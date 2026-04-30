@@ -46,26 +46,36 @@ interface RunReport {
   selector_coverage: SelectorCoverage;
 }
 
+interface DocumentedSelector {
+  id: string;
+  component: string;
+  coverage: "exercised" | "not_exercised";
+}
+
 interface SelectorCoverage {
-  documented: Record<
-    string,
-    {
-      id: string;
-      component: string;
-      coverage: "exercised" | "not_exercised";
-    }
-  >;
+  documented: Record<string, DocumentedSelector>;
   coverage_percentage: number;
   gaps: string[];
   undocumented: string[];
+}
+
+interface RegistryEntry {
+  id: string;
+  component: string;
+  [key: string]: unknown;
+}
+
+interface SelectorRegistry {
+  [key: string]: RegistryEntry | SelectorRegistry;
 }
 
 export default class StructuredReporter implements Reporter {
   private reportDir: string;
   private startTime: number = 0;
   private tests: TestReport[] = [];
-  private selectorRegistry: Record<string, any> = {};
+  private selectorRegistry: SelectorRegistry = {};
   private usedSelectors: Set<string> = new Set();
+  private processedTests: Set<string> = new Set();
   private testStats = {
     total: 0,
     passed: 0,
@@ -85,9 +95,17 @@ export default class StructuredReporter implements Reporter {
   private loadSelectorRegistry(): void {
     const registryPath = path.join(__dirname, "..", "..", "selector-registry.yaml");
     if (fs.existsSync(registryPath)) {
-      const content = fs.readFileSync(registryPath, "utf-8");
-      const parsed = yaml.load(content) as Record<string, any>;
-      this.selectorRegistry = parsed || {};
+      try {
+        const content = fs.readFileSync(registryPath, "utf-8");
+        const parsed = yaml.load(content) as SelectorRegistry;
+        this.selectorRegistry = parsed || {};
+      } catch (error) {
+        console.error(
+          `Failed to load selector registry from ${registryPath}:`,
+          error instanceof Error ? error.message : String(error)
+        );
+        this.selectorRegistry = {};
+      }
     }
   }
 
@@ -97,9 +115,17 @@ export default class StructuredReporter implements Reporter {
 
   onTestEnd(test: TestCase, result: TestResult): void {
     const specFile = test.location.file;
+    const testKey = `${specFile}::${test.title}`;
+
+    // Only process each test case once, not once per attempt
+    if (this.processedTests.has(testKey)) {
+      return;
+    }
+    this.processedTests.add(testKey);
+
     const testStatus = this.computeTestStatus(test);
 
-    // Update stats
+    // Update stats (only once per test)
     this.testStats.total++;
     if (testStatus === "passed") this.testStats.passed++;
     if (testStatus === "failed") this.testStats.failed++;
@@ -118,18 +144,21 @@ export default class StructuredReporter implements Reporter {
         : undefined;
     }
 
+    // Collect selectors from all attempts and the test file
+    const allSelectors = this.extractSelectorsFromTest(test, result);
+
     const testReport: TestReport = {
       spec_file: specFile,
       test_name: test.title,
       status: testStatus,
       duration_ms: totalDuration,
       attempts: this.extractAttempts(test),
-      selectors_used: this.extractSelectorsFromTest(test, result),
+      selectors_used: allSelectors,
       failure: failureInfo,
     };
 
     this.tests.push(testReport);
-    testReport.selectors_used.forEach((s) => this.usedSelectors.add(s));
+    allSelectors.forEach((s) => this.usedSelectors.add(s));
   }
 
   onEnd(_result: FullResult): void {
@@ -200,8 +229,11 @@ export default class StructuredReporter implements Reporter {
         while ((match = selectorPattern.exec(source)) !== null) {
           selectors.add(match[1]);
         }
-      } catch {
-        // If we can't read the file, skip source extraction
+      } catch (error) {
+        console.warn(
+          `Failed to read test file ${testFile}:`,
+          error instanceof Error ? error.message : String(error)
+        );
       }
     }
 
@@ -220,12 +252,13 @@ export default class StructuredReporter implements Reporter {
   }
 
   private buildSelectorCoverage(): SelectorCoverage {
-    const documented: Record<string, any> = {};
+    const documented: Record<string, DocumentedSelector> = {};
     const gaps: string[] = [];
     const undocumented: string[] = [];
 
     // Flatten the registry structure
     const flatRegistry = this.flattenRegistry(this.selectorRegistry);
+    const patternRegistry = this.extractPatternTemplates(this.selectorRegistry);
 
     // Check coverage
     for (const [_key, entry] of Object.entries(flatRegistry)) {
@@ -248,7 +281,10 @@ export default class StructuredReporter implements Reporter {
 
     // Find undocumented selectors
     Array.from(this.usedSelectors).forEach((selector) => {
-      if (!flatRegistry[selector] && !this.isPatternSelector(selector)) {
+      if (
+        !flatRegistry[selector] &&
+        !this.matchesPatternTemplate(selector, patternRegistry)
+      ) {
         undocumented.push(selector);
       }
     });
@@ -270,110 +306,155 @@ export default class StructuredReporter implements Reporter {
   }
 
   private flattenRegistry(
-    registry: Record<string, any>,
-    result: Record<string, any> = {}
-  ): Record<string, any> {
+    registry: SelectorRegistry,
+    result: Record<string, RegistryEntry> = {}
+  ): Record<string, RegistryEntry> {
     for (const [_key, value] of Object.entries(registry)) {
       if (value && typeof value === "object" && !Array.isArray(value)) {
         if ("id" in value) {
-          result[value.id] = value;
+          result[(value as RegistryEntry).id] = value as RegistryEntry;
         } else {
-          this.flattenRegistry(value, result);
+          this.flattenRegistry(value as SelectorRegistry, result);
         }
       }
     }
     return result;
   }
 
-  private isPatternSelector(selector: string): boolean {
-    // Check if selector matches a pattern like {entity-type}-table
-    return /\{[^}]+\}/.test(selector);
+  private extractPatternTemplates(
+    registry: SelectorRegistry
+  ): string[] {
+    const patterns: string[] = [];
+    const extractFromValue = (value: unknown) => {
+      if (
+        typeof value === "string" &&
+        value.includes("{") &&
+        value.includes("}")
+      ) {
+        patterns.push(value);
+      } else if (value && typeof value === "object" && !Array.isArray(value)) {
+        for (const v of Object.values(value)) {
+          extractFromValue(v);
+        }
+      }
+    };
+    extractFromValue(registry);
+    return patterns;
+  }
+
+  private matchesPatternTemplate(
+    selector: string,
+    patterns: string[]
+  ): boolean {
+    for (const pattern of patterns) {
+      const regex = new RegExp(
+        `^${pattern.replace(/\{[^}]+\}/g, "[a-zA-Z0-9_-]+")}$`
+      );
+      if (regex.test(selector)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private writeJsonReport(report: RunReport, runId: string): void {
     const filePath = path.join(this.reportDir, `${runId}.json`);
-    fs.writeFileSync(filePath, JSON.stringify(report, null, 2));
-    console.log(`\n📊 Structured report written to ${filePath}`);
+    try {
+      fs.writeFileSync(filePath, JSON.stringify(report, null, 2));
+      console.log(`\n📊 Structured report written to ${filePath}`);
+    } catch (error) {
+      console.error(
+        `Failed to write JSON report to ${filePath}:`,
+        error instanceof Error ? error.message : String(error)
+      );
+    }
   }
 
   private writeMarkdownReport(report: RunReport, runId: string): void {
     const filePath = path.join(this.reportDir, `${runId}.md`);
 
-    let markdown = `# Test Run Report\n\n`;
-    markdown += `**Run ID:** ${report.run_id}\n`;
-    markdown += `**Started:** ${report.started_at}\n`;
-    markdown += `**Ended:** ${report.ended_at}\n`;
-    markdown += `**Duration:** ${(report.duration_ms / 1000).toFixed(2)}s\n\n`;
+    try {
+      let markdown = `# Test Run Report\n\n`;
+      markdown += `**Run ID:** ${report.run_id}\n`;
+      markdown += `**Started:** ${report.started_at}\n`;
+      markdown += `**Ended:** ${report.ended_at}\n`;
+      markdown += `**Duration:** ${(report.duration_ms / 1000).toFixed(2)}s\n\n`;
 
-    // Summary stats
-    markdown += `## Summary\n\n`;
-    markdown += `| Metric | Count | Percentage |\n`;
-    markdown += `|--------|-------|------------|\n`;
-    markdown += `| Total | ${report.total} | 100% |\n`;
-    markdown += `| Passed | ${report.passed} | ${report.total > 0 ? Math.round((report.passed / report.total) * 100) : 0}% |\n`;
-    markdown += `| Failed | ${report.failed} | ${report.total > 0 ? Math.round((report.failed / report.total) * 100) : 0}% |\n`;
-    markdown += `| Flaky | ${report.flaky} | ${report.total > 0 ? Math.round((report.flaky / report.total) * 100) : 0}% |\n`;
-    markdown += `| Skipped | ${report.skipped} | ${report.total > 0 ? Math.round((report.skipped / report.total) * 100) : 0}% |\n\n`;
+      // Summary stats
+      markdown += `## Summary\n\n`;
+      markdown += `| Metric | Count | Percentage |\n`;
+      markdown += `|--------|-------|------------|\n`;
+      markdown += `| Total | ${report.total} | 100% |\n`;
+      markdown += `| Passed | ${report.passed} | ${report.total > 0 ? Math.round((report.passed / report.total) * 100) : 0}% |\n`;
+      markdown += `| Failed | ${report.failed} | ${report.total > 0 ? Math.round((report.failed / report.total) * 100) : 0}% |\n`;
+      markdown += `| Flaky | ${report.flaky} | ${report.total > 0 ? Math.round((report.flaky / report.total) * 100) : 0}% |\n`;
+      markdown += `| Skipped | ${report.skipped} | ${report.total > 0 ? Math.round((report.skipped / report.total) * 100) : 0}% |\n\n`;
 
-    // Selector coverage
-    markdown += `## Selector Coverage\n\n`;
-    const exercisedCount = Object.values(report.selector_coverage.documented).filter(
-      (d) => d.coverage === "exercised"
-    ).length;
-    markdown += `**Coverage:** ${report.selector_coverage.coverage_percentage}% (${exercisedCount}/${Object.keys(report.selector_coverage.documented).length} documented selectors exercised)\n\n`;
+      // Selector coverage
+      markdown += `## Selector Coverage\n\n`;
+      const exercisedCount = Object.values(report.selector_coverage.documented).filter(
+        (d) => d.coverage === "exercised"
+      ).length;
+      markdown += `**Coverage:** ${report.selector_coverage.coverage_percentage}% (${exercisedCount}/${Object.keys(report.selector_coverage.documented).length} documented selectors exercised)\n\n`;
 
-    if (report.selector_coverage.gaps.length > 0) {
-      markdown += `### Coverage Gaps (Documented but not exercised)\n\n`;
-      markdown += report.selector_coverage.gaps.map((s) => `- \`${s}\``).join("\n");
-      markdown += `\n\n`;
-    }
-
-    if (report.selector_coverage.undocumented.length > 0) {
-      markdown += `### Undocumented Selectors (Used but not in registry)\n\n`;
-      markdown += report.selector_coverage.undocumented
-        .map((s) => `- \`${s}\``)
-        .join("\n");
-      markdown += `\n\n`;
-    }
-
-    // Test details
-    markdown += `## Test Details\n\n`;
-    for (const test of report.tests) {
-      const statusEmoji = {
-        passed: "✅",
-        failed: "❌",
-        skipped: "⏭️",
-        flaky: "⚠️",
-      }[test.status];
-
-      markdown += `### ${statusEmoji} ${test.test_name}\n`;
-      markdown += `- **File:** ${test.spec_file}\n`;
-      markdown += `- **Status:** ${test.status}\n`;
-      markdown += `- **Duration:** ${test.duration_ms}ms\n`;
-
-      if (test.selectors_used.length > 0) {
-        markdown += `- **Selectors used:** ${test.selectors_used.map((s) => `\`${s}\``).join(", ")}\n`;
+      if (report.selector_coverage.gaps.length > 0) {
+        markdown += `### Coverage Gaps (Documented but not exercised)\n\n`;
+        markdown += report.selector_coverage.gaps.map((s) => `- \`${s}\``).join("\n");
+        markdown += `\n\n`;
       }
 
-      if (test.failure) {
-        markdown += `- **Error:** ${test.failure.message}\n`;
-        if (test.failure.screenshots.length > 0) {
-          markdown += `- **Screenshots:** ${test.failure.screenshots.map((s) => `[${path.basename(s)}](${s})`).join(", ")}\n`;
+      if (report.selector_coverage.undocumented.length > 0) {
+        markdown += `### Undocumented Selectors (Used but not in registry)\n\n`;
+        markdown += report.selector_coverage.undocumented
+          .map((s) => `- \`${s}\``)
+          .join("\n");
+        markdown += `\n\n`;
+      }
+
+      // Test details
+      markdown += `## Test Details\n\n`;
+      for (const test of report.tests) {
+        const statusEmoji = {
+          passed: "✅",
+          failed: "❌",
+          skipped: "⏭️",
+          flaky: "⚠️",
+        }[test.status];
+
+        markdown += `### ${statusEmoji} ${test.test_name}\n`;
+        markdown += `- **File:** ${test.spec_file}\n`;
+        markdown += `- **Status:** ${test.status}\n`;
+        markdown += `- **Duration:** ${test.duration_ms}ms\n`;
+
+        if (test.selectors_used.length > 0) {
+          markdown += `- **Selectors used:** ${test.selectors_used.map((s) => `\`${s}\``).join(", ")}\n`;
         }
-        if (test.failure.video) {
-          markdown += `- **Video:** [${path.basename(test.failure.video)}](${test.failure.video})\n`;
+
+        if (test.failure) {
+          markdown += `- **Error:** ${test.failure.message}\n`;
+          if (test.failure.screenshots.length > 0) {
+            markdown += `- **Screenshots:** ${test.failure.screenshots.map((s) => `[${path.basename(s)}](${s})`).join(", ")}\n`;
+          }
+          if (test.failure.video) {
+            markdown += `- **Video:** [${path.basename(test.failure.video)}](${test.failure.video})\n`;
+          }
         }
+
+        if (test.attempts.length > 1) {
+          markdown += `- **Attempts:** ${test.attempts.length}\n`;
+        }
+
+        markdown += `\n`;
       }
 
-      if (test.attempts.length > 1) {
-        markdown += `- **Attempts:** ${test.attempts.length}\n`;
-      }
-
-      markdown += `\n`;
+      fs.writeFileSync(filePath, markdown);
+      console.log(`📄 Markdown summary written to ${filePath}`);
+    } catch (error) {
+      console.error(
+        `Failed to write markdown report to ${filePath}:`,
+        error instanceof Error ? error.message : String(error)
+      );
     }
-
-    fs.writeFileSync(filePath, markdown);
-    console.log(`📄 Markdown summary written to ${filePath}`);
   }
 
   private getGitSha(): string {
@@ -387,24 +468,49 @@ export default class StructuredReporter implements Reporter {
 
   private pruneOldReports(): void {
     const maxReports = 20;
-    const files = fs
-      .readdirSync(this.reportDir)
-      .filter((f) => f.endsWith(".json"))
-      .sort()
-      .reverse();
+    try {
+      const files = fs
+        .readdirSync(this.reportDir)
+        .filter((f) => f.endsWith(".json"))
+        .sort()
+        .reverse();
 
-    if (files.length > maxReports) {
-      const filesToDelete = files.slice(maxReports);
-      for (const file of filesToDelete) {
-        const jsonPath = path.join(this.reportDir, file);
-        const mdPath = path.join(this.reportDir, file.replace(".json", ".md"));
-        fs.unlinkSync(jsonPath);
-        if (fs.existsSync(mdPath)) {
-          fs.unlinkSync(mdPath);
+      if (files.length > maxReports) {
+        const filesToDelete = files.slice(maxReports);
+        let deletedCount = 0;
+        for (const file of filesToDelete) {
+          const jsonPath = path.join(this.reportDir, file);
+          const mdPath = path.join(this.reportDir, file.replace(".json", ".md"));
+          try {
+            fs.unlinkSync(jsonPath);
+            deletedCount++;
+          } catch (error) {
+            console.warn(
+              `Failed to delete JSON report ${jsonPath}:`,
+              error instanceof Error ? error.message : String(error)
+            );
+          }
+          if (fs.existsSync(mdPath)) {
+            try {
+              fs.unlinkSync(mdPath);
+            } catch (error) {
+              console.warn(
+                `Failed to delete markdown report ${mdPath}:`,
+                error instanceof Error ? error.message : String(error)
+              );
+            }
+          }
+        }
+        if (deletedCount > 0) {
+          console.log(
+            `🧹 Pruned ${deletedCount} old reports (keeping last ${maxReports})`
+          );
         }
       }
-      console.log(
-        `🧹 Pruned ${filesToDelete.length} old reports (keeping last ${maxReports})`
+    } catch (error) {
+      console.error(
+        `Failed to prune old reports:`,
+        error instanceof Error ? error.message : String(error)
       );
     }
   }
