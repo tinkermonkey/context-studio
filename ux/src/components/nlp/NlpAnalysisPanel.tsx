@@ -48,13 +48,13 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
   domainId = null,
   layerId = null,
   flavorList = null,
-  nodeId = null,
+  nodeId: _nodeId = null,
 }) => {
   // Subscribe to the NLP analysis store
   const { shouldAnalyze, currentText, reset } = useNlpAnalysisStore();
 
   // Determine if title is multi-word (more than one word after splitting on whitespace)
-  const isMultiWord = useMemo(() => {
+  const _isMultiWord = useMemo(() => {
     const words = text
       .trim()
       .split(/\s+/)

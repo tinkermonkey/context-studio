@@ -16,7 +16,7 @@ interface AttributePanelProps {
   nodeId: string;
 }
 
-export const AttributePanel: React.FC<AttributePanelProps> = ({ nodeId }) => {
+export const AttributePanel: React.FC<AttributePanelProps> = ({ nodeId: _nodeId }) => {
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Attributes</h3>
