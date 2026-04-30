@@ -15,7 +15,7 @@ import type {
 import {
   useCreatePredicate,
   useUpdatePredicate,
-} from "@/api/hooks/predicates/usePredicateMutations";
+} from "@/api/hooks/predicates";
 
 interface PredicateFormProps {
   onSuccess?: (predicate: PropertyDefinition) => void;

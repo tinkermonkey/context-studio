@@ -32,19 +32,30 @@ export const OntologyClassSelector: React.FC<OntologyClassSelectorProps> = ({
   disabled = false,
   "data-testid": dataTestId,
 }) => {
-  // Fetch all nodes or filter by type
+  // Fetch all nodes
   const {
     data: nodes,
     isLoading,
     error,
-  } = useOntologyClasses(nodeType ? { node_type: nodeType } : undefined);
+  } = useOntologyClasses();
 
-  // Filter out excluded nodes
+  // Filter by type and excluded nodes
   const filteredNodes = useMemo(() => {
     if (!nodes) return [];
-    if (excludeNodeIds.length === 0) return nodes;
-    return nodes.filter((node) => !excludeNodeIds.includes(node.id));
-  }, [nodes, excludeNodeIds]);
+    let filtered = nodes;
+
+    // Filter by node type if provided
+    if (nodeType) {
+      filtered = filtered.filter((node) => node.node_type === nodeType);
+    }
+
+    // Filter out excluded nodes
+    if (excludeNodeIds.length > 0) {
+      filtered = filtered.filter((node) => !excludeNodeIds.includes(node.id));
+    }
+
+    return filtered;
+  }, [nodes, nodeType, excludeNodeIds]);
 
   // Field map for PortalRecordSelector
   const fieldMap: FieldMap<OntologyClass> = {

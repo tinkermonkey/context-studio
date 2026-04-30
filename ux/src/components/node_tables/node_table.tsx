@@ -384,7 +384,6 @@ function BaseNodeTable<T>({
     setPageIndex(0);
   }, [debouncedSearchTerm]);
 
-
   if (isLoading) return <Spinner />;
   if (error) {
     console.error(error);

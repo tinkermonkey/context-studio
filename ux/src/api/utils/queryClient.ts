@@ -45,7 +45,7 @@ export const queryClient = new QueryClient(queryClientConfig);
 export const createQueryKey = (
   entity: string,
   id?: string | number,
-  params?: Record<string, unknown>,
+  params?: any,
 ): string[] => {
   const key = [entity];
 

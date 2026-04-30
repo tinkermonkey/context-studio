@@ -33,36 +33,59 @@ export interface ChangeEvent {
 }
 
 /**
+ * Discriminated union types for specific change event types
+ */
+export interface TaxonomyEvent extends ChangeEvent {
+  entity_type: RecordType.TAXONOMY;
+}
+
+export interface ConceptSchemeEvent extends ChangeEvent {
+  entity_type: RecordType.CONCEPT_SCHEME;
+}
+
+export interface OntologyClassEvent extends ChangeEvent {
+  entity_type: RecordType.ONTOLOGY_CLASS;
+}
+
+export interface RelationshipEvent extends ChangeEvent {
+  entity_type: RecordType.RELATIONSHIP;
+}
+
+export interface PropertyDefinitionEvent extends ChangeEvent {
+  entity_type: RecordType.PROPERTY_DEFINITION;
+}
+
+/**
  * Type guard to check if an event is a taxonomy event
  */
-export function isTaxonomyEvent(event: ChangeEvent): event is ChangeEvent {
+export function isTaxonomyEvent(event: ChangeEvent): event is TaxonomyEvent {
   return event.entity_type === RecordType.TAXONOMY;
 }
 
 /**
  * Type guard to check if an event is a concept scheme event
  */
-export function isConceptSchemeEvent(event: ChangeEvent): event is ChangeEvent {
+export function isConceptSchemeEvent(event: ChangeEvent): event is ConceptSchemeEvent {
   return event.entity_type === RecordType.CONCEPT_SCHEME;
 }
 
 /**
  * Type guard to check if an event is an ontology class event
  */
-export function isOntologyClassEvent(event: ChangeEvent): event is ChangeEvent {
+export function isOntologyClassEvent(event: ChangeEvent): event is OntologyClassEvent {
   return event.entity_type === RecordType.ONTOLOGY_CLASS;
 }
 
 /**
  * Type guard to check if an event is a relationship event
  */
-export function isRelationshipEvent(event: ChangeEvent): event is ChangeEvent {
+export function isRelationshipEvent(event: ChangeEvent): event is RelationshipEvent {
   return event.entity_type === RecordType.RELATIONSHIP;
 }
 
 /**
  * Type guard to check if an event is a property definition event
  */
-export function isPropertyDefinitionEvent(event: ChangeEvent): event is ChangeEvent {
+export function isPropertyDefinitionEvent(event: ChangeEvent): event is PropertyDefinitionEvent {
   return event.entity_type === RecordType.PROPERTY_DEFINITION;
 }
