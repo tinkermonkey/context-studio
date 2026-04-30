@@ -20,13 +20,9 @@ import {
  *
  * These tests verify the visual representation and interaction
  * with knowledge graphs built from ontology data.
- *
- * SKIPPED: These tests reference data-testid values that do not exist in the
- * graph visualization components. The tests will be re-enabled once the
- * components are updated with proper test IDs.
  */
 
-test.describe.skip("Graph Visualization and Analysis", () => {
+test.describe("Graph Visualization and Analysis", () => {
   let _hierarchyId: string;
 
   test.beforeEach(async ({ page }) => {
