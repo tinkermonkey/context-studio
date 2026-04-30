@@ -248,17 +248,17 @@ export class EnabledModelsService extends BaseService {
   /**
    * Validate provider configuration
    */
-
-  async validateProviderConfig(_providerType: ProviderType): Promise<{
+  async validateProviderConfig(providerType: ProviderType): Promise<{
     valid: boolean;
     issues: string[];
   }> {
-    // This would need to be implemented on the backend
-    // For now, return a placeholder
-    return {
-      valid: true,
-      issues: [],
-    };
+    this.validateRequired(providerType, "providerType");
+
+    return this.withErrorContext(async () => {
+      return this.getResource<{ valid: boolean; issues: string[] }>(
+        `/api/enabled-models/providers/${encodeURIComponent(providerType)}/validate`,
+      );
+    }, `validating provider configuration for ${providerType}`);
   }
 }
 

@@ -93,12 +93,18 @@ export class PipelineExecutionService extends BaseService {
   async executePipelineStream(
     request: PipelineExecutionRequest,
   ): Promise<PipelineExecutionResponse> {
-    // For now, fall back to non-streaming execution
-    // TODO: Implement proper streaming with server-sent events
-    console.warn(
-      "Streaming not yet implemented, falling back to regular execution",
-    );
-    return this.executePipeline(request);
+    return this.withErrorContext(async () => {
+      // For now, fall back to non-streaming execution
+      // TODO: Implement proper streaming with server-sent events
+      apiLogger.warn(
+        "Streaming execution not yet implemented, falling back to regular execution",
+        {
+          pipeline_type: request.pipeline_type,
+          note: "Callers expecting progressive output will receive blocking response",
+        },
+      );
+      return this.executePipeline(request);
+    }, "executing pipeline with streaming (fallback)");
   }
 
   /**

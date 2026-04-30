@@ -554,7 +554,8 @@ const EditModal: React.FC<{
         queryKey: [QUERY_KEYS.ONTOLOGY_CLASSES],
       });
     } catch (e) {
-      console.warn("Failed to invalidate node queries", e);
+      const errorMsg = e instanceof Error ? e.message : "Failed to refresh data";
+      toast.error(`Failed to refresh node data: ${errorMsg}`);
     }
   };
 
@@ -611,7 +612,8 @@ const AddChildModal: React.FC<{
         queryKey: [QUERY_KEYS.ONTOLOGY_CLASSES],
       });
     } catch (e) {
-      console.warn("Failed to invalidate node queries", e);
+      const errorMsg = e instanceof Error ? e.message : "Failed to refresh data";
+      toast.error(`Failed to refresh node data: ${errorMsg}`);
     }
   };
 
