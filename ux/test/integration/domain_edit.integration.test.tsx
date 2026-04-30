@@ -110,7 +110,7 @@ const domain = {
   title: "Domain 1",
   definition: "A test domain",
   description: "A test domain",
-  node_type: NodeType.DOMAIN,
+  node_type: NodeType.CONCEPT_SCHEME,
   parent_node_id: "00000000-0000-0000-0000-000000000000",
   parent_class_id: "00000000-0000-0000-0000-000000000000",
   concept_scheme_id: "1",

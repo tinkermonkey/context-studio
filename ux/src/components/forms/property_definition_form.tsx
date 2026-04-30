@@ -34,17 +34,17 @@ const PropertyDefinitionForm: React.FC<PropertyDefinitionFormProps> = ({
 
   const form = useForm({
     defaultValues: {
+      identifier: propertyDefinition?.identifier ?? "",
       title: propertyDefinition?.title ?? "",
       description: propertyDefinition?.description ?? "",
-      range: propertyDefinition?.range ?? "",
     },
     onSubmit: async ({ value }) => {
       setSubmitError(null);
       try {
         const submissionData: PropertyDefinitionCreate = {
+          identifier: value.identifier,
           title: value.title,
           description: value.description || null,
-          range: value.range || null,
         };
 
         let result;
@@ -100,6 +100,41 @@ const PropertyDefinitionForm: React.FC<PropertyDefinitionFormProps> = ({
         className="flex flex-col gap-4"
       >
         <form.Field
+          name="identifier"
+          validators={{
+            onChange: ({ value }) => (!value ? "Identifier is required" : undefined),
+          }}
+        >
+          {(field) => (
+            <div>
+              <Label
+                htmlFor="property-definition-identifier"
+                className="mb-1 block font-medium"
+              >
+                Identifier
+              </Label>
+              <TextInput
+                id="property-definition-identifier"
+                data-testid="property-definition-identifier-input"
+                placeholder="Identifier"
+                value={field.state.value}
+                color={field.state.meta.errors.length ? "failure" : undefined}
+                onChange={(e) => {
+                  field.handleChange(e.target.value);
+                }}
+                required
+                autoFocus
+              />
+              {field.state.meta.errors.length > 0 && (
+                <div className="mt-1 text-sm text-red-600">
+                  {field.state.meta.errors[0]}
+                </div>
+              )}
+            </div>
+          )}
+        </form.Field>
+
+        <form.Field
           name="title"
           validators={{
             onChange: ({ value }) => (!value ? "Title is required" : undefined),
@@ -123,7 +158,6 @@ const PropertyDefinitionForm: React.FC<PropertyDefinitionFormProps> = ({
                   field.handleChange(e.target.value);
                 }}
                 required
-                autoFocus
               />
               {field.state.meta.errors.length > 0 && (
                 <div className="mt-1 text-sm text-red-600">
@@ -150,31 +184,6 @@ const PropertyDefinitionForm: React.FC<PropertyDefinitionFormProps> = ({
                 value={field.state.value}
                 onChange={(e) => field.handleChange(e.target.value)}
                 rows={3}
-              />
-              {field.state.meta.errors.length > 0 && (
-                <div className="mt-1 text-sm text-red-600">
-                  {field.state.meta.errors[0]}
-                </div>
-              )}
-            </div>
-          )}
-        </form.Field>
-
-        <form.Field name="range">
-          {(field) => (
-            <div>
-              <Label
-                htmlFor="property-definition-range"
-                className="mb-1 block font-medium"
-              >
-                Range (optional)
-              </Label>
-              <TextInput
-                id="property-definition-range"
-                data-testid="property-definition-range-input"
-                placeholder="Range type (optional)"
-                value={field.state.value}
-                onChange={(e) => field.handleChange(e.target.value)}
               />
               {field.state.meta.errors.length > 0 && (
                 <div className="mt-1 text-sm text-red-600">

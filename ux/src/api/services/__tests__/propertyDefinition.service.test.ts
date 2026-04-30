@@ -115,10 +115,9 @@ describe("PropertyDefinitionService", () => {
 
   describe("create", () => {
     it("should create a new property definition", async () => {
-      const newProperty = { title: "New Property" };
+      const newProperty = { identifier: "new-prop", title: "New Property" };
       const response = {
         id: "new-prop",
-        identifier: "new-prop",
         ...newProperty,
         version: 1,
       };
@@ -131,31 +130,20 @@ describe("PropertyDefinitionService", () => {
       expect(result).toEqual(response);
     });
 
-    it("should validate title is required", async () => {
-      await expect(service.create({ title: "" })).rejects.toThrow(
-        "title is required"
-      );
+    it("should validate identifier is required", async () => {
+      await expect(
+        service.create({ identifier: "", title: "New Property" })
+      ).rejects.toThrow("identifier is required");
     });
 
-    it("should accept optional range parameter", async () => {
-      const newProperty = {
-        title: "New Property",
-        range: "xsd:string",
-      };
-
-      vi.mocked(mockClient.request).mockResolvedValueOnce({
-        data: { id: "new-prop", ...newProperty, version: 1 },
-      });
-
-      await service.create(newProperty);
-
-      const callConfig = vi.mocked(mockClient.request).mock.calls[0][0];
-      expect(callConfig.data).toHaveProperty("title", "New Property");
-      expect(callConfig.data).toHaveProperty("range", "xsd:string");
+    it("should validate title is required", async () => {
+      await expect(
+        service.create({ identifier: "new-prop", title: "" })
+      ).rejects.toThrow("title is required");
     });
 
     it("should send POST request to correct endpoint", async () => {
-      const newProperty = { title: "New Property" };
+      const newProperty = { identifier: "new-prop", title: "New Property" };
 
       vi.mocked(mockClient.request).mockResolvedValueOnce({
         data: { id: "new-prop", ...newProperty, version: 1 },
@@ -194,11 +182,12 @@ describe("PropertyDefinitionService", () => {
     });
 
     it("should allow partial updates", async () => {
-      const updated = { range: "xsd:integer" };
+      const updated = { description: "Updated description" };
 
       vi.mocked(mockClient.request).mockResolvedValueOnce({
         data: {
           id: "prop-1",
+          identifier: "prop-1",
           title: "Property 1",
           ...updated,
           version: 2,

@@ -271,8 +271,7 @@ export const OntologyClassDetails: React.FC<OntologyClassDetailsProps> = ({
                 <Plus className="mr-2 h-4 w-4" />
                 Add Child
               </Button>
-              {node.node_type !== NodeType.TAXONOMY &&
-                node.node_type !== NodeType.TAXONOMY && (
+              {node.node_type !== NodeType.TAXONOMY && (
                   <Button
                     color="gray"
                     size="sm"
@@ -299,7 +298,7 @@ export const OntologyClassDetails: React.FC<OntologyClassDetailsProps> = ({
           <NlpAnalysisPanel
             text={node.title}
             textTitle={
-              node.node_type === NodeType.CLASS || node.node_type === NodeType.CLASS
+              node.node_type === NodeType.CLASS
                 ? "Term"
                 : "Title"
             }
@@ -322,19 +321,16 @@ export const OntologyClassDetails: React.FC<OntologyClassDetailsProps> = ({
             }
             currentDefinition={node.description}
             layerId={
-              node.node_type === NodeType.TAXONOMY ||
               node.node_type === NodeType.TAXONOMY
                 ? node.id
                 : parentLayer?.id
             }
             domainId={
-              node.node_type === NodeType.CONCEPT_SCHEME ||
               node.node_type === NodeType.CONCEPT_SCHEME
                 ? node.id
                 : parentDomain?.id
             }
             termId={
-              node.node_type === NodeType.CLASS ||
               node.node_type === NodeType.CLASS ||
               node.node_type === NodeType.INDIVIDUAL
                 ? node.id
@@ -371,19 +367,16 @@ export const OntologyClassDetails: React.FC<OntologyClassDetailsProps> = ({
             <h2 className="text-xl font-semibold">Hierarchy</h2>
             <TreeChartPanel
               layerId={
-                node.node_type === NodeType.TAXONOMY ||
                 node.node_type === NodeType.TAXONOMY
                   ? node.id
                   : undefined
               }
               domainId={
-                node.node_type === NodeType.CONCEPT_SCHEME ||
                 node.node_type === NodeType.CONCEPT_SCHEME
                   ? node.id
                   : undefined
               }
               termId={
-                node.node_type === NodeType.CLASS ||
                 node.node_type === NodeType.CLASS ||
                 node.node_type === NodeType.INDIVIDUAL
                   ? node.id
@@ -428,12 +421,9 @@ const EditableDefinition: React.FC<{ node: OntologyClass }> = ({ node }) => {
   const getUpdateMutation = () => {
     switch (node.node_type) {
       case NodeType.TAXONOMY:
-      case NodeType.TAXONOMY:
         return taxonomyMutation;
       case NodeType.CONCEPT_SCHEME:
-      case NodeType.CONCEPT_SCHEME:
         return conceptSchemeMutation;
-      case NodeType.CLASS:
       case NodeType.CLASS:
         return ontologyClassMutation;
       default:
@@ -590,12 +580,9 @@ const EditModal: React.FC<{
   const getModalTitle = () => {
     switch (node.node_type) {
       case NodeType.TAXONOMY:
-      case NodeType.TAXONOMY:
         return "Edit Layer";
       case NodeType.CONCEPT_SCHEME:
-      case NodeType.CONCEPT_SCHEME:
         return "Edit Domain";
-      case NodeType.CLASS:
       case NodeType.CLASS:
         return "Edit Term";
       default:
@@ -606,12 +593,9 @@ const EditModal: React.FC<{
   const getForm = () => {
     switch (node.node_type) {
       case NodeType.TAXONOMY:
-      case NodeType.TAXONOMY:
         return <LayerForm layer={node} onSuccess={handleSuccess} />;
       case NodeType.CONCEPT_SCHEME:
-      case NodeType.CONCEPT_SCHEME:
         return <DomainForm domain={node} onSuccess={handleSuccess} />;
-      case NodeType.CLASS:
       case NodeType.CLASS:
         return <TermForm term={node} onSuccess={handleSuccess} />;
       default:
@@ -653,12 +637,9 @@ const AddChildModal: React.FC<{
   const getModalTitle = () => {
     switch (node.node_type) {
       case NodeType.TAXONOMY:
-      case NodeType.TAXONOMY:
         return "Add Domain";
       case NodeType.CONCEPT_SCHEME:
-      case NodeType.CONCEPT_SCHEME:
         return "Add Term";
-      case NodeType.CLASS:
       case NodeType.CLASS:
         return "Add Child Term";
       default:
@@ -669,7 +650,6 @@ const AddChildModal: React.FC<{
   const getForm = () => {
     switch (node.node_type) {
       case NodeType.TAXONOMY:
-      case NodeType.TAXONOMY:
         return (
           <DomainForm
             parentLayerId={node.id}
@@ -679,7 +659,6 @@ const AddChildModal: React.FC<{
           />
         );
       case NodeType.CONCEPT_SCHEME:
-      case NodeType.CONCEPT_SCHEME:
         return (
           <TermForm
             parentDomainId={node.id}
@@ -688,7 +667,6 @@ const AddChildModal: React.FC<{
             onSuccess={handleSuccess}
           />
         );
-      case NodeType.CLASS:
       case NodeType.CLASS:
         return (
           <TermForm
@@ -737,9 +715,7 @@ const MoveModal: React.FC<{
   const getModalTitle = () => {
     switch (node.node_type) {
       case NodeType.CONCEPT_SCHEME:
-      case NodeType.CONCEPT_SCHEME:
         return "Move Domain";
-      case NodeType.CLASS:
       case NodeType.CLASS:
         return "Move Term";
       default:
@@ -750,7 +726,6 @@ const MoveModal: React.FC<{
   const getForm = () => {
     switch (node.node_type) {
       case NodeType.CONCEPT_SCHEME:
-      case NodeType.CONCEPT_SCHEME:
         return (
           <DomainMoveForm
             selectedNodes={[node]}
@@ -758,7 +733,6 @@ const MoveModal: React.FC<{
             onCancel={onClose}
           />
         );
-      case NodeType.CLASS:
       case NodeType.CLASS:
         return (
           <TermMoveForm

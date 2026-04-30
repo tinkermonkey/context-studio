@@ -73,10 +73,6 @@ const columns = [
     },
     header: () => "Description",
   }),
-  columnHelper.accessor("range", {
-    cell: (info) => info.getValue() ?? "-",
-    header: () => "Range",
-  }),
   columnHelper.accessor("created_at", {
     cell: (info) => {
       const value = info.getValue();
