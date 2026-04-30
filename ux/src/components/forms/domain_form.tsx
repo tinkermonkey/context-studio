@@ -108,7 +108,7 @@ const DomainForm: React.FC<DomainFormProps> = ({
           <div className="rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
             <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
               <Info className="h-4 w-4" />
-              <span>Creating domain in layer:</span>
+              <span>Creating concept scheme in taxonomy:</span>
             </div>
             <div className="mt-1 flex items-center gap-2">
               <Layers className="h-5 w-5 text-blue-600 dark:text-blue-400" />
@@ -229,8 +229,8 @@ const DomainForm: React.FC<DomainFormProps> = ({
               : isEdit
                 ? "Save Changes"
                 : isChildMode
-                  ? "Create Domain"
-                  : "Create Domain"}
+                  ? "Create Concept Scheme"
+                  : "Create Concept Scheme"}
           </Button>
         </div>
       </form>

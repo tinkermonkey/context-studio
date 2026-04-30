@@ -115,7 +115,7 @@ const TermForm: React.FC<TermFormProps> = ({
             <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
               <Info className="h-4 w-4" />
               <span>
-                Creating term in {parentDomain ? "domain" : "parent term"}:
+                Creating class in {parentDomain ? "concept scheme" : "parent class"}:
               </span>
             </div>
             <div className="mt-1 flex items-center gap-2">
@@ -244,7 +244,7 @@ const TermForm: React.FC<TermFormProps> = ({
                 : "Creating..."
               : isEdit
                 ? "Save Changes"
-                : "Create Term"}
+                : "Create Class"}
           </Button>
         </div>
       </form>

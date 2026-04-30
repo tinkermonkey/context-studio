@@ -59,13 +59,13 @@ describe("CreateChildButton", () => {
     last_modified: "2023-01-01T00:00:00Z",
   };
 
-  it("renders create domain button for layer parent", () => {
+  it("renders create concept scheme button for taxonomy parent", () => {
     render(
       <CreateChildButton
-        parentType="layer"
+        parentType="taxonomy"
         parentId="layer-1"
         parentObject={mockLayer}
-        childType="domain"
+        childType="concept_scheme"
       />,
     );
 
@@ -75,28 +75,28 @@ describe("CreateChildButton", () => {
   it("opens modal when button is clicked", () => {
     render(
       <CreateChildButton
-        parentType="layer"
+        parentType="taxonomy"
         parentId="layer-1"
         parentObject={mockLayer}
-        childType="domain"
+        childType="concept_scheme"
       />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: /add/i }));
 
     expect(
-      screen.getByText(/Create Domain in Layer: Test Layer/i),
+      screen.getByText(/Create Concept Scheme in Taxonomy: Test Layer/i),
     ).toBeInTheDocument();
     expect(screen.getByTestId("domain-form")).toBeInTheDocument();
   });
 
-  it("renders create term button for domain parent", () => {
+  it("renders create class button for concept scheme parent", () => {
     render(
       <CreateChildButton
-        parentType="domain"
+        parentType="concept_scheme"
         parentId="domain-1"
         parentObject={mockDomain}
-        childType="term"
+        childType="class"
       />,
     );
 
@@ -108,10 +108,10 @@ describe("CreateChildButton", () => {
 
     render(
       <CreateChildButton
-        parentType="layer"
+        parentType="taxonomy"
         parentId="layer-1"
         parentObject={mockLayer}
-        childType="domain"
+        childType="concept_scheme"
         onSuccess={onSuccess}
       />,
     );

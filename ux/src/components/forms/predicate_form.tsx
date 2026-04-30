@@ -285,7 +285,7 @@ const PredicateForm: React.FC<PredicateFormProps> = ({
                 : "Creating..."
               : isEdit
                 ? "Save Changes"
-                : "Create Predicate"}
+                : "Create Property Definition"}
           </Button>
         </div>
       </form>

@@ -161,7 +161,7 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
                 : "Creating..."
               : isEdit
                 ? "Save Changes"
-                : "Create Layer"}
+                : "Create Taxonomy"}
           </Button>
         </div>
       </form>

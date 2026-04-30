@@ -299,7 +299,7 @@ export const OntologyClassDetails: React.FC<OntologyClassDetailsProps> = ({
             text={node.title}
             textTitle={
               node.node_type === NodeType.CLASS
-                ? "Term"
+                ? "Class"
                 : "Title"
             }
             domainContext={

@@ -8,10 +8,10 @@ import { DomainForm } from "@/components/forms/domain_form";
 import { TermForm } from "@/components/forms/term_form";
 
 interface CreateChildButtonProps {
-  parentType: "layer" | "domain" | "term";
+  parentType: "taxonomy" | "concept_scheme" | "class";
   parentId: string;
   parentObject: OntologyClass;
-  childType: "domain" | "term";
+  childType: "concept_scheme" | "class";
 
   onSuccess?: (child: any) => void;
   className?: string;
@@ -44,16 +44,16 @@ export const CreateChildButton: React.FC<CreateChildButtonProps> = ({
     });
 
     // Invalidate specific list queries
-    if (childType === "domain") {
+    if (childType === "concept_scheme") {
       queryClient.invalidateQueries({
         queryKey: ["domains", { layer_id: parentId }],
       });
-    } else if (childType === "term") {
-      if (parentType === "domain") {
+    } else if (childType === "class") {
+      if (parentType === "concept_scheme") {
         queryClient.invalidateQueries({
           queryKey: ["terms", { domain_id: parentId }],
         });
-      } else if (parentType === "term") {
+      } else if (parentType === "class") {
         queryClient.invalidateQueries({
           queryKey: ["terms", { parent_term_id: parentId }],
         });
@@ -73,15 +73,15 @@ export const CreateChildButton: React.FC<CreateChildButtonProps> = ({
   };
 
   const getModalTitle = () => {
-    if (childType === "domain") {
-      return `Create Domain in Layer: ${parentObject.title}`;
+    if (childType === "concept_scheme") {
+      return `Create Concept Scheme in Taxonomy: ${parentObject.title}`;
     } else {
-      return `Create Term in ${parentType === "domain" ? "Domain" : "Parent Term"}: ${parentObject.title}`;
+      return `Create Class in ${parentType === "concept_scheme" ? "Concept Scheme" : "Parent Class"}: ${parentObject.title}`;
     }
   };
 
   const renderForm = () => {
-    if (childType === "domain" && parentType === "layer") {
+    if (childType === "concept_scheme" && parentType === "taxonomy") {
       return (
         <DomainForm
           onSuccess={handleSuccess}
@@ -90,8 +90,8 @@ export const CreateChildButton: React.FC<CreateChildButtonProps> = ({
           mode="child"
         />
       );
-    } else if (childType === "term") {
-      if (parentType === "domain") {
+    } else if (childType === "class") {
+      if (parentType === "concept_scheme") {
         return (
           <TermForm
             onSuccess={handleSuccess}
@@ -100,7 +100,7 @@ export const CreateChildButton: React.FC<CreateChildButtonProps> = ({
             mode="child"
           />
         );
-      } else if (parentType === "term") {
+      } else if (parentType === "class") {
         return (
           <TermForm
             onSuccess={handleSuccess}
