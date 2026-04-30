@@ -1,7 +1,6 @@
 import {
   Reporter,
   FullResult,
-  Suite,
   TestCase,
   TestResult,
 } from "@playwright/test/reporter";
@@ -133,7 +132,7 @@ export default class StructuredReporter implements Reporter {
     testReport.selectors_used.forEach((s) => this.usedSelectors.add(s));
   }
 
-  onEnd(result: FullResult): void {
+  onEnd(_result: FullResult): void {
     const endTime = Date.now();
     const timestamp = new Date()
       .toISOString()
@@ -229,7 +228,7 @@ export default class StructuredReporter implements Reporter {
     const flatRegistry = this.flattenRegistry(this.selectorRegistry);
 
     // Check coverage
-    for (const [key, entry] of Object.entries(flatRegistry)) {
+    for (const [_key, entry] of Object.entries(flatRegistry)) {
       const id = entry.id;
       if (this.usedSelectors.has(id)) {
         documented[id] = {
@@ -274,7 +273,7 @@ export default class StructuredReporter implements Reporter {
     registry: Record<string, any>,
     result: Record<string, any> = {}
   ): Record<string, any> {
-    for (const [key, value] of Object.entries(registry)) {
+    for (const [_key, value] of Object.entries(registry)) {
       if (value && typeof value === "object" && !Array.isArray(value)) {
         if ("id" in value) {
           result[value.id] = value;
