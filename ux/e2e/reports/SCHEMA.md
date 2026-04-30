@@ -14,11 +14,6 @@ Each test run produces a JSON report containing comprehensive metadata about tes
   "started_at": "ISO 8601 timestamp",
   "ended_at": "ISO 8601 timestamp",
   "duration_ms": "number",
-  "total": "number",
-  "passed": "number",
-  "failed": "number",
-  "skipped": "number",
-  "flaky": "number",
   "tests": [/* TestReport[] */],
   "selector_coverage": {/* SelectorCoverage */}
 }
@@ -32,13 +27,20 @@ Each test run produces a JSON report containing comprehensive metadata about tes
 | `started_at` | ISO 8601 | When the test run started (UTC) |
 | `ended_at` | ISO 8601 | When the test run completed (UTC) |
 | `duration_ms` | number | Total run duration in milliseconds |
-| `total` | number | Total number of tests (passed + failed + skipped + flaky) |
-| `passed` | number | Count of tests that passed |
-| `failed` | number | Count of tests that failed on all attempts |
-| `skipped` | number | Count of tests that were skipped |
-| `flaky` | number | Count of tests that were flaky (passed on retry) |
 | `tests` | array | Array of `TestReport` objects (see below) |
 | `selector_coverage` | object | Selector coverage analysis (see below) |
+
+### Computing Summary Statistics
+
+Summary statistics (`total`, `passed`, `failed`, `skipped`, `flaky`) are computed on-demand from the `tests` array rather than stored in the JSON report. Consumers should calculate these values from the test statuses:
+
+- **total**: `tests.length`
+- **passed**: `tests.filter(t => t.status === "passed").length`
+- **failed**: `tests.filter(t => t.status === "failed").length`
+- **skipped**: `tests.filter(t => t.status === "skipped").length`
+- **flaky**: `tests.filter(t => t.status === "flaky").length`
+
+This approach maintains a single source of truth (the tests array) and avoids redundancy and consistency risks.
 
 ## TestReport Object
 
@@ -148,11 +150,6 @@ Each test run produces a JSON report containing comprehensive metadata about tes
   "started_at": "2025-02-15T14:30:45.123Z",
   "ended_at": "2025-02-15T14:32:10.456Z",
   "duration_ms": 85333,
-  "total": 45,
-  "passed": 42,
-  "failed": 2,
-  "skipped": 1,
-  "flaky": 0,
   "tests": [
     {
       "spec_file": "ux/e2e/tests/ontology/taxonomy.spec.ts",
