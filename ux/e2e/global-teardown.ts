@@ -19,13 +19,28 @@ function killProcess(pid: number): void {
         try {
           process.kill(pid, 0); // Check if process exists
           process.kill(pid, "SIGKILL"); // Force kill
-        } catch {
-          // Process already dead
+        } catch (error) {
+          // Only ignore ESRCH (process doesn't exist)
+          // Report other errors like EPERM (permission denied)
+          const err = error as NodeJS.ErrnoException;
+          if (err.code !== "ESRCH") {
+            console.error(
+              `⚠️  Warning: Failed to kill process ${pid}: ${err.code} - ${err.message}`,
+            );
+          }
         }
       }, 2000);
     }
-  } catch {
-    // Process already dead or doesn't exist
+  } catch (error) {
+    // Report errors when killing the process
+    const err = error as NodeJS.ErrnoException;
+    if (err.code === "ESRCH") {
+      // Process not found is expected and fine
+      return;
+    }
+    console.error(
+      `⚠️  Warning: Failed to kill process ${pid}: ${err.code || "unknown error"} - ${err.message || String(error)}`,
+    );
   }
 }
 

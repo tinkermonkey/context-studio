@@ -81,10 +81,21 @@ async function globalSetup(): Promise<void> {
   fs.mkdirSync(testDbDir, { recursive: true });
   console.log("✅ Test databases cleaned\n");
 
-  // 2. Run database migrations
-  console.log("🔄 Running database migrations...");
+  // 2. Check if virtual environment exists (before using it)
+  console.log("🔧 Checking Python virtual environment...");
   const backendPath = path.resolve(__dirname, "../../local-server");
   const venvPythonPath = path.join(backendPath, ".venv/bin/python");
+
+  if (!fs.existsSync(venvPythonPath)) {
+    throw new Error(
+      `Virtual environment not found at ${venvPythonPath}. ` +
+        'Please run "python -m venv .venv" and "pip install -r requirements.txt" in /local-server',
+    );
+  }
+  console.log("✅ Virtual environment found\n");
+
+  // 3. Run database migrations
+  console.log("🔄 Running database migrations...");
 
   try {
     const testLocalDb = path.resolve(
@@ -132,16 +143,8 @@ async function globalSetup(): Promise<void> {
     throw error;
   }
 
-  // 3. Start Python backend
+  // 4. Start Python backend
   console.log("🐍 Starting Python backend (port 8888)...");
-
-  // Check if virtual environment exists
-  if (!fs.existsSync(venvPythonPath)) {
-    throw new Error(
-      `Virtual environment not found at ${venvPythonPath}. ` +
-        'Please run "python -m venv .venv" and "pip install -r requirements.txt" in /local-server',
-    );
-  }
 
   // Check if config.e2e.json exists
   const e2eConfigPath = path.join(backendPath, "config.e2e.json");
@@ -186,14 +189,9 @@ async function globalSetup(): Promise<void> {
   backendProcess.stderr?.on("data", (data) => {
     const message = data.toString().trim();
     if (message) {
-      // Always show errors, or all output if SHOW_BACKEND_LOGS is set
-      if (
-        showBackendLogs ||
-        message.toLowerCase().includes("error") ||
-        message.toLowerCase().includes("warning")
-      ) {
-        console.error(`   [Backend] ${message}`);
-      }
+      // Show all stderr output: Python tracebacks, errors, warnings, CRITICAL/FATAL messages, etc.
+      // This ensures startup failures and important diagnostics are never silently dropped
+      console.error(`   [Backend] ${message}`);
     }
   });
 
@@ -204,7 +202,7 @@ async function globalSetup(): Promise<void> {
     }
   });
 
-  // 4. Wait for backend to be ready (60s timeout for initial NLP model loading)
+  // 5. Wait for backend to be ready (60s timeout for initial NLP model loading)
   try {
     await waitForUrl("http://localhost:8888/api/v1/admin/health", 60000);
     console.log("✅ Backend ready\n");
@@ -216,7 +214,7 @@ async function globalSetup(): Promise<void> {
     throw error;
   }
 
-  // 5. Start frontend dev server
+  // 6. Start frontend dev server
   console.log("⚛️  Starting frontend (port 3888)...");
   const frontendPath = path.resolve(__dirname, "..");
 
@@ -261,9 +259,9 @@ async function globalSetup(): Promise<void> {
 
   frontendProcess.stderr?.on("data", (data) => {
     const message = data.toString().trim();
-    // Only log actual errors, not Vite's normal output
-    if (message && message.toLowerCase().includes("error")) {
-      console.error(`   [Frontend Error] ${message}`);
+    if (message) {
+      // Show all stderr output to capture startup failures and important diagnostics
+      console.error(`   [Frontend] ${message}`);
     }
   });
 
@@ -273,7 +271,7 @@ async function globalSetup(): Promise<void> {
     }
   });
 
-  // 6. Wait for frontend to be ready
+  // 7. Wait for frontend to be ready
   try {
     await waitForUrl("http://localhost:3888", 60000);
     console.log("✅ Frontend ready\n");
@@ -288,7 +286,7 @@ async function globalSetup(): Promise<void> {
     throw error;
   }
 
-  // 7. Store process PIDs for teardown (verified to exist above)
+  // 8. Store process PIDs for teardown (verified to exist above)
   process.env.E2E_BACKEND_PID = backendProcess.pid!.toString();
   process.env.E2E_FRONTEND_PID = frontendProcess.pid!.toString();
 
