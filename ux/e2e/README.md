@@ -269,8 +269,111 @@ Set `CI=true` environment variable to enable:
 4. Run with `npm run test:e2e:ui` to debug
 5. Commit the test file (Playwright artifacts are gitignored)
 
+## Test Contract & Selector Registry
+
+To prevent tests from hallucinating selectors and field names, Context Studio maintains an authoritative contract of all testable elements.
+
+### The Contract
+
+**See `app.context.md` at the repository root** for:
+- Complete page map (all routes and their purpose)
+- Entity model summary (field names sourced from `ux/src/api/client/types.ts`)
+- Key user flows (5–8 documented workflows agents must understand)
+- Invariants (rules the app guarantees)
+- Anti-patterns (things tests must NEVER do)
+
+### Selector Registry
+
+**See `selector-registry.yaml` at the repository root** for the canonical list of all `data-testid` values exposed by the application.
+
+#### Adding a New Selector
+
+When you add a new testable element to the UI:
+
+1. **Add the `data-testid` attribute** to your React component:
+   ```tsx
+   <button data-testid="my-entity-submit-button">Submit</button>
+   ```
+
+2. **Follow the naming convention**:
+   - Format: `{entity-type}-{component}-{action}`
+   - Example: `taxonomy-form-submit-button` or `class-table-add-button`
+   - Dynamic selectors: `{entity-type}-row-{id}` (append entity UUID)
+
+3. **Update the registry** (`selector-registry.yaml`):
+   ```yaml
+   forms:
+     my_entity_submit_button:
+       id: "my-entity-submit-button"
+       component: "MyEntityForm"
+       description: "Submit button for my entity form"
+       file: "ux/src/components/forms/my_entity_form.tsx"
+   ```
+
+4. **Validate your changes**:
+   ```bash
+   npm run validate-selectors
+   ```
+
+5. **Commit both files** (the component with `data-testid` and the updated `selector-registry.yaml`)
+
+#### Selector Naming Convention
+
+- Use hyphens, not underscores: `class-table` not `class_table`
+- Be descriptive but concise: `taxonomy-title-input` not `taxonomy-metadata-field-1`
+- Group related selectors: all form inputs use `{entity}-{field}-input`
+- Dynamic content uses templates: `{entity}-row-{id}` (filled in at runtime)
+
+#### Pattern Selectors
+
+For selectors that are generated dynamically (e.g., NodeTable components), mark them as `pattern: true` in the registry:
+
+```yaml
+tables:
+  dynamic_add_button:
+    id: "{entity-type}-add-button"
+    component: "NodeTable"
+    pattern: true
+    template_param: "entity-type (taxonomy, class, relationship, etc.)"
+```
+
+The validator will match test selectors against these patterns.
+
+### Validation
+
+The selector contract is validated automatically on every test run:
+
+```bash
+# Validate selectors only (without running tests)
+npm run validate-selectors
+
+# Validate selectors before running tests (automatic)
+npm run test         # Validates first, then runs vitest
+npm run test:e2e     # Validates first, then runs playwright
+```
+
+**Exit codes**:
+- `0` = All checks passed ✅
+- `1` = Hard failure: test references non-existent selector ❌
+- `2` = Warnings: selector in code but not in registry ⚠️
+
+Tests cannot proceed if a test references a non-existent selector. Warnings indicate the registry needs updating.
+
+### Anti-Patterns to Avoid
+
+Tests must NEVER:
+- ❌ Use `waitForTimeout()` without a condition (causes flaky tests)
+- ❌ Assert trivial conditions like `expect(true).toBe(true)`
+- ❌ Hardcode UUIDs (generate via factories instead)
+- ❌ Reference selectors not in the registry
+- ❌ Depend on UI text that may change
+- ❌ Leave test data behind (use `test.afterEach()` cleanup)
+
+See `app.context.md` for the full list of anti-patterns.
+
 ## Related Documentation
 
 - [Playwright Documentation](https://playwright.dev/docs/intro)
 - [Playwright Best Practices](https://playwright.dev/docs/best-practices)
 - [Playwright API Reference](https://playwright.dev/docs/api/class-test)
+- [App Context](../../app.context.md) — Authoritative product knowledge contract

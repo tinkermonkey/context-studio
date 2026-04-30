@@ -1,0 +1,617 @@
+# Context Studio Selector Registry
+# Authoritative list of all data-testid values exposed by the application
+# Format: Each selector entry includes the ID, component/page, and brief description
+
+# Forms & Inputs
+forms:
+  taxonomy_form:
+    id: "taxonomy-form"
+    component: "TaxonomyForm"
+    description: "Container for taxonomy create/edit form"
+    file: "ux/src/components/forms/taxonomy_form.tsx"
+
+  taxonomy_title_input:
+    id: "taxonomy-title-input"
+    component: "TaxonomyForm"
+    description: "Input field for taxonomy title"
+    file: "ux/src/components/forms/taxonomy_form.tsx"
+
+  taxonomy_description_input:
+    id: "taxonomy-description-input"
+    component: "TaxonomyForm"
+    description: "Input field for taxonomy description"
+    file: "ux/src/components/forms/taxonomy_form.tsx"
+
+  taxonomy_submit_button:
+    id: "taxonomy-submit-button"
+    component: "TaxonomyForm"
+    description: "Submit button for taxonomy form"
+    file: "ux/src/components/forms/taxonomy_form.tsx"
+
+  concept_scheme_form:
+    id: "concept-scheme-form"
+    component: "ConceptSchemeForm"
+    description: "Container for concept scheme create/edit form"
+    file: "ux/src/components/forms/concept_scheme_form.tsx"
+
+  concept_scheme_title_input:
+    id: "concept-scheme-title-input"
+    component: "ConceptSchemeForm"
+    description: "Input field for concept scheme title"
+    file: "ux/src/components/forms/concept_scheme_form.tsx"
+
+  concept_scheme_description_input:
+    id: "concept-scheme-description-input"
+    component: "ConceptSchemeForm"
+    description: "Input field for concept scheme description"
+    file: "ux/src/components/forms/concept_scheme_form.tsx"
+
+  concept_scheme_taxonomy_selector:
+    id: "concept-scheme-taxonomy-selector"
+    component: "ConceptSchemeForm"
+    description: "Dropdown to select parent taxonomy"
+    file: "ux/src/components/forms/concept_scheme_form.tsx"
+
+  concept_scheme_submit_button:
+    id: "concept-scheme-submit-button"
+    component: "ConceptSchemeForm"
+    description: "Submit button for concept scheme form"
+    file: "ux/src/components/forms/concept_scheme_form.tsx"
+
+  class_form:
+    id: "class-form"
+    component: "ClassForm"
+    description: "Container for class create/edit form"
+    file: "ux/src/components/forms/class_form.tsx"
+
+  class_title_input:
+    id: "class-title-input"
+    component: "ClassForm"
+    description: "Input field for class title"
+    file: "ux/src/components/forms/class_form.tsx"
+
+  class_description_input:
+    id: "class-description-input"
+    component: "ClassForm"
+    description: "Input field for class description"
+    file: "ux/src/components/forms/class_form.tsx"
+
+  class_concept_scheme_selector:
+    id: "class-concept-scheme-selector"
+    component: "ClassForm"
+    description: "Dropdown to select parent concept scheme"
+    file: "ux/src/components/forms/class_form.tsx"
+
+  class_submit_button:
+    id: "class-submit-button"
+    component: "ClassForm"
+    description: "Submit button for class form"
+    file: "ux/src/components/forms/class_form.tsx"
+
+  domain_form:
+    id: "domain-form"
+    component: "DomainForm"
+    description: "Container for domain create/edit form"
+    file: "ux/src/components/forms/domain_form.tsx"
+
+  domain_title_input:
+    id: "domain-title-input"
+    component: "DomainForm"
+    description: "Input field for domain title"
+    file: "ux/src/components/forms/domain_form.tsx"
+
+  domain_description_input:
+    id: "domain-description-input"
+    component: "DomainForm"
+    description: "Input field for domain description"
+    file: "ux/src/components/forms/domain_form.tsx"
+
+  domain_taxonomy_selector:
+    id: "domain-taxonomy-selector"
+    component: "DomainForm"
+    description: "Dropdown to select parent taxonomy"
+    file: "ux/src/components/forms/domain_form.tsx"
+
+  domain_submit_button:
+    id: "domain-submit-button"
+    component: "DomainForm"
+    description: "Submit button for domain form"
+    file: "ux/src/components/forms/domain_form.tsx"
+
+  layer_form:
+    id: "layer-form"
+    component: "LayerForm"
+    description: "Container for layer create/edit form"
+    file: "ux/src/components/forms/layer_form.tsx"
+
+  layer_title_input:
+    id: "layer-title-input"
+    component: "LayerForm"
+    description: "Input field for layer title"
+    file: "ux/src/components/forms/layer_form.tsx"
+
+  layer_description_input:
+    id: "layer-description-input"
+    component: "LayerForm"
+    description: "Input field for layer description"
+    file: "ux/src/components/forms/layer_form.tsx"
+
+  layer_submit_button:
+    id: "layer-submit-button"
+    component: "LayerForm"
+    description: "Submit button for layer form"
+    file: "ux/src/components/forms/layer_form.tsx"
+
+  term_form:
+    id: "term-form"
+    component: "TermForm"
+    description: "Container for term create/edit form"
+    file: "ux/src/components/forms/term_form.tsx"
+
+  term_title_input:
+    id: "term-title-input"
+    component: "TermForm"
+    description: "Input field for term title"
+    file: "ux/src/components/forms/term_form.tsx"
+
+  term_description_input:
+    id: "term-description-input"
+    component: "TermForm"
+    description: "Input field for term description"
+    file: "ux/src/components/forms/term_form.tsx"
+
+  term_domain_selector:
+    id: "term-domain-selector"
+    component: "TermForm"
+    description: "Dropdown to select parent domain"
+    file: "ux/src/components/forms/term_form.tsx"
+
+  term_submit_button:
+    id: "term-submit-button"
+    component: "TermForm"
+    description: "Submit button for term form"
+    file: "ux/src/components/forms/term_form.tsx"
+
+  predicate_form:
+    id: "predicate-form"
+    component: "PredicateForm"
+    description: "Container for predicate create/edit form"
+    file: "ux/src/components/forms/predicate_form.tsx"
+
+  predicate_title_input:
+    id: "predicate-title-input"
+    component: "PredicateForm"
+    description: "Input field for predicate title"
+    file: "ux/src/components/forms/predicate_form.tsx"
+
+  predicate_identifier_input:
+    id: "predicate-identifier-input"
+    component: "PredicateForm"
+    description: "Input field for predicate identifier (RDF-style URI)"
+    file: "ux/src/components/forms/predicate_form.tsx"
+
+  predicate_definition_input:
+    id: "predicate-definition-input"
+    component: "PredicateForm"
+    description: "Input field for predicate definition text"
+    file: "ux/src/components/forms/predicate_form.tsx"
+
+  predicate_submit_button:
+    id: "predicate-submit-button"
+    component: "PredicateForm"
+    description: "Submit button for predicate form"
+    file: "ux/src/components/forms/predicate_form.tsx"
+
+  property_definition_form:
+    id: "property-definition-form"
+    component: "PropertyDefinitionForm"
+    description: "Container for property definition create/edit form"
+    file: "ux/src/components/forms/property_definition_form.tsx"
+
+  property_definition_title_input:
+    id: "property-definition-title-input"
+    component: "PropertyDefinitionForm"
+    description: "Input field for property definition title"
+    file: "ux/src/components/forms/property_definition_form.tsx"
+
+  property_definition_identifier_input:
+    id: "property-definition-identifier-input"
+    component: "PropertyDefinitionForm"
+    description: "Input field for property definition identifier"
+    file: "ux/src/components/forms/property_definition_form.tsx"
+
+  property_definition_description_input:
+    id: "property-definition-description-input"
+    component: "PropertyDefinitionForm"
+    description: "Input field for property definition description"
+    file: "ux/src/components/forms/property_definition_form.tsx"
+
+  property_definition_submit_button:
+    id: "property-definition-submit-button"
+    component: "PropertyDefinitionForm"
+    description: "Submit button for property definition form"
+    file: "ux/src/components/forms/property_definition_form.tsx"
+
+# Tables & Data Display (Dynamic - Template Pattern)
+tables:
+  dynamic_table_toolbar:
+    id: "{entity-type}-table-toolbar"
+    component: "NodeTable"
+    description: "Toolbar above entity table (search, add, actions)"
+    file: "ux/src/components/node_tables/node_table.tsx"
+    pattern: true
+    template_param: "entity-type (taxonomy, class, relationship, etc.)"
+
+  dynamic_search_input:
+    id: "{entity-type}-search-input"
+    component: "NodeTable"
+    description: "Search/filter input in table toolbar"
+    file: "ux/src/components/node_tables/node_table.tsx"
+    pattern: true
+
+  dynamic_add_button:
+    id: "{entity-type}-add-button"
+    component: "NodeTable"
+    description: "Button to create new entity in table"
+    file: "ux/src/components/node_tables/node_table.tsx"
+    pattern: true
+
+  dynamic_actions_dropdown:
+    id: "{entity-type}-actions-dropdown"
+    component: "NodeTable"
+    description: "Dropdown menu for bulk actions (move, delete)"
+    file: "ux/src/components/node_tables/node_table.tsx"
+    pattern: true
+
+  dynamic_move_selected_action:
+    id: "{entity-type}-move-selected-action"
+    component: "NodeTable"
+    description: "Menu item to move selected entities"
+    file: "ux/src/components/node_tables/node_table.tsx"
+    pattern: true
+
+  dynamic_delete_selected_action:
+    id: "{entity-type}-delete-selected-action"
+    component: "NodeTable"
+    description: "Menu item to delete selected entities"
+    file: "ux/src/components/node_tables/node_table.tsx"
+    pattern: true
+
+  dynamic_table:
+    id: "{entity-type}-table"
+    component: "NodeTable"
+    description: "Main data table for listing entities"
+    file: "ux/src/components/node_tables/node_table.tsx"
+    pattern: true
+
+  dynamic_table_row:
+    id: "{entity-type}-row-{id}"
+    component: "NodeTable"
+    description: "Individual table row for entity"
+    file: "ux/src/components/node_tables/node_table.tsx"
+    pattern: true
+    template_param: "id (entity UUID)"
+
+  dynamic_delete_modal:
+    id: "{entity-type}-delete-modal"
+    component: "NodeTable"
+    description: "Confirmation modal for deleting entities"
+    file: "ux/src/components/node_tables/node_table.tsx"
+    pattern: true
+
+  dynamic_delete_cancel_button:
+    id: "{entity-type}-delete-cancel-button"
+    component: "NodeTable"
+    description: "Cancel button in delete confirmation modal"
+    file: "ux/src/components/node_tables/node_table.tsx"
+    pattern: true
+
+  dynamic_delete_confirm_button:
+    id: "{entity-type}-delete-confirm-button"
+    component: "NodeTable"
+    description: "Confirm button in delete confirmation modal"
+    file: "ux/src/components/node_tables/node_table.tsx"
+    pattern: true
+
+  dynamic_move_modal:
+    id: "{entity-type}-move-modal"
+    component: "NodeTable"
+    description: "Modal for moving entities to different parent"
+    file: "ux/src/components/node_tables/node_table.tsx"
+    pattern: true
+
+  dynamic_create_modal:
+    id: "{entity-type}-create-modal"
+    component: "NodeTable"
+    description: "Modal for creating new entity"
+    file: "ux/src/components/node_tables/node_table.tsx"
+    pattern: true
+
+  dynamic_edit_modal:
+    id: "{entity-type}-edit-modal"
+    component: "NodeTable"
+    description: "Modal for editing existing entity"
+    file: "ux/src/components/node_tables/node_table.tsx"
+    pattern: true
+
+# Selectors (Component)
+selectors:
+  taxonomy_selector:
+    id: "taxonomy-selector"
+    component: "TaxonomySelector"
+    description: "Dropdown/selector for choosing a taxonomy"
+    file: "ux/src/components/node_selectors/taxonomy_selector.tsx"
+
+  concept_scheme_selector:
+    id: "concept-scheme-selector"
+    component: "ConceptSchemeSelector"
+    description: "Dropdown/selector for choosing a concept scheme"
+    file: "ux/src/components/node_selectors/concept_scheme_selector.tsx"
+
+  layer_selector:
+    id: "layer-selector"
+    component: "LayerSelector"
+    description: "Dropdown/selector for choosing a layer"
+    file: "ux/src/components/node_selectors/layer_selector.tsx"
+
+  structure_node_selector:
+    id: "structure-node-selector"
+    component: "StructureNodeSelector"
+    description: "Advanced selector for choosing structure nodes"
+    file: "ux/src/components/node_selectors/structure_node_selector.tsx"
+
+  domain_selector:
+    id: "domain-selector"
+    component: "DomainSelector"
+    description: "Dropdown/selector for choosing a domain"
+    file: "ux/src/components/node_selectors/domain_selector.tsx"
+
+  portal_record_selector:
+    id: "portal-record-selector"
+    component: "PortalRecordSelector"
+    description: "Selector for choosing portal records"
+    file: "ux/src/components/node_selectors/portal_record_selector.tsx"
+
+# Node Details & Display
+node_details:
+  node_detail_title:
+    id: "node-detail-title"
+    component: "StructureNodeDetails"
+    description: "Title heading in entity detail view"
+    file: "ux/src/components/node_details/structure_node_details.tsx"
+
+  node_detail_id:
+    id: "node-detail-id"
+    component: "StructureNodeDetails"
+    description: "Display of entity ID in detail view"
+    file: "ux/src/components/node_details/structure_node_details.tsx"
+
+  node_detail_type:
+    id: "node-detail-type"
+    component: "StructureNodeDetails"
+    description: "Display of entity type in detail view"
+    file: "ux/src/components/node_details/structure_node_details.tsx"
+
+  node_detail_definition:
+    id: "node-detail-definition"
+    component: "StructureNodeDetails"
+    description: "Definition/description display in detail view"
+    file: "ux/src/components/node_details/structure_node_details.tsx"
+
+  node_detail_definition_section:
+    id: "node-detail-definition-section"
+    component: "StructureNodeDetails"
+    description: "Section container for definition area"
+    file: "ux/src/components/node_details/structure_node_details.tsx"
+
+  node_attributes_section:
+    id: "node-attributes-section"
+    component: "StructureNodeDetails"
+    description: "Section displaying entity attributes/properties"
+    file: "ux/src/components/node_details/structure_node_details.tsx"
+
+  node_children_section:
+    id: "node-children-section"
+    component: "StructureNodeDetails"
+    description: "Section displaying child entities or relationships"
+    file: "ux/src/components/node_details/structure_node_details.tsx"
+
+# Graph Visualization
+graph:
+  graph_container:
+    id: "graph-container"
+    component: "GraphView"
+    description: "Container for graph visualization"
+    file: "ux/src/components/reference/GraphView/GraphView.tsx"
+
+  graph_canvas:
+    id: "graph-canvas"
+    component: "GraphView"
+    description: "Canvas element for graph rendering"
+    file: "ux/src/components/reference/GraphView/GraphView.tsx"
+
+  graph_empty_state:
+    id: "graph-empty-state"
+    component: "GraphView"
+    description: "Empty state message when no graph data"
+    file: "ux/src/components/reference/GraphView/GraphView.tsx"
+
+  graph_node_details:
+    id: "graph-node-details"
+    component: "GraphView"
+    description: "Details panel for selected graph node"
+    file: "ux/src/components/reference/GraphView/GraphView.tsx"
+
+  graph_statistics:
+    id: "graph-statistics"
+    component: "GraphView"
+    description: "Statistics panel for graph metrics"
+    file: "ux/src/components/reference/GraphView/GraphView.tsx"
+
+  tree_menu:
+    id: "tree-menu"
+    component: "TreeMenu"
+    description: "Tree menu for navigating entity hierarchy"
+    file: "ux/src/components/panels/TreeChartPanel.tsx"
+
+# Reference/Knowledge Graph Integration
+reference:
+  reference_search_input:
+    id: "reference-search-input"
+    component: "UnifiedSearch"
+    description: "Search input for external knowledge sources"
+    file: "ux/src/components/reference/UnifiedSearch/UnifiedSearch.tsx"
+
+  reference_search_button:
+    id: "reference-search-button"
+    component: "UnifiedSearch"
+    description: "Button to execute search"
+    file: "ux/src/components/reference/UnifiedSearch/UnifiedSearch.tsx"
+
+  reference_source_filter:
+    id: "reference-source-filter"
+    component: "SourceSelector"
+    description: "Filter dropdown for selecting knowledge sources"
+    file: "ux/src/components/reference/UnifiedSearch/SourceSelector.tsx"
+
+  reference_results_list:
+    id: "reference-results-list"
+    component: "SearchResults"
+    description: "List of search results from knowledge sources"
+    file: "ux/src/components/reference/UnifiedSearch/SearchResults.tsx"
+
+# Pipeline Configuration & Testing
+pipelines:
+  pipeline_flavors_container:
+    id: "pipeline-flavors-container"
+    component: "PipelineFlavorsList"
+    description: "Container for pipeline flavors list"
+    file: "ux/src/components/llm_pipelines/PipelineFlavorsList.tsx"
+
+  pipeline_flavors_list:
+    id: "pipeline-flavors-list"
+    component: "PipelineFlavorsList"
+    description: "List of configured pipeline flavors"
+    file: "ux/src/components/llm_pipelines/PipelineFlavorsList.tsx"
+
+  pipeline_flavor_create_button:
+    id: "pipeline-flavor-create-button"
+    component: "PipelineFlavorsList"
+    description: "Button to create new pipeline flavor"
+    file: "ux/src/components/llm_pipelines/PipelineFlavorsList.tsx"
+
+  pipeline_flavor_delete_modal:
+    id: "pipeline-flavor-delete-modal"
+    component: "PipelineFlavorsList"
+    description: "Confirmation modal for deleting a pipeline"
+    file: "ux/src/components/llm_pipelines/PipelineFlavorsList.tsx"
+
+  pipeline_flavor_delete_cancel_button:
+    id: "pipeline-flavor-delete-cancel-button"
+    component: "PipelineFlavorsList"
+    description: "Cancel button in delete pipeline modal"
+    file: "ux/src/components/llm_pipelines/PipelineFlavorsList.tsx"
+
+  pipeline_flavor_delete_confirm_button:
+    id: "pipeline-flavor-delete-confirm-button"
+    component: "PipelineFlavorsList"
+    description: "Confirm button in delete pipeline modal"
+    file: "ux/src/components/llm_pipelines/PipelineFlavorsList.tsx"
+
+  pipeline_test_runner:
+    id: "pipeline-test-runner"
+    component: "PipelineTestRunner"
+    description: "Container for pipeline testing interface"
+    file: "ux/src/components/rag_experiments/PipelineTestRunner.tsx"
+
+  pipeline_run_tests_button:
+    id: "pipeline-run-tests-button"
+    component: "PipelineTestRunner"
+    description: "Button to execute pipeline tests"
+    file: "ux/src/components/rag_experiments/PipelineTestRunner.tsx"
+
+# RAG Experiments
+rag_experiments:
+  test_paragraph_list:
+    id: "test-paragraph-list"
+    component: "TestParagraphList"
+    description: "List of test paragraphs for RAG testing"
+    file: "ux/src/components/rag_experiments/TestParagraphList.tsx"
+
+  test_paragraph_create_button:
+    id: "test-paragraph-create-button"
+    component: "TestParagraphList"
+    description: "Button to create new test paragraph"
+    file: "ux/src/components/rag_experiments/TestParagraphList.tsx"
+
+  test_paragraph_table:
+    id: "test-paragraph-table"
+    component: "TestParagraphList"
+    description: "Table of test paragraphs"
+    file: "ux/src/components/rag_experiments/TestParagraphList.tsx"
+
+  test_paragraph_editor:
+    id: "test-paragraph-editor"
+    component: "TestParagraphEditor"
+    description: "Editor for test paragraph content"
+    file: "ux/src/components/rag_experiments/TestParagraphEditor.tsx"
+
+  test_paragraph_text_input:
+    id: "test-paragraph-text-input"
+    component: "TestParagraphEditor"
+    description: "Text input field for paragraph content"
+    file: "ux/src/components/rag_experiments/TestParagraphEditor.tsx"
+
+  test_paragraph_submit_button:
+    id: "test-paragraph-submit-button"
+    component: "TestParagraphEditor"
+    description: "Submit button for test paragraph"
+    file: "ux/src/components/rag_experiments/TestParagraphEditor.tsx"
+
+  test_paragraph_cancel_button:
+    id: "test-paragraph-cancel-button"
+    component: "TestParagraphEditor"
+    description: "Cancel button for test paragraph editor"
+    file: "ux/src/components/rag_experiments/TestParagraphEditor.tsx"
+
+  test_results_viewer:
+    id: "test-results-viewer"
+    component: "TestResultsViewer"
+    description: "Viewer for RAG test results"
+    file: "ux/src/components/rag_experiments/TestResultsViewer.tsx"
+
+  annotation_selector:
+    id: "annotation-selector"
+    component: "AnnotationSelector"
+    description: "Selector for choosing annotations in RAG tests"
+    file: "ux/src/components/rag_experiments/AnnotationSelector.tsx"
+
+# Traceability & Monitoring
+traceability:
+  selection_tracker:
+    id: "selection-tracker"
+    component: "SelectionTracker"
+    description: "Tracker for user selections in LLM operations"
+    file: "ux/src/components/llm_traceability/SelectionTracker.tsx"
+
+# Layout
+layout:
+  cs_main_title:
+    id: "cs-main-title"
+    component: "CsMainTitle"
+    description: "Main title/header element in layout"
+    file: "ux/src/components/layout/cs_main.tsx"
+
+# Error Handling
+errors:
+  custom_error:
+    id: "custom-error"
+    component: "CustomError"
+    description: "Custom error message display"
+    file: "ux/src/components/ui/custom_error.tsx"
+
+  custom_loading:
+    id: "custom-loading"
+    component: "CustomLoading"
+    description: "Custom loading spinner/indicator"
+    file: "ux/src/components/ui/custom_loading.tsx"

@@ -1,0 +1,274 @@
+#!/usr/bin/env node
+
+/**
+ * Test Contract Validator
+ *
+ * Validates that:
+ * 1. All selectors used in tests exist in the codebase
+ * 2. All selectors in the codebase are documented in the registry
+ * 3. Dynamic selectors follow the expected template pattern
+ *
+ * Exit codes:
+ * 0 = all checks passed
+ * 1 = hard failure (test references non-existent selector)
+ * 2 = warnings only (selector in code but not in registry)
+ */
+
+import fs from "fs";
+import path from "path";
+import yaml from "js-yaml";
+
+interface ValidationResult {
+  hasErrors: boolean;
+  hasWarnings: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+const result: ValidationResult = {
+  hasErrors: false,
+  hasWarnings: false,
+  errors: [],
+  warnings: [],
+};
+
+// Extract all data-testid values from source code
+function extractSelectorsFromCode(directory: string): Set<string> {
+  const selectors = new Set<string>();
+  const dataTestIdRegex = /data-testid=["']([^"']+)["']/g;
+
+  function walkDir(dir: string) {
+    const files = fs.readdirSync(dir);
+
+    for (const file of files) {
+      const filePath = path.join(dir, file);
+      const stat = fs.statSync(filePath);
+
+      // Skip node_modules, .git, dist, etc.
+      if (
+        file.startsWith(".") ||
+        file === "node_modules" ||
+        file === "dist" ||
+        file === "build"
+      ) {
+        continue;
+      }
+
+      if (stat.isDirectory()) {
+        walkDir(filePath);
+      } else if (
+        file.endsWith(".tsx") ||
+        file.endsWith(".ts") ||
+        file.endsWith(".jsx") ||
+        file.endsWith(".js")
+      ) {
+        try {
+          const content = fs.readFileSync(filePath, "utf-8");
+          let match;
+          while ((match = dataTestIdRegex.exec(content)) !== null) {
+            selectors.add(match[1]);
+          }
+        } catch (err) {
+          // Skip files that can't be read
+        }
+      }
+    }
+  }
+
+  walkDir(directory);
+  return selectors;
+}
+
+// Extract all data-testid references from E2E tests only
+function extractSelectorsFromE2ETests(testDirectory: string): Set<string> {
+  const selectors = new Set<string>();
+
+  // Patterns to match selector references in tests
+  const patterns = [
+    /data-testid=["']([^"']+)["']/g,
+    /getByTestId\(["']([^"']+)["']\)/g,
+    /getByTestId\(`([^`]+)`\)/g,
+    /\[data-testid=["']([^"']+)["']\]/g,
+    /locator\(\['data-testid=([^']+)'\]\)/g,
+    /locator\(['"][^'"].*data-testid=['"]([^'"]+)['"]/g,
+  ];
+
+  function walkDir(dir: string) {
+    if (!fs.existsSync(dir)) {
+      return;
+    }
+
+    const files = fs.readdirSync(dir);
+
+    for (const file of files) {
+      const filePath = path.join(dir, file);
+      const stat = fs.statSync(filePath);
+
+      if (stat.isDirectory()) {
+        walkDir(filePath);
+      } else if (
+        file.endsWith(".spec.ts") ||
+        file.endsWith(".spec.tsx")
+      ) {
+        try {
+          const content = fs.readFileSync(filePath, "utf-8");
+
+          for (const pattern of patterns) {
+            let match;
+            while ((match = pattern.exec(content)) !== null) {
+              const selector = match[1];
+              // Skip template literals with variables
+              if (!selector.includes("${")) {
+                selectors.add(selector);
+              }
+            }
+          }
+        } catch (err) {
+          // Skip files that can't be read
+        }
+      }
+    }
+  }
+
+  walkDir(testDirectory);
+  return selectors;
+}
+
+// Load registry and extract all documented selectors
+function loadRegistry(): {
+  documented: Set<string>;
+  patterns: Map<string, string>;
+} {
+  const registryPath = path.join(process.cwd(), "selector-registry.yaml");
+
+  if (!fs.existsSync(registryPath)) {
+    console.error("❌ selector-registry.yaml not found");
+    process.exit(1);
+  }
+
+  const content = fs.readFileSync(registryPath, "utf-8");
+  const registry = yaml.load(content) as Record<
+    string,
+    Record<string, { id: string; pattern?: boolean }>
+  >;
+
+  const documented = new Set<string>();
+  const patterns = new Map<string, string>();
+
+  for (const section of Object.values(registry)) {
+    for (const entry of Object.values(section)) {
+      if (entry.pattern) {
+        // Store pattern with template placeholders
+        patterns.set(
+          entry.id.replace(/{[^}]+}/g, "*"),
+          entry.id
+        );
+      } else {
+        documented.add(entry.id);
+      }
+    }
+  }
+
+  return { documented, patterns };
+}
+
+// Check if a selector matches a pattern
+function matchesPattern(selector: string, patterns: Map<string, string>): boolean {
+  for (const [pattern] of patterns) {
+    const regexPattern = pattern.replace(/\*/g, "[^-]+");
+    if (new RegExp(`^${regexPattern}$`).test(selector)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Main validation
+function validate() {
+  console.log("🔍 Validating test contract...\n");
+
+  const srcDir = path.join(process.cwd(), "src");
+  const e2eDir = path.join(process.cwd(), "e2e", "tests");
+
+  // Extract selectors from code and E2E tests only (not unit tests)
+  const codeSelectors = extractSelectorsFromCode(srcDir);
+  const testSelectors = extractSelectorsFromE2ETests(e2eDir);
+
+  // Load registry
+  const { documented, patterns } = loadRegistry();
+
+  console.log(`📊 Found ${codeSelectors.size} selectors in source code`);
+  console.log(`📊 Found ${testSelectors.size} selectors in tests`);
+  console.log(`📊 Found ${documented.size} documented selectors\n`);
+
+  // Check 1: Test selectors must exist in code or match a pattern
+  console.log("✅ Checking test selectors against code...");
+  for (const testSelector of testSelectors) {
+    if (
+      !codeSelectors.has(testSelector) &&
+      !matchesPattern(testSelector, patterns)
+    ) {
+      result.hasErrors = true;
+      result.errors.push(
+        `❌ Test references non-existent selector: "${testSelector}"`
+      );
+    }
+  }
+
+  if (result.errors.length === 0) {
+    console.log(
+      "✓ All test selectors exist in code or match documented patterns\n"
+    );
+  } else {
+    console.log(`✗ Found ${result.errors.length} invalid test selectors\n`);
+  }
+
+  // Check 2: Code selectors should be in registry (warnings only)
+  console.log("✅ Checking code selectors against registry...");
+  for (const codeSelector of codeSelectors) {
+    if (!documented.has(codeSelector) && !matchesPattern(codeSelector, patterns)) {
+      result.hasWarnings = true;
+      result.warnings.push(
+        `⚠️  Code selector not in registry: "${codeSelector}"`
+      );
+    }
+  }
+
+  if (result.warnings.length === 0) {
+    console.log("✓ All code selectors are documented in registry\n");
+  } else {
+    console.log(
+      `⚠️  Found ${result.warnings.length} undocumented code selectors (warnings)\n`
+    );
+  }
+
+  // Print results
+  if (result.errors.length > 0) {
+    console.log("❌ HARD FAILURES (tests reference non-existent selectors):");
+    result.errors.forEach((err) => console.log(`  ${err}`));
+    console.log();
+  }
+
+  if (result.warnings.length > 0) {
+    console.log("⚠️  WARNINGS (code selectors not in registry):");
+    result.warnings.slice(0, 10).forEach((warn) => console.log(`  ${warn}`));
+    if (result.warnings.length > 10) {
+      console.log(`  ... and ${result.warnings.length - 10} more`);
+    }
+    console.log();
+  }
+
+  // Summary
+  if (result.hasErrors) {
+    console.log("❌ Validation FAILED: Tests reference non-existent selectors");
+    process.exit(1);
+  } else if (result.hasWarnings) {
+    console.log("⚠️  Validation completed with warnings: Update selector registry");
+    process.exit(2);
+  } else {
+    console.log("✅ Validation PASSED: All selectors valid");
+    process.exit(0);
+  }
+}
+
+validate();
