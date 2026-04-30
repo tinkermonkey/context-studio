@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import {
   Spinner,
   Accordion,
@@ -13,8 +13,6 @@ import { NlpTokenAnalysisPanel } from "@/components/nlp/NlpTokenAnalysisPanel";
 import { NlpRefinementPanel } from "@/components/nlp/NlpRefinementPanel";
 import { NlpGenerationResult } from "@/components/nlp/NlpGenerationResult";
 import { useNlpAnalysisStore } from "@/stores/nlpAnalysisStore";
-// import { useWordSenses } from "@/api/hooks/ontologyClasses/useWordSenses";
-// import { WordSenseSelector } from "@/components/graphs/nlp_concept/WordSenseSelector";
 import type { NodeContext } from "@/components/nlp/types";
 
 interface NlpAnalysisPanelProps {
@@ -64,17 +62,6 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
     return words.length > 1;
   }, [text]);
 
-  // Fetch persisted word senses if nodeId is provided
-  // TODO: Implement word senses API when backend support is available
-  // const {
-  //   data: persistedWordSenses = [],
-  //   isLoading: wordSensesLoading,
-  //   refetch: refetchWordSenses,
-  // } = useWordSenses(nodeId || "", {
-  //   enabled: !!nodeId && isMultiWord,
-  // } as any);
-  const persistedWordSenses = [];
-  const wordSensesLoading = false;
 
   // Custom hook for API call
   const lowercasedText = text.toLowerCase();
@@ -284,10 +271,6 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
     [getNodeContext],
   );
 
-  // Callback to refetch word senses after save (deprecated - word senses feature not yet available)
-  const handleWordSensesSaved = useCallback(() => {
-    // No-op: word senses feature is not yet implemented
-  }, []);
 
   return (
     <>
@@ -300,31 +283,6 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
         </div>
       ) : analysisResult ? (
         <div className="space-y-3">
-          {/* Multi-word chart for titles with multiple words */}
-          {/* Word Sense Analysis feature temporarily disabled - awaiting backend API implementation */}
-          {/* {isMultiWord && nodeId && (
-            <div>
-              <h4 className="mb-2 text-lg font-bold">
-                {textTitle} Word Sense Analysis
-              </h4>
-              {wordSensesLoading ? (
-                <div className="flex items-center gap-3 py-4">
-                  <Spinner size="sm" />
-                  <span className="text-sm text-gray-600">
-                    Loading word senses...
-                  </span>
-                </div>
-              ) : (
-                <WordSenseSelector
-                  title={text}
-                  persistedSenses={persistedWordSenses}
-                  nodeId={nodeId}
-                  onSaveComplete={handleWordSensesSaved}
-                />
-              )}
-            </div>
-          )} */}
-
           <div>
             <h4 className="mb-2 text-lg font-bold">
               {textTitle} Token Analysis
