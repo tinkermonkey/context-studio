@@ -404,6 +404,8 @@ Once tests pass and are reviewed:
 
 ## Test Healing Workflow
 
+**STATUS: Planned — The healer agent specification exists at `.github/playwright-healer.md`, but CI integration and draft-PR creation are not yet implemented.**
+
 When tests fail in CI, a healer agent can analyze the failure and propose a fix. The healer is the most dangerous of the three agents because its mistakes silently mask real bugs — guardrails matter.
 
 ### Overview
@@ -414,6 +416,8 @@ The healer agent inspects a failing test, categorizes the failure, and either pr
 Test Fails in CI → Healer Analyzes → Categorizes Failure → Opens Draft PR or Bug Report
    (automatic)      (Claude agent)    (3 categories)        (for human review)
 ```
+
+**Note**: The workflow diagram above shows the intended workflow once CI integration is complete. Today, the healer specification and guardrails are documented but not yet wired into CI.
 
 ### When Tests Fail
 
@@ -550,9 +554,10 @@ Next step: Create a product issue to investigate and fix the backend.
 
 ### Implementation
 
-For detailed healer specifications and guardrail validation tests, see:
-- `.github/playwright-healer.md` — Healer agent specification and guardrails
-- `ux/e2e/tests/healer-guardrails.spec.ts` — Tests verifying guardrails are enforced
+For detailed healer specifications and guardrails, see:
+- `.github/playwright-healer.md` — Healer agent specification with complete guardrail definitions
+
+The healer guardrails are enforced through agent instructions in the spec, not through automated tests. When CI integration is complete, a test suite will validate that the agent refuses anti-patterns and properly categorizes failures.
 
 ## Manual Test Development
 
