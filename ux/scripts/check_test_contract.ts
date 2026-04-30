@@ -36,7 +36,7 @@ const result: ValidationResult = {
 function extractSelectorsFromCode(directory: string): Set<string> {
   const selectors = new Set<string>();
   // Match both literal attributes and JSX expressions
-  const dataTestIdRegex = /data-testid=["'{]([^"'}`]+)["}]/g;
+  const dataTestIdRegex = /data-testid=["']([^"']+)["']/g;
   const jsxExpressionRegex = /data-testid=\{\s*`([^`]+)`\s*\}/g;
   const propRegex = /dataTestId\s*=\s*["']([^"']+)["']/g;
 

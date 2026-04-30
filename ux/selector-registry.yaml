@@ -454,6 +454,69 @@ graph:
     description: "Statistics panel for graph metrics"
     file: "ux/src/components/reference/GraphView/GraphView.tsx"
 
+  graph_node:
+    id: "graph-node"
+    component: "GraphView"
+    description: "Node element in graph visualization"
+    file: "ux/src/components/reference/GraphView/GraphView.tsx"
+    status: "not_yet_implemented"
+
+  graph_edge:
+    id: "graph-edge"
+    component: "GraphView"
+    description: "Edge/connection line in graph visualization"
+    file: "ux/src/components/reference/GraphView/GraphView.tsx"
+    status: "not_yet_implemented"
+
+  graph_node_label:
+    id: "graph-node-label"
+    component: "GraphView"
+    description: "Label text on graph nodes"
+    file: "ux/src/components/reference/GraphView/GraphView.tsx"
+    status: "not_yet_implemented"
+
+  graph_zoom_in:
+    id: "graph-zoom-in"
+    component: "GraphView"
+    description: "Zoom in button for graph"
+    file: "ux/src/components/reference/GraphView/GraphView.tsx"
+    status: "not_yet_implemented"
+
+  graph_zoom_out:
+    id: "graph-zoom-out"
+    component: "GraphView"
+    description: "Zoom out button for graph"
+    file: "ux/src/components/reference/GraphView/GraphView.tsx"
+    status: "not_yet_implemented"
+
+  graph_fit_view:
+    id: "graph-fit-view"
+    component: "GraphView"
+    description: "Fit view button for graph"
+    file: "ux/src/components/reference/GraphView/GraphView.tsx"
+    status: "not_yet_implemented"
+
+  graph_edge_tooltip:
+    id: "graph-edge-tooltip"
+    component: "GraphView"
+    description: "Tooltip for edge information in graph"
+    file: "ux/src/components/reference/GraphView/GraphView.tsx"
+    status: "not_yet_implemented"
+
+  graph_filter_button:
+    id: "graph-filter-button"
+    component: "GraphView"
+    description: "Button to open graph filters"
+    file: "ux/src/components/reference/GraphView/GraphView.tsx"
+    status: "not_yet_implemented"
+
+  graph_filter_option:
+    id: "graph-filter-option"
+    component: "GraphView"
+    description: "Filter option in graph filter menu"
+    file: "ux/src/components/reference/GraphView/GraphView.tsx"
+    status: "not_yet_implemented"
+
   tree_menu:
     id: "tree-menu"
     component: "TreeMenu"
@@ -485,6 +548,34 @@ reference:
     component: "SearchResults"
     description: "List of search results from knowledge sources"
     file: "ux/src/components/reference/UnifiedSearch/SearchResults.tsx"
+
+  reference_search_results:
+    id: "reference-search-results"
+    component: "SearchResults"
+    description: "Container for search results from knowledge sources"
+    file: "ux/src/components/reference/UnifiedSearch/SearchResults.tsx"
+    status: "not_yet_implemented"
+
+  reference_search_result_item:
+    id: "reference-search-result-item"
+    component: "SearchResults"
+    description: "Individual search result item"
+    file: "ux/src/components/reference/UnifiedSearch/SearchResults.tsx"
+    status: "not_yet_implemented"
+
+  reference_result_detail:
+    id: "reference-result-detail"
+    component: "SearchResults"
+    description: "Detailed view of a search result"
+    file: "ux/src/components/reference/UnifiedSearch/SearchResults.tsx"
+    status: "not_yet_implemented"
+
+  reference_search_error:
+    id: "reference-search-error"
+    component: "UnifiedSearchPage"
+    description: "Error message display for search failures"
+    file: "ux/src/components/reference/UnifiedSearchPage.tsx"
+    status: "not_yet_implemented"
 
 # Pipeline Configuration & Testing
 pipelines:
@@ -535,6 +626,34 @@ pipelines:
     component: "PipelineTestRunner"
     description: "Button to execute pipeline tests"
     file: "ux/src/components/rag_experiments/PipelineTestRunner.tsx"
+
+  pipeline_flavor_title_default:
+    id: "pipeline-flavor-title-default"
+    component: "PipelineFlavorsList"
+    description: "Title of default pipeline flavor card"
+    file: "ux/src/components/llm_pipelines/PipelineFlavorsList.tsx"
+    status: "not_yet_implemented"
+
+  pipeline_flavor_card_default:
+    id: "pipeline-flavor-card-default"
+    component: "PipelineFlavorsList"
+    description: "Default pipeline flavor card container"
+    file: "ux/src/components/llm_pipelines/PipelineFlavorsList.tsx"
+    status: "not_yet_implemented"
+
+  pipeline_flavor_edit_button_default:
+    id: "pipeline-flavor-edit-button-default"
+    component: "PipelineFlavorsList"
+    description: "Edit button for default pipeline flavor"
+    file: "ux/src/components/llm_pipelines/PipelineFlavorsList.tsx"
+    status: "not_yet_implemented"
+
+  pipeline_flavor_delete_button_default:
+    id: "pipeline-flavor-delete-button-default"
+    component: "PipelineFlavorsList"
+    description: "Delete button for default pipeline flavor"
+    file: "ux/src/components/llm_pipelines/PipelineFlavorsList.tsx"
+    status: "not_yet_implemented"
 
 # RAG Experiments
 rag_experiments:
