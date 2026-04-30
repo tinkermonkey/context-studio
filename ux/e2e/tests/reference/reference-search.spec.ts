@@ -84,13 +84,13 @@ test.describe("Reference Search", () => {
     const dbpediaOption = page.locator('text="DBpedia"');
     await dbpediaOption.click();
 
-    // Wait for filtered results
-    await page.waitForTimeout(500);
-
-    // Verify results are filtered (should be less or equal to initial)
+    // Wait for filtered results to load
     const filteredResults = page.locator(
       '[data-testid="reference-search-result-item"]',
     );
+    await expect(filteredResults.first()).toBeVisible({ timeout: 5000 });
+
+    // Verify results are filtered (should be less or equal to initial)
     const filteredCount = await filteredResults.count();
     expect(filteredCount).toBeLessThanOrEqual(initialCount);
   });

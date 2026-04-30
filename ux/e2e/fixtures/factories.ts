@@ -329,7 +329,7 @@ export async function seedTestData(
  * by their source and target classes being test-created.
  *
  * @param page - Playwright page object
- * @param maxAge - Maximum age in milliseconds for entities to consider as test data (default: 10 minutes)
+ * @param maxAge - Maximum age threshold in milliseconds; only entities created within this window (more recently than maxAge) are deleted (default: 10 minutes)
  * @throws {Error} If any cleanup step fails after all cleanup attempts
  */
 export async function clearTestData(

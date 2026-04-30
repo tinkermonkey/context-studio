@@ -68,13 +68,35 @@ The E2E test infrastructure uses Playwright's global setup/teardown to manage se
 
 ```
 /ux/e2e/
-├── fixtures/                  # Test utilities and helpers
-│   └── test-helpers.ts        # Common test functions
-├── tests/                     # Test files
-│   └── example.spec.ts        # Example smoke tests
-├── global-setup.ts            # Server startup logic
-├── global-teardown.ts         # Server shutdown logic
-└── README.md                  # This file
+├── fixtures/                          # Test utilities and helpers
+│   ├── test-helpers.ts                # Common test functions
+│   ├── api-client.ts                  # API client for test requests
+│   └── factories.ts                   # Test data factories
+├── tests/                             # Test files organized by feature
+│   ├── api-contracts/                 # API contract tests
+│   │   └── ontology-endpoints.spec.ts
+│   ├── graph/                         # Graph analysis tests
+│   │   └── graph-analysis.spec.ts
+│   ├── layout/                        # Layout and navigation tests
+│   │   ├── navigation.spec.ts
+│   │   └── pages.spec.ts
+│   ├── ontology/                      # Ontology management tests
+│   │   ├── classes.spec.ts
+│   │   ├── concept-schemes.spec.ts
+│   │   ├── property-definitions.spec.ts
+│   │   ├── relationships.spec.ts
+│   │   └── taxonomies.spec.ts
+│   ├── pipeline/                      # Pipeline configuration tests
+│   │   └── pipeline-config.spec.ts
+│   ├── rag/                           # RAG experiments tests
+│   │   └── rag-experiments.spec.ts
+│   ├── reference/                     # Reference data search tests
+│   │   └── reference-search.spec.ts
+│   ├── example.spec.ts                # Example smoke tests
+│   └── ontology-factories.spec.ts     # Factory pattern tests
+├── global-setup.ts                    # Server startup logic
+├── global-teardown.ts                 # Server shutdown logic
+└── README.md                          # This file
 ```
 
 ## Writing Tests

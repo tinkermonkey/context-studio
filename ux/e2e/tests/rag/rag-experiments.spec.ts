@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { apiRequest, endpointExists } from "../fixtures/test-helpers";
+import { apiRequest, endpointExists } from "../../fixtures/test-helpers";
 
 /**
  * RAG Experiments E2E Tests
@@ -171,13 +171,12 @@ test.describe("RAG Experiments", () => {
       page.locator('[data-testid="test-paragraph-editor"]'),
     ).toBeVisible({ timeout: 5000 });
 
-    // Wait for input to be populated
-    await page.waitForTimeout(500); // Small delay for data to load
+    // Wait for input to be populated with the original text
+    const inputField = page.locator('[data-testid="test-paragraph-text-input"]');
+    await expect(inputField).toHaveValue(originalText, { timeout: 5000 });
 
     // Verify the original text is loaded
-    const inputValue = await page
-      .locator('[data-testid="test-paragraph-text-input"]')
-      .inputValue();
+    const inputValue = await inputField.inputValue();
     expect(inputValue).toBe(originalText);
 
     // Update the text
@@ -185,9 +184,6 @@ test.describe("RAG Experiments", () => {
 
     // Submit the form
     await page.click('[data-testid="test-paragraph-submit-button"]');
-
-    // Wait for update to process
-    await page.waitForTimeout(1000);
 
     // Verify updated text appears in the table
     await expect(
@@ -239,9 +235,6 @@ test.describe("RAG Experiments", () => {
 
     // Click delete button
     await deleteButton.click();
-
-    // Wait for deletion to process
-    await page.waitForTimeout(1000);
 
     // Verify paragraph is removed from the table
     await expect(
