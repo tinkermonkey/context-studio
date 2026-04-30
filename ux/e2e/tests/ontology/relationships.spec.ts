@@ -4,7 +4,7 @@ import {
   createRelationship,
   clearTestData,
   apiRequest,
-} from "../../fixtures/factories";
+} from "../../fixtures/test-helpers";
 import type { Relationship, OntologyClass } from "@/api/types/ontology";
 
 /**

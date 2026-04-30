@@ -194,7 +194,7 @@ export async function createRelationship(
 
 /**
  * Composite factory that creates a complete test hierarchy:
- * Taxonomy -> ConceptScheme -> OntologyClasses + PropertyDefinition
+ * Taxonomy -> ConceptScheme -> OntologyClasses
  *
  * Produces a relationship-ready state with all necessary entities
  * to create relationships between classes.
@@ -202,7 +202,7 @@ export async function createRelationship(
  * @param page - Playwright page object
  * @param classCount - Number of classes to create within the scheme (default: 1)
  * @param overrides - Optional fields to override defaults
- * @returns Object containing created hierarchy entities including property definition
+ * @returns Object containing created hierarchy entities
  */
 export async function createTestHierarchy(
   page: Page,
@@ -211,13 +211,11 @@ export async function createTestHierarchy(
     taxonomyTitle?: string;
     schemeTitle?: string;
     classTitle?: string;
-    propertyTitle?: string;
   },
 ): Promise<{
   taxonomy: Taxonomy;
   scheme: ConceptScheme;
   classes: OntologyClass[];
-  propertyDefinition: PropertyDefinition;
 }> {
   // Create the taxonomy
   const taxonomy = await createTaxonomy(page, {
@@ -241,16 +239,10 @@ export async function createTestHierarchy(
     classes.push(testClass);
   }
 
-  // Create a property definition for relationship support
-  const propertyDefinition = await createPropertyDefinition(page, {
-    title: overrides?.propertyTitle,
-  });
-
   return {
     taxonomy,
     scheme,
     classes,
-    propertyDefinition,
   };
 }
 
@@ -277,7 +269,6 @@ export async function seedTestData(
     taxonomy: Taxonomy;
     scheme: ConceptScheme;
     classes: OntologyClass[];
-    propertyDefinition: PropertyDefinition;
   }>;
   properties: PropertyDefinition[];
 }> {
@@ -295,7 +286,6 @@ export async function seedTestData(
       taxonomyTitle: `seed-taxonomy-${timestamp}-${i + 1}`,
       schemeTitle: `seed-scheme-${timestamp}-${i + 1}`,
       classTitle: `seed-class-${timestamp}-${i + 1}`,
-      propertyTitle: `seed-property-${timestamp}-${i + 1}`,
     });
     hierarchies.push(hierarchy);
   }
