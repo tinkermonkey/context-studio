@@ -182,8 +182,6 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
           return prev;
         }
 
-        const synset = state.analysis.wordnet.synsets[senseIndex];
-
         // Use handleSenseSelect to update the state
         const next = new Map(prev);
         const wordSense: WordSense = {
