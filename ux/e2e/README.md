@@ -402,6 +402,158 @@ Once tests pass and are reviewed:
 3. Ensure CI passes (E2E tests run as part of CI)
 4. Merge to `main`
 
+## Test Healing Workflow
+
+When tests fail in CI, a healer agent can analyze the failure and propose a fix. The healer is the most dangerous of the three agents because its mistakes silently mask real bugs — guardrails matter.
+
+### Overview
+
+The healer agent inspects a failing test, categorizes the failure, and either proposes a fix (as a draft PR) or escalates as a real product bug.
+
+```
+Test Fails in CI → Healer Analyzes → Categorizes Failure → Opens Draft PR or Bug Report
+   (automatic)      (Claude agent)    (3 categories)        (for human review)
+```
+
+### When Tests Fail
+
+Tests can fail for three different reasons:
+
+#### 1. **Selector Renamed** (Low Risk)
+- The UI element exists but the `data-testid` attribute changed
+- Example: `taxonomy-submit-button` → `ontology-taxonomy-submit-button`
+- **Action**: Healer proposes a diff to update the selector
+
+#### 2. **Timing Changed** (Low Risk)
+- The element takes longer to appear, or a network operation changed
+- Example: Test expects element to appear immediately, but now takes a moment
+- **Action**: Healer proposes a conditional wait instead of a fixed timeout
+
+#### 3. **Likely Real Bug** (High Risk)
+- Core functionality fails unexpectedly (API error, CRUD operation fails, assertion fails on real data)
+- Example: API returns 500, entity field is null, delete fails with 403
+- **Action**: Healer escalates as a bug report (NO code fix)
+
+### Healer Workflow
+
+1. **Test fails in CI**: A test times out, fails an assertion, or can't find a selector
+2. **Healer analyzes**: Claude agent reads the failure log and current UI state
+3. **Categorize**: Is this a selector change, timing issue, or real bug?
+4. **Propose or escalate**:
+   - For selector/timing issues: Open a draft PR with a unified diff
+   - For real bugs: Open a draft PR with no code changes — just a bug report
+5. **Human reviews**: Decide if this is a legitimate UI change or a real bug
+6. **Merge or file issue**: If UI change, merge and update selectors. If bug, file an issue.
+
+### Guardrails
+
+The healer REFUSES to propose any of these anti-patterns:
+
+**❌ Fixed timeouts without conditions**
+```typescript
+// REFUSE
+await page.waitForTimeout(2000);
+
+// PROPOSE INSTEAD
+await page.waitForLoadState("networkidle");
+```
+
+**❌ Vacuous assertions**
+```typescript
+// REFUSE
+expect(true).toBe(true);
+expect(page.url()).toBeTruthy();
+
+// PROPOSE INSTEAD (or escalate as bug)
+expect(page.url()).toContain("/app/taxonomies");
+```
+
+**❌ Try/catch to swallow errors**
+```typescript
+// REFUSE
+try {
+  await expect(element).toContainText("Created");
+} catch {
+  // Ignore failure
+}
+
+// PROPOSE INSTEAD (or escalate as bug)
+await expect(element).toContainText("Created");
+```
+
+**❌ Replacing getByTestId with CSS or XPath**
+```typescript
+// REFUSE
+page.locator("button.submit-btn")  // CSS
+page.locator("//button[@id='submit']")  // XPath
+
+// PROPOSE INSTEAD (investigate the selector change)
+page.getByTestId("ontology-taxonomy-submit-button")
+```
+
+### Draft PR Workflow
+
+Every healer PR:
+- Is opened as a **draft** (humans must review before merge)
+- Includes a **category** tag: `[Selector Renamed]`, `[Timing Changed]`, or `[Likely Real Bug]`
+- Includes a **one-paragraph rationale** explaining why the fix is safe
+- Passes **validation** before opening (selectors must exist in registry)
+
+Example PR:
+```
+Title: [Healer] Fix failing: taxonomies (Selector Renamed)
+
+## Failure Summary
+Test: ux/e2e/tests/ontology/taxonomies.spec.ts::create-and-delete-taxonomy
+Category: Selector Renamed
+Reason: getByTestId("taxonomy-submit-button") not found
+
+## Proposed Fix
+
+The selector was renamed from "taxonomy-submit-button" to 
+"ontology-taxonomy-submit-button" in the UI refactoring. 
+The component still exists and functions identically.
+
+```diff
+- await page.getByTestId("taxonomy-submit-button").click();
++ await page.getByTestId("ontology-taxonomy-submit-button").click();
+```
+
+## Validation
+- ✅ New selector exists in selector-registry.yaml
+- ✅ No anti-patterns introduced
+- ✅ Validator passes
+```
+
+### Escalation as Bug
+
+When the healer detects a likely real bug, it opens a draft PR with no code changes:
+
+```
+Title: [Healer] Bug report: taxonomies (Likely Real Bug)
+
+## Bug Report
+Test: ux/e2e/tests/ontology/taxonomies.spec.ts::create-and-delete-taxonomy
+Expected: POST /api/taxonomies returns 201
+Actual: API returned 500 Internal Server Error
+
+## Evidence
+[Failure log showing API error]
+
+## Assessment
+This appears to be a real product bug, not a test failure. 
+The test correctly validates that creating a taxonomy should succeed, 
+but the API is returning an error.
+
+Next step: Create a product issue to investigate and fix the backend.
+```
+
+### Implementation
+
+For detailed healer specifications and guardrail validation tests, see:
+- `.github/playwright-healer.md` — Healer agent specification and guardrails
+- `ux/e2e/tests/healer-guardrails.spec.ts` — Tests verifying guardrails are enforced
+
 ## Manual Test Development
 
 If you prefer to write tests manually instead of using agents:
