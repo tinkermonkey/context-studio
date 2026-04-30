@@ -152,7 +152,9 @@ test.describe("Graph Visualization and Analysis", () => {
       expect(panelText!.length).toBeGreaterThan(0);
     });
 
-    test.skip("should highlight connected nodes on node hover", async ({ page }) => {
+    test.skip("should highlight connected nodes on node hover", async ({
+      page,
+    }) => {
       // BLOCKED: Requires data-testid on Reagraph rendered nodes for DOM-based interaction
       // Reagraph nodes are canvas-rendered and not accessible via DOM selectors
       // Navigate to graph view
@@ -171,7 +173,9 @@ test.describe("Graph Visualization and Analysis", () => {
       expect(await highlighted.count()).toBeGreaterThan(0);
     });
 
-    test.skip("should deselect node when clicking background", async ({ page }) => {
+    test.skip("should deselect node when clicking background", async ({
+      page,
+    }) => {
       // BLOCKED: Requires ability to click on Reagraph rendered nodes
       // Reagraph nodes are canvas-rendered and not accessible via DOM selectors
       // Navigate to graph view
@@ -451,7 +455,9 @@ test.describe("Graph Visualization and Analysis", () => {
       }
     });
 
-    test.skip("should handle large graphs without crashing", async ({ page }) => {
+    test.skip("should handle large graphs without crashing", async ({
+      page,
+    }) => {
       // BLOCKED: Requires data-testid on Reagraph rendered nodes to verify rendering
       // Reagraph nodes are canvas-rendered and not accessible via DOM selectors
       // Create a large hierarchy (stress test)

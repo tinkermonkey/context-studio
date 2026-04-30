@@ -308,7 +308,10 @@ export const GraphView: React.FC<GraphViewProps> = ({
   return (
     <div className="space-y-4">
       {/* Graph stats */}
-      <div className="flex items-center justify-between text-sm text-gray-600" data-testid="graph-statistics">
+      <div
+        className="flex items-center justify-between text-sm text-gray-600"
+        data-testid="graph-statistics"
+      >
         <span>
           {layoutType === "tree" && searchLinks.length > 0 ? (
             <>
@@ -357,7 +360,10 @@ export const GraphView: React.FC<GraphViewProps> = ({
       )}
 
       {/* Graph visualization */}
-      <div className="rounded-lg border border-gray-200 bg-white" data-testid="graph-container">
+      <div
+        className="rounded-lg border border-gray-200 bg-white"
+        data-testid="graph-container"
+      >
         <div
           ref={containerRef}
           data-testid="graph-canvas"
