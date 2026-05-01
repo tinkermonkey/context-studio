@@ -12,6 +12,7 @@ from __future__ import annotations
 import re
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
+from uuid import uuid4
 
 from .entities import GraphMetrics, KnowledgeGraph, PathResult, Subgraph, SubgraphResult
 from .exceptions import GraphError, InvalidAlgorithmError, SPARQLValidationError
@@ -20,6 +21,7 @@ from .ports import GraphEngine, SemanticQueryEngine
 if TYPE_CHECKING:
     from ..ontology.ports import OntologyRepository
 
+from ..ontology.entities import Individual
 from ..ontology.events import GraphInvalidated
 
 # Map domain entity class names to node_type strings
@@ -90,6 +92,7 @@ class GraphAnalysisService:
 
         Reads all entities and relationships from the repository, converts them
         to dict format, passes to the graph engine, and clears the stale flag.
+        Synthesizes class-membership edges from Individual.class_ids.
         """
         if not self._graph_stale:
             return
@@ -118,6 +121,18 @@ class GraphAnalysisService:
             }
             edges.append(edge_dict)
 
+        # Synthesize class-membership edges from Individual.class_ids
+        for entity in entities:
+            if isinstance(entity, Individual):
+                for class_id in entity.class_ids:
+                    edge_dict = {
+                        "id": str(uuid4()),
+                        "source_id": str(entity.id),
+                        "target_id": str(class_id),
+                        "property_definition_id": None,
+                    }
+                    edges.append(edge_dict)
+
         # Build the graph
         self._graph_engine.build_from_data(nodes, edges)
         self._graph_stale = False
@@ -128,6 +143,7 @@ class GraphAnalysisService:
 
         Reads all entities, relationships, and property definitions from the repository,
         converts them to dicts, passes to the query engine, and clears the stale flag.
+        Synthesizes class-membership edges from Individual.class_ids.
         """
         if not self._rdf_stale:
             return
@@ -158,6 +174,18 @@ class GraphAnalysisService:
                 "property_definition_id": str(rel.property_definition_id) if rel.property_definition_id else None,
             }
             edges.append(edge_dict)
+
+        # Synthesize class-membership edges from Individual.class_ids
+        for entity in entities:
+            if isinstance(entity, Individual):
+                for class_id in entity.class_ids:
+                    edge_dict = {
+                        "id": str(uuid4()),
+                        "source_id": str(entity.id),
+                        "target_id": str(class_id),
+                        "property_definition_id": None,
+                    }
+                    edges.append(edge_dict)
 
         # Convert property definitions to dicts
         prop_defs = []

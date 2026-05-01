@@ -1116,13 +1116,9 @@ class TestIndividualGraphIntegration:
     ):
         """Individuals and their parent classes appear as nodes in the graph.
 
-        NOTE: This test verifies that both individuals and classes are represented
-        as nodes in the graph. However, there is a known gap: class-membership edges
-        (from individual.class_ids) are NOT automatically synthesized in _ensure_graph().
-        Currently, individuals are only connected to other entities via explicit
-        Relationship records. This limitation should be addressed in a follow-up
-        issue: individuals should have edges to their parent classes based on
-        class_ids, representing the membership relationship.
+        Class-membership edges (from individual.class_ids) are automatically
+        synthesized in _ensure_graph(), creating edges from each individual
+        to each of its parent classes based on class_ids.
         """
         service = GraphAnalysisService(
             repository=repository_with_individuals,
@@ -1149,3 +1145,8 @@ class TestIndividualGraphIntegration:
         class_ids = [cls.id for cls in classes]
         for class_id in class_ids:
             assert class_id in degrees, f"Class {class_id} should be in graph nodes"
+
+        # Verify class-membership edges are synthesized
+        # Individual 1 has 1 class, Individual 2 has 2 classes = 3 synthesized edges minimum
+        # Plus 1 explicit relationship edge = 4 edges minimum
+        assert service.build_graph().edge_count >= 4, "Graph should have at least 4 edges (3 synthesized + 1 explicit)"
