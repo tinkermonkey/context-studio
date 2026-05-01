@@ -67,6 +67,9 @@ from domain.ontology.events import (
     SchemeUpdated,
     SchemeDeleted,
     ConceptSchemeUpdated,
+    IndividualCreated,
+    IndividualUpdated,
+    IndividualDeleted,
 )
 from domain.extraction.events import ExtractionCompleted
 from domain.pipeline.events import PipelineExecuted
@@ -384,6 +387,15 @@ async def lifespan(app: FastAPI):
 
         event_publisher.subscribe(ConceptSchemeUpdated, change_recorder.on_concept_scheme_updated)
         logger.info("Event subscription: ConceptSchemeUpdated -> ChangeEventRecorder.on_concept_scheme_updated")
+
+        event_publisher.subscribe(IndividualCreated, change_recorder.on_individual_created)
+        logger.info("Event subscription: IndividualCreated -> ChangeEventRecorder.on_individual_created")
+
+        event_publisher.subscribe(IndividualUpdated, change_recorder.on_individual_updated)
+        logger.info("Event subscription: IndividualUpdated -> ChangeEventRecorder.on_individual_updated")
+
+        event_publisher.subscribe(IndividualDeleted, change_recorder.on_individual_deleted)
+        logger.info("Event subscription: IndividualDeleted -> ChangeEventRecorder.on_individual_deleted")
 
         # --- Store services in app.state for dependency injection ---
 
