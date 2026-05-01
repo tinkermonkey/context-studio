@@ -1961,3 +1961,103 @@ class TestDeleteIndividual:
         """Delete nonexistent individual raises EntityNotFoundError."""
         with pytest.raises(EntityNotFoundError, match="Individual"):
             service.delete_individual("nonexistent")
+
+    def test_delete_individual_cleans_up_orphaned_relationships_as_source(self, service):
+        """Delete individual cleans up relationships where it is the source."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        dog_class = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        mammal_class = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
+        fido = service.create_individual(dog_class.id, title="Fido")
+        animal_ind = service.create_individual(mammal_class.id, title="Animal")
+        prop = service.create_property_definition(identifier="is_a", title="Is A")
+
+        rel = service.create_relationship(
+            source_id=fido.id,
+            target_id=animal_ind.id,
+            property_definition_id=prop.id,
+        )
+
+        # Delete the source individual
+        service.delete_individual(individual_id=fido.id)
+
+        # Verify relationship is deleted
+        with pytest.raises(EntityNotFoundError):
+            service.get_relationship(rel.id)
+
+        # Verify RelationshipDeleted event was emitted
+        rel_delete_events = service._event_publisher.get_events_of_type(RelationshipDeleted)
+        assert len(rel_delete_events) == 1
+        assert rel_delete_events[0].relationship_id == rel.id
+        assert rel_delete_events[0].source_id == fido.id
+        assert rel_delete_events[0].target_id == animal_ind.id
+        assert rel_delete_events[0].property_definition_id == prop.id
+
+    def test_delete_individual_cleans_up_orphaned_relationships_as_target(self, service):
+        """Delete individual cleans up relationships where it is the target."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        dog_class = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        mammal_class = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
+        fido = service.create_individual(dog_class.id, title="Fido")
+        animal_ind = service.create_individual(mammal_class.id, title="Animal")
+        prop = service.create_property_definition(identifier="is_a", title="Is A")
+
+        rel = service.create_relationship(
+            source_id=fido.id,
+            target_id=animal_ind.id,
+            property_definition_id=prop.id,
+        )
+
+        # Delete the target individual
+        service.delete_individual(individual_id=animal_ind.id)
+
+        # Verify relationship is deleted
+        with pytest.raises(EntityNotFoundError):
+            service.get_relationship(rel.id)
+
+        # Verify RelationshipDeleted event was emitted
+        rel_delete_events = service._event_publisher.get_events_of_type(RelationshipDeleted)
+        assert len(rel_delete_events) == 1
+        assert rel_delete_events[0].relationship_id == rel.id
+        assert rel_delete_events[0].source_id == fido.id
+        assert rel_delete_events[0].target_id == animal_ind.id
+        assert rel_delete_events[0].property_definition_id == prop.id
+
+    def test_delete_individual_cleans_up_multiple_orphaned_relationships(self, service):
+        """Delete individual cleans up multiple relationships."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        dog_class = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        mammal_class = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
+        fido = service.create_individual(dog_class.id, title="Fido")
+        buddy = service.create_individual(dog_class.id, title="Buddy")
+        animal_ind = service.create_individual(mammal_class.id, title="Animal")
+        prop1 = service.create_property_definition(identifier="is_friend_of", title="Is Friend Of")
+        prop2 = service.create_property_definition(identifier="is_a", title="Is A")
+
+        rel1 = service.create_relationship(
+            source_id=fido.id,
+            target_id=buddy.id,
+            property_definition_id=prop1.id,
+        )
+        rel2 = service.create_relationship(
+            source_id=fido.id,
+            target_id=animal_ind.id,
+            property_definition_id=prop2.id,
+        )
+
+        # Delete individual with multiple relationships
+        service.delete_individual(individual_id=fido.id)
+
+        # Verify both relationships are deleted
+        with pytest.raises(EntityNotFoundError):
+            service.get_relationship(rel1.id)
+        with pytest.raises(EntityNotFoundError):
+            service.get_relationship(rel2.id)
+
+        # Verify both RelationshipDeleted events were emitted
+        rel_delete_events = service._event_publisher.get_events_of_type(RelationshipDeleted)
+        assert len(rel_delete_events) == 2
+        rel_ids = {event.relationship_id for event in rel_delete_events}
+        assert rel_ids == {rel1.id, rel2.id}

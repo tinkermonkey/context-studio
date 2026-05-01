@@ -1763,6 +1763,28 @@ class OntologyService:
         if individual is None:
             raise EntityNotFoundError("Individual", individual_id)
 
+        # Find and delete all relationships where this individual is source or target
+        orphaned_relationships = self._repository.list_relationships(
+            source_id=individual_id
+        ) + self._repository.list_relationships(target_id=individual_id)
+
+        for relationship in orphaned_relationships:
+            self._repository.delete_relationship(relationship.id)
+            failures = self._event_publisher.publish(RelationshipDeleted(
+                relationship_id=relationship.id,
+                source_id=relationship.source_id,
+                target_id=relationship.target_id,
+                property_definition_id=relationship.property_definition_id,
+            ))
+            if failures:
+                handler_names = ", ".join(name for name, _ in failures)
+                _logger.warning(
+                    "Event handlers failed for RelationshipDeleted (relationship_id=%s): %s. "
+                    "Relationship is deleted but audit trail may have gaps.",
+                    relationship.id,
+                    handler_names,
+                )
+
         self._repository.delete_individual(individual_id)
 
         # Emit IndividualDeleted event
