@@ -1130,7 +1130,7 @@ class TestIndividualGraphIntegration:
             query_engine=FakeSemanticQueryEngine(),
         )
 
-        graph = service.build_graph()
+        service.build_graph()
 
         # Verify graph includes individuals and classes as nodes
         degrees = service.get_degree_distribution()
