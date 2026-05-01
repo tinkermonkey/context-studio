@@ -500,6 +500,18 @@ node_details:
     description: "Section displaying child entities or relationships"
     file: "ux/src/components/node_details/structure_node_details.tsx"
 
+  individual_detail_title:
+    id: "individual-detail-title"
+    component: "IndividualDetails"
+    description: "Title heading in individual detail view"
+    file: "ux/src/components/node_details/individual_details.tsx"
+
+  individual_detail_id:
+    id: "individual-detail-id"
+    component: "IndividualDetails"
+    description: "Display of individual ID in detail view"
+    file: "ux/src/components/node_details/individual_details.tsx"
+
   individual_detail_description:
     id: "individual-detail-description"
     component: "IndividualDetails"
