@@ -772,7 +772,6 @@ class SQLiteOntologyRepository:
                 orm_entity.description = individual.description  # type: ignore[assignment]
                 orm_entity.data_properties = mapped_orm.data_properties  # type: ignore[assignment]
                 orm_entity.external_references = mapped_orm.external_references  # type: ignore[assignment]
-                orm_entity.class_id = mapped_orm.class_id  # type: ignore[assignment]
                 orm_entity.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
                 orm_entity.version = orm_entity.version + 1  # type: ignore[assignment]
 
