@@ -2,4 +2,14 @@
  * Individual Hooks Barrel Export
  */
 
-export * from "./useIndividuals";
+export {
+  useIndividuals,
+  useIndividual,
+  useCreateIndividual,
+  useUpdateIndividual,
+  useDeleteIndividual,
+  useAddIndividualClass,
+  useRemoveIndividualClass,
+  useSetIndividualClasses,
+  useIndividualInheritedProperties,
+} from "./useIndividuals";
