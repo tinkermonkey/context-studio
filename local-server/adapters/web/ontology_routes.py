@@ -545,7 +545,7 @@ async def delete_class(
         service: OntologyService from dependency injection
 
     Raises:
-        HTTPException: 404 if not found, 422 if it has subclasses
+        HTTPException: 404 if not found, 422 if it has subclasses or individuals
     """
     try:
         service.delete_class(class_id)
