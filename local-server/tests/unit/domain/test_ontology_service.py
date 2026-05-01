@@ -1027,7 +1027,7 @@ class TestCreateRelationship:
         target = service.create_class(concept_scheme_id=scheme.id, title="Target")
         prop = service.create_property_definition(identifier="is_a", title="Is A")
 
-        with pytest.raises(EntityNotFoundError, match="Class.*nonexistent"):
+        with pytest.raises(EntityNotFoundError, match="Entity.*nonexistent"):
             service.create_relationship(
                 source_id="nonexistent",
                 target_id=target.id,
@@ -1041,7 +1041,7 @@ class TestCreateRelationship:
         source = service.create_class(concept_scheme_id=scheme.id, title="Source")
         prop = service.create_property_definition(identifier="is_a", title="Is A")
 
-        with pytest.raises(EntityNotFoundError, match="Class.*nonexistent"):
+        with pytest.raises(EntityNotFoundError, match="Entity.*nonexistent"):
             service.create_relationship(
                 source_id=source.id,
                 target_id="nonexistent",
