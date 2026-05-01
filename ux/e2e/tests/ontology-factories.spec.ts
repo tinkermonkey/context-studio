@@ -146,14 +146,14 @@ test.describe("Test Data Factories", () => {
     }) => {
       const hierarchy = await createTestHierarchy(page, 2, {
         taxonomyTitle: "test-taxonomy-custom-scenario",
-        schemeTitle: "test-custom-scheme",
-        classTitle: "test-custom-class",
+        schemeTitle: "test-scheme-custom",
+        classTitle: "test-class-custom",
       });
 
       expect(hierarchy.taxonomy.title).toBe("test-taxonomy-custom-scenario");
-      expect(hierarchy.scheme.title).toBe("test-custom-scheme");
-      expect(hierarchy.classes[0].title).toContain("test-custom-class");
-      expect(hierarchy.classes[1].title).toContain("test-custom-class");
+      expect(hierarchy.scheme.title).toBe("test-scheme-custom");
+      expect(hierarchy.classes[0].title).toContain("test-class-custom");
+      expect(hierarchy.classes[1].title).toContain("test-class-custom");
     });
 
     test("should create a relationship-ready hierarchy with classes", async ({
