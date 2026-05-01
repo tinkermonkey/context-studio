@@ -1953,6 +1953,14 @@ class OntologyService:
                     "Graph invalidation event may not be recorded in audit trail.",
                     handler_names,
                 )
+        else:
+            _logger.warning(
+                "Could not determine taxonomy for class removal (individual_id=%s, class_id=%s): "
+                "class could not be resolved. "
+                "Graph cache may be stale. Consider investigating deleted classes.",
+                individual_id,
+                class_id,
+            )
 
         return individual
 
