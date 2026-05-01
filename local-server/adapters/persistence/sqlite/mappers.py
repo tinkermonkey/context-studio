@@ -207,7 +207,7 @@ def deserialize_ontology_mapping(data: dict[str, str] | None) -> OntologyMapping
     )
 
 
-def map_orm_to_domain(orm_entity: OntologyEntity) -> Union[Taxonomy, ConceptScheme, Class, Individual, PropertyDefinition]:
+def map_orm_to_domain(orm_entity: OntologyEntity) -> Union[Taxonomy, ConceptScheme, Class, PropertyDefinition]:
     """
     Convert an OntologyEntity ORM model to the appropriate domain entity type.
 
@@ -217,9 +217,10 @@ def map_orm_to_domain(orm_entity: OntologyEntity) -> Union[Taxonomy, ConceptSche
         orm_entity: SQLAlchemy ORM model instance
 
     Returns:
-        Domain entity (Taxonomy, ConceptScheme, Class, Individual, or PropertyDefinition)
+        Domain entity (Taxonomy, ConceptScheme, Class, or PropertyDefinition)
 
     Raises:
+        NotImplementedError: If node_type is 'individual' — use _build_individual_from_orm() instead
         ValueError: If node_type is not recognized
     """
     entity_id = cast(str, orm_entity.id)
