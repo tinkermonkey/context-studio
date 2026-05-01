@@ -7,6 +7,8 @@ import {
   useCreateIndividual,
   useUpdateIndividual,
   useSetIndividualClasses,
+  useAddIndividualClass,
+  useRemoveIndividualClass,
 } from "@/api/hooks/individuals";
 import { useOntologyClasses } from "@/api/hooks/ontologyClasses";
 import { renderShortUuid } from "@/utils/renderers";
@@ -30,6 +32,8 @@ const IndividualForm: React.FC<IndividualFormProps> = ({
   const createIndividualMutation = useCreateIndividual();
   const updateIndividualMutation = useUpdateIndividual();
   const setIndividualClassesMutation = useSetIndividualClasses();
+  const addIndividualClassMutation = useAddIndividualClass();
+  const removeIndividualClassMutation = useRemoveIndividualClass();
   const { data: availableClasses = [] } = useOntologyClasses();
   const isEdit = !!individual;
   const [submitError, setSubmitError] = React.useState<string | null>(null);
@@ -65,10 +69,34 @@ const IndividualForm: React.FC<IndividualFormProps> = ({
             data: updateData,
           });
 
-          // Then update class membership separately
+          // Handle class membership changes
+          const oldClassIds = individual.class_ids;
+          const newClassIds = selectedClassIds;
+
+          // Detect which classes were removed and added
+          const removedClassIds = oldClassIds.filter(id => !newClassIds.includes(id));
+          const addedClassIds = newClassIds.filter(id => !oldClassIds.includes(id));
+
+          // Remove classes that are no longer members
+          for (const classId of removedClassIds) {
+            await removeIndividualClassMutation.mutateAsync({
+              id: individual.id,
+              classId,
+            });
+          }
+
+          // Add new classes
+          for (const classId of addedClassIds) {
+            await addIndividualClassMutation.mutateAsync({
+              id: individual.id,
+              classId,
+            });
+          }
+
+          // Reorder classes to ensure correct final order
           const result = await setIndividualClassesMutation.mutateAsync({
             id: individual.id,
-            classIds: selectedClassIds,
+            classIds: newClassIds,
           });
 
           if (onSuccess) onSuccess(result);
