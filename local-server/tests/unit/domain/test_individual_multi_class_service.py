@@ -11,15 +11,10 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest
-from uuid import uuid4
-from datetime import datetime, timezone
 
-from domain.ontology.entities import (
-    Taxonomy, ConceptScheme, Class, Individual, PropertyDefinition
-)
 from domain.ontology.value_objects import DataPropertyValue
 from domain.ontology.services import OntologyService
-from domain.ontology.exceptions import EntityNotFoundError, DuplicateEntityError
+from domain.ontology.exceptions import EntityNotFoundError
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_event_publisher import FakeEventPublisher
@@ -291,7 +286,7 @@ class TestPropertyAttributeInheritance:
         assert rating_prop.value == "5/5"
 
         # Reorder: class3, class2, class1 - class3 should now win
-        reordered = svc.reorder_individual_classes(
+        svc.reorder_individual_classes(
             ind.id, [class3.id, class2.id, class1.id]
         )
         props = svc.get_individual_properties(ind.id)

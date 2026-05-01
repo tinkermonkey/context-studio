@@ -498,7 +498,7 @@ class TestIndividualCRUD:
 
         # Update class membership
         individual.add_parent_class(class2.id)
-        updated = repo.save_individual(individual)
+        repo.save_individual(individual)
 
         retrieved = repo.get_individual("ind-1")
         assert retrieved.class_ids == [sample_class.id, class2.id]
