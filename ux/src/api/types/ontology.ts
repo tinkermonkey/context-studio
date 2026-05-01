@@ -204,6 +204,36 @@ export interface PropertyDefinitionListParams {
   limit?: number;
 }
 
+// ============= Individual =============
+export interface Individual {
+  id: string;
+  class_ids: string[];
+  title: string;
+  description?: string | null;
+  data_properties?: DataPropertyValue[];
+  external_references?: ExternalReference[];
+  created_at?: string | null;
+  last_modified?: string | null;
+  version: number;
+}
+
+export interface IndividualCreate {
+  class_ids: string | string[];
+  title: string;
+  description?: string | null;
+}
+
+export interface IndividualUpdate {
+  title?: string | null;
+  description?: string | null;
+}
+
+export interface IndividualListParams {
+  offset?: number;
+  limit?: number;
+  class_id?: string;
+}
+
 // ============= Generic List Response =============
 export interface ListResponse<T> {
   items: T[];

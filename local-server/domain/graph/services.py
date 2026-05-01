@@ -27,6 +27,7 @@ _NODE_TYPE_MAP = {
     "Taxonomy": "taxonomy",
     "ConceptScheme": "concept_scheme",
     "Class": "class",
+    "Individual": "individual",
 }
 
 # Valid centrality algorithms for graph analysis

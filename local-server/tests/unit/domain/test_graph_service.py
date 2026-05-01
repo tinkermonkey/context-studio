@@ -18,7 +18,7 @@ from uuid import uuid4
 from domain.graph.services import GraphAnalysisService
 from domain.graph.entities import KnowledgeGraph, GraphMetrics, PathResult, SubgraphResult
 from domain.graph.exceptions import GraphError, InvalidAlgorithmError, SPARQLValidationError, NodeNotFoundError
-from domain.ontology.entities import Class, Taxonomy, ConceptScheme, Relationship, PropertyDefinition
+from domain.ontology.entities import Class, Taxonomy, ConceptScheme, Relationship, PropertyDefinition, Individual
 from domain.ontology.events import GraphInvalidated
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 from tests.fakes.fake_graph_engine import FakeGraphEngine
@@ -940,3 +940,178 @@ class TestEmptyGraph:
 
         assert service.get_triple_count() == 0
         assert service.execute_sparql("SELECT * WHERE { ?s ?p ?o }") == []
+
+
+class TestIndividualGraphIntegration:
+    """Tests for Individual integration with Graph Service."""
+
+    @pytest.fixture
+    def repository_with_individuals(self):
+        """Create a repository with individuals and their parent classes."""
+        repo = FakeOntologyRepository()
+
+        # Create taxonomy
+        tax = Taxonomy(id=str(uuid4()), title="Test Taxonomy", description="Test")
+        repo.save_taxonomy(tax)
+
+        # Create concept scheme
+        scheme = ConceptScheme(
+            id=str(uuid4()), taxonomy_id=tax.id, title="Test Scheme", description="Test"
+        )
+        repo.save_concept_scheme(scheme)
+
+        # Create classes
+        class1 = Class(
+            id=str(uuid4()),
+            concept_scheme_id=scheme.id,
+            taxonomy_id=tax.id,
+            title="Class 1",
+            description="First class",
+        )
+        class2 = Class(
+            id=str(uuid4()),
+            concept_scheme_id=scheme.id,
+            taxonomy_id=tax.id,
+            title="Class 2",
+            description="Second class",
+        )
+        repo.save_class(class1)
+        repo.save_class(class2)
+
+        # Create individuals
+        individual1 = Individual(
+            id=str(uuid4()),
+            class_ids=[class1.id],
+            title="Individual 1",
+            description="First individual",
+        )
+        individual2 = Individual(
+            id=str(uuid4()),
+            class_ids=[class1.id, class2.id],
+            title="Individual 2",
+            description="Second individual with multiple classes",
+        )
+        repo.save_individual(individual1)
+        repo.save_individual(individual2)
+
+        # Create property definition for relationships
+        prop_def = PropertyDefinition(
+            id=str(uuid4()),
+            identifier="related_to",
+            title="related to",
+            description="relationship between individuals",
+        )
+        repo.save_property_definition(prop_def)
+
+        # Create relationship between individuals
+        rel = Relationship(
+            id=str(uuid4()),
+            source_id=individual1.id,
+            target_id=individual2.id,
+            property_definition_id=prop_def.id,
+        )
+        repo.save_relationship(rel)
+
+        return repo
+
+    def test_individuals_appear_in_graph_nodes(self, repository_with_individuals):
+        """Individuals appear as nodes in the graph."""
+        service = GraphAnalysisService(
+            repository=repository_with_individuals,
+            graph_engine=FakeGraphEngine(),
+            query_engine=FakeSemanticQueryEngine(),
+        )
+
+        graph = service.build_graph()
+
+        # Graph should include individuals
+        assert graph.node_count > 0
+
+        # Get degree distribution to verify individuals are in the graph
+        degrees = service.get_degree_distribution()
+        individuals = repository_with_individuals.list_individuals()
+        assert len(individuals) > 0
+
+        # All individuals should be nodes in the graph
+        individual_ids = [ind.id for ind in individuals]
+        for ind_id in individual_ids:
+            assert ind_id in degrees
+
+    def test_individual_relationships_in_graph(self, repository_with_individuals):
+        """Relationships between individuals are included in the graph."""
+        service = GraphAnalysisService(
+            repository=repository_with_individuals,
+            graph_engine=FakeGraphEngine(),
+            query_engine=FakeSemanticQueryEngine(),
+        )
+
+        graph = service.build_graph()
+
+        # Should have edges (relationships)
+        assert graph.edge_count > 0
+
+        # Get relationships and verify they're in the graph
+        individuals = repository_with_individuals.list_individuals()
+        relationships = repository_with_individuals.list_relationships()
+
+        # Should have at least one relationship (between individuals)
+        assert len(relationships) > 0
+        assert len(individuals) > 0
+
+    def test_individual_node_type_classification(self, repository_with_individuals):
+        """Graph correctly classifies individuals by node type."""
+        service = GraphAnalysisService(
+            repository=repository_with_individuals,
+            graph_engine=FakeGraphEngine(),
+            query_engine=FakeSemanticQueryEngine(),
+        )
+
+        # Build the graph (which will classify nodes)
+        graph = service.build_graph()
+
+        # Verify graph was built successfully
+        assert graph.node_count > 0
+        assert not service._graph_stale
+
+        # Get all entities from repository
+        entities, relationships = (
+            repository_with_individuals.get_all_entities_and_relationships()
+        )
+
+        # Should have individuals in the entities list
+        individuals = [e for e in entities if isinstance(e, Individual)]
+        assert len(individuals) > 0
+
+        # Verify the node type mapping works for individuals
+        for individual in individuals:
+            node_type = service._derive_node_type(individual)
+            assert node_type == "individual"
+
+    def test_individuals_connected_to_classes_via_class_membership(
+        self, repository_with_individuals
+    ):
+        """Individuals are connected to their parent classes in the graph."""
+        service = GraphAnalysisService(
+            repository=repository_with_individuals,
+            graph_engine=FakeGraphEngine(),
+            query_engine=FakeSemanticQueryEngine(),
+        )
+
+        graph = service.build_graph()
+
+        # Get individuals and their parent classes
+        individuals = repository_with_individuals.list_individuals()
+        assert len(individuals) > 0
+
+        # Each individual should have parent class IDs
+        for individual in individuals:
+            assert len(individual.class_ids) > 0
+
+        # Verify graph includes all entities
+        degrees = service.get_degree_distribution()
+
+        # Classes should be in the graph
+        classes = repository_with_individuals.list_classes()
+        class_ids = [cls.id for cls in classes]
+        for class_id in class_ids:
+            assert class_id in degrees

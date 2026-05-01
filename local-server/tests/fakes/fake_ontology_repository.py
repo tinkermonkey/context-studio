@@ -277,6 +277,7 @@ class FakeOntologyRepository:
             list(self._taxonomies.values())
             + list(self._schemes.values())
             + list(self._classes.values())
+            + list(self._individuals.values())
             + list(self._property_definitions.values())
         )
         return (all_entities, list(self._relationships.values()))

@@ -6,6 +6,7 @@ import type {
   OntologyClass,
   Relationship,
   PropertyDefinition,
+  Individual,
 } from "@/api/types/ontology";
 
 /**
@@ -191,6 +192,42 @@ export async function createRelationship(
 }
 
 /**
+ * Create a test individual instance of one or more classes
+ * @param page - Playwright page object
+ * @param classIds - Array of class IDs for the individual (order matters for property precedence)
+ * @param overrides - Optional fields to override defaults
+ * @returns Created Individual entity
+ */
+export async function createIndividual(
+  page: Page,
+  classIds: string[],
+  overrides?: {
+    title?: string;
+    description?: string;
+  },
+): Promise<Individual> {
+  if (classIds.length === 0) {
+    throw new Error("Individual must have at least one parent class");
+  }
+
+  const timestamp = getRunTimestamp();
+  const title = overrides?.title || `test-individual-${timestamp}`;
+  const description =
+    overrides?.description || `Test individual created at ${timestamp}`;
+
+  const response = await apiRequest<Individual>(page, "/api/individuals", {
+    method: "POST",
+    body: {
+      class_ids: classIds,
+      title,
+      description,
+    },
+  });
+
+  return response;
+}
+
+/**
  * Composite factory that creates a complete test hierarchy:
  * Taxonomy -> ConceptScheme -> OntologyClasses
  *
@@ -200,7 +237,8 @@ export async function createRelationship(
  * @param page - Playwright page object
  * @param classCount - Number of classes to create within the scheme (default: 1)
  * @param overrides - Optional fields to override defaults
- * @returns Object containing created hierarchy entities
+ * @param includeIndividuals - Optional: if true, creates one Individual per class (default: false)
+ * @returns Object containing created hierarchy entities and optionally individuals
  */
 export async function createTestHierarchy(
   page: Page,
@@ -309,10 +347,11 @@ export async function seedTestData(
  *
  * CRITICAL: Deletion order respects foreign-key constraints:
  * 1. Relationships (must be deleted first — they reference properties and classes)
- * 2. Property definitions (must be deleted before classes, after relationships cleared)
- * 3. Ontology classes (must be deleted before schemes)
- * 4. Concept schemes (must be deleted before taxonomies)
- * 5. Taxonomies (deleted last)
+ * 2. Individuals (must be deleted before classes — they reference classes)
+ * 3. Property definitions (must be deleted before classes, after relationships cleared)
+ * 4. Ontology classes (must be deleted before schemes)
+ * 5. Concept schemes (must be deleted before taxonomies)
+ * 6. Taxonomies (deleted last)
  *
  * Isolation is achieved through unique names/prefixes for all test-created entities.
  * Test data is identified by name/title prefixes. Relationships are identified
@@ -401,7 +440,25 @@ export async function clearTestData(
     cleanupErrors.push({ step: "relationships", error });
   }
 
-  // STEP 2: Delete all test property definitions (after relationships cleared)
+  // STEP 2: Delete all test individuals (before classes — they reference classes)
+  try {
+    const individualsResponse = await apiRequest<any>(page, "/api/individuals");
+    const individuals = extractItems(individualsResponse);
+    for (const individual of individuals) {
+      try {
+        await deleteEntityIfMatches(page, individual, "/api/individuals", [
+          "test-individual-",
+          "seed-individual-",
+        ]);
+      } catch (error) {
+        cleanupErrors.push({ step: "individuals", error });
+      }
+    }
+  } catch (error) {
+    cleanupErrors.push({ step: "individuals-fetch", error });
+  }
+
+  // STEP 3: Delete all test property definitions (after relationships and individuals cleared)
   try {
     const propertiesResponse = await apiRequest<any>(page, "/api/properties");
     const properties = extractItems(propertiesResponse);
@@ -419,7 +476,7 @@ export async function clearTestData(
     cleanupErrors.push({ step: "properties-fetch", error });
   }
 
-  // STEP 3: Delete all test ontology classes (after relationships cleared)
+  // STEP 4: Delete all test ontology classes (after individuals and relationships cleared)
   try {
     const classesResponse = await apiRequest<any>(page, "/api/classes");
     const classes = extractItems(classesResponse);
@@ -437,7 +494,7 @@ export async function clearTestData(
     cleanupErrors.push({ step: "classes-fetch", error });
   }
 
-  // STEP 4: Delete all test concept schemes (after classes deleted)
+  // STEP 5: Delete all test concept schemes (after classes deleted)
   try {
     const schemesResponse = await apiRequest<any>(page, "/api/schemes");
     const schemes = extractItems(schemesResponse);
@@ -455,7 +512,7 @@ export async function clearTestData(
     cleanupErrors.push({ step: "schemes-fetch", error });
   }
 
-  // STEP 5: Delete all test taxonomies (last — after all dependent entities removed)
+  // STEP 6: Delete all test taxonomies (last — after all dependent entities removed)
   try {
     const taxonomiesResponse = await apiRequest<any>(page, "/api/taxonomies");
     const taxonomies = extractItems(taxonomiesResponse);
