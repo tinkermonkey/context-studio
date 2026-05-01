@@ -43,9 +43,9 @@ test.describe("Taxonomy CRUD Operations", () => {
     await page.getByTestId("taxonomy-title-input").fill("Test Taxonomy");
 
     // Fill in the description
-    await page.getByTestId("taxonomy-description-input").fill(
-      "A test taxonomy for validation",
-    );
+    await page
+      .getByTestId("taxonomy-description-input")
+      .fill("A test taxonomy for validation");
 
     // Submit the form
     await page.getByTestId("taxonomy-submit-button").click();
@@ -105,9 +105,11 @@ test.describe("Taxonomy CRUD Operations", () => {
 
     // Verify detail page contains taxonomy information
     // Note: Detail page displays the taxonomy title as a heading
-    await expect(page.getByRole("heading", { name: taxonomy.title })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: taxonomy.title }),
+    ).toBeVisible();
     // Description is displayed as text on the detail page
-    await expect(page.getByText(taxonomy.description)).toBeVisible();
+    await expect(page.getByText(taxonomy.description!)).toBeVisible();
 
     // Verify API read-back returns same data
     const apiResponse = await apiRequest<any>(
@@ -139,9 +141,7 @@ test.describe("Taxonomy CRUD Operations", () => {
 
     // Update fields
     const titleInput = page.getByTestId("taxonomy-title-input");
-    const descriptionInput = page.getByTestId(
-      "taxonomy-description-input",
-    );
+    const descriptionInput = page.getByTestId("taxonomy-description-input");
 
     await titleInput.fill("test-taxonomy-e2e-update");
     await descriptionInput.fill("Updated description");
@@ -233,7 +233,9 @@ test.describe("Taxonomy CRUD Operations", () => {
 
     // Verify all fields visible in list
     const row = page.getByTestId(`taxonomy-row-${taxonomy.id}`);
-    await expect(row.getByTestId("taxonomy-row-title")).toContainText(testTitle);
+    await expect(row.getByTestId("taxonomy-row-title")).toContainText(
+      testTitle,
+    );
     await expect(row.getByTestId("taxonomy-row-description")).toContainText(
       testDescription,
     );
