@@ -6,7 +6,6 @@ export interface RegistryEntry {
   component?: string;
   status?: "not_yet_implemented" | "future";
   pattern?: boolean;
-  [key: string]: unknown;
 }
 
 export interface SelectorRegistry {
