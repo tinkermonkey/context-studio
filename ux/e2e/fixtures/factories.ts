@@ -412,7 +412,13 @@ export async function clearTestData(
     const classes = extractItems(classesResponse);
     const testClassIds = new Set(
       classes
-        .filter((cls) => isTestEntity(cls, ["test-class-", "seed-class-"]))
+        .filter((cls) =>
+          isTestEntity(cls, [
+            "test-class-",
+            "seed-class-",
+            "test-individual-class",
+          ])
+        )
         .map((cls) => cls.id),
     );
 
@@ -449,6 +455,20 @@ export async function clearTestData(
         await deleteEntityIfMatches(page, individual, "/api/individuals", [
           "test-individual-",
           "seed-individual-",
+          "UI Test Individual",
+          "Multi-Class UI Individual",
+          "List Display Individual",
+          "Class Filter Individual",
+          "Detail View Individual",
+          "Inherited Properties Individual",
+          "Individual To Update",
+          "Individual Updated Via UI",
+          "Add Class Individual",
+          "Remove Class Individual",
+          "Reorder Precedence Test",
+          "Delete Via UI Individual",
+          "No Class Individual",
+          "Last Class Removal Individual",
         ]);
       } catch (error) {
         cleanupErrors.push({ step: "individuals", error });
@@ -485,6 +505,7 @@ export async function clearTestData(
         await deleteEntityIfMatches(page, ontologyClass, "/api/classes", [
           "test-class-",
           "seed-class-",
+          "test-individual-class",
         ]);
       } catch (error) {
         cleanupErrors.push({ step: "classes", error });

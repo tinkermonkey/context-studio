@@ -1024,18 +1024,24 @@ class TestIndividualGraphIntegration:
 
         graph = service.build_graph()
 
-        # Graph should include individuals
-        assert graph.node_count > 0
+        # Graph should have nodes (at minimum: 1 taxonomy + 1 scheme + 2 classes + 2 individuals = 6+)
+        assert graph.node_count >= 6, f"Expected at least 6 nodes, got {graph.node_count}"
 
         # Get degree distribution to verify individuals are in the graph
         degrees = service.get_degree_distribution()
         individuals = repository_with_individuals.list_individuals()
-        assert len(individuals) > 0
+        assert len(individuals) == 2, "Test setup should create 2 individuals"
 
-        # All individuals should be nodes in the graph
+        # All individuals should be nodes in the graph with specific IDs
         individual_ids = [ind.id for ind in individuals]
         for ind_id in individual_ids:
-            assert ind_id in degrees
+            assert ind_id in degrees, f"Individual {ind_id} must be in graph degree distribution"
+
+        # Verify node count includes the individuals
+        actual_individual_ids = [ind.id for ind in individuals]
+        nodes_in_graph = set(degrees.keys())
+        individuals_in_graph = nodes_in_graph.intersection(set(actual_individual_ids))
+        assert len(individuals_in_graph) == 2, "Both individuals must be in graph"
 
     def test_individual_relationships_in_graph(self, repository_with_individuals):
         """Relationships between individuals are included in the graph."""
@@ -1047,16 +1053,31 @@ class TestIndividualGraphIntegration:
 
         graph = service.build_graph()
 
-        # Should have edges (relationships)
-        assert graph.edge_count > 0
+        # Should have edges from relationships
+        assert graph.edge_count > 0, "Graph should have at least one edge from the relationship"
 
-        # Get relationships and verify they're in the graph
-        individuals = repository_with_individuals.list_individuals()
+        # Get relationships and individuals
         relationships = repository_with_individuals.list_relationships()
+        individuals = repository_with_individuals.list_individuals()
 
-        # Should have at least one relationship (between individuals)
-        assert len(relationships) > 0
-        assert len(individuals) > 0
+        # Verify test setup
+        assert len(relationships) == 1, "Test fixture should create exactly 1 relationship"
+        assert len(individuals) == 2, "Test fixture should create exactly 2 individuals"
+
+        # Get the relationship and verify its endpoints
+        rel = relationships[0]
+        assert rel.source_id is not None
+        assert rel.target_id is not None
+
+        # Verify both endpoints exist in the graph
+        degrees = service.get_degree_distribution()
+        assert rel.source_id in degrees, f"Relationship source {rel.source_id} must be in graph"
+        assert rel.target_id in degrees, f"Relationship target {rel.target_id} must be in graph"
+
+        # The source and target should have non-zero degree (at least 1 edge each)
+        # due to the relationship between them
+        assert degrees[rel.source_id] >= 1, f"Source node {rel.source_id} should have degree >= 1"
+        assert degrees[rel.target_id] >= 1, f"Target node {rel.target_id} should have degree >= 1"
 
     def test_individual_node_type_classification(self, repository_with_individuals):
         """Graph correctly classifies individuals by node type."""
@@ -1070,27 +1091,39 @@ class TestIndividualGraphIntegration:
         graph = service.build_graph()
 
         # Verify graph was built successfully
-        assert graph.node_count > 0
-        assert not service._graph_stale
+        assert graph.node_count >= 6, f"Expected at least 6 nodes, got {graph.node_count}"
+        assert not service._graph_stale, "Graph should not be stale after build"
 
         # Get all entities from repository
         entities, relationships = (
             repository_with_individuals.get_all_entities_and_relationships()
         )
 
-        # Should have individuals in the entities list
+        # Should have exactly 2 individuals in the entities list
         individuals = [e for e in entities if isinstance(e, Individual)]
-        assert len(individuals) > 0
+        assert len(individuals) == 2, "Test fixture should create exactly 2 individuals"
 
-        # Verify the node type mapping works for individuals
+        # Verify the node type mapping works correctly for each individual
         for individual in individuals:
             node_type = service._derive_node_type(individual)
-            assert node_type == "individual"
+            assert node_type == "individual", f"Individual {individual.id} should have node type 'individual', got {node_type}"
+            # Also verify the individual is in the graph
+            degrees = service.get_degree_distribution()
+            assert individual.id in degrees, f"Individual {individual.id} should be in graph degree distribution"
 
-    def test_individuals_connected_to_classes_via_class_membership(
+    def test_individuals_and_classes_both_in_graph(
         self, repository_with_individuals
     ):
-        """Individuals are connected to their parent classes in the graph."""
+        """Individuals and their parent classes appear as nodes in the graph.
+
+        NOTE: This test verifies that both individuals and classes are represented
+        as nodes in the graph. However, there is a known gap: class-membership edges
+        (from individual.class_ids) are NOT automatically synthesized in _ensure_graph().
+        Currently, individuals are only connected to other entities via explicit
+        Relationship records. This limitation should be addressed in a follow-up
+        issue: individuals should have edges to their parent classes based on
+        class_ids, representing the membership relationship.
+        """
         service = GraphAnalysisService(
             repository=repository_with_individuals,
             graph_engine=FakeGraphEngine(),
@@ -1099,19 +1132,20 @@ class TestIndividualGraphIntegration:
 
         graph = service.build_graph()
 
-        # Get individuals and their parent classes
+        # Verify graph includes individuals and classes as nodes
+        degrees = service.get_degree_distribution()
+        assert len(degrees) > 0
+
+        # Get individuals and verify they're in the graph
         individuals = repository_with_individuals.list_individuals()
         assert len(individuals) > 0
+        individual_ids = [ind.id for ind in individuals]
+        for ind_id in individual_ids:
+            assert ind_id in degrees, f"Individual {ind_id} should be in graph nodes"
 
-        # Each individual should have parent class IDs
-        for individual in individuals:
-            assert len(individual.class_ids) > 0
-
-        # Verify graph includes all entities
-        degrees = service.get_degree_distribution()
-
-        # Classes should be in the graph
+        # Get classes and verify they're in the graph
         classes = repository_with_individuals.list_classes()
+        assert len(classes) > 0
         class_ids = [cls.id for cls in classes]
         for class_id in class_ids:
-            assert class_id in degrees
+            assert class_id in degrees, f"Class {class_id} should be in graph nodes"
