@@ -16,8 +16,7 @@ from domain.ontology.value_objects import DataPropertyValue
 from domain.ontology.services import OntologyService
 from domain.ontology.exceptions import EntityNotFoundError, DuplicateEntityError
 from domain.ontology.events import (
-    IndividualCreated, IndividualUpdated, IndividualDeleted,
-    GraphInvalidated
+    IndividualCreated, IndividualUpdated, IndividualDeleted
 )
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
@@ -128,7 +127,7 @@ class TestIndividualMultiClassOperations:
         svc, repo, tax, scheme, class1, class2, class3 = sample_ontology
 
         # Create two individuals with same title in different classes
-        ind1 = svc.create_individual(class1.id, "MySQL")
+        svc.create_individual(class1.id, "MySQL")
         ind2 = svc.create_individual(class2.id, "PostgreSQL")
 
         # Try to add ind2 to class1 (where "PostgreSQL" already exists) should fail
@@ -328,7 +327,7 @@ class TestIndividualEventEmission:
         ind = svc.create_individual(class1.id, "MySQL")
         svc._event_publisher.clear()
 
-        updated = svc.update_individual(ind.id, title="MariaDB")
+        svc.update_individual(ind.id, title="MariaDB")
 
         updated_events = svc._event_publisher.get_events_of_type(IndividualUpdated)
         assert len(updated_events) == 1
