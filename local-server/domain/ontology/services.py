@@ -733,7 +733,7 @@ class OntologyService:
         """
         Delete a class.
 
-        Validates that the class has no subclasses before deletion.
+        Validates that the class has no subclasses or individuals before deletion.
         Cleans up any orphaned relationships where the class is source or target.
 
         Args:
@@ -741,7 +741,7 @@ class OntologyService:
 
         Raises:
             EntityNotFoundError: If the class does not exist
-            OntologyError: If the class has subclasses
+            OntologyError: If the class has subclasses or individuals
         """
         cls = self._repository.get_class(class_id)
         if cls is None:
@@ -751,6 +751,11 @@ class OntologyService:
         subclasses = self._repository.list_classes(parent_class_id=class_id)
         if subclasses:
             raise OntologyError(f"Cannot delete class {class_id}: it has {len(subclasses)} subclass(es)")
+
+        # Check for individuals referencing this class
+        individuals = self._repository.list_individuals(class_id=class_id)
+        if individuals:
+            raise OntologyError(f"Cannot delete class {class_id}: it has {len(individuals)} individual(s)")
 
         # Find and delete all relationships where this class is source or target
         orphaned_relationships = self._repository.list_relationships(

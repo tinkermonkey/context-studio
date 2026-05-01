@@ -952,6 +952,16 @@ class TestDeleteClass:
         assert rel1.id in rel_ids
         assert rel2.id in rel_ids
 
+    def test_delete_class_with_individuals_raises(self, service):
+        """Delete class with individuals referencing it raises OntologyError."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        service.create_individual(cls.id, title="Fido")
+
+        with pytest.raises(OntologyError, match="has.*individual"):
+            service.delete_class(class_id=cls.id)
+
 
 class TestCreateRelationship:
     """Tests for create_relationship."""
