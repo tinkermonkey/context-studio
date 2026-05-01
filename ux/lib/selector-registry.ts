@@ -6,6 +6,9 @@ export interface RegistryEntry {
   component?: string;
   status?: "not_yet_implemented" | "future";
   pattern?: boolean;
+  description?: string;
+  file?: string;
+  template_param?: boolean;
 }
 
 export interface SelectorRegistry {
@@ -99,7 +102,16 @@ export function flattenRegistry(
     if (value && typeof value === "object" && !Array.isArray(value)) {
       const typedValue = value as Record<string, unknown>;
       if ("id" in typedValue && typeof typedValue.id === "string") {
-        result.set(typedValue.id, typedValue as RegistryEntry);
+        const entry: RegistryEntry = {
+          id: typedValue.id as string,
+          component: typeof typedValue.component === "string" ? typedValue.component : undefined,
+          status: typedValue.status === "not_yet_implemented" || typedValue.status === "future" ? typedValue.status : undefined,
+          pattern: typeof typedValue.pattern === "boolean" ? typedValue.pattern : undefined,
+          description: typeof typedValue.description === "string" ? typedValue.description : undefined,
+          file: typeof typedValue.file === "string" ? typedValue.file : undefined,
+          template_param: typeof typedValue.template_param === "boolean" ? typedValue.template_param : undefined,
+        };
+        result.set(entry.id, entry);
       } else {
         flattenRegistry(typedValue as SelectorRegistry, result);
       }
