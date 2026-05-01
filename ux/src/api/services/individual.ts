@@ -127,11 +127,11 @@ export class IndividualService extends BaseService {
   /**
    * Remove a class from an individual's class membership
    */
-  async removeClass(id: string, classId: string): Promise<IndividualResponse> {
+  async removeClass(id: string, classId: string): Promise<void> {
     return this.withErrorContext(async () => {
       this.validateRequired(id, "id");
       this.validateRequired(classId, "classId");
-      return this.deleteResource<IndividualResponse>(
+      return this.deleteResource<void>(
         `${ENDPOINTS.INDIVIDUALS}/${id}/classes/${classId}`,
       );
     }, "removeClass");

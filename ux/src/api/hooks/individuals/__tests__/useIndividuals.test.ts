@@ -237,14 +237,7 @@ describe("Individual Hooks", () => {
 
   describe("useRemoveIndividualClass", () => {
     it("should remove a class and invalidate caches", async () => {
-      const response: IndividualResponse = {
-        id: "ind-1",
-        class_ids: ["class-1"],
-        title: "Individual 1",
-        version: 2,
-      };
-
-      mockIndividualService.removeClass.mockResolvedValueOnce(response);
+      mockIndividualService.removeClass.mockResolvedValueOnce(undefined);
 
       const { result } = renderHook(() => useRemoveIndividualClass(), {
         wrapper: createWrapper(),
@@ -256,7 +249,7 @@ describe("Individual Hooks", () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(result.current.data).toEqual(response);
+      expect(result.current.data).toBeUndefined();
       expect(mockIndividualService.removeClass).toHaveBeenCalledWith(
         "ind-1",
         "class-2",

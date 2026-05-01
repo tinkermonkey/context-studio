@@ -167,7 +167,7 @@ export const useAddIndividualClass = (
  */
 export const useRemoveIndividualClass = (
   options?: UseMutationOptions<
-    IndividualResponse,
+    void,
     Error,
     { id: string; classId: string }
   >,
@@ -176,22 +176,10 @@ export const useRemoveIndividualClass = (
 
   return useMutation({
     mutationFn: ({ id, classId }) => individualService.removeClass(id, classId),
-    onSuccess: (updatedIndividual) => {
-      // Update individual cache
-      queryClient.setQueryData(
-        createQueryKey(QUERY_KEYS.INDIVIDUALS, updatedIndividual.id),
-        updatedIndividual,
-      );
-      // Invalidate list
+    onSuccess: () => {
+      // Invalidate all individuals queries to refresh the data
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.INDIVIDUALS],
-      });
-      // Invalidate inherited properties
-      queryClient.invalidateQueries({
-        queryKey: createQueryKey(
-          `${QUERY_KEYS.INDIVIDUALS}_inherited_properties`,
-          updatedIndividual.id,
-        ),
       });
     },
     ...options,

@@ -344,19 +344,12 @@ describe("IndividualService", () => {
 
   describe("removeClass", () => {
     it("should remove a class from an individual", async () => {
-      const response: IndividualResponse = {
-        id: "ind-1",
-        class_ids: ["class-1"],
-        title: "Individual 1",
-        version: 2,
-      };
-
       vi.mocked(mockClient.request).mockResolvedValueOnce({
-        data: response,
+        data: undefined,
       });
 
       const result = await service.removeClass("ind-1", "class-2");
-      expect(result).toEqual(response);
+      expect(result).toBeUndefined();
     });
 
     it("should validate individual ID is required", async () => {
@@ -372,15 +365,8 @@ describe("IndividualService", () => {
     });
 
     it("should send DELETE request to correct endpoint", async () => {
-      const response: IndividualResponse = {
-        id: "ind-1",
-        class_ids: ["class-1"],
-        title: "Individual 1",
-        version: 2,
-      };
-
       vi.mocked(mockClient.request).mockResolvedValueOnce({
-        data: response,
+        data: undefined,
       });
 
       await service.removeClass("ind-1", "class-2");
