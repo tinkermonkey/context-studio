@@ -10,6 +10,7 @@ PRPs/
 **/test_venv/
 build_test_env/
 **/.dr/
+.claude_prompt_*.txt
 
 # Build and runtime artifacts
 *.log

@@ -4,6 +4,7 @@ import {
   createConceptScheme,
   clearTestData,
   apiRequest,
+  APIError,
 } from "../../fixtures/test-helpers";
 
 /**
@@ -254,7 +255,7 @@ test.describe("Concept Scheme CRUD Operations", () => {
       await apiRequest<any>(page, `/api/schemes/${scheme.id}`);
       throw new Error("Scheme was not deleted from API");
     } catch (error: any) {
-      if (!error.message.includes("404")) {
+      if (!(error instanceof APIError && error.statusCode === 404)) {
         throw error;
       }
     }
