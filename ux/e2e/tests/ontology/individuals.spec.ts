@@ -24,7 +24,7 @@ import {
  */
 
 test.describe("Ontology Individual CRUD and Class Membership Operations", () => {
-  let schemeId: string;
+  let _schemeId: string;
   let classIds: string[] = [];
 
   test.beforeEach(async ({ page }) => {
@@ -32,7 +32,7 @@ test.describe("Ontology Individual CRUD and Class Membership Operations", () => 
     const hierarchy = await createTestHierarchy(page, 3, {
       classTitle: "test-individual-class",
     });
-    schemeId = hierarchy.scheme.id;
+    _schemeId = hierarchy.scheme.id;
     classIds = hierarchy.classes.map((cls) => cls.id);
   });
 
@@ -136,7 +136,7 @@ test.describe("Ontology Individual CRUD and Class Membership Operations", () => 
 
   test("should list all individuals and verify UI display", async ({ page }) => {
     // Create individuals via API for faster setup
-    const ind1Response = await apiRequest<any>(page, "/api/individuals", {
+    const _ind1Response = await apiRequest<any>(page, "/api/individuals", {
       method: "POST",
       body: {
         title: "List Display Individual 1",
@@ -145,7 +145,7 @@ test.describe("Ontology Individual CRUD and Class Membership Operations", () => 
       },
     });
 
-    const ind2Response = await apiRequest<any>(page, "/api/individuals", {
+    const _ind2Response = await apiRequest<any>(page, "/api/individuals", {
       method: "POST",
       body: {
         title: "List Display Individual 2",
@@ -207,7 +207,7 @@ test.describe("Ontology Individual CRUD and Class Membership Operations", () => 
     page,
   }) => {
     // Create individual via API
-    const individual = await apiRequest<any>(page, "/api/individuals", {
+    const _individual = await apiRequest<any>(page, "/api/individuals", {
       method: "POST",
       body: {
         title: "Detail View Individual",
@@ -552,7 +552,7 @@ test.describe("Ontology Individual CRUD and Class Membership Operations", () => 
 
   test("should reject removing last parent class via UI", async ({ page }) => {
     // Create individual with single class
-    const individual = await apiRequest<any>(page, "/api/individuals", {
+    const _individual = await apiRequest<any>(page, "/api/individuals", {
       method: "POST",
       body: {
         title: "Last Class Removal Individual",

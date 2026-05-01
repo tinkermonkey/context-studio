@@ -4,7 +4,6 @@ import {
   createConceptScheme,
   createPropertyDefinition,
   createRelationship,
-  createIndividual,
   createTestHierarchy,
   clearTestData,
   apiRequest,
