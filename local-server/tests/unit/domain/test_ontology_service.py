@@ -11,6 +11,8 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+import logging
+
 import pytest
 
 from domain.ontology.services import OntologyService
@@ -1318,8 +1320,6 @@ class TestDeleteRelationship:
 
     def test_delete_relationship_with_individuals_and_deleted_parent_classes(self, service, caplog):
         """Delete relationship where both Individuals have deleted parent classes emits warning and no GraphInvalidated."""
-        import logging
-
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         animal_class = service.create_class(concept_scheme_id=scheme.id, title="Animal")
