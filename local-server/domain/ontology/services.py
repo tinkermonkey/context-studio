@@ -1159,9 +1159,9 @@ class OntologyService:
         if source_class:
             taxonomy_id = source_class.taxonomy_id
         else:
-            # Try source as an Individual (not yet implemented)
+            # Try source as an Individual - resolve its parent class to find taxonomy
             source_individual = self._repository.get_individual(relationship.source_id)
-            if source_individual:
+            if source_individual and source_individual.class_ids:
                 individual_class = self._repository.get_class(source_individual.class_ids[0])
                 if individual_class:
                     taxonomy_id = individual_class.taxonomy_id
@@ -1172,9 +1172,9 @@ class OntologyService:
             if target_class:
                 taxonomy_id = target_class.taxonomy_id
             else:
-                # Try target as an Individual (not yet implemented)
+                # Try target as an Individual - resolve its parent class to find taxonomy
                 target_individual = self._repository.get_individual(relationship.target_id)
-                if target_individual:
+                if target_individual and target_individual.class_ids:
                     individual_class = self._repository.get_class(target_individual.class_ids[0])
                     if individual_class:
                         taxonomy_id = individual_class.taxonomy_id
@@ -1192,6 +1192,15 @@ class OntologyService:
                     "Graph invalidation event may not be recorded in audit trail.",
                     handler_names,
                 )
+        else:
+            _logger.warning(
+                "Could not determine taxonomy for relationship deletion (relationship_id=%s): "
+                "source_id=%s and target_id=%s could not be resolved. "
+                "Graph cache may be stale. Consider investigating deleted classes or individuals.",
+                relationship_id,
+                relationship.source_id,
+                relationship.target_id,
+            )
 
     # PropertyDefinition operations
 

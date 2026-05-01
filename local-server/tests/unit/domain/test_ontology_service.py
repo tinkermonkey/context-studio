@@ -1196,6 +1196,170 @@ class TestDeleteRelationship:
         delete_graph_events = [e for e in graph_events if e.reason == "relationship_deleted"]
         assert len(delete_graph_events) == existing_count
 
+    def test_delete_relationship_with_individual_source(self, service):
+        """Delete relationship where source is an Individual resolves taxonomy from its parent class."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        animal_class = service.create_class(concept_scheme_id=scheme.id, title="Animal")
+        mammal_class = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
+
+        # Create an individual as the source
+        individual = service.create_individual(class_ids=animal_class.id, title="Fluffy")
+
+        prop = service.create_property_definition(identifier="is_a", title="Is A")
+        rel = service.create_relationship(
+            source_id=individual.id,
+            target_id=mammal_class.id,
+            property_definition_id=prop.id,
+        )
+
+        service.delete_relationship(relationship_id=rel.id)
+
+        # Verify the relationship is deleted
+        with pytest.raises(EntityNotFoundError):
+            service.get_relationship(rel.id)
+
+        # Verify GraphInvalidated event uses the Individual's parent class taxonomy
+        graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)
+        delete_graph_events = [e for e in graph_events if e.reason == "relationship_deleted"]
+        assert len(delete_graph_events) == 1
+        assert delete_graph_events[0].taxonomy_id == tax.id
+
+    def test_delete_relationship_with_individual_target(self, service):
+        """Delete relationship where target is an Individual resolves taxonomy from its parent class."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        animal_class = service.create_class(concept_scheme_id=scheme.id, title="Animal")
+        mammal_class = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
+
+        # Create an individual as the target
+        individual = service.create_individual(class_ids=mammal_class.id, title="Fido")
+
+        prop = service.create_property_definition(identifier="is_a", title="Is A")
+        rel = service.create_relationship(
+            source_id=animal_class.id,
+            target_id=individual.id,
+            property_definition_id=prop.id,
+        )
+
+        service.delete_relationship(relationship_id=rel.id)
+
+        # Verify the relationship is deleted
+        with pytest.raises(EntityNotFoundError):
+            service.get_relationship(rel.id)
+
+        # Verify GraphInvalidated event uses the Individual's parent class taxonomy
+        graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)
+        delete_graph_events = [e for e in graph_events if e.reason == "relationship_deleted"]
+        assert len(delete_graph_events) == 1
+        assert delete_graph_events[0].taxonomy_id == tax.id
+
+    def test_delete_relationship_with_both_individuals(self, service):
+        """Delete relationship where both source and target are Individuals."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        animal_class = service.create_class(concept_scheme_id=scheme.id, title="Animal")
+
+        # Create individuals for both source and target
+        individual1 = service.create_individual(class_ids=animal_class.id, title="Fluffy")
+        individual2 = service.create_individual(class_ids=animal_class.id, title="Fido")
+
+        prop = service.create_property_definition(identifier="related_to", title="Related To")
+        rel = service.create_relationship(
+            source_id=individual1.id,
+            target_id=individual2.id,
+            property_definition_id=prop.id,
+        )
+
+        service.delete_relationship(relationship_id=rel.id)
+
+        # Verify the relationship is deleted
+        with pytest.raises(EntityNotFoundError):
+            service.get_relationship(rel.id)
+
+        # Verify GraphInvalidated event uses the taxonomy
+        graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)
+        delete_graph_events = [e for e in graph_events if e.reason == "relationship_deleted"]
+        assert len(delete_graph_events) == 1
+        assert delete_graph_events[0].taxonomy_id == tax.id
+
+    def test_delete_relationship_with_individual_source_deleted_parent_class(self, service):
+        """Delete relationship where source Individual's parent class is deleted uses target class taxonomy."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        animal_class = service.create_class(concept_scheme_id=scheme.id, title="Animal")
+        mammal_class = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
+
+        # Create an individual
+        individual = service.create_individual(class_ids=animal_class.id, title="Fluffy")
+
+        prop = service.create_property_definition(identifier="is_a", title="Is A")
+        rel = service.create_relationship(
+            source_id=individual.id,
+            target_id=mammal_class.id,
+            property_definition_id=prop.id,
+        )
+
+        # Delete the individual's parent class
+        service._repository.delete_class(animal_class.id)
+
+        # Delete the relationship - should use target class's taxonomy
+        service.delete_relationship(relationship_id=rel.id)
+
+        # Verify the relationship is deleted
+        with pytest.raises(EntityNotFoundError):
+            service.get_relationship(rel.id)
+
+        # Verify GraphInvalidated event uses target class taxonomy
+        graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)
+        delete_graph_events = [e for e in graph_events if e.reason == "relationship_deleted"]
+        assert len(delete_graph_events) == 1
+        assert delete_graph_events[0].taxonomy_id == tax.id
+
+    def test_delete_relationship_with_individuals_and_deleted_parent_classes(self, service, caplog):
+        """Delete relationship where both Individuals have deleted parent classes emits warning and no GraphInvalidated."""
+        import logging
+
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        animal_class = service.create_class(concept_scheme_id=scheme.id, title="Animal")
+        mammal_class = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
+
+        # Create individuals for both source and target
+        individual1 = service.create_individual(class_ids=animal_class.id, title="Fluffy")
+        individual2 = service.create_individual(class_ids=mammal_class.id, title="Fido")
+
+        prop = service.create_property_definition(identifier="related_to", title="Related To")
+        rel = service.create_relationship(
+            source_id=individual1.id,
+            target_id=individual2.id,
+            property_definition_id=prop.id,
+        )
+
+        # Delete both parent classes
+        service._repository.delete_class(animal_class.id)
+        service._repository.delete_class(mammal_class.id)
+
+        # Get current count before deletion
+        existing_graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)
+        existing_count = len([e for e in existing_graph_events if e.reason == "relationship_deleted"])
+
+        # Delete the relationship - should not emit GraphInvalidated and should log warning
+        with caplog.at_level(logging.WARNING):
+            service.delete_relationship(relationship_id=rel.id)
+
+        # Verify the relationship is deleted
+        with pytest.raises(EntityNotFoundError):
+            service.get_relationship(rel.id)
+
+        # Verify no new GraphInvalidated event was emitted
+        graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)
+        delete_graph_events = [e for e in graph_events if e.reason == "relationship_deleted"]
+        assert len(delete_graph_events) == existing_count
+
+        # Verify warning was logged
+        assert "Could not determine taxonomy for relationship deletion" in caplog.text
+
 
 class TestGetPropertyDefinition:
     """Tests for get_property_definition."""
