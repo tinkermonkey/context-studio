@@ -153,6 +153,23 @@ function validate() {
   const srcDir = path.join(process.cwd(), "src");
   const e2eDir = path.join(process.cwd(), "e2e", "tests");
 
+  // Check that required directories exist
+  if (!fs.existsSync(srcDir)) {
+    console.error(
+      `❌ FATAL: Required directory not found: ${srcDir}\n` +
+      `This script must be run from the /ux directory.`
+    );
+    process.exit(1);
+  }
+
+  if (!fs.existsSync(e2eDir)) {
+    console.error(
+      `❌ FATAL: Required directory not found: ${e2eDir}\n` +
+      `This script must be run from the /ux directory.`
+    );
+    process.exit(1);
+  }
+
   // Extract selectors from code and E2E tests only (not unit tests)
   const codeSelectors = extractSelectorsFromCode(srcDir);
   const testSelectors = extractSelectorsFromE2ETests(e2eDir);
