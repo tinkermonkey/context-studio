@@ -7,6 +7,7 @@ This module implements all HTTP endpoints for CRUD operations on ontology entiti
 - Classes
 - Relationships
 - PropertyDefinitions
+- Individuals
 
 Each endpoint is a thin adapter that:
 1. Receives HTTP request + parsed Pydantic schema
@@ -835,7 +836,7 @@ async def create_individual(
         Created IndividualResponse
 
     Raises:
-        HTTPException: 400 if invalid, 404 if class not found, 409 if title exists, 422 if invariant violated
+        HTTPException: 400 if invalid or invariant violated, 404 if class not found, 409 if title exists
     """
     try:
         individual = await run_sync_in_executor(
@@ -987,7 +988,7 @@ async def add_parent_class_to_individual(
         Updated IndividualResponse
 
     Raises:
-        HTTPException: 404 if individual or class not found, 422 if class already a parent
+        HTTPException: 400 if class already a parent, 404 if individual or class not found
     """
     try:
         individual = await run_sync_in_executor(
@@ -1016,7 +1017,7 @@ async def remove_parent_class_from_individual(
         service: OntologyService from dependency injection
 
     Raises:
-        HTTPException: 404 if individual not found, 422 if class not a parent or is last parent
+        HTTPException: 400 if class not a parent or is last parent, 404 if individual not found
     """
     try:
         await run_sync_in_executor(

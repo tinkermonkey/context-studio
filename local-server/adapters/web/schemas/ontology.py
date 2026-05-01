@@ -8,6 +8,10 @@ Request schemas (for POST/PUT):
 - ClassUpdateRequest
 - RelationshipCreateRequest
 - PropertyDefinitionCreateRequest
+- IndividualCreateRequest
+- IndividualUpdateRequest
+- IndividualClassRequest
+- IndividualClassListRequest
 
 Response schemas (for GET/returns):
 - TaxonomyResponse
@@ -15,6 +19,7 @@ Response schemas (for GET/returns):
 - ClassResponse
 - RelationshipResponse
 - PropertyDefinitionResponse
+- IndividualResponse
 
 These schemas handle serialization/deserialization between HTTP and domain models.
 """
