@@ -859,3 +859,303 @@ class TestAutoCreatePropertyDefinition:
             assert prop_response.status_code == status.HTTP_200_OK
             prop_data = prop_response.json()
             assert prop_data["title"] == expected_title
+
+
+class TestIndividualCRUD:
+    """Integration tests for individual CRUD operations."""
+
+    @pytest.fixture
+    def setup_class(self, client):
+        """Create a taxonomy, scheme, and class for individual tests."""
+        tax_response = client.post("/api/taxonomies", json={
+            "title": "Individual Test Taxonomy"
+        })
+        taxonomy_id = tax_response.json()["id"]
+
+        scheme_response = client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
+            "title": "Individual Test Scheme"
+        })
+        scheme_id = scheme_response.json()["id"]
+
+        class_response = client.post(f"/api/schemes/{scheme_id}/classes", json={
+            "title": "Individual Test Class"
+        })
+        class_id = class_response.json()["id"]
+
+        return {
+            "taxonomy_id": taxonomy_id,
+            "scheme_id": scheme_id,
+            "class_id": class_id,
+        }
+
+    def test_create_individual_returns_201(self, client, setup_class):
+        """POST /api/individuals returns 201 with valid request."""
+        response = client.post("/api/individuals", json={
+            "class_ids": setup_class["class_id"],
+            "title": "Test Individual",
+            "description": "A test individual"
+        })
+        assert response.status_code == status.HTTP_201_CREATED
+
+    def test_create_individual_response_structure(self, client, setup_class):
+        """POST /api/individuals response has correct structure."""
+        response = client.post("/api/individuals", json={
+            "class_ids": setup_class["class_id"],
+            "title": "Test Individual",
+            "description": "A test individual"
+        })
+        body = response.json()
+
+        assert "id" in body
+        assert body["title"] == "Test Individual"
+        assert body["description"] == "A test individual"
+        assert "class_ids" in body
+        assert setup_class["class_id"] in body["class_ids"]
+        assert "created_at" in body
+        assert body["version"] == 1
+
+    def test_create_individual_with_multiple_classes(self, client, setup_class):
+        """POST /api/individuals with multiple classes."""
+        # Create a second class
+        class2_response = client.post(f"/api/schemes/{setup_class['scheme_id']}/classes", json={
+            "title": "Second Class"
+        })
+        class2_id = class2_response.json()["id"]
+
+        response = client.post("/api/individuals", json={
+            "class_ids": [setup_class["class_id"], class2_id],
+            "title": "Multi-Class Individual"
+        })
+        assert response.status_code == status.HTTP_201_CREATED
+        body = response.json()
+        assert len(body["class_ids"]) == 2
+        assert body["class_ids"][0] == setup_class["class_id"]
+        assert body["class_ids"][1] == class2_id
+
+    def test_create_individual_without_class_fails(self, client):
+        """POST /api/individuals without class_ids returns 400."""
+        response = client.post("/api/individuals", json={
+            "class_ids": [],
+            "title": "Test Individual"
+        })
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_create_individual_with_nonexistent_class_fails(self, client):
+        """POST /api/individuals with nonexistent class returns 404."""
+        response = client.post("/api/individuals", json={
+            "class_ids": str(uuid4()),
+            "title": "Test Individual"
+        })
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_list_individuals_returns_200(self, client, setup_class):
+        """GET /api/individuals returns 200 with list response."""
+        client.post("/api/individuals", json={
+            "class_ids": setup_class["class_id"],
+            "title": "Individual 1"
+        })
+
+        response = client.get("/api/individuals")
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert "items" in body
+        assert "total" in body
+        assert body["total"] > 0
+
+    def test_list_individuals_filter_by_class(self, client, setup_class):
+        """GET /api/individuals?class_id=X filters by class."""
+        client.post("/api/individuals", json={
+            "class_ids": setup_class["class_id"],
+            "title": "Individual 1"
+        })
+
+        response = client.get(f"/api/individuals?class_id={setup_class['class_id']}")
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert body["total"] > 0
+        # All returned individuals should have this class
+        for item in body["items"]:
+            assert setup_class["class_id"] in item["class_ids"]
+
+    def test_get_individual_returns_200(self, client, setup_class):
+        """GET /api/individuals/{id} returns 200 with individual."""
+        create_response = client.post("/api/individuals", json={
+            "class_ids": setup_class["class_id"],
+            "title": "Get Test Individual"
+        })
+        individual_id = create_response.json()["id"]
+
+        response = client.get(f"/api/individuals/{individual_id}")
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert body["id"] == individual_id
+        assert body["title"] == "Get Test Individual"
+
+    def test_get_nonexistent_individual_returns_404(self, client):
+        """GET /api/individuals/{id} returns 404 for nonexistent individual."""
+        response = client.get(f"/api/individuals/{uuid4()}")
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_update_individual_returns_200(self, client, setup_class):
+        """PUT /api/individuals/{id} returns 200 with updated individual."""
+        create_response = client.post("/api/individuals", json={
+            "class_ids": setup_class["class_id"],
+            "title": "Update Test Individual"
+        })
+        individual_id = create_response.json()["id"]
+
+        response = client.put(f"/api/individuals/{individual_id}", json={
+            "title": "Updated Title",
+            "description": "Updated description"
+        })
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert body["title"] == "Updated Title"
+        assert body["version"] == 2
+
+    def test_delete_individual_returns_204(self, client, setup_class):
+        """DELETE /api/individuals/{id} returns 204."""
+        create_response = client.post("/api/individuals", json={
+            "class_ids": setup_class["class_id"],
+            "title": "Delete Test Individual"
+        })
+        individual_id = create_response.json()["id"]
+
+        response = client.delete(f"/api/individuals/{individual_id}")
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+
+        # Verify it's deleted
+        response = client.get(f"/api/individuals/{individual_id}")
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_add_parent_class_to_individual(self, client, setup_class):
+        """POST /api/individuals/{id}/classes adds a parent class."""
+        individual_response = client.post("/api/individuals", json={
+            "class_ids": setup_class["class_id"],
+            "title": "Add Class Test"
+        })
+        individual_id = individual_response.json()["id"]
+
+        # Create a second class
+        class2_response = client.post(f"/api/schemes/{setup_class['scheme_id']}/classes", json={
+            "title": "Second Class"
+        })
+        class2_id = class2_response.json()["id"]
+
+        response = client.post(f"/api/individuals/{individual_id}/classes", json={
+            "class_id": class2_id
+        })
+        assert response.status_code == status.HTTP_201_CREATED
+        body = response.json()
+        assert len(body["class_ids"]) == 2
+        assert class2_id in body["class_ids"]
+
+    def test_remove_parent_class_from_individual(self, client, setup_class):
+        """DELETE /api/individuals/{id}/classes/{class_id} removes a parent class."""
+        # Create individual with two classes
+        class2_response = client.post(f"/api/schemes/{setup_class['scheme_id']}/classes", json={
+            "title": "Second Class"
+        })
+        class2_id = class2_response.json()["id"]
+
+        individual_response = client.post("/api/individuals", json={
+            "class_ids": [setup_class["class_id"], class2_id],
+            "title": "Remove Class Test"
+        })
+        individual_id = individual_response.json()["id"]
+
+        response = client.delete(f"/api/individuals/{individual_id}/classes/{class2_id}")
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+
+        # Verify class was removed
+        get_response = client.get(f"/api/individuals/{individual_id}")
+        body = get_response.json()
+        assert len(body["class_ids"]) == 1
+        assert setup_class["class_id"] in body["class_ids"]
+
+    def test_remove_last_parent_class_fails(self, client, setup_class):
+        """DELETE /api/individuals/{id}/classes/{class_id} fails if only class."""
+        individual_response = client.post("/api/individuals", json={
+            "class_ids": setup_class["class_id"],
+            "title": "Single Class Individual"
+        })
+        individual_id = individual_response.json()["id"]
+
+        response = client.delete(f"/api/individuals/{individual_id}/classes/{setup_class['class_id']}")
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_reorder_individual_classes(self, client, setup_class):
+        """PUT /api/individuals/{id}/classes reorders class list."""
+        # Create individual with two classes
+        class2_response = client.post(f"/api/schemes/{setup_class['scheme_id']}/classes", json={
+            "title": "Second Class"
+        })
+        class2_id = class2_response.json()["id"]
+
+        individual_response = client.post("/api/individuals", json={
+            "class_ids": [setup_class["class_id"], class2_id],
+            "title": "Reorder Test"
+        })
+        individual_id = individual_response.json()["id"]
+
+        response = client.put(f"/api/individuals/{individual_id}/classes", json={
+            "class_ids": [class2_id, setup_class["class_id"]]
+        })
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert body["class_ids"][0] == class2_id
+        assert body["class_ids"][1] == setup_class["class_id"]
+
+    def test_get_individual_inherited_properties(self, client, setup_class):
+        """GET /api/individuals/{id}/inherited-properties returns properties."""
+        individual_response = client.post("/api/individuals", json={
+            "class_ids": setup_class["class_id"],
+            "title": "Properties Test"
+        })
+        individual_id = individual_response.json()["id"]
+
+        response = client.get(f"/api/individuals/{individual_id}/inherited-properties")
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert "items" in body
+        assert "total" in body
+        assert isinstance(body["items"], list)
+
+    def test_round_trip_individual_operations(self, client, setup_class):
+        """Round-trip test: create → add class → reorder → get properties → delete."""
+        # Create individual
+        individual_response = client.post("/api/individuals", json={
+            "class_ids": setup_class["class_id"],
+            "title": "Round Trip Test"
+        })
+        assert individual_response.status_code == status.HTTP_201_CREATED
+        individual_id = individual_response.json()["id"]
+
+        # Add a second class
+        class2_response = client.post(f"/api/schemes/{setup_class['scheme_id']}/classes", json={
+            "title": "Second Class for Round Trip"
+        })
+        class2_id = class2_response.json()["id"]
+
+        add_class_response = client.post(f"/api/individuals/{individual_id}/classes", json={
+            "class_id": class2_id
+        })
+        assert add_class_response.status_code == status.HTTP_201_CREATED
+
+        # Reorder classes
+        reorder_response = client.put(f"/api/individuals/{individual_id}/classes", json={
+            "class_ids": [class2_id, setup_class["class_id"]]
+        })
+        assert reorder_response.status_code == status.HTTP_200_OK
+
+        # Get inherited properties
+        properties_response = client.get(f"/api/individuals/{individual_id}/inherited-properties")
+        assert properties_response.status_code == status.HTTP_200_OK
+
+        # Delete individual
+        delete_response = client.delete(f"/api/individuals/{individual_id}")
+        assert delete_response.status_code == status.HTTP_204_NO_CONTENT
+
+        # Verify deletion
+        get_response = client.get(f"/api/individuals/{individual_id}")
+        assert get_response.status_code == status.HTTP_404_NOT_FOUND
