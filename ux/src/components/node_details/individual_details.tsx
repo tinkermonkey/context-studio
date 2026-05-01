@@ -14,7 +14,6 @@ import { useOntologyClasses } from "@/api/hooks/ontologyClasses";
 import { useIndividualInheritedProperties } from "@/api/hooks/individuals";
 
 type IndividualResponse = components["schemas"]["IndividualResponse"];
-type DataPropertyValueResponse = components["schemas"]["DataPropertyValueResponse"];
 type ClassResponse = components["schemas"]["ClassResponse"];
 
 interface IndividualDetailsProps {
@@ -49,7 +48,7 @@ export const IndividualDetails: React.FC<IndividualDetailsProps> = ({
         <CsSidebarTitle>Individual Details</CsSidebarTitle>
         <CsSidebarSection>
           <div className="space-y-4">
-            <div>
+            <div data-testid="individual-detail-id">
               <h3 className="font-semibold text-gray-700">ID</h3>
               <p className="break-all text-sm text-gray-600">{individual.id}</p>
             </div>
@@ -70,7 +69,9 @@ export const IndividualDetails: React.FC<IndividualDetailsProps> = ({
       <CsMain>
         <CsMainHeader>
           <div className="flex items-center justify-between">
-            <CsMainTitle icon={Hash}>{individual.title}</CsMainTitle>
+            <CsMainTitle icon={Hash} data-testid="individual-detail-title">
+              {individual.title}
+            </CsMainTitle>
             <button
               onClick={() => setIsEditOpen(true)}
               className="flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"

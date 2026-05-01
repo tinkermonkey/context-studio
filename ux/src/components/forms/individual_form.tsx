@@ -6,6 +6,7 @@ import type { components } from "@/api/client/types";
 import {
   useCreateIndividual,
   useUpdateIndividual,
+  useSetIndividualClasses,
 } from "@/api/hooks/individuals";
 import { useOntologyClasses } from "@/api/hooks/ontologyClasses";
 import { renderShortUuid } from "@/utils/renderers";
@@ -28,12 +29,14 @@ const IndividualForm: React.FC<IndividualFormProps> = ({
 }) => {
   const createIndividualMutation = useCreateIndividual();
   const updateIndividualMutation = useUpdateIndividual();
+  const setIndividualClassesMutation = useSetIndividualClasses();
   const { data: availableClasses = [] } = useOntologyClasses();
   const isEdit = !!individual;
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const [selectedClassIds, setSelectedClassIds] = React.useState<string[]>(
     individual?.class_ids ?? [],
   );
+  const [draggedIndex, setDraggedIndex] = React.useState<number | null>(null);
 
   const getDefaultValues = () => ({
     title: individual?.title ?? "",
@@ -50,25 +53,37 @@ const IndividualForm: React.FC<IndividualFormProps> = ({
           return;
         }
 
-        const individualData: IndividualCreateRequest | IndividualUpdateRequest =
-          {
+        if (isEdit && individual?.id) {
+          // For edit: update the individual's title/description
+          const updateData: IndividualUpdateRequest = {
+            title: value.title,
+            description: value.description || null,
+          };
+
+          const result = await updateIndividualMutation.mutateAsync({
+            id: individual.id,
+            data: updateData,
+          });
+
+          // Then update class membership separately
+          await setIndividualClassesMutation.mutateAsync({
+            id: individual.id,
+            classIds: selectedClassIds,
+          });
+
+          if (onSuccess) onSuccess(result);
+        } else {
+          // For create: send class IDs in the create request
+          const createData: IndividualCreateRequest = {
             title: value.title,
             description: value.description || null,
             class_ids: selectedClassIds,
           };
 
-        let result;
-        if (isEdit && individual?.id) {
-          result = await updateIndividualMutation.mutateAsync({
-            id: individual.id,
-            data: individualData as IndividualUpdateRequest,
-          });
-        } else {
-          result = await createIndividualMutation.mutateAsync(
-            individualData as IndividualCreateRequest,
-          );
+          const result = await createIndividualMutation.mutateAsync(createData);
+          if (onSuccess) onSuccess(result);
         }
-        if (onSuccess) onSuccess(result);
+
         form.reset();
       } catch (error: any) {
         console.error("Full error object:", error);
@@ -109,11 +124,30 @@ const IndividualForm: React.FC<IndividualFormProps> = ({
     setSelectedClassIds(selectedClassIds.filter((id) => id !== classId));
   };
 
-  const handleReorderClass = (fromIndex: number, toIndex: number) => {
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = (dropIndex: number) => {
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      return;
+    }
+
     const newClassIds = [...selectedClassIds];
-    const [movedClass] = newClassIds.splice(fromIndex, 1);
-    newClassIds.splice(toIndex, 0, movedClass);
+    const [movedClass] = newClassIds.splice(draggedIndex, 1);
+    newClassIds.splice(dropIndex, 0, movedClass);
     setSelectedClassIds(newClassIds);
+    setDraggedIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
   };
 
   // Get the selected class objects
@@ -211,9 +245,21 @@ const IndividualForm: React.FC<IndividualFormProps> = ({
               selectedClasses.map((selectedClass, index) => (
                 <div
                   key={selectedClass.id}
-                  className="flex items-center gap-2 rounded border border-gray-200 bg-gray-50 p-3"
+                  draggable
+                  onDragStart={() => handleDragStart(index)}
+                  onDragOver={handleDragOver}
+                  onDrop={() => handleDrop(index)}
+                  onDragEnd={handleDragEnd}
+                  className={`flex items-center gap-2 rounded border p-3 transition-opacity ${
+                    draggedIndex === index
+                      ? "border-gray-300 bg-gray-100 opacity-50"
+                      : "border-gray-200 bg-gray-50"
+                  }`}
                 >
-                  <GripVertical className="h-4 w-4 cursor-move text-gray-400" />
+                  <GripVertical
+                    className="h-4 w-4 cursor-move text-gray-400"
+                    data-testid={`individual-classes-reorder-handle-${selectedClass.id}`}
+                  />
                   <div className="flex-1">
                     <div className="font-medium">{selectedClass.title}</div>
                     <div className="text-sm text-gray-500">

@@ -120,6 +120,22 @@ forms:
     description: "Button to add a class to individual"
     file: "ux/src/components/forms/individual_form.tsx"
 
+  individual_classes_remove_button:
+    id: "individual-classes-remove-button-{class_id}"
+    component: "IndividualForm"
+    description: "Button to remove a class from individual"
+    file: "ux/src/components/forms/individual_form.tsx"
+    pattern: true
+    template_param: "class_id (class UUID)"
+
+  individual_classes_reorder_handle:
+    id: "individual-classes-reorder-handle-{class_id}"
+    component: "IndividualForm"
+    description: "Drag handle for reordering parent classes"
+    file: "ux/src/components/forms/individual_form.tsx"
+    pattern: true
+    template_param: "class_id (class UUID)"
+
   individual_form_submit:
     id: "individual-form-submit"
     component: "IndividualForm"
@@ -382,20 +398,22 @@ tables:
     file: "ux/src/components/node_tables/node_table.tsx"
     pattern: true
 
-  individuals_table:
-    id: "individuals-table"
+  individual_table:
+    id: "individual-table"
     component: "IndividualsTable"
     description: "Main data table for listing individuals"
     file: "ux/src/components/node_tables/individuals_table.tsx"
 
-  individuals_table_row:
-    id: "individuals-table-row"
+  individual_table_row:
+    id: "individual-row-{id}"
     component: "IndividualsTable"
     description: "Individual table row for individual entity"
     file: "ux/src/components/node_tables/individuals_table.tsx"
+    pattern: true
+    template_param: "id (individual UUID)"
 
-  individuals_create_button:
-    id: "individuals-create-button"
+  individual_add_button:
+    id: "individual-add-button"
     component: "IndividualsTable"
     description: "Button to create new individual"
     file: "ux/src/components/node_tables/individuals_table.tsx"
@@ -481,18 +499,6 @@ node_details:
     component: "StructureNodeDetails"
     description: "Section displaying child entities or relationships"
     file: "ux/src/components/node_details/structure_node_details.tsx"
-
-  individual_detail_title:
-    id: "individual-detail-title"
-    component: "IndividualDetails"
-    description: "Title heading in individual detail view"
-    file: "ux/src/components/node_details/individual_details.tsx"
-
-  individual_detail_id:
-    id: "individual-detail-id"
-    component: "IndividualDetails"
-    description: "Display of individual ID in detail view"
-    file: "ux/src/components/node_details/individual_details.tsx"
 
   individual_detail_description:
     id: "individual-detail-description"

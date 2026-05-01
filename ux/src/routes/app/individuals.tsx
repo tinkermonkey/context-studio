@@ -1,12 +1,10 @@
 import React from "react";
-import { useIndividuals } from "@/api/hooks/individuals";
 import {
   createFileRoute,
   useNavigate,
   useSearch,
 } from "@tanstack/react-router";
 import { IndividualsTable } from "@/components/node_tables/individuals_table";
-import { Spinner } from "flowbite-react";
 import { CsSidebar, CsSidebarTitle } from "@/components/layout/cs_sidebar";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import { Users } from "lucide-react";
@@ -28,9 +26,6 @@ export const Route = createFileRoute("/app/individuals")({
 });
 
 function IndividualsPage() {
-  const { isLoading: individualsLoading, error: individualsError } =
-    useIndividuals();
-
   const navigate = useNavigate({ from: "/app/individuals" });
   const search = useSearch({ from: "/app/individuals" });
 
@@ -65,15 +60,6 @@ function IndividualsPage() {
     },
     [navigate],
   );
-
-  if (individualsLoading) {
-    return <Spinner />;
-  }
-
-  if (individualsError) {
-    console.error(individualsError);
-    return <div>Error loading Individuals</div>;
-  }
 
   return (
     <>
