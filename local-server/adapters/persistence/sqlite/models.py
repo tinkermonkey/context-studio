@@ -236,7 +236,6 @@ class IndividualClass(Base):  # type: ignore[misc,valid-type]
     __table_args__ = (
         PrimaryKeyConstraint("individual_id", "class_id", name="pk_individual_classes"),
         UniqueConstraint("individual_id", "position", name="uk_individual_position"),
-        Index("idx_class_id", "class_id"),
     )
 
     def __repr__(self) -> str:

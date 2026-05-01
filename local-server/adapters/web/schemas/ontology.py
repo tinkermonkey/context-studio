@@ -27,7 +27,7 @@ These schemas handle serialization/deserialization between HTTP and domain model
 from datetime import datetime
 from typing import Optional, Any, TypeVar, Generic
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 T = TypeVar("T")
 
@@ -247,6 +247,20 @@ class IndividualCreateRequest(BaseModel):
     class_ids: list[str] | str = Field(..., description="ID(s) of the class(es) this individual instantiates (≥1 required)")
     title: str = Field(..., description="Display name for the individual", min_length=1)
     description: Optional[str] = Field(None, description="Optional longer description")
+
+    @field_validator("class_ids", mode="before")
+    @classmethod
+    def validate_class_ids(cls, v: list[str] | str) -> list[str]:
+        """Normalize class_ids to list and validate it's not empty."""
+        # Normalize string to list
+        if isinstance(v, str):
+            v = [v]
+
+        # Reject empty lists
+        if not v:
+            raise ValueError("At least one class ID is required")
+
+        return v
 
 
 class IndividualUpdateRequest(BaseModel):
