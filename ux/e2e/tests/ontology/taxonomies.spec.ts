@@ -18,7 +18,7 @@ import {
  * - Validate form behavior
  * - Verify special character handling
  *
- * Each test uses beforeEach to create preconditions and verifies both
+ * Each test uses afterEach to clean up test data and verifies both
  * UI state and API responses via apiRequest read-back.
  */
 
@@ -207,7 +207,7 @@ test.describe("Taxonomy CRUD Operations", () => {
       throw new Error("Taxonomy was not deleted from API");
     } catch (error: any) {
       // 404 is expected
-      if (!error.message.includes("404")) {
+      if (error.statusCode !== 404) {
         throw error;
       }
     }
@@ -302,8 +302,9 @@ test.describe("Taxonomy CRUD Operations", () => {
 
     // Verify the taxonomy with special characters appears
     const taxonomyList = page.getByTestId("taxonomy-list");
+    const escapedTitle = specialTitle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     await expect(
-      taxonomyList.getByRole("cell", { name: new RegExp(specialTitle) }),
+      taxonomyList.getByRole("cell", { name: new RegExp(escapedTitle) }),
     ).toBeVisible();
   });
 });

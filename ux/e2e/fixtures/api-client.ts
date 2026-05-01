@@ -1,6 +1,20 @@
 import { Page } from "@playwright/test";
 
 /**
+ * Custom error for API request failures that includes status code.
+ */
+export class APIError extends Error {
+  constructor(
+    public statusCode: number,
+    public statusText: string,
+    message: string,
+  ) {
+    super(message);
+    this.name = "APIError";
+  }
+}
+
+/**
  * Make an API request to the backend and return the response.
  */
 
@@ -47,7 +61,9 @@ export async function apiRequest<T = unknown>(
     console.error(`API request failed: ${method} ${endpoint}`);
     console.error(`Status: ${response.status()} ${response.statusText()}`);
     console.error(`Response: ${responseText}`);
-    throw new Error(
+    throw new APIError(
+      response.status(),
+      response.statusText(),
       `API request failed with status ${response.status()}: ${responseText}`,
     );
   }

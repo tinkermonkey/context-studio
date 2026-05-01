@@ -16,9 +16,9 @@ export async function waitForAppReady(page: Page): Promise<void> {
 }
 
 /**
- * Re-export apiRequest from api-client for convenient access
+ * Re-export apiRequest and APIError from api-client for convenient access
  */
-export { apiRequest } from "./api-client";
+export { apiRequest, APIError } from "./api-client";
 
 /**
  * Export factory functions for convenient access
