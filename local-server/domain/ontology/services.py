@@ -1827,6 +1827,9 @@ class OntologyService:
                 f"Individual with title '{individual.title}' already exists in class '{class_id}'"
             )
 
+        # Capture old state for event (before mutation)
+        old_class_ids = list(individual.class_ids)
+
         # Add the class to the individual and save
         individual.add_parent_class(class_id)
         individual = self._repository.save_individual(individual)
@@ -1835,7 +1838,7 @@ class OntologyService:
         failures = self._event_publisher.publish(IndividualUpdated(
             individual_id=individual_id,
             changed_fields=("class_ids",),
-            old_values={"class_ids": individual.class_ids[:-1]},
+            old_values={"class_ids": old_class_ids},
             new_values={"class_ids": individual.class_ids},
         ))
         if failures:
@@ -1888,25 +1891,25 @@ class OntologyService:
         individual.remove_parent_class(class_id)
         individual = self._repository.save_individual(individual)
 
-        # Get the taxonomy from the removed class for event publishing
+        # Emit IndividualUpdated event (unconditionally - it records individual state change)
+        failures = self._event_publisher.publish(IndividualUpdated(
+            individual_id=individual_id,
+            changed_fields=("class_ids",),
+            old_values={"class_ids": old_class_ids},
+            new_values={"class_ids": individual.class_ids},
+        ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for IndividualUpdated (individual_id=%s): %s. "
+                "Class removed from individual but audit trail may have gaps.",
+                individual_id,
+                handler_names,
+            )
+
+        # Get the taxonomy from the removed class for GraphInvalidated event
         cls = self._repository.get_class(class_id)
         if cls:
-            # Emit IndividualUpdated event
-            failures = self._event_publisher.publish(IndividualUpdated(
-                individual_id=individual_id,
-                changed_fields=("class_ids",),
-                old_values={"class_ids": old_class_ids},
-                new_values={"class_ids": individual.class_ids},
-            ))
-            if failures:
-                handler_names = ", ".join(name for name, _ in failures)
-                _logger.warning(
-                    "Event handlers failed for IndividualUpdated (individual_id=%s): %s. "
-                    "Class removed from individual but audit trail may have gaps.",
-                    individual_id,
-                    handler_names,
-                )
-
             # Emit GraphInvalidated event
             failures = self._event_publisher.publish(GraphInvalidated(
                 taxonomy_id=cls.taxonomy_id,

@@ -19,7 +19,8 @@ from domain.ontology.events import (
     SchemeCreated, SchemeUpdated, SchemeDeleted,
     ClassCreated, ClassUpdated, ClassDeleted,
     ClassMoved, RelationshipCreated, RelationshipDeleted,
-    PropertyDefinitionCreated, GraphInvalidated
+    PropertyDefinitionCreated, GraphInvalidated,
+    IndividualCreated, IndividualUpdated, IndividualDeleted
 )
 from domain.ontology.exceptions import EntityNotFoundError, CircularReferenceError, DuplicateEntityError, OntologyError
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
