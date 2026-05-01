@@ -35,11 +35,17 @@ type TestReport =
       failure: FailureReport;
     };
 
-interface AttemptReport {
-  status: "passed" | "failed" | "skipped" | "timedOut" | "interrupted";
-  duration_ms: number;
-  failure?: FailureReport;
-}
+type AttemptReport =
+  | {
+      status: "passed" | "skipped";
+      duration_ms: number;
+      failure?: never;
+    }
+  | {
+      status: "failed" | "timedOut" | "interrupted";
+      duration_ms: number;
+      failure: FailureReport;
+    };
 
 interface FailureReport {
   message: string;
@@ -87,6 +93,7 @@ interface SelectorCoverage {
   coverage_percentage: number;
   gaps: string[];
   undocumented: string[];
+  registry_error?: string;
 }
 
 type SelectorRegistry = SharedSelectorRegistry;
@@ -97,6 +104,8 @@ export default class StructuredReporter implements Reporter {
   private tests: TestReport[] = [];
   private selectorRegistry: SelectorRegistry = {};
   private usedSelectors: Set<string> = new Set();
+  private registryParseError: Error | null = null;
+  private fileSourceCache: Map<string, string> = new Map();
 
   constructor() {
     this.reportDir = path.join(__dirname, "..", "reports");
@@ -127,9 +136,10 @@ export default class StructuredReporter implements Reporter {
         );
       }
     } catch (error) {
+      this.registryParseError = error instanceof Error ? error : new Error(String(error));
       console.error(
         `Failed to parse selector registry YAML at ${registryPath}: ` +
-        `${error instanceof Error ? error.message : String(error)}. ` +
+        `${this.registryParseError.message}. ` +
         `Coverage report will be unavailable.`
       );
       this.selectorRegistry = {};
@@ -227,13 +237,18 @@ export default class StructuredReporter implements Reporter {
     const jsonWriteSuccess = this.writeJsonReport(report, runId);
     const markdownWriteSuccess = this.writeMarkdownReport(report, runId);
 
-    if (!jsonWriteSuccess || !markdownWriteSuccess) {
-      const failedReports = [];
-      if (!jsonWriteSuccess) failedReports.push("JSON");
-      if (!markdownWriteSuccess) failedReports.push("Markdown");
+    if (!jsonWriteSuccess) {
+      const error = new Error(
+        `Failed to write JSON report for run ${runId}. ` +
+        `This is a critical failure as the JSON report is the core agentic deliverable.`
+      );
+      throw error;
+    }
+
+    if (!markdownWriteSuccess) {
       console.error(
-        `⚠️ Failed to write ${failedReports.join(" and ")} report(s) for run ${runId}. ` +
-        `Downstream consumers may not receive test results.`
+        `⚠️ Failed to write Markdown report for run ${runId}. ` +
+        `JSON report was written successfully, but human-readable summary is unavailable.`
       );
     }
 
@@ -249,11 +264,21 @@ export default class StructuredReporter implements Reporter {
   }
 
   private extractAttempts(test: TestCase): AttemptReport[] {
-    return test.results.map((result) => ({
-      status: result.status,
-      duration_ms: result.duration,
-      failure: result.status === "failed" ? this.extractFailureInfo(result) : undefined,
-    }));
+    return test.results.map((result) => {
+      const hasFailure = result.status === "failed" || result.status === "timedOut" || result.status === "interrupted";
+      if (hasFailure) {
+        return {
+          status: result.status,
+          duration_ms: result.duration,
+          failure: this.extractFailureInfo(result),
+        } as AttemptReport;
+      } else {
+        return {
+          status: result.status,
+          duration_ms: result.duration,
+        } as AttemptReport;
+      }
+    });
   }
 
   private extractFailureInfo(result: TestResult): FailureReport {
@@ -275,7 +300,12 @@ export default class StructuredReporter implements Reporter {
     const testFile = test.location.file;
     if (testFile && fs.existsSync(testFile)) {
       try {
-        const source = fs.readFileSync(testFile, "utf-8");
+        // Use cached source if available to avoid re-reading the same file
+        let source = this.fileSourceCache.get(testFile);
+        if (!source) {
+          source = fs.readFileSync(testFile, "utf-8");
+          this.fileSourceCache.set(testFile, source);
+        }
         // Look for getByTestId calls in the entire test file
         const selectorPattern = /(?:getByTestId|data-testid)[=\s(]*['"`]([^'"`]+)['"`]/g;
         let match;
@@ -361,12 +391,19 @@ export default class StructuredReporter implements Reporter {
         ? Math.round((coveredCount / Object.keys(documented).length) * 100)
         : 0;
 
-    return {
+    const coverage: SelectorCoverage = {
       documented,
       coverage_percentage: coveragePercentage,
       gaps,
       undocumented,
     };
+
+    // Include parse error if one occurred, so agents can distinguish from legitimate 0% coverage
+    if (this.registryParseError) {
+      coverage.registry_error = this.registryParseError.message;
+    }
+
+    return coverage;
   }
 
 
@@ -480,7 +517,12 @@ export default class StructuredReporter implements Reporter {
     try {
       const sha = execSync("git rev-parse --short HEAD", { encoding: "utf-8" }).trim();
       return sha;
-    } catch {
+    } catch (error) {
+      console.warn(
+        `Failed to retrieve git commit SHA: ` +
+        `${error instanceof Error ? error.message : String(error)}. ` +
+        `Run ID will use "unknown" as fallback.`
+      );
       return "unknown";
     }
   }

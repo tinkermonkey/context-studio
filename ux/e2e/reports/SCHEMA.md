@@ -72,7 +72,7 @@ This approach maintains a single source of truth (the tests array) and avoids re
 
 ```json
 {
-  "status": "passed" | "failed" | "skipped",
+  "status": "passed" | "failed" | "skipped" | "timedOut" | "interrupted",
   "duration_ms": "number",
   "failure": {/* FailureReport */}
 }
@@ -82,9 +82,9 @@ This approach maintains a single source of truth (the tests array) and avoids re
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `status` | enum | Outcome of this attempt: `passed`, `failed`, or `skipped` |
+| `status` | enum | Outcome of this attempt: `passed`, `failed`, `skipped`, `timedOut`, or `interrupted`. `timedOut` indicates test exceeded timeout. `interrupted` indicates test was interrupted (e.g., by Playwright's interrupt signal). |
 | `duration_ms` | number | Duration of this attempt in milliseconds |
-| `failure` | object | Only present if attempt failed; see `FailureReport` below |
+| `failure` | object | Only present if attempt failed, timed out, or was interrupted; see `FailureReport` below |
 
 ## FailureReport Object
 
@@ -119,7 +119,8 @@ This approach maintains a single source of truth (the tests array) and avoids re
   },
   "coverage_percentage": "number",
   "gaps": ["string"],
-  "undocumented": ["string"]
+  "undocumented": ["string"],
+  "registry_error": "string"
 }
 ```
 
@@ -131,6 +132,7 @@ This approach maintains a single source of truth (the tests array) and avoids re
 | `coverage_percentage` | number | Percentage of documented selectors that were exercised in this run (0–100). Calculated as: `(exercised / total_documented) * 100`. |
 | `gaps` | array | List of selector IDs that are documented in the registry but were **not** exercised in this run. Use to identify untested code paths. |
 | `undocumented` | array | List of selector values that were **used** in tests but not found in the selector registry. Indicates missing documentation. |
+| `registry_error` | string | **Optional.** Present if the selector registry YAML failed to parse. Contains the error message. When present, `documented` will be empty and coverage metrics are unreliable. Agents should treat this as a critical signal that selector tracking failed, distinct from legitimate 0% coverage. |
 
 ## SelectorCoverage.documented[id] Object
 
