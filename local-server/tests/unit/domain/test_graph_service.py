@@ -1129,24 +1129,126 @@ class TestIndividualGraphIntegration:
         service.build_graph()
 
         # Verify graph includes individuals and classes as nodes
-        degrees = service.get_degree_distribution()
-        assert len(degrees) > 0
+        in_degrees, out_degrees = service.get_degree_distributions()
+        assert len(in_degrees) > 0
+        assert len(out_degrees) > 0
 
         # Get individuals and verify they're in the graph
         individuals = repository_with_individuals.list_individuals()
-        assert len(individuals) > 0
-        individual_ids = [ind.id for ind in individuals]
-        for ind_id in individual_ids:
-            assert ind_id in degrees, f"Individual {ind_id} should be in graph nodes"
+        assert len(individuals) == 2, "Test fixture should create 2 individuals"
+        individual1, individual2 = individuals[0], individuals[1]
+
+        # Individual 1 has 1 class, Individual 2 has 2 classes
+        individual1_classes = individual1.class_ids
+        individual2_classes = individual2.class_ids
+        assert len(individual1_classes) == 1, "Individual 1 should belong to 1 class"
+        assert len(individual2_classes) == 2, "Individual 2 should belong to 2 classes"
 
         # Get classes and verify they're in the graph
         classes = repository_with_individuals.list_classes()
-        assert len(classes) > 0
+        assert len(classes) == 2, "Test fixture should create 2 classes"
+        class1, class2 = classes[0], classes[1]
         class_ids = [cls.id for cls in classes]
-        for class_id in class_ids:
-            assert class_id in degrees, f"Class {class_id} should be in graph nodes"
 
-        # Verify class-membership edges are synthesized
-        # Individual 1 has 1 class, Individual 2 has 2 classes = 3 synthesized edges minimum
-        # Plus 1 explicit relationship edge = 4 edges minimum
-        assert service.build_graph().edge_count >= 4, "Graph should have at least 4 edges (3 synthesized + 1 explicit)"
+        # Verify all individuals and classes are nodes
+        for ind in individuals:
+            assert ind.id in in_degrees, f"Individual {ind.id} should be in graph nodes"
+            assert ind.id in out_degrees, f"Individual {ind.id} should be in graph nodes"
+        for cls in classes:
+            assert cls.id in in_degrees, f"Class {cls.id} should be in graph nodes"
+            assert cls.id in out_degrees, f"Class {cls.id} should be in graph nodes"
+
+        # Verify correct edge directions through degree analysis:
+        # - individual1 should have out-degree 2: 1 class edge + 1 relationship edge to individual2
+        # - individual2 should have out-degree 2: 2 class edges
+        # - class1 should have in-degree 2: individual1 and individual2 point to it
+        # - class2 should have in-degree 1: individual2 points to it
+        assert out_degrees[individual1.id] == 2, \
+            f"Individual1 out-degree should be 2 (→class1 synthesized + →individual2 explicit), got {out_degrees[individual1.id]}"
+        assert out_degrees[individual2.id] == 2, \
+            f"Individual2 out-degree should be 2 (→class1 + →class2 synthesized), got {out_degrees[individual2.id]}"
+        assert in_degrees[class1.id] == 2, \
+            f"Class1 in-degree should be 2 (←individual1 + ←individual2), got {in_degrees[class1.id]}"
+        assert in_degrees[class2.id] == 1, \
+            f"Class2 in-degree should be 1 (←individual2), got {in_degrees[class2.id]}"
+
+        # Verify graph has expected edge count
+        # 3 synthesized edges (individual1→class1, individual2→class1, individual2→class2)
+        # + 1 explicit relationship edge (individual1→individual2)
+        # = 4 total edges
+        assert service.build_graph().edge_count == 4, "Graph should have exactly 4 edges (3 synthesized + 1 explicit)"
+
+    def test_individuals_rdf_class_membership_synthesis(
+        self, repository_with_individuals
+    ):
+        """RDF graph includes synthesized class-membership edges from individuals.
+
+        The _ensure_rdf() method synthesizes class-membership edges from
+        individual.class_ids, and these edges must appear in RDF queries.
+        RDF predicates for synthesized edges (property_definition_id=None)
+        map to "has_relationship" in the fake RDF engine.
+        """
+        service = GraphAnalysisService(
+            repository=repository_with_individuals,
+            graph_engine=FakeGraphEngine(),
+            query_engine=FakeSemanticQueryEngine(),
+        )
+
+        # Get individuals and classes
+        individuals = repository_with_individuals.list_individuals()
+        assert len(individuals) == 2
+        individual1, individual2 = individuals[0], individuals[1]
+
+        classes = repository_with_individuals.list_classes()
+        assert len(classes) == 2
+        class1, class2 = classes[0], classes[1]
+
+        # Verify test fixture setup
+        assert class1.id in individual1.class_ids, "Individual1 should belong to class1"
+        assert class1.id in individual2.class_ids, "Individual2 should belong to class1"
+        assert class2.id in individual2.class_ids, "Individual2 should belong to class2"
+
+        # Verify RDF is loaded (triggers _ensure_rdf which synthesizes edges)
+        triple_count = service.get_triple_count()
+        assert triple_count > 0, "RDF graph should have triples after loading"
+
+        # Verify synthesized edges appear in get_triples via subject filter
+        # This tests the RDF/SPARQL path and confirms synthesized edges are present
+        triples_ind1 = service.get_triples(subject=str(individual1.id))
+        assert isinstance(triples_ind1, list), "get_triples should return a list"
+
+        # Individual1 should have edges to:
+        # - its class (class1) via synthesized edge
+        # - individual2 via explicit relationship
+        # So at least 2 triples (may be more if type triples are included)
+        assert len(triples_ind1) >= 1, \
+            f"Individual1 should have at least 1 triple for synthesized class edge, got {len(triples_ind1)}: {triples_ind1}"
+
+        # Verify that get_triples for individual2 includes edges to both classes
+        triples_ind2 = service.get_triples(subject=str(individual2.id))
+        assert len(triples_ind2) >= 2, \
+            f"Individual2 should have at least 2 triples (→class1 + →class2), got {len(triples_ind2)}: {triples_ind2}"
+
+        # Verify specific synthesized edges exist by checking triples
+        # Individual1 should have a triple with class1 as object
+        ind1_to_class1_exists = any(
+            triple[0] == str(individual1.id) and triple[2] == str(class1.id)
+            for triple in triples_ind1
+        )
+        assert ind1_to_class1_exists, \
+            f"RDF should include synthesized edge from {individual1.id} to {class1.id}"
+
+        # Individual2 should have triples with both class1 and class2 as objects
+        ind2_to_class1_exists = any(
+            triple[0] == str(individual2.id) and triple[2] == str(class1.id)
+            for triple in triples_ind2
+        )
+        assert ind2_to_class1_exists, \
+            f"RDF should include synthesized edge from {individual2.id} to {class1.id}"
+
+        ind2_to_class2_exists = any(
+            triple[0] == str(individual2.id) and triple[2] == str(class2.id)
+            for triple in triples_ind2
+        )
+        assert ind2_to_class2_exists, \
+            f"RDF should include synthesized edge from {individual2.id} to {class2.id}"
