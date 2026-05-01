@@ -69,6 +69,7 @@ export async function apiRequest<T = unknown>(
     console.error(`Response body: ${responseText}`);
     throw new Error(
       `Failed to parse JSON from ${method} ${endpoint}: ${error instanceof Error ? error.message : String(error)}. Response: ${responseText.slice(0, 200)}`,
+      { cause: error },
     );
   }
 }
