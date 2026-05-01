@@ -1148,7 +1148,7 @@ class TestIndividualGraphIntegration:
         classes = repository_with_individuals.list_classes()
         assert len(classes) == 2, "Test fixture should create 2 classes"
         class1, class2 = classes[0], classes[1]
-        class_ids = [cls.id for cls in classes]
+        [cls.id for cls in classes]
 
         # Verify all individuals and classes are nodes
         for ind in individuals:
