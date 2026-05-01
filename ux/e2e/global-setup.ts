@@ -19,14 +19,11 @@ async function waitForUrl(url: string, timeout: number = 30000): Promise<void> {
   console.log(`Waiting for ${url} to be ready...`);
 
   while (Date.now() - startTime < timeout) {
+    let response: Response;
     try {
-      const response = await globalThis.fetch(url);
-      if (response.ok) {
-        console.log(`✓ ${url} is ready`);
-        return;
-      }
+      response = await globalThis.fetch(url);
     } catch {
-      // Server not ready yet, continue waiting
+      // Network error: server not ready yet, continue waiting
       const elapsed = Date.now() - startTime;
       if (elapsed % 5000 < interval) {
         // Log every 5 seconds
@@ -34,7 +31,34 @@ async function waitForUrl(url: string, timeout: number = 30000): Promise<void> {
           `  Still waiting for ${url}... (${Math.round(elapsed / 1000)}s)`,
         );
       }
+      await new Promise((resolve) => setTimeout(resolve, interval));
+      continue;
     }
+
+    if (response.ok) {
+      console.log(`✓ ${url} is ready`);
+      return;
+    }
+
+    // Server returned an error status code (not a connection error)
+    // 4xx errors (client errors) are fatal — server is up but something is misconfigured
+    // 5xx errors (server errors) are transient during startup — retry
+    if (response.status >= 400 && response.status < 500) {
+      throw new Error(
+        `Server returned ${response.status} ${response.statusText}. ` +
+          `Check the server logs for details.`,
+      );
+    }
+
+    // 5xx errors are transient during startup, continue waiting and retrying
+    const elapsed = Date.now() - startTime;
+    if (elapsed % 5000 < interval) {
+      // Log every 5 seconds
+      console.log(
+        `  Server returned ${response.status}, retrying... (${Math.round(elapsed / 1000)}s)`,
+      );
+    }
+
     await new Promise((resolve) => setTimeout(resolve, interval));
   }
 
@@ -46,9 +70,13 @@ async function waitForUrl(url: string, timeout: number = 30000): Promise<void> {
  *
  * This function:
  * 1. Cleans test databases
- * 2. Starts the Python FastAPI backend server
- * 3. Starts the React Vite frontend dev server
- * 4. Waits for both servers to be ready
+ * 2. Checks Python virtual environment exists
+ * 3. Runs database migrations (local.db and operations.db)
+ * 4. Starts the Python FastAPI backend server
+ * 5. Waits for backend server to be ready
+ * 6. Starts the React Vite frontend dev server
+ * 7. Waits for frontend server to be ready
+ * 8. Stores process PIDs for teardown
  *
  * The servers will run for the entire test suite and be torn down
  * in global-teardown.ts.
@@ -68,10 +96,21 @@ async function globalSetup(): Promise<void> {
   fs.mkdirSync(testDbDir, { recursive: true });
   console.log("✅ Test databases cleaned\n");
 
-  // 2. Run database migrations
-  console.log("🔄 Running database migrations...");
+  // 2. Check if virtual environment exists (before using it)
+  console.log("🔧 Checking Python virtual environment...");
   const backendPath = path.resolve(__dirname, "../../local-server");
   const venvPythonPath = path.join(backendPath, ".venv/bin/python");
+
+  if (!fs.existsSync(venvPythonPath)) {
+    throw new Error(
+      `Virtual environment not found at ${venvPythonPath}. ` +
+        'Please run "python -m venv .venv" and "pip install -r requirements.txt" in /local-server',
+    );
+  }
+  console.log("✅ Virtual environment found\n");
+
+  // 3. Run database migrations
+  console.log("🔄 Running database migrations...");
 
   try {
     const testLocalDb = path.resolve(
@@ -119,16 +158,8 @@ async function globalSetup(): Promise<void> {
     throw error;
   }
 
-  // 3. Start Python backend
+  // 4. Start Python backend
   console.log("🐍 Starting Python backend (port 8888)...");
-
-  // Check if virtual environment exists
-  if (!fs.existsSync(venvPythonPath)) {
-    throw new Error(
-      `Virtual environment not found at ${venvPythonPath}. ` +
-        'Please run "python -m venv .venv" and "pip install -r requirements.txt" in /local-server',
-    );
-  }
 
   // Check if config.e2e.json exists
   const e2eConfigPath = path.join(backendPath, "config.e2e.json");
@@ -151,10 +182,16 @@ async function globalSetup(): Promise<void> {
     stdio: ["ignore", "pipe", "pipe"],
   });
 
-  console.log(`🔍 Backend spawned with CONFIG_PATH: ${e2eConfigPath}`);
+  if (!backendProcess.pid) {
+    throw new Error(
+      "Backend process failed to spawn: no PID assigned. Check that Python is available and the virtual environment is properly set up.",
+    );
+  }
+
+  console.log(`🔍 Backend spawned (PID: ${backendProcess.pid}) with CONFIG_PATH: ${e2eConfigPath}`);
 
   // Log backend output
-  // Set SHOW_BACKEND_LOGS=true environment variable to see all backend output
+  // Set SHOW_BACKEND_LOGS=true to also see backend stdout (stderr is always logged)
   const showBackendLogs = process.env.SHOW_BACKEND_LOGS === "true";
 
   backendProcess.stdout?.on("data", (data) => {
@@ -167,14 +204,9 @@ async function globalSetup(): Promise<void> {
   backendProcess.stderr?.on("data", (data) => {
     const message = data.toString().trim();
     if (message) {
-      // Always show errors, or all output if SHOW_BACKEND_LOGS is set
-      if (
-        showBackendLogs ||
-        message.toLowerCase().includes("error") ||
-        message.toLowerCase().includes("warning")
-      ) {
-        console.error(`   [Backend] ${message}`);
-      }
+      // Show all stderr output: Python tracebacks, errors, warnings, CRITICAL/FATAL messages, etc.
+      // This ensures startup failures and important diagnostics are never silently dropped
+      console.error(`   [Backend] ${message}`);
     }
   });
 
@@ -185,7 +217,7 @@ async function globalSetup(): Promise<void> {
     }
   });
 
-  // 4. Wait for backend to be ready (60s timeout for initial NLP model loading)
+  // 5. Wait for backend to be ready (60s timeout for initial NLP model loading)
   try {
     await waitForUrl("http://localhost:8888/api/v1/admin/health", 60000);
     console.log("✅ Backend ready\n");
@@ -197,7 +229,7 @@ async function globalSetup(): Promise<void> {
     throw error;
   }
 
-  // 5. Start frontend dev server
+  // 6. Start frontend dev server
   console.log("⚛️  Starting frontend (port 3888)...");
   const frontendPath = path.resolve(__dirname, "..");
 
@@ -223,6 +255,15 @@ async function globalSetup(): Promise<void> {
     },
   );
 
+  if (!frontendProcess.pid) {
+    if (backendProcess) {
+      backendProcess.kill("SIGTERM");
+    }
+    throw new Error(
+      "Frontend process failed to spawn: no PID assigned. Check that npm is available and properly configured.",
+    );
+  }
+
   // Log frontend output (Vite outputs to stderr)
   frontendProcess.stdout?.on("data", (data) => {
     const message = data.toString().trim();
@@ -233,9 +274,9 @@ async function globalSetup(): Promise<void> {
 
   frontendProcess.stderr?.on("data", (data) => {
     const message = data.toString().trim();
-    // Only log actual errors, not Vite's normal output
-    if (message && message.toLowerCase().includes("error")) {
-      console.error(`   [Frontend Error] ${message}`);
+    if (message) {
+      // Show all stderr output to capture startup failures and important diagnostics
+      console.error(`   [Frontend] ${message}`);
     }
   });
 
@@ -245,7 +286,7 @@ async function globalSetup(): Promise<void> {
     }
   });
 
-  // 6. Wait for frontend to be ready
+  // 7. Wait for frontend to be ready
   try {
     await waitForUrl("http://localhost:3888", 60000);
     console.log("✅ Frontend ready\n");
@@ -260,13 +301,9 @@ async function globalSetup(): Promise<void> {
     throw error;
   }
 
-  // 7. Store process PIDs for teardown
-  if (backendProcess.pid) {
-    process.env.E2E_BACKEND_PID = backendProcess.pid.toString();
-  }
-  if (frontendProcess.pid) {
-    process.env.E2E_FRONTEND_PID = frontendProcess.pid.toString();
-  }
+  // 8. Store process PIDs for teardown (verified to exist above)
+  process.env.E2E_BACKEND_PID = backendProcess.pid!.toString();
+  process.env.E2E_FRONTEND_PID = frontendProcess.pid!.toString();
 
   console.log("🎉 E2E environment ready!\n");
   console.log("   Frontend: http://localhost:3888");

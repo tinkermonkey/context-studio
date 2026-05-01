@@ -25,6 +25,7 @@ export default defineConfig({
   reporter: [
     ["html", { outputFolder: "playwright-report", open: "never" }],
     ["list"],
+    [path.resolve(__dirname, "./e2e/reporters/structured-reporter.ts")],
   ],
 
   // Test behavior defaults

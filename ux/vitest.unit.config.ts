@@ -9,7 +9,12 @@ export default defineConfig({
     coverage: {
       provider: "istanbul",
     },
-    exclude: ["node_modules", "dist", "test/integration/**", "e2e/**"],
+    exclude: [
+      "node_modules",
+      "dist",
+      "test/integration/**",
+      "e2e/**",
+    ],
   },
   resolve: {
     alias: {

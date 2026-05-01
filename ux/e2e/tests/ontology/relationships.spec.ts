@@ -4,6 +4,7 @@ import {
   createRelationship,
   clearTestData,
   apiRequest,
+  APIError,
 } from "../../fixtures/test-helpers";
 import type { Relationship, OntologyClass } from "@/api/types/ontology";
 
@@ -157,7 +158,7 @@ test.describe("Relationship CRUD Operations", () => {
       );
       throw new Error("Relationship was not deleted from API");
     } catch (error: any) {
-      if (!error.message.includes("404")) {
+      if (!(error instanceof APIError && error.statusCode === 404)) {
         throw error;
       }
     }

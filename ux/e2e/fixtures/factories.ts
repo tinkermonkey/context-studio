@@ -16,7 +16,7 @@ import type {
  * the default dataset.
  *
  * All factory-created entities use a run-specific prefix/suffix
- * (timestamp + random suffix) to ensure uniqueness and isolation within a test run.
+ * (timestamp + incrementing counter) to ensure uniqueness and isolation within a test run.
  */
 
 let entityCounter = 0;
@@ -169,23 +169,21 @@ export async function createPropertyDefinition(
  * @param page - Playwright page object
  * @param sourceClassId - ID of the source class
  * @param targetClassId - ID of the target class
- * @param relationshipType - Type of relationship (e.g., "related_to", "parent_of")
+ * @param relationshipType - Relationship type identifier (e.g., 'related_to', 'parent_of')
  * @returns Created Relationship entity
  */
 export async function createRelationship(
   page: Page,
   sourceClassId: string,
   targetClassId: string,
-  relationshipType?: string,
+  relationshipType: string,
 ): Promise<Relationship> {
-  const type = relationshipType || "related_to";
-
   const response = await apiRequest<Relationship>(page, "/api/relationships", {
     method: "POST",
     body: {
       source_id: sourceClassId,
       target_id: targetClassId,
-      relationship_type: type,
+      relationship_type: relationshipType,
     },
   });
 
@@ -341,7 +339,9 @@ export async function clearTestData(
     if (response?.data && Array.isArray(response.data)) {
       return response.data;
     }
-    return [];
+    throw new Error(
+      `Unable to extract items from API response. Expected array, {items: array}, or {data: array}, but got: ${JSON.stringify(response).slice(0, 200)}`,
+    );
   };
 
   const isTestEntity = (entity: any, titlePatterns: string[]): boolean => {

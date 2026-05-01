@@ -7,6 +7,7 @@ import {
   createTestHierarchy,
   clearTestData,
   apiRequest,
+  APIError,
 } from "../../fixtures/test-helpers";
 
 /**
@@ -135,7 +136,7 @@ test.describe("Ontology API Endpoints", () => {
         await apiRequest<any>(page, `/api/taxonomies/${taxonomy.id}`);
         throw new Error("Taxonomy was not deleted");
       } catch (error: any) {
-        if (!error.message.includes("404")) {
+        if (!(error instanceof APIError && error.statusCode === 404)) {
           throw error;
         }
       }
@@ -242,7 +243,7 @@ test.describe("Ontology API Endpoints", () => {
         await apiRequest<any>(page, `/api/schemes/${scheme.id}`);
         throw new Error("Scheme was not deleted");
       } catch (error: any) {
-        if (!error.message.includes("404")) {
+        if (!(error instanceof APIError && error.statusCode === 404)) {
           throw error;
         }
       }
@@ -353,7 +354,7 @@ test.describe("Ontology API Endpoints", () => {
         await apiRequest<any>(page, `/api/classes/${ontologyClass.id}`);
         throw new Error("Class was not deleted");
       } catch (error: any) {
-        if (!error.message.includes("404")) {
+        if (!(error instanceof APIError && error.statusCode === 404)) {
           throw error;
         }
       }
@@ -457,7 +458,7 @@ test.describe("Ontology API Endpoints", () => {
         await apiRequest<any>(page, `/api/properties/${property.id}`);
         throw new Error("Property was not deleted");
       } catch (error: any) {
-        if (!error.message.includes("404")) {
+        if (!(error instanceof APIError && error.statusCode === 404)) {
           throw error;
         }
       }
@@ -556,7 +557,7 @@ test.describe("Ontology API Endpoints", () => {
         await apiRequest<any>(page, `/api/relationships/${relationship.id}`);
         throw new Error("Relationship was not deleted");
       } catch (error: any) {
-        if (!error.message.includes("404")) {
+        if (!(error instanceof APIError && error.statusCode === 404)) {
           throw error;
         }
       }

@@ -3,6 +3,7 @@ import {
   createPropertyDefinition,
   clearTestData,
   apiRequest,
+  APIError,
 } from "../../fixtures/test-helpers";
 
 /**
@@ -248,7 +249,7 @@ test.describe("Property Definition CRUD Operations", () => {
       await apiRequest<any>(page, `/api/properties/${property.id}`);
       throw new Error("Property was not deleted from API");
     } catch (error: any) {
-      if (!error.message.includes("404")) {
+      if (!(error instanceof APIError && error.statusCode === 404)) {
         throw error;
       }
     }

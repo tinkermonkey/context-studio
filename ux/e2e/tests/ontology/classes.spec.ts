@@ -4,6 +4,7 @@ import {
   createClass,
   clearTestData,
   apiRequest,
+  APIError,
 } from "../../fixtures/test-helpers";
 
 /**
@@ -252,7 +253,7 @@ test.describe("Ontology Class CRUD Operations", () => {
       await apiRequest<any>(page, `/api/classes/${ontologyClass.id}`);
       throw new Error("Class was not deleted from API");
     } catch (error: any) {
-      if (!error.message.includes("404")) {
+      if (!(error instanceof APIError && error.statusCode === 404)) {
         throw error;
       }
     }
