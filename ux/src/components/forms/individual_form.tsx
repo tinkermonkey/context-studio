@@ -77,17 +77,18 @@ const IndividualForm: React.FC<IndividualFormProps> = ({
           const removedClassIds = oldClassIds.filter(id => !newClassIds.includes(id));
           const addedClassIds = newClassIds.filter(id => !oldClassIds.includes(id));
 
-          // Remove classes that are no longer members
-          for (const classId of removedClassIds) {
-            await removeIndividualClassMutation.mutateAsync({
+          // Add new classes first to ensure at least one class is always present
+          // This prevents validation failure when replacing all classes
+          for (const classId of addedClassIds) {
+            await addIndividualClassMutation.mutateAsync({
               id: individual.id,
               classId,
             });
           }
 
-          // Add new classes
-          for (const classId of addedClassIds) {
-            await addIndividualClassMutation.mutateAsync({
+          // Remove classes that are no longer members
+          for (const classId of removedClassIds) {
+            await removeIndividualClassMutation.mutateAsync({
               id: individual.id,
               classId,
             });
