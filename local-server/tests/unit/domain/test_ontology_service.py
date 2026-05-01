@@ -1563,9 +1563,9 @@ class TestCreateIndividual:
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
 
-        individual = service.create_individual(class_id=cls.id, title="Fido")
+        individual = service.create_individual(cls.id, title="Fido")
         assert individual.id is not None
-        assert individual.class_id == cls.id
+        assert individual.class_ids == [cls.id]
         assert individual.title == "Fido"
         assert individual.description is None
         assert individual.created_at is not None
@@ -1578,7 +1578,7 @@ class TestCreateIndividual:
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
 
         individual = service.create_individual(
-            class_id=cls.id,
+            cls.id,
             title="Fido",
             description="A friendly dog"
         )
@@ -1588,7 +1588,7 @@ class TestCreateIndividual:
     def test_create_individual_nonexistent_class_raises(self, service):
         """Create individual with nonexistent class raises EntityNotFoundError."""
         with pytest.raises(EntityNotFoundError, match="Class"):
-            service.create_individual(class_id="nonexistent", title="Test")
+            service.create_individual("nonexistent", title="Test")
 
     def test_create_individual_empty_title_raises(self, service):
         """Create individual with empty title raises ValueError."""
@@ -1597,7 +1597,7 @@ class TestCreateIndividual:
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
 
         with pytest.raises(ValueError, match="Title cannot be empty"):
-            service.create_individual(class_id=cls.id, title="")
+            service.create_individual(cls.id, title="")
 
     def test_create_individual_whitespace_title_raises(self, service):
         """Create individual with whitespace-only title raises ValueError."""
@@ -1606,7 +1606,7 @@ class TestCreateIndividual:
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
 
         with pytest.raises(ValueError, match="Title cannot be empty"):
-            service.create_individual(class_id=cls.id, title="   ")
+            service.create_individual(cls.id, title="   ")
 
     def test_create_individual_duplicate_title_in_class_raises(self, service):
         """Create individual with duplicate title in same class raises DuplicateEntityError."""
@@ -1614,9 +1614,9 @@ class TestCreateIndividual:
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
 
-        service.create_individual(class_id=cls.id, title="Fido")
+        service.create_individual(cls.id, title="Fido")
         with pytest.raises(DuplicateEntityError, match="already exists"):
-            service.create_individual(class_id=cls.id, title="Fido")
+            service.create_individual(cls.id, title="Fido")
 
     def test_create_individual_same_title_different_class_allowed(self, service):
         """Create individuals with same title in different classes is allowed."""
@@ -1625,10 +1625,10 @@ class TestCreateIndividual:
         cls1 = service.create_class(concept_scheme_id=scheme.id, title="Dog")
         cls2 = service.create_class(concept_scheme_id=scheme.id, title="Cat")
 
-        ind1 = service.create_individual(class_id=cls1.id, title="Fluffy")
-        ind2 = service.create_individual(class_id=cls2.id, title="Fluffy")
-        assert ind1.class_id == cls1.id
-        assert ind2.class_id == cls2.id
+        ind1 = service.create_individual(cls1.id, title="Fluffy")
+        ind2 = service.create_individual(cls2.id, title="Fluffy")
+        assert ind1.class_ids == [cls1.id]
+        assert ind2.class_ids == [cls2.id]
         assert ind1.title == ind2.title
 
 
@@ -1640,7 +1640,7 @@ class TestGetIndividual:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
-        created = service.create_individual(class_id=cls.id, title="Fido")
+        created = service.create_individual(cls.id, title="Fido")
 
         retrieved = service.get_individual(created.id)
         assert retrieved.id == created.id
@@ -1667,9 +1667,9 @@ class TestListIndividuals:
         cls1 = service.create_class(concept_scheme_id=scheme.id, title="Dog")
         cls2 = service.create_class(concept_scheme_id=scheme.id, title="Cat")
 
-        ind1 = service.create_individual(class_id=cls1.id, title="Fido")
-        ind2 = service.create_individual(class_id=cls1.id, title="Rover")
-        ind3 = service.create_individual(class_id=cls2.id, title="Whiskers")
+        ind1 = service.create_individual(cls1.id, title="Fido")
+        ind2 = service.create_individual(cls1.id, title="Rover")
+        ind3 = service.create_individual(cls2.id, title="Whiskers")
 
         individuals = service.list_individuals()
         assert len(individuals) == 3
@@ -1684,9 +1684,9 @@ class TestListIndividuals:
         cls1 = service.create_class(concept_scheme_id=scheme.id, title="Dog")
         cls2 = service.create_class(concept_scheme_id=scheme.id, title="Cat")
 
-        ind1 = service.create_individual(class_id=cls1.id, title="Fido")
-        ind2 = service.create_individual(class_id=cls1.id, title="Rover")
-        service.create_individual(class_id=cls2.id, title="Whiskers")
+        ind1 = service.create_individual(cls1.id, title="Fido")
+        ind2 = service.create_individual(cls1.id, title="Rover")
+        service.create_individual(cls2.id, title="Whiskers")
 
         dog_individuals = service.list_individuals(class_id=cls1.id)
         assert len(dog_individuals) == 2
@@ -1702,7 +1702,7 @@ class TestUpdateIndividual:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
-        individual = service.create_individual(class_id=cls.id, title="Fido")
+        individual = service.create_individual(cls.id, title="Fido")
         old_timestamp = individual.last_modified
 
         updated = service.update_individual(individual.id, title="Buddy")
@@ -1714,7 +1714,7 @@ class TestUpdateIndividual:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
-        individual = service.create_individual(class_id=cls.id, title="Fido")
+        individual = service.create_individual(cls.id, title="Fido")
 
         updated = service.update_individual(individual.id, description="A friendly dog")
         assert updated.description == "A friendly dog"
@@ -1724,7 +1724,7 @@ class TestUpdateIndividual:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
-        individual = service.create_individual(class_id=cls.id, title="Fido", description="Old desc")
+        individual = service.create_individual(cls.id, title="Fido", description="Old desc")
 
         updated = service.update_individual(individual.id, title="Buddy", description="New desc")
         assert updated.title == "Buddy"
@@ -1740,7 +1740,7 @@ class TestUpdateIndividual:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
-        individual = service.create_individual(class_id=cls.id, title="Fido")
+        individual = service.create_individual(cls.id, title="Fido")
 
         with pytest.raises(ValueError, match="Title cannot be empty"):
             service.update_individual(individual.id, title="")
@@ -1751,8 +1751,8 @@ class TestUpdateIndividual:
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
 
-        service.create_individual(class_id=cls.id, title="Fido")
-        ind2 = service.create_individual(class_id=cls.id, title="Buddy")
+        service.create_individual(cls.id, title="Fido")
+        ind2 = service.create_individual(cls.id, title="Buddy")
 
         with pytest.raises(DuplicateEntityError, match="already exists"):
             service.update_individual(ind2.id, title="Fido")
@@ -1762,7 +1762,7 @@ class TestUpdateIndividual:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
-        individual = service.create_individual(class_id=cls.id, title="Fido")
+        individual = service.create_individual(cls.id, title="Fido")
 
         # Updating to same title should not raise
         updated = service.update_individual(individual.id, title="Fido")
@@ -1777,7 +1777,7 @@ class TestDeleteIndividual:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
-        individual = service.create_individual(class_id=cls.id, title="Fido")
+        individual = service.create_individual(cls.id, title="Fido")
 
         service.delete_individual(individual.id)
         with pytest.raises(EntityNotFoundError):

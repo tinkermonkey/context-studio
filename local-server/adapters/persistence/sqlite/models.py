@@ -30,6 +30,7 @@ from sqlalchemy import (
     Index,
     JSON,
     LargeBinary,
+    PrimaryKeyConstraint,
 )
 from sqlalchemy.orm import declarative_base
 
@@ -194,6 +195,52 @@ class OntologyEntity(Base):  # type: ignore[misc,valid-type]
 
     def __repr__(self) -> str:
         return f"<OntologyEntity(id={self.id}, type={self.node_type}, title={self.title})>"
+
+
+class IndividualClass(Base):  # type: ignore[misc,valid-type]
+    """
+    Join table for ordered parent class membership of Individual entities.
+
+    Represents the many-to-many relationship between an Individual and its parent Classes
+    with an explicit position column to preserve order for property attribute inheritance
+    (first-class-wins conflict resolution).
+
+    Attributes:
+        individual_id: ID of the Individual entity
+        class_id: ID of the parent Class entity
+        position: Zero-based position in the ordered list (determines inheritance precedence)
+    """
+
+    __tablename__ = "individual_classes"
+
+    individual_id = Column(
+        String(36),
+        ForeignKey("ontology_entities.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+        doc="ID of the Individual"
+    )
+    class_id = Column(
+        String(36),
+        ForeignKey("ontology_entities.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+        doc="ID of the parent Class"
+    )
+    position = Column(
+        Integer,
+        nullable=False,
+        doc="Zero-based position in the ordered list (determines inheritance precedence)"
+    )
+
+    __table_args__ = (
+        PrimaryKeyConstraint("individual_id", "class_id", name="pk_individual_classes"),
+        UniqueConstraint("individual_id", "position", name="uk_individual_position"),
+        Index("idx_class_id", "class_id"),
+    )
+
+    def __repr__(self) -> str:
+        return f"<IndividualClass(individual_id={self.individual_id}, class_id={self.class_id}, position={self.position})>"
 
 
 class Relationship(Base):  # type: ignore[misc,valid-type]

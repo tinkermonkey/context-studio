@@ -15,6 +15,7 @@ from uuid import uuid4
 
 from domain.ports import EventPublisher
 from .entities import Taxonomy, ConceptScheme, Class, Relationship, PropertyDefinition, Individual
+from .value_objects import DataPropertyValue
 from .events import (
     TaxonomyCreated, TaxonomyUpdated, TaxonomyDeleted,
     SchemeCreated, SchemeUpdated, SchemeDeleted,
@@ -1489,19 +1490,20 @@ class OntologyService:
 
     def create_individual(
         self,
-        class_id: str,
+        class_ids: str | list[str],
         title: str,
         description: str | None = None,
     ) -> Individual:
         """
-        Create a new individual instance of a class.
+        Create a new individual instance of one or more classes.
 
         Validates that:
-        - The class exists
-        - The title is unique within the class
+        - All classes exist
+        - The title is unique within each class
+        - At least one class is provided
 
         Args:
-            class_id: ID of the class this individual instantiates
+            class_ids: ID(s) of the class(es) this individual instantiates (string or list)
             title: Display name for the individual
             description: Optional longer description
 
@@ -1509,30 +1511,41 @@ class OntologyService:
             The created Individual
 
         Raises:
-            EntityNotFoundError: If the class does not exist
-            DuplicateEntityError: If an individual with this title already exists in the class
-            ValueError: If title is empty or whitespace
+            EntityNotFoundError: If any class does not exist
+            DuplicateEntityError: If an individual with this title already exists in any class
+            ValueError: If title is empty, whitespace, or no classes provided
         """
         if not title or not title.strip():
             raise ValueError("Title cannot be empty")
 
-        # Verify class exists
-        cls = self._repository.get_class(class_id)
-        if cls is None:
-            raise EntityNotFoundError("Class", class_id)
+        # Normalize class_ids to a list
+        if isinstance(class_ids, str):
+            class_ids_list = [class_ids]
+        else:
+            class_ids_list = class_ids
 
-        # Check for duplicate title within the class
-        existing = self._repository.list_individuals(class_id=class_id)
-        if any(ind.title == title for ind in existing):
-            raise DuplicateEntityError(
-                f"Individual with title '{title}' already exists in class '{class_id}'"
-            )
+        if not class_ids_list:
+            raise ValueError("Individual must belong to at least one class")
+
+        # Verify all classes exist
+        for class_id in class_ids_list:
+            cls = self._repository.get_class(class_id)
+            if cls is None:
+                raise EntityNotFoundError("Class", class_id)
+
+        # Check for duplicate title within each class
+        for class_id in class_ids_list:
+            existing = self._repository.list_individuals(class_id=class_id)
+            if any(ind.title == title for ind in existing):
+                raise DuplicateEntityError(
+                    f"Individual with title '{title}' already exists in class '{class_id}'"
+                )
 
         individual_id = str(uuid4())
         now = datetime.now(timezone.utc)
         individual = Individual(
             id=individual_id,
-            class_id=class_id,
+            class_ids=class_ids_list,
             title=title,
             description=description,
             created_at=now,
@@ -1583,7 +1596,7 @@ class OntologyService:
 
         Validates that:
         - The individual exists
-        - If title is updated, it is unique within the individual's class
+        - If title is updated, it is unique within all of the individual's parent classes
 
         Args:
             individual_id: The ID of the individual to update
@@ -1595,7 +1608,7 @@ class OntologyService:
 
         Raises:
             EntityNotFoundError: If the individual does not exist
-            DuplicateEntityError: If title is updated to a value that already exists in the class
+            DuplicateEntityError: If title is updated to a value that already exists in any parent class
         """
         individual = self._repository.get_individual(individual_id)
         if individual is None:
@@ -1610,11 +1623,13 @@ class OntologyService:
             if not title or not title.strip():
                 raise ValueError("Title cannot be empty")
             if title_changed:
-                existing = self._repository.list_individuals(class_id=individual.class_id)
-                if any(ind.title == title for ind in existing):
-                    raise DuplicateEntityError(
-                        f"Individual with title '{title}' already exists in class '{individual.class_id}'"
-                    )
+                # Check uniqueness within each parent class
+                for class_id in individual.class_ids:
+                    existing = self._repository.list_individuals(class_id=class_id)
+                    if any(ind.title == title and ind.id != individual_id for ind in existing):
+                        raise DuplicateEntityError(
+                            f"Individual with title '{title}' already exists in class '{class_id}'"
+                        )
                 individual.title = title
 
         # Update description if provided
@@ -1646,3 +1661,126 @@ class OntologyService:
             raise EntityNotFoundError("Individual", individual_id)
 
         self._repository.delete_individual(individual_id)
+
+    def add_class_to_individual(self, individual_id: str, class_id: str) -> Individual:
+        """
+        Add a parent class to an individual (appended to the end).
+
+        Args:
+            individual_id: The ID of the individual
+            class_id: The ID of the class to add
+
+        Returns:
+            The updated Individual
+
+        Raises:
+            EntityNotFoundError: If the individual or class does not exist
+            ValueError: If the class is already a parent of the individual
+        """
+        individual = self._repository.get_individual(individual_id)
+        if individual is None:
+            raise EntityNotFoundError("Individual", individual_id)
+
+        # Verify class exists
+        cls = self._repository.get_class(class_id)
+        if cls is None:
+            raise EntityNotFoundError("Class", class_id)
+
+        # Add the class (will raise ValueError if already present)
+        individual.add_parent_class(class_id)
+        individual = self._repository.save_individual(individual)
+        return individual
+
+    def remove_class_from_individual(self, individual_id: str, class_id: str) -> Individual:
+        """
+        Remove a parent class from an individual.
+
+        Args:
+            individual_id: The ID of the individual
+            class_id: The ID of the class to remove
+
+        Returns:
+            The updated Individual
+
+        Raises:
+            EntityNotFoundError: If the individual does not exist
+            ValueError: If the class is not a parent, or if it's the last parent class
+        """
+        individual = self._repository.get_individual(individual_id)
+        if individual is None:
+            raise EntityNotFoundError("Individual", individual_id)
+
+        # Remove the class (will raise ValueError if not present or if last)
+        individual.remove_parent_class(class_id)
+        individual = self._repository.save_individual(individual)
+        return individual
+
+    def reorder_individual_classes(
+        self, individual_id: str, ordered_class_ids: list[str]
+    ) -> Individual:
+        """
+        Reorder the parent classes for an individual.
+
+        The order matters for property attribute inheritance: when two parent Classes
+        declare a property with the same name but conflicting type/constraints, the
+        first parent (by class membership order) wins.
+
+        Args:
+            individual_id: The ID of the individual
+            ordered_class_ids: The new ordered list of class IDs
+
+        Returns:
+            The updated Individual
+
+        Raises:
+            EntityNotFoundError: If the individual does not exist
+            ValueError: If the list is empty, contains duplicates, or doesn't match current classes
+        """
+        individual = self._repository.get_individual(individual_id)
+        if individual is None:
+            raise EntityNotFoundError("Individual", individual_id)
+
+        # Reorder (will raise ValueError if invalid)
+        individual.reorder_parent_classes(ordered_class_ids)
+        individual = self._repository.save_individual(individual)
+        return individual
+
+    def get_individual_properties(self, individual_id: str) -> list[DataPropertyValue]:
+        """
+        Get the deduplicated property attribute list for an individual.
+
+        Returns the superset of data_properties declared on all parent Classes,
+        with first-class-wins precedence on name collisions: when two parent Classes
+        declare a property with the same name but conflicting type/constraints,
+        the property from the first parent (by class membership order) wins.
+
+        Args:
+            individual_id: The ID of the individual
+
+        Returns:
+            Deduplicated list of DataPropertyValue with first-class-wins for conflicts
+
+        Raises:
+            EntityNotFoundError: If the individual does not exist
+        """
+        individual = self._repository.get_individual(individual_id)
+        if individual is None:
+            raise EntityNotFoundError("Individual", individual_id)
+
+        # Collect properties from all parent classes in order
+        seen_property_names: set[str] = set()
+        deduplicated_properties: list[DataPropertyValue] = []
+
+        for class_id in individual.class_ids:
+            cls = self._repository.get_class(class_id)
+            if cls is None:
+                # Skip if class was deleted (should rarely happen due to FK constraints)
+                continue
+
+            for prop in cls.data_properties:
+                # First definition of this property name wins
+                if prop.property_identifier not in seen_property_names:
+                    deduplicated_properties.append(prop)
+                    seen_property_names.add(prop.property_identifier)
+
+        return deduplicated_properties

@@ -34,12 +34,15 @@ from adapters.persistence.sqlite.models import (
     OntologyEntity,
     Relationship as RelationshipORM,
     PropertyDefinition as PropertyDefinitionORM,
+    IndividualClass,
 )
 from adapters.persistence.sqlite.mappers import (
     map_orm_to_domain,
     map_domain_to_orm,
     map_relationship_orm_to_domain,
     map_relationship_domain_to_orm,
+    deserialize_data_properties,
+    deserialize_external_references,
 )
 
 
@@ -661,7 +664,29 @@ class SQLiteOntologyRepository:
             )
             if orm_entity is None:
                 return None
-            return cast(Individual, map_orm_to_domain(orm_entity))
+
+            # Load class_ids from join table first
+            class_memberships = (
+                session.query(IndividualClass)
+                .filter(IndividualClass.individual_id == individual_id)
+                .order_by(IndividualClass.position)
+                .all()
+            )
+            class_ids = [membership.class_id for membership in class_memberships]
+
+            # Create Individual directly with loaded class_ids to bypass __post_init__ validation
+            individual = Individual(
+                id=cast(str, orm_entity.id),
+                class_ids=class_ids,
+                title=cast(str, orm_entity.title),
+                description=cast(str | None, orm_entity.description),
+                created_at=cast(datetime | None, orm_entity.created_at),
+                last_modified=cast(datetime | None, orm_entity.last_modified),
+                version=cast(int, orm_entity.version),
+                data_properties=deserialize_data_properties(cast(list[dict[str, Any]], orm_entity.data_properties) or []),
+                external_references=deserialize_external_references(cast(list[dict[str, Any]], orm_entity.external_references) or []),
+            )
+            return individual
         finally:
             if close_session:
                 session.close()
@@ -673,7 +698,7 @@ class SQLiteOntologyRepository:
         List individuals, optionally filtered by class.
 
         Args:
-            class_id: Optional class ID to filter by (rdf:type)
+            class_id: Optional class ID to filter by (rdf:type) - matches any parent class
 
         Returns:
             Sequence of Individual entities
@@ -684,10 +709,40 @@ class SQLiteOntologyRepository:
             )
 
             if class_id is not None:
-                query = query.filter(OntologyEntity.class_id == class_id)
+                # Filter to individuals that have this class as a parent
+                subquery = session.query(IndividualClass.individual_id).filter(
+                    IndividualClass.class_id == class_id
+                ).distinct()
+                query = query.filter(OntologyEntity.id.in_(subquery))
 
             orm_entities = query.all()
-            return [cast(Individual, map_orm_to_domain(e)) for e in orm_entities]
+
+            # Load class_ids from join table for each individual
+            individuals = []
+            for orm_entity in orm_entities:
+                class_memberships = (
+                    session.query(IndividualClass)
+                    .filter(IndividualClass.individual_id == orm_entity.id)
+                    .order_by(IndividualClass.position)
+                    .all()
+                )
+                class_ids = [membership.class_id for membership in class_memberships]
+
+                # Create Individual directly with loaded class_ids
+                individual = Individual(
+                    id=cast(str, orm_entity.id),
+                    class_ids=class_ids,
+                    title=cast(str, orm_entity.title),
+                    description=cast(str | None, orm_entity.description),
+                    created_at=cast(datetime | None, orm_entity.created_at),
+                    last_modified=cast(datetime | None, orm_entity.last_modified),
+                    version=cast(int, orm_entity.version),
+                    data_properties=deserialize_data_properties(cast(list[dict[str, Any]], orm_entity.data_properties) or []),
+                    external_references=deserialize_external_references(cast(list[dict[str, Any]], orm_entity.external_references) or []),
+                )
+                individuals.append(individual)
+
+            return individuals
 
     def save_individual(self, individual: Individual) -> Individual:
         """
@@ -700,18 +755,21 @@ class SQLiteOntologyRepository:
             Saved Individual entity
 
         Raises:
-            ValueError: If title is empty or parent class doesn't exist
+            ValueError: If title is empty, no parent classes, or a parent class doesn't exist
         """
         if not individual.title or not individual.title.strip():
             raise ValueError("Individual title cannot be empty")
+        if not individual.class_ids:
+            raise ValueError("Individual must have at least one parent class")
 
         with self.session_factory() as session:
-            # Verify parent class exists (same session)
-            parent_class = self.get_class(individual.class_id, session)
-            if parent_class is None:
-                raise ValueError(
-                    f"Parent class {individual.class_id} does not exist"
-                )
+            # Verify all parent classes exist
+            for class_id in individual.class_ids:
+                parent_class = self.get_class(class_id, session)
+                if parent_class is None:
+                    raise ValueError(
+                        f"Parent class {class_id} does not exist"
+                    )
 
             orm_entity = (
                 session.query(OntologyEntity)
@@ -731,6 +789,16 @@ class SQLiteOntologyRepository:
                 orm_entity.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
                 orm_entity.version = 1  # type: ignore[assignment]
                 session.add(orm_entity)
+                session.flush()  # Ensure ORM entity exists before adding join table records
+
+                # Add class memberships to join table
+                for position, class_id in enumerate(individual.class_ids):
+                    membership = IndividualClass(
+                        individual_id=individual.id,
+                        class_id=class_id,
+                        position=position,
+                    )
+                    session.add(membership)
             else:
                 # Update existing
                 mapped_orm = map_domain_to_orm(individual)
@@ -738,11 +806,29 @@ class SQLiteOntologyRepository:
                 orm_entity.description = individual.description  # type: ignore[assignment]
                 orm_entity.data_properties = mapped_orm.data_properties  # type: ignore[assignment]
                 orm_entity.external_references = mapped_orm.external_references  # type: ignore[assignment]
+                orm_entity.class_id = mapped_orm.class_id  # type: ignore[assignment]
                 orm_entity.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
                 orm_entity.version = orm_entity.version + 1  # type: ignore[assignment]
 
+                # Update class memberships in join table
+                # Delete existing memberships
+                session.query(IndividualClass).filter(
+                    IndividualClass.individual_id == individual.id
+                ).delete()
+
+                # Add updated memberships
+                for position, class_id in enumerate(individual.class_ids):
+                    membership = IndividualClass(
+                        individual_id=individual.id,
+                        class_id=class_id,
+                        position=position,
+                    )
+                    session.add(membership)
+
             session.commit()
-            return cast(Individual, map_orm_to_domain(orm_entity))
+
+            # Reload with populated class_ids
+            return self.get_individual(individual.id, session)
 
     def delete_individual(self, individual_id: str) -> bool:
         """

@@ -38,3 +38,9 @@ class DuplicateEntityError(OntologyError):
     """Raised when attempting to create a duplicate entity."""
 
     pass
+
+
+class InvalidIndividualClassMembershipError(OntologyError):
+    """Raised when attempting an invalid class membership operation on an Individual."""
+
+    pass

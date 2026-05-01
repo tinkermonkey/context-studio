@@ -214,20 +214,20 @@ class FakeOntologyRepository:
         """Retrieve all individuals, optionally filtered by class ID.
 
         Args:
-            class_id: Optional class ID to filter by
+            class_id: Optional class ID to filter by (matches any parent class)
 
         Returns:
             List of individuals matching the filter
         """
         results = list(self._individuals.values())
         if class_id is not None:
-            results = [ind for ind in results if ind.class_id == class_id]
+            results = [ind for ind in results if class_id in ind.class_ids]
         return results
 
     def save_individual(self, individual: Individual) -> Individual:
         """Save an individual (insert or update).
 
-        Validates that the individual's title is unique within its class.
+        Validates that the individual's title is unique within each of its classes.
 
         Args:
             individual: The Individual to save
@@ -236,16 +236,17 @@ class FakeOntologyRepository:
             The saved Individual
 
         Raises:
-            DuplicateEntityError: If an individual with this title already exists in the class
+            DuplicateEntityError: If an individual with this title already exists in any of the classes
         """
-        # Check for duplicate title within the class (excluding the individual being updated)
-        for existing in self._individuals.values():
-            if (existing.class_id == individual.class_id and
-                existing.title == individual.title and
-                existing.id != individual.id):
-                raise DuplicateEntityError(
-                    f"Individual with title '{individual.title}' already exists in class '{individual.class_id}'"
-                )
+        # Check for duplicate title within each of the individual's classes (excluding the individual being updated)
+        for class_id in individual.class_ids:
+            for existing in self._individuals.values():
+                if (class_id in existing.class_ids and
+                    existing.title == individual.title and
+                    existing.id != individual.id):
+                    raise DuplicateEntityError(
+                        f"Individual with title '{individual.title}' already exists in class '{class_id}'"
+                    )
         self._individuals[individual.id] = individual
         return individual
 

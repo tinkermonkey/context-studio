@@ -276,7 +276,7 @@ def map_orm_to_domain(orm_entity: OntologyEntity) -> Union[Taxonomy, ConceptSche
             created_at=entity_created_at,
             last_modified=entity_last_modified,
             version=entity_version,
-            class_id=cast(str, orm_entity.class_id),
+            class_ids=[],  # Will be populated by repository from IndividualClass join table
             data_properties=deserialize_data_properties(cast(list[dict[str, Any]], orm_entity.data_properties) or []),
             external_references=deserialize_external_references(cast(list[dict[str, Any]], orm_entity.external_references) or []),
         )
@@ -353,7 +353,7 @@ def map_domain_to_orm(
         return OntologyEntity(
             **common_args,
             node_type=NodeType.INDIVIDUAL,
-            class_id=entity.class_id,
+            class_id=entity.class_ids[0] if entity.class_ids else None,  # Store first class for backwards compatibility
             data_properties=serialize_data_properties(entity.data_properties),
             external_references=serialize_external_references(entity.external_references),
         )
