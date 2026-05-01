@@ -665,28 +665,7 @@ class SQLiteOntologyRepository:
             if orm_entity is None:
                 return None
 
-            # Load class_ids from join table first
-            class_memberships = (
-                session.query(IndividualClass)
-                .filter(IndividualClass.individual_id == individual_id)
-                .order_by(IndividualClass.position)
-                .all()
-            )
-            class_ids = [membership.class_id for membership in class_memberships]
-
-            # Create Individual directly with loaded class_ids to bypass __post_init__ validation
-            individual = Individual(
-                id=cast(str, orm_entity.id),
-                class_ids=class_ids,
-                title=cast(str, orm_entity.title),
-                description=cast(str | None, orm_entity.description),
-                created_at=cast(datetime | None, orm_entity.created_at),
-                last_modified=cast(datetime | None, orm_entity.last_modified),
-                version=cast(int, orm_entity.version),
-                data_properties=deserialize_data_properties(cast(list[dict[str, Any]], orm_entity.data_properties) or []),
-                external_references=deserialize_external_references(cast(list[dict[str, Any]], orm_entity.external_references) or []),
-            )
-            return individual
+            return self._build_individual_from_orm(orm_entity, session)
         finally:
             if close_session:
                 session.close()
@@ -717,30 +696,8 @@ class SQLiteOntologyRepository:
 
             orm_entities = query.all()
 
-            # Load class_ids from join table for each individual
-            individuals = []
-            for orm_entity in orm_entities:
-                class_memberships = (
-                    session.query(IndividualClass)
-                    .filter(IndividualClass.individual_id == orm_entity.id)
-                    .order_by(IndividualClass.position)
-                    .all()
-                )
-                class_ids = [membership.class_id for membership in class_memberships]
-
-                # Create Individual directly with loaded class_ids
-                individual = Individual(
-                    id=cast(str, orm_entity.id),
-                    class_ids=class_ids,
-                    title=cast(str, orm_entity.title),
-                    description=cast(str | None, orm_entity.description),
-                    created_at=cast(datetime | None, orm_entity.created_at),
-                    last_modified=cast(datetime | None, orm_entity.last_modified),
-                    version=cast(int, orm_entity.version),
-                    data_properties=deserialize_data_properties(cast(list[dict[str, Any]], orm_entity.data_properties) or []),
-                    external_references=deserialize_external_references(cast(list[dict[str, Any]], orm_entity.external_references) or []),
-                )
-                individuals.append(individual)
+            # Build individuals from ORM entities using helper
+            individuals = [self._build_individual_from_orm(orm_entity, session) for orm_entity in orm_entities]
 
             return individuals
 
@@ -1236,7 +1193,13 @@ class SQLiteOntologyRepository:
         """
         with self.session_factory() as session:
             all_orm_entities = session.query(OntologyEntity).all()
-            entities = [map_orm_to_domain(e) for e in all_orm_entities]
+            entities = []
+            for e in all_orm_entities:
+                # Use helper for Individuals to ensure class_ids are loaded
+                if e.node_type == NodeType.INDIVIDUAL:
+                    entities.append(self._build_individual_from_orm(e, session))
+                else:
+                    entities.append(map_orm_to_domain(e))
 
             all_orm_rels = session.query(RelationshipORM).all()
             relationships = [map_relationship_orm_to_domain(r) for r in all_orm_rels]
@@ -1244,6 +1207,42 @@ class SQLiteOntologyRepository:
             return entities, relationships
 
     # ==================== Helper Methods ====================
+
+    def _build_individual_from_orm(self, orm_entity: OntologyEntity, session: Session) -> Individual:
+        """
+        Build an Individual domain entity from an ORM entity and join table data.
+
+        Loads the ordered list of parent classes from the IndividualClass join table
+        and constructs the Individual entity.
+
+        Args:
+            orm_entity: The ORM OntologyEntity (must be of type INDIVIDUAL)
+            session: SQLAlchemy session to use for loading join table data
+
+        Returns:
+            Individual domain entity with populated class_ids
+        """
+        # Load class_ids from join table in order
+        class_memberships = (
+            session.query(IndividualClass)
+            .filter(IndividualClass.individual_id == orm_entity.id)
+            .order_by(IndividualClass.position)
+            .all()
+        )
+        class_ids = [membership.class_id for membership in class_memberships]
+
+        # Create Individual directly with loaded class_ids
+        return Individual(
+            id=cast(str, orm_entity.id),
+            class_ids=class_ids,
+            title=cast(str, orm_entity.title),
+            description=cast(str | None, orm_entity.description),
+            created_at=cast(datetime | None, orm_entity.created_at),
+            last_modified=cast(datetime | None, orm_entity.last_modified),
+            version=cast(int, orm_entity.version),
+            data_properties=deserialize_data_properties(cast(list[dict[str, Any]], orm_entity.data_properties) or []),
+            external_references=deserialize_external_references(cast(list[dict[str, Any]], orm_entity.external_references) or []),
+        )
 
     def _would_create_cycle(self, class_id: str, potential_parent_id: str, session: Session) -> bool:
         """

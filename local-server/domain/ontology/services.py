@@ -1145,7 +1145,7 @@ class OntologyService:
             # Try source as an Individual (not yet implemented)
             source_individual = self._repository.get_individual(relationship.source_id)
             if source_individual:
-                individual_class = self._repository.get_class(source_individual.class_id)
+                individual_class = self._repository.get_class(source_individual.class_ids[0])
                 if individual_class:
                     taxonomy_id = individual_class.taxonomy_id
 
@@ -1158,7 +1158,7 @@ class OntologyService:
                 # Try target as an Individual (not yet implemented)
                 target_individual = self._repository.get_individual(relationship.target_id)
                 if target_individual:
-                    individual_class = self._repository.get_class(target_individual.class_id)
+                    individual_class = self._repository.get_class(target_individual.class_ids[0])
                     if individual_class:
                         taxonomy_id = individual_class.taxonomy_id
 

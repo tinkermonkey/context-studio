@@ -204,6 +204,8 @@ class Individual:
         """Validate individual invariants."""
         if not self.class_ids:
             raise ValueError("Individual must have at least one parent class")
+        if len(self.class_ids) != len(set(self.class_ids)):
+            raise ValueError("Individual class list contains duplicates")
 
     def rename(self, new_title: str) -> None:
         """
