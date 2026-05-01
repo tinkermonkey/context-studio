@@ -26,7 +26,7 @@ test.describe("Concept Scheme CRUD Operations", () => {
   test.beforeEach(async ({ page }) => {
     // Create a parent taxonomy for schemes to belong to
     const taxonomy = await createTaxonomy(page, {
-      title: "Test Parent Taxonomy",
+      title: "test-taxonomy-parent",
     });
     taxonomyId = taxonomy.id;
   });

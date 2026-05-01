@@ -60,10 +60,10 @@ export async function apiRequest<T = unknown>(
     return;
   }
 
+  const responseText = await response.text();
   try {
-    return await response.json();
+    return JSON.parse(responseText);
   } catch (error) {
-    const responseText = await response.text();
     console.error(`Failed to parse JSON from response: ${method} ${endpoint}`);
     console.error(`Status: ${response.status()} ${response.statusText()}`);
     console.error(`Response body: ${responseText}`);

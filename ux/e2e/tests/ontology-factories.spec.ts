@@ -29,13 +29,13 @@ test.describe("Test Data Factories", () => {
   test.describe("Individual Factories", () => {
     test("should create a taxonomy", async ({ page }) => {
       const taxonomy = await createTaxonomy(page, {
-        title: "Test Taxonomy",
+        title: "test-taxonomy-basic",
         description: "A test taxonomy",
       });
 
       expect(taxonomy).toBeDefined();
       expect(taxonomy.id).toBeDefined();
-      expect(taxonomy.title).toBe("Test Taxonomy");
+      expect(taxonomy.title).toBe("test-taxonomy-basic");
       expect(taxonomy.description).toBe("A test taxonomy");
       expect(taxonomy.version).toBeDefined();
     });
@@ -145,15 +145,15 @@ test.describe("Test Data Factories", () => {
       page,
     }) => {
       const hierarchy = await createTestHierarchy(page, 2, {
-        taxonomyTitle: "Custom Taxonomy",
-        schemeTitle: "Custom Scheme",
-        classTitle: "Custom Class",
+        taxonomyTitle: "test-taxonomy-custom-scenario",
+        schemeTitle: "test-custom-scheme",
+        classTitle: "test-custom-class",
       });
 
-      expect(hierarchy.taxonomy.title).toBe("Custom Taxonomy");
-      expect(hierarchy.scheme.title).toBe("Custom Scheme");
-      expect(hierarchy.classes[0].title).toContain("Custom Class");
-      expect(hierarchy.classes[1].title).toContain("Custom Class");
+      expect(hierarchy.taxonomy.title).toBe("test-taxonomy-custom-scenario");
+      expect(hierarchy.scheme.title).toBe("test-custom-scheme");
+      expect(hierarchy.classes[0].title).toContain("test-custom-class");
+      expect(hierarchy.classes[1].title).toContain("test-custom-class");
     });
 
     test("should create a relationship-ready hierarchy with classes", async ({
