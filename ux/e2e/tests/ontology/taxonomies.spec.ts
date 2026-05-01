@@ -104,8 +104,10 @@ test.describe("Taxonomy CRUD Operations", () => {
     await waitForAppReady(page);
 
     // Verify detail page contains taxonomy information
-    await expect(page.getByTestId("taxonomy-details-title")).toBeVisible();
-    await expect(page.getByTestId("taxonomy-details-description")).toBeVisible();
+    // Note: Detail page displays the taxonomy title as a heading
+    await expect(page.getByRole("heading", { name: taxonomy.title })).toBeVisible();
+    // Description is displayed as text on the detail page
+    await expect(page.getByText(taxonomy.description)).toBeVisible();
 
     // Verify API read-back returns same data
     const apiResponse = await apiRequest<any>(
@@ -301,10 +303,10 @@ test.describe("Taxonomy CRUD Operations", () => {
     await waitForAppReady(page);
 
     // Verify the taxonomy with special characters appears
-    const taxonomyList = page.getByTestId("taxonomy-list");
+    const taxonomyTable = page.getByTestId("taxonomy-table");
     const escapedTitle = specialTitle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     await expect(
-      taxonomyList.getByRole("cell", { name: new RegExp(escapedTitle) }),
+      taxonomyTable.getByRole("cell", { name: new RegExp(escapedTitle) }),
     ).toBeVisible();
   });
 });
