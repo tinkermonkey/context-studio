@@ -41,10 +41,21 @@ async function waitForUrl(url: string, timeout: number = 30000): Promise<void> {
     }
 
     // Server returned an error status code (not a connection error)
-    if (response.status >= 400) {
+    // 4xx errors (client errors) are fatal — server is up but something is misconfigured
+    // 5xx errors (server errors) are transient during startup — retry
+    if (response.status >= 400 && response.status < 500) {
       throw new Error(
         `Server returned ${response.status} ${response.statusText}. ` +
           `Check the server logs for details.`,
+      );
+    }
+
+    // 5xx errors are transient during startup, continue waiting and retrying
+    const elapsed = Date.now() - startTime;
+    if (elapsed % 5000 < interval) {
+      // Log every 5 seconds
+      console.log(
+        `  Server returned ${response.status}, retrying... (${Math.round(elapsed / 1000)}s)`,
       );
     }
 
