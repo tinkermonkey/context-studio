@@ -60,13 +60,13 @@ const IndividualForm: React.FC<IndividualFormProps> = ({
             description: value.description || null,
           };
 
-          const result = await updateIndividualMutation.mutateAsync({
+          await updateIndividualMutation.mutateAsync({
             id: individual.id,
             data: updateData,
           });
 
           // Then update class membership separately
-          await setIndividualClassesMutation.mutateAsync({
+          const result = await setIndividualClassesMutation.mutateAsync({
             id: individual.id,
             classIds: selectedClassIds,
           });
@@ -89,7 +89,9 @@ const IndividualForm: React.FC<IndividualFormProps> = ({
         console.error("Full error object:", error);
         console.error("Error detail:", error?.detail);
 
+        // Try to extract the original API detail string from the error object
         const detail =
+          error?.detail?.detail ||
           error?.response?.data?.detail ||
           error?.data?.detail ||
           error?.body?.detail ||
@@ -98,6 +100,8 @@ const IndividualForm: React.FC<IndividualFormProps> = ({
         let message: string;
         if (Array.isArray(detail)) {
           message = detail.map((d: any) => d.msg).join("; ");
+        } else if (typeof detail === "string") {
+          message = detail;
         } else if (error?.message) {
           message = error.message;
         } else if (typeof error === "string") {
@@ -205,10 +209,6 @@ const IndividualForm: React.FC<IndividualFormProps> = ({
 
         <form.Field
           name="description"
-          validators={{
-            onChange: ({ value }) =>
-              !value ? "Description is required" : undefined,
-          }}
         >
           {(field) => (
             <div>
@@ -220,11 +220,10 @@ const IndividualForm: React.FC<IndividualFormProps> = ({
               </Label>
               <Textarea
                 id="individual-description"
-                placeholder="Individual description"
+                placeholder="Individual description (optional)"
                 value={field.state.value}
                 color={field.state.meta.errors.length ? "failure" : undefined}
                 onChange={(e) => field.handleChange(e.target.value)}
-                required
                 data-testid="individual-description-input"
               />
             </div>
