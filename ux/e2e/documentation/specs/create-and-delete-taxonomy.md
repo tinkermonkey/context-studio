@@ -37,7 +37,7 @@ This test validates the core taxonomy lifecycle: creating a new taxonomy and the
   - Taxonomy `title` is required and non-empty
   - Taxonomy `version` starts at 1
   - `created_at` and `last_modified` are set correctly
-  - Taxonomy is immutable once created (except via update)
+  - Only `id` and `created_at` are immutable once created (other fields can be updated)
 
 ### Test Case 2: Delete a Taxonomy via UI
 

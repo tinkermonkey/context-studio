@@ -122,7 +122,7 @@ expect(page.url()).toContain("/app/taxonomies");
 await page.goto("/app/classes/123e4567-e89b-12d3-a456-426614174000");
 
 // GOOD
-const classEntity = await createClass(page);
+const classEntity = await createClass(page, schemeId);
 await page.goto(`/app/classes/${classEntity.id}`);
 ```
 

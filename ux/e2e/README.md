@@ -353,7 +353,7 @@ npx claude-code --agent-definition .github/playwright-generator.md \
 
 The generator will:
 1. Read the test specification
-2. Consult the product contract (`app.context.md`)
+2. Consult the product contract (`app-context.md`)
 3. Review the selector registry
 4. Create production-ready Playwright tests with:
    - Semantic locators only (no CSS selectors or XPath)
@@ -387,7 +387,7 @@ Review the test code:
 1. **Selector validation**: Runs automatically
 2. **Code quality**: Check for clarity and maintainability
 3. **Coverage**: Verify all test cases from spec are implemented
-4. **Anti-patterns**: Ensure no anti-patterns from `app.context.md`
+4. **Anti-patterns**: Ensure no anti-patterns from `app-context.md`
 5. **Factory usage**: Verify factories are used for entity creation
 
 If changes are needed:
@@ -567,7 +567,7 @@ If you prefer to write tests manually instead of using agents:
 2. Use semantic locators and factory patterns (see generator rules)
 3. Reference only selectors from `ux/selector-registry.yaml`
 4. Validate with `npm run validate-selectors` before committing
-5. Avoid all anti-patterns from `app.context.md`
+5. Avoid all anti-patterns from `app-context.md`
 
 ## Adding New Tests
 
@@ -682,7 +682,7 @@ Tests must NEVER:
 - ❌ Depend on UI text that may change
 - ❌ Leave test data behind (use `test.afterEach()` cleanup)
 
-See `app.context.md` for the full list of anti-patterns.
+See `app-context.md` for the full list of anti-patterns.
 
 ## Related Documentation
 

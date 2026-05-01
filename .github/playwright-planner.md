@@ -122,10 +122,10 @@ If any required selector is missing, add an "Open Questions" section and stop.
 
 ## Output Format
 
-Write the complete test plan to `specs/<feature-name>.md` in the repository root:
+Write the complete test plan to `ux/e2e/documentation/specs/<feature-name>.md`:
 
 ```bash
-specs/
+ux/e2e/documentation/specs/
   create-and-delete-taxonomy.md
   move-class-between-schemes.md
   ...
