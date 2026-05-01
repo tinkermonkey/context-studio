@@ -60,5 +60,15 @@ export async function apiRequest<T = unknown>(
     return;
   }
 
-  return await response.json();
+  try {
+    return await response.json();
+  } catch (error) {
+    const responseText = await response.text();
+    console.error(`Failed to parse JSON from response: ${method} ${endpoint}`);
+    console.error(`Status: ${response.status()} ${response.statusText()}`);
+    console.error(`Response body: ${responseText}`);
+    throw new Error(
+      `Failed to parse JSON from ${method} ${endpoint}: ${error instanceof Error ? error.message : String(error)}. Response: ${responseText.slice(0, 200)}`,
+    );
+  }
 }

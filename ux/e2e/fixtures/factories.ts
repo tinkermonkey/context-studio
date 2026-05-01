@@ -339,7 +339,9 @@ export async function clearTestData(
     if (response?.data && Array.isArray(response.data)) {
       return response.data;
     }
-    return [];
+    throw new Error(
+      `Unable to extract items from API response. Expected array, {items: array}, or {data: array}, but got: ${JSON.stringify(response).slice(0, 200)}`,
+    );
   };
 
   const isTestEntity = (entity: any, titlePatterns: string[]): boolean => {
@@ -462,7 +464,6 @@ export async function clearTestData(
         await deleteEntityIfMatches(page, taxonomy, "/api/taxonomies", [
           "test-taxonomy-",
           "seed-taxonomy-",
-          "Test ",
         ]);
       } catch (error) {
         cleanupErrors.push({ step: "taxonomies", error });
