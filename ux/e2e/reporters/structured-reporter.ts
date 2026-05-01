@@ -265,19 +265,17 @@ export default class StructuredReporter implements Reporter {
 
   private extractAttempts(test: TestCase): AttemptReport[] {
     return test.results.map((result) => {
-      const hasFailure = result.status === "failed" || result.status === "timedOut" || result.status === "interrupted";
-      if (hasFailure) {
+      if (result.status === "failed" || result.status === "timedOut" || result.status === "interrupted") {
         return {
           status: result.status,
           duration_ms: result.duration,
           failure: this.extractFailureInfo(result),
-        } as AttemptReport;
-      } else {
-        return {
-          status: result.status,
-          duration_ms: result.duration,
-        } as AttemptReport;
+        };
       }
+      return {
+        status: result.status as "passed" | "skipped",
+        duration_ms: result.duration,
+      };
     });
   }
 
