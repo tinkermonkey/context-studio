@@ -1,6 +1,6 @@
 import React from "react";
 import { useForm } from "@tanstack/react-form";
-import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
+import { TextInput, Textarea, Alert, Label } from "flowbite-react";
 import { X, GripVertical } from "lucide-react";
 import type { components } from "@/api/client/types";
 import {
