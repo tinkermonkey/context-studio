@@ -18,7 +18,7 @@ from uuid import uuid4
 from domain.graph.services import GraphAnalysisService
 from domain.graph.entities import KnowledgeGraph, GraphMetrics, PathResult, SubgraphResult
 from domain.graph.exceptions import GraphError, InvalidAlgorithmError, SPARQLValidationError, NodeNotFoundError
-from domain.ontology.entities import Class, Taxonomy, ConceptScheme, Relationship, PropertyDefinition
+from domain.ontology.entities import Class, Taxonomy, ConceptScheme, Relationship, PropertyDefinition, Individual
 from domain.ontology.events import GraphInvalidated
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 from tests.fakes.fake_graph_engine import FakeGraphEngine
@@ -940,3 +940,315 @@ class TestEmptyGraph:
 
         assert service.get_triple_count() == 0
         assert service.execute_sparql("SELECT * WHERE { ?s ?p ?o }") == []
+
+
+class TestIndividualGraphIntegration:
+    """Tests for Individual integration with Graph Service."""
+
+    @pytest.fixture
+    def repository_with_individuals(self):
+        """Create a repository with individuals and their parent classes."""
+        repo = FakeOntologyRepository()
+
+        # Create taxonomy
+        tax = Taxonomy(id=str(uuid4()), title="Test Taxonomy", description="Test")
+        repo.save_taxonomy(tax)
+
+        # Create concept scheme
+        scheme = ConceptScheme(
+            id=str(uuid4()), taxonomy_id=tax.id, title="Test Scheme", description="Test"
+        )
+        repo.save_concept_scheme(scheme)
+
+        # Create classes
+        class1 = Class(
+            id=str(uuid4()),
+            concept_scheme_id=scheme.id,
+            taxonomy_id=tax.id,
+            title="Class 1",
+            description="First class",
+        )
+        class2 = Class(
+            id=str(uuid4()),
+            concept_scheme_id=scheme.id,
+            taxonomy_id=tax.id,
+            title="Class 2",
+            description="Second class",
+        )
+        repo.save_class(class1)
+        repo.save_class(class2)
+
+        # Create individuals
+        individual1 = Individual(
+            id=str(uuid4()),
+            class_ids=[class1.id],
+            title="Individual 1",
+            description="First individual",
+        )
+        individual2 = Individual(
+            id=str(uuid4()),
+            class_ids=[class1.id, class2.id],
+            title="Individual 2",
+            description="Second individual with multiple classes",
+        )
+        repo.save_individual(individual1)
+        repo.save_individual(individual2)
+
+        # Create property definition for relationships
+        prop_def = PropertyDefinition(
+            id=str(uuid4()),
+            identifier="related_to",
+            title="related to",
+            description="relationship between individuals",
+        )
+        repo.save_property_definition(prop_def)
+
+        # Create relationship between individuals
+        rel = Relationship(
+            id=str(uuid4()),
+            source_id=individual1.id,
+            target_id=individual2.id,
+            property_definition_id=prop_def.id,
+        )
+        repo.save_relationship(rel)
+
+        return repo
+
+    def test_individuals_appear_in_graph_nodes(self, repository_with_individuals):
+        """Individuals appear as nodes in the graph."""
+        service = GraphAnalysisService(
+            repository=repository_with_individuals,
+            graph_engine=FakeGraphEngine(),
+            query_engine=FakeSemanticQueryEngine(),
+        )
+
+        graph = service.build_graph()
+
+        # Graph should have nodes (at minimum: 1 taxonomy + 1 scheme + 2 classes + 2 individuals = 6+)
+        assert graph.node_count >= 6, f"Expected at least 6 nodes, got {graph.node_count}"
+
+        # Get degree distribution to verify individuals are in the graph
+        degrees = service.get_degree_distribution()
+        individuals = repository_with_individuals.list_individuals()
+        assert len(individuals) == 2, "Test setup should create 2 individuals"
+
+        # All individuals should be nodes in the graph with specific IDs
+        individual_ids = [ind.id for ind in individuals]
+        for ind_id in individual_ids:
+            assert ind_id in degrees, f"Individual {ind_id} must be in graph degree distribution"
+
+        # Verify node count includes the individuals
+        actual_individual_ids = [ind.id for ind in individuals]
+        nodes_in_graph = set(degrees.keys())
+        individuals_in_graph = nodes_in_graph.intersection(set(actual_individual_ids))
+        assert len(individuals_in_graph) == 2, "Both individuals must be in graph"
+
+    def test_individual_relationships_in_graph(self, repository_with_individuals):
+        """Relationships between individuals are included in the graph."""
+        service = GraphAnalysisService(
+            repository=repository_with_individuals,
+            graph_engine=FakeGraphEngine(),
+            query_engine=FakeSemanticQueryEngine(),
+        )
+
+        graph = service.build_graph()
+
+        # Should have edges from relationships
+        assert graph.edge_count > 0, "Graph should have at least one edge from the relationship"
+
+        # Get relationships and individuals
+        relationships = repository_with_individuals.list_relationships()
+        individuals = repository_with_individuals.list_individuals()
+
+        # Verify test setup
+        assert len(relationships) == 1, "Test fixture should create exactly 1 relationship"
+        assert len(individuals) == 2, "Test fixture should create exactly 2 individuals"
+
+        # Get the relationship and verify its endpoints
+        rel = relationships[0]
+        assert rel.source_id is not None
+        assert rel.target_id is not None
+
+        # Verify both endpoints exist in the graph
+        degrees = service.get_degree_distribution()
+        assert rel.source_id in degrees, f"Relationship source {rel.source_id} must be in graph"
+        assert rel.target_id in degrees, f"Relationship target {rel.target_id} must be in graph"
+
+        # The source and target should have non-zero degree (at least 1 edge each)
+        # due to the relationship between them
+        assert degrees[rel.source_id] >= 1, f"Source node {rel.source_id} should have degree >= 1"
+        assert degrees[rel.target_id] >= 1, f"Target node {rel.target_id} should have degree >= 1"
+
+    def test_individual_node_type_classification(self, repository_with_individuals):
+        """Graph correctly classifies individuals by node type."""
+        service = GraphAnalysisService(
+            repository=repository_with_individuals,
+            graph_engine=FakeGraphEngine(),
+            query_engine=FakeSemanticQueryEngine(),
+        )
+
+        # Build the graph (which will classify nodes)
+        graph = service.build_graph()
+
+        # Verify graph was built successfully
+        assert graph.node_count >= 6, f"Expected at least 6 nodes, got {graph.node_count}"
+        assert not service._graph_stale, "Graph should not be stale after build"
+
+        # Get all entities from repository
+        entities, relationships = (
+            repository_with_individuals.get_all_entities_and_relationships()
+        )
+
+        # Should have exactly 2 individuals in the entities list
+        individuals = [e for e in entities if isinstance(e, Individual)]
+        assert len(individuals) == 2, "Test fixture should create exactly 2 individuals"
+
+        # Verify the node type mapping works correctly for each individual
+        for individual in individuals:
+            node_type = service._derive_node_type(individual)
+            assert node_type == "individual", f"Individual {individual.id} should have node type 'individual', got {node_type}"
+            # Also verify the individual is in the graph
+            degrees = service.get_degree_distribution()
+            assert individual.id in degrees, f"Individual {individual.id} should be in graph degree distribution"
+
+    def test_individuals_and_classes_both_in_graph(
+        self, repository_with_individuals
+    ):
+        """Individuals and their parent classes appear as nodes in the graph.
+
+        Class-membership edges (from individual.class_ids) are automatically
+        synthesized in _ensure_graph(), creating edges from each individual
+        to each of its parent classes based on class_ids.
+        """
+        service = GraphAnalysisService(
+            repository=repository_with_individuals,
+            graph_engine=FakeGraphEngine(),
+            query_engine=FakeSemanticQueryEngine(),
+        )
+
+        service.build_graph()
+
+        # Verify graph includes individuals and classes as nodes
+        in_degrees, out_degrees = service.get_degree_distributions()
+        assert len(in_degrees) > 0
+        assert len(out_degrees) > 0
+
+        # Get individuals and verify they're in the graph
+        individuals = repository_with_individuals.list_individuals()
+        assert len(individuals) == 2, "Test fixture should create 2 individuals"
+        individual1, individual2 = individuals[0], individuals[1]
+
+        # Individual 1 has 1 class, Individual 2 has 2 classes
+        individual1_classes = individual1.class_ids
+        individual2_classes = individual2.class_ids
+        assert len(individual1_classes) == 1, "Individual 1 should belong to 1 class"
+        assert len(individual2_classes) == 2, "Individual 2 should belong to 2 classes"
+
+        # Get classes and verify they're in the graph
+        classes = repository_with_individuals.list_classes()
+        assert len(classes) == 2, "Test fixture should create 2 classes"
+        class1, class2 = classes[0], classes[1]
+        [cls.id for cls in classes]
+
+        # Verify all individuals and classes are nodes
+        for ind in individuals:
+            assert ind.id in in_degrees, f"Individual {ind.id} should be in graph nodes"
+            assert ind.id in out_degrees, f"Individual {ind.id} should be in graph nodes"
+        for cls in classes:
+            assert cls.id in in_degrees, f"Class {cls.id} should be in graph nodes"
+            assert cls.id in out_degrees, f"Class {cls.id} should be in graph nodes"
+
+        # Verify correct edge directions through degree analysis:
+        # - individual1 should have out-degree 2: 1 class edge + 1 relationship edge to individual2
+        # - individual2 should have out-degree 2: 2 class edges
+        # - class1 should have in-degree 2: individual1 and individual2 point to it
+        # - class2 should have in-degree 1: individual2 points to it
+        assert out_degrees[individual1.id] == 2, \
+            f"Individual1 out-degree should be 2 (→class1 synthesized + →individual2 explicit), got {out_degrees[individual1.id]}"
+        assert out_degrees[individual2.id] == 2, \
+            f"Individual2 out-degree should be 2 (→class1 + →class2 synthesized), got {out_degrees[individual2.id]}"
+        assert in_degrees[class1.id] == 2, \
+            f"Class1 in-degree should be 2 (←individual1 + ←individual2), got {in_degrees[class1.id]}"
+        assert in_degrees[class2.id] == 1, \
+            f"Class2 in-degree should be 1 (←individual2), got {in_degrees[class2.id]}"
+
+        # Verify graph has expected edge count
+        # 3 synthesized edges (individual1→class1, individual2→class1, individual2→class2)
+        # + 1 explicit relationship edge (individual1→individual2)
+        # = 4 total edges
+        assert service.build_graph().edge_count == 4, "Graph should have exactly 4 edges (3 synthesized + 1 explicit)"
+
+    def test_individuals_rdf_class_membership_synthesis(
+        self, repository_with_individuals
+    ):
+        """RDF graph includes synthesized class-membership edges from individuals.
+
+        The _ensure_rdf() method synthesizes class-membership edges from
+        individual.class_ids, and these edges must appear in RDF queries.
+        RDF predicates for synthesized edges (property_definition_id=None)
+        map to "has_relationship" in the fake RDF engine.
+        """
+        service = GraphAnalysisService(
+            repository=repository_with_individuals,
+            graph_engine=FakeGraphEngine(),
+            query_engine=FakeSemanticQueryEngine(),
+        )
+
+        # Get individuals and classes
+        individuals = repository_with_individuals.list_individuals()
+        assert len(individuals) == 2
+        individual1, individual2 = individuals[0], individuals[1]
+
+        classes = repository_with_individuals.list_classes()
+        assert len(classes) == 2
+        class1, class2 = classes[0], classes[1]
+
+        # Verify test fixture setup
+        assert class1.id in individual1.class_ids, "Individual1 should belong to class1"
+        assert class1.id in individual2.class_ids, "Individual2 should belong to class1"
+        assert class2.id in individual2.class_ids, "Individual2 should belong to class2"
+
+        # Verify RDF is loaded (triggers _ensure_rdf which synthesizes edges)
+        triple_count = service.get_triple_count()
+        assert triple_count > 0, "RDF graph should have triples after loading"
+
+        # Verify synthesized edges appear in get_triples via subject filter
+        # This tests the RDF/SPARQL path and confirms synthesized edges are present
+        triples_ind1 = service.get_triples(subject=str(individual1.id))
+        assert isinstance(triples_ind1, list), "get_triples should return a list"
+
+        # Individual1 should have edges to:
+        # - its class (class1) via synthesized edge
+        # - individual2 via explicit relationship
+        # So at least 2 triples (may be more if type triples are included)
+        assert len(triples_ind1) >= 1, \
+            f"Individual1 should have at least 1 triple for synthesized class edge, got {len(triples_ind1)}: {triples_ind1}"
+
+        # Verify that get_triples for individual2 includes edges to both classes
+        triples_ind2 = service.get_triples(subject=str(individual2.id))
+        assert len(triples_ind2) >= 2, \
+            f"Individual2 should have at least 2 triples (→class1 + →class2), got {len(triples_ind2)}: {triples_ind2}"
+
+        # Verify specific synthesized edges exist by checking triples
+        # Individual1 should have a triple with class1 as object
+        ind1_to_class1_exists = any(
+            triple[0] == str(individual1.id) and triple[2] == str(class1.id)
+            for triple in triples_ind1
+        )
+        assert ind1_to_class1_exists, \
+            f"RDF should include synthesized edge from {individual1.id} to {class1.id}"
+
+        # Individual2 should have triples with both class1 and class2 as objects
+        ind2_to_class1_exists = any(
+            triple[0] == str(individual2.id) and triple[2] == str(class1.id)
+            for triple in triples_ind2
+        )
+        assert ind2_to_class1_exists, \
+            f"RDF should include synthesized edge from {individual2.id} to {class1.id}"
+
+        ind2_to_class2_exists = any(
+            triple[0] == str(individual2.id) and triple[2] == str(class2.id)
+            for triple in triples_ind2
+        )
+        assert ind2_to_class2_exists, \
+            f"RDF should include synthesized edge from {individual2.id} to {class2.id}"

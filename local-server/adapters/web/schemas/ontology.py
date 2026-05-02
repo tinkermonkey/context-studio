@@ -8,6 +8,10 @@ Request schemas (for POST/PUT):
 - ClassUpdateRequest
 - RelationshipCreateRequest
 - PropertyDefinitionCreateRequest
+- IndividualCreateRequest
+- IndividualUpdateRequest
+- IndividualClassRequest
+- IndividualClassListRequest
 
 Response schemas (for GET/returns):
 - TaxonomyResponse
@@ -15,6 +19,7 @@ Response schemas (for GET/returns):
 - ClassResponse
 - RelationshipResponse
 - PropertyDefinitionResponse
+- IndividualResponse
 
 These schemas handle serialization/deserialization between HTTP and domain models.
 """
@@ -22,7 +27,7 @@ These schemas handle serialization/deserialization between HTTP and domain model
 from datetime import datetime
 from typing import Optional, Any, TypeVar, Generic
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 T = TypeVar("T")
 
@@ -232,6 +237,65 @@ class PropertyDefinitionResponse(BaseModel):
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
     last_modified: Optional[datetime] = Field(None, description="Last modification timestamp")
     version: int = Field(default=1, description="Version number for optimistic concurrency control")
+
+
+# ==================== Individual Schemas ====================
+
+class IndividualCreateRequest(BaseModel):
+    """Request to create a new individual."""
+
+    class_ids: list[str] | str = Field(..., description="ID(s) of the class(es) this individual instantiates (≥1 required)")
+    title: str = Field(..., description="Display name for the individual", min_length=1)
+    description: Optional[str] = Field(None, description="Optional longer description")
+
+    @field_validator("class_ids", mode="before")
+    @classmethod
+    def validate_class_ids(cls, v: list[str] | str) -> list[str]:
+        """Normalize class_ids to list and validate it's not empty."""
+        # Normalize string to list
+        if isinstance(v, str):
+            v = [v]
+
+        # Reject empty lists
+        if not v:
+            raise ValueError("At least one class ID is required")
+
+        return v
+
+
+class IndividualUpdateRequest(BaseModel):
+    """Request to update an individual."""
+
+    title: Optional[str] = Field(None, description="New title for the individual", min_length=1)
+    description: Optional[str] = Field(None, description="New description")
+
+
+class IndividualResponse(BaseModel):
+    """Response containing individual data."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str = Field(..., description="Unique identifier")
+    class_ids: list[str] = Field(..., description="Ordered list of parent class IDs")
+    title: str = Field(..., description="Display name")
+    description: Optional[str] = Field(None, description="Optional description")
+    data_properties: list[DataPropertyValueResponse] = Field(default_factory=list)
+    external_references: list[ExternalReferenceResponse] = Field(default_factory=list)
+    created_at: Optional[datetime] = Field(None, description="Creation timestamp")
+    last_modified: Optional[datetime] = Field(None, description="Last modification timestamp")
+    version: int = Field(default=1, description="Version number for optimistic concurrency control")
+
+
+class IndividualClassRequest(BaseModel):
+    """Request to manage individual class membership."""
+
+    class_id: str = Field(..., description="ID of the class")
+
+
+class IndividualClassListRequest(BaseModel):
+    """Request to reorder individual class membership."""
+
+    class_ids: list[str] = Field(..., description="Ordered list of class IDs (must match current membership)")
 
 
 # ==================== List Response Schemas ====================

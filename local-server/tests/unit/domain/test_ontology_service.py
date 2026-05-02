@@ -11,6 +11,8 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+import logging
+
 import pytest
 
 from domain.ontology.services import OntologyService
@@ -952,6 +954,16 @@ class TestDeleteClass:
         assert rel1.id in rel_ids
         assert rel2.id in rel_ids
 
+    def test_delete_class_with_individuals_raises(self, service):
+        """Delete class with individuals referencing it raises OntologyError."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        service.create_individual(cls.id, title="Fido")
+
+        with pytest.raises(OntologyError, match="has.*individual"):
+            service.delete_class(class_id=cls.id)
+
 
 class TestCreateRelationship:
     """Tests for create_relationship."""
@@ -1017,7 +1029,7 @@ class TestCreateRelationship:
         target = service.create_class(concept_scheme_id=scheme.id, title="Target")
         prop = service.create_property_definition(identifier="is_a", title="Is A")
 
-        with pytest.raises(EntityNotFoundError, match="Class.*nonexistent"):
+        with pytest.raises(EntityNotFoundError, match="Entity.*nonexistent"):
             service.create_relationship(
                 source_id="nonexistent",
                 target_id=target.id,
@@ -1031,7 +1043,7 @@ class TestCreateRelationship:
         source = service.create_class(concept_scheme_id=scheme.id, title="Source")
         prop = service.create_property_definition(identifier="is_a", title="Is A")
 
-        with pytest.raises(EntityNotFoundError, match="Class.*nonexistent"):
+        with pytest.raises(EntityNotFoundError, match="Entity.*nonexistent"):
             service.create_relationship(
                 source_id=source.id,
                 target_id="nonexistent",
@@ -1185,6 +1197,168 @@ class TestDeleteRelationship:
         graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)
         delete_graph_events = [e for e in graph_events if e.reason == "relationship_deleted"]
         assert len(delete_graph_events) == existing_count
+
+    def test_delete_relationship_with_individual_source(self, service):
+        """Delete relationship where source is an Individual resolves taxonomy from its parent class."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        animal_class = service.create_class(concept_scheme_id=scheme.id, title="Animal")
+        mammal_class = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
+
+        # Create an individual as the source
+        individual = service.create_individual(class_ids=animal_class.id, title="Fluffy")
+
+        prop = service.create_property_definition(identifier="is_a", title="Is A")
+        rel = service.create_relationship(
+            source_id=individual.id,
+            target_id=mammal_class.id,
+            property_definition_id=prop.id,
+        )
+
+        service.delete_relationship(relationship_id=rel.id)
+
+        # Verify the relationship is deleted
+        with pytest.raises(EntityNotFoundError):
+            service.get_relationship(rel.id)
+
+        # Verify GraphInvalidated event uses the Individual's parent class taxonomy
+        graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)
+        delete_graph_events = [e for e in graph_events if e.reason == "relationship_deleted"]
+        assert len(delete_graph_events) == 1
+        assert delete_graph_events[0].taxonomy_id == tax.id
+
+    def test_delete_relationship_with_individual_target(self, service):
+        """Delete relationship where target is an Individual resolves taxonomy from its parent class."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        animal_class = service.create_class(concept_scheme_id=scheme.id, title="Animal")
+        mammal_class = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
+
+        # Create an individual as the target
+        individual = service.create_individual(class_ids=mammal_class.id, title="Fido")
+
+        prop = service.create_property_definition(identifier="is_a", title="Is A")
+        rel = service.create_relationship(
+            source_id=animal_class.id,
+            target_id=individual.id,
+            property_definition_id=prop.id,
+        )
+
+        service.delete_relationship(relationship_id=rel.id)
+
+        # Verify the relationship is deleted
+        with pytest.raises(EntityNotFoundError):
+            service.get_relationship(rel.id)
+
+        # Verify GraphInvalidated event uses the Individual's parent class taxonomy
+        graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)
+        delete_graph_events = [e for e in graph_events if e.reason == "relationship_deleted"]
+        assert len(delete_graph_events) == 1
+        assert delete_graph_events[0].taxonomy_id == tax.id
+
+    def test_delete_relationship_with_both_individuals(self, service):
+        """Delete relationship where both source and target are Individuals."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        animal_class = service.create_class(concept_scheme_id=scheme.id, title="Animal")
+
+        # Create individuals for both source and target
+        individual1 = service.create_individual(class_ids=animal_class.id, title="Fluffy")
+        individual2 = service.create_individual(class_ids=animal_class.id, title="Fido")
+
+        prop = service.create_property_definition(identifier="related_to", title="Related To")
+        rel = service.create_relationship(
+            source_id=individual1.id,
+            target_id=individual2.id,
+            property_definition_id=prop.id,
+        )
+
+        service.delete_relationship(relationship_id=rel.id)
+
+        # Verify the relationship is deleted
+        with pytest.raises(EntityNotFoundError):
+            service.get_relationship(rel.id)
+
+        # Verify GraphInvalidated event uses the taxonomy
+        graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)
+        delete_graph_events = [e for e in graph_events if e.reason == "relationship_deleted"]
+        assert len(delete_graph_events) == 1
+        assert delete_graph_events[0].taxonomy_id == tax.id
+
+    def test_delete_relationship_with_individual_source_deleted_parent_class(self, service):
+        """Delete relationship where source Individual's parent class is deleted uses target class taxonomy."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        animal_class = service.create_class(concept_scheme_id=scheme.id, title="Animal")
+        mammal_class = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
+
+        # Create an individual
+        individual = service.create_individual(class_ids=animal_class.id, title="Fluffy")
+
+        prop = service.create_property_definition(identifier="is_a", title="Is A")
+        rel = service.create_relationship(
+            source_id=individual.id,
+            target_id=mammal_class.id,
+            property_definition_id=prop.id,
+        )
+
+        # Delete the individual's parent class
+        service._repository.delete_class(animal_class.id)
+
+        # Delete the relationship - should use target class's taxonomy
+        service.delete_relationship(relationship_id=rel.id)
+
+        # Verify the relationship is deleted
+        with pytest.raises(EntityNotFoundError):
+            service.get_relationship(rel.id)
+
+        # Verify GraphInvalidated event uses target class taxonomy
+        graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)
+        delete_graph_events = [e for e in graph_events if e.reason == "relationship_deleted"]
+        assert len(delete_graph_events) == 1
+        assert delete_graph_events[0].taxonomy_id == tax.id
+
+    def test_delete_relationship_with_individuals_and_deleted_parent_classes(self, service, caplog):
+        """Delete relationship where both Individuals have deleted parent classes emits warning and no GraphInvalidated."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        animal_class = service.create_class(concept_scheme_id=scheme.id, title="Animal")
+        mammal_class = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
+
+        # Create individuals for both source and target
+        individual1 = service.create_individual(class_ids=animal_class.id, title="Fluffy")
+        individual2 = service.create_individual(class_ids=mammal_class.id, title="Fido")
+
+        prop = service.create_property_definition(identifier="related_to", title="Related To")
+        rel = service.create_relationship(
+            source_id=individual1.id,
+            target_id=individual2.id,
+            property_definition_id=prop.id,
+        )
+
+        # Delete both parent classes
+        service._repository.delete_class(animal_class.id)
+        service._repository.delete_class(mammal_class.id)
+
+        # Get current count before deletion
+        existing_graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)
+        existing_count = len([e for e in existing_graph_events if e.reason == "relationship_deleted"])
+
+        # Delete the relationship - should not emit GraphInvalidated and should log warning
+        with caplog.at_level(logging.WARNING):
+            service.delete_relationship(relationship_id=rel.id)
+
+        # Verify the relationship is deleted
+        with pytest.raises(EntityNotFoundError):
+            service.get_relationship(rel.id)
+
+        # Verify no new GraphInvalidated event was emitted
+        graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)
+        delete_graph_events = [e for e in graph_events if e.reason == "relationship_deleted"]
+        assert len(delete_graph_events) == existing_count
+
+        # Verify warning was logged
+        assert "Could not determine taxonomy for relationship deletion" in caplog.text
 
 
 class TestGetPropertyDefinition:
@@ -1563,9 +1737,9 @@ class TestCreateIndividual:
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
 
-        individual = service.create_individual(class_id=cls.id, title="Fido")
+        individual = service.create_individual(cls.id, title="Fido")
         assert individual.id is not None
-        assert individual.class_id == cls.id
+        assert individual.class_ids == [cls.id]
         assert individual.title == "Fido"
         assert individual.description is None
         assert individual.created_at is not None
@@ -1578,7 +1752,7 @@ class TestCreateIndividual:
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
 
         individual = service.create_individual(
-            class_id=cls.id,
+            cls.id,
             title="Fido",
             description="A friendly dog"
         )
@@ -1588,7 +1762,7 @@ class TestCreateIndividual:
     def test_create_individual_nonexistent_class_raises(self, service):
         """Create individual with nonexistent class raises EntityNotFoundError."""
         with pytest.raises(EntityNotFoundError, match="Class"):
-            service.create_individual(class_id="nonexistent", title="Test")
+            service.create_individual("nonexistent", title="Test")
 
     def test_create_individual_empty_title_raises(self, service):
         """Create individual with empty title raises ValueError."""
@@ -1597,7 +1771,7 @@ class TestCreateIndividual:
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
 
         with pytest.raises(ValueError, match="Title cannot be empty"):
-            service.create_individual(class_id=cls.id, title="")
+            service.create_individual(cls.id, title="")
 
     def test_create_individual_whitespace_title_raises(self, service):
         """Create individual with whitespace-only title raises ValueError."""
@@ -1606,7 +1780,7 @@ class TestCreateIndividual:
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
 
         with pytest.raises(ValueError, match="Title cannot be empty"):
-            service.create_individual(class_id=cls.id, title="   ")
+            service.create_individual(cls.id, title="   ")
 
     def test_create_individual_duplicate_title_in_class_raises(self, service):
         """Create individual with duplicate title in same class raises DuplicateEntityError."""
@@ -1614,9 +1788,9 @@ class TestCreateIndividual:
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
 
-        service.create_individual(class_id=cls.id, title="Fido")
+        service.create_individual(cls.id, title="Fido")
         with pytest.raises(DuplicateEntityError, match="already exists"):
-            service.create_individual(class_id=cls.id, title="Fido")
+            service.create_individual(cls.id, title="Fido")
 
     def test_create_individual_same_title_different_class_allowed(self, service):
         """Create individuals with same title in different classes is allowed."""
@@ -1625,10 +1799,10 @@ class TestCreateIndividual:
         cls1 = service.create_class(concept_scheme_id=scheme.id, title="Dog")
         cls2 = service.create_class(concept_scheme_id=scheme.id, title="Cat")
 
-        ind1 = service.create_individual(class_id=cls1.id, title="Fluffy")
-        ind2 = service.create_individual(class_id=cls2.id, title="Fluffy")
-        assert ind1.class_id == cls1.id
-        assert ind2.class_id == cls2.id
+        ind1 = service.create_individual(cls1.id, title="Fluffy")
+        ind2 = service.create_individual(cls2.id, title="Fluffy")
+        assert ind1.class_ids == [cls1.id]
+        assert ind2.class_ids == [cls2.id]
         assert ind1.title == ind2.title
 
 
@@ -1640,7 +1814,7 @@ class TestGetIndividual:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
-        created = service.create_individual(class_id=cls.id, title="Fido")
+        created = service.create_individual(cls.id, title="Fido")
 
         retrieved = service.get_individual(created.id)
         assert retrieved.id == created.id
@@ -1667,9 +1841,9 @@ class TestListIndividuals:
         cls1 = service.create_class(concept_scheme_id=scheme.id, title="Dog")
         cls2 = service.create_class(concept_scheme_id=scheme.id, title="Cat")
 
-        ind1 = service.create_individual(class_id=cls1.id, title="Fido")
-        ind2 = service.create_individual(class_id=cls1.id, title="Rover")
-        ind3 = service.create_individual(class_id=cls2.id, title="Whiskers")
+        ind1 = service.create_individual(cls1.id, title="Fido")
+        ind2 = service.create_individual(cls1.id, title="Rover")
+        ind3 = service.create_individual(cls2.id, title="Whiskers")
 
         individuals = service.list_individuals()
         assert len(individuals) == 3
@@ -1684,9 +1858,9 @@ class TestListIndividuals:
         cls1 = service.create_class(concept_scheme_id=scheme.id, title="Dog")
         cls2 = service.create_class(concept_scheme_id=scheme.id, title="Cat")
 
-        ind1 = service.create_individual(class_id=cls1.id, title="Fido")
-        ind2 = service.create_individual(class_id=cls1.id, title="Rover")
-        service.create_individual(class_id=cls2.id, title="Whiskers")
+        ind1 = service.create_individual(cls1.id, title="Fido")
+        ind2 = service.create_individual(cls1.id, title="Rover")
+        service.create_individual(cls2.id, title="Whiskers")
 
         dog_individuals = service.list_individuals(class_id=cls1.id)
         assert len(dog_individuals) == 2
@@ -1702,7 +1876,7 @@ class TestUpdateIndividual:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
-        individual = service.create_individual(class_id=cls.id, title="Fido")
+        individual = service.create_individual(cls.id, title="Fido")
         old_timestamp = individual.last_modified
 
         updated = service.update_individual(individual.id, title="Buddy")
@@ -1714,7 +1888,7 @@ class TestUpdateIndividual:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
-        individual = service.create_individual(class_id=cls.id, title="Fido")
+        individual = service.create_individual(cls.id, title="Fido")
 
         updated = service.update_individual(individual.id, description="A friendly dog")
         assert updated.description == "A friendly dog"
@@ -1724,7 +1898,7 @@ class TestUpdateIndividual:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
-        individual = service.create_individual(class_id=cls.id, title="Fido", description="Old desc")
+        individual = service.create_individual(cls.id, title="Fido", description="Old desc")
 
         updated = service.update_individual(individual.id, title="Buddy", description="New desc")
         assert updated.title == "Buddy"
@@ -1740,7 +1914,7 @@ class TestUpdateIndividual:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
-        individual = service.create_individual(class_id=cls.id, title="Fido")
+        individual = service.create_individual(cls.id, title="Fido")
 
         with pytest.raises(ValueError, match="Title cannot be empty"):
             service.update_individual(individual.id, title="")
@@ -1751,8 +1925,8 @@ class TestUpdateIndividual:
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
 
-        service.create_individual(class_id=cls.id, title="Fido")
-        ind2 = service.create_individual(class_id=cls.id, title="Buddy")
+        service.create_individual(cls.id, title="Fido")
+        ind2 = service.create_individual(cls.id, title="Buddy")
 
         with pytest.raises(DuplicateEntityError, match="already exists"):
             service.update_individual(ind2.id, title="Fido")
@@ -1762,7 +1936,7 @@ class TestUpdateIndividual:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
-        individual = service.create_individual(class_id=cls.id, title="Fido")
+        individual = service.create_individual(cls.id, title="Fido")
 
         # Updating to same title should not raise
         updated = service.update_individual(individual.id, title="Fido")
@@ -1777,7 +1951,7 @@ class TestDeleteIndividual:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
-        individual = service.create_individual(class_id=cls.id, title="Fido")
+        individual = service.create_individual(cls.id, title="Fido")
 
         service.delete_individual(individual.id)
         with pytest.raises(EntityNotFoundError):
@@ -1787,3 +1961,103 @@ class TestDeleteIndividual:
         """Delete nonexistent individual raises EntityNotFoundError."""
         with pytest.raises(EntityNotFoundError, match="Individual"):
             service.delete_individual("nonexistent")
+
+    def test_delete_individual_cleans_up_orphaned_relationships_as_source(self, service):
+        """Delete individual cleans up relationships where it is the source."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        dog_class = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        mammal_class = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
+        fido = service.create_individual(dog_class.id, title="Fido")
+        animal_ind = service.create_individual(mammal_class.id, title="Animal")
+        prop = service.create_property_definition(identifier="is_a", title="Is A")
+
+        rel = service.create_relationship(
+            source_id=fido.id,
+            target_id=animal_ind.id,
+            property_definition_id=prop.id,
+        )
+
+        # Delete the source individual
+        service.delete_individual(individual_id=fido.id)
+
+        # Verify relationship is deleted
+        with pytest.raises(EntityNotFoundError):
+            service.get_relationship(rel.id)
+
+        # Verify RelationshipDeleted event was emitted
+        rel_delete_events = service._event_publisher.get_events_of_type(RelationshipDeleted)
+        assert len(rel_delete_events) == 1
+        assert rel_delete_events[0].relationship_id == rel.id
+        assert rel_delete_events[0].source_id == fido.id
+        assert rel_delete_events[0].target_id == animal_ind.id
+        assert rel_delete_events[0].property_definition_id == prop.id
+
+    def test_delete_individual_cleans_up_orphaned_relationships_as_target(self, service):
+        """Delete individual cleans up relationships where it is the target."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        dog_class = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        mammal_class = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
+        fido = service.create_individual(dog_class.id, title="Fido")
+        animal_ind = service.create_individual(mammal_class.id, title="Animal")
+        prop = service.create_property_definition(identifier="is_a", title="Is A")
+
+        rel = service.create_relationship(
+            source_id=fido.id,
+            target_id=animal_ind.id,
+            property_definition_id=prop.id,
+        )
+
+        # Delete the target individual
+        service.delete_individual(individual_id=animal_ind.id)
+
+        # Verify relationship is deleted
+        with pytest.raises(EntityNotFoundError):
+            service.get_relationship(rel.id)
+
+        # Verify RelationshipDeleted event was emitted
+        rel_delete_events = service._event_publisher.get_events_of_type(RelationshipDeleted)
+        assert len(rel_delete_events) == 1
+        assert rel_delete_events[0].relationship_id == rel.id
+        assert rel_delete_events[0].source_id == fido.id
+        assert rel_delete_events[0].target_id == animal_ind.id
+        assert rel_delete_events[0].property_definition_id == prop.id
+
+    def test_delete_individual_cleans_up_multiple_orphaned_relationships(self, service):
+        """Delete individual cleans up multiple relationships."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        dog_class = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        mammal_class = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
+        fido = service.create_individual(dog_class.id, title="Fido")
+        buddy = service.create_individual(dog_class.id, title="Buddy")
+        animal_ind = service.create_individual(mammal_class.id, title="Animal")
+        prop1 = service.create_property_definition(identifier="is_friend_of", title="Is Friend Of")
+        prop2 = service.create_property_definition(identifier="is_a", title="Is A")
+
+        rel1 = service.create_relationship(
+            source_id=fido.id,
+            target_id=buddy.id,
+            property_definition_id=prop1.id,
+        )
+        rel2 = service.create_relationship(
+            source_id=fido.id,
+            target_id=animal_ind.id,
+            property_definition_id=prop2.id,
+        )
+
+        # Delete individual with multiple relationships
+        service.delete_individual(individual_id=fido.id)
+
+        # Verify both relationships are deleted
+        with pytest.raises(EntityNotFoundError):
+            service.get_relationship(rel1.id)
+        with pytest.raises(EntityNotFoundError):
+            service.get_relationship(rel2.id)
+
+        # Verify both RelationshipDeleted events were emitted
+        rel_delete_events = service._event_publisher.get_events_of_type(RelationshipDeleted)
+        assert len(rel_delete_events) == 2
+        rel_ids = {event.relationship_id for event in rel_delete_events}
+        assert rel_ids == {rel1.id, rel2.id}

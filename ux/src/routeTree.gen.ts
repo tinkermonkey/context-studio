@@ -15,6 +15,7 @@ import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AppTaxonomiesRouteImport } from './routes/app/taxonomies'
 import { Route as AppRelationshipsRouteImport } from './routes/app/relationships'
 import { Route as AppPropertiesRouteImport } from './routes/app/properties'
+import { Route as AppIndividualsRouteImport } from './routes/app/individuals'
 import { Route as AppDatasetsRouteImport } from './routes/app/datasets'
 import { Route as AppConfigRouteImport } from './routes/app/config'
 import { Route as AppConceptSchemesRouteImport } from './routes/app/concept-schemes'
@@ -33,6 +34,7 @@ import { Route as AppMonitoringSystemHealthRouteImport } from './routes/app/moni
 import { Route as AppMonitoringPerformanceRouteImport } from './routes/app/monitoring/performance'
 import { Route as AppMonitoringLlmTraceabilityRouteImport } from './routes/app/monitoring/llm-traceability'
 import { Route as AppMonitoringAnalyticsRouteImport } from './routes/app/monitoring/analytics'
+import { Route as AppIndividualsIndividualIdRouteImport } from './routes/app/individuals.$individualId'
 import { Route as AppConfigSystemRouteImport } from './routes/app/config/system'
 import { Route as AppConfigProcessingRouteImport } from './routes/app/config/processing'
 import { Route as AppConfigPipelinesRouteImport } from './routes/app/config/pipelines'
@@ -77,6 +79,11 @@ const AppRelationshipsRoute = AppRelationshipsRouteImport.update({
 const AppPropertiesRoute = AppPropertiesRouteImport.update({
   id: '/properties',
   path: '/properties',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppIndividualsRoute = AppIndividualsRouteImport.update({
+  id: '/individuals',
+  path: '/individuals',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDatasetsRoute = AppDatasetsRouteImport.update({
@@ -174,6 +181,12 @@ const AppMonitoringAnalyticsRoute = AppMonitoringAnalyticsRouteImport.update({
   path: '/monitoring/analytics',
   getParentRoute: () => AppRoute,
 } as any)
+const AppIndividualsIndividualIdRoute =
+  AppIndividualsIndividualIdRouteImport.update({
+    id: '/$individualId',
+    path: '/$individualId',
+    getParentRoute: () => AppIndividualsRoute,
+  } as any)
 const AppConfigSystemRoute = AppConfigSystemRouteImport.update({
   id: '/system',
   path: '/system',
@@ -263,6 +276,7 @@ export interface FileRoutesByFullPath {
   '/app/concept-schemes': typeof AppConceptSchemesRouteWithChildren
   '/app/config': typeof AppConfigRouteWithChildren
   '/app/datasets': typeof AppDatasetsRoute
+  '/app/individuals': typeof AppIndividualsRouteWithChildren
   '/app/properties': typeof AppPropertiesRoute
   '/app/relationships': typeof AppRelationshipsRoute
   '/app/taxonomies': typeof AppTaxonomiesRouteWithChildren
@@ -276,6 +290,7 @@ export interface FileRoutesByFullPath {
   '/app/config/pipelines': typeof AppConfigPipelinesRouteWithChildren
   '/app/config/processing': typeof AppConfigProcessingRoute
   '/app/config/system': typeof AppConfigSystemRoute
+  '/app/individuals/$individualId': typeof AppIndividualsIndividualIdRoute
   '/app/monitoring/analytics': typeof AppMonitoringAnalyticsRoute
   '/app/monitoring/llm-traceability': typeof AppMonitoringLlmTraceabilityRoute
   '/app/monitoring/performance': typeof AppMonitoringPerformanceRoute
@@ -302,6 +317,7 @@ export interface FileRoutesByTo {
   '/app/classes': typeof AppClassesRouteWithChildren
   '/app/concept-schemes': typeof AppConceptSchemesRouteWithChildren
   '/app/datasets': typeof AppDatasetsRoute
+  '/app/individuals': typeof AppIndividualsRouteWithChildren
   '/app/properties': typeof AppPropertiesRoute
   '/app/relationships': typeof AppRelationshipsRoute
   '/app/taxonomies': typeof AppTaxonomiesRouteWithChildren
@@ -314,6 +330,7 @@ export interface FileRoutesByTo {
   '/app/config/network': typeof AppConfigNetworkRoute
   '/app/config/processing': typeof AppConfigProcessingRoute
   '/app/config/system': typeof AppConfigSystemRoute
+  '/app/individuals/$individualId': typeof AppIndividualsIndividualIdRoute
   '/app/monitoring/analytics': typeof AppMonitoringAnalyticsRoute
   '/app/monitoring/llm-traceability': typeof AppMonitoringLlmTraceabilityRoute
   '/app/monitoring/performance': typeof AppMonitoringPerformanceRoute
@@ -342,6 +359,7 @@ export interface FileRoutesById {
   '/app/concept-schemes': typeof AppConceptSchemesRouteWithChildren
   '/app/config': typeof AppConfigRouteWithChildren
   '/app/datasets': typeof AppDatasetsRoute
+  '/app/individuals': typeof AppIndividualsRouteWithChildren
   '/app/properties': typeof AppPropertiesRoute
   '/app/relationships': typeof AppRelationshipsRoute
   '/app/taxonomies': typeof AppTaxonomiesRouteWithChildren
@@ -355,6 +373,7 @@ export interface FileRoutesById {
   '/app/config/pipelines': typeof AppConfigPipelinesRouteWithChildren
   '/app/config/processing': typeof AppConfigProcessingRoute
   '/app/config/system': typeof AppConfigSystemRoute
+  '/app/individuals/$individualId': typeof AppIndividualsIndividualIdRoute
   '/app/monitoring/analytics': typeof AppMonitoringAnalyticsRoute
   '/app/monitoring/llm-traceability': typeof AppMonitoringLlmTraceabilityRoute
   '/app/monitoring/performance': typeof AppMonitoringPerformanceRoute
@@ -385,6 +404,7 @@ export interface FileRouteTypes {
     | '/app/concept-schemes'
     | '/app/config'
     | '/app/datasets'
+    | '/app/individuals'
     | '/app/properties'
     | '/app/relationships'
     | '/app/taxonomies'
@@ -398,6 +418,7 @@ export interface FileRouteTypes {
     | '/app/config/pipelines'
     | '/app/config/processing'
     | '/app/config/system'
+    | '/app/individuals/$individualId'
     | '/app/monitoring/analytics'
     | '/app/monitoring/llm-traceability'
     | '/app/monitoring/performance'
@@ -424,6 +445,7 @@ export interface FileRouteTypes {
     | '/app/classes'
     | '/app/concept-schemes'
     | '/app/datasets'
+    | '/app/individuals'
     | '/app/properties'
     | '/app/relationships'
     | '/app/taxonomies'
@@ -436,6 +458,7 @@ export interface FileRouteTypes {
     | '/app/config/network'
     | '/app/config/processing'
     | '/app/config/system'
+    | '/app/individuals/$individualId'
     | '/app/monitoring/analytics'
     | '/app/monitoring/llm-traceability'
     | '/app/monitoring/performance'
@@ -463,6 +486,7 @@ export interface FileRouteTypes {
     | '/app/concept-schemes'
     | '/app/config'
     | '/app/datasets'
+    | '/app/individuals'
     | '/app/properties'
     | '/app/relationships'
     | '/app/taxonomies'
@@ -476,6 +500,7 @@ export interface FileRouteTypes {
     | '/app/config/pipelines'
     | '/app/config/processing'
     | '/app/config/system'
+    | '/app/individuals/$individualId'
     | '/app/monitoring/analytics'
     | '/app/monitoring/llm-traceability'
     | '/app/monitoring/performance'
@@ -545,6 +570,13 @@ declare module '@tanstack/react-router' {
       path: '/properties'
       fullPath: '/app/properties'
       preLoaderRoute: typeof AppPropertiesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/individuals': {
+      id: '/app/individuals'
+      path: '/individuals'
+      fullPath: '/app/individuals'
+      preLoaderRoute: typeof AppIndividualsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/datasets': {
@@ -672,6 +704,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/monitoring/analytics'
       preLoaderRoute: typeof AppMonitoringAnalyticsRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/app/individuals/$individualId': {
+      id: '/app/individuals/$individualId'
+      path: '/$individualId'
+      fullPath: '/app/individuals/$individualId'
+      preLoaderRoute: typeof AppIndividualsIndividualIdRouteImport
+      parentRoute: typeof AppIndividualsRoute
     }
     '/app/config/system': {
       id: '/app/config/system'
@@ -868,6 +907,18 @@ const AppConfigRouteWithChildren = AppConfigRoute._addFileChildren(
   AppConfigRouteChildren,
 )
 
+interface AppIndividualsRouteChildren {
+  AppIndividualsIndividualIdRoute: typeof AppIndividualsIndividualIdRoute
+}
+
+const AppIndividualsRouteChildren: AppIndividualsRouteChildren = {
+  AppIndividualsIndividualIdRoute: AppIndividualsIndividualIdRoute,
+}
+
+const AppIndividualsRouteWithChildren = AppIndividualsRoute._addFileChildren(
+  AppIndividualsRouteChildren,
+)
+
 interface AppTaxonomiesRouteChildren {
   AppTaxonomiesTaxonomyIdRoute: typeof AppTaxonomiesTaxonomyIdRoute
 }
@@ -885,6 +936,7 @@ interface AppRouteChildren {
   AppConceptSchemesRoute: typeof AppConceptSchemesRouteWithChildren
   AppConfigRoute: typeof AppConfigRouteWithChildren
   AppDatasetsRoute: typeof AppDatasetsRoute
+  AppIndividualsRoute: typeof AppIndividualsRouteWithChildren
   AppPropertiesRoute: typeof AppPropertiesRoute
   AppRelationshipsRoute: typeof AppRelationshipsRoute
   AppTaxonomiesRoute: typeof AppTaxonomiesRouteWithChildren
@@ -908,6 +960,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppConceptSchemesRoute: AppConceptSchemesRouteWithChildren,
   AppConfigRoute: AppConfigRouteWithChildren,
   AppDatasetsRoute: AppDatasetsRoute,
+  AppIndividualsRoute: AppIndividualsRouteWithChildren,
   AppPropertiesRoute: AppPropertiesRoute,
   AppRelationshipsRoute: AppRelationshipsRoute,
   AppTaxonomiesRoute: AppTaxonomiesRouteWithChildren,

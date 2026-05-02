@@ -7,6 +7,7 @@ This module implements all HTTP endpoints for CRUD operations on ontology entiti
 - Classes
 - Relationships
 - PropertyDefinitions
+- Individuals
 
 Each endpoint is a thin adapter that:
 1. Receives HTTP request + parsed Pydantic schema
@@ -44,6 +45,12 @@ from adapters.web.schemas.ontology import (
     PropertyDefinitionCreateRequest,
     PropertyDefinitionUpdateRequest,
     PropertyDefinitionResponse,
+    IndividualCreateRequest,
+    IndividualUpdateRequest,
+    IndividualResponse,
+    IndividualClassRequest,
+    IndividualClassListRequest,
+    DataPropertyValueResponse,
     ListResponse,
 )
 
@@ -538,7 +545,7 @@ async def delete_class(
         service: OntologyService from dependency injection
 
     Raises:
-        HTTPException: 404 if not found, 422 if it has subclasses
+        HTTPException: 404 if not found, 422 if it has subclasses or individuals
     """
     try:
         service.delete_class(class_id)
@@ -806,6 +813,293 @@ async def delete_property_definition(
     """
     try:
         service.delete_property_definition(property_id)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+# ==================== Individual Endpoints ====================
+
+@router.post("/individuals", response_model=IndividualResponse, status_code=status.HTTP_201_CREATED)
+async def create_individual(
+    request: IndividualCreateRequest,
+    service: OntologyService = Depends(get_ontology_service),
+) -> IndividualResponse:
+    """
+    Create a new individual instance of one or more classes.
+
+    Args:
+        request: IndividualCreateRequest with class_ids and title
+        service: OntologyService from dependency injection
+
+    Returns:
+        Created IndividualResponse
+
+    Raises:
+        HTTPException: 400 if invalid or invariant violated, 404 if class not found, 409 if title exists
+    """
+    try:
+        individual = await run_sync_in_executor(
+            service.create_individual,
+            request.class_ids,
+            request.title,
+            request.description,
+        )
+        return IndividualResponse.model_validate(individual)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.get("/individuals", response_model=ListResponse[IndividualResponse])
+async def list_individuals(
+    class_id: Optional[str] = Query(None, description="Optional class ID to filter by"),
+    limit: int = Query(100, ge=1, le=1000, description="Maximum number of results"),
+    offset: int = Query(0, ge=0, description="Number of results to skip"),
+    service: OntologyService = Depends(get_ontology_service),
+) -> ListResponse[IndividualResponse]:
+    """
+    Retrieve individuals with optional filtering and pagination.
+
+    Args:
+        class_id: Optional class ID to filter by (returns Individuals having this Class as a parent)
+        limit: Maximum number of results (1-1000, default 100)
+        offset: Number of results to skip (default 0)
+        service: OntologyService from dependency injection
+
+    Returns:
+        ListResponse containing matching individuals
+    """
+    try:
+        # For now, we get all individuals and apply pagination in memory
+        # In the future, the repository should support limit/offset directly
+        all_individuals = await run_sync_in_executor(service.list_individuals, class_id)
+        total = len(all_individuals)
+        paginated = all_individuals[offset:offset + limit]
+        return ListResponse(
+            items=[IndividualResponse.model_validate(i) for i in paginated],
+            total=total,
+            limit=limit,
+            offset=offset,
+        )
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.get("/individuals/{individual_id}", response_model=IndividualResponse)
+async def get_individual(
+    individual_id: str,
+    service: OntologyService = Depends(get_ontology_service),
+) -> IndividualResponse:
+    """
+    Retrieve an individual by ID.
+
+    Args:
+        individual_id: The individual ID
+        service: OntologyService from dependency injection
+
+    Returns:
+        IndividualResponse
+
+    Raises:
+        HTTPException: 404 if not found
+    """
+    try:
+        individual = await run_sync_in_executor(service.get_individual, individual_id)
+        return IndividualResponse.model_validate(individual)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.put("/individuals/{individual_id}", response_model=IndividualResponse)
+async def update_individual(
+    individual_id: str,
+    request: IndividualUpdateRequest,
+    service: OntologyService = Depends(get_ontology_service),
+) -> IndividualResponse:
+    """
+    Update an individual's title and/or description.
+
+    Note: class membership changes use dedicated endpoints; this endpoint is for data updates only.
+
+    Args:
+        individual_id: The individual ID
+        request: IndividualUpdateRequest with optional fields to update
+        service: OntologyService from dependency injection
+
+    Returns:
+        Updated IndividualResponse
+
+    Raises:
+        HTTPException: 400 if invalid, 404 if not found, 409 if title exists
+    """
+    try:
+        individual = await run_sync_in_executor(
+            service.update_individual,
+            individual_id,
+            request.title,
+            request.description,
+        )
+        return IndividualResponse.model_validate(individual)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.delete("/individuals/{individual_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_individual(
+    individual_id: str,
+    service: OntologyService = Depends(get_ontology_service),
+) -> None:
+    """
+    Delete an individual.
+
+    Args:
+        individual_id: The individual ID
+        service: OntologyService from dependency injection
+
+    Raises:
+        HTTPException: 404 if not found
+    """
+    try:
+        await run_sync_in_executor(service.delete_individual, individual_id)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.post("/individuals/{individual_id}/classes", response_model=IndividualResponse, status_code=status.HTTP_201_CREATED)
+async def add_parent_class_to_individual(
+    individual_id: str,
+    request: IndividualClassRequest,
+    service: OntologyService = Depends(get_ontology_service),
+) -> IndividualResponse:
+    """
+    Add a parent class to an individual (appended to the end of the class list).
+
+    Args:
+        individual_id: The individual ID
+        request: IndividualClassRequest with class_id to add
+        service: OntologyService from dependency injection
+
+    Returns:
+        Updated IndividualResponse
+
+    Raises:
+        HTTPException: 400 if class already a parent, 404 if individual or class not found
+    """
+    try:
+        individual = await run_sync_in_executor(
+            service.add_class_to_individual,
+            individual_id,
+            request.class_id,
+        )
+        return IndividualResponse.model_validate(individual)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.delete("/individuals/{individual_id}/classes/{class_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def remove_parent_class_from_individual(
+    individual_id: str,
+    class_id: str,
+    service: OntologyService = Depends(get_ontology_service),
+) -> None:
+    """
+    Remove a parent class from an individual.
+
+    Args:
+        individual_id: The individual ID
+        class_id: The class ID to remove
+        service: OntologyService from dependency injection
+
+    Raises:
+        HTTPException: 400 if class not a parent or is last parent, 404 if individual not found
+    """
+    try:
+        await run_sync_in_executor(
+            service.remove_class_from_individual,
+            individual_id,
+            class_id,
+        )
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.put("/individuals/{individual_id}/classes", response_model=IndividualResponse)
+async def reorder_individual_classes(
+    individual_id: str,
+    request: IndividualClassListRequest,
+    service: OntologyService = Depends(get_ontology_service),
+) -> IndividualResponse:
+    """
+    Reorder or replace the full ordered class list for an individual.
+
+    The order matters for property attribute inheritance: when two parent Classes
+    declare a property with the same name but conflicting type/constraints, the
+    first parent (by class membership order) wins.
+
+    Args:
+        individual_id: The individual ID
+        request: IndividualClassListRequest with ordered class_ids (full replacement)
+        service: OntologyService from dependency injection
+
+    Returns:
+        Updated IndividualResponse
+
+    Raises:
+        HTTPException: 404 if individual not found, 422 if class list is invalid
+    """
+    try:
+        individual = await run_sync_in_executor(
+            service.reorder_individual_classes,
+            individual_id,
+            request.class_ids,
+        )
+        return IndividualResponse.model_validate(individual)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.get("/individuals/{individual_id}/inherited-properties", response_model=ListResponse[DataPropertyValueResponse])
+async def get_individual_inherited_properties(
+    individual_id: str,
+    service: OntologyService = Depends(get_ontology_service),
+) -> ListResponse[DataPropertyValueResponse]:
+    """
+    Get the deduplicated property attribute list for an individual.
+
+    Returns the superset of data_properties declared on all parent Classes,
+    with first-class-wins precedence on name collisions: when two parent Classes
+    declare a property with the same name but conflicting type/constraints,
+    the property from the first parent (by class membership order) wins.
+
+    Args:
+        individual_id: The individual ID
+        service: OntologyService from dependency injection
+
+    Returns:
+        ListResponse containing deduplicated properties
+
+    Raises:
+        HTTPException: 404 if individual not found
+    """
+    try:
+        properties = await run_sync_in_executor(
+            service.get_individual_properties,
+            individual_id,
+        )
+        return ListResponse(
+            items=[DataPropertyValueResponse.model_validate(p) for p in properties],
+            total=len(properties),
+            limit=1000,
+            offset=0,
+        )
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)

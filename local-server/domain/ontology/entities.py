@@ -172,11 +172,15 @@ class Class:
 @dataclass
 class Individual:
     """
-    An individual is an instance of a class with specific data property values.
+    An individual is an instance of one or more classes with specific data property values.
+
+    An individual can belong to multiple parent classes with an ordered list that matters
+    for property attribute inheritance: when two parent Classes declare a property with the
+    same name but conflicting type/constraints, the first parent (by class membership order) wins.
 
     Attributes:
         id: Unique identifier (UUID as string)
-        class_id: ID of the class this individual instantiates
+        class_ids: Ordered list of IDs of classes this individual instantiates (≥1 required)
         title: Display name for the individual
         description: Optional longer description
         data_properties: List of data property values for this individual
@@ -187,7 +191,7 @@ class Individual:
     """
 
     id: str
-    class_id: str
+    class_ids: list[str]
     title: str
     description: str | None = None
     data_properties: list[DataPropertyValue] = field(default_factory=list)
@@ -195,6 +199,13 @@ class Individual:
     created_at: datetime | None = None
     last_modified: datetime | None = None
     version: int = 1
+
+    def __post_init__(self) -> None:
+        """Validate individual invariants."""
+        if not self.class_ids:
+            raise ValueError("Individual must have at least one parent class")
+        if len(self.class_ids) != len(set(self.class_ids)):
+            raise ValueError("Individual class list contains duplicates")
 
     def rename(self, new_title: str) -> None:
         """
@@ -209,6 +220,57 @@ class Individual:
         if not new_title or not new_title.strip():
             raise ValueError("Title cannot be empty")
         self.title = new_title
+        self.last_modified = datetime.now(timezone.utc)
+
+    def add_parent_class(self, class_id: str) -> None:
+        """
+        Add a parent class to this individual (appended to the end).
+
+        Args:
+            class_id: The ID of the class to add
+
+        Raises:
+            ValueError: If class_id is already a parent class of this individual
+        """
+        if class_id in self.class_ids:
+            raise ValueError(f"Class {class_id} is already a parent of this individual")
+        self.class_ids.append(class_id)
+        self.last_modified = datetime.now(timezone.utc)
+
+    def remove_parent_class(self, class_id: str) -> None:
+        """
+        Remove a parent class from this individual.
+
+        Args:
+            class_id: The ID of the class to remove
+
+        Raises:
+            ValueError: If this is the last parent class or if the class is not a parent
+        """
+        if class_id not in self.class_ids:
+            raise ValueError(f"Class {class_id} is not a parent of this individual")
+        if len(self.class_ids) == 1:
+            raise ValueError("Cannot remove the last parent class; Individual must have at least one parent class")
+        self.class_ids.remove(class_id)
+        self.last_modified = datetime.now(timezone.utc)
+
+    def reorder_parent_classes(self, ordered_class_ids: list[str]) -> None:
+        """
+        Reorder the parent classes for this individual.
+
+        Args:
+            ordered_class_ids: The new ordered list of class IDs
+
+        Raises:
+            ValueError: If the list is empty, contains duplicates, or doesn't match current classes
+        """
+        if not ordered_class_ids:
+            raise ValueError("Individual must have at least one parent class")
+        if len(ordered_class_ids) != len(set(ordered_class_ids)):
+            raise ValueError("Ordered class list contains duplicates")
+        if set(ordered_class_ids) != set(self.class_ids):
+            raise ValueError("Ordered class list must contain exactly the same classes")
+        self.class_ids = ordered_class_ids
         self.last_modified = datetime.now(timezone.utc)
 
 

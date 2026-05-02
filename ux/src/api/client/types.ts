@@ -542,6 +542,220 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/individuals": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Individuals
+     * @description Retrieve individuals with optional filtering and pagination.
+     *
+     *     Args:
+     *         class_id: Optional class ID to filter by (returns Individuals having this Class as a parent)
+     *         limit: Maximum number of results (1-1000, default 100)
+     *         offset: Number of results to skip (default 0)
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         ListResponse containing matching individuals
+     */
+    get: operations["list_individuals_api_individuals_get"];
+    put?: never;
+    /**
+     * Create Individual
+     * @description Create a new individual instance of one or more classes.
+     *
+     *     Args:
+     *         request: IndividualCreateRequest with class_ids and title
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         Created IndividualResponse
+     *
+     *     Raises:
+     *         HTTPException: 400 if invalid or invariant violated, 404 if class not found, 409 if title exists
+     */
+    post: operations["create_individual_api_individuals_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/individuals/{individual_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Individual
+     * @description Retrieve an individual by ID.
+     *
+     *     Args:
+     *         individual_id: The individual ID
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         IndividualResponse
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found
+     */
+    get: operations["get_individual_api_individuals__individual_id__get"];
+    /**
+     * Update Individual
+     * @description Update an individual's title and/or description.
+     *
+     *     Note: class membership changes use dedicated endpoints; this endpoint is for data updates only.
+     *
+     *     Args:
+     *         individual_id: The individual ID
+     *         request: IndividualUpdateRequest with optional fields to update
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         Updated IndividualResponse
+     *
+     *     Raises:
+     *         HTTPException: 400 if invalid, 404 if not found, 409 if title exists
+     */
+    put: operations["update_individual_api_individuals__individual_id__put"];
+    post?: never;
+    /**
+     * Delete Individual
+     * @description Delete an individual.
+     *
+     *     Args:
+     *         individual_id: The individual ID
+     *         service: OntologyService from dependency injection
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found
+     */
+    delete: operations["delete_individual_api_individuals__individual_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/individuals/{individual_id}/classes": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Reorder Individual Classes
+     * @description Reorder or replace the full ordered class list for an individual.
+     *
+     *     The order matters for property attribute inheritance: when two parent Classes
+     *     declare a property with the same name but conflicting type/constraints, the
+     *     first parent (by class membership order) wins.
+     *
+     *     Args:
+     *         individual_id: The individual ID
+     *         request: IndividualClassListRequest with ordered class_ids (full replacement)
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         Updated IndividualResponse
+     *
+     *     Raises:
+     *         HTTPException: 404 if individual not found, 422 if class list is invalid
+     */
+    put: operations["reorder_individual_classes_api_individuals__individual_id__classes_put"];
+    /**
+     * Add Parent Class To Individual
+     * @description Add a parent class to an individual (appended to the end of the class list).
+     *
+     *     Args:
+     *         individual_id: The individual ID
+     *         request: IndividualClassRequest with class_id to add
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         Updated IndividualResponse
+     *
+     *     Raises:
+     *         HTTPException: 400 if class already a parent, 404 if individual or class not found
+     */
+    post: operations["add_parent_class_to_individual_api_individuals__individual_id__classes_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/individuals/{individual_id}/classes/{class_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Remove Parent Class From Individual
+     * @description Remove a parent class from an individual.
+     *
+     *     Args:
+     *         individual_id: The individual ID
+     *         class_id: The class ID to remove
+     *         service: OntologyService from dependency injection
+     *
+     *     Raises:
+     *         HTTPException: 400 if class not a parent or is last parent, 404 if individual not found
+     */
+    delete: operations["remove_parent_class_from_individual_api_individuals__individual_id__classes__class_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/individuals/{individual_id}/inherited-properties": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Individual Inherited Properties
+     * @description Get the deduplicated property attribute list for an individual.
+     *
+     *     Returns the superset of data_properties declared on all parent Classes,
+     *     with first-class-wins precedence on name collisions: when two parent Classes
+     *     declare a property with the same name but conflicting type/constraints,
+     *     the property from the first parent (by class membership order) wins.
+     *
+     *     Args:
+     *         individual_id: The individual ID
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         ListResponse containing deduplicated properties
+     *
+     *     Raises:
+     *         HTTPException: 404 if individual not found
+     */
+    get: operations["get_individual_inherited_properties_api_individuals__individual_id__inherited_properties_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/graph/build": {
     parameters: {
       query?: never;
@@ -3208,6 +3422,111 @@ export interface components {
       detail?: components["schemas"]["ValidationError"][];
     };
     /**
+     * IndividualClassListRequest
+     * @description Request to reorder individual class membership.
+     */
+    IndividualClassListRequest: {
+      /**
+       * Class Ids
+       * @description Ordered list of class IDs (must match current membership)
+       */
+      class_ids: string[];
+    };
+    /**
+     * IndividualClassRequest
+     * @description Request to manage individual class membership.
+     */
+    IndividualClassRequest: {
+      /**
+       * Class Id
+       * @description ID of the class
+       */
+      class_id: string;
+    };
+    /**
+     * IndividualCreateRequest
+     * @description Request to create a new individual.
+     */
+    IndividualCreateRequest: {
+      /**
+       * Class Ids
+       * @description ID(s) of the class(es) this individual instantiates (≥1 required)
+       */
+      class_ids: string[] | string;
+      /**
+       * Title
+       * @description Display name for the individual
+       */
+      title: string;
+      /**
+       * Description
+       * @description Optional longer description
+       */
+      description?: string | null;
+    };
+    /**
+     * IndividualResponse
+     * @description Response containing individual data.
+     */
+    IndividualResponse: {
+      /**
+       * Id
+       * @description Unique identifier
+       */
+      id: string;
+      /**
+       * Class Ids
+       * @description Ordered list of parent class IDs
+       */
+      class_ids: string[];
+      /**
+       * Title
+       * @description Display name
+       */
+      title: string;
+      /**
+       * Description
+       * @description Optional description
+       */
+      description?: string | null;
+      /** Data Properties */
+      data_properties?: components["schemas"]["DataPropertyValueResponse"][];
+      /** External References */
+      external_references?: components["schemas"]["ExternalReferenceResponse"][];
+      /**
+       * Created At
+       * @description Creation timestamp
+       */
+      created_at?: string | null;
+      /**
+       * Last Modified
+       * @description Last modification timestamp
+       */
+      last_modified?: string | null;
+      /**
+       * Version
+       * @description Version number for optimistic concurrency control
+       * @default 1
+       */
+      version: number;
+    };
+    /**
+     * IndividualUpdateRequest
+     * @description Request to update an individual.
+     */
+    IndividualUpdateRequest: {
+      /**
+       * Title
+       * @description New title for the individual
+       */
+      title?: string | null;
+      /**
+       * Description
+       * @description New description
+       */
+      description?: string | null;
+    };
+    /**
      * KnowledgeGraphResponse
      * @description Response containing knowledge graph metadata.
      */
@@ -3285,6 +3604,52 @@ export interface components {
        * @description List of items
        */
       items: components["schemas"]["ConceptSchemeResponse"][];
+      /**
+       * Total
+       * @description Total number of items
+       */
+      total: number;
+      /**
+       * Limit
+       * @description Limit applied
+       */
+      limit: number;
+      /**
+       * Offset
+       * @description Offset applied
+       */
+      offset: number;
+    };
+    /** ListResponse[DataPropertyValueResponse] */
+    ListResponse_DataPropertyValueResponse_: {
+      /**
+       * Items
+       * @description List of items
+       */
+      items: components["schemas"]["DataPropertyValueResponse"][];
+      /**
+       * Total
+       * @description Total number of items
+       */
+      total: number;
+      /**
+       * Limit
+       * @description Limit applied
+       */
+      limit: number;
+      /**
+       * Offset
+       * @description Offset applied
+       */
+      offset: number;
+    };
+    /** ListResponse[IndividualResponse] */
+    ListResponse_IndividualResponse_: {
+      /**
+       * Items
+       * @description List of items
+       */
+      items: components["schemas"]["IndividualResponse"][];
       /**
        * Total
        * @description Total number of items
@@ -5184,6 +5549,301 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_individuals_api_individuals_get: {
+    parameters: {
+      query?: {
+        /** @description Optional class ID to filter by */
+        class_id?: string | null;
+        /** @description Maximum number of results */
+        limit?: number;
+        /** @description Number of results to skip */
+        offset?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListResponse_IndividualResponse_"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_individual_api_individuals_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["IndividualCreateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["IndividualResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_individual_api_individuals__individual_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        individual_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["IndividualResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_individual_api_individuals__individual_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        individual_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["IndividualUpdateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["IndividualResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_individual_api_individuals__individual_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        individual_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  reorder_individual_classes_api_individuals__individual_id__classes_put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        individual_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["IndividualClassListRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["IndividualResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  add_parent_class_to_individual_api_individuals__individual_id__classes_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        individual_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["IndividualClassRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["IndividualResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  remove_parent_class_from_individual_api_individuals__individual_id__classes__class_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        individual_id: string;
+        class_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_individual_inherited_properties_api_individuals__individual_id__inherited_properties_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        individual_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListResponse_DataPropertyValueResponse_"];
+        };
       };
       /** @description Validation Error */
       422: {

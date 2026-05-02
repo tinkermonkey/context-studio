@@ -609,4 +609,355 @@ test.describe("Ontology API Endpoints", () => {
     expect(hierarchy.classes[0].id).toBeDefined();
     expect(hierarchy.classes[0].created_at).toBeDefined();
   });
+
+  test.describe("Individual Endpoints", () => {
+    let classId: string;
+
+    test.beforeEach(async ({ page }) => {
+      const hierarchy = await createTestHierarchy(page, 1);
+      classId = hierarchy.classes[0].id;
+    });
+
+    test("POST /api/individuals should create a new individual", async ({
+      page,
+    }) => {
+      const response = await apiRequest<any>(page, "/api/individuals", {
+        method: "POST",
+        body: {
+          class_ids: [classId],
+          title: "API Test Individual",
+          description: "Created via API endpoint test",
+        },
+      });
+
+      // Verify response
+      expect(response.id).toBeDefined();
+      expect(response.title).toBe("API Test Individual");
+      expect(response.class_ids).toEqual([classId]);
+      expect(response.created_at).toBeDefined();
+      expect(response.version).toBeDefined();
+    });
+
+    test("GET /api/individuals should return list of individuals with pagination envelope", async ({
+      page,
+    }) => {
+      const hierarchy = await createTestHierarchy(page, 1);
+      const classId = hierarchy.classes[0].id;
+
+      // Create test individuals
+      const ind1 = await apiRequest<any>(page, "/api/individuals", {
+        method: "POST",
+        body: {
+          class_ids: [classId],
+          title: "API Paginated Individual 1",
+        },
+      });
+      const ind2 = await apiRequest<any>(page, "/api/individuals", {
+        method: "POST",
+        body: {
+          class_ids: [classId],
+          title: "API Paginated Individual 2",
+        },
+      });
+
+      // Call endpoint with pagination
+      const response = await apiRequest<any>(
+        page,
+        "/api/individuals?limit=10&offset=0",
+      );
+
+      // Verify pagination envelope
+      expect(response.items).toBeDefined();
+      expect(Array.isArray(response.items)).toBe(true);
+      expect(response.total).toBeDefined();
+      expect(typeof response.total).toBe("number");
+      expect(response.limit).toBeDefined();
+      expect(response.offset).toBeDefined();
+      expect(response.limit).toBe(10);
+      expect(response.offset).toBe(0);
+
+      // Verify our test data is in response
+      const ids = response.items.map((i: any) => i.id);
+      expect(ids).toContain(ind1.id);
+      expect(ids).toContain(ind2.id);
+    });
+
+    test("GET /api/individuals/:id should return specific individual", async ({
+      page,
+    }) => {
+      // Create test individual
+      const individual = await apiRequest<any>(page, "/api/individuals", {
+        method: "POST",
+        body: {
+          class_ids: [classId],
+          title: "Get Test Individual",
+        },
+      });
+
+      // Call endpoint
+      const response = await apiRequest<any>(
+        page,
+        `/api/individuals/${individual.id}`,
+      );
+
+      // Verify response
+      expect(response.id).toBe(individual.id);
+      expect(response.title).toBe("Get Test Individual");
+      expect(response.class_ids).toEqual([classId]);
+    });
+
+    test("PUT /api/individuals/:id should update an individual", async ({
+      page,
+    }) => {
+      // Create test individual
+      const individual = await apiRequest<any>(page, "/api/individuals", {
+        method: "POST",
+        body: {
+          class_ids: [classId],
+          title: "Original Title",
+          description: "Original description",
+        },
+      });
+
+      // Update via API
+      const response = await apiRequest<any>(
+        page,
+        `/api/individuals/${individual.id}`,
+        {
+          method: "PUT",
+          body: {
+            title: "Updated Title",
+            description: "Updated description",
+          },
+        },
+      );
+
+      // Verify response
+      expect(response.id).toBe(individual.id);
+      expect(response.title).toBe("Updated Title");
+      expect(response.description).toBe("Updated description");
+    });
+
+    test("DELETE /api/individuals/:id should delete an individual", async ({
+      page,
+    }) => {
+      // Create test individual
+      const individual = await apiRequest<any>(page, "/api/individuals", {
+        method: "POST",
+        body: {
+          class_ids: [classId],
+          title: "Delete Test Individual",
+        },
+      });
+
+      // Delete via API
+      await apiRequest(page, `/api/individuals/${individual.id}`, {
+        method: "DELETE",
+      });
+
+      // Verify deletion
+      try {
+        await apiRequest<any>(page, `/api/individuals/${individual.id}`);
+        throw new Error("Individual was not deleted");
+      } catch (error: any) {
+        if (!(error instanceof APIError && error.statusCode === 404)) {
+          throw error;
+        }
+      }
+    });
+
+    test("POST /api/individuals/:id/classes should add a parent class", async ({
+      page,
+    }) => {
+      // Create second class for testing
+      const hierarchy = await createTestHierarchy(page, 2);
+      const class1Id = hierarchy.classes[0].id;
+      const class2Id = hierarchy.classes[1].id;
+
+      // Create individual with first class
+      const individual = await apiRequest<any>(page, "/api/individuals", {
+        method: "POST",
+        body: {
+          class_ids: [class1Id],
+          title: "Add Class Test",
+        },
+      });
+
+      // Add second class
+      const response = await apiRequest<any>(
+        page,
+        `/api/individuals/${individual.id}/classes`,
+        {
+          method: "POST",
+          body: {
+            class_id: class2Id,
+          },
+        },
+      );
+
+      // Verify class was added
+      expect(response.class_ids).toEqual([class1Id, class2Id]);
+    });
+
+    test("DELETE /api/individuals/:id/classes/:class_id should remove a parent class", async ({
+      page,
+    }) => {
+      // Create individual with multiple classes
+      const hierarchy = await createTestHierarchy(page, 2);
+      const class1Id = hierarchy.classes[0].id;
+      const class2Id = hierarchy.classes[1].id;
+
+      const individual = await apiRequest<any>(page, "/api/individuals", {
+        method: "POST",
+        body: {
+          class_ids: [class1Id, class2Id],
+          title: "Remove Class Test",
+        },
+      });
+
+      // Remove one class
+      await apiRequest(
+        page,
+        `/api/individuals/${individual.id}/classes/${class2Id}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      // Read back to verify
+      const response = await apiRequest<any>(
+        page,
+        `/api/individuals/${individual.id}`,
+      );
+
+      // Verify class was removed
+      expect(response.class_ids).toEqual([class1Id]);
+    });
+
+    test("PUT /api/individuals/:id/classes should reorder parent classes", async ({
+      page,
+    }) => {
+      // Create individual with multiple classes
+      const hierarchy = await createTestHierarchy(page, 3);
+      const class1Id = hierarchy.classes[0].id;
+      const class2Id = hierarchy.classes[1].id;
+      const class3Id = hierarchy.classes[2].id;
+
+      const individual = await apiRequest<any>(page, "/api/individuals", {
+        method: "POST",
+        body: {
+          class_ids: [class1Id, class2Id, class3Id],
+          title: "Reorder Class Test",
+        },
+      });
+
+      // Reorder classes
+      const response = await apiRequest<any>(
+        page,
+        `/api/individuals/${individual.id}/classes`,
+        {
+          method: "PUT",
+          body: {
+            class_ids: [class3Id, class1Id, class2Id],
+          },
+        },
+      );
+
+      // Verify new order
+      expect(response.class_ids).toEqual([class3Id, class1Id, class2Id]);
+    });
+
+    test("GET /api/individuals/:id/inherited-properties should return documented shape", async ({
+      page,
+    }) => {
+      // Create individual
+      const individual = await apiRequest<any>(page, "/api/individuals", {
+        method: "POST",
+        body: {
+          class_ids: [classId],
+          title: "Inherited Properties Test",
+        },
+      });
+
+      // Fetch inherited properties
+      const response = await apiRequest<any>(
+        page,
+        `/api/individuals/${individual.id}/inherited-properties`,
+      );
+
+      // Verify response shape (ListResponse)
+      expect(response.items).toBeDefined();
+      expect(Array.isArray(response.items)).toBe(true);
+      expect(response.total).toBeDefined();
+      expect(response.limit).toBeDefined();
+      expect(response.offset).toBeDefined();
+    });
+
+    test("should return 422 when creating individual with zero parent classes", async ({
+      page,
+    }) => {
+      try {
+        await apiRequest<any>(page, "/api/individuals", {
+          method: "POST",
+          body: {
+            class_ids: [],
+            title: "Invalid Individual",
+          },
+        });
+        throw new Error("Expected validation error");
+      } catch (error: any) {
+        if (error instanceof APIError) {
+          expect([400, 422]).toContain(error.statusCode);
+        } else {
+          throw error;
+        }
+      }
+    });
+
+    test("should return 422 when removing last parent class", async ({
+      page,
+    }) => {
+      // Create individual with single class
+      const individual = await apiRequest<any>(page, "/api/individuals", {
+        method: "POST",
+        body: {
+          class_ids: [classId],
+          title: "Last Class Test",
+        },
+      });
+
+      // Attempt to remove only class
+      try {
+        await apiRequest(
+          page,
+          `/api/individuals/${individual.id}/classes/${classId}`,
+          {
+            method: "DELETE",
+          },
+        );
+        throw new Error("Expected error when removing last class");
+      } catch (error: any) {
+        if (error instanceof APIError) {
+          expect([400, 422]).toContain(error.statusCode);
+        } else {
+          throw error;
+        }
+      }
+    });
+
+    test("should return 404 for non-existent individual", async ({ page }) => {
+      const nonExistentId = "00000000-0000-0000-0000-000000000000";
+
+      try {
+        await apiRequest<any>(page, `/api/individuals/${nonExistentId}`);
+        throw new Error("Expected 404");
+      } catch (error: any) {
+        if (error instanceof APIError) {
+          expect(error.statusCode).toBe(404);
+        } else {
+          throw error;
+        }
+      }
+    });
+  });
 });

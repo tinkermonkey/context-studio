@@ -15,13 +15,15 @@ from uuid import uuid4
 
 from domain.ports import EventPublisher
 from .entities import Taxonomy, ConceptScheme, Class, Relationship, PropertyDefinition, Individual
+from .value_objects import DataPropertyValue
 from .events import (
     TaxonomyCreated, TaxonomyUpdated, TaxonomyDeleted,
     SchemeCreated, SchemeUpdated, SchemeDeleted,
     ClassCreated, ClassUpdated, ClassDeleted,
     ClassMoved, RelationshipCreated, RelationshipDeleted,
     PropertyDefinitionCreated, PropertyDefinitionUpdated, PropertyDefinitionDeleted,
-    ConceptSchemeUpdated, GraphInvalidated
+    ConceptSchemeUpdated, GraphInvalidated,
+    IndividualCreated, IndividualUpdated, IndividualDeleted
 )
 from .exceptions import EntityNotFoundError, CircularReferenceError, DuplicateEntityError, OntologyError
 from .ports import OntologyRepository, EmbeddingService
@@ -732,7 +734,7 @@ class OntologyService:
         """
         Delete a class.
 
-        Validates that the class has no subclasses before deletion.
+        Validates that the class has no subclasses or individuals before deletion.
         Cleans up any orphaned relationships where the class is source or target.
 
         Args:
@@ -740,7 +742,7 @@ class OntologyService:
 
         Raises:
             EntityNotFoundError: If the class does not exist
-            OntologyError: If the class has subclasses
+            OntologyError: If the class has subclasses or individuals
         """
         cls = self._repository.get_class(class_id)
         if cls is None:
@@ -750,6 +752,11 @@ class OntologyService:
         subclasses = self._repository.list_classes(parent_class_id=class_id)
         if subclasses:
             raise OntologyError(f"Cannot delete class {class_id}: it has {len(subclasses)} subclass(es)")
+
+        # Check for individuals referencing this class
+        individuals = self._repository.list_individuals(class_id=class_id)
+        if individuals:
+            raise OntologyError(f"Cannot delete class {class_id}: it has {len(individuals)} individual(s)")
 
         # Find and delete all relationships where this class is source or target
         orphaned_relationships = self._repository.list_relationships(
@@ -971,17 +978,17 @@ class OntologyService:
         property_definition_id: str,
     ) -> Relationship:
         """
-        Create a new typed relationship between two entities.
+        Create a new typed relationship between two entities (Classes or Individuals).
 
         Validates that:
         - source_id != target_id (no self-loops)
-        - Both source and target entities exist
+        - Both source and target entities exist (can be Classes or Individuals)
         - The property definition exists
         - The relationship triple (source_id, target_id, property_definition_id) is unique
 
         Args:
-            source_id: ID of the source entity
-            target_id: ID of the target entity
+            source_id: ID of the source entity (Class or Individual)
+            target_id: ID of the target entity (Class or Individual)
             property_definition_id: ID of the property definition (relationship type)
 
         Returns:
@@ -1000,15 +1007,27 @@ class OntologyService:
         if prop_def is None:
             raise EntityNotFoundError("PropertyDefinition", property_definition_id)
 
-        # Validate source entity exists
+        # Validate source entity exists (try Class first, then Individual)
         source_class = self._repository.get_class(source_id)
-        if source_class is None:
-            raise EntityNotFoundError("Class", source_id)
+        taxonomy_id = None
+        if source_class:
+            taxonomy_id = source_class.taxonomy_id
+        else:
+            source_individual = self._repository.get_individual(source_id)
+            if source_individual:
+                # Get taxonomy from first parent class
+                individual_class = self._repository.get_class(source_individual.class_ids[0])
+                if individual_class:
+                    taxonomy_id = individual_class.taxonomy_id
+            else:
+                raise EntityNotFoundError("Entity", source_id)
 
-        # Validate target entity exists
+        # Validate target entity exists (try Class first, then Individual)
         target_class = self._repository.get_class(target_id)
-        if target_class is None:
-            raise EntityNotFoundError("Class", target_id)
+        if not target_class:
+            target_individual = self._repository.get_individual(target_id)
+            if not target_individual:
+                raise EntityNotFoundError("Entity", target_id)
 
         # Check if this relationship triple already exists
         existing_relationships = self._repository.list_relationships(
@@ -1032,9 +1051,6 @@ class OntologyService:
         )
         relationship = self._repository.save_relationship(relationship)
 
-        # Determine which taxonomy this relationship belongs to using the source class
-        taxonomy_id = source_class.taxonomy_id
-
         failures = self._event_publisher.publish(RelationshipCreated(
             relationship_id=relationship_id,
             source_id=source_id,
@@ -1050,17 +1066,19 @@ class OntologyService:
                 handler_names,
             )
 
-        failures = self._event_publisher.publish(GraphInvalidated(
-            taxonomy_id=taxonomy_id,
-            reason="relationship_created",
-        ))
-        if failures:
-            handler_names = ", ".join(name for name, _ in failures)
-            _logger.warning(
-                "Event handlers failed for GraphInvalidated: %s. "
-                "Graph invalidation event may not be recorded in audit trail.",
-                handler_names,
-            )
+        # Only emit GraphInvalidated if we found a valid taxonomy
+        if taxonomy_id:
+            failures = self._event_publisher.publish(GraphInvalidated(
+                taxonomy_id=taxonomy_id,
+                reason="relationship_created",
+            ))
+            if failures:
+                handler_names = ", ".join(name for name, _ in failures)
+                _logger.warning(
+                    "Event handlers failed for GraphInvalidated: %s. "
+                    "Graph invalidation event may not be recorded in audit trail.",
+                    handler_names,
+                )
 
         return relationship
 
@@ -1141,10 +1159,10 @@ class OntologyService:
         if source_class:
             taxonomy_id = source_class.taxonomy_id
         else:
-            # Try source as an Individual (not yet implemented)
+            # Try source as an Individual - resolve its parent class to find taxonomy
             source_individual = self._repository.get_individual(relationship.source_id)
-            if source_individual:
-                individual_class = self._repository.get_class(source_individual.class_id)
+            if source_individual and source_individual.class_ids:
+                individual_class = self._repository.get_class(source_individual.class_ids[0])
                 if individual_class:
                     taxonomy_id = individual_class.taxonomy_id
 
@@ -1154,10 +1172,10 @@ class OntologyService:
             if target_class:
                 taxonomy_id = target_class.taxonomy_id
             else:
-                # Try target as an Individual (not yet implemented)
+                # Try target as an Individual - resolve its parent class to find taxonomy
                 target_individual = self._repository.get_individual(relationship.target_id)
-                if target_individual:
-                    individual_class = self._repository.get_class(target_individual.class_id)
+                if target_individual and target_individual.class_ids:
+                    individual_class = self._repository.get_class(target_individual.class_ids[0])
                     if individual_class:
                         taxonomy_id = individual_class.taxonomy_id
 
@@ -1174,6 +1192,15 @@ class OntologyService:
                     "Graph invalidation event may not be recorded in audit trail.",
                     handler_names,
                 )
+        else:
+            _logger.warning(
+                "Could not determine taxonomy for relationship deletion (relationship_id=%s): "
+                "source_id=%s and target_id=%s could not be resolved. "
+                "Graph cache may be stale. Consider investigating deleted classes or individuals.",
+                relationship_id,
+                relationship.source_id,
+                relationship.target_id,
+            )
 
     # PropertyDefinition operations
 
@@ -1489,19 +1516,20 @@ class OntologyService:
 
     def create_individual(
         self,
-        class_id: str,
+        class_ids: str | list[str],
         title: str,
         description: str | None = None,
     ) -> Individual:
         """
-        Create a new individual instance of a class.
+        Create a new individual instance of one or more classes.
 
         Validates that:
-        - The class exists
-        - The title is unique within the class
+        - All classes exist
+        - The title is unique within each class
+        - At least one class is provided
 
         Args:
-            class_id: ID of the class this individual instantiates
+            class_ids: ID(s) of the class(es) this individual instantiates (string or list)
             title: Display name for the individual
             description: Optional longer description
 
@@ -1509,36 +1537,78 @@ class OntologyService:
             The created Individual
 
         Raises:
-            EntityNotFoundError: If the class does not exist
-            DuplicateEntityError: If an individual with this title already exists in the class
-            ValueError: If title is empty or whitespace
+            EntityNotFoundError: If any class does not exist
+            DuplicateEntityError: If an individual with this title already exists in any class
+            ValueError: If title is empty, whitespace, or no classes provided
         """
         if not title or not title.strip():
             raise ValueError("Title cannot be empty")
 
-        # Verify class exists
-        cls = self._repository.get_class(class_id)
-        if cls is None:
-            raise EntityNotFoundError("Class", class_id)
+        # Normalize class_ids to a list
+        if isinstance(class_ids, str):
+            class_ids_list = [class_ids]
+        else:
+            class_ids_list = class_ids
 
-        # Check for duplicate title within the class
-        existing = self._repository.list_individuals(class_id=class_id)
-        if any(ind.title == title for ind in existing):
-            raise DuplicateEntityError(
-                f"Individual with title '{title}' already exists in class '{class_id}'"
-            )
+        if not class_ids_list:
+            raise ValueError("Individual must belong to at least one class")
+
+        # Verify all classes exist and get taxonomy from first class
+        parent_classes = []
+        for class_id in class_ids_list:
+            cls = self._repository.get_class(class_id)
+            if cls is None:
+                raise EntityNotFoundError("Class", class_id)
+            parent_classes.append(cls)
+
+        # Check for duplicate title within each class
+        for class_id in class_ids_list:
+            existing = self._repository.list_individuals(class_id=class_id)
+            if any(ind.title == title for ind in existing):
+                raise DuplicateEntityError(
+                    f"Individual with title '{title}' already exists in class '{class_id}'"
+                )
 
         individual_id = str(uuid4())
         now = datetime.now(timezone.utc)
         individual = Individual(
             id=individual_id,
-            class_id=class_id,
+            class_ids=class_ids_list,
             title=title,
             description=description,
             created_at=now,
             last_modified=now,
         )
         individual = self._repository.save_individual(individual)
+
+        # Emit IndividualCreated event
+        failures = self._event_publisher.publish(IndividualCreated(
+            individual_id=individual_id,
+            title=title,
+            class_ids=class_ids_list,
+        ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for IndividualCreated (individual_id=%s): %s. "
+                "Individual is created but audit trail may have gaps.",
+                individual_id,
+                handler_names,
+            )
+
+        # Emit GraphInvalidated event using taxonomy from first parent class
+        taxonomy_id = parent_classes[0].taxonomy_id
+        failures = self._event_publisher.publish(GraphInvalidated(
+            taxonomy_id=taxonomy_id,
+            reason="individual_created",
+        ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for GraphInvalidated: %s. "
+                "Graph invalidation event may not be recorded in audit trail.",
+                handler_names,
+            )
 
         return individual
 
@@ -1583,7 +1653,7 @@ class OntologyService:
 
         Validates that:
         - The individual exists
-        - If title is updated, it is unique within the individual's class
+        - If title is updated, it is unique within all of the individual's parent classes
 
         Args:
             individual_id: The ID of the individual to update
@@ -1595,11 +1665,15 @@ class OntologyService:
 
         Raises:
             EntityNotFoundError: If the individual does not exist
-            DuplicateEntityError: If title is updated to a value that already exists in the class
+            DuplicateEntityError: If title is updated to a value that already exists in any parent class
         """
         individual = self._repository.get_individual(individual_id)
         if individual is None:
             raise EntityNotFoundError("Individual", individual_id)
+
+        # Capture old values
+        old_title = individual.title
+        old_description = individual.description
 
         # Track what actually changed
         title_changed = title is not None and title != individual.title
@@ -1610,11 +1684,13 @@ class OntologyService:
             if not title or not title.strip():
                 raise ValueError("Title cannot be empty")
             if title_changed:
-                existing = self._repository.list_individuals(class_id=individual.class_id)
-                if any(ind.title == title for ind in existing):
-                    raise DuplicateEntityError(
-                        f"Individual with title '{title}' already exists in class '{individual.class_id}'"
-                    )
+                # Check uniqueness within each parent class
+                for class_id in individual.class_ids:
+                    existing = self._repository.list_individuals(class_id=class_id)
+                    if any(ind.title == title and ind.id != individual_id for ind in existing):
+                        raise DuplicateEntityError(
+                            f"Individual with title '{title}' already exists in class '{class_id}'"
+                        )
                 individual.title = title
 
         # Update description if provided
@@ -1629,6 +1705,48 @@ class OntologyService:
         individual.last_modified = datetime.now(timezone.utc)
 
         individual = self._repository.save_individual(individual)
+
+        # Emit IndividualUpdated event
+        changed_fields = tuple(f for f, was_changed in [("title", title_changed), ("description", desc_changed)] if was_changed)
+        old_values: dict[str, object] = {}
+        new_values: dict[str, object] = {}
+        if title_changed:
+            old_values["title"] = old_title
+            new_values["title"] = individual.title
+        if desc_changed:
+            old_values["description"] = old_description
+            new_values["description"] = individual.description
+
+        failures = self._event_publisher.publish(IndividualUpdated(
+            individual_id=individual_id,
+            changed_fields=changed_fields,
+            old_values=old_values,
+            new_values=new_values,
+        ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for IndividualUpdated (individual_id=%s): %s. "
+                "Individual is updated but audit trail may have gaps.",
+                individual_id,
+                handler_names,
+            )
+
+        # Emit GraphInvalidated event using taxonomy from first parent class
+        parent_class = self._repository.get_class(individual.class_ids[0])
+        if parent_class:
+            failures = self._event_publisher.publish(GraphInvalidated(
+                taxonomy_id=parent_class.taxonomy_id,
+                reason="individual_updated",
+            ))
+            if failures:
+                handler_names = ", ".join(name for name, _ in failures)
+                _logger.warning(
+                    "Event handlers failed for GraphInvalidated: %s. "
+                    "Graph invalidation event may not be recorded in audit trail.",
+                    handler_names,
+                )
+
         return individual
 
     def delete_individual(self, individual_id: str) -> None:
@@ -1645,4 +1763,308 @@ class OntologyService:
         if individual is None:
             raise EntityNotFoundError("Individual", individual_id)
 
+        # Find and delete all relationships where this individual is source or target
+        orphaned_relationships = self._repository.list_relationships(
+            source_id=individual_id
+        ) + self._repository.list_relationships(target_id=individual_id)
+
+        for relationship in orphaned_relationships:
+            self._repository.delete_relationship(relationship.id)
+            failures = self._event_publisher.publish(RelationshipDeleted(
+                relationship_id=relationship.id,
+                source_id=relationship.source_id,
+                target_id=relationship.target_id,
+                property_definition_id=relationship.property_definition_id,
+            ))
+            if failures:
+                handler_names = ", ".join(name for name, _ in failures)
+                _logger.warning(
+                    "Event handlers failed for RelationshipDeleted (relationship_id=%s): %s. "
+                    "Relationship is deleted but audit trail may have gaps.",
+                    relationship.id,
+                    handler_names,
+                )
+
         self._repository.delete_individual(individual_id)
+
+        # Emit IndividualDeleted event
+        failures = self._event_publisher.publish(IndividualDeleted(
+            individual_id=individual_id,
+            title=individual.title,
+        ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for IndividualDeleted (individual_id=%s): %s. "
+                "Individual is deleted but audit trail may have gaps.",
+                individual_id,
+                handler_names,
+            )
+
+        # Emit GraphInvalidated event using taxonomy from first parent class
+        parent_class = self._repository.get_class(individual.class_ids[0])
+        if parent_class:
+            failures = self._event_publisher.publish(GraphInvalidated(
+                taxonomy_id=parent_class.taxonomy_id,
+                reason="individual_deleted",
+            ))
+            if failures:
+                handler_names = ", ".join(name for name, _ in failures)
+                _logger.warning(
+                    "Event handlers failed for GraphInvalidated: %s. "
+                    "Graph invalidation event may not be recorded in audit trail.",
+                    handler_names,
+                )
+
+    def add_class_to_individual(self, individual_id: str, class_id: str) -> Individual:
+        """
+        Add a parent class to an individual (appended to the end).
+
+        Validates that:
+        - The individual exists
+        - The class exists
+        - The class is not already a parent of the individual
+        - The individual's title is unique within the target class
+
+        Args:
+            individual_id: The ID of the individual
+            class_id: The ID of the class to add
+
+        Returns:
+            The updated Individual
+
+        Raises:
+            EntityNotFoundError: If the individual or class does not exist
+            ValueError: If the class is already a parent of the individual
+            DuplicateEntityError: If an individual with this title already exists in the target class
+        """
+        individual = self._repository.get_individual(individual_id)
+        if individual is None:
+            raise EntityNotFoundError("Individual", individual_id)
+
+        # Verify class exists
+        cls = self._repository.get_class(class_id)
+        if cls is None:
+            raise EntityNotFoundError("Class", class_id)
+
+        # Check if class is already a parent (will raise ValueError if present)
+        if class_id in individual.class_ids:
+            raise ValueError(f"Class {class_id} is already a parent of this individual")
+
+        # Check for duplicate title within the target class before modifying the individual
+        existing = self._repository.list_individuals(class_id=class_id)
+        if any(ind.title == individual.title for ind in existing):
+            raise DuplicateEntityError(
+                f"Individual with title '{individual.title}' already exists in class '{class_id}'"
+            )
+
+        # Capture old state for event (before mutation)
+        old_class_ids = list(individual.class_ids)
+
+        # Add the class to the individual and save
+        individual.add_parent_class(class_id)
+        individual = self._repository.save_individual(individual)
+
+        # Emit IndividualUpdated event
+        failures = self._event_publisher.publish(IndividualUpdated(
+            individual_id=individual_id,
+            changed_fields=("class_ids",),
+            old_values={"class_ids": old_class_ids},
+            new_values={"class_ids": individual.class_ids},
+        ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for IndividualUpdated (individual_id=%s): %s. "
+                "Class added to individual but audit trail may have gaps.",
+                individual_id,
+                handler_names,
+            )
+
+        # Emit GraphInvalidated event
+        failures = self._event_publisher.publish(GraphInvalidated(
+            taxonomy_id=cls.taxonomy_id,
+            reason="individual_class_added",
+        ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for GraphInvalidated: %s. "
+                "Graph invalidation event may not be recorded in audit trail.",
+                handler_names,
+            )
+
+        return individual
+
+    def remove_class_from_individual(self, individual_id: str, class_id: str) -> Individual:
+        """
+        Remove a parent class from an individual.
+
+        Args:
+            individual_id: The ID of the individual
+            class_id: The ID of the class to remove
+
+        Returns:
+            The updated Individual
+
+        Raises:
+            EntityNotFoundError: If the individual does not exist
+            ValueError: If the class is not a parent, or if it's the last parent class
+        """
+        individual = self._repository.get_individual(individual_id)
+        if individual is None:
+            raise EntityNotFoundError("Individual", individual_id)
+
+        # Capture old state for event
+        old_class_ids = list(individual.class_ids)
+
+        # Remove the class (will raise ValueError if not present or if last)
+        individual.remove_parent_class(class_id)
+        individual = self._repository.save_individual(individual)
+
+        # Emit IndividualUpdated event (unconditionally - it records individual state change)
+        failures = self._event_publisher.publish(IndividualUpdated(
+            individual_id=individual_id,
+            changed_fields=("class_ids",),
+            old_values={"class_ids": old_class_ids},
+            new_values={"class_ids": individual.class_ids},
+        ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for IndividualUpdated (individual_id=%s): %s. "
+                "Class removed from individual but audit trail may have gaps.",
+                individual_id,
+                handler_names,
+            )
+
+        # Get the taxonomy from the removed class for GraphInvalidated event
+        cls = self._repository.get_class(class_id)
+        if cls:
+            # Emit GraphInvalidated event
+            failures = self._event_publisher.publish(GraphInvalidated(
+                taxonomy_id=cls.taxonomy_id,
+                reason="individual_class_removed",
+            ))
+            if failures:
+                handler_names = ", ".join(name for name, _ in failures)
+                _logger.warning(
+                    "Event handlers failed for GraphInvalidated: %s. "
+                    "Graph invalidation event may not be recorded in audit trail.",
+                    handler_names,
+                )
+        else:
+            _logger.warning(
+                "Could not determine taxonomy for class removal (individual_id=%s, class_id=%s): "
+                "class could not be resolved. "
+                "Graph cache may be stale. Consider investigating deleted classes.",
+                individual_id,
+                class_id,
+            )
+
+        return individual
+
+    def reorder_individual_classes(
+        self, individual_id: str, ordered_class_ids: list[str]
+    ) -> Individual:
+        """
+        Reorder the parent classes for an individual.
+
+        The order matters for property attribute inheritance: when two parent Classes
+        declare a property with the same name but conflicting type/constraints, the
+        first parent (by class membership order) wins.
+
+        Args:
+            individual_id: The ID of the individual
+            ordered_class_ids: The new ordered list of class IDs
+
+        Returns:
+            The updated Individual
+
+        Raises:
+            EntityNotFoundError: If the individual does not exist
+            ValueError: If the list is empty, contains duplicates, or doesn't match current classes
+        """
+        individual = self._repository.get_individual(individual_id)
+        if individual is None:
+            raise EntityNotFoundError("Individual", individual_id)
+
+        # Capture old state for event
+        old_class_ids = list(individual.class_ids)
+
+        # Reorder (will raise ValueError if invalid)
+        individual.reorder_parent_classes(ordered_class_ids)
+        individual = self._repository.save_individual(individual)
+
+        # Emit IndividualUpdated event
+        failures = self._event_publisher.publish(IndividualUpdated(
+            individual_id=individual_id,
+            changed_fields=("class_ids",),
+            old_values={"class_ids": old_class_ids},
+            new_values={"class_ids": individual.class_ids},
+        ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for IndividualUpdated (individual_id=%s): %s. "
+                "Individual classes reordered but audit trail may have gaps.",
+                individual_id,
+                handler_names,
+            )
+
+        # Emit GraphInvalidated event using taxonomy from first parent class
+        parent_class = self._repository.get_class(individual.class_ids[0])
+        if parent_class:
+            failures = self._event_publisher.publish(GraphInvalidated(
+                taxonomy_id=parent_class.taxonomy_id,
+                reason="individual_classes_reordered",
+            ))
+            if failures:
+                handler_names = ", ".join(name for name, _ in failures)
+                _logger.warning(
+                    "Event handlers failed for GraphInvalidated: %s. "
+                    "Graph invalidation event may not be recorded in audit trail.",
+                    handler_names,
+                )
+
+        return individual
+
+    def get_individual_properties(self, individual_id: str) -> list[DataPropertyValue]:
+        """
+        Get the deduplicated property attribute list for an individual.
+
+        Returns the superset of data_properties declared on all parent Classes,
+        with first-class-wins precedence on name collisions: when two parent Classes
+        declare a property with the same name but conflicting type/constraints,
+        the property from the first parent (by class membership order) wins.
+
+        Args:
+            individual_id: The ID of the individual
+
+        Returns:
+            Deduplicated list of DataPropertyValue with first-class-wins for conflicts
+
+        Raises:
+            EntityNotFoundError: If the individual does not exist
+        """
+        individual = self._repository.get_individual(individual_id)
+        if individual is None:
+            raise EntityNotFoundError("Individual", individual_id)
+
+        # Collect properties from all parent classes in order
+        seen_property_names: set[str] = set()
+        deduplicated_properties: list[DataPropertyValue] = []
+
+        for class_id in individual.class_ids:
+            cls = self._repository.get_class(class_id)
+            if cls is None:
+                # Skip if class was deleted (should rarely happen due to FK constraints)
+                continue
+
+            for prop in cls.data_properties:
+                # First definition of this property name wins
+                if prop.property_identifier not in seen_property_names:
+                    deduplicated_properties.append(prop)
+                    seen_property_names.add(prop.property_identifier)
+
+        return deduplicated_properties

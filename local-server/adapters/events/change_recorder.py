@@ -32,6 +32,9 @@ from domain.ontology.events import (
     SchemeUpdated,
     SchemeDeleted,
     ConceptSchemeUpdated,
+    IndividualCreated,
+    IndividualUpdated,
+    IndividualDeleted,
 )
 from domain.versioning.value_objects import ChangeOperation
 from utils.logger import get_logger
@@ -384,4 +387,44 @@ class ChangeEventRecorder:
                 "title": event.title,
             },
             change_reason="Property definition deleted",
+        )
+
+    # --- Individual Event Handlers ---
+
+    def on_individual_created(self, event: IndividualCreated) -> None:
+        """Handle IndividualCreated events."""
+        self._record(
+            entity_id=event.individual_id,
+            entity_type="individual",
+            operation=ChangeOperation.CREATE,
+            new_state={
+                "individual_id": event.individual_id,
+                "title": event.title,
+                "class_ids": event.class_ids,
+            },
+            change_reason="Individual created",
+        )
+
+    def on_individual_updated(self, event: IndividualUpdated) -> None:
+        """Handle IndividualUpdated events."""
+        self._record(
+            entity_id=event.individual_id,
+            entity_type="individual",
+            operation=ChangeOperation.UPDATE,
+            new_state=event.new_values,
+            previous_state=event.old_values,
+            change_reason=f"Individual updated: {', '.join(event.changed_fields)}",
+        )
+
+    def on_individual_deleted(self, event: IndividualDeleted) -> None:
+        """Handle IndividualDeleted events."""
+        self._record(
+            entity_id=event.individual_id,
+            entity_type="individual",
+            operation=ChangeOperation.DELETE,
+            previous_state={
+                "individual_id": event.individual_id,
+                "title": event.title,
+            },
+            change_reason="Individual deleted",
         )

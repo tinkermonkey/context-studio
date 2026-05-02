@@ -292,6 +292,57 @@ class ConceptSchemeUpdated(DomainEvent):
 
 
 @dataclass(frozen=True)
+class IndividualCreated(DomainEvent):
+    """
+    Event emitted when a new individual is created.
+
+    Attributes:
+        individual_id: ID of the created individual
+        title: Title of the individual
+        class_ids: List of parent class IDs
+    """
+
+    _aggregate_id_field: ClassVar[str] = "individual_id"
+    individual_id: str = ""
+    title: str = ""
+    class_ids: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class IndividualUpdated(DomainEvent):
+    """
+    Event emitted when an individual is updated.
+
+    Attributes:
+        individual_id: ID of the updated individual
+        changed_fields: Tuple of field names that changed
+        old_values: Dictionary of field names to their previous values
+        new_values: Dictionary of field names to their new values
+    """
+
+    _aggregate_id_field: ClassVar[str] = "individual_id"
+    individual_id: str = ""
+    changed_fields: tuple[str, ...] = field(default_factory=tuple)
+    old_values: dict[str, object] = field(default_factory=dict)
+    new_values: dict[str, object] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class IndividualDeleted(DomainEvent):
+    """
+    Event emitted when an individual is deleted.
+
+    Attributes:
+        individual_id: ID of the deleted individual
+        title: Title of the deleted individual
+    """
+
+    _aggregate_id_field: ClassVar[str] = "individual_id"
+    individual_id: str = ""
+    title: str = ""
+
+
+@dataclass(frozen=True)
 class GraphInvalidated(DomainEvent):
     """
     Event emitted when the graph state is invalidated and needs recomputation.

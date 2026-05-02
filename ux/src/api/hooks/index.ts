@@ -37,6 +37,7 @@ export {
   useShortestPath,
   useNeighborsQuery,
 } from "./graph";
+export * from "./individuals";
 export * from "./llm";
 export * from "./modelCapabilities";
 export * from "./nlp";

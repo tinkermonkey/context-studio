@@ -24,6 +24,9 @@ from domain.ontology.events import (
     ClassUpdated,
     DomainEvent,
     GraphInvalidated,
+    IndividualCreated,
+    IndividualDeleted,
+    IndividualUpdated,
     PropertyDefinitionCreated,
     RelationshipCreated,
     RelationshipDeleted,
@@ -718,7 +721,7 @@ class TestEventImportability:
     """Tests that all events can be imported from the module."""
 
     def test_all_events_importable_from_events_module(self):
-        """All fifteen event classes are importable from domain.ontology.events."""
+        """All eighteen event classes are importable from domain.ontology.events."""
         events = [
             DomainEvent,
             TaxonomyCreated,
@@ -734,6 +737,9 @@ class TestEventImportability:
             RelationshipCreated,
             RelationshipDeleted,
             PropertyDefinitionCreated,
+            IndividualCreated,
+            IndividualUpdated,
+            IndividualDeleted,
             GraphInvalidated,
         ]
         for event_class in events:

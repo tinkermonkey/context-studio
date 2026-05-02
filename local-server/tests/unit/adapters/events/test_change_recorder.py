@@ -26,6 +26,9 @@ from domain.ontology.events import (
     PropertyDefinitionUpdated,
     PropertyDefinitionDeleted,
     ConceptSchemeUpdated,
+    IndividualCreated,
+    IndividualUpdated,
+    IndividualDeleted,
 )
 from adapters.events.change_recorder import ChangeEventRecorder
 
@@ -261,6 +264,26 @@ class TestOntologyHandlers:
         assert call_args.kwargs['operation'] == "create"
         assert call_args.kwargs['new_state']['identifier'] == "hasChild"
 
+    def test_on_individual_created(self, recorder, mock_change_repo):
+        """Test IndividualCreated event recording."""
+        mock_change_repo.record_change.return_value = "change-111"
+        event = IndividualCreated(
+            individual_id="individual-1",
+            title="John Doe",
+            class_ids=["class-1", "class-2"],
+        )
+
+        recorder.on_individual_created(event)
+
+        mock_change_repo.record_change.assert_called_once()
+        call_args = mock_change_repo.record_change.call_args
+        assert call_args.kwargs['entity_id'] == "individual-1"
+        assert call_args.kwargs['entity_type'] == "individual"
+        assert call_args.kwargs['operation'] == "create"
+        assert call_args.kwargs['new_state']['individual_id'] == "individual-1"
+        assert call_args.kwargs['new_state']['title'] == "John Doe"
+        assert call_args.kwargs['new_state']['class_ids'] == ["class-1", "class-2"]
+
     # --- UPDATE Pattern Tests ---
 
     def test_on_scheme_updated(self, recorder, mock_change_repo):
@@ -401,6 +424,28 @@ class TestOntologyHandlers:
         assert call_args.kwargs['new_state']['title'] == "New Scheme Title"
         assert "title" in call_args.kwargs['change_reason']
 
+    def test_on_individual_updated(self, recorder, mock_change_repo):
+        """Test IndividualUpdated event recording with change tracking."""
+        mock_change_repo.record_change.return_value = "change-111"
+        event = IndividualUpdated(
+            individual_id="individual-1",
+            changed_fields=("title", "description"),
+            old_values={"title": "John Doe", "description": "Old Description"},
+            new_values={"title": "Jane Doe", "description": "New Description"},
+        )
+
+        recorder.on_individual_updated(event)
+
+        mock_change_repo.record_change.assert_called_once()
+        call_args = mock_change_repo.record_change.call_args
+        assert call_args.kwargs['entity_id'] == "individual-1"
+        assert call_args.kwargs['entity_type'] == "individual"
+        assert call_args.kwargs['operation'] == "update"
+        assert call_args.kwargs['new_state'] == event.new_values
+        assert call_args.kwargs['previous_state'] == event.old_values
+        assert "title" in call_args.kwargs['change_reason']
+        assert "description" in call_args.kwargs['change_reason']
+
     # --- DELETE Pattern Tests ---
 
     def test_on_scheme_deleted(self, recorder, mock_change_repo):
@@ -484,3 +529,18 @@ class TestOntologyHandlers:
         assert call_args.kwargs['operation'] == "delete"
         assert call_args.kwargs['previous_state']['identifier'] == "hasChild"
         assert call_args.kwargs['previous_state']['title'] == "Has Child"
+
+    def test_on_individual_deleted(self, recorder, mock_change_repo):
+        """Test IndividualDeleted event recording."""
+        mock_change_repo.record_change.return_value = "change-111"
+        event = IndividualDeleted(individual_id="individual-1", title="John Doe")
+
+        recorder.on_individual_deleted(event)
+
+        mock_change_repo.record_change.assert_called_once()
+        call_args = mock_change_repo.record_change.call_args
+        assert call_args.kwargs['entity_id'] == "individual-1"
+        assert call_args.kwargs['entity_type'] == "individual"
+        assert call_args.kwargs['operation'] == "delete"
+        assert call_args.kwargs['previous_state']['individual_id'] == "individual-1"
+        assert call_args.kwargs['previous_state']['title'] == "John Doe"

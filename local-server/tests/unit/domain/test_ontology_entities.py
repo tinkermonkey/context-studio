@@ -321,20 +321,31 @@ class TestClass:
 
 
 class TestIndividual:
-    """Tests for Individual entity."""
+    """Tests for Individual entity with multi-class support."""
 
-    def test_individual_creation(self):
-        """Create an individual."""
-        ind = Individual(id="ind-1", class_id="class-1", title="Fido")
+    def test_individual_creation_single_class(self):
+        """Create an individual with a single parent class."""
+        ind = Individual(id="ind-1", class_ids=["class-1"], title="Fido")
         assert ind.id == "ind-1"
-        assert ind.class_id == "class-1"
+        assert ind.class_ids == ["class-1"]
         assert ind.title == "Fido"
         assert ind.description is None
         assert ind.data_properties == []
 
+    def test_individual_creation_multiple_classes(self):
+        """Create an individual with multiple parent classes."""
+        ind = Individual(id="ind-1", class_ids=["class-1", "class-2"], title="PostgreSQL")
+        assert ind.class_ids == ["class-1", "class-2"]
+        assert len(ind.class_ids) == 2
+
     def test_individual_creation_with_description(self):
         """Create an individual with description."""
-        ind = Individual(id="ind-1", class_id="class-1", title="Fido", description="My pet dog")
+        ind = Individual(
+            id="ind-1",
+            class_ids=["class-1"],
+            title="Fido",
+            description="My pet dog"
+        )
         assert ind.description == "My pet dog"
 
     def test_individual_creation_with_data_properties(self):
@@ -343,21 +354,95 @@ class TestIndividual:
             DataPropertyValue(property_identifier="age", value=5, datatype="xsd:integer"),
             DataPropertyValue(property_identifier="name", value="Fido"),
         ]
-        ind = Individual(id="ind-1", class_id="class-1", title="Fido", data_properties=props)
+        ind = Individual(
+            id="ind-1",
+            class_ids=["class-1"],
+            title="Fido",
+            data_properties=props
+        )
         assert len(ind.data_properties) == 2
         assert ind.data_properties[0].value == 5
 
+    def test_individual_no_classes_raises(self):
+        """Create an individual with no parent classes raises ValueError."""
+        with pytest.raises(ValueError, match="Individual must have at least one parent class"):
+            Individual(id="ind-1", class_ids=[], title="Fido")
+
     def test_individual_rename(self):
         """Rename an individual."""
-        ind = Individual(id="ind-1", class_id="class-1", title="Fido")
+        ind = Individual(id="ind-1", class_ids=["class-1"], title="Fido")
         ind.rename("Max")
         assert ind.title == "Max"
+        assert ind.last_modified is not None
 
     def test_individual_rename_empty_raises(self):
         """Rename with empty string raises ValueError."""
-        ind = Individual(id="ind-1", class_id="class-1", title="Fido")
+        ind = Individual(id="ind-1", class_ids=["class-1"], title="Fido")
         with pytest.raises(ValueError, match="Title cannot be empty"):
             ind.rename("")
+
+    def test_individual_rename_whitespace_only_raises(self):
+        """Rename with whitespace-only string raises ValueError."""
+        ind = Individual(id="ind-1", class_ids=["class-1"], title="Fido")
+        with pytest.raises(ValueError, match="Title cannot be empty"):
+            ind.rename("   ")
+
+    def test_add_parent_class(self):
+        """Add a parent class to an individual."""
+        ind = Individual(id="ind-1", class_ids=["class-1"], title="PostgreSQL")
+        ind.add_parent_class("class-2")
+        assert ind.class_ids == ["class-1", "class-2"]
+        assert ind.last_modified is not None
+
+    def test_add_parent_class_duplicate_raises(self):
+        """Adding a parent class that is already assigned raises ValueError."""
+        ind = Individual(id="ind-1", class_ids=["class-1"], title="PostgreSQL")
+        with pytest.raises(ValueError, match="Class class-1 is already a parent"):
+            ind.add_parent_class("class-1")
+
+    def test_remove_parent_class(self):
+        """Remove a parent class from an individual."""
+        ind = Individual(id="ind-1", class_ids=["class-1", "class-2"], title="PostgreSQL")
+        ind.remove_parent_class("class-2")
+        assert ind.class_ids == ["class-1"]
+        assert ind.last_modified is not None
+
+    def test_remove_parent_class_not_found_raises(self):
+        """Removing a non-existent parent class raises ValueError."""
+        ind = Individual(id="ind-1", class_ids=["class-1"], title="PostgreSQL")
+        with pytest.raises(ValueError, match="Class class-3 is not a parent"):
+            ind.remove_parent_class("class-3")
+
+    def test_remove_last_parent_class_raises(self):
+        """Removing the last parent class raises ValueError."""
+        ind = Individual(id="ind-1", class_ids=["class-1"], title="PostgreSQL")
+        with pytest.raises(ValueError, match="Cannot remove the last parent class"):
+            ind.remove_parent_class("class-1")
+
+    def test_reorder_parent_classes(self):
+        """Reorder parent classes."""
+        ind = Individual(id="ind-1", class_ids=["class-1", "class-2", "class-3"], title="PostgreSQL")
+        ind.reorder_parent_classes(["class-3", "class-1", "class-2"])
+        assert ind.class_ids == ["class-3", "class-1", "class-2"]
+        assert ind.last_modified is not None
+
+    def test_reorder_parent_classes_empty_raises(self):
+        """Reordering with empty list raises ValueError."""
+        ind = Individual(id="ind-1", class_ids=["class-1"], title="PostgreSQL")
+        with pytest.raises(ValueError, match="Individual must have at least one parent class"):
+            ind.reorder_parent_classes([])
+
+    def test_reorder_parent_classes_duplicates_raises(self):
+        """Reordering with duplicate classes raises ValueError."""
+        ind = Individual(id="ind-1", class_ids=["class-1", "class-2"], title="PostgreSQL")
+        with pytest.raises(ValueError, match="contains duplicates"):
+            ind.reorder_parent_classes(["class-1", "class-1"])
+
+    def test_reorder_parent_classes_mismatch_raises(self):
+        """Reordering with different classes raises ValueError."""
+        ind = Individual(id="ind-1", class_ids=["class-1", "class-2"], title="PostgreSQL")
+        with pytest.raises(ValueError, match="must contain exactly the same classes"):
+            ind.reorder_parent_classes(["class-1", "class-3"])
 
 
 class TestRelationship:

@@ -23,6 +23,7 @@ function MobileNavMenu() {
       <NavbarLink href="/app/taxonomies">KG: Taxonomies</NavbarLink>
       <NavbarLink href="/app/concept-schemes">KG: Concept Schemes</NavbarLink>
       <NavbarLink href="/app/classes">KG: Classes</NavbarLink>
+      <NavbarLink href="/app/individuals">KG: Individuals</NavbarLink>
       <NavbarLink href="/app/properties">KG: Property Definitions</NavbarLink>
       <NavbarLink href="/app/relationships">KG: Relationships</NavbarLink>
 
@@ -61,6 +62,7 @@ function DesktopNavMenus() {
         <DropdownItem href="/app/taxonomies">Taxonomies</DropdownItem>
         <DropdownItem href="/app/concept-schemes">Concept Schemes</DropdownItem>
         <DropdownItem href="/app/classes">Classes</DropdownItem>
+        <DropdownItem href="/app/individuals">Individuals</DropdownItem>
         <DropdownItem href="/app/properties">Property Definitions</DropdownItem>
         <DropdownItem href="/app/relationships">Relationships</DropdownItem>
       </Dropdown>

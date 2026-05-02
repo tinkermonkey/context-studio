@@ -30,6 +30,7 @@ export {
   createClass,
   createPropertyDefinition,
   createRelationship,
+  createIndividual,
   createTestHierarchy,
   seedTestData,
   clearTestData,

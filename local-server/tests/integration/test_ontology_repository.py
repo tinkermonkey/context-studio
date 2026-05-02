@@ -383,50 +383,152 @@ class TestClassCRUD:
 
 
 class TestIndividualCRUD:
-    """Tests for Individual CRUD operations."""
+    """Tests for Individual CRUD operations with multi-class support."""
 
-    def test_save_and_get_individual(self, repo, sample_class):
-        """Test creating and retrieving an individual."""
+    def test_save_and_get_individual_single_class(self, repo, sample_class):
+        """Test creating and retrieving an individual with a single parent class."""
         individual = Individual(
             id="ind-1",
-            class_id=sample_class.id,
+            class_ids=[sample_class.id],
             title="Fido",
             description="A specific dog",
         )
         saved = repo.save_individual(individual)
 
         assert saved.id == "ind-1"
-        assert saved.class_id == sample_class.id
+        assert saved.class_ids == [sample_class.id]
 
         retrieved = repo.get_individual("ind-1")
         assert retrieved is not None
         assert retrieved.title == "Fido"
+        assert retrieved.class_ids == [sample_class.id]
+
+    def test_save_and_get_individual_multiple_classes(self, repo, sample_class, sample_concept_scheme, sample_taxonomy):
+        """Test creating and retrieving an individual with multiple parent classes."""
+        # Create a second class
+        class2 = Class(
+            id="class-2",
+            concept_scheme_id=sample_concept_scheme.id,
+            taxonomy_id=sample_taxonomy.id,
+            title="Database Product",
+        )
+        repo.save_class(class2)
+
+        individual = Individual(
+            id="ind-1",
+            class_ids=[sample_class.id, class2.id],
+            title="PostgreSQL",
+            description="A SQL database and a database product",
+        )
+        saved = repo.save_individual(individual)
+
+        assert saved.id == "ind-1"
+        assert saved.class_ids == [sample_class.id, class2.id]
+
+        retrieved = repo.get_individual("ind-1")
+        assert retrieved is not None
+        assert retrieved.class_ids == [sample_class.id, class2.id]
 
     def test_save_individual_nonexistent_class(self, repo):
         """Test that saving with nonexistent class raises ValueError."""
         individual = Individual(
             id="ind-1",
-            class_id="nonexistent",
+            class_ids=["nonexistent"],
             title="Test Individual",
         )
         with pytest.raises(ValueError, match="does not exist"):
             repo.save_individual(individual)
 
-    def test_list_individuals_by_class(self, repo, sample_class):
-        """Test listing individuals filtered by class."""
-        repo.save_individual(Individual(id="ind-1", class_id=sample_class.id, title="I1"))
-        repo.save_individual(Individual(id="ind-2", class_id=sample_class.id, title="I2"))
+    def test_save_individual_no_classes_raises(self, repo):
+        """Test that creating an individual with no classes raises ValueError."""
+        with pytest.raises(ValueError, match="at least one parent class"):
+            Individual(
+                id="ind-1",
+                class_ids=[],
+                title="Test Individual",
+            )
 
+    def test_list_individuals_by_class(self, repo, sample_class, sample_concept_scheme, sample_taxonomy):
+        """Test listing individuals filtered by class (including those with multiple classes)."""
+        class2 = Class(
+            id="class-2",
+            concept_scheme_id=sample_concept_scheme.id,
+            taxonomy_id=sample_taxonomy.id,
+            title="Database Product",
+        )
+        repo.save_class(class2)
+
+        # Create individual with single class
+        repo.save_individual(Individual(id="ind-1", class_ids=[sample_class.id], title="I1"))
+        # Create individual with multiple classes including sample_class
+        repo.save_individual(Individual(id="ind-2", class_ids=[sample_class.id, class2.id], title="I2"))
+        # Create individual with only class2
+        repo.save_individual(Individual(id="ind-3", class_ids=[class2.id], title="I3"))
+
+        # Filter by sample_class should return ind-1 and ind-2
         individuals = repo.list_individuals(sample_class.id)
         assert len(individuals) == 2
+        assert {ind.id for ind in individuals} == {"ind-1", "ind-2"}
+
+        # Filter by class2 should return ind-2 and ind-3
+        individuals = repo.list_individuals(class2.id)
+        assert len(individuals) == 2
+        assert {ind.id for ind in individuals} == {"ind-2", "ind-3"}
 
     def test_delete_individual(self, repo, sample_class):
         """Test deleting an individual."""
-        individual = Individual(id="ind-1", class_id=sample_class.id, title="Test")
+        individual = Individual(id="ind-1", class_ids=[sample_class.id], title="Test")
         repo.save_individual(individual)
 
         deleted = repo.delete_individual("ind-1")
         assert deleted is True
+
+    def test_update_individual_class_membership(self, repo, sample_class, sample_concept_scheme, sample_taxonomy):
+        """Test updating an individual's class membership."""
+        class2 = Class(
+            id="class-2",
+            concept_scheme_id=sample_concept_scheme.id,
+            taxonomy_id=sample_taxonomy.id,
+            title="Category 2",
+        )
+        repo.save_class(class2)
+
+        individual = Individual(id="ind-1", class_ids=[sample_class.id], title="Test")
+        repo.save_individual(individual)
+
+        # Update class membership
+        individual.add_parent_class(class2.id)
+        repo.save_individual(individual)
+
+        retrieved = repo.get_individual("ind-1")
+        assert retrieved.class_ids == [sample_class.id, class2.id]
+
+    def test_individual_class_order_preserved(self, repo, sample_class, sample_concept_scheme, sample_taxonomy):
+        """Test that individual class membership order is preserved."""
+        class2 = Class(
+            id="class-2",
+            concept_scheme_id=sample_concept_scheme.id,
+            taxonomy_id=sample_taxonomy.id,
+            title="Class 2",
+        )
+        class3 = Class(
+            id="class-3",
+            concept_scheme_id=sample_concept_scheme.id,
+            taxonomy_id=sample_taxonomy.id,
+            title="Class 3",
+        )
+        repo.save_class(class2)
+        repo.save_class(class3)
+
+        individual = Individual(
+            id="ind-1",
+            class_ids=[class2.id, sample_class.id, class3.id],
+            title="OrderTest"
+        )
+        repo.save_individual(individual)
+
+        retrieved = repo.get_individual("ind-1")
+        assert retrieved.class_ids == [class2.id, sample_class.id, class3.id]
 
 
 class TestPropertyDefinitionCRUD:
