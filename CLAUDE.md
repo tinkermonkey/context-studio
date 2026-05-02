@@ -332,3 +332,38 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 - End-to-End testing: Create scenarios that test the full user journey
 - Good logging: Make sure all files have good logging
 - Graceful degradation: Implement fallback strategies when components fail
+
+<!-- generated-agents-section -->
+
+## Specialized Sub-Agents
+
+**MANDATORY**: Before implementing, identify which specialist agent applies to your task and consult it via the `Task` tool. Do not proceed with implementation until you have consulted the relevant agent. These agents have deep project-specific context that general knowledge cannot replicate.
+
+| Agent | When to use |
+|---|---|
+| `context-studio-architect` | Hexagonal architecture with 6 bounded contexts and strict domain purity requires deep architectural understanding |
+| `context-studio-guardian` | Domain layer has zero infrastructure imports (enforced by scripts/check_domain_imports |
+| `context-studio-doc-maintainer` | Comprehensive documentation/ directory with architecture docs, API references, and development guides |
+| `context-studio-tester` | Three distinct test frameworks (pytest backend, Vitest frontend, Playwright e2e) with unit/integration/e2e/performance separation |
+| `context-studio-data-expert` | Dual-database setup (local |
+| `context-studio-frontend-expert` | Sophisticated frontend with TanStack Query for server state, React Router v7, custom hooks pattern, and extensive Testing Library usage |
+| `context-studio-api-expert` | FastAPI with Pydantic schemas (adapter-layer only), async route handlers, OpenAPI contract validation, and hexagonal DI patterns |
+
+```
+Task(subagent_type="context-studio-architect", prompt="<your question about Expert in hexagonal architecture, bounded contexts, and how all components interact>")
+Task(subagent_type="context-studio-guardian", prompt="<your question about Enforces domain purity, hexagonal architecture boundaries, and catches DDD antipatterns>")
+Task(subagent_type="context-studio-doc-maintainer", prompt="<your question about Maintains project documentation, README, and architecture diagrams>")
+```
+
+## Skills
+
+| Skill | What it does |
+|---|---|
+| `/context-studio-test` | Run test suites: backend (unit/integration/e2e/performance), frontend (unit/integration), or all |
+| `/context-studio-architecture` | Display architecture overview: bounded contexts, layers, ports/adapters, and dependency flows |
+| `/context-studio-migrations` | Manage Alembic migrations: create, upgrade, downgrade for local.db and operations.db |
+| `/context-studio-dev` | Start development servers for backend (uvicorn) and frontend (vite) concurrently |
+| `/context-studio-check` | Run all validation scripts: domain purity, test contracts, OpenAPI contracts, and linting |
+| `/context-studio-api-docs` | View and validate OpenAPI documentation and API contracts |
+
+<!-- /generated-agents-section -->

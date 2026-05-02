@@ -1,0 +1,1 @@
+Now I'll create the comprehensive agent definition for the context-studio-guardian.
