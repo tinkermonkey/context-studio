@@ -59,6 +59,8 @@ interface RunReport {
   started_at: string;
   ended_at: string;
   duration_ms: number;
+  is_valid: boolean;
+  registry_error?: string;
   tests: TestReport[];
   selector_coverage: SelectorCoverage;
 }
@@ -230,6 +232,8 @@ export default class StructuredReporter implements Reporter {
       started_at: new Date(this.startTime).toISOString(),
       ended_at: new Date(endTime).toISOString(),
       duration_ms: endTime - this.startTime,
+      is_valid: !this.registryParseError,
+      ...(this.registryParseError && { registry_error: this.registryParseError.message }),
       tests: this.tests,
       selector_coverage: selectorCoverage,
     };
@@ -427,6 +431,14 @@ export default class StructuredReporter implements Reporter {
       const stats = computeRunStats(report.tests);
 
       let markdown = `# Test Run Report\n\n`;
+
+      if (report.registry_error) {
+        markdown += `> **⚠️ INVALID REPORT — Selector registry failed to parse**\n`;
+        markdown += `> \`selector_coverage\` shows 0% but this is NOT legitimate coverage data.\n`;
+        markdown += `> Fix the registry before trusting any coverage numbers.\n`;
+        markdown += `> Error: ${report.registry_error}\n\n`;
+      }
+
       markdown += `**Run ID:** ${report.run_id}\n`;
       markdown += `**Started:** ${report.started_at}\n`;
       markdown += `**Ended:** ${report.ended_at}\n`;

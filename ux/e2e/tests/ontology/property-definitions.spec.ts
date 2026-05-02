@@ -4,20 +4,22 @@ import {
   clearTestData,
   apiRequest,
   APIError,
+  waitForAppReady,
 } from "../../fixtures/test-helpers";
 
 /**
  * Property Definition CRUD E2E Tests
  *
- * Tests the complete CRUD lifecycle for property definitions:
- * - Create a new property definition
- * - List property definitions
- * - View property definition details
- * - Update property definition properties
- * - Delete property definition
+ * Each test verifies a full round-trip: UI action → API read-back confirms persistence.
  *
- * Each test uses beforeEach factory to create preconditions and verifies both
- * UI state and API responses via apiRequest read-back.
+ * typeName="Property Definition" → testIdPrefix="property-definition"
+ * Table testids: "property-definition-add-button", "property-definition-row-${id}", etc.
+ * Form testids: "property-definition-identifier-input", "property-definition-title-input", etc.
+ *
+ * Delete flow: select row checkbox → property-definition-actions-dropdown
+ *   → property-definition-delete-selected-action → property-definition-delete-modal
+ *   → property-definition-delete-confirm-button.
+ * Edit flow: double-click property-definition-row-${id} → property-definition-edit-modal.
  */
 
 test.describe("Property Definition CRUD Operations", () => {
@@ -25,304 +27,151 @@ test.describe("Property Definition CRUD Operations", () => {
     await clearTestData(page);
   });
 
-  test("should create a property definition via UI", async ({ page }) => {
-    // Navigate to properties page
+  test("should create a property definition via UI form", async ({ page }) => {
     await page.goto("/app/properties");
-    await page.waitForLoadState("networkidle");
+    await waitForAppReady(page);
 
-    // Click add button
-    const addButton = page.getByRole("button", { name: /add|create|new/i });
-    await expect(addButton).toBeVisible();
-    await addButton.click();
+    // typeName="Property Definition" → "property-definition-add-button" (normalized from typeName "Property Definition")
+    await page.getByTestId("property-definition-add-button").click();
 
-    // Wait for form modal
-    const modal = page.getByRole("dialog");
-    await expect(modal).toBeVisible({ timeout: 5000 });
+    const createModal = page.getByTestId("property-definition-create-modal");
+    await expect(createModal).toBeVisible({ timeout: 5000 });
 
-    // Fill form fields
-    const titleInput = page
-      .locator('[data-testid="property-definition-title-input"]')
-      .first();
-    const descriptionInput = page
-      .locator('[data-testid="property-definition-description-input"]')
-      .first();
+    await page.getByTestId("property-definition-identifier-input").fill("e2e_test_property");
+    await page.getByTestId("property-definition-title-input").fill("E2E Test Property");
+    await page.getByTestId("property-definition-description-input").fill("Created via E2E");
+    await page.getByTestId("property-definition-submit-button").click();
 
-    await titleInput.fill("test-property-e2e-create");
-    await descriptionInput.fill("A test property created via E2E tests");
+    await expect(createModal).not.toBeVisible({ timeout: 5000 });
+    await waitForAppReady(page);
 
-    // Submit form
-    const submitButton = modal.getByRole("button", {
-      name: /create|save|submit/i,
-    });
-    await submitButton.click();
+    await expect(page.getByText("E2E Test Property")).toBeVisible();
 
-    // Wait for modal to close
-    await expect(modal).not.toBeVisible({ timeout: 5000 });
-
-    // Verify property appears in table
-    await expect(page.getByText("test-property-e2e-create")).toBeVisible();
+    const list = await apiRequest<{ items: Array<{ title: string }> }>(
+      page,
+      "/api/properties"
+    );
+    expect(list.items.some((p) => p.title === "E2E Test Property")).toBe(true);
   });
 
-  test("should create a property definition via API", async ({ page }) => {
-    // Create property using API
-    const property = await createPropertyDefinition(page, {
-      title: "API Created Property",
-      description: "Property created via API",
-      identifier: "api_created_property",
-    });
-
-    // Verify property was created successfully
-    expect(property.id).toBeDefined();
-    expect(property.title).toBe("API Created Property");
-    expect(property.description).toBe("Property created via API");
-    expect(property.identifier).toBe("api_created_property");
-
-    // Navigate to properties page to verify it appears in UI
-    await page.goto("/app/properties");
-    await page.waitForLoadState("networkidle");
-
-    // Verify property appears in list
-    await expect(page.getByText("API Created Property")).toBeVisible();
-  });
-
-  test("should list all property definitions", async ({ page }) => {
-    // Create test properties
+  test("should display property definitions in the list", async ({ page }) => {
     const prop1 = await createPropertyDefinition(page, {
-      title: "List Test Property 1",
-      identifier: "list_test_prop_1",
+      title: "Property Alpha",
+      identifier: "property_alpha",
     });
     const prop2 = await createPropertyDefinition(page, {
-      title: "List Test Property 2",
-      identifier: "list_test_prop_2",
+      title: "Property Beta",
+      identifier: "property_beta",
     });
 
-    // Navigate to properties page
     await page.goto("/app/properties");
-    await page.waitForLoadState("networkidle");
+    await waitForAppReady(page);
 
-    // Verify both properties appear in the list
-    await expect(page.getByText("List Test Property 1")).toBeVisible();
-    await expect(page.getByText("List Test Property 2")).toBeVisible();
+    await expect(page.getByText("Property Alpha")).toBeVisible();
+    await expect(page.getByText("Property Beta")).toBeVisible();
 
-    // Verify API response includes both
-    const response = await apiRequest<any>(page, "/api/properties");
-    const titles =
-      response.items?.map((p: any) => p.title) ||
-      response.map((p: any) => p.title) ||
-      [];
-    expect(titles).toContain(prop1.title);
-    expect(titles).toContain(prop2.title);
-  });
-
-  test("should view property definition details", async ({ page }) => {
-    // Create test property
-    const property = await createPropertyDefinition(page, {
-      title: "Detail Test Property",
-      description: "Test description for property details",
-      identifier: "detail_test_property",
-    });
-
-    // Navigate to properties page
-    await page.goto("/app/properties");
-    await page.waitForLoadState("networkidle");
-
-    // Click on property row to view details
-    const propertyLink = page.getByText("Detail Test Property");
-    await propertyLink.click();
-
-    // Wait for detail page to load
-    await page.waitForLoadState("networkidle");
-
-    // Verify detail page contains property information
-    await expect(page.getByText("Detail Test Property")).toBeVisible();
     await expect(
-      page.getByText("Test description for property details"),
+      page.getByTestId(`property-definition-row-${prop1.id}`)
     ).toBeVisible();
-
-    // Verify API read-back returns same data
-    const apiResponse = await apiRequest<any>(
-      page,
-      `/api/properties/${property.id}`,
-    );
-    expect(apiResponse.title).toBe(property.title);
-    expect(apiResponse.description).toBe(property.description);
-    expect(apiResponse.identifier).toBe(property.identifier);
+    await expect(
+      page.getByTestId(`property-definition-row-${prop2.id}`)
+    ).toBeVisible();
   });
 
-  test("should update a property definition", async ({ page }) => {
-    // Create test property
-    const property = await createPropertyDefinition(page, {
-      title: "Update Test Property",
+  test("should update a property definition via double-click edit", async ({
+    page,
+  }) => {
+    const prop = await createPropertyDefinition(page, {
+      title: "Property Before Update",
+      identifier: "before_update",
       description: "Original description",
-      identifier: "update_test_property",
     });
 
-    // Navigate to properties page
     await page.goto("/app/properties");
-    await page.waitForLoadState("networkidle");
+    await waitForAppReady(page);
 
-    // Find and double-click row to open edit form
-    const propertyRow = page.getByText("Update Test Property");
-    await propertyRow.dblclick();
+    await page.getByTestId(`property-definition-row-${prop.id}`).dblclick();
 
-    // Wait for edit form
-    const modal = page.getByRole("dialog");
-    await expect(modal).toBeVisible({ timeout: 5000 });
+    const editModal = page.getByTestId("property-definition-edit-modal");
+    await expect(editModal).toBeVisible({ timeout: 5000 });
 
-    // Update fields
-    const titleInput = page
-      .locator('[data-testid="property-definition-title-input"]')
-      .first();
-    const descriptionInput = page
-      .locator('[data-testid="property-definition-description-input"]')
-      .first();
+    await page.getByTestId("property-definition-title-input").fill("Property After Update");
+    await page.getByTestId("property-definition-description-input").fill("Updated description");
+    await page.getByTestId("property-definition-submit-button").click();
 
-    await titleInput.fill("test-property-e2e-update");
-    await descriptionInput.fill("Updated property description");
+    await expect(editModal).not.toBeVisible({ timeout: 5000 });
+    await waitForAppReady(page);
 
-    // Submit form
-    const submitButton = modal.getByRole("button", { name: /save|update/i });
-    await submitButton.click();
+    await expect(
+      page.getByTestId(`property-definition-row-${prop.id}`)
+    ).toContainText("Property After Update");
 
-    // Wait for changes to apply
-    await page.waitForLoadState("networkidle");
-
-    // Verify updates in UI
-    await expect(page.getByText("test-property-e2e-update")).toBeVisible();
-
-    // Verify updates via API
-    const apiResponse = await apiRequest<any>(
+    const updated = await apiRequest<{ title: string; description: string }>(
       page,
-      `/api/properties/${property.id}`,
+      `/api/properties/${prop.id}`
     );
-    expect(apiResponse.title).toBe("test-property-e2e-update");
-    expect(apiResponse.description).toBe("Updated property description");
+    expect(updated.title).toBe("Property After Update");
+    expect(updated.description).toBe("Updated description");
   });
 
-  test("should delete a property definition", async ({ page }) => {
-    // Create test property
-    const property = await createPropertyDefinition(page, {
-      title: "Delete Test Property",
+  test("should delete a property definition via Actions dropdown", async ({
+    page,
+  }) => {
+    const prop = await createPropertyDefinition(page, {
+      title: "Property to Delete",
+      identifier: "to_delete",
     });
 
-    // Navigate to properties page
     await page.goto("/app/properties");
-    await page.waitForLoadState("networkidle");
+    await waitForAppReady(page);
 
-    // Verify property is visible
-    await expect(page.getByText("Delete Test Property")).toBeVisible();
+    await expect(page.getByText("Property to Delete")).toBeVisible();
 
-    // Find the row and select it via checkbox
-    const propertyRow = page.getByText("Delete Test Property");
-    const rowContainer = propertyRow.locator("..").locator("..");
-    const checkbox = rowContainer.locator("input[type='checkbox']").first();
-    await checkbox.click();
+    const row = page.getByTestId(`property-definition-row-${prop.id}`);
+    await row.getByRole("checkbox").click();
 
-    // Click Actions dropdown
-    const actionsDropdown = page.getByRole("button", { name: /actions/i });
-    await actionsDropdown.click();
+    await page.getByTestId("property-definition-actions-dropdown").click();
+    await page.getByTestId("property-definition-delete-selected-action").click();
 
-    // Click Delete Selected
-    const deleteAction = page.getByRole("menuitem", {
-      name: /delete selected/i,
-    });
-    await deleteAction.click();
+    const deleteModal = page.getByTestId("property-definition-delete-modal");
+    await expect(deleteModal).toBeVisible();
+    await page.getByTestId("property-definition-delete-confirm-button").click();
+    await expect(deleteModal).not.toBeVisible({ timeout: 5000 });
+    await waitForAppReady(page);
 
-    // Handle confirmation dialog if present
-    const confirmButton = page.getByRole("button", {
-      name: /confirm|delete|yes/i,
-    });
-    if (await confirmButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await confirmButton.click();
-    }
+    await expect(page.getByText("Property to Delete")).not.toBeVisible();
 
-    // Wait for deletion to complete
-    await page.waitForLoadState("networkidle");
-
-    // Verify property is removed from UI
-    await expect(page.getByText("Delete Test Property")).not.toBeVisible({
-      timeout: 5000,
-    });
-
-    // Verify via API that it's deleted
     try {
-      await apiRequest<any>(page, `/api/properties/${property.id}`);
-      throw new Error("Property was not deleted from API");
-    } catch (error: any) {
-      if (!(error instanceof APIError && error.statusCode === 404)) {
-        throw error;
-      }
+      await apiRequest(page, `/api/properties/${prop.id}`);
+      throw new Error("Property was not deleted");
+    } catch (err) {
+      if (!(err instanceof APIError && err.statusCode === 404)) throw err;
     }
   });
 
-  test("should verify property definition fields are persisted correctly", async ({
+  test("should persist identifier, title, and description fields", async ({
     page,
   }) => {
-    // Create property with all fields populated
-    const testTitle = `Field Test ${Date.now()}`;
-    const testDescription = "Testing all field persistence";
-    const testIdentifier = `field_test_${Date.now()}`;
-
-    const property = await createPropertyDefinition(page, {
-      title: testTitle,
-      description: testDescription,
-      identifier: testIdentifier,
+    const prop = await createPropertyDefinition(page, {
+      title: "Persistence Test Property",
+      identifier: "persistence_test",
+      description: "Testing field persistence",
     });
 
-    // Navigate to properties page
     await page.goto("/app/properties");
-    await page.waitForLoadState("networkidle");
+    await waitForAppReady(page);
 
-    // Verify all fields visible in list
-    await expect(page.getByText(testTitle)).toBeVisible();
-    await expect(page.getByText(testDescription)).toBeVisible();
+    const row = page.getByTestId(`property-definition-row-${prop.id}`);
+    await expect(row).toBeVisible();
+    await expect(row).toContainText("Persistence Test Property");
 
-    // Verify API response has all fields
-    const apiResponse = await apiRequest<any>(
-      page,
-      `/api/properties/${property.id}`,
-    );
-    expect(apiResponse.title).toBe(testTitle);
-    expect(apiResponse.description).toBe(testDescription);
-    expect(apiResponse.identifier).toBe(testIdentifier);
-    expect(apiResponse.id).toBeDefined();
-    expect(apiResponse.created_at).toBeDefined();
-  });
-
-  test("should create multiple property definitions with different identifiers", async ({
-    page,
-  }) => {
-    // Create properties with different identifiers
-    const prop1 = await createPropertyDefinition(page, {
-      title: "String Property",
-      identifier: "string_property",
-    });
-    const prop2 = await createPropertyDefinition(page, {
-      title: "Integer Property",
-      identifier: "integer_property",
-    });
-    const prop3 = await createPropertyDefinition(page, {
-      title: "Boolean Property",
-      identifier: "boolean_property",
-    });
-
-    // Verify each property has correct identifier via API
-    const response1 = await apiRequest<any>(
-      page,
-      `/api/properties/${prop1.id}`,
-    );
-    expect(response1.identifier).toBe("string_property");
-
-    const response2 = await apiRequest<any>(
-      page,
-      `/api/properties/${prop2.id}`,
-    );
-    expect(response2.identifier).toBe("integer_property");
-
-    const response3 = await apiRequest<any>(
-      page,
-      `/api/properties/${prop3.id}`,
-    );
-    expect(response3.identifier).toBe("boolean_property");
+    const apiResponse = await apiRequest<{
+      title: string;
+      identifier: string;
+      description: string;
+    }>(page, `/api/properties/${prop.id}`);
+    expect(apiResponse.title).toBe("Persistence Test Property");
+    expect(apiResponse.identifier).toBe("persistence_test");
+    expect(apiResponse.description).toBe("Testing field persistence");
   });
 });

@@ -239,15 +239,26 @@ function validate() {
     );
   }
 
+  // Check 3: Spec classification — detect API-only tests mislabeled as UI tests.
+  //
+  // A spec file is "API-only" if it contains apiRequest() calls but zero UI interaction
+  // patterns (page.goto, getByTestId, page.click, page.fill, page.locator, page.type).
+  //
+  // Files in e2e/tests/api-contracts/ are exempt (they are intentionally API-only).
+  // Files outside that directory must have at least one UI interaction, or they will be
+  // flagged — because they will pass even if the frontend serves a blank error page.
+  console.log("✅ Checking test classification (API-only vs UI)...");
+  checkSpecClassification(e2eDir, result);
+
   // Print results
   if (result.errors.length > 0) {
-    console.log("❌ HARD FAILURES (tests reference non-existent selectors):");
+    console.log("❌ HARD FAILURES:");
     result.errors.forEach((err) => console.log(`  ${err}`));
     console.log();
   }
 
   if (result.warnings.length > 0) {
-    console.log("⚠️  WARNINGS (code selectors not in registry):");
+    console.log("⚠️  WARNINGS:");
     result.warnings.slice(0, 10).forEach((warn) => console.log(`  ${warn}`));
     if (result.warnings.length > 10) {
       console.log(`  ... and ${result.warnings.length - 10} more`);
@@ -257,14 +268,107 @@ function validate() {
 
   // Summary
   if (result.errors.length > 0) {
-    console.log("❌ Validation FAILED: Tests reference non-existent selectors");
+    console.log("❌ Validation FAILED");
     process.exit(1);
   } else if (result.warnings.length > 0) {
-    console.log("⚠️  Validation completed with warnings: Update selector registry");
+    console.log("⚠️  Validation completed with warnings");
     process.exit(0);
   } else {
     console.log("✅ Validation PASSED: All selectors valid");
     process.exit(0);
+  }
+}
+
+// UI interaction patterns that prove a test actually drives the browser.
+const UI_INTERACTION_PATTERNS = [
+  /page\.goto\s*\(/,
+  /page\.getByTestId\s*\(/,
+  /getByTestId\s*\(/,
+  /page\.click\s*\(/,
+  /page\.fill\s*\(/,
+  /page\.type\s*\(/,
+  /page\.locator\s*\(/,
+  /page\.getByRole\s*\(/,
+  /page\.getByText\s*\(/,
+  /page\.getByLabel\s*\(/,
+  /await\s+expect\s*\(\s*page\./,
+];
+
+const API_ONLY_PATTERN = /\bapiRequest\s*[(<]/;
+
+function checkSpecClassification(
+  testDir: string,
+  result: ValidationResult
+): void {
+  const apiContractsDir = path.join(testDir, "api-contracts");
+
+  function walkSpecs(dir: string): void {
+    if (!fs.existsSync(dir)) return;
+    for (const entry of fs.readdirSync(dir)) {
+      const fullPath = path.join(dir, entry);
+      const stat = fs.statSync(fullPath);
+      if (stat.isDirectory()) {
+        walkSpecs(fullPath);
+      } else if (entry.endsWith(".spec.ts") || entry.endsWith(".spec.tsx")) {
+        classifySpec(fullPath, apiContractsDir, result);
+      }
+    }
+  }
+
+  walkSpecs(testDir);
+}
+
+function stripComments(source: string): string {
+  // Remove single-line (//) and block (/* */) comments to prevent commented-out
+  // code from triggering false positives in the pattern checks below.
+  //
+  // Limitation: this regex-based stripper does not respect string or template
+  // literals, so URLs containing `//` (e.g. "http://...") and block-comment-like
+  // sequences inside strings will also be stripped. This is acceptable for the
+  // heuristic classification check — the patterns we're matching (apiRequest,
+  // page.goto, getByTestId) are unlikely to appear solely inside string literals
+  // — but it means the classifier is not a strict parser.
+  return source
+    .replace(/\/\/[^\n]*/g, "")
+    .replace(/\/\*[\s\S]*?\*\//g, "");
+}
+
+function classifySpec(
+  filePath: string,
+  apiContractsDir: string,
+  result: ValidationResult
+): void {
+  const isInApiContracts = filePath.startsWith(apiContractsDir + path.sep) ||
+    path.dirname(filePath) === apiContractsDir;
+
+  let rawContent: string;
+  try {
+    rawContent = fs.readFileSync(filePath, "utf-8");
+  } catch {
+    return;
+  }
+
+  const content = stripComments(rawContent);
+  const hasApiRequest = API_ONLY_PATTERN.test(content);
+  const hasUiInteraction = UI_INTERACTION_PATTERNS.some((p) => p.test(content));
+  const relPath = path.relative(process.cwd(), filePath);
+
+  if (isInApiContracts) {
+    // api-contracts/ specs should NOT have UI interactions — that's what ui-flows/ is for.
+    if (hasUiInteraction) {
+      result.warnings.push(
+        `⚠️  api-contracts spec has UI interactions (move to ui-flows/): ${relPath}`
+      );
+    }
+  } else {
+    // All other spec directories are assumed to be UI test directories.
+    // A spec with apiRequest() but no UI interactions will pass against a blank frontend.
+    if (hasApiRequest && !hasUiInteraction) {
+      result.errors.push(
+        `❌ Spec has no UI interactions — will pass against a blank frontend. ` +
+        `Move to api-contracts/ or add browser-level assertions: ${relPath}`
+      );
+    }
   }
 }
 

@@ -69,7 +69,7 @@ export const ENDPOINTS = {
     EXECUTION_HISTORY: "/api/llm/execution-history",
     EXECUTION_DETAILS: "/api/llm/execution-details",
     FLAVOR_ANALYTICS: "/api/llm/flavor-analytics",
-    HEALTH: "/api/llm/health",
+    HEALTH: "/api/v1/admin/health",
   },
   PIPELINE_FLAVORS: "/api/pipeline-flavors",
   NLP_REFERENCE: "/api/reference",
@@ -78,7 +78,7 @@ export const ENDPOINTS = {
     FILTER_STATISTICS: "/api/reference/ref-db/filter/statistics",
     NODES: "/api/reference/ref-db/nodes",
   },
-  CHANGE_EVENTS: "/api/change_events",
+  CHANGE_EVENTS: "/api/v1/versioning/changes",
   RAG: {
     EXTRACT: "/api/rag/extract",
     METRICS: (requestId: string) => `/api/rag/metrics/${requestId}`,

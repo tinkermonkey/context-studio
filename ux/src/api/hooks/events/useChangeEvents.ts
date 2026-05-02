@@ -32,9 +32,6 @@ class ChangeEventService extends BaseService {
     processed?: boolean;
   }): Promise<ChangeEvent[]> {
     return this.withErrorContext(async () => {
-      const url = ENDPOINTS.CHANGE_EVENTS + "/";
-
-      // Build query parameters
       const queryParams: Record<string, unknown> = {};
       if (params?.skip !== undefined) queryParams.skip = params.skip;
       if (params?.limit !== undefined) queryParams.limit = params.limit;
@@ -44,13 +41,11 @@ class ChangeEventService extends BaseService {
       if (params?.processed !== undefined)
         queryParams.processed = params.processed;
 
-      // If limit is explicitly set, use single page request
-      if (params?.limit !== undefined) {
-        return this.getPage<ChangeEvent>(url, queryParams);
-      }
-
-      // Otherwise, load all events across all pages
-      return this.getAllPaginated<ChangeEvent>(url, queryParams);
+      const response = await this.getResource<{
+        events: ChangeEvent[];
+        total: number;
+      }>(ENDPOINTS.CHANGE_EVENTS, queryParams);
+      return response.events;
     }, "list");
   }
 

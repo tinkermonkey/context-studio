@@ -125,6 +125,10 @@ function BaseNodeTable<T>({
   onGetChildren,
   onMoveChildren,
 }: BaseNodeTableProps<T>) {
+  // Normalize typeName for use in data-testid attributes: spaces → hyphens.
+  // "Concept Scheme" → "concept-scheme", "Property Definition" → "property-definition".
+  const testIdPrefix = typeName.toLowerCase().replace(/\s+/g, "-");
+
   const [showCreateModal, setShowCreateModal] = React.useState(false);
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const [showMoveModal, setShowMoveModal] = React.useState(false);
@@ -500,7 +504,7 @@ function BaseNodeTable<T>({
 
       <div
         className="mb-4 flex items-center justify-between"
-        data-testid={`${typeName.toLowerCase()}-table-toolbar`}
+        data-testid={`${testIdPrefix}-table-toolbar`}
       >
         <div className="flex grow justify-start">
           {searchEnabled && (
@@ -511,7 +515,7 @@ function BaseNodeTable<T>({
               value={searchTerm}
               onChange={handleSearchChange}
               className="max-w-md"
-              data-testid={`${typeName.toLowerCase()}-search-input`}
+              data-testid={`${testIdPrefix}-search-input`}
             />
           )}
         </div>
@@ -524,7 +528,7 @@ function BaseNodeTable<T>({
               size="sm"
               onClick={() => setShowCreateModal(true)}
               className="w-auto whitespace-nowrap"
-              data-testid={`${typeName.toLowerCase()}-add-button`}
+              data-testid={`${testIdPrefix}-add-button`}
             >
               <Plus className="mr-2 h-4 w-4" />
               Add {typeName}
@@ -538,12 +542,12 @@ function BaseNodeTable<T>({
             className="w-auto whitespace-nowrap"
             dismissOnClick={true}
             disabled={selectedCount === 0}
-            data-testid={`${typeName.toLowerCase()}-actions-dropdown`}
+            data-testid={`${testIdPrefix}-actions-dropdown`}
           >
             {MoveForm && (
               <DropdownItem
                 onClick={handleMoveSelected}
-                data-testid={`${typeName.toLowerCase()}-move-selected-action`}
+                data-testid={`${testIdPrefix}-move-selected-action`}
               >
                 <Move className="mr-2 h-4 w-4" />
                 Move Selected
@@ -551,7 +555,7 @@ function BaseNodeTable<T>({
             )}
             <DropdownItem
               onClick={handleDeleteSelected}
-              data-testid={`${typeName.toLowerCase()}-delete-selected-action`}
+              data-testid={`${testIdPrefix}-delete-selected-action`}
             >
               Delete Selected
             </DropdownItem>
@@ -585,7 +589,7 @@ function BaseNodeTable<T>({
       <Table
         hoverable
         className="max-w-full"
-        data-testid={`${typeName.toLowerCase()}-table`}
+        data-testid={`${testIdPrefix}-table`}
       >
         <TableHead>
           <TableRow>
@@ -609,7 +613,7 @@ function BaseNodeTable<T>({
           {table.getRowModel().rows.map((row) => (
             <TableRow
               key={row.id}
-              data-testid={`${typeName.toLowerCase()}-row-${getId(row.original)}`}
+              data-testid={`${testIdPrefix}-row-${getId(row.original)}`}
               onDoubleClick={() => {
                 setEditNodeId(getId(row.original));
               }}
@@ -756,7 +760,7 @@ function BaseNodeTable<T>({
       <Modal
         show={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        data-testid={`${typeName.toLowerCase()}-delete-modal`}
+        data-testid={`${testIdPrefix}-delete-modal`}
       >
         <ModalHeader className="border-b-0">
           <div className="flex items-center gap-2">
@@ -844,14 +848,14 @@ function BaseNodeTable<T>({
             <Button
               color="gray"
               onClick={() => setShowDeleteModal(false)}
-              data-testid={`${typeName.toLowerCase()}-delete-cancel-button`}
+              data-testid={`${testIdPrefix}-delete-cancel-button`}
             >
               Cancel
             </Button>
             <Button
               color="red"
               onClick={confirmDeleteSelected}
-              data-testid={`${typeName.toLowerCase()}-delete-confirm-button`}
+              data-testid={`${testIdPrefix}-delete-confirm-button`}
             >
               Delete
             </Button>
@@ -868,7 +872,7 @@ function BaseNodeTable<T>({
             setPendingMoveRows([]);
             setIsProcessing(false);
           }}
-          data-testid={`${typeName.toLowerCase()}-move-modal`}
+          data-testid={`${testIdPrefix}-move-modal`}
         >
           <ModalHeader className="border-b-0">
             Move {pendingMoveRows.length} {typeName.toLowerCase()}
@@ -898,7 +902,7 @@ function BaseNodeTable<T>({
       <Modal
         show={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        data-testid={`${typeName.toLowerCase()}-create-modal`}
+        data-testid={`${testIdPrefix}-create-modal`}
       >
         <ModalHeader className="border-b-0">Create New {typeName}</ModalHeader>
         <ModalBody>
@@ -909,7 +913,7 @@ function BaseNodeTable<T>({
       <Modal
         show={!!editNodeId}
         onClose={() => setEditNodeId(undefined)}
-        data-testid={`${typeName.toLowerCase()}-edit-modal`}
+        data-testid={`${testIdPrefix}-edit-modal`}
       >
         <ModalHeader className="border-b-0">Edit {typeName}</ModalHeader>
         <ModalBody>

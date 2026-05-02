@@ -301,7 +301,62 @@ async function globalSetup(): Promise<void> {
     throw error;
   }
 
-  // 8. Store process PIDs for teardown (verified to exist above)
+  // 8. Browser-based health check — verifies the app renders and API calls succeed through the
+  // browser. A plain fetch() to each server's port passes even if the frontend serves a blank
+  // error page or if CORS is misconfigured. This check catches both failure modes.
+  console.log("🌐 Running browser health check...");
+  const { chromium } = await import("@playwright/test");
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+
+    await page.goto("http://localhost:3888", {
+      waitUntil: "domcontentloaded",
+      timeout: 15000,
+    });
+
+    // Verify the page rendered actual content, not a blank error page.
+    const bodyText = await page.textContent("body");
+    if (!bodyText || bodyText.trim().length === 0) {
+      throw new Error(
+        "Frontend page rendered blank — check for build errors or missing assets",
+      );
+    }
+
+    // Verify API calls succeed from the browser context. fetch() in page.evaluate() uses the
+    // browser's network stack, so CORS headers and origin restrictions are enforced — a plain
+    // Node fetch() call would bypass this entirely.
+    const apiResult = await page.evaluate(async () => {
+      try {
+        const res = await fetch("http://localhost:8888/api/v1/admin/health");
+        return { ok: res.ok, status: res.status };
+      } catch (err) {
+        return { ok: false, status: 0, error: String(err) };
+      }
+    });
+
+    if (!apiResult.ok) {
+      const detail =
+        "error" in apiResult ? apiResult.error : `HTTP ${apiResult.status}`;
+      throw new Error(
+        `API call from browser context failed: ${detail}. ` +
+          "This indicates a CORS misconfiguration, wrong API_BASE_URL, or proxy failure.",
+      );
+    }
+
+    console.log("✅ Browser health check passed\n");
+  } catch (error) {
+    if (frontendProcess) frontendProcess.kill("SIGTERM");
+    if (backendProcess) backendProcess.kill("SIGTERM");
+    throw new Error(
+      `Browser health check failed: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  } finally {
+    // Runs on both success and failure — browser is always closed.
+    await browser.close();
+  }
+
+  // 9. Store process PIDs for teardown (verified to exist above)
   process.env.E2E_BACKEND_PID = backendProcess.pid!.toString();
   process.env.E2E_FRONTEND_PID = frontendProcess.pid!.toString();
 

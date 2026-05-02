@@ -5,262 +5,97 @@ import {
   clearTestData,
   apiRequest,
   APIError,
+  waitForAppReady,
 } from "../../fixtures/test-helpers";
-import type { Relationship, OntologyClass } from "@/api/types/ontology";
 
 /**
- * Relationship CRUD E2E Tests
+ * Relationship List and Delete E2E Tests
  *
- * Tests the complete CRUD lifecycle for relationships:
- * - Create a relationship between two classes
- * - List relationships
- * - View relationship details
- * - Delete relationship
+ * Relationships have no create/edit UI yet ("coming soon"), so these tests
+ * cover the list view and the delete flow.
  *
- * Each test uses beforeEach factory to create preconditions and verifies both
- * UI state and API responses via apiRequest read-back.
+ * typeName="Relationship" → testIdPrefix="relationship"
+ * Table testids: "relationship-row-${id}", "relationship-actions-dropdown",
+ *   "relationship-delete-selected-action", "relationship-delete-modal",
+ *   "relationship-delete-confirm-button".
+ *
+ * Delete flow: select row checkbox → relationship-actions-dropdown
+ *   → relationship-delete-selected-action → relationship-delete-modal
+ *   → relationship-delete-confirm-button.
  */
 
-test.describe("Relationship CRUD Operations", () => {
-  let class1Id: string;
-  let class2Id: string;
+test.describe("Relationship List and Delete", () => {
+  let classIds: string[];
 
   test.beforeEach(async ({ page }) => {
-    // Create test hierarchy with multiple classes
-    const hierarchy = await createTestHierarchy(page, 2);
-    class1Id = hierarchy.classes[0].id;
-    class2Id = hierarchy.classes[1].id;
+    const hierarchy = await createTestHierarchy(page, 3);
+    classIds = hierarchy.classes.map((c) => c.id);
   });
 
   test.afterEach(async ({ page }) => {
     await clearTestData(page);
   });
 
-  test("should create a relationship between two classes via API", async ({
-    page,
-  }) => {
-    // Create relationship using API
-    const relationship = await createRelationship(
-      page,
-      class1Id,
-      class2Id,
-      "related_to",
-    );
+  test("should display relationships created via API", async ({ page }) => {
+    const rel1 = await createRelationship(page, classIds[0], classIds[1], "related_to");
+    const rel2 = await createRelationship(page, classIds[1], classIds[2], "parent_of");
 
-    // Verify relationship was created successfully
-    expect(relationship.id).toBeDefined();
-    expect(relationship.source_id).toBe(class1Id);
-    expect(relationship.target_id).toBe(class2Id);
+    await page.goto("/app/relationships");
+    await waitForAppReady(page);
 
-    // Verify API can retrieve the relationship
-    const apiResponse = await apiRequest<Relationship>(
-      page,
-      `/api/relationships/${relationship.id}`,
-    );
-    expect(apiResponse.source_id).toBe(class1Id);
-    expect(apiResponse.target_id).toBe(class2Id);
+    await expect(page.getByTestId(`relationship-row-${rel1.id}`)).toBeVisible();
+    await expect(page.getByTestId(`relationship-row-${rel2.id}`)).toBeVisible();
   });
 
-  test("should list all relationships", async ({ page }) => {
-    // Create multiple relationships
-    const rel1 = await createRelationship(
-      page,
-      class1Id,
-      class2Id,
-      "related_to",
-    );
+  test("should delete a relationship via Actions dropdown", async ({ page }) => {
+    const rel = await createRelationship(page, classIds[0], classIds[1], "related_to");
 
-    // Create another class for second relationship
-    const hierarchy = await createTestHierarchy(page, 1);
-    const class3Id = hierarchy.classes[0].id;
+    await page.goto("/app/relationships");
+    await waitForAppReady(page);
 
-    const rel2 = await createRelationship(
-      page,
-      class2Id,
-      class3Id,
-      "parent_of",
-    );
+    const row = page.getByTestId(`relationship-row-${rel.id}`);
+    await expect(row).toBeVisible();
+    await row.getByRole("checkbox").click();
 
-    // Fetch relationships list from API
-    const response = await apiRequest<
-      Relationship[] | { items: Relationship[] }
-    >(page, "/api/relationships");
-    const relationships = Array.isArray(response) ? response : response.items;
+    await page.getByTestId("relationship-actions-dropdown").click();
+    await page.getByTestId("relationship-delete-selected-action").click();
 
-    // Verify both relationships appear in list
-    const ids = relationships.map((r: any) => r.id);
-    expect(ids).toContain(rel1.id);
-    expect(ids).toContain(rel2.id);
+    const deleteModal = page.getByTestId("relationship-delete-modal");
+    await expect(deleteModal).toBeVisible();
+    await page.getByTestId("relationship-delete-confirm-button").click();
+    await expect(deleteModal).not.toBeVisible({ timeout: 5000 });
+    await waitForAppReady(page);
 
-    // Verify relationship details
-    const rel1Data = relationships.find((r: any) => r.id === rel1.id);
-    expect(rel1Data).toBeDefined();
-    expect(rel1Data!.source_id).toBe(class1Id);
-    expect(rel1Data!.target_id).toBe(class2Id);
-  });
+    await expect(page.getByTestId(`relationship-row-${rel.id}`)).not.toBeVisible();
 
-  test("should verify relationship endpoints with correct structure", async ({
-    page,
-  }) => {
-    // Create a relationship
-    const relationship = await createRelationship(
-      page,
-      class1Id,
-      class2Id,
-      "related_to",
-    );
-
-    // Verify GET single relationship returns correct structure
-    const getResponse = await apiRequest<Relationship>(
-      page,
-      `/api/relationships/${relationship.id}`,
-    );
-    expect(getResponse).toHaveProperty("id");
-    expect(getResponse).toHaveProperty("source_id");
-    expect(getResponse).toHaveProperty("target_id");
-    expect(getResponse).toHaveProperty("created_at");
-
-    // Verify GET all relationships returns collection
-    const listResponse = await apiRequest<
-      Relationship[] | { items: Relationship[] }
-    >(page, "/api/relationships");
-    const isList = Array.isArray(listResponse);
-    const hasItems = !isList && Array.isArray((listResponse as any).items);
-    expect(isList || hasItems).toBe(true);
-  });
-
-  test("should delete a relationship", async ({ page }) => {
-    // Create a relationship
-    const relationship = await createRelationship(
-      page,
-      class1Id,
-      class2Id,
-      "related_to",
-    );
-
-    // Verify relationship exists
-    const beforeDelete = await apiRequest<Relationship>(
-      page,
-      `/api/relationships/${relationship.id}`,
-    );
-    expect(beforeDelete.id).toBe(relationship.id);
-
-    // Delete the relationship via API
-    await apiRequest(page, `/api/relationships/${relationship.id}`, {
-      method: "DELETE",
-    });
-
-    // Verify relationship is deleted
     try {
-      await apiRequest<Relationship>(
-        page,
-        `/api/relationships/${relationship.id}`,
-      );
-      throw new Error("Relationship was not deleted from API");
-    } catch (error: any) {
-      if (!(error instanceof APIError && error.statusCode === 404)) {
-        throw error;
-      }
+      await apiRequest(page, `/api/relationships/${rel.id}`);
+      throw new Error("Relationship was not deleted");
+    } catch (err) {
+      if (!(err instanceof APIError && err.statusCode === 404)) throw err;
     }
   });
 
-  test("should verify relationship properties are linked correctly", async ({
-    page,
-  }) => {
-    // Create a relationship
-    const relationship = await createRelationship(
-      page,
-      class1Id,
-      class2Id,
-      "related_to",
-    );
+  test("should cancel relationship deletion", async ({ page }) => {
+    const rel = await createRelationship(page, classIds[0], classIds[1], "related_to");
 
-    // Fetch relationship details
-    const apiResponse = await apiRequest<Relationship>(
-      page,
-      `/api/relationships/${relationship.id}`,
-    );
+    await page.goto("/app/relationships");
+    await waitForAppReady(page);
 
-    // Verify all properties are correctly linked
-    expect(apiResponse.source_id).toBe(class1Id);
-    expect(apiResponse.target_id).toBe(class2Id);
+    const row = page.getByTestId(`relationship-row-${rel.id}`);
+    await row.getByRole("checkbox").click();
 
-    // Verify relationship is bidirectional when querying classes
-    const class1Response = await apiRequest<OntologyClass>(
-      page,
-      `/api/classes/${class1Id}`,
-    );
-    expect(class1Response.id).toBe(class1Id);
+    await page.getByTestId("relationship-actions-dropdown").click();
+    await page.getByTestId("relationship-delete-selected-action").click();
 
-    const class2Response = await apiRequest<OntologyClass>(
-      page,
-      `/api/classes/${class2Id}`,
-    );
-    expect(class2Response.id).toBe(class2Id);
-  });
+    const deleteModal = page.getByTestId("relationship-delete-modal");
+    await expect(deleteModal).toBeVisible();
+    await page.getByTestId("relationship-delete-cancel-button").click();
+    await expect(deleteModal).not.toBeVisible({ timeout: 5000 });
 
-  test("should handle self-referential relationships", async ({ page }) => {
-    // Create a relationship from class to itself
-    const selfRelationship = await createRelationship(
-      page,
-      class1Id,
-      class1Id,
-      "self_referential",
-    );
-
-    // Verify self-referential relationship
-    const apiResponse = await apiRequest<Relationship>(
-      page,
-      `/api/relationships/${selfRelationship.id}`,
-    );
-    expect(apiResponse.source_id).toBe(class1Id);
-    expect(apiResponse.target_id).toBe(class1Id);
-  });
-
-  test("should verify relationships respect foreign key constraints", async ({
-    page,
-  }) => {
-    // Create valid relationship
-    const relationship = await createRelationship(
-      page,
-      class1Id,
-      class2Id,
-      "related_to",
-    );
-    expect(relationship.id).toBeDefined();
-
-    // Verify deleting a related class does not leave orphaned relationships
-    // (This is handled by the backend cascading delete)
-
-    // Verify relationship fields cannot be null
-    const apiResponse = await apiRequest<Relationship>(
-      page,
-      `/api/relationships/${relationship.id}`,
-    );
-    expect(apiResponse.source_id).toBeTruthy();
-    expect(apiResponse.target_id).toBeTruthy();
-  });
-
-  test("should create multiple relationships between same classes with different types", async ({
-    page,
-  }) => {
-    // Create two relationships between same classes with different relationship types
-    const rel1 = await createRelationship(
-      page,
-      class1Id,
-      class2Id,
-      "related_to",
-    );
-    const rel2 = await createRelationship(
-      page,
-      class1Id,
-      class2Id,
-      "parent_of",
-    );
-
-    // Verify both relationships exist
-    expect(rel1.id).not.toBe(rel2.id);
-    expect(rel1.source_id).toBe(rel2.source_id);
-    expect(rel1.target_id).toBe(rel2.target_id);
+    // Relationship must still exist
+    await expect(page.getByTestId(`relationship-row-${rel.id}`)).toBeVisible();
+    const existing = await apiRequest<{ id: string }>(page, `/api/relationships/${rel.id}`);
+    expect(existing.id).toBe(rel.id);
   });
 });

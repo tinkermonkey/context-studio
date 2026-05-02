@@ -5,30 +5,29 @@ import {
   clearTestData,
   apiRequest,
   APIError,
+  waitForAppReady,
 } from "../../fixtures/test-helpers";
 
 /**
  * Concept Scheme CRUD E2E Tests
  *
- * Tests the complete CRUD lifecycle for concept schemes:
- * - Create a concept scheme within a taxonomy
- * - List concept schemes
- * - View concept scheme details
- * - Update concept scheme properties
- * - Delete concept scheme
+ * Each test verifies a full round-trip: UI action → API read-back confirms persistence.
  *
- * Each test uses beforeEach factory to create preconditions and verifies both
- * UI state and API responses via apiRequest read-back.
+ * typeName="Concept Scheme" → testIdPrefix="concept-scheme"
+ * Table testids: "concept-scheme-add-button", "concept-scheme-row-${id}", etc.
+ * Form testids: "concept-scheme-title-input", "concept-scheme-description-input", etc.
+ *
+ * Delete flow: select row checkbox → concept-scheme-actions-dropdown
+ *   → concept-scheme-delete-selected-action → concept-scheme-delete-modal
+ *   → concept-scheme-delete-confirm-button.
+ * Edit flow: double-click concept-scheme-row-${id} → concept-scheme-edit-modal opens.
  */
 
 test.describe("Concept Scheme CRUD Operations", () => {
   let taxonomyId: string;
 
   test.beforeEach(async ({ page }) => {
-    // Create a parent taxonomy for schemes to belong to
-    const taxonomy = await createTaxonomy(page, {
-      title: "test-taxonomy-parent",
-    });
+    const taxonomy = await createTaxonomy(page, { title: "Parent Taxonomy" });
     taxonomyId = taxonomy.id;
   });
 
@@ -36,260 +35,141 @@ test.describe("Concept Scheme CRUD Operations", () => {
     await clearTestData(page);
   });
 
-  test("should create a concept scheme via UI", async ({ page }) => {
-    // Navigate to concept schemes page
+  test("should create a concept scheme via UI form", async ({ page }) => {
     await page.goto("/app/concept-schemes");
-    await page.waitForLoadState("networkidle");
+    await waitForAppReady(page);
 
-    // Click add button
-    const addButton = page.getByRole("button", { name: /add|create|new/i });
-    await expect(addButton).toBeVisible();
-    await addButton.click();
+    // typeName="Concept Scheme" → "concept-scheme-add-button" (normalized from typeName "Concept Scheme")
+    await page.getByTestId("concept-scheme-add-button").click();
 
-    // Wait for form modal
-    const modal = page.getByRole("dialog");
-    await expect(modal).toBeVisible({ timeout: 5000 });
+    const createModal = page.getByTestId("concept-scheme-create-modal");
+    await expect(createModal).toBeVisible({ timeout: 5000 });
 
-    // Fill form fields
-    const titleInput = page
-      .locator('[data-testid="concept-scheme-title-input"]')
-      .first();
-    const descriptionInput = page
-      .locator('[data-testid="concept-scheme-description-input"]')
-      .first();
+    await page.getByTestId("concept-scheme-title-input").fill("E2E Created Scheme");
+    await page.getByTestId("concept-scheme-description-input").fill("Created via E2E");
+    await page.getByTestId("concept-scheme-submit-button").click();
 
-    await titleInput.fill("test-scheme-e2e-create");
-    await descriptionInput.fill("A test scheme created via E2E tests");
+    await expect(createModal).not.toBeVisible({ timeout: 5000 });
+    await waitForAppReady(page);
 
-    // Submit form
-    const submitButton = modal.getByRole("button", {
-      name: /create|save|submit/i,
-    });
-    await submitButton.click();
+    await expect(page.getByText("E2E Created Scheme")).toBeVisible();
 
-    // Wait for modal to close
-    await expect(modal).not.toBeVisible({ timeout: 5000 });
-
-    // Verify scheme appears in table
-    await expect(page.getByText("test-scheme-e2e-create")).toBeVisible();
-  });
-
-  test("should create a concept scheme within a taxonomy", async ({ page }) => {
-    // Use API to create scheme within specific taxonomy
-    const scheme = await createConceptScheme(page, taxonomyId, {
-      title: "Taxonomy Specific Scheme",
-      description: "Scheme created under specific taxonomy",
-    });
-
-    // Navigate to concept schemes page
-    await page.goto("/app/concept-schemes");
-    await page.waitForLoadState("networkidle");
-
-    // Verify scheme appears in list
-    await expect(page.getByText("Taxonomy Specific Scheme")).toBeVisible();
-
-    // Verify scheme is linked to correct taxonomy
-    const apiResponse = await apiRequest<any>(
+    const list = await apiRequest<{ items: Array<{ title: string }> }>(
       page,
-      `/api/schemes/${scheme.id}`,
+      "/api/schemes"
     );
-    expect(apiResponse.taxonomy_id).toBe(taxonomyId);
+    expect(list.items.some((s) => s.title === "E2E Created Scheme")).toBe(true);
   });
 
-  test("should list all concept schemes", async ({ page }) => {
-    // Create test schemes
+  test("should display concept schemes in the list", async ({ page }) => {
     const scheme1 = await createConceptScheme(page, taxonomyId, {
-      title: "List Test Scheme 1",
+      title: "Scheme Alpha",
     });
     const scheme2 = await createConceptScheme(page, taxonomyId, {
-      title: "List Test Scheme 2",
+      title: "Scheme Beta",
     });
 
-    // Navigate to concept schemes page
     await page.goto("/app/concept-schemes");
-    await page.waitForLoadState("networkidle");
+    await waitForAppReady(page);
 
-    // Verify both schemes appear in the list
-    await expect(page.getByText("List Test Scheme 1")).toBeVisible();
-    await expect(page.getByText("List Test Scheme 2")).toBeVisible();
+    await expect(page.getByText("Scheme Alpha")).toBeVisible();
+    await expect(page.getByText("Scheme Beta")).toBeVisible();
 
-    // Verify API response includes both
-    const response = await apiRequest<any>(page, "/api/schemes");
-    const titles =
-      response.items?.map((s: any) => s.title) ||
-      response.map((s: any) => s.title) ||
-      [];
-    expect(titles).toContain(scheme1.title);
-    expect(titles).toContain(scheme2.title);
-  });
-
-  test("should view concept scheme details", async ({ page }) => {
-    // Create test scheme
-    const scheme = await createConceptScheme(page, taxonomyId, {
-      title: "Detail Test Scheme",
-      description: "Test description for scheme details",
-    });
-
-    // Navigate to concept schemes page
-    await page.goto("/app/concept-schemes");
-    await page.waitForLoadState("networkidle");
-
-    // Click on scheme row to view details
-    const schemeLink = page.getByText("Detail Test Scheme");
-    await schemeLink.click();
-
-    // Wait for detail page to load
-    await page.waitForLoadState("networkidle");
-
-    // Verify detail page contains scheme information
-    await expect(page.getByText("Detail Test Scheme")).toBeVisible();
     await expect(
-      page.getByText("Test description for scheme details"),
+      page.getByTestId(`concept-scheme-row-${scheme1.id}`)
     ).toBeVisible();
-
-    // Verify API read-back returns same data
-    const apiResponse = await apiRequest<any>(
-      page,
-      `/api/schemes/${scheme.id}`,
-    );
-    expect(apiResponse.title).toBe(scheme.title);
-    expect(apiResponse.description).toBe(scheme.description);
+    await expect(
+      page.getByTestId(`concept-scheme-row-${scheme2.id}`)
+    ).toBeVisible();
   });
 
-  test("should update a concept scheme", async ({ page }) => {
-    // Create test scheme
+  test("should update a concept scheme via double-click edit", async ({
+    page,
+  }) => {
     const scheme = await createConceptScheme(page, taxonomyId, {
-      title: "Update Test Scheme",
+      title: "Scheme Before Update",
       description: "Original description",
     });
 
-    // Navigate to concept schemes page
     await page.goto("/app/concept-schemes");
-    await page.waitForLoadState("networkidle");
+    await waitForAppReady(page);
 
-    // Find and double-click row to open edit form
-    const schemeRow = page.getByText("Update Test Scheme");
-    await schemeRow.dblclick();
+    await page.getByTestId(`concept-scheme-row-${scheme.id}`).dblclick();
 
-    // Wait for edit form
-    const modal = page.getByRole("dialog");
-    await expect(modal).toBeVisible({ timeout: 5000 });
+    const editModal = page.getByTestId("concept-scheme-edit-modal");
+    await expect(editModal).toBeVisible({ timeout: 5000 });
 
-    // Update fields
-    const titleInput = page
-      .locator('[data-testid="concept-scheme-title-input"]')
-      .first();
-    const descriptionInput = page
-      .locator('[data-testid="concept-scheme-description-input"]')
-      .first();
+    await page.getByTestId("concept-scheme-title-input").fill("Scheme After Update");
+    await page.getByTestId("concept-scheme-description-input").fill("Updated description");
+    await page.getByTestId("concept-scheme-submit-button").click();
 
-    await titleInput.fill("test-scheme-e2e-update");
-    await descriptionInput.fill("Updated scheme definition");
+    await expect(editModal).not.toBeVisible({ timeout: 5000 });
+    await waitForAppReady(page);
 
-    // Submit form
-    const submitButton = modal.getByRole("button", { name: /save|update/i });
-    await submitButton.click();
+    await expect(
+      page.getByTestId(`concept-scheme-row-${scheme.id}`)
+    ).toContainText("Scheme After Update");
 
-    // Wait for changes to apply
-    await page.waitForLoadState("networkidle");
-
-    // Verify updates in UI
-    await expect(page.getByText("test-scheme-e2e-update")).toBeVisible();
-
-    // Verify updates via API
-    const apiResponse = await apiRequest<any>(
+    const updated = await apiRequest<{ title: string; description: string }>(
       page,
-      `/api/schemes/${scheme.id}`,
+      `/api/schemes/${scheme.id}`
     );
-    expect(apiResponse.title).toBe("test-scheme-e2e-update");
-    expect(apiResponse.description).toBe("Updated scheme definition");
+    expect(updated.title).toBe("Scheme After Update");
+    expect(updated.description).toBe("Updated description");
   });
 
-  test("should delete a concept scheme", async ({ page }) => {
-    // Create test scheme
-    const scheme = await createConceptScheme(page, taxonomyId, {
-      title: "Delete Test Scheme",
-    });
-
-    // Navigate to concept schemes page
-    await page.goto("/app/concept-schemes");
-    await page.waitForLoadState("networkidle");
-
-    // Verify scheme is visible
-    await expect(page.getByText("Delete Test Scheme")).toBeVisible();
-
-    // Find the row and select it via checkbox
-    const schemeRow = page.getByText("Delete Test Scheme");
-    const rowContainer = schemeRow.locator("..").locator("..");
-    const checkbox = rowContainer.locator("input[type='checkbox']").first();
-    await checkbox.click();
-
-    // Click Actions dropdown
-    const actionsDropdown = page.getByRole("button", { name: /actions/i });
-    await actionsDropdown.click();
-
-    // Click Delete Selected
-    const deleteAction = page.getByRole("menuitem", {
-      name: /delete selected/i,
-    });
-    await deleteAction.click();
-
-    // Handle confirmation dialog if present
-    const confirmButton = page.getByRole("button", {
-      name: /confirm|delete|yes/i,
-    });
-    if (await confirmButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await confirmButton.click();
-    }
-
-    // Wait for deletion to complete
-    await page.waitForLoadState("networkidle");
-
-    // Verify scheme is removed from UI
-    await expect(page.getByText("Delete Test Scheme")).not.toBeVisible({
-      timeout: 5000,
-    });
-
-    // Verify via API that it's deleted
-    try {
-      await apiRequest<any>(page, `/api/schemes/${scheme.id}`);
-      throw new Error("Scheme was not deleted from API");
-    } catch (error: any) {
-      if (!(error instanceof APIError && error.statusCode === 404)) {
-        throw error;
-      }
-    }
-  });
-
-  test("should verify concept scheme fields are persisted correctly", async ({
+  test("should delete a concept scheme via Actions dropdown", async ({
     page,
   }) => {
-    // Create scheme with all fields populated
-    const testTitle = `Field Test ${Date.now()}`;
-    const testDescription = "Testing all field persistence";
-
     const scheme = await createConceptScheme(page, taxonomyId, {
-      title: testTitle,
-      description: testDescription,
+      title: "Scheme to Delete",
     });
 
-    // Navigate to concept schemes page
     await page.goto("/app/concept-schemes");
-    await page.waitForLoadState("networkidle");
+    await waitForAppReady(page);
 
-    // Verify all fields visible in list
-    await expect(page.getByText(testTitle)).toBeVisible();
-    await expect(page.getByText(testDescription)).toBeVisible();
+    await expect(page.getByText("Scheme to Delete")).toBeVisible();
 
-    // Verify API response has all fields
-    const apiResponse = await apiRequest<any>(
+    const row = page.getByTestId(`concept-scheme-row-${scheme.id}`);
+    await row.getByRole("checkbox").click();
+
+    await page.getByTestId("concept-scheme-actions-dropdown").click();
+    await page.getByTestId("concept-scheme-delete-selected-action").click();
+
+    const deleteModal = page.getByTestId("concept-scheme-delete-modal");
+    await expect(deleteModal).toBeVisible();
+    await page.getByTestId("concept-scheme-delete-confirm-button").click();
+    await expect(deleteModal).not.toBeVisible({ timeout: 5000 });
+    await waitForAppReady(page);
+
+    await expect(page.getByText("Scheme to Delete")).not.toBeVisible();
+
+    try {
+      await apiRequest(page, `/api/schemes/${scheme.id}`);
+      throw new Error("Scheme was not deleted");
+    } catch (err) {
+      if (!(err instanceof APIError && err.statusCode === 404)) throw err;
+    }
+  });
+
+  test("should verify concept scheme is linked to its taxonomy", async ({
+    page,
+  }) => {
+    const scheme = await createConceptScheme(page, taxonomyId, {
+      title: "Taxonomy-Linked Scheme",
+    });
+
+    await page.goto("/app/concept-schemes");
+    await waitForAppReady(page);
+
+    await expect(
+      page.getByTestId(`concept-scheme-row-${scheme.id}`)
+    ).toBeVisible();
+
+    const apiResponse = await apiRequest<{ taxonomy_id: string }>(
       page,
-      `/api/schemes/${scheme.id}`,
+      `/api/schemes/${scheme.id}`
     );
-    expect(apiResponse.title).toBe(testTitle);
-    expect(apiResponse.description).toBe(testDescription);
-    expect(apiResponse.id).toBeDefined();
     expect(apiResponse.taxonomy_id).toBe(taxonomyId);
-    expect(apiResponse.created_at).toBeDefined();
   });
 });

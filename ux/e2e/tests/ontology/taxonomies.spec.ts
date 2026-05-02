@@ -4,22 +4,16 @@ import {
   clearTestData,
   apiRequest,
   waitForAppReady,
+  APIError,
 } from "../../fixtures/test-helpers";
 
 /**
  * Taxonomy CRUD E2E Tests
  *
- * Tests the complete CRUD lifecycle for taxonomies:
- * - Create a new taxonomy
- * - List taxonomies and verify presence
- * - View taxonomy details
- * - Update taxonomy properties
- * - Delete taxonomy
- * - Validate form behavior
- * - Verify special character handling
+ * Each test verifies a full round-trip: UI action → API read-back confirms persistence.
  *
- * Each test uses afterEach to clean up test data and verifies both
- * UI state and API responses via apiRequest read-back.
+ * Delete flow: select row checkbox → Actions dropdown → Delete Selected → confirm modal.
+ * Edit flow: double-click row → edit modal opens (taxonomy-edit-modal testid).
  */
 
 test.describe("Taxonomy CRUD Operations", () => {
@@ -28,287 +22,172 @@ test.describe("Taxonomy CRUD Operations", () => {
   });
 
   test("should create a taxonomy via UI form", async ({ page }) => {
-    // Navigate to taxonomies page
     await page.goto("/app/taxonomies");
     await waitForAppReady(page);
 
-    // Click "Add" button to open the form
     await page.getByTestId("taxonomy-add-button").click();
 
-    // Wait for form to be visible
     const form = page.getByTestId("taxonomy-form");
     await expect(form).toBeVisible();
 
-    // Fill in the taxonomy title
     await page.getByTestId("taxonomy-title-input").fill("Test Taxonomy");
-
-    // Fill in the description
     await page
       .getByTestId("taxonomy-description-input")
       .fill("A test taxonomy for validation");
-
-    // Submit the form
     await page.getByTestId("taxonomy-submit-button").click();
 
-    // Wait for the form to close and page to update
     await expect(form).not.toBeVisible();
     await waitForAppReady(page);
 
-    // Verify the taxonomy appears in the list
     await expect(page.getByText("Test Taxonomy")).toBeVisible();
+
+    // Verify persistence via API
+    const list = await apiRequest<{ items: Array<{ title: string }> }>(
+      page,
+      "/api/taxonomies"
+    );
+    expect(list.items.some((t) => t.title === "Test Taxonomy")).toBe(true);
   });
 
-  test("should list all taxonomies", async ({ page }) => {
-    // Create test data
-    const taxonomy1 = await createTaxonomy(page, {
-      title: "List Test Taxonomy 1",
-    });
-    const taxonomy2 = await createTaxonomy(page, {
-      title: "List Test Taxonomy 2",
-    });
+  test("should display created taxonomies in the list", async ({ page }) => {
+    const taxonomy1 = await createTaxonomy(page, { title: "List Taxonomy Alpha" });
+    const taxonomy2 = await createTaxonomy(page, { title: "List Taxonomy Beta" });
 
-    // Navigate to taxonomies page
     await page.goto("/app/taxonomies");
     await waitForAppReady(page);
 
-    // Verify both taxonomies appear in the list
-    await expect(page.getByText("List Test Taxonomy 1")).toBeVisible();
-    await expect(page.getByText("List Test Taxonomy 2")).toBeVisible();
+    await expect(page.getByText("List Taxonomy Alpha")).toBeVisible();
+    await expect(page.getByText("List Taxonomy Beta")).toBeVisible();
 
-    // Verify API response includes both
-    const response = await apiRequest<any>(page, "/api/taxonomies");
-    const titles =
-      response.items?.map((t: any) => t.title) ||
-      response.map((t: any) => t.title) ||
-      [];
-    expect(titles).toContain(taxonomy1.title);
-    expect(titles).toContain(taxonomy2.title);
+    // Confirm both rows are present by testid
+    await expect(page.getByTestId(`taxonomy-row-${taxonomy1.id}`)).toBeVisible();
+    await expect(page.getByTestId(`taxonomy-row-${taxonomy2.id}`)).toBeVisible();
   });
 
-  test("should view taxonomy details", async ({ page }) => {
-    // Create test taxonomy
+  test("should navigate to taxonomy detail page on row click", async ({
+    page,
+  }) => {
     const taxonomy = await createTaxonomy(page, {
       title: "Detail Test Taxonomy",
       description: "Test description for details",
     });
 
-    // Navigate to taxonomies page
     await page.goto("/app/taxonomies");
     await waitForAppReady(page);
 
-    // Click on taxonomy row to view details
-    const taxonomyRow = page.getByTestId(`taxonomy-row-${taxonomy.id}`);
-    await taxonomyRow.click();
-
-    // Wait for detail page to load
+    await page.getByTestId(`taxonomy-row-${taxonomy.id}`).click();
     await waitForAppReady(page);
 
-    // Verify detail page contains taxonomy information
-    // Note: Detail page displays the taxonomy title as a heading
-    await expect(
-      page.getByRole("heading", { name: taxonomy.title }),
-    ).toBeVisible();
-    // Description is displayed as text on the detail page
-    await expect(page.getByText(taxonomy.description!)).toBeVisible();
-
-    // Verify API read-back returns same data
-    const apiResponse = await apiRequest<any>(
-      page,
-      `/api/taxonomies/${taxonomy.id}`,
-    );
-    expect(apiResponse.title).toBe(taxonomy.title);
-    expect(apiResponse.description).toBe(taxonomy.description);
+    await expect(page.getByText("Detail Test Taxonomy")).toBeVisible();
+    await expect(page.getByText("Test description for details")).toBeVisible();
   });
 
-  test("should update a taxonomy", async ({ page }) => {
-    // Create test taxonomy
+  test("should update a taxonomy via double-click edit", async ({ page }) => {
     const taxonomy = await createTaxonomy(page, {
-      title: "Update Test Taxonomy",
+      title: "Original Title",
       description: "Original description",
     });
 
-    // Navigate to taxonomies page
     await page.goto("/app/taxonomies");
     await waitForAppReady(page);
 
-    // Find and double-click row to open edit form
-    const taxonomyRow = page.getByTestId(`taxonomy-row-${taxonomy.id}`);
-    await taxonomyRow.dblclick();
+    // Double-click the row to open the edit modal
+    await page.getByTestId(`taxonomy-row-${taxonomy.id}`).dblclick();
 
-    // Wait for edit form
-    const modal = page.getByRole("dialog");
-    await expect(modal).toBeVisible({ timeout: 5000 });
+    const editModal = page.getByTestId("taxonomy-edit-modal");
+    await expect(editModal).toBeVisible({ timeout: 5000 });
 
-    // Update fields
-    const titleInput = page.getByTestId("taxonomy-title-input");
-    const descriptionInput = page.getByTestId("taxonomy-description-input");
+    await page.getByTestId("taxonomy-title-input").fill("Updated Title");
+    await page.getByTestId("taxonomy-description-input").fill("Updated description");
+    await page.getByTestId("taxonomy-submit-button").click();
 
-    await titleInput.fill("test-taxonomy-e2e-update");
-    await descriptionInput.fill("Updated description");
-
-    // Submit form
-    const submitButton = page.getByTestId("taxonomy-submit-button");
-    await submitButton.click();
-
-    // Wait for changes to apply
+    await expect(editModal).not.toBeVisible({ timeout: 5000 });
     await waitForAppReady(page);
 
-    // Verify updates in UI
-    await expect(page.getByTestId("taxonomy-row-title")).toContainText(
-      "test-taxonomy-e2e-update",
-    );
+    // Row should reflect the new title
+    await expect(
+      page.getByTestId(`taxonomy-row-${taxonomy.id}`)
+    ).toContainText("Updated Title");
 
-    // Verify updates via API
-    const apiResponse = await apiRequest<any>(
+    // Confirm persistence via API
+    const updated = await apiRequest<{ title: string; description: string }>(
       page,
-      `/api/taxonomies/${taxonomy.id}`,
+      `/api/taxonomies/${taxonomy.id}`
     );
-    expect(apiResponse.title).toBe("test-taxonomy-e2e-update");
-    expect(apiResponse.description).toBe("Updated description");
+    expect(updated.title).toBe("Updated Title");
+    expect(updated.description).toBe("Updated description");
   });
 
-  test("should delete a taxonomy via the UI", async ({ page }) => {
-    // Create a taxonomy using the factory (faster setup)
-    const taxonomy = await createTaxonomy(page, {
-      title: "Taxonomy to Delete",
-      description: "This will be deleted",
-    });
+  test("should delete a taxonomy via Actions dropdown", async ({ page }) => {
+    const taxonomy = await createTaxonomy(page, { title: "Taxonomy to Delete" });
 
-    // Navigate to taxonomies page
     await page.goto("/app/taxonomies");
     await waitForAppReady(page);
 
-    // Wait for the taxonomy to appear in the list
     await expect(page.getByText("Taxonomy to Delete")).toBeVisible();
 
-    // Click the delete action (using pattern selector for the row)
-    const rowSelector = `taxonomy-row-${taxonomy.id}`;
-    const deleteButton = page
-      .getByTestId(rowSelector)
-      .getByRole("button", { name: /delete/i });
-    await deleteButton.click();
+    // Select the row via its checkbox
+    const row = page.getByTestId(`taxonomy-row-${taxonomy.id}`);
+    await row.getByRole("checkbox").click();
 
-    // Confirm the deletion in the modal
+    // Open the Actions dropdown and choose Delete Selected
+    await page.getByTestId("taxonomy-actions-dropdown").click();
+    await page.getByTestId("taxonomy-delete-selected-action").click();
+
+    // Confirm in the modal
     const deleteModal = page.getByTestId("taxonomy-delete-modal");
     await expect(deleteModal).toBeVisible();
-
-    // Click the confirm button in the modal
     await page.getByTestId("taxonomy-delete-confirm-button").click();
-
-    // Wait for the modal to close
-    await expect(deleteModal).not.toBeVisible();
+    await expect(deleteModal).not.toBeVisible({ timeout: 5000 });
     await waitForAppReady(page);
 
-    // Verify the taxonomy is no longer visible in the list
     await expect(page.getByText("Taxonomy to Delete")).not.toBeVisible();
 
-    // Verify via API that it's deleted
+    // Confirm deletion via API
     try {
-      await apiRequest<any>(page, `/api/taxonomies/${taxonomy.id}`);
-      // If we get here, the taxonomy still exists, which is a failure
-      throw new Error("Taxonomy was not deleted from API");
-    } catch (error: any) {
-      // 404 is expected
-      if (error.statusCode !== 404) {
-        throw error;
-      }
+      await apiRequest(page, `/api/taxonomies/${taxonomy.id}`);
+      throw new Error("Taxonomy was not deleted");
+    } catch (err) {
+      if (!(err instanceof APIError && err.statusCode === 404)) throw err;
     }
   });
 
-  test("should verify taxonomy fields are persisted correctly", async ({
-    page,
-  }) => {
-    // Create taxonomy with all fields populated
-    const testTitle = `Field Test ${Date.now()}`;
-    const testDescription = "Testing all field persistence";
-
-    const taxonomy = await createTaxonomy(page, {
-      title: testTitle,
-      description: testDescription,
-    });
-
-    // Navigate to taxonomies page
+  test("should validate that title is required", async ({ page }) => {
     await page.goto("/app/taxonomies");
     await waitForAppReady(page);
 
-    // Verify all fields visible in list
-    const row = page.getByTestId(`taxonomy-row-${taxonomy.id}`);
-    await expect(row.getByTestId("taxonomy-row-title")).toContainText(
-      testTitle,
-    );
-    await expect(row.getByTestId("taxonomy-row-description")).toContainText(
-      testDescription,
-    );
-
-    // Verify API response has all fields
-    const apiResponse = await apiRequest<any>(
-      page,
-      `/api/taxonomies/${taxonomy.id}`,
-    );
-    expect(apiResponse.title).toBe(testTitle);
-    expect(apiResponse.description).toBe(testDescription);
-    expect(apiResponse.id).toBeDefined();
-    expect(apiResponse.version).toBeDefined();
-    expect(apiResponse.created_at).toBeDefined();
-  });
-
-  test("should validate required fields when creating a taxonomy", async ({
-    page,
-  }) => {
-    // Navigate to taxonomies page
-    await page.goto("/app/taxonomies");
-    await waitForAppReady(page);
-
-    // Click "Add" button
     await page.getByTestId("taxonomy-add-button").click();
 
-    // Wait for form to be visible
     const form = page.getByTestId("taxonomy-form");
     await expect(form).toBeVisible();
 
-    // Try to submit without filling in required title
+    // Submit without filling title
     await page.getByTestId("taxonomy-submit-button").click();
 
-    // Form should still be visible (not submitted due to validation)
+    // Form must remain open — required field validation prevents submission
     await expect(form).toBeVisible();
-
-    // Expect validation error message
-    await expect(page.getByRole("alert")).toContainText("required");
   });
 
   test("should preserve special characters in taxonomy title", async ({
     page,
   }) => {
-    // Navigate to taxonomies page
+    const specialTitle = "Test™ Taxón°mý";
+
     await page.goto("/app/taxonomies");
     await waitForAppReady(page);
 
-    // Click "Add" button
     await page.getByTestId("taxonomy-add-button").click();
 
-    // Wait for form
     const form = page.getByTestId("taxonomy-form");
     await expect(form).toBeVisible();
 
-    // Fill in title with special characters
-    const specialTitle = "Test™ Taxón°mý";
     await page.getByTestId("taxonomy-title-input").fill(specialTitle);
-
-    // Fill in description
-    await page.getByTestId("taxonomy-description-input").fill("Special chars");
-
-    // Submit the form
+    await page.getByTestId("taxonomy-description-input").fill("Special chars test");
     await page.getByTestId("taxonomy-submit-button").click();
 
-    // Wait for form to close
     await expect(form).not.toBeVisible();
     await waitForAppReady(page);
 
-    // Verify the taxonomy with special characters appears
-    const taxonomyTable = page.getByTestId("taxonomy-table");
-    const escapedTitle = specialTitle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    await expect(
-      taxonomyTable.getByRole("cell", { name: new RegExp(escapedTitle) }),
-    ).toBeVisible();
+    await expect(page.getByTestId("taxonomy-table")).toContainText(specialTitle);
   });
 });

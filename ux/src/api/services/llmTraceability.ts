@@ -178,13 +178,21 @@ export class LLMTraceabilityService extends BaseService {
    * @returns Health status information including database connectivity
    */
   async healthCheck(): Promise<LLMTraceabilityHealthResponse> {
-    return this.withErrorContext(
-      () =>
-        this.getResource<LLMTraceabilityHealthResponse>(
-          ENDPOINTS.LLM_TRACEABILITY.HEALTH,
-        ),
-      "checking LLM traceability health",
-    );
+    return this.withErrorContext(async () => {
+      const response = await this.getResource<{
+        status: string;
+        database_connected: boolean;
+        uptime_seconds: number;
+        checked_at: string;
+      }>(ENDPOINTS.LLM_TRACEABILITY.HEALTH);
+      return {
+        status: response.status as LLMTraceabilityHealthResponse["status"],
+        database_connection: response.database_connected,
+        api_version: "1.0",
+        timestamp: response.checked_at,
+        uptime_seconds: response.uptime_seconds,
+      };
+    }, "checking LLM traceability health");
   }
 
   /**
