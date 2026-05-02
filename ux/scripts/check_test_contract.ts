@@ -8,9 +8,12 @@
  * 2. All selectors in the codebase are documented in the registry
  * 3. Registry patterns are properly formatted and usable
  *
+ * Flags:
+ *   --strict   Treat undocumented source selectors as hard failures (CI uses this).
+ *
  * Exit codes:
- * 0 = validation passed (all checks passed or warnings only)
- * 1 = hard failure (test references non-existent selector)
+ * 0 = validation passed (all checks passed or warnings only — without --strict)
+ * 1 = hard failure (test references non-existent selector, OR --strict and any warning)
  */
 
 import fs from "fs";
@@ -30,6 +33,8 @@ const result: ValidationResult = {
   errors: [],
   warnings: [],
 };
+
+const STRICT = process.argv.slice(2).includes("--strict");
 
 /**
  * Walks a directory tree and extracts selectors using the provided regex patterns
@@ -271,6 +276,12 @@ function validate() {
     console.log("❌ Validation FAILED");
     process.exit(1);
   } else if (result.warnings.length > 0) {
+    if (STRICT) {
+      console.log(
+        "❌ Validation FAILED (--strict): undocumented source selectors are not allowed in CI"
+      );
+      process.exit(1);
+    }
     console.log("⚠️  Validation completed with warnings");
     process.exit(0);
   } else {

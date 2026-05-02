@@ -1,7 +1,11 @@
 name: Test and Coverage
 
 on:
-  workflow_dispatch:  # disabled - manual trigger only
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
   test-python:
@@ -29,9 +33,13 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
 
+      - name: Verify domain purity
+        working-directory: ./local-server
+        run: python scripts/check_domain_imports.py
+
       - name: Run pytest
         working-directory: ./local-server
-        run: pytest tests/ -v --tb=short
+        run: pytest tests/ -v --tb=short -m "not e2e"
 
   test-node:
     runs-on: ubuntu-latest
@@ -48,6 +56,10 @@ jobs:
         working-directory: ./ux
         run: npm ci --legacy-peer-deps
 
+      - name: TypeScript check
+        working-directory: ./ux
+        run: npm run typecheck
+
       - name: Run tests and collect coverage (c8)
         working-directory: ./ux
         run: npm run test:coverage:c8
@@ -58,3 +70,9 @@ jobs:
           name: coverage-lcov
           path: ux/coverage/lcov.info
           retention-days: 7
+
+# E2E (Playwright) is intentionally NOT run in CI. The full E2E cycle
+# — including smoke, selector contract, and full suite — is run locally
+# as part of the developer SDLC. See ux/e2e/README.md for the local
+# workflow and the playwright-test-{planner,generator,healer} agents
+# under .claude/agents/switchyard/.

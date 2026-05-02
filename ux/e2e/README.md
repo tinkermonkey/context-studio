@@ -233,26 +233,32 @@ The test databases are created fresh on each run. If migrations fail:
 
 ## CI/CD Integration
 
-For continuous integration:
+E2E (Playwright) is **not** run in GitHub CI. It is part of the local developer SDLC and is run periodically as a full cycle on the developer's workstation.
 
-```yaml
-# Example GitHub Actions workflow
-- name: Run E2E tests
-  run: |
-    cd local-server
-    python -m venv .venv
-    source .venv/bin/activate
-    pip install -r requirements.txt
-    cd ../ux
-    npm install
-    npm run test:e2e
+What CI does run (`.github/workflows/test-and-coverage.yml`, on push and PR):
+
+- `test-python` — backend pytest (skipping the `e2e` marker), plus the domain-purity check.
+- `test-node` — frontend `vitest` + `typecheck` + coverage upload.
+
+What runs locally:
+
+```bash
+cd ux
+npm run validate-selectors                              # selector contract (fast)
+npx playwright test e2e/tests/smoke/                    # smoke gate (~30s)
+npm run test:e2e                                        # full suite
 ```
 
-Set `CI=true` environment variable to enable:
+When a local E2E run produces a failure, the structured report at `ux/e2e/reports/<run_id>.json` is the canonical input to the `playwright-test-healer` agent:
 
-- 2 retries for flaky tests
-- GitHub Actions reporter
-- Verbose output
+```
+Task(subagent_type="playwright-test-healer",
+     prompt="Diagnose failures in ux/e2e/reports/<run_id>.json. Classify each (Selector Renamed | Timing Changed | Likely Real Bug). For A/B, propose a minimal draft-PR diff. For C, file a bug report — no code change.")
+```
+
+Setting `CI=true` locally (or in any non-interactive runner) enables 2 retries for flaky tests, GitHub Actions reporter, and verbose output.
+
+For periodic registry drift cleanup, run the doc-maintainer agent against `ux/selector-registry.yaml` as part of your full-cycle test pass — it will verify each `status: not_yet_implemented` entry against source and propose updates.
 
 ## Performance Tips
 
@@ -263,15 +269,21 @@ Set `CI=true` environment variable to enable:
 
 ## Agentic Test Development Workflow
 
-This project uses Claude agents to generate high-quality test specifications and implementations. The workflow includes human approval gates at each stage.
+This project ships three Claude Code subagents in `.claude/agents/switchyard/` that produce, validate, and heal E2E tests. Each is invoked via the `Task` tool. Humans approve at every stage — none of the agents auto-merge.
+
+### Agents
+
+| Agent | Role | Tools |
+|---|---|---|
+| `playwright-test-planner` | Reads `app-context.md`, `selector-registry.yaml`, and OpenAPI types and produces a Markdown spec at `ux/e2e/documentation/specs/<feature>.md`. Refuses to invent selectors. | Read, Glob, Grep, Bash |
+| `playwright-test-generator` | Turns an approved planner spec into a single `.spec.ts` file under `ux/e2e/tests/`. Runs `npm run validate-selectors` after writing. | Read, Edit, Write, Glob, Grep, Bash |
+| `playwright-test-healer` | Diagnoses a failing test from a structured report; proposes a minimal draft-PR fix or escalates as a real bug. Refuses anti-patterns. | Read, Edit, Glob, Grep, Bash |
 
 ### Overview
 
-The test development workflow uses a planner agent and a generator agent to create Playwright tests that consume the authoritative product knowledge from `./documentation/app-context.md` and the selector registry.
-
 ```
-Feature Request → Planner Agent → Spec Review → Generator Agent → Test Review → Merge
-     (step 1)       (step 2)       (step 3)      (step 4)        (step 5)    (step 6)
+Feature Request → Planner → Spec Review → Generator → Validator + Tester → (Healer on failure) → Merge
+     (step 1)     (step 2)    (step 3)      (step 4)         (step 5)            (step 6)        (step 7)
 ```
 
 ### Step 1: Write a Feature Description
@@ -300,13 +312,11 @@ Or reference a GitHub issue number: `#595 Phase 1.2`
 
 ### Step 2: Run the Planner Agent
 
-The planner agent creates a detailed test specification:
+Invoke the planner via the `Task` tool:
 
-```bash
-# Using Claude Code with .github/playwright-planner.md
-npx claude-code --agent-definition .github/playwright-planner.md \
-  --input "Test creating and deleting a taxonomy" \
-  --output specs/create-and-delete-taxonomy.md
+```
+Task(subagent_type="playwright-test-planner",
+     prompt="Plan an E2E test for creating and deleting a taxonomy. User flow: navigate to /app/taxonomies, click Add, fill title+description, submit, verify in list, select and delete, verify removed.")
 ```
 
 The planner will:
@@ -344,11 +354,9 @@ If changes are needed:
 
 Once the spec is approved, generate the test code:
 
-```bash
-# Using Claude Code with .github/playwright-generator.md
-npx claude-code --agent-definition .github/playwright-generator.md \
-  --input specs/create-and-delete-taxonomy.md \
-  --output ux/e2e/tests/ontology/create-and-delete-taxonomy.spec.ts
+```
+Task(subagent_type="playwright-test-generator",
+     prompt="Generate the test from ux/e2e/documentation/specs/create-and-delete-taxonomy.md. Place under ux/e2e/tests/ontology/.")
 ```
 
 The generator will:
@@ -404,20 +412,20 @@ Once tests pass and are reviewed:
 
 ## Test Healing Workflow
 
-**STATUS: Planned — The healer agent specification exists at `.github/playwright-healer.md`, but CI integration and draft-PR creation are not yet implemented.**
-
-When tests fail in CI, a healer agent can analyze the failure and propose a fix. The healer is the most dangerous of the three agents because its mistakes silently mask real bugs — guardrails matter.
+When E2E tests fail in CI, the `e2e-healer-trigger.yml` workflow opens a `[Healer Triage]` issue containing the structured failure report. A reviewer (or a human invoking the healer agent locally) classifies the failure and either proposes a draft-PR fix or files a product bug. The healer never auto-merges and never edits product code.
 
 ### Overview
 
-The healer agent inspects a failing test, categorizes the failure, and either proposes a fix (as a draft PR) or escalates as a real product bug.
-
 ```
-Test Fails in CI → Healer Analyzes → Categorizes Failure → Opens Draft PR or Bug Report
-   (automatic)      (Claude agent)    (3 categories)        (for human review)
+Test fails in CI → e2e-healer-trigger.yml opens triage issue → playwright-test-healer agent diagnoses → Draft PR (A/B) or bug report comment (C)
 ```
 
-**Note**: The workflow diagram above shows the intended workflow once CI integration is complete. Today, the healer specification and guardrails are documented but not yet wired into CI.
+The agent is invoked via:
+
+```
+Task(subagent_type="playwright-test-healer",
+     prompt="Diagnose the failing tests in issue #<n>. Use the attached structured report. Classify each failure (Selector Renamed | Timing Changed | Likely Real Bug) and act per the healer spec.")
+```
 
 ### When Tests Fail
 
@@ -554,10 +562,11 @@ Next step: Create a product issue to investigate and fix the backend.
 
 ### Implementation
 
-For detailed healer specifications and guardrails, see:
-- `.github/playwright-healer.md` — Healer agent specification with complete guardrail definitions
+For detailed healer guardrails and PR templates, see:
+- `.claude/agents/switchyard/playwright-test-healer.md` — Healer agent definition and full anti-pattern guardrails.
+- `.github/workflows/e2e-healer-trigger.yml` — CI hook that opens the triage issue.
 
-The healer guardrails are enforced through agent instructions in the spec, not through automated tests. When CI integration is complete, a test suite will validate that the agent refuses anti-patterns and properly categorizes failures.
+The healer guardrails are enforced through agent instructions in the agent definition, not by an automated suite. The healer always opens **draft** PRs and never modifies `selector-registry.yaml` or product code.
 
 ## Manual Test Development
 

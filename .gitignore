@@ -1,6 +1,8 @@
 .claude/**
 !.claude/agents/
 !.claude/agents/**
+!.claude/commands/
+!.claude/commands/**
 .serena/
 .vscode/
 .mcp.json

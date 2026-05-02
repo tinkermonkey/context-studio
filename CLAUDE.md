@@ -341,29 +341,32 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 | Agent | When to use |
 |---|---|
-| `context-studio-architect` | Hexagonal architecture with 6 bounded contexts and strict domain purity requires deep architectural understanding |
-| `context-studio-guardian` | Domain layer has zero infrastructure imports (enforced by scripts/check_domain_imports |
-| `context-studio-doc-maintainer` | Comprehensive documentation/ directory with architecture docs, API references, and development guides |
-| `context-studio-tester` | Three distinct test frameworks (pytest backend, Vitest frontend, Playwright e2e) with unit/integration/e2e/performance separation |
-| `context-studio-data-expert` | Dual-database setup (local |
-| `context-studio-frontend-expert` | Sophisticated frontend with TanStack Query for server state, React Router v7, custom hooks pattern, and extensive Testing Library usage |
-| `context-studio-api-expert` | FastAPI with Pydantic schemas (adapter-layer only), async route handlers, OpenAPI contract validation, and hexagonal DI patterns |
+| `context-studio-architect` | Designing new bounded contexts, ports, adapters, or cross-context flows in `local-server/`. |
+| `context-studio-guardian` | Enforces `domain/` purity (zero infrastructure imports). Run before merging any backend change. |
+| `context-studio-doc-maintainer` | Sync `rearchitecture/` docs, `CLAUDE.md`, `selector-registry.yaml`, and `app-context.md`. |
+| `context-studio-data-expert` | Schema, Alembic migrations, repositories, dual-database (`local.db`, `operations.db`). |
+| `context-studio-api-expert` | FastAPI routes, Pydantic schemas, OpenAPI contract, exception mapping. |
+| `context-studio-frontend-expert` | React/TanStack components, hooks, OpenAPI-generated types, `data-testid` instrumentation. |
+| `context-studio-tester` | Runs pytest, Vitest, and Playwright suites. Read-only — never writes tests. |
+| `playwright-test-planner` | Produces an E2E test spec at `ux/e2e/documentation/specs/<feature>.md` from a feature description. Refuses to invent selectors. |
+| `playwright-test-generator` | Turns an approved planner spec into a `.spec.ts` file under `ux/e2e/tests/`. Validates selector contract before emit. |
+| `playwright-test-healer` | Diagnoses a single failing E2E test from a structured report; proposes a minimal draft-PR fix or escalates as a real bug. |
+
+### E2E test development chain
 
 ```
-Task(subagent_type="context-studio-architect", prompt="<your question about Expert in hexagonal architecture, bounded contexts, and how all components interact>")
-Task(subagent_type="context-studio-guardian", prompt="<your question about Enforces domain purity, hexagonal architecture boundaries, and catches DDD antipatterns>")
-Task(subagent_type="context-studio-doc-maintainer", prompt="<your question about Maintains project documentation, README, and architecture diagrams>")
+Task(subagent_type="playwright-test-planner",   prompt="Plan an E2E test for <feature>: <user flow>")
+Task(subagent_type="playwright-test-generator", prompt="Generate the test from ux/e2e/documentation/specs/<feature>.md")
+Task(subagent_type="context-studio-tester",     prompt="Run validate-selectors then ux/e2e/tests/<area>/<feature>.spec.ts and report results")
+# On failure:
+Task(subagent_type="playwright-test-healer",    prompt="Diagnose failing test in ux/e2e/reports/<run_id>.json — categorize and propose a draft PR")
 ```
 
 ## Skills
 
 | Skill | What it does |
 |---|---|
-| `/context-studio-test` | Run test suites: backend (unit/integration/e2e/performance), frontend (unit/integration), or all |
-| `/context-studio-architecture` | Display architecture overview: bounded contexts, layers, ports/adapters, and dependency flows |
-| `/context-studio-migrations` | Manage Alembic migrations: create, upgrade, downgrade for local.db and operations.db |
-| `/context-studio-dev` | Start development servers for backend (uvicorn) and frontend (vite) concurrently |
-| `/context-studio-check` | Run all validation scripts: domain purity, test contracts, OpenAPI contracts, and linting |
-| `/context-studio-api-docs` | View and validate OpenAPI documentation and API contracts |
+| `/context-studio-test` | Run test suites — backend (pytest), frontend unit (vitest), E2E (playwright). Accepts `backend`, `unit`, `integration`, `frontend`, `e2e`, `smoke`, `validate`, `all`. |
+| `/context-studio-check` | Run all validation gates: domain purity, selector contract, OpenAPI freshness, TypeScript. |
 
 <!-- /generated-agents-section -->
