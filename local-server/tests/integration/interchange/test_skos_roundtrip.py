@@ -255,17 +255,13 @@ class TestSKOSEmptyDatabaseRoundTrip:
 
         # Verify structural equality: same number of entities with same titles/descriptions
         original_classes = ontology_repo.list_classes()
-        list(plan.conflicts) + [
-            {"incoming": {"title": e["title"], "type": e.get("type")}}
-            for e in deserializer.incoming_entities.values()
-        ]
 
         # Count classes in both
         original_class_count = len([c for c in original_classes])
         imported_class_count = len(deserializer.incoming_entities)
 
-        # Should have same structure
-        assert imported_class_count >= original_class_count
+        # Should have exact same structure (no duplicates on roundtrip)
+        assert imported_class_count == original_class_count
 
         # Verify external references are preserved
         for original_class in original_classes:
