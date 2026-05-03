@@ -20,7 +20,7 @@ import hashlib
 import uuid
 from typing import Optional, Dict, Any
 
-from rdflib import Graph, Namespace, URIRef, Literal, RDF
+from rdflib import Graph, Namespace, URIRef, Literal, RDF, OWL
 from rdflib.term import Node
 
 from domain.interchange.ports import OntologySerializer, OntologyDeserializer
@@ -236,7 +236,7 @@ class SKOSSerializer(OntologySerializer):
         assert self.graph is not None
         ind_uri = self._entity_uri(individual.id)
         # Represent individual with RDF type
-        self.graph.add((ind_uri, RDF.type, URIRef("http://www.w3.org/2002/07/owl#NamedIndividual")))
+        self.graph.add((ind_uri, RDF.type, OWL.NamedIndividual))
         self.graph.add((ind_uri, SKOS.prefLabel, Literal(individual.title)))
         if individual.description:
             self.graph.add((ind_uri, SKOS.definition, Literal(individual.description)))
@@ -255,7 +255,7 @@ class SKOSSerializer(OntologySerializer):
         assert self.graph is not None
         prop_uri = self._entity_uri(prop.id)
         # Represent property definition with RDF type
-        self.graph.add((prop_uri, RDF.type, URIRef("http://www.w3.org/2002/07/owl#ObjectProperty")))
+        self.graph.add((prop_uri, RDF.type, OWL.ObjectProperty))
         self.graph.add((prop_uri, SKOS.prefLabel, Literal(prop.title)))
         if prop.description:
             self.graph.add((prop_uri, SKOS.definition, Literal(prop.description)))
@@ -304,6 +304,7 @@ class SKOSDeserializer(OntologyDeserializer):
         self.graph: Optional[Graph] = None
         self.warnings: list[str] = []
         self.incoming_entities: Dict[str, Dict[str, Any]] = {}
+        self._entity_map: Dict[str, str] = {}  # URI -> local entity ID
 
     def deserialize(self, source: bytes | str, dry_run: bool = True) -> ImportPlan:
         """
@@ -325,6 +326,7 @@ class SKOSDeserializer(OntologyDeserializer):
             assert self.graph is not None
             self.warnings = []
             self.incoming_entities = {}
+            self._entity_map = {}  # Reset entity map for this deserialization
 
             # Ensure source is bytes for hashing
             if isinstance(source, str):
@@ -332,21 +334,21 @@ class SKOSDeserializer(OntologyDeserializer):
             else:
                 source_bytes = source
 
-            # Try to parse with auto-detection of format
-            parse_error = None
+            # Try to parse with auto-detection of format, collecting all errors
+            format_errors: list[tuple[str, Exception]] = []
             for fmt in ["turtle", "xml", "json-ld"]:
                 try:
                     self.graph = Graph()
                     self.graph.parse(data=source_bytes, format=fmt)
                     break
                 except Exception as e:
-                    parse_error = e
+                    format_errors.append((fmt, e))
                     continue
             else:
-                # All formats failed
-                raise ValueError(
-                    f"Failed to parse SKOS RDF in any format: {str(parse_error)}"
-                ) from parse_error
+                # All formats failed - build error message from all attempts
+                error_parts = [f"{fmt}: {str(e)}" for fmt, e in format_errors]
+                error_msg = "Failed to parse SKOS RDF in any format. " + "; ".join(error_parts)
+                raise ValueError(error_msg) from format_errors[-1][1] if format_errors else None
 
             # Extract entities from RDF
             self._extract_entities_from_graph()
@@ -526,20 +528,34 @@ class SKOSDeserializer(OntologyDeserializer):
 
     def _uri_to_id(self, uri: Node) -> Optional[str]:
         """
-        Extract the ID from a URI.
+        Extract the ID from a URI, using cache to maintain referential integrity.
 
         For LOCAL namespace URIs, extract the ID.
         For fragment-based URIs, extract the fragment.
-        For external URIs without fragments, generate a UUID.
+        For external URIs without fragments, generate a UUID (cached to ensure consistency).
         """
         uri_str = str(uri)
+
+        # Check cache first
+        if uri_str in self._entity_map:
+            return self._entity_map[uri_str]
+
+        entity_id: Optional[str] = None
+
         if uri_str.startswith(str(LOCAL)):
-            return uri_str[len(str(LOCAL)) :]
-        # If it's a UUID-like string in the fragment, extract it
-        if "#" in uri_str:
-            return uri_str.split("#")[-1]
-        # For external URIs without fragments, generate a UUID
-        return str(uuid.uuid4())
+            entity_id = uri_str[len(str(LOCAL)) :]
+        elif "#" in uri_str:
+            # If it's a UUID-like string in the fragment, extract it
+            entity_id = uri_str.split("#")[-1]
+        else:
+            # For external URIs without fragments, generate a UUID
+            entity_id = str(uuid.uuid4())
+
+        # Cache the mapping
+        if entity_id:
+            self._entity_map[uri_str] = entity_id
+
+        return entity_id
 
     def _parse_external_reference_uri(
         self, uri_str: str

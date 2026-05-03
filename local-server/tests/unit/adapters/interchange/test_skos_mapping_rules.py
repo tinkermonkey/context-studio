@@ -21,9 +21,9 @@ sys.path.insert(
     ),
 )
 
-from rdflib import Graph, Namespace, RDF
+from rdflib import Graph, Namespace, RDF, OWL
 
-from domain.ontology.entities import Taxonomy, ConceptScheme, Class
+from domain.ontology.entities import Taxonomy, ConceptScheme, Class, Individual, PropertyDefinition
 from domain.ontology.value_objects import ExternalReference
 from domain.interchange.value_objects import SerializationScope, SerializationScopeType
 from adapters.interchange.skos import SKOSSerializer
@@ -40,6 +40,8 @@ class FakeOntologyRepo:
         self.taxonomies = {}
         self.schemes = {}
         self.classes = {}
+        self.individuals = {}
+        self.properties = {}
 
     def get_taxonomy(self, taxonomy_id):
         return self.taxonomies.get(taxonomy_id)
@@ -64,6 +66,12 @@ class FakeOntologyRepo:
         return [
             c for c in self.classes.values() if c.concept_scheme_id == concept_scheme_id
         ]
+
+    def get_individual(self, individual_id):
+        return self.individuals.get(individual_id)
+
+    def get_property_definition(self, property_id):
+        return self.properties.get(property_id)
 
 
 class TestSKOSTaxonomyMapping:
@@ -342,3 +350,135 @@ class TestSKOSExternalReferenceMapping:
         class_uri = LOCAL["class-1"]
         exact_matches = list(graph.objects(class_uri, SKOS.exactMatch))
         assert len(exact_matches) >= 1
+
+
+class TestSKOSIndividualMapping:
+    """Test Individual serialization in entity_set scope."""
+
+    def test_export_individual_as_named_individual(self):
+        """Test that Individual is exported as owl:NamedIndividual."""
+        repo = FakeOntologyRepo()
+        individual = Individual(
+            id="ind-1",
+            title="Fido",
+            description="A specific dog",
+            class_ids=["class-1"],
+        )
+        repo.individuals["ind-1"] = individual
+
+        serializer = SKOSSerializer(repo)
+        scope = SerializationScope(
+            scope_type=SerializationScopeType.ENTITY_SET,
+            entity_ids=("ind-1",),
+        )
+        result = serializer.serialize(scope)
+
+        graph = Graph()
+        graph.parse(data=result, format="turtle")
+
+        ind_uri = LOCAL["ind-1"]
+        assert (ind_uri, RDF.type, OWL.NamedIndividual) in graph
+
+    def test_export_individual_title_as_pref_label(self):
+        """Test that Individual.title maps to skos:prefLabel."""
+        repo = FakeOntologyRepo()
+        individual = Individual(
+            id="ind-1",
+            title="Fido",
+            class_ids=["class-1"],
+        )
+        repo.individuals["ind-1"] = individual
+
+        serializer = SKOSSerializer(repo)
+        scope = SerializationScope(
+            scope_type=SerializationScopeType.ENTITY_SET,
+            entity_ids=("ind-1",),
+        )
+        result = serializer.serialize(scope)
+
+        graph = Graph()
+        graph.parse(data=result, format="turtle")
+
+        ind_uri = LOCAL["ind-1"]
+        labels = list(graph.objects(ind_uri, SKOS.prefLabel))
+        assert len(labels) == 1
+        assert str(labels[0]) == "Fido"
+
+    def test_export_individual_with_class_membership(self):
+        """Test that Individual class memberships are exported as rdf:type."""
+        repo = FakeOntologyRepo()
+        individual = Individual(
+            id="ind-1",
+            title="Fido",
+            class_ids=["class-1", "class-2"],
+        )
+        repo.individuals["ind-1"] = individual
+
+        serializer = SKOSSerializer(repo)
+        scope = SerializationScope(
+            scope_type=SerializationScopeType.ENTITY_SET,
+            entity_ids=("ind-1",),
+        )
+        result = serializer.serialize(scope)
+
+        graph = Graph()
+        graph.parse(data=result, format="turtle")
+
+        ind_uri = LOCAL["ind-1"]
+        class_uri_1 = LOCAL["class-1"]
+        class_uri_2 = LOCAL["class-2"]
+        assert (ind_uri, RDF.type, class_uri_1) in graph
+        assert (ind_uri, RDF.type, class_uri_2) in graph
+
+
+class TestSKOSPropertyMapping:
+    """Test PropertyDefinition serialization in entity_set scope."""
+
+    def test_export_property_as_object_property(self):
+        """Test that PropertyDefinition is exported as owl:ObjectProperty."""
+        repo = FakeOntologyRepo()
+        prop = PropertyDefinition(
+            id="prop-1",
+            identifier="has_part",
+            title="hasPart",
+            description="Indicates a part-whole relationship",
+        )
+        repo.properties["prop-1"] = prop
+
+        serializer = SKOSSerializer(repo)
+        scope = SerializationScope(
+            scope_type=SerializationScopeType.ENTITY_SET,
+            entity_ids=("prop-1",),
+        )
+        result = serializer.serialize(scope)
+
+        graph = Graph()
+        graph.parse(data=result, format="turtle")
+
+        prop_uri = LOCAL["prop-1"]
+        assert (prop_uri, RDF.type, OWL.ObjectProperty) in graph
+
+    def test_export_property_title_as_pref_label(self):
+        """Test that PropertyDefinition.title maps to skos:prefLabel."""
+        repo = FakeOntologyRepo()
+        prop = PropertyDefinition(
+            id="prop-1",
+            identifier="has_part",
+            title="hasPart",
+        )
+        repo.properties["prop-1"] = prop
+
+        serializer = SKOSSerializer(repo)
+        scope = SerializationScope(
+            scope_type=SerializationScopeType.ENTITY_SET,
+            entity_ids=("prop-1",),
+        )
+        result = serializer.serialize(scope)
+
+        graph = Graph()
+        graph.parse(data=result, format="turtle")
+
+        prop_uri = LOCAL["prop-1"]
+        labels = list(graph.objects(prop_uri, SKOS.prefLabel))
+        assert len(labels) == 1
+        assert str(labels[0]) == "hasPart"
