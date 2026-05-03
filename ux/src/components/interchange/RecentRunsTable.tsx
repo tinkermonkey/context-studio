@@ -8,7 +8,7 @@ import React from "react";
 import { Button, Badge, Spinner } from "flowbite-react";
 import { Link } from "@tanstack/react-router";
 import { useInterchangeRuns } from "@/api/hooks/interchange";
-import { ImportRunStatus, ImportRun } from "@/api/types/interchange";
+import { ImportRun } from "@/api/types/interchange";
 import { Eye } from "lucide-react";
 
 export function RecentRunsTable() {
