@@ -25,8 +25,15 @@ from domain.ontology.entities import (
     ConceptScheme,
     Class,
     Individual,
+    Relationship,
+    PropertyDefinition,
 )
-from domain.interchange.value_objects import SerializationScope, SerializationScopeType
+from domain.ontology.value_objects import ExternalReference
+from domain.interchange.value_objects import (
+    SerializationScope,
+    SerializationScopeType,
+    MatchKind,
+)
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
@@ -204,6 +211,45 @@ local:class-1 a owl:Class ;
         warning_text = " ".join(plan.warnings)
         assert "no label" in warning_text.lower()
 
+    def test_warnings_for_dropped_relationships(self, ontology_repo, interchange_repo):
+        """Test that warnings are generated when relationships reference missing entities."""
+        owl_turtle = b"""
+@prefix local: <http://context-studio.local/ontology/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+
+local:tax-1 a skos:ConceptScheme ;
+    skos:prefLabel "Test Taxonomy" .
+
+local:scheme-1 a skos:ConceptScheme ;
+    skos:prefLabel "Test Scheme" ;
+    dct:isPartOf local:tax-1 .
+
+local:class-1 a owl:Class ;
+    rdfs:label "Class 1" ;
+    skos:inScheme local:scheme-1 .
+
+local:class-2 a owl:Class ;
+    rdfs:label "Class 2" ;
+    skos:inScheme local:scheme-1 .
+
+local:prop-1 a owl:ObjectProperty ;
+    rdfs:label "has related" .
+
+local:class-1 local:prop-1 local:class-2-no-label .
+
+local:class-2-no-label a owl:Class ;
+    skos:inScheme local:scheme-1 .
+"""
+        deserializer = OWLDeserializer(ontology_repo, interchange_repo)
+        plan = deserializer.deserialize(owl_turtle, dry_run=True)
+
+        # Should have warnings about dropped relationships
+        warning_text = " ".join(plan.warnings)
+        assert "relationship" in warning_text.lower() or "not found in entity map" in warning_text.lower()
+
 
 class TestOWLAdapterErrorHandling:
     """Test error handling in OWL deserializer."""
@@ -218,7 +264,93 @@ class TestOWLAdapterErrorHandling:
         with pytest.raises(ValueError) as exc_info:
             deserializer.deserialize(malformed_data, dry_run=True)
 
-        assert "Failed to parse OWL RDF" in str(exc_info.value)
+        error_msg = str(exc_info.value)
+        assert "Failed to parse OWL RDF" in error_msg
+        # Verify all format attempts are reported in the error message
+        assert "xml:" in error_msg
+        assert "turtle:" in error_msg
+        assert "json-ld:" in error_msg
+
+
+class TestOWLAdapterConflictDetection:
+    """Test conflict detection in OWL deserializer."""
+
+    def test_conflict_detection_on_reimport(self, ontology_repo, interchange_repo):
+        """Test that reimporting the same entities produces conflicts."""
+        # Export the existing taxonomy and classes
+        serializer = OWLSerializer(ontology_repo, format="turtle", split_mode=False)
+        scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+        exported_data = serializer.serialize(scope)
+
+        # Now reimport the exported data against the same populated database
+        deserializer = OWLDeserializer(ontology_repo, interchange_repo)
+        plan = deserializer.deserialize(exported_data, dry_run=True)
+
+        # Should have conflicts for the existing entities (tax-1, scheme-1, class-1, individual-1)
+        assert len(plan.conflicts) > 0, "Expected conflicts when reimporting existing entities"
+
+        # Verify at least one conflict is detected
+        conflict_ids = [c.incoming["id"] for c in plan.conflicts]
+        # Should detect conflicts for the existing entities
+        assert any(cid in conflict_ids for cid in ["tax-1", "scheme-1", "class-1", "individual-1"])
+
+    def test_conflict_cascade_external_reference(self, db_engine, session_factory, interchange_repo):
+        """Test that external references have priority in conflict detection cascade."""
+        repo = SQLiteOntologyRepository(session_factory)
+
+        # First create a taxonomy and concept scheme
+        tax = Taxonomy(
+            id="tax-ext-ref",
+            title="Taxonomy with External References",
+            description="Test taxonomy",
+            created_at=datetime.now(timezone.utc),
+            last_modified=datetime.now(timezone.utc),
+        )
+        repo.save_taxonomy(tax)
+
+        scheme = ConceptScheme(
+            id="scheme-ext-ref",
+            taxonomy_id="tax-ext-ref",
+            title="Scheme with External References",
+            description="Test scheme",
+            created_at=datetime.now(timezone.utc),
+            last_modified=datetime.now(timezone.utc),
+        )
+        repo.save_concept_scheme(scheme)
+
+        # Create a class with an external reference
+        class_with_ref = Class(
+            id="class-ext-ref",
+            concept_scheme_id="scheme-ext-ref",
+            taxonomy_id="tax-ext-ref",
+            title="Class with External Reference",
+            description="A class with external reference",
+            parent_class_id=None,
+            external_references=[
+                ExternalReference(source="dbpedia", identifier="Dog", uri="http://dbpedia.org/resource/Dog")
+            ],
+            created_at=datetime.now(timezone.utc),
+            last_modified=datetime.now(timezone.utc),
+        )
+        repo.save_class(class_with_ref)
+
+        # Create OWL data with a class having the same external reference but different ID
+        owl_turtle = b"""
+@prefix local: <http://context-studio.local/ontology/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+local:class-different-id a owl:Class ;
+    rdfs:label "Different Class ID" ;
+    owl:sameAs <http://dbpedia.org/resource/Dog> .
+"""
+        deserializer = OWLDeserializer(repo, interchange_repo)
+        plan = deserializer.deserialize(owl_turtle, dry_run=True)
+
+        # Should detect a conflict via external reference
+        assert len(plan.conflicts) > 0
+        conflict = plan.conflicts[0]
+        assert conflict.match_kind == MatchKind.EXTERNAL_REFERENCE
 
 
 class TestOWLAdapterSplitMode:

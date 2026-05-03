@@ -877,9 +877,15 @@ class OWLDeserializer(OntologyDeserializer):
         Pre-populates external_references before checking, making round-trips idempotent.
         """
         conflicts = []
-        classes_cache = None
+        # Pre-populate caches to avoid O(N) database queries per entity
+        classes_cache = self.ontology_repo.list_classes()
+        individuals_cache = self.ontology_repo.list_individuals()
 
         for entity_id, entity_dict in self.incoming_entities.items():
+            # Skip relationships early — they have no external references and can't match by title
+            if entity_dict.get("type") == "relationship":
+                continue
+
             # Check external references first
             external_references = entity_dict.get("external_references", [])
             existing_entity: str | None = None
@@ -889,7 +895,8 @@ class OWLDeserializer(OntologyDeserializer):
                 # Try to find existing entity by external reference
                 for ext_ref in external_references:
                     existing_by_ref = self._find_by_external_reference(
-                        ext_ref["source"], ext_ref["identifier"]
+                        ext_ref["source"], ext_ref["identifier"],
+                        classes_cache, individuals_cache
                     )
                     if existing_by_ref:
                         existing_entity = existing_by_ref
@@ -953,19 +960,22 @@ class OWLDeserializer(OntologyDeserializer):
         return conflicts
 
     def _find_by_external_reference(
-        self, source: str, identifier: str
+        self, source: str, identifier: str,
+        classes_cache=None, individuals_cache=None
     ) -> Optional[str]:
-        """Find an existing entity by external reference."""
-        all_classes = self.ontology_repo.list_classes()
+        """Find an existing entity by external reference using cached lists."""
+        # Use cached lists if provided, otherwise fetch from repository
+        if classes_cache is None:
+            classes_cache = self.ontology_repo.list_classes()
+        if individuals_cache is None:
+            individuals_cache = self.ontology_repo.list_individuals()
 
-        for class_entity in all_classes:
+        for class_entity in classes_cache:
             for ext_ref in class_entity.external_references:
                 if ext_ref.source == source and ext_ref.identifier == identifier:
                     return class_entity.id
 
-        all_individuals = self.ontology_repo.list_individuals()
-
-        for individual in all_individuals:
+        for individual in individuals_cache:
             for ext_ref in individual.external_references:
                 if ext_ref.source == source and ext_ref.identifier == identifier:
                     return individual.id
