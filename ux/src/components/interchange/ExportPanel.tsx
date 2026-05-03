@@ -23,7 +23,6 @@ export function ExportPanel() {
   const [scopeType, setScopeType] = React.useState<ScopeType>("whole_graph");
   const [selectedTaxonomy, setSelectedTaxonomy] = React.useState<string>("");
   const [selectedScheme, setSelectedScheme] = React.useState<string>("");
-  const [owlSingleFile, setOwlSingleFile] = React.useState(true);
 
   const { data: taxonomiesResponse } = useTaxonomies();
   const { data: schemesResponse } = useConceptSchemes();
@@ -106,24 +105,6 @@ export function ExportPanel() {
             <option value="graphml">GraphML (Graph Markup Language)</option>
           </Select>
         </div>
-
-        {format === "owl" && (
-          <div className="mt-4">
-            <Label className="flex items-center gap-2">
-              <Checkbox
-                data-testid="interchange-export-owl-mode-toggle"
-                checked={owlSingleFile}
-                onChange={(e) => setOwlSingleFile(e.target.checked)}
-              />
-              <span>Export as single file</span>
-            </Label>
-            <p className="text-sm text-gray-500 mt-2">
-              {owlSingleFile
-                ? "All ontology data in one file"
-                : "Split into multiple interconnected files"}
-            </p>
-          </div>
-        )}
       </Card>
 
       <Card>

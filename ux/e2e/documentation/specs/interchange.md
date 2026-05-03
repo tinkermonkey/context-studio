@@ -96,12 +96,9 @@ This test plan covers Phase 3.8 of the Interchange feature, which enables users 
 
 **Steps:**
 1. Within external_reference conflict group, apply resolution to all similar conflicts:
-   - Click apply-all button (`data-testid="interchange-conflict-apply-all-external_reference"`)
-   - Select resolution strategy (e.g., "skip" or "overwrite")
-2. Within uuid conflict group, click apply-all button (`data-testid="interchange-conflict-apply-all-uuid"`)
-   - Select resolution strategy
-3. Within title conflict group, click apply-all button (`data-testid="interchange-conflict-apply-all-title"`)
-   - Select resolution strategy
+   - Click apply-all button for "skip" resolution (`data-testid="interchange-conflict-apply-all-external_reference-skip"`)
+2. Within uuid conflict group, click apply-all button for "skip" resolution (`data-testid="interchange-conflict-apply-all-uuid-skip"`)
+3. Within title conflict group, click apply-all button for "skip" resolution (`data-testid="interchange-conflict-apply-all-title-skip"`)
 4. Verify all conflicts are resolved (no unresolved indicator visible)
 5. Click commit button (`data-testid="interchange-conflict-commit-button"`)
 6. Wait for import commit API response; modal closes and success toast appears
@@ -114,9 +111,9 @@ This test plan covers Phase 3.8 of the Interchange feature, which enables users 
 - Page remains on import page or redirects to `/app/interchange/runs/$runId`
 
 **Selectors Used:**
-- `interchange-conflict-apply-all-external_reference`
-- `interchange-conflict-apply-all-uuid`
-- `interchange-conflict-apply-all-title`
+- `interchange-conflict-apply-all-external_reference-{resolution}` (e.g., `-skip`, `-overwrite`, `-merge`)
+- `interchange-conflict-apply-all-uuid-{resolution}` (e.g., `-skip`, `-overwrite`, `-merge`)
+- `interchange-conflict-apply-all-title-{resolution}` (e.g., `-skip`, `-overwrite`, `-merge`)
 - `interchange-conflict-commit-button`
 
 **Invariants Verified:**

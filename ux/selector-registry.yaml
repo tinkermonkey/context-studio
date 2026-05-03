@@ -922,12 +922,12 @@ interchange:
     template_param: "entity_id (entity UUID)"
 
   conflict_apply_all_button:
-    id: "interchange-conflict-apply-all-{match_kind}"
+    id: "interchange-conflict-apply-all-{match_kind}-{resolution}"
     component: "ConflictResolutionModal"
-    description: "Apply to all button for a conflict group"
+    description: "Apply to all button for a conflict group with specific resolution"
     file: "ux/src/components/interchange/ConflictResolutionModal.tsx"
     pattern: true
-    template_param: "match_kind (external_reference|uuid|title|create)"
+    template_param: "match_kind (external_reference|uuid|title), resolution (skip|overwrite|merge)"
 
   conflict_commit_button:
     id: "interchange-conflict-commit-button"

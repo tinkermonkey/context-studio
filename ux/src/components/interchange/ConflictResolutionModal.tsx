@@ -197,7 +197,7 @@ export function ConflictResolutionModal({
                         key={res}
                         size="xs"
                         color="light"
-                        data-testid="interchange-conflict-apply-all-external_reference"
+                        data-testid={`interchange-conflict-apply-all-external_reference-${res}`}
                         onClick={() =>
                           handleApplyAll(
                             "external_reference",
@@ -269,7 +269,7 @@ export function ConflictResolutionModal({
                         key={res}
                         size="xs"
                         color="light"
-                        data-testid="interchange-conflict-apply-all-uuid"
+                        data-testid={`interchange-conflict-apply-all-uuid-${res}`}
                         onClick={() =>
                           handleApplyAll("uuid", res as ResolutionKind)
                         }
@@ -338,7 +338,7 @@ export function ConflictResolutionModal({
                         key={res}
                         size="xs"
                         color="light"
-                        data-testid="interchange-conflict-apply-all-title"
+                        data-testid={`interchange-conflict-apply-all-title-${res}`}
                         onClick={() =>
                           handleApplyAll("title", res as ResolutionKind)
                         }

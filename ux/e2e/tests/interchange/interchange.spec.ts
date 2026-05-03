@@ -188,35 +188,26 @@ test.describe("Interchange (Import/Export)", () => {
 
     // Resolve external_reference conflicts
     const applyAllExtRef = page.getByTestId(
-      "interchange-conflict-apply-all-external_reference",
+      "interchange-conflict-apply-all-external_reference-skip",
     );
     if (await applyAllExtRef.isVisible()) {
       await applyAllExtRef.click();
-      const resolutionSelect = page.getByRole("combobox").first();
-      await resolutionSelect.click();
-      await page.getByRole("option", { name: /skip/i }).click();
     }
 
     // Resolve uuid conflicts
     const applyAllUuid = page.getByTestId(
-      "interchange-conflict-apply-all-uuid",
+      "interchange-conflict-apply-all-uuid-skip",
     );
     if (await applyAllUuid.isVisible()) {
       await applyAllUuid.click();
-      const resolutionSelect = page.getByRole("combobox").first();
-      await resolutionSelect.click();
-      await page.getByRole("option", { name: /skip/i }).click();
     }
 
     // Resolve title conflicts
     const applyAllTitle = page.getByTestId(
-      "interchange-conflict-apply-all-title",
+      "interchange-conflict-apply-all-title-skip",
     );
     if (await applyAllTitle.isVisible()) {
       await applyAllTitle.click();
-      const resolutionSelect = page.getByRole("combobox").first();
-      await resolutionSelect.click();
-      await page.getByRole("option", { name: /skip/i }).click();
     }
 
     // Commit import
