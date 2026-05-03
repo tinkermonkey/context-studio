@@ -10,6 +10,7 @@ import {
   interchangeService,
   ImportPlanResponse,
   ImportRunCommitResponse,
+  ResolutionRecord,
 } from "../../services/interchange";
 import { QUERY_KEYS } from "../../config";
 
@@ -42,14 +43,14 @@ export const useInterchangeImport = (
   options?: UseMutationOptions<
     ImportPlanResponse | ImportRunCommitResponse,
     Error,
-    { format: string; file: File; dry_run: boolean }
+    { format: string; file: File; dry_run: boolean; resolutions?: ResolutionRecord[] }
   >,
 ) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ format, file, dry_run }) =>
-      interchangeService.importFile(format, file, dry_run),
+    mutationFn: ({ format, file, dry_run, resolutions }) =>
+      interchangeService.importFile(format, file, dry_run, resolutions),
     onSuccess: (_response, variables) => {
       // Only invalidate entity caches if this is a commit (dry_run=false)
       if (!variables.dry_run) {
