@@ -626,27 +626,15 @@ class GraphMLDeserializer(OntologyDeserializer):
         import_run_service = ImportRunService()
         scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
 
-        try:
-            import_run_data = [
-                {
-                    "match_kind": res.match_kind.value,
-                    "entity_id": res.entity_id,
-                    "resolution_chosen": res.resolution_chosen.value,
-                }
-                for res in resolutions
-            ] if resolutions else []
-
-            import_run = import_run_service.create_with_resolutions_and_persist(
-                format=SerializationFormat.GRAPHML,
-                source_hash=source_hash,
-                scope=scope,
-                resolutions_data=import_run_data,
-                source_uri=None,
-                created_by=None,
-                interchange_repo=self.interchange_repo,
-            )
-        except ValueError as e:
-            raise ValueError(f"Invalid resolution data in commit: {str(e)}") from e
+        import_run = import_run_service.create_with_resolutions_and_persist(
+            format=SerializationFormat.GRAPHML,
+            source_hash=source_hash,
+            scope=scope,
+            resolutions=resolutions,
+            source_uri=None,
+            created_by=None,
+            interchange_repo=self.interchange_repo,
+        )
 
         # Process entities and persist those that aren't skipped
         affected_entity_ids = []

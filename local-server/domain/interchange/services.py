@@ -14,6 +14,7 @@ from typing import Optional
 
 from .entities import ImportRun, ResolutionRecord
 from .value_objects import SerializationScope, SerializationFormat, ResolutionKind, MatchKind
+from .ports import ImportRunRepository
 
 # Context variable for tracking the current import run ID across async boundaries
 _import_run_context: ContextVar[Optional[str]] = ContextVar(
@@ -171,22 +172,22 @@ class ImportRunService:
         format: SerializationFormat,
         source_hash: str,
         scope: SerializationScope,
-        resolutions_data: Optional[list[dict]] = None,
+        resolutions: Optional[list[ResolutionRecord]] = None,
         source_uri: Optional[str] = None,
         created_by: Optional[str] = None,
-        interchange_repo=None,
+        interchange_repo: Optional[ImportRunRepository] = None,
     ) -> ImportRun:
         """
         Create and persist an ImportRun with validated resolutions.
 
-        Creates a fresh ImportRun entity, validates and records the provided
-        resolutions, and persists it via the interchange_repo.
+        Creates a fresh ImportRun entity, records the provided resolutions,
+        and persists it via the interchange_repo.
 
         Args:
             format: Format of the imported file (skos, owl, graphml)
             source_hash: SHA256 hash of the imported bytes
             scope: Describes what is being imported
-            resolutions_data: Optional list of resolution dicts with match_kind, entity_id, resolution_chosen
+            resolutions: Optional list of ResolutionRecord objects to apply
             source_uri: Optional URI or filename of the source
             created_by: Optional ID of the user initiating the import
             interchange_repo: Repository for persisting the import run
@@ -195,7 +196,7 @@ class ImportRunService:
             The persisted ImportRun entity
 
         Raises:
-            ValueError: If resolution data is malformed (invalid match_kind or resolution_chosen)
+            ValueError: If persistence fails
             RuntimeError: If persistence fails
         """
         # Create the ImportRun
@@ -207,24 +208,14 @@ class ImportRunService:
             created_by=created_by,
         )
 
-        # Record and validate resolutions
-        if resolutions_data:
-            for resolution_data in resolutions_data:
-                try:
-                    match_kind = MatchKind(resolution_data.get("match_kind"))
-                    resolution_chosen = ResolutionKind(resolution_data.get("resolution_chosen"))
-                    entity_id = resolution_data.get("entity_id")
-
-                    if not entity_id:
-                        raise ValueError("Resolution missing entity_id")
-
-                    import_run.add_resolution(
-                        match_kind=match_kind,
-                        entity_id=entity_id,
-                        resolution_chosen=resolution_chosen,
-                    )
-                except (KeyError, ValueError, TypeError) as e:
-                    raise ValueError(f"Invalid resolution data: {resolution_data}. Error: {str(e)}") from e
+        # Record resolutions
+        if resolutions:
+            for resolution in resolutions:
+                import_run.add_resolution(
+                    match_kind=resolution.match_kind,
+                    entity_id=resolution.entity_id,
+                    resolution_chosen=resolution.resolution_chosen,
+                )
 
         # Persist the ImportRun
         if interchange_repo:
