@@ -65,6 +65,7 @@ class OWLSerializer(OntologySerializer):
         self,
         ontology_repo,
         format: str = "turtle",
+        split_mode: bool = False,
     ):
         """
         Initialize the OWL serializer.
@@ -72,9 +73,11 @@ class OWLSerializer(OntologySerializer):
         Args:
             ontology_repo: Repository for querying ontology entities
             format: Output format ('turtle', 'xml', 'json-ld')
+            split_mode: If True, serialize only TBox (schema) without individuals (ABox)
         """
         self.ontology_repo = ontology_repo
         self.format = format
+        self.split_mode = split_mode
         self.graph: Optional[Graph] = None
 
     def serialize(self, scope: SerializationScope) -> bytes:
@@ -94,8 +97,6 @@ class OWLSerializer(OntologySerializer):
         scope.validate()
 
         self.graph = Graph()
-        if self.graph is None:
-            raise RuntimeError("Failed to initialize RDF graph")
         self.graph.bind("owl", OWL)
         self.graph.bind("skos", SKOS)
         self.graph.bind("rdfs", RDFS)
@@ -140,15 +141,17 @@ class OWLSerializer(OntologySerializer):
         for taxonomy in taxonomies:
             self._add_taxonomy_to_graph(taxonomy)
 
-        # Add all individuals
-        individuals = self.ontology_repo.list_individuals()
-        for individual in individuals:
-            self._add_individual_to_graph(individual)
+        # Add all individuals and relationships only if not in split (TBox-only) mode
+        if not self.split_mode:
+            # Add all individuals
+            individuals = self.ontology_repo.list_individuals()
+            for individual in individuals:
+                self._add_individual_to_graph(individual)
 
-        # Add all relationships
-        relationships = self.ontology_repo.list_relationships()
-        for relationship in relationships:
-            self._add_relationship_to_graph(relationship)
+            # Add all relationships
+            relationships = self.ontology_repo.list_relationships()
+            for relationship in relationships:
+                self._add_relationship_to_graph(relationship)
 
     def _serialize_taxonomy(self, taxonomy_id: str) -> None:
         """Serialize a single taxonomy and its descendants."""
@@ -188,10 +191,12 @@ class OWLSerializer(OntologySerializer):
                 self._add_class_to_graph(class_entity)
                 continue
 
-            individual = self.ontology_repo.get_individual(entity_id)
-            if individual:
-                self._add_individual_to_graph(individual)
-                continue
+            # Skip individuals if in split (TBox-only) mode
+            if not self.split_mode:
+                individual = self.ontology_repo.get_individual(entity_id)
+                if individual:
+                    self._add_individual_to_graph(individual)
+                    continue
 
             prop = self.ontology_repo.get_property_definition(entity_id)
             if prop:
@@ -336,6 +341,7 @@ class OWLDeserializer(OntologyDeserializer):
         self.graph: Optional[Graph] = None
         self._entity_map: Dict[str, str] = {}  # URI -> local entity ID
         self.incoming_entities: Dict[str, Dict[str, Any]] = {}
+        self.warnings: list[str] = []
 
     def deserialize(self, source: bytes | str, dry_run: bool = True) -> ImportPlan:
         """
@@ -350,15 +356,28 @@ class OWLDeserializer(OntologyDeserializer):
         """
         try:
             self.graph = Graph()
-            if self.graph is None:
-                raise RuntimeError("Failed to initialize RDF graph")
             self.incoming_entities = {}
             self._entity_map = {}
+            self.warnings = []
 
-            if isinstance(source, bytes):
-                self.graph.parse(data=source, format="turtle")
+            # Ensure source is bytes for hashing
+            if isinstance(source, str):
+                source_bytes = source.encode("utf-8")
             else:
-                self.graph.parse(data=source, format="turtle")
+                source_bytes = source
+
+            # Try to parse with auto-detection of format (RDF/XML, Turtle, JSON-LD)
+            parse_error = None
+            for fmt in ["xml", "turtle", "json-ld"]:
+                try:
+                    self.graph.parse(data=source_bytes, format=fmt)
+                    break
+                except Exception as e:
+                    parse_error = e
+                    continue
+            else:
+                # All formats failed
+                raise ValueError(f"Failed to parse OWL RDF in any format: {str(parse_error)}")
 
             # Process taxonomies first (ConceptSchemes without dct:isPartOf)
             # Then concept schemes (with dct:isPartOf) to avoid duplicate creation
@@ -380,10 +399,6 @@ class OWLDeserializer(OntologyDeserializer):
             self._process_relationships()
 
             # Compute source hash
-            if isinstance(source, str):
-                source_bytes = source.encode("utf-8")
-            else:
-                source_bytes = source
             source_hash = hashlib.sha256(source_bytes).hexdigest()
 
             # Create import plan
@@ -391,10 +406,13 @@ class OWLDeserializer(OntologyDeserializer):
                 conflicts=[],
                 new_entity_count=len(self.incoming_entities),
                 import_run_id=None,
+                warnings=self.warnings,
                 source_hash=source_hash,
             )
 
             return plan
+        except ValueError:
+            raise
         except Exception as e:
             raise RuntimeError(f"OWL deserialization failed: {str(e)}") from e
 
@@ -426,6 +444,7 @@ class OWLDeserializer(OntologyDeserializer):
 
         title = self._get_label(scheme_uri)
         if not title:
+            self.warnings.append(f"ConceptScheme/Taxonomy {scheme_uri} has no label (rdfs:label or skos:prefLabel)")
             return
 
         # Try to extract ID from LOCAL namespace URI
@@ -469,6 +488,7 @@ class OWLDeserializer(OntologyDeserializer):
 
         title = self._get_label(class_uri)
         if not title:
+            self.warnings.append(f"Class {class_uri} has no label (rdfs:label or skos:prefLabel)")
             return
 
         description = self._get_first_string(class_uri, RDFS.comment)
@@ -512,6 +532,7 @@ class OWLDeserializer(OntologyDeserializer):
 
         title = self._get_label(ind_uri)
         if not title:
+            self.warnings.append(f"NamedIndividual {ind_uri} has no label (rdfs:label or skos:prefLabel)")
             return
 
         description = self._get_first_string(ind_uri, RDFS.comment)
@@ -557,6 +578,7 @@ class OWLDeserializer(OntologyDeserializer):
         class_ids = [class_id for _, class_id in class_entries]
 
         if not class_ids:
+            self.warnings.append(f"NamedIndividual {ind_uri} has no class memberships (rdf:type)")
             return
 
         # Get external references (from owl:sameAs only)
@@ -580,6 +602,7 @@ class OWLDeserializer(OntologyDeserializer):
 
         title = self._get_label(prop_uri)
         if not title:
+            self.warnings.append(f"ObjectProperty {prop_uri} has no label (rdfs:label)")
             return
 
         description = self._get_first_string(prop_uri, RDFS.comment)
