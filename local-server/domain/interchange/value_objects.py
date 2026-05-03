@@ -85,10 +85,8 @@ class SerializationScope:
                         "SCHEME scope must not have taxonomy_id or entity_ids"
                     )
             case SerializationScopeType.ENTITY_SET:
-                if self.entity_ids is None:
+                if not self.entity_ids:
                     raise ValueError("ENTITY_SET scope requires entity_ids")
-                if len(self.entity_ids) == 0:
-                    raise ValueError("ENTITY_SET scope must have at least one entity_id")
                 if self.taxonomy_id or self.scheme_id:
                     raise ValueError(
                         "ENTITY_SET scope must not have taxonomy_id or scheme_id"
