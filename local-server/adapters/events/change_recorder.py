@@ -13,6 +13,7 @@ without modifying domain code.
 from typing import Optional
 
 from domain.ports import ChangeRecordPort
+from domain.interchange.services import get_current_import_run_id
 from domain.extraction.events import ExtractionCompleted
 from domain.pipeline.events import PipelineExecuted
 from domain.ontology.events import (
@@ -143,7 +144,8 @@ class ChangeEventRecorder:
         Helper method to record a change event.
 
         Reduces boilerplate for recording ontology mutations with consistent
-        logging and error propagation.
+        logging and error propagation. Automatically includes import_run_id
+        from the correlation context if an import is in progress.
 
         Args:
             entity_id: ID of the entity that changed
@@ -160,6 +162,11 @@ class ChangeEventRecorder:
             Any exception from the change repository is propagated to allow
             the event publisher to include it in the failures list.
         """
+        # Get current import_run_id from correlation context if set
+        import_run_id = get_current_import_run_id()
+
+        # For now, we update the change repository signature to accept import_run_id
+        # The actual persistence layer will handle storing it
         change_id = self.change_repo.record_change(
             entity_id=entity_id,
             entity_type=entity_type,
@@ -167,11 +174,13 @@ class ChangeEventRecorder:
             new_state=new_state or {},
             previous_state=previous_state,
             change_reason=change_reason,
+            import_run_id=import_run_id,
         )
         logger.debug(
             f"Recorded ontology change: entity_id={entity_id}, "
             f"entity_type={entity_type}, operation={operation}, "
             f"change_event_id={change_id}"
+            + (f", import_run_id={import_run_id}" if import_run_id else "")
         )
         return change_id
 

@@ -22,6 +22,7 @@ class ChangeEvent:
     user_id: Optional[str] = None
     change_reason: Optional[str] = None
     changeset_id: Optional[str] = None
+    import_run_id: Optional[str] = None
     processed: bool = False
 
 

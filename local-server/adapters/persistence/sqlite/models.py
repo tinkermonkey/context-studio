@@ -389,6 +389,7 @@ class ChangeEvent(Base):  # type: ignore[misc,valid-type]
         user_id: Optional ID of the user who made the change
         change_reason: Optional explanation of why the change was made
         changeset_id: Optional ID of a changeset this event belongs to
+        import_run_id: Optional ID of the import run that produced this change
     """
 
     __tablename__ = "change_events"
@@ -444,6 +445,13 @@ class ChangeEvent(Base):  # type: ignore[misc,valid-type]
         index=True,
         doc="Optional changeset this event belongs to"
     )
+    import_run_id = Column(
+        String(36),
+        ForeignKey("import_runs.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+        doc="Optional import run that produced this change"
+    )
     processed = Column(
         Boolean,
         nullable=False,
@@ -454,6 +462,7 @@ class ChangeEvent(Base):  # type: ignore[misc,valid-type]
     __table_args__ = (
         Index("idx_entity_id_timestamp", "entity_id", "timestamp"),
         Index("idx_processed", "processed"),
+        Index("idx_import_run_id", "import_run_id"),
     )
 
     def __repr__(self) -> str:
@@ -697,3 +706,110 @@ class ConflictResolution(Base):  # type: ignore[misc,valid-type]
 
     def __repr__(self) -> str:
         return f"<ConflictResolution(proposal_id={self.proposal_id}, entity_id={self.entity_id}, field_name={self.field_name})>"
+
+
+class ImportRun(Base):  # type: ignore[misc,valid-type]
+    """
+    Record of an import operation.
+
+    Tracks import runs from initiation through completion, correlating
+    a batch of change_events with the operation that produced them.
+
+    Attributes:
+        id: UUID as string, primary key
+        created_at: UTC timestamp of import initiation
+        created_by: Optional ID of the user who initiated the import
+        format: Format of imported file (skos, owl, graphml, etc.)
+        source_uri: Optional URI or filename of the import source
+        source_hash: SHA256 hash of the imported bytes
+        scope_type: Type of scope (whole_graph, taxonomy, scheme, entity_set)
+        scope_taxonomy_id: For taxonomy scope, the taxonomy ID
+        scope_scheme_id: For scheme scope, the scheme ID
+        scope_include_descendants: For scheme scope, whether to include descendants
+        scope_entity_ids: For entity_set scope, JSON list of entity IDs
+        resolutions: JSON list of applied resolutions (match_kind, entity_id, resolution)
+        affected_entity_ids: JSON list of entity IDs affected by this import
+        status: Current status (pending, committed, failed, rolled_back)
+    """
+
+    __tablename__ = "import_runs"
+
+    id = Column(String(36), primary_key=True, nullable=False)
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        index=True,
+        doc="UTC timestamp of import initiation"
+    )
+    created_by = Column(
+        String(36),
+        nullable=True,
+        doc="Optional ID of user who initiated the import"
+    )
+    format = Column(
+        String(20),
+        nullable=False,
+        doc="Format of imported file (skos, owl, graphml, etc.)"
+    )
+    source_uri = Column(
+        Text,
+        nullable=True,
+        doc="Optional URI or filename of the import source"
+    )
+    source_hash = Column(
+        String(64),
+        nullable=False,
+        doc="SHA256 hash of the imported bytes"
+    )
+    scope_type = Column(
+        String(20),
+        nullable=False,
+        doc="Type of scope (whole_graph, taxonomy, scheme, entity_set)"
+    )
+    scope_taxonomy_id = Column(
+        String(36),
+        nullable=True,
+        doc="For taxonomy scope, the taxonomy ID"
+    )
+    scope_scheme_id = Column(
+        String(36),
+        nullable=True,
+        doc="For scheme scope, the scheme ID"
+    )
+    scope_include_descendants = Column(
+        Boolean,
+        nullable=False,
+        default=False,
+        doc="For scheme scope, whether to include descendants"
+    )
+    scope_entity_ids = Column(
+        JSON,
+        nullable=True,
+        default=list,
+        doc="For entity_set scope, JSON list of entity IDs"
+    )
+    resolutions = Column(
+        JSON,
+        nullable=False,
+        default=list,
+        doc="JSON list of applied resolutions"
+    )
+    affected_entity_ids = Column(
+        JSON,
+        nullable=False,
+        default=list,
+        doc="JSON list of entity IDs affected by this import"
+    )
+    status = Column(
+        String(20),
+        nullable=False,
+        default="pending",
+        index=True,
+        doc="Current status (pending, committed, failed, rolled_back)"
+    )
+
+    __table_args__ = ()
+
+    def __repr__(self) -> str:
+        return f"<ImportRun(id={self.id}, format={self.format}, status={self.status})>"
