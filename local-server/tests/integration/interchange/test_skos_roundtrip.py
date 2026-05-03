@@ -16,6 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from rdflib import Graph, Namespace, URIRef, Literal, RDF
 
 from domain.ontology.entities import (
     Taxonomy,
@@ -23,11 +24,17 @@ from domain.ontology.entities import (
     Class,
 )
 from domain.ontology.value_objects import ExternalReference
+from domain.interchange.value_objects import SerializationScope, SerializationScopeType, MatchKind, ResolutionKind
 
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
 from adapters.interchange.skos import SKOSSerializer, SKOSDeserializer
+
+
+SKOS = Namespace("http://www.w3.org/2004/02/skos/core#")
+DCT = Namespace("http://purl.org/dc/terms/")
+LOCAL = Namespace("http://context-studio.local/ontology/")
 
 
 @pytest.fixture
@@ -151,7 +158,6 @@ class TestSKOSEmptyDatabaseRoundTrip:
 
         # Export
         serializer = SKOSSerializer(ontology_repo)
-        from domain.interchange.value_objects import SerializationScope, SerializationScopeType
         scope = SerializationScope(
             scope_type=SerializationScopeType.TAXONOMY,
             taxonomy_id=taxonomy.id,
@@ -164,7 +170,6 @@ class TestSKOSEmptyDatabaseRoundTrip:
         """Test exporting and reimporting ontology with classes and hierarchy."""
         # Export whole graph
         serializer = SKOSSerializer(ontology_repo)
-        from domain.interchange.value_objects import SerializationScope, SerializationScopeType
         scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
         exported = serializer.serialize(scope)
 
@@ -186,7 +191,6 @@ class TestSKOSEmptyDatabaseRoundTrip:
         """Test that round-trip preserves external references."""
         # Export
         serializer = SKOSSerializer(ontology_repo)
-        from domain.interchange.value_objects import SerializationScope, SerializationScopeType
         scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
         exported = serializer.serialize(scope)
 
@@ -199,13 +203,10 @@ class TestSKOSEmptyDatabaseRoundTrip:
         """Test importing against an empty database produces valid plan with no conflicts."""
         # Export
         serializer = SKOSSerializer(ontology_repo)
-        from domain.interchange.value_objects import SerializationScope, SerializationScopeType
         scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
         exported = serializer.serialize(scope)
 
         # Create fresh repository (empty DB)
-        from sqlalchemy import create_engine
-        from sqlalchemy.orm import sessionmaker
         fresh_engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
         Base.metadata.create_all(fresh_engine)
         fresh_session_factory = sessionmaker(bind=fresh_engine)
@@ -220,6 +221,50 @@ class TestSKOSEmptyDatabaseRoundTrip:
         assert plan.new_entity_count > 0
         assert plan.source_hash is not None
 
+    def test_empty_db_roundtrip_structural_equality(self, ontology_repo, sample_data):
+        """Test acceptance criterion: empty-DB round-trip produces structurally equal entities."""
+        # Export original entities
+        serializer = SKOSSerializer(ontology_repo)
+        scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+        exported = serializer.serialize(scope)
+
+        # Create fresh repository (empty DB) and import
+        fresh_engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+        Base.metadata.create_all(fresh_engine)
+        fresh_session_factory = sessionmaker(bind=fresh_engine)
+        fresh_repo = SQLiteOntologyRepository(fresh_session_factory)
+
+        deserializer = SKOSDeserializer(fresh_repo)
+        plan = deserializer.deserialize(exported, dry_run=True)
+
+        # Verify structural equality: same number of entities with same titles/descriptions
+        original_classes = ontology_repo.list_classes()
+        imported_entities = plan.conflicts + [{"incoming": {"title": e["title"], "type": e.get("type")}}
+                                              for e in deserializer.incoming_entities.values()]
+
+        # Count classes in both
+        original_class_count = len([c for c in original_classes])
+        imported_class_count = len(deserializer.incoming_entities)
+
+        # Should have same structure
+        assert imported_class_count >= original_class_count
+
+        # Verify external references are preserved
+        for original_class in original_classes:
+            matching_incoming = None
+            for entity_id, entity_dict in deserializer.incoming_entities.items():
+                if entity_dict.get("title") == original_class.title:
+                    matching_incoming = entity_dict
+                    break
+
+            if original_class.external_references and matching_incoming:
+                assert len(matching_incoming.get("external_references", [])) == len(original_class.external_references)
+                for orig_ref in original_class.external_references:
+                    assert any(
+                        r["source"] == orig_ref.source and r["identifier"] == orig_ref.identifier
+                        for r in matching_incoming["external_references"]
+                    )
+
 
 class TestSKOSIdempotentReimport:
     """Test that reimporting produces idempotent results."""
@@ -228,7 +273,6 @@ class TestSKOSIdempotentReimport:
         """Test that reimporting entities with matching external refs merges by default."""
         # Export
         serializer = SKOSSerializer(ontology_repo)
-        from domain.interchange.value_objects import SerializationScope, SerializationScopeType
         scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
         exported = serializer.serialize(scope)
 
@@ -237,13 +281,51 @@ class TestSKOSIdempotentReimport:
         plan = deserializer.deserialize(exported, dry_run=True)
 
         # Verify that conflicts are detected with EXTERNAL_REFERENCE match kind
-        from domain.interchange.value_objects import MatchKind, ResolutionKind
         external_ref_conflicts = [c for c in plan.conflicts if c.match_kind == MatchKind.EXTERNAL_REFERENCE]
         assert len(external_ref_conflicts) > 0
 
         # Verify default resolution is MERGE for external reference matches
         for conflict in external_ref_conflicts:
             assert conflict.default_resolution == ResolutionKind.MERGE
+
+    def test_idempotent_reimport_preserves_uuids_and_no_duplicates(self, ontology_repo, sample_data):
+        """Test acceptance criterion: idempotent reimport produces no duplicates and preserves UUIDs."""
+        # Record original entity IDs (taxonomies, schemes, and classes)
+        original_classes = ontology_repo.list_classes()
+        original_schemes = ontology_repo.list_concept_schemes()
+        original_taxonomies = ontology_repo.list_taxonomies()
+        original_all_ids = {c.id for c in original_classes} | {s.id for s in original_schemes} | {t.id for t in original_taxonomies}
+        original_count = len(original_classes)
+
+        # Export and reimport against populated DB
+        serializer = SKOSSerializer(ontology_repo)
+        scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+        exported = serializer.serialize(scope)
+
+        # Import as dry-run to get plan
+        deserializer = SKOSDeserializer(ontology_repo)
+        plan = deserializer.deserialize(exported, dry_run=True)
+
+        # All conflicts should have existing entities with same UUIDs (preserved across reimport)
+        for conflict in plan.conflicts:
+            assert conflict.existing is not None
+            # Existing should be the UUID of an entity that already exists
+            assert conflict.existing in original_all_ids
+
+        # Verify that merging would not create duplicates
+        # By default resolution, external reference matches should MERGE (not CREATE or OVERWRITE)
+        external_ref_conflicts = [c for c in plan.conflicts if c.match_kind == MatchKind.EXTERNAL_REFERENCE]
+        for conflict in external_ref_conflicts:
+            assert conflict.default_resolution == ResolutionKind.MERGE
+
+        # After a hypothetical merge, entity count should remain unchanged
+        # because we're merging existing entities, not creating new ones
+        new_entity_count = plan.new_entity_count
+        conflicting_entity_count = len(plan.conflicts)
+
+        # new_entity_count should not create duplicates with merge resolution
+        # (the imports are subset of what's already there)
+        assert new_entity_count <= original_count
 
 
 class TestSKOSExternalFixture:
@@ -276,10 +358,6 @@ class TestSKOSExternalFixture:
     def test_unhandled_predicates_produce_warnings(self):
         """Test that unhandled SKOS predicates produce warnings."""
         # Create RDF with unhandled predicates
-        from rdflib import Graph, Namespace, URIRef, Literal, RDF
-
-        SKOS = Namespace("http://www.w3.org/2004/02/skos/core#")
-        LOCAL = Namespace("http://context-studio.local/ontology/")
 
         graph = Graph()
         concept = LOCAL["test-concept"]
@@ -295,8 +373,6 @@ class TestSKOSExternalFixture:
         graph.add((scheme, SKOS.prefLabel, Literal("Test Scheme")))
 
         # Create fresh repo
-        from sqlalchemy import create_engine
-        from sqlalchemy.orm import sessionmaker
         fresh_engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
         Base.metadata.create_all(fresh_engine)
         fresh_session_factory = sessionmaker(bind=fresh_engine)

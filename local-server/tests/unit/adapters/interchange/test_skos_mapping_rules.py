@@ -22,6 +22,7 @@ from rdflib import Graph, Namespace, URIRef, Literal, RDF
 
 from domain.ontology.entities import Taxonomy, ConceptScheme, Class
 from domain.ontology.value_objects import ExternalReference
+from domain.interchange.value_objects import SerializationScope, SerializationScopeType
 from adapters.interchange.skos import SKOSSerializer, SKOSDeserializer
 
 
@@ -75,7 +76,6 @@ class TestSKOSTaxonomyMapping:
         repo.taxonomies["tax-1"] = taxonomy
 
         serializer = SKOSSerializer(repo)
-        from domain.interchange.value_objects import SerializationScope, SerializationScopeType
         scope = SerializationScope(
             scope_type=SerializationScopeType.TAXONOMY,
             taxonomy_id="tax-1",
@@ -100,7 +100,6 @@ class TestSKOSTaxonomyMapping:
         repo.taxonomies["tax-1"] = taxonomy
 
         serializer = SKOSSerializer(repo)
-        from domain.interchange.value_objects import SerializationScope, SerializationScopeType
         scope = SerializationScope(
             scope_type=SerializationScopeType.TAXONOMY,
             taxonomy_id="tax-1",
@@ -126,7 +125,6 @@ class TestSKOSTaxonomyMapping:
         repo.taxonomies["tax-1"] = taxonomy
 
         serializer = SKOSSerializer(repo)
-        from domain.interchange.value_objects import SerializationScope, SerializationScopeType
         scope = SerializationScope(
             scope_type=SerializationScopeType.TAXONOMY,
             taxonomy_id="tax-1",
@@ -160,7 +158,6 @@ class TestSKOSConceptSchemeMapping:
         repo.schemes["scheme-1"] = scheme
 
         serializer = SKOSSerializer(repo)
-        from domain.interchange.value_objects import SerializationScope, SerializationScopeType
         scope = SerializationScope(
             scope_type=SerializationScopeType.SCHEME,
             scheme_id="scheme-1",
@@ -193,7 +190,6 @@ class TestSKOSClassMapping:
         repo.classes["class-1"] = class_entity
 
         serializer = SKOSSerializer(repo)
-        from domain.interchange.value_objects import SerializationScope, SerializationScopeType
         scope = SerializationScope(
             scope_type=SerializationScopeType.ENTITY_SET,
             entity_ids=("class-1",),
@@ -218,7 +214,6 @@ class TestSKOSClassMapping:
         repo.classes["class-1"] = class_entity
 
         serializer = SKOSSerializer(repo)
-        from domain.interchange.value_objects import SerializationScope, SerializationScopeType
         scope = SerializationScope(
             scope_type=SerializationScopeType.ENTITY_SET,
             entity_ids=("class-1",),
@@ -256,7 +251,6 @@ class TestSKOSHierarchyMapping:
         repo.classes["child-1"] = child
 
         serializer = SKOSSerializer(repo)
-        from domain.interchange.value_objects import SerializationScope, SerializationScopeType
         scope = SerializationScope(
             scope_type=SerializationScopeType.ENTITY_SET,
             entity_ids=("parent-1", "child-1"),
@@ -300,7 +294,6 @@ class TestSKOSExternalReferenceMapping:
         repo.classes["class-1"] = class_entity
 
         serializer = SKOSSerializer(repo)
-        from domain.interchange.value_objects import SerializationScope, SerializationScopeType
         scope = SerializationScope(
             scope_type=SerializationScopeType.ENTITY_SET,
             entity_ids=("class-1",),
@@ -333,7 +326,6 @@ class TestSKOSExternalReferenceMapping:
         repo.classes["class-1"] = class_entity
 
         serializer = SKOSSerializer(repo)
-        from domain.interchange.value_objects import SerializationScope, SerializationScopeType
         scope = SerializationScope(
             scope_type=SerializationScopeType.ENTITY_SET,
             entity_ids=("class-1",),

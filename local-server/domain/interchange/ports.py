@@ -46,13 +46,13 @@ class OntologyDeserializer(ABC):
 
     @abstractmethod
     def deserialize(
-        self, source: bytes, dry_run: bool = True
+        self, source: bytes | str, dry_run: bool = True
     ) -> ImportPlan:
         """
         Deserialize ontology data and produce an import plan.
 
         Args:
-            source: Serialized ontology as bytes
+            source: Serialized ontology as bytes or string
             dry_run: If True, returns ImportPlan without persisting.
                      If False, commits changes and returns ImportPlan with ImportRun.
 

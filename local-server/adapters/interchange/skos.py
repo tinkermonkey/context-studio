@@ -17,9 +17,7 @@ Mapping strategy:
 from __future__ import annotations
 
 import hashlib
-import uuid
-from typing import Optional, Dict, Set, Any, cast
-from datetime import datetime, timezone
+from typing import Optional, Dict, Any
 
 from rdflib import Graph, Namespace, URIRef, Literal, RDF
 from rdflib.term import Node
@@ -44,8 +42,6 @@ from domain.ontology.value_objects import ExternalReference
 # RDF Namespaces
 SKOS = Namespace("http://www.w3.org/2004/02/skos/core#")
 DCT = Namespace("http://purl.org/dc/terms/")
-RDFS = Namespace("http://www.w3.org/2000/01/rdf-schema#")
-OWL = Namespace("http://www.w3.org/2002/07/owl#")
 LOCAL = Namespace("http://context-studio.local/ontology/")
 
 
@@ -75,7 +71,6 @@ class SKOSSerializer(OntologySerializer):
         self.ontology_repo = ontology_repo
         self.format = format
         self.graph: Optional[Graph] = None
-        self.namespace_map: Dict[str, str] = {}
 
     def serialize(self, scope: SerializationScope) -> bytes:
         """
@@ -96,8 +91,6 @@ class SKOSSerializer(OntologySerializer):
         self.graph = Graph()
         self.graph.bind("skos", SKOS)
         self.graph.bind("dct", DCT)
-        self.graph.bind("rdfs", RDFS)
-        self.graph.bind("owl", OWL)
         self.graph.bind("local", LOCAL)
 
         try:
