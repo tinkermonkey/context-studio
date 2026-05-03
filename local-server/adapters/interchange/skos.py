@@ -435,7 +435,7 @@ class SKOSDeserializer(OntologyDeserializer):
                 resolution_map[res.entity_id] = res.resolution_chosen
 
         # Build conflict map: entity_id -> ImportConflict
-        conflict_map: Dict[str, ImportConflict] = {c.incoming["id"]: c for c in conflicts}
+        {c.incoming["id"]: c for c in conflicts}
 
         # Validate that all conflicts have resolutions
         for conflict in conflicts:

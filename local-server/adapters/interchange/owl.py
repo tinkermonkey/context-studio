@@ -31,7 +31,6 @@ from domain.interchange.value_objects import (
     SerializationScope,
     SerializationScopeType,
     ImportPlan,
-    MatchKind,
     ResolutionKind,
     SerializationFormat,
 )

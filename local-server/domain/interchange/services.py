@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from .entities import ImportRun, ResolutionRecord
-from .value_objects import SerializationScope, SerializationFormat, ResolutionKind, MatchKind
+from .value_objects import SerializationScope, SerializationFormat
 from .ports import ImportRunRepository
 
 # Context variable for tracking the current import run ID across async boundaries
