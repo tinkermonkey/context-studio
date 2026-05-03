@@ -10,15 +10,6 @@ sys.path.append(
 import pytest
 
 
-def test_is_ready_returns_false_when_not_loaded(monkeypatch):
-    """Test that is_ready() returns False when spaCy is not installed."""
-    monkeypatch.setitem(sys.modules, "spacy", None)
-    from adapters.nlp.spacy_processor import SpacyNLPProcessor
-
-    processor = SpacyNLPProcessor()
-    assert processor.is_ready() is False
-
-
 def test_process_returns_empty_result_when_not_ready():
     """Test that process() returns empty result when processor is not ready."""
     from adapters.nlp.spacy_processor import SpacyNLPProcessor

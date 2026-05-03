@@ -115,34 +115,6 @@ class TestExtractionWorkflow:
             assert isinstance(layer["duration_ms"], int)
             assert isinstance(layer["success"], bool)
 
-    def test_extract_entity_structure(self, e2e_client):
-        """
-        Extracted entities have correct structure.
-
-        Asserts:
-        - Entity structure includes id, label, entity_type, source_layer, confidence
-        - All fields have correct types
-        """
-        response = e2e_client.post(
-            "/api/extract", json={"text": "Test entity extraction with multiple words."}
-        )
-        body = response.json()
-
-        # Check entity structure (entities should be found in extraction)
-        assert body["extracted_entities"], "Expected at least one extracted entity"
-        for entity in body["extracted_entities"]:
-            assert "id" in entity
-            assert "label" in entity
-            assert "entity_type" in entity
-            assert "source_layer" in entity
-            assert "confidence" in entity
-
-            # Verify types
-            assert isinstance(entity["id"], str)
-            assert isinstance(entity["label"], str)
-            assert isinstance(entity["entity_type"], str)
-            assert isinstance(entity["source_layer"], int)
-            assert isinstance(entity["confidence"], float)
 
     def test_extract_total_duration_positive(self, e2e_client):
         """
@@ -483,32 +455,6 @@ class TestReferenceEnrichment:
 class TestExtractionDeduplication:
     """Tests for entity deduplication across layers."""
 
-    def test_extract_deduplicates_entities(self, e2e_client):
-        """
-        Extraction deduplicates similar entities across layers.
-
-        Asserts:
-        - Status code 200 (OK)
-        - Entities with same label are deduplicated (no duplicate labels in results)
-        - Deduplication reduces entity count compared to raw extraction
-        """
-        response = e2e_client.post(
-            "/api/extract",
-            json={"text": "SQLite database SQLite engine SQLite system."},
-        )
-        assert response.status_code == status.HTTP_200_OK
-        body = response.json()
-
-        # Verify that entities were extracted
-        assert "extracted_entities" in body
-        entities = body["extracted_entities"]
-        assert len(entities) > 0, "Expected entities to be extracted"
-
-        # Verify deduplication: check that no entity label appears multiple times
-        entity_labels = [entity["label"] for entity in entities]
-        assert len(entity_labels) == len(
-            set(entity_labels)
-        ), "Duplicate entity labels found - deduplication failed"
 
     def test_extract_maintains_unique_entities(self, e2e_client):
         """

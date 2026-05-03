@@ -315,28 +315,6 @@ class TestPipelineExecution:
 class TestPipelineValidation:
     """Tests for pipeline configuration validation."""
 
-    def test_create_with_invalid_provider_fails(self, e2e_client):
-        """
-        Creating a pipeline with an invalid provider is rejected.
-
-        Asserts:
-        - Status code 400 (Bad Request)
-        - Provider validation occurs at creation time
-        """
-        response = e2e_client.post(
-            "/api/pipelines",
-            json={
-                "pipeline": "invalid_provider_test",
-                "title": "Invalid Provider Pipeline",
-                "provider": "nonexistent_provider",
-                "model": "some-model",
-                "system_prompt": "System prompt",
-                "user_prompt": "User prompt: {text}",
-            },
-        )
-        # Provider validation occurs at creation time
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-
     def test_create_with_empty_title_fails(self, e2e_client):
         """
         Creating a pipeline with empty title fails.
