@@ -5,14 +5,67 @@
  */
 
 import React from "react";
-import { fireEvent, waitFor } from "@testing-library/react";
-import { vi } from "vitest";
-import {
-  renderWithProviders as render,
-  screen,
-} from "@/test/utils/renderWithProviders";
+import { render, fireEvent, waitFor, screen, cleanup } from "@testing-library/react";
+import { vi, describe, it, expect, afterEach } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+// Clean up after each test to avoid multiple elements with same testid
+afterEach(() => {
+  cleanup();
+});
+
+// Mock flowbite-react Modal sub-components which are not available in test environment
+vi.mock("flowbite-react", async () => {
+  const actual = await vi.importActual("flowbite-react");
+  const Modal = (props: any) => {
+    const { children, "data-testid": testId, show = true, ...rest } = props;
+    if (!show) {
+      return null;
+    }
+    return React.createElement(
+      "div",
+      { "data-testid": testId, role: "dialog", className: "modal", ...rest },
+      children
+    );
+  };
+  Modal.Header = (props: any) => React.createElement("div", { className: "modal-header", ...props }, props.children);
+  Modal.Body = (props: any) => React.createElement("div", { className: "modal-body", ...props }, props.children);
+  Modal.Footer = (props: any) => React.createElement("div", { className: "modal-footer", ...props }, props.children);
+
+  return {
+    ...(actual as object),
+    Modal,
+  };
+});
+
+// Mock lucide-react icons
+vi.mock("lucide-react", () => ({
+  ChevronDown: () => <div>ChevronDown Icon</div>,
+  ChevronUp: () => <div>ChevronUp Icon</div>,
+}));
+
 import { ConflictResolutionModal } from "../ConflictResolutionModal";
 import type { ImportConflict } from "@/api/types/interchange";
+
+// Create test providers wrapper
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+      mutations: {
+        retry: false,
+      },
+    },
+  });
+
+const createWrapper = () => {
+  const queryClient = createTestQueryClient();
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+};
 
 describe("ConflictResolutionModal", () => {
   const mockConflicts: ImportConflict[] = [
@@ -41,17 +94,20 @@ describe("ConflictResolutionModal", () => {
   ];
 
   it("renders modal when isOpen is true", () => {
+    const Wrapper = createWrapper();
     const mockOnClose = vi.fn();
     const mockOnCommit = vi.fn();
 
     render(
-      <ConflictResolutionModal
-        isOpen={true}
-        onClose={mockOnClose}
-        conflicts={mockConflicts}
-        newEntityCount={5}
-        onCommit={mockOnCommit}
-      />
+      <Wrapper>
+        <ConflictResolutionModal
+          isOpen={true}
+          onClose={mockOnClose}
+          conflicts={mockConflicts}
+          newEntityCount={5}
+          onCommit={mockOnCommit}
+        />
+      </Wrapper>
     );
 
     expect(screen.getByTestId("interchange-conflict-resolution-modal")).toBeInTheDocument();
@@ -59,17 +115,20 @@ describe("ConflictResolutionModal", () => {
   });
 
   it("does not render modal when isOpen is false", () => {
+    const Wrapper = createWrapper();
     const mockOnClose = vi.fn();
     const mockOnCommit = vi.fn();
 
     const { container } = render(
-      <ConflictResolutionModal
-        isOpen={false}
-        onClose={mockOnClose}
-        conflicts={mockConflicts}
-        newEntityCount={5}
-        onCommit={mockOnCommit}
-      />
+      <Wrapper>
+        <ConflictResolutionModal
+          isOpen={false}
+          onClose={mockOnClose}
+          conflicts={mockConflicts}
+          newEntityCount={5}
+          onCommit={mockOnCommit}
+        />
+      </Wrapper>
     );
 
     // Modal should not be visible when isOpen is false
@@ -289,17 +348,20 @@ describe("ConflictResolutionModal", () => {
   });
 
   it("displays conflict count summary", () => {
+    const Wrapper = createWrapper();
     const mockOnClose = vi.fn();
     const mockOnCommit = vi.fn();
 
     render(
-      <ConflictResolutionModal
-        isOpen={true}
-        onClose={mockOnClose}
-        conflicts={mockConflicts}
-        newEntityCount={5}
-        onCommit={mockOnCommit}
-      />
+      <Wrapper>
+        <ConflictResolutionModal
+          isOpen={true}
+          onClose={mockOnClose}
+          conflicts={mockConflicts}
+          newEntityCount={5}
+          onCommit={mockOnCommit}
+        />
+      </Wrapper>
     );
 
     // Check for conflict descriptions
@@ -308,17 +370,20 @@ describe("ConflictResolutionModal", () => {
   });
 
   it("calls onClose when close button is clicked", async () => {
+    const Wrapper = createWrapper();
     const mockOnClose = vi.fn();
     const mockOnCommit = vi.fn();
 
     render(
-      <ConflictResolutionModal
-        isOpen={true}
-        onClose={mockOnClose}
-        conflicts={mockConflicts}
-        newEntityCount={5}
-        onCommit={mockOnCommit}
-      />
+      <Wrapper>
+        <ConflictResolutionModal
+          isOpen={true}
+          onClose={mockOnClose}
+          conflicts={mockConflicts}
+          newEntityCount={5}
+          onCommit={mockOnCommit}
+        />
+      </Wrapper>
     );
 
     const closeButton = screen.getByRole("button", { name: /close/i });

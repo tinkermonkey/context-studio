@@ -9,6 +9,19 @@ import {
   renderWithProviders as render,
   screen,
 } from "@/test/utils/renderWithProviders";
+
+// Mock flowbite-react components
+vi.mock("flowbite-react", async () => {
+  const actual = await vi.importActual("flowbite-react");
+  return {
+    ...(actual as object),
+    Select: (props: any) => {
+      const { children, ...rest } = props;
+      return React.createElement("select", rest, children);
+    },
+  };
+});
+
 import { ImportPanel } from "../ImportPanel";
 import * as toastHook from "@/hooks/useButterToast";
 

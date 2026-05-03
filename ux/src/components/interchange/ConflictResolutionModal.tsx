@@ -120,11 +120,11 @@ export function ConflictResolutionModal({
   const getGroupDescription = (matchKind: string, count: number): string => {
     switch (matchKind) {
       case "external_reference":
-        return `${count} entit${count !== 1 ? "ies" : "y"} matched by external reference — these will be merged by default`;
+        return `${count} item${count !== 1 ? "s" : ""} matched by external reference — these will be merged by default`;
       case "uuid":
-        return `${count} entit${count !== 1 ? "ies" : "y"} matched by UUID with no other overlap — please review`;
+        return `${count} item${count !== 1 ? "s" : ""} matched by UUID with no other overlap — please review`;
       case "title":
-        return `${count} entit${count !== 1 ? "ies" : "y"} matched by title alone — please review`;
+        return `${count} item${count !== 1 ? "s" : ""} matched by title alone — please review`;
       default:
         return "";
     }
@@ -356,7 +356,7 @@ export function ConflictResolutionModal({
               className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-950"
             >
               <h4 className="font-semibold text-green-900 dark:text-green-100">
-                New Entities
+                New Concepts
               </h4>
               <p className="mt-2 text-sm text-green-700 dark:text-green-300">
                 {newEntityCount} new entit{newEntityCount !== 1 ? "ies" : "y"}{" "}
@@ -373,7 +373,7 @@ export function ConflictResolutionModal({
           onClick={onClose}
           disabled={isLoading}
         >
-          Cancel
+          Close
         </Button>
         <Button
           data-testid="interchange-conflict-commit-button"

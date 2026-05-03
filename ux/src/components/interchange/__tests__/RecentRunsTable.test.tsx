@@ -9,6 +9,15 @@ import {
   renderWithProviders as render,
   screen,
 } from "@/test/utils/renderWithProviders";
+
+// Mock flowbite-react components
+vi.mock("flowbite-react", async () => {
+  const actual = await vi.importActual("flowbite-react");
+  return {
+    ...(actual as object),
+  };
+});
+
 import { RecentRunsTable } from "../RecentRunsTable";
 import type { ImportRun } from "@/api/types/interchange";
 import * as interchangeHooks from "@/api/hooks/interchange";

@@ -109,7 +109,7 @@ export function ImportPanel({ onPreviewRequested }: ImportPanelProps) {
           <p className="text-gray-700 dark:text-gray-300">
             Drag and drop your file here, or{" "}
             <button className="text-blue-500 underline hover:text-blue-700">
-              click to browse
+              choose a file
             </button>
           </p>
           <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
