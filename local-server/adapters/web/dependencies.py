@@ -34,6 +34,7 @@ from fastapi import Request
 from sqlalchemy.orm import Session
 
 from domain.ontology.services import OntologyService
+from domain.ontology.ports import OntologyRepository
 from domain.graph.services import GraphAnalysisService
 from domain.extraction.services import ExtractionService
 from domain.extraction.ports import ReferenceSource
@@ -41,6 +42,7 @@ from domain.pipeline.services import PipelineService
 from domain.versioning.services import VersioningService
 from domain.admin.services import AdminService
 from adapters.persistence.sqlite.connection import DatabaseManager
+from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
 from utils.async_executor import run_sync_in_executor
 
 
@@ -239,7 +241,26 @@ async def get_admin_service(request: Request) -> AdminService:
     return service
 
 
-async def get_interchange_repo(request: Request):
+async def get_ontology_repo(request: Request) -> OntologyRepository:
+    """
+    Extract the OntologyRepository from app state.
+
+    Args:
+        request: FastAPI request object
+
+    Returns:
+        The OntologyRepository instance from app.state
+
+    Raises:
+        RuntimeError: If repository is not initialized in app.state
+    """
+    repo = getattr(request.app.state, "ontology_repo", None)
+    if repo is None:
+        raise RuntimeError("OntologyRepository not initialized in app.state")
+    return repo
+
+
+async def get_interchange_repo(request: Request) -> SQLiteInterchangeRepository:
     """
     Extract the SQLiteInterchangeRepository from app state.
 
@@ -252,8 +273,6 @@ async def get_interchange_repo(request: Request):
     Raises:
         RuntimeError: If repository is not initialized in app.state
     """
-    from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
-
     repo = getattr(request.app.state, "interchange_repo", None)
     if repo is None:
         raise RuntimeError("InterchangeRepository not initialized in app.state")

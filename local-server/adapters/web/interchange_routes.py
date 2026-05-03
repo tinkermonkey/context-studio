@@ -16,11 +16,11 @@ Note: Export returns binary data (Blob); import accepts multipart form data.
 """
 
 from typing import Optional
+import json
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status, UploadFile, File, Form
 from fastapi.responses import StreamingResponse
 
-from domain.ontology.services import OntologyService
 from domain.interchange.services import ImportRunService
 from domain.interchange.value_objects import SerializationScope, SerializationScopeType
 from domain.interchange.entities import ImportRunStatus
@@ -28,7 +28,7 @@ from utils.logger import get_logger
 from utils.async_executor import run_sync_in_executor
 
 from adapters.web.dependencies import (
-    get_ontology_service,
+    get_ontology_repo,
     get_interchange_repo,
 )
 from adapters.web.schemas.interchange import (
@@ -56,28 +56,28 @@ _logger = get_logger(__name__)
 # ==================== Helper Functions ====================
 
 
-def _get_serializer(format: str, ontology_service: OntologyService):
+def _get_serializer(format: str, ontology_repo):
     """Get the appropriate serializer for the format."""
     format_lower = format.lower()
     if format_lower == "skos":
-        return SKOSSerializer(ontology_service.repository)
+        return SKOSSerializer(ontology_repo)
     elif format_lower == "owl":
-        return OWLSerializer(ontology_service.repository)
+        return OWLSerializer(ontology_repo)
     elif format_lower == "graphml":
-        return GraphMLSerializer(ontology_service.repository)
+        return GraphMLSerializer(ontology_repo)
     else:
         raise ValueError(f"Unsupported format: {format}")
 
 
-def _get_deserializer(format: str, ontology_service: OntologyService, import_service: ImportRunService):
+def _get_deserializer(format: str, ontology_repo, interchange_repo):
     """Get the appropriate deserializer for the format."""
     format_lower = format.lower()
     if format_lower == "skos":
-        return SKOSDeserializer(ontology_service, import_service)
+        return SKOSDeserializer(ontology_repo, interchange_repo)
     elif format_lower == "owl":
-        return OWLDeserializer(ontology_service, import_service)
+        return OWLDeserializer(ontology_repo, interchange_repo)
     elif format_lower == "graphml":
-        return GraphMLDeserializer(ontology_service, import_service)
+        return GraphMLDeserializer(ontology_repo, interchange_repo)
     else:
         raise ValueError(f"Unsupported format: {format}")
 
@@ -176,14 +176,14 @@ def _change_event_to_response(event: dict) -> ChangeEventResponse:
 @router.post("/export", response_class=StreamingResponse)
 async def export_ontology(
     request: ExportRequest,
-    ontology_service: OntologyService = Depends(get_ontology_service),
+    ontology_repo=Depends(get_ontology_repo),
 ) -> StreamingResponse:
     """
     Export ontology data in the specified format.
 
     Args:
         request: Export request with format and scope
-        ontology_service: Injected OntologyService
+        ontology_repo: Injected OntologyRepository
 
     Returns:
         Binary file data as blob
@@ -196,7 +196,7 @@ async def export_ontology(
         scope = _scope_request_to_domain(request.scope)
 
         # Get serializer
-        serializer = _get_serializer(request.format, ontology_service)
+        serializer = _get_serializer(request.format, ontology_repo)
 
         # Serialize in executor to avoid blocking
         data = await run_sync_in_executor(
@@ -232,7 +232,8 @@ async def import_ontology(
     file: UploadFile = File(..., description="File to import"),
     dry_run: str = Form("true", description="If 'true', returns plan without committing"),
     resolutions: Optional[str] = Form(None, description="JSON-encoded resolutions"),
-    ontology_service: OntologyService = Depends(get_ontology_service),
+    ontology_repo=Depends(get_ontology_repo),
+    interchange_repo: SQLiteInterchangeRepository = Depends(get_interchange_repo),
 ):
     """
     Import ontology data from a file.
@@ -244,7 +245,8 @@ async def import_ontology(
         file: File to import
         dry_run: "true" for dry-run (returns plan), "false" to commit
         resolutions: JSON-encoded list of resolutions (only used when dry_run="false")
-        ontology_service: Injected OntologyService
+        ontology_repo: Injected OntologyRepository
+        interchange_repo: Injected InterchangeRepository
 
     Returns:
         ImportPlanResponse (dry-run) or ImportRunResponse (committed)
@@ -261,16 +263,15 @@ async def import_ontology(
 
         # Validate format
         try:
-            _get_serializer(format, ontology_service)
+            _get_serializer(format, ontology_repo)
         except ValueError as e:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
         # Create import service (stateless, no need for dependency injection)
-        from domain.interchange.services import ImportRunService
         import_service = ImportRunService()
 
         # Get deserializer
-        deserializer = _get_deserializer(format, ontology_service, import_service)
+        deserializer = _get_deserializer(format, ontology_repo, interchange_repo)
 
         # Deserialize in executor to avoid blocking
         import_plan = await run_sync_in_executor(
@@ -281,8 +282,19 @@ async def import_ontology(
         if is_dry_run:
             return _import_plan_to_response(import_plan)
         else:
-            # Return the plan with the import run ID
-            return _import_plan_to_response(import_plan)
+            # Parse resolutions if provided
+            resolution_list = []
+            if resolutions:
+                try:
+                    resolution_data = json.loads(resolutions)
+                    resolution_list = resolution_data if isinstance(resolution_data, list) else []
+                except json.JSONDecodeError as e:
+                    raise ValueError(f"Invalid JSON in resolutions: {e}")
+
+            # Apply resolutions to the plan (if the deserializer created an ImportRun)
+            # For now, we return the plan as an ImportRun response
+            # The resolutions have been parsed and could be applied if needed
+            return _import_run_to_response(import_plan)
 
     except HTTPException:
         raise
@@ -305,7 +317,7 @@ async def list_import_runs(
     interchange_repo: SQLiteInterchangeRepository = Depends(get_interchange_repo),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     limit: int = Query(100, ge=1, le=500, description="Maximum number of results"),
-    status: Optional[str] = Query(None, description="Filter by status"),
+    status_filter: Optional[str] = Query(None, description="Filter by status"),
 ) -> ImportRunListResponse:
     """
     List all import runs with optional filtering.
@@ -314,7 +326,7 @@ async def list_import_runs(
         interchange_repo: Injected interchange repository
         offset: Number of results to skip
         limit: Maximum number of results to return
-        status: Optional status filter (pending, committed, failed, rolled_back)
+        status_filter: Optional status filter (pending, committed, failed, rolled_back)
 
     Returns:
         Paginated list of import runs
@@ -323,15 +335,15 @@ async def list_import_runs(
         HTTPException: If query fails or invalid status provided
     """
     try:
-        if status:
+        if status_filter:
             # Validate status value
             try:
-                ImportRunStatus(status)
+                ImportRunStatus(status_filter)
             except ValueError:
-                raise ValueError(f"Invalid status: {status}")
+                raise ValueError(f"Invalid status: {status_filter}")
             runs = await run_sync_in_executor(
                 lambda: interchange_repo.list_by_status(
-                    ImportRunStatus(status), limit=limit, offset=offset
+                    ImportRunStatus(status_filter), limit=limit, offset=offset
                 )
             )
         else:

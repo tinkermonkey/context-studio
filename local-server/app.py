@@ -489,6 +489,7 @@ async def lifespan(app: FastAPI):
         app.state.admin_service = admin_service
         app.state.db_manager = db_manager
         app.state.reference_sources = reference_sources
+        app.state.ontology_repo = ontology_repo
         app.state.interchange_repo = interchange_repo
         app.state.import_run_service = import_run_service
 

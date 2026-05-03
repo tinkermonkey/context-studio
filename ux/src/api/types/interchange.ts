@@ -2,30 +2,51 @@
  * Interchange Type Definitions
  *
  * Type definitions for import/export operations (interchange)
+ * Generated types are imported from the OpenAPI spec where available
  */
 
+import type { components } from "@/api/client/types";
+
 /**
- * Scope parameters for serialization operations.
+ * SerializationScope - Scope parameters for serialization operations.
  * Describes what should be exported or imported.
  */
-export interface SerializationScope {
-  scope_type: "whole_graph" | "taxonomy" | "scheme" | "entity_set";
-  taxonomy_id?: string;
-  scheme_id?: string;
-  include_descendants?: boolean;
-  entity_ids?: string[];
-}
+export type SerializationScope = components["schemas"]["SerializationScopeResponse"];
 
 /**
- * Conflict detected during import dry-run.
+ * SerializationScopeResponse - Describes what was serialized.
  */
-export interface ImportConflict {
-  match_kind: "external_reference" | "uuid" | "title";
-  incoming: Record<string, unknown>;
-  existing?: string;
-  default_resolution: ResolutionKind;
-  available_resolutions: ResolutionKind[];
-}
+export type SerializationScopeResponse = components["schemas"]["SerializationScopeResponse"];
+
+/**
+ * ResolutionRecord - Resolution applied to a conflict during import.
+ */
+export type ResolutionRecord = components["schemas"]["ResolutionRecordResponse"];
+
+/**
+ * ChangeEvent - Change event associated with an import run.
+ */
+export type ChangeEvent = components["schemas"]["adapters__web__schemas__interchange__ChangeEventResponse"];
+
+/**
+ * ChangeEventResponse - Response containing change event data.
+ */
+export type ChangeEventResponse = components["schemas"]["adapters__web__schemas__interchange__ChangeEventResponse"];
+
+/**
+ * ImportRunResponse - Response containing import run data.
+ */
+export type ImportRunResponse = components["schemas"]["ImportRunResponse"];
+
+/**
+ * ImportRunListResponse - Paginated list of import runs.
+ */
+export type ImportRunListResponse = components["schemas"]["ImportRunListResponse"];
+
+/**
+ * ChangeEventListResponse - Paginated list of change events.
+ */
+export type ChangeEventListResponse = components["schemas"]["ChangeEventListResponse"];
 
 /**
  * Resolution strategy for import conflicts.
@@ -38,12 +59,14 @@ export type ResolutionKind =
   | "abort";
 
 /**
- * Resolution applied to a conflict during import.
+ * Conflict detected during import dry-run.
  */
-export interface ResolutionRecord {
+export interface ImportConflict {
   match_kind: "external_reference" | "uuid" | "title";
-  entity_id: string;
-  resolution_chosen: ResolutionKind;
+  incoming: Record<string, unknown>;
+  existing?: string;
+  default_resolution: ResolutionKind;
+  available_resolutions: ResolutionKind[];
 }
 
 /**
@@ -70,54 +93,25 @@ export type ImportRunStatus =
 /**
  * Result of committing an import run.
  */
-export interface ImportRunCommitResponse {
-  id: string;
-  created_at: string;
-  created_by?: string;
-  format: string;
-  source_uri?: string;
-  source_hash: string;
-  scope: SerializationScope;
-  resolutions: ResolutionRecord[];
-  affected_entity_ids: string[];
-  status: ImportRunStatus;
-}
+export type ImportRunCommitResponse = ImportRunResponse;
 
 /**
  * Import run with change events.
  */
-export interface ImportRun {
-  id: string;
-  created_at: string;
-  created_by?: string;
-  format: string;
-  source_uri?: string;
-  source_hash: string;
-  scope: SerializationScope;
-  resolutions: ResolutionRecord[];
-  affected_entity_ids: string[];
-  status: ImportRunStatus;
-}
+export type ImportRun = ImportRunResponse;
 
 /**
- * Change event associated with an import run.
+ * Query parameters for listing import runs.
  */
-export interface ChangeEvent {
-  id: string;
-  timestamp: string;
-  entity_id: string;
-  entity_type: string;
-  change_type: string;
-  import_run_id?: string;
-  details?: Record<string, unknown>;
-}
-
 export interface ImportRunListParams {
   offset?: number;
   limit?: number;
   status?: ImportRunStatus;
 }
 
+/**
+ * Query parameters for listing change events.
+ */
 export interface ChangeEventListParams {
   offset?: number;
   limit?: number;
