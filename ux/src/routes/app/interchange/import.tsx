@@ -34,11 +34,25 @@ function ImportComponent() {
     onSuccess: (response) => {
       if ("conflicts" in response) {
         // This is an ImportPlanResponse from dry_run
-        setImportPlan(response as ImportPlanResponse);
+        const plan = response as ImportPlanResponse;
+        setImportPlan(plan);
         setShowConflictModal(true);
-        success(
-          `Found ${(response as ImportPlanResponse).conflicts.length} conflicts`,
-        );
+
+        // Build success message with conflicts and warnings
+        const messages = [];
+        if (plan.conflicts.length > 0) {
+          messages.push(`Found ${plan.conflicts.length} conflicts`);
+        }
+        if (plan.warnings && plan.warnings.length > 0) {
+          plan.warnings.forEach((warning) => {
+            error(warning);
+          });
+        }
+
+        // Show conflicts count if there are any
+        if (messages.length > 0) {
+          success(messages.join(", "));
+        }
       }
     },
     onError: (err) => {

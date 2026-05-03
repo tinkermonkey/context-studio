@@ -77,9 +77,9 @@ export const useInterchangeImport = (
   };
 
   return useMutation({
+    ...otherOptions,
     mutationFn: ({ format, file, dry_run, resolutions }) =>
       interchangeService.importFile(format, file, dry_run, resolutions),
     onSuccess: customOnSuccess,
-    ...otherOptions,
   });
 };

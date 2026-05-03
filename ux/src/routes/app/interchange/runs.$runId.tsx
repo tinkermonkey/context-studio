@@ -24,8 +24,9 @@ function ImportRunDetailComponent() {
   const [eventOffset, setEventOffset] = React.useState(0);
   const eventLimit = 20;
 
-  const { data: run, isLoading: runLoading } = useInterchangeRun(runId);
-  const { data: eventsData, isLoading: eventsLoading } =
+  const { data: run, isLoading: runLoading, error: runError } =
+    useInterchangeRun(runId);
+  const { data: eventsData, isLoading: eventsLoading, error: eventsError } =
     useInterchangeRunChangeEvents(runId, {
       offset: eventOffset,
       limit: eventLimit,
@@ -51,6 +52,17 @@ function ImportRunDetailComponent() {
 
   if (runLoading) {
     return <Spinner className="mx-auto my-8" />;
+  }
+
+  if (runError) {
+    return (
+      <div className="rounded bg-red-50 p-4 text-red-900 dark:bg-red-950 dark:text-red-100">
+        <p className="font-semibold">Failed to load import run</p>
+        <p className="text-sm">
+          {runError instanceof Error ? runError.message : "Unknown error"}
+        </p>
+      </div>
+    );
   }
 
   if (!run) {
@@ -145,6 +157,15 @@ function ImportRunDetailComponent() {
 
         {eventsLoading ? (
           <Spinner />
+        ) : eventsError ? (
+          <div className="rounded bg-yellow-50 p-4 text-yellow-900 dark:bg-yellow-950 dark:text-yellow-100">
+            <p className="font-semibold">Failed to load change events</p>
+            <p className="text-sm">
+              {eventsError instanceof Error
+                ? eventsError.message
+                : "Unknown error"}
+            </p>
+          </div>
         ) : changeEvents.length === 0 ? (
           <p className="text-gray-600 dark:text-gray-400">
             No change events recorded
