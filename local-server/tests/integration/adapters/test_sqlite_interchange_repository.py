@@ -389,3 +389,79 @@ class TestImportRunPersistence:
         # Try to directly assign status — should raise AttributeError
         with pytest.raises(AttributeError, match="Cannot directly assign to 'status'"):
             import_run.status = ImportRunStatus.COMMITTED
+
+    def test_count_all(self, repository):
+        """Can count all import runs."""
+        assert repository.count_all() == 0
+
+        scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+        for i in range(5):
+            import_run = ImportRun(
+                id=str(uuid.uuid4()),
+                created_at=datetime.now(timezone.utc),
+                created_by=f"user-{i}",
+                format=SerializationFormat.SKOS,
+                source_uri=f"test-{i}.skos",
+                source_hash=f"hash-{i}",
+                scope=scope,
+            )
+            repository.create(import_run)
+
+        assert repository.count_all() == 5
+
+    def test_count_by_status_pending(self, repository):
+        """Can count import runs filtered by PENDING status."""
+        scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+
+        # Create 3 pending runs
+        for i in range(3):
+            import_run = ImportRun(
+                id=str(uuid.uuid4()),
+                created_at=datetime.now(timezone.utc),
+                created_by=f"user-{i}",
+                format=SerializationFormat.SKOS,
+                source_uri=f"pending-{i}.skos",
+                source_hash=f"hash-pending-{i}",
+                scope=scope,
+                status=ImportRunStatus.PENDING,
+            )
+            repository.create(import_run)
+
+        # Create 2 committed runs
+        for i in range(2):
+            import_run = ImportRun(
+                id=str(uuid.uuid4()),
+                created_at=datetime.now(timezone.utc),
+                created_by=f"user-committed-{i}",
+                format=SerializationFormat.SKOS,
+                source_uri=f"committed-{i}.skos",
+                source_hash=f"hash-committed-{i}",
+                scope=scope,
+                status=ImportRunStatus.COMMITTED,
+            )
+            repository.create(import_run)
+
+        assert repository.count_by_status(ImportRunStatus.PENDING) == 3
+        assert repository.count_by_status(ImportRunStatus.COMMITTED) == 2
+
+    def test_count_by_status_all_statuses(self, repository):
+        """Can count import runs for each status type."""
+        scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+
+        # Create one run for each status
+        for status in ImportRunStatus:
+            import_run = ImportRun(
+                id=str(uuid.uuid4()),
+                created_at=datetime.now(timezone.utc),
+                created_by=f"user-{status.value}",
+                format=SerializationFormat.SKOS,
+                source_uri=f"test-{status.value}.skos",
+                source_hash=f"hash-{status.value}",
+                scope=scope,
+                status=status,
+            )
+            repository.create(import_run)
+
+        # Verify count for each status
+        for status in ImportRunStatus:
+            assert repository.count_by_status(status) == 1

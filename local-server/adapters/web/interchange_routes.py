@@ -18,7 +18,7 @@ Note: Export returns binary data (Blob); import accepts multipart form data.
 from typing import Optional
 import json
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, Query, status as http_status, UploadFile, File, Form
 from fastapi.responses import StreamingResponse
 
 from domain.interchange.value_objects import SerializationScope, SerializationScopeType, SerializationFormat
@@ -223,11 +223,11 @@ async def export_ontology(
 
     except ValueError as e:
         _logger.warning(f"Invalid export request: {e}")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=http_status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         _logger.error(f"Export failed: {e}", exc_info=e)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Export operation failed",
         )
 
@@ -274,7 +274,7 @@ async def import_ontology(
                 parsed_resolutions = json.loads(resolutions)
             except json.JSONDecodeError as e:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
+                    status_code=http_status.HTTP_400_BAD_REQUEST,
                     detail=f"Invalid resolutions JSON: {str(e)}",
                 )
 
@@ -286,7 +286,7 @@ async def import_ontology(
             enum_format = SerializationFormat(format.lower())
         except ValueError:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=http_status.HTTP_400_BAD_REQUEST,
                 detail=f"Unsupported format: {format}. Supported formats: {', '.join(f.value for f in SerializationFormat)}",
             )
 
@@ -294,7 +294,7 @@ async def import_ontology(
         try:
             _get_serializer(enum_format, ontology_repo)
         except ValueError as e:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+            raise HTTPException(status_code=http_status.HTTP_400_BAD_REQUEST, detail=str(e))
 
         # Get deserializer
         deserializer = _get_deserializer(enum_format, ontology_repo, interchange_repo)
@@ -328,11 +328,11 @@ async def import_ontology(
         raise
     except ValueError as e:
         _logger.warning(f"Invalid import request: {e}")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=http_status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         _logger.error(f"Import failed: {e}", exc_info=e)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Import operation failed",
         )
 
@@ -394,11 +394,11 @@ async def list_import_runs(
 
     except ValueError as e:
         _logger.warning(f"Invalid query parameters: {e}")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=http_status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         _logger.error(f"Failed to list import runs: {e}", exc_info=e)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to list import runs",
         )
 
@@ -431,7 +431,7 @@ async def get_import_run(
 
         if not import_run:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail=f"Import run not found: {run_id}",
             )
 
@@ -442,7 +442,7 @@ async def get_import_run(
     except Exception as e:
         _logger.error(f"Failed to get import run: {e}", exc_info=e)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get import run",
         )
 
@@ -484,7 +484,7 @@ async def get_run_change_events(
 
         if not import_run:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail=f"Import run not found: {run_id}",
             )
 
@@ -519,6 +519,6 @@ async def get_run_change_events(
     except Exception as e:
         _logger.error(f"Failed to get change events: {e}", exc_info=e)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get change events",
         )

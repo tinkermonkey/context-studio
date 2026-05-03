@@ -145,6 +145,27 @@ class ImportRunRepository(Protocol):
         """
         ...
 
+    def count_all(self) -> int:
+        """
+        Count total number of import runs.
+
+        Returns:
+            Total count of all import runs
+        """
+        ...
+
+    def count_by_status(self, status: ImportRunStatus) -> int:
+        """
+        Count import runs filtered by status.
+
+        Args:
+            status: The ImportRunStatus to filter by
+
+        Returns:
+            Total count of import runs with the given status
+        """
+        ...
+
     def get_change_events_for_run(self, import_run_id: str) -> list[dict]:
         """
         Retrieve change events associated with an import run.
