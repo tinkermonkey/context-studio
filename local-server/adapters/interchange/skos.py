@@ -11,12 +11,14 @@ Mapping strategy:
 - Class.parent_class_id → skos:broader (and inverse skos:narrower)
 - Class.title → skos:prefLabel
 - Class.description → skos:definition
-- external_references → dct:source (one per ref) plus skos:exactMatch (for cross-vocab refs)
+- external_references → LOCAL:externalReferences (JSON-encoded full object with source/identifier/uri)
+  - Backwards compatible with legacy dct:source + skos:exactMatch format (heuristically reconstructed on import)
 """
 
 from __future__ import annotations
 
 import hashlib
+import json
 import uuid
 from typing import Optional, Dict, Any
 
@@ -277,14 +279,17 @@ class SKOSSerializer(OntologySerializer):
     def _add_external_reference(
         self, subject_uri: URIRef, ext_ref: ExternalReference
     ) -> None:
-        """Add external references as dct:source and skos:exactMatch."""
+        """Add external references as LOCAL:externalReferences JSON for faithful round-tripping."""
         assert self.graph is not None
-        # Add dct:source for all references
-        if ext_ref.uri:
-            ref_uri = URIRef(ext_ref.uri)
-            self.graph.add((subject_uri, DCT.source, ref_uri))
-            # Also add skos:exactMatch for cross-vocabulary references
-            self.graph.add((subject_uri, SKOS.exactMatch, ref_uri))
+        # Store full external reference object as JSON for faithful round-tripping
+        # This includes source, identifier, and uri fields
+        ref_dict = {
+            "source": ext_ref.source,
+            "identifier": ext_ref.identifier,
+            "uri": ext_ref.uri,
+        }
+        ref_json = json.dumps(ref_dict)
+        self.graph.add((subject_uri, LOCAL.externalReferences, Literal(ref_json)))
 
     def _entity_uri(self, entity_id: str) -> URIRef:
         """Create a URI for an entity."""
@@ -635,27 +640,33 @@ class SKOSDeserializer(OntologyDeserializer):
             parent_class_id = self._uri_to_id(parent)
             break
 
-        # Extract external references from dct:source and skos:exactMatch
+        # Extract external references from LOCAL:externalReferences JSON (primary)
+        # Fall back to dct:source and skos:exactMatch for backwards compatibility
         external_references = []
-        for source_uri in self.graph.objects(uri, DCT.source):
-            source_str = str(source_uri)
-            # Extract source name and identifier from URI
-            source_name, identifier = self._parse_external_reference_uri(source_str)
-            if source_name and identifier:
+
+        # Try to extract from LOCAL:externalReferences JSON first
+        for ext_ref_lit in self.graph.objects(uri, LOCAL.externalReferences):
+            try:
+                ref_dict = json.loads(str(ext_ref_lit))
                 external_references.append(
                     {
-                        "source": source_name,
-                        "identifier": identifier,
-                        "uri": source_str,
+                        "source": ref_dict.get("source"),
+                        "identifier": ref_dict.get("identifier"),
+                        "uri": ref_dict.get("uri"),
                     }
                 )
+            except (json.JSONDecodeError, TypeError):
+                self.warnings.append(
+                    f"Class {uri} has malformed LOCAL:externalReferences JSON"
+                )
 
-        for match_uri in self.graph.objects(uri, SKOS.exactMatch):
-            source_str = str(match_uri)
-            source_name, identifier = self._parse_external_reference_uri(source_str)
-            if source_name and identifier:
-                # Check if already added via dct:source
-                if not any(r["uri"] == source_str for r in external_references):
+        # If no JSON references found, fall back to legacy dct:source and skos:exactMatch
+        if not external_references:
+            for source_uri in self.graph.objects(uri, DCT.source):
+                source_str = str(source_uri)
+                # Extract source name and identifier from URI
+                source_name, identifier = self._parse_external_reference_uri(source_str)
+                if source_name and identifier:
                     external_references.append(
                         {
                             "source": source_name,
@@ -663,6 +674,20 @@ class SKOSDeserializer(OntologyDeserializer):
                             "uri": source_str,
                         }
                     )
+
+            for match_uri in self.graph.objects(uri, SKOS.exactMatch):
+                source_str = str(match_uri)
+                source_name, identifier = self._parse_external_reference_uri(source_str)
+                if source_name and identifier:
+                    # Check if already added via dct:source
+                    if not any(r["uri"] == source_str for r in external_references):
+                        external_references.append(
+                            {
+                                "source": source_name,
+                                "identifier": identifier,
+                                "uri": source_str,
+                            }
+                        )
 
         entity_dict = {
             "id": entity_id,

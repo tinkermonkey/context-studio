@@ -32,7 +32,7 @@ SKOS is RDF-based, designed specifically for taxonomies and concept schemes. It 
 - **Class** (as `skos:Concept`)
   - `id`, `title`, `description`, `parent_class_id`
   - `concept_scheme_id` (via `skos:inScheme`)
-  - `external_references` (via `dct:source` for all references, plus `skos:exactMatch` for cross-vocabulary identity)
+  - `external_references` (via `LOCAL:externalReferences` JSON with full source/identifier/uri, with `dct:source`/`skos:exactMatch` as legacy fallback)
 
 ### Survives But Lossy
 
@@ -63,12 +63,12 @@ OWL is the most expressive format, built on RDF and designed for full ontology d
 - **Class** (as `owl:Class`)
   - `id`, `title`, `description`, `parent_class_id` (via `rdfs:subClassOf`)
   - `concept_scheme_id` (via `skos:inScheme` or inferred from parent structures)
-  - `external_references` (via `owl:sameAs`)
+  - `external_references` (via `LOCAL:externalReferences` JSON with full source/identifier/uri, with `owl:sameAs` as legacy fallback)
 - **Individual** (as `owl:NamedIndividual`)
   - `id`, `title`, `description`
   - `class_ids` (via `rdf:type`, preserved in order)
   - Multi-class membership with ordering (via `LOCAL:hasClass_0`, `LOCAL:hasClass_1`, ... indexed predicates)
-  - `external_references` (via `owl:sameAs`)
+  - `external_references` (via `LOCAL:externalReferences` JSON with full source/identifier/uri, with `owl:sameAs` as legacy fallback)
 - **PropertyDefinition** (as `owl:ObjectProperty`)
   - `id`, `identifier`, `title`, `description`
 - **Relationship** (as RDF triples using property URIs)

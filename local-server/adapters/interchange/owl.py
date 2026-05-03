@@ -11,12 +11,14 @@ Mapping strategy:
 - Individual → owl:NamedIndividual (with rdf:type indicating class membership)
 - PropertyDefinition → owl:ObjectProperty or owl:DatatypeProperty (inferred from usage)
 - Relationship → RDF triple using the property predicate
-- external_references → owl:sameAs (for entity identity) with URI extraction on import
+- external_references → LOCAL:externalReferences (JSON-encoded full object with source/identifier/uri)
+  - Backwards compatible with legacy owl:sameAs format (heuristically reconstructed on import)
 """
 
 from __future__ import annotations
 
 import hashlib
+import json
 import uuid
 from typing import Optional, Dict, Any, cast
 
@@ -320,11 +322,17 @@ class OWLSerializer(OntologySerializer):
     def _add_external_reference_to_graph(
         self, entity_uri: URIRef, ext_ref: ExternalReference
     ) -> None:
-        """Add an external reference to an entity using only owl:sameAs to avoid duplication."""
+        """Add an external reference to an entity using LOCAL:externalReferences JSON for faithful round-tripping."""
         assert self.graph is not None
-        if ext_ref.uri:
-            # Use owl:sameAs as the single source of truth for external references
-            self.graph.add((entity_uri, OWL.sameAs, URIRef(ext_ref.uri)))
+        # Store full external reference object as JSON for faithful round-tripping
+        # This includes source, identifier, and uri fields
+        ref_dict = {
+            "source": ext_ref.source,
+            "identifier": ext_ref.identifier,
+            "uri": ext_ref.uri,
+        }
+        ref_json = json.dumps(ref_dict)
+        self.graph.add((entity_uri, LOCAL.externalReferences, Literal(ref_json)))
 
     def _entity_uri(self, entity_id: str) -> URIRef:
         """Convert an entity ID to a URI."""
@@ -778,23 +786,38 @@ class OWLDeserializer(OntologyDeserializer):
     def _extract_external_references_as_dicts(
         self, entity_uri: Node
     ) -> list[Dict[str, Any]]:
-        """Extract external references from owl:sameAs URIs as dicts."""
+        """Extract external references from LOCAL:externalReferences JSON (primary) or owl:sameAs (legacy)."""
         refs = []
 
         if self.graph is not None:
-            # Extract owl:sameAs references (single source of truth)
-            for same_as_uri in self.graph.objects(entity_uri, OWL.sameAs):
-                uri_str = str(same_as_uri)
-                # Parse source:identifier from the URI
-                source, identifier = self._parse_uri_for_reference(uri_str)
+            # Try to extract from LOCAL:externalReferences JSON first (primary format)
+            for ext_ref_lit in self.graph.objects(entity_uri, LOCAL.externalReferences):
+                try:
+                    ref_dict = json.loads(str(ext_ref_lit))
+                    refs.append(
+                        {
+                            "source": ref_dict.get("source"),
+                            "identifier": ref_dict.get("identifier"),
+                            "uri": ref_dict.get("uri"),
+                        }
+                    )
+                except (json.JSONDecodeError, TypeError):
+                    pass  # Skip malformed JSON, will try legacy format
 
-                refs.append(
-                    {
-                        "source": source,
-                        "identifier": identifier,
-                        "uri": uri_str,
-                    }
-                )
+            # If no JSON references found, fall back to legacy owl:sameAs format
+            if not refs:
+                for same_as_uri in self.graph.objects(entity_uri, OWL.sameAs):
+                    uri_str = str(same_as_uri)
+                    # Parse source:identifier from the URI
+                    source, identifier = self._parse_uri_for_reference(uri_str)
+
+                    refs.append(
+                        {
+                            "source": source,
+                            "identifier": identifier,
+                            "uri": uri_str,
+                        }
+                    )
 
         return refs
 
