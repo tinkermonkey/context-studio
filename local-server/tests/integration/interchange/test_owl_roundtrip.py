@@ -355,12 +355,15 @@ class TestOWLIdempotentReimport:
         original_dog = next(
             (c for c in ontology_repo.list_classes() if c.title == "Dog"), None
         )
-        if original_dog:
-            # Should find matching entity in incoming
-            assert any(
-                e.get("title") == "Dog"
-                for e in deserializer.incoming_entities.values()
-            )
+        assert original_dog is not None
+
+        # Should find matching entity in incoming with same UUID
+        matching_entity = next(
+            (e for e in deserializer.incoming_entities.values() if e.get("title") == "Dog"),
+            None,
+        )
+        assert matching_entity is not None
+        assert matching_entity["id"] == original_dog.id
 
     def test_reimport_with_multi_class_individuals(self, ontology_repo, sample_data):
         """Test that multi-class individual membership survives round-trip."""
@@ -388,9 +391,9 @@ class TestOWLIdempotentReimport:
         )
 
         # Fido should have both Dog and Mammal as classes
-        if fido_incoming:
-            class_ids = fido_incoming.get("class_ids", [])
-            assert len(class_ids) >= 1  # At minimum should have a class
+        assert fido_incoming is not None
+        class_ids = fido_incoming.get("class_ids", [])
+        assert len(class_ids) == 2
 
 
 class TestOWLFormatSupport:
