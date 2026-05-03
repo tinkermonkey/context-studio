@@ -320,7 +320,7 @@ export interface paths {
      *         service: OntologyService from dependency injection
      *
      *     Raises:
-     *         HTTPException: 404 if not found, 422 if it has subclasses
+     *         HTTPException: 404 if not found, 422 if it has subclasses or individuals
      */
     delete: operations["delete_class_api_classes__class_id__delete"];
     options?: never;
