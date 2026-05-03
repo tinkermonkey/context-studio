@@ -55,6 +55,7 @@ def run_local_migrations(args: list[str], local_db_url: str | None = None) -> in
 
 def run_operations_migrations(args: list[str], operations_db_url: str | None = None) -> int:
     """Run migrations for operations.db using Alembic Python API."""
+    import argparse
     from alembic.config import Config
     from alembic import command
 
@@ -62,11 +63,16 @@ def run_operations_migrations(args: list[str], operations_db_url: str | None = N
         # Create Alembic configuration
         config = Config(str(SQLITE_DIR / "alembic.ini"))
 
+        # Set cmd_opts so env.py can detect this is for operations database
+        db_url = operations_db_url or "sqlite:///./operations.db"
+        config.cmd_opts = argparse.Namespace(
+            x=[f"db=operations", f"operations_db_url={db_url}"]
+        )
+
         # Set version locations to operations directory only
         config.set_main_option("version_locations", str(SQLITE_DIR / "operations" / "versions"))
 
         # Set database URL
-        db_url = operations_db_url or "sqlite:///./operations.db"
         config.set_main_option("sqlalchemy.url", db_url)
 
         # Parse arguments and run the appropriate Alembic command

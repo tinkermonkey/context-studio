@@ -1,5 +1,4 @@
 import sys
-import importlib.util
 from pathlib import Path
 from logging.config import fileConfig
 
@@ -7,7 +6,6 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
-from alembic.config import Config
 
 # Ensure local-server root is in path for imports
 local_server_root = Path(__file__).parent.parent.parent.parent
@@ -20,7 +18,7 @@ from adapters.persistence.sqlite.models import Base  # noqa: E402
 # access to the values within the .ini file in use.
 config = context.config
 
-# Configure version locations to include both local and operations migrations
+# Configure version locations based on target database
 sqlite_dir = Path(__file__).parent
 x_args = context.get_x_argument(as_dictionary=True)
 
