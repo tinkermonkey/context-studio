@@ -480,47 +480,51 @@ class SKOSDeserializer(OntologyDeserializer):
                 if resolution_map[entity_id] == ResolutionKind.SKIP:
                     continue
 
-            # Create and persist the entity (simplified for now - assumes CREATE semantics)
+            # Persist the entity (simplified for now - assumes CREATE semantics)
             # In a full implementation, would also handle MERGE and OVERWRITE
             entity_type = entity_dict.get("type")
-            if entity_type == "class":
-                # Create Class entity and persist
-                class_entity = Class(
-                    id=entity_dict["id"],
-                    title=entity_dict["title"],
-                    description=entity_dict.get("description"),
-                    concept_scheme_id=entity_dict.get("concept_scheme_id", ""),
-                    parent_class_id=entity_dict.get("parent_class_id"),
-                    external_references=[
-                        ExternalReference(
-                            source=ref["source"],
-                            identifier=ref["identifier"],
-                            uri=ref.get("uri"),
-                        )
-                        for ref in entity_dict.get("external_references", [])
-                    ],
-                )
-                self.ontology_repo.create_class(class_entity)
-                affected_entity_ids.append(entity_id)
-            elif entity_type == "concept_scheme":
-                # Create ConceptScheme entity and persist
-                scheme = ConceptScheme(
-                    id=entity_dict["id"],
-                    title=entity_dict["title"],
-                    description=entity_dict.get("description"),
-                    taxonomy_id=entity_dict.get("taxonomy_id", ""),
-                )
-                self.ontology_repo.create_concept_scheme(scheme)
-                affected_entity_ids.append(entity_id)
-            elif entity_type == "taxonomy":
-                # Create Taxonomy entity and persist
-                taxonomy = Taxonomy(
-                    id=entity_dict["id"],
-                    title=entity_dict["title"],
-                    description=entity_dict.get("description"),
-                )
-                self.ontology_repo.create_taxonomy(taxonomy)
-                affected_entity_ids.append(entity_id)
+            try:
+                if entity_type == "class":
+                    # Create and persist Class entity
+                    class_entity = Class(
+                        id=entity_dict["id"],
+                        title=entity_dict["title"],
+                        description=entity_dict.get("description"),
+                        concept_scheme_id=entity_dict.get("concept_scheme_id", ""),
+                        parent_class_id=entity_dict.get("parent_class_id"),
+                        external_references=[
+                            ExternalReference(
+                                source=ref["source"],
+                                identifier=ref["identifier"],
+                                uri=ref.get("uri"),
+                            )
+                            for ref in entity_dict.get("external_references", [])
+                        ],
+                    )
+                    self.ontology_repo.save_class(class_entity)
+                    affected_entity_ids.append(entity_id)
+                elif entity_type == "concept_scheme":
+                    # Create and persist ConceptScheme entity
+                    scheme = ConceptScheme(
+                        id=entity_dict["id"],
+                        title=entity_dict["title"],
+                        description=entity_dict.get("description"),
+                        taxonomy_id=entity_dict.get("taxonomy_id", ""),
+                    )
+                    self.ontology_repo.save_concept_scheme(scheme)
+                    affected_entity_ids.append(entity_id)
+                elif entity_type == "taxonomy":
+                    # Create and persist Taxonomy entity
+                    taxonomy = Taxonomy(
+                        id=entity_dict["id"],
+                        title=entity_dict["title"],
+                        description=entity_dict.get("description"),
+                    )
+                    self.ontology_repo.save_taxonomy(taxonomy)
+                    affected_entity_ids.append(entity_id)
+            except Exception as e:
+                # Log error but continue with other entities
+                logger.error(f"Failed to persist entity {entity_id}: {str(e)}")
 
         # Update ImportRun with affected entities and mark as committed
         import_run.affected_entity_ids = affected_entity_ids
