@@ -312,7 +312,7 @@ class TestOWLEmptyDatabaseRoundTrip:
         # Count entities in both
         original_classes = ontology_repo.list_classes()
         original_class_count = len(list(original_classes))
-        imported_class_count = len(deserializer.incoming_entities)
+        imported_class_count = len([e for e in deserializer.incoming_entities.values() if e.get('type') == 'class'])
 
         # Should have exact same structure (no duplicates on roundtrip)
         assert imported_class_count == original_class_count

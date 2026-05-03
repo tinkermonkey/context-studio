@@ -258,7 +258,7 @@ class TestSKOSEmptyDatabaseRoundTrip:
 
         # Count classes in both
         original_class_count = len([c for c in original_classes])
-        imported_class_count = len(deserializer.incoming_entities)
+        imported_class_count = len([e for e in deserializer.incoming_entities.values() if e.get('type') == 'class'])
 
         # Should have exact same structure (no duplicates on roundtrip)
         assert imported_class_count == original_class_count
