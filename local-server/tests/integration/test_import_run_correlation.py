@@ -27,6 +27,7 @@ from domain.interchange.services import (
 from domain.interchange.value_objects import (
     SerializationScope,
     SerializationScopeType,
+    SerializationFormat,
 )
 from domain.ontology.services import OntologyService
 from domain.versioning.value_objects import ChangeOperation
@@ -115,7 +116,7 @@ def test_change_events_inside_import_have_import_run_id(change_repo):
     import_service = ImportRunService()
     scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
     import_run = import_service.start_run(
-        format="skos",
+        format=SerializationFormat.SKOS,
         source_hash="test-hash",
         scope=scope,
         source_uri="test.skos",
@@ -170,7 +171,7 @@ def test_multiple_events_in_same_import_linked_to_same_run(change_repo):
     import_service = ImportRunService()
     scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
     import_run = import_service.start_run(
-        format="skos",
+        format=SerializationFormat.SKOS,
         source_hash="test-hash",
         scope=scope,
         source_uri="test.skos",
@@ -228,7 +229,7 @@ def test_change_event_recorder_auto_correlation_from_context(
     import_service = ImportRunService()
     scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
     import_run = import_service.start_run(
-        format="skos",
+        format=SerializationFormat.SKOS,
         source_hash="test-hash",
         scope=scope,
         source_uri="test.skos",

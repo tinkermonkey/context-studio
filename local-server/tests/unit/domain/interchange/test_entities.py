@@ -21,6 +21,7 @@ from domain.interchange.entities import (
 from domain.interchange.value_objects import (
     SerializationScope,
     SerializationScopeType,
+    SerializationFormat,
     MatchKind,
     ResolutionKind,
 )
@@ -36,7 +37,7 @@ class TestImportRunStatus:
             id="test-run-1",
             created_at=datetime.now(timezone.utc),
             created_by="user-1",
-            format="skos",
+            format=SerializationFormat.SKOS,
             source_uri="test.skos",
             source_hash="abc123",
             scope=scope,
@@ -53,7 +54,7 @@ class TestImportRunStatus:
             id="test-run-1",
             created_at=datetime.now(timezone.utc),
             created_by="user-1",
-            format="skos",
+            format=SerializationFormat.SKOS,
             source_uri="test.skos",
             source_hash="abc123",
             scope=scope,
@@ -70,7 +71,7 @@ class TestImportRunStatus:
             id="test-run-1",
             created_at=datetime.now(timezone.utc),
             created_by="user-1",
-            format="skos",
+            format=SerializationFormat.SKOS,
             source_uri="test.skos",
             source_hash="abc123",
             scope=scope,
@@ -87,7 +88,7 @@ class TestImportRunStatus:
             id="test-run-1",
             created_at=datetime.now(timezone.utc),
             created_by="user-1",
-            format="skos",
+            format=SerializationFormat.SKOS,
             source_uri="test.skos",
             source_hash="abc123",
             scope=scope,
@@ -100,38 +101,41 @@ class TestImportRunStatus:
         with pytest.raises(ValueError, match="terminal state"):
             run.mark_committed()
 
-    def test_failed_to_rolled_back(self):
-        """FAILED can transition to ROLLED_BACK."""
+    def test_failed_terminal_cannot_rollback(self):
+        """FAILED is terminal; cannot transition to other states."""
         scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
         run = ImportRun(
             id="test-run-1",
             created_at=datetime.now(timezone.utc),
             created_by="user-1",
-            format="skos",
+            format=SerializationFormat.SKOS,
             source_uri="test.skos",
             source_hash="abc123",
             scope=scope,
             status=ImportRunStatus.FAILED,
         )
 
-        run.mark_rolled_back()
-        assert run.status == ImportRunStatus.ROLLED_BACK
+        with pytest.raises(ValueError, match="terminal state"):
+            run.mark_rolled_back()
+
+        with pytest.raises(ValueError, match="terminal state"):
+            run.mark_committed()
 
     def test_committed_cannot_rollback(self):
-        """COMMITTED run cannot be rolled back."""
+        """COMMITTED is terminal; cannot transition to other states."""
         scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
         run = ImportRun(
             id="test-run-1",
             created_at=datetime.now(timezone.utc),
             created_by="user-1",
-            format="skos",
+            format=SerializationFormat.SKOS,
             source_uri="test.skos",
             source_hash="abc123",
             scope=scope,
             status=ImportRunStatus.COMMITTED,
         )
 
-        with pytest.raises(ValueError, match="Cannot roll back a COMMITTED run"):
+        with pytest.raises(ValueError, match="terminal state"):
             run.mark_rolled_back()
 
 
@@ -145,7 +149,7 @@ class TestImportRunResolutions:
             id="test-run-1",
             created_at=datetime.now(timezone.utc),
             created_by="user-1",
-            format="skos",
+            format=SerializationFormat.SKOS,
             source_uri="test.skos",
             source_hash="abc123",
             scope=scope,
@@ -171,7 +175,7 @@ class TestImportRunResolutions:
             id="test-run-1",
             created_at=datetime.now(timezone.utc),
             created_by="user-1",
-            format="skos",
+            format=SerializationFormat.SKOS,
             source_uri="test.skos",
             source_hash="abc123",
             scope=scope,
@@ -196,7 +200,7 @@ class TestImportRunAffectedEntities:
             id="test-run-1",
             created_at=datetime.now(timezone.utc),
             created_by="user-1",
-            format="skos",
+            format=SerializationFormat.SKOS,
             source_uri="test.skos",
             source_hash="abc123",
             scope=scope,
@@ -215,7 +219,7 @@ class TestImportRunAffectedEntities:
             id="test-run-1",
             created_at=datetime.now(timezone.utc),
             created_by="user-1",
-            format="skos",
+            format=SerializationFormat.SKOS,
             source_uri="test.skos",
             source_hash="abc123",
             scope=scope,

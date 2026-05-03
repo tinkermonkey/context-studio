@@ -28,34 +28,31 @@ class TestSerializationScopeValidation:
     def test_whole_graph_valid(self):
         """WHOLE_GRAPH scope with no other fields is valid."""
         scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
-        scope.validate()  # Should not raise
+        # Validation happens at construction time via __post_init__
 
     def test_whole_graph_rejects_taxonomy_id(self):
         """WHOLE_GRAPH scope cannot have taxonomy_id."""
-        scope = SerializationScope(
-            scope_type=SerializationScopeType.WHOLE_GRAPH,
-            taxonomy_id="tax-1",
-        )
         with pytest.raises(ValueError, match="must not have"):
-            scope.validate()
+            SerializationScope(
+                scope_type=SerializationScopeType.WHOLE_GRAPH,
+                taxonomy_id="tax-1",
+            )
 
     def test_whole_graph_rejects_scheme_id(self):
         """WHOLE_GRAPH scope cannot have scheme_id."""
-        scope = SerializationScope(
-            scope_type=SerializationScopeType.WHOLE_GRAPH,
-            scheme_id="scheme-1",
-        )
         with pytest.raises(ValueError, match="must not have"):
-            scope.validate()
+            SerializationScope(
+                scope_type=SerializationScopeType.WHOLE_GRAPH,
+                scheme_id="scheme-1",
+            )
 
     def test_whole_graph_rejects_entity_ids(self):
         """WHOLE_GRAPH scope cannot have entity_ids."""
-        scope = SerializationScope(
-            scope_type=SerializationScopeType.WHOLE_GRAPH,
-            entity_ids=("entity-1",),
-        )
         with pytest.raises(ValueError, match="must not have"):
-            scope.validate()
+            SerializationScope(
+                scope_type=SerializationScopeType.WHOLE_GRAPH,
+                entity_ids=("entity-1",),
+            )
 
     def test_taxonomy_valid(self):
         """TAXONOMY scope with taxonomy_id is valid."""
@@ -63,33 +60,30 @@ class TestSerializationScopeValidation:
             scope_type=SerializationScopeType.TAXONOMY,
             taxonomy_id="tax-1",
         )
-        scope.validate()  # Should not raise
+        # Validation happens at construction time via __post_init__
 
     def test_taxonomy_requires_id(self):
         """TAXONOMY scope requires taxonomy_id."""
-        scope = SerializationScope(scope_type=SerializationScopeType.TAXONOMY)
         with pytest.raises(ValueError, match="requires taxonomy_id"):
-            scope.validate()
+            SerializationScope(scope_type=SerializationScopeType.TAXONOMY)
 
     def test_taxonomy_rejects_scheme_id(self):
         """TAXONOMY scope cannot have scheme_id."""
-        scope = SerializationScope(
-            scope_type=SerializationScopeType.TAXONOMY,
-            taxonomy_id="tax-1",
-            scheme_id="scheme-1",
-        )
         with pytest.raises(ValueError, match="must not have"):
-            scope.validate()
+            SerializationScope(
+                scope_type=SerializationScopeType.TAXONOMY,
+                taxonomy_id="tax-1",
+                scheme_id="scheme-1",
+            )
 
     def test_taxonomy_rejects_entity_ids(self):
         """TAXONOMY scope cannot have entity_ids."""
-        scope = SerializationScope(
-            scope_type=SerializationScopeType.TAXONOMY,
-            taxonomy_id="tax-1",
-            entity_ids=("entity-1",),
-        )
         with pytest.raises(ValueError, match="must not have"):
-            scope.validate()
+            SerializationScope(
+                scope_type=SerializationScopeType.TAXONOMY,
+                taxonomy_id="tax-1",
+                entity_ids=("entity-1",),
+            )
 
     def test_scheme_valid(self):
         """SCHEME scope with scheme_id is valid."""
@@ -97,7 +91,7 @@ class TestSerializationScopeValidation:
             scope_type=SerializationScopeType.SCHEME,
             scheme_id="scheme-1",
         )
-        scope.validate()  # Should not raise
+        # Validation happens at construction time via __post_init__
 
     def test_scheme_requires_id(self):
         """SCHEME scope requires scheme_id."""
@@ -105,25 +99,28 @@ class TestSerializationScopeValidation:
         with pytest.raises(ValueError, match="requires scheme_id"):
             scope.validate()
 
+    def test_scheme_requires_id(self):
+        """SCHEME scope requires scheme_id."""
+        with pytest.raises(ValueError, match="requires scheme_id"):
+            SerializationScope(scope_type=SerializationScopeType.SCHEME)
+
     def test_scheme_rejects_taxonomy_id(self):
         """SCHEME scope cannot have taxonomy_id."""
-        scope = SerializationScope(
-            scope_type=SerializationScopeType.SCHEME,
-            scheme_id="scheme-1",
-            taxonomy_id="tax-1",
-        )
         with pytest.raises(ValueError, match="must not have"):
-            scope.validate()
+            SerializationScope(
+                scope_type=SerializationScopeType.SCHEME,
+                scheme_id="scheme-1",
+                taxonomy_id="tax-1",
+            )
 
     def test_scheme_rejects_entity_ids(self):
         """SCHEME scope cannot have entity_ids."""
-        scope = SerializationScope(
-            scope_type=SerializationScopeType.SCHEME,
-            scheme_id="scheme-1",
-            entity_ids=("entity-1",),
-        )
         with pytest.raises(ValueError, match="must not have"):
-            scope.validate()
+            SerializationScope(
+                scope_type=SerializationScopeType.SCHEME,
+                scheme_id="scheme-1",
+                entity_ids=("entity-1",),
+            )
 
     def test_scheme_include_descendants_flag(self):
         """SCHEME scope can have include_descendants flag."""
@@ -132,7 +129,7 @@ class TestSerializationScopeValidation:
             scheme_id="scheme-1",
             include_descendants=True,
         )
-        scope.validate()  # Should not raise
+        # Validation happens at construction time via __post_init__
 
     def test_entity_set_valid(self):
         """ENTITY_SET scope with entity_ids is valid."""
@@ -140,42 +137,38 @@ class TestSerializationScopeValidation:
             scope_type=SerializationScopeType.ENTITY_SET,
             entity_ids=("entity-1", "entity-2"),
         )
-        scope.validate()  # Should not raise
+        # Validation happens at construction time via __post_init__
 
     def test_entity_set_requires_ids(self):
         """ENTITY_SET scope requires entity_ids."""
-        scope = SerializationScope(scope_type=SerializationScopeType.ENTITY_SET)
         with pytest.raises(ValueError, match="requires entity_ids"):
-            scope.validate()
+            SerializationScope(scope_type=SerializationScopeType.ENTITY_SET)
 
     def test_entity_set_rejects_empty_ids(self):
         """ENTITY_SET scope cannot have empty entity_ids."""
-        scope = SerializationScope(
-            scope_type=SerializationScopeType.ENTITY_SET,
-            entity_ids=(),
-        )
         with pytest.raises(ValueError, match="requires entity_ids"):
-            scope.validate()
+            SerializationScope(
+                scope_type=SerializationScopeType.ENTITY_SET,
+                entity_ids=(),
+            )
 
     def test_entity_set_rejects_taxonomy_id(self):
         """ENTITY_SET scope cannot have taxonomy_id."""
-        scope = SerializationScope(
-            scope_type=SerializationScopeType.ENTITY_SET,
-            entity_ids=("entity-1",),
-            taxonomy_id="tax-1",
-        )
         with pytest.raises(ValueError, match="must not have"):
-            scope.validate()
+            SerializationScope(
+                scope_type=SerializationScopeType.ENTITY_SET,
+                entity_ids=("entity-1",),
+                taxonomy_id="tax-1",
+            )
 
     def test_entity_set_rejects_scheme_id(self):
         """ENTITY_SET scope cannot have scheme_id."""
-        scope = SerializationScope(
-            scope_type=SerializationScopeType.ENTITY_SET,
-            entity_ids=("entity-1",),
-            scheme_id="scheme-1",
-        )
         with pytest.raises(ValueError, match="must not have"):
-            scope.validate()
+            SerializationScope(
+                scope_type=SerializationScopeType.ENTITY_SET,
+                entity_ids=("entity-1",),
+                scheme_id="scheme-1",
+            )
 
 
 class TestImportConflictDefaultResolution:

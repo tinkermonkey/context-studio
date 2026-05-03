@@ -35,6 +35,7 @@ from sqlalchemy.orm import Session
 
 from domain.ontology.services import OntologyService
 from domain.ontology.ports import OntologyRepository
+from domain.interchange.ports import ImportRunRepository
 from domain.graph.services import GraphAnalysisService
 from domain.extraction.services import ExtractionService
 from domain.extraction.ports import ReferenceSource
@@ -42,7 +43,6 @@ from domain.pipeline.services import PipelineService
 from domain.versioning.services import VersioningService
 from domain.admin.services import AdminService
 from adapters.persistence.sqlite.connection import DatabaseManager
-from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
 from utils.async_executor import run_sync_in_executor
 
 
@@ -260,15 +260,15 @@ async def get_ontology_repo(request: Request) -> OntologyRepository:
     return repo
 
 
-async def get_interchange_repo(request: Request) -> SQLiteInterchangeRepository:
+async def get_interchange_repo(request: Request) -> ImportRunRepository:
     """
-    Extract the SQLiteInterchangeRepository from app state.
+    Extract the ImportRunRepository from app state.
 
     Args:
         request: FastAPI request object
 
     Returns:
-        The SQLiteInterchangeRepository instance from app.state
+        The ImportRunRepository instance from app.state (concrete: SQLiteInterchangeRepository)
 
     Raises:
         RuntimeError: If repository is not initialized in app.state

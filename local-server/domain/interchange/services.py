@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from .entities import ImportRun
-from .value_objects import SerializationScope
+from .value_objects import SerializationScope, SerializationFormat
 
 # Context variable for tracking the current import run ID across async boundaries
 _import_run_context: ContextVar[Optional[str]] = ContextVar(
@@ -50,7 +50,7 @@ class ImportRunService:
 
     def start_run(
         self,
-        format: str,
+        format: SerializationFormat,
         source_hash: str,
         scope: SerializationScope,
         source_uri: Optional[str] = None,
@@ -64,9 +64,9 @@ class ImportRunService:
         so that subsequent change recordings will be linked to this run.
 
         Args:
-            format: Format of the imported file (skos, owl, graphml, etc.)
+            format: Format of the imported file (skos, owl, graphml)
             source_hash: SHA256 hash of the imported bytes
-            scope: Describes what is being imported
+            scope: Describes what is being imported (validates at construction)
             source_uri: Optional URI or filename of the source
             created_by: Optional ID of the user initiating the import
 
@@ -74,10 +74,8 @@ class ImportRunService:
             A new ImportRun entity in PENDING status
 
         Raises:
-            ValueError: If format or scope is invalid
+            ValueError: If scope is invalid (raised by SerializationScope.__post_init__)
         """
-        scope.validate()
-
         import_run = ImportRun(
             id=str(uuid.uuid4()),
             created_at=datetime.now(timezone.utc),

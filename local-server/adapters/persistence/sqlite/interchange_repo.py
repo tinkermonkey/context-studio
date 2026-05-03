@@ -24,6 +24,7 @@ from domain.interchange.entities import (
 from domain.interchange.value_objects import (
     SerializationScope,
     SerializationScopeType,
+    SerializationFormat,
     MatchKind,
     ResolutionKind,
 )
@@ -33,8 +34,10 @@ class SQLiteInterchangeRepository:
     """
     SQLAlchemy-based repository for interchange domain persistence.
 
+    Concrete adapter implementing the ImportRunRepository port.
+
     Implements persistence operations for ImportRun entities and their
-    change event correlations.
+    change event correlations using SQLite.
 
     Attributes:
         session_factory: SQLAlchemy sessionmaker for creating isolated sessions
@@ -220,7 +223,7 @@ class SQLiteInterchangeRepository:
             id=import_run.id,
             created_at=import_run.created_at,
             created_by=import_run.created_by,
-            format=import_run.format,
+            format=import_run.format.value,
             source_uri=import_run.source_uri,
             source_hash=import_run.source_hash,
             scope_type=scope.scope_type.value,
@@ -254,7 +257,7 @@ class SQLiteInterchangeRepository:
             id=cast(str, orm_run.id),
             created_at=cast(datetime, orm_run.created_at),
             created_by=cast(Optional[str], orm_run.created_by),
-            format=cast(str, orm_run.format),
+            format=SerializationFormat(cast(str, orm_run.format)),
             source_uri=cast(Optional[str], orm_run.source_uri),
             source_hash=cast(str, orm_run.source_hash),
             scope=scope,

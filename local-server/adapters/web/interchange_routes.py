@@ -20,8 +20,9 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status, UploadFile, File, Form
 from fastapi.responses import StreamingResponse
 
-from domain.interchange.value_objects import SerializationScope, SerializationScopeType
+from domain.interchange.value_objects import SerializationScope, SerializationScopeType, SerializationFormat
 from domain.interchange.entities import ImportRunStatus
+from domain.interchange.ports import ImportRunRepository
 from domain.ontology.ports import OntologyRepository
 from utils.logger import get_logger
 from utils.async_executor import run_sync_in_executor
@@ -45,7 +46,6 @@ from adapters.web.schemas.interchange import (
 from adapters.interchange.skos import SKOSSerializer, SKOSDeserializer
 from adapters.interchange.owl import OWLSerializer, OWLDeserializer
 from adapters.interchange.graphml import GraphMLSerializer, GraphMLDeserializer
-from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
 
 router = APIRouter(prefix="/api/v1/interchange", tags=["interchange"])
 
@@ -55,31 +55,29 @@ _logger = get_logger(__name__)
 # ==================== Helper Functions ====================
 
 
-def _get_serializer(format: str, ontology_repo: OntologyRepository):
+def _get_serializer(format: SerializationFormat, ontology_repo: OntologyRepository):
     """Get the appropriate serializer for the format."""
-    format_lower = format.lower()
-    if format_lower == "skos":
+    if format == SerializationFormat.SKOS:
         return SKOSSerializer(ontology_repo)
-    elif format_lower == "owl":
+    elif format == SerializationFormat.OWL:
         return OWLSerializer(ontology_repo)
-    elif format_lower == "graphml":
+    elif format == SerializationFormat.GRAPHML:
         return GraphMLSerializer(ontology_repo)
     else:
         raise ValueError(f"Unsupported format: {format}")
 
 
 def _get_deserializer(
-    format: str,
+    format: SerializationFormat,
     ontology_repo: OntologyRepository,
-    interchange_repo: SQLiteInterchangeRepository,
+    interchange_repo: ImportRunRepository,
 ):
     """Get the appropriate deserializer for the format."""
-    format_lower = format.lower()
-    if format_lower == "skos":
+    if format == SerializationFormat.SKOS:
         return SKOSDeserializer(ontology_repo, interchange_repo)
-    elif format_lower == "owl":
+    elif format == SerializationFormat.OWL:
         return OWLDeserializer(ontology_repo, interchange_repo)
-    elif format_lower == "graphml":
+    elif format == SerializationFormat.GRAPHML:
         return GraphMLDeserializer(ontology_repo, interchange_repo)
     else:
         raise ValueError(f"Unsupported format: {format}")
@@ -143,7 +141,7 @@ def _import_run_to_response(import_run) -> ImportRunResponse:
         id=import_run.id,
         created_at=import_run.created_at,
         created_by=import_run.created_by,
-        format=import_run.format,
+        format=import_run.format.value,
         source_uri=import_run.source_uri,
         source_hash=import_run.source_hash,
         scope=_scope_domain_to_response(import_run.scope),
@@ -235,7 +233,7 @@ async def import_ontology(
     file: UploadFile = File(..., description="File to import"),
     dry_run: str = Form("true", description="If 'true', returns plan without committing"),
     ontology_repo: OntologyRepository = Depends(get_ontology_repo),
-    interchange_repo: SQLiteInterchangeRepository = Depends(get_interchange_repo),
+    interchange_repo: ImportRunRepository = Depends(get_interchange_repo),
 ):
     """
     Import ontology data from a file.
@@ -243,11 +241,11 @@ async def import_ontology(
     Supports dry-run mode to preview conflicts, or direct commit.
 
     Args:
-        format: Import format (skos, owl, graphml, etc.)
+        format: Import format (skos, owl, graphml)
         file: File to import
         dry_run: "true" for dry-run (returns plan), "false" to commit
         ontology_repo: Injected OntologyRepository
-        interchange_repo: Injected InterchangeRepository
+        interchange_repo: Injected ImportRunRepository
 
     Returns:
         ImportPlanResponse (dry-run) or ImportRunResponse (committed)
@@ -262,14 +260,23 @@ async def import_ontology(
         # Read file content
         content = await file.read()
 
-        # Validate format
+        # Parse and validate format
         try:
-            _get_serializer(format, ontology_repo)
+            enum_format = SerializationFormat(format.lower())
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unsupported format: {format}. Supported formats: {', '.join(f.value for f in SerializationFormat)}",
+            )
+
+        # Validate format with serializer
+        try:
+            _get_serializer(enum_format, ontology_repo)
         except ValueError as e:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
         # Get deserializer
-        deserializer = _get_deserializer(format, ontology_repo, interchange_repo)
+        deserializer = _get_deserializer(enum_format, ontology_repo, interchange_repo)
 
         # Deserialize in executor to avoid blocking
         import_plan = await run_sync_in_executor(
@@ -314,7 +321,7 @@ async def import_ontology(
 
 @router.get("/runs", response_model=ImportRunListResponse)
 async def list_import_runs(
-    interchange_repo: SQLiteInterchangeRepository = Depends(get_interchange_repo),
+    interchange_repo: ImportRunRepository = Depends(get_interchange_repo),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     limit: int = Query(100, ge=1, le=500, description="Maximum number of results"),
     status_filter: Optional[str] = Query(None, description="Filter by status"),
@@ -375,7 +382,7 @@ async def list_import_runs(
 @router.get("/runs/{run_id}", response_model=ImportRunResponse)
 async def get_import_run(
     run_id: str,
-    interchange_repo: SQLiteInterchangeRepository = Depends(get_interchange_repo),
+    interchange_repo: ImportRunRepository = Depends(get_interchange_repo),
 ) -> ImportRunResponse:
     """
     Get a specific import run by ID.
@@ -419,7 +426,7 @@ async def get_import_run(
 @router.get("/runs/{run_id}/change-events", response_model=ChangeEventListResponse)
 async def get_run_change_events(
     run_id: str,
-    interchange_repo: SQLiteInterchangeRepository = Depends(get_interchange_repo),
+    interchange_repo: ImportRunRepository = Depends(get_interchange_repo),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     limit: int = Query(100, ge=1, le=500, description="Maximum number of results"),
     entity_type: Optional[str] = Query(None, description="Filter by entity type"),

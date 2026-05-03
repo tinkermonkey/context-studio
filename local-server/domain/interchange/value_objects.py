@@ -39,6 +39,14 @@ class SerializationScopeType(str, Enum):
     ENTITY_SET = "entity_set"
 
 
+class SerializationFormat(str, Enum):
+    """Supported serialization formats for import/export operations."""
+
+    SKOS = "skos"
+    OWL = "owl"
+    GRAPHML = "graphml"
+
+
 @dataclass(frozen=True)
 class SerializationScope:
     """
@@ -56,6 +64,10 @@ class SerializationScope:
     scheme_id: str | None = None
     include_descendants: bool = False
     entity_ids: tuple[str, ...] | None = None
+
+    def __post_init__(self) -> None:
+        """Validate scope invariants at construction time."""
+        self.validate()
 
     def validate(self) -> None:
         """
@@ -129,23 +141,25 @@ class ImportConflict:
             return ResolutionKind.SKIP
 
 
-@dataclass
+@dataclass(frozen=True)
 class ImportPlan:
     """
     Describes what an import would do (result of dry-run).
 
+    Immutable value object representing the plan outcome.
+
     Attributes:
-        conflicts: List of detected conflicts
+        conflicts: Tuple of detected conflicts
         new_entity_count: Number of new entities to be created
         import_run_id: Prospective ImportRun ID (populated on dry_run=False)
-        warnings: List of warning messages
+        warnings: Tuple of warning messages
         source_hash: SHA256 hash of imported bytes
         scope: The scope being imported
     """
 
-    conflicts: list[ImportConflict]
+    conflicts: tuple[ImportConflict, ...]
     new_entity_count: int
     import_run_id: str | None
-    warnings: list[str] = field(default_factory=list)
+    warnings: tuple[str, ...] = field(default_factory=tuple)
     source_hash: str | None = None
     scope: SerializationScope | None = None

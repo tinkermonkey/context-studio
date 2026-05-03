@@ -9,8 +9,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from typing import Any
 
-from .value_objects import SerializationScope, ResolutionKind, MatchKind
+from .value_objects import SerializationScope, ResolutionKind, MatchKind, SerializationFormat
 
 
 class ImportRunStatus(str, Enum):
@@ -62,13 +63,27 @@ class ImportRun:
     id: str
     created_at: datetime
     created_by: str | None
-    format: str
+    format: SerializationFormat
     source_uri: str | None
     source_hash: str
     scope: SerializationScope
     resolutions: list[ResolutionRecord] = field(default_factory=list)
     affected_entity_ids: list[str] = field(default_factory=list)
     status: ImportRunStatus = ImportRunStatus.PENDING
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        """
+        Prevent direct assignment to status field after initialization.
+
+        State machine transitions must use mark_committed(), mark_failed(),
+        or mark_rolled_back() methods to ensure proper invariants.
+        """
+        if name == "status" and "status" in self.__dict__:
+            raise AttributeError(
+                "Cannot directly assign to 'status'. Use mark_committed(), "
+                "mark_failed(), or mark_rolled_back() methods instead."
+            )
+        object.__setattr__(self, name, value)
 
     def mark_committed(self) -> None:
         """
@@ -85,7 +100,7 @@ class ImportRun:
             raise ValueError(
                 f"Cannot transition {self.status} to COMMITTED (terminal state)"
             )
-        self.status = ImportRunStatus.COMMITTED
+        object.__setattr__(self, "status", ImportRunStatus.COMMITTED)
 
     def mark_failed(self) -> None:
         """
@@ -94,11 +109,15 @@ class ImportRun:
         Raises:
             ValueError: If the run is already in a terminal state
         """
-        if self.status in (ImportRunStatus.COMMITTED, ImportRunStatus.ROLLED_BACK):
+        if self.status in (
+            ImportRunStatus.COMMITTED,
+            ImportRunStatus.FAILED,
+            ImportRunStatus.ROLLED_BACK,
+        ):
             raise ValueError(
                 f"Cannot transition {self.status} to FAILED (terminal state)"
             )
-        self.status = ImportRunStatus.FAILED
+        object.__setattr__(self, "status", ImportRunStatus.FAILED)
 
     def mark_rolled_back(self) -> None:
         """
@@ -107,9 +126,15 @@ class ImportRun:
         Raises:
             ValueError: If the run is already in a terminal state
         """
-        if self.status == ImportRunStatus.COMMITTED:
-            raise ValueError("Cannot roll back a COMMITTED run")
-        self.status = ImportRunStatus.ROLLED_BACK
+        if self.status in (
+            ImportRunStatus.COMMITTED,
+            ImportRunStatus.FAILED,
+            ImportRunStatus.ROLLED_BACK,
+        ):
+            raise ValueError(
+                f"Cannot transition {self.status} to ROLLED_BACK (terminal state)"
+            )
+        object.__setattr__(self, "status", ImportRunStatus.ROLLED_BACK)
 
     def add_resolution(
         self,

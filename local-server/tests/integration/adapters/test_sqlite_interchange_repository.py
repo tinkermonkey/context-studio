@@ -26,6 +26,7 @@ from domain.interchange.entities import (
 from domain.interchange.value_objects import (
     SerializationScope,
     SerializationScopeType,
+    SerializationFormat,
     MatchKind,
     ResolutionKind,
 )
@@ -61,7 +62,7 @@ class TestImportRunPersistence:
             id=str(uuid.uuid4()),
             created_at=datetime.now(timezone.utc),
             created_by="user-1",
-            format="skos",
+            format=SerializationFormat.SKOS,
             source_uri="test.skos",
             source_hash="abc123def456",
             scope=scope,
@@ -72,7 +73,7 @@ class TestImportRunPersistence:
 
         assert retrieved is not None
         assert retrieved.id == import_run.id
-        assert retrieved.format == "skos"
+        assert retrieved.format == SerializationFormat.SKOS
         assert retrieved.source_uri == "test.skos"
         assert retrieved.status == ImportRunStatus.PENDING
 
@@ -86,7 +87,7 @@ class TestImportRunPersistence:
             id=str(uuid.uuid4()),
             created_at=datetime.now(timezone.utc),
             created_by="user-1",
-            format="owl",
+            format=SerializationFormat.OWL,
             source_uri="test.owl",
             source_hash="xyz789",
             scope=scope,
@@ -109,7 +110,7 @@ class TestImportRunPersistence:
             id=str(uuid.uuid4()),
             created_at=datetime.now(timezone.utc),
             created_by="user-1",
-            format="graphml",
+            format=SerializationFormat.GRAPHML,
             source_uri="test.graphml",
             source_hash="uvw123",
             scope=scope,
@@ -133,7 +134,7 @@ class TestImportRunPersistence:
             id=str(uuid.uuid4()),
             created_at=datetime.now(timezone.utc),
             created_by="user-1",
-            format="skos",
+            format=SerializationFormat.SKOS,
             source_uri="subset.skos",
             source_hash="pqr456",
             scope=scope,
@@ -152,7 +153,7 @@ class TestImportRunPersistence:
             id=str(uuid.uuid4()),
             created_at=datetime.now(timezone.utc),
             created_by="user-1",
-            format="skos",
+            format=SerializationFormat.SKOS,
             source_uri="test.skos",
             source_hash="abc123",
             scope=scope,
@@ -181,7 +182,7 @@ class TestImportRunPersistence:
             id=str(uuid.uuid4()),
             created_at=datetime.now(timezone.utc),
             created_by="user-1",
-            format="skos",
+            format=SerializationFormat.SKOS,
             source_uri="test.skos",
             source_hash="abc123",
             scope=scope,
@@ -206,7 +207,7 @@ class TestImportRunPersistence:
             id=str(uuid.uuid4()),
             created_at=datetime.now(timezone.utc),
             created_by="user-1",
-            format="skos",
+            format=SerializationFormat.SKOS,
             source_uri="test.skos",
             source_hash="abc123",
             scope=scope,
@@ -228,7 +229,7 @@ class TestImportRunPersistence:
                 id=str(uuid.uuid4()),
                 created_at=datetime.now(timezone.utc),
                 created_by=f"user-{i}",
-                format="skos",
+                format=SerializationFormat.SKOS,
                 source_uri=f"test-{i}.skos",
                 source_hash=f"hash-{i}",
                 scope=scope,
@@ -246,7 +247,7 @@ class TestImportRunPersistence:
             id=str(uuid.uuid4()),
             created_at=datetime.now(timezone.utc),
             created_by="user-1",
-            format="skos",
+            format=SerializationFormat.SKOS,
             source_uri="pending.skos",
             source_hash="hash-1",
             scope=scope,
@@ -257,7 +258,7 @@ class TestImportRunPersistence:
             id=str(uuid.uuid4()),
             created_at=datetime.now(timezone.utc),
             created_by="user-2",
-            format="skos",
+            format=SerializationFormat.SKOS,
             source_uri="committed.skos",
             source_hash="hash-2",
             scope=scope,
@@ -279,7 +280,7 @@ class TestImportRunPersistence:
             id=str(uuid.uuid4()),
             created_at=datetime.now(timezone.utc),
             created_by="user-1",
-            format="skos",
+            format=SerializationFormat.SKOS,
             source_uri="pending.skos",
             source_hash="hash-1",
             scope=scope,
@@ -290,7 +291,7 @@ class TestImportRunPersistence:
             id=str(uuid.uuid4()),
             created_at=datetime.now(timezone.utc),
             created_by="user-2",
-            format="skos",
+            format=SerializationFormat.SKOS,
             source_uri="committed.skos",
             source_hash="hash-2",
             scope=scope,
@@ -316,7 +317,7 @@ class TestImportRunPersistence:
             id=str(uuid.uuid4()),
             created_at=datetime.now(timezone.utc),
             created_by="user-1",
-            format="skos",
+            format=SerializationFormat.SKOS,
             source_uri="test.skos",
             source_hash="abc123",
             scope=scope,
@@ -329,3 +330,62 @@ class TestImportRunPersistence:
         # Try to commit failed run — should raise
         with pytest.raises(ValueError, match="Cannot transition.*FAILED.*to COMMITTED"):
             import_run.mark_committed()
+
+    def test_cannot_fail_already_failed_run(self):
+        """Cannot transition a FAILED run to FAILED (idempotency guard)."""
+        scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+        import_run = ImportRun(
+            id=str(uuid.uuid4()),
+            created_at=datetime.now(timezone.utc),
+            created_by="user-1",
+            format=SerializationFormat.SKOS,
+            source_uri="test.skos",
+            source_hash="abc123",
+            scope=scope,
+        )
+
+        # Mark as failed
+        import_run.mark_failed()
+        assert import_run.status == ImportRunStatus.FAILED
+
+        # Try to mark failed again — should raise
+        with pytest.raises(ValueError, match="Cannot transition.*FAILED.*to FAILED"):
+            import_run.mark_failed()
+
+    def test_cannot_rollback_already_rolled_back_run(self):
+        """Cannot transition a ROLLED_BACK run to ROLLED_BACK (idempotency guard)."""
+        scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+        import_run = ImportRun(
+            id=str(uuid.uuid4()),
+            created_at=datetime.now(timezone.utc),
+            created_by="user-1",
+            format=SerializationFormat.SKOS,
+            source_uri="test.skos",
+            source_hash="abc123",
+            scope=scope,
+        )
+
+        # Mark as rolled back
+        import_run.mark_rolled_back()
+        assert import_run.status == ImportRunStatus.ROLLED_BACK
+
+        # Try to roll back again — should raise
+        with pytest.raises(ValueError, match="Cannot transition.*ROLLED_BACK.*to ROLLED_BACK"):
+            import_run.mark_rolled_back()
+
+    def test_cannot_directly_assign_status(self):
+        """Cannot directly assign to status field; must use state transition methods."""
+        scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+        import_run = ImportRun(
+            id=str(uuid.uuid4()),
+            created_at=datetime.now(timezone.utc),
+            created_by="user-1",
+            format=SerializationFormat.SKOS,
+            source_uri="test.skos",
+            source_hash="abc123",
+            scope=scope,
+        )
+
+        # Try to directly assign status — should raise AttributeError
+        with pytest.raises(AttributeError, match="Cannot directly assign to 'status'"):
+            import_run.status = ImportRunStatus.COMMITTED

@@ -1,15 +1,16 @@
 """
 Ports for the Data Interchange bounded context.
 
-Defines the contracts for serializing and deserializing ontology data.
+Defines the contracts for serializing, deserializing, and persisting import data.
 """
 
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import Protocol
 
-from .value_objects import SerializationScope
-from .value_objects import ImportPlan
+from .entities import ImportRun, ImportRunStatus
+from .value_objects import SerializationScope, ImportPlan
 
 
 class OntologySerializer(ABC):
@@ -60,5 +61,85 @@ class OntologyDeserializer(ABC):
         Raises:
             ValueError: If the source is malformed
             RuntimeError: If deserialization fails
+        """
+        ...
+
+
+class ImportRunRepository(Protocol):
+    """
+    Port for persisting and querying import runs.
+
+    Implementations handle storage and retrieval of ImportRun entities
+    with support for filtering by status and pagination.
+    """
+
+    def create(self, import_run: ImportRun) -> ImportRun:
+        """
+        Persist a new import run.
+
+        Args:
+            import_run: The ImportRun entity to persist
+
+        Returns:
+            The persisted ImportRun
+
+        Raises:
+            RuntimeError: If persistence fails
+        """
+        ...
+
+    def get(self, import_run_id: str) -> ImportRun | None:
+        """
+        Retrieve an import run by ID.
+
+        Args:
+            import_run_id: The ID of the import run
+
+        Returns:
+            The ImportRun if found, None otherwise
+        """
+        ...
+
+    def list_all(self, limit: int = 100, offset: int = 0) -> list[ImportRun]:
+        """
+        Retrieve all import runs with pagination.
+
+        Args:
+            limit: Maximum number of results
+            offset: Number of results to skip
+
+        Returns:
+            List of ImportRun entities
+        """
+        ...
+
+    def list_by_status(
+        self, status: ImportRunStatus, limit: int = 100, offset: int = 0
+    ) -> list[ImportRun]:
+        """
+        Retrieve import runs filtered by status.
+
+        Args:
+            status: The ImportRunStatus to filter by
+            limit: Maximum number of results
+            offset: Number of results to skip
+
+        Returns:
+            List of ImportRun entities matching the status
+        """
+        ...
+
+    def update(self, import_run: ImportRun) -> ImportRun:
+        """
+        Update an existing import run.
+
+        Args:
+            import_run: The ImportRun entity with updated state
+
+        Returns:
+            The updated ImportRun
+
+        Raises:
+            RuntimeError: If the run does not exist or update fails
         """
         ...
