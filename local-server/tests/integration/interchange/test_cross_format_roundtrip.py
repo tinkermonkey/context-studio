@@ -40,6 +40,150 @@ from adapters.interchange.owl import OWLSerializer, OWLDeserializer
 from adapters.interchange.graphml import GraphMLSerializer, GraphMLDeserializer
 
 
+def persist_incoming_entities(repo: SQLiteOntologyRepository, incoming_entities: Dict[str, Dict[str, Any]]) -> None:
+    """
+    Helper function to persist incoming_entities from a deserializer into the ontology repository.
+
+    Args:
+        repo: The ontology repository to persist entities into
+        incoming_entities: Dictionary of entities from a deserializer's incoming_entities
+    """
+    # Process in dependency order: taxonomies first, then concept_schemes, then classes
+
+    # Save taxonomies
+    for entity_id, entity_dict in incoming_entities.items():
+        if entity_dict.get('type') == 'taxonomy':
+            tax = Taxonomy(
+                id=entity_dict['id'],
+                title=entity_dict['title'],
+                description=entity_dict.get('description'),
+                created_at=datetime.now(timezone.utc),
+                last_modified=datetime.now(timezone.utc),
+            )
+            repo.save_taxonomy(tax)
+
+    # Save concept schemes
+    for entity_id, entity_dict in incoming_entities.items():
+        if entity_dict.get('type') == 'concept_scheme':
+            scheme = ConceptScheme(
+                id=entity_dict['id'],
+                taxonomy_id=entity_dict['taxonomy_id'],
+                title=entity_dict['title'],
+                description=entity_dict.get('description'),
+                created_at=datetime.now(timezone.utc),
+                last_modified=datetime.now(timezone.utc),
+            )
+            repo.save_concept_scheme(scheme)
+
+    # Save classes in dependency order: first pass saves classes without parents,
+    # subsequent passes save classes whose parents have been saved
+    classes_to_save = {
+        entity_id: entity_dict
+        for entity_id, entity_dict in incoming_entities.items()
+        if entity_dict.get('type') == 'class'
+    }
+    saved_class_ids = set()
+
+    # Keep trying until all classes are saved or we hit a deadlock
+    max_attempts = len(classes_to_save) + 1
+    attempts = 0
+    while classes_to_save and attempts < max_attempts:
+        attempts += 1
+        saved_this_pass = []
+
+        for entity_id, entity_dict in list(classes_to_save.items()):
+            parent_class_id = entity_dict.get('parent_class_id')
+            # Save if no parent, or parent already saved
+            if parent_class_id is None or parent_class_id in saved_class_ids:
+                external_refs = [
+                    ExternalReference(
+                        source=ref['source'],
+                        identifier=ref['identifier'],
+                        uri=ref['uri'],
+                    )
+                    for ref in entity_dict.get('external_references', [])
+                ]
+                cls = Class(
+                    id=entity_dict['id'],
+                    concept_scheme_id=entity_dict['concept_scheme_id'],
+                    taxonomy_id=_find_taxonomy_id_for_scheme(repo, entity_dict['concept_scheme_id']),
+                    title=entity_dict['title'],
+                    description=entity_dict.get('description'),
+                    parent_class_id=parent_class_id,
+                    external_references=external_refs,
+                    created_at=datetime.now(timezone.utc),
+                    last_modified=datetime.now(timezone.utc),
+                )
+                repo.save_class(cls)
+                saved_class_ids.add(entity_id)
+                saved_this_pass.append(entity_id)
+                del classes_to_save[entity_id]
+
+        if not saved_this_pass and classes_to_save:
+            # No progress made, likely a circular dependency
+            raise ValueError(f"Could not save classes due to unresolved parent references: {list(classes_to_save.keys())}")
+
+    # Save individuals
+    for entity_id, entity_dict in incoming_entities.items():
+        if entity_dict.get('type') == 'individual':
+            external_refs = [
+                ExternalReference(
+                    source=ref['source'],
+                    identifier=ref['identifier'],
+                    uri=ref['uri'],
+                )
+                for ref in entity_dict.get('external_references', [])
+            ]
+            ind = Individual(
+                id=entity_dict['id'],
+                class_ids=entity_dict.get('class_ids', []),
+                title=entity_dict['title'],
+                description=entity_dict.get('description'),
+                external_references=external_refs,
+                created_at=datetime.now(timezone.utc),
+                last_modified=datetime.now(timezone.utc),
+            )
+            repo.save_individual(ind)
+
+    # Save property definitions
+    for entity_id, entity_dict in incoming_entities.items():
+        if entity_dict.get('type') == 'property_definition':
+            prop = PropertyDefinition(
+                id=entity_dict['id'],
+                identifier=entity_dict.get('identifier'),
+                title=entity_dict['title'],
+                description=entity_dict.get('description'),
+                created_at=datetime.now(timezone.utc),
+                last_modified=datetime.now(timezone.utc),
+            )
+            repo.save_property_definition(prop)
+
+    # Save relationships
+    for entity_id, entity_dict in incoming_entities.items():
+        if entity_dict.get('type') == 'relationship':
+            rel = Relationship(
+                id=entity_dict['id'],
+                source_id=entity_dict['source_id'],
+                target_id=entity_dict['target_id'],
+                property_definition_id=entity_dict['property_definition_id'],
+                created_at=datetime.now(timezone.utc),
+            )
+            repo.save_relationship(rel)
+
+
+def _find_taxonomy_id_for_scheme(repo: SQLiteOntologyRepository, scheme_id: str) -> str:
+    """Find the taxonomy_id for a given concept scheme."""
+    scheme = repo.get_concept_scheme(scheme_id)
+    if scheme:
+        return scheme.taxonomy_id
+    # Fallback: try to find by querying all schemes
+    for tax in repo.list_taxonomies():
+        for scheme in repo.list_concept_schemes_by_taxonomy(tax.id):
+            if scheme.id == scheme_id:
+                return tax.id
+    raise ValueError(f"Could not find taxonomy for scheme {scheme_id}")
+
+
 @pytest.fixture
 def db_engine():
     """Create an in-memory SQLite database for testing."""
@@ -516,6 +660,9 @@ class TestCrossFormatRoundTrip:
         assert fido_entity.get('class_ids'), "Multi-class membership lost"
         assert len(fido_entity['class_ids']) == len(original_order), \
             f"Expected {len(original_order)} classes, got {len(fido_entity['class_ids'])}"
+        # Verify ordering is preserved (not just count)
+        assert fido_entity['class_ids'] == original_order, \
+            f"Class ordering not preserved. Expected {original_order}, got {fido_entity['class_ids']}"
 
     def test_cross_format_three_leg_chain_roundtrip(
         self, ontology_repo, interchange_repo, representative_graph
@@ -524,11 +671,14 @@ class TestCrossFormatRoundTrip:
         Test the three-leg chain: SKOS export → SKOS import → OWL export → OWL import → GraphML export → GraphML import.
 
         Verifies that:
-        1. Exported from original to SKOS, verified structure survives
-        2. SKOS was exported from original, then imported (incoming_entities verified)
-        3. Each format's incoming_entities is re-exported to the next format
-        4. external_references on classes survive unchanged across all three legs
-        5. Final state matches original (only documented lossy fields differ)
+        1. Original ontology exported to SKOS format
+        2. SKOS imported into fresh_repo1, entities persisted
+        3. fresh_repo1 re-exported to OWL (completing the first chain: original → SKOS → back to intermediate state)
+        4. OWL imported into fresh_repo2, entities persisted
+        5. fresh_repo2 re-exported to GraphML (completing the second chain)
+        6. GraphML imported into fresh_repo3, verified
+        7. external_references on classes survive unchanged across all three legs
+        8. Final state matches original (only documented lossy fields differ)
         """
         from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker
@@ -536,7 +686,7 @@ class TestCrossFormatRoundTrip:
         original_dog = representative_graph["classes"]["dog"]
         original_dog_refs = {(ref.source, ref.identifier, ref.uri) for ref in original_dog.external_references}
 
-        # LEG 1: Export original → SKOS → Import SKOS
+        # LEG 1: Export original ontology to SKOS, then import SKOS into fresh_repo1
         skos_serializer = SKOSSerializer(ontology_repo)
         scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
         skos_bytes = skos_serializer.serialize(scope)
@@ -566,12 +716,15 @@ class TestCrossFormatRoundTrip:
         skos_dog_refs = {(ref['source'], ref['identifier'], ref['uri']) for ref in dog_entity_skos['external_references']}
         assert skos_dog_refs == original_dog_refs, "SKOS leg: External references corrupted"
 
-        # For the chain test, we export SKOS bytes directly to OWL (simulating a re-export)
-        # Parse SKOS and serialize it to OWL format
-        owl_serializer = OWLSerializer(ontology_repo)
+        # CRITICAL: Persist the SKOS-imported entities into fresh_repo1 before re-exporting
+        persist_incoming_entities(fresh_repo1, skos_deserializer.incoming_entities)
+
+        # LEG 2: Export from fresh_repo1 (which now has SKOS-imported entities) to OWL
+        # This completes the chain: original → SKOS export → SKOS import → OWL export
+        owl_serializer = OWLSerializer(fresh_repo1)
         owl_bytes = owl_serializer.serialize(scope)
 
-        # LEG 2: Import OWL (from original ontology_repo serialized to OWL)
+        # LEG 2: Import the OWL bytes into fresh_repo2
         fresh_engine2 = create_engine(
             "sqlite:///:memory:",
             connect_args={"check_same_thread": False},
@@ -597,8 +750,12 @@ class TestCrossFormatRoundTrip:
         owl_dog_refs = {(ref['source'], ref['identifier'], ref['uri']) for ref in dog_entity_owl['external_references']}
         assert owl_dog_refs == original_dog_refs, "OWL leg: External references corrupted"
 
-        # LEG 3: Export original to GraphML (simulating the third leg of chain)
-        graphml_serializer = GraphMLSerializer(ontology_repo)
+        # CRITICAL: Persist the OWL-imported entities into fresh_repo2 before re-exporting
+        persist_incoming_entities(fresh_repo2, owl_deserializer.incoming_entities)
+
+        # LEG 3: Export from fresh_repo2 (which now has OWL-imported entities) to GraphML
+        # This completes the chain: SKOS export → SKOS import → OWL export → OWL import → GraphML export
+        graphml_serializer = GraphMLSerializer(fresh_repo2)
         graphml_bytes = graphml_serializer.serialize(scope)
 
         # LEG 3: Import GraphML

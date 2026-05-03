@@ -263,12 +263,14 @@ class OWLSerializer(OntologySerializer):
         if individual.description:
             self.graph.add((ind_uri, RDFS.comment, Literal(individual.description)))
 
-        # Add class memberships in order
+        # Add class memberships in order using indexed predicates to preserve ordering
         for i, class_id in enumerate(individual.class_ids):
             class_uri = self._entity_uri(class_id)
             self.graph.add((ind_uri, RDF.type, class_uri))
-            # Store index for preserving multi-class ordering
-            self.graph.add((ind_uri, LOCAL.classOrder, Literal(i)))
+            # Store class with index in predicate name (e.g., hasClass_0, hasClass_1, ...)
+            # This preserves the order in RDF since each triple is unique
+            indexed_predicate = LOCAL[f"hasClass_{i}"]
+            self.graph.add((ind_uri, indexed_predicate, class_uri))
 
         # Add external references
         for ext_ref in individual.external_references:
@@ -513,23 +515,27 @@ class OWLDeserializer(OntologyDeserializer):
         if not entity_id:
             entity_id = str(uuid.uuid4())
 
-        # Get class memberships (rdf:type pointing to owl:Class), preserving order
+        # Get class memberships in order using indexed predicates (hasClass_0, hasClass_1, etc.)
         class_entries = []
-        for order_literal in self.graph.objects(ind_uri, LOCAL.classOrder):
-            try:
-                order = int(str(order_literal))
-                # Find the class at this position
-                class_uris_list = list(self.graph.objects(ind_uri, RDF.type))
-                if order < len(class_uris_list):
-                    class_uri = class_uris_list[order]
-                    if str(class_uri) != str(OWL.NamedIndividual):
-                        class_id = self._entity_map.get(str(class_uri))
-                        if class_id:
-                            class_entries.append((order, class_id))
-            except (ValueError, IndexError):
-                pass
 
-        # If no ordered entries found, collect all class memberships
+        # First, try to collect ordered class references from indexed predicates
+        index = 0
+        while True:
+            indexed_predicate = LOCAL[f"hasClass_{index}"]
+            class_uris = list(self.graph.objects(ind_uri, indexed_predicate))
+            if not class_uris:
+                # No more indexed predicates found
+                break
+
+            for class_uri in class_uris:
+                if str(class_uri) != str(OWL.NamedIndividual):
+                    class_id = self._entity_map.get(str(class_uri))
+                    if class_id:
+                        class_entries.append((index, class_id))
+            index += 1
+
+        # If no ordered entries found via indexed predicates, fall back to collecting
+        # all class memberships from rdf:type (unordered, for backwards compatibility)
         if not class_entries:
             class_uris = list(self.graph.objects(ind_uri, RDF.type))
             for i, class_uri in enumerate(class_uris):
