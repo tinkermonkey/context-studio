@@ -18,7 +18,6 @@ from __future__ import annotations
 import hashlib
 import json
 import io
-import xml.etree.ElementTree as ET
 from typing import Optional, Dict, Any
 
 import networkx as nx
@@ -40,12 +39,6 @@ from domain.ontology.entities import (
     Relationship,
     PropertyDefinition,
 )
-from domain.ontology.value_objects import ExternalReference
-
-
-# GraphML namespace
-GRAPHML_NS = "http://graphml.graphdrawing.org/xmlns"
-CS_NS = "cs"  # Context Studio namespace for custom attributes
 
 
 class GraphMLSerializer(OntologySerializer):
@@ -68,7 +61,6 @@ class GraphMLSerializer(OntologySerializer):
         """
         self.ontology_repo = ontology_repo
         self.graph: Optional[nx.MultiDiGraph] = None
-        self.entity_type_mapping: Dict[str, str] = {}
 
     def serialize(self, scope: SerializationScope) -> bytes:
         """
@@ -87,7 +79,6 @@ class GraphMLSerializer(OntologySerializer):
         scope.validate()
 
         self.graph = nx.MultiDiGraph()
-        self.entity_type_mapping = {}
 
         try:
             match scope.scope_type:
@@ -239,7 +230,6 @@ class GraphMLSerializer(OntologySerializer):
             'cs:created_at': (taxonomy.created_at.isoformat() if taxonomy.created_at else ''),
             'cs:last_modified': (taxonomy.last_modified.isoformat() if taxonomy.last_modified else ''),
         })
-        self.entity_type_mapping[node_id] = 'taxonomy'
 
     def _add_concept_scheme(self, scheme: ConceptScheme) -> None:
         """Add a concept scheme node to the graph."""
@@ -253,7 +243,6 @@ class GraphMLSerializer(OntologySerializer):
             'cs:created_at': (scheme.created_at.isoformat() if scheme.created_at else ''),
             'cs:last_modified': (scheme.last_modified.isoformat() if scheme.last_modified else ''),
         })
-        self.entity_type_mapping[node_id] = 'concept_scheme'
 
     def _add_class(self, cls: Class) -> None:
         """Add a class node to the graph."""
@@ -275,7 +264,6 @@ class GraphMLSerializer(OntologySerializer):
             'cs:last_modified': (cls.last_modified.isoformat() if cls.last_modified else ''),
             'cs:external_references': ext_refs_json,
         })
-        self.entity_type_mapping[node_id] = 'class'
 
     def _add_individual(self, individual: Individual) -> None:
         """Add an individual node to the graph."""
@@ -297,7 +285,6 @@ class GraphMLSerializer(OntologySerializer):
             'cs:last_modified': (individual.last_modified.isoformat() if individual.last_modified else ''),
             'cs:external_references': ext_refs_json,
         })
-        self.entity_type_mapping[node_id] = 'individual'
 
     def _add_property_definition(self, prop: PropertyDefinition) -> None:
         """Add a property definition node to the graph."""
@@ -314,7 +301,6 @@ class GraphMLSerializer(OntologySerializer):
             'cs:created_at': (prop.created_at.isoformat() if prop.created_at else ''),
             'cs:last_modified': (prop.last_modified.isoformat() if prop.last_modified else ''),
         })
-        self.entity_type_mapping[node_id] = 'property_definition'
 
     def _add_structural_edges(
         self,
@@ -419,12 +405,8 @@ class GraphMLSerializer(OntologySerializer):
         """Set attributes on a node."""
         assert self.graph is not None
         for key, value in attributes.items():
-            if value or value == '':
+            if value is not None:
                 self.graph.nodes[node_id][key] = value
-
-    def _entity_uri(self, entity_id: str) -> str:
-        """Create a URI for an entity."""
-        return f"context-studio:entity/{entity_id}"
 
 
 class GraphMLDeserializer(OntologyDeserializer):
@@ -535,12 +517,31 @@ class GraphMLDeserializer(OntologyDeserializer):
             elif kind == 'property_definition':
                 self._extract_property_definition(node_id, node_attrs)
 
+    def _check_unknown_attributes(self, node_id: str, attrs: Dict[str, Any], known_keys: set[str]) -> None:
+        """
+        Check for unknown data keys and record warnings.
+
+        Args:
+            node_id: The node ID being checked
+            attrs: The node attributes
+            known_keys: Set of known attribute keys to exclude from warnings
+        """
+        # Layout attributes that should be silently ignored
+        layout_keys = {'x', 'y', 'z', 'label', 'graphics'}
+
+        for key in attrs.keys():
+            if key not in known_keys and key not in layout_keys:
+                self.warnings.append(f"Node {node_id} has unknown data key: {key}")
+
     def _extract_taxonomy(self, node_id: str, attrs: Dict[str, Any]) -> None:
         """Extract a Taxonomy from a node."""
         title = attrs.get('cs:title')
         if not title:
             self.warnings.append(f"Taxonomy {node_id} has no cs:title")
             return
+
+        known_keys = {'kind', 'cs:title', 'cs:description', 'cs:created_at', 'cs:last_modified'}
+        self._check_unknown_attributes(node_id, attrs, known_keys)
 
         entity_dict = {
             'id': node_id,
@@ -568,6 +569,9 @@ class GraphMLDeserializer(OntologyDeserializer):
         if not taxonomy_id:
             self.warnings.append(f"ConceptScheme {node_id} has no parent taxonomy")
             return
+
+        known_keys = {'kind', 'cs:title', 'cs:description', 'cs:created_at', 'cs:last_modified'}
+        self._check_unknown_attributes(node_id, attrs, known_keys)
 
         entity_dict = {
             'id': node_id,
@@ -619,6 +623,9 @@ class GraphMLDeserializer(OntologyDeserializer):
                     })
             except (json.JSONDecodeError, KeyError) as e:
                 self.warnings.append(f"Class {node_id} has malformed cs:external_references: {e}")
+
+        known_keys = {'kind', 'cs:title', 'cs:description', 'cs:created_at', 'cs:last_modified', 'cs:external_references'}
+        self._check_unknown_attributes(node_id, attrs, known_keys)
 
         entity_dict = {
             'id': node_id,
@@ -680,6 +687,9 @@ class GraphMLDeserializer(OntologyDeserializer):
             except (json.JSONDecodeError, KeyError) as e:
                 self.warnings.append(f"Individual {node_id} has malformed cs:external_references: {e}")
 
+        known_keys = {'kind', 'cs:title', 'cs:description', 'cs:created_at', 'cs:last_modified', 'cs:external_references'}
+        self._check_unknown_attributes(node_id, attrs, known_keys)
+
         entity_dict = {
             'id': node_id,
             'title': title,
@@ -702,6 +712,9 @@ class GraphMLDeserializer(OntologyDeserializer):
         is_relevant = None
         if is_relevant_str:
             is_relevant = is_relevant_str.lower() == 'true'
+
+        known_keys = {'kind', 'cs:title', 'cs:identifier', 'cs:description', 'cs:is_relevant', 'cs:created_at', 'cs:last_modified'}
+        self._check_unknown_attributes(node_id, attrs, known_keys)
 
         entity_dict = {
             'id': node_id,

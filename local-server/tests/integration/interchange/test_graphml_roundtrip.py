@@ -405,6 +405,68 @@ class TestGraphMLExternalReferences:
         assert any(r['source'] == 'example' and r['identifier'] == 'fido-001'
                   for r in fido_incoming['external_references'])
 
+    def test_external_tool_roundtrip_via_networkx(self, ontology_repo, sample_data):
+        """Acceptance criterion: external-tool round-trip via networkx as external consumer.
+
+        This test simulates an external tool (like Cytoscape, yEd, Gephi):
+        1. Export GraphML from Context Studio
+        2. Read with networkx (simulating external tool parsing)
+        3. Re-export with networkx (simulating external tool saving)
+        4. Reimport into Context Studio
+        5. Verify external_references survive
+        """
+        import networkx as nx
+        import io
+
+        # Export from Context Studio
+        serializer = GraphMLSerializer(ontology_repo)
+        scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+        exported = serializer.serialize(scope)
+
+        # Simulate external tool: read with networkx
+        input_stream = io.BytesIO(exported)
+        external_graph = nx.read_graphml(input_stream)
+
+        # Simulate external tool: re-export with networkx
+        output_stream = io.BytesIO()
+        nx.write_graphml(external_graph, output_stream)
+        reexported = output_stream.getvalue()
+
+        # Reimport into fresh Context Studio database
+        fresh_engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+        Base.metadata.create_all(fresh_engine)
+        fresh_session_factory = sessionmaker(bind=fresh_engine)
+        fresh_repo = SQLiteOntologyRepository(fresh_session_factory)
+
+        deserializer = GraphMLDeserializer(fresh_repo)
+        plan = deserializer.deserialize(reexported, dry_run=True)
+
+        # Verify no conflicts (entities imported successfully)
+        assert plan.conflicts == []
+
+        # Verify external_references survive through the round-trip
+        # Check Dog's external references (DBpedia and Wikidata)
+        dog_incoming = next((e for e in deserializer.incoming_entities.values()
+                            if e.get('title') == 'Dog'), None)
+        assert dog_incoming is not None
+        assert len(dog_incoming['external_references']) >= 2
+
+        refs = dog_incoming['external_references']
+        dbpedia_refs = [r for r in refs if r['source'] == 'dbpedia']
+        wikidata_refs = [r for r in refs if r['source'] == 'wikidata']
+        assert len(dbpedia_refs) >= 1
+        assert len(wikidata_refs) >= 1
+        assert dbpedia_refs[0]['identifier'] == 'Dog'
+        assert wikidata_refs[0]['identifier'] == 'Q144'
+
+        # Verify Individual's external references survive
+        fido_incoming = next((e for e in deserializer.incoming_entities.values()
+                             if e.get('title') == 'Fido'), None)
+        assert fido_incoming is not None
+        assert len(fido_incoming['external_references']) >= 1
+        assert any(r['source'] == 'example' and r['identifier'] == 'fido-001'
+                  for r in fido_incoming['external_references'])
+
 
 class TestGraphMLIdempotentReimport:
     """Test that reimporting produces idempotent results."""
