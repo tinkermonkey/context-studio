@@ -214,3 +214,55 @@ def test_multiple_events_in_same_import_linked_to_same_run(change_repo):
                 assert event.import_run_id == import_run.id
     finally:
         set_import_run_context(None)
+
+
+def test_change_event_recorder_auto_correlation_from_context(
+    change_recorder, db_engine, change_repo
+):
+    """ChangeEventRecorder automatically reads import_run_id from context."""
+    # Create an import run and set context
+    import_service = ImportRunService()
+    scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+    import_run = import_service.start_run(
+        format="skos",
+        source_hash="test-hash",
+        scope=scope,
+        source_uri="test.skos",
+    )
+
+    # Set the correlation context
+    set_import_run_context(import_run.id)
+
+    try:
+        # Verify context is set
+        assert get_current_import_run_id() == import_run.id
+
+        # Call the _record() method directly to exercise the automatic correlation path
+        # This simulates what happens when a domain event triggers the recorder
+        change_recorder._record(
+            entity_id="test-entity-auto",
+            entity_type="taxonomy",
+            operation=ChangeOperation.CREATE,
+            new_state={"title": "Auto-correlated Taxonomy"},
+            change_reason="Created during import",
+        )
+
+        # Verify the change event was recorded with the import_run_id automatically
+        retrieved_events = change_repo.get_changes(limit=10).events
+        assert len(retrieved_events) > 0
+
+        # Find the event we just recorded
+        auto_correlated_events = [
+            e
+            for e in retrieved_events
+            if e.entity_id == "test-entity-auto"
+            and e.import_run_id == import_run.id
+        ]
+
+        # Verify at least one event was auto-correlated
+        assert len(auto_correlated_events) > 0
+        assert auto_correlated_events[0].entity_type == "taxonomy"
+        assert auto_correlated_events[0].operation == ChangeOperation.CREATE.value
+    finally:
+        # Clear the context
+        set_import_run_context(None)

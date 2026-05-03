@@ -42,13 +42,8 @@ def upgrade() -> None:
         batch_op.create_foreign_key('fk_change_events_import_run_id', 'import_runs', ['import_run_id'], ['id'], ondelete='SET NULL')
         batch_op.create_index('idx_import_run_id', ['import_run_id'], unique=False)
 
-    op.drop_index(op.f('idx_class_id'), table_name='individual_classes')
-
 
 def downgrade() -> None:
-    # Re-add idx_class_id to individual_classes
-    op.create_index(op.f('idx_class_id'), 'individual_classes', ['class_id'], unique=False)
-
     # Remove import_run_id column from change_events using batch mode
     with op.batch_alter_table('change_events', schema=None) as batch_op:
         batch_op.drop_index('idx_import_run_id')

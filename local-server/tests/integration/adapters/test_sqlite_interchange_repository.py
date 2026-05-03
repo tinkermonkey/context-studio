@@ -309,3 +309,24 @@ class TestImportRunPersistence:
         """Getting a nonexistent ImportRun returns None."""
         result = repository.get("nonexistent-id")
         assert result is None
+
+    def test_cannot_commit_failed_run(self):
+        """Cannot transition a FAILED run to COMMITTED."""
+        scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+        import_run = ImportRun(
+            id=str(uuid.uuid4()),
+            created_at=datetime.now(timezone.utc),
+            created_by="user-1",
+            format="skos",
+            source_uri="test.skos",
+            source_hash="abc123",
+            scope=scope,
+        )
+
+        # Mark as failed
+        import_run.mark_failed()
+        assert import_run.status == ImportRunStatus.FAILED
+
+        # Try to commit failed run — should raise
+        with pytest.raises(ValueError, match="Cannot transition.*FAILED.*to COMMITTED"):
+            import_run.mark_committed()

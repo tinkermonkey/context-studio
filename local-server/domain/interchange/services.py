@@ -94,8 +94,7 @@ class ImportRunService:
         """
         Mark an import run as committed.
 
-        Transitions the run from PENDING to COMMITTED status. This is
-        idempotent if already committed.
+        Transitions the run from PENDING to COMMITTED status.
 
         Args:
             import_run: The ImportRun to commit
@@ -104,7 +103,7 @@ class ImportRunService:
             The updated ImportRun
 
         Raises:
-            ValueError: If the run is in a terminal state other than COMMITTED
+            ValueError: If the run is already in a terminal state (COMMITTED, FAILED, or ROLLED_BACK)
         """
         import_run.mark_committed()
         return import_run
