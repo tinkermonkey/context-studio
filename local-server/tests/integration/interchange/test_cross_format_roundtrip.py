@@ -11,7 +11,6 @@ Tests the three-leg journey: SKOS → OWL → GraphML → final state, verifying
 import sys
 import os
 import uuid
-import hashlib
 from datetime import datetime, timezone
 from typing import Dict, Any
 
@@ -148,9 +147,12 @@ def persist_incoming_entities(repo: SQLiteOntologyRepository, incoming_entities:
     # Save property definitions
     for entity_id, entity_dict in incoming_entities.items():
         if entity_dict.get('type') == 'property_definition':
+            identifier = entity_dict.get('identifier')
+            if not identifier:
+                identifier = entity_dict['title'].lower().replace(" ", "_")
             prop = PropertyDefinition(
                 id=entity_dict['id'],
-                identifier=entity_dict.get('identifier'),
+                identifier=identifier,
                 title=entity_dict['title'],
                 description=entity_dict.get('description'),
                 created_at=datetime.now(timezone.utc),
@@ -178,7 +180,7 @@ def _find_taxonomy_id_for_scheme(repo: SQLiteOntologyRepository, scheme_id: str)
         return scheme.taxonomy_id
     # Fallback: try to find by querying all schemes
     for tax in repo.list_taxonomies():
-        for scheme in repo.list_concept_schemes_by_taxonomy(tax.id):
+        for scheme in repo.list_concept_schemes(taxonomy_id=tax.id):
             if scheme.id == scheme_id:
                 return tax.id
     raise ValueError(f"Could not find taxonomy for scheme {scheme_id}")
@@ -467,7 +469,7 @@ class TestCrossFormatRoundTrip:
 
         # Import OWL
         owl_deserializer = OWLDeserializer(fresh_repo, interchange_repo)
-        plan = owl_deserializer.deserialize(owl_bytes)
+        owl_deserializer.deserialize(owl_bytes)
 
         # Verify core entity types in incoming_entities
         assert any(e.get('type') == 'taxonomy' for e in owl_deserializer.incoming_entities.values()), \
@@ -507,7 +509,7 @@ class TestCrossFormatRoundTrip:
 
         # Import GraphML
         graphml_deserializer = GraphMLDeserializer(fresh_repo)
-        plan = graphml_deserializer.deserialize(graphml_bytes, dry_run=True)
+        graphml_deserializer.deserialize(graphml_bytes, dry_run=True)
 
         # Verify core entity types in incoming_entities
         assert any(e.get('type') == 'taxonomy' for e in graphml_deserializer.incoming_entities.values()), \

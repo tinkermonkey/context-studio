@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import hashlib
 import uuid
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, cast
 
 from rdflib import Graph, Namespace, URIRef, Literal, RDF, RDFS
 from rdflib.term import Node
@@ -95,7 +95,8 @@ class OWLSerializer(OntologySerializer):
         scope.validate()
 
         self.graph = Graph()
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Failed to initialize RDF graph")
         self.graph.bind("owl", OWL)
         self.graph.bind("skos", SKOS)
         self.graph.bind("rdfs", RDFS)
@@ -121,7 +122,7 @@ class OWLSerializer(OntologySerializer):
                 "json-ld": "json-ld",
             }
             format_str = format_map.get(self.format, "turtle")
-            result = self.graph.serialize(format=format_str)
+            result = cast(str | bytes, self.graph.serialize(format=format_str))
             if isinstance(result, str):
                 return result.encode('utf-8')
             return result
@@ -350,6 +351,8 @@ class OWLDeserializer(OntologyDeserializer):
         """
         try:
             self.graph = Graph()
+            if self.graph is None:
+                raise RuntimeError("Failed to initialize RDF graph")
             self.incoming_entities = {}
             self._entity_map = {}
 
@@ -398,6 +401,8 @@ class OWLDeserializer(OntologyDeserializer):
 
     def _process_taxonomies_first(self) -> None:
         """Process taxonomies first, then concept schemes to avoid duplicate creation."""
+        if self.graph is None:
+            return
         # First pass: find taxonomies (ConceptSchemes without dct:isPartOf)
         for scheme_uri in self.graph.subjects(RDF.type, SKOS.ConceptScheme):
             parent_taxonomy_uri = self._get_first_object(scheme_uri, DCT.isPartOf)
@@ -518,32 +523,33 @@ class OWLDeserializer(OntologyDeserializer):
         # Get class memberships in order using indexed predicates (hasClass_0, hasClass_1, etc.)
         class_entries = []
 
-        # First, try to collect ordered class references from indexed predicates
-        index = 0
-        while True:
-            indexed_predicate = LOCAL[f"hasClass_{index}"]
-            class_uris = list(self.graph.objects(ind_uri, indexed_predicate))
-            if not class_uris:
-                # No more indexed predicates found
-                break
+        if self.graph is not None:
+            # First, try to collect ordered class references from indexed predicates
+            index = 0
+            while True:
+                indexed_predicate = LOCAL[f"hasClass_{index}"]
+                class_uris = list(self.graph.objects(ind_uri, indexed_predicate))
+                if not class_uris:
+                    # No more indexed predicates found
+                    break
 
-            for class_uri in class_uris:
-                if str(class_uri) != str(OWL.NamedIndividual):
+                for class_uri in class_uris:
+                    if str(class_uri) != str(OWL.NamedIndividual):
+                        class_id = self._entity_map.get(str(class_uri))
+                        if class_id:
+                            class_entries.append((index, class_id))
+                index += 1
+
+            # If no ordered entries found via indexed predicates, fall back to collecting
+            # all class memberships from rdf:type (unordered, for backwards compatibility)
+            if not class_entries:
+                class_uris = list(self.graph.objects(ind_uri, RDF.type))
+                for i, class_uri in enumerate(class_uris):
+                    if str(class_uri) == str(OWL.NamedIndividual):
+                        continue
                     class_id = self._entity_map.get(str(class_uri))
                     if class_id:
-                        class_entries.append((index, class_id))
-            index += 1
-
-        # If no ordered entries found via indexed predicates, fall back to collecting
-        # all class memberships from rdf:type (unordered, for backwards compatibility)
-        if not class_entries:
-            class_uris = list(self.graph.objects(ind_uri, RDF.type))
-            for i, class_uri in enumerate(class_uris):
-                if str(class_uri) == str(OWL.NamedIndividual):
-                    continue
-                class_id = self._entity_map.get(str(class_uri))
-                if class_id:
-                    class_entries.append((i, class_id))
+                        class_entries.append((i, class_id))
 
         # Sort by order and extract IDs
         class_entries.sort(key=lambda x: x[0])
@@ -596,6 +602,8 @@ class OWLDeserializer(OntologyDeserializer):
 
     def _process_relationships(self) -> None:
         """Process relationships between entities using property predicates."""
+        if self.graph is None:
+            return
         # Get all defined properties
         property_uris = set(self.graph.subjects(RDF.type, OWL.ObjectProperty))
 
@@ -620,17 +628,18 @@ class OWLDeserializer(OntologyDeserializer):
         """Extract external references from owl:sameAs URIs as dicts."""
         refs = []
 
-        # Extract owl:sameAs references (single source of truth)
-        for same_as_uri in self.graph.objects(entity_uri, OWL.sameAs):
-            uri_str = str(same_as_uri)
-            # Parse source:identifier from the URI
-            source, identifier = self._parse_uri_for_reference(uri_str)
+        if self.graph is not None:
+            # Extract owl:sameAs references (single source of truth)
+            for same_as_uri in self.graph.objects(entity_uri, OWL.sameAs):
+                uri_str = str(same_as_uri)
+                # Parse source:identifier from the URI
+                source, identifier = self._parse_uri_for_reference(uri_str)
 
-            refs.append({
-                "source": source,
-                "identifier": identifier,
-                "uri": uri_str,
-            })
+                refs.append({
+                    "source": source,
+                    "identifier": identifier,
+                    "uri": uri_str,
+                })
 
         return refs
 
