@@ -23,6 +23,7 @@ from typing import Optional, Dict, Any
 from rdflib import Graph, Namespace, URIRef, Literal, RDF, OWL
 from rdflib.term import Node
 
+from utils.logger import get_logger
 from domain.interchange.ports import OntologySerializer, OntologyDeserializer
 from domain.interchange.value_objects import (
     SerializationScope,
@@ -45,6 +46,8 @@ from domain.ontology.value_objects import ExternalReference
 SKOS = Namespace("http://www.w3.org/2004/02/skos/core#")
 DCT = Namespace("http://purl.org/dc/terms/")
 LOCAL = Namespace("http://context-studio.local/ontology/")
+
+logger = get_logger(__name__)
 
 
 class SKOSSerializer(OntologySerializer):
@@ -114,7 +117,13 @@ class SKOSSerializer(OntologySerializer):
             if isinstance(result, str):
                 return result.encode("utf-8")
             return result  # type: ignore[unreachable,return-value]
+        except ValueError:
+            raise
+        except (TypeError, AttributeError, KeyError) as e:
+            logger.error(f"SKOS serialization error: {type(e).__name__}: {str(e)}")
+            raise RuntimeError(f"SKOS serialization failed: {str(e)}") from e
         except Exception as e:
+            logger.error(f"SKOS serialization error: {type(e).__name__}: {str(e)}")
             raise RuntimeError(f"SKOS serialization failed: {str(e)}") from e
 
     def _serialize_whole_graph(self) -> None:
@@ -169,6 +178,9 @@ class SKOSSerializer(OntologySerializer):
             prop = self.ontology_repo.get_property_definition(entity_id)
             if prop:
                 self._add_property_to_graph(prop)
+                continue
+
+            logger.warning(f"Entity {entity_id} does not match any known type during SKOS serialization; skipping")
 
     def _add_taxonomy_to_graph(self, taxonomy: Taxonomy) -> None:
         """Add a taxonomy and its descendants to the graph."""
@@ -305,6 +317,7 @@ class SKOSDeserializer(OntologyDeserializer):
         self.warnings: list[str] = []
         self.incoming_entities: Dict[str, Dict[str, Any]] = {}
         self._entity_map: Dict[str, str] = {}  # URI -> local entity ID
+        self._classes_cache: Optional[list[Class]] = None
 
     def deserialize(self, source: bytes | str, dry_run: bool = True) -> ImportPlan:
         """
@@ -327,6 +340,7 @@ class SKOSDeserializer(OntologyDeserializer):
             self.warnings = []
             self.incoming_entities = {}
             self._entity_map = {}  # Reset entity map for this deserialization
+            self._classes_cache = None  # Reset classes cache
 
             # Ensure source is bytes for hashing
             if isinstance(source, str):
@@ -373,7 +387,11 @@ class SKOSDeserializer(OntologyDeserializer):
             return plan
         except ValueError:
             raise
+        except (TypeError, AttributeError, KeyError) as e:
+            logger.error(f"SKOS deserialization error: {type(e).__name__}: {str(e)}")
+            raise RuntimeError(f"SKOS deserialization failed: {str(e)}") from e
         except Exception as e:
+            logger.error(f"SKOS deserialization error: {type(e).__name__}: {str(e)}")
             raise RuntimeError(f"SKOS deserialization failed: {str(e)}") from e
 
     def _extract_entities_from_graph(self) -> None:
@@ -671,8 +689,10 @@ class SKOSDeserializer(OntologyDeserializer):
         self, source: str, identifier: str
     ) -> Optional[str]:
         """Find an existing entity by external reference."""
-        all_classes = self.ontology_repo.list_classes()
-        for class_entity in all_classes:
+        if self._classes_cache is None:
+            self._classes_cache = self.ontology_repo.list_classes()
+
+        for class_entity in self._classes_cache:
             for ext_ref in class_entity.external_references:
                 if ext_ref.source == source and ext_ref.identifier == identifier:
                     return class_entity.id

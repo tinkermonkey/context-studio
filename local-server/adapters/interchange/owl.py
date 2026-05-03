@@ -23,6 +23,7 @@ from typing import Optional, Dict, Any, cast
 from rdflib import Graph, Namespace, URIRef, Literal, RDF, RDFS
 from rdflib.term import Node
 
+from utils.logger import get_logger
 from domain.interchange.ports import OntologySerializer, OntologyDeserializer
 from domain.interchange.value_objects import (
     SerializationScope,
@@ -44,6 +45,8 @@ OWL = Namespace("http://www.w3.org/2002/07/owl#")
 SKOS = Namespace("http://www.w3.org/2004/02/skos/core#")
 DCT = Namespace("http://purl.org/dc/terms/")
 LOCAL = Namespace("http://context-studio.local/ontology/")
+
+logger = get_logger(__name__)
 
 
 class OWLSerializer(OntologySerializer):
@@ -126,7 +129,13 @@ class OWLSerializer(OntologySerializer):
             if isinstance(result, str):
                 return result.encode("utf-8")
             return result
+        except ValueError:
+            raise
+        except (TypeError, AttributeError, KeyError) as e:
+            logger.error(f"OWL serialization error: {type(e).__name__}: {str(e)}")
+            raise RuntimeError(f"OWL serialization failed: {str(e)}") from e
         except Exception as e:
+            logger.error(f"OWL serialization error: {type(e).__name__}: {str(e)}")
             raise RuntimeError(f"OWL serialization failed: {str(e)}") from e
 
     def _serialize_whole_graph(self) -> None:
@@ -201,6 +210,9 @@ class OWLSerializer(OntologySerializer):
             prop = self.ontology_repo.get_property_definition(entity_id)
             if prop:
                 self._add_property_to_graph(prop)
+                continue
+
+            logger.warning(f"Entity {entity_id} does not match any known type during OWL serialization; skipping")
 
     def _add_taxonomy_to_graph(self, taxonomy: Taxonomy) -> None:
         """Add a taxonomy and its descendants to the graph."""
@@ -414,7 +426,11 @@ class OWLDeserializer(OntologyDeserializer):
             return plan
         except ValueError:
             raise
+        except (TypeError, AttributeError, KeyError) as e:
+            logger.error(f"OWL deserialization error: {type(e).__name__}: {str(e)}")
+            raise RuntimeError(f"OWL deserialization failed: {str(e)}") from e
         except Exception as e:
+            logger.error(f"OWL deserialization error: {type(e).__name__}: {str(e)}")
             raise RuntimeError(f"OWL deserialization failed: {str(e)}") from e
 
     def _process_taxonomies_first(self) -> None:

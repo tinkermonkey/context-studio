@@ -22,6 +22,7 @@ from typing import Optional, Dict, Any
 
 import networkx as nx
 
+from utils.logger import get_logger
 from domain.interchange.ports import OntologySerializer, OntologyDeserializer
 from domain.interchange.value_objects import (
     SerializationScope,
@@ -39,6 +40,8 @@ from domain.ontology.entities import (
     Relationship,
     PropertyDefinition,
 )
+
+logger = get_logger(__name__)
 
 
 class GraphMLSerializer(OntologySerializer):
@@ -98,7 +101,13 @@ class GraphMLSerializer(OntologySerializer):
             nx.write_graphml(self.graph, output)
             return output.getvalue()
 
+        except ValueError:
+            raise
+        except (TypeError, AttributeError, KeyError) as e:
+            logger.error(f"GraphML serialization error: {type(e).__name__}: {str(e)}")
+            raise RuntimeError(f"GraphML serialization failed: {str(e)}") from e
         except Exception as e:
+            logger.error(f"GraphML serialization error: {type(e).__name__}: {str(e)}")
             raise RuntimeError(f"GraphML serialization failed: {str(e)}") from e
 
     def _serialize_whole_graph(self) -> None:
@@ -221,6 +230,9 @@ class GraphMLSerializer(OntologySerializer):
             if prop:
                 self._add_property_definition(prop)
                 processed_ids.add(entity_id)
+                continue
+
+            logger.warning(f"Entity {entity_id} does not match any known type during GraphML serialization; skipping")
 
     def _add_taxonomy(self, taxonomy: Taxonomy) -> None:
         """Add a taxonomy node to the graph."""
@@ -491,6 +503,8 @@ class GraphMLDeserializer(OntologyDeserializer):
         self.graph: Optional[nx.MultiDiGraph] = None
         self.warnings: list[str] = []
         self.incoming_entities: Dict[str, Dict[str, Any]] = {}
+        self._classes_cache: Optional[list[Class]] = None
+        self._individuals_cache: Optional[list[Individual]] = None
 
     def deserialize(self, source: bytes | str, dry_run: bool = True) -> ImportPlan:
         """
@@ -510,6 +524,8 @@ class GraphMLDeserializer(OntologyDeserializer):
         try:
             self.warnings = []
             self.incoming_entities = {}
+            self._classes_cache = None
+            self._individuals_cache = None
 
             # Ensure source is bytes for hashing
             if isinstance(source, str):
@@ -553,7 +569,11 @@ class GraphMLDeserializer(OntologyDeserializer):
             return plan
         except ValueError:
             raise
+        except (TypeError, AttributeError, KeyError) as e:
+            logger.error(f"GraphML deserialization error: {type(e).__name__}: {str(e)}")
+            raise RuntimeError(f"GraphML deserialization failed: {str(e)}") from e
         except Exception as e:
+            logger.error(f"GraphML deserialization error: {type(e).__name__}: {str(e)}")
             raise RuntimeError(f"GraphML deserialization failed: {str(e)}") from e
 
     def _extract_entities_from_graph(self) -> None:
@@ -573,6 +593,8 @@ class GraphMLDeserializer(OntologyDeserializer):
                 self._extract_individual(node_id, node_attrs)
             elif kind == "property_definition":
                 self._extract_property_definition(node_id, node_attrs)
+            else:
+                logger.warning(f"Node {node_id} has unknown kind attribute: {kind}; skipping")
 
     def _check_unknown_attributes(
         self, node_id: str, attrs: Dict[str, Any], known_keys: set[str]
@@ -931,14 +953,18 @@ class GraphMLDeserializer(OntologyDeserializer):
         self, source: str, identifier: str
     ) -> Optional[str]:
         """Find an existing entity by external reference."""
-        all_classes = self.ontology_repo.list_classes(limit=10000)
-        for class_entity in all_classes:
+        if self._classes_cache is None:
+            self._classes_cache = self.ontology_repo.list_classes(limit=10000)
+
+        for class_entity in self._classes_cache:
             for ext_ref in class_entity.external_references:
                 if ext_ref.source == source and ext_ref.identifier == identifier:
                     return class_entity.id
 
-        all_individuals = self.ontology_repo.list_individuals()
-        for individual in all_individuals:
+        if self._individuals_cache is None:
+            self._individuals_cache = self.ontology_repo.list_individuals()
+
+        for individual in self._individuals_cache:
             for ext_ref in individual.external_references:
                 if ext_ref.source == source and ext_ref.identifier == identifier:
                     return individual.id
