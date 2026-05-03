@@ -135,14 +135,13 @@ class ImportConflict:
         Returns:
             The default resolution strategy for this match kind
         """
-        if match_kind == MatchKind.EXTERNAL_REFERENCE:
-            return ResolutionKind.MERGE
-        elif match_kind == MatchKind.UUID:
-            return ResolutionKind.SKIP
-        elif match_kind == MatchKind.TITLE:
-            return ResolutionKind.SKIP
-        else:
-            return ResolutionKind.ABORT
+        match match_kind:
+            case MatchKind.EXTERNAL_REFERENCE:
+                return ResolutionKind.MERGE
+            case MatchKind.UUID:
+                return ResolutionKind.SKIP
+            case MatchKind.TITLE:
+                return ResolutionKind.SKIP
 
 
 @dataclass(frozen=True)

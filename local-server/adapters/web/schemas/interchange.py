@@ -18,7 +18,6 @@ from datetime import datetime
 from typing import Optional, Any, List
 
 from pydantic import BaseModel, ConfigDict, Field
-from adapters.web.schemas.ontology import ListResponse
 
 
 # ==================== Serialization Scope Schemas ====================
