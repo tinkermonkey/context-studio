@@ -9,6 +9,7 @@ import {
   screen,
 } from "@/test/utils/renderWithProviders";
 import { InterchangeSidebar } from "../InterchangeSidebar";
+import * as routerHooks from "@tanstack/react-router";
 
 // Mock TanStack Router
 vi.mock("@tanstack/react-router", () => ({
@@ -36,10 +37,20 @@ describe("InterchangeSidebar", () => {
   });
 
   it("renders sidebar container", () => {
-    const { useRouterState } = require("@tanstack/react-router");
+    const useRouterState = vi.mocked(routerHooks.useRouterState);
     useRouterState.mockReturnValue({
-      location: { pathname: "/app/interchange" },
-    });
+      location: {
+        pathname: "/app/interchange",
+        href: "/app/interchange",
+        search: "",
+        searchStr: "",
+        state: { __TSR_index: 0 },
+        hash: "",
+      },
+      status: "idle",
+      isLoading: false,
+      isTransitioning: false,
+    } as any);
 
     render(<InterchangeSidebar />);
 
@@ -47,10 +58,20 @@ describe("InterchangeSidebar", () => {
   });
 
   it("renders sidebar title", () => {
-    const { useRouterState } = require("@tanstack/react-router");
+    const useRouterState = vi.mocked(routerHooks.useRouterState);
     useRouterState.mockReturnValue({
-      location: { pathname: "/app/interchange" },
-    });
+      location: {
+        pathname: "/app/interchange",
+        href: "/app/interchange",
+        search: "",
+        searchStr: "",
+        state: { __TSR_index: 0 },
+        hash: "",
+      },
+      status: "idle",
+      isLoading: false,
+      isTransitioning: false,
+    } as any);
 
     render(<InterchangeSidebar />);
 
@@ -59,10 +80,20 @@ describe("InterchangeSidebar", () => {
   });
 
   it("renders navigation links", () => {
-    const { useRouterState } = require("@tanstack/react-router");
+    const useRouterState = vi.mocked(routerHooks.useRouterState);
     useRouterState.mockReturnValue({
-      location: { pathname: "/app/interchange" },
-    });
+      location: {
+        pathname: "/app/interchange",
+        href: "/app/interchange",
+        search: "",
+        searchStr: "",
+        state: { __TSR_index: 0 },
+        hash: "",
+      },
+      status: "idle",
+      isLoading: false,
+      isTransitioning: false,
+    } as any);
 
     render(<InterchangeSidebar />);
 
@@ -72,10 +103,20 @@ describe("InterchangeSidebar", () => {
   });
 
   it("sets correct links", () => {
-    const { useRouterState } = require("@tanstack/react-router");
+    const useRouterState = vi.mocked(routerHooks.useRouterState);
     useRouterState.mockReturnValue({
-      location: { pathname: "/app/interchange" },
-    });
+      location: {
+        pathname: "/app/interchange",
+        href: "/app/interchange",
+        search: "",
+        searchStr: "",
+        state: { __TSR_index: 0 },
+        hash: "",
+      },
+      status: "idle",
+      isLoading: false,
+      isTransitioning: false,
+    } as any);
 
     render(<InterchangeSidebar />);
 
@@ -95,10 +136,20 @@ describe("InterchangeSidebar", () => {
   });
 
   it("highlights recent runs link when on main interchange page", () => {
-    const { useRouterState } = require("@tanstack/react-router");
+    const useRouterState = vi.mocked(routerHooks.useRouterState);
     useRouterState.mockReturnValue({
-      location: { pathname: "/app/interchange" },
-    });
+      location: {
+        pathname: "/app/interchange",
+        href: "/app/interchange",
+        search: "",
+        searchStr: "",
+        state: { __TSR_index: 0 },
+        hash: "",
+      },
+      status: "idle",
+      isLoading: false,
+      isTransitioning: false,
+    } as any);
 
     render(<InterchangeSidebar />);
 
@@ -108,10 +159,20 @@ describe("InterchangeSidebar", () => {
   });
 
   it("highlights export link when on export page", () => {
-    const { useRouterState } = require("@tanstack/react-router");
+    const useRouterState = vi.mocked(routerHooks.useRouterState);
     useRouterState.mockReturnValue({
-      location: { pathname: "/app/interchange/export" },
-    });
+      location: {
+        pathname: "/app/interchange/export",
+        href: "/app/interchange/export",
+        search: "",
+        searchStr: "",
+        state: { __TSR_index: 0 },
+        hash: "",
+      },
+      status: "idle",
+      isLoading: false,
+      isTransitioning: false,
+    } as any);
 
     render(<InterchangeSidebar />);
 
@@ -121,10 +182,20 @@ describe("InterchangeSidebar", () => {
   });
 
   it("highlights import link when on import page", () => {
-    const { useRouterState } = require("@tanstack/react-router");
+    const useRouterState = vi.mocked(routerHooks.useRouterState);
     useRouterState.mockReturnValue({
-      location: { pathname: "/app/interchange/import" },
-    });
+      location: {
+        pathname: "/app/interchange/import",
+        href: "/app/interchange/import",
+        search: "",
+        searchStr: "",
+        state: { __TSR_index: 0 },
+        hash: "",
+      },
+      status: "idle",
+      isLoading: false,
+      isTransitioning: false,
+    } as any);
 
     render(<InterchangeSidebar />);
 
@@ -134,10 +205,20 @@ describe("InterchangeSidebar", () => {
   });
 
   it("defaults to runs view when pathname doesn't match export or import", () => {
-    const { useRouterState } = require("@tanstack/react-router");
+    const useRouterState = vi.mocked(routerHooks.useRouterState);
     useRouterState.mockReturnValue({
-      location: { pathname: "/app/interchange/unknown" },
-    });
+      location: {
+        pathname: "/app/interchange/unknown",
+        href: "/app/interchange/unknown",
+        search: "",
+        searchStr: "",
+        state: { __TSR_index: 0 },
+        hash: "",
+      },
+      status: "idle",
+      isLoading: false,
+      isTransitioning: false,
+    } as any);
 
     render(<InterchangeSidebar />);
 
@@ -146,10 +227,20 @@ describe("InterchangeSidebar", () => {
   });
 
   it("applies correct styling to non-active links", () => {
-    const { useRouterState } = require("@tanstack/react-router");
+    const useRouterState = vi.mocked(routerHooks.useRouterState);
     useRouterState.mockReturnValue({
-      location: { pathname: "/app/interchange/export" },
-    });
+      location: {
+        pathname: "/app/interchange/export",
+        href: "/app/interchange/export",
+        search: "",
+        searchStr: "",
+        state: { __TSR_index: 0 },
+        hash: "",
+      },
+      status: "idle",
+      isLoading: false,
+      isTransitioning: false,
+    } as any);
 
     render(<InterchangeSidebar />);
 
@@ -161,10 +252,20 @@ describe("InterchangeSidebar", () => {
   });
 
   it("renders nav element with space between links", () => {
-    const { useRouterState } = require("@tanstack/react-router");
+    const useRouterState = vi.mocked(routerHooks.useRouterState);
     useRouterState.mockReturnValue({
-      location: { pathname: "/app/interchange" },
-    });
+      location: {
+        pathname: "/app/interchange",
+        href: "/app/interchange",
+        search: "",
+        searchStr: "",
+        state: { __TSR_index: 0 },
+        hash: "",
+      },
+      status: "idle",
+      isLoading: false,
+      isTransitioning: false,
+    } as any);
 
     const { container } = render(<InterchangeSidebar />);
 
@@ -174,10 +275,20 @@ describe("InterchangeSidebar", () => {
   });
 
   it("handles root interchange path correctly", () => {
-    const { useRouterState } = require("@tanstack/react-router");
+    const useRouterState = vi.mocked(routerHooks.useRouterState);
     useRouterState.mockReturnValue({
-      location: { pathname: "/app/interchange/" },
-    });
+      location: {
+        pathname: "/app/interchange/",
+        href: "/app/interchange/",
+        search: "",
+        searchStr: "",
+        state: { __TSR_index: 0 },
+        hash: "",
+      },
+      status: "idle",
+      isLoading: false,
+      isTransitioning: false,
+    } as any);
 
     render(<InterchangeSidebar />);
 
@@ -186,10 +297,20 @@ describe("InterchangeSidebar", () => {
   });
 
   it("renders all links with proper structure", () => {
-    const { useRouterState } = require("@tanstack/react-router");
+    const useRouterState = vi.mocked(routerHooks.useRouterState);
     useRouterState.mockReturnValue({
-      location: { pathname: "/app/interchange" },
-    });
+      location: {
+        pathname: "/app/interchange",
+        href: "/app/interchange",
+        search: "",
+        searchStr: "",
+        state: { __TSR_index: 0 },
+        hash: "",
+      },
+      status: "idle",
+      isLoading: false,
+      isTransitioning: false,
+    } as any);
 
     const { container } = render(<InterchangeSidebar />);
 

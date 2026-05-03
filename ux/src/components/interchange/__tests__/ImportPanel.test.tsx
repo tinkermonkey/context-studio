@@ -10,6 +10,7 @@ import {
   screen,
 } from "@/test/utils/renderWithProviders";
 import { ImportPanel } from "../ImportPanel";
+import * as toastHook from "@/hooks/useButterToast";
 
 vi.mock("@/hooks/useButterToast", () => ({
   useButterToast: vi.fn(() => ({
@@ -41,13 +42,15 @@ describe("ImportPanel", () => {
   });
 
   it("detects format from file extension (OWL/RDF)", () => {
-    const { useButterToast } = require("@/hooks/useButterToast");
+    const useButterToast = vi.mocked(toastHook.useButterToast);
     const mockInfo = vi.fn();
     useButterToast.mockReturnValue({
       success: vi.fn(),
       error: vi.fn(),
       info: mockInfo,
-    });
+      warning: vi.fn(),
+      show: vi.fn(),
+    } as any);
 
     const { container } = render(<ImportPanel />);
 
@@ -66,13 +69,15 @@ describe("ImportPanel", () => {
   });
 
   it("detects format from file extension (GraphML)", () => {
-    const { useButterToast } = require("@/hooks/useButterToast");
+    const useButterToast = vi.mocked(toastHook.useButterToast);
     const mockInfo = vi.fn();
     useButterToast.mockReturnValue({
       success: vi.fn(),
       error: vi.fn(),
       info: mockInfo,
-    });
+      warning: vi.fn(),
+      show: vi.fn(),
+    } as any);
 
     const { container } = render(<ImportPanel />);
 
@@ -90,13 +95,15 @@ describe("ImportPanel", () => {
   });
 
   it("detects format from file extension (Turtle)", () => {
-    const { useButterToast } = require("@/hooks/useButterToast");
+    const useButterToast = vi.mocked(toastHook.useButterToast);
     const mockInfo = vi.fn();
     useButterToast.mockReturnValue({
       success: vi.fn(),
       error: vi.fn(),
       info: mockInfo,
-    });
+      warning: vi.fn(),
+      show: vi.fn(),
+    } as any);
 
     const { container } = render(<ImportPanel />);
 
@@ -114,13 +121,15 @@ describe("ImportPanel", () => {
   });
 
   it("defaults to auto format for unknown extensions", () => {
-    const { useButterToast } = require("@/hooks/useButterToast");
+    const useButterToast = vi.mocked(toastHook.useButterToast);
     const mockInfo = vi.fn();
     useButterToast.mockReturnValue({
       success: vi.fn(),
       error: vi.fn(),
       info: mockInfo,
-    });
+      warning: vi.fn(),
+      show: vi.fn(),
+    } as any);
 
     const { container } = render(<ImportPanel />);
 
@@ -137,13 +146,15 @@ describe("ImportPanel", () => {
   });
 
   it("supports drag and drop", () => {
-    const { useButterToast } = require("@/hooks/useButterToast");
+    const useButterToast = vi.mocked(toastHook.useButterToast);
     const mockInfo = vi.fn();
     useButterToast.mockReturnValue({
       success: vi.fn(),
       error: vi.fn(),
       info: mockInfo,
-    });
+      warning: vi.fn(),
+      show: vi.fn(),
+    } as any);
 
     render(<ImportPanel />);
 
@@ -175,13 +186,15 @@ describe("ImportPanel", () => {
   });
 
   it("shows error when preview is clicked without file", async () => {
-    const { useButterToast } = require("@/hooks/useButterToast");
+    const useButterToast = vi.mocked(toastHook.useButterToast);
     const mockError = vi.fn();
     useButterToast.mockReturnValue({
       success: vi.fn(),
       error: mockError,
       info: vi.fn(),
-    });
+      warning: vi.fn(),
+      show: vi.fn(),
+    } as any);
 
     render(<ImportPanel />);
 
@@ -195,12 +208,14 @@ describe("ImportPanel", () => {
 
   it("calls onPreviewRequested when preview button is clicked with file", async () => {
     const mockOnPreviewRequested = vi.fn();
-    const { useButterToast } = require("@/hooks/useButterToast");
+    const useButterToast = vi.mocked(toastHook.useButterToast);
     useButterToast.mockReturnValue({
       success: vi.fn(),
       error: vi.fn(),
       info: vi.fn(),
-    });
+      warning: vi.fn(),
+      show: vi.fn(),
+    } as any);
 
     const { container } = render(
       <ImportPanel onPreviewRequested={mockOnPreviewRequested} />

@@ -12,40 +12,31 @@ import {
   screen,
 } from "@/test/utils/renderWithProviders";
 import { ConflictResolutionModal } from "../ConflictResolutionModal";
-import type {
-  ImportConflict,
-  ResolutionKind,
-} from "@/api/types/interchange";
+import type { ImportConflict } from "@/api/types/interchange";
 
 describe("ConflictResolutionModal", () => {
   const mockConflicts: ImportConflict[] = [
     {
       match_kind: "external_reference",
-      existing: {
-        id: "existing-1",
-        title: "Dog",
-        type: "class",
-      },
+      existing: "existing-1",
       incoming: {
         id: "incoming-1",
         title: "Dog",
         type: "class",
       },
       default_resolution: "merge",
+      available_resolutions: ["merge", "skip", "overwrite"],
     },
     {
       match_kind: "title",
-      existing: {
-        id: "existing-2",
-        title: "Cat",
-        type: "class",
-      },
+      existing: "existing-2",
       incoming: {
         id: "incoming-2",
         title: "Cat",
         type: "class",
       },
       default_resolution: "skip",
+      available_resolutions: ["skip", "merge", "overwrite"],
     },
   ];
 
@@ -136,17 +127,14 @@ describe("ConflictResolutionModal", () => {
     // Create a conflict with UUID that has multiple hyphens
     const uuidConflict: ImportConflict = {
       match_kind: "uuid",
-      existing: {
-        id: "550e8400-e29b-41d4-a716-446655440000",
-        title: "Entity 1",
-        type: "class",
-      },
+      existing: "550e8400-e29b-41d4-a716-446655440000",
       incoming: {
         id: "550e8400-e29b-41d4-a716-446655440001",
         title: "Entity 1",
         type: "class",
       },
       default_resolution: "skip",
+      available_resolutions: ["skip", "merge", "overwrite"],
     };
 
     render(
@@ -184,17 +172,14 @@ describe("ConflictResolutionModal", () => {
     const testConflicts: ImportConflict[] = [
       {
         match_kind: "external_reference",
-        existing: {
-          id: "ext-ref-123",
-          title: "DBpedia Item",
-          type: "class",
-        },
+        existing: "ext-ref-123",
         incoming: {
           id: "incoming-ext-ref",
           title: "DBpedia Item",
           type: "class",
         },
         default_resolution: "merge",
+        available_resolutions: ["merge", "skip", "overwrite"],
       },
     ];
 

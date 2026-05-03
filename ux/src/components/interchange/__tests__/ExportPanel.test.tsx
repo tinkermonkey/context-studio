@@ -10,6 +10,10 @@ import {
   screen,
 } from "@/test/utils/renderWithProviders";
 import { ExportPanel } from "../ExportPanel";
+import * as interchangeHooks from "@/api/hooks/interchange";
+import * as taxonomyHooks from "@/api/hooks/taxonomies";
+import * as conceptSchemeHooks from "@/api/hooks/conceptSchemes";
+import * as toastHook from "@/hooks/useButterToast";
 
 // Mock the API hooks
 vi.mock("@/api/hooks/interchange", () => ({
@@ -37,11 +41,7 @@ describe("ExportPanel", () => {
     // Reset mocks before each test
     vi.clearAllMocks();
 
-    const { useInterchangeExport } = require("@/api/hooks/interchange");
-    const { useTaxonomies } = require("@/api/hooks/taxonomies");
-    const { useConceptSchemes } = require("@/api/hooks/conceptSchemes");
-
-    useTaxonomies.mockReturnValue({
+    vi.mocked(taxonomyHooks.useTaxonomies).mockReturnValue({
       data: [
         {
           id: "tax-1",
@@ -49,9 +49,9 @@ describe("ExportPanel", () => {
           description: "Test description",
         },
       ],
-    });
+    } as any);
 
-    useConceptSchemes.mockReturnValue({
+    vi.mocked(conceptSchemeHooks.useConceptSchemes).mockReturnValue({
       data: [
         {
           id: "scheme-1",
@@ -59,12 +59,15 @@ describe("ExportPanel", () => {
           description: "Test description",
         },
       ],
-    });
+    } as any);
 
-    useInterchangeExport.mockReturnValue({
+    vi.mocked(interchangeHooks.useInterchangeExport).mockReturnValue({
       mutate: vi.fn(),
-      isLoading: false,
-    });
+      mutateAsync: vi.fn(),
+      isPending: false,
+      isError: false,
+      isSuccess: false,
+    } as any);
   });
 
   it("renders export panel with format selector", () => {
@@ -126,13 +129,15 @@ describe("ExportPanel", () => {
   });
 
   it("shows error when exporting taxonomy without selecting one", async () => {
-    const { useButterToast } = require("@/hooks/useButterToast");
+    const useButterToast = vi.mocked(toastHook.useButterToast);
     const mockError = vi.fn();
     useButterToast.mockReturnValue({
       success: vi.fn(),
       error: mockError,
       info: vi.fn(),
-    });
+      warning: vi.fn(),
+      show: vi.fn(),
+    } as any);
 
     render(<ExportPanel />);
 
@@ -148,13 +153,15 @@ describe("ExportPanel", () => {
   });
 
   it("shows error when exporting scheme without selecting one", async () => {
-    const { useButterToast } = require("@/hooks/useButterToast");
+    const useButterToast = vi.mocked(toastHook.useButterToast);
     const mockError = vi.fn();
     useButterToast.mockReturnValue({
       success: vi.fn(),
       error: mockError,
       info: vi.fn(),
-    });
+      warning: vi.fn(),
+      show: vi.fn(),
+    } as any);
 
     render(<ExportPanel />);
 
@@ -172,12 +179,15 @@ describe("ExportPanel", () => {
   });
 
   it("calls export mutation with correct parameters", async () => {
-    const { useInterchangeExport } = require("@/api/hooks/interchange");
+    const useInterchangeExport = vi.mocked(interchangeHooks.useInterchangeExport);
     const mockMutate = vi.fn();
     useInterchangeExport.mockReturnValue({
       mutate: mockMutate,
-      isLoading: false,
-    });
+      mutateAsync: vi.fn(),
+      isPending: false,
+      isError: false,
+      isSuccess: false,
+    } as any);
 
     render(<ExportPanel />);
 

@@ -11,6 +11,7 @@ import {
 } from "@/test/utils/renderWithProviders";
 import { RecentRunsTable } from "../RecentRunsTable";
 import type { ImportRun } from "@/api/types/interchange";
+import * as interchangeHooks from "@/api/hooks/interchange";
 
 vi.mock("@/api/hooks/interchange", () => ({
   useInterchangeRuns: vi.fn(),
@@ -25,6 +26,8 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 
 describe("RecentRunsTable", () => {
+  const useInterchangeRuns = vi.mocked(interchangeHooks.useInterchangeRuns);
+
   const mockRuns: ImportRun[] = [
     {
       id: "run-1",
@@ -33,6 +36,11 @@ describe("RecentRunsTable", () => {
       created_at: new Date("2024-01-01T10:00:00Z").toISOString(),
       status: "committed",
       affected_entity_ids: ["entity-1", "entity-2"],
+      source_hash: "abc123",
+      scope: {
+        scope_type: "whole_graph",
+        include_descendants: false,
+      },
     },
     {
       id: "run-2",
@@ -41,6 +49,11 @@ describe("RecentRunsTable", () => {
       created_at: new Date("2024-01-02T11:00:00Z").toISOString(),
       status: "pending",
       affected_entity_ids: ["entity-3"],
+      source_hash: "def456",
+      scope: {
+        scope_type: "whole_graph",
+        include_descendants: false,
+      },
     },
     {
       id: "run-3",
@@ -49,6 +62,11 @@ describe("RecentRunsTable", () => {
       created_at: new Date("2024-01-03T12:00:00Z").toISOString(),
       status: "failed",
       affected_entity_ids: [],
+      source_hash: "ghi789",
+      scope: {
+        scope_type: "whole_graph",
+        include_descendants: false,
+      },
     },
   ];
 
@@ -57,12 +75,11 @@ describe("RecentRunsTable", () => {
   });
 
   it("renders table when runs are loaded", () => {
-    const { useInterchangeRuns } = require("@/api/hooks/interchange");
     useInterchangeRuns.mockReturnValue({
       data: mockRuns,
       isLoading: false,
       error: null,
-    });
+    } as any);
 
     render(<RecentRunsTable />);
 
@@ -71,12 +88,11 @@ describe("RecentRunsTable", () => {
   });
 
   it("displays table headers", () => {
-    const { useInterchangeRuns } = require("@/api/hooks/interchange");
     useInterchangeRuns.mockReturnValue({
       data: mockRuns,
       isLoading: false,
       error: null,
-    });
+    } as any);
 
     render(<RecentRunsTable />);
 
@@ -88,12 +104,11 @@ describe("RecentRunsTable", () => {
   });
 
   it("displays run data in rows", () => {
-    const { useInterchangeRuns } = require("@/api/hooks/interchange");
     useInterchangeRuns.mockReturnValue({
       data: mockRuns,
       isLoading: false,
       error: null,
-    });
+    } as any);
 
     render(<RecentRunsTable />);
 
@@ -104,12 +119,11 @@ describe("RecentRunsTable", () => {
   });
 
   it("displays status badges with appropriate colors", () => {
-    const { useInterchangeRuns } = require("@/api/hooks/interchange");
     useInterchangeRuns.mockReturnValue({
       data: mockRuns,
       isLoading: false,
       error: null,
-    });
+    } as any);
 
     render(<RecentRunsTable />);
 
@@ -119,12 +133,11 @@ describe("RecentRunsTable", () => {
   });
 
   it("extracts filename from source URI", () => {
-    const { useInterchangeRuns } = require("@/api/hooks/interchange");
     useInterchangeRuns.mockReturnValue({
       data: mockRuns,
       isLoading: false,
       error: null,
-    });
+    } as any);
 
     render(<RecentRunsTable />);
 
@@ -135,12 +148,11 @@ describe("RecentRunsTable", () => {
   });
 
   it("displays entity count", () => {
-    const { useInterchangeRuns } = require("@/api/hooks/interchange");
     useInterchangeRuns.mockReturnValue({
       data: mockRuns,
       isLoading: false,
       error: null,
-    });
+    } as any);
 
     render(<RecentRunsTable />);
 
@@ -150,12 +162,11 @@ describe("RecentRunsTable", () => {
   });
 
   it("shows loading spinner when loading", () => {
-    const { useInterchangeRuns } = require("@/api/hooks/interchange");
     useInterchangeRuns.mockReturnValue({
       data: [],
       isLoading: true,
       error: null,
-    });
+    } as any);
 
     render(<RecentRunsTable />);
 
@@ -163,13 +174,12 @@ describe("RecentRunsTable", () => {
   });
 
   it("shows error message when error occurs", () => {
-    const { useInterchangeRuns } = require("@/api/hooks/interchange");
     const testError = new Error("Failed to fetch runs");
     useInterchangeRuns.mockReturnValue({
       data: [],
       isLoading: false,
       error: testError,
-    });
+    } as any);
 
     render(<RecentRunsTable />);
 
@@ -178,12 +188,11 @@ describe("RecentRunsTable", () => {
   });
 
   it("shows empty state when no runs", () => {
-    const { useInterchangeRuns } = require("@/api/hooks/interchange");
     useInterchangeRuns.mockReturnValue({
       data: [],
       isLoading: false,
       error: null,
-    });
+    } as any);
 
     render(<RecentRunsTable />);
 
@@ -191,12 +200,11 @@ describe("RecentRunsTable", () => {
   });
 
   it("renders action button for each run", () => {
-    const { useInterchangeRuns } = require("@/api/hooks/interchange");
     useInterchangeRuns.mockReturnValue({
       data: mockRuns,
       isLoading: false,
       error: null,
-    });
+    } as any);
 
     render(<RecentRunsTable />);
 
@@ -205,12 +213,11 @@ describe("RecentRunsTable", () => {
   });
 
   it("has correct data-testid for each row", () => {
-    const { useInterchangeRuns } = require("@/api/hooks/interchange");
     useInterchangeRuns.mockReturnValue({
       data: mockRuns,
       isLoading: false,
       error: null,
-    });
+    } as any);
 
     render(<RecentRunsTable />);
 
@@ -226,12 +233,11 @@ describe("RecentRunsTable", () => {
   });
 
   it("has data-testid for main container", () => {
-    const { useInterchangeRuns } = require("@/api/hooks/interchange");
     useInterchangeRuns.mockReturnValue({
       data: mockRuns,
       isLoading: false,
       error: null,
-    });
+    } as any);
 
     render(<RecentRunsTable />);
 
@@ -239,8 +245,7 @@ describe("RecentRunsTable", () => {
   });
 
   it("handles pagination correctly", async () => {
-    const { useInterchangeRuns } = require("@/api/hooks/interchange");
-    const mockUseInterchangeRuns = useInterchangeRuns;
+    const mockUseInterchangeRuns = vi.mocked(interchangeHooks.useInterchangeRuns);
 
     // Return 10 items to indicate more pages
     const fullPage = Array.from({ length: 10 }, (_, i) => ({
@@ -250,15 +255,20 @@ describe("RecentRunsTable", () => {
       created_at: new Date().toISOString(),
       status: "committed",
       affected_entity_ids: [],
+      source_hash: `hash-${i}`,
+      scope: {
+        scope_type: "whole_graph",
+        include_descendants: false,
+      },
     }));
 
     mockUseInterchangeRuns.mockReturnValue({
       data: fullPage,
       isLoading: false,
       error: null,
-    });
+    } as any);
 
-    const { rerender } = render(<RecentRunsTable />);
+    render(<RecentRunsTable />);
 
     // Should show all items
     expect(screen.getByText("SKOS")).toBeInTheDocument();
