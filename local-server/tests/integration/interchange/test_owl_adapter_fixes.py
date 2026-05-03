@@ -25,8 +25,6 @@ from domain.ontology.entities import (
     ConceptScheme,
     Class,
     Individual,
-    Relationship,
-    PropertyDefinition,
 )
 from domain.ontology.value_objects import ExternalReference
 from domain.interchange.value_objects import (
