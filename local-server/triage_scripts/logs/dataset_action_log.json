@@ -1,0 +1,11 @@
+[
+  {
+    "timestamp": "2025-08-11T19:55:59.317093+00:00",
+    "action": "create",
+    "dataset_id": "cabbecf6-f751-4c32-b422-0b618c91efe0",
+    "dataset_title": "Default Dataset",
+    "details": {
+      "filename": "default.db"
+    }
+  }
+]
