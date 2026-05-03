@@ -28,7 +28,7 @@ class TestSerializationScopeValidation:
 
     def test_whole_graph_valid(self):
         """WHOLE_GRAPH scope with no other fields is valid."""
-        scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+        SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
         # Validation happens at construction time via __post_init__
 
     def test_whole_graph_rejects_taxonomy_id(self):
@@ -57,7 +57,7 @@ class TestSerializationScopeValidation:
 
     def test_taxonomy_valid(self):
         """TAXONOMY scope with taxonomy_id is valid."""
-        scope = SerializationScope(
+        SerializationScope(
             scope_type=SerializationScopeType.TAXONOMY,
             taxonomy_id="tax-1",
         )
@@ -88,7 +88,7 @@ class TestSerializationScopeValidation:
 
     def test_scheme_valid(self):
         """SCHEME scope with scheme_id is valid."""
-        scope = SerializationScope(
+        SerializationScope(
             scope_type=SerializationScopeType.SCHEME,
             scheme_id="scheme-1",
         )
@@ -119,7 +119,7 @@ class TestSerializationScopeValidation:
 
     def test_scheme_include_descendants_flag(self):
         """SCHEME scope can have include_descendants flag."""
-        scope = SerializationScope(
+        SerializationScope(
             scope_type=SerializationScopeType.SCHEME,
             scheme_id="scheme-1",
             include_descendants=True,
@@ -128,7 +128,7 @@ class TestSerializationScopeValidation:
 
     def test_entity_set_valid(self):
         """ENTITY_SET scope with entity_ids is valid."""
-        scope = SerializationScope(
+        SerializationScope(
             scope_type=SerializationScopeType.ENTITY_SET,
             entity_ids=("entity-1", "entity-2"),
         )

@@ -373,10 +373,10 @@ class SKOSDeserializer(OntologyDeserializer):
             # Create import plan
             source_hash = hashlib.sha256(source_bytes).hexdigest()
             plan = ImportPlan(
-                conflicts=conflicts,
+                conflicts=tuple(conflicts),
                 new_entity_count=new_entity_count,
                 import_run_id=None,
-                warnings=self.warnings,
+                warnings=tuple(self.warnings),
                 source_hash=source_hash,
                 scope=None,
             )

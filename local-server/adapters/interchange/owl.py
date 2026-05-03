@@ -415,10 +415,10 @@ class OWLDeserializer(OntologyDeserializer):
 
             # Create import plan
             plan = ImportPlan(
-                conflicts=[],
+                conflicts=(),
                 new_entity_count=len(self.incoming_entities),
                 import_run_id=None,
-                warnings=self.warnings,
+                warnings=tuple(self.warnings),
                 source_hash=source_hash,
             )
 
