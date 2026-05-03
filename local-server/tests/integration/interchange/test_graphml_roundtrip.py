@@ -310,7 +310,7 @@ class TestGraphMLMultiClassIndividual:
         fresh_repo = SQLiteOntologyRepository(fresh_session_factory)
 
         deserializer = GraphMLDeserializer(fresh_repo)
-        plan = deserializer.deserialize(exported, dry_run=True)
+        deserializer.deserialize(exported, dry_run=True)
 
         # Verify that Fido's class ordering is preserved in the incoming entities
         fido_incoming = next((e for e in deserializer.incoming_entities.values()
@@ -368,7 +368,7 @@ class TestGraphMLExternalReferences:
         fresh_repo = SQLiteOntologyRepository(fresh_session_factory)
 
         deserializer = GraphMLDeserializer(fresh_repo)
-        plan = deserializer.deserialize(exported, dry_run=True)
+        deserializer.deserialize(exported, dry_run=True)
 
         # Verify external references were extracted
         dog_incoming = next((e for e in deserializer.incoming_entities.values()
@@ -395,7 +395,7 @@ class TestGraphMLExternalReferences:
         fresh_repo = SQLiteOntologyRepository(fresh_session_factory)
 
         deserializer = GraphMLDeserializer(fresh_repo)
-        plan = deserializer.deserialize(exported, dry_run=True)
+        deserializer.deserialize(exported, dry_run=True)
 
         # Verify Fido's external references
         fido_incoming = next((e for e in deserializer.incoming_entities.values()
