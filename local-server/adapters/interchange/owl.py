@@ -370,6 +370,7 @@ class OWLDeserializer(OntologyDeserializer):
             parse_error = None
             for fmt in ["xml", "turtle", "json-ld"]:
                 try:
+                    self.graph = Graph()  # Reset graph for each format attempt
                     self.graph.parse(data=source_bytes, format=fmt)
                     break
                 except Exception as e:

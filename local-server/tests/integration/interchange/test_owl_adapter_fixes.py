@@ -24,7 +24,7 @@ from domain.ontology.entities import (
     Taxonomy,
     ConceptScheme,
     Class,
-    PropertyDefinition,
+    Individual,
 )
 from domain.interchange.value_objects import SerializationScope, SerializationScopeType
 from adapters.persistence.sqlite.models import Base
@@ -87,6 +87,17 @@ def ontology_repo(session_factory):
         last_modified=datetime.now(timezone.utc),
     )
     repo.save_class(class_entity)
+
+    # Create an individual instance of the class
+    individual = Individual(
+        id="individual-1",
+        class_ids=["class-1"],
+        title="Test Individual",
+        description="An instance of the test class",
+        created_at=datetime.now(timezone.utc),
+        last_modified=datetime.now(timezone.utc),
+    )
+    repo.save_individual(individual)
 
     return repo
 
@@ -223,17 +234,23 @@ class TestOWLAdapterSplitMode:
         turtle_bytes = serializer.serialize(scope)
         turtle_str = turtle_bytes.decode('utf-8')
 
-        # In split mode, should not include owl:NamedIndividual
+        # In split mode, should not include the individual (by label or NamedIndividual)
+        assert "Test Individual" not in turtle_str
         assert "NamedIndividual" not in turtle_str
+        # Should still include the class (TBox)
+        assert "Test Class" in turtle_str
 
     def test_non_split_mode_includes_individuals(self, ontology_repo):
-        """Test that non-split mode includes all entities."""
+        """Test that non-split mode includes all entities including individuals."""
         # Create a serializer without split mode
         serializer = OWLSerializer(ontology_repo, format="turtle", split_mode=False)
         scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
 
         # Serialize in normal mode
         turtle_bytes = serializer.serialize(scope)
+        turtle_str = turtle_bytes.decode('utf-8')
 
-        # Should complete without error (may or may not have individuals depending on test data)
+        # In normal mode, should include both class and individual
+        assert "Test Class" in turtle_str
+        assert "Test Individual" in turtle_str
         assert isinstance(turtle_bytes, bytes)
