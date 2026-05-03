@@ -112,7 +112,9 @@ export function RecentRunsTable() {
                   {new Date(run.created_at).toLocaleDateString()}
                 </td>
                 <td className="px-6 py-4">{getStatusBadge(run.status)}</td>
-                <td className="px-6 py-4">{run.affected_entity_ids?.length ?? 0}</td>
+                <td className="px-6 py-4">
+                  {run.affected_entity_ids?.length ?? 0}
+                </td>
                 <td className="px-6 py-4">
                   <Link
                     to="/app/interchange/runs/$runId"
@@ -120,7 +122,7 @@ export function RecentRunsTable() {
                     className="inline-block"
                   >
                     <Button size="sm" color="light">
-                      <Eye className="h-4 w-4 mr-1" />
+                      <Eye className="mr-1 h-4 w-4" />
                       View
                     </Button>
                   </Link>

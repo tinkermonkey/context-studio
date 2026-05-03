@@ -24,13 +24,19 @@ function ImportRunDetailComponent() {
   const [eventOffset, setEventOffset] = React.useState(0);
   const eventLimit = 20;
 
-  const { data: run, isLoading: runLoading, error: runError } =
-    useInterchangeRun(runId);
-  const { data: eventsData, isLoading: eventsLoading, error: eventsError } =
-    useInterchangeRunChangeEvents(runId, {
-      offset: eventOffset,
-      limit: eventLimit,
-    });
+  const {
+    data: run,
+    isLoading: runLoading,
+    error: runError,
+  } = useInterchangeRun(runId);
+  const {
+    data: eventsData,
+    isLoading: eventsLoading,
+    error: eventsError,
+  } = useInterchangeRunChangeEvents(runId, {
+    offset: eventOffset,
+    limit: eventLimit,
+  });
 
   const changeEvents = Array.isArray(eventsData) ? eventsData : [];
   const hasMoreEvents = changeEvents.length === eventLimit;

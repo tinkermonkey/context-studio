@@ -11,27 +11,32 @@ import type { components } from "@/api/client/types";
  * SerializationScope - Scope parameters for serialization operations.
  * Describes what should be exported or imported.
  */
-export type SerializationScope = components["schemas"]["SerializationScopeResponse"];
+export type SerializationScope =
+  components["schemas"]["SerializationScopeResponse"];
 
 /**
  * SerializationScopeResponse - Describes what was serialized.
  */
-export type SerializationScopeResponse = components["schemas"]["SerializationScopeResponse"];
+export type SerializationScopeResponse =
+  components["schemas"]["SerializationScopeResponse"];
 
 /**
  * ResolutionRecord - Resolution applied to a conflict during import.
  */
-export type ResolutionRecord = components["schemas"]["ResolutionRecordResponse"];
+export type ResolutionRecord =
+  components["schemas"]["ResolutionRecordResponse"];
 
 /**
  * ChangeEvent - Change event associated with an import run.
  */
-export type ChangeEvent = components["schemas"]["adapters__web__schemas__interchange__ChangeEventResponse"];
+export type ChangeEvent =
+  components["schemas"]["adapters__web__schemas__interchange__ChangeEventResponse"];
 
 /**
  * ChangeEventResponse - Response containing change event data.
  */
-export type ChangeEventResponse = components["schemas"]["adapters__web__schemas__interchange__ChangeEventResponse"];
+export type ChangeEventResponse =
+  components["schemas"]["adapters__web__schemas__interchange__ChangeEventResponse"];
 
 /**
  * ImportRunResponse - Response containing import run data.
@@ -41,12 +46,14 @@ export type ImportRunResponse = components["schemas"]["ImportRunResponse"];
 /**
  * ImportRunListResponse - Paginated list of import runs.
  */
-export type ImportRunListResponse = components["schemas"]["ImportRunListResponse"];
+export type ImportRunListResponse =
+  components["schemas"]["ImportRunListResponse"];
 
 /**
  * ChangeEventListResponse - Paginated list of change events.
  */
-export type ChangeEventListResponse = components["schemas"]["ChangeEventListResponse"];
+export type ChangeEventListResponse =
+  components["schemas"]["ChangeEventListResponse"];
 
 /**
  * Resolution strategy for import conflicts.

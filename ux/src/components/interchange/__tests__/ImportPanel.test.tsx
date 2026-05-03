@@ -44,7 +44,9 @@ describe("ImportPanel", () => {
   it("renders drag-drop area", () => {
     render(<ImportPanel />);
 
-    expect(screen.getByTestId("interchange-import-file-input")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("interchange-import-file-input"),
+    ).toBeInTheDocument();
   });
 
   it("renders file input field", () => {
@@ -72,7 +74,7 @@ describe("ImportPanel", () => {
       type: "application/rdf+xml",
     });
     const fileInput = container.querySelector(
-      'input[type="file"]'
+      'input[type="file"]',
     ) as HTMLInputElement;
 
     fireEvent.change(fileInput, { target: { files: [file] } });
@@ -99,7 +101,7 @@ describe("ImportPanel", () => {
       type: "application/graphml+xml",
     });
     const fileInput = container.querySelector(
-      'input[type="file"]'
+      'input[type="file"]',
     ) as HTMLInputElement;
 
     fireEvent.change(fileInput, { target: { files: [file] } });
@@ -125,7 +127,7 @@ describe("ImportPanel", () => {
       type: "text/turtle",
     });
     const fileInput = container.querySelector(
-      'input[type="file"]'
+      'input[type="file"]',
     ) as HTMLInputElement;
 
     fireEvent.change(fileInput, { target: { files: [file] } });
@@ -150,7 +152,7 @@ describe("ImportPanel", () => {
       type: "application/octet-stream",
     });
     const fileInput = container.querySelector(
-      'input[type="file"]'
+      'input[type="file"]',
     ) as HTMLInputElement;
 
     fireEvent.change(fileInput, { target: { files: [file] } });
@@ -231,7 +233,7 @@ describe("ImportPanel", () => {
     } as any);
 
     const { container } = render(
-      <ImportPanel onPreviewRequested={mockOnPreviewRequested} />
+      <ImportPanel onPreviewRequested={mockOnPreviewRequested} />,
     );
 
     // Select a file
@@ -239,7 +241,7 @@ describe("ImportPanel", () => {
       type: "text/turtle",
     });
     const fileInput = container.querySelector(
-      'input[type="file"]'
+      'input[type="file"]',
     ) as HTMLInputElement;
     fireEvent.change(fileInput, { target: { files: [file] } });
 
@@ -256,6 +258,8 @@ describe("ImportPanel", () => {
     render(<ImportPanel />);
 
     expect(screen.getByTestId("interchange-import-panel")).toBeInTheDocument();
-    expect(screen.getByTestId("interchange-import-file-input")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("interchange-import-file-input"),
+    ).toBeInTheDocument();
   });
 });

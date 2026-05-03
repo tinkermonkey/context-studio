@@ -1,7 +1,6 @@
 import "@testing-library/jest-dom";
 import { vi, beforeEach, afterEach } from "vitest";
 import { cleanup } from "@testing-library/react";
-import React from "react";
 
 // Mock Axios to prevent real HTTP requests during tests
 vi.mock("axios", () => {

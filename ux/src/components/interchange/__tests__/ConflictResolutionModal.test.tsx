@@ -5,7 +5,13 @@
  */
 
 import React from "react";
-import { render, fireEvent, waitFor, screen, cleanup } from "@testing-library/react";
+import {
+  render,
+  fireEvent,
+  waitFor,
+  screen,
+  cleanup,
+} from "@testing-library/react";
 import { vi, describe, it, expect, afterEach } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -25,12 +31,27 @@ vi.mock("flowbite-react", async () => {
     return React.createElement(
       "div",
       { "data-testid": testId, role: "dialog", className: "modal", ...rest },
-      children
+      children,
     );
   };
-  Modal.Header = (props: any) => React.createElement("div", { className: "modal-header", ...props }, props.children);
-  Modal.Body = (props: any) => React.createElement("div", { className: "modal-body", ...props }, props.children);
-  Modal.Footer = (props: any) => React.createElement("div", { className: "modal-footer", ...props }, props.children);
+  Modal.Header = (props: any) =>
+    React.createElement(
+      "div",
+      { className: "modal-header", ...props },
+      props.children,
+    );
+  Modal.Body = (props: any) =>
+    React.createElement(
+      "div",
+      { className: "modal-body", ...props },
+      props.children,
+    );
+  Modal.Footer = (props: any) =>
+    React.createElement(
+      "div",
+      { className: "modal-footer", ...props },
+      props.children,
+    );
 
   return {
     ...(actual as object),
@@ -107,10 +128,12 @@ describe("ConflictResolutionModal", () => {
           newEntityCount={5}
           onCommit={mockOnCommit}
         />
-      </Wrapper>
+      </Wrapper>,
     );
 
-    expect(screen.getByTestId("interchange-conflict-resolution-modal")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("interchange-conflict-resolution-modal"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Resolve Import Conflicts")).toBeInTheDocument();
   });
 
@@ -128,7 +151,7 @@ describe("ConflictResolutionModal", () => {
           newEntityCount={5}
           onCommit={mockOnCommit}
         />
-      </Wrapper>
+      </Wrapper>,
     );
 
     // Modal should not be visible when isOpen is false
@@ -150,11 +173,11 @@ describe("ConflictResolutionModal", () => {
         conflicts={mockConflicts}
         newEntityCount={5}
         onCommit={mockOnCommit}
-      />
+      />,
     );
 
     expect(
-      screen.getByTestId("interchange-conflict-group-external-reference")
+      screen.getByTestId("interchange-conflict-group-external-reference"),
     ).toBeInTheDocument();
   });
 
@@ -169,7 +192,7 @@ describe("ConflictResolutionModal", () => {
         conflicts={mockConflicts}
         newEntityCount={5}
         onCommit={mockOnCommit}
-      />
+      />,
     );
 
     // Resolution dropdowns should be rendered with default values
@@ -203,7 +226,7 @@ describe("ConflictResolutionModal", () => {
         conflicts={[uuidConflict]}
         newEntityCount={1}
         onCommit={mockOnCommit}
-      />
+      />,
     );
 
     // Click commit to trigger key parsing
@@ -220,7 +243,7 @@ describe("ConflictResolutionModal", () => {
     expect(resolutionRecords[0].match_kind).toBe("uuid");
     // The entity_id should be the full UUID after the first hyphen
     expect(resolutionRecords[0].entity_id).toBe(
-      "550e8400-e29b-41d4-a716-446655440001"
+      "550e8400-e29b-41d4-a716-446655440001",
     );
   });
 
@@ -249,7 +272,7 @@ describe("ConflictResolutionModal", () => {
         conflicts={testConflicts}
         newEntityCount={1}
         onCommit={mockOnCommit}
-      />
+      />,
     );
 
     const commitButton = screen.getByRole("button", { name: /commit/i });
@@ -275,7 +298,7 @@ describe("ConflictResolutionModal", () => {
         conflicts={mockConflicts}
         newEntityCount={5}
         onCommit={mockOnCommit}
-      />
+      />,
     );
 
     // Find and change a resolution dropdown
@@ -305,11 +328,13 @@ describe("ConflictResolutionModal", () => {
         conflicts={mockConflicts}
         newEntityCount={5}
         onCommit={mockOnCommit}
-      />
+      />,
     );
 
     // Find "Apply All" button (if it exists)
-    const applyAllButtons = screen.queryAllByRole("button", { name: /apply all/i });
+    const applyAllButtons = screen.queryAllByRole("button", {
+      name: /apply all/i,
+    });
     if (applyAllButtons.length > 0) {
       fireEvent.click(applyAllButtons[0]);
     }
@@ -333,11 +358,11 @@ describe("ConflictResolutionModal", () => {
         conflicts={mockConflicts}
         newEntityCount={5}
         onCommit={mockOnCommit}
-      />
+      />,
     );
 
     const groupHeader = screen.getByTestId(
-      "interchange-conflict-group-external-reference"
+      "interchange-conflict-group-external-reference",
     );
     fireEvent.click(groupHeader);
 
@@ -361,7 +386,7 @@ describe("ConflictResolutionModal", () => {
           newEntityCount={5}
           onCommit={mockOnCommit}
         />
-      </Wrapper>
+      </Wrapper>,
     );
 
     // Check for conflict descriptions
@@ -383,7 +408,7 @@ describe("ConflictResolutionModal", () => {
           newEntityCount={5}
           onCommit={mockOnCommit}
         />
-      </Wrapper>
+      </Wrapper>,
     );
 
     const closeButton = screen.getByRole("button", { name: /close/i });
@@ -404,7 +429,7 @@ describe("ConflictResolutionModal", () => {
         newEntityCount={5}
         onCommit={mockOnCommit}
         isLoading={true}
-      />
+      />,
     );
 
     const commitButton = screen.getByRole("button", { name: /commit/i });
@@ -422,11 +447,11 @@ describe("ConflictResolutionModal", () => {
         conflicts={mockConflicts}
         newEntityCount={5}
         onCommit={mockOnCommit}
-      />
+      />,
     );
 
     expect(
-      screen.getByTestId("interchange-conflict-resolution-modal")
+      screen.getByTestId("interchange-conflict-resolution-modal"),
     ).toBeInTheDocument();
   });
 });

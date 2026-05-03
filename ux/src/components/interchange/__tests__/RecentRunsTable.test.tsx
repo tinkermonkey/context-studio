@@ -92,7 +92,9 @@ describe("RecentRunsTable", () => {
 
     render(<RecentRunsTable />);
 
-    expect(screen.getByTestId("interchange-recent-runs-table")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("interchange-recent-runs-table"),
+    ).toBeInTheDocument();
     expect(screen.getByRole("table")).toBeInTheDocument();
   });
 
@@ -231,13 +233,13 @@ describe("RecentRunsTable", () => {
     render(<RecentRunsTable />);
 
     expect(
-      screen.getByTestId("interchange-runs-table-row-run-1")
+      screen.getByTestId("interchange-runs-table-row-run-1"),
     ).toBeInTheDocument();
     expect(
-      screen.getByTestId("interchange-runs-table-row-run-2")
+      screen.getByTestId("interchange-runs-table-row-run-2"),
     ).toBeInTheDocument();
     expect(
-      screen.getByTestId("interchange-runs-table-row-run-3")
+      screen.getByTestId("interchange-runs-table-row-run-3"),
     ).toBeInTheDocument();
   });
 
@@ -250,11 +252,15 @@ describe("RecentRunsTable", () => {
 
     render(<RecentRunsTable />);
 
-    expect(screen.getByTestId("interchange-recent-runs-table")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("interchange-recent-runs-table"),
+    ).toBeInTheDocument();
   });
 
   it("handles pagination correctly", async () => {
-    const mockUseInterchangeRuns = vi.mocked(interchangeHooks.useInterchangeRuns);
+    const mockUseInterchangeRuns = vi.mocked(
+      interchangeHooks.useInterchangeRuns,
+    );
 
     // Return 10 items to indicate more pages
     const fullPage = Array.from({ length: 10 }, (_, i) => ({
@@ -280,7 +286,9 @@ describe("RecentRunsTable", () => {
     render(<RecentRunsTable />);
 
     // Should show all items - check the table is rendered
-    expect(screen.getByTestId("interchange-recent-runs-table")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("interchange-recent-runs-table"),
+    ).toBeInTheDocument();
 
     // Should render all 10 rows
     expect(screen.getAllByText("SKOS").length).toBe(10);

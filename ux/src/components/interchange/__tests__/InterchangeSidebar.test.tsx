@@ -97,7 +97,9 @@ describe("InterchangeSidebar", () => {
 
     render(<InterchangeSidebar />);
 
-    expect(screen.getByRole("link", { name: /recent runs/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /recent runs/i }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /export/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /import/i })).toBeInTheDocument();
   });
