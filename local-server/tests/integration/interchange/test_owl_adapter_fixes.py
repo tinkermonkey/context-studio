@@ -119,19 +119,19 @@ class TestOWLAdapterFormatDetection:
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 
-local:tax-1 a skos:ConceptScheme ;
-    skos:prefLabel "Test Taxonomy" ;
-    skos:definition "A test taxonomy" .
+local:tax-new a skos:ConceptScheme ;
+    skos:prefLabel "New Taxonomy" ;
+    skos:definition "A new taxonomy" .
 
-local:scheme-1 a skos:ConceptScheme ;
-    skos:prefLabel "Test Scheme" ;
-    skos:definition "A test scheme" ;
-    <http://purl.org/dc/terms/isPartOf> local:tax-1 .
+local:scheme-new a skos:ConceptScheme ;
+    skos:prefLabel "New Scheme" ;
+    skos:definition "A new scheme" ;
+    <http://purl.org/dc/terms/isPartOf> local:tax-new .
 
-local:class-1 a owl:Class ;
-    rdfs:label "Test Class" ;
-    rdfs:comment "A test class" ;
-    skos:inScheme local:scheme-1 .
+local:class-new a owl:Class ;
+    rdfs:label "New Class" ;
+    rdfs:comment "A new class" ;
+    skos:inScheme local:scheme-new .
 """
         deserializer = OWLDeserializer(ontology_repo, interchange_repo)
         plan = deserializer.deserialize(owl_turtle, dry_run=True)
@@ -151,24 +151,24 @@ local:class-1 a owl:Class ;
     xmlns:dct="http://purl.org/dc/terms/"
     xmlns:local="http://context-studio.local/ontology/">
 
-    <rdf:Description rdf:about="http://context-studio.local/ontology/tax-1">
+    <rdf:Description rdf:about="http://context-studio.local/ontology/tax-xml">
         <rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#ConceptScheme"/>
-        <skos:prefLabel>Test Taxonomy</skos:prefLabel>
-        <skos:definition>A test taxonomy</skos:definition>
+        <skos:prefLabel>XML Taxonomy</skos:prefLabel>
+        <skos:definition>A taxonomy in RDF/XML format</skos:definition>
     </rdf:Description>
 
-    <rdf:Description rdf:about="http://context-studio.local/ontology/scheme-1">
+    <rdf:Description rdf:about="http://context-studio.local/ontology/scheme-xml">
         <rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#ConceptScheme"/>
-        <skos:prefLabel>Test Scheme</skos:prefLabel>
-        <skos:definition>A test scheme</skos:definition>
-        <dct:isPartOf rdf:resource="http://context-studio.local/ontology/tax-1"/>
+        <skos:prefLabel>XML Scheme</skos:prefLabel>
+        <skos:definition>A scheme in RDF/XML format</skos:definition>
+        <dct:isPartOf rdf:resource="http://context-studio.local/ontology/tax-xml"/>
     </rdf:Description>
 
-    <rdf:Description rdf:about="http://context-studio.local/ontology/class-1">
+    <rdf:Description rdf:about="http://context-studio.local/ontology/class-xml">
         <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
-        <rdfs:label>Test Class</rdfs:label>
-        <rdfs:comment>A test class</rdfs:comment>
-        <skos:inScheme rdf:resource="http://context-studio.local/ontology/scheme-1"/>
+        <rdfs:label>XML Class</rdfs:label>
+        <rdfs:comment>A class in RDF/XML format</rdfs:comment>
+        <skos:inScheme rdf:resource="http://context-studio.local/ontology/scheme-xml"/>
     </rdf:Description>
 </rdf:RDF>
 """

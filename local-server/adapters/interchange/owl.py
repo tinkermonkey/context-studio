@@ -31,6 +31,8 @@ from domain.interchange.value_objects import (
     SerializationScope,
     SerializationScopeType,
     ImportPlan,
+    ImportConflict,
+    MatchKind,
     ResolutionKind,
     SerializationFormat,
 )
@@ -383,18 +385,24 @@ class OWLDeserializer(OntologyDeserializer):
                 source_bytes = source
 
             # Try to parse with auto-detection of format (RDF/XML, Turtle, JSON-LD)
-            parse_error = None
+            format_errors: list[tuple[str, Exception]] = []
             for fmt in ["xml", "turtle", "json-ld"]:
                 try:
                     self.graph = Graph()  # Reset graph for each format attempt
                     self.graph.parse(data=source_bytes, format=fmt)
                     break
                 except Exception as e:
-                    parse_error = e
+                    format_errors.append((fmt, e))
                     continue
             else:
-                # All formats failed
-                raise ValueError(f"Failed to parse OWL RDF in any format: {str(parse_error)}")
+                # All formats failed - build error message from all attempts
+                error_parts = [f"{fmt}: {str(e)}" for fmt, e in format_errors]
+                error_msg = "Failed to parse OWL RDF in any format. " + "; ".join(
+                    error_parts
+                )
+                raise ValueError(error_msg) from (
+                    format_errors[-1][1] if format_errors else None
+                )
 
             # Process taxonomies first (ConceptSchemes without dct:isPartOf)
             # Then concept schemes (with dct:isPartOf) to avoid duplicate creation
@@ -415,6 +423,12 @@ class OWLDeserializer(OntologyDeserializer):
             # Process relationships
             self._process_relationships()
 
+            # Detect conflicts using cascade
+            conflicts = self._detect_conflicts()
+
+            # Calculate new entity count
+            new_entity_count = len(self.incoming_entities) - len(conflicts)
+
             # Compute source hash
             source_hash = hashlib.sha256(source_bytes).hexdigest()
 
@@ -422,14 +436,15 @@ class OWLDeserializer(OntologyDeserializer):
             import_run_id = None
             if not dry_run:
                 import_run_id = self._commit_with_resolutions(
+                    conflicts=conflicts,
                     source_hash=source_hash,
                     resolutions=resolutions,
                 )
 
             # Create import plan
             plan = ImportPlan(
-                conflicts=(),
-                new_entity_count=len(self.incoming_entities),
+                conflicts=tuple(conflicts),
+                new_entity_count=new_entity_count,
                 import_run_id=import_run_id,
                 warnings=tuple(self.warnings),
                 source_hash=source_hash,
@@ -444,6 +459,7 @@ class OWLDeserializer(OntologyDeserializer):
 
     def _commit_with_resolutions(
         self,
+        conflicts: list[ImportConflict],
         source_hash: str,
         resolutions: Optional[list[ResolutionRecord]] = None,
     ) -> str:
@@ -451,17 +467,30 @@ class OWLDeserializer(OntologyDeserializer):
         Commit the import by applying resolutions and persisting entities.
 
         Args:
+            conflicts: List of detected conflicts
             source_hash: SHA256 hash of the imported source
             resolutions: Optional list of ResolutionRecord objects from the user
 
         Returns:
             The ID of the created ImportRun
+
+        Raises:
+            ValueError: If any conflict lacks a resolution or has invalid resolution data
         """
         # Build resolution map: entity_id -> ResolutionKind
         resolution_map: Dict[str, ResolutionKind] = {}
         if resolutions:
             for res in resolutions:
                 resolution_map[res.entity_id] = res.resolution_chosen
+
+        # Validate that all conflicts have resolutions
+        for conflict in conflicts:
+            entity_id = conflict.incoming["id"]
+            if entity_id not in resolution_map:
+                raise ValueError(
+                    f"Conflict for entity {entity_id} ({conflict.match_kind.value}) "
+                    f"requires resolution before commit (default: {conflict.default_resolution.value})"
+                )
 
         # Create and persist ImportRun with resolutions
         import_run_service = ImportRunService()
@@ -719,15 +748,32 @@ class OWLDeserializer(OntologyDeserializer):
                 target_id = self._entity_map.get(str(target_uri))
                 prop_id = self._entity_map.get(str(prop_uri))
 
-                if source_id and target_id and prop_id:
-                    rel_id = str(uuid.uuid4())
-                    self.incoming_entities[rel_id] = {
-                        "id": rel_id,
-                        "type": "relationship",
-                        "source_id": source_id,
-                        "target_id": target_id,
-                        "property_definition_id": prop_id,
-                    }
+                if not source_id:
+                    self.warnings.append(
+                        f"Relationship source {source_uri} not found in entity map; relationship skipped"
+                    )
+                    continue
+
+                if not target_id:
+                    self.warnings.append(
+                        f"Relationship target {target_uri} not found in entity map; relationship skipped"
+                    )
+                    continue
+
+                if not prop_id:
+                    self.warnings.append(
+                        f"Relationship property {prop_uri} not found in entity map; relationship skipped"
+                    )
+                    continue
+
+                rel_id = str(uuid.uuid4())
+                self.incoming_entities[rel_id] = {
+                    "id": rel_id,
+                    "type": "relationship",
+                    "source_id": source_id,
+                    "target_id": target_id,
+                    "property_definition_id": prop_id,
+                }
 
     def _extract_external_references_as_dicts(
         self, entity_uri: Node
@@ -822,4 +868,118 @@ class OWLDeserializer(OntologyDeserializer):
             return None
         for obj in self.graph.objects(uri, predicate):
             return obj
+        return None
+
+    def _detect_conflicts(self) -> list[ImportConflict]:
+        """
+        Detect conflicts using the cascade: external_reference → uuid → title.
+
+        Pre-populates external_references before checking, making round-trips idempotent.
+        """
+        conflicts = []
+        classes_cache = None
+
+        for entity_id, entity_dict in self.incoming_entities.items():
+            # Check external references first
+            external_references = entity_dict.get("external_references", [])
+            existing_entity: str | None = None
+            match_kind: MatchKind | None = None
+
+            if external_references:
+                # Try to find existing entity by external reference
+                for ext_ref in external_references:
+                    existing_by_ref = self._find_by_external_reference(
+                        ext_ref["source"], ext_ref["identifier"]
+                    )
+                    if existing_by_ref:
+                        existing_entity = existing_by_ref
+                        match_kind = MatchKind.EXTERNAL_REFERENCE
+                        break
+
+            # If no external reference match, try UUID
+            if not existing_entity:
+                existing_by_uuid = self.ontology_repo.get_taxonomy(entity_id)
+                if existing_by_uuid:
+                    existing_entity = existing_by_uuid.id
+                    match_kind = MatchKind.UUID
+                else:
+                    existing_by_uuid = self.ontology_repo.get_concept_scheme(entity_id)
+                    if existing_by_uuid:
+                        existing_entity = existing_by_uuid.id
+                        match_kind = MatchKind.UUID
+                    else:
+                        existing_by_uuid = self.ontology_repo.get_class(entity_id)
+                        if existing_by_uuid:
+                            existing_entity = existing_by_uuid.id
+                            match_kind = MatchKind.UUID
+                        else:
+                            existing_by_uuid = self.ontology_repo.get_individual(
+                                entity_id
+                            )
+                            if existing_by_uuid:
+                                existing_entity = existing_by_uuid.id
+                                match_kind = MatchKind.UUID
+
+            # If no UUID match, try by title (only for classes)
+            if not existing_entity and entity_dict.get("type") == "class":
+                existing_by_title = self._find_class_by_title(
+                    entity_dict["title"],
+                    entity_dict.get("concept_scheme_id"),
+                )
+                if existing_by_title:
+                    existing_entity = existing_by_title.id
+                    match_kind = MatchKind.TITLE
+
+            # If conflict found, record it
+            if existing_entity and match_kind:
+                default_resolution = (
+                    ResolutionKind.MERGE
+                    if match_kind == MatchKind.EXTERNAL_REFERENCE
+                    else ResolutionKind.SKIP
+                )
+                conflict = ImportConflict(
+                    match_kind=match_kind,
+                    incoming=entity_dict,
+                    existing=existing_entity,
+                    default_resolution=default_resolution,
+                    available_resolutions=(
+                        ResolutionKind.SKIP,
+                        ResolutionKind.OVERWRITE,
+                        ResolutionKind.MERGE,
+                    ),
+                )
+                conflicts.append(conflict)
+
+        return conflicts
+
+    def _find_by_external_reference(
+        self, source: str, identifier: str
+    ) -> Optional[str]:
+        """Find an existing entity by external reference."""
+        all_classes = self.ontology_repo.list_classes()
+
+        for class_entity in all_classes:
+            for ext_ref in class_entity.external_references:
+                if ext_ref.source == source and ext_ref.identifier == identifier:
+                    return class_entity.id
+
+        all_individuals = self.ontology_repo.list_individuals()
+
+        for individual in all_individuals:
+            for ext_ref in individual.external_references:
+                if ext_ref.source == source and ext_ref.identifier == identifier:
+                    return individual.id
+
+        return None
+
+    def _find_class_by_title(
+        self, title: str, concept_scheme_id: Optional[str]
+    ) -> Optional[Class]:
+        """Find an existing class by title (and optional scheme)."""
+        all_classes = self.ontology_repo.list_classes(
+            concept_scheme_id=concept_scheme_id
+        )
+        for class_entity in all_classes:
+            if class_entity.title == title:
+                return class_entity
         return None
