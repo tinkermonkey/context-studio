@@ -61,9 +61,11 @@ export function ConflictResolutionModal({
   // Initialize resolutions with defaults
   React.useEffect(() => {
     const newResolutions = new Map<string, ResolutionKind>();
-    conflicts.forEach((conflict, index) => {
-      const key = `${conflict.match_kind}-${conflict.incoming.id || index}`;
-      newResolutions.set(key, conflict.default_resolution);
+    Object.entries(groupedConflicts).forEach(([matchKind, group]) => {
+      group.forEach((conflict, index) => {
+        const key = `${matchKind}-${conflict.incoming.id || index}`;
+        newResolutions.set(key, conflict.default_resolution);
+      });
     });
     setResolutions(newResolutions);
   }, [conflicts]);

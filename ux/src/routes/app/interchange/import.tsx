@@ -19,7 +19,7 @@ export const Route = createFileRoute("/app/interchange/import")({
 });
 
 function ImportComponent() {
-  const { error, success } = useButterToast();
+  const { error, success, warning: showWarning } = useButterToast();
   const navigate = useNavigate();
 
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
@@ -44,8 +44,8 @@ function ImportComponent() {
           messages.push(`Found ${plan.conflicts.length} conflicts`);
         }
         if (plan.warnings && plan.warnings.length > 0) {
-          plan.warnings.forEach((warning) => {
-            error(warning);
+          plan.warnings.forEach((w) => {
+            showWarning(w);
           });
         }
 
