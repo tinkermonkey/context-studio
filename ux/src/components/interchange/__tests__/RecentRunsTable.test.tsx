@@ -279,8 +279,11 @@ describe("RecentRunsTable", () => {
 
     render(<RecentRunsTable />);
 
-    // Should show all items
-    expect(screen.getByText("SKOS")).toBeInTheDocument();
+    // Should show all items - check the table is rendered
+    expect(screen.getByTestId("interchange-recent-runs-table")).toBeInTheDocument();
+
+    // Should render all 10 rows
+    expect(screen.getAllByText("SKOS").length).toBe(10);
 
     // Check for next page button (if implemented)
     const nextButton = screen.queryByRole("button", { name: /next/i });

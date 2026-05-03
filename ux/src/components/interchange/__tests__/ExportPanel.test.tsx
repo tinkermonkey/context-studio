@@ -93,14 +93,15 @@ describe("ExportPanel", () => {
   it("has SKOS as default format", () => {
     render(<ExportPanel />);
 
-    const formatSelect = screen.getByDisplayValue("skos") as HTMLSelectElement;
+    const formatSelect = screen.getByTestId("interchange-export-format-select") as HTMLSelectElement;
     expect(formatSelect).toBeInTheDocument();
+    expect(formatSelect.value).toBe("skos");
   });
 
   it("allows changing export format", () => {
     render(<ExportPanel />);
 
-    const formatSelect = screen.getByDisplayValue("skos") as HTMLSelectElement;
+    const formatSelect = screen.getByTestId("interchange-export-format-select") as HTMLSelectElement;
     fireEvent.change(formatSelect, { target: { value: "owl" } });
 
     expect((formatSelect as HTMLSelectElement).value).toBe("owl");
@@ -109,13 +110,13 @@ describe("ExportPanel", () => {
   it("renders scope type selector", () => {
     render(<ExportPanel />);
 
-    expect(screen.getByLabelText(/scope/i)).toBeInTheDocument();
+    expect(screen.getByTestId("interchange-export-scope-picker")).toBeInTheDocument();
   });
 
   it("shows taxonomy selector when taxonomy scope is selected", async () => {
     render(<ExportPanel />);
 
-    const scopeSelect = screen.getByDisplayValue("whole_graph") as HTMLSelectElement;
+    const scopeSelect = screen.getByTestId("interchange-export-scope-picker") as HTMLSelectElement;
     fireEvent.change(scopeSelect, { target: { value: "taxonomy" } });
 
     await waitFor(() => {
@@ -126,7 +127,7 @@ describe("ExportPanel", () => {
   it("shows scheme selector when scheme scope is selected", async () => {
     render(<ExportPanel />);
 
-    const scopeSelect = screen.getByDisplayValue("whole_graph") as HTMLSelectElement;
+    const scopeSelect = screen.getByTestId("interchange-export-scope-picker") as HTMLSelectElement;
     fireEvent.change(scopeSelect, { target: { value: "scheme" } });
 
     await waitFor(() => {
@@ -137,7 +138,7 @@ describe("ExportPanel", () => {
   it("renders export button", () => {
     render(<ExportPanel />);
 
-    const exportButton = screen.getByRole("button", { name: /export/i });
+    const exportButton = screen.getByRole("button", { name: /download/i });
     expect(exportButton).toBeInTheDocument();
   });
 
@@ -154,10 +155,10 @@ describe("ExportPanel", () => {
 
     render(<ExportPanel />);
 
-    const scopeSelect = screen.getByDisplayValue("whole_graph") as HTMLSelectElement;
+    const scopeSelect = screen.getByTestId("interchange-export-scope-picker") as HTMLSelectElement;
     fireEvent.change(scopeSelect, { target: { value: "taxonomy" } });
 
-    const exportButton = screen.getByRole("button", { name: /export/i });
+    const exportButton = screen.getByRole("button", { name: /download/i });
     fireEvent.click(exportButton);
 
     await waitFor(() => {
@@ -178,10 +179,10 @@ describe("ExportPanel", () => {
 
     render(<ExportPanel />);
 
-    const scopeSelect = screen.getByDisplayValue("whole_graph") as HTMLSelectElement;
+    const scopeSelect = screen.getByTestId("interchange-export-scope-picker") as HTMLSelectElement;
     fireEvent.change(scopeSelect, { target: { value: "scheme" } });
 
-    const exportButton = screen.getByRole("button", { name: /export/i });
+    const exportButton = screen.getByRole("button", { name: /download/i });
     fireEvent.click(exportButton);
 
     await waitFor(() => {
@@ -204,7 +205,7 @@ describe("ExportPanel", () => {
 
     render(<ExportPanel />);
 
-    const exportButton = screen.getByRole("button", { name: /export/i });
+    const exportButton = screen.getByRole("button", { name: /download/i });
     fireEvent.click(exportButton);
 
     await waitFor(() => {

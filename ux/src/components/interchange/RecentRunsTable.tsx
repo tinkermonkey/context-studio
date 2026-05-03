@@ -119,7 +119,10 @@ export function RecentRunsTable() {
                     params={{ runId: run.id }}
                     className="inline-block"
                   >
-                    <Eye className="h-4 w-4 cursor-pointer text-blue-500 hover:text-blue-700" />
+                    <Button size="sm" color="light">
+                      <Eye className="h-4 w-4 mr-1" />
+                      View
+                    </Button>
                   </Link>
                 </td>
               </tr>

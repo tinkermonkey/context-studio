@@ -32,6 +32,7 @@ export function ImportPanel({ onPreviewRequested }: ImportPanelProps) {
         return "graphml";
       case "ttl":
       case "n3":
+      case "skos":
         return "skos";
       default:
         return "auto";
@@ -165,7 +166,6 @@ export function ImportPanel({ onPreviewRequested }: ImportPanelProps) {
           data-testid="interchange-import-preview-button"
           onClick={handlePreview}
           color="blue"
-          disabled={!selectedFile}
         >
           Preview Import (Dry Run)
         </Button>
