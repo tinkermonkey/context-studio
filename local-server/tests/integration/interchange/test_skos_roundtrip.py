@@ -251,7 +251,7 @@ class TestSKOSEmptyDatabaseRoundTrip:
         fresh_repo = SQLiteOntologyRepository(fresh_session_factory)
 
         deserializer = SKOSDeserializer(fresh_repo)
-        plan = deserializer.deserialize(exported, dry_run=True)
+        deserializer.deserialize(exported, dry_run=True)
 
         # Verify structural equality: same number of entities with same titles/descriptions
         original_classes = ontology_repo.list_classes()

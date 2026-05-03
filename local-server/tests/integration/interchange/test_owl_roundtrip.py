@@ -307,7 +307,7 @@ class TestOWLEmptyDatabaseRoundTrip:
         fresh_interchange_repo = SQLiteInterchangeRepository(fresh_session_factory)
 
         deserializer = OWLDeserializer(fresh_repo, fresh_interchange_repo)
-        plan = deserializer.deserialize(exported, dry_run=True)
+        deserializer.deserialize(exported, dry_run=True)
 
         # Count entities in both
         original_classes = ontology_repo.list_classes()
@@ -349,7 +349,7 @@ class TestOWLIdempotentReimport:
 
         # Reimport against the same DB
         deserializer = OWLDeserializer(ontology_repo)
-        plan = deserializer.deserialize(exported, dry_run=True)
+        deserializer.deserialize(exported, dry_run=True)
 
         # The plan should match entities by UUID or external reference
         original_dog = next(
@@ -382,7 +382,7 @@ class TestOWLIdempotentReimport:
         fresh_interchange_repo = SQLiteInterchangeRepository(fresh_session_factory)
 
         deserializer = OWLDeserializer(fresh_repo, fresh_interchange_repo)
-        plan = deserializer.deserialize(exported, dry_run=True)
+        deserializer.deserialize(exported, dry_run=True)
 
         # Find Fido (multi-class individual)
         fido_incoming = next(
