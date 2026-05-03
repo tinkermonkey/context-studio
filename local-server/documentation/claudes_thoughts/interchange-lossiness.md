@@ -6,9 +6,9 @@ This document describes what data survives the round-trip export/import cycle fo
 
 The following fields **must** round-trip exactly through every format. Loss of these fields indicates a correctness bug, not a feature limitation:
 
-- **`external_references`** on all entity types (Taxonomy, ConceptScheme, Class, Individual, PropertyDefinition)
+- **`external_references`** on Class and Individual entities
   - These references preserve the link to external knowledge sources (DBpedia, Wikidata, etc.)
-  - Supported mechanisms: SKOS via `dct:source` + `skos:exactMatch`, OWL via `owl:sameAs` + `dct:source`, GraphML via `cs:external_references` JSON
+  - Supported mechanisms: SKOS via `dct:source` + `skos:exactMatch`, OWL via `owl:sameAs`, GraphML via `cs:external_references` JSON
   - Loss of external_references breaks entity identity and linkage to external systems
 
 - **Entity identity (title + structural relationships)**
@@ -32,7 +32,7 @@ SKOS is RDF-based, designed specifically for taxonomies and concept schemes. It 
 - **Class** (as `skos:Concept`)
   - `id`, `title`, `description`, `parent_class_id`
   - `concept_scheme_id` (via `skos:inScheme`)
-- **external_references** (via `dct:source` for all references, plus `skos:exactMatch` for cross-vocabulary identity)
+- **external_references** on Class (via `dct:source` for all references, plus `skos:exactMatch` for cross-vocabulary identity)
 
 ### Survives But Lossy
 
@@ -63,16 +63,18 @@ OWL is the most expressive format, built on RDF and designed for full ontology d
 - **Class** (as `owl:Class`)
   - `id`, `title`, `description`, `parent_class_id` (via `rdfs:subClassOf`)
   - `concept_scheme_id` (via `skos:inScheme` or inferred from parent structures)
+  - `external_references` (via `owl:sameAs`)
 - **Individual** (as `owl:NamedIndividual`)
   - `id`, `title`, `description`
   - `class_ids` (via `rdf:type`, preserved in order)
-  - Multi-class membership with ordering (via `LOCAL:classOrder` literal)
+  - Multi-class membership with ordering (via `LOCAL:hasClass_0`, `LOCAL:hasClass_1`, ... indexed predicates)
+  - `external_references` (via `owl:sameAs`)
 - **PropertyDefinition** (as `owl:ObjectProperty`)
   - `id`, `identifier`, `title`, `description`
 - **Relationship** (as RDF triples using property URIs)
   - Source, target, and property type all survive
   - Note: PropertyDefinition domain/range constraints are not used in Context Studio's OWL representation
-- **external_references** (via `owl:sameAs` for entity identity and `dct:source` for source tracking)
+- **external_references** (via `owl:sameAs` for entity identity)
 
 ### Survives But Lossy
 
@@ -102,20 +104,21 @@ GraphML is XML-based and designed for graph visualization tools. It represents a
 - **Class** (as `<node kind="class">`)
   - `id`, `title`, `description`, `parent_class_id`
   - `concept_scheme_id` (via `has_class` edge)
+  - `external_references` (via reserved `<data key="cs:external_references">` element, JSON-encoded)
 - **Individual** (as `<node kind="individual">`)
   - `id`, `title`, `description`
   - `class_ids` (via `class_membership` edges with `cs:class_order` attribute for ordering)
+  - `external_references` (via reserved `<data key="cs:external_references">` element, JSON-encoded)
 - **PropertyDefinition** (as `<node kind="property_definition">`)
   - `id`, `identifier`, `title`, `description`
 - **Relationship** (as `<edge kind="relationship">`)
   - Source, target, and property_definition_id all survive
-- **external_references** (via reserved `<data key="cs:external_references">` element, JSON-encoded)
 
 ### Survives But Lossy
 
 - **created_at, last_modified, version**: Timestamps and version metadata stored as string values; not round-tripped with type information
 - **ontology_mapping**: Not stored in GraphML
-- **is_relevant**: Not stored
+- **is_relevant**: Stored as string value but not round-tripped with type information
 - **embedding**: Not supported by GraphML
 - **data_properties**: Not stored (no schema-enforced type information)
 - **lexical_senses**: Not stored

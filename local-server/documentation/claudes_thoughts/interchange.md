@@ -1,4 +1,4 @@
-# Data Interchange: GraphML and SKOS Adapters
+# Data Interchange: GraphML, SKOS, and OWL Adapters
 
 This document describes the data interchange formats supported by Context Studio and the manual testing procedures for validation.
 
@@ -12,6 +12,29 @@ SKOS is an RDF-based format for representing taxonomies, concept schemes, and cl
 - whole_graph: All taxonomies, concept schemes, and classes
 - taxonomy: Single taxonomy and its descendants
 - scheme: Single concept scheme and its classes
+- entity_set: Specific entities by ID
+
+### OWL (Web Ontology Language)
+
+OWL is the most expressive RDF-based format, designed for full ontology definition. It represents all entity types including individuals and relationships with semantic constraints.
+
+**Exported entities:**
+- Taxonomy nodes (as `skos:ConceptScheme`)
+- ConceptScheme nodes (as `skos:ConceptScheme` with `dct:isPartOf` parent)
+- Class nodes (as `owl:Class`)
+- Individual nodes (as `owl:NamedIndividual`)
+- PropertyDefinition nodes (as `owl:ObjectProperty`)
+- Relationship edges (as RDF triples using property URIs)
+
+**Data encoding:**
+- Entity attributes are stored as RDF properties (rdfs:label, rdfs:comment, etc.)
+- external_references are encoded using `owl:sameAs` for entity identity
+- Multi-class Individual membership is preserved in order using indexed predicates (LOCAL:hasClass_0, LOCAL:hasClass_1, etc.)
+
+**Supported scopes:**
+- whole_graph: All entities and relationships
+- taxonomy: Single taxonomy with descendants
+- scheme: Single concept scheme with classes
 - entity_set: Specific entities by ID
 
 ### GraphML (Graph Markup Language)
@@ -128,9 +151,11 @@ from adapters.interchange.graphml import GraphMLDeserializer
 
 deserializer = GraphMLDeserializer(ontology_repo)
 with open("input.graphml", "rb") as f:
-    plan = deserializer.deserialize(f.read(), dry_run=True)
+    file_contents = f.read()
+
+plan = deserializer.deserialize(file_contents, dry_run=True)
 
 # Review conflicts in plan.conflicts
 # Then commit the import
-plan = deserializer.deserialize(f.read(), dry_run=False)
+plan = deserializer.deserialize(file_contents, dry_run=False)
 ```
