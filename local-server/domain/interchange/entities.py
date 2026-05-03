@@ -149,7 +149,18 @@ class ImportRun:
             match_kind: Type of match that was resolved
             entity_id: ID of the entity involved
             resolution_chosen: The resolution strategy applied
+
+        Raises:
+            ValueError: If the run is in a terminal state
         """
+        if self.status in (
+            ImportRunStatus.COMMITTED,
+            ImportRunStatus.FAILED,
+            ImportRunStatus.ROLLED_BACK,
+        ):
+            raise ValueError(
+                f"Cannot add resolution to {self.status} import run (terminal state)"
+            )
         self.resolutions.append(
             ResolutionRecord(
                 match_kind=match_kind,
@@ -164,6 +175,17 @@ class ImportRun:
 
         Args:
             entity_id: ID of the affected entity
+
+        Raises:
+            ValueError: If the run is in a terminal state
         """
+        if self.status in (
+            ImportRunStatus.COMMITTED,
+            ImportRunStatus.FAILED,
+            ImportRunStatus.ROLLED_BACK,
+        ):
+            raise ValueError(
+                f"Cannot add affected entity to {self.status} import run (terminal state)"
+            )
         if entity_id not in self.affected_entity_ids:
             self.affected_entity_ids.append(entity_id)

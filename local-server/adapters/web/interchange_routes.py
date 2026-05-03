@@ -196,8 +196,16 @@ async def export_ontology(
         # Convert request scope to domain scope
         scope = _scope_request_to_domain(request.scope)
 
+        # Parse and validate format
+        try:
+            enum_format = SerializationFormat(request.format.lower())
+        except ValueError:
+            raise ValueError(
+                f"Unsupported format: {request.format}. Supported formats: {', '.join(f.value for f in SerializationFormat)}"
+            )
+
         # Get serializer
-        serializer = _get_serializer(request.format, ontology_repo)
+        serializer = _get_serializer(enum_format, ontology_repo)
 
         # Serialize in executor to avoid blocking
         data = await run_sync_in_executor(

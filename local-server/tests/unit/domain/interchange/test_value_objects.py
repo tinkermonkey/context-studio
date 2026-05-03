@@ -17,6 +17,7 @@ from domain.interchange.value_objects import (
     SerializationScope,
     SerializationScopeType,
     ImportConflict,
+    ImportPlan,
     MatchKind,
     ResolutionKind,
 )
@@ -93,14 +94,8 @@ class TestSerializationScopeValidation:
         )
         # Validation happens at construction time via __post_init__
 
-    def test_scheme_requires_id(self):
-        """SCHEME scope requires scheme_id."""
-        scope = SerializationScope(scope_type=SerializationScopeType.SCHEME)
-        with pytest.raises(ValueError, match="requires scheme_id"):
-            scope.validate()
-
-    def test_scheme_requires_id(self):
-        """SCHEME scope requires scheme_id."""
+    def test_scheme_requires_id_at_construction(self):
+        """SCHEME scope requires scheme_id at construction."""
         with pytest.raises(ValueError, match="requires scheme_id"):
             SerializationScope(scope_type=SerializationScopeType.SCHEME)
 
@@ -210,3 +205,44 @@ class TestImportConflictDefaultResolution:
         )
 
         assert conflict.default_resolution == ResolutionKind.MERGE
+
+
+class TestImportPlanValidation:
+    """Test ImportPlan validation invariants."""
+
+    def test_import_plan_valid_with_non_negative_count(self):
+        """ImportPlan can be created with non-negative new_entity_count."""
+        plan = ImportPlan(
+            conflicts=(),
+            new_entity_count=5,
+            import_run_id="run-1",
+        )
+        assert plan.new_entity_count == 5
+
+    def test_import_plan_valid_with_zero_count(self):
+        """ImportPlan can be created with zero new_entity_count."""
+        plan = ImportPlan(
+            conflicts=(),
+            new_entity_count=0,
+            import_run_id="run-1",
+        )
+        assert plan.new_entity_count == 0
+
+    def test_import_plan_rejects_negative_count(self):
+        """ImportPlan cannot be created with negative new_entity_count."""
+        with pytest.raises(ValueError, match="non-negative"):
+            ImportPlan(
+                conflicts=(),
+                new_entity_count=-1,
+                import_run_id="run-1",
+            )
+
+    def test_import_plan_frozen(self):
+        """ImportPlan is frozen and immutable."""
+        plan = ImportPlan(
+            conflicts=(),
+            new_entity_count=5,
+            import_run_id="run-1",
+        )
+        with pytest.raises(AttributeError):
+            plan.new_entity_count = 10

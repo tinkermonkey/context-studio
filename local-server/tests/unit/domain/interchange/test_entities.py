@@ -189,6 +189,63 @@ class TestImportRunResolutions:
 
         assert len(run.resolutions) == 3
 
+    def test_add_resolution_terminal_committed(self):
+        """Cannot add resolution to a committed run."""
+        scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+        run = ImportRun(
+            id="test-run-1",
+            created_at=datetime.now(timezone.utc),
+            created_by="user-1",
+            format=SerializationFormat.SKOS,
+            source_uri="test.skos",
+            source_hash="abc123",
+            scope=scope,
+            status=ImportRunStatus.COMMITTED,
+        )
+
+        with pytest.raises(ValueError, match="terminal state"):
+            run.add_resolution(
+                MatchKind.EXTERNAL_REFERENCE, "entity-1", ResolutionKind.MERGE
+            )
+
+    def test_add_resolution_terminal_failed(self):
+        """Cannot add resolution to a failed run."""
+        scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+        run = ImportRun(
+            id="test-run-1",
+            created_at=datetime.now(timezone.utc),
+            created_by="user-1",
+            format=SerializationFormat.SKOS,
+            source_uri="test.skos",
+            source_hash="abc123",
+            scope=scope,
+            status=ImportRunStatus.FAILED,
+        )
+
+        with pytest.raises(ValueError, match="terminal state"):
+            run.add_resolution(
+                MatchKind.EXTERNAL_REFERENCE, "entity-1", ResolutionKind.MERGE
+            )
+
+    def test_add_resolution_terminal_rolled_back(self):
+        """Cannot add resolution to a rolled back run."""
+        scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+        run = ImportRun(
+            id="test-run-1",
+            created_at=datetime.now(timezone.utc),
+            created_by="user-1",
+            format=SerializationFormat.SKOS,
+            source_uri="test.skos",
+            source_hash="abc123",
+            scope=scope,
+            status=ImportRunStatus.ROLLED_BACK,
+        )
+
+        with pytest.raises(ValueError, match="terminal state"):
+            run.add_resolution(
+                MatchKind.EXTERNAL_REFERENCE, "entity-1", ResolutionKind.MERGE
+            )
+
 
 class TestImportRunAffectedEntities:
     """Test affected entity tracking."""
@@ -230,3 +287,54 @@ class TestImportRunAffectedEntities:
 
         assert len(run.affected_entity_ids) == 1
         assert run.affected_entity_ids.count("entity-1") == 1
+
+    def test_add_affected_entity_terminal_committed(self):
+        """Cannot add affected entity to a committed run."""
+        scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+        run = ImportRun(
+            id="test-run-1",
+            created_at=datetime.now(timezone.utc),
+            created_by="user-1",
+            format=SerializationFormat.SKOS,
+            source_uri="test.skos",
+            source_hash="abc123",
+            scope=scope,
+            status=ImportRunStatus.COMMITTED,
+        )
+
+        with pytest.raises(ValueError, match="terminal state"):
+            run.add_affected_entity("entity-1")
+
+    def test_add_affected_entity_terminal_failed(self):
+        """Cannot add affected entity to a failed run."""
+        scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+        run = ImportRun(
+            id="test-run-1",
+            created_at=datetime.now(timezone.utc),
+            created_by="user-1",
+            format=SerializationFormat.SKOS,
+            source_uri="test.skos",
+            source_hash="abc123",
+            scope=scope,
+            status=ImportRunStatus.FAILED,
+        )
+
+        with pytest.raises(ValueError, match="terminal state"):
+            run.add_affected_entity("entity-1")
+
+    def test_add_affected_entity_terminal_rolled_back(self):
+        """Cannot add affected entity to a rolled back run."""
+        scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+        run = ImportRun(
+            id="test-run-1",
+            created_at=datetime.now(timezone.utc),
+            created_by="user-1",
+            format=SerializationFormat.SKOS,
+            source_uri="test.skos",
+            source_hash="abc123",
+            scope=scope,
+            status=ImportRunStatus.ROLLED_BACK,
+        )
+
+        with pytest.raises(ValueError, match="terminal state"):
+            run.add_affected_entity("entity-1")

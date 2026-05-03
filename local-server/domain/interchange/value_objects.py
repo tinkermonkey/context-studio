@@ -163,3 +163,10 @@ class ImportPlan:
     warnings: tuple[str, ...] = field(default_factory=tuple)
     source_hash: str | None = None
     scope: SerializationScope | None = None
+
+    def __post_init__(self) -> None:
+        """Validate plan invariants at construction time."""
+        if self.new_entity_count < 0:
+            raise ValueError(
+                f"new_entity_count must be non-negative, got {self.new_entity_count}"
+            )

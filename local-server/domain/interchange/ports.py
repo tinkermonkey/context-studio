@@ -143,3 +143,15 @@ class ImportRunRepository(Protocol):
             RuntimeError: If the run does not exist or update fails
         """
         ...
+
+    def get_change_events_for_run(self, import_run_id: str) -> list[dict]:
+        """
+        Retrieve change events associated with an import run.
+
+        Args:
+            import_run_id: The ID of the import run
+
+        Returns:
+            List of change event dicts for the run
+        """
+        ...
