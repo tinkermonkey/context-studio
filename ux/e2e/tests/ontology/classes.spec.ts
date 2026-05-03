@@ -44,6 +44,8 @@ test.describe("Ontology Class CRUD Operations", () => {
 
     await page.getByTestId("class-title-input").fill("E2E Created Class");
     await page.getByTestId("class-description-input").fill("Created via E2E test");
+    await page.getByTestId("class-concept-scheme-selector").click();
+    await page.locator(`#option-${schemeId}`).click();
     await page.getByTestId("class-submit-button").click();
 
     await expect(createModal).not.toBeVisible({ timeout: 5000 });

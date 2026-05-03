@@ -311,8 +311,8 @@ async function globalSetup(): Promise<void> {
     const page = await browser.newPage();
 
     await page.goto("http://localhost:3888", {
-      waitUntil: "domcontentloaded",
-      timeout: 15000,
+      waitUntil: "networkidle",
+      timeout: 30000,
     });
 
     // Verify the page rendered actual content, not a blank error page.

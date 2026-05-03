@@ -54,10 +54,20 @@ const ClassForm: React.FC<ClassFormProps> = ({
             id: ontologyClass.id,
             data: classData,
           });
-        } else {
+        } else if (isChildMode) {
           result = await createClassMutation.mutateAsync({
             schemeId: parentConceptSchemeId || "",
             data: classData,
+          });
+        } else {
+          // Global create: user selected the target scheme via the parent_class_id field.
+          result = await createClassMutation.mutateAsync({
+            schemeId: value.parent_class_id || "",
+            data: {
+              title: value.title,
+              description: value.description || null,
+              parent_class_id: null,
+            },
           });
         }
         if (onSuccess) onSuccess(result);
@@ -174,12 +184,12 @@ const ClassForm: React.FC<ClassFormProps> = ({
           )}
         </form.Field>
 
-        {!isChildMode && (
+        {!isChildMode && !isEdit && (
           <form.Field
             name="parent_class_id"
             validators={{
               onChange: ({ value }) =>
-                !value ? "Parent is required" : undefined,
+                !value ? "Concept scheme is required" : undefined,
             }}
           >
             {(field) => {

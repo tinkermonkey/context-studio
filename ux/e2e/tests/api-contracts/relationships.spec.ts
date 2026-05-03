@@ -199,22 +199,18 @@ test.describe("Relationship CRUD Operations", () => {
     expect(class2Response.id).toBe(class2Id);
   });
 
-  test("should handle self-referential relationships", async ({ page }) => {
-    // Create a relationship from class to itself
-    const selfRelationship = await createRelationship(
-      page,
-      class1Id,
-      class1Id,
-      "self_referential",
-    );
-
-    // Verify self-referential relationship
-    const apiResponse = await apiRequest<Relationship>(
-      page,
-      `/api/relationships/${selfRelationship.id}`,
-    );
-    expect(apiResponse.source_id).toBe(class1Id);
-    expect(apiResponse.target_id).toBe(class1Id);
+  test("should reject self-referential relationships", async ({ page }) => {
+    // The backend enforces that source_id != target_id at the domain layer.
+    // Attempting a self-referential relationship must return a 4xx error.
+    try {
+      await createRelationship(page, class1Id, class1Id, "self_referential");
+      throw new Error("Expected API to reject self-referential relationship");
+    } catch (error: any) {
+      // Accept any 4xx status — the exact code (400 or 422) is an implementation detail.
+      expect(error instanceof APIError).toBe(true);
+      expect(error.statusCode).toBeGreaterThanOrEqual(400);
+      expect(error.statusCode).toBeLessThan(500);
+    }
   });
 
   test("should verify relationships respect foreign key constraints", async ({

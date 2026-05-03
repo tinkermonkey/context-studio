@@ -16,6 +16,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+# Resolve alembic from the same venv as the running Python interpreter
+_alembic = Path(sys.executable).parent / "alembic"
+ALEMBIC = str(_alembic) if _alembic.exists() else "alembic"
+
 # Get the local-server root directory
 LOCAL_SERVER_ROOT = Path(__file__).parent.parent
 SQLITE_DIR = LOCAL_SERVER_ROOT / "adapters" / "persistence" / "sqlite"
@@ -30,7 +34,7 @@ def run_migrations(database: str, args: list[str], local_db_url: str | None = No
 
     # Construct the alembic command
     cmd = [
-        "alembic",
+        ALEMBIC,
         "--config",
         str(config_path),
     ]

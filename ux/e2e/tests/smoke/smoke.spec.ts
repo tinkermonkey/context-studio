@@ -36,7 +36,7 @@ test.describe("Smoke", () => {
 
   test("frontend renders content", async ({ page }) => {
     await page.goto("/app/taxonomies");
-    await page.waitForLoadState("domcontentloaded");
+    await page.waitForLoadState("networkidle");
 
     const bodyText = await page.textContent("body");
     expect(bodyText).toBeTruthy();

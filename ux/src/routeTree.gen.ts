@@ -20,8 +20,12 @@ import { Route as AppDatasetsRouteImport } from './routes/app/datasets'
 import { Route as AppConfigRouteImport } from './routes/app/config'
 import { Route as AppConceptSchemesRouteImport } from './routes/app/concept-schemes'
 import { Route as AppClassesRouteImport } from './routes/app/classes'
+import { Route as AppTaxonomiesIndexRouteImport } from './routes/app/taxonomies.index'
 import { Route as AppReferenceIndexRouteImport } from './routes/app/reference/index'
+import { Route as AppIndividualsIndexRouteImport } from './routes/app/individuals.index'
 import { Route as AppConfigIndexRouteImport } from './routes/app/config/index'
+import { Route as AppConceptSchemesIndexRouteImport } from './routes/app/concept-schemes.index'
+import { Route as AppClassesIndexRouteImport } from './routes/app/classes.index'
 import { Route as AppTaxonomiesTaxonomyIdRouteImport } from './routes/app/taxonomies.$taxonomyId'
 import { Route as AppReferenceSearchRouteImport } from './routes/app/reference/search'
 import { Route as AppReferenceRagTestRouteImport } from './routes/app/reference/rag-test'
@@ -106,15 +110,35 @@ const AppClassesRoute = AppClassesRouteImport.update({
   path: '/classes',
   getParentRoute: () => AppRoute,
 } as any)
+const AppTaxonomiesIndexRoute = AppTaxonomiesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppTaxonomiesRoute,
+} as any)
 const AppReferenceIndexRoute = AppReferenceIndexRouteImport.update({
   id: '/reference/',
   path: '/reference/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppIndividualsIndexRoute = AppIndividualsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppIndividualsRoute,
+} as any)
 const AppConfigIndexRoute = AppConfigIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppConfigRoute,
+} as any)
+const AppConceptSchemesIndexRoute = AppConceptSchemesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppConceptSchemesRoute,
+} as any)
+const AppClassesIndexRoute = AppClassesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppClassesRoute,
 } as any)
 const AppTaxonomiesTaxonomyIdRoute = AppTaxonomiesTaxonomyIdRouteImport.update({
   id: '/$taxonomyId',
@@ -303,8 +327,12 @@ export interface FileRoutesByFullPath {
   '/app/reference/rag-test': typeof AppReferenceRagTestRoute
   '/app/reference/search': typeof AppReferenceSearchRoute
   '/app/taxonomies/$taxonomyId': typeof AppTaxonomiesTaxonomyIdRoute
+  '/app/classes/': typeof AppClassesIndexRoute
+  '/app/concept-schemes/': typeof AppConceptSchemesIndexRoute
   '/app/config/': typeof AppConfigIndexRoute
+  '/app/individuals/': typeof AppIndividualsIndexRoute
   '/app/reference': typeof AppReferenceIndexRoute
+  '/app/taxonomies/': typeof AppTaxonomiesIndexRoute
   '/app/config/pipelines/$pipelineType': typeof AppConfigPipelinesPipelineTypeRouteWithChildren
   '/app/config/pipelines/': typeof AppConfigPipelinesIndexRoute
   '/app/config/pipelines/$pipelineType/create': typeof AppConfigPipelinesPipelineTypeCreateRoute
@@ -314,13 +342,9 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/app/classes': typeof AppClassesRouteWithChildren
-  '/app/concept-schemes': typeof AppConceptSchemesRouteWithChildren
   '/app/datasets': typeof AppDatasetsRoute
-  '/app/individuals': typeof AppIndividualsRouteWithChildren
   '/app/properties': typeof AppPropertiesRoute
   '/app/relationships': typeof AppRelationshipsRoute
-  '/app/taxonomies': typeof AppTaxonomiesRouteWithChildren
   '/app': typeof AppIndexRoute
   '/app/classes/$classId': typeof AppClassesClassIdRoute
   '/app/concept-schemes/$schemeId': typeof AppConceptSchemesSchemeIdRoute
@@ -343,8 +367,12 @@ export interface FileRoutesByTo {
   '/app/reference/rag-test': typeof AppReferenceRagTestRoute
   '/app/reference/search': typeof AppReferenceSearchRoute
   '/app/taxonomies/$taxonomyId': typeof AppTaxonomiesTaxonomyIdRoute
+  '/app/classes': typeof AppClassesIndexRoute
+  '/app/concept-schemes': typeof AppConceptSchemesIndexRoute
   '/app/config': typeof AppConfigIndexRoute
+  '/app/individuals': typeof AppIndividualsIndexRoute
   '/app/reference': typeof AppReferenceIndexRoute
+  '/app/taxonomies': typeof AppTaxonomiesIndexRoute
   '/app/config/pipelines': typeof AppConfigPipelinesIndexRoute
   '/app/config/pipelines/$pipelineType/create': typeof AppConfigPipelinesPipelineTypeCreateRoute
   '/app/config/pipelines/$pipelineType': typeof AppConfigPipelinesPipelineTypeIndexRoute
@@ -386,8 +414,12 @@ export interface FileRoutesById {
   '/app/reference/rag-test': typeof AppReferenceRagTestRoute
   '/app/reference/search': typeof AppReferenceSearchRoute
   '/app/taxonomies/$taxonomyId': typeof AppTaxonomiesTaxonomyIdRoute
+  '/app/classes/': typeof AppClassesIndexRoute
+  '/app/concept-schemes/': typeof AppConceptSchemesIndexRoute
   '/app/config/': typeof AppConfigIndexRoute
+  '/app/individuals/': typeof AppIndividualsIndexRoute
   '/app/reference/': typeof AppReferenceIndexRoute
+  '/app/taxonomies/': typeof AppTaxonomiesIndexRoute
   '/app/config/pipelines/$pipelineType': typeof AppConfigPipelinesPipelineTypeRouteWithChildren
   '/app/config/pipelines/': typeof AppConfigPipelinesIndexRoute
   '/app/config/pipelines/$pipelineType/create': typeof AppConfigPipelinesPipelineTypeCreateRoute
@@ -431,8 +463,12 @@ export interface FileRouteTypes {
     | '/app/reference/rag-test'
     | '/app/reference/search'
     | '/app/taxonomies/$taxonomyId'
+    | '/app/classes/'
+    | '/app/concept-schemes/'
     | '/app/config/'
+    | '/app/individuals/'
     | '/app/reference'
+    | '/app/taxonomies/'
     | '/app/config/pipelines/$pipelineType'
     | '/app/config/pipelines/'
     | '/app/config/pipelines/$pipelineType/create'
@@ -442,13 +478,9 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/app/classes'
-    | '/app/concept-schemes'
     | '/app/datasets'
-    | '/app/individuals'
     | '/app/properties'
     | '/app/relationships'
-    | '/app/taxonomies'
     | '/app'
     | '/app/classes/$classId'
     | '/app/concept-schemes/$schemeId'
@@ -471,8 +503,12 @@ export interface FileRouteTypes {
     | '/app/reference/rag-test'
     | '/app/reference/search'
     | '/app/taxonomies/$taxonomyId'
+    | '/app/classes'
+    | '/app/concept-schemes'
     | '/app/config'
+    | '/app/individuals'
     | '/app/reference'
+    | '/app/taxonomies'
     | '/app/config/pipelines'
     | '/app/config/pipelines/$pipelineType/create'
     | '/app/config/pipelines/$pipelineType'
@@ -513,8 +549,12 @@ export interface FileRouteTypes {
     | '/app/reference/rag-test'
     | '/app/reference/search'
     | '/app/taxonomies/$taxonomyId'
+    | '/app/classes/'
+    | '/app/concept-schemes/'
     | '/app/config/'
+    | '/app/individuals/'
     | '/app/reference/'
+    | '/app/taxonomies/'
     | '/app/config/pipelines/$pipelineType'
     | '/app/config/pipelines/'
     | '/app/config/pipelines/$pipelineType/create'
@@ -607,6 +647,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppClassesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/taxonomies/': {
+      id: '/app/taxonomies/'
+      path: '/'
+      fullPath: '/app/taxonomies/'
+      preLoaderRoute: typeof AppTaxonomiesIndexRouteImport
+      parentRoute: typeof AppTaxonomiesRoute
+    }
     '/app/reference/': {
       id: '/app/reference/'
       path: '/reference'
@@ -614,12 +661,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppReferenceIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/individuals/': {
+      id: '/app/individuals/'
+      path: '/'
+      fullPath: '/app/individuals/'
+      preLoaderRoute: typeof AppIndividualsIndexRouteImport
+      parentRoute: typeof AppIndividualsRoute
+    }
     '/app/config/': {
       id: '/app/config/'
       path: '/'
       fullPath: '/app/config/'
       preLoaderRoute: typeof AppConfigIndexRouteImport
       parentRoute: typeof AppConfigRoute
+    }
+    '/app/concept-schemes/': {
+      id: '/app/concept-schemes/'
+      path: '/'
+      fullPath: '/app/concept-schemes/'
+      preLoaderRoute: typeof AppConceptSchemesIndexRouteImport
+      parentRoute: typeof AppConceptSchemesRoute
+    }
+    '/app/classes/': {
+      id: '/app/classes/'
+      path: '/'
+      fullPath: '/app/classes/'
+      preLoaderRoute: typeof AppClassesIndexRouteImport
+      parentRoute: typeof AppClassesRoute
     }
     '/app/taxonomies/$taxonomyId': {
       id: '/app/taxonomies/$taxonomyId'
@@ -822,10 +890,12 @@ declare module '@tanstack/react-router' {
 
 interface AppClassesRouteChildren {
   AppClassesClassIdRoute: typeof AppClassesClassIdRoute
+  AppClassesIndexRoute: typeof AppClassesIndexRoute
 }
 
 const AppClassesRouteChildren: AppClassesRouteChildren = {
   AppClassesClassIdRoute: AppClassesClassIdRoute,
+  AppClassesIndexRoute: AppClassesIndexRoute,
 }
 
 const AppClassesRouteWithChildren = AppClassesRoute._addFileChildren(
@@ -834,10 +904,12 @@ const AppClassesRouteWithChildren = AppClassesRoute._addFileChildren(
 
 interface AppConceptSchemesRouteChildren {
   AppConceptSchemesSchemeIdRoute: typeof AppConceptSchemesSchemeIdRoute
+  AppConceptSchemesIndexRoute: typeof AppConceptSchemesIndexRoute
 }
 
 const AppConceptSchemesRouteChildren: AppConceptSchemesRouteChildren = {
   AppConceptSchemesSchemeIdRoute: AppConceptSchemesSchemeIdRoute,
+  AppConceptSchemesIndexRoute: AppConceptSchemesIndexRoute,
 }
 
 const AppConceptSchemesRouteWithChildren =
@@ -909,10 +981,12 @@ const AppConfigRouteWithChildren = AppConfigRoute._addFileChildren(
 
 interface AppIndividualsRouteChildren {
   AppIndividualsIndividualIdRoute: typeof AppIndividualsIndividualIdRoute
+  AppIndividualsIndexRoute: typeof AppIndividualsIndexRoute
 }
 
 const AppIndividualsRouteChildren: AppIndividualsRouteChildren = {
   AppIndividualsIndividualIdRoute: AppIndividualsIndividualIdRoute,
+  AppIndividualsIndexRoute: AppIndividualsIndexRoute,
 }
 
 const AppIndividualsRouteWithChildren = AppIndividualsRoute._addFileChildren(
@@ -921,10 +995,12 @@ const AppIndividualsRouteWithChildren = AppIndividualsRoute._addFileChildren(
 
 interface AppTaxonomiesRouteChildren {
   AppTaxonomiesTaxonomyIdRoute: typeof AppTaxonomiesTaxonomyIdRoute
+  AppTaxonomiesIndexRoute: typeof AppTaxonomiesIndexRoute
 }
 
 const AppTaxonomiesRouteChildren: AppTaxonomiesRouteChildren = {
   AppTaxonomiesTaxonomyIdRoute: AppTaxonomiesTaxonomyIdRoute,
+  AppTaxonomiesIndexRoute: AppTaxonomiesIndexRoute,
 }
 
 const AppTaxonomiesRouteWithChildren = AppTaxonomiesRoute._addFileChildren(
