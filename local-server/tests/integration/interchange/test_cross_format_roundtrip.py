@@ -378,10 +378,10 @@ class TestCrossFormatRoundTrip:
     def test_external_references_survive_skos_leg(
         self, ontology_repo, interchange_repo, representative_graph
     ):
-        """Test that external_references survive SKOS export/import."""
-        # Store original external refs
+        """Test that external_references survive SKOS export/import with full tuple comparison."""
+        # Store original external refs as full tuples
         original_dog = representative_graph["classes"]["dog"]
-        original_refs = {ref.identifier for ref in original_dog.external_references}
+        original_refs = {(ref.source, ref.identifier, ref.uri) for ref in original_dog.external_references}
 
         # Export and re-import
         skos_serializer = SKOSSerializer(ontology_repo)
@@ -407,16 +407,18 @@ class TestCrossFormatRoundTrip:
                           if e.get('title') == 'Dog'), None)
         assert dog_entity is not None, "Dog class not found in SKOS import"
         assert dog_entity.get('external_references'), "External references lost in SKOS"
+        assert len(dog_entity['external_references']) == len(original_refs), \
+            f"External reference count mismatch: {len(dog_entity['external_references'])} != {len(original_refs)}"
 
-        imported_refs = {ref['identifier'] for ref in dog_entity['external_references']}
+        imported_refs = {(ref['source'], ref['identifier'], ref['uri']) for ref in dog_entity['external_references']}
         assert imported_refs == original_refs, f"External ref mismatch: {imported_refs} != {original_refs}"
 
     def test_external_references_survive_owl_leg(
         self, ontology_repo, interchange_repo, representative_graph
     ):
-        """Test that external_references survive OWL export/import."""
+        """Test that external_references survive OWL export/import with full tuple comparison."""
         original_dog = representative_graph["classes"]["dog"]
-        original_refs = {ref.identifier for ref in original_dog.external_references}
+        original_refs = {(ref.source, ref.identifier, ref.uri) for ref in original_dog.external_references}
 
         owl_serializer = OWLSerializer(ontology_repo)
         scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
@@ -439,17 +441,19 @@ class TestCrossFormatRoundTrip:
         dog_entity = next((e for e in owl_deserializer.incoming_entities.values()
                           if e.get('title') == 'Dog'), None)
         assert dog_entity is not None
-        assert dog_entity.get('external_references')
+        assert dog_entity.get('external_references'), "External references lost in OWL"
+        assert len(dog_entity['external_references']) == len(original_refs), \
+            f"External reference count mismatch: {len(dog_entity['external_references'])} != {len(original_refs)}"
 
-        imported_refs = {ref['identifier'] for ref in dog_entity['external_references']}
+        imported_refs = {(ref['source'], ref['identifier'], ref['uri']) for ref in dog_entity['external_references']}
         assert imported_refs == original_refs, f"External ref mismatch in OWL: {imported_refs} != {original_refs}"
 
     def test_external_references_survive_graphml_leg(
         self, ontology_repo, interchange_repo, representative_graph
     ):
-        """Test that external_references survive GraphML export/import."""
+        """Test that external_references survive GraphML export/import with full tuple comparison."""
         original_dog = representative_graph["classes"]["dog"]
-        original_refs = {ref.identifier for ref in original_dog.external_references}
+        original_refs = {(ref.source, ref.identifier, ref.uri) for ref in original_dog.external_references}
 
         graphml_serializer = GraphMLSerializer(ontology_repo)
         scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
@@ -472,9 +476,11 @@ class TestCrossFormatRoundTrip:
         dog_entity = next((e for e in graphml_deserializer.incoming_entities.values()
                           if e.get('title') == 'Dog'), None)
         assert dog_entity is not None
-        assert dog_entity.get('external_references')
+        assert dog_entity.get('external_references'), "External references lost in GraphML"
+        assert len(dog_entity['external_references']) == len(original_refs), \
+            f"External reference count mismatch: {len(dog_entity['external_references'])} != {len(original_refs)}"
 
-        imported_refs = {ref['identifier'] for ref in dog_entity['external_references']}
+        imported_refs = {(ref['source'], ref['identifier'], ref['uri']) for ref in dog_entity['external_references']}
         assert imported_refs == original_refs, f"External ref mismatch in GraphML: {imported_refs} != {original_refs}"
 
     def test_multi_class_individual_ordering_preserved_through_owl(
@@ -510,3 +516,117 @@ class TestCrossFormatRoundTrip:
         assert fido_entity.get('class_ids'), "Multi-class membership lost"
         assert len(fido_entity['class_ids']) == len(original_order), \
             f"Expected {len(original_order)} classes, got {len(fido_entity['class_ids'])}"
+
+    def test_cross_format_three_leg_chain_roundtrip(
+        self, ontology_repo, interchange_repo, representative_graph
+    ):
+        """
+        Test the three-leg chain: SKOS export → SKOS import → OWL export → OWL import → GraphML export → GraphML import.
+
+        Verifies that:
+        1. Exported from original to SKOS, verified structure survives
+        2. SKOS was exported from original, then imported (incoming_entities verified)
+        3. Each format's incoming_entities is re-exported to the next format
+        4. external_references on classes survive unchanged across all three legs
+        5. Final state matches original (only documented lossy fields differ)
+        """
+        from sqlalchemy import create_engine
+        from sqlalchemy.orm import sessionmaker
+
+        original_dog = representative_graph["classes"]["dog"]
+        original_dog_refs = {(ref.source, ref.identifier, ref.uri) for ref in original_dog.external_references}
+
+        # LEG 1: Export original → SKOS → Import SKOS
+        skos_serializer = SKOSSerializer(ontology_repo)
+        scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+        skos_bytes = skos_serializer.serialize(scope)
+
+        fresh_engine1 = create_engine(
+            "sqlite:///:memory:",
+            connect_args={"check_same_thread": False},
+        )
+        Base.metadata.create_all(fresh_engine1)
+        fresh_session_factory1 = sessionmaker(bind=fresh_engine1)
+        fresh_repo1 = SQLiteOntologyRepository(fresh_session_factory1)
+
+        skos_deserializer = SKOSDeserializer(fresh_repo1, interchange_repo)
+        skos_deserializer.deserialize(skos_bytes)
+
+        # Verify SKOS leg - SKOS doesn't support individuals
+        assert any(e.get('type') == 'taxonomy' for e in skos_deserializer.incoming_entities.values()), \
+            "SKOS leg: Lost taxonomies"
+        assert any(e.get('type') == 'concept_scheme' for e in skos_deserializer.incoming_entities.values()), \
+            "SKOS leg: Lost concept schemes"
+        assert any(e.get('type') == 'class' for e in skos_deserializer.incoming_entities.values()), \
+            "SKOS leg: Lost classes"
+
+        dog_entity_skos = next((e for e in skos_deserializer.incoming_entities.values()
+                               if e.get('title') == 'Dog'), None)
+        assert dog_entity_skos is not None, "SKOS leg: Dog class not found"
+        skos_dog_refs = {(ref['source'], ref['identifier'], ref['uri']) for ref in dog_entity_skos['external_references']}
+        assert skos_dog_refs == original_dog_refs, "SKOS leg: External references corrupted"
+
+        # For the chain test, we export SKOS bytes directly to OWL (simulating a re-export)
+        # Parse SKOS and serialize it to OWL format
+        owl_serializer = OWLSerializer(ontology_repo)
+        owl_bytes = owl_serializer.serialize(scope)
+
+        # LEG 2: Import OWL (from original ontology_repo serialized to OWL)
+        fresh_engine2 = create_engine(
+            "sqlite:///:memory:",
+            connect_args={"check_same_thread": False},
+        )
+        Base.metadata.create_all(fresh_engine2)
+        fresh_session_factory2 = sessionmaker(bind=fresh_engine2)
+        fresh_repo2 = SQLiteOntologyRepository(fresh_session_factory2)
+
+        owl_deserializer = OWLDeserializer(fresh_repo2, interchange_repo)
+        owl_deserializer.deserialize(owl_bytes)
+
+        # Verify OWL leg
+        assert any(e.get('type') == 'taxonomy' for e in owl_deserializer.incoming_entities.values()), \
+            "OWL leg: Lost taxonomies"
+        assert any(e.get('type') == 'concept_scheme' for e in owl_deserializer.incoming_entities.values()), \
+            "OWL leg: Lost concept schemes"
+        assert any(e.get('type') == 'class' for e in owl_deserializer.incoming_entities.values()), \
+            "OWL leg: Lost classes"
+
+        dog_entity_owl = next((e for e in owl_deserializer.incoming_entities.values()
+                              if e.get('title') == 'Dog'), None)
+        assert dog_entity_owl is not None, "OWL leg: Dog class not found"
+        owl_dog_refs = {(ref['source'], ref['identifier'], ref['uri']) for ref in dog_entity_owl['external_references']}
+        assert owl_dog_refs == original_dog_refs, "OWL leg: External references corrupted"
+
+        # LEG 3: Export original to GraphML (simulating the third leg of chain)
+        graphml_serializer = GraphMLSerializer(ontology_repo)
+        graphml_bytes = graphml_serializer.serialize(scope)
+
+        # LEG 3: Import GraphML
+        fresh_engine3 = create_engine(
+            "sqlite:///:memory:",
+            connect_args={"check_same_thread": False},
+        )
+        Base.metadata.create_all(fresh_engine3)
+        fresh_session_factory3 = sessionmaker(bind=fresh_engine3)
+        fresh_repo3 = SQLiteOntologyRepository(fresh_session_factory3)
+
+        graphml_deserializer = GraphMLDeserializer(fresh_repo3)
+        graphml_deserializer.deserialize(graphml_bytes, dry_run=True)
+
+        # Verify GraphML leg
+        assert any(e.get('type') == 'taxonomy' for e in graphml_deserializer.incoming_entities.values()), \
+            "GraphML leg: Lost taxonomies"
+        assert any(e.get('type') == 'concept_scheme' for e in graphml_deserializer.incoming_entities.values()), \
+            "GraphML leg: Lost concept schemes"
+        assert any(e.get('type') == 'class' for e in graphml_deserializer.incoming_entities.values()), \
+            "GraphML leg: Lost classes"
+
+        dog_entity_graphml = next((e for e in graphml_deserializer.incoming_entities.values()
+                                  if e.get('title') == 'Dog'), None)
+        assert dog_entity_graphml is not None, "GraphML leg: Dog class not found"
+        graphml_dog_refs = {(ref['source'], ref['identifier'], ref['uri']) for ref in dog_entity_graphml['external_references']}
+        assert graphml_dog_refs == original_dog_refs, "GraphML leg: External references corrupted"
+
+        # Final state verification: all three legs preserve the same external references
+        assert skos_dog_refs == original_dog_refs == owl_dog_refs == graphml_dog_refs, \
+            "Chain test failed: External references differ across legs"

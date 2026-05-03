@@ -11,12 +11,13 @@ Mapping strategy:
 - Individual → owl:NamedIndividual (with rdf:type indicating class membership)
 - PropertyDefinition → owl:ObjectProperty or owl:DatatypeProperty (inferred from usage)
 - Relationship → RDF triple using the property predicate
-- external_references → owl:sameAs (for entity identity) and dct:source (for references)
+- external_references → owl:sameAs (for entity identity) with URI extraction on import
 """
 
 from __future__ import annotations
 
 import hashlib
+import uuid
 from typing import Optional, Dict, Any
 
 from rdflib import Graph, Namespace, URIRef, Literal, RDF, RDFS
@@ -27,9 +28,6 @@ from domain.interchange.value_objects import (
     SerializationScope,
     SerializationScopeType,
     ImportPlan,
-    ImportConflict,
-    MatchKind,
-    ResolutionKind,
 )
 from domain.ontology.entities import (
     Taxonomy,
@@ -247,6 +245,11 @@ class OWLSerializer(OntologySerializer):
             parent_uri = self._entity_uri(class_entity.parent_class_id)
             self.graph.add((class_uri, RDFS.subClassOf, parent_uri))
 
+        # Add concept scheme relationship
+        if class_entity.concept_scheme_id:
+            scheme_uri = self._entity_uri(class_entity.concept_scheme_id)
+            self.graph.add((class_uri, SKOS.inScheme, scheme_uri))
+
         # Add external references
         for ext_ref in class_entity.external_references:
             self._add_external_reference_to_graph(class_uri, ext_ref)
@@ -260,12 +263,11 @@ class OWLSerializer(OntologySerializer):
         if individual.description:
             self.graph.add((ind_uri, RDFS.comment, Literal(individual.description)))
 
-        # Add class memberships
+        # Add class memberships in order
         for i, class_id in enumerate(individual.class_ids):
             class_uri = self._entity_uri(class_id)
             self.graph.add((ind_uri, RDF.type, class_uri))
-            # Store class order as a triple for multi-class ordering
-            order_uri = URIRef(str(ind_uri) + f"#class_order_{i}")
+            # Store index for preserving multi-class ordering
             self.graph.add((ind_uri, LOCAL.classOrder, Literal(i)))
 
         # Add external references
@@ -292,14 +294,11 @@ class OWLSerializer(OntologySerializer):
         self.graph.add((source_uri, prop_uri, target_uri))
 
     def _add_external_reference_to_graph(self, entity_uri: URIRef, ext_ref: ExternalReference) -> None:
-        """Add an external reference to an entity."""
+        """Add an external reference to an entity using only owl:sameAs to avoid duplication."""
         assert self.graph is not None
         if ext_ref.uri:
-            # Use owl:sameAs for exact matches to external entities
+            # Use owl:sameAs as the single source of truth for external references
             self.graph.add((entity_uri, OWL.sameAs, URIRef(ext_ref.uri)))
-        # Also add dct:source for tracking the source
-        source_literal = Literal(f"{ext_ref.source}:{ext_ref.identifier}")
-        self.graph.add((entity_uri, DCT.source, source_literal))
 
     def _entity_uri(self, entity_id: str) -> URIRef:
         """Convert an entity ID to a URI."""
@@ -315,7 +314,7 @@ class OWLDeserializer(OntologyDeserializer):
     - owl:Class → Class
     - owl:NamedIndividual → Individual
     - owl:ObjectProperty → PropertyDefinition
-    - owl:sameAs / dct:source → external_references
+    - owl:sameAs → external_references (single source of truth)
     - rdfs:subClassOf → parent_class_id
     - rdf:type (when object is owl:NamedIndividual) → class membership
     """
@@ -348,8 +347,6 @@ class OWLDeserializer(OntologyDeserializer):
             ImportPlan describing what the import would/did do
         """
         try:
-            import uuid as uuid_module
-
             self.graph = Graph()
             self.incoming_entities = {}
             self._entity_map = {}
@@ -359,9 +356,9 @@ class OWLDeserializer(OntologyDeserializer):
             else:
                 self.graph.parse(data=source, format="turtle")
 
-            # Process concept schemes first (taxonomies/conceptschemes)
-            for scheme_uri in self.graph.subjects(RDF.type, SKOS.ConceptScheme):
-                self._process_concept_scheme_entity(scheme_uri)
+            # Process taxonomies first (ConceptSchemes without dct:isPartOf)
+            # Then concept schemes (with dct:isPartOf) to avoid duplicate creation
+            self._process_taxonomies_first()
 
             # Process classes
             for class_uri in self.graph.subjects(RDF.type, OWL.Class):
@@ -370,6 +367,13 @@ class OWLDeserializer(OntologyDeserializer):
             # Process individuals
             for ind_uri in self.graph.subjects(RDF.type, OWL.NamedIndividual):
                 self._process_individual_entity(ind_uri)
+
+            # Process property definitions
+            for prop_uri in self.graph.subjects(RDF.type, OWL.ObjectProperty):
+                self._process_property_entity(prop_uri)
+
+            # Process relationships
+            self._process_relationships()
 
             # Compute source hash
             if isinstance(source, str):
@@ -390,34 +394,54 @@ class OWLDeserializer(OntologyDeserializer):
         except Exception as e:
             raise RuntimeError(f"OWL deserialization failed: {str(e)}") from e
 
-    def _process_concept_scheme_entity(self, scheme_uri: Node) -> None:
+    def _process_taxonomies_first(self) -> None:
+        """Process taxonomies first, then concept schemes to avoid duplicate creation."""
+        # First pass: find taxonomies (ConceptSchemes without dct:isPartOf)
+        for scheme_uri in self.graph.subjects(RDF.type, SKOS.ConceptScheme):
+            parent_taxonomy_uri = self._get_first_object(scheme_uri, DCT.isPartOf)
+            if not parent_taxonomy_uri:
+                # This is a taxonomy
+                self._process_concept_scheme_entity(scheme_uri, is_taxonomy=True)
+
+        # Second pass: find concept schemes (with dct:isPartOf)
+        for scheme_uri in self.graph.subjects(RDF.type, SKOS.ConceptScheme):
+            parent_taxonomy_uri = self._get_first_object(scheme_uri, DCT.isPartOf)
+            if parent_taxonomy_uri:
+                # This is a concept scheme
+                self._process_concept_scheme_entity(scheme_uri, is_taxonomy=False)
+
+    def _process_concept_scheme_entity(self, scheme_uri: Node, is_taxonomy: bool) -> None:
         """Process a SKOS ConceptScheme (Taxonomy or ConceptScheme)."""
-        import uuid
+        # Skip if already processed
+        if str(scheme_uri) in self._entity_map:
+            return
 
         title = self._get_label(scheme_uri)
         if not title:
             return
 
-        description = self._get_first_string(scheme_uri, RDFS.comment)
-        entity_id = str(uuid.uuid4())
+        # Try to extract ID from LOCAL namespace URI
+        entity_id = self._uri_to_id(scheme_uri)
+        if not entity_id:
+            entity_id = str(uuid.uuid4())
 
-        # Check if it has a parent taxonomy (dct:isPartOf)
-        parent_taxonomy_uri = self._get_first_object(scheme_uri, DCT.isPartOf)
+        # Read description from skos:definition, not rdfs:comment
+        description = self._get_first_string(scheme_uri, SKOS.definition)
 
-        if parent_taxonomy_uri:
+        if is_taxonomy:
+            # This is a Taxonomy
+            self.incoming_entities[entity_id] = {
+                "id": entity_id,
+                "title": title,
+                "description": description,
+                "type": "taxonomy",
+            }
+        else:
             # This is a ConceptScheme
-            parent_taxonomy_id = self._entity_map.get(str(parent_taxonomy_uri))
-            if not parent_taxonomy_id:
-                # Create parent taxonomy first
-                parent_tax_id = str(uuid.uuid4())
-                parent_tax_title = self._get_label(parent_taxonomy_uri) or "Imported Taxonomy"
-                self.incoming_entities[parent_tax_id] = {
-                    "id": parent_tax_id,
-                    "title": parent_tax_title,
-                    "type": "taxonomy",
-                }
-                self._entity_map[str(parent_taxonomy_uri)] = parent_tax_id
-                parent_taxonomy_id = parent_tax_id
+            parent_taxonomy_uri = self._get_first_object(scheme_uri, DCT.isPartOf)
+            parent_taxonomy_id = None
+            if parent_taxonomy_uri:
+                parent_taxonomy_id = self._entity_map.get(str(parent_taxonomy_uri))
 
             self.incoming_entities[entity_id] = {
                 "id": entity_id,
@@ -426,27 +450,25 @@ class OWLDeserializer(OntologyDeserializer):
                 "type": "concept_scheme",
                 "taxonomy_id": parent_taxonomy_id,
             }
-        else:
-            # This is a Taxonomy
-            self.incoming_entities[entity_id] = {
-                "id": entity_id,
-                "title": title,
-                "description": description,
-                "type": "taxonomy",
-            }
 
         self._entity_map[str(scheme_uri)] = entity_id
 
     def _process_class_entity(self, class_uri: Node) -> None:
         """Process an OWL Class."""
-        import uuid
+        # Skip if already processed
+        if str(class_uri) in self._entity_map:
+            return
 
         title = self._get_label(class_uri)
         if not title:
             return
 
         description = self._get_first_string(class_uri, RDFS.comment)
-        entity_id = str(uuid.uuid4())
+
+        # Try to extract ID from LOCAL namespace URI
+        entity_id = self._uri_to_id(class_uri)
+        if not entity_id:
+            entity_id = str(uuid.uuid4())
 
         # Find parent class if exists
         parent_class_uri = self._get_first_object(class_uri, RDFS.subClassOf)
@@ -454,10 +476,10 @@ class OWLDeserializer(OntologyDeserializer):
         if parent_class_uri:
             parent_class_id = self._entity_map.get(str(parent_class_uri))
 
-        # Get external references
+        # Get external references (from owl:sameAs only)
         external_references = self._extract_external_references_as_dicts(class_uri)
 
-        # Try to infer scheme from skos:inScheme
+        # Get concept scheme from skos:inScheme
         scheme_id = None
         scheme_uri = self._get_first_object(class_uri, SKOS.inScheme)
         if scheme_uri:
@@ -476,29 +498,55 @@ class OWLDeserializer(OntologyDeserializer):
 
     def _process_individual_entity(self, ind_uri: Node) -> None:
         """Process an OWL NamedIndividual."""
-        import uuid
+        # Skip if already processed
+        if str(ind_uri) in self._entity_map:
+            return
 
         title = self._get_label(ind_uri)
         if not title:
             return
 
         description = self._get_first_string(ind_uri, RDFS.comment)
-        entity_id = str(uuid.uuid4())
 
-        # Get class memberships (rdf:type pointing to owl:Class)
-        class_uris = list(self.graph.objects(ind_uri, RDF.type))
-        class_ids = []
-        for class_uri in class_uris:
-            if str(class_uri) == str(OWL.NamedIndividual):
-                continue
-            class_id = self._entity_map.get(str(class_uri))
-            if class_id:
-                class_ids.append(class_id)
+        # Try to extract ID from LOCAL namespace URI
+        entity_id = self._uri_to_id(ind_uri)
+        if not entity_id:
+            entity_id = str(uuid.uuid4())
+
+        # Get class memberships (rdf:type pointing to owl:Class), preserving order
+        class_entries = []
+        for order_literal in self.graph.objects(ind_uri, LOCAL.classOrder):
+            try:
+                order = int(str(order_literal))
+                # Find the class at this position
+                class_uris_list = list(self.graph.objects(ind_uri, RDF.type))
+                if order < len(class_uris_list):
+                    class_uri = class_uris_list[order]
+                    if str(class_uri) != str(OWL.NamedIndividual):
+                        class_id = self._entity_map.get(str(class_uri))
+                        if class_id:
+                            class_entries.append((order, class_id))
+            except (ValueError, IndexError):
+                pass
+
+        # If no ordered entries found, collect all class memberships
+        if not class_entries:
+            class_uris = list(self.graph.objects(ind_uri, RDF.type))
+            for i, class_uri in enumerate(class_uris):
+                if str(class_uri) == str(OWL.NamedIndividual):
+                    continue
+                class_id = self._entity_map.get(str(class_uri))
+                if class_id:
+                    class_entries.append((i, class_id))
+
+        # Sort by order and extract IDs
+        class_entries.sort(key=lambda x: x[0])
+        class_ids = [class_id for _, class_id in class_entries]
 
         if not class_ids:
             return
 
-        # Get external references
+        # Get external references (from owl:sameAs only)
         external_references = self._extract_external_references_as_dicts(ind_uri)
 
         self.incoming_entities[entity_id] = {
@@ -511,45 +559,122 @@ class OWLDeserializer(OntologyDeserializer):
         }
         self._entity_map[str(ind_uri)] = entity_id
 
+    def _process_property_entity(self, prop_uri: Node) -> None:
+        """Process an OWL ObjectProperty (PropertyDefinition)."""
+        # Skip if already processed
+        if str(prop_uri) in self._entity_map:
+            return
+
+        title = self._get_label(prop_uri)
+        if not title:
+            return
+
+        description = self._get_first_string(prop_uri, RDFS.comment)
+
+        # Try to extract ID from LOCAL namespace URI
+        entity_id = self._uri_to_id(prop_uri)
+        if not entity_id:
+            entity_id = str(uuid.uuid4())
+
+        # Extract identifier from title or URI
+        identifier = title.lower().replace(" ", "_")
+
+        self.incoming_entities[entity_id] = {
+            "id": entity_id,
+            "identifier": identifier,
+            "title": title,
+            "description": description,
+            "type": "property_definition",
+        }
+        self._entity_map[str(prop_uri)] = entity_id
+
+    def _process_relationships(self) -> None:
+        """Process relationships between entities using property predicates."""
+        # Get all defined properties
+        property_uris = set(self.graph.subjects(RDF.type, OWL.ObjectProperty))
+
+        for prop_uri in property_uris:
+            # Find all triples using this property
+            for source_uri, _, target_uri in self.graph.triples((None, prop_uri, None)):
+                source_id = self._entity_map.get(str(source_uri))
+                target_id = self._entity_map.get(str(target_uri))
+                prop_id = self._entity_map.get(str(prop_uri))
+
+                if source_id and target_id and prop_id:
+                    rel_id = str(uuid.uuid4())
+                    self.incoming_entities[rel_id] = {
+                        "id": rel_id,
+                        "type": "relationship",
+                        "source_id": source_id,
+                        "target_id": target_id,
+                        "property_definition_id": prop_id,
+                    }
+
     def _extract_external_references_as_dicts(self, entity_uri: Node) -> list[Dict[str, Any]]:
-        """Extract external references from owl:sameAs and dct:source predicates as dicts."""
+        """Extract external references from owl:sameAs URIs as dicts."""
         refs = []
 
-        # Extract owl:sameAs references
+        # Extract owl:sameAs references (single source of truth)
         for same_as_uri in self.graph.objects(entity_uri, OWL.sameAs):
             uri_str = str(same_as_uri)
-            # Try to parse source:identifier from the URI
-            if "#" in uri_str:
-                source, identifier = uri_str.rsplit("#", 1)
-            elif "/" in uri_str:
-                parts = uri_str.rsplit("/", 1)
-                source, identifier = parts[0], parts[1]
-            else:
-                source = uri_str
-                identifier = uri_str
-
-            refs.append({
-                "source": source.split("/")[-1] if "/" in source else source,
-                "identifier": identifier,
-                "uri": uri_str,
-            })
-
-        # Extract dct:source references
-        for source_literal in self.graph.objects(entity_uri, DCT.source):
-            source_str = str(source_literal)
-            if ":" in source_str:
-                source, identifier = source_str.split(":", 1)
-            else:
-                source = "external"
-                identifier = source_str
+            # Parse source:identifier from the URI
+            source, identifier = self._parse_uri_for_reference(uri_str)
 
             refs.append({
                 "source": source,
                 "identifier": identifier,
-                "uri": None,
+                "uri": uri_str,
             })
 
         return refs
+
+    def _parse_uri_for_reference(self, uri_str: str) -> tuple[str, str]:
+        """Parse a URI to extract source and identifier for external references."""
+        # Handle common patterns like http://dbpedia.org/resource/Dog or https://www.wikidata.org/wiki/Q144
+        if "#" in uri_str:
+            source, identifier = uri_str.rsplit("#", 1)
+            # Extract domain from full URL
+            domain = self._extract_domain_from_uri(source)
+            return domain, identifier
+        elif "/" in uri_str:
+            parts = uri_str.rsplit("/", 1)
+            source_part = parts[0]
+            identifier = parts[1]
+            # Extract domain name from the URI
+            domain = self._extract_domain_from_uri(source_part)
+            return domain, identifier
+        else:
+            return "external", uri_str
+
+    def _extract_domain_from_uri(self, uri_part: str) -> str:
+        """Extract the domain name from a URI (e.g., 'dbpedia' from 'http://dbpedia.org')."""
+        # Remove protocol (http://, https://, etc.)
+        if "://" in uri_part:
+            uri_part = uri_part.split("://", 1)[1]
+
+        # Remove 'www.' prefix if present
+        if uri_part.startswith("www."):
+            uri_part = uri_part[4:]
+
+        # Extract the domain name (first part before the dot or slash)
+        if "/" in uri_part:
+            domain = uri_part.split("/")[0]
+        else:
+            domain = uri_part
+
+        # Get the main domain name (e.g., 'dbpedia' from 'dbpedia.org', 'wikidata' from 'wikidata.org')
+        if "." in domain:
+            domain = domain.split(".")[0]
+
+        return domain
+
+    def _uri_to_id(self, uri: Node) -> Optional[str]:
+        """Extract entity ID from LOCAL namespace URI."""
+        uri_str = str(uri)
+        if uri_str.startswith(str(LOCAL)):
+            # Extract the ID from the LOCAL namespace
+            return uri_str[len(str(LOCAL)):]
+        return None
 
     def _get_label(self, uri: Node) -> Optional[str]:
         """Get the label for a URI (rdfs:label or skos:prefLabel)."""
@@ -560,6 +685,8 @@ class OWLDeserializer(OntologyDeserializer):
 
     def _get_first_string(self, uri: Node, predicate: URIRef) -> Optional[str]:
         """Get the first string value for a predicate."""
+        if self.graph is None:
+            return None
         value = self._get_first_object(uri, predicate)
         if value:
             return str(value)
@@ -567,6 +694,8 @@ class OWLDeserializer(OntologyDeserializer):
 
     def _get_first_object(self, uri: Node, predicate: URIRef) -> Optional[Node]:
         """Get the first object for a predicate."""
+        if self.graph is None:
+            return None
         for obj in self.graph.objects(uri, predicate):
             return obj
         return None
