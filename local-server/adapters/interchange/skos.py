@@ -89,17 +89,20 @@ class SKOSSerializer(OntologySerializer):
         scope.validate()
 
         self.graph = Graph()
+        assert self.graph is not None
         self.graph.bind("skos", SKOS)
         self.graph.bind("dct", DCT)
         self.graph.bind("local", LOCAL)
 
-        try:
+        try:  # type: ignore[unreachable]
             match scope.scope_type:
                 case SerializationScopeType.WHOLE_GRAPH:
                     self._serialize_whole_graph()
                 case SerializationScopeType.TAXONOMY:
+                    assert scope.taxonomy_id is not None
                     self._serialize_taxonomy(scope.taxonomy_id)
                 case SerializationScopeType.SCHEME:
+                    assert scope.scheme_id is not None
                     self._serialize_scheme(scope.scheme_id)
                 case SerializationScopeType.ENTITY_SET:
                     self._serialize_entity_set(scope.entity_ids)
@@ -114,7 +117,7 @@ class SKOSSerializer(OntologySerializer):
             # Ensure result is bytes
             if isinstance(result, str):
                 return result.encode('utf-8')
-            return result
+            return result  # type: ignore[unreachable,return-value]
         except Exception as e:
             raise RuntimeError(f"SKOS serialization failed: {str(e)}") from e
 
@@ -163,6 +166,7 @@ class SKOSSerializer(OntologySerializer):
 
     def _add_taxonomy_to_graph(self, taxonomy: Taxonomy) -> None:
         """Add a taxonomy and its descendants to the graph."""
+        assert self.graph is not None
         # Taxonomy → skos:ConceptScheme
         tax_uri = self._entity_uri(taxonomy.id)
         self.graph.add((tax_uri, RDF.type, SKOS.ConceptScheme))
@@ -179,6 +183,7 @@ class SKOSSerializer(OntologySerializer):
         self, scheme: ConceptScheme, include_parent_taxonomy: bool = True
     ) -> None:
         """Add a concept scheme and its classes to the graph."""
+        assert self.graph is not None
         scheme_uri = self._entity_uri(scheme.id)
         self.graph.add((scheme_uri, RDF.type, SKOS.ConceptScheme))
         self.graph.add((scheme_uri, SKOS.prefLabel, Literal(scheme.title)))
@@ -197,6 +202,7 @@ class SKOSSerializer(OntologySerializer):
 
     def _add_class_to_graph(self, class_entity: Class) -> None:
         """Add a class as a skos:Concept to the graph."""
+        assert self.graph is not None
         class_uri = self._entity_uri(class_entity.id)
         self.graph.add((class_uri, RDF.type, SKOS.Concept))
         self.graph.add((class_uri, SKOS.prefLabel, Literal(class_entity.title)))
@@ -219,6 +225,7 @@ class SKOSSerializer(OntologySerializer):
 
     def _add_external_reference(self, subject_uri: URIRef, ext_ref: ExternalReference) -> None:
         """Add external references as dct:source and skos:exactMatch."""
+        assert self.graph is not None
         # Add dct:source for all references
         if ext_ref.uri:
             ref_uri = URIRef(ext_ref.uri)
@@ -278,6 +285,7 @@ class SKOSDeserializer(OntologyDeserializer):
         """
         try:
             self.graph = Graph()
+            assert self.graph is not None
             self.warnings = []
             self.incoming_entities = {}
 
@@ -327,6 +335,7 @@ class SKOSDeserializer(OntologyDeserializer):
 
     def _extract_entities_from_graph(self) -> None:
         """Extract taxonomies, concept schemes, and classes from the RDF graph."""
+        assert self.graph is not None
         # Process all skos:ConceptScheme entities
         for subject in self.graph.subjects(RDF.type, SKOS.ConceptScheme):
             self._extract_concept_scheme_or_taxonomy(subject)
@@ -337,6 +346,7 @@ class SKOSDeserializer(OntologyDeserializer):
 
     def _extract_concept_scheme_or_taxonomy(self, uri: Node) -> None:
         """Extract a ConceptScheme or Taxonomy from the graph."""
+        assert self.graph is not None
         entity_id = self._uri_to_id(uri)
         if not entity_id:
             return
@@ -376,6 +386,7 @@ class SKOSDeserializer(OntologyDeserializer):
 
     def _extract_class(self, uri: Node) -> None:
         """Extract a Class (skos:Concept) from the graph."""
+        assert self.graph is not None
         entity_id = self._uri_to_id(uri)
         if not entity_id:
             return
@@ -453,6 +464,7 @@ class SKOSDeserializer(OntologyDeserializer):
 
     def _check_unhandled_predicates(self, uri: Node) -> None:
         """Check for SKOS predicates that aren't being handled."""
+        assert self.graph is not None
         unhandled = {
             SKOS.related,
             SKOS.altLabel,
@@ -522,45 +534,45 @@ class SKOSDeserializer(OntologyDeserializer):
         for entity_id, entity_dict in self.incoming_entities.items():
             # Check external references first
             external_references = entity_dict.get("external_references", [])
-            existing_entity = None
-            match_kind = None
+            existing_entity: str | None = None
+            match_kind: MatchKind | None = None
 
             if external_references:
                 # Try to find existing entity by external reference
                 for ext_ref in external_references:
-                    existing = self._find_by_external_reference(
+                    existing_by_ref = self._find_by_external_reference(
                         ext_ref["source"], ext_ref["identifier"]
                     )
-                    if existing:
-                        existing_entity = existing
+                    if existing_by_ref:
+                        existing_entity = existing_by_ref
                         match_kind = MatchKind.EXTERNAL_REFERENCE
                         break
 
             # If no external reference match, try UUID
             if not existing_entity:
-                existing = self.ontology_repo.get_taxonomy(entity_id)
-                if existing:
-                    existing_entity = existing.id
+                existing_by_uuid = self.ontology_repo.get_taxonomy(entity_id)
+                if existing_by_uuid:
+                    existing_entity = existing_by_uuid.id
                     match_kind = MatchKind.UUID
                 else:
-                    existing = self.ontology_repo.get_concept_scheme(entity_id)
-                    if existing:
-                        existing_entity = existing.id
+                    existing_by_uuid = self.ontology_repo.get_concept_scheme(entity_id)
+                    if existing_by_uuid:
+                        existing_entity = existing_by_uuid.id
                         match_kind = MatchKind.UUID
                     else:
-                        existing = self.ontology_repo.get_class(entity_id)
-                        if existing:
-                            existing_entity = existing.id
+                        existing_by_uuid = self.ontology_repo.get_class(entity_id)
+                        if existing_by_uuid:
+                            existing_entity = existing_by_uuid.id
                             match_kind = MatchKind.UUID
 
             # If no UUID match, try by title
             if not existing_entity and entity_dict.get("type") == "class":
-                existing = self._find_class_by_title(
+                existing_by_title = self._find_class_by_title(
                     entity_dict["title"],
                     entity_dict.get("concept_scheme_id"),
                 )
-                if existing:
-                    existing_entity = existing.id
+                if existing_by_title:
+                    existing_entity = existing_by_title.id
                     match_kind = MatchKind.TITLE
 
             # If conflict found, record it
