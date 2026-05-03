@@ -120,13 +120,13 @@ function ImportRunDetailComponent() {
       <Card data-testid="interchange-run-detail-entities" className="mt-6">
         <h3 className="mb-4 text-lg font-semibold">Affected Entities</h3>
         <div data-testid="interchange-run-affected-entities">
-          {run.affected_entity_ids.length === 0 ? (
+          {(run.affected_entity_ids?.length ?? 0) === 0 ? (
             <p className="text-gray-600 dark:text-gray-400">
               No entities were affected by this import
             </p>
           ) : (
             <div className="max-h-64 space-y-2 overflow-y-auto">
-              {run.affected_entity_ids.map((entityId: string) => (
+              {run.affected_entity_ids?.map((entityId: string) => (
                 <div
                   key={entityId}
                   className="rounded bg-gray-50 p-2 font-mono text-sm dark:bg-gray-900"
@@ -160,7 +160,7 @@ function ImportRunDetailComponent() {
                   <tr>
                     <th className="px-6 py-3 font-semibold">Timestamp</th>
                     <th className="px-6 py-3 font-semibold">Entity Type</th>
-                    <th className="px-6 py-3 font-semibold">Change Type</th>
+                    <th className="px-6 py-3 font-semibold">Operation</th>
                     <th className="px-6 py-3 font-semibold">Entity ID</th>
                   </tr>
                 </thead>
@@ -175,7 +175,7 @@ function ImportRunDetailComponent() {
                       </td>
                       <td className="px-6 py-4">{event.entity_type}</td>
                       <td className="px-6 py-4">
-                        <Badge color="blue">{event.change_type}</Badge>
+                        <Badge color="blue">{event.operation}</Badge>
                       </td>
                       <td className="px-6 py-4 font-mono text-sm">
                         {event.entity_id}

@@ -48,7 +48,7 @@ describe("useInterchangeExport", () => {
 
     result.current.mutate({
       format: "owl",
-      scope: { scope_type: "whole_graph" },
+      scope: { scope_type: "whole_graph", include_descendants: false },
     });
 
     await waitFor(() => {
@@ -68,7 +68,7 @@ describe("useInterchangeExport", () => {
 
     result.current.mutate({
       format: "invalid",
-      scope: { scope_type: "whole_graph" },
+      scope: { scope_type: "whole_graph", include_descendants: false },
     });
 
     await waitFor(() => {
@@ -89,7 +89,7 @@ describe("useInterchangeExport", () => {
 
     result.current.mutate({
       format: "owl",
-      scope: { scope_type: "whole_graph" },
+      scope: { scope_type: "whole_graph", include_descendants: false },
     });
 
     await waitFor(() => {

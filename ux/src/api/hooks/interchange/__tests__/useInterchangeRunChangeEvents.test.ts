@@ -44,9 +44,8 @@ describe("useInterchangeRunChangeEvents", () => {
         timestamp: "2024-01-01T00:00:00Z",
         entity_id: "entity-1",
         entity_type: "Class",
-        change_type: "created",
-        import_run_id: "run-123",
-        details: { title: "New Class" },
+        operation: "created",
+        new_state: { title: "New Class" },
       },
     ];
 
@@ -76,9 +75,8 @@ describe("useInterchangeRunChangeEvents", () => {
         timestamp: "2024-01-01T00:00:00Z",
         entity_id: "entity-1",
         entity_type: "Class",
-        change_type: "created",
-        import_run_id: "run-123",
-        details: { title: "New Class" },
+        operation: "created",
+        new_state: { title: "New Class" },
       },
     ];
 
@@ -108,9 +106,8 @@ describe("useInterchangeRunChangeEvents", () => {
         timestamp: "2024-01-01T00:00:00Z",
         entity_id: "entity-1",
         entity_type: "Class",
-        change_type: "created",
-        import_run_id: "run-123",
-        details: {},
+        operation: "created",
+        new_state: {},
       },
     ];
 
@@ -130,7 +127,7 @@ describe("useInterchangeRunChangeEvents", () => {
     });
 
     expect(result.current.data).toHaveLength(1);
-    expect(result.current.data?.[0].change_type).toBe("created");
+    expect(result.current.data?.[0].operation).toBe("created");
   });
 
   it("should not fetch when run ID is empty", () => {

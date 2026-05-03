@@ -29,6 +29,7 @@ describe("InterchangeService", () => {
 
       const scope: SerializationScope = {
         scope_type: "whole_graph",
+        include_descendants: false,
       };
 
       const result = await service.exportFile("owl", scope);
@@ -45,6 +46,7 @@ describe("InterchangeService", () => {
     it("should throw error if format is missing", async () => {
       const scope: SerializationScope = {
         scope_type: "whole_graph",
+        include_descendants: false,
       };
 
       await expect(service.exportFile("", scope)).rejects.toThrow(
@@ -93,7 +95,7 @@ describe("InterchangeService", () => {
         format: "owl",
         source_uri: "test.owl",
         source_hash: "abc123",
-        scope: { scope_type: "whole_graph" as const } as SerializationScope,
+        scope: { scope_type: "whole_graph" as const, include_descendants: false } as SerializationScope,
         resolutions: [],
         affected_entity_ids: ["entity-1", "entity-2"],
         status: "committed" as const,
@@ -138,7 +140,7 @@ describe("InterchangeService", () => {
           format: "owl",
           source_uri: "test.owl",
           source_hash: "hash1",
-          scope: { scope_type: "whole_graph" } as SerializationScope,
+          scope: { scope_type: "whole_graph", include_descendants: false } as SerializationScope,
           resolutions: [],
           affected_entity_ids: [],
           status: "committed" as const,
@@ -168,7 +170,7 @@ describe("InterchangeService", () => {
           format: "owl",
           source_uri: "test.owl",
           source_hash: "hash1",
-          scope: { scope_type: "whole_graph" } as SerializationScope,
+          scope: { scope_type: "whole_graph", include_descendants: false } as SerializationScope,
           resolutions: [],
           affected_entity_ids: [],
           status: "committed" as const,
@@ -197,7 +199,7 @@ describe("InterchangeService", () => {
           format: "owl",
           source_uri: "test.owl",
           source_hash: "hash1",
-          scope: { scope_type: "whole_graph" } as SerializationScope,
+          scope: { scope_type: "whole_graph", include_descendants: false } as SerializationScope,
           resolutions: [],
           affected_entity_ids: [],
           status: "pending" as const,
@@ -228,7 +230,7 @@ describe("InterchangeService", () => {
         format: "owl",
         source_uri: "test.owl",
         source_hash: "abc123",
-        scope: { scope_type: "whole_graph" } as SerializationScope,
+        scope: { scope_type: "whole_graph", include_descendants: false } as SerializationScope,
         resolutions: [],
         affected_entity_ids: ["entity-1"],
         status: "committed" as const,

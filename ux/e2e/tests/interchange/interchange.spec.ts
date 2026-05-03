@@ -410,7 +410,7 @@ test.describe("Interchange (Import/Export)", () => {
     await expect(entitiesSection).toBeVisible();
 
     // Verify at least one entity ID is displayed
-    for (const entityId of commitResult.affected_entity_ids) {
+    for (const entityId of commitResult.affected_entity_ids ?? []) {
       const entityIdElement = entitiesSection.getByText(entityId);
       await expect(entityIdElement).toBeVisible();
     }

@@ -28,8 +28,8 @@ export function RecentRunsTable() {
   const hasMorePages = runs.length === limit;
   const currentPage = Math.floor(offset / limit) + 1;
 
-  const getStatusBadge = (status: ImportRunStatus) => {
-    const colors: Record<ImportRunStatus, string> = {
+  const getStatusBadge = (status: string) => {
+    const colors: Record<string, string> = {
       pending: "yellow",
       committed: "green",
       failed: "red",
@@ -112,7 +112,7 @@ export function RecentRunsTable() {
                   {new Date(run.created_at).toLocaleDateString()}
                 </td>
                 <td className="px-6 py-4">{getStatusBadge(run.status)}</td>
-                <td className="px-6 py-4">{run.affected_entity_ids.length}</td>
+                <td className="px-6 py-4">{run.affected_entity_ids?.length ?? 0}</td>
                 <td className="px-6 py-4">
                   <Link
                     to="/app/interchange/runs/$runId"
