@@ -825,6 +825,162 @@ rag_experiments:
     description: "Selector for choosing annotations in RAG tests"
     file: "ux/src/components/rag_experiments/AnnotationSelector.tsx"
 
+# Interchange (Import/Export)
+interchange:
+  export_panel:
+    id: "interchange-export-panel"
+    component: "ExportPanel"
+    description: "Export panel container"
+    file: "ux/src/components/interchange/ExportPanel.tsx"
+
+  export_format_select:
+    id: "interchange-export-format-select"
+    component: "ExportPanel"
+    description: "Format dropdown for export (SKOS/OWL/GraphML)"
+    file: "ux/src/components/interchange/ExportPanel.tsx"
+
+  export_scope_picker:
+    id: "interchange-export-scope-picker"
+    component: "ExportPanel"
+    description: "Scope selector for export"
+    file: "ux/src/components/interchange/ExportPanel.tsx"
+
+  export_owl_mode_toggle:
+    id: "interchange-export-owl-mode-toggle"
+    component: "ExportPanel"
+    description: "Toggle for OWL single-file vs split-file mode"
+    file: "ux/src/components/interchange/ExportPanel.tsx"
+
+  export_download_button:
+    id: "interchange-export-download-button"
+    component: "ExportPanel"
+    description: "Download button for export"
+    file: "ux/src/components/interchange/ExportPanel.tsx"
+
+  import_panel:
+    id: "interchange-import-panel"
+    component: "ImportPanel"
+    description: "Import panel container"
+    file: "ux/src/components/interchange/ImportPanel.tsx"
+
+  import_file_input:
+    id: "interchange-import-file-input"
+    component: "ImportPanel"
+    description: "Drag-drop or file selection area"
+    file: "ux/src/components/interchange/ImportPanel.tsx"
+
+  import_preview_button:
+    id: "interchange-import-preview-button"
+    component: "ImportPanel"
+    description: "Preview button to trigger dry-run"
+    file: "ux/src/components/interchange/ImportPanel.tsx"
+
+  conflict_resolution_modal:
+    id: "interchange-conflict-resolution-modal"
+    component: "ConflictResolutionModal"
+    description: "Modal for resolving import conflicts"
+    file: "ux/src/components/interchange/ConflictResolutionModal.tsx"
+
+  conflict_group_external_reference:
+    id: "interchange-conflict-group-external-reference"
+    component: "ConflictResolutionModal"
+    description: "Conflict group header for external reference matches"
+    file: "ux/src/components/interchange/ConflictResolutionModal.tsx"
+
+  conflict_group_uuid:
+    id: "interchange-conflict-group-uuid"
+    component: "ConflictResolutionModal"
+    description: "Conflict group header for UUID matches"
+    file: "ux/src/components/interchange/ConflictResolutionModal.tsx"
+
+  conflict_group_title:
+    id: "interchange-conflict-group-title"
+    component: "ConflictResolutionModal"
+    description: "Conflict group header for title matches"
+    file: "ux/src/components/interchange/ConflictResolutionModal.tsx"
+
+  conflict_group_create:
+    id: "interchange-conflict-group-create"
+    component: "ConflictResolutionModal"
+    description: "Conflict group header for new entities"
+    file: "ux/src/components/interchange/ConflictResolutionModal.tsx"
+
+  conflict_row:
+    id: "interchange-conflict-row-{entity_id}"
+    component: "ConflictResolutionModal"
+    description: "Row for a specific conflict"
+    file: "ux/src/components/interchange/ConflictResolutionModal.tsx"
+    pattern: true
+    template_param: "entity_id (entity UUID)"
+
+  conflict_resolution_select:
+    id: "interchange-conflict-resolution-select-{entity_id}"
+    component: "ConflictResolutionModal"
+    description: "Resolution dropdown for a specific conflict"
+    file: "ux/src/components/interchange/ConflictResolutionModal.tsx"
+    pattern: true
+    template_param: "entity_id (entity UUID)"
+
+  conflict_apply_all_button:
+    id: "interchange-conflict-apply-all-{match_kind}"
+    component: "ConflictResolutionModal"
+    description: "Apply to all button for a conflict group"
+    file: "ux/src/components/interchange/ConflictResolutionModal.tsx"
+    pattern: true
+    template_param: "match_kind (external_reference|uuid|title|create)"
+
+  conflict_commit_button:
+    id: "interchange-conflict-commit-button"
+    component: "ConflictResolutionModal"
+    description: "Button to commit import with resolutions"
+    file: "ux/src/components/interchange/ConflictResolutionModal.tsx"
+
+  conflict_cancel_button:
+    id: "interchange-conflict-cancel-button"
+    component: "ConflictResolutionModal"
+    description: "Button to cancel conflict resolution"
+    file: "ux/src/components/interchange/ConflictResolutionModal.tsx"
+
+  recent_runs_table:
+    id: "interchange-recent-runs-table"
+    component: "RecentRunsTable"
+    description: "Table of recent import runs"
+    file: "ux/src/components/interchange/RecentRunsTable.tsx"
+
+  runs_table_row:
+    id: "interchange-runs-table-row-{run_id}"
+    component: "RecentRunsTable"
+    description: "Table row for an import run"
+    file: "ux/src/components/interchange/RecentRunsTable.tsx"
+    pattern: true
+    template_param: "run_id (ImportRun UUID)"
+
+  run_detail_section:
+    id: "interchange-run-detail-{section}"
+    component: "ImportRunDetailPage"
+    description: "Section in run detail page (metadata|entities|events)"
+    file: "ux/src/routes/app/interchange/runs.$runId.tsx"
+    pattern: true
+    template_param: "section (metadata|entities|events)"
+
+  run_affected_entities:
+    id: "interchange-run-affected-entities"
+    component: "ImportRunDetailPage"
+    description: "List of entities affected by import run"
+    file: "ux/src/routes/app/interchange/runs.$runId.tsx"
+
+  run_change_events:
+    id: "interchange-run-change-events"
+    component: "ImportRunDetailPage"
+    description: "Paginated list of change events from import run"
+    file: "ux/src/routes/app/interchange/runs.$runId.tsx"
+
+  run_undo_button:
+    id: "interchange-run-undo-button"
+    component: "ImportRunDetailPage"
+    description: "Disabled placeholder button for undo functionality"
+    file: "ux/src/routes/app/interchange/runs.$runId.tsx"
+
 # Traceability & Monitoring
 traceability:
   selection_tracker:

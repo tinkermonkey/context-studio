@@ -30,6 +30,10 @@ This document is the authoritative source of truth for Context Studio's product 
 | `/app/reference`                                     | External knowledge graph explorer (ConceptNet, DBpedia, schema.org) | Secondary    |
 | `/app/monitoring`                                    | System health, background tasks, observability                      | Secondary    |
 | `/app/rag`                                           | RAG pipeline testing and experimentation                            | Experimental |
+| `/app/interchange`                                   | Import/export ontology data in multiple formats                     | Secondary    |
+| `/app/interchange/export`                            | Export ontology to SKOS, OWL, or GraphML format                     | Secondary    |
+| `/app/interchange/import`                            | Import ontology from file with conflict resolution                  | Secondary    |
+| `/app/interchange/runs/$runId`                       | View details of a past import run and its change events             | Secondary    |
 
 ---
 
