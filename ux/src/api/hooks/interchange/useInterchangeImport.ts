@@ -48,15 +48,23 @@ export const useInterchangeImport = (
 ) => {
   const queryClient = useQueryClient();
 
+  // Destructure onSuccess from options to exclude it from the spread
+  const { onSuccess: userProvidedOnSuccess, ...otherOptions } = options || {};
+
+  // Compose the custom onSuccess with the user-provided one
+  const customOnSuccess = (response: ImportPlanResponse | ImportRunCommitResponse, variables: any, context: any) => {
+    // Only invalidate entity caches if this is a commit (dry_run=false)
+    if (!variables.dry_run) {
+      invalidateEntityCaches(queryClient);
+    }
+    // Call the user-provided onSuccess if it exists
+    userProvidedOnSuccess?.(response, variables, context);
+  };
+
   return useMutation({
     mutationFn: ({ format, file, dry_run, resolutions }) =>
       interchangeService.importFile(format, file, dry_run, resolutions),
-    onSuccess: (_response, variables) => {
-      // Only invalidate entity caches if this is a commit (dry_run=false)
-      if (!variables.dry_run) {
-        invalidateEntityCaches(queryClient);
-      }
-    },
-    ...options,
+    onSuccess: customOnSuccess,
+    ...otherOptions,
   });
 };

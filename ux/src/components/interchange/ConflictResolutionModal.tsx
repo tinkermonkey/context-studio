@@ -104,7 +104,10 @@ export function ConflictResolutionModal({
     const resolutionRecords: ResolutionRecord[] = Array.from(
       resolutions.entries()
     ).map(([key, resolution]) => {
-      const [matchKind, entityId] = key.split("-");
+      // Split on first occurrence of hyphen only, since UUIDs contain hyphens
+      const firstHyphenIndex = key.indexOf("-");
+      const matchKind = key.substring(0, firstHyphenIndex);
+      const entityId = key.substring(firstHyphenIndex + 1);
       return {
         match_kind: matchKind as ImportConflict["match_kind"],
         entity_id: entityId,
@@ -132,7 +135,7 @@ export function ConflictResolutionModal({
   };
 
   return (
-    <Modal show={isOpen} onClose={onClose} size="4xl">
+    <Modal show={isOpen} onClose={onClose} size="4xl" data-testid="interchange-conflict-resolution-modal">
       <Modal.Header>Resolve Import Conflicts</Modal.Header>
       <Modal.Body className="max-h-96 overflow-y-auto">
         <div className="space-y-6">
@@ -194,6 +197,7 @@ export function ConflictResolutionModal({
                         key={res}
                         size="xs"
                         color="light"
+                        data-testid="interchange-conflict-apply-all-external_reference"
                         onClick={() =>
                           handleApplyAll(
                             "external_reference",
@@ -265,6 +269,7 @@ export function ConflictResolutionModal({
                         key={res}
                         size="xs"
                         color="light"
+                        data-testid="interchange-conflict-apply-all-uuid"
                         onClick={() =>
                           handleApplyAll("uuid", res as ResolutionKind)
                         }
@@ -333,6 +338,7 @@ export function ConflictResolutionModal({
                         key={res}
                         size="xs"
                         color="light"
+                        data-testid="interchange-conflict-apply-all-title"
                         onClick={() =>
                           handleApplyAll("title", res as ResolutionKind)
                         }
@@ -400,7 +406,7 @@ function ConflictRow({
   resolution,
   onResolutionChange,
 }: ConflictRowProps) {
-  const title = String((conflict.incoming as Record<string, any>)?.title || "Untitled");
+  const title = String(conflict.incoming?.title || "Untitled");
   const existingId = conflict.existing;
 
   return (

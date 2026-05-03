@@ -4,16 +4,21 @@
  * Navigation sidebar for the interchange (import/export) module
  */
 
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { CsSidebar, CsSidebarTitle } from "@/components/layout/cs_sidebar";
 
-interface InterchangeSidebarProps {
-  currentSection?: "export" | "import" | "runs";
-}
+export function InterchangeSidebar() {
+  const routerState = useRouterState();
+  const pathname = routerState.location.pathname;
 
-export function InterchangeSidebar({
-  currentSection = "runs",
-}: InterchangeSidebarProps) {
+  // Determine current section from the pathname
+  let currentSection: "export" | "import" | "runs" = "runs";
+  if (pathname.includes("/export")) {
+    currentSection = "export";
+  } else if (pathname.includes("/import")) {
+    currentSection = "import";
+  }
+
   const getLinkClass = (section: string) =>
     `block px-4 py-2 rounded transition ${
       currentSection === section

@@ -12,6 +12,7 @@ import {
   useInterchangeRun,
   useInterchangeRunChangeEvents,
 } from "@/api/hooks/interchange";
+import { ChangeEvent } from "@/api/types/interchange";
 import { ChevronLeft } from "lucide-react";
 
 export const Route = createFileRoute("/app/interchange/runs/$runId")({
@@ -31,8 +32,7 @@ function ImportRunDetailComponent() {
     });
 
   const changeEvents = Array.isArray(eventsData) ? eventsData : [];
-  const totalEvents = changeEvents.length;
-  const totalPages = Math.ceil(totalEvents / eventLimit);
+  const hasMoreEvents = changeEvents.length === eventLimit;
   const currentPage = Math.floor(eventOffset / eventLimit) + 1;
 
   const getStatusBadge = (status: string) => {
@@ -168,7 +168,7 @@ function ImportRunDetailComponent() {
                   </tr>
                 </thead>
                 <tbody className="divide-y border-t border-gray-200 dark:border-gray-700">
-                  {changeEvents.map((event: any) => (
+                  {changeEvents.map((event: ChangeEvent) => (
                     <tr key={event.id} className="hover:bg-gray-50 dark:hover:bg-gray-900">
                       <td className="px-6 py-4">
                         {new Date(event.timestamp).toLocaleString()}
@@ -187,10 +187,10 @@ function ImportRunDetailComponent() {
             </div>
 
             {/* Pagination */}
-            {totalPages > 1 && (
+            {(eventOffset > 0 || hasMoreEvents) && (
               <div className="flex items-center justify-between mt-4 pt-4 border-t">
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  Page {currentPage} of {totalPages}
+                  Page {currentPage}
                 </div>
                 <div className="flex gap-2">
                   <Button
@@ -204,7 +204,7 @@ function ImportRunDetailComponent() {
                   </Button>
                   <Button
                     size="sm"
-                    disabled={eventOffset + eventLimit >= totalEvents}
+                    disabled={!hasMoreEvents}
                     onClick={() => setEventOffset(eventOffset + eventLimit)}
                   >
                     Next

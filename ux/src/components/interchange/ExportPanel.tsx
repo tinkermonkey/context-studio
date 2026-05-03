@@ -11,6 +11,7 @@ import { useInterchangeExport } from "@/api/hooks/interchange";
 import { SerializationScope } from "@/api/types/interchange";
 import { useTaxonomies } from "@/api/hooks/taxonomies";
 import { useConceptSchemes } from "@/api/hooks/conceptSchemes";
+import { Taxonomy, ConceptScheme } from "@/api/types/ontology";
 import { useButterToast } from "@/hooks/useButterToast";
 
 type ExportFormat = "skos" | "owl" | "graphml";
@@ -154,7 +155,7 @@ export function ExportPanel() {
               onChange={(e) => setSelectedTaxonomy(e.target.value)}
             >
               <option value="">-- Choose a taxonomy --</option>
-              {taxonomies.map((tax: any) => (
+              {taxonomies.map((tax: Taxonomy) => (
                 <option key={tax.id} value={tax.id}>
                   {tax.title}
                 </option>
@@ -174,7 +175,7 @@ export function ExportPanel() {
               onChange={(e) => setSelectedScheme(e.target.value)}
             >
               <option value="">-- Choose a concept scheme --</option>
-              {schemes.map((scheme: any) => (
+              {schemes.map((scheme: ConceptScheme) => (
                 <option key={scheme.id} value={scheme.id}>
                   {scheme.title}
                 </option>

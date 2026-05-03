@@ -8,7 +8,7 @@ import React from "react";
 import { Button, Badge, Spinner } from "flowbite-react";
 import { Link } from "@tanstack/react-router";
 import { useInterchangeRuns } from "@/api/hooks/interchange";
-import { ImportRunStatus } from "@/api/types/interchange";
+import { ImportRunStatus, ImportRun } from "@/api/types/interchange";
 import { Eye } from "lucide-react";
 
 export function RecentRunsTable() {
@@ -20,7 +20,8 @@ export function RecentRunsTable() {
     limit,
   });
 
-  const totalPages = runs.length > 0 ? Math.ceil((runs[0] as any).total / limit) : 1;
+  // Determine if there are more pages by checking if we got a full page of results
+  const hasMorePages = runs.length === limit;
   const currentPage = Math.floor(offset / limit) + 1;
 
   const getStatusBadge = (status: ImportRunStatus) => {
@@ -76,7 +77,7 @@ export function RecentRunsTable() {
             </tr>
           </thead>
           <tbody className="divide-y border-t border-gray-200 dark:border-gray-700">
-            {runs.map((run: any) => (
+            {runs.map((run: ImportRun) => (
               <tr
                 key={run.id}
                 data-testid={`interchange-runs-table-row-${run.id}`}
@@ -85,7 +86,14 @@ export function RecentRunsTable() {
                 <td className="px-6 py-4 font-medium">{run.format.toUpperCase()}</td>
                 <td className="px-6 py-4">
                   {run.source_uri
-                    ? new URL(run.source_uri).pathname.split("/").pop() || run.source_uri
+                    ? (() => {
+                        try {
+                          return new URL(run.source_uri).pathname.split("/").pop() || run.source_uri;
+                        } catch {
+                          // If source_uri is not a valid URL, extract filename using string methods
+                          return run.source_uri.split("/").pop() || run.source_uri;
+                        }
+                      })()
                     : "File"}
                 </td>
                 <td className="px-6 py-4">
@@ -94,9 +102,9 @@ export function RecentRunsTable() {
                 <td className="px-6 py-4">{getStatusBadge(run.status)}</td>
                 <td className="px-6 py-4">{run.affected_entity_ids.length}</td>
                 <td className="px-6 py-4">
-                  <a href={`/app/interchange/runs/${run.id}`} className="inline-block">
+                  <Link to="/app/interchange/runs/$runId" params={{ runId: run.id }} className="inline-block">
                     <Eye className="h-4 w-4 text-blue-500 hover:text-blue-700 cursor-pointer" />
-                  </a>
+                  </Link>
                 </td>
               </tr>
             ))}
@@ -105,10 +113,10 @@ export function RecentRunsTable() {
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {(offset > 0 || hasMorePages) && (
         <div className="flex items-center justify-between mt-4">
           <div className="text-sm text-gray-600 dark:text-gray-400">
-            Page {currentPage} of {totalPages}
+            Page {currentPage}
           </div>
           <div className="flex gap-2">
             <Button
@@ -120,7 +128,7 @@ export function RecentRunsTable() {
             </Button>
             <Button
               size="sm"
-              disabled={offset + limit >= (runs[0] as any)?.total}
+              disabled={!hasMorePages}
               onClick={() => setOffset(offset + limit)}
             >
               Next
