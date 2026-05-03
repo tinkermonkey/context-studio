@@ -2431,7 +2431,7 @@ export interface paths {
      *
      *     Args:
      *         request: Export request with format and scope
-     *         ontology_service: Injected OntologyService
+     *         ontology_repo: Injected OntologyRepository
      *
      *     Returns:
      *         Binary file data as blob
@@ -2459,14 +2459,15 @@ export interface paths {
      * Import Ontology
      * @description Import ontology data from a file.
      *
-     *     Supports dry-run mode to preview conflicts, or direct commit with resolutions.
+     *     Supports dry-run mode to preview conflicts, or direct commit with user-chosen resolutions.
      *
      *     Args:
-     *         format: Import format (skos, owl, graphml, etc.)
+     *         format: Import format (skos, owl, graphml)
      *         file: File to import
      *         dry_run: "true" for dry-run (returns plan), "false" to commit
-     *         resolutions: JSON-encoded list of resolutions (only used when dry_run="false")
-     *         ontology_service: Injected OntologyService
+     *         resolutions: Optional JSON-encoded list of ResolutionRecord to apply when committing
+     *         ontology_repo: Injected OntologyRepository
+     *         interchange_repo: Injected ImportRunRepository
      *
      *     Returns:
      *         ImportPlanResponse (dry-run) or ImportRunResponse (committed)
@@ -2710,7 +2711,7 @@ export interface components {
       dry_run: string;
       /**
        * Resolutions
-       * @description JSON-encoded resolutions
+       * @description JSON-encoded conflict resolutions to apply on commit
        */
       resolutions?: string | null;
     };
@@ -2731,32 +2732,6 @@ export interface components {
       scores: {
         [key: string]: number;
       };
-    };
-    /**
-     * ChangeEventListResponse
-     * @description Paginated list of change events.
-     */
-    ChangeEventListResponse: {
-      /**
-       * Events
-       * @description List of change events
-       */
-      events: components["schemas"]["adapters__web__schemas__interchange__ChangeEventResponse"][];
-      /**
-       * Total
-       * @description Total count
-       */
-      total: number;
-      /**
-       * Offset
-       * @description Offset used
-       */
-      offset: number;
-      /**
-       * Limit
-       * @description Limit used
-       */
-      limit: number;
     };
     /**
      * ChangeHistoryResponse
@@ -3588,32 +3563,6 @@ export interface components {
       detail?: components["schemas"]["ValidationError"][];
     };
     /**
-     * ImportRunListResponse
-     * @description Paginated list of import runs.
-     */
-    ImportRunListResponse: {
-      /**
-       * Runs
-       * @description List of import runs
-       */
-      runs: components["schemas"]["ImportRunResponse"][];
-      /**
-       * Total
-       * @description Total count
-       */
-      total: number;
-      /**
-       * Offset
-       * @description Offset used
-       */
-      offset: number;
-      /**
-       * Limit
-       * @description Limit used
-       */
-      limit: number;
-    };
-    /**
      * ImportRunResponse
      * @description Response containing import run data.
      */
@@ -3820,6 +3769,29 @@ export interface components {
        */
       sense_type: string;
     };
+    /** ListResponse[ChangeEventResponse] */
+    ListResponse_ChangeEventResponse_: {
+      /**
+       * Items
+       * @description List of items
+       */
+      items: components["schemas"]["adapters__web__schemas__interchange__ChangeEventResponse"][];
+      /**
+       * Total
+       * @description Total number of items
+       */
+      total: number;
+      /**
+       * Limit
+       * @description Limit applied
+       */
+      limit: number;
+      /**
+       * Offset
+       * @description Offset applied
+       */
+      offset: number;
+    };
     /** ListResponse[ClassResponse] */
     ListResponse_ClassResponse_: {
       /**
@@ -3873,6 +3845,29 @@ export interface components {
        * @description List of items
        */
       items: components["schemas"]["DataPropertyValueResponse"][];
+      /**
+       * Total
+       * @description Total number of items
+       */
+      total: number;
+      /**
+       * Limit
+       * @description Limit applied
+       */
+      limit: number;
+      /**
+       * Offset
+       * @description Offset applied
+       */
+      offset: number;
+    };
+    /** ListResponse[ImportRunResponse] */
+    ListResponse_ImportRunResponse_: {
+      /**
+       * Items
+       * @description List of items
+       */
+      items: components["schemas"]["ImportRunResponse"][];
       /**
        * Total
        * @description Total number of items
@@ -7950,7 +7945,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ImportRunListResponse"];
+          "application/json": components["schemas"]["ListResponse_ImportRunResponse_"];
         };
       };
       /** @description Validation Error */
@@ -8021,7 +8016,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ChangeEventListResponse"];
+          "application/json": components["schemas"]["ListResponse_ChangeEventResponse_"];
         };
       };
       /** @description Validation Error */

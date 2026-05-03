@@ -8,7 +8,7 @@ change event correlations for the Data Interchange bounded context.
 from datetime import datetime
 from typing import Optional, cast
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 
@@ -146,6 +146,43 @@ class SQLiteInterchangeRepository:
                 return [self._orm_to_domain(r) for r in orm_runs]
         except SQLAlchemyError as e:
             raise RuntimeError(f"Failed to list import runs by status: {str(e)}") from e
+
+    def count_all(self) -> int:
+        """
+        Count total number of import runs.
+
+        Returns:
+            Total count of all import runs
+        """
+        try:
+            with self.session_factory() as session:
+                query = select(func.count(ImportRunORM.id))
+                count = session.execute(query).scalar()
+                return count or 0
+        except SQLAlchemyError as e:
+            raise RuntimeError(f"Failed to count import runs: {str(e)}") from e
+
+    def count_by_status(self, status: ImportRunStatus) -> int:
+        """
+        Count import runs filtered by status.
+
+        Args:
+            status: The status to filter by
+
+        Returns:
+            Total count of import runs with the given status
+        """
+        try:
+            with self.session_factory() as session:
+                query = select(func.count(ImportRunORM.id)).where(
+                    ImportRunORM.status == status.value
+                )
+                count = session.execute(query).scalar()
+                return count or 0
+        except SQLAlchemyError as e:
+            raise RuntimeError(
+                f"Failed to count import runs by status: {str(e)}"
+            ) from e
 
     def update(self, import_run: ImportRun) -> ImportRun:
         """

@@ -45,15 +45,17 @@ export type ImportRunResponse = components["schemas"]["ImportRunResponse"];
 
 /**
  * ImportRunListResponse - Paginated list of import runs.
+ * Uses generic ListResponse pattern.
  */
 export type ImportRunListResponse =
-  components["schemas"]["ImportRunListResponse"];
+  components["schemas"]["ListResponse_ImportRunResponse_"];
 
 /**
  * ChangeEventListResponse - Paginated list of change events.
+ * Uses generic ListResponse pattern.
  */
 export type ChangeEventListResponse =
-  components["schemas"]["ChangeEventListResponse"];
+  components["schemas"]["ListResponse_ChangeEventResponse_"];
 
 /**
  * Resolution strategy for import conflicts.

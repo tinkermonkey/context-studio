@@ -18,6 +18,7 @@ from datetime import datetime
 from typing import Optional, Any, List
 
 from pydantic import BaseModel, ConfigDict, Field
+from adapters.web.schemas.ontology import ListResponse
 
 
 # ==================== Serialization Scope Schemas ====================
@@ -144,22 +145,3 @@ class ChangeEventResponse(BaseModel):
     )
 
 
-# ==================== List Response Schemas ====================
-
-
-class ImportRunListResponse(BaseModel):
-    """Paginated list of import runs."""
-
-    runs: List[ImportRunResponse] = Field(..., description="List of import runs")
-    total: int = Field(..., description="Total count")
-    offset: int = Field(..., description="Offset used")
-    limit: int = Field(..., description="Limit used")
-
-
-class ChangeEventListResponse(BaseModel):
-    """Paginated list of change events."""
-
-    events: List[ChangeEventResponse] = Field(..., description="List of change events")
-    total: int = Field(..., description="Total count")
-    offset: int = Field(..., description="Offset used")
-    limit: int = Field(..., description="Limit used")

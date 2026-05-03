@@ -41,9 +41,8 @@ from adapters.web.schemas.interchange import (
     ImportConflictResponse,
     ResolutionRecordResponse,
     SerializationScopeResponse,
-    ImportRunListResponse,
-    ChangeEventListResponse,
 )
+from adapters.web.schemas.ontology import ListResponse
 from adapters.interchange.skos import SKOSSerializer, SKOSDeserializer
 from adapters.interchange.owl import OWLSerializer, OWLDeserializer
 from adapters.interchange.graphml import GraphMLSerializer, GraphMLDeserializer
@@ -341,13 +340,13 @@ async def import_ontology(
 # ==================== Import Run List Endpoints ====================
 
 
-@router.get("/runs", response_model=ImportRunListResponse)
+@router.get("/runs", response_model=ListResponse[ImportRunResponse])
 async def list_import_runs(
     interchange_repo: ImportRunRepository = Depends(get_interchange_repo),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     limit: int = Query(100, ge=1, le=500, description="Maximum number of results"),
-    status_filter: Optional[str] = Query(None, description="Filter by status"),
-) -> ImportRunListResponse:
+    status: Optional[str] = Query(None, description="Filter by status"),
+) -> ListResponse[ImportRunResponse]:
     """
     List all import runs with optional filtering.
 
@@ -355,7 +354,7 @@ async def list_import_runs(
         interchange_repo: Injected interchange repository
         offset: Number of results to skip
         limit: Maximum number of results to return
-        status_filter: Optional status filter (pending, committed, failed, rolled_back)
+        status: Optional status filter (pending, committed, failed, rolled_back)
 
     Returns:
         Paginated list of import runs
@@ -364,25 +363,31 @@ async def list_import_runs(
         HTTPException: If query fails or invalid status provided
     """
     try:
-        if status_filter:
+        if status:
             # Validate status value
             try:
-                ImportRunStatus(status_filter)
+                ImportRunStatus(status)
             except ValueError:
-                raise ValueError(f"Invalid status: {status_filter}")
+                raise ValueError(f"Invalid status: {status}")
             runs = await run_sync_in_executor(
                 lambda: interchange_repo.list_by_status(
-                    ImportRunStatus(status_filter), limit=limit, offset=offset
+                    ImportRunStatus(status), limit=limit, offset=offset
                 )
+            )
+            total = await run_sync_in_executor(
+                lambda: interchange_repo.count_by_status(ImportRunStatus(status))
             )
         else:
             runs = await run_sync_in_executor(
                 lambda: interchange_repo.list_all(limit=limit, offset=offset)
             )
+            total = await run_sync_in_executor(
+                lambda: interchange_repo.count_all()
+            )
 
-        return ImportRunListResponse(
-            runs=[_import_run_to_response(r) for r in runs],
-            total=len(runs),
+        return ListResponse(
+            items=[_import_run_to_response(r) for r in runs],
+            total=total,
             offset=offset,
             limit=limit,
         )
@@ -445,7 +450,7 @@ async def get_import_run(
 # ==================== Change Events Endpoints ====================
 
 
-@router.get("/runs/{run_id}/change-events", response_model=ChangeEventListResponse)
+@router.get("/runs/{run_id}/change-events", response_model=ListResponse[ChangeEventResponse])
 async def get_run_change_events(
     run_id: str,
     interchange_repo: ImportRunRepository = Depends(get_interchange_repo),
@@ -453,7 +458,7 @@ async def get_run_change_events(
     limit: int = Query(100, ge=1, le=500, description="Maximum number of results"),
     entity_type: Optional[str] = Query(None, description="Filter by entity type"),
     change_type: Optional[str] = Query(None, description="Filter by change type"),
-) -> ChangeEventListResponse:
+) -> ListResponse[ChangeEventResponse]:
     """
     Get change events associated with an import run.
 
@@ -502,8 +507,8 @@ async def get_run_change_events(
         # Apply pagination
         paginated_events = filtered_events[offset : offset + limit]
 
-        return ChangeEventListResponse(
-            events=[_change_event_to_response(e) for e in paginated_events],
+        return ListResponse(
+            items=[_change_event_to_response(e) for e in paginated_events],
             total=len(filtered_events),
             offset=offset,
             limit=limit,

@@ -3672,7 +3672,7 @@
       "post": {
         "tags": ["interchange"],
         "summary": "Export Ontology",
-        "description": "Export ontology data in the specified format.\n\nArgs:\n    request: Export request with format and scope\n    ontology_service: Injected OntologyService\n\nReturns:\n    Binary file data as blob\n\nRaises:\n    HTTPException: If export fails or format is unsupported",
+        "description": "Export ontology data in the specified format.\n\nArgs:\n    request: Export request with format and scope\n    ontology_repo: Injected OntologyRepository\n\nReturns:\n    Binary file data as blob\n\nRaises:\n    HTTPException: If export fails or format is unsupported",
         "operationId": "export_ontology_api_v1_interchange_export_post",
         "requestBody": {
           "content": {
@@ -3705,7 +3705,7 @@
       "post": {
         "tags": ["interchange"],
         "summary": "Import Ontology",
-        "description": "Import ontology data from a file.\n\nSupports dry-run mode to preview conflicts, or direct commit with resolutions.\n\nArgs:\n    format: Import format (skos, owl, graphml, etc.)\n    file: File to import\n    dry_run: \"true\" for dry-run (returns plan), \"false\" to commit\n    resolutions: JSON-encoded list of resolutions (only used when dry_run=\"false\")\n    ontology_service: Injected OntologyService\n\nReturns:\n    ImportPlanResponse (dry-run) or ImportRunResponse (committed)\n\nRaises:\n    HTTPException: If import fails or format is unsupported",
+        "description": "Import ontology data from a file.\n\nSupports dry-run mode to preview conflicts, or direct commit with user-chosen resolutions.\n\nArgs:\n    format: Import format (skos, owl, graphml)\n    file: File to import\n    dry_run: \"true\" for dry-run (returns plan), \"false\" to commit\n    resolutions: Optional JSON-encoded list of ResolutionRecord to apply when committing\n    ontology_repo: Injected OntologyRepository\n    interchange_repo: Injected ImportRunRepository\n\nReturns:\n    ImportPlanResponse (dry-run) or ImportRunResponse (committed)\n\nRaises:\n    HTTPException: If import fails or format is unsupported",
         "operationId": "import_ontology_api_v1_interchange_import_post",
         "requestBody": {
           "content": {
@@ -3798,7 +3798,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ImportRunListResponse"
+                  "$ref": "#/components/schemas/ListResponse_ImportRunResponse_"
                 }
               }
             }
@@ -3943,7 +3943,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ChangeEventListResponse"
+                  "$ref": "#/components/schemas/ListResponse_ChangeEventResponse_"
                 }
               }
             }
@@ -4137,7 +4137,7 @@
               }
             ],
             "title": "Resolutions",
-            "description": "JSON-encoded resolutions"
+            "description": "JSON-encoded conflict resolutions to apply on commit"
           }
         },
         "type": "object",
@@ -4164,37 +4164,6 @@
         "required": ["algorithm", "scores"],
         "title": "CentralityResponse",
         "description": "Response containing centrality scores."
-      },
-      "ChangeEventListResponse": {
-        "properties": {
-          "events": {
-            "items": {
-              "$ref": "#/components/schemas/adapters__web__schemas__interchange__ChangeEventResponse"
-            },
-            "type": "array",
-            "title": "Events",
-            "description": "List of change events"
-          },
-          "total": {
-            "type": "integer",
-            "title": "Total",
-            "description": "Total count"
-          },
-          "offset": {
-            "type": "integer",
-            "title": "Offset",
-            "description": "Offset used"
-          },
-          "limit": {
-            "type": "integer",
-            "title": "Limit",
-            "description": "Limit used"
-          }
-        },
-        "type": "object",
-        "required": ["events", "total", "offset", "limit"],
-        "title": "ChangeEventListResponse",
-        "description": "Paginated list of change events."
       },
       "ChangeHistoryResponse": {
         "properties": {
@@ -5418,37 +5387,6 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
-      "ImportRunListResponse": {
-        "properties": {
-          "runs": {
-            "items": {
-              "$ref": "#/components/schemas/ImportRunResponse"
-            },
-            "type": "array",
-            "title": "Runs",
-            "description": "List of import runs"
-          },
-          "total": {
-            "type": "integer",
-            "title": "Total",
-            "description": "Total count"
-          },
-          "offset": {
-            "type": "integer",
-            "title": "Offset",
-            "description": "Offset used"
-          },
-          "limit": {
-            "type": "integer",
-            "title": "Limit",
-            "description": "Limit used"
-          }
-        },
-        "type": "object",
-        "required": ["runs", "total", "offset", "limit"],
-        "title": "ImportRunListResponse",
-        "description": "Paginated list of import runs."
-      },
       "ImportRunResponse": {
         "properties": {
           "id": {
@@ -5772,6 +5710,36 @@
         "title": "LexicalSenseResponse",
         "description": "Response containing lexical sense data."
       },
+      "ListResponse_ChangeEventResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/adapters__web__schemas__interchange__ChangeEventResponse"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total number of items"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "description": "Limit applied"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "description": "Offset applied"
+          }
+        },
+        "type": "object",
+        "required": ["items", "total", "limit", "offset"],
+        "title": "ListResponse[ChangeEventResponse]"
+      },
       "ListResponse_ClassResponse_": {
         "properties": {
           "items": {
@@ -5861,6 +5829,36 @@
         "type": "object",
         "required": ["items", "total", "limit", "offset"],
         "title": "ListResponse[DataPropertyValueResponse]"
+      },
+      "ListResponse_ImportRunResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ImportRunResponse"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total number of items"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "description": "Limit applied"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "description": "Offset applied"
+          }
+        },
+        "type": "object",
+        "required": ["items", "total", "limit", "offset"],
+        "title": "ListResponse[ImportRunResponse]"
       },
       "ListResponse_IndividualResponse_": {
         "properties": {
