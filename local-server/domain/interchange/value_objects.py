@@ -137,6 +137,10 @@ class ImportConflict:
         """
         if match_kind == MatchKind.EXTERNAL_REFERENCE:
             return ResolutionKind.MERGE
+        elif match_kind == MatchKind.UUID:
+            return ResolutionKind.SKIP
+        elif match_kind == MatchKind.TITLE:
+            return ResolutionKind.SKIP
         else:
             return ResolutionKind.ABORT
 

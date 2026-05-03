@@ -180,7 +180,9 @@ class SKOSSerializer(OntologySerializer):
                 self._add_property_to_graph(prop)
                 continue
 
-            logger.warning(f"Entity {entity_id} does not match any known type during SKOS serialization; skipping")
+            logger.warning(
+                f"Entity {entity_id} does not match any known type during SKOS serialization; skipping"
+            )
 
     def _add_taxonomy_to_graph(self, taxonomy: Taxonomy) -> None:
         """Add a taxonomy and its descendants to the graph."""
@@ -319,7 +321,12 @@ class SKOSDeserializer(OntologyDeserializer):
         self._entity_map: Dict[str, str] = {}  # URI -> local entity ID
         self._classes_cache: Optional[list[Class]] = None
 
-    def deserialize(self, source: bytes | str, dry_run: bool = True, resolutions: list[ResolutionRecord] | None = None) -> ImportPlan:
+    def deserialize(
+        self,
+        source: bytes | str,
+        dry_run: bool = True,
+        resolutions: list[ResolutionRecord] | None = None,
+    ) -> ImportPlan:
         """
         Deserialize SKOS RDF data and produce an import plan.
 
@@ -362,8 +369,12 @@ class SKOSDeserializer(OntologyDeserializer):
             else:
                 # All formats failed - build error message from all attempts
                 error_parts = [f"{fmt}: {str(e)}" for fmt, e in format_errors]
-                error_msg = "Failed to parse SKOS RDF in any format. " + "; ".join(error_parts)
-                raise ValueError(error_msg) from format_errors[-1][1] if format_errors else None
+                error_msg = "Failed to parse SKOS RDF in any format. " + "; ".join(
+                    error_parts
+                )
+                raise ValueError(error_msg) from (
+                    format_errors[-1][1] if format_errors else None
+                )
 
             # Extract entities from RDF
             self._extract_entities_from_graph()
@@ -474,11 +485,22 @@ class SKOSDeserializer(OntologyDeserializer):
             try:
                 if entity_type == "class":
                     # Create and persist Class entity
+                    # Get taxonomy_id from the parent concept scheme
+                    concept_scheme_id = entity_dict.get("concept_scheme_id", "")
+                    taxonomy_id = ""
+                    if (
+                        concept_scheme_id
+                        and concept_scheme_id in self.incoming_entities
+                    ):
+                        concept_scheme = self.incoming_entities[concept_scheme_id]
+                        taxonomy_id = concept_scheme.get("taxonomy_id", "")
+
                     class_entity = Class(
                         id=entity_dict["id"],
                         title=entity_dict["title"],
                         description=entity_dict.get("description"),
-                        concept_scheme_id=entity_dict.get("concept_scheme_id", ""),
+                        concept_scheme_id=concept_scheme_id,
+                        taxonomy_id=taxonomy_id,
                         parent_class_id=entity_dict.get("parent_class_id"),
                         external_references=[
                             ExternalReference(
