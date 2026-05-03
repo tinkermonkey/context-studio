@@ -16,7 +16,6 @@ Note: Export returns binary data (Blob); import accepts multipart form data.
 """
 
 from typing import Optional
-import json
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status, UploadFile, File, Form
 from fastapi.responses import StreamingResponse
@@ -235,20 +234,18 @@ async def import_ontology(
     format: str = Form(..., description="Import format"),
     file: UploadFile = File(..., description="File to import"),
     dry_run: str = Form("true", description="If 'true', returns plan without committing"),
-    resolutions: Optional[str] = Form(None, description="JSON-encoded resolutions"),
     ontology_repo: OntologyRepository = Depends(get_ontology_repo),
     interchange_repo: SQLiteInterchangeRepository = Depends(get_interchange_repo),
 ):
     """
     Import ontology data from a file.
 
-    Supports dry-run mode to preview conflicts, or direct commit with resolutions.
+    Supports dry-run mode to preview conflicts, or direct commit.
 
     Args:
         format: Import format (skos, owl, graphml, etc.)
         file: File to import
         dry_run: "true" for dry-run (returns plan), "false" to commit
-        resolutions: JSON-encoded list of resolutions (only used when dry_run="false")
         ontology_repo: Injected OntologyRepository
         interchange_repo: Injected InterchangeRepository
 
@@ -283,19 +280,21 @@ async def import_ontology(
         if is_dry_run:
             return _import_plan_to_response(import_plan)
         else:
-            # Parse resolutions if provided
-            resolution_list = []
-            if resolutions:
-                try:
-                    resolution_data = json.loads(resolutions)
-                    resolution_list = resolution_data if isinstance(resolution_data, list) else []
-                except json.JSONDecodeError as e:
-                    raise ValueError(f"Invalid JSON in resolutions: {e}")
+            # When dry_run=False, the deserializer commits the import and returns
+            # an ImportPlan with the import_run_id. Fetch the actual ImportRun.
+            if not import_plan.import_run_id:
+                raise ValueError("Expected import_run_id in plan after non-dry-run deserialize")
 
-            # Apply resolutions to the plan (if the deserializer created an ImportRun)
-            # For now, we return the plan as an ImportRun response
-            # The resolutions have been parsed and could be applied if needed
-            return _import_run_to_response(import_plan)
+            import_run = await run_sync_in_executor(
+                lambda: interchange_repo.get(import_plan.import_run_id)
+            )
+
+            if not import_run:
+                raise RuntimeError(
+                    f"ImportRun {import_plan.import_run_id} not found after commit"
+                )
+
+            return _import_run_to_response(import_run)
 
     except HTTPException:
         raise
