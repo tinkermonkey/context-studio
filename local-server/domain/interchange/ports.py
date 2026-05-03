@@ -9,7 +9,6 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 
 from .value_objects import SerializationScope
-from .entities import ImportRun
 from .value_objects import ImportPlan
 
 

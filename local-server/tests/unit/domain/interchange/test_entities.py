@@ -15,7 +15,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 from domain.interchange.entities import (
     ImportRun,
     ImportRunStatus,
-    ResolutionRecord,
 )
 from domain.interchange.value_objects import (
     SerializationScope,

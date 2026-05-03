@@ -7,16 +7,15 @@ automatically linked to the import run via the correlation context.
 
 import sys
 import os
-from datetime import datetime, timezone
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../"))
 
-from adapters.persistence.sqlite.models import Base, ChangeEvent
+from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.events.change_recorder import ChangeEventRecorder
 from adapters.events.in_process import InProcessEventPublisher
@@ -30,7 +29,6 @@ from domain.interchange.value_objects import (
     SerializationScopeType,
 )
 from domain.ontology.services import OntologyService
-from domain.ontology.entities import Taxonomy
 from domain.versioning.value_objects import ChangeOperation
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 
@@ -93,7 +91,7 @@ def test_change_events_outside_import_have_null_import_run_id(change_repo):
     assert get_current_import_run_id() is None
 
     # Directly record a change event without import context
-    change_id = change_repo.record_change(
+    change_repo.record_change(
         entity_id="test-entity-1",
         entity_type="taxonomy",
         operation=ChangeOperation.CREATE,
@@ -128,7 +126,7 @@ def test_change_events_inside_import_have_import_run_id(change_repo):
         assert get_current_import_run_id() == import_run.id
 
         # Record a change event within the import context
-        change_id = change_repo.record_change(
+        change_repo.record_change(
             entity_id="test-entity-1",
             entity_type="taxonomy",
             operation=ChangeOperation.CREATE,

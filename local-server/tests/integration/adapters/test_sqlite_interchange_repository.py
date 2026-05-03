@@ -17,12 +17,11 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-from adapters.persistence.sqlite.models import Base, ImportRun as ImportRunORM
+from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
 from domain.interchange.entities import (
     ImportRun,
     ImportRunStatus,
-    ResolutionRecord,
 )
 from domain.interchange.value_objects import (
     SerializationScope,

@@ -5,12 +5,12 @@ Handles persistence of ImportRun entities and their associated
 change event correlations for the Data Interchange bounded context.
 """
 
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional, cast
 
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 
 from adapters.persistence.sqlite.models import (
     ImportRun as ImportRunORM,

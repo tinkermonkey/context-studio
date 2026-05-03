@@ -12,7 +12,7 @@ from contextvars import ContextVar
 from datetime import datetime, timezone
 from typing import Optional
 
-from .entities import ImportRun, ImportRunStatus
+from .entities import ImportRun
 from .value_objects import SerializationScope
 
 # Context variable for tracking the current import run ID across async boundaries
