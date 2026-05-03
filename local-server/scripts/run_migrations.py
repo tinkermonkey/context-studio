@@ -30,28 +30,73 @@ def run_migrations(database: str, args: list[str], local_db_url: str | None = No
         print(f"Error: Invalid database '{database}'. Must be 'local' or 'operations'.", file=sys.stderr)
         return 1
 
+    if database == "operations":
+        # For operations.db, use Python API directly to work around version_locations issues
+        return run_operations_migrations(args, operations_db_url)
+    else:
+        return run_local_migrations(args, local_db_url)
+
+
+def run_local_migrations(args: list[str], local_db_url: str | None = None) -> int:
+    """Run migrations for local.db using alembic CLI."""
     config_path = SQLITE_DIR / "alembic.ini"
 
     # Construct the alembic command
-    cmd = [
-        ALEMBIC,
-        "--config",
-        str(config_path),
-    ]
+    cmd = [ALEMBIC, "--config", str(config_path)]
 
-    # For operations.db, route using the -x flag
-    if database == "operations":
-        cmd.extend(["-x", "db=operations"])
-        if operations_db_url:
-            cmd.extend(["-x", f"operations_db_url={operations_db_url}"])
-    else:
-        if local_db_url:
-            cmd.extend(["-x", f"local_db_url={local_db_url}"])
+    if local_db_url:
+        cmd.extend(["-x", f"local_db_url={local_db_url}"])
 
     cmd.extend(args)
 
-    # Run the command from the sqlite directory to ensure relative paths work
-    return subprocess.run(cmd, cwd=str(SQLITE_DIR)).returncode
+    # Run the command from the local-server directory so database paths are correct
+    return subprocess.run(cmd, cwd=str(LOCAL_SERVER_ROOT)).returncode
+
+
+def run_operations_migrations(args: list[str], operations_db_url: str | None = None) -> int:
+    """Run migrations for operations.db using Alembic Python API."""
+    from alembic.config import Config
+    from alembic import command
+
+    try:
+        # Create Alembic configuration
+        config = Config(str(SQLITE_DIR / "alembic.ini"))
+
+        # Set version locations to operations directory only
+        config.set_main_option("version_locations", str(SQLITE_DIR / "operations" / "versions"))
+
+        # Set database URL
+        db_url = operations_db_url or "sqlite:///./operations.db"
+        config.set_main_option("sqlalchemy.url", db_url)
+
+        # Parse arguments and run the appropriate Alembic command
+        if not args:
+            return 1
+
+        command_name = args[0]
+        command_args = args[1:] if len(args) > 1 else []
+
+        if command_name == "upgrade":
+            # Support both "head" and "heads" for upgrade target
+            revision = command_args[0] if command_args else "head"
+            if revision == "heads":
+                revision = "head"
+            command.upgrade(config, revision)
+            return 0
+        elif command_name == "downgrade":
+            revision = command_args[0] if command_args else "-1"
+            command.downgrade(config, revision)
+            return 0
+        elif command_name == "revision":
+            command.revision(config, *command_args, autogenerate=True)
+            return 0
+        else:
+            print(f"Error: Unknown command '{command_name}'", file=sys.stderr)
+            return 1
+
+    except Exception as e:
+        print(f"Error running operations migrations: {e}", file=sys.stderr)
+        return 1
 
 
 def main():

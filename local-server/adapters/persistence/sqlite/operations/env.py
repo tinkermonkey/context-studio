@@ -54,8 +54,12 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    x_args = context.get_x_argument(as_dictionary=True)
-    url = x_args.get("operations_db_url") or "sqlite:///./operations.db"
+    # x_args is either passed from parent env.py or from context
+    try:
+        x_args_local = globals().get("x_args", context.get_x_argument(as_dictionary=True))
+    except:
+        x_args_local = {}
+    url = x_args_local.get("operations_db_url") or "sqlite:///./operations.db"
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -74,9 +78,13 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    x_args = context.get_x_argument(as_dictionary=True)
+    # x_args is either passed from parent env.py or from context
+    try:
+        x_args_local = globals().get("x_args", context.get_x_argument(as_dictionary=True))
+    except:
+        x_args_local = {}
     configuration = config.get_section(config.config_ini_section) or {}
-    configuration["sqlalchemy.url"] = x_args.get("operations_db_url") or "sqlite:///./operations.db"
+    configuration["sqlalchemy.url"] = x_args_local.get("operations_db_url") or "sqlite:///./operations.db"
 
     connectable = engine_from_config(
         configuration,
