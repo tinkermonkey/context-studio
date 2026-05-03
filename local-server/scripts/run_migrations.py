@@ -66,7 +66,7 @@ def run_operations_migrations(args: list[str], operations_db_url: str | None = N
         # Set cmd_opts so env.py can detect this is for operations database
         db_url = operations_db_url or "sqlite:///./operations.db"
         config.cmd_opts = argparse.Namespace(
-            x=[f"db=operations", f"operations_db_url={db_url}"]
+            x=["db=operations", f"operations_db_url={db_url}"]
         )
 
         # Set version locations to operations directory only

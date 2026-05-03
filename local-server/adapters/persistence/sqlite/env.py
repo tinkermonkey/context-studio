@@ -65,7 +65,7 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    x_args = context.get_x_argument(as_dictionary=True)
+    context.get_x_argument(as_dictionary=True)
     # Use the sqlalchemy.url already set in config, which respects operations vs local
     url = config.get_main_option("sqlalchemy.url") or "sqlite:///./local.db"
     context.configure(
