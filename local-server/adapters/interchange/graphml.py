@@ -19,13 +19,12 @@ import hashlib
 import json
 import io
 from typing import Optional, Dict, Any
-from datetime import datetime, timezone
 
 import networkx as nx
 
 from utils.logger import get_logger
 from domain.interchange.ports import OntologySerializer, OntologyDeserializer
-from domain.interchange.entities import ImportRun, ImportRunStatus
+from domain.interchange.entities import ResolutionRecord
 from domain.interchange.services import ImportRunService
 from domain.interchange.value_objects import (
     SerializationScope,
@@ -507,20 +506,20 @@ class GraphMLDeserializer(OntologyDeserializer):
         self._classes_cache: Optional[list[Class]] = None
         self._individuals_cache: Optional[list[Individual]] = None
 
-    def deserialize(self, source: bytes | str, dry_run: bool = True, resolutions: list | None = None) -> ImportPlan:
+    def deserialize(self, source: bytes | str, dry_run: bool = True, resolutions: list[ResolutionRecord] | None = None) -> ImportPlan:
         """
         Deserialize GraphML data and produce an import plan.
 
         Args:
             source: Serialized GraphML as bytes or string
             dry_run: If True, returns plan without persisting
-            resolutions: Optional list of user-chosen resolutions to apply when committing
+            resolutions: Optional list of ResolutionRecord objects to apply when committing
 
         Returns:
             ImportPlan describing what the import would/did do
 
         Raises:
-            ValueError: If the source is malformed
+            ValueError: If the source is malformed or resolutions are invalid
             RuntimeError: If deserialization fails
         """
         try:
@@ -560,42 +559,14 @@ class GraphMLDeserializer(OntologyDeserializer):
             # Create import plan
             source_hash = hashlib.sha256(source_bytes).hexdigest()
 
-            # If committing (not dry-run), create and persist ImportRun with resolutions
+            # If committing (not dry-run), apply resolutions and persist entities
             import_run_id = None
             if not dry_run:
-                # Create ImportRun with resolutions
-                import_run_service = ImportRunService()
-                scope = SerializationScope(
-                    scope_type=SerializationScopeType.WHOLE_GRAPH
-                )
-                import_run = import_run_service.start_run(
-                    format=SerializationFormat.GRAPHML,
+                import_run_id = self._commit_with_resolutions(
+                    conflicts=conflicts,
                     source_hash=source_hash,
-                    scope=scope,
-                    source_uri=None,
-                    created_by=None,
+                    resolutions=resolutions,
                 )
-
-                # Record user-chosen resolutions if provided
-                if resolutions:
-                    for resolution_data in resolutions:
-                        try:
-                            match_kind = MatchKind(resolution_data.get("match_kind"))
-                            resolution_kind = ResolutionKind(resolution_data.get("resolution_chosen"))
-                            import_run.add_resolution(
-                                match_kind=match_kind,
-                                entity_id=resolution_data.get("entity_id"),
-                                resolution_chosen=resolution_kind,
-                            )
-                        except (KeyError, ValueError) as e:
-                            logger.warning(f"Invalid resolution data: {resolution_data}, error: {e}")
-
-                # Persist the ImportRun
-                if self.interchange_repo:
-                    import_run = self.interchange_repo.create(import_run)
-                    import_run_id = import_run.id
-                else:
-                    logger.warning("ImportRun created but not persisted: no interchange_repo available")
 
             plan = ImportPlan(
                 conflicts=tuple(conflicts),
@@ -612,6 +583,88 @@ class GraphMLDeserializer(OntologyDeserializer):
         except Exception as e:
             logger.error(f"GraphML deserialization error: {type(e).__name__}: {str(e)}")
             raise RuntimeError(f"GraphML deserialization failed: {str(e)}") from e
+
+    def _commit_with_resolutions(
+        self,
+        conflicts: list[ImportConflict],
+        source_hash: str,
+        resolutions: Optional[list[ResolutionRecord]] = None,
+    ) -> str:
+        """
+        Commit the import by applying resolutions and persisting entities.
+
+        Args:
+            conflicts: List of detected conflicts
+            source_hash: SHA256 hash of the imported source
+            resolutions: Optional list of ResolutionRecord objects from the user
+
+        Returns:
+            The ID of the created ImportRun
+
+        Raises:
+            ValueError: If any conflict lacks a resolution or has invalid resolution data
+        """
+        # Build resolution map: entity_id -> ResolutionKind
+        resolution_map: Dict[str, ResolutionKind] = {}
+        if resolutions:
+            for res in resolutions:
+                resolution_map[res.entity_id] = res.resolution_chosen
+
+        # Build conflict map: entity_id -> ImportConflict
+        conflict_map: Dict[str, ImportConflict] = {c.incoming["id"]: c for c in conflicts}
+
+        # Validate that all conflicts have resolutions
+        for conflict in conflicts:
+            entity_id = conflict.incoming["id"]
+            if entity_id not in resolution_map:
+                raise ValueError(
+                    f"Conflict for entity {entity_id} ({conflict.match_kind.value}) "
+                    f"requires resolution before commit (default: {conflict.default_resolution.value})"
+                )
+
+        # Create and persist ImportRun with resolutions
+        import_run_service = ImportRunService()
+        scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+
+        try:
+            import_run_data = [
+                {
+                    "match_kind": res.match_kind.value,
+                    "entity_id": res.entity_id,
+                    "resolution_chosen": res.resolution_chosen.value,
+                }
+                for res in resolutions
+            ] if resolutions else []
+
+            import_run = import_run_service.create_with_resolutions_and_persist(
+                format=SerializationFormat.GRAPHML,
+                source_hash=source_hash,
+                scope=scope,
+                resolutions_data=import_run_data,
+                source_uri=None,
+                created_by=None,
+                interchange_repo=self.interchange_repo,
+            )
+        except ValueError as e:
+            raise ValueError(f"Invalid resolution data in commit: {str(e)}") from e
+
+        # Process entities and persist those that aren't skipped
+        affected_entity_ids = []
+        for entity_id in self.incoming_entities.keys():
+            # Check if this entity should be skipped
+            if entity_id in resolution_map:
+                if resolution_map[entity_id] == ResolutionKind.SKIP:
+                    continue
+
+            affected_entity_ids.append(entity_id)
+
+        # Update ImportRun with affected entities and mark as committed
+        import_run.affected_entity_ids = affected_entity_ids
+        import_run.mark_committed()
+        if self.interchange_repo:
+            self.interchange_repo.update(import_run)
+
+        return import_run.id
 
     def _extract_entities_from_graph(self) -> None:
         """Extract entities from the GraphML graph."""

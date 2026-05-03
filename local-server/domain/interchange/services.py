@@ -12,8 +12,8 @@ from contextvars import ContextVar
 from datetime import datetime, timezone
 from typing import Optional
 
-from .entities import ImportRun
-from .value_objects import SerializationScope, SerializationFormat
+from .entities import ImportRun, ResolutionRecord
+from .value_objects import SerializationScope, SerializationFormat, ResolutionKind, MatchKind
 
 # Context variable for tracking the current import run ID across async boundaries
 _import_run_context: ContextVar[Optional[str]] = ContextVar(
@@ -165,3 +165,69 @@ class ImportRunService:
             import_run_id: The import run ID, or None to clear context
         """
         set_import_run_context(import_run_id)
+
+    def create_with_resolutions_and_persist(
+        self,
+        format: SerializationFormat,
+        source_hash: str,
+        scope: SerializationScope,
+        resolutions_data: Optional[list[dict]] = None,
+        source_uri: Optional[str] = None,
+        created_by: Optional[str] = None,
+        interchange_repo=None,
+    ) -> ImportRun:
+        """
+        Create and persist an ImportRun with validated resolutions.
+
+        Creates a fresh ImportRun entity, validates and records the provided
+        resolutions, and persists it via the interchange_repo.
+
+        Args:
+            format: Format of the imported file (skos, owl, graphml)
+            source_hash: SHA256 hash of the imported bytes
+            scope: Describes what is being imported
+            resolutions_data: Optional list of resolution dicts with match_kind, entity_id, resolution_chosen
+            source_uri: Optional URI or filename of the source
+            created_by: Optional ID of the user initiating the import
+            interchange_repo: Repository for persisting the import run
+
+        Returns:
+            The persisted ImportRun entity
+
+        Raises:
+            ValueError: If resolution data is malformed (invalid match_kind or resolution_chosen)
+            RuntimeError: If persistence fails
+        """
+        # Create the ImportRun
+        import_run = self.start_run(
+            format=format,
+            source_hash=source_hash,
+            scope=scope,
+            source_uri=source_uri,
+            created_by=created_by,
+        )
+
+        # Record and validate resolutions
+        if resolutions_data:
+            for resolution_data in resolutions_data:
+                try:
+                    match_kind = MatchKind(resolution_data.get("match_kind"))
+                    resolution_chosen = ResolutionKind(resolution_data.get("resolution_chosen"))
+                    entity_id = resolution_data.get("entity_id")
+
+                    if not entity_id:
+                        raise ValueError("Resolution missing entity_id")
+
+                    import_run.add_resolution(
+                        match_kind=match_kind,
+                        entity_id=entity_id,
+                        resolution_chosen=resolution_chosen,
+                    )
+                except (KeyError, ValueError, TypeError) as e:
+                    raise ValueError(f"Invalid resolution data: {resolution_data}. Error: {str(e)}") from e
+
+        # Persist the ImportRun
+        if interchange_repo:
+            import_run = interchange_repo.create(import_run)
+
+        return import_run

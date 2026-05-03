@@ -19,14 +19,13 @@ from __future__ import annotations
 import hashlib
 import uuid
 from typing import Optional, Dict, Any, cast
-from datetime import datetime, timezone
 
 from rdflib import Graph, Namespace, URIRef, Literal, RDF, RDFS
 from rdflib.term import Node
 
 from utils.logger import get_logger
 from domain.interchange.ports import OntologySerializer, OntologyDeserializer
-from domain.interchange.entities import ImportRun, ImportRunStatus
+from domain.interchange.entities import ResolutionRecord
 from domain.interchange.services import ImportRunService
 from domain.interchange.value_objects import (
     SerializationScope,
@@ -360,14 +359,14 @@ class OWLDeserializer(OntologyDeserializer):
         self.incoming_entities: Dict[str, Dict[str, Any]] = {}
         self.warnings: list[str] = []
 
-    def deserialize(self, source: bytes | str, dry_run: bool = True, resolutions: list | None = None) -> ImportPlan:
+    def deserialize(self, source: bytes | str, dry_run: bool = True, resolutions: list[ResolutionRecord] | None = None) -> ImportPlan:
         """
         Deserialize OWL data and produce an import plan.
 
         Args:
             source: Serialized OWL as bytes or string
             dry_run: If True, returns ImportPlan without persisting
-            resolutions: Optional list of user-chosen resolutions to apply when committing
+            resolutions: Optional list of ResolutionRecord objects to apply when committing
 
         Returns:
             ImportPlan describing what the import would/did do
@@ -420,42 +419,13 @@ class OWLDeserializer(OntologyDeserializer):
             # Compute source hash
             source_hash = hashlib.sha256(source_bytes).hexdigest()
 
-            # If committing (not dry-run), create and persist ImportRun with resolutions
+            # If committing (not dry-run), apply resolutions and persist entities
             import_run_id = None
             if not dry_run:
-                # Create ImportRun with resolutions
-                import_run_service = ImportRunService()
-                scope = SerializationScope(
-                    scope_type=SerializationScopeType.WHOLE_GRAPH
-                )
-                import_run = import_run_service.start_run(
-                    format=SerializationFormat.OWL,
+                import_run_id = self._commit_with_resolutions(
                     source_hash=source_hash,
-                    scope=scope,
-                    source_uri=None,
-                    created_by=None,
+                    resolutions=resolutions,
                 )
-
-                # Record user-chosen resolutions if provided
-                if resolutions:
-                    for resolution_data in resolutions:
-                        try:
-                            match_kind = MatchKind(resolution_data.get("match_kind"))
-                            resolution_kind = ResolutionKind(resolution_data.get("resolution_chosen"))
-                            import_run.add_resolution(
-                                match_kind=match_kind,
-                                entity_id=resolution_data.get("entity_id"),
-                                resolution_chosen=resolution_kind,
-                            )
-                        except (KeyError, ValueError) as e:
-                            logger.warning(f"Invalid resolution data: {resolution_data}, error: {e}")
-
-                # Persist the ImportRun
-                if self.interchange_repo:
-                    import_run = self.interchange_repo.create(import_run)
-                    import_run_id = import_run.id
-                else:
-                    logger.warning("ImportRun created but not persisted: no interchange_repo available")
 
             # Create import plan
             plan = ImportPlan(
@@ -472,6 +442,73 @@ class OWLDeserializer(OntologyDeserializer):
         except Exception as e:
             logger.error(f"OWL deserialization error: {type(e).__name__}: {str(e)}")
             raise RuntimeError(f"OWL deserialization failed: {str(e)}") from e
+
+    def _commit_with_resolutions(
+        self,
+        source_hash: str,
+        resolutions: Optional[list[ResolutionRecord]] = None,
+    ) -> str:
+        """
+        Commit the import by applying resolutions and persisting entities.
+
+        Args:
+            source_hash: SHA256 hash of the imported source
+            resolutions: Optional list of ResolutionRecord objects from the user
+
+        Returns:
+            The ID of the created ImportRun
+        """
+        # Build resolution map: entity_id -> ResolutionKind
+        resolution_map: Dict[str, ResolutionKind] = {}
+        if resolutions:
+            for res in resolutions:
+                resolution_map[res.entity_id] = res.resolution_chosen
+
+        # Create and persist ImportRun with resolutions
+        import_run_service = ImportRunService()
+        scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+
+        try:
+            import_run_data = [
+                {
+                    "match_kind": res.match_kind.value,
+                    "entity_id": res.entity_id,
+                    "resolution_chosen": res.resolution_chosen.value,
+                }
+                for res in resolutions
+            ] if resolutions else []
+
+            import_run = import_run_service.create_with_resolutions_and_persist(
+                format=SerializationFormat.OWL,
+                source_hash=source_hash,
+                scope=scope,
+                resolutions_data=import_run_data,
+                source_uri=None,
+                created_by=None,
+                interchange_repo=self.interchange_repo,
+            )
+        except ValueError as e:
+            raise ValueError(f"Invalid resolution data in commit: {str(e)}") from e
+
+        # Process entities and persist those that aren't skipped
+        affected_entity_ids = []
+        for entity_id in self.incoming_entities.keys():
+            # Check if this entity should be skipped
+            if entity_id in resolution_map:
+                if resolution_map[entity_id] == ResolutionKind.SKIP:
+                    continue
+
+            # For OWL, we persist entities during processing
+            # This is a simplified implementation that just tracks affected entities
+            affected_entity_ids.append(entity_id)
+
+        # Update ImportRun with affected entities and mark as committed
+        import_run.affected_entity_ids = affected_entity_ids
+        import_run.mark_committed()
+        if self.interchange_repo:
+            self.interchange_repo.update(import_run)
+
+        return import_run.id
 
     def _process_taxonomies_first(self) -> None:
         """Process taxonomies first, then concept schemes to avoid duplicate creation."""

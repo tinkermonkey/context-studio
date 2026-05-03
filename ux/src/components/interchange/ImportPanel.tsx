@@ -89,6 +89,12 @@ export function ImportPanel({ onPreviewRequested }: ImportPanelProps) {
       error("Please select a file first");
       return;
     }
+    if (format === "auto") {
+      error(
+        "Unable to detect file format. Please select a format manually or use a recognized file extension (.owl, .ttl, .json, .graphml, etc.)"
+      );
+      return;
+    }
     onPreviewRequested?.(selectedFile, format);
   };
 
