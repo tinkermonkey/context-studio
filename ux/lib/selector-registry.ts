@@ -52,7 +52,7 @@ function validateRegistryStructure(registry: SelectorRegistry): void {
   for (const [sectionKey, section] of Object.entries(registry)) {
     if (!section || typeof section !== "object" || Array.isArray(section)) {
       throw new Error(
-        `selector-registry.yaml: section "${sectionKey}" must be an object`
+        `selector-registry.yaml: section "${sectionKey}" must be an object`,
       );
     }
 
@@ -73,14 +73,14 @@ function validateRegistryStructure(registry: SelectorRegistry): void {
       for (const [entryKey, entry] of Object.entries(sectionTyped)) {
         if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
           throw new Error(
-            `selector-registry.yaml: entry "${sectionKey}.${entryKey}" must be an object`
+            `selector-registry.yaml: entry "${sectionKey}.${entryKey}" must be an object`,
           );
         }
 
         const entryTyped = entry as Record<string, unknown>;
         if (typeof entryTyped.id !== "string") {
           throw new Error(
-            `selector-registry.yaml: entry "${sectionKey}.${entryKey}" must have an id field (string)`
+            `selector-registry.yaml: entry "${sectionKey}.${entryKey}" must have an id field (string)`,
           );
         }
       }
@@ -96,7 +96,7 @@ function validateRegistryStructure(registry: SelectorRegistry): void {
  */
 export function flattenRegistry(
   registry: SelectorRegistry,
-  result: Map<string, RegistryEntry> = new Map()
+  result: Map<string, RegistryEntry> = new Map(),
 ): Map<string, RegistryEntry> {
   for (const value of Object.values(registry)) {
     if (value && typeof value === "object" && !Array.isArray(value)) {
@@ -104,12 +104,29 @@ export function flattenRegistry(
       if ("id" in typedValue && typeof typedValue.id === "string") {
         const entry: RegistryEntry = {
           id: typedValue.id as string,
-          component: typeof typedValue.component === "string" ? typedValue.component : undefined,
-          status: typedValue.status === "not_yet_implemented" || typedValue.status === "future" ? typedValue.status : undefined,
-          pattern: typeof typedValue.pattern === "boolean" ? typedValue.pattern : undefined,
-          description: typeof typedValue.description === "string" ? typedValue.description : undefined,
-          file: typeof typedValue.file === "string" ? typedValue.file : undefined,
-          template_param: typeof typedValue.template_param === "boolean" ? typedValue.template_param : undefined,
+          component:
+            typeof typedValue.component === "string"
+              ? typedValue.component
+              : undefined,
+          status:
+            typedValue.status === "not_yet_implemented" ||
+            typedValue.status === "future"
+              ? typedValue.status
+              : undefined,
+          pattern:
+            typeof typedValue.pattern === "boolean"
+              ? typedValue.pattern
+              : undefined,
+          description:
+            typeof typedValue.description === "string"
+              ? typedValue.description
+              : undefined,
+          file:
+            typeof typedValue.file === "string" ? typedValue.file : undefined,
+          template_param:
+            typeof typedValue.template_param === "boolean"
+              ? typedValue.template_param
+              : undefined,
         };
         result.set(entry.id, entry);
       } else {
@@ -125,7 +142,7 @@ export function flattenRegistry(
  */
 export function extractPatternTemplates(
   registry: SelectorRegistry,
-  result: string[] = []
+  result: string[] = [],
 ): string[] {
   for (const value of Object.values(registry)) {
     if (!value || typeof value !== "object" || Array.isArray(value)) {

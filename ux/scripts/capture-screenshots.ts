@@ -27,10 +27,10 @@ const flag = (name: string, fallback: string) => {
 };
 
 const FRONTEND = "http://localhost:3100";
-const BACKEND  = "http://localhost:8000";
-const OUT_DIR  = path.resolve(__dirname, "..", flag("--out", "screenshots"));
-const WIDTH    = parseInt(flag("--width", "1440"), 10);
-const HEIGHT   = 900; // initial viewport height; screenshots are full-page
+const BACKEND = "http://localhost:8000";
+const OUT_DIR = path.resolve(__dirname, "..", flag("--out", "screenshots"));
+const WIDTH = parseInt(flag("--width", "1440"), 10);
+const HEIGHT = 900; // initial viewport height; screenshots are full-page
 
 // ── Fetch live entity IDs ─────────────────────────────────────────────────────
 
@@ -48,8 +48,8 @@ async function getLiveIds() {
   ]);
   return {
     taxonomyId: taxonomies.items[0]?.id ?? "",
-    schemeId:   schemes.items[0]?.id ?? "",
-    classId:    classes.items[0]?.id ?? "",
+    schemeId: schemes.items[0]?.id ?? "",
+    classId: classes.items[0]?.id ?? "",
   };
 }
 
@@ -60,47 +60,55 @@ function buildRoutes(ids: Awaited<ReturnType<typeof getLiveIds>>) {
 
   return [
     // ── Core ontology ─────────────────────────────────────────
-    { slug: "home",                      path: "/app" },
-    { slug: "taxonomies",                path: "/app/taxonomies" },
-    { slug: "taxonomy-detail",           path: `/app/taxonomies/${taxonomyId}`,  skip: !taxonomyId },
-    { slug: "concept-schemes",           path: "/app/concept-schemes" },
-    { slug: "concept-scheme-detail",     path: `/app/concept-schemes/${schemeId}`, skip: !schemeId },
-    { slug: "classes",                   path: "/app/classes" },
-    { slug: "class-detail",              path: `/app/classes/${classId}`,        skip: !classId },
-    { slug: "individuals",               path: "/app/individuals" },
-    { slug: "relationships",             path: "/app/relationships" },
-    { slug: "properties",                path: "/app/properties" },
+    { slug: "home", path: "/app" },
+    { slug: "taxonomies", path: "/app/taxonomies" },
+    {
+      slug: "taxonomy-detail",
+      path: `/app/taxonomies/${taxonomyId}`,
+      skip: !taxonomyId,
+    },
+    { slug: "concept-schemes", path: "/app/concept-schemes" },
+    {
+      slug: "concept-scheme-detail",
+      path: `/app/concept-schemes/${schemeId}`,
+      skip: !schemeId,
+    },
+    { slug: "classes", path: "/app/classes" },
+    { slug: "class-detail", path: `/app/classes/${classId}`, skip: !classId },
+    { slug: "individuals", path: "/app/individuals" },
+    { slug: "relationships", path: "/app/relationships" },
+    { slug: "properties", path: "/app/properties" },
 
     // ── Reference ─────────────────────────────────────────────
-    { slug: "reference",                 path: "/app/reference" },
-    { slug: "reference-search",          path: "/app/reference/search" },
-    { slug: "reference-properties",      path: "/app/reference/properties" },
-    { slug: "reference-rag-test",        path: "/app/reference/rag-test" },
+    { slug: "reference", path: "/app/reference" },
+    { slug: "reference-search", path: "/app/reference/search" },
+    { slug: "reference-properties", path: "/app/reference/properties" },
+    { slug: "reference-rag-test", path: "/app/reference/rag-test" },
 
     // ── RAG ───────────────────────────────────────────────────
-    { slug: "rag-experiments",           path: "/app/rag/experiments" },
-    { slug: "rag-pipeline-comparison",   path: "/app/rag/pipeline-comparison" },
-    { slug: "rag-test-runner",           path: "/app/rag/test-runner" },
+    { slug: "rag-experiments", path: "/app/rag/experiments" },
+    { slug: "rag-pipeline-comparison", path: "/app/rag/pipeline-comparison" },
+    { slug: "rag-test-runner", path: "/app/rag/test-runner" },
 
     // ── Config ────────────────────────────────────────────────
-    { slug: "config",                    path: "/app/config" },
-    { slug: "config-pipelines",          path: "/app/config/pipelines" },
-    { slug: "config-data-sources",       path: "/app/config/data-sources" },
-    { slug: "config-models",             path: "/app/config/models" },
-    { slug: "config-processing",         path: "/app/config/processing" },
-    { slug: "config-network",            path: "/app/config/network" },
-    { slug: "config-system",             path: "/app/config/system" },
-    { slug: "config-advanced",           path: "/app/config/advanced" },
+    { slug: "config", path: "/app/config" },
+    { slug: "config-pipelines", path: "/app/config/pipelines" },
+    { slug: "config-data-sources", path: "/app/config/data-sources" },
+    { slug: "config-models", path: "/app/config/models" },
+    { slug: "config-processing", path: "/app/config/processing" },
+    { slug: "config-network", path: "/app/config/network" },
+    { slug: "config-system", path: "/app/config/system" },
+    { slug: "config-advanced", path: "/app/config/advanced" },
 
     // ── Monitoring ────────────────────────────────────────────
-    { slug: "monitoring-system-health",  path: "/app/monitoring/system-health" },
-    { slug: "monitoring-task-manager",   path: "/app/monitoring/task-manager" },
-    { slug: "monitoring-analytics",      path: "/app/monitoring/analytics" },
-    { slug: "monitoring-performance",    path: "/app/monitoring/performance" },
-    { slug: "monitoring-llm-trace",      path: "/app/monitoring/llm-traceability" },
+    { slug: "monitoring-system-health", path: "/app/monitoring/system-health" },
+    { slug: "monitoring-task-manager", path: "/app/monitoring/task-manager" },
+    { slug: "monitoring-analytics", path: "/app/monitoring/analytics" },
+    { slug: "monitoring-performance", path: "/app/monitoring/performance" },
+    { slug: "monitoring-llm-trace", path: "/app/monitoring/llm-traceability" },
 
     // ── Data ──────────────────────────────────────────────────
-    { slug: "datasets",                  path: "/app/datasets" },
+    { slug: "datasets", path: "/app/datasets" },
   ] as { slug: string; path: string; skip?: boolean }[];
 }
 
@@ -132,12 +140,14 @@ async function main() {
       });
 
       // Wait for the page to have visible content beyond the nav shell.
-      await page.waitForFunction(
-        () => document.body && document.body.innerText.trim().length > 20,
-        { timeout: 8_000 }
-      ).catch(() => {
-        // Non-fatal — still capture whatever is rendered.
-      });
+      await page
+        .waitForFunction(
+          () => document.body && document.body.innerText.trim().length > 20,
+          { timeout: 8_000 },
+        )
+        .catch(() => {
+          // Non-fatal — still capture whatever is rendered.
+        });
 
       // Brief pause for any client-side transitions to settle.
       await page.waitForTimeout(400);
@@ -147,7 +157,8 @@ async function main() {
       console.log(`✓  ${(stat.size / 1024).toFixed(0)} KB`);
       results.push({ slug: route.slug, status: "ok" });
     } catch (err) {
-      const msg = err instanceof Error ? err.message.split("\n")[0] : String(err);
+      const msg =
+        err instanceof Error ? err.message.split("\n")[0] : String(err);
       console.log(`✗  ${msg}`);
       results.push({ slug: route.slug, status: "error", note: msg });
     }
@@ -156,14 +167,14 @@ async function main() {
   await browser.close();
 
   // ── Summary ───────────────────────────────────────────────────────────────
-  const ok    = results.filter((r) => r.status === "ok").length;
+  const ok = results.filter((r) => r.status === "ok").length;
   const error = results.filter((r) => r.status === "error").length;
   console.log(`\n${ok} captured, ${error} failed`);
   if (error > 0) {
     console.log("Failed:");
-    results.filter((r) => r.status === "error").forEach((r) =>
-      console.log(`  ✗ ${r.slug}: ${r.note}`)
-    );
+    results
+      .filter((r) => r.status === "error")
+      .forEach((r) => console.log(`  ✗ ${r.slug}: ${r.note}`));
   }
 
   // Write an index for easy navigation.
@@ -177,7 +188,7 @@ async function main() {
           <a href="${r.slug}.png" target="_blank">
             <img src="${r.slug}.png" alt="${r.slug}" loading="lazy">
           </a>
-        </figure>`
+        </figure>`,
     )
     .join("\n");
 
@@ -206,7 +217,7 @@ async function main() {
 ${imgs}
   </div>
 </body>
-</html>`
+</html>`,
   );
 
   console.log(`\nIndex: ${indexPath}`);

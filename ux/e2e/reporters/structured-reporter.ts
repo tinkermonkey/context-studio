@@ -122,11 +122,16 @@ export default class StructuredReporter implements Reporter {
   }
 
   private loadSelectorRegistry(): void {
-    const registryPath = path.join(__dirname, "..", "..", "selector-registry.yaml");
+    const registryPath = path.join(
+      __dirname,
+      "..",
+      "..",
+      "selector-registry.yaml",
+    );
     if (!fs.existsSync(registryPath)) {
       console.warn(
         `Selector registry not found at ${registryPath} — selector coverage will be empty. ` +
-        `Create selector-registry.yaml to enable coverage tracking.`
+          `Create selector-registry.yaml to enable coverage tracking.`,
       );
       this.selectorRegistry = {};
       return;
@@ -138,15 +143,16 @@ export default class StructuredReporter implements Reporter {
       if (Object.keys(this.selectorRegistry).length === 0) {
         console.warn(
           `Selector registry at ${registryPath} is empty. ` +
-          `Coverage report will show 0% with all selectors as undocumented.`
+            `Coverage report will show 0% with all selectors as undocumented.`,
         );
       }
     } catch (error) {
-      this.registryParseError = error instanceof Error ? error : new Error(String(error));
+      this.registryParseError =
+        error instanceof Error ? error : new Error(String(error));
       console.error(
         `Failed to parse selector registry YAML at ${registryPath}: ` +
-        `${this.registryParseError.message}. ` +
-        `Coverage report will be unavailable.`
+          `${this.registryParseError.message}. ` +
+          `Coverage report will be unavailable.`,
       );
       this.selectorRegistry = {};
     }
@@ -237,7 +243,9 @@ export default class StructuredReporter implements Reporter {
       ended_at: new Date(endTime).toISOString(),
       duration_ms: endTime - this.startTime,
       is_valid: !this.registryParseError,
-      ...(this.registryParseError && { registry_error: this.registryParseError.message }),
+      ...(this.registryParseError && {
+        registry_error: this.registryParseError.message,
+      }),
       tests: this.tests,
       selector_coverage: selectorCoverage,
     };
@@ -248,7 +256,7 @@ export default class StructuredReporter implements Reporter {
     if (!jsonWriteSuccess) {
       const error = new Error(
         `Failed to write JSON report for run ${runId}. ` +
-        `This is a critical failure as the JSON report is the core agentic deliverable.`
+          `This is a critical failure as the JSON report is the core agentic deliverable.`,
       );
       throw error;
     }
@@ -256,14 +264,16 @@ export default class StructuredReporter implements Reporter {
     if (!markdownWriteSuccess) {
       console.error(
         `⚠️ Failed to write Markdown report for run ${runId}. ` +
-        `JSON report was written successfully, but human-readable summary is unavailable.`
+          `JSON report was written successfully, but human-readable summary is unavailable.`,
       );
     }
 
     this.pruneOldReports();
   }
 
-  private computeTestStatus(test: TestCase): "passed" | "failed" | "skipped" | "flaky" {
+  private computeTestStatus(
+    test: TestCase,
+  ): "passed" | "failed" | "skipped" | "flaky" {
     const outcome = test.outcome();
     if (outcome === "skipped") return "skipped";
     if (outcome === "flaky") return "flaky";
@@ -273,7 +283,11 @@ export default class StructuredReporter implements Reporter {
 
   private extractAttempts(test: TestCase): AttemptReport[] {
     return test.results.map((result) => {
-      if (result.status === "failed" || result.status === "timedOut" || result.status === "interrupted") {
+      if (
+        result.status === "failed" ||
+        result.status === "timedOut" ||
+        result.status === "interrupted"
+      ) {
         return {
           status: result.status,
           duration_ms: result.duration,
@@ -299,7 +313,10 @@ export default class StructuredReporter implements Reporter {
     return failure;
   }
 
-  private extractSelectorsFromTest(test: TestCase, result: TestResult): string[] {
+  private extractSelectorsFromTest(
+    test: TestCase,
+    result: TestResult,
+  ): string[] {
     const selectors = new Set<string>();
 
     // Extract from test location source if available
@@ -313,7 +330,8 @@ export default class StructuredReporter implements Reporter {
           this.fileSourceCache.set(testFile, source);
         }
         // Look for getByTestId calls in the entire test file
-        const selectorPattern = /(?:getByTestId|data-testid)[=\s(]*['"`]([^'"`]+)['"`]/g;
+        const selectorPattern =
+          /(?:getByTestId|data-testid)[=\s(]*['"`]([^'"`]+)['"`]/g;
         let match;
         while ((match = selectorPattern.exec(source)) !== null) {
           selectors.add(match[1]);
@@ -321,7 +339,7 @@ export default class StructuredReporter implements Reporter {
       } catch (error) {
         console.warn(
           `Failed to read test file ${testFile}:`,
-          error instanceof Error ? error.message : String(error)
+          error instanceof Error ? error.message : String(error),
         );
       }
     }
@@ -390,7 +408,7 @@ export default class StructuredReporter implements Reporter {
     });
 
     const coveredCount = Object.values(documented).filter(
-      (d) => d.coverage === "exercised"
+      (d) => d.coverage === "exercised",
     ).length;
     const coveragePercentage =
       Object.keys(documented).length > 0
@@ -412,7 +430,6 @@ export default class StructuredReporter implements Reporter {
     return coverage;
   }
 
-
   private writeJsonReport(report: RunReport, runId: string): boolean {
     const filePath = path.join(this.reportDir, `${runId}.json`);
     try {
@@ -422,7 +439,7 @@ export default class StructuredReporter implements Reporter {
     } catch (error) {
       console.error(
         `Failed to write JSON report to ${filePath}:`,
-        error instanceof Error ? error.message : String(error)
+        error instanceof Error ? error.message : String(error),
       );
       return false;
     }
@@ -460,14 +477,16 @@ export default class StructuredReporter implements Reporter {
 
       // Selector coverage
       markdown += `## Selector Coverage\n\n`;
-      const exercisedCount = Object.values(report.selector_coverage.documented).filter(
-        (d) => d.coverage === "exercised"
-      ).length;
+      const exercisedCount = Object.values(
+        report.selector_coverage.documented,
+      ).filter((d) => d.coverage === "exercised").length;
       markdown += `**Coverage:** ${report.selector_coverage.coverage_percentage}% (${exercisedCount}/${Object.keys(report.selector_coverage.documented).length} documented selectors exercised)\n\n`;
 
       if (report.selector_coverage.gaps.length > 0) {
         markdown += `### Coverage Gaps (Documented but not exercised)\n\n`;
-        markdown += report.selector_coverage.gaps.map((s) => `- \`${s}\``).join("\n");
+        markdown += report.selector_coverage.gaps
+          .map((s) => `- \`${s}\``)
+          .join("\n");
         markdown += `\n\n`;
       }
 
@@ -521,7 +540,7 @@ export default class StructuredReporter implements Reporter {
     } catch (error) {
       console.error(
         `Failed to write markdown report to ${filePath}:`,
-        error instanceof Error ? error.message : String(error)
+        error instanceof Error ? error.message : String(error),
       );
       return false;
     }
@@ -529,13 +548,15 @@ export default class StructuredReporter implements Reporter {
 
   private getGitSha(): string {
     try {
-      const sha = execSync("git rev-parse --short HEAD", { encoding: "utf-8" }).trim();
+      const sha = execSync("git rev-parse --short HEAD", {
+        encoding: "utf-8",
+      }).trim();
       return sha;
     } catch (error) {
       console.warn(
         `Failed to retrieve git commit SHA: ` +
-        `${error instanceof Error ? error.message : String(error)}. ` +
-        `Run ID will use "unknown" as fallback.`
+          `${error instanceof Error ? error.message : String(error)}. ` +
+          `Run ID will use "unknown" as fallback.`,
       );
       return "unknown";
     }
@@ -555,14 +576,17 @@ export default class StructuredReporter implements Reporter {
         let deletedCount = 0;
         for (const file of filesToDelete) {
           const jsonPath = path.join(this.reportDir, file);
-          const mdPath = path.join(this.reportDir, file.replace(".json", ".md"));
+          const mdPath = path.join(
+            this.reportDir,
+            file.replace(".json", ".md"),
+          );
           try {
             fs.unlinkSync(jsonPath);
             deletedCount++;
           } catch (error) {
             console.warn(
               `Failed to delete JSON report ${jsonPath}:`,
-              error instanceof Error ? error.message : String(error)
+              error instanceof Error ? error.message : String(error),
             );
           }
           if (fs.existsSync(mdPath)) {
@@ -571,21 +595,21 @@ export default class StructuredReporter implements Reporter {
             } catch (error) {
               console.warn(
                 `Failed to delete markdown report ${mdPath}:`,
-                error instanceof Error ? error.message : String(error)
+                error instanceof Error ? error.message : String(error),
               );
             }
           }
         }
         if (deletedCount > 0) {
           console.log(
-            `🧹 Pruned ${deletedCount} old reports (keeping last ${maxReports})`
+            `🧹 Pruned ${deletedCount} old reports (keeping last ${maxReports})`,
           );
         }
       }
     } catch (error) {
       console.error(
         `Failed to prune old reports:`,
-        error instanceof Error ? error.message : String(error)
+        error instanceof Error ? error.message : String(error),
       );
     }
   }

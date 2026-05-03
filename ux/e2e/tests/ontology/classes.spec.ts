@@ -43,7 +43,9 @@ test.describe("Ontology Class CRUD Operations", () => {
     await expect(createModal).toBeVisible({ timeout: 5000 });
 
     await page.getByTestId("class-title-input").fill("E2E Created Class");
-    await page.getByTestId("class-description-input").fill("Created via E2E test");
+    await page
+      .getByTestId("class-description-input")
+      .fill("Created via E2E test");
     await page.getByTestId("class-concept-scheme-selector").click();
     await page.locator(`#option-${schemeId}`).click();
     await page.getByTestId("class-submit-button").click();
@@ -56,7 +58,7 @@ test.describe("Ontology Class CRUD Operations", () => {
     // Confirm persistence via API
     const list = await apiRequest<{ items: Array<{ title: string }> }>(
       page,
-      "/api/classes"
+      "/api/classes",
     );
     expect(list.items.some((c) => c.title === "E2E Created Class")).toBe(true);
   });
@@ -90,19 +92,21 @@ test.describe("Ontology Class CRUD Operations", () => {
     await expect(editModal).toBeVisible({ timeout: 5000 });
 
     await page.getByTestId("class-title-input").fill("Class After Update");
-    await page.getByTestId("class-description-input").fill("Updated definition");
+    await page
+      .getByTestId("class-description-input")
+      .fill("Updated definition");
     await page.getByTestId("class-submit-button").click();
 
     await expect(editModal).not.toBeVisible({ timeout: 5000 });
     await waitForAppReady(page);
 
     await expect(
-      page.getByTestId(`class-row-${ontologyClass.id}`)
+      page.getByTestId(`class-row-${ontologyClass.id}`),
     ).toContainText("Class After Update");
 
     const updated = await apiRequest<{ title: string; description: string }>(
       page,
-      `/api/classes/${ontologyClass.id}`
+      `/api/classes/${ontologyClass.id}`,
     );
     expect(updated.title).toBe("Class After Update");
     expect(updated.description).toBe("Updated definition");
@@ -151,7 +155,9 @@ test.describe("Ontology Class CRUD Operations", () => {
     await page.goto("/app/classes");
     await waitForAppReady(page);
 
-    await expect(page.getByTestId(`class-row-${ontologyClass.id}`)).toBeVisible();
+    await expect(
+      page.getByTestId(`class-row-${ontologyClass.id}`),
+    ).toBeVisible();
 
     const apiResponse = await apiRequest<{
       concept_scheme_id: string;

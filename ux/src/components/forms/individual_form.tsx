@@ -74,8 +74,12 @@ const IndividualForm: React.FC<IndividualFormProps> = ({
           const newClassIds = selectedClassIds;
 
           // Detect which classes were removed and added
-          const removedClassIds = oldClassIds.filter(id => !newClassIds.includes(id));
-          const addedClassIds = newClassIds.filter(id => !oldClassIds.includes(id));
+          const removedClassIds = oldClassIds.filter(
+            (id) => !newClassIds.includes(id),
+          );
+          const addedClassIds = newClassIds.filter(
+            (id) => !oldClassIds.includes(id),
+          );
 
           // Add new classes first to ensure at least one class is always present
           // This prevents validation failure when replacing all classes
@@ -140,7 +144,9 @@ const IndividualForm: React.FC<IndividualFormProps> = ({
         }
         setSubmitError(message);
         console.error(
-          isEdit ? "Failed to update individual:" : "Failed to create individual:",
+          isEdit
+            ? "Failed to update individual:"
+            : "Failed to create individual:",
           error,
         );
       }
@@ -194,10 +200,7 @@ const IndividualForm: React.FC<IndividualFormProps> = ({
   );
 
   return (
-    <div
-      className="flex flex-col gap-4"
-      data-testid="individual-form"
-    >
+    <div className="flex flex-col gap-4" data-testid="individual-form">
       {submitError && (
         <Alert color="failure">
           <span className="font-medium">Error:</span> {submitError}
@@ -219,7 +222,10 @@ const IndividualForm: React.FC<IndividualFormProps> = ({
         >
           {(field) => (
             <div>
-              <Label htmlFor="individual-title" className="mb-1 block font-medium">
+              <Label
+                htmlFor="individual-title"
+                className="mb-1 block font-medium"
+              >
                 Title
               </Label>
               <TextInput
@@ -236,9 +242,7 @@ const IndividualForm: React.FC<IndividualFormProps> = ({
           )}
         </form.Field>
 
-        <form.Field
-          name="description"
-        >
+        <form.Field name="description">
           {(field) => (
             <div>
               <Label

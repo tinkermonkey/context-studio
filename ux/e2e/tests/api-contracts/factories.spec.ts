@@ -34,7 +34,9 @@ test.describe("Test Data Factories", () => {
       expect(taxonomy.description).toBe("A test taxonomy");
     });
 
-    test("should create a concept scheme within a taxonomy", async ({ page }) => {
+    test("should create a concept scheme within a taxonomy", async ({
+      page,
+    }) => {
       const taxonomy = await createTaxonomy(page);
       const scheme = await createConceptScheme(page, taxonomy.id, {
         title: "Test Scheme",
@@ -47,7 +49,9 @@ test.describe("Test Data Factories", () => {
       expect(scheme.description).toBe("A test scheme");
     });
 
-    test("should create an ontology class within a scheme", async ({ page }) => {
+    test("should create an ontology class within a scheme", async ({
+      page,
+    }) => {
       const taxonomy = await createTaxonomy(page);
       const scheme = await createConceptScheme(page, taxonomy.id);
       const ontologyClass = await createClass(page, scheme.id, {
@@ -92,7 +96,9 @@ test.describe("Test Data Factories", () => {
   });
 
   test.describe("Composite Factories", () => {
-    test("should create a test hierarchy with taxonomy, scheme, and classes", async ({ page }) => {
+    test("should create a test hierarchy with taxonomy, scheme, and classes", async ({
+      page,
+    }) => {
       const hierarchy = await createTestHierarchy(page, 3);
 
       expect(hierarchy.taxonomy.id).toBeDefined();
@@ -104,7 +110,9 @@ test.describe("Test Data Factories", () => {
       }
     });
 
-    test("should create hierarchy with custom class title prefix", async ({ page }) => {
+    test("should create hierarchy with custom class title prefix", async ({
+      page,
+    }) => {
       const hierarchy = await createTestHierarchy(page, 2, {
         classTitle: "custom-class",
       });

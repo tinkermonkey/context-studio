@@ -14,7 +14,8 @@ type ListResponse<T> = {
   offset: number;
 };
 type IndividualResponse = components["schemas"]["IndividualResponse"];
-type DataPropertyValueResponse = components["schemas"]["DataPropertyValueResponse"];
+type DataPropertyValueResponse =
+  components["schemas"]["DataPropertyValueResponse"];
 
 describe("IndividualService", () => {
   let mockClient: AxiosInstance;
@@ -232,9 +233,9 @@ describe("IndividualService", () => {
     });
 
     it("should validate ID is required", async () => {
-      await expect(
-        service.update("", { title: "New Title" }),
-      ).rejects.toThrow("id is required");
+      await expect(service.update("", { title: "New Title" })).rejects.toThrow(
+        "id is required",
+      );
     });
 
     it("should validate title max length when provided", async () => {
@@ -396,9 +397,9 @@ describe("IndividualService", () => {
     });
 
     it("should validate individual ID is required", async () => {
-      await expect(
-        service.setClassOrder("", ["class-1"]),
-      ).rejects.toThrow("id is required");
+      await expect(service.setClassOrder("", ["class-1"])).rejects.toThrow(
+        "id is required",
+      );
     });
 
     it("should validate class IDs are required", async () => {
@@ -453,9 +454,9 @@ describe("IndividualService", () => {
     });
 
     it("should validate individual ID is required", async () => {
-      await expect(
-        service.getInheritedProperties(""),
-      ).rejects.toThrow("id is required");
+      await expect(service.getInheritedProperties("")).rejects.toThrow(
+        "id is required",
+      );
     });
 
     it("should send GET request to correct endpoint", async () => {
@@ -475,7 +476,9 @@ describe("IndividualService", () => {
 
       const callConfig = vi.mocked(mockClient.request).mock.calls[0][0];
       expect(callConfig.method).toBe("GET");
-      expect(callConfig.url).toBe("/api/individuals/ind-1/inherited-properties");
+      expect(callConfig.url).toBe(
+        "/api/individuals/ind-1/inherited-properties",
+      );
     });
   });
 });

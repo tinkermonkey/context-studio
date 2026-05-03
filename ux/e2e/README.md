@@ -273,11 +273,11 @@ This project ships three Claude Code subagents in `.claude/agents/switchyard/` t
 
 ### Agents
 
-| Agent | Role | Tools |
-|---|---|---|
-| `playwright-test-planner` | Reads `app-context.md`, `selector-registry.yaml`, and OpenAPI types and produces a Markdown spec at `ux/e2e/documentation/specs/<feature>.md`. Refuses to invent selectors. | Read, Glob, Grep, Bash |
-| `playwright-test-generator` | Turns an approved planner spec into a single `.spec.ts` file under `ux/e2e/tests/`. Runs `npm run validate-selectors` after writing. | Read, Edit, Write, Glob, Grep, Bash |
-| `playwright-test-healer` | Diagnoses a failing test from a structured report; proposes a minimal draft-PR fix or escalates as a real bug. Refuses anti-patterns. | Read, Edit, Glob, Grep, Bash |
+| Agent                       | Role                                                                                                                                                                        | Tools                               |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| `playwright-test-planner`   | Reads `app-context.md`, `selector-registry.yaml`, and OpenAPI types and produces a Markdown spec at `ux/e2e/documentation/specs/<feature>.md`. Refuses to invent selectors. | Read, Glob, Grep, Bash              |
+| `playwright-test-generator` | Turns an approved planner spec into a single `.spec.ts` file under `ux/e2e/tests/`. Runs `npm run validate-selectors` after writing.                                        | Read, Edit, Write, Glob, Grep, Bash |
+| `playwright-test-healer`    | Diagnoses a failing test from a structured report; proposes a minimal draft-PR fix or escalates as a real bug. Refuses anti-patterns.                                       | Read, Edit, Glob, Grep, Bash        |
 
 ### Overview
 
@@ -289,12 +289,14 @@ Feature Request → Planner → Spec Review → Generator → Validator + Tester
 ### Step 1: Write a Feature Description
 
 Start with a clear description of what you want to test:
+
 - Feature name
 - User flow to test
 - Entities involved
 - Expected behavior
 
 Example:
+
 ```
 Test creating a new taxonomy and deleting it.
 
@@ -320,6 +322,7 @@ Task(subagent_type="playwright-test-planner",
 ```
 
 The planner will:
+
 1. Read the authoritative product knowledge (`./documentation/app-context.md`)
 2. Consult the selector registry (`ux/selector-registry.yaml`)
 3. Review entity field names from the OpenAPI contract
@@ -347,6 +350,7 @@ Before code is written, review the test plan:
 4. **Approve** by marking the spec ready for generation
 
 If changes are needed:
+
 - Modify the spec and get planner feedback, OR
 - Ask the planner to revise the spec
 
@@ -360,6 +364,7 @@ Task(subagent_type="playwright-test-generator",
 ```
 
 The generator will:
+
 1. Read the test specification
 2. Consult the product contract (`app-context.md`)
 3. Review the selector registry
@@ -386,12 +391,14 @@ npm run test:e2e
 ```
 
 The validator (`ux/scripts/check_test_contract.ts`) will:
+
 - Extract all `data-testid` references from your test file
 - Verify each selector exists in `ux/selector-registry.yaml`
 - **Fail with exit code 1** if any selector is missing
 - Tests cannot run until validation passes
 
 Review the test code:
+
 1. **Selector validation**: Runs automatically
 2. **Code quality**: Check for clarity and maintainability
 3. **Coverage**: Verify all test cases from spec are implemented
@@ -399,12 +406,14 @@ Review the test code:
 5. **Factory usage**: Verify factories are used for entity creation
 
 If changes are needed:
+
 - Ask the generator to revise
 - Or make manual fixes and validate with `npm run validate-selectors`
 
 ### Step 6: Merge
 
 Once tests pass and are reviewed:
+
 1. Commit the test file
 2. Create a pull request
 3. Ensure CI passes (E2E tests run as part of CI)
@@ -432,16 +441,19 @@ Task(subagent_type="playwright-test-healer",
 Tests can fail for three different reasons:
 
 #### 1. **Selector Renamed** (Low Risk)
+
 - The UI element exists but the `data-testid` attribute changed
 - Example: `taxonomy-submit-button` → `ontology-taxonomy-submit-button`
 - **Action**: Healer proposes a diff to update the selector
 
 #### 2. **Timing Changed** (Low Risk)
+
 - The element takes longer to appear, or a network operation changed
 - Example: Test expects element to appear immediately, but now takes a moment
 - **Action**: Healer proposes a conditional wait instead of a fixed timeout
 
 #### 3. **Likely Real Bug** (High Risk)
+
 - Core functionality fails unexpectedly (API error, CRUD operation fails, assertion fails on real data)
 - Example: API returns 500, entity field is null, delete fails with 403
 - **Action**: Healer escalates as a bug report (NO code fix)
@@ -462,6 +474,7 @@ Tests can fail for three different reasons:
 The healer REFUSES to propose any of these anti-patterns:
 
 **❌ Fixed timeouts without conditions**
+
 ```typescript
 // REFUSE
 await page.waitForTimeout(2000);
@@ -471,6 +484,7 @@ await page.waitForLoadState("networkidle");
 ```
 
 **❌ Vacuous assertions**
+
 ```typescript
 // REFUSE
 expect(true).toBe(true);
@@ -481,6 +495,7 @@ expect(page.url()).toContain("/app/taxonomies");
 ```
 
 **❌ Try/catch to swallow errors**
+
 ```typescript
 // REFUSE
 try {
@@ -494,25 +509,28 @@ await expect(element).toContainText("Created");
 ```
 
 **❌ Replacing getByTestId with CSS or XPath**
+
 ```typescript
 // REFUSE
-page.locator("button.submit-btn")  // CSS
-page.locator("//button[@id='submit']")  // XPath
+page.locator("button.submit-btn"); // CSS
+page.locator("//button[@id='submit']"); // XPath
 
 // PROPOSE INSTEAD (investigate the selector change)
-page.getByTestId("ontology-taxonomy-submit-button")
+page.getByTestId("ontology-taxonomy-submit-button");
 ```
 
 ### Draft PR Workflow
 
 Every healer PR:
+
 - Is opened as a **draft** (humans must review before merge)
 - Includes a **category** tag: `[Selector Renamed]`, `[Timing Changed]`, or `[Likely Real Bug]`
 - Includes a **one-paragraph rationale** explaining why the fix is safe
 - Passes **validation** before opening (selectors must exist in registry)
 
 Example PR:
-```
+
+````
 Title: [Healer] Fix failing: taxonomies (Selector Renamed)
 
 ## Failure Summary
@@ -522,19 +540,21 @@ Reason: getByTestId("taxonomy-submit-button") not found
 
 ## Proposed Fix
 
-The selector was renamed from "taxonomy-submit-button" to 
-"ontology-taxonomy-submit-button" in the UI refactoring. 
+The selector was renamed from "taxonomy-submit-button" to
+"ontology-taxonomy-submit-button" in the UI refactoring.
 The component still exists and functions identically.
 
 ```diff
 - await page.getByTestId("taxonomy-submit-button").click();
 + await page.getByTestId("ontology-taxonomy-submit-button").click();
-```
+````
 
 ## Validation
+
 - ✅ New selector exists in selector-registry.yaml
 - ✅ No anti-patterns introduced
 - ✅ Validator passes
+
 ```
 
 ### Escalation as Bug
@@ -542,23 +562,28 @@ The component still exists and functions identically.
 When the healer detects a likely real bug, it opens a draft PR with no code changes:
 
 ```
+
 Title: [Healer] Bug report: taxonomies (Likely Real Bug)
 
 ## Bug Report
+
 Test: ux/e2e/tests/ontology/taxonomies.spec.ts::create-and-delete-taxonomy
 Expected: POST /api/taxonomies returns 201
 Actual: API returned 500 Internal Server Error
 
 ## Evidence
+
 [Failure log showing API error]
 
 ## Assessment
-This appears to be a real product bug, not a test failure. 
-The test correctly validates that creating a taxonomy should succeed, 
+
+This appears to be a real product bug, not a test failure.
+The test correctly validates that creating a taxonomy should succeed,
 but the API is returning an error.
 
 Next step: Create a product issue to investigate and fix the backend.
-```
+
+````
 
 ### Implementation
 
@@ -616,7 +641,7 @@ When you add a new testable element to the UI:
 1. **Add the `data-testid` attribute** to your React component:
    ```tsx
    <button data-testid="my-entity-submit-button">Submit</button>
-   ```
+````
 
 2. **Follow the naming convention**:
    - Format: `{entity-type}-{component}-{action}`
@@ -624,6 +649,7 @@ When you add a new testable element to the UI:
    - Dynamic selectors: `{entity-type}-row-{id}` (append entity UUID)
 
 3. **Update the registry** (`selector-registry.yaml`):
+
    ```yaml
    forms:
      my_entity_submit_button:
@@ -634,6 +660,7 @@ When you add a new testable element to the UI:
    ```
 
 4. **Validate your changes**:
+
    ```bash
    npm run validate-selectors
    ```
@@ -676,6 +703,7 @@ npm run test:e2e     # Validates first, then runs playwright
 ```
 
 **Exit codes**:
+
 - `0` = All checks passed, or warnings present (non-blocking) ✅
 - `1` = Hard failure: test references non-existent selector ❌
 
@@ -684,6 +712,7 @@ Tests cannot proceed if a test references a non-existent selector. Warnings indi
 ### Anti-Patterns to Avoid
 
 Tests must NEVER:
+
 - ❌ Use `waitForTimeout()` without a condition (causes flaky tests)
 - ❌ Assert trivial conditions like `expect(true).toBe(true)`
 - ❌ Hardcode UUIDs (generate via factories instead)

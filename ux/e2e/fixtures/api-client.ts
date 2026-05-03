@@ -22,14 +22,22 @@ export class APIError extends Error {
 export async function apiRequest(
   page: Page,
   endpoint: string,
-  options: { method: "DELETE"; body?: Record<string, unknown>; headers?: Record<string, string> }
+  options: {
+    method: "DELETE";
+    body?: Record<string, unknown>;
+    headers?: Record<string, string>;
+  },
 ): Promise<void>;
 
 // Overload: all other methods return T
 export async function apiRequest<T = unknown>(
   page: Page,
   endpoint: string,
-  options?: { method?: "GET" | "POST" | "PUT" | "PATCH"; body?: Record<string, unknown>; headers?: Record<string, string> }
+  options?: {
+    method?: "GET" | "POST" | "PUT" | "PATCH";
+    body?: Record<string, unknown>;
+    headers?: Record<string, string>;
+  },
 ): Promise<T>;
 
 // Implementation

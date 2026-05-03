@@ -45,11 +45,18 @@ test.describe("Concept Scheme CRUD Operations", () => {
     const createModal = page.getByTestId("concept-scheme-create-modal").first();
     await expect(createModal).toBeVisible({ timeout: 5000 });
 
-    await page.getByTestId("concept-scheme-title-input").fill("E2E Created Scheme");
-    await page.getByTestId("concept-scheme-description-input").fill("Created via E2E");
+    await page
+      .getByTestId("concept-scheme-title-input")
+      .fill("E2E Created Scheme");
+    await page
+      .getByTestId("concept-scheme-description-input")
+      .fill("Created via E2E");
 
     // Select the parent taxonomy (required to submit)
-    await page.getByTestId("concept-scheme-taxonomy-selector").getByRole("button").click();
+    await page
+      .getByTestId("concept-scheme-taxonomy-selector")
+      .getByRole("button")
+      .click();
     await page.locator(`#option-${taxonomyId}`).click();
 
     await page.getByTestId("concept-scheme-submit-button").click();
@@ -61,7 +68,7 @@ test.describe("Concept Scheme CRUD Operations", () => {
 
     const list = await apiRequest<{ items: Array<{ title: string }> }>(
       page,
-      "/api/schemes"
+      "/api/schemes",
     );
     expect(list.items.some((s) => s.title === "E2E Created Scheme")).toBe(true);
   });
@@ -81,10 +88,10 @@ test.describe("Concept Scheme CRUD Operations", () => {
     await expect(page.getByText("Scheme Beta")).toBeVisible();
 
     await expect(
-      page.getByTestId(`concept-scheme-row-${scheme1.id}`)
+      page.getByTestId(`concept-scheme-row-${scheme1.id}`),
     ).toBeVisible();
     await expect(
-      page.getByTestId(`concept-scheme-row-${scheme2.id}`)
+      page.getByTestId(`concept-scheme-row-${scheme2.id}`),
     ).toBeVisible();
   });
 
@@ -104,20 +111,24 @@ test.describe("Concept Scheme CRUD Operations", () => {
     const editModal = page.getByTestId("concept-scheme-edit-modal").first();
     await expect(editModal).toBeVisible({ timeout: 5000 });
 
-    await page.getByTestId("concept-scheme-title-input").fill("Scheme After Update");
-    await page.getByTestId("concept-scheme-description-input").fill("Updated description");
+    await page
+      .getByTestId("concept-scheme-title-input")
+      .fill("Scheme After Update");
+    await page
+      .getByTestId("concept-scheme-description-input")
+      .fill("Updated description");
     await page.getByTestId("concept-scheme-submit-button").click();
 
     await expect(editModal).not.toBeVisible({ timeout: 5000 });
     await waitForAppReady(page);
 
     await expect(
-      page.getByTestId(`concept-scheme-row-${scheme.id}`)
+      page.getByTestId(`concept-scheme-row-${scheme.id}`),
     ).toContainText("Scheme After Update");
 
     const updated = await apiRequest<{ title: string; description: string }>(
       page,
-      `/api/schemes/${scheme.id}`
+      `/api/schemes/${scheme.id}`,
     );
     expect(updated.title).toBe("Scheme After Update");
     expect(updated.description).toBe("Updated description");
@@ -168,12 +179,12 @@ test.describe("Concept Scheme CRUD Operations", () => {
     await waitForAppReady(page);
 
     await expect(
-      page.getByTestId(`concept-scheme-row-${scheme.id}`)
+      page.getByTestId(`concept-scheme-row-${scheme.id}`),
     ).toBeVisible();
 
     const apiResponse = await apiRequest<{ taxonomy_id: string }>(
       page,
-      `/api/schemes/${scheme.id}`
+      `/api/schemes/${scheme.id}`,
     );
     expect(apiResponse.taxonomy_id).toBe(taxonomyId);
   });

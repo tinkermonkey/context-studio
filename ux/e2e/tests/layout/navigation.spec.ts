@@ -44,7 +44,10 @@ test.describe("Navigation", () => {
       await page.getByText("Knowledge Graph").first().click();
       const link = page.getByRole("link", { name: route.label, exact: true });
       // Hard assertion — a missing link is a failure, not a no-op.
-      await expect(link, `Nav link "${route.label}" should be visible`).toBeVisible();
+      await expect(
+        link,
+        `Nav link "${route.label}" should be visible`,
+      ).toBeVisible();
       await link.click();
       await page.waitForLoadState("networkidle");
       expect(

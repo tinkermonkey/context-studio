@@ -23,11 +23,11 @@ This test validates the core taxonomy lifecycle: creating a new taxonomy and the
   4. Fill in `description` field with "A test taxonomy for validation" using selector `data-testid="taxonomy-description-input"`
   5. Click submit button with selector `data-testid="taxonomy-submit-button"`
   6. Modal closes automatically
-- **Expected Result**: 
+- **Expected Result**:
   - Taxonomy appears in the list on `/app/taxonomies`
   - Taxonomy has `id`, `title`, `description`, `version=1`, `created_at`, and `last_modified` fields
   - Taxonomy is visible and searchable in the table
-- **Selectors Used**: 
+- **Selectors Used**:
   - `taxonomy-add-button` (verified ✓)
   - `taxonomy-form` (verified ✓)
   - `taxonomy-title-input` (verified ✓)
@@ -41,7 +41,7 @@ This test validates the core taxonomy lifecycle: creating a new taxonomy and the
 
 ### Test Case 2: Delete a Taxonomy via UI
 
-- **Preconditions**: 
+- **Preconditions**:
   - A taxonomy exists (created in Test Case 1 or via factory)
   - User is on the taxonomy detail or list page
 - **Steps**:
@@ -100,6 +100,7 @@ This test validates the core taxonomy lifecycle: creating a new taxonomy and the
 ### Anti-Pattern Validations
 
 Tests verify that the following anti-patterns are NOT present:
+
 - ✓ No `waitForTimeout()` without conditions (use explicit waits)
 - ✓ No hardcoded UUIDs (factory-created IDs only)
 - ✓ No invented selectors (all from registry)
@@ -114,14 +115,16 @@ None - all required selectors are documented in `ux/selector-registry.yaml`.
 ## Factory Usage
 
 This plan uses existing factory patterns from `ux/e2e/fixtures/factories.ts`:
+
 - `createTaxonomy(page, overrides)` — Creates a taxonomy via API
 - `clearTestData(page)` — Cleans up all test data via API (use in `test.afterEach`)
 
 Example:
+
 ```typescript
-const taxonomy = await createTaxonomy(page, { 
-  title: "Test Taxonomy", 
-  description: "Test description" 
+const taxonomy = await createTaxonomy(page, {
+  title: "Test Taxonomy",
+  description: "Test description",
 });
 // Use taxonomy.id in subsequent test steps
 ```
