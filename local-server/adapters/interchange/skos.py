@@ -17,6 +17,7 @@ Mapping strategy:
 from __future__ import annotations
 
 import hashlib
+import uuid
 from typing import Optional, Dict, Any
 
 from rdflib import Graph, Namespace, URIRef, Literal, RDF
@@ -35,6 +36,8 @@ from domain.ontology.entities import (
     Taxonomy,
     ConceptScheme,
     Class,
+    Individual,
+    PropertyDefinition,
 )
 from domain.ontology.value_objects import ExternalReference
 
@@ -106,13 +109,7 @@ class SKOSSerializer(OntologySerializer):
                 case SerializationScopeType.ENTITY_SET:
                     self._serialize_entity_set(scope.entity_ids)
 
-            format_map = {
-                "turtle": "turtle",
-                "xml": "xml",
-                "json-ld": "json-ld",
-            }
-            format_str = format_map.get(self.format, "turtle")
-            result = self.graph.serialize(format=format_str)
+            result = self.graph.serialize(format=self.format)
             # Ensure result is bytes
             if isinstance(result, str):
                 return result.encode("utf-8")
@@ -162,6 +159,16 @@ class SKOSSerializer(OntologySerializer):
             class_entity = self.ontology_repo.get_class(entity_id)
             if class_entity:
                 self._add_class_to_graph(class_entity)
+                continue
+
+            individual = self.ontology_repo.get_individual(entity_id)
+            if individual:
+                self._add_individual_to_graph(individual)
+                continue
+
+            prop = self.ontology_repo.get_property_definition(entity_id)
+            if prop:
+                self._add_property_to_graph(prop)
 
     def _add_taxonomy_to_graph(self, taxonomy: Taxonomy) -> None:
         """Add a taxonomy and its descendants to the graph."""
@@ -223,6 +230,35 @@ class SKOSSerializer(OntologySerializer):
         # Add external references
         for ext_ref in class_entity.external_references:
             self._add_external_reference(class_uri, ext_ref)
+
+    def _add_individual_to_graph(self, individual: Individual) -> None:
+        """Add an individual to the graph as an RDF resource."""
+        assert self.graph is not None
+        ind_uri = self._entity_uri(individual.id)
+        # Represent individual with RDF type
+        self.graph.add((ind_uri, RDF.type, URIRef("http://www.w3.org/2002/07/owl#NamedIndividual")))
+        self.graph.add((ind_uri, SKOS.prefLabel, Literal(individual.title)))
+        if individual.description:
+            self.graph.add((ind_uri, SKOS.definition, Literal(individual.description)))
+
+        # Add class memberships
+        for class_id in individual.class_ids:
+            class_uri = self._entity_uri(class_id)
+            self.graph.add((ind_uri, RDF.type, class_uri))
+
+        # Add external references
+        for ext_ref in individual.external_references:
+            self._add_external_reference(ind_uri, ext_ref)
+
+    def _add_property_to_graph(self, prop: PropertyDefinition) -> None:
+        """Add a property definition to the graph."""
+        assert self.graph is not None
+        prop_uri = self._entity_uri(prop.id)
+        # Represent property definition with RDF type
+        self.graph.add((prop_uri, RDF.type, URIRef("http://www.w3.org/2002/07/owl#ObjectProperty")))
+        self.graph.add((prop_uri, SKOS.prefLabel, Literal(prop.title)))
+        if prop.description:
+            self.graph.add((prop_uri, SKOS.definition, Literal(prop.description)))
 
     def _add_external_reference(
         self, subject_uri: URIRef, ext_ref: ExternalReference
@@ -297,16 +333,20 @@ class SKOSDeserializer(OntologyDeserializer):
                 source_bytes = source
 
             # Try to parse with auto-detection of format
-            try:
-                self.graph.parse(data=source_bytes, format="turtle")
-            except Exception:
+            parse_error = None
+            for fmt in ["turtle", "xml", "json-ld"]:
                 try:
-                    self.graph.parse(data=source_bytes, format="xml")
-                except Exception:
-                    try:
-                        self.graph.parse(data=source_bytes, format="json-ld")
-                    except Exception as e:
-                        raise ValueError(f"Failed to parse SKOS RDF: {str(e)}") from e
+                    self.graph = Graph()
+                    self.graph.parse(data=source_bytes, format=fmt)
+                    break
+                except Exception as e:
+                    parse_error = e
+                    continue
+            else:
+                # All formats failed
+                raise ValueError(
+                    f"Failed to parse SKOS RDF in any format: {str(parse_error)}"
+                ) from parse_error
 
             # Extract entities from RDF
             self._extract_entities_from_graph()
@@ -485,14 +525,21 @@ class SKOSDeserializer(OntologyDeserializer):
                 )
 
     def _uri_to_id(self, uri: Node) -> Optional[str]:
-        """Extract the ID from a LOCAL URI."""
+        """
+        Extract the ID from a URI.
+
+        For LOCAL namespace URIs, extract the ID.
+        For fragment-based URIs, extract the fragment.
+        For external URIs without fragments, generate a UUID.
+        """
         uri_str = str(uri)
         if uri_str.startswith(str(LOCAL)):
             return uri_str[len(str(LOCAL)) :]
         # If it's a UUID-like string in the fragment, extract it
         if "#" in uri_str:
             return uri_str.split("#")[-1]
-        return None
+        # For external URIs without fragments, generate a UUID
+        return str(uuid.uuid4())
 
     def _parse_external_reference_uri(
         self, uri_str: str
