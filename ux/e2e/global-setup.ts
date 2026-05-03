@@ -350,6 +350,7 @@ async function globalSetup(): Promise<void> {
     if (backendProcess) backendProcess.kill("SIGTERM");
     throw new Error(
       `Browser health check failed: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
     );
   } finally {
     // Runs on both success and failure — browser is always closed.

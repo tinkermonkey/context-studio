@@ -142,9 +142,7 @@ class SQLiteInterchangeRepository:
                 orm_runs = session.execute(query).scalars().all()
                 return [self._orm_to_domain(r) for r in orm_runs]
         except SQLAlchemyError as e:
-            raise RuntimeError(
-                f"Failed to list import runs by status: {str(e)}"
-            ) from e
+            raise RuntimeError(f"Failed to list import runs by status: {str(e)}") from e
 
     def update(self, import_run: ImportRun) -> ImportRun:
         """
@@ -241,14 +239,16 @@ class SQLiteInterchangeRepository:
         scope_type = SerializationScopeType(orm_run.scope_type)
         scope = SerializationScope(
             scope_type=scope_type,
-            taxonomy_id=orm_run.scope_taxonomy_id,
-            scheme_id=orm_run.scope_scheme_id,
-            include_descendants=orm_run.scope_include_descendants or False,
+            taxonomy_id=cast(str | None, orm_run.scope_taxonomy_id),
+            scheme_id=cast(str | None, orm_run.scope_scheme_id),
+            include_descendants=cast(bool, orm_run.scope_include_descendants or False),
             entity_ids=tuple(orm_run.scope_entity_ids or []),
         )
 
         # Reconstruct resolutions
-        resolutions = self._deserialize_resolutions(orm_run.resolutions or [])
+        resolutions = self._deserialize_resolutions(
+            cast(list[dict], orm_run.resolutions or [])
+        )
 
         return ImportRun(
             id=cast(str, orm_run.id),
