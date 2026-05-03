@@ -5,7 +5,7 @@
  */
 
 import React from "react";
-import { Button, Card, Label, Select, Checkbox } from "flowbite-react";
+import { Button, Card, Label, Select } from "flowbite-react";
 import { Download } from "lucide-react";
 import { useInterchangeExport } from "@/api/hooks/interchange";
 import { SerializationScope } from "@/api/types/interchange";

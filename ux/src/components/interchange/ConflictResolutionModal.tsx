@@ -130,10 +130,6 @@ export function ConflictResolutionModal({
     }
   };
 
-  const getGroupTestId = (matchKind: string): string => {
-    return `interchange-conflict-group-${matchKind}`;
-  };
-
   return (
     <Modal show={isOpen} onClose={onClose} size="4xl" data-testid="interchange-conflict-resolution-modal">
       <Modal.Header>Resolve Import Conflicts</Modal.Header>
@@ -174,7 +170,6 @@ export function ConflictResolutionModal({
                     <ConflictRow
                       key={idx}
                       conflict={conflict}
-                      matchKind="external_reference"
                       conflictIndex={String(conflict.incoming.id || idx)}
                       resolution={
                         resolutions.get(
@@ -246,7 +241,6 @@ export function ConflictResolutionModal({
                     <ConflictRow
                       key={idx}
                       conflict={conflict}
-                      matchKind="uuid"
                       conflictIndex={String(conflict.incoming.id || idx)}
                       resolution={
                         resolutions.get(
@@ -315,7 +309,6 @@ export function ConflictResolutionModal({
                     <ConflictRow
                       key={idx}
                       conflict={conflict}
-                      matchKind="title"
                       conflictIndex={String(conflict.incoming.id || idx)}
                       resolution={
                         resolutions.get(
@@ -393,7 +386,6 @@ export function ConflictResolutionModal({
 
 interface ConflictRowProps {
   conflict: ImportConflict;
-  matchKind: string;
   conflictIndex: string;
   resolution: ResolutionKind;
   onResolutionChange: (resolution: ResolutionKind) => void;
@@ -401,7 +393,6 @@ interface ConflictRowProps {
 
 function ConflictRow({
   conflict,
-  matchKind,
   conflictIndex,
   resolution,
   onResolutionChange,

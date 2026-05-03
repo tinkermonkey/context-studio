@@ -11,7 +11,6 @@ import {
 import type {
   ImportPlanResponse,
   ImportRunCommitResponse,
-  ImportRun,
   ChangeEvent,
 } from "@/api/types/interchange";
 
@@ -273,7 +272,7 @@ test.describe("Interchange (Import/Export)", () => {
     // Preconditions: Create and import data
     const taxonomy = await createTaxonomy(page);
     const scheme = await createConceptScheme(page, taxonomy.id);
-    const existingClass = await createClass(page, scheme.id);
+    const _existingClass = await createClass(page, scheme.id);
 
     // Create import file
     const skosContent = `<?xml version="1.0" encoding="UTF-8"?>
@@ -336,9 +335,9 @@ test.describe("Interchange (Import/Export)", () => {
     // Preconditions: Create and import data
     const taxonomy = await createTaxonomy(page);
     const scheme = await createConceptScheme(page, taxonomy.id);
-    const class1 = await createClass(page, scheme.id, { title: "Class1" });
-    const class2 = await createClass(page, scheme.id, { title: "Class2" });
-    const class3 = await createClass(page, scheme.id, { title: "Class3" });
+    const _class1 = await createClass(page, scheme.id, { title: "Class1" });
+    const _class2 = await createClass(page, scheme.id, { title: "Class2" });
+    const _class3 = await createClass(page, scheme.id, { title: "Class3" });
 
     // Create import file
     const skosContent = `<?xml version="1.0" encoding="UTF-8"?>
@@ -426,7 +425,7 @@ test.describe("Interchange (Import/Export)", () => {
     }
 
     // Create import with multiple changes
-    const classIds = classes.map((c) => c.id).join(",");
+    const _classIds = classes.map((c) => c.id).join(",");
     const skosContent = `<?xml version="1.0" encoding="UTF-8"?>
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:skos="http://www.w3.org/2004/02/skos/core#">
   <rdf:Description rdf:about="http://example.org/class/1">
