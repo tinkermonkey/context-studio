@@ -34,6 +34,7 @@ class _S3FileParseError(RuntimeError):
     This exception is raised when a downloaded S3 object fails to parse as JSON Lines,
     and is caught by the outer exception handler to be re-raised as SyncError.
     """
+
     pass
 
 
@@ -77,7 +78,9 @@ class S3SyncAdapter:
             import boto3
             import botocore.exceptions
         except ImportError:
-            _logger.error("boto3 is required for S3 sync adapter. Install with: pip install boto3")
+            _logger.error(
+                "boto3 is required for S3 sync adapter. Install with: pip install boto3"
+            )
             raise
 
         self._bucket = bucket
@@ -118,7 +121,14 @@ class S3SyncAdapter:
         started_at = datetime.now(timezone.utc)
         if not events:
             completed_at = datetime.now(timezone.utc)
-            return SyncResult(pushed=0, pulled=0, errors=(), pushed_event_ids=(), started_at=started_at, completed_at=completed_at)
+            return SyncResult(
+                pushed=0,
+                pulled=0,
+                errors=(),
+                pushed_event_ids=(),
+                started_at=started_at,
+                completed_at=completed_at,
+            )
 
         pushed_event_ids = []
         try:
@@ -164,7 +174,14 @@ class S3SyncAdapter:
                 key,
             )
             completed_at = datetime.now(timezone.utc)
-            return SyncResult(pushed=len(pushed_event_ids), pulled=0, errors=(), pushed_event_ids=tuple(pushed_event_ids), started_at=started_at, completed_at=completed_at)
+            return SyncResult(
+                pushed=len(pushed_event_ids),
+                pulled=0,
+                errors=(),
+                pushed_event_ids=tuple(pushed_event_ids),
+                started_at=started_at,
+                completed_at=completed_at,
+            )
 
         except (ValueError, TypeError, KeyError, OSError, self._client_error) as e:
             error_msg = f"Failed to push changes to S3: {e}"
@@ -210,9 +227,9 @@ class S3SyncAdapter:
                         if len(parts) >= 3:
                             try:
                                 date_str = parts[-2]
-                                file_date = datetime.strptime(date_str, "%Y-%m-%d").replace(
-                                    tzinfo=timezone.utc
-                                )
+                                file_date = datetime.strptime(
+                                    date_str, "%Y-%m-%d"
+                                ).replace(tzinfo=timezone.utc)
                                 # Only skip if file date is before the date part of since
                                 # (file_date is at midnight, so compare dates not times)
                                 if file_date.date() < since.date():
@@ -228,7 +245,9 @@ class S3SyncAdapter:
 
                     # Download the file
                     try:
-                        response = self._s3_client.get_object(Bucket=self._bucket, Key=key)
+                        response = self._s3_client.get_object(
+                            Bucket=self._bucket, Key=key
+                        )
                         content = response["Body"].read().decode("utf-8")
                     except (OSError, self._client_error) as e:
                         error_msg = f"Failed to download S3 object {key}: {e}"

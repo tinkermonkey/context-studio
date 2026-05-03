@@ -14,7 +14,14 @@ from types import MappingProxyType
 from typing import Optional
 
 from .entities import SystemHealth, BackgroundTask, AppConfiguration
-from .value_objects import BackgroundTaskStatus, SystemHealthStatus, DatabaseHealth, ServiceMetrics, ComponentStatus, BackgroundTaskSummary
+from .value_objects import (
+    BackgroundTaskStatus,
+    SystemHealthStatus,
+    DatabaseHealth,
+    ServiceMetrics,
+    ComponentStatus,
+    BackgroundTaskSummary,
+)
 from .ports import MetricsCollector, ConfigurationStore
 from .exceptions import TaskNotFoundError, ConfigurationError
 
@@ -59,8 +66,12 @@ class AdminService:
         # Initialize defaults for safe fallback on any component failure
         db_health = DatabaseHealth(connected=False, issues=())
         service_metrics = ServiceMetrics(uptime_seconds=0.0, llm_providers_available=())
-        embedding_status = ComponentStatus(available=False, details="Health check not performed")
-        nlp_status = ComponentStatus(available=False, details="Health check not performed")
+        embedding_status = ComponentStatus(
+            available=False, details="Health check not performed"
+        )
+        nlp_status = ComponentStatus(
+            available=False, details="Health check not performed"
+        )
         task_summary = BackgroundTaskSummary(by_status=MappingProxyType({}))
 
         # Call each port method with individual error handling
@@ -210,9 +221,7 @@ class AdminService:
         """
         return self._config.reset_to_defaults()
 
-    def update_configuration(
-        self, section: str, updates: dict
-    ) -> AppConfiguration:
+    def update_configuration(self, section: str, updates: dict) -> AppConfiguration:
         """
         Update a configuration section.
 
@@ -239,7 +248,9 @@ class AdminService:
         # Get the current section value
         section_value = getattr(config, section, None)
         if section_value is None:
-            raise ConfigurationError(f"Configuration section '{section}' is not configured")
+            raise ConfigurationError(
+                f"Configuration section '{section}' is not configured"
+            )
 
         # Validate that section_value is a dict before attempting to update
         if not isinstance(section_value, dict):
@@ -328,5 +339,7 @@ class AdminService:
             InvalidStateTransitionError: If the status transition is invalid
         """
         task = self.get_task(task_id)
-        task.transition_to(status, datetime.now(timezone.utc), error=error, result=result)
+        task.transition_to(
+            status, datetime.now(timezone.utc), error=error, result=result
+        )
         return task

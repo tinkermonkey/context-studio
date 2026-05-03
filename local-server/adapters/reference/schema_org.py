@@ -187,7 +187,9 @@ class SchemaOrgSource:
 
             return relations
         except Exception as e:
-            logger.error(f"Unexpected error during schema.org get_relations for '{uri}': {e}")
+            logger.error(
+                f"Unexpected error during schema.org get_relations for '{uri}': {e}"
+            )
             raise ReferenceSourceError(
                 "Unexpected error during schema.org get_relations"
             ) from e
@@ -221,7 +223,9 @@ class SchemaOrgSource:
         """
         return await run_sync_in_executor(self.search, term, limit)
 
-    async def get_relations_async(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
+    async def get_relations_async(
+        self, uri: str, limit: int = 10
+    ) -> list[ReferenceRelation]:
         """
         Get relationships connected to a URI in schema.org (async version).
 

@@ -12,7 +12,9 @@ import sys
 import os
 import uuid
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import pytest
 from sqlalchemy import create_engine
@@ -27,7 +29,12 @@ from domain.ontology.entities import (
     Relationship,
 )
 from domain.ontology.value_objects import ExternalReference
-from domain.interchange.value_objects import SerializationScope, SerializationScopeType, MatchKind, ResolutionKind
+from domain.interchange.value_objects import (
+    SerializationScope,
+    SerializationScopeType,
+    MatchKind,
+    ResolutionKind,
+)
 
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
@@ -219,7 +226,7 @@ class TestGraphMLEmptyDatabaseRoundTrip:
 
         assert exported is not None
         assert isinstance(exported, bytes)
-        exported_str = exported.decode('utf-8')
+        exported_str = exported.decode("utf-8")
 
         # Verify GraphML structure
         assert "graphml" in exported_str
@@ -227,7 +234,9 @@ class TestGraphMLEmptyDatabaseRoundTrip:
         assert "Cat" in exported_str
         assert "Mammal" in exported_str
 
-    def test_import_creates_import_plan_with_no_conflicts(self, ontology_repo, sample_data):
+    def test_import_creates_import_plan_with_no_conflicts(
+        self, ontology_repo, sample_data
+    ):
         """Test importing against an empty database produces valid plan with no conflicts."""
         # Export
         serializer = GraphMLSerializer(ontology_repo)
@@ -235,7 +244,9 @@ class TestGraphMLEmptyDatabaseRoundTrip:
         exported = serializer.serialize(scope)
 
         # Create fresh repository (empty DB)
-        fresh_engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+        fresh_engine = create_engine(
+            "sqlite:///:memory:", connect_args={"check_same_thread": False}
+        )
         Base.metadata.create_all(fresh_engine)
         fresh_session_factory = sessionmaker(bind=fresh_engine)
         fresh_repo = SQLiteOntologyRepository(fresh_session_factory)
@@ -257,7 +268,9 @@ class TestGraphMLEmptyDatabaseRoundTrip:
         exported = serializer.serialize(scope)
 
         # Create fresh repository (empty DB) and import
-        fresh_engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+        fresh_engine = create_engine(
+            "sqlite:///:memory:", connect_args={"check_same_thread": False}
+        )
         Base.metadata.create_all(fresh_engine)
         fresh_session_factory = sessionmaker(bind=fresh_engine)
         fresh_repo = SQLiteOntologyRepository(fresh_session_factory)
@@ -275,11 +288,41 @@ class TestGraphMLEmptyDatabaseRoundTrip:
         original_individuals = ontology_repo.list_individuals()
         original_properties = ontology_repo.list_property_definitions()
 
-        imported_class_count = len([e for e in deserializer.incoming_entities.values() if e.get('type') == 'class'])
-        imported_scheme_count = len([e for e in deserializer.incoming_entities.values() if e.get('type') == 'concept_scheme'])
-        imported_taxonomy_count = len([e for e in deserializer.incoming_entities.values() if e.get('type') == 'taxonomy'])
-        imported_individual_count = len([e for e in deserializer.incoming_entities.values() if e.get('type') == 'individual'])
-        imported_property_count = len([e for e in deserializer.incoming_entities.values() if e.get('type') == 'property_definition'])
+        imported_class_count = len(
+            [
+                e
+                for e in deserializer.incoming_entities.values()
+                if e.get("type") == "class"
+            ]
+        )
+        imported_scheme_count = len(
+            [
+                e
+                for e in deserializer.incoming_entities.values()
+                if e.get("type") == "concept_scheme"
+            ]
+        )
+        imported_taxonomy_count = len(
+            [
+                e
+                for e in deserializer.incoming_entities.values()
+                if e.get("type") == "taxonomy"
+            ]
+        )
+        imported_individual_count = len(
+            [
+                e
+                for e in deserializer.incoming_entities.values()
+                if e.get("type") == "individual"
+            ]
+        )
+        imported_property_count = len(
+            [
+                e
+                for e in deserializer.incoming_entities.values()
+                if e.get("type") == "property_definition"
+            ]
+        )
 
         assert imported_class_count == len(original_classes)
         assert imported_scheme_count == len(original_schemes)
@@ -304,7 +347,9 @@ class TestGraphMLMultiClassIndividual:
         exported = serializer.serialize(scope)
 
         # Import
-        fresh_engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+        fresh_engine = create_engine(
+            "sqlite:///:memory:", connect_args={"check_same_thread": False}
+        )
         Base.metadata.create_all(fresh_engine)
         fresh_session_factory = sessionmaker(bind=fresh_engine)
         fresh_repo = SQLiteOntologyRepository(fresh_session_factory)
@@ -313,10 +358,19 @@ class TestGraphMLMultiClassIndividual:
         deserializer.deserialize(exported, dry_run=True)
 
         # Verify that Fido's class ordering is preserved in the incoming entities
-        fido_incoming = next((e for e in deserializer.incoming_entities.values()
-                             if e.get('title') == 'Fido'), None)
+        fido_incoming = next(
+            (
+                e
+                for e in deserializer.incoming_entities.values()
+                if e.get("title") == "Fido"
+            ),
+            None,
+        )
         assert fido_incoming is not None
-        assert fido_incoming['class_ids'] == [sample_data["dog"].id, sample_data["carnivore"].id]
+        assert fido_incoming["class_ids"] == [
+            sample_data["dog"].id,
+            sample_data["carnivore"].id,
+        ]
 
     def test_individual_class_order_missing_produces_warning(self, ontology_repo):
         """Test that missing class_order produces a warning."""
@@ -325,15 +379,25 @@ class TestGraphMLMultiClassIndividual:
 
         # Create GraphML with missing class_order using networkx
         G = nx.MultiDiGraph()
-        G.add_node("class1", kind="class", **{"cs:title": "TestClass", "cs:description": "A test class"})
-        G.add_node("individual1", kind="individual", **{"cs:title": "TestIndividual", "cs:description": "A test individual"})
+        G.add_node(
+            "class1",
+            kind="class",
+            **{"cs:title": "TestClass", "cs:description": "A test class"}
+        )
+        G.add_node(
+            "individual1",
+            kind="individual",
+            **{"cs:title": "TestIndividual", "cs:description": "A test individual"}
+        )
         G.add_edge("individual1", "class1", kind="class_membership")
 
         output = io.BytesIO()
         nx.write_graphml(G, output)
         graphml_bytes = output.getvalue()
 
-        fresh_engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+        fresh_engine = create_engine(
+            "sqlite:///:memory:", connect_args={"check_same_thread": False}
+        )
         Base.metadata.create_all(fresh_engine)
         fresh_session_factory = sessionmaker(bind=fresh_engine)
         fresh_repo = SQLiteOntologyRepository(fresh_session_factory)
@@ -355,14 +419,16 @@ class TestGraphMLExternalReferences:
         scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
         exported = serializer.serialize(scope)
 
-        exported_str = exported.decode('utf-8')
+        exported_str = exported.decode("utf-8")
         # Verify external references are in the output
         assert "dbpedia" in exported_str
         assert "wikidata" in exported_str
         assert "cs:external_references" in exported_str
 
         # Import
-        fresh_engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+        fresh_engine = create_engine(
+            "sqlite:///:memory:", connect_args={"check_same_thread": False}
+        )
         Base.metadata.create_all(fresh_engine)
         fresh_session_factory = sessionmaker(bind=fresh_engine)
         fresh_repo = SQLiteOntologyRepository(fresh_session_factory)
@@ -371,15 +437,21 @@ class TestGraphMLExternalReferences:
         deserializer.deserialize(exported, dry_run=True)
 
         # Verify external references were extracted
-        dog_incoming = next((e for e in deserializer.incoming_entities.values()
-                            if e.get('title') == 'Dog'), None)
+        dog_incoming = next(
+            (
+                e
+                for e in deserializer.incoming_entities.values()
+                if e.get("title") == "Dog"
+            ),
+            None,
+        )
         assert dog_incoming is not None
-        assert len(dog_incoming['external_references']) >= 2
+        assert len(dog_incoming["external_references"]) >= 2
 
         # Verify DBpedia and Wikidata refs
-        refs = dog_incoming['external_references']
-        assert any(r['source'] == 'dbpedia' for r in refs)
-        assert any(r['source'] == 'wikidata' for r in refs)
+        refs = dog_incoming["external_references"]
+        assert any(r["source"] == "dbpedia" for r in refs)
+        assert any(r["source"] == "wikidata" for r in refs)
 
     def test_individual_external_references_roundtrip(self, ontology_repo, sample_data):
         """Test that Individual external references round-trip."""
@@ -389,7 +461,9 @@ class TestGraphMLExternalReferences:
         exported = serializer.serialize(scope)
 
         # Import
-        fresh_engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+        fresh_engine = create_engine(
+            "sqlite:///:memory:", connect_args={"check_same_thread": False}
+        )
         Base.metadata.create_all(fresh_engine)
         fresh_session_factory = sessionmaker(bind=fresh_engine)
         fresh_repo = SQLiteOntologyRepository(fresh_session_factory)
@@ -398,12 +472,20 @@ class TestGraphMLExternalReferences:
         deserializer.deserialize(exported, dry_run=True)
 
         # Verify Fido's external references
-        fido_incoming = next((e for e in deserializer.incoming_entities.values()
-                             if e.get('title') == 'Fido'), None)
+        fido_incoming = next(
+            (
+                e
+                for e in deserializer.incoming_entities.values()
+                if e.get("title") == "Fido"
+            ),
+            None,
+        )
         assert fido_incoming is not None
-        assert len(fido_incoming['external_references']) >= 1
-        assert any(r['source'] == 'example' and r['identifier'] == 'fido-001'
-                  for r in fido_incoming['external_references'])
+        assert len(fido_incoming["external_references"]) >= 1
+        assert any(
+            r["source"] == "example" and r["identifier"] == "fido-001"
+            for r in fido_incoming["external_references"]
+        )
 
     def test_external_tool_roundtrip_via_networkx(self, ontology_repo, sample_data):
         """Acceptance criterion: external-tool round-trip via networkx as external consumer.
@@ -433,7 +515,9 @@ class TestGraphMLExternalReferences:
         reexported = output_stream.getvalue()
 
         # Reimport into fresh Context Studio database
-        fresh_engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+        fresh_engine = create_engine(
+            "sqlite:///:memory:", connect_args={"check_same_thread": False}
+        )
         Base.metadata.create_all(fresh_engine)
         fresh_session_factory = sessionmaker(bind=fresh_engine)
         fresh_repo = SQLiteOntologyRepository(fresh_session_factory)
@@ -446,32 +530,48 @@ class TestGraphMLExternalReferences:
 
         # Verify external_references survive through the round-trip
         # Check Dog's external references (DBpedia and Wikidata)
-        dog_incoming = next((e for e in deserializer.incoming_entities.values()
-                            if e.get('title') == 'Dog'), None)
+        dog_incoming = next(
+            (
+                e
+                for e in deserializer.incoming_entities.values()
+                if e.get("title") == "Dog"
+            ),
+            None,
+        )
         assert dog_incoming is not None
-        assert len(dog_incoming['external_references']) >= 2
+        assert len(dog_incoming["external_references"]) >= 2
 
-        refs = dog_incoming['external_references']
-        dbpedia_refs = [r for r in refs if r['source'] == 'dbpedia']
-        wikidata_refs = [r for r in refs if r['source'] == 'wikidata']
+        refs = dog_incoming["external_references"]
+        dbpedia_refs = [r for r in refs if r["source"] == "dbpedia"]
+        wikidata_refs = [r for r in refs if r["source"] == "wikidata"]
         assert len(dbpedia_refs) >= 1
         assert len(wikidata_refs) >= 1
-        assert dbpedia_refs[0]['identifier'] == 'Dog'
-        assert wikidata_refs[0]['identifier'] == 'Q144'
+        assert dbpedia_refs[0]["identifier"] == "Dog"
+        assert wikidata_refs[0]["identifier"] == "Q144"
 
         # Verify Individual's external references survive
-        fido_incoming = next((e for e in deserializer.incoming_entities.values()
-                             if e.get('title') == 'Fido'), None)
+        fido_incoming = next(
+            (
+                e
+                for e in deserializer.incoming_entities.values()
+                if e.get("title") == "Fido"
+            ),
+            None,
+        )
         assert fido_incoming is not None
-        assert len(fido_incoming['external_references']) >= 1
-        assert any(r['source'] == 'example' and r['identifier'] == 'fido-001'
-                  for r in fido_incoming['external_references'])
+        assert len(fido_incoming["external_references"]) >= 1
+        assert any(
+            r["source"] == "example" and r["identifier"] == "fido-001"
+            for r in fido_incoming["external_references"]
+        )
 
 
 class TestGraphMLIdempotentReimport:
     """Test that reimporting produces idempotent results."""
 
-    def test_reimport_with_matching_external_references(self, ontology_repo, sample_data):
+    def test_reimport_with_matching_external_references(
+        self, ontology_repo, sample_data
+    ):
         """Test that reimporting entities with matching external refs detects conflicts."""
         # Export
         serializer = GraphMLSerializer(ontology_repo)
@@ -483,7 +583,9 @@ class TestGraphMLIdempotentReimport:
         plan = deserializer.deserialize(exported, dry_run=True)
 
         # Verify that conflicts are detected with EXTERNAL_REFERENCE match kind
-        external_ref_conflicts = [c for c in plan.conflicts if c.match_kind == MatchKind.EXTERNAL_REFERENCE]
+        external_ref_conflicts = [
+            c for c in plan.conflicts if c.match_kind == MatchKind.EXTERNAL_REFERENCE
+        ]
         assert len(external_ref_conflicts) > 0
 
         # Verify default resolution is MERGE for external reference matches
@@ -498,7 +600,13 @@ class TestGraphMLIdempotentReimport:
         original_taxonomies = ontology_repo.list_taxonomies()
         original_individuals = ontology_repo.list_individuals()
         original_properties = ontology_repo.list_property_definitions()
-        original_all_ids = {c.id for c in original_classes} | {s.id for s in original_schemes} | {t.id for t in original_taxonomies} | {i.id for i in original_individuals} | {p.id for p in original_properties}
+        original_all_ids = (
+            {c.id for c in original_classes}
+            | {s.id for s in original_schemes}
+            | {t.id for t in original_taxonomies}
+            | {i.id for i in original_individuals}
+            | {p.id for p in original_properties}
+        )
 
         # Export and reimport against populated DB
         serializer = GraphMLSerializer(ontology_repo)
@@ -515,7 +623,9 @@ class TestGraphMLIdempotentReimport:
             assert conflict.existing in original_all_ids
 
         # External reference matches should MERGE by default
-        external_ref_conflicts = [c for c in plan.conflicts if c.match_kind == MatchKind.EXTERNAL_REFERENCE]
+        external_ref_conflicts = [
+            c for c in plan.conflicts if c.match_kind == MatchKind.EXTERNAL_REFERENCE
+        ]
         for conflict in external_ref_conflicts:
             assert conflict.default_resolution == ResolutionKind.MERGE
 
@@ -530,15 +640,25 @@ class TestGraphMLLayoutCoordinates:
 
         # Create GraphML with layout coordinates using networkx
         G = nx.MultiDiGraph()
-        G.add_node("tax1", kind="taxonomy", **{"cs:title": "TestTax", "x": "100.5", "y": "200.5"})
-        G.add_node("scheme1", kind="concept_scheme", **{"cs:title": "TestScheme", "x": "300", "y": "400"})
+        G.add_node(
+            "tax1",
+            kind="taxonomy",
+            **{"cs:title": "TestTax", "x": "100.5", "y": "200.5"}
+        )
+        G.add_node(
+            "scheme1",
+            kind="concept_scheme",
+            **{"cs:title": "TestScheme", "x": "300", "y": "400"}
+        )
         G.add_edge("tax1", "scheme1", kind="has_scheme")
 
         output = io.BytesIO()
         nx.write_graphml(G, output)
         graphml_bytes = output.getvalue()
 
-        fresh_engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+        fresh_engine = create_engine(
+            "sqlite:///:memory:", connect_args={"check_same_thread": False}
+        )
         Base.metadata.create_all(fresh_engine)
         fresh_session_factory = sessionmaker(bind=fresh_engine)
         fresh_repo = SQLiteOntologyRepository(fresh_session_factory)
@@ -549,5 +669,7 @@ class TestGraphMLLayoutCoordinates:
         # Should not raise exception and should not have x/y in warnings
         assert plan is not None
         # x, y should not produce warnings since they're in the ignored set
-        coord_warnings = [w for w in plan.warnings if 'x' in w.lower() or 'y' in w.lower()]
+        coord_warnings = [
+            w for w in plan.warnings if "x" in w.lower() or "y" in w.lower()
+        ]
         assert len(coord_warnings) == 0

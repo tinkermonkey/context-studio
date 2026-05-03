@@ -14,7 +14,11 @@ These tests exercise the complete stack: routes → domain service → adapters 
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+sys.path.append(
+    os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    )
+)
 
 import pytest
 import tempfile
@@ -105,7 +109,7 @@ class TestPipelineRoutes:
                 "config": {"temperature": 0.0, "max_tokens": 2000},
                 "system_prompt": "You are a helpful assistant.",
                 "user_prompt": "Process: {text}",
-            }
+            },
         )
         assert response.status_code == status.HTTP_201_CREATED
 
@@ -121,7 +125,7 @@ class TestPipelineRoutes:
                 "config": {},
                 "system_prompt": "You are helpful.",
                 "user_prompt": "Process: {text}",
-            }
+            },
         )
         body = response.json()
 
@@ -157,7 +161,7 @@ class TestPipelineRoutes:
                 "config": {},
                 "system_prompt": "You are helpful.",
                 "user_prompt": "Process: {text}",
-            }
+            },
         )
         body = response.json()
 
@@ -189,7 +193,7 @@ class TestPipelineRoutes:
                 "config": {},
                 "system_prompt": "You are helpful.",
                 "user_prompt": "Process: {text}",
-            }
+            },
         )
         created_id = create_response.json()["id"]
 
@@ -214,7 +218,7 @@ class TestPipelineRoutes:
                 "config": {},
                 "system_prompt": "You are helpful.",
                 "user_prompt": "Process: {text}",
-            }
+            },
         )
         pipeline_id = create_response.json()["id"]
 
@@ -235,7 +239,7 @@ class TestPipelineRoutes:
                 "config": {"temperature": 0.5},
                 "system_prompt": "System message",
                 "user_prompt": "User: {text}",
-            }
+            },
         )
         created_data = create_response.json()
         pipeline_id = created_data["id"]
@@ -269,7 +273,7 @@ class TestPipelineRoutes:
                 "config": {},
                 "system_prompt": "Original system prompt",
                 "user_prompt": "Original user prompt",
-            }
+            },
         )
         pipeline_id = create_response.json()["id"]
 
@@ -279,7 +283,7 @@ class TestPipelineRoutes:
             json={
                 "title": "Updated Pipeline 4",
                 "system_prompt": "Updated system prompt",
-            }
+            },
         )
         assert response.status_code == status.HTTP_200_OK
 
@@ -297,14 +301,14 @@ class TestPipelineRoutes:
                 "system_prompt": "Original",
                 "user_prompt": "Original",
                 "enabled": True,
-            }
+            },
         )
         pipeline_id = create_response.json()["id"]
 
         # Update the pipeline
         client.put(
             f"/api/pipelines/{pipeline_id}",
-            json={"title": "New Title", "enabled": False}
+            json={"title": "New Title", "enabled": False},
         )
 
         # Get the pipeline to verify update
@@ -326,15 +330,14 @@ class TestPipelineRoutes:
                 "config": {},
                 "system_prompt": "Test",
                 "user_prompt": "Test",
-            }
+            },
         )
         original_version = create_response.json()["version"]
         pipeline_id = create_response.json()["id"]
 
         # Update the pipeline
         response = client.put(
-            f"/api/pipelines/{pipeline_id}",
-            json={"title": "New Title"}
+            f"/api/pipelines/{pipeline_id}", json={"title": "New Title"}
         )
         new_version = response.json()["version"]
 
@@ -354,7 +357,7 @@ class TestPipelineRoutes:
                 "config": {},
                 "system_prompt": "Test",
                 "user_prompt": "Test",
-            }
+            },
         )
         pipeline_id = create_response.json()["id"]
 
@@ -375,7 +378,7 @@ class TestPipelineRoutes:
                 "config": {},
                 "system_prompt": "Test",
                 "user_prompt": "Test",
-            }
+            },
         )
         pipeline_id = create_response.json()["id"]
 
@@ -404,14 +407,13 @@ class TestPipelineRoutes:
                 "config": {},
                 "system_prompt": "Test",
                 "user_prompt": "Process: {text}",
-            }
+            },
         )
         pipeline_id = create_response.json()["id"]
 
         # Execute the pipeline
         response = client.post(
-            f"/api/pipelines/{pipeline_id}/execute",
-            json={"input_text": "Test input"}
+            f"/api/pipelines/{pipeline_id}/execute", json={"input_text": "Test input"}
         )
         assert response.status_code == status.HTTP_200_OK
 
@@ -428,14 +430,13 @@ class TestPipelineRoutes:
                 "config": {},
                 "system_prompt": "Test",
                 "user_prompt": "Process: {text}",
-            }
+            },
         )
         pipeline_id = create_response.json()["id"]
 
         # Execute the pipeline
         response = client.post(
-            f"/api/pipelines/{pipeline_id}/execute",
-            json={"input_text": "Test input"}
+            f"/api/pipelines/{pipeline_id}/execute", json={"input_text": "Test input"}
         )
         body = response.json()
 
@@ -461,8 +462,7 @@ class TestPipelineRoutes:
     def test_execute_pipeline_nonexistent_returns_404(self, client):
         """POST /api/pipelines/{id}/execute returns 404 for nonexistent pipeline."""
         response = client.post(
-            f"/api/pipelines/{uuid4()}/execute",
-            json={"input_text": "Test input"}
+            f"/api/pipelines/{uuid4()}/execute", json={"input_text": "Test input"}
         )
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
@@ -479,7 +479,7 @@ class TestPipelineRoutes:
                 "config": {},
                 "system_prompt": "Test",
                 "user_prompt": "Process: {text}",
-            }
+            },
         )
         pipeline_id = create_response.json()["id"]
 
@@ -500,7 +500,7 @@ class TestPipelineRoutes:
                 "config": {},
                 "system_prompt": "Test",
                 "user_prompt": "Process: {text}",
-            }
+            },
         )
         pipeline_id = create_response.json()["id"]
 
@@ -522,14 +522,13 @@ class TestPipelineRoutes:
                 "config": {},
                 "system_prompt": "Test",
                 "user_prompt": "Process: {text}",
-            }
+            },
         )
         pipeline_id = create_response.json()["id"]
 
         # Execute the pipeline
         execute_response = client.post(
-            f"/api/pipelines/{pipeline_id}/execute",
-            json={"input_text": "Test input"}
+            f"/api/pipelines/{pipeline_id}/execute", json={"input_text": "Test input"}
         )
         execution_id = execute_response.json()["id"]
 
@@ -558,7 +557,7 @@ class TestPipelineErrorHandling:
                 "config": {},
                 "system_prompt": "Test",
                 "user_prompt": "Process: {text}",
-            }
+            },
         )
         pipeline_id = create_response.json()["id"]
 
@@ -592,7 +591,7 @@ class TestPipelineErrorHandling:
                 "config": {},
                 "system_prompt": "Test",
                 "user_prompt": "Process: {text}",
-            }
+            },
         )
         pipeline_id = create_response.json()["id"]
 
@@ -626,7 +625,7 @@ class TestPipelineErrorHandling:
                 "config": {},
                 "system_prompt": "Test",
                 "user_prompt": "Process: {text}",
-            }
+            },
         )
         create_response.json()["id"]
 
@@ -664,7 +663,7 @@ class TestPipelineErrorHandling:
                 "config": {},
                 "system_prompt": "Test",
                 "user_prompt": "Process: {text}",
-            }
+            },
         )
         pipeline_id = create_response.json()["id"]
 
@@ -680,7 +679,7 @@ class TestPipelineErrorHandling:
             # Request should return 500 for LayerExecutionError
             response = client.post(
                 f"/api/pipelines/{pipeline_id}/execute",
-                json={"input_text": "Test input"}
+                json={"input_text": "Test input"},
             )
             assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
             assert response.json()["detail"] == "Pipeline layer failed to execute"
@@ -701,7 +700,7 @@ class TestPipelineErrorHandling:
                 "config": {},
                 "system_prompt": "Test",
                 "user_prompt": "Process: {text}",
-            }
+            },
         )
         pipeline_id = create_response.json()["id"]
 
@@ -741,7 +740,7 @@ class TestPipelineErrorHandling:
                 "config": {},
                 "system_prompt": "Test",
                 "user_prompt": "Process: {text}",
-            }
+            },
         )
         pipeline_id = create_response.json()["id"]
 

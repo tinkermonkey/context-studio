@@ -40,7 +40,6 @@ from domain.ontology.events import (
 from domain.versioning.value_objects import ChangeOperation
 from utils.logger import get_logger
 
-
 logger = get_logger(__name__)
 
 
@@ -304,9 +303,7 @@ class ChangeEventRecorder:
             change_reason=f"Class moved from parent {event.old_parent_id} to {event.new_parent_id}",
         )
 
-    def on_property_definition_updated(
-        self, event: PropertyDefinitionUpdated
-    ) -> None:
+    def on_property_definition_updated(self, event: PropertyDefinitionUpdated) -> None:
         """Handle PropertyDefinitionUpdated events."""
         self._record(
             entity_id=event.property_id,
@@ -382,9 +379,7 @@ class ChangeEventRecorder:
             change_reason="Relationship deleted",
         )
 
-    def on_property_definition_deleted(
-        self, event: PropertyDefinitionDeleted
-    ) -> None:
+    def on_property_definition_deleted(self, event: PropertyDefinitionDeleted) -> None:
         """Handle PropertyDefinitionDeleted events."""
         self._record(
             entity_id=event.property_id,

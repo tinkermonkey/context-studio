@@ -15,7 +15,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 # Ensure local-server root is in path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 from domain.pipeline.entities import PipelineConfiguration, Execution
 from adapters.persistence.sqlite.operations.models import (
@@ -110,8 +112,12 @@ class TestPipelineRepositoryConfigCRUD:
         assert retrieved.version == sample_config.version
         assert retrieved.enabled == sample_config.enabled
         # Compare timestamps without timezone (SQLite doesn't preserve tz info)
-        assert retrieved.created_at.replace(tzinfo=None) == sample_config.created_at.replace(tzinfo=None)
-        assert retrieved.last_updated.replace(tzinfo=None) == sample_config.last_updated.replace(tzinfo=None)
+        assert retrieved.created_at.replace(
+            tzinfo=None
+        ) == sample_config.created_at.replace(tzinfo=None)
+        assert retrieved.last_updated.replace(
+            tzinfo=None
+        ) == sample_config.last_updated.replace(tzinfo=None)
 
     def test_get_config_returns_none_for_missing_id(self, repo):
         """Test that get_config returns None for non-existent ID."""
@@ -385,4 +391,6 @@ class TestPipelineRepositoryExecutionTracking:
         assert retrieved.status == sample_execution.status
         assert retrieved.error_message == sample_execution.error_message
         # Compare timestamps without timezone (SQLite doesn't preserve tz info)
-        assert retrieved.timestamp.replace(tzinfo=None) == sample_execution.timestamp.replace(tzinfo=None)
+        assert retrieved.timestamp.replace(
+            tzinfo=None
+        ) == sample_execution.timestamp.replace(tzinfo=None)

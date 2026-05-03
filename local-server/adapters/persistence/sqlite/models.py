@@ -79,7 +79,7 @@ class OntologyEntity(Base):  # type: ignore[misc,valid-type]
         String(20),
         nullable=False,
         index=True,
-        doc="Discriminator: taxonomy, concept_scheme, class, individual, property_definition"
+        doc="Discriminator: taxonomy, concept_scheme, class, individual, property_definition",
     )
     title = Column(String(255), nullable=False, index=True)
     description = Column(Text, nullable=True)
@@ -87,14 +87,14 @@ class OntologyEntity(Base):  # type: ignore[misc,valid-type]
         DateTime(timezone=True),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
-        doc="UTC timestamp of creation"
+        doc="UTC timestamp of creation",
     )
     last_modified = Column(
         DateTime(timezone=True),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
-        doc="UTC timestamp of last modification"
+        doc="UTC timestamp of last modification",
     )
     version = Column(Integer, nullable=False, default=1, doc="For optimistic locking")
 
@@ -104,33 +104,33 @@ class OntologyEntity(Base):  # type: ignore[misc,valid-type]
         ForeignKey("ontology_entities.id", ondelete="CASCADE"),
         nullable=True,
         index=True,
-        doc="Parent taxonomy (for concept_scheme, class, individual)"
+        doc="Parent taxonomy (for concept_scheme, class, individual)",
     )
     concept_scheme_id = Column(
         String(36),
         ForeignKey("ontology_entities.id", ondelete="CASCADE"),
         nullable=True,
         index=True,
-        doc="Parent concept scheme (for class, individual)"
+        doc="Parent concept scheme (for class, individual)",
     )
     class_id = Column(
         String(36),
         ForeignKey("ontology_entities.id", ondelete="CASCADE"),
         nullable=True,
-        doc="Class being instantiated (for individual, rdf:type)"
+        doc="Class being instantiated (for individual, rdf:type)",
     )
     parent_class_id = Column(
         String(36),
         ForeignKey("ontology_entities.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
-        doc="Parent class for hierarchy (for class, rdfs:subClassOf)"
+        doc="Parent class for hierarchy (for class, rdfs:subClassOf)",
     )
     structural_property_id = Column(
         String(36),
         ForeignKey("ontology_entities.id", ondelete="SET NULL"),
         nullable=True,
-        doc="Primary structural property definition (for class)"
+        doc="Primary structural property definition (for class)",
     )
 
     # Nested value objects (stored as JSON)
@@ -138,32 +138,30 @@ class OntologyEntity(Base):  # type: ignore[misc,valid-type]
         JSON,
         nullable=False,
         default=list,
-        doc="JSON list of {source, identifier, uri, metadata}"
+        doc="JSON list of {source, identifier, uri, metadata}",
     )
     lexical_senses = Column(
         JSON,
         nullable=False,
         default=list,
-        doc="JSON list of {label, language_code, sense_type}"
+        doc="JSON list of {label, language_code, sense_type}",
     )
     data_properties = Column(
         JSON,
         nullable=False,
         default=list,
-        doc="JSON list of {property_identifier, value, datatype}"
+        doc="JSON list of {property_identifier, value, datatype}",
     )
 
     # Embeddings and indexing
     embedding = Column(
-        LargeBinary,
-        nullable=True,
-        doc="Binary embedding vector (for class, optional)"
+        LargeBinary, nullable=True, doc="Binary embedding vector (for class, optional)"
     )
     is_indexed = Column(
         Boolean,
         nullable=False,
         default=True,
-        doc="Whether included in semantic indexes"
+        doc="Whether included in semantic indexes",
     )
 
     # Property definition fields (only used when node_type='property_definition')
@@ -171,30 +169,32 @@ class OntologyEntity(Base):  # type: ignore[misc,valid-type]
         String(255),
         nullable=True,
         unique=True,
-        doc="Machine-readable identifier (unique, for property_definition)"
+        doc="Machine-readable identifier (unique, for property_definition)",
     )
     ontology_mapping = Column(
         JSON,
         nullable=True,
-        doc="Mapping to external ontologies (for property_definition)"
+        doc="Mapping to external ontologies (for property_definition)",
     )
     is_relevant = Column(
         Integer,
         nullable=True,
-        doc="Tri-state relevance: NULL=not evaluated, 0=not relevant, 1=relevant"
+        doc="Tri-state relevance: NULL=not evaluated, 0=not relevant, 1=relevant",
     )
 
     # Constraints
     __table_args__ = (
         CheckConstraint(
             "node_type IN ('taxonomy', 'concept_scheme', 'class', 'individual', 'property_definition')",
-            name="check_valid_node_type"
+            name="check_valid_node_type",
         ),
         Index("idx_node_type_title", "node_type", "title"),
     )
 
     def __repr__(self) -> str:
-        return f"<OntologyEntity(id={self.id}, type={self.node_type}, title={self.title})>"
+        return (
+            f"<OntologyEntity(id={self.id}, type={self.node_type}, title={self.title})>"
+        )
 
 
 class IndividualClass(Base):  # type: ignore[misc,valid-type]
@@ -218,19 +218,19 @@ class IndividualClass(Base):  # type: ignore[misc,valid-type]
         ForeignKey("ontology_entities.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
-        doc="ID of the Individual"
+        doc="ID of the Individual",
     )
     class_id = Column(
         String(36),
         ForeignKey("ontology_entities.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
-        doc="ID of the parent Class"
+        doc="ID of the parent Class",
     )
     position = Column(
         Integer,
         nullable=False,
-        doc="Zero-based position in the ordered list (determines inheritance precedence)"
+        doc="Zero-based position in the ordered list (determines inheritance precedence)",
     )
 
     __table_args__ = (
@@ -267,35 +267,37 @@ class Relationship(Base):  # type: ignore[misc,valid-type]
         ForeignKey("ontology_entities.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
-        doc="Source entity"
+        doc="Source entity",
     )
     target_id = Column(
         String(36),
         ForeignKey("ontology_entities.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
-        doc="Target entity"
+        doc="Target entity",
     )
     property_definition_id = Column(
         String(36),
         ForeignKey("ontology_entities.id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
-        doc="PropertyDefinition that types this relationship"
+        doc="PropertyDefinition that types this relationship",
     )
     created_at = Column(
         DateTime(timezone=True),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
-        doc="UTC timestamp of creation (immutable)"
+        doc="UTC timestamp of creation (immutable)",
     )
 
     __table_args__ = (
-        CheckConstraint(
-            "source_id != target_id",
-            name="check_no_self_loop"
+        CheckConstraint("source_id != target_id", name="check_no_self_loop"),
+        UniqueConstraint(
+            "source_id",
+            "target_id",
+            "property_definition_id",
+            name="uk_relationship_triple",
         ),
-        UniqueConstraint("source_id", "target_id", "property_definition_id", name="uk_relationship_triple"),
     )
 
     def __repr__(self) -> str:
@@ -331,26 +333,24 @@ class PropertyDefinition(Base):  # type: ignore[misc,valid-type]
         ForeignKey("ontology_entities.id", ondelete="CASCADE"),
         primary_key=True,
         nullable=False,
-        doc="Must match OntologyEntity.id with node_type='property_definition'"
+        doc="Must match OntologyEntity.id with node_type='property_definition'",
     )
     identifier = Column(
         String(255),
         nullable=False,
         unique=True,
         index=True,
-        doc="Machine-readable identifier, unique constraint"
+        doc="Machine-readable identifier, unique constraint",
     )
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     ontology_mapping = Column(
-        JSON,
-        nullable=True,
-        doc="JSON mapping to external ontologies"
+        JSON, nullable=True, doc="JSON mapping to external ontologies"
     )
     is_relevant = Column(
         Integer,
         nullable=True,
-        doc="Tri-state: NULL=not evaluated, 0=not relevant, 1=relevant"
+        doc="Tri-state: NULL=not evaluated, 0=not relevant, 1=relevant",
     )
     created_at = Column(
         DateTime(timezone=True),
@@ -396,67 +396,56 @@ class ChangeEvent(Base):  # type: ignore[misc,valid-type]
 
     id = Column(String(36), primary_key=True, nullable=False)
     entity_id = Column(
-        String(36),
-        nullable=False,
-        index=True,
-        doc="Entity that changed"
+        String(36), nullable=False, index=True, doc="Entity that changed"
     )
     entity_type = Column(
         String(20),
         nullable=False,
-        doc="Type of entity (taxonomy, concept_scheme, class, etc.)"
+        doc="Type of entity (taxonomy, concept_scheme, class, etc.)",
     )
     operation = Column(
         String(10),
         nullable=False,
         index=True,
-        doc="Operation type: create, update, delete"
+        doc="Operation type: create, update, delete",
     )
     previous_state = Column(
-        JSON,
-        nullable=True,
-        doc="JSON snapshot before change (null for create)"
+        JSON, nullable=True, doc="JSON snapshot before change (null for create)"
     )
     new_state = Column(
-        JSON,
-        nullable=False,
-        doc="JSON snapshot after change (null for delete)"
+        JSON, nullable=False, doc="JSON snapshot after change (null for delete)"
     )
     timestamp = Column(
         DateTime(timezone=True),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         index=True,
-        doc="UTC timestamp of the change"
+        doc="UTC timestamp of the change",
     )
     user_id = Column(
-        String(36),
-        nullable=True,
-        doc="Optional ID of user who made the change"
+        String(36), nullable=True, doc="Optional ID of user who made the change"
     )
     change_reason = Column(
-        Text,
-        nullable=True,
-        doc="Optional explanation of the change"
+        Text, nullable=True, doc="Optional explanation of the change"
     )
     changeset_id = Column(
         String(36),
         nullable=True,
         index=True,
-        doc="Optional changeset this event belongs to"
+        doc="Optional changeset this event belongs to",
     )
     import_run_id = Column(
         String(36),
         ForeignKey("import_runs.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
-        doc="Optional import run that produced this change"
+        doc="Optional import run that produced this change",
     )
     processed = Column(
         Boolean,
         nullable=False,
         default=False,
-        doc="Whether this change has been synchronized to remote"
+        doc="Whether this change has been synchronized to remote",
     )
 
     __table_args__ = (
@@ -493,31 +482,29 @@ class ExtractionResult(Base):  # type: ignore[misc,valid-type]
         JSON,
         nullable=False,
         default=list,
-        doc="JSON list of {id, label, entity_type, source_layer, confidence, uri, description, properties}"
+        doc="JSON list of {id, label, entity_type, source_layer, confidence, uri, description, properties}",
     )
     layers_executed = Column(
         JSON,
         nullable=False,
         default=list,
-        doc="JSON list of {layer_number, layer_name, entities_found, duration_ms, success, error_message}"
+        doc="JSON list of {layer_number, layer_name, entities_found, duration_ms, success, error_message}",
     )
     total_duration_ms = Column(
         Integer,
         nullable=False,
         default=0,
-        doc="Total time spent on extraction (milliseconds)"
+        doc="Total time spent on extraction (milliseconds)",
     )
     created_at = Column(
         DateTime(timezone=True),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         index=True,
-        doc="UTC timestamp of extraction completion"
+        doc="UTC timestamp of extraction completion",
     )
 
-    __table_args__ = (
-        Index("idx_created_at", "created_at"),
-    )
+    __table_args__ = (Index("idx_created_at", "created_at"),)
 
     def __repr__(self) -> str:
         return f"<ExtractionResult(id={self.id}, text_len={len(self.text or '')}, entities={len(self.extracted_entities or [])})>"
@@ -740,73 +727,60 @@ class ImportRun(Base):  # type: ignore[misc,valid-type]
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         index=True,
-        doc="UTC timestamp of import initiation"
+        doc="UTC timestamp of import initiation",
     )
     created_by = Column(
-        String(36),
-        nullable=True,
-        doc="Optional ID of user who initiated the import"
+        String(36), nullable=True, doc="Optional ID of user who initiated the import"
     )
     format = Column(
         String(20),
         nullable=False,
-        doc="Format of imported file (skos, owl, graphml, etc.)"
+        doc="Format of imported file (skos, owl, graphml, etc.)",
     )
     source_uri = Column(
-        Text,
-        nullable=True,
-        doc="Optional URI or filename of the import source"
+        Text, nullable=True, doc="Optional URI or filename of the import source"
     )
     source_hash = Column(
-        String(64),
-        nullable=False,
-        doc="SHA256 hash of the imported bytes"
+        String(64), nullable=False, doc="SHA256 hash of the imported bytes"
     )
     scope_type = Column(
         String(20),
         nullable=False,
-        doc="Type of scope (whole_graph, taxonomy, scheme, entity_set)"
+        doc="Type of scope (whole_graph, taxonomy, scheme, entity_set)",
     )
     scope_taxonomy_id = Column(
-        String(36),
-        nullable=True,
-        doc="For taxonomy scope, the taxonomy ID"
+        String(36), nullable=True, doc="For taxonomy scope, the taxonomy ID"
     )
     scope_scheme_id = Column(
-        String(36),
-        nullable=True,
-        doc="For scheme scope, the scheme ID"
+        String(36), nullable=True, doc="For scheme scope, the scheme ID"
     )
     scope_include_descendants = Column(
         Boolean,
         nullable=False,
         default=False,
-        doc="For scheme scope, whether to include descendants"
+        doc="For scheme scope, whether to include descendants",
     )
     scope_entity_ids = Column(
         JSON,
         nullable=True,
         default=list,
-        doc="For entity_set scope, JSON list of entity IDs"
+        doc="For entity_set scope, JSON list of entity IDs",
     )
     resolutions = Column(
-        JSON,
-        nullable=False,
-        default=list,
-        doc="JSON list of applied resolutions"
+        JSON, nullable=False, default=list, doc="JSON list of applied resolutions"
     )
     affected_entity_ids = Column(
         JSON,
         nullable=False,
         default=list,
-        doc="JSON list of entity IDs affected by this import"
+        doc="JSON list of entity IDs affected by this import",
     )
     status = Column(
         String(20),
         nullable=False,
         default="pending",
         index=True,
-        doc="Current status (pending, committed, failed, rolled_back)"
+        doc="Current status (pending, committed, failed, rolled_back)",
     )
 
     __table_args__ = ()

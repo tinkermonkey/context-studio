@@ -56,8 +56,7 @@ class LocalReferenceRepository:
             Path(self._db_path).parent.mkdir(parents=True, exist_ok=True)
 
             with sqlite3.connect(self._db_path) as conn:
-                conn.execute(
-                    """
+                conn.execute("""
                     CREATE TABLE IF NOT EXISTS "references" (
                         id INTEGER PRIMARY KEY,
                         uri TEXT UNIQUE NOT NULL,
@@ -65,23 +64,17 @@ class LocalReferenceRepository:
                         description TEXT,
                         source TEXT NOT NULL
                     )
-                    """
-                )
+                    """)
 
-                conn.execute(
-                    """
+                conn.execute("""
                     CREATE INDEX IF NOT EXISTS idx_references_uri ON "references"(uri)
-                    """
-                )
+                    """)
 
-                conn.execute(
-                    """
+                conn.execute("""
                     CREATE INDEX IF NOT EXISTS idx_references_label ON "references"(label)
-                    """
-                )
+                    """)
 
-                conn.execute(
-                    """
+                conn.execute("""
                     CREATE TABLE IF NOT EXISTS "reference_relations" (
                         id INTEGER PRIMARY KEY,
                         subject_uri TEXT NOT NULL,
@@ -89,15 +82,12 @@ class LocalReferenceRepository:
                         object_uri TEXT NOT NULL,
                         source TEXT NOT NULL
                     )
-                    """
-                )
+                    """)
 
-                conn.execute(
-                    """
+                conn.execute("""
                     CREATE INDEX IF NOT EXISTS idx_relations_subject
                     ON "reference_relations"(subject_uri)
-                    """
-                )
+                    """)
 
                 conn.commit()
         except OSError as e:
@@ -149,7 +139,9 @@ class LocalReferenceRepository:
 
                 return results
         except Exception as e:
-            logger.error("Local reference search failed for '%s': %s", term, e, exc_info=True)
+            logger.error(
+                "Local reference search failed for '%s': %s", term, e, exc_info=True
+            )
             raise
 
     def get_relations(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
@@ -189,7 +181,12 @@ class LocalReferenceRepository:
 
                 return relations
         except Exception as e:
-            logger.error("Local reference get_relations failed for '%s': %s", uri, e, exc_info=True)
+            logger.error(
+                "Local reference get_relations failed for '%s': %s",
+                uri,
+                e,
+                exc_info=True,
+            )
             raise
 
     def import_reference(
@@ -250,5 +247,11 @@ class LocalReferenceRepository:
                 )
                 conn.commit()
         except Exception as e:
-            logger.error("Failed to import relation %s -> %s: %s", subject_uri, object_uri, e, exc_info=True)
+            logger.error(
+                "Failed to import relation %s -> %s: %s",
+                subject_uri,
+                object_uri,
+                e,
+                exc_info=True,
+            )
             raise

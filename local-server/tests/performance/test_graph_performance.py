@@ -11,14 +11,24 @@ import time
 import pytest
 from uuid import uuid4
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 from domain.graph.services import GraphAnalysisService
-from domain.ontology.entities import Taxonomy, ConceptScheme, Class, Relationship, PropertyDefinition
+from domain.ontology.entities import (
+    Taxonomy,
+    ConceptScheme,
+    Class,
+    Relationship,
+    PropertyDefinition,
+)
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 
 
-def _setup_graph_service(num_nodes: int) -> tuple[GraphAnalysisService, FakeOntologyRepository, list[str]]:
+def _setup_graph_service(
+    num_nodes: int,
+) -> tuple[GraphAnalysisService, FakeOntologyRepository, list[str]]:
     """Set up graph analysis service with test data.
 
     Creates a taxonomy, concept scheme, and classes, building a DAG where
@@ -40,22 +50,27 @@ def _setup_graph_service(num_nodes: int) -> tuple[GraphAnalysisService, FakeOnto
 
     # Create taxonomy and concept scheme
     taxonomy = Taxonomy(id=str(uuid4()), title="Test Taxonomy")
-    scheme = ConceptScheme(id=str(uuid4()), title="Test Scheme", taxonomy_id=taxonomy.id)
+    scheme = ConceptScheme(
+        id=str(uuid4()), title="Test Scheme", taxonomy_id=taxonomy.id
+    )
     repository.save_taxonomy(taxonomy)
     repository.save_concept_scheme(scheme)
 
     # Create a property definition for relationships
     prop_def = PropertyDefinition(
-        id=str(uuid4()),
-        identifier="relates_to",
-        title="Relates To"
+        id=str(uuid4()), identifier="relates_to", title="Relates To"
     )
     repository.save_property_definition(prop_def)
 
     # Create classes
     class_ids = []
     for i in range(num_nodes):
-        cls = Class(id=str(uuid4()), title=f"Node_{i}", concept_scheme_id=scheme.id, taxonomy_id=taxonomy.id)
+        cls = Class(
+            id=str(uuid4()),
+            title=f"Node_{i}",
+            concept_scheme_id=scheme.id,
+            taxonomy_id=taxonomy.id,
+        )
         repository.save_class(cls)
         class_ids.append(cls.id)
 
@@ -66,7 +81,7 @@ def _setup_graph_service(num_nodes: int) -> tuple[GraphAnalysisService, FakeOnto
                 id=str(uuid4()),
                 source_id=class_ids[i],
                 target_id=class_ids[i + 1],
-                property_definition_id=prop_def.id
+                property_definition_id=prop_def.id,
             )
             repository.save_relationship(rel)
         if i + 2 < num_nodes:
@@ -74,7 +89,7 @@ def _setup_graph_service(num_nodes: int) -> tuple[GraphAnalysisService, FakeOnto
                 id=str(uuid4()),
                 source_id=class_ids[i],
                 target_id=class_ids[i + 2],
-                property_definition_id=prop_def.id
+                property_definition_id=prop_def.id,
             )
             repository.save_relationship(rel)
 
@@ -87,12 +102,15 @@ def _setup_graph_service(num_nodes: int) -> tuple[GraphAnalysisService, FakeOnto
 
 
 @pytest.mark.performance
-@pytest.mark.parametrize("num_nodes,max_time", [
-    (100, 0.002),
-    (500, 0.01),
-    (1000, 0.02),
-    (5000, 0.1),
-])
+@pytest.mark.parametrize(
+    "num_nodes,max_time",
+    [
+        (100, 0.002),
+        (500, 0.01),
+        (1000, 0.02),
+        (5000, 0.1),
+    ],
+)
 def test_graph_build(num_nodes: int, max_time: float) -> None:
     """Measure time to build a graph with specified number of nodes."""
     service, _, _ = _setup_graph_service(num_nodes)
@@ -108,12 +126,15 @@ def test_graph_build(num_nodes: int, max_time: float) -> None:
 
 
 @pytest.mark.performance
-@pytest.mark.parametrize("num_nodes,max_time", [
-    (100, 0.005),
-    (500, 0.01),
-    (1000, 0.02),
-    (5000, 0.13),
-])
+@pytest.mark.parametrize(
+    "num_nodes,max_time",
+    [
+        (100, 0.005),
+        (500, 0.01),
+        (1000, 0.02),
+        (5000, 0.13),
+    ],
+)
 def test_shortest_path_query(num_nodes: int, max_time: float) -> None:
     """Measure shortest path query time in a graph of specified size."""
     service, _, class_ids = _setup_graph_service(num_nodes)
@@ -129,12 +150,15 @@ def test_shortest_path_query(num_nodes: int, max_time: float) -> None:
 
 
 @pytest.mark.performance
-@pytest.mark.parametrize("num_nodes,max_time", [
-    (100, 0.2),
-    (500, 0.5),
-    (1000, 2.5),
-    (5000, 110.0),
-])
+@pytest.mark.parametrize(
+    "num_nodes,max_time",
+    [
+        (100, 0.2),
+        (500, 0.5),
+        (1000, 2.5),
+        (5000, 110.0),
+    ],
+)
 def test_centrality_calculation(num_nodes: int, max_time: float) -> None:
     """Measure centrality calculation time in a graph of specified size."""
     service, _, _ = _setup_graph_service(num_nodes)
@@ -151,12 +175,15 @@ def test_centrality_calculation(num_nodes: int, max_time: float) -> None:
 
 
 @pytest.mark.performance
-@pytest.mark.parametrize("num_nodes,max_time", [
-    (100, 0.1),
-    (500, 0.3),
-    (1000, 0.5),
-    (5000, 1.0),
-])
+@pytest.mark.parametrize(
+    "num_nodes,max_time",
+    [
+        (100, 0.1),
+        (500, 0.3),
+        (1000, 0.5),
+        (5000, 1.0),
+    ],
+)
 def test_sparql_query(num_nodes: int, max_time: float) -> None:
     """Measure SPARQL query execution time in a graph of specified size."""
     service, _, _ = _setup_graph_service(num_nodes)

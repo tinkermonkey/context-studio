@@ -14,7 +14,9 @@ import uuid
 from datetime import datetime, timezone
 from typing import Dict, Any
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import pytest
 from sqlalchemy import create_engine
@@ -39,7 +41,9 @@ from adapters.interchange.owl import OWLSerializer, OWLDeserializer
 from adapters.interchange.graphml import GraphMLSerializer, GraphMLDeserializer
 
 
-def persist_incoming_entities(repo: SQLiteOntologyRepository, incoming_entities: Dict[str, Dict[str, Any]]) -> None:
+def persist_incoming_entities(
+    repo: SQLiteOntologyRepository, incoming_entities: Dict[str, Dict[str, Any]]
+) -> None:
     """
     Helper function to persist incoming_entities from a deserializer into the ontology repository.
 
@@ -51,11 +55,11 @@ def persist_incoming_entities(repo: SQLiteOntologyRepository, incoming_entities:
 
     # Save taxonomies
     for entity_id, entity_dict in incoming_entities.items():
-        if entity_dict.get('type') == 'taxonomy':
+        if entity_dict.get("type") == "taxonomy":
             tax = Taxonomy(
-                id=entity_dict['id'],
-                title=entity_dict['title'],
-                description=entity_dict.get('description'),
+                id=entity_dict["id"],
+                title=entity_dict["title"],
+                description=entity_dict.get("description"),
                 created_at=datetime.now(timezone.utc),
                 last_modified=datetime.now(timezone.utc),
             )
@@ -63,12 +67,12 @@ def persist_incoming_entities(repo: SQLiteOntologyRepository, incoming_entities:
 
     # Save concept schemes
     for entity_id, entity_dict in incoming_entities.items():
-        if entity_dict.get('type') == 'concept_scheme':
+        if entity_dict.get("type") == "concept_scheme":
             scheme = ConceptScheme(
-                id=entity_dict['id'],
-                taxonomy_id=entity_dict['taxonomy_id'],
-                title=entity_dict['title'],
-                description=entity_dict.get('description'),
+                id=entity_dict["id"],
+                taxonomy_id=entity_dict["taxonomy_id"],
+                title=entity_dict["title"],
+                description=entity_dict.get("description"),
                 created_at=datetime.now(timezone.utc),
                 last_modified=datetime.now(timezone.utc),
             )
@@ -79,7 +83,7 @@ def persist_incoming_entities(repo: SQLiteOntologyRepository, incoming_entities:
     classes_to_save = {
         entity_id: entity_dict
         for entity_id, entity_dict in incoming_entities.items()
-        if entity_dict.get('type') == 'class'
+        if entity_dict.get("type") == "class"
     }
     saved_class_ids = set()
 
@@ -91,23 +95,25 @@ def persist_incoming_entities(repo: SQLiteOntologyRepository, incoming_entities:
         saved_this_pass = []
 
         for entity_id, entity_dict in list(classes_to_save.items()):
-            parent_class_id = entity_dict.get('parent_class_id')
+            parent_class_id = entity_dict.get("parent_class_id")
             # Save if no parent, or parent already saved
             if parent_class_id is None or parent_class_id in saved_class_ids:
                 external_refs = [
                     ExternalReference(
-                        source=ref['source'],
-                        identifier=ref['identifier'],
-                        uri=ref['uri'],
+                        source=ref["source"],
+                        identifier=ref["identifier"],
+                        uri=ref["uri"],
                     )
-                    for ref in entity_dict.get('external_references', [])
+                    for ref in entity_dict.get("external_references", [])
                 ]
                 cls = Class(
-                    id=entity_dict['id'],
-                    concept_scheme_id=entity_dict['concept_scheme_id'],
-                    taxonomy_id=_find_taxonomy_id_for_scheme(repo, entity_dict['concept_scheme_id']),
-                    title=entity_dict['title'],
-                    description=entity_dict.get('description'),
+                    id=entity_dict["id"],
+                    concept_scheme_id=entity_dict["concept_scheme_id"],
+                    taxonomy_id=_find_taxonomy_id_for_scheme(
+                        repo, entity_dict["concept_scheme_id"]
+                    ),
+                    title=entity_dict["title"],
+                    description=entity_dict.get("description"),
                     parent_class_id=parent_class_id,
                     external_references=external_refs,
                     created_at=datetime.now(timezone.utc),
@@ -120,24 +126,26 @@ def persist_incoming_entities(repo: SQLiteOntologyRepository, incoming_entities:
 
         if not saved_this_pass and classes_to_save:
             # No progress made, likely a circular dependency
-            raise ValueError(f"Could not save classes due to unresolved parent references: {list(classes_to_save.keys())}")
+            raise ValueError(
+                f"Could not save classes due to unresolved parent references: {list(classes_to_save.keys())}"
+            )
 
     # Save individuals
     for entity_id, entity_dict in incoming_entities.items():
-        if entity_dict.get('type') == 'individual':
+        if entity_dict.get("type") == "individual":
             external_refs = [
                 ExternalReference(
-                    source=ref['source'],
-                    identifier=ref['identifier'],
-                    uri=ref['uri'],
+                    source=ref["source"],
+                    identifier=ref["identifier"],
+                    uri=ref["uri"],
                 )
-                for ref in entity_dict.get('external_references', [])
+                for ref in entity_dict.get("external_references", [])
             ]
             ind = Individual(
-                id=entity_dict['id'],
-                class_ids=entity_dict.get('class_ids', []),
-                title=entity_dict['title'],
-                description=entity_dict.get('description'),
+                id=entity_dict["id"],
+                class_ids=entity_dict.get("class_ids", []),
+                title=entity_dict["title"],
+                description=entity_dict.get("description"),
                 external_references=external_refs,
                 created_at=datetime.now(timezone.utc),
                 last_modified=datetime.now(timezone.utc),
@@ -146,15 +154,15 @@ def persist_incoming_entities(repo: SQLiteOntologyRepository, incoming_entities:
 
     # Save property definitions
     for entity_id, entity_dict in incoming_entities.items():
-        if entity_dict.get('type') == 'property_definition':
-            identifier = entity_dict.get('identifier')
+        if entity_dict.get("type") == "property_definition":
+            identifier = entity_dict.get("identifier")
             if not identifier:
-                identifier = entity_dict['title'].lower().replace(" ", "_")
+                identifier = entity_dict["title"].lower().replace(" ", "_")
             prop = PropertyDefinition(
-                id=entity_dict['id'],
+                id=entity_dict["id"],
                 identifier=identifier,
-                title=entity_dict['title'],
-                description=entity_dict.get('description'),
+                title=entity_dict["title"],
+                description=entity_dict.get("description"),
                 created_at=datetime.now(timezone.utc),
                 last_modified=datetime.now(timezone.utc),
             )
@@ -162,12 +170,12 @@ def persist_incoming_entities(repo: SQLiteOntologyRepository, incoming_entities:
 
     # Save relationships
     for entity_id, entity_dict in incoming_entities.items():
-        if entity_dict.get('type') == 'relationship':
+        if entity_dict.get("type") == "relationship":
             rel = Relationship(
-                id=entity_dict['id'],
-                source_id=entity_dict['source_id'],
-                target_id=entity_dict['target_id'],
-                property_definition_id=entity_dict['property_definition_id'],
+                id=entity_dict["id"],
+                source_id=entity_dict["source_id"],
+                target_id=entity_dict["target_id"],
+                property_definition_id=entity_dict["property_definition_id"],
                 created_at=datetime.now(timezone.utc),
             )
             repo.save_relationship(rel)
@@ -434,16 +442,25 @@ class TestCrossFormatRoundTrip:
         assert plan.new_entity_count > 0, "No new entities in SKOS import"
 
         # Verify incoming entities contain expected types
-        assert any(e.get('type') == 'taxonomy' for e in skos_deserializer.incoming_entities.values()), \
-            "No taxonomies in SKOS import"
-        assert any(e.get('type') == 'concept_scheme' for e in skos_deserializer.incoming_entities.values()), \
-            "No concept schemes in SKOS import"
-        assert any(e.get('type') == 'class' for e in skos_deserializer.incoming_entities.values()), \
-            "No classes in SKOS import"
+        assert any(
+            e.get("type") == "taxonomy"
+            for e in skos_deserializer.incoming_entities.values()
+        ), "No taxonomies in SKOS import"
+        assert any(
+            e.get("type") == "concept_scheme"
+            for e in skos_deserializer.incoming_entities.values()
+        ), "No concept schemes in SKOS import"
+        assert any(
+            e.get("type") == "class"
+            for e in skos_deserializer.incoming_entities.values()
+        ), "No classes in SKOS import"
 
         # Verify external_references preserved
-        classes_with_refs = [e for e in skos_deserializer.incoming_entities.values()
-                            if e.get('type') == 'class' and e.get('external_references')]
+        classes_with_refs = [
+            e
+            for e in skos_deserializer.incoming_entities.values()
+            if e.get("type") == "class" and e.get("external_references")
+        ]
         assert len(classes_with_refs) > 0, "Lost external_references in SKOS"
 
     def test_owl_roundtrip_preserves_all_entities(
@@ -472,18 +489,29 @@ class TestCrossFormatRoundTrip:
         owl_deserializer.deserialize(owl_bytes)
 
         # Verify core entity types in incoming_entities
-        assert any(e.get('type') == 'taxonomy' for e in owl_deserializer.incoming_entities.values()), \
-            "OWL lost taxonomies"
-        assert any(e.get('type') == 'concept_scheme' for e in owl_deserializer.incoming_entities.values()), \
-            "OWL lost concept schemes"
-        assert any(e.get('type') == 'class' for e in owl_deserializer.incoming_entities.values()), \
-            "OWL lost classes"
-        assert any(e.get('type') == 'individual' for e in owl_deserializer.incoming_entities.values()), \
-            "OWL lost individuals"
+        assert any(
+            e.get("type") == "taxonomy"
+            for e in owl_deserializer.incoming_entities.values()
+        ), "OWL lost taxonomies"
+        assert any(
+            e.get("type") == "concept_scheme"
+            for e in owl_deserializer.incoming_entities.values()
+        ), "OWL lost concept schemes"
+        assert any(
+            e.get("type") == "class"
+            for e in owl_deserializer.incoming_entities.values()
+        ), "OWL lost classes"
+        assert any(
+            e.get("type") == "individual"
+            for e in owl_deserializer.incoming_entities.values()
+        ), "OWL lost individuals"
 
         # Verify external_references preserved
-        classes_with_refs = [e for e in owl_deserializer.incoming_entities.values()
-                            if e.get('type') == 'class' and e.get('external_references')]
+        classes_with_refs = [
+            e
+            for e in owl_deserializer.incoming_entities.values()
+            if e.get("type") == "class" and e.get("external_references")
+        ]
         assert len(classes_with_refs) > 0, "OWL lost external_references"
 
     def test_graphml_roundtrip_preserves_all_entities(
@@ -512,14 +540,22 @@ class TestCrossFormatRoundTrip:
         graphml_deserializer.deserialize(graphml_bytes, dry_run=True)
 
         # Verify core entity types in incoming_entities
-        assert any(e.get('type') == 'taxonomy' for e in graphml_deserializer.incoming_entities.values()), \
-            "GraphML lost taxonomies"
-        assert any(e.get('type') == 'concept_scheme' for e in graphml_deserializer.incoming_entities.values()), \
-            "GraphML lost concept schemes"
-        assert any(e.get('type') == 'class' for e in graphml_deserializer.incoming_entities.values()), \
-            "GraphML lost classes"
-        assert any(e.get('type') == 'individual' for e in graphml_deserializer.incoming_entities.values()), \
-            "GraphML lost individuals"
+        assert any(
+            e.get("type") == "taxonomy"
+            for e in graphml_deserializer.incoming_entities.values()
+        ), "GraphML lost taxonomies"
+        assert any(
+            e.get("type") == "concept_scheme"
+            for e in graphml_deserializer.incoming_entities.values()
+        ), "GraphML lost concept schemes"
+        assert any(
+            e.get("type") == "class"
+            for e in graphml_deserializer.incoming_entities.values()
+        ), "GraphML lost classes"
+        assert any(
+            e.get("type") == "individual"
+            for e in graphml_deserializer.incoming_entities.values()
+        ), "GraphML lost individuals"
 
     def test_external_references_survive_skos_leg(
         self, ontology_repo, interchange_repo, representative_graph
@@ -527,7 +563,10 @@ class TestCrossFormatRoundTrip:
         """Test that external_references survive SKOS export/import with full tuple comparison."""
         # Store original external refs as full tuples
         original_dog = representative_graph["classes"]["dog"]
-        original_refs = {(ref.source, ref.identifier, ref.uri) for ref in original_dog.external_references}
+        original_refs = {
+            (ref.source, ref.identifier, ref.uri)
+            for ref in original_dog.external_references
+        }
 
         # Export and re-import
         skos_serializer = SKOSSerializer(ontology_repo)
@@ -549,22 +588,37 @@ class TestCrossFormatRoundTrip:
         skos_deserializer.deserialize(skos_bytes)
 
         # Verify external refs in incoming_entities
-        dog_entity = next((e for e in skos_deserializer.incoming_entities.values()
-                          if e.get('title') == 'Dog'), None)
+        dog_entity = next(
+            (
+                e
+                for e in skos_deserializer.incoming_entities.values()
+                if e.get("title") == "Dog"
+            ),
+            None,
+        )
         assert dog_entity is not None, "Dog class not found in SKOS import"
-        assert dog_entity.get('external_references'), "External references lost in SKOS"
-        assert len(dog_entity['external_references']) == len(original_refs), \
-            f"External reference count mismatch: {len(dog_entity['external_references'])} != {len(original_refs)}"
+        assert dog_entity.get("external_references"), "External references lost in SKOS"
+        assert len(dog_entity["external_references"]) == len(
+            original_refs
+        ), f"External reference count mismatch: {len(dog_entity['external_references'])} != {len(original_refs)}"
 
-        imported_refs = {(ref['source'], ref['identifier'], ref['uri']) for ref in dog_entity['external_references']}
-        assert imported_refs == original_refs, f"External ref mismatch: {imported_refs} != {original_refs}"
+        imported_refs = {
+            (ref["source"], ref["identifier"], ref["uri"])
+            for ref in dog_entity["external_references"]
+        }
+        assert (
+            imported_refs == original_refs
+        ), f"External ref mismatch: {imported_refs} != {original_refs}"
 
     def test_external_references_survive_owl_leg(
         self, ontology_repo, interchange_repo, representative_graph
     ):
         """Test that external_references survive OWL export/import with full tuple comparison."""
         original_dog = representative_graph["classes"]["dog"]
-        original_refs = {(ref.source, ref.identifier, ref.uri) for ref in original_dog.external_references}
+        original_refs = {
+            (ref.source, ref.identifier, ref.uri)
+            for ref in original_dog.external_references
+        }
 
         owl_serializer = OWLSerializer(ontology_repo)
         scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
@@ -584,22 +638,37 @@ class TestCrossFormatRoundTrip:
         owl_deserializer = OWLDeserializer(fresh_repo, interchange_repo)
         owl_deserializer.deserialize(owl_bytes)
 
-        dog_entity = next((e for e in owl_deserializer.incoming_entities.values()
-                          if e.get('title') == 'Dog'), None)
+        dog_entity = next(
+            (
+                e
+                for e in owl_deserializer.incoming_entities.values()
+                if e.get("title") == "Dog"
+            ),
+            None,
+        )
         assert dog_entity is not None
-        assert dog_entity.get('external_references'), "External references lost in OWL"
-        assert len(dog_entity['external_references']) == len(original_refs), \
-            f"External reference count mismatch: {len(dog_entity['external_references'])} != {len(original_refs)}"
+        assert dog_entity.get("external_references"), "External references lost in OWL"
+        assert len(dog_entity["external_references"]) == len(
+            original_refs
+        ), f"External reference count mismatch: {len(dog_entity['external_references'])} != {len(original_refs)}"
 
-        imported_refs = {(ref['source'], ref['identifier'], ref['uri']) for ref in dog_entity['external_references']}
-        assert imported_refs == original_refs, f"External ref mismatch in OWL: {imported_refs} != {original_refs}"
+        imported_refs = {
+            (ref["source"], ref["identifier"], ref["uri"])
+            for ref in dog_entity["external_references"]
+        }
+        assert (
+            imported_refs == original_refs
+        ), f"External ref mismatch in OWL: {imported_refs} != {original_refs}"
 
     def test_external_references_survive_graphml_leg(
         self, ontology_repo, interchange_repo, representative_graph
     ):
         """Test that external_references survive GraphML export/import with full tuple comparison."""
         original_dog = representative_graph["classes"]["dog"]
-        original_refs = {(ref.source, ref.identifier, ref.uri) for ref in original_dog.external_references}
+        original_refs = {
+            (ref.source, ref.identifier, ref.uri)
+            for ref in original_dog.external_references
+        }
 
         graphml_serializer = GraphMLSerializer(ontology_repo)
         scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
@@ -619,15 +688,29 @@ class TestCrossFormatRoundTrip:
         graphml_deserializer = GraphMLDeserializer(fresh_repo)
         graphml_deserializer.deserialize(graphml_bytes, dry_run=True)
 
-        dog_entity = next((e for e in graphml_deserializer.incoming_entities.values()
-                          if e.get('title') == 'Dog'), None)
+        dog_entity = next(
+            (
+                e
+                for e in graphml_deserializer.incoming_entities.values()
+                if e.get("title") == "Dog"
+            ),
+            None,
+        )
         assert dog_entity is not None
-        assert dog_entity.get('external_references'), "External references lost in GraphML"
-        assert len(dog_entity['external_references']) == len(original_refs), \
-            f"External reference count mismatch: {len(dog_entity['external_references'])} != {len(original_refs)}"
+        assert dog_entity.get(
+            "external_references"
+        ), "External references lost in GraphML"
+        assert len(dog_entity["external_references"]) == len(
+            original_refs
+        ), f"External reference count mismatch: {len(dog_entity['external_references'])} != {len(original_refs)}"
 
-        imported_refs = {(ref['source'], ref['identifier'], ref['uri']) for ref in dog_entity['external_references']}
-        assert imported_refs == original_refs, f"External ref mismatch in GraphML: {imported_refs} != {original_refs}"
+        imported_refs = {
+            (ref["source"], ref["identifier"], ref["uri"])
+            for ref in dog_entity["external_references"]
+        }
+        assert (
+            imported_refs == original_refs
+        ), f"External ref mismatch in GraphML: {imported_refs} != {original_refs}"
 
     def test_multi_class_individual_ordering_preserved_through_owl(
         self, ontology_repo, interchange_repo, representative_graph
@@ -655,16 +738,24 @@ class TestCrossFormatRoundTrip:
         owl_deserializer.deserialize(owl_bytes)
 
         # Find the Fido individual in incoming_entities
-        fido_entity = next((e for e in owl_deserializer.incoming_entities.values()
-                           if e.get('title') == 'Fido'), None)
+        fido_entity = next(
+            (
+                e
+                for e in owl_deserializer.incoming_entities.values()
+                if e.get("title") == "Fido"
+            ),
+            None,
+        )
         assert fido_entity is not None
-        assert fido_entity.get('type') == 'individual'
-        assert fido_entity.get('class_ids'), "Multi-class membership lost"
-        assert len(fido_entity['class_ids']) == len(original_order), \
-            f"Expected {len(original_order)} classes, got {len(fido_entity['class_ids'])}"
+        assert fido_entity.get("type") == "individual"
+        assert fido_entity.get("class_ids"), "Multi-class membership lost"
+        assert len(fido_entity["class_ids"]) == len(
+            original_order
+        ), f"Expected {len(original_order)} classes, got {len(fido_entity['class_ids'])}"
         # Verify ordering is preserved (not just count)
-        assert fido_entity['class_ids'] == original_order, \
-            f"Class ordering not preserved. Expected {original_order}, got {fido_entity['class_ids']}"
+        assert (
+            fido_entity["class_ids"] == original_order
+        ), f"Class ordering not preserved. Expected {original_order}, got {fido_entity['class_ids']}"
 
     def test_cross_format_three_leg_chain_roundtrip(
         self, ontology_repo, interchange_repo, representative_graph
@@ -686,7 +777,10 @@ class TestCrossFormatRoundTrip:
         from sqlalchemy.orm import sessionmaker
 
         original_dog = representative_graph["classes"]["dog"]
-        original_dog_refs = {(ref.source, ref.identifier, ref.uri) for ref in original_dog.external_references}
+        original_dog_refs = {
+            (ref.source, ref.identifier, ref.uri)
+            for ref in original_dog.external_references
+        }
 
         # LEG 1: Export original ontology to SKOS, then import SKOS into fresh_repo1
         skos_serializer = SKOSSerializer(ontology_repo)
@@ -705,18 +799,35 @@ class TestCrossFormatRoundTrip:
         skos_deserializer.deserialize(skos_bytes)
 
         # Verify SKOS leg - SKOS doesn't support individuals
-        assert any(e.get('type') == 'taxonomy' for e in skos_deserializer.incoming_entities.values()), \
-            "SKOS leg: Lost taxonomies"
-        assert any(e.get('type') == 'concept_scheme' for e in skos_deserializer.incoming_entities.values()), \
-            "SKOS leg: Lost concept schemes"
-        assert any(e.get('type') == 'class' for e in skos_deserializer.incoming_entities.values()), \
-            "SKOS leg: Lost classes"
+        assert any(
+            e.get("type") == "taxonomy"
+            for e in skos_deserializer.incoming_entities.values()
+        ), "SKOS leg: Lost taxonomies"
+        assert any(
+            e.get("type") == "concept_scheme"
+            for e in skos_deserializer.incoming_entities.values()
+        ), "SKOS leg: Lost concept schemes"
+        assert any(
+            e.get("type") == "class"
+            for e in skos_deserializer.incoming_entities.values()
+        ), "SKOS leg: Lost classes"
 
-        dog_entity_skos = next((e for e in skos_deserializer.incoming_entities.values()
-                               if e.get('title') == 'Dog'), None)
+        dog_entity_skos = next(
+            (
+                e
+                for e in skos_deserializer.incoming_entities.values()
+                if e.get("title") == "Dog"
+            ),
+            None,
+        )
         assert dog_entity_skos is not None, "SKOS leg: Dog class not found"
-        skos_dog_refs = {(ref['source'], ref['identifier'], ref['uri']) for ref in dog_entity_skos['external_references']}
-        assert skos_dog_refs == original_dog_refs, "SKOS leg: External references corrupted"
+        skos_dog_refs = {
+            (ref["source"], ref["identifier"], ref["uri"])
+            for ref in dog_entity_skos["external_references"]
+        }
+        assert (
+            skos_dog_refs == original_dog_refs
+        ), "SKOS leg: External references corrupted"
 
         # CRITICAL: Persist the SKOS-imported entities into fresh_repo1 before re-exporting
         persist_incoming_entities(fresh_repo1, skos_deserializer.incoming_entities)
@@ -739,18 +850,35 @@ class TestCrossFormatRoundTrip:
         owl_deserializer.deserialize(owl_bytes)
 
         # Verify OWL leg
-        assert any(e.get('type') == 'taxonomy' for e in owl_deserializer.incoming_entities.values()), \
-            "OWL leg: Lost taxonomies"
-        assert any(e.get('type') == 'concept_scheme' for e in owl_deserializer.incoming_entities.values()), \
-            "OWL leg: Lost concept schemes"
-        assert any(e.get('type') == 'class' for e in owl_deserializer.incoming_entities.values()), \
-            "OWL leg: Lost classes"
+        assert any(
+            e.get("type") == "taxonomy"
+            for e in owl_deserializer.incoming_entities.values()
+        ), "OWL leg: Lost taxonomies"
+        assert any(
+            e.get("type") == "concept_scheme"
+            for e in owl_deserializer.incoming_entities.values()
+        ), "OWL leg: Lost concept schemes"
+        assert any(
+            e.get("type") == "class"
+            for e in owl_deserializer.incoming_entities.values()
+        ), "OWL leg: Lost classes"
 
-        dog_entity_owl = next((e for e in owl_deserializer.incoming_entities.values()
-                              if e.get('title') == 'Dog'), None)
+        dog_entity_owl = next(
+            (
+                e
+                for e in owl_deserializer.incoming_entities.values()
+                if e.get("title") == "Dog"
+            ),
+            None,
+        )
         assert dog_entity_owl is not None, "OWL leg: Dog class not found"
-        owl_dog_refs = {(ref['source'], ref['identifier'], ref['uri']) for ref in dog_entity_owl['external_references']}
-        assert owl_dog_refs == original_dog_refs, "OWL leg: External references corrupted"
+        owl_dog_refs = {
+            (ref["source"], ref["identifier"], ref["uri"])
+            for ref in dog_entity_owl["external_references"]
+        }
+        assert (
+            owl_dog_refs == original_dog_refs
+        ), "OWL leg: External references corrupted"
 
         # CRITICAL: Persist the OWL-imported entities into fresh_repo2 before re-exporting
         persist_incoming_entities(fresh_repo2, owl_deserializer.incoming_entities)
@@ -773,19 +901,37 @@ class TestCrossFormatRoundTrip:
         graphml_deserializer.deserialize(graphml_bytes, dry_run=True)
 
         # Verify GraphML leg
-        assert any(e.get('type') == 'taxonomy' for e in graphml_deserializer.incoming_entities.values()), \
-            "GraphML leg: Lost taxonomies"
-        assert any(e.get('type') == 'concept_scheme' for e in graphml_deserializer.incoming_entities.values()), \
-            "GraphML leg: Lost concept schemes"
-        assert any(e.get('type') == 'class' for e in graphml_deserializer.incoming_entities.values()), \
-            "GraphML leg: Lost classes"
+        assert any(
+            e.get("type") == "taxonomy"
+            for e in graphml_deserializer.incoming_entities.values()
+        ), "GraphML leg: Lost taxonomies"
+        assert any(
+            e.get("type") == "concept_scheme"
+            for e in graphml_deserializer.incoming_entities.values()
+        ), "GraphML leg: Lost concept schemes"
+        assert any(
+            e.get("type") == "class"
+            for e in graphml_deserializer.incoming_entities.values()
+        ), "GraphML leg: Lost classes"
 
-        dog_entity_graphml = next((e for e in graphml_deserializer.incoming_entities.values()
-                                  if e.get('title') == 'Dog'), None)
+        dog_entity_graphml = next(
+            (
+                e
+                for e in graphml_deserializer.incoming_entities.values()
+                if e.get("title") == "Dog"
+            ),
+            None,
+        )
         assert dog_entity_graphml is not None, "GraphML leg: Dog class not found"
-        graphml_dog_refs = {(ref['source'], ref['identifier'], ref['uri']) for ref in dog_entity_graphml['external_references']}
-        assert graphml_dog_refs == original_dog_refs, "GraphML leg: External references corrupted"
+        graphml_dog_refs = {
+            (ref["source"], ref["identifier"], ref["uri"])
+            for ref in dog_entity_graphml["external_references"]
+        }
+        assert (
+            graphml_dog_refs == original_dog_refs
+        ), "GraphML leg: External references corrupted"
 
         # Final state verification: all three legs preserve the same external references
-        assert skos_dog_refs == original_dog_refs == owl_dog_refs == graphml_dog_refs, \
-            "Chain test failed: External references differ across legs"
+        assert (
+            skos_dog_refs == original_dog_refs == owl_dog_refs == graphml_dog_refs
+        ), "Chain test failed: External references differ across legs"

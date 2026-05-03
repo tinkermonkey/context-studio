@@ -4,6 +4,7 @@ NLP gap-filling layer (Layer 2).
 Fills gaps in entity extraction using NLP processors to catch entities
 missed by prior layers.
 """
+
 from types import MappingProxyType
 
 from domain.extraction.entities import ExtractedEntity
@@ -36,7 +37,10 @@ def execute(input: LayerInput, nlp: NLPProcessor) -> LayerOutput:
     entities: list[ExtractedEntity] = []
 
     if not input.text or not input.text.strip():
-        return LayerOutput(entities=tuple(entities), metadata=MappingProxyType({"reason": "empty_text"}))
+        return LayerOutput(
+            entities=tuple(entities),
+            metadata=MappingProxyType({"reason": "empty_text"}),
+        )
 
     # Check if NLP processor is ready before attempting extraction
     # If not ready, raise an exception (not return empty result) so the caller
@@ -74,9 +78,11 @@ def execute(input: LayerInput, nlp: NLPProcessor) -> LayerOutput:
 
     return LayerOutput(
         entities=tuple(entities),
-        metadata=MappingProxyType({
-            "nlp_entities_found": len(nlp_entities),
-            "duplicates_skipped": len(nlp_entities) - len(entities),
-            "processor_ready": True,
-        }),
+        metadata=MappingProxyType(
+            {
+                "nlp_entities_found": len(nlp_entities),
+                "duplicates_skipped": len(nlp_entities) - len(entities),
+                "processor_ready": True,
+            }
+        ),
     )

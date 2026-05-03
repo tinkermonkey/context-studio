@@ -14,7 +14,9 @@ from pathlib import Path
 import json
 
 # Add parent directory to path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import pytest
 
@@ -133,10 +135,14 @@ class TestDuckDBSyncAdapterPush:
 
         # Verify Parquet files exist in the date directories (UUID filenames)
         date_parquet_files = list((changes_dir / date_str).glob("*.parquet"))
-        tomorrow_parquet_files = list((changes_dir / tomorrow_date_str).glob("*.parquet"))
+        tomorrow_parquet_files = list(
+            (changes_dir / tomorrow_date_str).glob("*.parquet")
+        )
 
         assert len(date_parquet_files) > 0, f"No Parquet files in {date_str} directory"
-        assert len(tomorrow_parquet_files) > 0, f"No Parquet files in {tomorrow_date_str} directory"
+        assert (
+            len(tomorrow_parquet_files) > 0
+        ), f"No Parquet files in {tomorrow_date_str} directory"
 
     def test_push_events_with_complex_state(self, duckdb_adapter):
         """Test pushing events with complex nested state objects."""
@@ -294,7 +300,9 @@ class TestDuckDBSyncAdapterPull:
         assert pulled_event.change_reason is None
         assert pulled_event.previous_state is None
 
-    def test_pull_fails_on_malformed_json_in_new_state(self, duckdb_adapter, temp_output_dir):
+    def test_pull_fails_on_malformed_json_in_new_state(
+        self, duckdb_adapter, temp_output_dir
+    ):
         """Test that pull raises RuntimeError on malformed JSON in new_state instead of silently returning empty dict."""
         import pyarrow as pa
         import pyarrow.parquet as pq
@@ -306,18 +314,20 @@ class TestDuckDBSyncAdapterPull:
 
         # Create a Parquet file with malformed JSON in new_state column
         malformed_json = "{ invalid json }"
-        table = pa.table({
-            "id": ["event-malformed"],
-            "entity_id": ["entity-1"],
-            "entity_type": ["Class"],
-            "operation": ["CREATE"],
-            "timestamp": ["2024-01-01T12:00:00+00:00"],
-            "processed": [False],
-            "user_id": ["user-1"],
-            "change_reason": ["test"],
-            "new_state": [malformed_json],  # Intentionally malformed JSON
-            "previous_state": [None],
-        })
+        table = pa.table(
+            {
+                "id": ["event-malformed"],
+                "entity_id": ["entity-1"],
+                "entity_type": ["Class"],
+                "operation": ["CREATE"],
+                "timestamp": ["2024-01-01T12:00:00+00:00"],
+                "processed": [False],
+                "user_id": ["user-1"],
+                "change_reason": ["test"],
+                "new_state": [malformed_json],  # Intentionally malformed JSON
+                "previous_state": [None],
+            }
+        )
 
         parquet_file = date_dir / "malformed.parquet"
         pq.write_table(table, str(parquet_file))
@@ -328,7 +338,9 @@ class TestDuckDBSyncAdapterPull:
 
         assert "Failed to parse new_state JSON" in str(exc_info.value)
 
-    def test_pull_fails_on_malformed_json_in_previous_state(self, duckdb_adapter, temp_output_dir):
+    def test_pull_fails_on_malformed_json_in_previous_state(
+        self, duckdb_adapter, temp_output_dir
+    ):
         """Test that pull raises RuntimeError on malformed JSON in previous_state instead of silently returning None."""
         import pyarrow as pa
         import pyarrow.parquet as pq
@@ -340,18 +352,20 @@ class TestDuckDBSyncAdapterPull:
 
         # Create a Parquet file with malformed JSON in previous_state column
         malformed_json = "{ invalid json }"
-        table = pa.table({
-            "id": ["event-malformed"],
-            "entity_id": ["entity-1"],
-            "entity_type": ["Class"],
-            "operation": ["UPDATE"],
-            "timestamp": ["2024-01-01T12:00:00+00:00"],
-            "processed": [False],
-            "user_id": ["user-1"],
-            "change_reason": ["test"],
-            "new_state": [json.dumps({"name": "Test"})],
-            "previous_state": [malformed_json],  # Intentionally malformed JSON
-        })
+        table = pa.table(
+            {
+                "id": ["event-malformed"],
+                "entity_id": ["entity-1"],
+                "entity_type": ["Class"],
+                "operation": ["UPDATE"],
+                "timestamp": ["2024-01-01T12:00:00+00:00"],
+                "processed": [False],
+                "user_id": ["user-1"],
+                "change_reason": ["test"],
+                "new_state": [json.dumps({"name": "Test"})],
+                "previous_state": [malformed_json],  # Intentionally malformed JSON
+            }
+        )
 
         parquet_file = date_dir / "malformed.parquet"
         pq.write_table(table, str(parquet_file))

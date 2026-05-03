@@ -16,7 +16,9 @@ Tests verify:
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import pytest
 from fastapi import status
@@ -29,28 +31,39 @@ def create_test_taxonomy_with_classes(e2e_client, num_classes=2, unique_id=""):
     Returns: (taxonomy_id, scheme_id, [class_ids])
     """
     import uuid
+
     unique_suffix = str(uuid.uuid4())[:8] if not unique_id else unique_id
 
-    tax_response = e2e_client.post("/api/taxonomies", json={
-        "title": f"Test Taxonomy {unique_suffix}"
-    })
-    assert tax_response.status_code == 201, f"Failed to create taxonomy: {tax_response.text}"
+    tax_response = e2e_client.post(
+        "/api/taxonomies", json={"title": f"Test Taxonomy {unique_suffix}"}
+    )
+    assert (
+        tax_response.status_code == 201
+    ), f"Failed to create taxonomy: {tax_response.text}"
     taxonomy_id = tax_response.json()["id"]
 
-    scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-        "title": f"Test Scheme {unique_suffix}"
-    })
-    assert scheme_response.status_code == 201, f"Failed to create scheme: {scheme_response.text}"
+    scheme_response = e2e_client.post(
+        f"/api/taxonomies/{taxonomy_id}/schemes",
+        json={"title": f"Test Scheme {unique_suffix}"},
+    )
+    assert (
+        scheme_response.status_code == 201
+    ), f"Failed to create scheme: {scheme_response.text}"
     scheme_id = scheme_response.json()["id"]
 
     class_ids = []
     parent_id = None
     for i in range(num_classes):
-        class_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": f"Test Class {i+1} {unique_suffix}",
-            **({"parent_class_id": parent_id} if parent_id else {})
-        })
-        assert class_response.status_code == 201, f"Failed to create class: {class_response.text}"
+        class_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes",
+            json={
+                "title": f"Test Class {i+1} {unique_suffix}",
+                **({"parent_class_id": parent_id} if parent_id else {}),
+            },
+        )
+        assert (
+            class_response.status_code == 201
+        ), f"Failed to create class: {class_response.text}"
         class_id = class_response.json()["id"]
         class_ids.append(class_id)
         parent_id = class_id
@@ -71,26 +84,27 @@ class TestGraphConstruction:
         - Response contains node count, edge count, last_built timestamp
         """
         # Setup: Create ontology entities first
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Graph Test Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "Graph Test Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
-        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "Graph Test Scheme"
-        })
+        scheme_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes",
+            json={"title": "Graph Test Scheme"},
+        )
         scheme_id = scheme_response.json()["id"]
 
         # Create classes to form edges
-        class1_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Graph Class 1"
-        })
+        class1_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes", json={"title": "Graph Class 1"}
+        )
         class1_id = class1_response.json()["id"]
 
-        class2_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Graph Class 2",
-            "parent_class_id": class1_id
-        })
+        class2_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes",
+            json={"title": "Graph Class 2", "parent_class_id": class1_id},
+        )
         assert class2_response.status_code == 201
 
         # Build the graph
@@ -136,32 +150,33 @@ class TestGraphMetrics:
         - Response includes density, average_degree, connected_components, degree_distribution
         """
         # Setup: Create ontology with relationships
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Metrics Test Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "Metrics Test Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
-        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "Metrics Test Scheme"
-        })
+        scheme_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes",
+            json={"title": "Metrics Test Scheme"},
+        )
         scheme_id = scheme_response.json()["id"]
 
         # Create multiple classes
-        class1_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Metrics Class 1"
-        })
+        class1_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes", json={"title": "Metrics Class 1"}
+        )
         class1_id = class1_response.json()["id"]
 
-        class2_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Metrics Class 2",
-            "parent_class_id": class1_id
-        })
+        class2_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes",
+            json={"title": "Metrics Class 2", "parent_class_id": class1_id},
+        )
         class2_id = class2_response.json()["id"]
 
-        e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Metrics Class 3",
-            "parent_class_id": class2_id
-        })
+        e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes",
+            json={"title": "Metrics Class 3", "parent_class_id": class2_id},
+        )
 
         # Build graph
         build_response = e2e_client.post("/api/graph/build")
@@ -208,25 +223,26 @@ class TestDegreeDistribution:
         - Response contains distribution mapping and computed_at
         """
         # Setup
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Degree Test Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "Degree Test Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
-        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "Degree Test Scheme"
-        })
+        scheme_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes",
+            json={"title": "Degree Test Scheme"},
+        )
         scheme_id = scheme_response.json()["id"]
 
-        class1_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Degree Class 1"
-        })
+        class1_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes", json={"title": "Degree Class 1"}
+        )
         class1_id = class1_response.json()["id"]
 
-        class2_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Degree Class 2",
-            "parent_class_id": class1_id
-        })
+        class2_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes",
+            json={"title": "Degree Class 2", "parent_class_id": class1_id},
+        )
         assert class2_response.status_code == 201
 
         # Build graph
@@ -256,26 +272,38 @@ class TestPathFinding:
         - Response includes source_id, target_id, nodes, distance, relationships
         """
         # Create real entities with parent-child relationships creating a connected chain
-        taxonomy_id, scheme_id, class_ids = create_test_taxonomy_with_classes(e2e_client, num_classes=3)
+        taxonomy_id, scheme_id, class_ids = create_test_taxonomy_with_classes(
+            e2e_client, num_classes=3
+        )
 
         # Create a property definition for relationships
-        prop_response = e2e_client.post("/api/properties", json={
-            "identifier": "parent_of",
-            "title": "Parent Of",
-            "description": "Indicates a parent-child relationship"
-        })
-        assert prop_response.status_code == 201, f"Failed to create property definition: {prop_response.text}"
+        prop_response = e2e_client.post(
+            "/api/properties",
+            json={
+                "identifier": "parent_of",
+                "title": "Parent Of",
+                "description": "Indicates a parent-child relationship",
+            },
+        )
+        assert (
+            prop_response.status_code == 201
+        ), f"Failed to create property definition: {prop_response.text}"
         property_definition_id = prop_response.json()["id"]
 
         # Create explicit Relationship records to form edges in the graph
         # (parent_class_id is an entity attribute, not a graph edge)
         for i in range(len(class_ids) - 1):
-            rel_response = e2e_client.post("/api/relationships", json={
-                "source_id": class_ids[i],
-                "target_id": class_ids[i + 1],
-                "property_definition_id": property_definition_id
-            })
-            assert rel_response.status_code == 201, f"Failed to create relationship: {rel_response.text}"
+            rel_response = e2e_client.post(
+                "/api/relationships",
+                json={
+                    "source_id": class_ids[i],
+                    "target_id": class_ids[i + 1],
+                    "property_definition_id": property_definition_id,
+                },
+            )
+            assert (
+                rel_response.status_code == 201
+            ), f"Failed to create relationship: {rel_response.text}"
 
         # Build the graph
         build_response = e2e_client.post("/api/graph/build")
@@ -301,24 +329,24 @@ class TestPathFinding:
         - Status code 404 (Not Found)
         """
         # Setup: Create disconnected nodes
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "No Path Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "No Path Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
-        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "No Path Scheme"
-        })
+        scheme_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes", json={"title": "No Path Scheme"}
+        )
         scheme_id = scheme_response.json()["id"]
 
-        class1_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Isolated Class 1"
-        })
+        class1_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes", json={"title": "Isolated Class 1"}
+        )
         class1_id = class1_response.json()["id"]
 
-        class2_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Isolated Class 2"
-        })
+        class2_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes", json={"title": "Isolated Class 2"}
+        )
         class2_id = class2_response.json()["id"]
 
         # Build graph
@@ -341,26 +369,38 @@ class TestPathFinding:
         - Response is a list containing paths between connected nodes
         """
         # Create real entities with parent-child relationships creating a connected chain
-        taxonomy_id, scheme_id, class_ids = create_test_taxonomy_with_classes(e2e_client, num_classes=3)
+        taxonomy_id, scheme_id, class_ids = create_test_taxonomy_with_classes(
+            e2e_client, num_classes=3
+        )
 
         # Create a property definition for relationships
-        prop_response = e2e_client.post("/api/properties", json={
-            "identifier": "connected_to",
-            "title": "Connected To",
-            "description": "Indicates a connection between entities"
-        })
-        assert prop_response.status_code == 201, f"Failed to create property definition: {prop_response.text}"
+        prop_response = e2e_client.post(
+            "/api/properties",
+            json={
+                "identifier": "connected_to",
+                "title": "Connected To",
+                "description": "Indicates a connection between entities",
+            },
+        )
+        assert (
+            prop_response.status_code == 201
+        ), f"Failed to create property definition: {prop_response.text}"
         property_definition_id = prop_response.json()["id"]
 
         # Create explicit Relationship records to form edges in the graph
         # (parent_class_id is an entity attribute, not a graph edge)
         for i in range(len(class_ids) - 1):
-            rel_response = e2e_client.post("/api/relationships", json={
-                "source_id": class_ids[i],
-                "target_id": class_ids[i + 1],
-                "property_definition_id": property_definition_id
-            })
-            assert rel_response.status_code == 201, f"Failed to create relationship: {rel_response.text}"
+            rel_response = e2e_client.post(
+                "/api/relationships",
+                json={
+                    "source_id": class_ids[i],
+                    "target_id": class_ids[i + 1],
+                    "property_definition_id": property_definition_id,
+                },
+            )
+            assert (
+                rel_response.status_code == 201
+            ), f"Failed to create relationship: {rel_response.text}"
 
         # Build the graph
         build_response = e2e_client.post("/api/graph/build")
@@ -389,25 +429,37 @@ class TestNeighborQueries:
         - Uses real entity IDs instead of fabricated test strings
         """
         # Create real entities with parent-child relationships
-        taxonomy_id, scheme_id, class_ids = create_test_taxonomy_with_classes(e2e_client, num_classes=2)
+        taxonomy_id, scheme_id, class_ids = create_test_taxonomy_with_classes(
+            e2e_client, num_classes=2
+        )
 
         # Create a property definition for relationships
-        prop_response = e2e_client.post("/api/properties", json={
-            "identifier": "has_child",
-            "title": "Has Child",
-            "description": "Indicates a parent-child relationship"
-        })
-        assert prop_response.status_code == 201, f"Failed to create property definition: {prop_response.text}"
+        prop_response = e2e_client.post(
+            "/api/properties",
+            json={
+                "identifier": "has_child",
+                "title": "Has Child",
+                "description": "Indicates a parent-child relationship",
+            },
+        )
+        assert (
+            prop_response.status_code == 201
+        ), f"Failed to create property definition: {prop_response.text}"
         property_definition_id = prop_response.json()["id"]
 
         # Create explicit Relationship records to form edges in the graph
         # (parent_class_id is an entity attribute, not a graph edge)
-        rel_response = e2e_client.post("/api/relationships", json={
-            "source_id": class_ids[0],
-            "target_id": class_ids[1],
-            "property_definition_id": property_definition_id
-        })
-        assert rel_response.status_code == 201, f"Failed to create relationship: {rel_response.text}"
+        rel_response = e2e_client.post(
+            "/api/relationships",
+            json={
+                "source_id": class_ids[0],
+                "target_id": class_ids[1],
+                "property_definition_id": property_definition_id,
+            },
+        )
+        assert (
+            rel_response.status_code == 201
+        ), f"Failed to create relationship: {rel_response.text}"
 
         # Build the graph
         build_response = e2e_client.post("/api/graph/build")
@@ -436,25 +488,37 @@ class TestNeighborQueries:
         - Uses real entity IDs instead of fabricated test strings
         """
         # Create real entities with parent-child relationships
-        taxonomy_id, scheme_id, class_ids = create_test_taxonomy_with_classes(e2e_client, num_classes=2)
+        taxonomy_id, scheme_id, class_ids = create_test_taxonomy_with_classes(
+            e2e_client, num_classes=2
+        )
 
         # Create a property definition for relationships
-        prop_response = e2e_client.post("/api/properties", json={
-            "identifier": "extends",
-            "title": "Extends",
-            "description": "Indicates an extension relationship"
-        })
-        assert prop_response.status_code == 201, f"Failed to create property definition: {prop_response.text}"
+        prop_response = e2e_client.post(
+            "/api/properties",
+            json={
+                "identifier": "extends",
+                "title": "Extends",
+                "description": "Indicates an extension relationship",
+            },
+        )
+        assert (
+            prop_response.status_code == 201
+        ), f"Failed to create property definition: {prop_response.text}"
         property_definition_id = prop_response.json()["id"]
 
         # Create explicit Relationship records to form edges in the graph
         # (parent_class_id is an entity attribute, not a graph edge)
-        rel_response = e2e_client.post("/api/relationships", json={
-            "source_id": class_ids[0],
-            "target_id": class_ids[1],
-            "property_definition_id": property_definition_id
-        })
-        assert rel_response.status_code == 201, f"Failed to create relationship: {rel_response.text}"
+        rel_response = e2e_client.post(
+            "/api/relationships",
+            json={
+                "source_id": class_ids[0],
+                "target_id": class_ids[1],
+                "property_definition_id": property_definition_id,
+            },
+        )
+        assert (
+            rel_response.status_code == 201
+        ), f"Failed to create relationship: {rel_response.text}"
 
         # Build the graph
         build_response = e2e_client.post("/api/graph/build")
@@ -485,19 +549,20 @@ class TestCentrality:
         - Response includes algorithm and scores mapping
         """
         # Setup
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Centrality Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "Centrality Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
-        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "Centrality Scheme"
-        })
+        scheme_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes",
+            json={"title": "Centrality Scheme"},
+        )
         scheme_id = scheme_response.json()["id"]
 
-        class_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Centrality Class 1"
-        })
+        class_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes", json={"title": "Centrality Class 1"}
+        )
         assert class_response.status_code == 201
 
         # Build graph
@@ -522,19 +587,19 @@ class TestCentrality:
         - Response includes algorithm and scores mapping
         """
         # Setup
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "PageRank Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "PageRank Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
-        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "PageRank Scheme"
-        })
+        scheme_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes", json={"title": "PageRank Scheme"}
+        )
         scheme_id = scheme_response.json()["id"]
 
-        class_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "PageRank Class"
-        })
+        class_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes", json={"title": "PageRank Class"}
+        )
         assert class_response.status_code == 201
 
         # Build graph
@@ -561,19 +626,19 @@ class TestSPARQLQueries:
         - Response includes results and triple_count
         """
         # Setup: Create ontology with entities
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "SPARQL Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "SPARQL Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
-        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "SPARQL Scheme"
-        })
+        scheme_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes", json={"title": "SPARQL Scheme"}
+        )
         scheme_id = scheme_response.json()["id"]
 
-        class_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "SPARQL Class"
-        })
+        class_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes", json={"title": "SPARQL Class"}
+        )
         assert class_response.status_code == 201
 
         # Build graph
@@ -581,9 +646,10 @@ class TestSPARQLQueries:
         assert build_response.status_code == status.HTTP_200_OK
 
         # Execute SPARQL query
-        response = e2e_client.post("/api/graph/sparql", json={
-            "query": "SELECT ?s ?p ?o WHERE { ?s ?p ?o } LIMIT 10"
-        })
+        response = e2e_client.post(
+            "/api/graph/sparql",
+            json={"query": "SELECT ?s ?p ?o WHERE { ?s ?p ?o } LIMIT 10"},
+        )
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
         assert "results" in body
@@ -600,9 +666,12 @@ class TestSPARQLQueries:
         - Results structure is correct
         """
         # Execute SPARQL query for a predicate that likely doesn't exist
-        response = e2e_client.post("/api/graph/sparql", json={
-            "query": "SELECT ?s ?p ?o WHERE { ?s <http://example.com/nonexistent> ?o }"
-        })
+        response = e2e_client.post(
+            "/api/graph/sparql",
+            json={
+                "query": "SELECT ?s ?p ?o WHERE { ?s <http://example.com/nonexistent> ?o }"
+            },
+        )
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
         assert "results" in body
@@ -624,19 +693,19 @@ class TestRDFTriples:
         - Response includes triples array and count
         """
         # Setup
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Triples Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "Triples Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
-        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "Triples Scheme"
-        })
+        scheme_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes", json={"title": "Triples Scheme"}
+        )
         scheme_id = scheme_response.json()["id"]
 
-        class_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Triples Class"
-        })
+        class_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes", json={"title": "Triples Class"}
+        )
         assert class_response.status_code == 201
 
         # Build graph
@@ -660,19 +729,19 @@ class TestRDFTriples:
         - Response includes count
         """
         # Setup
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Count Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "Count Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
-        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "Count Scheme"
-        })
+        scheme_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes", json={"title": "Count Scheme"}
+        )
         scheme_id = scheme_response.json()["id"]
 
-        class_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Count Class"
-        })
+        class_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes", json={"title": "Count Class"}
+        )
         assert class_response.status_code == 201
 
         # Build graph
@@ -694,7 +763,9 @@ class TestRDFTriples:
         - Count field matches the actual number of triples in response
         """
         # Setup: create entities to ensure some triples exist
-        taxonomy_id, scheme_id, class_ids = create_test_taxonomy_with_classes(e2e_client, num_classes=2)
+        taxonomy_id, scheme_id, class_ids = create_test_taxonomy_with_classes(
+            e2e_client, num_classes=2
+        )
 
         # Build graph
         build_response = e2e_client.post("/api/graph/build")
@@ -725,7 +796,9 @@ class TestCommunities:
         - Response includes both algorithm and communities
         """
         # Setup: Create entities to build a graph
-        taxonomy_id, scheme_id, class_ids = create_test_taxonomy_with_classes(e2e_client, num_classes=3)
+        taxonomy_id, scheme_id, class_ids = create_test_taxonomy_with_classes(
+            e2e_client, num_classes=3
+        )
 
         # Build the graph
         build_response = e2e_client.post("/api/graph/build")
@@ -754,25 +827,25 @@ class TestCycleDetection:
         - would_create_cycle is true
         """
         # Setup: Create a chain to enable cycle
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Cycle Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "Cycle Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
-        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "Cycle Scheme"
-        })
+        scheme_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes", json={"title": "Cycle Scheme"}
+        )
         scheme_id = scheme_response.json()["id"]
 
-        class1_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Cycle Class 1"
-        })
+        class1_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes", json={"title": "Cycle Class 1"}
+        )
         class1_id = class1_response.json()["id"]
 
-        class2_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Cycle Class 2",
-            "parent_class_id": class1_id
-        })
+        class2_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes",
+            json={"title": "Cycle Class 2", "parent_class_id": class1_id},
+        )
         assert class2_response.status_code == 201
         class2_id = class2_response.json()["id"]
 
@@ -781,10 +854,10 @@ class TestCycleDetection:
         assert build_response.status_code == status.HTTP_200_OK
 
         # Check if adding edge from class2 to class1 would create cycle
-        response = e2e_client.post("/api/graph/cycle-check", json={
-            "source_id": class2_id,
-            "target_id": class1_id
-        })
+        response = e2e_client.post(
+            "/api/graph/cycle-check",
+            json={"source_id": class2_id, "target_id": class1_id},
+        )
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
         assert "source_id" in body

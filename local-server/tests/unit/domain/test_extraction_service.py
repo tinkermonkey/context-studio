@@ -9,7 +9,9 @@ passing between layers. Uses in-memory fakes with zero infrastructure imports.
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import pytest
 
@@ -25,10 +27,10 @@ from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
 from tests.fakes.fake_extraction_repository import FakeExtractionRepository
 
-
 # ============================================================================
 # Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def service():
@@ -47,6 +49,7 @@ def service():
 # ============================================================================
 # Test Cases
 # ============================================================================
+
 
 class TestExtract:
     """Tests for extract() orchestration."""
@@ -167,7 +170,9 @@ class TestDeduplication:
         )
 
         # Deduplication should keep layer 1 (highest priority)
-        deduplicated = service._deduplicate([entity_layer_0, entity_layer_1, entity_layer_3])
+        deduplicated = service._deduplicate(
+            [entity_layer_0, entity_layer_1, entity_layer_3]
+        )
 
         assert len(deduplicated) == 1
         assert deduplicated[0].source_layer == 1
@@ -227,8 +232,12 @@ class TestDeduplication:
             extraction_repo=FakeExtractionRepository(),
         )
 
-        entity_a = ExtractedEntity(label="Apple Inc.", entity_type="ORG", source_layer=0)
-        entity_b = ExtractedEntity(label="  Apple Inc.  ", entity_type="ORG", source_layer=1)
+        entity_a = ExtractedEntity(
+            label="Apple Inc.", entity_type="ORG", source_layer=0
+        )
+        entity_b = ExtractedEntity(
+            label="  Apple Inc.  ", entity_type="ORG", source_layer=1
+        )
 
         deduplicated = service._deduplicate([entity_a, entity_b])
 
@@ -321,12 +330,15 @@ class TestLayerExecution:
 
     def test_layer_returns_empty_output_gracefully(self):
         """Layer that returns empty output doesn't stop extraction."""
+
         # LLM provider with no available models returns empty output
         class NoModelsLLMProvider:
             def list_available_models(self):
                 return []
+
             def is_model_available(self, model):
                 return False
+
             def complete(self, *args, **kwargs):
                 # Won't be called if no models available
                 raise RuntimeError("Should not be called")
@@ -634,6 +646,7 @@ class TestExceptionHandling:
         Empty results are valid—they indicate the text contains no entities,
         not that extraction failed.
         """
+
         # All layers fail to extract entities (either by exception or returning no results)
         class ThrowingOntologyRepository:
             def get_all_entities_and_relationships(self):
@@ -642,8 +655,10 @@ class TestExceptionHandling:
         class ThrowingEmbeddingService:
             def embed(self, text):
                 raise RuntimeError("Embedding error")
+
             def embed_batch(self, texts):
                 raise RuntimeError("Embedding error")
+
             def similarity(self, a, b):
                 raise RuntimeError("Embedding error")
 
@@ -652,7 +667,9 @@ class TestExceptionHandling:
             embedding_service=ThrowingEmbeddingService(),
             llm=FakeLLMProvider(should_fail=True),  # Layer 1 fails
             nlp=FakeNLPProcessor(should_fail=True),  # Layer 2 fails (empty entities)
-            reference_sources=[FakeReferenceSource(should_fail=True)],  # Layer 3: no entities to enrich
+            reference_sources=[
+                FakeReferenceSource(should_fail=True)
+            ],  # Layer 3: no entities to enrich
             event_publisher=FakeEventPublisher(),
             extraction_repo=FakeExtractionRepository(),
         )
@@ -669,12 +686,15 @@ class TestExceptionHandling:
 
     def test_nlp_processor_not_ready_allows_continuation(self):
         """NLP processor not ready doesn't stop extraction."""
+
         class NotReadyNLPProcessor:
             def is_ready(self):
                 return False
+
             def process(self, text):
                 # Won't be called if not ready
                 raise RuntimeError("Should not be called")
+
             def extract_entities(self, text):
                 # Won't be called if not ready
                 raise RuntimeError("Should not be called")
@@ -709,15 +729,19 @@ class TestExceptionHandling:
 
     def test_reference_source_not_available_allows_continuation(self):
         """Reference source not available doesn't stop extraction."""
+
         class UnavailableReferenceSource:
             @property
             def source_name(self):
                 return "UnavailableSource"
+
             def search(self, term, limit=10):
                 # Won't be called if not available
                 raise RuntimeError("Should not be called")
+
             def get_relations(self, uri, limit=10):
                 raise RuntimeError("Should not be called")
+
             def is_available(self):
                 return False
 

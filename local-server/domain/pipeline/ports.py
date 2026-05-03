@@ -16,10 +16,10 @@ from typing import Literal, Protocol
 
 from .entities import Execution, PipelineConfiguration
 
-
 # ============================================================================
 # Value types used in port contracts
 # ============================================================================
+
 
 @dataclass(frozen=True)
 class LLMResponse:
@@ -34,6 +34,7 @@ class LLMResponse:
         finish_reason: Reason the model stopped (e.g., 'stop', 'length')
         model: Name of the model that generated the response
     """
+
     content: str
     tokens_in: int
     tokens_out: int
@@ -45,6 +46,7 @@ class LLMResponse:
 # ============================================================================
 # Port interfaces (Protocols)
 # ============================================================================
+
 
 class LLMProvider(Protocol):
     """
@@ -175,7 +177,9 @@ class PipelineRepository(Protocol):
         """
         ...
 
-    def get_executions(self, pipeline_config_id: str, limit: int = 50) -> list[Execution]:
+    def get_executions(
+        self, pipeline_config_id: str, limit: int = 50
+    ) -> list[Execution]:
         """
         Retrieve execution history for a pipeline configuration.
 

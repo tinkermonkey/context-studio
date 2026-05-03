@@ -184,8 +184,13 @@ class WikidataSource:
                             if "mainsnak" in claim:
                                 mainsnak = claim["mainsnak"]
                                 if mainsnak.get("snaktype") == "value":
-                                    value = mainsnak.get("datavalue", {}).get("value", {})
-                                    if isinstance(value, dict) and "entity-type" in value:
+                                    value = mainsnak.get("datavalue", {}).get(
+                                        "value", {}
+                                    )
+                                    if (
+                                        isinstance(value, dict)
+                                        and "entity-type" in value
+                                    ):
                                         target_id = value.get("id", "")
                                         if target_id and target_id.startswith("Q"):
                                             relations.append(
@@ -247,7 +252,9 @@ class WikidataSource:
         """
         return await run_sync_in_executor(self.search, term, limit)
 
-    async def get_relations_async(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
+    async def get_relations_async(
+        self, uri: str, limit: int = 10
+    ) -> list[ReferenceRelation]:
         """
         Get relationships connected to a URI in Wikidata (async version).
 

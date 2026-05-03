@@ -5,6 +5,7 @@ ExtractionService orchestrates four extraction layers sequentially, deduplicates
 results, and emits domain events. It depends on port interfaces for repositories,
 embedding services, LLM providers, NLP processors, and reference sources.
 """
+
 from __future__ import annotations
 
 import logging
@@ -254,7 +255,9 @@ class ExtractionService:
             start_time=start_time,
         )
 
-    def enrich_from_references(self, text: str, extracted_entities: list[ExtractedEntity]) -> ExtractionResult:
+    def enrich_from_references(
+        self, text: str, extracted_entities: list[ExtractedEntity]
+    ) -> ExtractionResult:
         """
         Enrich extracted entities with external reference knowledge.
 
@@ -364,11 +367,13 @@ class ExtractionService:
             # and the completion event is still published. Persistence is fire-and-forget.
 
         # Publish completion event
-        failures = self._event_publisher.publish(ExtractionCompleted(
-            result_id=result_id,
-            entity_count=len(deduplicated),
-            duration_ms=duration_ms,
-        ))
+        failures = self._event_publisher.publish(
+            ExtractionCompleted(
+                result_id=result_id,
+                entity_count=len(deduplicated),
+                duration_ms=duration_ms,
+            )
+        )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
@@ -409,13 +414,15 @@ class ExtractionService:
             output = layer_fn()
             duration_ms = int((time.time() - layer_start) * 1000)
 
-            layers_executed.append(ExtractionLayerResult(
-                layer_number=layer_num,
-                layer_name=layer_name,
-                entities_found=len(output.entities),
-                duration_ms=duration_ms,
-                success=True,
-            ))
+            layers_executed.append(
+                ExtractionLayerResult(
+                    layer_number=layer_num,
+                    layer_name=layer_name,
+                    entities_found=len(output.entities),
+                    duration_ms=duration_ms,
+                    success=True,
+                )
+            )
 
             return output
 
@@ -432,17 +439,21 @@ class ExtractionService:
                 exc_info=exc,
             )
 
-            layers_executed.append(ExtractionLayerResult(
-                layer_number=layer_num,
-                layer_name=layer_name,
-                entities_found=0,
-                duration_ms=duration_ms,
-                success=False,
-                error_message=error_msg,
-            ))
+            layers_executed.append(
+                ExtractionLayerResult(
+                    layer_number=layer_num,
+                    layer_name=layer_name,
+                    entities_found=0,
+                    duration_ms=duration_ms,
+                    success=False,
+                    error_message=error_msg,
+                )
+            )
 
             # Return empty output so subsequent layers can continue
-            return LayerOutput(entities=tuple(), metadata=MappingProxyType({"error": error_msg}))
+            return LayerOutput(
+                entities=tuple(), metadata=MappingProxyType({"error": error_msg})
+            )
 
     def _deduplicate(self, entities: list[ExtractedEntity]) -> list[ExtractedEntity]:
         """
@@ -517,7 +528,9 @@ class ExtractionService:
                     used_indices.add(j)
                     continue
 
-                label_similarity = self._normalized_similarity(entity.label, other.label)
+                label_similarity = self._normalized_similarity(
+                    entity.label, other.label
+                )
 
                 if label_similarity >= self._similarity_threshold:
                     # Mark as used; higher-priority entity is kept

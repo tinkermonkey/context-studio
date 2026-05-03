@@ -20,7 +20,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from domain.extraction.entities import ExtractedEntity
 from domain.extraction.services import ExtractionService
-from domain.extraction.exceptions import ExtractionError, InvalidInputError, LayerExecutionError
+from domain.extraction.exceptions import (
+    ExtractionError,
+    InvalidInputError,
+    LayerExecutionError,
+)
 from utils.logger import get_logger
 from utils.async_executor import run_sync_in_executor
 
@@ -41,6 +45,7 @@ _logger = get_logger(__name__)
 
 # ==================== Error Handler Utilities ====================
 
+
 def _handle_domain_error(exc: Exception) -> tuple[int, str]:
     """
     Map domain exceptions to HTTP status codes and error messages.
@@ -55,7 +60,10 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
         return (status.HTTP_400_BAD_REQUEST, str(exc))
     elif isinstance(exc, LayerExecutionError):
         _logger.error(f"Extraction layer execution error: {exc}", exc_info=exc)
-        return (status.HTTP_500_INTERNAL_SERVER_ERROR, "Extraction layer failed to execute")
+        return (
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Extraction layer failed to execute",
+        )
     elif isinstance(exc, ExtractionError):
         return (status.HTTP_400_BAD_REQUEST, str(exc))
     else:
@@ -109,7 +117,10 @@ def _to_schema(result) -> ExtractionResultSchema:
 
 # ==================== Extraction Endpoints ====================
 
-@router.post("/extract", response_model=ExtractionResultSchema, status_code=status.HTTP_200_OK)
+
+@router.post(
+    "/extract", response_model=ExtractionResultSchema, status_code=status.HTTP_200_OK
+)
 async def extract_entities(
     request: ExtractRequest,
     service: ExtractionService = Depends(get_extraction_service),
@@ -141,7 +152,11 @@ async def extract_entities(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.post("/analyze_text", response_model=ExtractionResultSchema, status_code=status.HTTP_200_OK)
+@router.post(
+    "/analyze_text",
+    response_model=ExtractionResultSchema,
+    status_code=status.HTTP_200_OK,
+)
 async def analyze_text(
     request: AnalyzeTextRequest,
     service: ExtractionService = Depends(get_extraction_service),
@@ -175,7 +190,11 @@ async def analyze_text(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.post("/enrich_from_references", response_model=ExtractionResultSchema, status_code=status.HTTP_200_OK)
+@router.post(
+    "/enrich_from_references",
+    response_model=ExtractionResultSchema,
+    status_code=status.HTTP_200_OK,
+)
 async def enrich_from_references(
     request: EnrichFromReferencesRequest,
     service: ExtractionService = Depends(get_extraction_service),

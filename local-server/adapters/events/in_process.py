@@ -5,12 +5,11 @@ from typing import Callable, TypeVar
 from domain.events import DomainEvent
 from utils.logger import get_logger
 
-
 logger = get_logger(__name__)
 
 # Contravariant TypeVar allows handlers typed for specific event subclasses
 # E.g., a handler expecting GraphInvalidated can be assigned to Callable[[DomainEvent], None]
-EventT_contra = TypeVar('EventT_contra', bound=DomainEvent, contravariant=True)
+EventT_contra = TypeVar("EventT_contra", bound=DomainEvent, contravariant=True)
 
 
 class InProcessEventPublisher:
@@ -29,7 +28,9 @@ class InProcessEventPublisher:
 
     def __init__(self) -> None:
         """Initialize the event publisher with empty handler registry."""
-        self._handlers: dict[type[DomainEvent], list[Callable[[DomainEvent], None]]] = {}
+        self._handlers: dict[type[DomainEvent], list[Callable[[DomainEvent], None]]] = (
+            {}
+        )
 
     def publish(self, event: DomainEvent) -> list[tuple[str, Exception]]:
         """
@@ -54,7 +55,7 @@ class InProcessEventPublisher:
             try:
                 handler(event)
             except Exception as e:
-                handler_name = getattr(handler, '__name__', repr(handler))
+                handler_name = getattr(handler, "__name__", repr(handler))
                 logger.error(
                     f"Handler {handler_name} raised exception while processing "
                     f"event {event_type.__name__} (id: {event.event_id}): {type(e).__name__}: {str(e)}",

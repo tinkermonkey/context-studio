@@ -156,7 +156,9 @@ async def get_embedding_status(
         HTTPException: 500 for internal errors
     """
     try:
-        component_status = await run_sync_in_executor(service.get_embedding_model_status)
+        component_status = await run_sync_in_executor(
+            service.get_embedding_model_status
+        )
         return ComponentStatusResponse.model_validate(component_status)
     except Exception as exc:
         status_code, message = _handle_admin_error(exc)

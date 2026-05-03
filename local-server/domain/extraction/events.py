@@ -3,6 +3,7 @@ Extraction domain events.
 
 Domain events published when extraction operations complete.
 """
+
 from dataclasses import dataclass
 from typing import ClassVar
 
@@ -19,6 +20,7 @@ class ExtractionCompleted(DomainEvent):
         entity_count: Number of unique entities in the result
         duration_ms: Total extraction time in milliseconds
     """
+
     _aggregate_id_field: ClassVar[str] = "result_id"
     result_id: str = ""
     entity_count: int = 0

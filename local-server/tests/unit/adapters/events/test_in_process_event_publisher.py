@@ -11,8 +11,11 @@ Tests verify:
 import sys
 import os
 
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+sys.path.append(
+    os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    )
+)
 
 from adapters.events.in_process import InProcessEventPublisher
 from domain.events import DomainEvent

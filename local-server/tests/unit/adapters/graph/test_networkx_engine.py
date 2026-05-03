@@ -17,7 +17,11 @@ Tests verify:
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+sys.path.append(
+    os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    )
+)
 
 import pytest
 from adapters.graph.networkx_engine import NetworkXGraphEngine
@@ -56,8 +60,18 @@ class TestNetworkXGraphEngineConstruction:
             {"id": "node-3", "title": "Gamma", "node_type": "taxonomy"},
         ]
         edges = [
-            {"id": "edge-1", "source_id": "node-1", "target_id": "node-2", "property_definition_id": "prop-1"},
-            {"id": "edge-2", "source_id": "node-2", "target_id": "node-3", "property_definition_id": "prop-1"},
+            {
+                "id": "edge-1",
+                "source_id": "node-1",
+                "target_id": "node-2",
+                "property_definition_id": "prop-1",
+            },
+            {
+                "id": "edge-2",
+                "source_id": "node-2",
+                "target_id": "node-3",
+                "property_definition_id": "prop-1",
+            },
         ]
 
         engine.build_from_data(nodes, edges)

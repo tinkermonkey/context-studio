@@ -9,7 +9,12 @@ import sys
 import os
 
 # Add local-server root to path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+sys.path.insert(
+    0,
+    os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    ),
+)
 
 from adapters.web.schemas.admin import AppConfigurationResponse
 from domain.admin.entities import AppConfiguration
@@ -24,9 +29,7 @@ class TestAppConfigurationResponseMasking:
             server={},
             database={},
             logging={},
-            llm={
-                "openai_api_key": "sk-abcdefghijklmnop1234"
-            },
+            llm={"openai_api_key": "sk-abcdefghijklmnop1234"},
             nlp={},
             embedding={},
             reference_sources={},
@@ -42,9 +45,7 @@ class TestAppConfigurationResponseMasking:
             server={},
             database={},
             logging={},
-            llm={
-                "anthropic_api_key": "sk-ant-v0-abcdefghijklmnop1234"
-            },
+            llm={"anthropic_api_key": "sk-ant-v0-abcdefghijklmnop1234"},
             nlp={},
             embedding={},
             reference_sources={},
@@ -64,9 +65,7 @@ class TestAppConfigurationResponseMasking:
             nlp={},
             embedding={},
             reference_sources={},
-            sync={
-                "s3_secret_key": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-            }
+            sync={"s3_secret_key": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"},
         )
 
         response = AppConfigurationResponse.from_domain(config)
@@ -84,9 +83,7 @@ class TestAppConfigurationResponseMasking:
             nlp={},
             embedding={},
             reference_sources={},
-            sync={
-                "s3_access_key": "AKIAIOSFODNN7EXAMPLE"
-            }
+            sync={"s3_access_key": "AKIAIOSFODNN7EXAMPLE"},
         )
 
         response = AppConfigurationResponse.from_domain(config)
@@ -100,9 +97,7 @@ class TestAppConfigurationResponseMasking:
             server={},
             database={},
             logging={},
-            llm={
-                "openai_api_key": "abc"
-            },
+            llm={"openai_api_key": "abc"},
             nlp={},
             embedding={},
             reference_sources={},
@@ -118,9 +113,7 @@ class TestAppConfigurationResponseMasking:
             server={},
             database={},
             logging={},
-            llm={
-                "openai_api_key": ""
-            },
+            llm={"openai_api_key": ""},
             nlp={},
             embedding={},
             reference_sources={},
@@ -136,9 +129,7 @@ class TestAppConfigurationResponseMasking:
             server={},
             database={},
             logging={},
-            llm={
-                "openai_api_key": None
-            },
+            llm={"openai_api_key": None},
             nlp={},
             embedding={},
             reference_sources={},
@@ -156,7 +147,7 @@ class TestAppConfigurationResponseMasking:
             logging={},
             llm={
                 "openai_api_key": "sk-openai1234567890",
-                "anthropic_api_key": "sk-ant-anthropic1234567890"
+                "anthropic_api_key": "sk-ant-anthropic1234567890",
             },
             nlp={},
             embedding={},
@@ -180,8 +171,8 @@ class TestAppConfigurationResponseMasking:
             reference_sources={},
             sync={
                 "s3_access_key": "AKIAIOSFODNN7EXAMPLE",
-                "s3_secret_key": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-            }
+                "s3_secret_key": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+            },
         )
 
         response = AppConfigurationResponse.from_domain(config)
@@ -199,7 +190,7 @@ class TestAppConfigurationResponseMasking:
             llm={
                 "provider": "openai",
                 "model": "gpt-4",
-                "openai_api_key": "sk-test1234567890"
+                "openai_api_key": "sk-test1234567890",
             },
             nlp={},
             embedding={},
@@ -219,9 +210,7 @@ class TestAppConfigurationResponseMasking:
             server={},
             database={},
             logging={},
-            llm={
-                "openai_api_key": original_key
-            },
+            llm={"openai_api_key": original_key},
             nlp={},
             embedding={},
             reference_sources={},
@@ -237,16 +226,14 @@ class TestAppConfigurationResponseMasking:
             server={},
             database={},
             logging={},
-            llm={
-                "openai_api_key": "sk-openai1234567890"
-            },
+            llm={"openai_api_key": "sk-openai1234567890"},
             nlp={},
             embedding={},
             reference_sources={},
             sync={
                 "s3_access_key": "AKIAIOSFODNN7EXAMPLE",
-                "s3_secret_key": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-            }
+                "s3_secret_key": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+            },
         )
 
         response = AppConfigurationResponse.from_domain(config)
@@ -262,9 +249,7 @@ class TestAppConfigurationResponseMasking:
             server={},
             database={},
             logging={},
-            llm={
-                "openai_api_key": "abcd"
-            },
+            llm={"openai_api_key": "abcd"},
             nlp={},
             embedding={},
             reference_sources={},
@@ -280,9 +265,7 @@ class TestAppConfigurationResponseMasking:
             server={},
             database={},
             logging={},
-            llm={
-                "openai_api_key": 12345678901234
-            },
+            llm={"openai_api_key": 12345678901234},
             nlp={},
             embedding={},
             reference_sources={},
@@ -299,13 +282,11 @@ class TestAppConfigurationResponseMasking:
             server={},
             database={},
             logging={},
-            llm={
-                "openai_api_key": "sk-test1234567890"
-            },
+            llm={"openai_api_key": "sk-test1234567890"},
             nlp={},
             embedding={},
             reference_sources={},
-            sync=None
+            sync=None,
         )
 
         response = AppConfigurationResponse.from_domain(config)

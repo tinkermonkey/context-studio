@@ -26,7 +26,11 @@ from domain.admin.value_objects import (
     ComponentStatus,
     BackgroundTaskSummary,
 )
-from domain.admin.exceptions import ConfigurationError, TaskNotFoundError, InvalidStateTransitionError
+from domain.admin.exceptions import (
+    ConfigurationError,
+    TaskNotFoundError,
+    InvalidStateTransitionError,
+)
 from tests.fakes.fake_metrics_collector import FakeMetricsCollector
 from tests.fakes.fake_configuration_store import FakeConfigurationStore
 
@@ -299,7 +303,9 @@ class TestAdminServiceHealthErrorHandling:
 
         # Health check continues despite the failure and reports it
         assert health.status == SystemHealthStatus.DEGRADED
-        assert any("Error checking background tasks" in issue for issue in health.issues)
+        assert any(
+            "Error checking background tasks" in issue for issue in health.issues
+        )
 
 
 class TestBackgroundTaskSummaryValueObject:
@@ -314,10 +320,12 @@ class TestBackgroundTaskSummaryValueObject:
     def test_total_with_non_empty_by_status(self):
         """BackgroundTaskSummary.total sums all tasks by status."""
         summary = BackgroundTaskSummary(
-            by_status=MappingProxyType({
-                BackgroundTaskStatus.COMPLETED: 2,
-                BackgroundTaskStatus.FAILED: 1,
-            })
+            by_status=MappingProxyType(
+                {
+                    BackgroundTaskStatus.COMPLETED: 2,
+                    BackgroundTaskStatus.FAILED: 1,
+                }
+            )
         )
 
         assert summary.total == 3
@@ -325,12 +333,14 @@ class TestBackgroundTaskSummaryValueObject:
     def test_total_with_multiple_statuses(self):
         """BackgroundTaskSummary.total correctly sums multiple status groups."""
         summary = BackgroundTaskSummary(
-            by_status=MappingProxyType({
-                BackgroundTaskStatus.PENDING: 1,
-                BackgroundTaskStatus.RUNNING: 2,
-                BackgroundTaskStatus.COMPLETED: 5,
-                BackgroundTaskStatus.FAILED: 1,
-            })
+            by_status=MappingProxyType(
+                {
+                    BackgroundTaskStatus.PENDING: 1,
+                    BackgroundTaskStatus.RUNNING: 2,
+                    BackgroundTaskStatus.COMPLETED: 5,
+                    BackgroundTaskStatus.FAILED: 1,
+                }
+            )
         )
 
         assert summary.total == 9
@@ -424,7 +434,9 @@ class TestBackgroundTaskStateTransitions:
         )
 
         with pytest.raises(InvalidStateTransitionError) as exc_info:
-            task.transition_to(BackgroundTaskStatus.COMPLETED, datetime.now(timezone.utc))
+            task.transition_to(
+                BackgroundTaskStatus.COMPLETED, datetime.now(timezone.utc)
+            )
 
         assert "Cannot transition task" in str(exc_info.value)
 
@@ -443,10 +455,12 @@ class TestAdminServiceBackgroundTaskSummary:
                 uptime_seconds=0.0, llm_providers_available=("openai",)
             ),
             task_summary=BackgroundTaskSummary(
-                by_status=MappingProxyType({
-                    BackgroundTaskStatus.COMPLETED: 2,
-                    BackgroundTaskStatus.FAILED: 1,
-                })
+                by_status=MappingProxyType(
+                    {
+                        BackgroundTaskStatus.COMPLETED: 2,
+                        BackgroundTaskStatus.FAILED: 1,
+                    }
+                )
             ),
         )
         service = AdminService(metrics, self.config_store)
@@ -670,7 +684,7 @@ class TestAdminServiceConfigurationReset:
                 "nested": {
                     "key": "value",
                     "s3_access_key": "AKIAIOSFODNN7EXAMPLE",  # Nested credential
-                }
+                },
             },
             logging={},
             llm={
@@ -688,7 +702,7 @@ class TestAdminServiceConfigurationReset:
                 "path": "/default/db.db",
                 "nested": {
                     "key": "default_value",
-                }
+                },
             },
             logging={},
             llm={},
@@ -706,7 +720,9 @@ class TestAdminServiceConfigurationReset:
 
         # Verify nested credentials are preserved
         assert result.database["path"] == "/default/db.db"  # Non-credential reset
-        assert result.database["nested"]["s3_access_key"] == "AKIAIOSFODNN7EXAMPLE"  # Nested credential preserved
+        assert (
+            result.database["nested"]["s3_access_key"] == "AKIAIOSFODNN7EXAMPLE"
+        )  # Nested credential preserved
 
         # Verify non-nested credentials in other sections are also preserved
         assert result.llm["openai_api_key"] == "sk-nested-secret"

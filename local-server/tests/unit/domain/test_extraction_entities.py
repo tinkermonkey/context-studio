@@ -8,12 +8,18 @@ for ExtractedEntity, ExtractionResult, and ProcessingMetrics, including validati
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import pytest
 from datetime import datetime, timezone
 
-from domain.extraction.entities import ExtractedEntity, ExtractionResult, ProcessingMetrics
+from domain.extraction.entities import (
+    ExtractedEntity,
+    ExtractionResult,
+    ProcessingMetrics,
+)
 from domain.extraction.value_objects import ExtractionLayerResult
 
 
@@ -430,7 +436,9 @@ class TestProcessingMetrics:
 
     def test_processing_metrics_invalid_negative_relationships(self):
         """ProcessingMetrics raises ValueError if relationships_found is negative."""
-        with pytest.raises(ValueError, match="relationships_found must be non-negative"):
+        with pytest.raises(
+            ValueError, match="relationships_found must be non-negative"
+        ):
             ProcessingMetrics(
                 layer_name="Test",
                 duration_ms=100,

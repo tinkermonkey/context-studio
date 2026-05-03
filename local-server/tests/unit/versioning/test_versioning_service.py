@@ -17,14 +17,30 @@ sys.path.insert(
 )
 
 from domain.versioning.services import VersioningService
-from domain.versioning.entities import EntityVersion, Proposal, ChangeEvent, Conflict, ConflictReport
+from domain.versioning.entities import (
+    EntityVersion,
+    Proposal,
+    ChangeEvent,
+    Conflict,
+    ConflictReport,
+)
 from domain.versioning.events import ChangesetMerged, SyncCompleted
-from domain.versioning.exceptions import VersionNotFoundError, ChangesetStateError, ConflictResolutionError
-from domain.versioning.value_objects import ChangeState, ChangeOperation, ProposalState, SyncResult, EntityVersionState, MergeStrategy
+from domain.versioning.exceptions import (
+    VersionNotFoundError,
+    ChangesetStateError,
+    ConflictResolutionError,
+)
+from domain.versioning.value_objects import (
+    ChangeState,
+    ChangeOperation,
+    ProposalState,
+    SyncResult,
+    EntityVersionState,
+    MergeStrategy,
+)
 from tests.fakes.fake_change_repository import FakeChangeRepository
 from tests.fakes.fake_sync_target import FakeSyncTarget
 from tests.fakes.fake_event_publisher import FakeEventPublisher
-
 
 # ============================================================================
 # Fixtures
@@ -50,7 +66,11 @@ def event_publisher() -> FakeEventPublisher:
 
 
 @pytest.fixture
-def service(repo: FakeChangeRepository, sync_target: FakeSyncTarget, event_publisher: FakeEventPublisher) -> VersioningService:
+def service(
+    repo: FakeChangeRepository,
+    sync_target: FakeSyncTarget,
+    event_publisher: FakeEventPublisher,
+) -> VersioningService:
     """Create a VersioningService with fake dependencies."""
     return VersioningService(
         change_repo=repo,
@@ -175,9 +195,7 @@ class TestChangeHistoryQueries:
         assert retrieved.version == 1
         assert retrieved.state == "active"
 
-    def test_get_entity_version_not_found(
-        self, service: VersioningService
-    ) -> None:
+    def test_get_entity_version_not_found(self, service: VersioningService) -> None:
         """Test retrieving a non-existent entity version raises error."""
         with pytest.raises(VersionNotFoundError):
             service.get_entity_version("entity1", 999)
@@ -207,9 +225,7 @@ class TestChangeHistoryQueries:
         assert latest is not None
         assert latest.version == 2
 
-    def test_get_latest_version_not_found(
-        self, service: VersioningService
-    ) -> None:
+    def test_get_latest_version_not_found(self, service: VersioningService) -> None:
         """Test retrieving latest version when entity has no versions."""
         latest = service.get_latest_version("entity1")
         assert latest is None
@@ -240,10 +256,7 @@ class TestChangeHistoryQueries:
         assert versions[0].version == 1
         assert versions[1].version == 2
 
-    def test_list_versions_empty(
-        self, service: VersioningService
-
-    ) -> None:
+    def test_list_versions_empty(self, service: VersioningService) -> None:
         """Test listing versions when entity has no versions."""
         versions = service.list_versions("entity1")
         assert versions == []
@@ -257,9 +270,7 @@ class TestChangeHistoryQueries:
 class TestChangesetLifecycle:
     """Test changeset creation, staging, and proposal submission."""
 
-    def test_create_changeset_basic(
-        self, service: VersioningService
-    ) -> None:
+    def test_create_changeset_basic(self, service: VersioningService) -> None:
         """Test creating a basic changeset."""
         changeset = service.create_changeset(name="Test changeset")
 
@@ -317,9 +328,7 @@ class TestChangesetLifecycle:
         assert retrieved.id == changeset.id
         assert retrieved.name == "Test changeset"
 
-    def test_stage_changeset_success(
-        self, service: VersioningService
-    ) -> None:
+    def test_stage_changeset_success(self, service: VersioningService) -> None:
         """Test staging a changeset from WORKING to STAGED."""
         changeset = service.create_changeset(name="Test changeset")
         assert changeset.state == ChangeState.WORKING
@@ -338,16 +347,12 @@ class TestChangesetLifecycle:
         # greater due to timing, so just verify it exists
         assert staged.updated_at is not None
 
-    def test_stage_changeset_not_found(
-        self, service: VersioningService
-    ) -> None:
+    def test_stage_changeset_not_found(self, service: VersioningService) -> None:
         """Test staging a non-existent changeset raises error."""
         with pytest.raises(VersionNotFoundError):
             service.stage_changeset("nonexistent-id")
 
-    def test_stage_already_staged_raises(
-        self, service: VersioningService
-    ) -> None:
+    def test_stage_already_staged_raises(self, service: VersioningService) -> None:
         """Test that staging an already staged changeset raises error."""
         changeset = service.create_changeset(name="Test changeset")
         service.stage_changeset(changeset.id)
@@ -355,9 +360,7 @@ class TestChangesetLifecycle:
         with pytest.raises(ChangesetStateError):
             service.stage_changeset(changeset.id)
 
-    def test_submit_proposal_success(
-        self, service: VersioningService
-    ) -> None:
+    def test_submit_proposal_success(self, service: VersioningService) -> None:
         """Test submitting a changeset as a proposal."""
         changeset = service.create_changeset(name="Test changeset")
         service.stage_changeset(changeset.id)
@@ -382,9 +385,7 @@ class TestChangesetLifecycle:
         assert updated_changeset is not None
         assert updated_changeset.state == ChangeState.PROPOSED
 
-    def test_submit_proposal_not_found(
-        self, service: VersioningService
-    ) -> None:
+    def test_submit_proposal_not_found(self, service: VersioningService) -> None:
         """Test submitting a proposal for non-existent changeset raises error."""
         with pytest.raises(VersionNotFoundError):
             service.submit_proposal("nonexistent-id")
@@ -408,9 +409,7 @@ class TestChangesetLifecycle:
 class TestProposalWorkflow:
     """Test proposal approval, rejection, and merge workflows."""
 
-    def test_approve_proposal_success(
-        self, service: VersioningService
-    ) -> None:
+    def test_approve_proposal_success(self, service: VersioningService) -> None:
         """Test approving a proposal."""
         changeset = service.create_changeset(name="Test changeset")
         service.stage_changeset(changeset.id)
@@ -435,16 +434,12 @@ class TestProposalWorkflow:
         assert updated_changeset is not None
         assert updated_changeset.state == ChangeState.APPROVED
 
-    def test_approve_proposal_not_found(
-        self, service: VersioningService
-    ) -> None:
+    def test_approve_proposal_not_found(self, service: VersioningService) -> None:
         """Test approving a non-existent proposal raises error."""
         with pytest.raises(VersionNotFoundError):
             service.approve_proposal("nonexistent-id")
 
-    def test_reject_proposal_success(
-        self, service: VersioningService
-    ) -> None:
+    def test_reject_proposal_success(self, service: VersioningService) -> None:
         """Test rejecting a proposal."""
         changeset = service.create_changeset(name="Test changeset")
         service.stage_changeset(changeset.id)
@@ -471,9 +466,7 @@ class TestProposalWorkflow:
         assert updated_changeset is not None
         assert updated_changeset.state == ChangeState.WORKING
 
-    def test_reject_proposal_not_found(
-        self, service: VersioningService
-    ) -> None:
+    def test_reject_proposal_not_found(self, service: VersioningService) -> None:
         """Test rejecting a non-existent proposal raises error."""
         with pytest.raises(VersionNotFoundError):
             service.reject_proposal("nonexistent-id", "Test reason")
@@ -560,9 +553,7 @@ class TestProposalWorkflow:
         result = service.merge_proposal(proposal.id)
         assert result.events_applied == 2
 
-    def test_merge_proposal_not_found(
-        self, service: VersioningService
-    ) -> None:
+    def test_merge_proposal_not_found(self, service: VersioningService) -> None:
         """Test merging a non-existent proposal raises error."""
         with pytest.raises(VersionNotFoundError):
             service.merge_proposal("nonexistent-id")
@@ -579,9 +570,7 @@ class TestProposalWorkflow:
         with pytest.raises(ChangesetStateError):
             service.merge_proposal(proposal.id)
 
-    def test_merge_rejected_proposal_raises(
-        self, service: VersioningService
-    ) -> None:
+    def test_merge_rejected_proposal_raises(self, service: VersioningService) -> None:
         """Test that merging a rejected proposal raises error."""
         changeset = service.create_changeset(name="Test changeset")
         service.stage_changeset(changeset.id)
@@ -816,7 +805,11 @@ class TestConflictDetection:
             entity_id="entity1",
             entity_type="class",
             operation=ChangeOperation.UPDATE,
-            previous_state={"name": "old", "description": "old_desc", "status": "active"},
+            previous_state={
+                "name": "old",
+                "description": "old_desc",
+                "status": "active",
+            },
             new_state={"name": "new1", "description": "desc1", "status": "active"},
         )
 
@@ -824,7 +817,11 @@ class TestConflictDetection:
             entity_id="entity1",
             entity_type="class",
             operation=ChangeOperation.UPDATE,
-            previous_state={"name": "external_name", "description": "external_desc", "status": "active"},
+            previous_state={
+                "name": "external_name",
+                "description": "external_desc",
+                "status": "active",
+            },
             new_state={"name": "new2", "description": "desc2", "status": "inactive"},
         )
 
@@ -901,9 +898,7 @@ class TestAutoResolveConflicts:
             assert conflict.is_resolved is True
             assert conflict.resolved_value == conflict.incoming_value
 
-    def test_auto_resolve_uses_incoming_value(
-        self, service: VersioningService
-    ) -> None:
+    def test_auto_resolve_uses_incoming_value(self, service: VersioningService) -> None:
         """Test that auto_resolve uses incoming_value for resolution."""
         from domain.versioning.entities import Conflict, ConflictReport
 
@@ -922,9 +917,7 @@ class TestAutoResolveConflicts:
 
         assert resolved.conflicts[0].resolved_value == "incoming_value"
 
-    def test_auto_resolve_empty_report(
-        self, service: VersioningService
-    ) -> None:
+    def test_auto_resolve_empty_report(self, service: VersioningService) -> None:
         """Test auto_resolve on empty conflict report."""
         from domain.versioning.entities import ConflictReport
 
@@ -962,7 +955,9 @@ class TestAutoResolveConflicts:
         proposal = service.submit_proposal(changeset.id)
 
         # Call auto_resolve_and_persist (the method under test)
-        report = service.auto_resolve_and_persist(proposal.id, MergeStrategy.LAST_WRITE_WINS)
+        report = service.auto_resolve_and_persist(
+            proposal.id, MergeStrategy.LAST_WRITE_WINS
+        )
 
         # Verify the report shows conflicts detected and resolved
         assert report.has_conflicts is True
@@ -1026,12 +1021,16 @@ class TestAutoResolveConflicts:
             new_state={"name": "Entity1"},
         )
 
-        changeset = service.create_changeset(name="Clean changeset", event_ids=[event_id])
+        changeset = service.create_changeset(
+            name="Clean changeset", event_ids=[event_id]
+        )
         service.stage_changeset(changeset.id)
         proposal = service.submit_proposal(changeset.id)
 
         # Call auto_resolve_and_persist (should handle no-conflict case)
-        report = service.auto_resolve_and_persist(proposal.id, MergeStrategy.LAST_WRITE_WINS)
+        report = service.auto_resolve_and_persist(
+            proposal.id, MergeStrategy.LAST_WRITE_WINS
+        )
 
         # Should report no conflicts
         assert report.has_conflicts is False
@@ -1202,7 +1201,9 @@ class TestMergeStrategies:
         service.approve_proposal(proposal.id)
 
         # Use auto_resolve_and_persist to detect, resolve, and persist all at once
-        resolved_report = service.auto_resolve_and_persist(proposal.id, MergeStrategy.LAST_WRITE_WINS)
+        resolved_report = service.auto_resolve_and_persist(
+            proposal.id, MergeStrategy.LAST_WRITE_WINS
+        )
         assert resolved_report.has_conflicts is True
         assert resolved_report.all_resolved is True
 
@@ -1258,13 +1259,10 @@ class TestMergeStrategies:
         assert resolved.conflicts[0].resolution_strategy is None
 
 
-
 class TestManualConflictResolution:
     """Test manual conflict resolution."""
 
-    def test_resolve_conflicts_no_conflicts(
-        self, service: VersioningService
-    ) -> None:
+    def test_resolve_conflicts_no_conflicts(self, service: VersioningService) -> None:
         """Test manual resolution when there are no conflicts."""
         changeset = service.create_changeset(name="No conflicts")
         service.stage_changeset(changeset.id)
@@ -1431,7 +1429,9 @@ class TestMergeWithConflictDetection:
             new_state={"name": "Entity1"},
         )
 
-        changeset = service.create_changeset(name="Clean changeset", event_ids=[event_id])
+        changeset = service.create_changeset(
+            name="Clean changeset", event_ids=[event_id]
+        )
         service.stage_changeset(changeset.id)
         proposal = service.submit_proposal(changeset.id)
         service.approve_proposal(proposal.id)
@@ -1510,7 +1510,10 @@ class TestSyncMethods:
     """Test sync methods (push/pull) with event slicing and transaction handling."""
 
     def test_push_changes_empty_returns_zero_pushed(
-        self, service: VersioningService, repo: FakeChangeRepository, sync_target: FakeSyncTarget
+        self,
+        service: VersioningService,
+        repo: FakeChangeRepository,
+        sync_target: FakeSyncTarget,
     ) -> None:
         """Test push_changes with no unprocessed events returns 0 pushed."""
         result = service.push_changes()
@@ -1520,7 +1523,11 @@ class TestSyncMethods:
         assert len(result.errors) == 0
 
     def test_push_changes_marks_events_as_processed(
-        self, service: VersioningService, repo: FakeChangeRepository, sync_target: FakeSyncTarget, event_publisher: FakeEventPublisher
+        self,
+        service: VersioningService,
+        repo: FakeChangeRepository,
+        sync_target: FakeSyncTarget,
+        event_publisher: FakeEventPublisher,
     ) -> None:
         """Test push_changes marks successfully pushed events as processed."""
         # Record some unprocessed events
@@ -1561,7 +1568,10 @@ class TestSyncMethods:
         assert event.events_count == 2
 
     def test_push_changes_respects_500_event_limit(
-        self, service: VersioningService, repo: FakeChangeRepository, sync_target: FakeSyncTarget
+        self,
+        service: VersioningService,
+        repo: FakeChangeRepository,
+        sync_target: FakeSyncTarget,
     ) -> None:
         """Test push_changes slices events to 500 limit."""
         # Record 600 unprocessed events
@@ -1616,7 +1626,10 @@ class TestSyncMethods:
         assert len(unprocessed) == 1
 
     def test_pull_changes_empty_returns_zero_pulled(
-        self, service: VersioningService, repo: FakeChangeRepository, sync_target: FakeSyncTarget
+        self,
+        service: VersioningService,
+        repo: FakeChangeRepository,
+        sync_target: FakeSyncTarget,
     ) -> None:
         """Test pull_changes with no remote events returns 0 pulled."""
         result = service.pull_changes()
@@ -1626,7 +1639,11 @@ class TestSyncMethods:
         assert len(repo.get_changes().events) == 0
 
     def test_pull_changes_records_events_locally(
-        self, service: VersioningService, repo: FakeChangeRepository, sync_target: FakeSyncTarget, event_publisher: FakeEventPublisher
+        self,
+        service: VersioningService,
+        repo: FakeChangeRepository,
+        sync_target: FakeSyncTarget,
+        event_publisher: FakeEventPublisher,
     ) -> None:
         """Test pull_changes records remote events in local repository."""
         # Add remote events
@@ -1669,7 +1686,10 @@ class TestSyncMethods:
         assert event.events_count == 2
 
     def test_pull_changes_stops_on_first_error(
-        self, service: VersioningService, repo: FakeChangeRepository, event_publisher: FakeEventPublisher
+        self,
+        service: VersioningService,
+        repo: FakeChangeRepository,
+        event_publisher: FakeEventPublisher,
     ) -> None:
         """Test pull_changes stops on first record error and logs partial success."""
         # Create a mock sync target that returns events
@@ -1688,13 +1708,16 @@ class TestSyncMethods:
 
             def push(self, events):
                 now = datetime.now(timezone.utc)
-                return SyncResult(pushed=0, pulled=0, errors=(), started_at=now, completed_at=now)
+                return SyncResult(
+                    pushed=0, pulled=0, errors=(), started_at=now, completed_at=now
+                )
 
             def is_configured(self):
                 return True
 
             def get_sync_status(self):
                 from domain.versioning.value_objects import SyncStatus
+
                 return SyncStatus(
                     last_pushed_at=None,
                     last_pulled_at=None,
@@ -1732,7 +1755,10 @@ class TestSyncMethods:
         assert "Database error" in result.errors[0]
 
     def test_pull_changes_rolls_back_on_partial_failure(
-        self, service: VersioningService, repo: FakeChangeRepository, event_publisher: FakeEventPublisher
+        self,
+        service: VersioningService,
+        repo: FakeChangeRepository,
+        event_publisher: FakeEventPublisher,
     ) -> None:
         """Test pull_changes rolls back all recorded events when one fails mid-pull."""
         # Create remote events to be pulled
@@ -1759,13 +1785,16 @@ class TestSyncMethods:
 
             def push(self, events):
                 now = datetime.now(timezone.utc)
-                return SyncResult(pushed=0, pulled=0, errors=(), started_at=now, completed_at=now)
+                return SyncResult(
+                    pushed=0, pulled=0, errors=(), started_at=now, completed_at=now
+                )
 
             def is_configured(self):
                 return True
 
             def get_sync_status(self):
                 from domain.versioning.value_objects import SyncStatus
+
                 return SyncStatus(
                     last_pushed_at=None,
                     last_pulled_at=None,
@@ -1904,7 +1933,10 @@ class TestSyncStatusErrorHandling:
         assert status.is_degraded is True
 
     def test_get_sync_status_success_path(
-        self, service: VersioningService, repo: FakeChangeRepository, sync_target: FakeSyncTarget
+        self,
+        service: VersioningService,
+        repo: FakeChangeRepository,
+        sync_target: FakeSyncTarget,
     ) -> None:
         """Test that get_sync_status returns correct values when no errors occur."""
         # Record a change to have an unprocessed event
@@ -2188,7 +2220,9 @@ class TestEntityVersionCreationOnMerge:
             entity_id=entity_id,
             entity_type="class",
             operation=ChangeOperation.UPDATE,
-            previous_state={"field": "value1_modified"},  # Conflict: doesn't match first event's new_state
+            previous_state={
+                "field": "value1_modified"
+            },  # Conflict: doesn't match first event's new_state
             new_state={"field": "value2"},
         )
 

@@ -299,7 +299,9 @@ async def lifespan(app: FastAPI):
             sync_target=sync_target,
             event_publisher=event_publisher,
         )
-        logger.info("VersioningService created and wired with repository, sync adapter, and event publisher")
+        logger.info(
+            "VersioningService created and wired with repository, sync adapter, and event publisher"
+        )
 
         # --- System Administration Service ---
 
@@ -324,78 +326,150 @@ async def lifespan(app: FastAPI):
         # --- Wire event subscriptions ---
 
         event_publisher.subscribe(GraphInvalidated, graph_service.on_graph_invalidated)
-        logger.info("Event subscription: GraphInvalidated -> GraphAnalysisService.on_graph_invalidated")
+        logger.info(
+            "Event subscription: GraphInvalidated -> GraphAnalysisService.on_graph_invalidated"
+        )
 
-        event_publisher.subscribe(ExtractionCompleted, change_recorder.on_extraction_completed)
-        logger.info("Event subscription: ExtractionCompleted -> ChangeEventRecorder.on_extraction_completed")
+        event_publisher.subscribe(
+            ExtractionCompleted, change_recorder.on_extraction_completed
+        )
+        logger.info(
+            "Event subscription: ExtractionCompleted -> ChangeEventRecorder.on_extraction_completed"
+        )
 
-        event_publisher.subscribe(PipelineExecuted, change_recorder.on_pipeline_executed)
-        logger.info("Event subscription: PipelineExecuted -> ChangeEventRecorder.on_pipeline_executed")
+        event_publisher.subscribe(
+            PipelineExecuted, change_recorder.on_pipeline_executed
+        )
+        logger.info(
+            "Event subscription: PipelineExecuted -> ChangeEventRecorder.on_pipeline_executed"
+        )
 
-        event_publisher.subscribe(ChangesetMerged, versioning_service.on_changeset_merged)
-        logger.info("Event subscription: ChangesetMerged -> VersioningService.on_changeset_merged")
+        event_publisher.subscribe(
+            ChangesetMerged, versioning_service.on_changeset_merged
+        )
+        logger.info(
+            "Event subscription: ChangesetMerged -> VersioningService.on_changeset_merged"
+        )
 
         event_publisher.subscribe(SyncCompleted, versioning_service.on_sync_completed)
-        logger.info("Event subscription: SyncCompleted -> VersioningService.on_sync_completed")
+        logger.info(
+            "Event subscription: SyncCompleted -> VersioningService.on_sync_completed"
+        )
 
         # --- Ontology change event subscriptions ---
 
         event_publisher.subscribe(TaxonomyCreated, change_recorder.on_taxonomy_created)
-        logger.info("Event subscription: TaxonomyCreated -> ChangeEventRecorder.on_taxonomy_created")
+        logger.info(
+            "Event subscription: TaxonomyCreated -> ChangeEventRecorder.on_taxonomy_created"
+        )
 
         event_publisher.subscribe(SchemeCreated, change_recorder.on_scheme_created)
-        logger.info("Event subscription: SchemeCreated -> ChangeEventRecorder.on_scheme_created")
+        logger.info(
+            "Event subscription: SchemeCreated -> ChangeEventRecorder.on_scheme_created"
+        )
 
         event_publisher.subscribe(ClassCreated, change_recorder.on_class_created)
-        logger.info("Event subscription: ClassCreated -> ChangeEventRecorder.on_class_created")
+        logger.info(
+            "Event subscription: ClassCreated -> ChangeEventRecorder.on_class_created"
+        )
 
         event_publisher.subscribe(ClassUpdated, change_recorder.on_class_updated)
-        logger.info("Event subscription: ClassUpdated -> ChangeEventRecorder.on_class_updated")
+        logger.info(
+            "Event subscription: ClassUpdated -> ChangeEventRecorder.on_class_updated"
+        )
 
         event_publisher.subscribe(ClassDeleted, change_recorder.on_class_deleted)
-        logger.info("Event subscription: ClassDeleted -> ChangeEventRecorder.on_class_deleted")
+        logger.info(
+            "Event subscription: ClassDeleted -> ChangeEventRecorder.on_class_deleted"
+        )
 
         event_publisher.subscribe(ClassMoved, change_recorder.on_class_moved)
-        logger.info("Event subscription: ClassMoved -> ChangeEventRecorder.on_class_moved")
+        logger.info(
+            "Event subscription: ClassMoved -> ChangeEventRecorder.on_class_moved"
+        )
 
-        event_publisher.subscribe(RelationshipCreated, change_recorder.on_relationship_created)
-        logger.info("Event subscription: RelationshipCreated -> ChangeEventRecorder.on_relationship_created")
+        event_publisher.subscribe(
+            RelationshipCreated, change_recorder.on_relationship_created
+        )
+        logger.info(
+            "Event subscription: RelationshipCreated -> ChangeEventRecorder.on_relationship_created"
+        )
 
-        event_publisher.subscribe(RelationshipDeleted, change_recorder.on_relationship_deleted)
-        logger.info("Event subscription: RelationshipDeleted -> ChangeEventRecorder.on_relationship_deleted")
+        event_publisher.subscribe(
+            RelationshipDeleted, change_recorder.on_relationship_deleted
+        )
+        logger.info(
+            "Event subscription: RelationshipDeleted -> ChangeEventRecorder.on_relationship_deleted"
+        )
 
-        event_publisher.subscribe(PropertyDefinitionCreated, change_recorder.on_property_definition_created)
-        logger.info("Event subscription: PropertyDefinitionCreated -> ChangeEventRecorder.on_property_definition_created")
+        event_publisher.subscribe(
+            PropertyDefinitionCreated, change_recorder.on_property_definition_created
+        )
+        logger.info(
+            "Event subscription: PropertyDefinitionCreated -> ChangeEventRecorder.on_property_definition_created"
+        )
 
-        event_publisher.subscribe(PropertyDefinitionUpdated, change_recorder.on_property_definition_updated)
-        logger.info("Event subscription: PropertyDefinitionUpdated -> ChangeEventRecorder.on_property_definition_updated")
+        event_publisher.subscribe(
+            PropertyDefinitionUpdated, change_recorder.on_property_definition_updated
+        )
+        logger.info(
+            "Event subscription: PropertyDefinitionUpdated -> ChangeEventRecorder.on_property_definition_updated"
+        )
 
-        event_publisher.subscribe(PropertyDefinitionDeleted, change_recorder.on_property_definition_deleted)
-        logger.info("Event subscription: PropertyDefinitionDeleted -> ChangeEventRecorder.on_property_definition_deleted")
+        event_publisher.subscribe(
+            PropertyDefinitionDeleted, change_recorder.on_property_definition_deleted
+        )
+        logger.info(
+            "Event subscription: PropertyDefinitionDeleted -> ChangeEventRecorder.on_property_definition_deleted"
+        )
 
         event_publisher.subscribe(TaxonomyUpdated, change_recorder.on_taxonomy_updated)
-        logger.info("Event subscription: TaxonomyUpdated -> ChangeEventRecorder.on_taxonomy_updated")
+        logger.info(
+            "Event subscription: TaxonomyUpdated -> ChangeEventRecorder.on_taxonomy_updated"
+        )
 
         event_publisher.subscribe(TaxonomyDeleted, change_recorder.on_taxonomy_deleted)
-        logger.info("Event subscription: TaxonomyDeleted -> ChangeEventRecorder.on_taxonomy_deleted")
+        logger.info(
+            "Event subscription: TaxonomyDeleted -> ChangeEventRecorder.on_taxonomy_deleted"
+        )
 
         event_publisher.subscribe(SchemeUpdated, change_recorder.on_scheme_updated)
-        logger.info("Event subscription: SchemeUpdated -> ChangeEventRecorder.on_scheme_updated")
+        logger.info(
+            "Event subscription: SchemeUpdated -> ChangeEventRecorder.on_scheme_updated"
+        )
 
         event_publisher.subscribe(SchemeDeleted, change_recorder.on_scheme_deleted)
-        logger.info("Event subscription: SchemeDeleted -> ChangeEventRecorder.on_scheme_deleted")
+        logger.info(
+            "Event subscription: SchemeDeleted -> ChangeEventRecorder.on_scheme_deleted"
+        )
 
-        event_publisher.subscribe(ConceptSchemeUpdated, change_recorder.on_concept_scheme_updated)
-        logger.info("Event subscription: ConceptSchemeUpdated -> ChangeEventRecorder.on_concept_scheme_updated")
+        event_publisher.subscribe(
+            ConceptSchemeUpdated, change_recorder.on_concept_scheme_updated
+        )
+        logger.info(
+            "Event subscription: ConceptSchemeUpdated -> ChangeEventRecorder.on_concept_scheme_updated"
+        )
 
-        event_publisher.subscribe(IndividualCreated, change_recorder.on_individual_created)
-        logger.info("Event subscription: IndividualCreated -> ChangeEventRecorder.on_individual_created")
+        event_publisher.subscribe(
+            IndividualCreated, change_recorder.on_individual_created
+        )
+        logger.info(
+            "Event subscription: IndividualCreated -> ChangeEventRecorder.on_individual_created"
+        )
 
-        event_publisher.subscribe(IndividualUpdated, change_recorder.on_individual_updated)
-        logger.info("Event subscription: IndividualUpdated -> ChangeEventRecorder.on_individual_updated")
+        event_publisher.subscribe(
+            IndividualUpdated, change_recorder.on_individual_updated
+        )
+        logger.info(
+            "Event subscription: IndividualUpdated -> ChangeEventRecorder.on_individual_updated"
+        )
 
-        event_publisher.subscribe(IndividualDeleted, change_recorder.on_individual_deleted)
-        logger.info("Event subscription: IndividualDeleted -> ChangeEventRecorder.on_individual_deleted")
+        event_publisher.subscribe(
+            IndividualDeleted, change_recorder.on_individual_deleted
+        )
+        logger.info(
+            "Event subscription: IndividualDeleted -> ChangeEventRecorder.on_individual_deleted"
+        )
 
         # --- Store services in app.state for dependency injection ---
 

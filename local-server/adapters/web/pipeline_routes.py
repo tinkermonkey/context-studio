@@ -23,7 +23,11 @@ Error handling translates domain exceptions to appropriate HTTP responses.
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from domain.pipeline.services import PipelineService
-from domain.pipeline.exceptions import PipelineNotFoundError, PipelineError, LayerExecutionError
+from domain.pipeline.exceptions import (
+    PipelineNotFoundError,
+    PipelineError,
+    LayerExecutionError,
+)
 from utils.logger import get_logger
 from utils.async_executor import run_sync_in_executor
 
@@ -42,6 +46,7 @@ _logger = get_logger(__name__)
 
 
 # ==================== Error Handler Utilities ====================
+
 
 def _handle_domain_error(exc: Exception) -> tuple[int, str]:
     """
@@ -67,7 +72,10 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
         return (status.HTTP_404_NOT_FOUND, str(exc))
     elif isinstance(exc, LayerExecutionError):
         _logger.error(f"Pipeline layer execution error: {exc}", exc_info=exc)
-        return (status.HTTP_500_INTERNAL_SERVER_ERROR, "Pipeline layer failed to execute")
+        return (
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Pipeline layer failed to execute",
+        )
     elif isinstance(exc, PipelineError):
         return (status.HTTP_400_BAD_REQUEST, str(exc))
     else:
@@ -78,7 +86,12 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
 
 # ==================== Pipeline Configuration Endpoints ====================
 
-@router.post("/pipelines", response_model=PipelineConfigurationResponse, status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/pipelines",
+    response_model=PipelineConfigurationResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_pipeline_configuration(
     request: PipelineConfigurationCreate,
     service: PipelineService = Depends(get_pipeline_service),
@@ -220,6 +233,7 @@ async def delete_pipeline_configuration(
 
 # ==================== Pipeline Execution Endpoints ====================
 
+
 @router.post("/pipelines/{pipeline_id}/execute", response_model=ExecutionResponse)
 async def execute_pipeline(
     pipeline_id: str,
@@ -252,7 +266,9 @@ async def execute_pipeline(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.get("/pipelines/{pipeline_id}/executions", response_model=list[ExecutionResponse])
+@router.get(
+    "/pipelines/{pipeline_id}/executions", response_model=list[ExecutionResponse]
+)
 async def get_pipeline_executions(
     pipeline_id: str,
     service: PipelineService = Depends(get_pipeline_service),
@@ -273,7 +289,9 @@ async def get_pipeline_executions(
         HTTPException: 404 if configuration not found
     """
     try:
-        executions = await run_sync_in_executor(service.list_executions, pipeline_id, limit=50)
+        executions = await run_sync_in_executor(
+            service.list_executions, pipeline_id, limit=50
+        )
         return [ExecutionResponse.model_validate(e) for e in executions]
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)

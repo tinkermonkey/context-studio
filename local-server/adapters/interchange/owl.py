@@ -39,7 +39,6 @@ from domain.ontology.entities import (
 )
 from domain.ontology.value_objects import ExternalReference
 
-
 # RDF Namespaces
 OWL = Namespace("http://www.w3.org/2002/07/owl#")
 SKOS = Namespace("http://www.w3.org/2004/02/skos/core#")
@@ -124,7 +123,7 @@ class OWLSerializer(OntologySerializer):
             format_str = format_map.get(self.format, "turtle")
             result = cast(str | bytes, self.graph.serialize(format=format_str))
             if isinstance(result, str):
-                return result.encode('utf-8')
+                return result.encode("utf-8")
             return result
         except Exception as e:
             raise RuntimeError(f"OWL serialization failed: {str(e)}") from e
@@ -296,7 +295,9 @@ class OWLSerializer(OntologySerializer):
 
         self.graph.add((source_uri, prop_uri, target_uri))
 
-    def _add_external_reference_to_graph(self, entity_uri: URIRef, ext_ref: ExternalReference) -> None:
+    def _add_external_reference_to_graph(
+        self, entity_uri: URIRef, ext_ref: ExternalReference
+    ) -> None:
         """Add an external reference to an entity using only owl:sameAs to avoid duplication."""
         assert self.graph is not None
         if ext_ref.uri:
@@ -336,9 +337,7 @@ class OWLDeserializer(OntologyDeserializer):
         self._entity_map: Dict[str, str] = {}  # URI -> local entity ID
         self.incoming_entities: Dict[str, Dict[str, Any]] = {}
 
-    def deserialize(
-        self, source: bytes | str, dry_run: bool = True
-    ) -> ImportPlan:
+    def deserialize(self, source: bytes | str, dry_run: bool = True) -> ImportPlan:
         """
         Deserialize OWL data and produce an import plan.
 
@@ -382,7 +381,7 @@ class OWLDeserializer(OntologyDeserializer):
 
             # Compute source hash
             if isinstance(source, str):
-                source_bytes = source.encode('utf-8')
+                source_bytes = source.encode("utf-8")
             else:
                 source_bytes = source
             source_hash = hashlib.sha256(source_bytes).hexdigest()
@@ -417,7 +416,9 @@ class OWLDeserializer(OntologyDeserializer):
                 # This is a concept scheme
                 self._process_concept_scheme_entity(scheme_uri, is_taxonomy=False)
 
-    def _process_concept_scheme_entity(self, scheme_uri: Node, is_taxonomy: bool) -> None:
+    def _process_concept_scheme_entity(
+        self, scheme_uri: Node, is_taxonomy: bool
+    ) -> None:
         """Process a SKOS ConceptScheme (Taxonomy or ConceptScheme)."""
         # Skip if already processed
         if str(scheme_uri) in self._entity_map:
@@ -624,7 +625,9 @@ class OWLDeserializer(OntologyDeserializer):
                         "property_definition_id": prop_id,
                     }
 
-    def _extract_external_references_as_dicts(self, entity_uri: Node) -> list[Dict[str, Any]]:
+    def _extract_external_references_as_dicts(
+        self, entity_uri: Node
+    ) -> list[Dict[str, Any]]:
         """Extract external references from owl:sameAs URIs as dicts."""
         refs = []
 
@@ -635,11 +638,13 @@ class OWLDeserializer(OntologyDeserializer):
                 # Parse source:identifier from the URI
                 source, identifier = self._parse_uri_for_reference(uri_str)
 
-                refs.append({
-                    "source": source,
-                    "identifier": identifier,
-                    "uri": uri_str,
-                })
+                refs.append(
+                    {
+                        "source": source,
+                        "identifier": identifier,
+                        "uri": uri_str,
+                    }
+                )
 
         return refs
 
@@ -688,7 +693,7 @@ class OWLDeserializer(OntologyDeserializer):
         uri_str = str(uri)
         if uri_str.startswith(str(LOCAL)):
             # Extract the ID from the LOCAL namespace
-            return uri_str[len(str(LOCAL)):]
+            return uri_str[len(str(LOCAL)) :]
         return None
 
     def _get_label(self, uri: Node) -> Optional[str]:

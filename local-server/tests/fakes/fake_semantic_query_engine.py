@@ -8,7 +8,9 @@ import sys
 import os
 from typing import Any
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 
 class FakeSemanticQueryEngine:
@@ -20,7 +22,10 @@ class FakeSemanticQueryEngine:
         self._loaded = False
 
     def load_ontology(
-        self, nodes: list[dict[str, Any]], edges: list[dict[str, Any]], property_definitions: list[dict[str, Any]]
+        self,
+        nodes: list[dict[str, Any]],
+        edges: list[dict[str, Any]],
+        property_definitions: list[dict[str, Any]],
     ) -> None:
         """
         Load ontology data into the RDF graph.
@@ -69,7 +74,10 @@ class FakeSemanticQueryEngine:
         return []
 
     def get_triples(
-        self, subject: str | None = None, predicate: str | None = None, object: str | None = None
+        self,
+        subject: str | None = None,
+        predicate: str | None = None,
+        object: str | None = None,
     ) -> list[tuple[str, str, str]]:
         """
         Retrieve RDF triples matching the given pattern.
@@ -118,4 +126,3 @@ class FakeSemanticQueryEngine:
             Number of triples currently in the graph
         """
         return len(self._triples)
-

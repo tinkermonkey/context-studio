@@ -26,7 +26,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from domain.ontology.services import OntologyService
 from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
-from domain.ontology.exceptions import EntityNotFoundError, CircularReferenceError, DuplicateEntityError, OntologyError
+from domain.ontology.exceptions import (
+    EntityNotFoundError,
+    CircularReferenceError,
+    DuplicateEntityError,
+    OntologyError,
+)
 
 from adapters.web.dependencies import get_ontology_service
 from adapters.web.schemas.ontology import (
@@ -61,6 +66,7 @@ _logger = get_logger(__name__)
 
 # ==================== Error Handler Utilities ====================
 
+
 def _handle_domain_error(exc: Exception) -> tuple[int, str]:
     """
     Map domain exceptions to HTTP status codes and error messages.
@@ -89,7 +95,10 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
 
 # ==================== Taxonomy Endpoints ====================
 
-@router.post("/taxonomies", response_model=TaxonomyResponse, status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/taxonomies", response_model=TaxonomyResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_taxonomy(
     request: TaxonomyCreateRequest,
     service: OntologyService = Depends(get_ontology_service),
@@ -225,7 +234,12 @@ async def delete_taxonomy(
 
 # ==================== ConceptScheme Endpoints ====================
 
-@router.post("/taxonomies/{taxonomy_id}/schemes", response_model=ConceptSchemeResponse, status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/taxonomies/{taxonomy_id}/schemes",
+    response_model=ConceptSchemeResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_concept_scheme(
     taxonomy_id: str,
     request: ConceptSchemeCreateRequest,
@@ -260,7 +274,9 @@ async def create_concept_scheme(
 
 @router.get("/schemes", response_model=ListResponse[ConceptSchemeResponse])
 async def list_concept_schemes(
-    taxonomy_id: Optional[str] = Query(None, description="Optional taxonomy ID to filter by"),
+    taxonomy_id: Optional[str] = Query(
+        None, description="Optional taxonomy ID to filter by"
+    ),
     service: OntologyService = Depends(get_ontology_service),
 ) -> ListResponse[ConceptSchemeResponse]:
     """
@@ -368,7 +384,12 @@ async def delete_concept_scheme(
 
 # ==================== Class Endpoints ====================
 
-@router.post("/schemes/{scheme_id}/classes", response_model=ClassResponse, status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/schemes/{scheme_id}/classes",
+    response_model=ClassResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_class(
     scheme_id: str,
     request: ClassCreateRequest,
@@ -403,8 +424,12 @@ async def create_class(
 
 @router.get("/classes", response_model=ListResponse[ClassResponse])
 async def list_classes(
-    concept_scheme_id: Optional[str] = Query(None, description="Optional concept scheme ID to filter by"),
-    parent_class_id: Optional[str] = Query(None, description="Optional parent class ID to filter by"),
+    concept_scheme_id: Optional[str] = Query(
+        None, description="Optional concept scheme ID to filter by"
+    ),
+    parent_class_id: Optional[str] = Query(
+        None, description="Optional parent class ID to filter by"
+    ),
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     service: OntologyService = Depends(get_ontology_service),
@@ -556,7 +581,12 @@ async def delete_class(
 
 # ==================== Relationship Endpoints ====================
 
-@router.post("/relationships", response_model=RelationshipResponse, status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/relationships",
+    response_model=RelationshipResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_relationship(
     request: RelationshipCreateRequest,
     service: OntologyService = Depends(get_ontology_service),
@@ -594,9 +624,15 @@ async def create_relationship(
 
 @router.get("/relationships", response_model=ListResponse[RelationshipResponse])
 async def list_relationships(
-    source_id: Optional[str] = Query(None, description="Optional source entity ID to filter by"),
-    target_id: Optional[str] = Query(None, description="Optional target entity ID to filter by"),
-    property_id: Optional[str] = Query(None, description="Optional property definition ID to filter by"),
+    source_id: Optional[str] = Query(
+        None, description="Optional source entity ID to filter by"
+    ),
+    target_id: Optional[str] = Query(
+        None, description="Optional target entity ID to filter by"
+    ),
+    property_id: Optional[str] = Query(
+        None, description="Optional property definition ID to filter by"
+    ),
     service: OntologyService = Depends(get_ontology_service),
 ) -> ListResponse[RelationshipResponse]:
     """
@@ -654,7 +690,9 @@ async def get_relationship(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.delete("/relationships/{relationship_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/relationships/{relationship_id}", status_code=status.HTTP_204_NO_CONTENT
+)
 async def delete_relationship(
     relationship_id: str,
     service: OntologyService = Depends(get_ontology_service),
@@ -678,7 +716,12 @@ async def delete_relationship(
 
 # ==================== PropertyDefinition Endpoints ====================
 
-@router.post("/properties", response_model=PropertyDefinitionResponse, status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/properties",
+    response_model=PropertyDefinitionResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_property_definition(
     request: PropertyDefinitionCreateRequest,
     service: OntologyService = Depends(get_ontology_service),
@@ -710,7 +753,9 @@ async def create_property_definition(
 
 @router.get("/properties", response_model=ListResponse[PropertyDefinitionResponse])
 async def list_property_definitions(
-    is_relevant: Optional[bool] = Query(None, description="Optional filter for relevant properties"),
+    is_relevant: Optional[bool] = Query(
+        None, description="Optional filter for relevant properties"
+    ),
     service: OntologyService = Depends(get_ontology_service),
 ) -> ListResponse[PropertyDefinitionResponse]:
     """
@@ -820,7 +865,12 @@ async def delete_property_definition(
 
 # ==================== Individual Endpoints ====================
 
-@router.post("/individuals", response_model=IndividualResponse, status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/individuals",
+    response_model=IndividualResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_individual(
     request: IndividualCreateRequest,
     service: OntologyService = Depends(get_ontology_service),
@@ -875,7 +925,7 @@ async def list_individuals(
         # In the future, the repository should support limit/offset directly
         all_individuals = await run_sync_in_executor(service.list_individuals, class_id)
         total = len(all_individuals)
-        paginated = all_individuals[offset:offset + limit]
+        paginated = all_individuals[offset : offset + limit]
         return ListResponse(
             items=[IndividualResponse.model_validate(i) for i in paginated],
             total=total,
@@ -970,7 +1020,11 @@ async def delete_individual(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.post("/individuals/{individual_id}/classes", response_model=IndividualResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/individuals/{individual_id}/classes",
+    response_model=IndividualResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def add_parent_class_to_individual(
     individual_id: str,
     request: IndividualClassRequest,
@@ -1002,7 +1056,10 @@ async def add_parent_class_to_individual(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.delete("/individuals/{individual_id}/classes/{class_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/individuals/{individual_id}/classes/{class_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
 async def remove_parent_class_from_individual(
     individual_id: str,
     class_id: str,
@@ -1066,7 +1123,10 @@ async def reorder_individual_classes(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.get("/individuals/{individual_id}/inherited-properties", response_model=ListResponse[DataPropertyValueResponse])
+@router.get(
+    "/individuals/{individual_id}/inherited-properties",
+    response_model=ListResponse[DataPropertyValueResponse],
+)
 async def get_individual_inherited_properties(
     individual_id: str,
     service: OntologyService = Depends(get_ontology_service),

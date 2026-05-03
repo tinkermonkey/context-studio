@@ -38,7 +38,6 @@ from domain.ontology.entities import (
 )
 from domain.ontology.value_objects import ExternalReference
 
-
 # RDF Namespaces
 SKOS = Namespace("http://www.w3.org/2004/02/skos/core#")
 DCT = Namespace("http://purl.org/dc/terms/")
@@ -116,7 +115,7 @@ class SKOSSerializer(OntologySerializer):
             result = self.graph.serialize(format=format_str)
             # Ensure result is bytes
             if isinstance(result, str):
-                return result.encode('utf-8')
+                return result.encode("utf-8")
             return result  # type: ignore[unreachable,return-value]
         except Exception as e:
             raise RuntimeError(f"SKOS serialization failed: {str(e)}") from e
@@ -207,7 +206,9 @@ class SKOSSerializer(OntologySerializer):
         self.graph.add((class_uri, RDF.type, SKOS.Concept))
         self.graph.add((class_uri, SKOS.prefLabel, Literal(class_entity.title)))
         if class_entity.description:
-            self.graph.add((class_uri, SKOS.definition, Literal(class_entity.description)))
+            self.graph.add(
+                (class_uri, SKOS.definition, Literal(class_entity.description))
+            )
 
         # Link to concept scheme
         scheme_uri = self._entity_uri(class_entity.concept_scheme_id)
@@ -223,7 +224,9 @@ class SKOSSerializer(OntologySerializer):
         for ext_ref in class_entity.external_references:
             self._add_external_reference(class_uri, ext_ref)
 
-    def _add_external_reference(self, subject_uri: URIRef, ext_ref: ExternalReference) -> None:
+    def _add_external_reference(
+        self, subject_uri: URIRef, ext_ref: ExternalReference
+    ) -> None:
         """Add external references as dct:source and skos:exactMatch."""
         assert self.graph is not None
         # Add dct:source for all references
@@ -266,9 +269,7 @@ class SKOSDeserializer(OntologyDeserializer):
         self.warnings: list[str] = []
         self.incoming_entities: Dict[str, Dict[str, Any]] = {}
 
-    def deserialize(
-        self, source: bytes | str, dry_run: bool = True
-    ) -> ImportPlan:
+    def deserialize(self, source: bytes | str, dry_run: bool = True) -> ImportPlan:
         """
         Deserialize SKOS RDF data and produce an import plan.
 
@@ -291,7 +292,7 @@ class SKOSDeserializer(OntologyDeserializer):
 
             # Ensure source is bytes for hashing
             if isinstance(source, str):
-                source_bytes = source.encode('utf-8')
+                source_bytes = source.encode("utf-8")
             else:
                 source_bytes = source
 
@@ -429,11 +430,13 @@ class SKOSDeserializer(OntologyDeserializer):
             # Extract source name and identifier from URI
             source_name, identifier = self._parse_external_reference_uri(source_str)
             if source_name and identifier:
-                external_references.append({
-                    "source": source_name,
-                    "identifier": identifier,
-                    "uri": source_str,
-                })
+                external_references.append(
+                    {
+                        "source": source_name,
+                        "identifier": identifier,
+                        "uri": source_str,
+                    }
+                )
 
         for match_uri in self.graph.objects(uri, SKOS.exactMatch):
             source_str = str(match_uri)
@@ -441,11 +444,13 @@ class SKOSDeserializer(OntologyDeserializer):
             if source_name and identifier:
                 # Check if already added via dct:source
                 if not any(r["uri"] == source_str for r in external_references):
-                    external_references.append({
-                        "source": source_name,
-                        "identifier": identifier,
-                        "uri": source_str,
-                    })
+                    external_references.append(
+                        {
+                            "source": source_name,
+                            "identifier": identifier,
+                            "uri": source_str,
+                        }
+                    )
 
         entity_dict = {
             "id": entity_id,
@@ -483,13 +488,15 @@ class SKOSDeserializer(OntologyDeserializer):
         """Extract the ID from a LOCAL URI."""
         uri_str = str(uri)
         if uri_str.startswith(str(LOCAL)):
-            return uri_str[len(str(LOCAL)):]
+            return uri_str[len(str(LOCAL)) :]
         # If it's a UUID-like string in the fragment, extract it
         if "#" in uri_str:
             return uri_str.split("#")[-1]
         return None
 
-    def _parse_external_reference_uri(self, uri_str: str) -> tuple[Optional[str], Optional[str]]:
+    def _parse_external_reference_uri(
+        self, uri_str: str
+    ) -> tuple[Optional[str], Optional[str]]:
         """
         Parse an external reference URI to extract source name and identifier.
 
@@ -577,7 +584,11 @@ class SKOSDeserializer(OntologyDeserializer):
 
             # If conflict found, record it
             if existing_entity and match_kind:
-                default_resolution = ResolutionKind.MERGE if match_kind == MatchKind.EXTERNAL_REFERENCE else ResolutionKind.SKIP
+                default_resolution = (
+                    ResolutionKind.MERGE
+                    if match_kind == MatchKind.EXTERNAL_REFERENCE
+                    else ResolutionKind.SKIP
+                )
                 conflict = ImportConflict(
                     match_kind=match_kind,
                     incoming=entity_dict,
@@ -593,7 +604,9 @@ class SKOSDeserializer(OntologyDeserializer):
 
         return conflicts
 
-    def _find_by_external_reference(self, source: str, identifier: str) -> Optional[str]:
+    def _find_by_external_reference(
+        self, source: str, identifier: str
+    ) -> Optional[str]:
         """Find an existing entity by external reference."""
         all_classes = self.ontology_repo.list_classes()
         for class_entity in all_classes:
@@ -602,9 +615,13 @@ class SKOSDeserializer(OntologyDeserializer):
                     return class_entity.id
         return None
 
-    def _find_class_by_title(self, title: str, concept_scheme_id: Optional[str]) -> Optional[Class]:
+    def _find_class_by_title(
+        self, title: str, concept_scheme_id: Optional[str]
+    ) -> Optional[Class]:
         """Find an existing class by title (and optional scheme)."""
-        all_classes = self.ontology_repo.list_classes(concept_scheme_id=concept_scheme_id)
+        all_classes = self.ontology_repo.list_classes(
+            concept_scheme_id=concept_scheme_id
+        )
         for class_entity in all_classes:
             if class_entity.title == title:
                 return class_entity

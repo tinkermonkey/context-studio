@@ -70,7 +70,9 @@ async def reference_status(
     available_count = 0
 
     # Use async availability checks in parallel
-    async def check_source(source: ReferenceSource) -> tuple[ReferenceSourceStatusSchema, bool]:
+    async def check_source(
+        source: ReferenceSource,
+    ) -> tuple[ReferenceSourceStatusSchema, bool]:
         try:
             is_available = await source.is_available_async()
 
@@ -83,9 +85,7 @@ async def reference_status(
                 is_available,
             )
         except Exception as e:
-            logger.warning(
-                f"Error checking availability of {source.source_name}: {e}"
-            )
+            logger.warning(f"Error checking availability of {source.source_name}: {e}")
             return (
                 ReferenceSourceStatusSchema(
                     name=source.source_name,
@@ -147,16 +147,16 @@ async def search_references(
     # Filter sources if specific ones were requested
     sources_to_query = sources
     if request.sources:
-        sources_to_query = [
-            s for s in sources if s.source_name in request.sources
-        ]
+        sources_to_query = [s for s in sources if s.source_name in request.sources]
         if not sources_to_query:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"None of the requested sources are available: {request.sources}",
             )
 
-    async def search_single_source(source: ReferenceSource) -> tuple[list[ReferenceResultSchema], str, bool]:
+    async def search_single_source(
+        source: ReferenceSource,
+    ) -> tuple[list[ReferenceResultSchema], str, bool]:
         """Search a single source and return results or error."""
         try:
             is_available = await source.is_available_async()
@@ -164,7 +164,9 @@ async def search_references(
             if not is_available:
                 return [], source.source_name, False
 
-            source_results = await source.search_async(request.term, limit=request.limit)
+            source_results = await source.search_async(
+                request.term, limit=request.limit
+            )
 
             results = [
                 ReferenceResultSchema(
@@ -184,7 +186,9 @@ async def search_references(
             return [], source.source_name, False
 
     # Run all searches concurrently
-    search_results = await asyncio.gather(*[search_single_source(s) for s in sources_to_query])
+    search_results = await asyncio.gather(
+        *[search_single_source(s) for s in sources_to_query]
+    )
 
     results = []
     sources_searched = []
@@ -243,16 +247,16 @@ async def get_reference_relations(
     # Filter sources if specific ones were requested
     sources_to_query = sources
     if request.sources:
-        sources_to_query = [
-            s for s in sources if s.source_name in request.sources
-        ]
+        sources_to_query = [s for s in sources if s.source_name in request.sources]
         if not sources_to_query:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"None of the requested sources are available: {request.sources}",
             )
 
-    async def get_relations_from_source(source: ReferenceSource) -> tuple[list[ReferenceRelationSchema], str, bool]:
+    async def get_relations_from_source(
+        source: ReferenceSource,
+    ) -> tuple[list[ReferenceRelationSchema], str, bool]:
         """Get relations from a single source."""
         try:
             is_available = await source.is_available_async()
@@ -260,7 +264,9 @@ async def get_reference_relations(
             if not is_available:
                 return [], source.source_name, False
 
-            source_relations = await source.get_relations_async(request.uri, limit=request.limit)
+            source_relations = await source.get_relations_async(
+                request.uri, limit=request.limit
+            )
 
             relations = [
                 ReferenceRelationSchema(
@@ -280,7 +286,9 @@ async def get_reference_relations(
             return [], source.source_name, False
 
     # Run all relation queries concurrently
-    relation_results = await asyncio.gather(*[get_relations_from_source(s) for s in sources_to_query])
+    relation_results = await asyncio.gather(
+        *[get_relations_from_source(s) for s in sources_to_query]
+    )
 
     relations = []
     sources_queried = []

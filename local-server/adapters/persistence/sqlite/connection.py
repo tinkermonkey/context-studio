@@ -39,7 +39,9 @@ def create_local_db_engine(database_url: str = "sqlite:///./local.db") -> Engine
     )
 
 
-def create_operations_db_engine(database_url: str = "sqlite:///./operations.db") -> Engine:
+def create_operations_db_engine(
+    database_url: str = "sqlite:///./operations.db",
+) -> Engine:
     """
     Create an SQLAlchemy engine for the operations.db database.
 
@@ -134,42 +136,56 @@ class DatabaseManager:
         self._local_engine = create_local_db_engine(local_db_url)
         self._operations_engine = create_operations_db_engine(operations_db_url)
         self._local_session_factory = create_session_factory(self._local_engine)
-        self._operations_session_factory = create_session_factory(self._operations_engine)
+        self._operations_session_factory = create_session_factory(
+            self._operations_engine
+        )
 
     def get_local_engine(self) -> Engine:
         """Return the local.db engine. Must call initialize() first."""
         if self._local_engine is None:
-            raise RuntimeError("DatabaseManager not initialized. Call initialize() first.")
+            raise RuntimeError(
+                "DatabaseManager not initialized. Call initialize() first."
+            )
         return self._local_engine
 
     def get_operations_engine(self) -> Engine:
         """Return the operations.db engine. Must call initialize() first."""
         if self._operations_engine is None:
-            raise RuntimeError("DatabaseManager not initialized. Call initialize() first.")
+            raise RuntimeError(
+                "DatabaseManager not initialized. Call initialize() first."
+            )
         return self._operations_engine
 
     def get_local_session(self) -> Session:
         """Create a new session for local.db. Must call initialize() first."""
         if self._local_session_factory is None:
-            raise RuntimeError("DatabaseManager not initialized. Call initialize() first.")
+            raise RuntimeError(
+                "DatabaseManager not initialized. Call initialize() first."
+            )
         return self._local_session_factory()
 
     def get_local_session_factory(self) -> sessionmaker:
         """Return the local.db session factory. Must call initialize() first."""
         if self._local_session_factory is None:
-            raise RuntimeError("DatabaseManager not initialized. Call initialize() first.")
+            raise RuntimeError(
+                "DatabaseManager not initialized. Call initialize() first."
+            )
         return self._local_session_factory
 
     def get_operations_session(self) -> Session:
         """Create a new session for operations.db. Must call initialize() first."""
         if self._operations_session_factory is None:
-            raise RuntimeError("DatabaseManager not initialized. Call initialize() first.")
+            raise RuntimeError(
+                "DatabaseManager not initialized. Call initialize() first."
+            )
         return self._operations_session_factory()
 
     def get_operations_session_factory(self) -> sessionmaker:
         """Return the operations.db session factory. Must call initialize() first."""
         if self._operations_session_factory is None:
-            raise RuntimeError("DatabaseManager not initialized. Call initialize() first.")
+            raise RuntimeError(
+                "DatabaseManager not initialized. Call initialize() first."
+            )
         return self._operations_session_factory
 
     def dispose(self) -> None:
@@ -192,7 +208,9 @@ class DatabaseManager:
         Requires that SQLAlchemy ORM models have been defined and imported.
         """
         if self._local_engine is None or self._operations_engine is None:
-            raise RuntimeError("DatabaseManager not initialized. Call initialize() first.")
+            raise RuntimeError(
+                "DatabaseManager not initialized. Call initialize() first."
+            )
 
         # Import models to ensure they're registered with Base
         from adapters.persistence.sqlite.models import Base as LocalBase
@@ -201,4 +219,5 @@ class DatabaseManager:
 
         # Import operations models and create tables
         from adapters.persistence.sqlite.operations.models import OperationsBase
+
         OperationsBase.metadata.create_all(self._operations_engine)

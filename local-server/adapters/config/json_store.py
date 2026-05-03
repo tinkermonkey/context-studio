@@ -57,11 +57,13 @@ class JSONFileConfigStore:
                 llm=settings.llm.model_dump(),
                 nlp=settings.nlp if settings.nlp else {},
                 embedding=settings.embedding if settings.embedding else {},
-                reference_sources=settings.reference.model_dump() if settings.reference else {},
+                reference_sources=(
+                    settings.reference.model_dump() if settings.reference else {}
+                ),
                 sync=settings.sync.model_dump() if settings.sync else None,
             )
         except (RuntimeError, AttributeError, TypeError) as e:
-            raise ConfigurationError(f'Failed to load configuration: {e}') from e
+            raise ConfigurationError(f"Failed to load configuration: {e}") from e
 
     def save(self, config: AppConfiguration) -> AppConfiguration:
         """
@@ -107,7 +109,9 @@ class JSONFileConfigStore:
             for section_name, section_updates in updates.items():
                 if hasattr(current_config, section_name):
                     current_section = getattr(current_config, section_name)
-                    if isinstance(current_section, dict) and isinstance(section_updates, dict):
+                    if isinstance(current_section, dict) and isinstance(
+                        section_updates, dict
+                    ):
                         current_section.update(section_updates)
                     else:
                         setattr(current_config, section_name, section_updates)
@@ -119,7 +123,7 @@ class JSONFileConfigStore:
         except ConfigurationError:
             raise
         except Exception as e:
-            raise ConfigurationError(f'Failed to update configuration: {e}') from e
+            raise ConfigurationError(f"Failed to update configuration: {e}") from e
 
     def reset_to_defaults(self) -> AppConfiguration:
         """
@@ -146,14 +150,33 @@ class JSONFileConfigStore:
                 logging=default_settings.logging.model_dump(),
                 llm=default_settings.llm.model_dump(),
                 nlp=default_settings.nlp if default_settings.nlp else {},
-                embedding=default_settings.embedding if default_settings.embedding else {},
-                reference_sources=default_settings.reference.model_dump() if default_settings.reference else {},
-                sync=default_settings.sync.model_dump() if default_settings.sync else None,
+                embedding=(
+                    default_settings.embedding if default_settings.embedding else {}
+                ),
+                reference_sources=(
+                    default_settings.reference.model_dump()
+                    if default_settings.reference
+                    else {}
+                ),
+                sync=(
+                    default_settings.sync.model_dump()
+                    if default_settings.sync
+                    else None
+                ),
             )
 
             # Preserve credentials from current config for each section
             # Only preserve credentials in sections that exist in the defaults
-            section_names = ('server', 'database', 'logging', 'llm', 'nlp', 'embedding', 'reference_sources', 'sync')
+            section_names = (
+                "server",
+                "database",
+                "logging",
+                "llm",
+                "nlp",
+                "embedding",
+                "reference_sources",
+                "sync",
+            )
             for attr_name in section_names:
                 current_section = getattr(current_config, attr_name, None)
                 default_section = getattr(default_config, attr_name, None)
@@ -179,7 +202,7 @@ class JSONFileConfigStore:
         except ConfigurationError:
             raise
         except (ValidationError, TypeError) as e:
-            raise ConfigurationError(f'Failed to reset configuration: {e}') from e
+            raise ConfigurationError(f"Failed to reset configuration: {e}") from e
 
     def _preserve_credentials_recursive(self, current: dict, default: dict) -> None:
         """
@@ -213,19 +236,19 @@ class JSONFileConfigStore:
             # Reconstruct Settings object from config sections
             # Map AppConfiguration fields to Settings constructor arguments
             settings_dict = {
-                'server': config.server or {},
-                'database': config.database or {},
-                'logging': config.logging or {},
-                'llm': config.llm or {},
-                'nlp': config.nlp or {},
-                'embedding': config.embedding or {},
+                "server": config.server or {},
+                "database": config.database or {},
+                "logging": config.logging or {},
+                "llm": config.llm or {},
+                "nlp": config.nlp or {},
+                "embedding": config.embedding or {},
             }
             # Add optional sections only if they exist
             if config.reference_sources is not None:
-                settings_dict['reference'] = config.reference_sources
+                settings_dict["reference"] = config.reference_sources
 
             if config.sync is not None:
-                settings_dict['sync'] = config.sync
+                settings_dict["sync"] = config.sync
 
             # Pydantic will convert dicts to config classes
             new_settings = Settings(**settings_dict)  # type: ignore[arg-type]
@@ -236,4 +259,4 @@ class JSONFileConfigStore:
         except ConfigurationError:
             raise
         except (ValidationError, TypeError) as e:
-            raise ConfigurationError(f'Failed to persist configuration: {e}') from e
+            raise ConfigurationError(f"Failed to persist configuration: {e}") from e

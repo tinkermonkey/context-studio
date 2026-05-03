@@ -3,7 +3,9 @@
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 from typing import Sequence
 from domain.extraction.entities import ExtractionResult
@@ -58,4 +60,4 @@ class FakeExtractionRepository:
         results = list(self._results.values())
         # Sort by created_at descending (most recent first)
         sorted_results = sorted(results, key=lambda r: r.created_at, reverse=True)
-        return sorted_results[offset:offset + limit]
+        return sorted_results[offset : offset + limit]

@@ -14,18 +14,43 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from domain.ports import EventPublisher
-from .entities import Taxonomy, ConceptScheme, Class, Relationship, PropertyDefinition, Individual
+from .entities import (
+    Taxonomy,
+    ConceptScheme,
+    Class,
+    Relationship,
+    PropertyDefinition,
+    Individual,
+)
 from .value_objects import DataPropertyValue
 from .events import (
-    TaxonomyCreated, TaxonomyUpdated, TaxonomyDeleted,
-    SchemeCreated, SchemeUpdated, SchemeDeleted,
-    ClassCreated, ClassUpdated, ClassDeleted,
-    ClassMoved, RelationshipCreated, RelationshipDeleted,
-    PropertyDefinitionCreated, PropertyDefinitionUpdated, PropertyDefinitionDeleted,
-    ConceptSchemeUpdated, GraphInvalidated,
-    IndividualCreated, IndividualUpdated, IndividualDeleted
+    TaxonomyCreated,
+    TaxonomyUpdated,
+    TaxonomyDeleted,
+    SchemeCreated,
+    SchemeUpdated,
+    SchemeDeleted,
+    ClassCreated,
+    ClassUpdated,
+    ClassDeleted,
+    ClassMoved,
+    RelationshipCreated,
+    RelationshipDeleted,
+    PropertyDefinitionCreated,
+    PropertyDefinitionUpdated,
+    PropertyDefinitionDeleted,
+    ConceptSchemeUpdated,
+    GraphInvalidated,
+    IndividualCreated,
+    IndividualUpdated,
+    IndividualDeleted,
 )
-from .exceptions import EntityNotFoundError, CircularReferenceError, DuplicateEntityError, OntologyError
+from .exceptions import (
+    EntityNotFoundError,
+    CircularReferenceError,
+    DuplicateEntityError,
+    OntologyError,
+)
 from .ports import OntologyRepository, EmbeddingService
 
 _logger = logging.getLogger(__name__)
@@ -96,10 +121,12 @@ class OntologyService:
         )
         taxonomy = self._repository.save_taxonomy(taxonomy)
 
-        failures = self._event_publisher.publish(TaxonomyCreated(
-            taxonomy_id=taxonomy_id,
-            title=title if title else "",
-        ))
+        failures = self._event_publisher.publish(
+            TaxonomyCreated(
+                taxonomy_id=taxonomy_id,
+                title=title if title else "",
+            )
+        )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
@@ -174,7 +201,9 @@ class OntologyService:
                 raise ValueError("Title cannot be empty")
             existing = self._repository.list_taxonomies()
             if any(t.id != taxonomy_id and t.title == title for t in existing):
-                raise DuplicateEntityError(f"Taxonomy with title '{title}' already exists")
+                raise DuplicateEntityError(
+                    f"Taxonomy with title '{title}' already exists"
+                )
             taxonomy.title = title
 
         if description is not None:
@@ -191,7 +220,14 @@ class OntologyService:
         taxonomy = self._repository.save_taxonomy(taxonomy)
 
         # Emit event only if there were actual changes
-        changed = tuple(f for f, was_changed in [("title", title_changed), ("description", desc_changed)] if was_changed)
+        changed = tuple(
+            f
+            for f, was_changed in [
+                ("title", title_changed),
+                ("description", desc_changed),
+            ]
+            if was_changed
+        )
 
         old_values: dict[str, str | None] = {}
         new_values: dict[str, str | None] = {}
@@ -202,12 +238,14 @@ class OntologyService:
             old_values["description"] = old_description
             new_values["description"] = description
 
-        failures = self._event_publisher.publish(TaxonomyUpdated(
-            taxonomy_id=taxonomy_id,
-            changed_fields=changed,
-            old_values=old_values,
-            new_values=new_values,
-        ))
+        failures = self._event_publisher.publish(
+            TaxonomyUpdated(
+                taxonomy_id=taxonomy_id,
+                changed_fields=changed,
+                old_values=old_values,
+                new_values=new_values,
+            )
+        )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
@@ -247,7 +285,9 @@ class OntologyService:
         # Check for duplicate title (excluding the current taxonomy)
         existing = self._repository.list_taxonomies()
         if any(t.title == new_title and t.id != taxonomy_id for t in existing):
-            raise DuplicateEntityError(f"Taxonomy with title '{new_title}' already exists")
+            raise DuplicateEntityError(
+                f"Taxonomy with title '{new_title}' already exists"
+            )
 
         # Guard against no-op updates
         if new_title == taxonomy.title:
@@ -259,12 +299,14 @@ class OntologyService:
         taxonomy.rename(new_title)
         taxonomy = self._repository.save_taxonomy(taxonomy)
 
-        failures = self._event_publisher.publish(TaxonomyUpdated(
-            taxonomy_id=taxonomy_id,
-            changed_fields=("title",),
-            old_values={"title": old_title},
-            new_values={"title": new_title},
-        ))
+        failures = self._event_publisher.publish(
+            TaxonomyUpdated(
+                taxonomy_id=taxonomy_id,
+                changed_fields=("title",),
+                old_values={"title": old_title},
+                new_values={"title": new_title},
+            )
+        )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
@@ -296,14 +338,18 @@ class OntologyService:
         # Check for concept schemes
         schemes = self._repository.list_concept_schemes(taxonomy_id=taxonomy_id)
         if schemes:
-            raise OntologyError(f"Cannot delete taxonomy {taxonomy_id}: it has {len(schemes)} concept scheme(s)")
+            raise OntologyError(
+                f"Cannot delete taxonomy {taxonomy_id}: it has {len(schemes)} concept scheme(s)"
+            )
 
         self._repository.delete_taxonomy(taxonomy_id)
 
-        failures = self._event_publisher.publish(TaxonomyDeleted(
-            taxonomy_id=taxonomy_id,
-            title=taxonomy.title,
-        ))
+        failures = self._event_publisher.publish(
+            TaxonomyDeleted(
+                taxonomy_id=taxonomy_id,
+                title=taxonomy.title,
+            )
+        )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
@@ -315,7 +361,9 @@ class OntologyService:
 
     # ConceptScheme operations
 
-    def create_scheme(self, taxonomy_id: str, title: str, description: str | None = None) -> ConceptScheme:
+    def create_scheme(
+        self, taxonomy_id: str, title: str, description: str | None = None
+    ) -> ConceptScheme:
         """
         Create a new concept scheme within a taxonomy.
 
@@ -345,9 +393,13 @@ class OntologyService:
             raise EntityNotFoundError("Taxonomy", taxonomy_id)
 
         # Check for duplicate title within this taxonomy
-        existing_schemes = self._repository.list_concept_schemes(taxonomy_id=taxonomy_id)
+        existing_schemes = self._repository.list_concept_schemes(
+            taxonomy_id=taxonomy_id
+        )
         if any(s.title == title for s in existing_schemes):
-            raise DuplicateEntityError(f"ConceptScheme with title '{title}' already exists in this taxonomy")
+            raise DuplicateEntityError(
+                f"ConceptScheme with title '{title}' already exists in this taxonomy"
+            )
 
         scheme_id = str(uuid4())
         now = datetime.now(timezone.utc)
@@ -361,11 +413,13 @@ class OntologyService:
         )
         scheme = self._repository.save_concept_scheme(scheme)
 
-        failures = self._event_publisher.publish(SchemeCreated(
-            concept_scheme_id=scheme_id,
-            title=title,
-            taxonomy_id=taxonomy_id,
-        ))
+        failures = self._event_publisher.publish(
+            SchemeCreated(
+                concept_scheme_id=scheme_id,
+                title=title,
+                taxonomy_id=taxonomy_id,
+            )
+        )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
@@ -395,7 +449,9 @@ class OntologyService:
             raise EntityNotFoundError("ConceptScheme", concept_scheme_id)
         return scheme
 
-    def list_concept_schemes(self, taxonomy_id: str | None = None) -> list[ConceptScheme]:
+    def list_concept_schemes(
+        self, taxonomy_id: str | None = None
+    ) -> list[ConceptScheme]:
         """
         Retrieve concept schemes, optionally filtered by taxonomy.
 
@@ -433,9 +489,15 @@ class OntologyService:
             raise EntityNotFoundError("ConceptScheme", concept_scheme_id)
 
         # Check for duplicate title within this taxonomy (excluding the current scheme)
-        existing_schemes = self._repository.list_concept_schemes(taxonomy_id=scheme.taxonomy_id)
-        if any(s.title == new_title and s.id != concept_scheme_id for s in existing_schemes):
-            raise DuplicateEntityError(f"ConceptScheme with title '{new_title}' already exists in this taxonomy")
+        existing_schemes = self._repository.list_concept_schemes(
+            taxonomy_id=scheme.taxonomy_id
+        )
+        if any(
+            s.title == new_title and s.id != concept_scheme_id for s in existing_schemes
+        ):
+            raise DuplicateEntityError(
+                f"ConceptScheme with title '{new_title}' already exists in this taxonomy"
+            )
 
         # Guard against no-op updates
         if new_title == scheme.title:
@@ -447,13 +509,15 @@ class OntologyService:
         scheme.rename(new_title)
         scheme = self._repository.save_concept_scheme(scheme)
 
-        failures = self._event_publisher.publish(SchemeUpdated(
-            concept_scheme_id=concept_scheme_id,
-            taxonomy_id=scheme.taxonomy_id,
-            changed_fields=("title",),
-            old_values={"title": old_title},
-            new_values={"title": new_title},
-        ))
+        failures = self._event_publisher.publish(
+            SchemeUpdated(
+                concept_scheme_id=concept_scheme_id,
+                taxonomy_id=scheme.taxonomy_id,
+                changed_fields=("title",),
+                old_values={"title": old_title},
+                new_values={"title": new_title},
+            )
+        )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
@@ -485,15 +549,19 @@ class OntologyService:
         # Check for classes
         classes = self._repository.list_classes(concept_scheme_id=concept_scheme_id)
         if classes:
-            raise OntologyError(f"Cannot delete concept scheme {concept_scheme_id}: it has {len(classes)} class(es)")
+            raise OntologyError(
+                f"Cannot delete concept scheme {concept_scheme_id}: it has {len(classes)} class(es)"
+            )
 
         self._repository.delete_concept_scheme(concept_scheme_id)
 
-        failures = self._event_publisher.publish(SchemeDeleted(
-            concept_scheme_id=concept_scheme_id,
-            taxonomy_id=scheme.taxonomy_id,
-            title=scheme.title,
-        ))
+        failures = self._event_publisher.publish(
+            SchemeDeleted(
+                concept_scheme_id=concept_scheme_id,
+                taxonomy_id=scheme.taxonomy_id,
+                title=scheme.title,
+            )
+        )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
@@ -544,9 +612,13 @@ class OntologyService:
             raise EntityNotFoundError("ConceptScheme", concept_scheme_id)
 
         # Check for duplicate title within this scheme
-        existing_classes = self._repository.list_classes(concept_scheme_id=concept_scheme_id)
+        existing_classes = self._repository.list_classes(
+            concept_scheme_id=concept_scheme_id
+        )
         if any(c.title == title for c in existing_classes):
-            raise DuplicateEntityError(f"Class with title '{title}' already exists in this scheme")
+            raise DuplicateEntityError(
+                f"Class with title '{title}' already exists in this scheme"
+            )
 
         # Validate parent class if provided
         if parent_class_id is not None:
@@ -555,7 +627,9 @@ class OntologyService:
                 raise EntityNotFoundError("Class", parent_class_id)
             # Verify parent is in the same scheme
             if parent_class.concept_scheme_id != concept_scheme_id:
-                raise ValueError(f"Parent class {parent_class_id} is not in the same scheme")
+                raise ValueError(
+                    f"Parent class {parent_class_id} is not in the same scheme"
+                )
 
         class_id = str(uuid4())
 
@@ -577,12 +651,14 @@ class OntologyService:
         )
         cls = self._repository.save_class(cls)
 
-        failures = self._event_publisher.publish(ClassCreated(
-            class_id=class_id,
-            title=title,
-            concept_scheme_id=concept_scheme_id,
-            taxonomy_id=scheme.taxonomy_id,
-        ))
+        failures = self._event_publisher.publish(
+            ClassCreated(
+                class_id=class_id,
+                title=title,
+                concept_scheme_id=concept_scheme_id,
+                taxonomy_id=scheme.taxonomy_id,
+            )
+        )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
@@ -681,9 +757,13 @@ class OntologyService:
         if title_changed:
             if not title or not title.strip():
                 raise ValueError("Title cannot be empty")
-            existing_classes = self._repository.list_classes(concept_scheme_id=cls.concept_scheme_id)
+            existing_classes = self._repository.list_classes(
+                concept_scheme_id=cls.concept_scheme_id
+            )
             if any(c.title == title and c.id != class_id for c in existing_classes):
-                raise DuplicateEntityError(f"Class with title '{title}' already exists in this scheme")
+                raise DuplicateEntityError(
+                    f"Class with title '{title}' already exists in this scheme"
+                )
             cls.title = title
 
         if desc_changed:
@@ -702,7 +782,14 @@ class OntologyService:
         cls.last_modified = datetime.now(timezone.utc)
         cls = self._repository.save_class(cls)
 
-        changed = tuple(f for f, was_changed in [("title", title_changed), ("description", desc_changed)] if was_changed)
+        changed = tuple(
+            f
+            for f, was_changed in [
+                ("title", title_changed),
+                ("description", desc_changed),
+            ]
+            if was_changed
+        )
 
         old_values: dict[str, str | None] = {}
         new_values: dict[str, str | None] = {}
@@ -713,12 +800,14 @@ class OntologyService:
             old_values["description"] = old_description
             new_values["description"] = cls.description
 
-        failures = self._event_publisher.publish(ClassUpdated(
-            class_id=class_id,
-            changed_fields=changed,
-            old_values=old_values,
-            new_values=new_values,
-        ))
+        failures = self._event_publisher.publish(
+            ClassUpdated(
+                class_id=class_id,
+                changed_fields=changed,
+                old_values=old_values,
+                new_values=new_values,
+            )
+        )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
@@ -751,12 +840,16 @@ class OntologyService:
         # Check for subclasses
         subclasses = self._repository.list_classes(parent_class_id=class_id)
         if subclasses:
-            raise OntologyError(f"Cannot delete class {class_id}: it has {len(subclasses)} subclass(es)")
+            raise OntologyError(
+                f"Cannot delete class {class_id}: it has {len(subclasses)} subclass(es)"
+            )
 
         # Check for individuals referencing this class
         individuals = self._repository.list_individuals(class_id=class_id)
         if individuals:
-            raise OntologyError(f"Cannot delete class {class_id}: it has {len(individuals)} individual(s)")
+            raise OntologyError(
+                f"Cannot delete class {class_id}: it has {len(individuals)} individual(s)"
+            )
 
         # Find and delete all relationships where this class is source or target
         orphaned_relationships = self._repository.list_relationships(
@@ -765,12 +858,14 @@ class OntologyService:
 
         for relationship in orphaned_relationships:
             self._repository.delete_relationship(relationship.id)
-            failures = self._event_publisher.publish(RelationshipDeleted(
-                relationship_id=relationship.id,
-                source_id=relationship.source_id,
-                target_id=relationship.target_id,
-                property_definition_id=relationship.property_definition_id,
-            ))
+            failures = self._event_publisher.publish(
+                RelationshipDeleted(
+                    relationship_id=relationship.id,
+                    source_id=relationship.source_id,
+                    target_id=relationship.target_id,
+                    property_definition_id=relationship.property_definition_id,
+                )
+            )
             if failures:
                 handler_names = ", ".join(name for name, _ in failures)
                 _logger.warning(
@@ -782,10 +877,12 @@ class OntologyService:
 
         self._repository.delete_class(class_id)
 
-        failures = self._event_publisher.publish(ClassDeleted(
-            class_id=class_id,
-            title=cls.title,
-        ))
+        failures = self._event_publisher.publish(
+            ClassDeleted(
+                class_id=class_id,
+                title=cls.title,
+            )
+        )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
@@ -795,10 +892,12 @@ class OntologyService:
                 handler_names,
             )
 
-        failures = self._event_publisher.publish(GraphInvalidated(
-            taxonomy_id=cls.taxonomy_id,
-            reason="class_deleted",
-        ))
+        failures = self._event_publisher.publish(
+            GraphInvalidated(
+                taxonomy_id=cls.taxonomy_id,
+                reason="class_deleted",
+            )
+        )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
@@ -857,7 +956,9 @@ class OntologyService:
             if new_parent is None:
                 raise EntityNotFoundError("Class", new_parent_id)
             if new_parent.concept_scheme_id != cls.concept_scheme_id:
-                raise ValueError(f"Parent class {new_parent_id} is not in the same scheme")
+                raise ValueError(
+                    f"Parent class {new_parent_id} is not in the same scheme"
+                )
 
             # Traverse ancestor chain of new_parent_id looking for class_id
             current_id: str | None = new_parent_id
@@ -869,7 +970,9 @@ class OntologyService:
                         current_id,
                     )
                 if ancestor.id == class_id:
-                    raise CircularReferenceError("Move would create a circular reference")
+                    raise CircularReferenceError(
+                        "Move would create a circular reference"
+                    )
                 current_id = ancestor.parent_class_id
 
         # Safe to proceed
@@ -882,11 +985,13 @@ class OntologyService:
 
         cls = self._repository.save_class(cls)
 
-        failures = self._event_publisher.publish(ClassMoved(
-            class_id=class_id,
-            old_parent_id=old_parent_id,
-            new_parent_id=new_parent_id,
-        ))
+        failures = self._event_publisher.publish(
+            ClassMoved(
+                class_id=class_id,
+                old_parent_id=old_parent_id,
+                new_parent_id=new_parent_id,
+            )
+        )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
@@ -896,10 +1001,12 @@ class OntologyService:
                 handler_names,
             )
 
-        failures = self._event_publisher.publish(GraphInvalidated(
-            taxonomy_id=cls.taxonomy_id,
-            reason="class_moved",
-        ))
+        failures = self._event_publisher.publish(
+            GraphInvalidated(
+                taxonomy_id=cls.taxonomy_id,
+                reason="class_moved",
+            )
+        )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
@@ -952,12 +1059,14 @@ class OntologyService:
         cls = self._repository.save_class(cls)
 
         # Emit event for audit trail and graph invalidation
-        failures = self._event_publisher.publish(ClassUpdated(
-            class_id=class_id,
-            changed_fields=("concept_scheme_id",),
-            old_values={"concept_scheme_id": old_scheme_id},
-            new_values={"concept_scheme_id": target_scheme_id},
-        ))
+        failures = self._event_publisher.publish(
+            ClassUpdated(
+                class_id=class_id,
+                changed_fields=("concept_scheme_id",),
+                old_values={"concept_scheme_id": old_scheme_id},
+                new_values={"concept_scheme_id": target_scheme_id},
+            )
+        )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
@@ -1016,7 +1125,9 @@ class OntologyService:
             source_individual = self._repository.get_individual(source_id)
             if source_individual:
                 # Get taxonomy from first parent class
-                individual_class = self._repository.get_class(source_individual.class_ids[0])
+                individual_class = self._repository.get_class(
+                    source_individual.class_ids[0]
+                )
                 if individual_class:
                     taxonomy_id = individual_class.taxonomy_id
             else:
@@ -1051,12 +1162,14 @@ class OntologyService:
         )
         relationship = self._repository.save_relationship(relationship)
 
-        failures = self._event_publisher.publish(RelationshipCreated(
-            relationship_id=relationship_id,
-            source_id=source_id,
-            target_id=target_id,
-            property_definition_id=property_definition_id,
-        ))
+        failures = self._event_publisher.publish(
+            RelationshipCreated(
+                relationship_id=relationship_id,
+                source_id=source_id,
+                target_id=target_id,
+                property_definition_id=property_definition_id,
+            )
+        )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
@@ -1068,10 +1181,12 @@ class OntologyService:
 
         # Only emit GraphInvalidated if we found a valid taxonomy
         if taxonomy_id:
-            failures = self._event_publisher.publish(GraphInvalidated(
-                taxonomy_id=taxonomy_id,
-                reason="relationship_created",
-            ))
+            failures = self._event_publisher.publish(
+                GraphInvalidated(
+                    taxonomy_id=taxonomy_id,
+                    reason="relationship_created",
+                )
+            )
             if failures:
                 handler_names = ", ".join(name for name, _ in failures)
                 _logger.warning(
@@ -1117,7 +1232,9 @@ class OntologyService:
         Returns:
             List of Relationship entities
         """
-        return self._repository.list_relationships(source_id=source_id, target_id=target_id, property_id=property_id)
+        return self._repository.list_relationships(
+            source_id=source_id, target_id=target_id, property_id=property_id
+        )
 
     def delete_relationship(self, relationship_id: str) -> None:
         """
@@ -1135,12 +1252,14 @@ class OntologyService:
 
         self._repository.delete_relationship(relationship_id)
 
-        failures = self._event_publisher.publish(RelationshipDeleted(
-            relationship_id=relationship_id,
-            source_id=relationship.source_id,
-            target_id=relationship.target_id,
-            property_definition_id=relationship.property_definition_id,
-        ))
+        failures = self._event_publisher.publish(
+            RelationshipDeleted(
+                relationship_id=relationship_id,
+                source_id=relationship.source_id,
+                target_id=relationship.target_id,
+                property_definition_id=relationship.property_definition_id,
+            )
+        )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
@@ -1162,7 +1281,9 @@ class OntologyService:
             # Try source as an Individual - resolve its parent class to find taxonomy
             source_individual = self._repository.get_individual(relationship.source_id)
             if source_individual and source_individual.class_ids:
-                individual_class = self._repository.get_class(source_individual.class_ids[0])
+                individual_class = self._repository.get_class(
+                    source_individual.class_ids[0]
+                )
                 if individual_class:
                     taxonomy_id = individual_class.taxonomy_id
 
@@ -1173,18 +1294,24 @@ class OntologyService:
                 taxonomy_id = target_class.taxonomy_id
             else:
                 # Try target as an Individual - resolve its parent class to find taxonomy
-                target_individual = self._repository.get_individual(relationship.target_id)
+                target_individual = self._repository.get_individual(
+                    relationship.target_id
+                )
                 if target_individual and target_individual.class_ids:
-                    individual_class = self._repository.get_class(target_individual.class_ids[0])
+                    individual_class = self._repository.get_class(
+                        target_individual.class_ids[0]
+                    )
                     if individual_class:
                         taxonomy_id = individual_class.taxonomy_id
 
         # Only emit GraphInvalidated if we found a valid taxonomy
         if taxonomy_id:
-            failures = self._event_publisher.publish(GraphInvalidated(
-                taxonomy_id=taxonomy_id,
-                reason="relationship_deleted",
-            ))
+            failures = self._event_publisher.publish(
+                GraphInvalidated(
+                    taxonomy_id=taxonomy_id,
+                    reason="relationship_deleted",
+                )
+            )
             if failures:
                 handler_names = ", ".join(name for name, _ in failures)
                 _logger.warning(
@@ -1237,9 +1364,13 @@ class OntologyService:
         # Check for duplicate identifier and title
         existing_props = self._repository.list_property_definitions()
         if any(p.identifier == identifier for p in existing_props):
-            raise DuplicateEntityError(f"PropertyDefinition with identifier '{identifier}' already exists")
+            raise DuplicateEntityError(
+                f"PropertyDefinition with identifier '{identifier}' already exists"
+            )
         if any(p.title == title for p in existing_props):
-            raise DuplicateEntityError(f"PropertyDefinition with title '{title}' already exists")
+            raise DuplicateEntityError(
+                f"PropertyDefinition with title '{title}' already exists"
+            )
 
         property_id = str(uuid4())
         now = datetime.now(timezone.utc)
@@ -1253,11 +1384,13 @@ class OntologyService:
         )
         prop_def = self._repository.save_property_definition(prop_def)
 
-        failures = self._event_publisher.publish(PropertyDefinitionCreated(
-            property_id=property_id,
-            identifier=identifier,
-            title=title,
-        ))
+        failures = self._event_publisher.publish(
+            PropertyDefinitionCreated(
+                property_id=property_id,
+                identifier=identifier,
+                title=title,
+            )
+        )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
@@ -1328,7 +1461,9 @@ class OntologyService:
 
         # Create new property definition with provided title
         if not title or not title.strip():
-            raise ValueError("Title cannot be empty when creating a new property definition")
+            raise ValueError(
+                "Title cannot be empty when creating a new property definition"
+            )
 
         return self.create_property_definition(
             identifier=identifier,
@@ -1336,7 +1471,9 @@ class OntologyService:
             description=description,
         )
 
-    def list_property_definitions(self, is_relevant: bool | None = None) -> list[PropertyDefinition]:
+    def list_property_definitions(
+        self, is_relevant: bool | None = None
+    ) -> list[PropertyDefinition]:
         """
         Retrieve property definitions, optionally filtered by relevance.
 
@@ -1382,7 +1519,9 @@ class OntologyService:
                 raise ValueError("Title cannot be empty")
             existing_props = self._repository.list_property_definitions()
             if any(p.id != property_id and p.title == title for p in existing_props):
-                raise DuplicateEntityError(f"PropertyDefinition with title '{title}' already exists")
+                raise DuplicateEntityError(
+                    f"PropertyDefinition with title '{title}' already exists"
+                )
             prop_def.title = title
 
         if description is not None:
@@ -1391,11 +1530,13 @@ class OntologyService:
         prop_def.last_modified = datetime.now(timezone.utc)
         prop_def = self._repository.save_property_definition(prop_def)
 
-        failures = self._event_publisher.publish(PropertyDefinitionUpdated(
-            property_id=property_id,
-            title=prop_def.title,
-            description=prop_def.description,
-        ))
+        failures = self._event_publisher.publish(
+            PropertyDefinitionUpdated(
+                property_id=property_id,
+                title=prop_def.title,
+                description=prop_def.description,
+            )
+        )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
@@ -1425,15 +1566,19 @@ class OntologyService:
         # Check if property is in use
         relationships = self._repository.list_relationships(property_id=property_id)
         if relationships:
-            raise OntologyError(f"PropertyDefinition '{property_id}' is in use by {len(relationships)} relationship(s)")
+            raise OntologyError(
+                f"PropertyDefinition '{property_id}' is in use by {len(relationships)} relationship(s)"
+            )
 
         self._repository.delete_property_definition(property_id)
 
-        failures = self._event_publisher.publish(PropertyDefinitionDeleted(
-            property_id=property_id,
-            identifier=prop_def.identifier,
-            title=prop_def.title,
-        ))
+        failures = self._event_publisher.publish(
+            PropertyDefinitionDeleted(
+                property_id=property_id,
+                identifier=prop_def.identifier,
+                title=prop_def.title,
+            )
+        )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
@@ -1473,9 +1618,15 @@ class OntologyService:
         if title is not None and title != scheme.title:
             if not title or not title.strip():
                 raise ValueError("Title cannot be empty")
-            existing_schemes = self._repository.list_concept_schemes(taxonomy_id=scheme.taxonomy_id)
-            if any(s.id != concept_scheme_id and s.title == title for s in existing_schemes):
-                raise DuplicateEntityError(f"ConceptScheme with title '{title}' already exists in this taxonomy")
+            existing_schemes = self._repository.list_concept_schemes(
+                taxonomy_id=scheme.taxonomy_id
+            )
+            if any(
+                s.id != concept_scheme_id and s.title == title for s in existing_schemes
+            ):
+                raise DuplicateEntityError(
+                    f"ConceptScheme with title '{title}' already exists in this taxonomy"
+                )
             scheme.title = title
 
         if description is not None:
@@ -1484,10 +1635,12 @@ class OntologyService:
         scheme.last_modified = datetime.now(timezone.utc)
         scheme = self._repository.save_concept_scheme(scheme)
 
-        failures = self._event_publisher.publish(ConceptSchemeUpdated(
-            concept_scheme_id=concept_scheme_id,
-            title=scheme.title,
-        ))
+        failures = self._event_publisher.publish(
+            ConceptSchemeUpdated(
+                concept_scheme_id=concept_scheme_id,
+                title=scheme.title,
+            )
+        )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
@@ -1582,11 +1735,13 @@ class OntologyService:
         individual = self._repository.save_individual(individual)
 
         # Emit IndividualCreated event
-        failures = self._event_publisher.publish(IndividualCreated(
-            individual_id=individual_id,
-            title=title,
-            class_ids=class_ids_list,
-        ))
+        failures = self._event_publisher.publish(
+            IndividualCreated(
+                individual_id=individual_id,
+                title=title,
+                class_ids=class_ids_list,
+            )
+        )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
@@ -1598,10 +1753,12 @@ class OntologyService:
 
         # Emit GraphInvalidated event using taxonomy from first parent class
         taxonomy_id = parent_classes[0].taxonomy_id
-        failures = self._event_publisher.publish(GraphInvalidated(
-            taxonomy_id=taxonomy_id,
-            reason="individual_created",
-        ))
+        failures = self._event_publisher.publish(
+            GraphInvalidated(
+                taxonomy_id=taxonomy_id,
+                reason="individual_created",
+            )
+        )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
@@ -1687,7 +1844,10 @@ class OntologyService:
                 # Check uniqueness within each parent class
                 for class_id in individual.class_ids:
                     existing = self._repository.list_individuals(class_id=class_id)
-                    if any(ind.title == title and ind.id != individual_id for ind in existing):
+                    if any(
+                        ind.title == title and ind.id != individual_id
+                        for ind in existing
+                    ):
                         raise DuplicateEntityError(
                             f"Individual with title '{title}' already exists in class '{class_id}'"
                         )
@@ -1707,7 +1867,14 @@ class OntologyService:
         individual = self._repository.save_individual(individual)
 
         # Emit IndividualUpdated event
-        changed_fields = tuple(f for f, was_changed in [("title", title_changed), ("description", desc_changed)] if was_changed)
+        changed_fields = tuple(
+            f
+            for f, was_changed in [
+                ("title", title_changed),
+                ("description", desc_changed),
+            ]
+            if was_changed
+        )
         old_values: dict[str, object] = {}
         new_values: dict[str, object] = {}
         if title_changed:
@@ -1717,12 +1884,14 @@ class OntologyService:
             old_values["description"] = old_description
             new_values["description"] = individual.description
 
-        failures = self._event_publisher.publish(IndividualUpdated(
-            individual_id=individual_id,
-            changed_fields=changed_fields,
-            old_values=old_values,
-            new_values=new_values,
-        ))
+        failures = self._event_publisher.publish(
+            IndividualUpdated(
+                individual_id=individual_id,
+                changed_fields=changed_fields,
+                old_values=old_values,
+                new_values=new_values,
+            )
+        )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
@@ -1735,10 +1904,12 @@ class OntologyService:
         # Emit GraphInvalidated event using taxonomy from first parent class
         parent_class = self._repository.get_class(individual.class_ids[0])
         if parent_class:
-            failures = self._event_publisher.publish(GraphInvalidated(
-                taxonomy_id=parent_class.taxonomy_id,
-                reason="individual_updated",
-            ))
+            failures = self._event_publisher.publish(
+                GraphInvalidated(
+                    taxonomy_id=parent_class.taxonomy_id,
+                    reason="individual_updated",
+                )
+            )
             if failures:
                 handler_names = ", ".join(name for name, _ in failures)
                 _logger.warning(
@@ -1770,12 +1941,14 @@ class OntologyService:
 
         for relationship in orphaned_relationships:
             self._repository.delete_relationship(relationship.id)
-            failures = self._event_publisher.publish(RelationshipDeleted(
-                relationship_id=relationship.id,
-                source_id=relationship.source_id,
-                target_id=relationship.target_id,
-                property_definition_id=relationship.property_definition_id,
-            ))
+            failures = self._event_publisher.publish(
+                RelationshipDeleted(
+                    relationship_id=relationship.id,
+                    source_id=relationship.source_id,
+                    target_id=relationship.target_id,
+                    property_definition_id=relationship.property_definition_id,
+                )
+            )
             if failures:
                 handler_names = ", ".join(name for name, _ in failures)
                 _logger.warning(
@@ -1788,10 +1961,12 @@ class OntologyService:
         self._repository.delete_individual(individual_id)
 
         # Emit IndividualDeleted event
-        failures = self._event_publisher.publish(IndividualDeleted(
-            individual_id=individual_id,
-            title=individual.title,
-        ))
+        failures = self._event_publisher.publish(
+            IndividualDeleted(
+                individual_id=individual_id,
+                title=individual.title,
+            )
+        )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
@@ -1804,10 +1979,12 @@ class OntologyService:
         # Emit GraphInvalidated event using taxonomy from first parent class
         parent_class = self._repository.get_class(individual.class_ids[0])
         if parent_class:
-            failures = self._event_publisher.publish(GraphInvalidated(
-                taxonomy_id=parent_class.taxonomy_id,
-                reason="individual_deleted",
-            ))
+            failures = self._event_publisher.publish(
+                GraphInvalidated(
+                    taxonomy_id=parent_class.taxonomy_id,
+                    reason="individual_deleted",
+                )
+            )
             if failures:
                 handler_names = ", ".join(name for name, _ in failures)
                 _logger.warning(
@@ -1866,12 +2043,14 @@ class OntologyService:
         individual = self._repository.save_individual(individual)
 
         # Emit IndividualUpdated event
-        failures = self._event_publisher.publish(IndividualUpdated(
-            individual_id=individual_id,
-            changed_fields=("class_ids",),
-            old_values={"class_ids": old_class_ids},
-            new_values={"class_ids": individual.class_ids},
-        ))
+        failures = self._event_publisher.publish(
+            IndividualUpdated(
+                individual_id=individual_id,
+                changed_fields=("class_ids",),
+                old_values={"class_ids": old_class_ids},
+                new_values={"class_ids": individual.class_ids},
+            )
+        )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
@@ -1882,10 +2061,12 @@ class OntologyService:
             )
 
         # Emit GraphInvalidated event
-        failures = self._event_publisher.publish(GraphInvalidated(
-            taxonomy_id=cls.taxonomy_id,
-            reason="individual_class_added",
-        ))
+        failures = self._event_publisher.publish(
+            GraphInvalidated(
+                taxonomy_id=cls.taxonomy_id,
+                reason="individual_class_added",
+            )
+        )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
@@ -1896,7 +2077,9 @@ class OntologyService:
 
         return individual
 
-    def remove_class_from_individual(self, individual_id: str, class_id: str) -> Individual:
+    def remove_class_from_individual(
+        self, individual_id: str, class_id: str
+    ) -> Individual:
         """
         Remove a parent class from an individual.
 
@@ -1923,12 +2106,14 @@ class OntologyService:
         individual = self._repository.save_individual(individual)
 
         # Emit IndividualUpdated event (unconditionally - it records individual state change)
-        failures = self._event_publisher.publish(IndividualUpdated(
-            individual_id=individual_id,
-            changed_fields=("class_ids",),
-            old_values={"class_ids": old_class_ids},
-            new_values={"class_ids": individual.class_ids},
-        ))
+        failures = self._event_publisher.publish(
+            IndividualUpdated(
+                individual_id=individual_id,
+                changed_fields=("class_ids",),
+                old_values={"class_ids": old_class_ids},
+                new_values={"class_ids": individual.class_ids},
+            )
+        )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
@@ -1942,10 +2127,12 @@ class OntologyService:
         cls = self._repository.get_class(class_id)
         if cls:
             # Emit GraphInvalidated event
-            failures = self._event_publisher.publish(GraphInvalidated(
-                taxonomy_id=cls.taxonomy_id,
-                reason="individual_class_removed",
-            ))
+            failures = self._event_publisher.publish(
+                GraphInvalidated(
+                    taxonomy_id=cls.taxonomy_id,
+                    reason="individual_class_removed",
+                )
+            )
             if failures:
                 handler_names = ", ".join(name for name, _ in failures)
                 _logger.warning(
@@ -1997,12 +2184,14 @@ class OntologyService:
         individual = self._repository.save_individual(individual)
 
         # Emit IndividualUpdated event
-        failures = self._event_publisher.publish(IndividualUpdated(
-            individual_id=individual_id,
-            changed_fields=("class_ids",),
-            old_values={"class_ids": old_class_ids},
-            new_values={"class_ids": individual.class_ids},
-        ))
+        failures = self._event_publisher.publish(
+            IndividualUpdated(
+                individual_id=individual_id,
+                changed_fields=("class_ids",),
+                old_values={"class_ids": old_class_ids},
+                new_values={"class_ids": individual.class_ids},
+            )
+        )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
@@ -2015,10 +2204,12 @@ class OntologyService:
         # Emit GraphInvalidated event using taxonomy from first parent class
         parent_class = self._repository.get_class(individual.class_ids[0])
         if parent_class:
-            failures = self._event_publisher.publish(GraphInvalidated(
-                taxonomy_id=parent_class.taxonomy_id,
-                reason="individual_classes_reordered",
-            ))
+            failures = self._event_publisher.publish(
+                GraphInvalidated(
+                    taxonomy_id=parent_class.taxonomy_id,
+                    reason="individual_classes_reordered",
+                )
+            )
             if failures:
                 handler_names = ", ".join(name for name, _ in failures)
                 _logger.warning(

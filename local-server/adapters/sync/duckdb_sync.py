@@ -43,7 +43,9 @@ class DuckDBSyncAdapter:
     SyncError domain exceptions.
     """
 
-    def __init__(self, output_dir: str, change_repo: "ChangeRepository | None" = None) -> None:
+    def __init__(
+        self, output_dir: str, change_repo: "ChangeRepository | None" = None
+    ) -> None:
         """
         Initialize the sync adapter.
 
@@ -56,10 +58,14 @@ class DuckDBSyncAdapter:
             RuntimeError: If sync directory cannot be created
         """
         if importlib.util.find_spec("duckdb") is None:
-            _logger.error("duckdb is required for sync adapter. Install with: pip install duckdb")
+            _logger.error(
+                "duckdb is required for sync adapter. Install with: pip install duckdb"
+            )
             raise ImportError("duckdb is required for sync adapter")
         if importlib.util.find_spec("pyarrow") is None:
-            _logger.error("pyarrow is required for sync adapter. Install with: pip install pyarrow")
+            _logger.error(
+                "pyarrow is required for sync adapter. Install with: pip install pyarrow"
+            )
             raise ImportError("pyarrow is required for sync adapter")
 
         self._output_dir = Path(output_dir).resolve()
@@ -98,7 +104,14 @@ class DuckDBSyncAdapter:
         started_at = datetime.now(timezone.utc)
         if not events:
             completed_at = datetime.now(timezone.utc)
-            return SyncResult(pushed=0, pulled=0, errors=(), pushed_event_ids=(), started_at=started_at, completed_at=completed_at)
+            return SyncResult(
+                pushed=0,
+                pulled=0,
+                errors=(),
+                pushed_event_ids=(),
+                started_at=started_at,
+                completed_at=completed_at,
+            )
 
         try:
             import pyarrow as pa
@@ -127,8 +140,14 @@ class DuckDBSyncAdapter:
                     "processed": event.processed,
                     "user_id": event.user_id,
                     "change_reason": event.change_reason,
-                    "new_state": json.dumps(event.new_state) if event.new_state else None,
-                    "previous_state": json.dumps(event.previous_state) if event.previous_state else None,
+                    "new_state": (
+                        json.dumps(event.new_state) if event.new_state else None
+                    ),
+                    "previous_state": (
+                        json.dumps(event.previous_state)
+                        if event.previous_state
+                        else None
+                    ),
                 }
                 events_by_date[date_str].append(event_dict)
 
@@ -165,7 +184,14 @@ class DuckDBSyncAdapter:
                 len(events_by_date),
             )
             completed_at = datetime.now(timezone.utc)
-            return SyncResult(pushed=len(pushed_event_ids), pulled=0, errors=(), pushed_event_ids=tuple(pushed_event_ids), started_at=started_at, completed_at=completed_at)
+            return SyncResult(
+                pushed=len(pushed_event_ids),
+                pulled=0,
+                errors=(),
+                pushed_event_ids=tuple(pushed_event_ids),
+                started_at=started_at,
+                completed_at=completed_at,
+            )
 
         except OSError as e:
             error_msg = f"Failed to write Parquet files: {e}"
@@ -300,7 +326,9 @@ class DuckDBSyncAdapter:
                         _logger.error(error_msg)
                         raise RuntimeError(error_msg) from e
 
-            _logger.info("Pulled %d change events from Parquet files (deduplicated)", len(events))
+            _logger.info(
+                "Pulled %d change events from Parquet files (deduplicated)", len(events)
+            )
             return events
 
         except RuntimeError:
@@ -348,7 +376,9 @@ class DuckDBSyncAdapter:
                 for date_dir in self._changes_dir.iterdir():
                     if date_dir.is_dir():
                         for parquet_file in date_dir.glob("*.parquet"):
-                            mtime = datetime.fromtimestamp(parquet_file.stat().st_mtime, tz=timezone.utc)
+                            mtime = datetime.fromtimestamp(
+                                parquet_file.stat().st_mtime, tz=timezone.utc
+                            )
                             if most_recent_mtime is None or mtime > most_recent_mtime:
                                 most_recent_mtime = mtime
 

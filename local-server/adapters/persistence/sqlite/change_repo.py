@@ -28,7 +28,13 @@ from domain.versioning.entities import (
     Changeset as DomainChangeset,
     Proposal as DomainProposal,
 )
-from domain.versioning.value_objects import ChangeState, ProposalState, ChangeOperation, EntityVersionState, ChangeHistoryResult
+from domain.versioning.value_objects import (
+    ChangeState,
+    ProposalState,
+    ChangeOperation,
+    EntityVersionState,
+    ChangeHistoryResult,
+)
 from domain.versioning.exceptions import VersionNotFoundError
 
 
@@ -147,7 +153,9 @@ class SQLiteChangeRepository:
             total_count = session.execute(count_query).scalar() or 0
 
             # Apply ordering and limit to get paginated results
-            paginated_query = base_query.order_by(ChangeEvent.timestamp.desc()).limit(limit)
+            paginated_query = base_query.order_by(ChangeEvent.timestamp.desc()).limit(
+                limit
+            )
             orm_events = session.execute(paginated_query).scalars().all()
 
             events = [self._to_domain_change_event(e) for e in orm_events]
@@ -210,7 +218,9 @@ class SQLiteChangeRepository:
         except VersionNotFoundError:
             raise
         except SQLAlchemyError as e:
-            raise RuntimeError(f"Failed to mark change events as processed: {str(e)}") from e
+            raise RuntimeError(
+                f"Failed to mark change events as processed: {str(e)}"
+            ) from e
 
     def delete_changes(self, event_ids: list[str]) -> None:
         """
@@ -279,7 +289,11 @@ class SQLiteChangeRepository:
         """
         try:
             with self.session_factory() as session:
-                query = select(func.count()).select_from(ChangeEvent).where(~ChangeEvent.processed)
+                query = (
+                    select(func.count())
+                    .select_from(ChangeEvent)
+                    .where(~ChangeEvent.processed)
+                )
                 count = session.scalar(query)
                 return count or 0
         except SQLAlchemyError as e:
@@ -668,7 +682,9 @@ class SQLiteChangeRepository:
         except VersionNotFoundError:
             raise
         except SQLAlchemyError as e:
-            raise RuntimeError(f"Failed to update changeset and proposal: {str(e)}") from e
+            raise RuntimeError(
+                f"Failed to update changeset and proposal: {str(e)}"
+            ) from e
 
     def atomic_update_on_merge(
         self,

@@ -147,7 +147,9 @@ async def get_change_history_by_entity(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.get("/versioning/versions/{entity_id}", response_model=list[EntityVersionResponse])
+@router.get(
+    "/versioning/versions/{entity_id}", response_model=list[EntityVersionResponse]
+)
 async def list_versions(
     entity_id: str,
     service: VersioningService = Depends(get_versioning_service),
@@ -173,7 +175,9 @@ async def list_versions(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.get("/versioning/versions/{entity_id}/{version}", response_model=EntityVersionResponse)
+@router.get(
+    "/versioning/versions/{entity_id}/{version}", response_model=EntityVersionResponse
+)
 async def get_entity_version(
     entity_id: str,
     version: int,
@@ -206,7 +210,11 @@ async def get_entity_version(
 # ==================== Changeset Endpoints ====================
 
 
-@router.post("/versioning/changesets", response_model=ChangesetResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/versioning/changesets",
+    response_model=ChangesetResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_changeset(
     request: ChangesetCreateRequest,
     service: VersioningService = Depends(get_versioning_service),
@@ -263,7 +271,9 @@ async def get_changeset(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.post("/versioning/changesets/{changeset_id}/stage", response_model=ChangesetResponse)
+@router.post(
+    "/versioning/changesets/{changeset_id}/stage", response_model=ChangesetResponse
+)
 async def stage_changeset(
     changeset_id: str,
     service: VersioningService = Depends(get_versioning_service),
@@ -289,7 +299,9 @@ async def stage_changeset(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.post("/versioning/changesets/{changeset_id}/submit", response_model=ProposalResponse)
+@router.post(
+    "/versioning/changesets/{changeset_id}/submit", response_model=ProposalResponse
+)
 async def submit_proposal(
     changeset_id: str,
     service: VersioningService = Depends(get_versioning_service),
@@ -320,7 +332,9 @@ async def submit_proposal(
 # ==================== Proposal Workflow Endpoints ====================
 
 
-@router.post("/versioning/proposals/{proposal_id}/approve", response_model=ProposalResponse)
+@router.post(
+    "/versioning/proposals/{proposal_id}/approve", response_model=ProposalResponse
+)
 async def approve_proposal(
     proposal_id: str,
     service: VersioningService = Depends(get_versioning_service),
@@ -349,7 +363,9 @@ async def approve_proposal(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.post("/versioning/proposals/{proposal_id}/reject", response_model=ProposalResponse)
+@router.post(
+    "/versioning/proposals/{proposal_id}/reject", response_model=ProposalResponse
+)
 async def reject_proposal(
     proposal_id: str,
     request: RejectProposalRequest,
@@ -382,7 +398,10 @@ async def reject_proposal(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.get("/versioning/proposals/{proposal_id}/conflicts", response_model=ConflictReportResponse)
+@router.get(
+    "/versioning/proposals/{proposal_id}/conflicts",
+    response_model=ConflictReportResponse,
+)
 async def detect_conflicts(
     proposal_id: str,
     service: VersioningService = Depends(get_versioning_service),
@@ -425,7 +444,10 @@ async def detect_conflicts(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.post("/versioning/proposals/{proposal_id}/auto-resolve", response_model=ConflictReportResponse)
+@router.post(
+    "/versioning/proposals/{proposal_id}/auto-resolve",
+    response_model=ConflictReportResponse,
+)
 async def auto_resolve_conflicts(
     proposal_id: str,
     request: AutoResolveConflictsRequest,
@@ -475,7 +497,9 @@ async def auto_resolve_conflicts(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.post("/versioning/proposals/{proposal_id}/resolve", response_model=ConflictReportResponse)
+@router.post(
+    "/versioning/proposals/{proposal_id}/resolve", response_model=ConflictReportResponse
+)
 async def resolve_conflicts(
     proposal_id: str,
     request: ResolveConflictsRequest,
@@ -523,7 +547,9 @@ async def resolve_conflicts(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.post("/versioning/proposals/{proposal_id}/merge", response_model=MergeResultResponse)
+@router.post(
+    "/versioning/proposals/{proposal_id}/merge", response_model=MergeResultResponse
+)
 async def merge_proposal(
     proposal_id: str,
     service: VersioningService = Depends(get_versioning_service),

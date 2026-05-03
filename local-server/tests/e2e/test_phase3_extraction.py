@@ -20,7 +20,9 @@ Run with: pytest -m extraction
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import pytest
 import tempfile
@@ -176,7 +178,9 @@ class TestExtractionLayerMetrics:
         # Should complete despite reference source failure
         assert result is not None
         # Layer 3 should have recorded an error or continued with entities
-        layer_3 = next((layer for layer in result.layers_executed if layer.layer_num == 3), None)
+        layer_3 = next(
+            (layer for layer in result.layers_executed if layer.layer_num == 3), None
+        )
         if layer_3 is not None:
             # Either layer recorded an error message OR it has entities despite failure
             assert layer_3.error_message is not None or len(layer_3.entities) > 0
@@ -209,7 +213,9 @@ class TestReferenceAggregationAcrossSources:
         result = service.extract("Apple is a company")
 
         # Verify that reference layer executed
-        layer_3 = next((layer for layer in result.layers_executed if layer.layer_num == 3), None)
+        layer_3 = next(
+            (layer for layer in result.layers_executed if layer.layer_num == 3), None
+        )
         assert layer_3 is not None
         assert layer_3.layer_name == "Reference Source Enrichment"
 
@@ -257,7 +263,9 @@ class TestReferenceCacheEffectiveness:
             service = ExtractionService(
                 ontology_repo=kg_repo,
                 embedding_service=embedding_service,
-                llm=FakeLLMProvider(response_content='{"entities": [{"label": "apple"}]}'),
+                llm=FakeLLMProvider(
+                    response_content='{"entities": [{"label": "apple"}]}'
+                ),
                 nlp=SpacyNLPProcessor(),
                 reference_sources=[cached_source],
                 event_publisher=FakeEventPublisher(),
@@ -347,14 +355,14 @@ def test_full_rag_extraction_pipeline():
     assert result.text == input_text
 
     # Verify at least 3 entities extracted
-    assert len(result.entities) >= 3, (
-        f"Expected at least 3 entities, got {len(result.entities)}: {result.entities}"
-    )
+    assert (
+        len(result.entities) >= 3
+    ), f"Expected at least 3 entities, got {len(result.entities)}: {result.entities}"
 
     # Verify all 4 layers executed
-    assert len(result.layers_executed) == 4, (
-        f"Expected 4 layers executed, got {len(result.layers_executed)}"
-    )
+    assert (
+        len(result.layers_executed) == 4
+    ), f"Expected 4 layers executed, got {len(result.layers_executed)}"
 
     # Verify each layer in sequence
     layer_nums = [layer.layer_num for layer in result.layers_executed]
@@ -371,7 +379,9 @@ def test_full_rag_extraction_pipeline():
     assert result.created_at is not None
 
     # Verify at least Layer 1 (LLM) extracted entities
-    llm_layer = next((layer for layer in result.layers_executed if layer.layer_num == 1), None)
+    llm_layer = next(
+        (layer for layer in result.layers_executed if layer.layer_num == 1), None
+    )
     assert llm_layer is not None
     # LLM layer should contribute entities
     assert llm_layer.entities or len(result.entities) > 0

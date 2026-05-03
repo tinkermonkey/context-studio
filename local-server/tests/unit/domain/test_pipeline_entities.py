@@ -8,7 +8,9 @@ for PipelineConfiguration and Execution.
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import pytest
 from datetime import datetime, timezone
@@ -19,6 +21,7 @@ from domain.pipeline.entities import PipelineConfiguration, Execution
 @pytest.fixture
 def make_config():
     """Factory fixture for PipelineConfiguration with sensible defaults."""
+
     def _make(**overrides):
         now = datetime.now(timezone.utc)
         defaults = {
@@ -37,12 +40,14 @@ def make_config():
         }
         defaults.update(overrides)
         return PipelineConfiguration(**defaults)
+
     return _make
 
 
 @pytest.fixture
 def make_execution():
     """Factory fixture for Execution with sensible defaults."""
+
     def _make(**overrides):
         now = datetime.now(timezone.utc)
         defaults = {
@@ -61,6 +66,7 @@ def make_execution():
         }
         defaults.update(overrides)
         return Execution(**defaults)
+
     return _make
 
 
@@ -268,12 +274,16 @@ class TestExecution:
 
     def test_execution_error_status_without_message_raises(self, make_execution):
         """Execution raises ValueError if status='error' but error_message is None."""
-        with pytest.raises(ValueError, match="error_message must be set when status is 'error'"):
+        with pytest.raises(
+            ValueError, match="error_message must be set when status is 'error'"
+        ):
             make_execution(status="error", error_message=None)
 
     def test_execution_error_status_with_empty_message_raises(self, make_execution):
         """Execution raises ValueError if status='error' with empty error_message."""
-        with pytest.raises(ValueError, match="error_message must be set when status is 'error'"):
+        with pytest.raises(
+            ValueError, match="error_message must be set when status is 'error'"
+        ):
             make_execution(status="error", error_message="")
 
     def test_execution_timeout_status_without_message_allowed(self, make_execution):

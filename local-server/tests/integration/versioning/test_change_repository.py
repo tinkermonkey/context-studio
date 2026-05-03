@@ -13,7 +13,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 # Add local-server root to path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
@@ -22,7 +24,12 @@ from domain.versioning.entities import (
     Changeset,
     Proposal,
 )
-from domain.versioning.value_objects import ChangeState, ChangeOperation, ProposalState, EntityVersionState
+from domain.versioning.value_objects import (
+    ChangeState,
+    ChangeOperation,
+    ProposalState,
+    EntityVersionState,
+)
 from domain.versioning.exceptions import VersionNotFoundError
 
 
@@ -87,10 +94,16 @@ class TestChangeEventOperations:
     def test_get_changes_by_entity_id(self, repository) -> None:
         """Test filtering changes by entity ID."""
         repository.record_change(
-            entity_id="entity1", entity_type="class", operation=ChangeOperation.CREATE, new_state={}
+            entity_id="entity1",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={},
         )
         repository.record_change(
-            entity_id="entity2", entity_type="class", operation=ChangeOperation.CREATE, new_state={}
+            entity_id="entity2",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={},
         )
 
         result = repository.get_changes(entity_id="entity1")
@@ -105,7 +118,10 @@ class TestChangeEventOperations:
         future = now + timedelta(hours=1)
 
         repository.record_change(
-            entity_id="entity1", entity_type="class", operation=ChangeOperation.CREATE, new_state={}
+            entity_id="entity1",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={},
         )
 
         recent_result = repository.get_changes(since=past)
@@ -133,7 +149,10 @@ class TestChangeEventOperations:
     def test_mark_processed_sets_flag(self, repository) -> None:
         """Test that mark_processed sets the processed flag."""
         event_id = repository.record_change(
-            entity_id="entity1", entity_type="class", operation=ChangeOperation.CREATE, new_state={}
+            entity_id="entity1",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={},
         )
 
         repository.mark_processed([event_id])
@@ -144,10 +163,16 @@ class TestChangeEventOperations:
     def test_get_unprocessed_returns_unprocessed(self, repository) -> None:
         """Test that get_unprocessed returns only unprocessed events."""
         event1_id = repository.record_change(
-            entity_id="entity1", entity_type="class", operation=ChangeOperation.CREATE, new_state={}
+            entity_id="entity1",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={},
         )
         event2_id = repository.record_change(
-            entity_id="entity2", entity_type="class", operation=ChangeOperation.CREATE, new_state={}
+            entity_id="entity2",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={},
         )
 
         repository.mark_processed([event1_id])
@@ -297,10 +322,16 @@ class TestChangesetOperations:
         """Test that create_changeset persists event IDs to junction table."""
         # Create some change events first
         event1_id = repository.record_change(
-            entity_id="entity1", entity_type="class", operation=ChangeOperation.CREATE, new_state={}
+            entity_id="entity1",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={},
         )
         event2_id = repository.record_change(
-            entity_id="entity2", entity_type="class", operation=ChangeOperation.CREATE, new_state={}
+            entity_id="entity2",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={},
         )
 
         # Create a changeset with these event IDs
@@ -337,10 +368,16 @@ class TestChangesetOperations:
         """Verify update_changeset correctly syncs changes to event_ids in junction table."""
         # Create initial events
         event_id_1 = repository.record_change(
-            entity_id="entity1", entity_type="TestEntity", operation=ChangeOperation.CREATE, new_state={"name": "test"}
+            entity_id="entity1",
+            entity_type="TestEntity",
+            operation=ChangeOperation.CREATE,
+            new_state={"name": "test"},
         )
         event_id_2 = repository.record_change(
-            entity_id="entity1", entity_type="TestEntity", operation=ChangeOperation.UPDATE, new_state={"name": "updated"}
+            entity_id="entity1",
+            entity_type="TestEntity",
+            operation=ChangeOperation.UPDATE,
+            new_state={"name": "updated"},
         )
 
         # Create changeset with first two events
@@ -358,10 +395,16 @@ class TestChangesetOperations:
 
         # Create additional events
         event_id_3 = repository.record_change(
-            entity_id="entity2", entity_type="TestEntity", operation=ChangeOperation.CREATE, new_state={"name": "new"}
+            entity_id="entity2",
+            entity_type="TestEntity",
+            operation=ChangeOperation.CREATE,
+            new_state={"name": "new"},
         )
         event_id_4 = repository.record_change(
-            entity_id="entity2", entity_type="TestEntity", operation=ChangeOperation.UPDATE, new_state={"name": "newer"}
+            entity_id="entity2",
+            entity_type="TestEntity",
+            operation=ChangeOperation.UPDATE,
+            new_state={"name": "newer"},
         )
 
         # Update changeset with new event list (removed event_id_2, added event_id_3 and event_id_4)
@@ -471,7 +514,10 @@ class TestMarkProcessedOperations:
         """Test that mark_processed raises if any of multiple event IDs don't exist."""
         # Create one valid event
         event_id = repository.record_change(
-            entity_id="entity1", entity_type="class", operation=ChangeOperation.CREATE, new_state={}
+            entity_id="entity1",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={},
         )
 
         # Try to mark both valid and invalid IDs
@@ -481,10 +527,16 @@ class TestMarkProcessedOperations:
     def test_mark_processed_succeeds_with_all_valid_ids(self, repository) -> None:
         """Test that mark_processed succeeds when all IDs exist."""
         event1_id = repository.record_change(
-            entity_id="entity1", entity_type="class", operation=ChangeOperation.CREATE, new_state={}
+            entity_id="entity1",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={},
         )
         event2_id = repository.record_change(
-            entity_id="entity2", entity_type="class", operation=ChangeOperation.CREATE, new_state={}
+            entity_id="entity2",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={},
         )
 
         # Should not raise
@@ -498,7 +550,9 @@ class TestMarkProcessedOperations:
 class TestAtomicUpdateOperations:
     """Test atomic update operations for changesets and proposals."""
 
-    def test_update_changeset_and_proposal_on_submit_persists_both(self, repository) -> None:
+    def test_update_changeset_and_proposal_on_submit_persists_both(
+        self, repository
+    ) -> None:
         """Test that both changeset and proposal are persisted in one operation."""
         # Create and persist a changeset
         changeset = Changeset(
@@ -539,7 +593,9 @@ class TestAtomicUpdateOperations:
         assert retrieved_prop is not None
         assert retrieved_prop.state == ProposalState.OPEN
 
-    def test_atomic_update_changeset_and_proposal_updates_both(self, repository) -> None:
+    def test_atomic_update_changeset_and_proposal_updates_both(
+        self, repository
+    ) -> None:
         """Test that both entities are updated atomically on approve/reject/merge."""
         # Create and persist both entities
         changeset = Changeset(

@@ -4,6 +4,7 @@ from typing import Any, Optional
 
 try:
     import spacy
+
     HAS_SPACY = True
 except ImportError:
     HAS_SPACY = False
@@ -72,7 +73,9 @@ class SpacyNLPProcessor:
             Returns empty results if the processor is not ready.
         """
         if not self.is_ready():
-            logger.warning(f"NLP processor not ready. Returning empty results for text: {text[:100]}")
+            logger.warning(
+                f"NLP processor not ready. Returning empty results for text: {text[:100]}"
+            )
             return NLPResult(tokens=[], entities=[], noun_chunks=[], language="unknown")
 
         assert self._nlp is not None
@@ -81,7 +84,9 @@ class SpacyNLPProcessor:
         entities = self._extract_from_doc(doc)
         noun_chunks = [chunk.text for chunk in doc.noun_chunks]
 
-        return NLPResult(tokens=tokens, entities=entities, noun_chunks=noun_chunks, language="en")
+        return NLPResult(
+            tokens=tokens, entities=entities, noun_chunks=noun_chunks, language="en"
+        )
 
     def extract_entities(self, text: str) -> list[NLPEntity]:
         """
@@ -95,7 +100,9 @@ class SpacyNLPProcessor:
             Returns empty list if the processor is not ready.
         """
         if not self.is_ready():
-            logger.warning(f"NLP processor not ready. Returning empty entities for text: {text[:100]}")
+            logger.warning(
+                f"NLP processor not ready. Returning empty entities for text: {text[:100]}"
+            )
             return []
 
         assert self._nlp is not None

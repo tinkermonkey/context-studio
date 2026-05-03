@@ -15,7 +15,9 @@ from datetime import datetime, timezone
 
 import pytest
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 from domain.versioning.events import ChangesetMerged, SyncCompleted
 from domain.versioning.value_objects import SyncDirection
@@ -65,7 +67,9 @@ class TestChangesetMerged:
 
     def test_changeset_merged_rejects_none_merged_at(self):
         """ChangesetMerged raises ValueError if merged_at is None."""
-        with pytest.raises(ValueError, match="ChangesetMerged event requires merged_at timestamp"):
+        with pytest.raises(
+            ValueError, match="ChangesetMerged event requires merged_at timestamp"
+        ):
             ChangesetMerged(
                 changeset_id="changeset-123",
                 proposal_id="proposal-456",
@@ -87,7 +91,9 @@ class TestChangesetMerged:
     def test_changeset_merged_rejects_empty_proposal_id(self):
         """ChangesetMerged raises ValueError if proposal_id is empty (parent validation)."""
         now = datetime.now(timezone.utc)
-        with pytest.raises(ValueError, match="Event field 'proposal_id' cannot be empty"):
+        with pytest.raises(
+            ValueError, match="Event field 'proposal_id' cannot be empty"
+        ):
             ChangesetMerged(
                 changeset_id="changeset-123",
                 proposal_id="",
@@ -171,7 +177,9 @@ class TestSyncCompleted:
     def test_sync_completed_rejects_invalid_direction_string(self):
         """SyncCompleted raises ValueError if direction is an invalid string value."""
         now = datetime.now(timezone.utc)
-        with pytest.raises(ValueError, match="requires direction to be a valid SyncDirection"):
+        with pytest.raises(
+            ValueError, match="requires direction to be a valid SyncDirection"
+        ):
             SyncCompleted(
                 direction="invalid",  # type: ignore
                 events_count=5,
@@ -180,7 +188,9 @@ class TestSyncCompleted:
 
     def test_sync_completed_rejects_none_completed_at(self):
         """SyncCompleted raises ValueError if completed_at is None."""
-        with pytest.raises(ValueError, match="SyncCompleted event requires completed_at timestamp"):
+        with pytest.raises(
+            ValueError, match="SyncCompleted event requires completed_at timestamp"
+        ):
             SyncCompleted(
                 direction=SyncDirection.PUSH,
                 events_count=5,

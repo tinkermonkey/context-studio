@@ -90,7 +90,9 @@ class FakeChangeRepository:
 
     def get_changes_by_ids(self, event_ids: list[str]) -> list[ChangeEvent]:
         """Retrieve change events by their IDs."""
-        return [self._change_events[eid] for eid in event_ids if eid in self._change_events]
+        return [
+            self._change_events[eid] for eid in event_ids if eid in self._change_events
+        ]
 
     def mark_processed(self, event_ids: list[str]) -> None:
         """
@@ -151,18 +153,14 @@ class FakeChangeRepository:
         key = (version.entity_id, version.version)
         self._entity_versions[key] = version
 
-    def get_version(
-        self, entity_id: str, version: int
-    ) -> Optional[EntityVersion]:
+    def get_version(self, entity_id: str, version: int) -> Optional[EntityVersion]:
         """Retrieve a specific version."""
         return self._entity_versions.get((entity_id, version))
 
     def get_latest_version(self, entity_id: str) -> Optional[EntityVersion]:
         """Retrieve the latest version of an entity."""
         matching = [
-            v
-            for (eid, _), v in self._entity_versions.items()
-            if eid == entity_id
+            v for (eid, _), v in self._entity_versions.items() if eid == entity_id
         ]
         if not matching:
             return None
@@ -268,7 +266,9 @@ class FakeChangeRepository:
         self._changesets[changeset.id] = deepcopy(changeset)
         self._proposals[proposal.id] = deepcopy(proposal)
         for version in versions:
-            self._entity_versions[(version.entity_id, version.version)] = deepcopy(version)
+            self._entity_versions[(version.entity_id, version.version)] = deepcopy(
+                version
+            )
         return deepcopy(changeset), deepcopy(proposal)
 
     def save_conflict_resolutions(

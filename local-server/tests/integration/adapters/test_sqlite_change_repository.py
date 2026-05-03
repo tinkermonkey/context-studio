@@ -2,18 +2,35 @@
 
 import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../../'))
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../"))
 
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import uuid
 
-from adapters.persistence.sqlite.models import Base, ChangeEvent, Changeset, Proposal, ConflictResolution, EntityVersion
+from adapters.persistence.sqlite.models import (
+    Base,
+    ChangeEvent,
+    Changeset,
+    Proposal,
+    ConflictResolution,
+    EntityVersion,
+)
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
-from domain.versioning.value_objects import ChangeOperation, ChangeState, ProposalState, EntityVersionState
+from domain.versioning.value_objects import (
+    ChangeOperation,
+    ChangeState,
+    ProposalState,
+    EntityVersionState,
+)
 from domain.versioning.exceptions import VersionNotFoundError
-from domain.versioning.entities import Changeset as DomainChangeset, Proposal as DomainProposal, EntityVersion as DomainEntityVersion
+from domain.versioning.entities import (
+    Changeset as DomainChangeset,
+    Proposal as DomainProposal,
+    EntityVersion as DomainEntityVersion,
+)
 from datetime import datetime, timezone
 
 
@@ -51,16 +68,12 @@ class TestSQLiteChangeRepository:
                 id=changeset_id,
                 name="Test Changeset",
                 description="Test changeset for conflict resolution",
-                state="working"
+                state="working",
             )
             session.add(changeset)
             session.flush()
 
-            proposal = Proposal(
-                id=proposal_id,
-                changeset_id=changeset_id,
-                state="open"
-            )
+            proposal = Proposal(id=proposal_id, changeset_id=changeset_id, state="open")
             session.add(proposal)
             session.commit()
 
@@ -263,7 +276,9 @@ class TestSQLiteChangeRepository:
         count = change_repo.count_unprocessed()
         assert count == 0
 
-    def test_save_conflict_resolutions_persists_resolutions(self, change_repo, session_factory):
+    def test_save_conflict_resolutions_persists_resolutions(
+        self, change_repo, session_factory
+    ):
         """Test that save_conflict_resolutions persists conflict resolution data."""
         proposal_id = self._create_proposal(session_factory)
         resolutions = {
@@ -281,9 +296,11 @@ class TestSQLiteChangeRepository:
         # Verify the resolutions were persisted
         session = session_factory()
         try:
-            records = session.query(ConflictResolution).filter_by(
-                proposal_id=proposal_id
-            ).all()
+            records = (
+                session.query(ConflictResolution)
+                .filter_by(proposal_id=proposal_id)
+                .all()
+            )
 
             assert len(records) == 3
 
@@ -299,7 +316,9 @@ class TestSQLiteChangeRepository:
         finally:
             session.close()
 
-    def test_get_conflict_resolutions_retrieves_resolutions(self, change_repo, session_factory):
+    def test_get_conflict_resolutions_retrieves_resolutions(
+        self, change_repo, session_factory
+    ):
         """Test that get_conflict_resolutions retrieves persisted resolutions."""
         proposal_id = self._create_proposal(session_factory)
         resolutions = {
@@ -322,7 +341,9 @@ class TestSQLiteChangeRepository:
         assert retrieved["entity-1"]["field_b"] == "value_b"
         assert retrieved["entity-2"]["field_c"] == "value_c"
 
-    def test_save_conflict_resolutions_overwrites_existing(self, change_repo, session_factory):
+    def test_save_conflict_resolutions_overwrites_existing(
+        self, change_repo, session_factory
+    ):
         """Test that save_conflict_resolutions deletes and reinserts (overwrites) existing resolutions."""
         proposal_id = self._create_proposal(session_factory)
 
@@ -475,15 +496,19 @@ class TestSQLiteChangeRepository:
             assert db_proposal is not None
             assert db_proposal.state == "merged"
 
-            db_version = session.query(EntityVersion).filter_by(
-                entity_id="entity-1", version=1
-            ).first()
+            db_version = (
+                session.query(EntityVersion)
+                .filter_by(entity_id="entity-1", version=1)
+                .first()
+            )
             assert db_version is not None
             assert db_version.snapshot == {"data": "snapshot"}
         finally:
             session.close()
 
-    def test_mark_processed_raises_domain_exception_before_db_exception(self, change_repo):
+    def test_mark_processed_raises_domain_exception_before_db_exception(
+        self, change_repo
+    ):
         """Test that mark_processed raises VersionNotFoundError without catching it."""
         # This test verifies the defensive re-raise is in place
         with pytest.raises(VersionNotFoundError):

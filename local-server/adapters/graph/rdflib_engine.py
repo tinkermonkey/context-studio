@@ -36,7 +36,10 @@ class RDFLibQueryEngine:
         self._loaded = False
 
     def load_ontology(
-        self, nodes: Sequence[dict[str, Any]], edges: Sequence[dict[str, Any]], property_definitions: Sequence[dict[str, Any]]
+        self,
+        nodes: Sequence[dict[str, Any]],
+        edges: Sequence[dict[str, Any]],
+        property_definitions: Sequence[dict[str, Any]],
     ) -> None:
         """
         Load ontology data into the RDF graph.
@@ -150,7 +153,14 @@ class RDFLibQueryEngine:
             if keyword_match:
                 keyword = keyword_match.group(1).upper()
                 # Check if this is a forbidden keyword
-                forbidden_keywords = {"INSERT", "DELETE", "DROP", "CLEAR", "LOAD", "CREATE"}
+                forbidden_keywords = {
+                    "INSERT",
+                    "DELETE",
+                    "DROP",
+                    "CLEAR",
+                    "LOAD",
+                    "CREATE",
+                }
                 if keyword in forbidden_keywords:
                     raise SPARQLValidationError(query, f"Forbidden keyword: {keyword}")
             # Fall through to generic error if keyword extraction fails
@@ -173,7 +183,10 @@ class RDFLibQueryEngine:
         return result_list
 
     def get_triples(
-        self, subject: str | None = None, predicate: str | None = None, object: str | None = None
+        self,
+        subject: str | None = None,
+        predicate: str | None = None,
+        object: str | None = None,
     ) -> list[tuple[str, str, str]]:
         """
         Retrieve RDF triples matching the given pattern.
@@ -207,12 +220,16 @@ class RDFLibQueryEngine:
         else:
             # Try to match as URIRef first
             object_uri = URIRef(object)
-            for s, p, o in self._graph.triples((subject_uri, predicate_uri, object_uri)):
+            for s, p, o in self._graph.triples(
+                (subject_uri, predicate_uri, object_uri)
+            ):
                 results.append((str(s), str(p), str(o)))
 
             # Then try to match as Literal
             object_literal = Literal(object)
-            for s, p, o in self._graph.triples((subject_uri, predicate_uri, object_literal)):
+            for s, p, o in self._graph.triples(
+                (subject_uri, predicate_uri, object_literal)
+            ):
                 # Check if this triple is already in results to avoid duplicates
                 triple_str = (str(s), str(p), str(o))
                 if triple_str not in results:
@@ -243,7 +260,7 @@ class RDFLibQueryEngine:
         # Remove string literals from the query to avoid matching keywords inside strings
         # This regex matches same-type quote pairs: double-quoted strings and single-quoted strings
         # This correctly handles apostrophes inside double-quoted strings and vice versa
-        query_without_literals = re.sub(r'"[^"]*"|\'[^\']*\'', ' ', query)
+        query_without_literals = re.sub(r'"[^"]*"|\'[^\']*\'', " ", query)
         query_upper = query_without_literals.upper()
 
         for keyword in forbidden_keywords:
@@ -269,4 +286,3 @@ class RDFLibQueryEngine:
             Number of triples currently in the graph
         """
         return len(self._graph)
-

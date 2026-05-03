@@ -100,7 +100,11 @@ def test_change_events_outside_import_have_null_import_run_id(change_repo):
     )
 
     # Verify the change event was recorded with NULL import_run_id
-    retrieved_event = change_repo.get_changes(limit=1).events[0] if change_repo.get_changes(limit=1).events else None
+    retrieved_event = (
+        change_repo.get_changes(limit=1).events[0]
+        if change_repo.get_changes(limit=1).events
+        else None
+    )
     assert retrieved_event is not None
     assert retrieved_event.import_run_id is None
 
@@ -139,7 +143,9 @@ def test_change_events_inside_import_have_import_run_id(change_repo):
         retrieved_events = change_repo.get_changes(limit=10).events
         assert len(retrieved_events) > 0
         # Check that at least one event has the import_run_id
-        events_with_import_run = [e for e in retrieved_events if e.import_run_id == import_run.id]
+        events_with_import_run = [
+            e for e in retrieved_events if e.import_run_id == import_run.id
+        ]
         assert len(events_with_import_run) > 0
     finally:
         # Clear the context
@@ -253,8 +259,7 @@ def test_change_event_recorder_auto_correlation_from_context(
         auto_correlated_events = [
             e
             for e in retrieved_events
-            if e.entity_id == "test-entity-auto"
-            and e.import_run_id == import_run.id
+            if e.entity_id == "test-entity-auto" and e.import_run_id == import_run.id
         ]
 
         # Verify at least one event was auto-correlated

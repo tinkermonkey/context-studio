@@ -4,9 +4,15 @@ Unit tests for ExtractionService.
 Tests the four-layer extraction pipeline, deduplication logic, error handling,
 and configuration options.
 """
+
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+
+sys.path.append(
+    os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    )
+)
 
 import pytest
 from unittest.mock import Mock
@@ -18,20 +24,24 @@ from domain.extraction.exceptions import ExtractionError
 
 class FakeOntologyRepository:
     """Fake ontology repository for testing."""
+
     def get_by_semantic_similarity(self, embedding, limit=5):
         return []
 
 
 class FakeEmbeddingService:
     """Fake embedding service for testing."""
+
     def embed(self, text):
         return [0.0] * 384  # Dummy embedding
 
 
 class FakeLLMProvider:
     """Fake LLM provider for testing."""
+
     def complete(self, system_prompt, user_prompt, model, **kwargs):
         from domain.pipeline.ports import LLMResponse
+
         # Simple response for testing
         return LLMResponse(
             content='[{"label": "Apple", "type": "ORG", "confidence": 0.9}]',
@@ -51,8 +61,10 @@ class FakeLLMProvider:
 
 class FakeNLPProcessor:
     """Fake NLP processor for testing."""
+
     def extract_entities(self, text):
         from domain.extraction.ports import NLPEntity
+
         return [
             NLPEntity(
                 text="Steve",
@@ -73,12 +85,14 @@ class FakeNLPProcessor:
 
 class FakeReferenceSource:
     """Fake reference source for testing."""
+
     @property
     def source_name(self):
         return "TestSource"
 
     def search(self, term, limit=10):
         from domain.extraction.ports import ReferenceResult
+
         if term.lower() == "apple":
             return [
                 ReferenceResult(
@@ -100,6 +114,7 @@ class FakeReferenceSource:
 
 class FakeExtractionRepository:
     """Fake extraction repository for testing."""
+
     def __init__(self):
         self.saved_results = []
 
@@ -119,6 +134,7 @@ class FakeExtractionRepository:
 
 class FakeEventPublisher:
     """Fake event publisher for testing."""
+
     def __init__(self):
         self.published_events = []
 
@@ -417,7 +433,9 @@ class TestExtractionServicePersistence:
         result = service.extract("Test text with Apple in it")
 
         assert isinstance(result, ExtractionResult)
-        assert len(result.extracted_entities) > 0  # Has entities despite persistence failure
+        assert (
+            len(result.extracted_entities) > 0
+        )  # Has entities despite persistence failure
         # Event should still be published
         assert len(service_with_fakes["event_publisher"].published_events) > 0
 
@@ -444,7 +462,6 @@ class TestExtractionServicePersistence:
         assert any(
             isinstance(e, ExtractionCompleted) for e in event_publisher.published_events
         )
-
 
     def test_analyze_text_returns_result_even_if_persistence_fails(
         self, service_with_fakes
@@ -474,7 +491,11 @@ class TestExtractionServicePersistence:
             side_effect=RuntimeError("Database connection failed")
         )
 
-        entities = [DomainEntity(label="Apple", entity_type="ORG", source_layer=1, confidence=0.9)]
+        entities = [
+            DomainEntity(
+                label="Apple", entity_type="ORG", source_layer=1, confidence=0.9
+            )
+        ]
         result = service.enrich_from_references("Apple is a tech company", entities)
 
         assert isinstance(result, ExtractionResult)
@@ -494,6 +515,7 @@ class TestExtractionServicePersistence:
 
         class FailingEventPublisher:
             """Event publisher that simulates a handler failure."""
+
             def publish(self, event) -> list[tuple[str, Exception]]:
                 return [("audit_handler", RuntimeError("handler failed"))]
 
@@ -547,4 +569,3 @@ class TestExtractionServiceErrorHandling:
         assert isinstance(result, ExtractionResult)
         # Some layers may have failed, but the result is still valid
         assert result.total_duration_ms >= 0
-

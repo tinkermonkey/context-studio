@@ -13,7 +13,9 @@ import sys
 import os
 import pytest
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -297,7 +299,9 @@ class TestClassCRUD:
         assert len(children) == 1
         assert children[0].id == "child"
 
-    def test_class_self_parent_validation(self, repo, sample_concept_scheme, sample_taxonomy):
+    def test_class_self_parent_validation(
+        self, repo, sample_concept_scheme, sample_taxonomy
+    ):
         """Test that a class cannot be its own parent."""
         cls = Class(
             id="class-1",
@@ -359,7 +363,9 @@ class TestClassCRUD:
         assert len(results) == 1
         assert results[0].title == "Dog"
 
-    def test_search_classes_by_description(self, repo, sample_concept_scheme, sample_taxonomy):
+    def test_search_classes_by_description(
+        self, repo, sample_concept_scheme, sample_taxonomy
+    ):
         """Test searching for classes by description."""
         repo.save_class(
             Class(
@@ -403,7 +409,9 @@ class TestIndividualCRUD:
         assert retrieved.title == "Fido"
         assert retrieved.class_ids == [sample_class.id]
 
-    def test_save_and_get_individual_multiple_classes(self, repo, sample_class, sample_concept_scheme, sample_taxonomy):
+    def test_save_and_get_individual_multiple_classes(
+        self, repo, sample_class, sample_concept_scheme, sample_taxonomy
+    ):
         """Test creating and retrieving an individual with multiple parent classes."""
         # Create a second class
         class2 = Class(
@@ -448,7 +456,9 @@ class TestIndividualCRUD:
                 title="Test Individual",
             )
 
-    def test_list_individuals_by_class(self, repo, sample_class, sample_concept_scheme, sample_taxonomy):
+    def test_list_individuals_by_class(
+        self, repo, sample_class, sample_concept_scheme, sample_taxonomy
+    ):
         """Test listing individuals filtered by class (including those with multiple classes)."""
         class2 = Class(
             id="class-2",
@@ -459,9 +469,13 @@ class TestIndividualCRUD:
         repo.save_class(class2)
 
         # Create individual with single class
-        repo.save_individual(Individual(id="ind-1", class_ids=[sample_class.id], title="I1"))
+        repo.save_individual(
+            Individual(id="ind-1", class_ids=[sample_class.id], title="I1")
+        )
         # Create individual with multiple classes including sample_class
-        repo.save_individual(Individual(id="ind-2", class_ids=[sample_class.id, class2.id], title="I2"))
+        repo.save_individual(
+            Individual(id="ind-2", class_ids=[sample_class.id, class2.id], title="I2")
+        )
         # Create individual with only class2
         repo.save_individual(Individual(id="ind-3", class_ids=[class2.id], title="I3"))
 
@@ -483,7 +497,9 @@ class TestIndividualCRUD:
         deleted = repo.delete_individual("ind-1")
         assert deleted is True
 
-    def test_update_individual_class_membership(self, repo, sample_class, sample_concept_scheme, sample_taxonomy):
+    def test_update_individual_class_membership(
+        self, repo, sample_class, sample_concept_scheme, sample_taxonomy
+    ):
         """Test updating an individual's class membership."""
         class2 = Class(
             id="class-2",
@@ -503,7 +519,9 @@ class TestIndividualCRUD:
         retrieved = repo.get_individual("ind-1")
         assert retrieved.class_ids == [sample_class.id, class2.id]
 
-    def test_individual_class_order_preserved(self, repo, sample_class, sample_concept_scheme, sample_taxonomy):
+    def test_individual_class_order_preserved(
+        self, repo, sample_class, sample_concept_scheme, sample_taxonomy
+    ):
         """Test that individual class membership order is preserved."""
         class2 = Class(
             id="class-2",
@@ -523,7 +541,7 @@ class TestIndividualCRUD:
         individual = Individual(
             id="ind-1",
             class_ids=[class2.id, sample_class.id, class3.id],
-            title="OrderTest"
+            title="OrderTest",
         )
         repo.save_individual(individual)
 
@@ -630,9 +648,7 @@ class TestRelationshipCRUD:
                 property_definition_id=sample_property_definition.id,
             )
 
-    def test_list_relationships(
-        self, repo, sample_class, sample_property_definition
-    ):
+    def test_list_relationships(self, repo, sample_class, sample_property_definition):
         """Test listing relationships filtered by source or target."""
         # Create two classes for relationships
         class1 = sample_class
@@ -659,9 +675,7 @@ class TestRelationshipCRUD:
         assert len(rels) == 1
         assert rels[0].source_id == class1.id
 
-    def test_delete_relationship(
-        self, repo, sample_class, sample_property_definition
-    ):
+    def test_delete_relationship(self, repo, sample_class, sample_property_definition):
         """Test deleting a relationship."""
         class2 = Class(
             id="class-2",

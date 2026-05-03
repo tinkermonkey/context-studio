@@ -11,7 +11,9 @@ from datetime import datetime, timezone
 import pytest
 
 # Add local-server root to path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 from domain.versioning.entities import (
     Changeset,
@@ -364,7 +366,11 @@ class TestProposalStateTransitions:
             submitted_at=datetime.now(timezone.utc),
         )
 
-        for state in [ProposalState.OPEN, ProposalState.APPROVED, ProposalState.REJECTED]:
+        for state in [
+            ProposalState.OPEN,
+            ProposalState.APPROVED,
+            ProposalState.REJECTED,
+        ]:
             with pytest.raises(ProposalStateError):
                 proposal.transition_to(state)
 

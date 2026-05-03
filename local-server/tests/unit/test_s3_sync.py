@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from unittest.mock import Mock
 import pytest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
 from domain.versioning.entities import ChangeEvent
 from domain.versioning.value_objects import ChangeOperation
@@ -19,6 +19,7 @@ from domain.versioning.value_objects import ChangeOperation
 
 class MockClientError(Exception):
     """Mock botocore.exceptions.ClientError for testing."""
+
     def __init__(self, error_response, operation_name):
         self.response = error_response
         self.operation_name = operation_name
@@ -35,9 +36,9 @@ class TestS3SyncAdapterClientErrorHandling:
 
         # Create adapter instance manually, bypassing __init__
         adapter = S3SyncAdapter.__new__(S3SyncAdapter)
-        adapter._bucket = 'test-bucket'
-        adapter._prefix = 'test-prefix'
-        adapter._region = 'us-east-1'
+        adapter._bucket = "test-bucket"
+        adapter._prefix = "test-prefix"
+        adapter._region = "us-east-1"
         adapter._change_repo = None
         adapter._s3_client = Mock()
         adapter._client_error = MockClientError
@@ -48,20 +49,19 @@ class TestS3SyncAdapterClientErrorHandling:
         """Test that push() raises RuntimeError when S3 put_object raises ClientError."""
 
         adapter._s3_client.put_object.side_effect = MockClientError(
-            {'Error': {'Code': 'AccessDenied'}},
-            'PutObject'
+            {"Error": {"Code": "AccessDenied"}}, "PutObject"
         )
 
         event = ChangeEvent(
-            id='event-1',
-            entity_id='entity-1',
-            entity_type='TaxonomyEntity',
+            id="event-1",
+            entity_id="entity-1",
+            entity_type="TaxonomyEntity",
             operation=ChangeOperation.CREATE,
             timestamp=datetime.now(timezone.utc),
             processed=False,
-            user_id='user-1',
-            change_reason='Test change',
-            new_state={'name': 'Test'},
+            user_id="user-1",
+            change_reason="Test change",
+            new_state={"name": "Test"},
             previous_state=None,
         )
 
@@ -73,17 +73,14 @@ class TestS3SyncAdapterClientErrorHandling:
         # Mock paginator and list response
         mock_paginator = Mock()
         mock_page = {
-            'Contents': [
-                {'Key': 'test-prefix/changes/2026-01-15/uuid-1.jsonl'}
-            ]
+            "Contents": [{"Key": "test-prefix/changes/2026-01-15/uuid-1.jsonl"}]
         }
         mock_paginator.paginate.return_value = [mock_page]
         adapter._s3_client.get_paginator.return_value = mock_paginator
 
         # Mock get_object to raise ClientError
         adapter._s3_client.get_object.side_effect = MockClientError(
-            {'Error': {'Code': 'NoSuchKey'}},
-            'GetObject'
+            {"Error": {"Code": "NoSuchKey"}}, "GetObject"
         )
 
         with pytest.raises(RuntimeError, match="Failed to download S3 object"):
@@ -94,8 +91,7 @@ class TestS3SyncAdapterClientErrorHandling:
         # Mock paginator to raise ClientError on paginate
         mock_paginator = Mock()
         mock_paginator.paginate.side_effect = MockClientError(
-            {'Error': {'Code': 'AccessDenied'}},
-            'ListObjects'
+            {"Error": {"Code": "AccessDenied"}}, "ListObjects"
         )
         adapter._s3_client.get_paginator.return_value = mock_paginator
 
@@ -107,18 +103,14 @@ class TestS3SyncAdapterClientErrorHandling:
         # Mock paginator and list response
         mock_paginator = Mock()
         mock_page = {
-            'Contents': [
-                {'Key': 'test-prefix/changes/2026-01-15/uuid-1.jsonl'}
-            ]
+            "Contents": [{"Key": "test-prefix/changes/2026-01-15/uuid-1.jsonl"}]
         }
         mock_paginator.paginate.return_value = [mock_page]
         adapter._s3_client.get_paginator.return_value = mock_paginator
 
         # Mock get_object to return invalid JSON
-        mock_response = {
-            'Body': Mock()
-        }
-        mock_response['Body'].read.return_value = b'invalid json{{'
+        mock_response = {"Body": Mock()}
+        mock_response["Body"].read.return_value = b"invalid json{{"
         adapter._s3_client.get_object.return_value = mock_response
 
         with pytest.raises(RuntimeError, match="Failed to parse S3 object"):
@@ -129,8 +121,7 @@ class TestS3SyncAdapterClientErrorHandling:
         # Mock paginator to raise ClientError on paginate
         mock_paginator = Mock()
         mock_paginator.paginate.side_effect = MockClientError(
-            {'Error': {'Code': 'NoSuchBucket'}},
-            'ListObjects'
+            {"Error": {"Code": "NoSuchBucket"}}, "ListObjects"
         )
         adapter._s3_client.get_paginator.return_value = mock_paginator
 
@@ -142,15 +133,15 @@ class TestS3SyncAdapterClientErrorHandling:
         adapter._s3_client.put_object.return_value = {}
 
         event = ChangeEvent(
-            id='event-1',
-            entity_id='entity-1',
-            entity_type='TaxonomyEntity',
+            id="event-1",
+            entity_id="entity-1",
+            entity_type="TaxonomyEntity",
             operation=ChangeOperation.CREATE,
             timestamp=datetime.now(timezone.utc),
             processed=False,
-            user_id='user-1',
-            change_reason='Test change',
-            new_state={'name': 'Test'},
+            user_id="user-1",
+            change_reason="Test change",
+            new_state={"name": "Test"},
             previous_state=None,
         )
 
@@ -159,7 +150,7 @@ class TestS3SyncAdapterClientErrorHandling:
         assert result.pushed == 1
         assert result.pulled == 0
         assert len(result.pushed_event_ids) == 1
-        assert result.pushed_event_ids[0] == 'event-1'
+        assert result.pushed_event_ids[0] == "event-1"
         adapter._s3_client.put_object.assert_called_once()
 
     def test_pull_success(self, adapter):
@@ -167,26 +158,22 @@ class TestS3SyncAdapterClientErrorHandling:
         # Mock paginator and list response
         mock_paginator = Mock()
         mock_page = {
-            'Contents': [
-                {'Key': 'test-prefix/changes/2026-01-15/uuid-1.jsonl'}
-            ]
+            "Contents": [{"Key": "test-prefix/changes/2026-01-15/uuid-1.jsonl"}]
         }
         mock_paginator.paginate.return_value = [mock_page]
         adapter._s3_client.get_paginator.return_value = mock_paginator
 
         # Mock get_object to return valid JSON
-        mock_response = {
-            'Body': Mock()
-        }
+        mock_response = {"Body": Mock()}
         json_data = '{"id": "event-1", "entity_id": "entity-1", "entity_type": "TaxonomyEntity", "operation": "create", "timestamp": "2026-01-15T12:00:00+00:00", "processed": false, "user_id": "user-1", "change_reason": "Test change", "new_state": {"name": "Test"}, "previous_state": null}'
-        mock_response['Body'].read.return_value = json_data.encode('utf-8')
+        mock_response["Body"].read.return_value = json_data.encode("utf-8")
         adapter._s3_client.get_object.return_value = mock_response
 
         events = adapter.pull()
 
         assert len(events) == 1
-        assert events[0].id == 'event-1'
-        assert events[0].entity_id == 'entity-1'
+        assert events[0].id == "event-1"
+        assert events[0].entity_id == "entity-1"
 
     def test_get_sync_status_success(self, adapter):
         """Test successful get_sync_status operation."""
@@ -194,10 +181,10 @@ class TestS3SyncAdapterClientErrorHandling:
         mock_paginator = Mock()
         mock_time = datetime(2026, 1, 15, 12, 0, 0, tzinfo=timezone.utc)
         mock_page = {
-            'Contents': [
+            "Contents": [
                 {
-                    'Key': 'test-prefix/changes/2026-01-15/uuid-1.jsonl',
-                    'LastModified': mock_time
+                    "Key": "test-prefix/changes/2026-01-15/uuid-1.jsonl",
+                    "LastModified": mock_time,
                 }
             ]
         }

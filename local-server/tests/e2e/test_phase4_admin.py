@@ -17,7 +17,9 @@ import os
 import time
 import json
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import pytest
 from fastapi import status
@@ -58,8 +60,9 @@ class TestHealthCheck:
         assert "issues" in body
 
         # Verify database_connected is true (real database is working)
-        assert body["database_connected"] is True, \
-            "Database should be connected with real SQLite database"
+        assert (
+            body["database_connected"] is True
+        ), "Database should be connected with real SQLite database"
 
         # Verify service statuses are booleans
         assert isinstance(body["nlp_pipeline_ready"], bool)
@@ -92,7 +95,9 @@ class TestSystemMetrics:
 
         db_body = response.json()
         assert "connected" in db_body
-        assert db_body["connected"] is True, "Database should be connected and responsive"
+        assert (
+            db_body["connected"] is True
+        ), "Database should be connected and responsive"
 
         # Check service metrics endpoint
         response = e2e_client.get("/api/v1/admin/health/services")
@@ -149,35 +154,33 @@ class TestConfigurationManagement:
         # Verify expected sections present
         expected_sections = ["server", "database", "llm"]
         for section in expected_sections:
-            assert section in config["sections"], \
-                f"Configuration should have '{section}' section"
+            assert (
+                section in config["sections"]
+            ), f"Configuration should have '{section}' section"
 
         # Update a non-sensitive setting (e.g., update CORS origins in server section)
         test_section = "server"
         test_key = "cors_origins"
         test_value = ["http://localhost:3000", "http://localhost:5173"]
 
-        update_payload = {
-            "updates": {
-                test_key: test_value
-            }
-        }
+        update_payload = {"updates": {test_key: test_value}}
 
         response = e2e_client.patch(
-            f"/api/v1/admin/configuration/{test_section}",
-            json=update_payload
+            f"/api/v1/admin/configuration/{test_section}", json=update_payload
         )
         assert response.status_code == status.HTTP_200_OK
 
         updated_config = response.json()
         assert test_section in updated_config["sections"]
         # Verify the update was reflected in the response
-        assert updated_config["sections"][test_section].get(test_key) == test_value, \
-            "Updated configuration should include the new value"
+        assert (
+            updated_config["sections"][test_section].get(test_key) == test_value
+        ), "Updated configuration should include the new value"
 
         # Verify other standard fields are still present (not overwritten)
-        assert "host" in updated_config["sections"][test_section], \
-            "Standard configuration fields should be preserved"
+        assert (
+            "host" in updated_config["sections"][test_section]
+        ), "Standard configuration fields should be preserved"
 
         # Verify the update is written to the config file on disk
         config_file = temp_db_dir / "config.json"
@@ -187,10 +190,12 @@ class TestConfigurationManagement:
             persisted_config = json.load(f)
 
         # Verify the update was written to the file
-        assert test_section in persisted_config, \
-            f"Configuration file should have '{test_section}' section"
-        assert persisted_config[test_section].get(test_key) == test_value, \
-            "Updated value should be persisted to config file for restart"
+        assert (
+            test_section in persisted_config
+        ), f"Configuration file should have '{test_section}' section"
+        assert (
+            persisted_config[test_section].get(test_key) == test_value
+        ), "Updated value should be persisted to config file for restart"
 
         # Verify configuration persistence by loading it fresh from disk
         # This simulates what happens when the server restarts and reads config.json
@@ -202,13 +207,16 @@ class TestConfigurationManagement:
         fresh_settings = fresh_config_manager.get_settings()
 
         # Verify the persisted update is still present when loaded fresh
-        assert hasattr(fresh_settings, test_section), \
-            f"Fresh load should have '{test_section}' section"
+        assert hasattr(
+            fresh_settings, test_section
+        ), f"Fresh load should have '{test_section}' section"
         section_data = getattr(fresh_settings, test_section)
-        assert hasattr(section_data, test_key), \
-            f"Fresh load should have '{test_key}' in {test_section}"
-        assert getattr(section_data, test_key) == test_value, \
-            "Updated configuration should persist across application restart"
+        assert hasattr(
+            section_data, test_key
+        ), f"Fresh load should have '{test_key}' in {test_section}"
+        assert (
+            getattr(section_data, test_key) == test_value
+        ), "Updated configuration should persist across application restart"
 
 
 @pytest.mark.e2e

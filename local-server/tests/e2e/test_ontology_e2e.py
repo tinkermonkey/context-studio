@@ -17,7 +17,9 @@ Tests verify:
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import pytest
 from fastapi import status
@@ -35,10 +37,10 @@ class TestTaxonomyCRUD:
         - Status code 201 (Created)
         - Response contains id, title, description, created_at, version
         """
-        response = e2e_client.post("/api/taxonomies", json={
-            "title": "Test Taxonomy",
-            "description": "A test taxonomy"
-        })
+        response = e2e_client.post(
+            "/api/taxonomies",
+            json={"title": "Test Taxonomy", "description": "A test taxonomy"},
+        )
 
         assert response.status_code == status.HTTP_201_CREATED
         body = response.json()
@@ -57,9 +59,9 @@ class TestTaxonomyCRUD:
         - Response is a ListResponse with items, total, limit, offset
         """
         # Create a taxonomy first
-        create_response = e2e_client.post("/api/taxonomies", json={
-            "title": "List Test Taxonomy"
-        })
+        create_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "List Test Taxonomy"}
+        )
         assert create_response.status_code == status.HTTP_201_CREATED
 
         # List taxonomies
@@ -82,9 +84,9 @@ class TestTaxonomyCRUD:
         - Response contains all taxonomy fields
         """
         # Create a taxonomy
-        create_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Get Test Taxonomy"
-        })
+        create_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "Get Test Taxonomy"}
+        )
         taxonomy_id = create_response.json()["id"]
 
         # Get the taxonomy
@@ -104,16 +106,16 @@ class TestTaxonomyCRUD:
         - Version is incremented
         """
         # Create a taxonomy
-        create_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Update Test Taxonomy"
-        })
+        create_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "Update Test Taxonomy"}
+        )
         taxonomy_id = create_response.json()["id"]
 
         # Update the taxonomy
-        response = e2e_client.put(f"/api/taxonomies/{taxonomy_id}", json={
-            "title": "Updated Title",
-            "description": "Updated description"
-        })
+        response = e2e_client.put(
+            f"/api/taxonomies/{taxonomy_id}",
+            json={"title": "Updated Title", "description": "Updated description"},
+        )
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
         assert body["id"] == taxonomy_id
@@ -130,9 +132,9 @@ class TestTaxonomyCRUD:
         - Subsequent GET returns 404
         """
         # Create a taxonomy
-        create_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Delete Test Taxonomy"
-        })
+        create_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "Delete Test Taxonomy"}
+        )
         taxonomy_id = create_response.json()["id"]
 
         # Delete the taxonomy
@@ -172,16 +174,16 @@ class TestConceptSchemeCRUD:
         - Response contains id, taxonomy_id, title, version
         """
         # Create a taxonomy
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Scheme Test Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "Scheme Test Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
         # Create a concept scheme
-        response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "Test Scheme",
-            "description": "A test scheme"
-        })
+        response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes",
+            json={"title": "Test Scheme", "description": "A test scheme"},
+        )
         assert response.status_code == status.HTTP_201_CREATED
         body = response.json()
         assert "id" in body
@@ -198,14 +200,14 @@ class TestConceptSchemeCRUD:
         - Can filter by taxonomy_id
         """
         # Create a taxonomy and scheme
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "List Scheme Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "List Scheme Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
-        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "List Test Scheme"
-        })
+        scheme_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes", json={"title": "List Test Scheme"}
+        )
         assert scheme_response.status_code == status.HTTP_201_CREATED
 
         # List all schemes
@@ -230,14 +232,14 @@ class TestConceptSchemeCRUD:
         - Response contains all scheme fields
         """
         # Create taxonomy and scheme
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Get Scheme Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "Get Scheme Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
-        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "Get Test Scheme"
-        })
+        scheme_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes", json={"title": "Get Test Scheme"}
+        )
         scheme_id = scheme_response.json()["id"]
 
         # Get the scheme
@@ -258,20 +260,21 @@ class TestConceptSchemeCRUD:
         - Version incremented
         """
         # Create taxonomy and scheme
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Update Scheme Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "Update Scheme Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
-        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "Update Test Scheme"
-        })
+        scheme_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes",
+            json={"title": "Update Test Scheme"},
+        )
         scheme_id = scheme_response.json()["id"]
 
         # Update the scheme
-        response = e2e_client.put(f"/api/schemes/{scheme_id}", json={
-            "title": "Updated Scheme Title"
-        })
+        response = e2e_client.put(
+            f"/api/schemes/{scheme_id}", json={"title": "Updated Scheme Title"}
+        )
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
         assert body["id"] == scheme_id
@@ -287,14 +290,15 @@ class TestConceptSchemeCRUD:
         - Subsequent GET returns 404
         """
         # Create taxonomy and scheme
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Delete Scheme Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "Delete Scheme Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
-        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "Delete Test Scheme"
-        })
+        scheme_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes",
+            json={"title": "Delete Test Scheme"},
+        )
         scheme_id = scheme_response.json()["id"]
 
         # Delete the scheme
@@ -319,20 +323,20 @@ class TestClassHierarchy:
         - parent_class_id is None
         """
         # Create taxonomy and scheme
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Class Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "Class Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
-        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "Class Scheme"
-        })
+        scheme_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes", json={"title": "Class Scheme"}
+        )
         scheme_id = scheme_response.json()["id"]
 
         # Create a root class
-        response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Root Class"
-        })
+        response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes", json={"title": "Root Class"}
+        )
         assert response.status_code == status.HTTP_201_CREATED
         body = response.json()
         assert "id" in body
@@ -348,27 +352,28 @@ class TestClassHierarchy:
         - parent_class_id is set correctly
         """
         # Create taxonomy and scheme
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Child Class Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "Child Class Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
-        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "Child Class Scheme"
-        })
+        scheme_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes",
+            json={"title": "Child Class Scheme"},
+        )
         scheme_id = scheme_response.json()["id"]
 
         # Create parent class
-        parent_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Parent Class"
-        })
+        parent_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes", json={"title": "Parent Class"}
+        )
         parent_id = parent_response.json()["id"]
 
         # Create child class
-        response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Child Class",
-            "parent_class_id": parent_id
-        })
+        response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes",
+            json={"title": "Child Class", "parent_class_id": parent_id},
+        )
         assert response.status_code == status.HTTP_201_CREATED
         body = response.json()
         assert body["parent_class_id"] == parent_id
@@ -381,22 +386,23 @@ class TestClassHierarchy:
         - Status code 404 (Not Found) for missing parent reference
         """
         # Create taxonomy and scheme
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Invalid Parent Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "Invalid Parent Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
-        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "Invalid Parent Scheme"
-        })
+        scheme_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes",
+            json={"title": "Invalid Parent Scheme"},
+        )
         scheme_id = scheme_response.json()["id"]
 
         # Try to create a class with non-existent parent
         invalid_parent_id = "00000000-0000-0000-0000-000000000000"
-        response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Orphan Class",
-            "parent_class_id": invalid_parent_id
-        })
+        response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes",
+            json={"title": "Orphan Class", "parent_class_id": invalid_parent_id},
+        )
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_list_classes(self, e2e_client):
@@ -408,25 +414,26 @@ class TestClassHierarchy:
         - Can filter by concept_scheme_id and parent_class_id
         """
         # Create taxonomy, scheme, and classes
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "List Class Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "List Class Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
-        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "List Class Scheme"
-        })
+        scheme_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes",
+            json={"title": "List Class Scheme"},
+        )
         scheme_id = scheme_response.json()["id"]
 
-        parent_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Parent Class"
-        })
+        parent_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes", json={"title": "Parent Class"}
+        )
         parent_id = parent_response.json()["id"]
 
-        e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Child Class",
-            "parent_class_id": parent_id
-        })
+        e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes",
+            json={"title": "Child Class", "parent_class_id": parent_id},
+        )
 
         # List all classes
         response = e2e_client.get("/api/classes")
@@ -450,34 +457,34 @@ class TestClassHierarchy:
         - concept_scheme_id is updated to target scheme
         """
         # Setup: create taxonomy and two schemes
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Move Class Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "Move Class Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
-        scheme1_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "Source Scheme"
-        })
+        scheme1_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes", json={"title": "Source Scheme"}
+        )
         scheme1_id = scheme1_response.json()["id"]
 
-        scheme2_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "Target Scheme"
-        })
+        scheme2_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes", json={"title": "Target Scheme"}
+        )
         scheme2_id = scheme2_response.json()["id"]
 
         # Create a root-level class in scheme1
-        class_response = e2e_client.post(f"/api/schemes/{scheme1_id}/classes", json={
-            "title": "Test Class"
-        })
+        class_response = e2e_client.post(
+            f"/api/schemes/{scheme1_id}/classes", json={"title": "Test Class"}
+        )
         class_id = class_response.json()["id"]
 
         # Verify initial state
         assert class_response.json()["concept_scheme_id"] == scheme1_id
 
         # Move class to scheme2
-        response = e2e_client.post(f"/api/classes/{class_id}/move", json={
-            "target_scheme_id": scheme2_id
-        })
+        response = e2e_client.post(
+            f"/api/classes/{class_id}/move", json={"target_scheme_id": scheme2_id}
+        )
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
         assert body["concept_scheme_id"] == scheme2_id
@@ -491,36 +498,32 @@ class TestClassHierarchy:
         - Error message indicates taxonomy mismatch
         """
         # Setup: create two taxonomies with schemes
-        tax1_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Taxonomy 1"
-        })
+        tax1_response = e2e_client.post("/api/taxonomies", json={"title": "Taxonomy 1"})
         taxonomy1_id = tax1_response.json()["id"]
 
-        tax2_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Taxonomy 2"
-        })
+        tax2_response = e2e_client.post("/api/taxonomies", json={"title": "Taxonomy 2"})
         taxonomy2_id = tax2_response.json()["id"]
 
-        scheme1_response = e2e_client.post(f"/api/taxonomies/{taxonomy1_id}/schemes", json={
-            "title": "Scheme 1"
-        })
+        scheme1_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy1_id}/schemes", json={"title": "Scheme 1"}
+        )
         scheme1_id = scheme1_response.json()["id"]
 
-        scheme2_response = e2e_client.post(f"/api/taxonomies/{taxonomy2_id}/schemes", json={
-            "title": "Scheme 2"
-        })
+        scheme2_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy2_id}/schemes", json={"title": "Scheme 2"}
+        )
         scheme2_id = scheme2_response.json()["id"]
 
         # Create class in scheme1
-        class_response = e2e_client.post(f"/api/schemes/{scheme1_id}/classes", json={
-            "title": "Test Class"
-        })
+        class_response = e2e_client.post(
+            f"/api/schemes/{scheme1_id}/classes", json={"title": "Test Class"}
+        )
         class_id = class_response.json()["id"]
 
         # Try to move to scheme2 (different taxonomy)
-        response = e2e_client.post(f"/api/classes/{class_id}/move", json={
-            "target_scheme_id": scheme2_id
-        })
+        response = e2e_client.post(
+            f"/api/classes/{class_id}/move", json={"target_scheme_id": scheme2_id}
+        )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_move_nonexistent_class_fails(self, e2e_client):
@@ -531,20 +534,21 @@ class TestClassHierarchy:
         - Status code 404 (Not Found)
         """
         # Setup: create taxonomy and scheme
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Nonexistent Class Move Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "Nonexistent Class Move Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
-        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "Nonexistent Class Move Scheme"
-        })
+        scheme_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes",
+            json={"title": "Nonexistent Class Move Scheme"},
+        )
         scheme_id = scheme_response.json()["id"]
 
         # Try to move a non-existent class
-        response = e2e_client.post("/api/classes/nonexistent-id/move", json={
-            "target_scheme_id": scheme_id
-        })
+        response = e2e_client.post(
+            "/api/classes/nonexistent-id/move", json={"target_scheme_id": scheme_id}
+        )
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_move_to_nonexistent_scheme_fails(self, e2e_client):
@@ -555,26 +559,29 @@ class TestClassHierarchy:
         - Status code 404 (Not Found)
         """
         # Setup: create taxonomy and scheme
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Nonexistent Scheme Move Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "Nonexistent Scheme Move Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
-        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "Nonexistent Scheme Move Scheme"
-        })
+        scheme_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes",
+            json={"title": "Nonexistent Scheme Move Scheme"},
+        )
         scheme_id = scheme_response.json()["id"]
 
         # Create a class
-        class_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Class for Nonexistent Scheme Move"
-        })
+        class_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes",
+            json={"title": "Class for Nonexistent Scheme Move"},
+        )
         class_id = class_response.json()["id"]
 
         # Try to move to a non-existent scheme
-        response = e2e_client.post(f"/api/classes/{class_id}/move", json={
-            "target_scheme_id": "nonexistent-scheme-id"
-        })
+        response = e2e_client.post(
+            f"/api/classes/{class_id}/move",
+            json={"target_scheme_id": "nonexistent-scheme-id"},
+        )
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_delete_root_class_with_children_fails(self, e2e_client):
@@ -585,25 +592,26 @@ class TestClassHierarchy:
         - Status code 422 (Unprocessable Entity)
         """
         # Setup
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Delete Parent Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "Delete Parent Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
-        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "Delete Parent Scheme"
-        })
+        scheme_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes",
+            json={"title": "Delete Parent Scheme"},
+        )
         scheme_id = scheme_response.json()["id"]
 
-        parent_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Parent"
-        })
+        parent_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes", json={"title": "Parent"}
+        )
         parent_id = parent_response.json()["id"]
 
-        e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Child",
-            "parent_class_id": parent_id
-        })
+        e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes",
+            json={"title": "Child", "parent_class_id": parent_id},
+        )
 
         # Try to delete parent (should fail)
         response = e2e_client.delete(f"/api/classes/{parent_id}")
@@ -617,19 +625,20 @@ class TestClassHierarchy:
         - Status code 204 (No Content)
         """
         # Setup
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Delete Leaf Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "Delete Leaf Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
-        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "Delete Leaf Scheme"
-        })
+        scheme_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes",
+            json={"title": "Delete Leaf Scheme"},
+        )
         scheme_id = scheme_response.json()["id"]
 
-        class_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Leaf Class"
-        })
+        class_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes", json={"title": "Leaf Class"}
+        )
         class_id = class_response.json()["id"]
 
         # Delete the leaf class
@@ -649,11 +658,14 @@ class TestPropertyDefinitionCRUD:
         - Status code 201 (Created)
         - Response contains id, identifier, title, version
         """
-        response = e2e_client.post("/api/properties", json={
-            "identifier": "is_child_of",
-            "title": "Is Child Of",
-            "description": "Indicates a child relationship"
-        })
+        response = e2e_client.post(
+            "/api/properties",
+            json={
+                "identifier": "is_child_of",
+                "title": "Is Child Of",
+                "description": "Indicates a child relationship",
+            },
+        )
         assert response.status_code == status.HTTP_201_CREATED
         body = response.json()
         assert "id" in body
@@ -670,10 +682,10 @@ class TestPropertyDefinitionCRUD:
         - Response contains items array
         """
         # Create a property definition
-        e2e_client.post("/api/properties", json={
-            "identifier": "has_related",
-            "title": "Has Related"
-        })
+        e2e_client.post(
+            "/api/properties",
+            json={"identifier": "has_related", "title": "Has Related"},
+        )
 
         response = e2e_client.get("/api/properties")
         assert response.status_code == status.HTTP_200_OK
@@ -690,10 +702,10 @@ class TestPropertyDefinitionCRUD:
         - Response contains all property fields
         """
         # Create a property definition
-        create_response = e2e_client.post("/api/properties", json={
-            "identifier": "get_prop_test",
-            "title": "Get Prop Test"
-        })
+        create_response = e2e_client.post(
+            "/api/properties",
+            json={"identifier": "get_prop_test", "title": "Get Prop Test"},
+        )
         prop_id = create_response.json()["id"]
 
         # Get the property
@@ -712,16 +724,16 @@ class TestPropertyDefinitionCRUD:
         - Title is updated, version incremented
         """
         # Create a property definition
-        create_response = e2e_client.post("/api/properties", json={
-            "identifier": "update_prop_test",
-            "title": "Original Title"
-        })
+        create_response = e2e_client.post(
+            "/api/properties",
+            json={"identifier": "update_prop_test", "title": "Original Title"},
+        )
         prop_id = create_response.json()["id"]
 
         # Update the property
-        response = e2e_client.put(f"/api/properties/{prop_id}", json={
-            "title": "Updated Title"
-        })
+        response = e2e_client.put(
+            f"/api/properties/{prop_id}", json={"title": "Updated Title"}
+        )
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
         assert body["title"] == "Updated Title"
@@ -736,10 +748,10 @@ class TestPropertyDefinitionCRUD:
         - Subsequent GET returns 404
         """
         # Create a property definition
-        create_response = e2e_client.post("/api/properties", json={
-            "identifier": "delete_prop_test",
-            "title": "Delete Test"
-        })
+        create_response = e2e_client.post(
+            "/api/properties",
+            json={"identifier": "delete_prop_test", "title": "Delete Test"},
+        )
         prop_id = create_response.json()["id"]
 
         # Delete the property
@@ -764,38 +776,40 @@ class TestRelationshipCRUD:
         - Response contains id, source_id, target_id, property_definition_id
         """
         # Setup: create entities and property definition
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Rel Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "Rel Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
-        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "Rel Scheme"
-        })
+        scheme_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes", json={"title": "Rel Scheme"}
+        )
         scheme_id = scheme_response.json()["id"]
 
-        class1_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Class 1"
-        })
+        class1_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes", json={"title": "Class 1"}
+        )
         class1_id = class1_response.json()["id"]
 
-        class2_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Class 2"
-        })
+        class2_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes", json={"title": "Class 2"}
+        )
         class2_id = class2_response.json()["id"]
 
-        prop_response = e2e_client.post("/api/properties", json={
-            "identifier": "relates_to",
-            "title": "Relates To"
-        })
+        prop_response = e2e_client.post(
+            "/api/properties", json={"identifier": "relates_to", "title": "Relates To"}
+        )
         prop_id = prop_response.json()["id"]
 
         # Create relationship
-        response = e2e_client.post("/api/relationships", json={
-            "source_id": class1_id,
-            "target_id": class2_id,
-            "property_definition_id": prop_id
-        })
+        response = e2e_client.post(
+            "/api/relationships",
+            json={
+                "source_id": class1_id,
+                "target_id": class2_id,
+                "property_definition_id": prop_id,
+            },
+        )
         assert response.status_code == status.HTTP_201_CREATED
         body = response.json()
         assert "id" in body
@@ -812,37 +826,40 @@ class TestRelationshipCRUD:
         - Can filter by source_id, target_id, property_id
         """
         # Setup
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "List Rel Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "List Rel Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
-        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "List Rel Scheme"
-        })
+        scheme_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes", json={"title": "List Rel Scheme"}
+        )
         scheme_id = scheme_response.json()["id"]
 
-        class1_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "List Class 1"
-        })
+        class1_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes", json={"title": "List Class 1"}
+        )
         class1_id = class1_response.json()["id"]
 
-        class2_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "List Class 2"
-        })
+        class2_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes", json={"title": "List Class 2"}
+        )
         class2_id = class2_response.json()["id"]
 
-        prop_response = e2e_client.post("/api/properties", json={
-            "identifier": "list_relates_to",
-            "title": "List Relates To"
-        })
+        prop_response = e2e_client.post(
+            "/api/properties",
+            json={"identifier": "list_relates_to", "title": "List Relates To"},
+        )
         prop_id = prop_response.json()["id"]
 
-        e2e_client.post("/api/relationships", json={
-            "source_id": class1_id,
-            "target_id": class2_id,
-            "property_definition_id": prop_id
-        })
+        e2e_client.post(
+            "/api/relationships",
+            json={
+                "source_id": class1_id,
+                "target_id": class2_id,
+                "property_definition_id": prop_id,
+            },
+        )
 
         # List all relationships
         response = e2e_client.get("/api/relationships")
@@ -865,37 +882,40 @@ class TestRelationshipCRUD:
         - Response contains all relationship fields
         """
         # Setup
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Get Rel Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "Get Rel Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
-        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "Get Rel Scheme"
-        })
+        scheme_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes", json={"title": "Get Rel Scheme"}
+        )
         scheme_id = scheme_response.json()["id"]
 
-        class1_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Get Class 1"
-        })
+        class1_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes", json={"title": "Get Class 1"}
+        )
         class1_id = class1_response.json()["id"]
 
-        class2_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Get Class 2"
-        })
+        class2_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes", json={"title": "Get Class 2"}
+        )
         class2_id = class2_response.json()["id"]
 
-        prop_response = e2e_client.post("/api/properties", json={
-            "identifier": "get_relates_to",
-            "title": "Get Relates To"
-        })
+        prop_response = e2e_client.post(
+            "/api/properties",
+            json={"identifier": "get_relates_to", "title": "Get Relates To"},
+        )
         prop_id = prop_response.json()["id"]
 
-        create_response = e2e_client.post("/api/relationships", json={
-            "source_id": class1_id,
-            "target_id": class2_id,
-            "property_definition_id": prop_id
-        })
+        create_response = e2e_client.post(
+            "/api/relationships",
+            json={
+                "source_id": class1_id,
+                "target_id": class2_id,
+                "property_definition_id": prop_id,
+            },
+        )
         rel_id = create_response.json()["id"]
 
         # Get the relationship
@@ -914,37 +934,41 @@ class TestRelationshipCRUD:
         - Subsequent GET returns 404
         """
         # Setup
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Delete Rel Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "Delete Rel Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
-        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "Delete Rel Scheme"
-        })
+        scheme_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes",
+            json={"title": "Delete Rel Scheme"},
+        )
         scheme_id = scheme_response.json()["id"]
 
-        class1_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Delete Class 1"
-        })
+        class1_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes", json={"title": "Delete Class 1"}
+        )
         class1_id = class1_response.json()["id"]
 
-        class2_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Delete Class 2"
-        })
+        class2_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes", json={"title": "Delete Class 2"}
+        )
         class2_id = class2_response.json()["id"]
 
-        prop_response = e2e_client.post("/api/properties", json={
-            "identifier": "delete_relates_to",
-            "title": "Delete Relates To"
-        })
+        prop_response = e2e_client.post(
+            "/api/properties",
+            json={"identifier": "delete_relates_to", "title": "Delete Relates To"},
+        )
         prop_id = prop_response.json()["id"]
 
-        create_response = e2e_client.post("/api/relationships", json={
-            "source_id": class1_id,
-            "target_id": class2_id,
-            "property_definition_id": prop_id
-        })
+        create_response = e2e_client.post(
+            "/api/relationships",
+            json={
+                "source_id": class1_id,
+                "target_id": class2_id,
+                "property_definition_id": prop_id,
+            },
+        )
         rel_id = create_response.json()["id"]
 
         # Delete the relationship
@@ -969,9 +993,9 @@ class TestCrossContextChangeEvents:
         - Change history includes the creation event
         """
         # Create a taxonomy
-        response = e2e_client.post("/api/taxonomies", json={
-            "title": "Change Event Taxonomy"
-        })
+        response = e2e_client.post(
+            "/api/taxonomies", json={"title": "Change Event Taxonomy"}
+        )
         assert response.status_code == status.HTTP_201_CREATED
         taxonomy_id = response.json()["id"]
 
@@ -996,20 +1020,21 @@ class TestCrossContextChangeEvents:
         - Change history includes the creation event
         """
         # Setup
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Class Change Event Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "Class Change Event Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
-        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "Class Change Event Scheme"
-        })
+        scheme_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes",
+            json={"title": "Class Change Event Scheme"},
+        )
         scheme_id = scheme_response.json()["id"]
 
         # Create a class
-        response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Change Event Class"
-        })
+        response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes", json={"title": "Change Event Class"}
+        )
         assert response.status_code == status.HTTP_201_CREATED
         class_id = response.json()["id"]
 
@@ -1034,38 +1059,47 @@ class TestCrossContextChangeEvents:
         - Change history includes the creation event
         """
         # Setup
-        tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Rel Change Event Taxonomy"
-        })
+        tax_response = e2e_client.post(
+            "/api/taxonomies", json={"title": "Rel Change Event Taxonomy"}
+        )
         taxonomy_id = tax_response.json()["id"]
 
-        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "Rel Change Event Scheme"
-        })
+        scheme_response = e2e_client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes",
+            json={"title": "Rel Change Event Scheme"},
+        )
         scheme_id = scheme_response.json()["id"]
 
-        class1_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Rel Change Event Class 1"
-        })
+        class1_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes",
+            json={"title": "Rel Change Event Class 1"},
+        )
         class1_id = class1_response.json()["id"]
 
-        class2_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Rel Change Event Class 2"
-        })
+        class2_response = e2e_client.post(
+            f"/api/schemes/{scheme_id}/classes",
+            json={"title": "Rel Change Event Class 2"},
+        )
         class2_id = class2_response.json()["id"]
 
-        prop_response = e2e_client.post("/api/properties", json={
-            "identifier": "change_event_relates_to",
-            "title": "Change Event Relates To"
-        })
+        prop_response = e2e_client.post(
+            "/api/properties",
+            json={
+                "identifier": "change_event_relates_to",
+                "title": "Change Event Relates To",
+            },
+        )
         prop_id = prop_response.json()["id"]
 
         # Create relationship
-        response = e2e_client.post("/api/relationships", json={
-            "source_id": class1_id,
-            "target_id": class2_id,
-            "property_definition_id": prop_id
-        })
+        response = e2e_client.post(
+            "/api/relationships",
+            json={
+                "source_id": class1_id,
+                "target_id": class2_id,
+                "property_definition_id": prop_id,
+            },
+        )
         assert response.status_code == status.HTTP_201_CREATED
         rel_id = response.json()["id"]
 

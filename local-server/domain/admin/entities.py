@@ -67,7 +67,9 @@ class BackgroundTask:
     result: Optional[dict] = None
 
     # Valid state transitions for background tasks
-    _VALID_TRANSITIONS: ClassVar[dict[BackgroundTaskStatus, set[BackgroundTaskStatus]]] = {
+    _VALID_TRANSITIONS: ClassVar[
+        dict[BackgroundTaskStatus, set[BackgroundTaskStatus]]
+    ] = {
         BackgroundTaskStatus.PENDING: {
             BackgroundTaskStatus.RUNNING,
             BackgroundTaskStatus.COMPLETED,
@@ -123,7 +125,10 @@ class BackgroundTask:
         self.status = target_status
         if target_status == BackgroundTaskStatus.RUNNING:
             self.started_at = timestamp
-        elif target_status in (BackgroundTaskStatus.COMPLETED, BackgroundTaskStatus.FAILED):
+        elif target_status in (
+            BackgroundTaskStatus.COMPLETED,
+            BackgroundTaskStatus.FAILED,
+        ):
             self.completed_at = timestamp
 
         self.error = error

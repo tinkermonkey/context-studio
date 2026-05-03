@@ -17,7 +17,11 @@ These tests exercise the complete stack: routes → domain service → adapters 
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+sys.path.append(
+    os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    )
+)
 
 import pytest
 import tempfile
@@ -124,7 +128,9 @@ def extraction_repository(session_factory):
 
 
 @pytest.fixture
-def extraction_service(populated_repository, embedding_service, event_publisher, extraction_repository):
+def extraction_service(
+    populated_repository, embedding_service, event_publisher, extraction_repository
+):
     """Create ExtractionService with fake adapters."""
     service = ExtractionService(
         ontology_repo=populated_repository,
@@ -154,16 +160,14 @@ class TestExtractionRoutes:
     def test_extract_returns_200_with_valid_text(self, client):
         """POST /api/extract returns 200 with valid text input."""
         response = client.post(
-            "/api/extract",
-            json={"text": "SQLite is an embedded relational database."}
+            "/api/extract", json={"text": "SQLite is an embedded relational database."}
         )
         assert response.status_code == status.HTTP_200_OK
 
     def test_extract_response_structure(self, client):
         """POST /api/extract response has correct structure."""
         response = client.post(
-            "/api/extract",
-            json={"text": "SQLite is an embedded relational database."}
+            "/api/extract", json={"text": "SQLite is an embedded relational database."}
         )
         body = response.json()
 
@@ -186,8 +190,7 @@ class TestExtractionRoutes:
     def test_extract_layers_executed_length(self, client):
         """POST /api/extract response includes all 4 layers."""
         response = client.post(
-            "/api/extract",
-            json={"text": "SQLite is an embedded relational database."}
+            "/api/extract", json={"text": "SQLite is an embedded relational database."}
         )
         body = response.json()
 
@@ -197,8 +200,7 @@ class TestExtractionRoutes:
     def test_extract_layer_result_structure(self, client):
         """POST /api/extract layer results have correct structure."""
         response = client.post(
-            "/api/extract",
-            json={"text": "SQLite is an embedded relational database."}
+            "/api/extract", json={"text": "SQLite is an embedded relational database."}
         )
         body = response.json()
 
@@ -220,35 +222,23 @@ class TestExtractionRoutes:
 
     def test_extract_with_empty_text_returns_400(self, client):
         """POST /api/extract with empty text returns 422 (validation error)."""
-        response = client.post(
-            "/api/extract",
-            json={"text": ""}
-        )
+        response = client.post("/api/extract", json={"text": ""})
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_extract_with_whitespace_only_returns_400(self, client):
         """POST /api/extract with whitespace-only text returns 400."""
-        response = client.post(
-            "/api/extract",
-            json={"text": "   \n\t  "}
-        )
+        response = client.post("/api/extract", json={"text": "   \n\t  "})
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_extract_with_missing_text_returns_422(self, client):
         """POST /api/extract with missing text field returns 422."""
-        response = client.post(
-            "/api/extract",
-            json={}
-        )
+        response = client.post("/api/extract", json={})
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_extract_with_long_text(self, client):
         """POST /api/extract handles long text input."""
         long_text = "This is a test. " * 100
-        response = client.post(
-            "/api/extract",
-            json={"text": long_text}
-        )
+        response = client.post("/api/extract", json={"text": long_text})
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
         assert body["text"] == long_text
@@ -256,8 +246,7 @@ class TestExtractionRoutes:
     def test_extract_entity_structure(self, client):
         """POST /api/extract entity results have correct structure."""
         response = client.post(
-            "/api/extract",
-            json={"text": "Test entity extraction with multiple words."}
+            "/api/extract", json={"text": "Test entity extraction with multiple words."}
         )
         body = response.json()
 
@@ -283,8 +272,7 @@ class TestExtractionRoutes:
     def test_extract_deduplicates_entities(self, client):
         """POST /api/extract deduplicates similar entities across layers."""
         response = client.post(
-            "/api/extract",
-            json={"text": "SQLite database SQLite engine."}
+            "/api/extract", json={"text": "SQLite database SQLite engine."}
         )
         assert response.status_code == status.HTTP_200_OK
         # If deduplication works, similar entities should be merged
@@ -292,8 +280,7 @@ class TestExtractionRoutes:
     def test_extract_total_duration_positive(self, client):
         """POST /api/extract total_duration_ms is positive."""
         response = client.post(
-            "/api/extract",
-            json={"text": "SQLite is an embedded relational database."}
+            "/api/extract", json={"text": "SQLite is an embedded relational database."}
         )
         body = response.json()
         assert body["total_duration_ms"] >= 0
@@ -301,12 +288,12 @@ class TestExtractionRoutes:
     def test_extract_created_at_is_iso_format(self, client):
         """POST /api/extract created_at timestamp is ISO 8601 format."""
         response = client.post(
-            "/api/extract",
-            json={"text": "SQLite is an embedded relational database."}
+            "/api/extract", json={"text": "SQLite is an embedded relational database."}
         )
         body = response.json()
         # Should be ISO 8601 string, verify it can be parsed
         from datetime import datetime
+
         try:
             datetime.fromisoformat(body["created_at"])
         except ValueError:
@@ -316,7 +303,7 @@ class TestExtractionRoutes:
         """POST /api/analyze_text returns 200 with valid text input."""
         response = client.post(
             "/api/analyze_text",
-            json={"text": "SQLite is an embedded relational database."}
+            json={"text": "SQLite is an embedded relational database."},
         )
         assert response.status_code == status.HTTP_200_OK
 
@@ -324,7 +311,7 @@ class TestExtractionRoutes:
         """POST /api/analyze_text response has correct structure."""
         response = client.post(
             "/api/analyze_text",
-            json={"text": "SQLite is an embedded relational database."}
+            json={"text": "SQLite is an embedded relational database."},
         )
         body = response.json()
 
@@ -340,7 +327,7 @@ class TestExtractionRoutes:
         """POST /api/analyze_text response includes only 2 layers (KG context and NLP)."""
         response = client.post(
             "/api/analyze_text",
-            json={"text": "SQLite is an embedded relational database."}
+            json={"text": "SQLite is an embedded relational database."},
         )
         body = response.json()
 
@@ -349,18 +336,12 @@ class TestExtractionRoutes:
 
     def test_analyze_text_with_empty_text_returns_400(self, client):
         """POST /api/analyze_text with empty text returns 422."""
-        response = client.post(
-            "/api/analyze_text",
-            json={"text": ""}
-        )
+        response = client.post("/api/analyze_text", json={"text": ""})
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_analyze_text_with_whitespace_only_returns_400(self, client):
         """POST /api/analyze_text with whitespace-only text returns 400."""
-        response = client.post(
-            "/api/analyze_text",
-            json={"text": "   \n\t  "}
-        )
+        response = client.post("/api/analyze_text", json={"text": "   \n\t  "})
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_enrich_from_references_returns_200_with_valid_input(self, client):
@@ -374,15 +355,12 @@ class TestExtractionRoutes:
                 "confidence": 0.9,
                 "uri": None,
                 "description": None,
-                "properties": {}
+                "properties": {},
             }
         ]
         response = client.post(
             "/api/enrich_from_references",
-            json={
-                "text": "SQLite is a database.",
-                "extracted_entities": entities
-            }
+            json={"text": "SQLite is a database.", "extracted_entities": entities},
         )
         assert response.status_code == status.HTTP_200_OK
 
@@ -397,15 +375,12 @@ class TestExtractionRoutes:
                 "confidence": 0.9,
                 "uri": None,
                 "description": None,
-                "properties": {}
+                "properties": {},
             }
         ]
         response = client.post(
             "/api/enrich_from_references",
-            json={
-                "text": "SQLite is a database.",
-                "extracted_entities": entities
-            }
+            json={"text": "SQLite is a database.", "extracted_entities": entities},
         )
         body = response.json()
 
@@ -428,15 +403,12 @@ class TestExtractionRoutes:
                 "confidence": 0.9,
                 "uri": None,
                 "description": None,
-                "properties": {}
+                "properties": {},
             }
         ]
         response = client.post(
             "/api/enrich_from_references",
-            json={
-                "text": "SQLite is a database.",
-                "extracted_entities": entities
-            }
+            json={"text": "SQLite is a database.", "extracted_entities": entities},
         )
         body = response.json()
 
@@ -455,15 +427,12 @@ class TestExtractionRoutes:
                 "confidence": 0.9,
                 "uri": None,
                 "description": None,
-                "properties": {}
+                "properties": {},
             }
         ]
         response = client.post(
             "/api/enrich_from_references",
-            json={
-                "text": "",
-                "extracted_entities": entities
-            }
+            json={"text": "", "extracted_entities": entities},
         )
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -471,10 +440,7 @@ class TestExtractionRoutes:
         """POST /api/enrich_from_references with empty entities list returns 200."""
         response = client.post(
             "/api/enrich_from_references",
-            json={
-                "text": "SQLite is a database.",
-                "extracted_entities": []
-            }
+            json={"text": "SQLite is a database.", "extracted_entities": []},
         )
         assert response.status_code == status.HTTP_200_OK
         body = response.json()

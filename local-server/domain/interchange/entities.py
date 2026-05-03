@@ -77,7 +77,11 @@ class ImportRun:
         Raises:
             ValueError: If the run is already in a terminal state
         """
-        if self.status in (ImportRunStatus.COMMITTED, ImportRunStatus.FAILED, ImportRunStatus.ROLLED_BACK):
+        if self.status in (
+            ImportRunStatus.COMMITTED,
+            ImportRunStatus.FAILED,
+            ImportRunStatus.ROLLED_BACK,
+        ):
             raise ValueError(
                 f"Cannot transition {self.status} to COMMITTED (terminal state)"
             )

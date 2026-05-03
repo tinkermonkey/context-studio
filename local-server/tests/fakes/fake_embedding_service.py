@@ -5,7 +5,9 @@ import os
 import hashlib
 import math
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 
 class FakeEmbeddingService:
@@ -37,10 +39,10 @@ class FakeEmbeddingService:
         for i in range(self.EMBEDDING_DIMENSION):
             # Extract 4 bytes and convert to float in [0, 1) using integer normalization
             # This avoids NaN/Inf that can result from interpreting raw bytes as float32
-            chunk = hash_bytes[i * 4:(i + 1) * 4]
-            int_val = int.from_bytes(chunk, byteorder='little')
+            chunk = hash_bytes[i * 4 : (i + 1) * 4]
+            int_val = int.from_bytes(chunk, byteorder="little")
             # Normalize to [0, 1) range using integer division
-            normalized = (int_val % (2 ** 32)) / (2 ** 32)
+            normalized = (int_val % (2**32)) / (2**32)
             embedding.append(normalized)
         return embedding
 

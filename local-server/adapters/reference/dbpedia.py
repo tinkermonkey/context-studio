@@ -174,7 +174,9 @@ class DBpediaSource:
         """
         return await run_sync_in_executor(self.search, term, limit)
 
-    async def get_relations_async(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
+    async def get_relations_async(
+        self, uri: str, limit: int = 10
+    ) -> list[ReferenceRelation]:
         """
         Get relationships connected to a URI in DBpedia (async version).
 

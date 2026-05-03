@@ -3,7 +3,9 @@
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 from domain.pipeline.entities import Execution, PipelineConfiguration
 
@@ -86,7 +88,9 @@ class FakePipelineRepository:
         self._executions[config_id].append(execution)
         return execution
 
-    def get_executions(self, pipeline_config_id: str, limit: int = 50) -> list[Execution]:
+    def get_executions(
+        self, pipeline_config_id: str, limit: int = 50
+    ) -> list[Execution]:
         """
         Retrieve execution history for a pipeline configuration.
 

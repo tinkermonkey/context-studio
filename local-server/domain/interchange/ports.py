@@ -45,9 +45,7 @@ class OntologyDeserializer(ABC):
     """
 
     @abstractmethod
-    def deserialize(
-        self, source: bytes | str, dry_run: bool = True
-    ) -> ImportPlan:
+    def deserialize(self, source: bytes | str, dry_run: bool = True) -> ImportPlan:
         """
         Deserialize ontology data and produce an import plan.
 

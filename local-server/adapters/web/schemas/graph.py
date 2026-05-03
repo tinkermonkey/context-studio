@@ -26,8 +26,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
 # ==================== Request Schemas ====================
+
 
 class CycleCheckRequest(BaseModel):
     """Request to check if adding an edge would create a cycle."""
@@ -39,10 +39,15 @@ class CycleCheckRequest(BaseModel):
 class SPARQLRequest(BaseModel):
     """Request to execute a SPARQL query."""
 
-    query: str = Field(..., max_length=10000, description="SPARQL SELECT query string (max 10000 characters)")
+    query: str = Field(
+        ...,
+        max_length=10000,
+        description="SPARQL SELECT query string (max 10000 characters)",
+    )
 
 
 # ==================== Response Schemas ====================
+
 
 class KnowledgeGraphResponse(BaseModel):
     """Response containing knowledge graph metadata."""
@@ -52,7 +57,9 @@ class KnowledgeGraphResponse(BaseModel):
     node_count: int = Field(..., description="Number of nodes in the graph")
     edge_count: int = Field(..., description="Number of edges in the graph")
     is_directed: bool = Field(..., description="Whether the graph is directed")
-    timestamp: datetime = Field(..., description="Timestamp when the graph was last built")
+    timestamp: datetime = Field(
+        ..., description="Timestamp when the graph was last built"
+    )
 
 
 class GraphMetricsResponse(BaseModel):
@@ -63,11 +70,19 @@ class GraphMetricsResponse(BaseModel):
     density: float = Field(..., description="Edge density of the graph")
     average_degree: float = Field(..., description="Average degree of nodes")
     connected_components: int = Field(..., description="Number of connected components")
-    degree_distribution: dict[str, int] = Field(..., description="Distribution of node degrees")
-    centrality: dict[str, float] = Field(..., description="Centrality scores for all nodes")
-    communities: list[list[str]] = Field(..., description="Detected communities as lists of node IDs")
+    degree_distribution: dict[str, int] = Field(
+        ..., description="Distribution of node degrees"
+    )
+    centrality: dict[str, float] = Field(
+        ..., description="Centrality scores for all nodes"
+    )
+    communities: list[list[str]] = Field(
+        ..., description="Detected communities as lists of node IDs"
+    )
     algorithm: str = Field(..., description="Name of the centrality algorithm used")
-    computed_at: datetime = Field(..., description="Timestamp when metrics were computed")
+    computed_at: datetime = Field(
+        ..., description="Timestamp when metrics were computed"
+    )
 
 
 class PathResultResponse(BaseModel):
@@ -77,9 +92,21 @@ class PathResultResponse(BaseModel):
 
     source_id: str = Field(..., description="ID of the starting node")
     target_id: str = Field(..., description="ID of the ending node")
-    nodes: list[str] = Field(..., alias="path", serialization_alias="nodes", description="Ordered list of node IDs from source to target")
-    distance: int = Field(..., alias="length", serialization_alias="distance", description="Number of edges in the path")
-    relationships: list[str] = Field(..., description="Relationship types traversed along the path")
+    nodes: list[str] = Field(
+        ...,
+        alias="path",
+        serialization_alias="nodes",
+        description="Ordered list of node IDs from source to target",
+    )
+    distance: int = Field(
+        ...,
+        alias="length",
+        serialization_alias="distance",
+        description="Number of edges in the path",
+    )
+    relationships: list[str] = Field(
+        ..., description="Relationship types traversed along the path"
+    )
 
 
 class CentralityResponse(BaseModel):
@@ -88,7 +115,9 @@ class CentralityResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     algorithm: str = Field(..., description="Name of the centrality algorithm")
-    scores: dict[str, float] = Field(..., description="Centrality scores mapped by node ID")
+    scores: dict[str, float] = Field(
+        ..., description="Centrality scores mapped by node ID"
+    )
 
 
 class CommunitiesResponse(BaseModel):
@@ -97,7 +126,9 @@ class CommunitiesResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     algorithm: str = Field(..., description="Name of the community detection algorithm")
-    communities: list[list[str]] = Field(..., description="Communities as sorted lists of node IDs")
+    communities: list[list[str]] = Field(
+        ..., description="Communities as sorted lists of node IDs"
+    )
 
 
 class NeighborsResponse(BaseModel):
@@ -106,9 +137,15 @@ class NeighborsResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     node_id: str = Field(..., description="ID of the queried node")
-    direction: Literal["in", "out", "both"] = Field(..., description="Direction of traversal: 'in', 'out', or 'both'")
-    incoming: list[str] = Field(..., description="List of nodes with edges pointing to this node")
-    outgoing: list[str] = Field(..., description="List of nodes this node has edges pointing to")
+    direction: Literal["in", "out", "both"] = Field(
+        ..., description="Direction of traversal: 'in', 'out', or 'both'"
+    )
+    incoming: list[str] = Field(
+        ..., description="List of nodes with edges pointing to this node"
+    )
+    outgoing: list[str] = Field(
+        ..., description="List of nodes this node has edges pointing to"
+    )
 
 
 class CycleCheckResponse(BaseModel):
@@ -118,7 +155,9 @@ class CycleCheckResponse(BaseModel):
 
     source_id: str = Field(..., description="ID of the proposed edge source")
     target_id: str = Field(..., description="ID of the proposed edge target")
-    would_create_cycle: bool = Field(..., description="Whether adding this edge would create a cycle")
+    would_create_cycle: bool = Field(
+        ..., description="Whether adding this edge would create a cycle"
+    )
 
 
 class SPARQLResponse(BaseModel):
@@ -160,8 +199,12 @@ class DegreeDistributionResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    in_degree: dict[str, int] = Field(..., description="Mapping of node IDs to their in-degrees")
-    out_degree: dict[str, int] = Field(..., description="Mapping of node IDs to their out-degrees")
+    in_degree: dict[str, int] = Field(
+        ..., description="Mapping of node IDs to their in-degrees"
+    )
+    out_degree: dict[str, int] = Field(
+        ..., description="Mapping of node IDs to their out-degrees"
+    )
 
 
 class SubgraphDataResponse(BaseModel):
@@ -170,7 +213,10 @@ class SubgraphDataResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     nodes: list[str] = Field(..., description="IDs of all nodes in the subgraph")
-    edges: list[tuple[str, str]] = Field(..., description="Edges connecting nodes in the subgraph as (source, target) tuples")
+    edges: list[tuple[str, str]] = Field(
+        ...,
+        description="Edges connecting nodes in the subgraph as (source, target) tuples",
+    )
     node_count: int = Field(..., description="Number of nodes in the subgraph")
     edge_count: int = Field(..., description="Number of edges in the subgraph")
 
@@ -181,5 +227,7 @@ class SubgraphResultResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     node_id: str = Field(..., description="ID of the center node")
-    subgraph: SubgraphDataResponse = Field(..., description="The extracted subgraph containing nodes and edges")
+    subgraph: SubgraphDataResponse = Field(
+        ..., description="The extracted subgraph containing nodes and edges"
+    )
     depth: int = Field(..., description="Maximum traversal depth from center node")

@@ -11,7 +11,9 @@ import sys
 import os
 import uuid
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import pytest
 from sqlalchemy import create_engine
@@ -24,13 +26,17 @@ from domain.ontology.entities import (
     Class,
 )
 from domain.ontology.value_objects import ExternalReference
-from domain.interchange.value_objects import SerializationScope, SerializationScopeType, MatchKind, ResolutionKind
+from domain.interchange.value_objects import (
+    SerializationScope,
+    SerializationScopeType,
+    MatchKind,
+    ResolutionKind,
+)
 
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
 from adapters.interchange.skos import SKOSSerializer, SKOSDeserializer
-
 
 SKOS = Namespace("http://www.w3.org/2004/02/skos/core#")
 DCT = Namespace("http://purl.org/dc/terms/")
@@ -175,7 +181,9 @@ class TestSKOSEmptyDatabaseRoundTrip:
 
         assert exported is not None
         assert isinstance(exported, bytes)
-        exported_str = exported.decode('utf-8') if isinstance(exported, bytes) else exported
+        exported_str = (
+            exported.decode("utf-8") if isinstance(exported, bytes) else exported
+        )
 
         assert "Concept" in exported_str or "concept" in exported_str.lower()
         assert "Dog" in exported_str
@@ -195,11 +203,15 @@ class TestSKOSEmptyDatabaseRoundTrip:
         exported = serializer.serialize(scope)
 
         # Verify DBpedia and Wikidata references in output
-        exported_str = exported.decode('utf-8') if isinstance(exported, bytes) else exported
+        exported_str = (
+            exported.decode("utf-8") if isinstance(exported, bytes) else exported
+        )
         assert "dbpedia.org" in exported_str
         assert "wikidata.org" in exported_str
 
-    def test_import_creates_import_plan_with_no_conflicts(self, ontology_repo, sample_data):
+    def test_import_creates_import_plan_with_no_conflicts(
+        self, ontology_repo, sample_data
+    ):
         """Test importing against an empty database produces valid plan with no conflicts."""
         # Export
         serializer = SKOSSerializer(ontology_repo)
@@ -207,7 +219,9 @@ class TestSKOSEmptyDatabaseRoundTrip:
         exported = serializer.serialize(scope)
 
         # Create fresh repository (empty DB)
-        fresh_engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+        fresh_engine = create_engine(
+            "sqlite:///:memory:", connect_args={"check_same_thread": False}
+        )
         Base.metadata.create_all(fresh_engine)
         fresh_session_factory = sessionmaker(bind=fresh_engine)
         fresh_repo = SQLiteOntologyRepository(fresh_session_factory)
@@ -229,7 +243,9 @@ class TestSKOSEmptyDatabaseRoundTrip:
         exported = serializer.serialize(scope)
 
         # Create fresh repository (empty DB) and import
-        fresh_engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+        fresh_engine = create_engine(
+            "sqlite:///:memory:", connect_args={"check_same_thread": False}
+        )
         Base.metadata.create_all(fresh_engine)
         fresh_session_factory = sessionmaker(bind=fresh_engine)
         fresh_repo = SQLiteOntologyRepository(fresh_session_factory)
@@ -239,8 +255,10 @@ class TestSKOSEmptyDatabaseRoundTrip:
 
         # Verify structural equality: same number of entities with same titles/descriptions
         original_classes = ontology_repo.list_classes()
-        plan.conflicts + [{"incoming": {"title": e["title"], "type": e.get("type")}}
-                                              for e in deserializer.incoming_entities.values()]
+        plan.conflicts + [
+            {"incoming": {"title": e["title"], "type": e.get("type")}}
+            for e in deserializer.incoming_entities.values()
+        ]
 
         # Count classes in both
         original_class_count = len([c for c in original_classes])
@@ -258,10 +276,13 @@ class TestSKOSEmptyDatabaseRoundTrip:
                     break
 
             if original_class.external_references and matching_incoming:
-                assert len(matching_incoming.get("external_references", [])) == len(original_class.external_references)
+                assert len(matching_incoming.get("external_references", [])) == len(
+                    original_class.external_references
+                )
                 for orig_ref in original_class.external_references:
                     assert any(
-                        r["source"] == orig_ref.source and r["identifier"] == orig_ref.identifier
+                        r["source"] == orig_ref.source
+                        and r["identifier"] == orig_ref.identifier
                         for r in matching_incoming["external_references"]
                     )
 
@@ -269,7 +290,9 @@ class TestSKOSEmptyDatabaseRoundTrip:
 class TestSKOSIdempotentReimport:
     """Test that reimporting produces idempotent results."""
 
-    def test_reimport_with_matching_external_references(self, ontology_repo, sample_data):
+    def test_reimport_with_matching_external_references(
+        self, ontology_repo, sample_data
+    ):
         """Test that reimporting entities with matching external refs merges by default."""
         # Export
         serializer = SKOSSerializer(ontology_repo)
@@ -281,20 +304,28 @@ class TestSKOSIdempotentReimport:
         plan = deserializer.deserialize(exported, dry_run=True)
 
         # Verify that conflicts are detected with EXTERNAL_REFERENCE match kind
-        external_ref_conflicts = [c for c in plan.conflicts if c.match_kind == MatchKind.EXTERNAL_REFERENCE]
+        external_ref_conflicts = [
+            c for c in plan.conflicts if c.match_kind == MatchKind.EXTERNAL_REFERENCE
+        ]
         assert len(external_ref_conflicts) > 0
 
         # Verify default resolution is MERGE for external reference matches
         for conflict in external_ref_conflicts:
             assert conflict.default_resolution == ResolutionKind.MERGE
 
-    def test_idempotent_reimport_preserves_uuids_and_no_duplicates(self, ontology_repo, sample_data):
+    def test_idempotent_reimport_preserves_uuids_and_no_duplicates(
+        self, ontology_repo, sample_data
+    ):
         """Test acceptance criterion: idempotent reimport produces no duplicates and preserves UUIDs."""
         # Record original entity IDs (taxonomies, schemes, and classes)
         original_classes = ontology_repo.list_classes()
         original_schemes = ontology_repo.list_concept_schemes()
         original_taxonomies = ontology_repo.list_taxonomies()
-        original_all_ids = {c.id for c in original_classes} | {s.id for s in original_schemes} | {t.id for t in original_taxonomies}
+        original_all_ids = (
+            {c.id for c in original_classes}
+            | {s.id for s in original_schemes}
+            | {t.id for t in original_taxonomies}
+        )
         original_count = len(original_classes)
 
         # Export and reimport against populated DB
@@ -314,7 +345,9 @@ class TestSKOSIdempotentReimport:
 
         # Verify that merging would not create duplicates
         # By default resolution, external reference matches should MERGE (not CREATE or OVERWRITE)
-        external_ref_conflicts = [c for c in plan.conflicts if c.match_kind == MatchKind.EXTERNAL_REFERENCE]
+        external_ref_conflicts = [
+            c for c in plan.conflicts if c.match_kind == MatchKind.EXTERNAL_REFERENCE
+        ]
         for conflict in external_ref_conflicts:
             assert conflict.default_resolution == ResolutionKind.MERGE
 
@@ -373,7 +406,9 @@ class TestSKOSExternalFixture:
         graph.add((scheme, SKOS.prefLabel, Literal("Test Scheme")))
 
         # Create fresh repo
-        fresh_engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+        fresh_engine = create_engine(
+            "sqlite:///:memory:", connect_args={"check_same_thread": False}
+        )
         Base.metadata.create_all(fresh_engine)
         fresh_session_factory = sessionmaker(bind=fresh_engine)
         fresh_repo = SQLiteOntologyRepository(fresh_session_factory)

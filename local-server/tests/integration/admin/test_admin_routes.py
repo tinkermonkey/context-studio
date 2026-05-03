@@ -13,7 +13,11 @@ These tests exercise the complete stack: routes → domain service → adapters.
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+sys.path.append(
+    os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    )
+)
 
 import pytest
 
@@ -130,7 +134,9 @@ class TestConfigurationEndpoint:
     def test_get_configuration_masks_api_keys(self, client, config_store):
         """GET /api/v1/admin/configuration masks API keys."""
         # Ensure config has API keys
-        config_store.update_config({'llm': {'openai_api_key': 'sk-1234567890abcdef1234567890'}})
+        config_store.update_config(
+            {"llm": {"openai_api_key": "sk-1234567890abcdef1234567890"}}
+        )
 
         # Get configuration
         response = client.get("/api/v1/admin/configuration")
@@ -138,24 +144,26 @@ class TestConfigurationEndpoint:
 
         # API key should be masked
         llm_section = body["sections"].get("llm", {})
-        assert "openai_api_key" in llm_section, "openai_api_key should be present in llm section"
+        assert (
+            "openai_api_key" in llm_section
+        ), "openai_api_key should be present in llm section"
         masked = llm_section["openai_api_key"]
         assert masked.startswith("***"), "API key should be masked with ***"
-        assert masked != 'sk-1234567890abcdef1234567890', "Masked key should not be the original key"
+        assert (
+            masked != "sk-1234567890abcdef1234567890"
+        ), "Masked key should not be the original key"
 
     def test_update_configuration_section_returns_200(self, client):
         """PATCH /api/v1/admin/configuration/{section} returns 200."""
         response = client.patch(
-            "/api/v1/admin/configuration/llm",
-            json={"updates": {"temperature": 0.7}}
+            "/api/v1/admin/configuration/llm", json={"updates": {"temperature": 0.7}}
         )
         assert response.status_code == status.HTTP_200_OK
 
     def test_update_configuration_response_structure(self, client):
         """PATCH /api/v1/admin/configuration/{section} response has sections."""
         response = client.patch(
-            "/api/v1/admin/configuration/llm",
-            json={"updates": {"temperature": 0.7}}
+            "/api/v1/admin/configuration/llm", json={"updates": {"temperature": 0.7}}
         )
         body = response.json()
 
@@ -167,7 +175,7 @@ class TestConfigurationEndpoint:
         # Update a section
         response = client.patch(
             "/api/v1/admin/configuration/llm",
-            json={"updates": {"test_key": "test_value"}}
+            json={"updates": {"test_key": "test_value"}},
         )
         body = response.json()
 
@@ -179,7 +187,7 @@ class TestConfigurationEndpoint:
         """PATCH /api/v1/admin/configuration/{section} returns 400 for nonexistent section."""
         response = client.patch(
             "/api/v1/admin/configuration/nonexistent_section",
-            json={"updates": {"key": "value"}}
+            json={"updates": {"key": "value"}},
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -187,7 +195,7 @@ class TestConfigurationEndpoint:
         """PATCH /api/v1/admin/configuration/{section} error includes detail."""
         response = client.patch(
             "/api/v1/admin/configuration/nonexistent_section",
-            json={"updates": {"key": "value"}}
+            json={"updates": {"key": "value"}},
         )
         body = response.json()
 
@@ -329,9 +337,7 @@ class TestTasksEndpoint:
         # Register, run, and complete task
         task = admin_service.register_task("completion_test")
         admin_service.update_task_status(
-            task.id,
-            "completed",
-            result={"output": "task completed"}
+            task.id, "completed", result={"output": "task completed"}
         )
 
         # Get the task
@@ -472,7 +478,9 @@ class TestConfigurationResetEndpoint:
     def test_reset_configuration_masks_credentials(self, client, config_store):
         """POST /api/v1/admin/configuration/reset masks credential fields."""
         # Set up config with credentials
-        config_store.update_config({'llm': {'openai_api_key': 'sk-1234567890abcdef1234567890'}})
+        config_store.update_config(
+            {"llm": {"openai_api_key": "sk-1234567890abcdef1234567890"}}
+        )
 
         # Reset configuration
         response = client.post("/api/v1/admin/configuration/reset")
@@ -480,11 +488,15 @@ class TestConfigurationResetEndpoint:
 
         # Credentials should be masked
         llm_section = body["sections"].get("llm", {})
-        assert "openai_api_key" in llm_section, "openai_api_key should be present in reset response"
+        assert (
+            "openai_api_key" in llm_section
+        ), "openai_api_key should be present in reset response"
         masked = llm_section["openai_api_key"]
         assert masked.startswith("***"), "Credential should be masked"
 
-    def test_reset_configuration_restores_defaults(self, client, config_store, admin_service):
+    def test_reset_configuration_restores_defaults(
+        self, client, config_store, admin_service
+    ):
         """POST /api/v1/admin/configuration/reset restores default values."""
         # Get baseline config
         reset_config = admin_service.reset_configuration()
@@ -493,7 +505,7 @@ class TestConfigurationResetEndpoint:
         # Modify config
         response = client.patch(
             "/api/v1/admin/configuration/llm",
-            json={"updates": {"custom_field": "custom_value"}}
+            json={"updates": {"custom_field": "custom_value"}},
         )
         assert response.status_code == status.HTTP_200_OK
 
@@ -511,6 +523,7 @@ class TestAdminErrorHandling:
 
     def test_generic_exception_returns_500(self, client, admin_service, monkeypatch):
         """Test that non-AdminError exceptions return 500 Internal Server Error."""
+
         # Mock the service method to raise a non-AdminError exception
         def failing_check_health():
             raise RuntimeError("Unexpected database connection error")
@@ -530,6 +543,7 @@ class TestAdminErrorHandling:
 
     def test_admin_error_returns_400(self, client, admin_service, monkeypatch):
         """Test that AdminError exceptions return 400 Bad Request."""
+
         # Mock the service method to raise an AdminError
         def failing_check_health():
             raise AdminError("Configuration incomplete")
@@ -547,15 +561,17 @@ class TestAdminErrorHandling:
 
     def test_configuration_error_returns_400(self, client, admin_service, monkeypatch):
         """Test that ConfigurationError exceptions return 400 Bad Request."""
+
         # Mock the service method to raise a ConfigurationError
         def failing_update_config(section, updates):
             raise ConfigurationError(f"Invalid section: {section}")
 
-        monkeypatch.setattr(admin_service, "update_configuration", failing_update_config)
+        monkeypatch.setattr(
+            admin_service, "update_configuration", failing_update_config
+        )
 
         response = client.patch(
-            "/api/v1/admin/configuration/invalid",
-            json={"updates": {"key": "value"}}
+            "/api/v1/admin/configuration/invalid", json={"updates": {"key": "value"}}
         )
 
         # Should return 400 for ConfigurationError
@@ -567,6 +583,7 @@ class TestAdminErrorHandling:
 
     def test_task_not_found_returns_404(self, client, admin_service, monkeypatch):
         """Test that TaskNotFoundError exceptions return 404 Not Found."""
+
         # Mock the service method to raise a TaskNotFoundError
         def failing_get_task(task_id):
             raise TaskNotFoundError(f"Task {task_id} not found")
@@ -582,13 +599,20 @@ class TestAdminErrorHandling:
         assert "detail" in body
         assert "not found" in body["detail"].lower()
 
-    def test_reset_configuration_error_returns_400(self, client, admin_service, monkeypatch):
+    def test_reset_configuration_error_returns_400(
+        self, client, admin_service, monkeypatch
+    ):
         """Test that ConfigurationError from reset_configuration returns 400 Bad Request."""
+
         # Mock the service method to raise a ConfigurationError
         def failing_reset_configuration():
-            raise ConfigurationError("Failed to reset configuration: Invalid default settings")
+            raise ConfigurationError(
+                "Failed to reset configuration: Invalid default settings"
+            )
 
-        monkeypatch.setattr(admin_service, "reset_configuration", failing_reset_configuration)
+        monkeypatch.setattr(
+            admin_service, "reset_configuration", failing_reset_configuration
+        )
 
         response = client.post("/api/v1/admin/configuration/reset")
 

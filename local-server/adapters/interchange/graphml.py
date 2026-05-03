@@ -149,7 +149,9 @@ class GraphMLSerializer(OntologySerializer):
         for scheme in schemes:
             self._add_concept_scheme(scheme)
             # Add classes in this scheme
-            classes = self.ontology_repo.list_classes(concept_scheme_id=scheme.id, limit=10000)
+            classes = self.ontology_repo.list_classes(
+                concept_scheme_id=scheme.id, limit=10000
+            )
             for cls in classes:
                 self._add_class(cls)
 
@@ -170,7 +172,9 @@ class GraphMLSerializer(OntologySerializer):
         self._add_concept_scheme(scheme)
 
         # Add classes in this scheme
-        classes = self.ontology_repo.list_classes(concept_scheme_id=scheme.id, limit=10000)
+        classes = self.ontology_repo.list_classes(
+            concept_scheme_id=scheme.id, limit=10000
+        )
         for cls in classes:
             self._add_class(cls)
 
@@ -223,26 +227,40 @@ class GraphMLSerializer(OntologySerializer):
         assert self.graph is not None
         node_id = taxonomy.id
         self.graph.add_node(node_id)
-        self._set_node_attributes(node_id, {
-            'kind': 'taxonomy',
-            'cs:title': taxonomy.title,
-            'cs:description': taxonomy.description or '',
-            'cs:created_at': (taxonomy.created_at.isoformat() if taxonomy.created_at else ''),
-            'cs:last_modified': (taxonomy.last_modified.isoformat() if taxonomy.last_modified else ''),
-        })
+        self._set_node_attributes(
+            node_id,
+            {
+                "kind": "taxonomy",
+                "cs:title": taxonomy.title,
+                "cs:description": taxonomy.description or "",
+                "cs:created_at": (
+                    taxonomy.created_at.isoformat() if taxonomy.created_at else ""
+                ),
+                "cs:last_modified": (
+                    taxonomy.last_modified.isoformat() if taxonomy.last_modified else ""
+                ),
+            },
+        )
 
     def _add_concept_scheme(self, scheme: ConceptScheme) -> None:
         """Add a concept scheme node to the graph."""
         assert self.graph is not None
         node_id = scheme.id
         self.graph.add_node(node_id)
-        self._set_node_attributes(node_id, {
-            'kind': 'concept_scheme',
-            'cs:title': scheme.title,
-            'cs:description': scheme.description or '',
-            'cs:created_at': (scheme.created_at.isoformat() if scheme.created_at else ''),
-            'cs:last_modified': (scheme.last_modified.isoformat() if scheme.last_modified else ''),
-        })
+        self._set_node_attributes(
+            node_id,
+            {
+                "kind": "concept_scheme",
+                "cs:title": scheme.title,
+                "cs:description": scheme.description or "",
+                "cs:created_at": (
+                    scheme.created_at.isoformat() if scheme.created_at else ""
+                ),
+                "cs:last_modified": (
+                    scheme.last_modified.isoformat() if scheme.last_modified else ""
+                ),
+            },
+        )
 
     def _add_class(self, cls: Class) -> None:
         """Add a class node to the graph."""
@@ -250,20 +268,30 @@ class GraphMLSerializer(OntologySerializer):
         node_id = cls.id
         self.graph.add_node(node_id)
 
-        ext_refs_json = json.dumps([{
-            'source': ref.source,
-            'identifier': ref.identifier,
-            'uri': ref.uri,
-        } for ref in cls.external_references])
+        ext_refs_json = json.dumps(
+            [
+                {
+                    "source": ref.source,
+                    "identifier": ref.identifier,
+                    "uri": ref.uri,
+                }
+                for ref in cls.external_references
+            ]
+        )
 
-        self._set_node_attributes(node_id, {
-            'kind': 'class',
-            'cs:title': cls.title,
-            'cs:description': cls.description or '',
-            'cs:created_at': (cls.created_at.isoformat() if cls.created_at else ''),
-            'cs:last_modified': (cls.last_modified.isoformat() if cls.last_modified else ''),
-            'cs:external_references': ext_refs_json,
-        })
+        self._set_node_attributes(
+            node_id,
+            {
+                "kind": "class",
+                "cs:title": cls.title,
+                "cs:description": cls.description or "",
+                "cs:created_at": (cls.created_at.isoformat() if cls.created_at else ""),
+                "cs:last_modified": (
+                    cls.last_modified.isoformat() if cls.last_modified else ""
+                ),
+                "cs:external_references": ext_refs_json,
+            },
+        )
 
     def _add_individual(self, individual: Individual) -> None:
         """Add an individual node to the graph."""
@@ -271,20 +299,34 @@ class GraphMLSerializer(OntologySerializer):
         node_id = individual.id
         self.graph.add_node(node_id)
 
-        ext_refs_json = json.dumps([{
-            'source': ref.source,
-            'identifier': ref.identifier,
-            'uri': ref.uri,
-        } for ref in individual.external_references])
+        ext_refs_json = json.dumps(
+            [
+                {
+                    "source": ref.source,
+                    "identifier": ref.identifier,
+                    "uri": ref.uri,
+                }
+                for ref in individual.external_references
+            ]
+        )
 
-        self._set_node_attributes(node_id, {
-            'kind': 'individual',
-            'cs:title': individual.title,
-            'cs:description': individual.description or '',
-            'cs:created_at': (individual.created_at.isoformat() if individual.created_at else ''),
-            'cs:last_modified': (individual.last_modified.isoformat() if individual.last_modified else ''),
-            'cs:external_references': ext_refs_json,
-        })
+        self._set_node_attributes(
+            node_id,
+            {
+                "kind": "individual",
+                "cs:title": individual.title,
+                "cs:description": individual.description or "",
+                "cs:created_at": (
+                    individual.created_at.isoformat() if individual.created_at else ""
+                ),
+                "cs:last_modified": (
+                    individual.last_modified.isoformat()
+                    if individual.last_modified
+                    else ""
+                ),
+                "cs:external_references": ext_refs_json,
+            },
+        )
 
     def _add_property_definition(self, prop: PropertyDefinition) -> None:
         """Add a property definition node to the graph."""
@@ -292,15 +334,24 @@ class GraphMLSerializer(OntologySerializer):
         node_id = prop.id
         self.graph.add_node(node_id)
 
-        self._set_node_attributes(node_id, {
-            'kind': 'property_definition',
-            'cs:title': prop.title,
-            'cs:identifier': prop.identifier,
-            'cs:description': prop.description or '',
-            'cs:is_relevant': str(prop.is_relevant) if prop.is_relevant is not None else '',
-            'cs:created_at': (prop.created_at.isoformat() if prop.created_at else ''),
-            'cs:last_modified': (prop.last_modified.isoformat() if prop.last_modified else ''),
-        })
+        self._set_node_attributes(
+            node_id,
+            {
+                "kind": "property_definition",
+                "cs:title": prop.title,
+                "cs:identifier": prop.identifier,
+                "cs:description": prop.description or "",
+                "cs:is_relevant": (
+                    str(prop.is_relevant) if prop.is_relevant is not None else ""
+                ),
+                "cs:created_at": (
+                    prop.created_at.isoformat() if prop.created_at else ""
+                ),
+                "cs:last_modified": (
+                    prop.last_modified.isoformat() if prop.last_modified else ""
+                ),
+            },
+        )
 
     def _add_structural_edges(
         self,
@@ -314,29 +365,31 @@ class GraphMLSerializer(OntologySerializer):
 
         # Taxonomy → ConceptScheme edges
         for scheme in schemes:
-            if self.graph.has_node(scheme.id) and self.graph.has_node(scheme.taxonomy_id):
+            if self.graph.has_node(scheme.id) and self.graph.has_node(
+                scheme.taxonomy_id
+            ):
                 self.graph.add_edge(
-                    scheme.taxonomy_id, scheme.id,
-                    key='has_scheme',
-                    kind='has_scheme'
+                    scheme.taxonomy_id, scheme.id, key="has_scheme", kind="has_scheme"
                 )
 
         # Class → ConceptScheme edges
         for cls in classes:
-            if self.graph.has_node(cls.id) and self.graph.has_node(cls.concept_scheme_id):
+            if self.graph.has_node(cls.id) and self.graph.has_node(
+                cls.concept_scheme_id
+            ):
                 self.graph.add_edge(
-                    cls.concept_scheme_id, cls.id,
-                    key='has_class',
-                    kind='has_class'
+                    cls.concept_scheme_id, cls.id, key="has_class", kind="has_class"
                 )
 
         # Class → Parent Class edges
         for cls in classes:
-            if cls.parent_class_id and self.graph.has_node(cls.id) and self.graph.has_node(cls.parent_class_id):
+            if (
+                cls.parent_class_id
+                and self.graph.has_node(cls.id)
+                and self.graph.has_node(cls.parent_class_id)
+            ):
                 self.graph.add_edge(
-                    cls.id, cls.parent_class_id,
-                    key='parent_class',
-                    kind='parent_class'
+                    cls.id, cls.parent_class_id, key="parent_class", kind="parent_class"
                 )
 
         # Individual → Class edges
@@ -344,10 +397,11 @@ class GraphMLSerializer(OntologySerializer):
             for idx, class_id in enumerate(individual.class_ids):
                 if self.graph.has_node(individual.id) and self.graph.has_node(class_id):
                     self.graph.add_edge(
-                        individual.id, class_id,
-                        key=f'class_membership_{idx}',
-                        kind='class_membership',
-                        **{'cs:class_order': str(idx)}
+                        individual.id,
+                        class_id,
+                        key=f"class_membership_{idx}",
+                        kind="class_membership",
+                        **{"cs:class_order": str(idx)},
                     )
 
     def _add_structural_edges_for_taxonomy(
@@ -359,11 +413,11 @@ class GraphMLSerializer(OntologySerializer):
         assert self.graph is not None
 
         for scheme in schemes:
-            if self.graph.has_node(scheme.id) and self.graph.has_node(scheme.taxonomy_id):
+            if self.graph.has_node(scheme.id) and self.graph.has_node(
+                scheme.taxonomy_id
+            ):
                 self.graph.add_edge(
-                    scheme.taxonomy_id, scheme.id,
-                    key='has_scheme',
-                    kind='has_scheme'
+                    scheme.taxonomy_id, scheme.id, key="has_scheme", kind="has_scheme"
                 )
 
     def _add_structural_edges_for_scheme(
@@ -375,18 +429,20 @@ class GraphMLSerializer(OntologySerializer):
         assert self.graph is not None
 
         for cls in classes:
-            if self.graph.has_node(cls.id) and self.graph.has_node(cls.concept_scheme_id):
+            if self.graph.has_node(cls.id) and self.graph.has_node(
+                cls.concept_scheme_id
+            ):
                 self.graph.add_edge(
-                    cls.concept_scheme_id, cls.id,
-                    key='has_class',
-                    kind='has_class'
+                    cls.concept_scheme_id, cls.id, key="has_class", kind="has_class"
                 )
 
-            if cls.parent_class_id and self.graph.has_node(cls.id) and self.graph.has_node(cls.parent_class_id):
+            if (
+                cls.parent_class_id
+                and self.graph.has_node(cls.id)
+                and self.graph.has_node(cls.parent_class_id)
+            ):
                 self.graph.add_edge(
-                    cls.id, cls.parent_class_id,
-                    key='parent_class',
-                    kind='parent_class'
+                    cls.id, cls.parent_class_id, key="parent_class", kind="parent_class"
                 )
 
     def _add_relationship(self, rel: Relationship) -> None:
@@ -395,10 +451,11 @@ class GraphMLSerializer(OntologySerializer):
 
         if self.graph.has_node(rel.source_id) and self.graph.has_node(rel.target_id):
             self.graph.add_edge(
-                rel.source_id, rel.target_id,
+                rel.source_id,
+                rel.target_id,
                 key=rel.id,
-                kind='relationship',
-                **{'cs:property_definition_id': rel.property_definition_id}
+                kind="relationship",
+                **{"cs:property_definition_id": rel.property_definition_id},
             )
 
     def _set_node_attributes(self, node_id: str, attributes: Dict[str, str]) -> None:
@@ -456,7 +513,7 @@ class GraphMLDeserializer(OntologyDeserializer):
 
             # Ensure source is bytes for hashing
             if isinstance(source, str):
-                source_bytes = source.encode('utf-8')
+                source_bytes = source.encode("utf-8")
             else:
                 source_bytes = source
 
@@ -504,20 +561,22 @@ class GraphMLDeserializer(OntologyDeserializer):
         assert self.graph is not None
 
         for node_id, node_attrs in self.graph.nodes(data=True):
-            kind = node_attrs.get('kind')
+            kind = node_attrs.get("kind")
 
-            if kind == 'taxonomy':
+            if kind == "taxonomy":
                 self._extract_taxonomy(node_id, node_attrs)
-            elif kind == 'concept_scheme':
+            elif kind == "concept_scheme":
                 self._extract_concept_scheme(node_id, node_attrs)
-            elif kind == 'class':
+            elif kind == "class":
                 self._extract_class(node_id, node_attrs)
-            elif kind == 'individual':
+            elif kind == "individual":
                 self._extract_individual(node_id, node_attrs)
-            elif kind == 'property_definition':
+            elif kind == "property_definition":
                 self._extract_property_definition(node_id, node_attrs)
 
-    def _check_unknown_attributes(self, node_id: str, attrs: Dict[str, Any], known_keys: set[str]) -> None:
+    def _check_unknown_attributes(
+        self, node_id: str, attrs: Dict[str, Any], known_keys: set[str]
+    ) -> None:
         """
         Check for unknown data keys and record warnings.
 
@@ -527,7 +586,7 @@ class GraphMLDeserializer(OntologyDeserializer):
             known_keys: Set of known attribute keys to exclude from warnings
         """
         # Layout attributes that should be silently ignored
-        layout_keys = {'x', 'y', 'z', 'label', 'graphics'}
+        layout_keys = {"x", "y", "z", "label", "graphics"}
 
         for key in attrs.keys():
             if key not in known_keys and key not in layout_keys:
@@ -535,25 +594,31 @@ class GraphMLDeserializer(OntologyDeserializer):
 
     def _extract_taxonomy(self, node_id: str, attrs: Dict[str, Any]) -> None:
         """Extract a Taxonomy from a node."""
-        title = attrs.get('cs:title')
+        title = attrs.get("cs:title")
         if not title:
             self.warnings.append(f"Taxonomy {node_id} has no cs:title")
             return
 
-        known_keys = {'kind', 'cs:title', 'cs:description', 'cs:created_at', 'cs:last_modified'}
+        known_keys = {
+            "kind",
+            "cs:title",
+            "cs:description",
+            "cs:created_at",
+            "cs:last_modified",
+        }
         self._check_unknown_attributes(node_id, attrs, known_keys)
 
         entity_dict = {
-            'id': node_id,
-            'title': title,
-            'description': attrs.get('cs:description') or None,
-            'type': 'taxonomy',
+            "id": node_id,
+            "title": title,
+            "description": attrs.get("cs:description") or None,
+            "type": "taxonomy",
         }
         self.incoming_entities[node_id] = entity_dict
 
     def _extract_concept_scheme(self, node_id: str, attrs: Dict[str, Any]) -> None:
         """Extract a ConceptScheme from a node."""
-        title = attrs.get('cs:title')
+        title = attrs.get("cs:title")
         if not title:
             self.warnings.append(f"ConceptScheme {node_id} has no cs:title")
             return
@@ -562,7 +627,7 @@ class GraphMLDeserializer(OntologyDeserializer):
         assert self.graph is not None
         taxonomy_id = None
         for pred, _, _ in self.graph.in_edges(node_id, keys=True):
-            if self.graph.nodes[pred].get('kind') == 'taxonomy':
+            if self.graph.nodes[pred].get("kind") == "taxonomy":
                 taxonomy_id = pred
                 break
 
@@ -570,21 +635,27 @@ class GraphMLDeserializer(OntologyDeserializer):
             self.warnings.append(f"ConceptScheme {node_id} has no parent taxonomy")
             return
 
-        known_keys = {'kind', 'cs:title', 'cs:description', 'cs:created_at', 'cs:last_modified'}
+        known_keys = {
+            "kind",
+            "cs:title",
+            "cs:description",
+            "cs:created_at",
+            "cs:last_modified",
+        }
         self._check_unknown_attributes(node_id, attrs, known_keys)
 
         entity_dict = {
-            'id': node_id,
-            'title': title,
-            'description': attrs.get('cs:description') or None,
-            'type': 'concept_scheme',
-            'taxonomy_id': taxonomy_id,
+            "id": node_id,
+            "title": title,
+            "description": attrs.get("cs:description") or None,
+            "type": "concept_scheme",
+            "taxonomy_id": taxonomy_id,
         }
         self.incoming_entities[node_id] = entity_dict
 
     def _extract_class(self, node_id: str, attrs: Dict[str, Any]) -> None:
         """Extract a Class from a node."""
-        title = attrs.get('cs:title')
+        title = attrs.get("cs:title")
         if not title:
             self.warnings.append(f"Class {node_id} has no cs:title")
             return
@@ -594,7 +665,7 @@ class GraphMLDeserializer(OntologyDeserializer):
         # Find parent concept scheme via incoming edges
         concept_scheme_id = None
         for pred, _, _ in self.graph.in_edges(node_id, keys=True):
-            if self.graph.nodes[pred].get('kind') == 'concept_scheme':
+            if self.graph.nodes[pred].get("kind") == "concept_scheme":
                 concept_scheme_id = pred
                 break
 
@@ -604,43 +675,56 @@ class GraphMLDeserializer(OntologyDeserializer):
 
         # Find parent class via outgoing edges
         parent_class_id = None
-        for _, succ, _, edge_attrs in self.graph.out_edges(node_id, data=True, keys=True):
-            if edge_attrs.get('kind') == 'parent_class':
+        for _, succ, _, edge_attrs in self.graph.out_edges(
+            node_id, data=True, keys=True
+        ):
+            if edge_attrs.get("kind") == "parent_class":
                 parent_class_id = succ
                 break
 
         # Extract external references
         external_references = []
-        ext_refs_json = attrs.get('cs:external_references')
+        ext_refs_json = attrs.get("cs:external_references")
         if ext_refs_json:
             try:
                 refs = json.loads(ext_refs_json)
                 for ref in refs:
-                    external_references.append({
-                        'source': ref['source'],
-                        'identifier': ref['identifier'],
-                        'uri': ref['uri'],
-                    })
+                    external_references.append(
+                        {
+                            "source": ref["source"],
+                            "identifier": ref["identifier"],
+                            "uri": ref["uri"],
+                        }
+                    )
             except (json.JSONDecodeError, KeyError) as e:
-                self.warnings.append(f"Class {node_id} has malformed cs:external_references: {e}")
+                self.warnings.append(
+                    f"Class {node_id} has malformed cs:external_references: {e}"
+                )
 
-        known_keys = {'kind', 'cs:title', 'cs:description', 'cs:created_at', 'cs:last_modified', 'cs:external_references'}
+        known_keys = {
+            "kind",
+            "cs:title",
+            "cs:description",
+            "cs:created_at",
+            "cs:last_modified",
+            "cs:external_references",
+        }
         self._check_unknown_attributes(node_id, attrs, known_keys)
 
         entity_dict = {
-            'id': node_id,
-            'title': title,
-            'description': attrs.get('cs:description') or None,
-            'type': 'class',
-            'concept_scheme_id': concept_scheme_id,
-            'parent_class_id': parent_class_id,
-            'external_references': external_references,
+            "id": node_id,
+            "title": title,
+            "description": attrs.get("cs:description") or None,
+            "type": "class",
+            "concept_scheme_id": concept_scheme_id,
+            "parent_class_id": parent_class_id,
+            "external_references": external_references,
         }
         self.incoming_entities[node_id] = entity_dict
 
     def _extract_individual(self, node_id: str, attrs: Dict[str, Any]) -> None:
         """Extract an Individual from a node."""
-        title = attrs.get('cs:title')
+        title = attrs.get("cs:title")
         if not title:
             self.warnings.append(f"Individual {node_id} has no cs:title")
             return
@@ -650,17 +734,23 @@ class GraphMLDeserializer(OntologyDeserializer):
         # Find parent classes via outgoing edges, maintaining order
         class_ids = []
         class_orders = []
-        for _, succ, _, edge_attrs in self.graph.out_edges(node_id, data=True, keys=True):
-            if edge_attrs.get('kind') == 'class_membership':
-                class_order = edge_attrs.get('cs:class_order')
+        for _, succ, _, edge_attrs in self.graph.out_edges(
+            node_id, data=True, keys=True
+        ):
+            if edge_attrs.get("kind") == "class_membership":
+                class_order = edge_attrs.get("cs:class_order")
                 if class_order is not None:
                     try:
                         class_orders.append((int(class_order), succ))
                     except ValueError:
-                        self.warnings.append(f"Individual {node_id} has invalid cs:class_order: {class_order}")
+                        self.warnings.append(
+                            f"Individual {node_id} has invalid cs:class_order: {class_order}"
+                        )
                         class_ids.append(succ)
                 else:
-                    self.warnings.append(f"Individual {node_id} missing cs:class_order on class membership edge")
+                    self.warnings.append(
+                        f"Individual {node_id} missing cs:class_order on class membership edge"
+                    )
                     class_ids.append(succ)
 
         # Sort by order if we have ordering info
@@ -674,55 +764,76 @@ class GraphMLDeserializer(OntologyDeserializer):
 
         # Extract external references
         external_references = []
-        ext_refs_json = attrs.get('cs:external_references')
+        ext_refs_json = attrs.get("cs:external_references")
         if ext_refs_json:
             try:
                 refs = json.loads(ext_refs_json)
                 for ref in refs:
-                    external_references.append({
-                        'source': ref['source'],
-                        'identifier': ref['identifier'],
-                        'uri': ref['uri'],
-                    })
+                    external_references.append(
+                        {
+                            "source": ref["source"],
+                            "identifier": ref["identifier"],
+                            "uri": ref["uri"],
+                        }
+                    )
             except (json.JSONDecodeError, KeyError) as e:
-                self.warnings.append(f"Individual {node_id} has malformed cs:external_references: {e}")
+                self.warnings.append(
+                    f"Individual {node_id} has malformed cs:external_references: {e}"
+                )
 
-        known_keys = {'kind', 'cs:title', 'cs:description', 'cs:created_at', 'cs:last_modified', 'cs:external_references'}
+        known_keys = {
+            "kind",
+            "cs:title",
+            "cs:description",
+            "cs:created_at",
+            "cs:last_modified",
+            "cs:external_references",
+        }
         self._check_unknown_attributes(node_id, attrs, known_keys)
 
         entity_dict = {
-            'id': node_id,
-            'title': title,
-            'description': attrs.get('cs:description') or None,
-            'type': 'individual',
-            'class_ids': class_ids,
-            'external_references': external_references,
+            "id": node_id,
+            "title": title,
+            "description": attrs.get("cs:description") or None,
+            "type": "individual",
+            "class_ids": class_ids,
+            "external_references": external_references,
         }
         self.incoming_entities[node_id] = entity_dict
 
     def _extract_property_definition(self, node_id: str, attrs: Dict[str, Any]) -> None:
         """Extract a PropertyDefinition from a node."""
-        title = attrs.get('cs:title')
-        identifier = attrs.get('cs:identifier')
+        title = attrs.get("cs:title")
+        identifier = attrs.get("cs:identifier")
         if not title or not identifier:
-            self.warnings.append(f"PropertyDefinition {node_id} missing cs:title or cs:identifier")
+            self.warnings.append(
+                f"PropertyDefinition {node_id} missing cs:title or cs:identifier"
+            )
             return
 
-        is_relevant_str = attrs.get('cs:is_relevant', '')
+        is_relevant_str = attrs.get("cs:is_relevant", "")
         is_relevant = None
         if is_relevant_str:
-            is_relevant = is_relevant_str.lower() == 'true'
+            is_relevant = is_relevant_str.lower() == "true"
 
-        known_keys = {'kind', 'cs:title', 'cs:identifier', 'cs:description', 'cs:is_relevant', 'cs:created_at', 'cs:last_modified'}
+        known_keys = {
+            "kind",
+            "cs:title",
+            "cs:identifier",
+            "cs:description",
+            "cs:is_relevant",
+            "cs:created_at",
+            "cs:last_modified",
+        }
         self._check_unknown_attributes(node_id, attrs, known_keys)
 
         entity_dict = {
-            'id': node_id,
-            'title': title,
-            'identifier': identifier,
-            'description': attrs.get('cs:description') or None,
-            'type': 'property_definition',
-            'is_relevant': is_relevant,
+            "id": node_id,
+            "title": title,
+            "identifier": identifier,
+            "description": attrs.get("cs:description") or None,
+            "type": "property_definition",
+            "is_relevant": is_relevant,
         }
         self.incoming_entities[node_id] = entity_dict
 
@@ -736,7 +847,7 @@ class GraphMLDeserializer(OntologyDeserializer):
 
         for entity_id, entity_dict in self.incoming_entities.items():
             # Check external references first
-            external_references = entity_dict.get('external_references', [])
+            external_references = entity_dict.get("external_references", [])
             existing_entity: str | None = None
             match_kind: MatchKind | None = None
 
@@ -744,7 +855,7 @@ class GraphMLDeserializer(OntologyDeserializer):
                 # Try to find existing entity by external reference
                 for ext_ref in external_references:
                     existing_by_ref = self._find_by_external_reference(
-                        ext_ref['source'], ext_ref['identifier']
+                        ext_ref["source"], ext_ref["identifier"]
                     )
                     if existing_by_ref:
                         existing_entity = existing_by_ref
@@ -768,21 +879,27 @@ class GraphMLDeserializer(OntologyDeserializer):
                             existing_entity = existing_by_uuid.id
                             match_kind = MatchKind.UUID
                         else:
-                            existing_by_uuid = self.ontology_repo.get_individual(entity_id)
+                            existing_by_uuid = self.ontology_repo.get_individual(
+                                entity_id
+                            )
                             if existing_by_uuid:
                                 existing_entity = existing_by_uuid.id
                                 match_kind = MatchKind.UUID
                             else:
-                                existing_by_uuid = self.ontology_repo.get_property_definition(entity_id)
+                                existing_by_uuid = (
+                                    self.ontology_repo.get_property_definition(
+                                        entity_id
+                                    )
+                                )
                                 if existing_by_uuid:
                                     existing_entity = existing_by_uuid.id
                                     match_kind = MatchKind.UUID
 
             # If no UUID match, try by title (only for classes)
-            if not existing_entity and entity_dict.get('type') == 'class':
+            if not existing_entity and entity_dict.get("type") == "class":
                 existing_by_title = self._find_class_by_title(
-                    entity_dict['title'],
-                    entity_dict.get('concept_scheme_id'),
+                    entity_dict["title"],
+                    entity_dict.get("concept_scheme_id"),
                 )
                 if existing_by_title:
                     existing_entity = existing_by_title.id
@@ -790,7 +907,11 @@ class GraphMLDeserializer(OntologyDeserializer):
 
             # If conflict found, record it
             if existing_entity and match_kind:
-                default_resolution = ResolutionKind.MERGE if match_kind == MatchKind.EXTERNAL_REFERENCE else ResolutionKind.SKIP
+                default_resolution = (
+                    ResolutionKind.MERGE
+                    if match_kind == MatchKind.EXTERNAL_REFERENCE
+                    else ResolutionKind.SKIP
+                )
                 conflict = ImportConflict(
                     match_kind=match_kind,
                     incoming=entity_dict,
@@ -806,7 +927,9 @@ class GraphMLDeserializer(OntologyDeserializer):
 
         return conflicts
 
-    def _find_by_external_reference(self, source: str, identifier: str) -> Optional[str]:
+    def _find_by_external_reference(
+        self, source: str, identifier: str
+    ) -> Optional[str]:
         """Find an existing entity by external reference."""
         all_classes = self.ontology_repo.list_classes(limit=10000)
         for class_entity in all_classes:
@@ -822,9 +945,13 @@ class GraphMLDeserializer(OntologyDeserializer):
 
         return None
 
-    def _find_class_by_title(self, title: str, concept_scheme_id: Optional[str]) -> Optional[Class]:
+    def _find_class_by_title(
+        self, title: str, concept_scheme_id: Optional[str]
+    ) -> Optional[Class]:
         """Find an existing class by title (and optional scheme)."""
-        all_classes = self.ontology_repo.list_classes(concept_scheme_id=concept_scheme_id, limit=10000)
+        all_classes = self.ontology_repo.list_classes(
+            concept_scheme_id=concept_scheme_id, limit=10000
+        )
         for class_entity in all_classes:
             if class_entity.title == title:
                 return class_entity

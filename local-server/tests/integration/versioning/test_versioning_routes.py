@@ -14,7 +14,11 @@ These tests exercise the complete stack: routes → domain service → adapters 
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+sys.path.append(
+    os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    )
+)
 
 import pytest
 import tempfile
@@ -263,7 +267,9 @@ class TestVersioningRoutes:
         )
         changeset_id = create_response.json()["id"]
         client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
-        submit_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
+        submit_response = client.post(
+            f"/api/v1/versioning/changesets/{changeset_id}/submit"
+        )
         proposal_id = submit_response.json()["id"]
 
         # Approve it
@@ -281,7 +287,9 @@ class TestVersioningRoutes:
         )
         changeset_id = create_response.json()["id"]
         client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
-        submit_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
+        submit_response = client.post(
+            f"/api/v1/versioning/changesets/{changeset_id}/submit"
+        )
         proposal_id = submit_response.json()["id"]
 
         # Reject it
@@ -303,7 +311,9 @@ class TestVersioningRoutes:
         )
         changeset_id = create_response.json()["id"]
         client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
-        submit_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
+        submit_response = client.post(
+            f"/api/v1/versioning/changesets/{changeset_id}/submit"
+        )
         proposal_id = submit_response.json()["id"]
 
         # Detect conflicts (should be empty for new changeset)
@@ -323,7 +333,9 @@ class TestVersioningRoutes:
         )
         changeset_id = create_response.json()["id"]
         client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
-        submit_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
+        submit_response = client.post(
+            f"/api/v1/versioning/changesets/{changeset_id}/submit"
+        )
         proposal_id = submit_response.json()["id"]
 
         # Resolve conflicts (empty resolutions for new changeset)
@@ -335,7 +347,9 @@ class TestVersioningRoutes:
         data = response.json()
         assert data["proposal_id"] == proposal_id
 
-    def test_auto_resolve_conflicts_with_last_write_wins(self, client, change_repository):
+    def test_auto_resolve_conflicts_with_last_write_wins(
+        self, client, change_repository
+    ):
         """POST /api/v1/versioning/proposals/{id}/auto-resolve resolves with LAST_WRITE_WINS."""
         # Record conflicting changes
         event_id_1 = change_repository.record_change(
@@ -360,7 +374,9 @@ class TestVersioningRoutes:
         )
         changeset_id = create_response.json()["id"]
         client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
-        submit_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
+        submit_response = client.post(
+            f"/api/v1/versioning/changesets/{changeset_id}/submit"
+        )
         proposal_id = submit_response.json()["id"]
 
         # Auto-resolve conflicts with default LAST_WRITE_WINS strategy
@@ -378,7 +394,9 @@ class TestVersioningRoutes:
         assert data["conflicts"][0]["is_resolved"] is True
         assert data["conflicts"][0]["resolved_value"] == "new2"
 
-    def test_auto_resolve_conflicts_with_base_value_wins(self, client, change_repository):
+    def test_auto_resolve_conflicts_with_base_value_wins(
+        self, client, change_repository
+    ):
         """POST /api/v1/versioning/proposals/{id}/auto-resolve with BASE_VALUE_WINS."""
         # Record conflicting changes
         event_id_1 = change_repository.record_change(
@@ -403,7 +421,9 @@ class TestVersioningRoutes:
         )
         changeset_id = create_response.json()["id"]
         client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
-        submit_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
+        submit_response = client.post(
+            f"/api/v1/versioning/changesets/{changeset_id}/submit"
+        )
         proposal_id = submit_response.json()["id"]
 
         # Auto-resolve with BASE_VALUE_WINS strategy
@@ -444,7 +464,9 @@ class TestVersioningRoutes:
         )
         changeset_id = create_response.json()["id"]
         client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
-        submit_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
+        submit_response = client.post(
+            f"/api/v1/versioning/changesets/{changeset_id}/submit"
+        )
         proposal_id = submit_response.json()["id"]
 
         # Auto-resolve with MANUAL strategy (leaves unresolved)
@@ -468,7 +490,9 @@ class TestVersioningRoutes:
         )
         changeset_id = create_response.json()["id"]
         client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
-        submit_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
+        submit_response = client.post(
+            f"/api/v1/versioning/changesets/{changeset_id}/submit"
+        )
         proposal_id = submit_response.json()["id"]
         client.post(f"/api/v1/versioning/proposals/{proposal_id}/approve")
 
@@ -524,24 +548,32 @@ class TestVersioningRoutes:
         assert changeset["state"] == "working"
 
         # 2. Stage changeset
-        stage_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
+        stage_response = client.post(
+            f"/api/v1/versioning/changesets/{changeset_id}/stage"
+        )
         assert stage_response.status_code == status.HTTP_200_OK
         assert stage_response.json()["state"] == "staged"
 
         # 3. Submit proposal
-        submit_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
+        submit_response = client.post(
+            f"/api/v1/versioning/changesets/{changeset_id}/submit"
+        )
         assert submit_response.status_code == status.HTTP_200_OK
         proposal = submit_response.json()
         proposal_id = proposal["id"]
         assert proposal["state"] == "open"
 
         # 4. Approve proposal
-        approve_response = client.post(f"/api/v1/versioning/proposals/{proposal_id}/approve")
+        approve_response = client.post(
+            f"/api/v1/versioning/proposals/{proposal_id}/approve"
+        )
         assert approve_response.status_code == status.HTTP_200_OK
         assert approve_response.json()["state"] == "approved"
 
         # 5. Merge proposal
-        merge_response = client.post(f"/api/v1/versioning/proposals/{proposal_id}/merge")
+        merge_response = client.post(
+            f"/api/v1/versioning/proposals/{proposal_id}/merge"
+        )
         assert merge_response.status_code == status.HTTP_200_OK
         merge_result = merge_response.json()
         assert merge_result["proposal_id"] == proposal_id
@@ -558,7 +590,9 @@ class TestVersioningRoutes:
         client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
 
         # 2. Submit proposal
-        submit_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
+        submit_response = client.post(
+            f"/api/v1/versioning/changesets/{changeset_id}/submit"
+        )
         proposal_id = submit_response.json()["id"]
 
         # 3. Reject proposal
@@ -621,7 +655,9 @@ class TestVersioningRoutes:
         changeset_id = create_response.json()["id"]
 
         client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
-        submit_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
+        submit_response = client.post(
+            f"/api/v1/versioning/changesets/{changeset_id}/submit"
+        )
         proposal_id = submit_response.json()["id"]
 
         # Approve it
@@ -641,7 +677,9 @@ class TestVersioningRoutes:
         changeset_id = create_response.json()["id"]
 
         client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
-        submit_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
+        submit_response = client.post(
+            f"/api/v1/versioning/changesets/{changeset_id}/submit"
+        )
         proposal_id = submit_response.json()["id"]
 
         # Approve it
@@ -664,7 +702,9 @@ class TestVersioningRoutes:
         changeset_id = create_response.json()["id"]
 
         client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
-        submit_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
+        submit_response = client.post(
+            f"/api/v1/versioning/changesets/{changeset_id}/submit"
+        )
         proposal_id = submit_response.json()["id"]
 
         # Try to merge without approving - should return 409
@@ -704,7 +744,9 @@ class TestVersioningRoutes:
 
         # Stage, submit, approve
         client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
-        proposal_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
+        proposal_response = client.post(
+            f"/api/v1/versioning/changesets/{changeset_id}/submit"
+        )
         proposal_id = proposal_response.json()["id"]
         client.post(f"/api/v1/versioning/proposals/{proposal_id}/approve")
 

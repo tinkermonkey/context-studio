@@ -15,7 +15,9 @@ import pytest
 from pydantic import ValidationError
 
 # Add local-server root to path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 from domain.admin.exceptions import ConfigurationError
 from config import SyncAdapterType, SyncConfig, DuckDBConfig, S3Config
