@@ -130,11 +130,15 @@ test.describe("Interchange (Import/Export)", () => {
     await expect(
       page.getByTestId("interchange-conflict-group-external-reference"),
     ).toBeVisible();
-    await expect(page.getByTestId("interchange-conflict-group-uuid")).toBeVisible();
+    await expect(
+      page.getByTestId("interchange-conflict-group-uuid"),
+    ).toBeVisible();
     await expect(
       page.getByTestId("interchange-conflict-group-title"),
     ).toBeVisible();
-    await expect(page.getByTestId("interchange-conflict-group-create")).toBeVisible();
+    await expect(
+      page.getByTestId("interchange-conflict-group-create"),
+    ).toBeVisible();
   });
 
   test("Test Case 3: Resolve conflicts with apply-all-per-group strategy and commit import", async ({
@@ -172,11 +176,13 @@ test.describe("Interchange (Import/Export)", () => {
     await page.waitForLoadState("networkidle");
 
     const fileInput = page.locator('input[type="file"]');
-    await fileInput.setInputFiles([{
-      name: "test.rdf",
-      mimeType: "application/xml",
-      buffer: Buffer.from(skosContent),
-    }]);
+    await fileInput.setInputFiles([
+      {
+        name: "test.rdf",
+        mimeType: "application/xml",
+        buffer: Buffer.from(skosContent),
+      },
+    ]);
 
     // Click preview
     await page.getByTestId("interchange-import-preview-button").click();
@@ -243,11 +249,13 @@ test.describe("Interchange (Import/Export)", () => {
     await page.waitForLoadState("networkidle");
 
     const fileInput = page.locator('input[type="file"]');
-    await fileInput.setInputFiles([{
-      name: "test.rdf",
-      mimeType: "application/xml",
-      buffer: Buffer.from(skosContent),
-    }]);
+    await fileInput.setInputFiles([
+      {
+        name: "test.rdf",
+        mimeType: "application/xml",
+        buffer: Buffer.from(skosContent),
+      },
+    ]);
 
     // Click preview
     await page.getByTestId("interchange-import-preview-button").click();
@@ -523,11 +531,13 @@ test.describe("Interchange (Import/Export)", () => {
     // Upload invalid file
     const invalidContent = "This is not valid XML or RDF content";
     const fileInput = page.locator('input[type="file"]');
-    await fileInput.setInputFiles([{
-      name: "invalid.rdf",
-      mimeType: "application/xml",
-      buffer: Buffer.from(invalidContent),
-    }]);
+    await fileInput.setInputFiles([
+      {
+        name: "invalid.rdf",
+        mimeType: "application/xml",
+        buffer: Buffer.from(invalidContent),
+      },
+    ]);
 
     // Click preview button
     await page.getByTestId("interchange-import-preview-button").click();

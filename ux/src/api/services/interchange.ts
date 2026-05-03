@@ -113,10 +113,7 @@ export class InterchangeService extends BaseService {
         );
       }
 
-      return this.getPage<ImportRun>(
-        ENDPOINTS.INTERCHANGE.RUNS,
-        queryParams,
-      );
+      return this.getPage<ImportRun>(ENDPOINTS.INTERCHANGE.RUNS, queryParams);
     }, "listRuns");
   }
 

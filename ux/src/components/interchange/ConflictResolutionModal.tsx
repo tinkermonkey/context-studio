@@ -38,7 +38,7 @@ export function ConflictResolutionModal({
     Map<string, ResolutionKind>
   >(new Map());
   const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(
-    new Set(["external_reference", "uuid", "title"])
+    new Set(["external_reference", "uuid", "title"]),
   );
 
   // Group conflicts by match_kind
@@ -62,7 +62,7 @@ export function ConflictResolutionModal({
   React.useEffect(() => {
     const newResolutions = new Map<string, ResolutionKind>();
     conflicts.forEach((conflict) => {
-      const key = `${conflict.match_kind}-${conflict.incoming.id || 'unknown'}`;
+      const key = `${conflict.match_kind}-${conflict.incoming.id || "unknown"}`;
       newResolutions.set(key, conflict.default_resolution);
     });
     setResolutions(newResolutions);
@@ -71,7 +71,7 @@ export function ConflictResolutionModal({
   const handleResolutionChange = (
     matchKind: string,
     conflictIndex: string,
-    resolution: ResolutionKind
+    resolution: ResolutionKind,
   ) => {
     const key = `${matchKind}-${conflictIndex}`;
     const newResolutions = new Map(resolutions);
@@ -85,7 +85,7 @@ export function ConflictResolutionModal({
       (conflict, index) => {
         const key = `${matchKind}-${conflict.incoming.id || index}`;
         newResolutions.set(key, resolution);
-      }
+      },
     );
     setResolutions(newResolutions);
   };
@@ -102,7 +102,7 @@ export function ConflictResolutionModal({
 
   const handleCommit = () => {
     const resolutionRecords: ResolutionRecord[] = Array.from(
-      resolutions.entries()
+      resolutions.entries(),
     ).map(([key, resolution]) => {
       // Split on first occurrence of hyphen only, since UUIDs contain hyphens
       const firstHyphenIndex = key.indexOf("-");
@@ -131,16 +131,21 @@ export function ConflictResolutionModal({
   };
 
   return (
-    <Modal show={isOpen} onClose={onClose} size="4xl" data-testid="interchange-conflict-resolution-modal">
+    <Modal
+      show={isOpen}
+      onClose={onClose}
+      size="4xl"
+      data-testid="interchange-conflict-resolution-modal"
+    >
       <Modal.Header>Resolve Import Conflicts</Modal.Header>
       <Modal.Body className="max-h-96 overflow-y-auto">
         <div className="space-y-6">
           {/* External Reference group */}
           {groupedConflicts.external_reference.length > 0 && (
-            <div className="border rounded-lg p-4">
+            <div className="rounded-lg border p-4">
               <div
                 data-testid="interchange-conflict-group-external-reference"
-                className="flex items-center justify-between cursor-pointer"
+                className="flex cursor-pointer items-center justify-between"
                 onClick={() => toggleGroup("external_reference")}
               >
                 <div>
@@ -148,7 +153,7 @@ export function ConflictResolutionModal({
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     {getGroupDescription(
                       "external_reference",
-                      groupedConflicts.external_reference.length
+                      groupedConflicts.external_reference.length,
                     )}
                   </p>
                 </div>
@@ -173,19 +178,19 @@ export function ConflictResolutionModal({
                       conflictIndex={String(conflict.incoming.id || idx)}
                       resolution={
                         resolutions.get(
-                          `external_reference-${conflict.incoming.id || idx}`
+                          `external_reference-${conflict.incoming.id || idx}`,
                         ) || conflict.default_resolution
                       }
                       onResolutionChange={(resolution) =>
                         handleResolutionChange(
                           "external_reference",
                           String(conflict.incoming.id || idx),
-                          resolution
+                          resolution,
                         )
                       }
                     />
                   ))}
-                  <div className="flex gap-2 mt-3 pt-3 border-t">
+                  <div className="mt-3 flex gap-2 border-t pt-3">
                     <span className="text-sm text-gray-600">Apply to all:</span>
                     {["skip", "overwrite", "merge"].map((res) => (
                       <Button
@@ -196,7 +201,7 @@ export function ConflictResolutionModal({
                         onClick={() =>
                           handleApplyAll(
                             "external_reference",
-                            res as ResolutionKind
+                            res as ResolutionKind,
                           )
                         }
                       >
@@ -211,10 +216,10 @@ export function ConflictResolutionModal({
 
           {/* UUID group */}
           {groupedConflicts.uuid.length > 0 && (
-            <div className="border rounded-lg p-4">
+            <div className="rounded-lg border p-4">
               <div
                 data-testid="interchange-conflict-group-uuid"
-                className="flex items-center justify-between cursor-pointer"
+                className="flex cursor-pointer items-center justify-between"
                 onClick={() => toggleGroup("uuid")}
               >
                 <div>
@@ -224,9 +229,7 @@ export function ConflictResolutionModal({
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge color="yellow">
-                    {groupedConflicts.uuid.length}
-                  </Badge>
+                  <Badge color="yellow">{groupedConflicts.uuid.length}</Badge>
                   {expandedGroups.has("uuid") ? (
                     <ChevronUp className="h-4 w-4" />
                   ) : (
@@ -244,19 +247,19 @@ export function ConflictResolutionModal({
                       conflictIndex={String(conflict.incoming.id || idx)}
                       resolution={
                         resolutions.get(
-                          `uuid-${conflict.incoming.id || idx}`
+                          `uuid-${conflict.incoming.id || idx}`,
                         ) || conflict.default_resolution
                       }
                       onResolutionChange={(resolution) =>
                         handleResolutionChange(
                           "uuid",
                           String(conflict.incoming.id || idx),
-                          resolution
+                          resolution,
                         )
                       }
                     />
                   ))}
-                  <div className="flex gap-2 mt-3 pt-3 border-t">
+                  <div className="mt-3 flex gap-2 border-t pt-3">
                     <span className="text-sm text-gray-600">Apply to all:</span>
                     {["skip", "overwrite", "merge"].map((res) => (
                       <Button
@@ -279,22 +282,23 @@ export function ConflictResolutionModal({
 
           {/* Title group */}
           {groupedConflicts.title.length > 0 && (
-            <div className="border rounded-lg p-4">
+            <div className="rounded-lg border p-4">
               <div
                 data-testid="interchange-conflict-group-title"
-                className="flex items-center justify-between cursor-pointer"
+                className="flex cursor-pointer items-center justify-between"
                 onClick={() => toggleGroup("title")}
               >
                 <div>
                   <h4 className="font-semibold">Title Matches</h4>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {getGroupDescription("title", groupedConflicts.title.length)}
+                    {getGroupDescription(
+                      "title",
+                      groupedConflicts.title.length,
+                    )}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge color="orange">
-                    {groupedConflicts.title.length}
-                  </Badge>
+                  <Badge color="orange">{groupedConflicts.title.length}</Badge>
                   {expandedGroups.has("title") ? (
                     <ChevronUp className="h-4 w-4" />
                   ) : (
@@ -312,19 +316,19 @@ export function ConflictResolutionModal({
                       conflictIndex={String(conflict.incoming.id || idx)}
                       resolution={
                         resolutions.get(
-                          `title-${conflict.incoming.id || idx}`
+                          `title-${conflict.incoming.id || idx}`,
                         ) || conflict.default_resolution
                       }
                       onResolutionChange={(resolution) =>
                         handleResolutionChange(
                           "title",
                           String(conflict.incoming.id || idx),
-                          resolution
+                          resolution,
                         )
                       }
                     />
                   ))}
-                  <div className="flex gap-2 mt-3 pt-3 border-t">
+                  <div className="mt-3 flex gap-2 border-t pt-3">
                     <span className="text-sm text-gray-600">Apply to all:</span>
                     {["skip", "overwrite", "merge"].map((res) => (
                       <Button
@@ -349,12 +353,12 @@ export function ConflictResolutionModal({
           {newEntityCount > 0 && (
             <div
               data-testid="interchange-conflict-group-create"
-              className="border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950 rounded-lg p-4"
+              className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-950"
             >
               <h4 className="font-semibold text-green-900 dark:text-green-100">
                 New Entities
               </h4>
-              <p className="text-sm text-green-700 dark:text-green-300 mt-2">
+              <p className="mt-2 text-sm text-green-700 dark:text-green-300">
                 {newEntityCount} new entit{newEntityCount !== 1 ? "ies" : "y"}{" "}
                 will be created
               </p>
@@ -403,10 +407,10 @@ function ConflictRow({
   return (
     <div
       data-testid={`interchange-conflict-row-${conflictIndex}`}
-      className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded"
+      className="flex items-center gap-3 rounded bg-gray-50 p-3 dark:bg-gray-900"
     >
       <div className="flex-1">
-        <p className="font-medium text-sm">{title}</p>
+        <p className="text-sm font-medium">{title}</p>
         {existingId && (
           <p className="text-xs text-gray-600 dark:text-gray-400">
             Exists as: {existingId}

@@ -31,7 +31,11 @@ describe("useInterchangeRuns", () => {
 
   const createWrapper = () => {
     return ({ children }: { children: React.ReactNode }) =>
-      React.createElement(QueryClientProvider, { client: queryClient }, children);
+      React.createElement(
+        QueryClientProvider,
+        { client: queryClient },
+        children,
+      );
   };
 
   it("should fetch paginated list of runs", async () => {
@@ -126,7 +130,11 @@ describe("useInterchangeRun", () => {
 
   const createWrapper = () => {
     return ({ children }: { children: React.ReactNode }) =>
-      React.createElement(QueryClientProvider, { client: queryClient }, children);
+      React.createElement(
+        QueryClientProvider,
+        { client: queryClient },
+        children,
+      );
   };
 
   it("should fetch a specific run by ID", async () => {

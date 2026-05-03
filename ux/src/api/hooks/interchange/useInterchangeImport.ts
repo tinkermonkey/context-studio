@@ -5,7 +5,11 @@
  * Handles cache invalidation for entity caches on commit
  */
 
-import { useMutation, useQueryClient, UseMutationOptions } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  UseMutationOptions,
+} from "@tanstack/react-query";
 import {
   interchangeService,
   ImportPlanResponse,
@@ -17,7 +21,9 @@ import { QUERY_KEYS } from "../../config";
 /**
  * Utility function to invalidate all entity caches
  */
-const invalidateEntityCaches = (queryClient: ReturnType<typeof useQueryClient>) => {
+const invalidateEntityCaches = (
+  queryClient: ReturnType<typeof useQueryClient>,
+) => {
   const entityKeys = [
     QUERY_KEYS.TAXONOMIES,
     QUERY_KEYS.CONCEPT_SCHEMES,
@@ -43,7 +49,12 @@ export const useInterchangeImport = (
   options?: UseMutationOptions<
     ImportPlanResponse | ImportRunCommitResponse,
     Error,
-    { format: string; file: File; dry_run: boolean; resolutions?: ResolutionRecord[] }
+    {
+      format: string;
+      file: File;
+      dry_run: boolean;
+      resolutions?: ResolutionRecord[];
+    }
   >,
 ) => {
   const queryClient = useQueryClient();
@@ -52,7 +63,11 @@ export const useInterchangeImport = (
   const { onSuccess: userProvidedOnSuccess, ...otherOptions } = options || {};
 
   // Compose the custom onSuccess with the user-provided one
-  const customOnSuccess = (response: ImportPlanResponse | ImportRunCommitResponse, variables: any, context: any) => {
+  const customOnSuccess = (
+    response: ImportPlanResponse | ImportRunCommitResponse,
+    variables: any,
+    context: any,
+  ) => {
     // Only invalidate entity caches if this is a commit (dry_run=false)
     if (!variables.dry_run) {
       invalidateEntityCaches(queryClient);

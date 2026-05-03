@@ -32,7 +32,11 @@ describe("useInterchangeImport", () => {
 
   const createWrapper = () => {
     return ({ children }: { children: React.ReactNode }) =>
-      React.createElement(QueryClientProvider, { client: queryClient }, children);
+      React.createElement(
+        QueryClientProvider,
+        { client: queryClient },
+        children,
+      );
   };
 
   it("should execute import mutation", async () => {

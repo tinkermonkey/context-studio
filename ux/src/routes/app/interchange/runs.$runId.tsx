@@ -55,7 +55,7 @@ function ImportRunDetailComponent() {
 
   if (!run) {
     return (
-      <div className="p-4 bg-red-50 dark:bg-red-950 text-red-900 dark:text-red-100 rounded">
+      <div className="rounded bg-red-50 p-4 text-red-900 dark:bg-red-950 dark:text-red-100">
         Import run not found
       </div>
     );
@@ -63,10 +63,10 @@ function ImportRunDetailComponent() {
 
   return (
     <>
-      <div className="flex items-center gap-2 mb-6">
+      <div className="mb-6 flex items-center gap-2">
         <Link
           to="/app/interchange"
-          className="text-blue-500 hover:text-blue-700 flex items-center gap-1"
+          className="flex items-center gap-1 text-blue-500 hover:text-blue-700"
         >
           <ChevronLeft className="h-4 w-4" />
           Back
@@ -77,7 +77,7 @@ function ImportRunDetailComponent() {
 
       {/* Metadata section */}
       <Card data-testid="interchange-run-detail-metadata" className="mt-6">
-        <h3 className="text-lg font-semibold mb-4">Run Information</h3>
+        <h3 className="mb-4 text-lg font-semibold">Run Information</h3>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-gray-600 dark:text-gray-400">ID</p>
@@ -117,22 +117,19 @@ function ImportRunDetailComponent() {
       </Card>
 
       {/* Affected entities section */}
-      <Card
-        data-testid="interchange-run-detail-entities"
-        className="mt-6"
-      >
-        <h3 className="text-lg font-semibold mb-4">Affected Entities</h3>
+      <Card data-testid="interchange-run-detail-entities" className="mt-6">
+        <h3 className="mb-4 text-lg font-semibold">Affected Entities</h3>
         <div data-testid="interchange-run-affected-entities">
           {run.affected_entity_ids.length === 0 ? (
             <p className="text-gray-600 dark:text-gray-400">
               No entities were affected by this import
             </p>
           ) : (
-            <div className="space-y-2 max-h-64 overflow-y-auto">
+            <div className="max-h-64 space-y-2 overflow-y-auto">
               {run.affected_entity_ids.map((entityId: string) => (
                 <div
                   key={entityId}
-                  className="p-2 bg-gray-50 dark:bg-gray-900 rounded font-mono text-sm"
+                  className="rounded bg-gray-50 p-2 font-mono text-sm dark:bg-gray-900"
                 >
                   {entityId}
                 </div>
@@ -144,7 +141,7 @@ function ImportRunDetailComponent() {
 
       {/* Change events section */}
       <Card data-testid="interchange-run-detail-events" className="mt-6">
-        <h3 className="text-lg font-semibold mb-4">Change Events</h3>
+        <h3 className="mb-4 text-lg font-semibold">Change Events</h3>
 
         {eventsLoading ? (
           <Spinner />
@@ -158,7 +155,7 @@ function ImportRunDetailComponent() {
               data-testid="interchange-run-change-events"
               className="overflow-x-auto"
             >
-              <table className="w-full text-sm text-left text-gray-700 dark:text-gray-300">
+              <table className="w-full text-left text-sm text-gray-700 dark:text-gray-300">
                 <thead className="bg-gray-100 dark:bg-gray-800">
                   <tr>
                     <th className="px-6 py-3 font-semibold">Timestamp</th>
@@ -169,7 +166,10 @@ function ImportRunDetailComponent() {
                 </thead>
                 <tbody className="divide-y border-t border-gray-200 dark:border-gray-700">
                   {changeEvents.map((event: ChangeEvent) => (
-                    <tr key={event.id} className="hover:bg-gray-50 dark:hover:bg-gray-900">
+                    <tr
+                      key={event.id}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-900"
+                    >
                       <td className="px-6 py-4">
                         {new Date(event.timestamp).toLocaleString()}
                       </td>
@@ -188,7 +188,7 @@ function ImportRunDetailComponent() {
 
             {/* Pagination */}
             {(eventOffset > 0 || hasMoreEvents) && (
-              <div className="flex items-center justify-between mt-4 pt-4 border-t">
+              <div className="mt-4 flex items-center justify-between border-t pt-4">
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   Page {currentPage}
                 </div>

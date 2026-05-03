@@ -30,7 +30,11 @@ describe("useInterchangeExport", () => {
 
   const createWrapper = () => {
     return ({ children }: { children: React.ReactNode }) =>
-      React.createElement(QueryClientProvider, { client: queryClient }, children);
+      React.createElement(
+        QueryClientProvider,
+        { client: queryClient },
+        children,
+      );
   };
 
   it("should export ontology data and return blob", async () => {

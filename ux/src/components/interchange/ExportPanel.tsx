@@ -27,7 +27,9 @@ export function ExportPanel() {
   const { data: taxonomiesResponse } = useTaxonomies();
   const { data: schemesResponse } = useConceptSchemes();
 
-  const taxonomies = Array.isArray(taxonomiesResponse) ? taxonomiesResponse : [];
+  const taxonomies = Array.isArray(taxonomiesResponse)
+    ? taxonomiesResponse
+    : [];
   const schemes = Array.isArray(schemesResponse) ? schemesResponse : [];
 
   const exportMutation = useInterchangeExport({
@@ -44,7 +46,9 @@ export function ExportPanel() {
       success("Export downloaded successfully");
     },
     onError: (err) => {
-      error(`Export failed: ${err instanceof Error ? err.message : "Unknown error"}`);
+      error(
+        `Export failed: ${err instanceof Error ? err.message : "Unknown error"}`,
+      );
     },
   });
 
@@ -89,7 +93,7 @@ export function ExportPanel() {
   return (
     <div data-testid="interchange-export-panel" className="space-y-6">
       <Card>
-        <h3 className="text-lg font-semibold mb-4">Export Format</h3>
+        <h3 className="mb-4 text-lg font-semibold">Export Format</h3>
         <div>
           <Label htmlFor="format-select" className="mb-2 block">
             Select Format
@@ -100,7 +104,9 @@ export function ExportPanel() {
             value={format}
             onChange={(e) => setFormat(e.target.value as ExportFormat)}
           >
-            <option value="skos">SKOS (Simple Knowledge Organization System)</option>
+            <option value="skos">
+              SKOS (Simple Knowledge Organization System)
+            </option>
             <option value="owl">OWL (Web Ontology Language)</option>
             <option value="graphml">GraphML (Graph Markup Language)</option>
           </Select>
@@ -108,7 +114,7 @@ export function ExportPanel() {
       </Card>
 
       <Card>
-        <h3 className="text-lg font-semibold mb-4">Export Scope</h3>
+        <h3 className="mb-4 text-lg font-semibold">Export Scope</h3>
         <div>
           <Label htmlFor="scope-picker" className="mb-2 block">
             What to Export

@@ -15,7 +15,11 @@ export function RecentRunsTable() {
   const [offset, setOffset] = React.useState(0);
   const limit = 10;
 
-  const { data: runs = [], isLoading, error } = useInterchangeRuns({
+  const {
+    data: runs = [],
+    isLoading,
+    error,
+  } = useInterchangeRuns({
     offset,
     limit,
   });
@@ -40,8 +44,9 @@ export function RecentRunsTable() {
 
   if (error) {
     return (
-      <div className="p-4 bg-red-50 dark:bg-red-950 text-red-900 dark:text-red-100 rounded">
-        Error loading runs: {error instanceof Error ? error.message : "Unknown error"}
+      <div className="rounded bg-red-50 p-4 text-red-900 dark:bg-red-950 dark:text-red-100">
+        Error loading runs:{" "}
+        {error instanceof Error ? error.message : "Unknown error"}
       </div>
     );
   }
@@ -56,7 +61,7 @@ export function RecentRunsTable() {
 
   if (runs.length === 0) {
     return (
-      <div className="p-4 bg-gray-50 dark:bg-gray-900 text-gray-600 dark:text-gray-400 rounded">
+      <div className="rounded bg-gray-50 p-4 text-gray-600 dark:bg-gray-900 dark:text-gray-400">
         No import runs yet. Start by importing a file.
       </div>
     );
@@ -65,7 +70,7 @@ export function RecentRunsTable() {
   return (
     <div data-testid="interchange-recent-runs-table" className="space-y-4">
       <div className="overflow-x-auto">
-        <table className="w-full text-sm text-left text-gray-700 dark:text-gray-300">
+        <table className="w-full text-left text-sm text-gray-700 dark:text-gray-300">
           <thead className="bg-gray-100 dark:bg-gray-800">
             <tr>
               <th className="px-6 py-3 font-semibold">Format</th>
@@ -83,15 +88,22 @@ export function RecentRunsTable() {
                 data-testid={`interchange-runs-table-row-${run.id}`}
                 className="hover:bg-gray-50 dark:hover:bg-gray-900"
               >
-                <td className="px-6 py-4 font-medium">{run.format.toUpperCase()}</td>
+                <td className="px-6 py-4 font-medium">
+                  {run.format.toUpperCase()}
+                </td>
                 <td className="px-6 py-4">
                   {run.source_uri
                     ? (() => {
                         try {
-                          return new URL(run.source_uri).pathname.split("/").pop() || run.source_uri;
+                          return (
+                            new URL(run.source_uri).pathname.split("/").pop() ||
+                            run.source_uri
+                          );
                         } catch {
                           // If source_uri is not a valid URL, extract filename using string methods
-                          return run.source_uri.split("/").pop() || run.source_uri;
+                          return (
+                            run.source_uri.split("/").pop() || run.source_uri
+                          );
                         }
                       })()
                     : "File"}
@@ -102,8 +114,12 @@ export function RecentRunsTable() {
                 <td className="px-6 py-4">{getStatusBadge(run.status)}</td>
                 <td className="px-6 py-4">{run.affected_entity_ids.length}</td>
                 <td className="px-6 py-4">
-                  <Link to="/app/interchange/runs/$runId" params={{ runId: run.id }} className="inline-block">
-                    <Eye className="h-4 w-4 text-blue-500 hover:text-blue-700 cursor-pointer" />
+                  <Link
+                    to="/app/interchange/runs/$runId"
+                    params={{ runId: run.id }}
+                    className="inline-block"
+                  >
+                    <Eye className="h-4 w-4 cursor-pointer text-blue-500 hover:text-blue-700" />
                   </Link>
                 </td>
               </tr>
@@ -114,7 +130,7 @@ export function RecentRunsTable() {
 
       {/* Pagination */}
       {(offset > 0 || hasMorePages) && (
-        <div className="flex items-center justify-between mt-4">
+        <div className="mt-4 flex items-center justify-between">
           <div className="text-sm text-gray-600 dark:text-gray-400">
             Page {currentPage}
           </div>

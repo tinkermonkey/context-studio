@@ -26,7 +26,7 @@ function ImportComponent() {
   const [selectedFormat, setSelectedFormat] = React.useState<string>("auto");
   const [showConflictModal, setShowConflictModal] = React.useState(false);
   const [importPlan, setImportPlan] = React.useState<ImportPlanResponse | null>(
-    null
+    null,
   );
 
   // Dry-run mutation (preview)
@@ -36,12 +36,14 @@ function ImportComponent() {
         // This is an ImportPlanResponse from dry_run
         setImportPlan(response as ImportPlanResponse);
         setShowConflictModal(true);
-        success(`Found ${(response as ImportPlanResponse).conflicts.length} conflicts`);
+        success(
+          `Found ${(response as ImportPlanResponse).conflicts.length} conflicts`,
+        );
       }
     },
     onError: (err) => {
       error(
-        `Import preview failed: ${err instanceof Error ? err.message : "Unknown error"}`
+        `Import preview failed: ${err instanceof Error ? err.message : "Unknown error"}`,
       );
     },
   });
@@ -59,7 +61,7 @@ function ImportComponent() {
     },
     onError: (err) => {
       error(
-        `Import commit failed: ${err instanceof Error ? err.message : "Unknown error"}`
+        `Import commit failed: ${err instanceof Error ? err.message : "Unknown error"}`,
       );
     },
   });

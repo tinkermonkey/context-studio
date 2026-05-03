@@ -30,7 +30,11 @@ describe("useInterchangeRunChangeEvents", () => {
 
   const createWrapper = () => {
     return ({ children }: { children: React.ReactNode }) =>
-      React.createElement(QueryClientProvider, { client: queryClient }, children);
+      React.createElement(
+        QueryClientProvider,
+        { client: queryClient },
+        children,
+      );
   };
 
   it("should fetch change events for a run", async () => {
@@ -46,9 +50,7 @@ describe("useInterchangeRunChangeEvents", () => {
       },
     ];
 
-    mockInterchangeService.getRunChangeEvents.mockResolvedValueOnce(
-      mockEvents,
-    );
+    mockInterchangeService.getRunChangeEvents.mockResolvedValueOnce(mockEvents);
 
     const { result } = renderHook(
       () =>
@@ -80,9 +82,7 @@ describe("useInterchangeRunChangeEvents", () => {
       },
     ];
 
-    mockInterchangeService.getRunChangeEvents.mockResolvedValueOnce(
-      mockEvents,
-    );
+    mockInterchangeService.getRunChangeEvents.mockResolvedValueOnce(mockEvents);
 
     const { result } = renderHook(
       () =>
@@ -114,9 +114,7 @@ describe("useInterchangeRunChangeEvents", () => {
       },
     ];
 
-    mockInterchangeService.getRunChangeEvents.mockResolvedValueOnce(
-      mockEvents,
-    );
+    mockInterchangeService.getRunChangeEvents.mockResolvedValueOnce(mockEvents);
 
     const { result } = renderHook(
       () =>
@@ -136,10 +134,9 @@ describe("useInterchangeRunChangeEvents", () => {
   });
 
   it("should not fetch when run ID is empty", () => {
-    const { result } = renderHook(
-      () => useInterchangeRunChangeEvents(""),
-      { wrapper: createWrapper() },
-    );
+    const { result } = renderHook(() => useInterchangeRunChangeEvents(""), {
+      wrapper: createWrapper(),
+    });
 
     expect(result.current.isLoading).toBe(false);
   });

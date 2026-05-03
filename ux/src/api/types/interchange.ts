@@ -30,7 +30,12 @@ export interface ImportConflict {
 /**
  * Resolution strategy for import conflicts.
  */
-export type ResolutionKind = "skip" | "overwrite" | "merge" | "rename" | "abort";
+export type ResolutionKind =
+  | "skip"
+  | "overwrite"
+  | "merge"
+  | "rename"
+  | "abort";
 
 /**
  * Resolution applied to a conflict during import.
@@ -56,7 +61,11 @@ export interface ImportPlanResponse {
 /**
  * Status of an import run.
  */
-export type ImportRunStatus = "pending" | "committed" | "failed" | "rolled_back";
+export type ImportRunStatus =
+  | "pending"
+  | "committed"
+  | "failed"
+  | "rolled_back";
 
 /**
  * Result of committing an import run.

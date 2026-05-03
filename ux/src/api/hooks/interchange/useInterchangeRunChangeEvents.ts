@@ -4,10 +4,7 @@
  * Hook for fetching change events associated with an import run
  */
 
-import {
-  useQuery,
-  UseQueryOptions,
-} from "@tanstack/react-query";
+import { useQuery, UseQueryOptions } from "@tanstack/react-query";
 import {
   interchangeService,
   ChangeEvent,
@@ -25,11 +22,10 @@ export const useInterchangeRunChangeEvents = (
   options?: UseQueryOptions<ChangeEvent[], Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(
-      QUERY_KEYS.INTERCHANGE_RUNS,
-      id,
-      { change_events: true, ...params },
-    ),
+    queryKey: createQueryKey(QUERY_KEYS.INTERCHANGE_RUNS, id, {
+      change_events: true,
+      ...params,
+    }),
     queryFn: () => interchangeService.getRunChangeEvents(id, params),
     enabled: !!id,
     ...options,
