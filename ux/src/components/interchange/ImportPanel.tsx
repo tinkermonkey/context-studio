@@ -27,12 +27,17 @@ export function ImportPanel({ onPreviewRequested }: ImportPanelProps) {
     switch (ext) {
       case "rdf":
       case "xml":
+      case "owl":
         return "owl";
       case "graphml":
         return "graphml";
       case "ttl":
       case "n3":
       case "skos":
+      case "json":
+      case "jsonld":
+      case "nt":
+      case "nq":
         return "skos";
       default:
         return "auto";
@@ -114,14 +119,14 @@ export function ImportPanel({ onPreviewRequested }: ImportPanelProps) {
             </button>
           </p>
           <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            Supported formats: SKOS (TTL, N3), OWL (RDF, XML), GraphML
+            Supported formats: SKOS (TTL, N3, JSON, JSON-LD, NT, NQ), OWL (RDF, XML, OWL), GraphML
           </p>
           <input
             ref={fileInputRef}
             type="file"
             hidden
             onChange={handleFileChange}
-            accept=".rdf,.xml,.ttl,.n3,.graphml"
+            accept=".rdf,.xml,.owl,.ttl,.n3,.skos,.json,.jsonld,.nt,.nq,.graphml"
           />
         </div>
 

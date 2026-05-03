@@ -19,12 +19,15 @@ from __future__ import annotations
 import hashlib
 import uuid
 from typing import Optional, Dict, Any
+from datetime import datetime, timezone
 
 from rdflib import Graph, Namespace, URIRef, Literal, RDF, OWL
 from rdflib.term import Node
 
 from utils.logger import get_logger
 from domain.interchange.ports import OntologySerializer, OntologyDeserializer
+from domain.interchange.entities import ImportRun, ImportRunStatus
+from domain.interchange.services import ImportRunService
 from domain.interchange.value_objects import (
     SerializationScope,
     SerializationScopeType,
@@ -32,6 +35,7 @@ from domain.interchange.value_objects import (
     ImportConflict,
     MatchKind,
     ResolutionKind,
+    SerializationFormat,
 )
 from domain.ontology.entities import (
     Taxonomy,
@@ -316,13 +320,14 @@ class SKOSDeserializer(OntologyDeserializer):
         self._entity_map: Dict[str, str] = {}  # URI -> local entity ID
         self._classes_cache: Optional[list[Class]] = None
 
-    def deserialize(self, source: bytes | str, dry_run: bool = True) -> ImportPlan:
+    def deserialize(self, source: bytes | str, dry_run: bool = True, resolutions: list | None = None) -> ImportPlan:
         """
         Deserialize SKOS RDF data and produce an import plan.
 
         Args:
             source: Serialized SKOS RDF as bytes or string
             dry_run: If True, returns plan without persisting
+            resolutions: Optional list of user-chosen resolutions to apply when committing
 
         Returns:
             ImportPlan describing what the import would/did do
@@ -372,10 +377,48 @@ class SKOSDeserializer(OntologyDeserializer):
 
             # Create import plan
             source_hash = hashlib.sha256(source_bytes).hexdigest()
+
+            # If committing (not dry-run), create and persist ImportRun with resolutions
+            import_run_id = None
+            if not dry_run:
+                # Create ImportRun with resolutions
+                import_run_service = ImportRunService()
+                scope = SerializationScope(
+                    scope_type=SerializationScopeType.WHOLE_GRAPH
+                )
+                import_run = import_run_service.start_run(
+                    format=SerializationFormat.SKOS,
+                    source_hash=source_hash,
+                    scope=scope,
+                    source_uri=None,
+                    created_by=None,
+                )
+
+                # Record user-chosen resolutions if provided
+                if resolutions:
+                    for resolution_data in resolutions:
+                        try:
+                            match_kind = MatchKind(resolution_data.get("match_kind"))
+                            resolution_kind = ResolutionKind(resolution_data.get("resolution_chosen"))
+                            import_run.add_resolution(
+                                match_kind=match_kind,
+                                entity_id=resolution_data.get("entity_id"),
+                                resolution_chosen=resolution_kind,
+                            )
+                        except (KeyError, ValueError) as e:
+                            logger.warning(f"Invalid resolution data: {resolution_data}, error: {e}")
+
+                # Persist the ImportRun
+                if self.interchange_repo:
+                    import_run = self.interchange_repo.create(import_run)
+                    import_run_id = import_run.id
+                else:
+                    logger.warning("ImportRun created but not persisted: no interchange_repo available")
+
             plan = ImportPlan(
                 conflicts=tuple(conflicts),
                 new_entity_count=new_entity_count,
-                import_run_id=None,
+                import_run_id=import_run_id,
                 warnings=tuple(self.warnings),
                 source_hash=source_hash,
                 scope=None,

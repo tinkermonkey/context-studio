@@ -138,7 +138,7 @@ class ImportConflict:
         if match_kind == MatchKind.EXTERNAL_REFERENCE:
             return ResolutionKind.MERGE
         else:
-            return ResolutionKind.SKIP
+            return ResolutionKind.ABORT
 
 
 @dataclass(frozen=True)

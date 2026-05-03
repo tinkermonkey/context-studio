@@ -16,6 +16,7 @@ Note: Export returns binary data (Blob); import accepts multipart form data.
 """
 
 from typing import Optional
+import json
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status, UploadFile, File, Form
 from fastapi.responses import StreamingResponse
@@ -240,18 +241,20 @@ async def import_ontology(
     format: str = Form(..., description="Import format"),
     file: UploadFile = File(..., description="File to import"),
     dry_run: str = Form("true", description="If 'true', returns plan without committing"),
+    resolutions: Optional[str] = Form(None, description="JSON-encoded conflict resolutions to apply on commit"),
     ontology_repo: OntologyRepository = Depends(get_ontology_repo),
     interchange_repo: ImportRunRepository = Depends(get_interchange_repo),
 ):
     """
     Import ontology data from a file.
 
-    Supports dry-run mode to preview conflicts, or direct commit.
+    Supports dry-run mode to preview conflicts, or direct commit with user-chosen resolutions.
 
     Args:
         format: Import format (skos, owl, graphml)
         file: File to import
         dry_run: "true" for dry-run (returns plan), "false" to commit
+        resolutions: Optional JSON-encoded list of ResolutionRecord to apply when committing
         ontology_repo: Injected OntologyRepository
         interchange_repo: Injected ImportRunRepository
 
@@ -264,6 +267,17 @@ async def import_ontology(
     try:
         # Parse dry_run parameter
         is_dry_run = dry_run.lower() == "true"
+
+        # Parse resolutions from JSON if provided
+        parsed_resolutions = None
+        if resolutions:
+            try:
+                parsed_resolutions = json.loads(resolutions)
+            except json.JSONDecodeError as e:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Invalid resolutions JSON: {str(e)}",
+                )
 
         # Read file content
         content = await file.read()
@@ -288,7 +302,7 @@ async def import_ontology(
 
         # Deserialize in executor to avoid blocking
         import_plan = await run_sync_in_executor(
-            lambda: deserializer.deserialize(content, dry_run=is_dry_run)
+            lambda: deserializer.deserialize(content, dry_run=is_dry_run, resolutions=parsed_resolutions)
         )
 
         # Return appropriate response
