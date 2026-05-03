@@ -342,24 +342,20 @@ export async function seedTestData(
 }
 
 /**
- * Delete all factory-created test data by removing entities with
- * the run-specific timestamp prefix/suffix.
+ * Delete all entities in the E2E database. Safe because the database is
+ * isolated (`datafiles/e2e-test/`) and wiped fresh at the start of every
+ * test session by global-setup.ts.
  *
- * CRITICAL: Deletion order respects foreign-key constraints:
- * 1. Relationships (must be deleted first — they reference properties and classes)
- * 2. Individuals (must be deleted before classes — they reference classes)
- * 3. Property definitions (must be deleted before classes, after relationships cleared)
- * 4. Ontology classes (must be deleted before schemes)
- * 5. Concept schemes (must be deleted before taxonomies)
- * 6. Taxonomies (deleted last)
- *
- * Isolation is achieved through unique names/prefixes for all test-created entities.
- * Test data is identified by name/title prefixes. Relationships are identified
- * by their source and target classes being test-created.
+ * Deletion order respects foreign-key constraints (leaves before roots):
+ * 1. Relationships
+ * 2. Individuals
+ * 3. Property definitions
+ * 4. Ontology classes
+ * 5. Concept schemes
+ * 6. Taxonomies
  *
  * @param page - Playwright page object
- * @param maxAge - Maximum age threshold in milliseconds; only entities created within this window (more recently than maxAge) are deleted (default: 10 minutes)
- * @throws {Error} If any cleanup step fails after all cleanup attempts
+ * @throws {Error} If any deletion step fails
  */
 export async function clearTestData(page: Page): Promise<void> {
   const cleanupErrors: Array<{ step: string; error: unknown }> = [];

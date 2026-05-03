@@ -38,7 +38,9 @@ test.describe("Navigation", () => {
     await page.waitForLoadState("networkidle");
 
     for (const route of PRIMARY_ROUTES) {
-      // The Knowledge Graph dropdown must be opened to expose each nav link.
+      // Dismiss any open dropdown before opening this one — Flowbite toggles on
+      // repeated clicks, so pressing Escape first guarantees a clean open.
+      await page.keyboard.press("Escape");
       await page.getByText("Knowledge Graph").first().click();
       const link = page.getByRole("link", { name: route.label, exact: true });
       // Hard assertion — a missing link is a failure, not a no-op.

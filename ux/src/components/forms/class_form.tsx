@@ -34,6 +34,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
   const getDefaultValues = () => ({
     title: ontologyClass?.title ?? "",
     description: ontologyClass?.description ?? "",
+    concept_scheme_id: "",
     parent_class_id: ontologyClass?.parent_class_id ?? parentClassId ?? "",
   });
 
@@ -60,9 +61,9 @@ const ClassForm: React.FC<ClassFormProps> = ({
             data: classData,
           });
         } else {
-          // Global create: user selected the target scheme via the parent_class_id field.
+          // Global create: user selected the target scheme via the concept_scheme_id field.
           result = await createClassMutation.mutateAsync({
-            schemeId: value.parent_class_id || "",
+            schemeId: value.concept_scheme_id || "",
             data: {
               title: value.title,
               description: value.description || null,
@@ -186,7 +187,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
 
         {!isChildMode && !isEdit && (
           <form.Field
-            name="parent_class_id"
+            name="concept_scheme_id"
             validators={{
               onChange: ({ value }) =>
                 !value ? "Concept scheme is required" : undefined,
@@ -196,10 +197,10 @@ const ClassForm: React.FC<ClassFormProps> = ({
               return (
                 <div>
                   <Label
-                    htmlFor="class-parent"
+                    htmlFor="class-concept-scheme"
                     className="mb-1 block font-medium"
                   >
-                    Parent (Concept Scheme or Class)
+                    Concept Scheme
                   </Label>
                   <ConceptSchemeSelector
                     value={field.state.value}
