@@ -119,9 +119,6 @@ class SKOSSerializer(OntologySerializer):
             return result  # type: ignore[unreachable,return-value]
         except ValueError:
             raise
-        except (TypeError, AttributeError, KeyError) as e:
-            logger.error(f"SKOS serialization error: {type(e).__name__}: {str(e)}")
-            raise RuntimeError(f"SKOS serialization failed: {str(e)}") from e
         except Exception as e:
             logger.error(f"SKOS serialization error: {type(e).__name__}: {str(e)}")
             raise RuntimeError(f"SKOS serialization failed: {str(e)}") from e
@@ -387,9 +384,6 @@ class SKOSDeserializer(OntologyDeserializer):
             return plan
         except ValueError:
             raise
-        except (TypeError, AttributeError, KeyError) as e:
-            logger.error(f"SKOS deserialization error: {type(e).__name__}: {str(e)}")
-            raise RuntimeError(f"SKOS deserialization failed: {str(e)}") from e
         except Exception as e:
             logger.error(f"SKOS deserialization error: {type(e).__name__}: {str(e)}")
             raise RuntimeError(f"SKOS deserialization failed: {str(e)}") from e

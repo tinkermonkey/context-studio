@@ -103,9 +103,6 @@ class GraphMLSerializer(OntologySerializer):
 
         except ValueError:
             raise
-        except (TypeError, AttributeError, KeyError) as e:
-            logger.error(f"GraphML serialization error: {type(e).__name__}: {str(e)}")
-            raise RuntimeError(f"GraphML serialization failed: {str(e)}") from e
         except Exception as e:
             logger.error(f"GraphML serialization error: {type(e).__name__}: {str(e)}")
             raise RuntimeError(f"GraphML serialization failed: {str(e)}") from e
@@ -569,9 +566,6 @@ class GraphMLDeserializer(OntologyDeserializer):
             return plan
         except ValueError:
             raise
-        except (TypeError, AttributeError, KeyError) as e:
-            logger.error(f"GraphML deserialization error: {type(e).__name__}: {str(e)}")
-            raise RuntimeError(f"GraphML deserialization failed: {str(e)}") from e
         except Exception as e:
             logger.error(f"GraphML deserialization error: {type(e).__name__}: {str(e)}")
             raise RuntimeError(f"GraphML deserialization failed: {str(e)}") from e

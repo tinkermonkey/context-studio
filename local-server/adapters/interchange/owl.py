@@ -131,9 +131,6 @@ class OWLSerializer(OntologySerializer):
             return result
         except ValueError:
             raise
-        except (TypeError, AttributeError, KeyError) as e:
-            logger.error(f"OWL serialization error: {type(e).__name__}: {str(e)}")
-            raise RuntimeError(f"OWL serialization failed: {str(e)}") from e
         except Exception as e:
             logger.error(f"OWL serialization error: {type(e).__name__}: {str(e)}")
             raise RuntimeError(f"OWL serialization failed: {str(e)}") from e
@@ -200,12 +197,14 @@ class OWLSerializer(OntologySerializer):
                 self._add_class_to_graph(class_entity)
                 continue
 
-            # Skip individuals if in split (TBox-only) mode
-            if not self.split_mode:
-                individual = self.ontology_repo.get_individual(entity_id)
-                if individual:
+            # Always check for Individual to provide accurate warning messages
+            individual = self.ontology_repo.get_individual(entity_id)
+            if individual:
+                if self.split_mode:
+                    logger.warning(f"Entity {entity_id} is an Individual, skipped in TBox-only (split) mode")
+                else:
                     self._add_individual_to_graph(individual)
-                    continue
+                continue
 
             prop = self.ontology_repo.get_property_definition(entity_id)
             if prop:
@@ -426,9 +425,6 @@ class OWLDeserializer(OntologyDeserializer):
             return plan
         except ValueError:
             raise
-        except (TypeError, AttributeError, KeyError) as e:
-            logger.error(f"OWL deserialization error: {type(e).__name__}: {str(e)}")
-            raise RuntimeError(f"OWL deserialization failed: {str(e)}") from e
         except Exception as e:
             logger.error(f"OWL deserialization error: {type(e).__name__}: {str(e)}")
             raise RuntimeError(f"OWL deserialization failed: {str(e)}") from e
