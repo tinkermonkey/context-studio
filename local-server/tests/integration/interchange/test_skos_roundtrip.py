@@ -231,7 +231,7 @@ class TestSKOSEmptyDatabaseRoundTrip:
         plan = deserializer.deserialize(exported, dry_run=True)
 
         # Verify plan
-        assert plan.conflicts == []
+        assert plan.conflicts == ()
         assert plan.new_entity_count > 0
         assert plan.source_hash is not None
 
@@ -255,7 +255,7 @@ class TestSKOSEmptyDatabaseRoundTrip:
 
         # Verify structural equality: same number of entities with same titles/descriptions
         original_classes = ontology_repo.list_classes()
-        plan.conflicts + [
+        list(plan.conflicts) + [
             {"incoming": {"title": e["title"], "type": e.get("type")}}
             for e in deserializer.incoming_entities.values()
         ]

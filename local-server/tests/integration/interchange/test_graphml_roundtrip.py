@@ -256,7 +256,7 @@ class TestGraphMLEmptyDatabaseRoundTrip:
         plan = deserializer.deserialize(exported, dry_run=True)
 
         # Verify plan
-        assert plan.conflicts == []
+        assert plan.conflicts == ()
         assert plan.new_entity_count > 0
         assert plan.source_hash is not None
 
@@ -279,7 +279,7 @@ class TestGraphMLEmptyDatabaseRoundTrip:
         plan = deserializer.deserialize(exported, dry_run=True)
 
         # Verify no conflicts and structural equality
-        assert plan.conflicts == []
+        assert plan.conflicts == ()
 
         # Verify same number of entities
         original_classes = ontology_repo.list_classes(limit=10000)
@@ -526,7 +526,7 @@ class TestGraphMLExternalReferences:
         plan = deserializer.deserialize(reexported, dry_run=True)
 
         # Verify no conflicts (entities imported successfully)
-        assert plan.conflicts == []
+        assert plan.conflicts == ()
 
         # Verify external_references survive through the round-trip
         # Check Dog's external references (DBpedia and Wikidata)
