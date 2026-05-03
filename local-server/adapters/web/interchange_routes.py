@@ -21,9 +21,9 @@ import json
 from fastapi import APIRouter, Depends, HTTPException, Query, status, UploadFile, File, Form
 from fastapi.responses import StreamingResponse
 
-from domain.interchange.services import ImportRunService
 from domain.interchange.value_objects import SerializationScope, SerializationScopeType
 from domain.interchange.entities import ImportRunStatus
+from domain.ontology.ports import OntologyRepository
 from utils.logger import get_logger
 from utils.async_executor import run_sync_in_executor
 
@@ -56,7 +56,7 @@ _logger = get_logger(__name__)
 # ==================== Helper Functions ====================
 
 
-def _get_serializer(format: str, ontology_repo):
+def _get_serializer(format: str, ontology_repo: OntologyRepository):
     """Get the appropriate serializer for the format."""
     format_lower = format.lower()
     if format_lower == "skos":
@@ -69,7 +69,11 @@ def _get_serializer(format: str, ontology_repo):
         raise ValueError(f"Unsupported format: {format}")
 
 
-def _get_deserializer(format: str, ontology_repo, interchange_repo):
+def _get_deserializer(
+    format: str,
+    ontology_repo: OntologyRepository,
+    interchange_repo: SQLiteInterchangeRepository,
+):
     """Get the appropriate deserializer for the format."""
     format_lower = format.lower()
     if format_lower == "skos":
@@ -176,7 +180,7 @@ def _change_event_to_response(event: dict) -> ChangeEventResponse:
 @router.post("/export", response_class=StreamingResponse)
 async def export_ontology(
     request: ExportRequest,
-    ontology_repo=Depends(get_ontology_repo),
+    ontology_repo: OntologyRepository = Depends(get_ontology_repo),
 ) -> StreamingResponse:
     """
     Export ontology data in the specified format.
@@ -232,7 +236,7 @@ async def import_ontology(
     file: UploadFile = File(..., description="File to import"),
     dry_run: str = Form("true", description="If 'true', returns plan without committing"),
     resolutions: Optional[str] = Form(None, description="JSON-encoded resolutions"),
-    ontology_repo=Depends(get_ontology_repo),
+    ontology_repo: OntologyRepository = Depends(get_ontology_repo),
     interchange_repo: SQLiteInterchangeRepository = Depends(get_interchange_repo),
 ):
     """
@@ -266,9 +270,6 @@ async def import_ontology(
             _get_serializer(format, ontology_repo)
         except ValueError as e:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-
-        # Create import service (stateless, no need for dependency injection)
-        import_service = ImportRunService()
 
         # Get deserializer
         deserializer = _get_deserializer(format, ontology_repo, interchange_repo)
