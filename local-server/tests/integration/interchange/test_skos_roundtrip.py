@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from rdflib import Graph, Namespace, URIRef, Literal, RDF
+from rdflib import Graph, Namespace, Literal, RDF
 
 from domain.ontology.entities import (
     Taxonomy,
@@ -239,7 +239,7 @@ class TestSKOSEmptyDatabaseRoundTrip:
 
         # Verify structural equality: same number of entities with same titles/descriptions
         original_classes = ontology_repo.list_classes()
-        imported_entities = plan.conflicts + [{"incoming": {"title": e["title"], "type": e.get("type")}}
+        plan.conflicts + [{"incoming": {"title": e["title"], "type": e.get("type")}}
                                               for e in deserializer.incoming_entities.values()]
 
         # Count classes in both
@@ -321,7 +321,7 @@ class TestSKOSIdempotentReimport:
         # After a hypothetical merge, entity count should remain unchanged
         # because we're merging existing entities, not creating new ones
         new_entity_count = plan.new_entity_count
-        conflicting_entity_count = len(plan.conflicts)
+        len(plan.conflicts)
 
         # new_entity_count should not create duplicates with merge resolution
         # (the imports are subset of what's already there)

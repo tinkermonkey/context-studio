@@ -13,17 +13,15 @@ Tests each mapping rule to ensure correct serialization and deserialization:
 
 import sys
 import os
-import uuid
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
-import pytest
-from rdflib import Graph, Namespace, URIRef, Literal, RDF
+from rdflib import Graph, Namespace, RDF
 
 from domain.ontology.entities import Taxonomy, ConceptScheme, Class
 from domain.ontology.value_objects import ExternalReference
 from domain.interchange.value_objects import SerializationScope, SerializationScopeType
-from adapters.interchange.skos import SKOSSerializer, SKOSDeserializer
+from adapters.interchange.skos import SKOSSerializer
 
 
 SKOS = Namespace("http://www.w3.org/2004/02/skos/core#")
