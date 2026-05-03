@@ -622,7 +622,7 @@ class OWLDeserializer(OntologyDeserializer):
         if parent_class_uri:
             parent_class_id = self._entity_map.get(str(parent_class_uri))
 
-        # Get external references (from owl:sameAs only)
+        # Extract external references from LOCAL:externalReferences JSON (primary) or owl:sameAs (legacy)
         external_references = self._extract_external_references_as_dicts(class_uri)
 
         # Get concept scheme from skos:inScheme
@@ -699,7 +699,7 @@ class OWLDeserializer(OntologyDeserializer):
             self.warnings.append(f"NamedIndividual {ind_uri} has no class memberships (rdf:type)")
             return
 
-        # Get external references (from owl:sameAs only)
+        # Extract external references from LOCAL:externalReferences JSON (primary) or owl:sameAs (legacy)
         external_references = self._extract_external_references_as_dicts(ind_uri)
 
         self.incoming_entities[entity_id] = {
@@ -802,7 +802,9 @@ class OWLDeserializer(OntologyDeserializer):
                         }
                     )
                 except (json.JSONDecodeError, TypeError):
-                    pass  # Skip malformed JSON, will try legacy format
+                    self.warnings.append(
+                        f"Entity {entity_uri} has malformed LOCAL:externalReferences JSON"
+                    )
 
             # If no JSON references found, fall back to legacy owl:sameAs format
             if not refs:
