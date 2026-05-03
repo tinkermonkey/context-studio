@@ -29,6 +29,7 @@ from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
 from adapters.persistence.sqlite.pipeline_repo import SQLitePipelineRepository
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
+from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.llm.provider_router import LLMProviderRouter
 from adapters.events.in_process import InProcessEventPublisher
@@ -49,6 +50,7 @@ from domain.extraction.services import ExtractionService
 from domain.extraction.ports import ReferenceSource
 from domain.pipeline.services import PipelineService
 from domain.versioning.services import VersioningService
+from domain.interchange.services import ImportRunService
 from domain.ontology.events import (
     GraphInvalidated,
     TaxonomyCreated,
@@ -89,6 +91,7 @@ from adapters.web.pipeline_routes import router as pipeline_router
 from adapters.web.reference_routes import router as reference_router
 from adapters.web.versioning_routes import router as versioning_router
 from adapters.web.admin_routes import router as admin_router
+from adapters.web.interchange_routes import router as interchange_router
 
 # Import admin adapters and services
 from adapters.config.json_store import JSONFileConfigStore
@@ -151,7 +154,8 @@ async def lifespan(app: FastAPI):
         local_session_factory = db_manager.get_local_session_factory()
         ontology_repo = SQLiteOntologyRepository(local_session_factory)
         extraction_repo = SQLiteExtractionRepository(local_session_factory)
-        logger.info("OntologyRepository and ExtractionRepository created")
+        interchange_repo = SQLiteInterchangeRepository(local_session_factory)
+        logger.info("OntologyRepository, ExtractionRepository, and InterchangeRepository created")
 
         operations_session_factory = db_manager.get_operations_session_factory()
         pipeline_repo = SQLitePipelineRepository(operations_session_factory)
@@ -302,6 +306,10 @@ async def lifespan(app: FastAPI):
         logger.info(
             "VersioningService created and wired with repository, sync adapter, and event publisher"
         )
+
+        # Interchange service for import run tracking
+        import_run_service = ImportRunService()
+        logger.info("ImportRunService created")
 
         # --- System Administration Service ---
 
@@ -481,6 +489,8 @@ async def lifespan(app: FastAPI):
         app.state.admin_service = admin_service
         app.state.db_manager = db_manager
         app.state.reference_sources = reference_sources
+        app.state.interchange_repo = interchange_repo
+        app.state.import_run_service = import_run_service
 
         # Store adapters needed for health checks
         app.state.nlp_processor = nlp_processor
@@ -530,6 +540,7 @@ app.include_router(pipeline_router)
 app.include_router(reference_router)
 app.include_router(versioning_router)
 app.include_router(admin_router)
+app.include_router(interchange_router)
 
 
 # ==================== Exception Handlers ====================

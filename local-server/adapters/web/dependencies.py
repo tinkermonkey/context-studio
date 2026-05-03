@@ -237,3 +237,24 @@ async def get_admin_service(request: Request) -> AdminService:
     if service is None:
         raise RuntimeError("AdminService not initialized in app.state")
     return service
+
+
+async def get_interchange_repo(request: Request):
+    """
+    Extract the SQLiteInterchangeRepository from app state.
+
+    Args:
+        request: FastAPI request object
+
+    Returns:
+        The SQLiteInterchangeRepository instance from app.state
+
+    Raises:
+        RuntimeError: If repository is not initialized in app.state
+    """
+    from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
+
+    repo = getattr(request.app.state, "interchange_repo", None)
+    if repo is None:
+        raise RuntimeError("InterchangeRepository not initialized in app.state")
+    return repo

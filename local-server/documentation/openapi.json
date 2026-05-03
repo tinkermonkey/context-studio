@@ -676,7 +676,7 @@
           "ontology"
         ],
         "summary": "Delete Class",
-        "description": "Delete a class.\n\nArgs:\n    class_id: The class ID\n    service: OntologyService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found, 422 if it has subclasses",
+        "description": "Delete a class.\n\nArgs:\n    class_id: The class ID\n    service: OntologyService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found, 422 if it has subclasses or individuals",
         "operationId": "delete_class_api_classes__class_id__delete",
         "parameters": [
           {
@@ -3849,6 +3849,309 @@
           }
         }
       }
+    },
+    "/api/v1/interchange/export": {
+      "post": {
+        "tags": [
+          "interchange"
+        ],
+        "summary": "Export Ontology",
+        "description": "Export ontology data in the specified format.\n\nArgs:\n    request: Export request with format and scope\n    ontology_service: Injected OntologyService\n\nReturns:\n    Binary file data as blob\n\nRaises:\n    HTTPException: If export fails or format is unsupported",
+        "operationId": "export_ontology_api_v1_interchange_export_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/interchange/import": {
+      "post": {
+        "tags": [
+          "interchange"
+        ],
+        "summary": "Import Ontology",
+        "description": "Import ontology data from a file.\n\nSupports dry-run mode to preview conflicts, or direct commit with resolutions.\n\nArgs:\n    format: Import format (skos, owl, graphml, etc.)\n    file: File to import\n    dry_run: \"true\" for dry-run (returns plan), \"false\" to commit\n    resolutions: JSON-encoded list of resolutions (only used when dry_run=\"false\")\n    ontology_service: Injected OntologyService\n\nReturns:\n    ImportPlanResponse (dry-run) or ImportRunResponse (committed)\n\nRaises:\n    HTTPException: If import fails or format is unsupported",
+        "operationId": "import_ontology_api_v1_interchange_import_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_import_ontology_api_v1_interchange_import_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/interchange/runs": {
+      "get": {
+        "tags": [
+          "interchange"
+        ],
+        "summary": "List Import Runs",
+        "description": "List all import runs with optional filtering.\n\nArgs:\n    interchange_repo: Injected interchange repository\n    offset: Number of results to skip\n    limit: Maximum number of results to return\n    status: Optional status filter (pending, committed, failed, rolled_back)\n\nReturns:\n    Paginated list of import runs\n\nRaises:\n    HTTPException: If query fails or invalid status provided",
+        "operationId": "list_import_runs_api_v1_interchange_runs_get",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of results to skip",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Number of results to skip"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "description": "Maximum number of results",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "Maximum number of results"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by status",
+              "title": "Status"
+            },
+            "description": "Filter by status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportRunListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/interchange/runs/{run_id}": {
+      "get": {
+        "tags": [
+          "interchange"
+        ],
+        "summary": "Get Import Run",
+        "description": "Get a specific import run by ID.\n\nArgs:\n    run_id: The import run ID\n    interchange_repo: Injected interchange repository\n\nReturns:\n    Import run details\n\nRaises:\n    HTTPException: If run not found or query fails",
+        "operationId": "get_import_run_api_v1_interchange_runs__run_id__get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/interchange/runs/{run_id}/change-events": {
+      "get": {
+        "tags": [
+          "interchange"
+        ],
+        "summary": "Get Run Change Events",
+        "description": "Get change events associated with an import run.\n\nArgs:\n    run_id: The import run ID\n    interchange_repo: Injected interchange repository\n    offset: Number of results to skip\n    limit: Maximum number of results to return\n    entity_type: Optional filter by entity type\n    change_type: Optional filter by change type\n\nReturns:\n    Paginated list of change events\n\nRaises:\n    HTTPException: If run not found or query fails",
+        "operationId": "get_run_change_events_api_v1_interchange_runs__run_id__change_events_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of results to skip",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Number of results to skip"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "description": "Maximum number of results",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "Maximum number of results"
+          },
+          {
+            "name": "entity_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by entity type",
+              "title": "Entity Type"
+            },
+            "description": "Filter by entity type"
+          },
+          {
+            "name": "change_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by change type",
+              "title": "Change Type"
+            },
+            "description": "Filter by change type"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeEventListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4011,6 +4314,45 @@
         "title": "BackgroundTaskSummaryResponse",
         "description": "Response containing summary of background task execution status."
       },
+      "Body_import_ontology_api_v1_interchange_import_post": {
+        "properties": {
+          "format": {
+            "type": "string",
+            "title": "Format",
+            "description": "Import format"
+          },
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "description": "File to import"
+          },
+          "dry_run": {
+            "type": "string",
+            "title": "Dry Run",
+            "description": "If 'true', returns plan without committing",
+            "default": "true"
+          },
+          "resolutions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolutions",
+            "description": "JSON-encoded resolutions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "format",
+          "file"
+        ],
+        "title": "Body_import_ontology_api_v1_interchange_import_post"
+      },
       "CentralityResponse": {
         "properties": {
           "algorithm": {
@@ -4035,100 +4377,47 @@
         "title": "CentralityResponse",
         "description": "Response containing centrality scores."
       },
-      "ChangeEventResponse": {
+      "ChangeEventListResponse": {
         "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id",
-            "description": "Unique identifier of the change event"
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/adapters__web__schemas__interchange__ChangeEventResponse"
+            },
+            "type": "array",
+            "title": "Events",
+            "description": "List of change events"
           },
-          "entity_id": {
-            "type": "string",
-            "title": "Entity Id",
-            "description": "ID of the entity that changed"
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total count"
           },
-          "entity_type": {
-            "type": "string",
-            "title": "Entity Type",
-            "description": "Type of the entity"
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "description": "Offset used"
           },
-          "operation": {
-            "$ref": "#/components/schemas/ChangeOperation",
-            "description": "Type of operation (create, update, delete)"
-          },
-          "new_state": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "New State",
-            "description": "New state of the entity after this change"
-          },
-          "timestamp": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Timestamp",
-            "description": "When the change occurred"
-          },
-          "processed": {
-            "type": "boolean",
-            "title": "Processed",
-            "description": "Whether change has been synced to remote"
-          },
-          "user_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "User Id",
-            "description": "User who made the change"
-          },
-          "change_reason": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Change Reason",
-            "description": "Why the change was made"
-          },
-          "previous_state": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Previous State",
-            "description": "Previous state of the entity before this change"
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "description": "Limit used"
           }
         },
         "type": "object",
         "required": [
-          "id",
-          "entity_id",
-          "entity_type",
-          "operation",
-          "new_state",
-          "timestamp",
-          "processed"
+          "events",
+          "total",
+          "offset",
+          "limit"
         ],
-        "title": "ChangeEventResponse",
-        "description": "Response representing a change event"
+        "title": "ChangeEventListResponse",
+        "description": "Paginated list of change events."
       },
       "ChangeHistoryResponse": {
         "properties": {
           "events": {
             "items": {
-              "$ref": "#/components/schemas/ChangeEventResponse"
+              "$ref": "#/components/schemas/adapters__web__schemas__versioning__ChangeEventResponse"
             },
             "type": "array",
             "title": "Events",
@@ -5084,6 +5373,27 @@
         "title": "ExecutionResponse",
         "description": "Response containing pipeline execution record data."
       },
+      "ExportRequest": {
+        "properties": {
+          "format": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Format",
+            "description": "Export format: skos, owl, graphml, etc."
+          },
+          "scope": {
+            "$ref": "#/components/schemas/SerializationScopeRequest",
+            "description": "What to export"
+          }
+        },
+        "type": "object",
+        "required": [
+          "format",
+          "scope"
+        ],
+        "title": "ExportRequest",
+        "description": "Request to export ontology data."
+      },
       "ExternalReferenceResponse": {
         "properties": {
           "source": {
@@ -5411,6 +5721,127 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "ImportRunListResponse": {
+        "properties": {
+          "runs": {
+            "items": {
+              "$ref": "#/components/schemas/ImportRunResponse"
+            },
+            "type": "array",
+            "title": "Runs",
+            "description": "List of import runs"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total count"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "description": "Offset used"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "description": "Limit used"
+          }
+        },
+        "type": "object",
+        "required": [
+          "runs",
+          "total",
+          "offset",
+          "limit"
+        ],
+        "title": "ImportRunListResponse",
+        "description": "Paginated list of import runs."
+      },
+      "ImportRunResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique identifier"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By",
+            "description": "User who initiated the import"
+          },
+          "format": {
+            "type": "string",
+            "title": "Format",
+            "description": "Format of imported file"
+          },
+          "source_uri": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Uri",
+            "description": "URI or filename of source"
+          },
+          "source_hash": {
+            "type": "string",
+            "title": "Source Hash",
+            "description": "SHA256 hash of imported bytes"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/SerializationScopeResponse",
+            "description": "Import scope"
+          },
+          "resolutions": {
+            "items": {
+              "$ref": "#/components/schemas/ResolutionRecordResponse"
+            },
+            "type": "array",
+            "title": "Resolutions",
+            "description": "Applied conflict resolutions"
+          },
+          "affected_entity_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Affected Entity Ids",
+            "description": "Entities affected by import"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Current status: pending, committed, failed, or rolled_back"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "format",
+          "source_hash",
+          "scope",
+          "status"
+        ],
+        "title": "ImportRunResponse",
+        "description": "Response containing import run data."
       },
       "IndividualClassListRequest": {
         "properties": {
@@ -6943,6 +7374,33 @@
         "title": "RelationshipResponse",
         "description": "Response containing relationship data."
       },
+      "ResolutionRecordResponse": {
+        "properties": {
+          "match_kind": {
+            "type": "string",
+            "title": "Match Kind",
+            "description": "Type of match that was resolved"
+          },
+          "entity_id": {
+            "type": "string",
+            "title": "Entity Id",
+            "description": "Entity ID involved"
+          },
+          "resolution_chosen": {
+            "type": "string",
+            "title": "Resolution Chosen",
+            "description": "Resolution applied"
+          }
+        },
+        "type": "object",
+        "required": [
+          "match_kind",
+          "entity_id",
+          "resolution_chosen"
+        ],
+        "title": "ResolutionRecordResponse",
+        "description": "Record of a resolution applied during import."
+      },
       "ResolveConflictsRequest": {
         "properties": {
           "resolutions": {
@@ -7002,6 +7460,121 @@
         ],
         "title": "SPARQLResponse",
         "description": "Response from SPARQL query execution."
+      },
+      "SerializationScopeRequest": {
+        "properties": {
+          "scope_type": {
+            "type": "string",
+            "title": "Scope Type",
+            "description": "Scope type: whole_graph, taxonomy, scheme, or entity_set"
+          },
+          "taxonomy_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taxonomy Id",
+            "description": "Taxonomy ID for taxonomy scope"
+          },
+          "scheme_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheme Id",
+            "description": "Scheme ID for scheme scope"
+          },
+          "include_descendants": {
+            "type": "boolean",
+            "title": "Include Descendants",
+            "description": "Include descendants for scheme scope",
+            "default": false
+          },
+          "entity_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity Ids",
+            "description": "Entity IDs for entity_set scope"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scope_type"
+        ],
+        "title": "SerializationScopeRequest",
+        "description": "Request to specify what to export."
+      },
+      "SerializationScopeResponse": {
+        "properties": {
+          "scope_type": {
+            "type": "string",
+            "title": "Scope Type"
+          },
+          "taxonomy_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taxonomy Id"
+          },
+          "scheme_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheme Id"
+          },
+          "include_descendants": {
+            "type": "boolean",
+            "title": "Include Descendants",
+            "default": false
+          },
+          "entity_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scope_type"
+        ],
+        "title": "SerializationScopeResponse",
+        "description": "Response describing what was serialized."
       },
       "ServiceMetricsResponse": {
         "properties": {
@@ -7506,6 +8079,161 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "adapters__web__schemas__interchange__ChangeEventResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique identifier"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp",
+            "description": "When the change occurred"
+          },
+          "entity_id": {
+            "type": "string",
+            "title": "Entity Id",
+            "description": "Entity that changed"
+          },
+          "entity_type": {
+            "type": "string",
+            "title": "Entity Type",
+            "description": "Type of entity"
+          },
+          "operation": {
+            "type": "string",
+            "title": "Operation",
+            "description": "Operation performed"
+          },
+          "new_state": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New State",
+            "description": "New state after change"
+          },
+          "previous_state": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous State",
+            "description": "Previous state before change"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "timestamp",
+          "entity_id",
+          "entity_type",
+          "operation"
+        ],
+        "title": "ChangeEventResponse",
+        "description": "Response containing change event data."
+      },
+      "adapters__web__schemas__versioning__ChangeEventResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique identifier of the change event"
+          },
+          "entity_id": {
+            "type": "string",
+            "title": "Entity Id",
+            "description": "ID of the entity that changed"
+          },
+          "entity_type": {
+            "type": "string",
+            "title": "Entity Type",
+            "description": "Type of the entity"
+          },
+          "operation": {
+            "$ref": "#/components/schemas/ChangeOperation",
+            "description": "Type of operation (create, update, delete)"
+          },
+          "new_state": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "New State",
+            "description": "New state of the entity after this change"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp",
+            "description": "When the change occurred"
+          },
+          "processed": {
+            "type": "boolean",
+            "title": "Processed",
+            "description": "Whether change has been synced to remote"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id",
+            "description": "User who made the change"
+          },
+          "change_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change Reason",
+            "description": "Why the change was made"
+          },
+          "previous_state": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous State",
+            "description": "Previous state of the entity before this change"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "entity_id",
+          "entity_type",
+          "operation",
+          "new_state",
+          "timestamp",
+          "processed"
+        ],
+        "title": "ChangeEventResponse",
+        "description": "Response representing a change event"
       }
     }
   }
