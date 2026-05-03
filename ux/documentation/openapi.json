@@ -646,7 +646,7 @@
       "delete": {
         "tags": ["ontology"],
         "summary": "Delete Class",
-        "description": "Delete a class.\n\nArgs:\n    class_id: The class ID\n    service: OntologyService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found, 422 if it has subclasses or individuals",
+        "description": "Delete a class.\n\nArgs:\n    class_id: The class ID\n    service: OntologyService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found, 422 if it has subclasses",
         "operationId": "delete_class_api_classes__class_id__delete",
         "parameters": [
           {
