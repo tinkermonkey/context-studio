@@ -39,7 +39,7 @@ test.describe("Taxonomy CRUD Operations", () => {
     await expect(form).not.toBeVisible();
     await waitForAppReady(page);
 
-    await expect(page.getByText("Test Taxonomy")).toBeVisible();
+    await expect(page.getByTestId("taxonomy-table").getByText("Test Taxonomy", { exact: true })).toBeVisible();
 
     // Verify persistence via API
     const list = await apiRequest<{ items: Array<{ title: string }> }>(
@@ -94,7 +94,7 @@ test.describe("Taxonomy CRUD Operations", () => {
     // Double-click the row to open the edit modal
     await page.getByTestId(`taxonomy-row-${taxonomy.id}`).dblclick();
 
-    const editModal = page.getByTestId("taxonomy-edit-modal");
+    const editModal = page.getByTestId("taxonomy-edit-modal").first();
     await expect(editModal).toBeVisible({ timeout: 5000 });
 
     await page.getByTestId("taxonomy-title-input").fill("Updated Title");
@@ -135,7 +135,7 @@ test.describe("Taxonomy CRUD Operations", () => {
     await page.getByTestId("taxonomy-delete-selected-action").click();
 
     // Confirm in the modal
-    const deleteModal = page.getByTestId("taxonomy-delete-modal");
+    const deleteModal = page.getByTestId("taxonomy-delete-modal").first();
     await expect(deleteModal).toBeVisible();
     await page.getByTestId("taxonomy-delete-confirm-button").click();
     await expect(deleteModal).not.toBeVisible({ timeout: 5000 });

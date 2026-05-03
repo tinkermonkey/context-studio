@@ -30,6 +30,9 @@ test.describe("Reference Search", () => {
     await page.getByTestId("reference-search-input").fill("computer");
     await page.getByTestId("reference-search-button").click();
 
+    // Results render in a tabbed view — switch to "List View" to access the list.
+    await page.getByRole("tab", { name: "List View" }).click();
+
     const resultsList = page.getByTestId("reference-results-list");
     await expect(resultsList).toBeVisible({ timeout: 10000 });
 

@@ -60,7 +60,7 @@ test.describe("Relationship List and Delete", () => {
     await page.getByTestId("relationship-actions-dropdown").click();
     await page.getByTestId("relationship-delete-selected-action").click();
 
-    const deleteModal = page.getByTestId("relationship-delete-modal");
+    const deleteModal = page.getByTestId("relationship-delete-modal").first();
     await expect(deleteModal).toBeVisible();
     await page.getByTestId("relationship-delete-confirm-button").click();
     await expect(deleteModal).not.toBeVisible({ timeout: 5000 });
@@ -88,7 +88,7 @@ test.describe("Relationship List and Delete", () => {
     await page.getByTestId("relationship-actions-dropdown").click();
     await page.getByTestId("relationship-delete-selected-action").click();
 
-    const deleteModal = page.getByTestId("relationship-delete-modal");
+    const deleteModal = page.getByTestId("relationship-delete-modal").first();
     await expect(deleteModal).toBeVisible();
     await page.getByTestId("relationship-delete-cancel-button").click();
     await expect(deleteModal).not.toBeVisible({ timeout: 5000 });

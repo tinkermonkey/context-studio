@@ -55,7 +55,7 @@ test.describe("Entity Detail Pages", () => {
       await page.goto("/app/taxonomies");
       await waitForAppReady(page);
 
-      await page.getByTestId(`taxonomy-row-${taxonomy.id}`).click();
+      await page.getByTestId(`taxonomy-row-${taxonomy.id}`).getByRole("link").click();
       await waitForAppReady(page);
 
       expect(page.url()).toContain(`/app/taxonomies/${taxonomy.id}`);
@@ -91,7 +91,7 @@ test.describe("Entity Detail Pages", () => {
       await page.goto("/app/concept-schemes");
       await waitForAppReady(page);
 
-      await page.getByTestId(`concept-scheme-row-${scheme.id}`).click();
+      await page.getByTestId(`concept-scheme-row-${scheme.id}`).getByRole("link").click();
       await waitForAppReady(page);
 
       expect(page.url()).toContain(`/app/concept-schemes/${scheme.id}`);
@@ -123,7 +123,7 @@ test.describe("Entity Detail Pages", () => {
       await page.goto("/app/classes");
       await waitForAppReady(page);
 
-      await page.getByTestId(`class-row-${cls.id}`).click();
+      await page.getByTestId(`class-row-${cls.id}`).getByRole("link").click();
       await waitForAppReady(page);
 
       expect(page.url()).toContain(`/app/classes/${cls.id}`);
@@ -185,7 +185,7 @@ test.describe("Entity Detail Pages", () => {
       await page.goto("/app/individuals");
       await waitForAppReady(page);
 
-      await page.getByTestId(`individual-row-${individual.id}`).click();
+      await page.getByTestId(`individual-row-${individual.id}`).getByRole("link").click();
       await waitForAppReady(page);
 
       expect(page.url()).toContain(`/app/individuals/${individual.id}`);

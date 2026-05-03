@@ -16,7 +16,7 @@ const PRIMARY_ROUTES = [
   { path: "/app/classes", label: "Classes" },
   { path: "/app/individuals", label: "Individuals" },
   { path: "/app/relationships", label: "Relationships" },
-  { path: "/app/properties", label: "Properties" },
+  { path: "/app/properties", label: "Property Definitions" },
 ];
 
 test.describe("Navigation", () => {
@@ -33,14 +33,16 @@ test.describe("Navigation", () => {
     }
   });
 
-  test("sidebar links navigate to the correct URLs", async ({ page }) => {
+  test("nav dropdown links navigate to the correct URLs", async ({ page }) => {
     await page.goto("/app/taxonomies");
     await page.waitForLoadState("networkidle");
 
     for (const route of PRIMARY_ROUTES) {
+      // The Knowledge Graph dropdown must be opened to expose each nav link.
+      await page.getByText("Knowledge Graph").first().click();
       const link = page.getByRole("link", { name: route.label, exact: true });
       // Hard assertion — a missing link is a failure, not a no-op.
-      await expect(link, `Sidebar link "${route.label}" should be visible`).toBeVisible();
+      await expect(link, `Nav link "${route.label}" should be visible`).toBeVisible();
       await link.click();
       await page.waitForLoadState("networkidle");
       expect(

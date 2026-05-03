@@ -46,7 +46,7 @@ test.describe("Ontology Individual CRUD and Class Membership Operations", () => 
 
     await page.getByTestId("individual-add-button").click();
 
-    const createModal = page.getByTestId("individual-create-modal");
+    const createModal = page.getByTestId("individual-create-modal").first();
     await expect(createModal).toBeVisible({ timeout: 5000 });
 
     await page.getByTestId("individual-title-input").fill("UI Created Individual");
@@ -111,7 +111,7 @@ test.describe("Ontology Individual CRUD and Class Membership Operations", () => 
 
     await page.getByTestId(`individual-row-${individual.id}`).dblclick();
 
-    const editModal = page.getByTestId("individual-edit-modal");
+    const editModal = page.getByTestId("individual-edit-modal").first();
     await expect(editModal).toBeVisible({ timeout: 5000 });
 
     await page.getByTestId("individual-title-input").fill("Individual After Update");
@@ -157,7 +157,7 @@ test.describe("Ontology Individual CRUD and Class Membership Operations", () => 
     await page.getByTestId("individual-actions-dropdown").click();
     await page.getByTestId("individual-delete-selected-action").click();
 
-    const deleteModal = page.getByTestId("individual-delete-modal");
+    const deleteModal = page.getByTestId("individual-delete-modal").first();
     await expect(deleteModal).toBeVisible();
     await page.getByTestId("individual-delete-confirm-button").click();
     await expect(deleteModal).not.toBeVisible({ timeout: 5000 });
@@ -191,7 +191,7 @@ test.describe("Ontology Individual CRUD and Class Membership Operations", () => 
 
     await page.getByTestId(`individual-row-${individual.id}`).dblclick();
 
-    const editModal = page.getByTestId("individual-edit-modal");
+    const editModal = page.getByTestId("individual-edit-modal").first();
     await expect(editModal).toBeVisible({ timeout: 5000 });
 
     // Add a second class — onChange fires immediately on selection
@@ -226,7 +226,7 @@ test.describe("Ontology Individual CRUD and Class Membership Operations", () => 
 
     await page.getByTestId(`individual-row-${individual.id}`).dblclick();
 
-    const editModal = page.getByTestId("individual-edit-modal");
+    const editModal = page.getByTestId("individual-edit-modal").first();
     await expect(editModal).toBeVisible({ timeout: 5000 });
 
     // Remove the second class
@@ -252,7 +252,7 @@ test.describe("Ontology Individual CRUD and Class Membership Operations", () => 
 
     await page.getByTestId("individual-add-button").click();
 
-    const createModal = page.getByTestId("individual-create-modal");
+    const createModal = page.getByTestId("individual-create-modal").first();
     await expect(createModal).toBeVisible({ timeout: 5000 });
 
     await page.getByTestId("individual-title-input").fill("No Class Individual");

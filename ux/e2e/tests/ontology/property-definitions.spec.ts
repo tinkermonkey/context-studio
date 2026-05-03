@@ -34,7 +34,7 @@ test.describe("Property Definition CRUD Operations", () => {
     // typeName="Property Definition" → "property-definition-add-button" (normalized from typeName "Property Definition")
     await page.getByTestId("property-definition-add-button").click();
 
-    const createModal = page.getByTestId("property-definition-create-modal");
+    const createModal = page.getByTestId("property-definition-create-modal").first();
     await expect(createModal).toBeVisible({ timeout: 5000 });
 
     await page.getByTestId("property-definition-identifier-input").fill("e2e_test_property");
@@ -92,7 +92,7 @@ test.describe("Property Definition CRUD Operations", () => {
 
     await page.getByTestId(`property-definition-row-${prop.id}`).dblclick();
 
-    const editModal = page.getByTestId("property-definition-edit-modal");
+    const editModal = page.getByTestId("property-definition-edit-modal").first();
     await expect(editModal).toBeVisible({ timeout: 5000 });
 
     await page.getByTestId("property-definition-title-input").fill("Property After Update");
@@ -133,7 +133,7 @@ test.describe("Property Definition CRUD Operations", () => {
     await page.getByTestId("property-definition-actions-dropdown").click();
     await page.getByTestId("property-definition-delete-selected-action").click();
 
-    const deleteModal = page.getByTestId("property-definition-delete-modal");
+    const deleteModal = page.getByTestId("property-definition-delete-modal").first();
     await expect(deleteModal).toBeVisible();
     await page.getByTestId("property-definition-delete-confirm-button").click();
     await expect(deleteModal).not.toBeVisible({ timeout: 5000 });

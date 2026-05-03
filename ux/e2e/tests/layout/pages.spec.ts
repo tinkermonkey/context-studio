@@ -87,7 +87,7 @@ test.describe("Entity Page Layout", () => {
     await waitForAppReady(page);
 
     await page.getByTestId("taxonomy-add-button").click();
-    await expect(page.getByTestId("taxonomy-create-modal")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId("taxonomy-create-modal").first()).toBeVisible({ timeout: 5000 });
 
     // Cancel to leave the page clean.
     await page.keyboard.press("Escape");

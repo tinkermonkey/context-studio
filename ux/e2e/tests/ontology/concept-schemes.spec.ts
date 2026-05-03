@@ -42,11 +42,16 @@ test.describe("Concept Scheme CRUD Operations", () => {
     // typeName="Concept Scheme" → "concept-scheme-add-button" (normalized from typeName "Concept Scheme")
     await page.getByTestId("concept-scheme-add-button").click();
 
-    const createModal = page.getByTestId("concept-scheme-create-modal");
+    const createModal = page.getByTestId("concept-scheme-create-modal").first();
     await expect(createModal).toBeVisible({ timeout: 5000 });
 
     await page.getByTestId("concept-scheme-title-input").fill("E2E Created Scheme");
     await page.getByTestId("concept-scheme-description-input").fill("Created via E2E");
+
+    // Select the parent taxonomy (required to submit)
+    await page.getByTestId("concept-scheme-taxonomy-selector").getByRole("button").click();
+    await page.locator(`#option-${taxonomyId}`).click();
+
     await page.getByTestId("concept-scheme-submit-button").click();
 
     await expect(createModal).not.toBeVisible({ timeout: 5000 });
@@ -96,7 +101,7 @@ test.describe("Concept Scheme CRUD Operations", () => {
 
     await page.getByTestId(`concept-scheme-row-${scheme.id}`).dblclick();
 
-    const editModal = page.getByTestId("concept-scheme-edit-modal");
+    const editModal = page.getByTestId("concept-scheme-edit-modal").first();
     await expect(editModal).toBeVisible({ timeout: 5000 });
 
     await page.getByTestId("concept-scheme-title-input").fill("Scheme After Update");
@@ -136,7 +141,7 @@ test.describe("Concept Scheme CRUD Operations", () => {
     await page.getByTestId("concept-scheme-actions-dropdown").click();
     await page.getByTestId("concept-scheme-delete-selected-action").click();
 
-    const deleteModal = page.getByTestId("concept-scheme-delete-modal");
+    const deleteModal = page.getByTestId("concept-scheme-delete-modal").first();
     await expect(deleteModal).toBeVisible();
     await page.getByTestId("concept-scheme-delete-confirm-button").click();
     await expect(deleteModal).not.toBeVisible({ timeout: 5000 });

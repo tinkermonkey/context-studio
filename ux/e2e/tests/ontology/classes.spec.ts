@@ -39,7 +39,7 @@ test.describe("Ontology Class CRUD Operations", () => {
 
     await page.getByTestId("class-add-button").click();
 
-    const createModal = page.getByTestId("class-create-modal");
+    const createModal = page.getByTestId("class-create-modal").first();
     await expect(createModal).toBeVisible({ timeout: 5000 });
 
     await page.getByTestId("class-title-input").fill("E2E Created Class");
@@ -84,7 +84,7 @@ test.describe("Ontology Class CRUD Operations", () => {
 
     await page.getByTestId(`class-row-${ontologyClass.id}`).dblclick();
 
-    const editModal = page.getByTestId("class-edit-modal");
+    const editModal = page.getByTestId("class-edit-modal").first();
     await expect(editModal).toBeVisible({ timeout: 5000 });
 
     await page.getByTestId("class-title-input").fill("Class After Update");
@@ -122,7 +122,7 @@ test.describe("Ontology Class CRUD Operations", () => {
     await page.getByTestId("class-actions-dropdown").click();
     await page.getByTestId("class-delete-selected-action").click();
 
-    const deleteModal = page.getByTestId("class-delete-modal");
+    const deleteModal = page.getByTestId("class-delete-modal").first();
     await expect(deleteModal).toBeVisible();
     await page.getByTestId("class-delete-confirm-button").click();
     await expect(deleteModal).not.toBeVisible({ timeout: 5000 });
