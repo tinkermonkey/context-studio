@@ -32,7 +32,7 @@ SKOS is RDF-based, designed specifically for taxonomies and concept schemes. It 
 - **Class** (as `skos:Concept`)
   - `id`, `title`, `description`, `parent_class_id`
   - `concept_scheme_id` (via `skos:inScheme`)
-- **external_references** on Class (via `dct:source` for all references, plus `skos:exactMatch` for cross-vocabulary identity)
+  - `external_references` (via `dct:source` for all references, plus `skos:exactMatch` for cross-vocabulary identity)
 
 ### Survives But Lossy
 
@@ -74,7 +74,6 @@ OWL is the most expressive format, built on RDF and designed for full ontology d
 - **Relationship** (as RDF triples using property URIs)
   - Source, target, and property type all survive
   - Note: PropertyDefinition domain/range constraints are not used in Context Studio's OWL representation
-- **external_references** (via `owl:sameAs` for entity identity)
 
 ### Survives But Lossy
 
