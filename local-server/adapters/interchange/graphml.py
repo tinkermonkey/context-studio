@@ -92,10 +92,12 @@ class GraphMLSerializer(OntologySerializer):
                 case SerializationScopeType.WHOLE_GRAPH:
                     self._serialize_whole_graph()
                 case SerializationScopeType.TAXONOMY:
-                    assert scope.taxonomy_id is not None
+                    if scope.taxonomy_id is None:
+                        raise ValueError("TAXONOMY scope requires taxonomy_id to be set")
                     self._serialize_taxonomy(scope.taxonomy_id)
                 case SerializationScopeType.SCHEME:
-                    assert scope.scheme_id is not None
+                    if scope.scheme_id is None:
+                        raise ValueError("SCHEME scope requires scheme_id to be set")
                     self._serialize_scheme(scope.scheme_id, scope.include_descendants)
                 case SerializationScopeType.ENTITY_SET:
                     self._serialize_entity_set(scope.entity_ids)
@@ -123,8 +125,8 @@ class GraphMLSerializer(OntologySerializer):
         for scheme in schemes:
             self._add_concept_scheme(scheme)
 
-        # Add all classes
-        classes = self.ontology_repo.list_classes(limit=10000)
+        # Add all classes (without limit to ensure complete export)
+        classes = self.ontology_repo.list_classes()
         for cls in classes:
             self._add_class(cls)
 
@@ -158,9 +160,9 @@ class GraphMLSerializer(OntologySerializer):
         schemes = self.ontology_repo.list_concept_schemes(taxonomy_id=taxonomy.id)
         for scheme in schemes:
             self._add_concept_scheme(scheme)
-            # Add classes in this scheme
+            # Add classes in this scheme (without limit to ensure complete export)
             classes = self.ontology_repo.list_classes(
-                concept_scheme_id=scheme.id, limit=10000
+                concept_scheme_id=scheme.id
             )
             for cls in classes:
                 self._add_class(cls)
@@ -189,8 +191,9 @@ class GraphMLSerializer(OntologySerializer):
         # Add classes in this scheme only if include_descendants is True
         classes = []
         if include_descendants:
+            # Query all classes without limit to ensure complete export
             classes = self.ontology_repo.list_classes(
-                concept_scheme_id=scheme.id, limit=10000
+                concept_scheme_id=scheme.id
             )
             for cls in classes:
                 self._add_class(cls)
@@ -244,7 +247,8 @@ class GraphMLSerializer(OntologySerializer):
 
     def _add_taxonomy(self, taxonomy: Taxonomy) -> None:
         """Add a taxonomy node to the graph."""
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
         node_id = taxonomy.id
         self.graph.add_node(node_id)
         self._set_node_attributes(
@@ -264,7 +268,8 @@ class GraphMLSerializer(OntologySerializer):
 
     def _add_concept_scheme(self, scheme: ConceptScheme) -> None:
         """Add a concept scheme node to the graph."""
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
         node_id = scheme.id
         self.graph.add_node(node_id)
         self._set_node_attributes(
@@ -284,7 +289,8 @@ class GraphMLSerializer(OntologySerializer):
 
     def _add_class(self, cls: Class) -> None:
         """Add a class node to the graph."""
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
         node_id = cls.id
         self.graph.add_node(node_id)
 
@@ -315,7 +321,8 @@ class GraphMLSerializer(OntologySerializer):
 
     def _add_individual(self, individual: Individual) -> None:
         """Add an individual node to the graph."""
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
         node_id = individual.id
         self.graph.add_node(node_id)
 
@@ -350,7 +357,8 @@ class GraphMLSerializer(OntologySerializer):
 
     def _add_property_definition(self, prop: PropertyDefinition) -> None:
         """Add a property definition node to the graph."""
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
         node_id = prop.id
         self.graph.add_node(node_id)
 
@@ -381,7 +389,8 @@ class GraphMLSerializer(OntologySerializer):
         individuals: list[Individual],
     ) -> None:
         """Add structural edges (parent relationships, scheme membership, etc.)."""
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
 
         # Taxonomy → ConceptScheme edges
         for scheme in schemes:
@@ -430,7 +439,8 @@ class GraphMLSerializer(OntologySerializer):
         schemes: list[ConceptScheme],
     ) -> None:
         """Add structural edges for a specific taxonomy scope."""
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
 
         for scheme in schemes:
             if self.graph.has_node(scheme.id) and self.graph.has_node(
@@ -446,7 +456,8 @@ class GraphMLSerializer(OntologySerializer):
         classes: list[Class],
     ) -> None:
         """Add structural edges for a specific scheme scope."""
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
 
         for cls in classes:
             if self.graph.has_node(cls.id) and self.graph.has_node(
@@ -467,7 +478,8 @@ class GraphMLSerializer(OntologySerializer):
 
     def _add_relationship(self, rel: Relationship) -> None:
         """Add a relationship edge to the graph."""
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
 
         if self.graph.has_node(rel.source_id) and self.graph.has_node(rel.target_id):
             self.graph.add_edge(
@@ -480,7 +492,8 @@ class GraphMLSerializer(OntologySerializer):
 
     def _set_node_attributes(self, node_id: str, attributes: Dict[str, str]) -> None:
         """Set attributes on a node."""
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
         for key, value in attributes.items():
             if value is not None:
                 self.graph.nodes[node_id][key] = value
@@ -660,7 +673,8 @@ class GraphMLDeserializer(OntologyDeserializer):
 
     def _extract_entities_from_graph(self) -> None:
         """Extract entities from the GraphML graph."""
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
 
         for node_id, node_attrs in self.graph.nodes(data=True):
             kind = node_attrs.get("kind")
@@ -728,7 +742,8 @@ class GraphMLDeserializer(OntologyDeserializer):
             return
 
         # Find parent taxonomy via incoming edges
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
         taxonomy_id = None
         for pred, _, _ in self.graph.in_edges(node_id, keys=True):
             if self.graph.nodes[pred].get("kind") == "taxonomy":
@@ -764,7 +779,8 @@ class GraphMLDeserializer(OntologyDeserializer):
             self.warnings.append(f"Class {node_id} has no cs:title")
             return
 
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
 
         # Find parent concept scheme via incoming edges
         concept_scheme_id = None
@@ -837,7 +853,8 @@ class GraphMLDeserializer(OntologyDeserializer):
             self.warnings.append(f"Individual {node_id} has no cs:title")
             return
 
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
 
         # Find parent classes via outgoing edges, maintaining order
         class_ids = []
@@ -1042,7 +1059,8 @@ class GraphMLDeserializer(OntologyDeserializer):
     ) -> Optional[str]:
         """Find an existing entity by external reference."""
         if self._classes_cache is None:
-            self._classes_cache = self.ontology_repo.list_classes(limit=10000)
+            # Query all classes without limit to ensure complete search
+            self._classes_cache = self.ontology_repo.list_classes()
 
         for class_entity in self._classes_cache:
             for ext_ref in class_entity.external_references:
@@ -1063,8 +1081,9 @@ class GraphMLDeserializer(OntologyDeserializer):
         self, title: str, concept_scheme_id: Optional[str]
     ) -> Optional[Class]:
         """Find an existing class by title (and optional scheme)."""
+        # Query all classes without limit to ensure complete search
         all_classes = self.ontology_repo.list_classes(
-            concept_scheme_id=concept_scheme_id, limit=10000
+            concept_scheme_id=concept_scheme_id
         )
         for class_entity in all_classes:
             if class_entity.title == title:

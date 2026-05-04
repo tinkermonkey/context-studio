@@ -100,7 +100,6 @@ class SKOSSerializer(OntologySerializer):
         scope.validate()
 
         self.graph = Graph()
-        assert self.graph is not None
         self.graph.bind("skos", SKOS)
         self.graph.bind("dct", DCT)
         self.graph.bind("local", LOCAL)
@@ -110,10 +109,12 @@ class SKOSSerializer(OntologySerializer):
                 case SerializationScopeType.WHOLE_GRAPH:
                     self._serialize_whole_graph()
                 case SerializationScopeType.TAXONOMY:
-                    assert scope.taxonomy_id is not None
+                    if scope.taxonomy_id is None:
+                        raise ValueError("TAXONOMY scope requires taxonomy_id to be set")
                     self._serialize_taxonomy(scope.taxonomy_id)
                 case SerializationScopeType.SCHEME:
-                    assert scope.scheme_id is not None
+                    if scope.scheme_id is None:
+                        raise ValueError("SCHEME scope requires scheme_id to be set")
                     self._serialize_scheme(scope.scheme_id, scope.include_descendants)
                 case SerializationScopeType.ENTITY_SET:
                     self._serialize_entity_set(scope.entity_ids)
@@ -194,7 +195,8 @@ class SKOSSerializer(OntologySerializer):
 
     def _add_taxonomy_to_graph(self, taxonomy: Taxonomy) -> None:
         """Add a taxonomy and its descendants to the graph."""
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
         # Taxonomy → skos:ConceptScheme
         tax_uri = self._entity_uri(taxonomy.id)
         self.graph.add((tax_uri, RDF.type, SKOS.ConceptScheme))
@@ -217,7 +219,8 @@ class SKOSSerializer(OntologySerializer):
             include_parent_taxonomy: If True, add link to parent taxonomy
             include_descendants: If True, add classes within the scheme; if False, only add the scheme itself
         """
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
         scheme_uri = self._entity_uri(scheme.id)
         self.graph.add((scheme_uri, RDF.type, SKOS.ConceptScheme))
         self.graph.add((scheme_uri, SKOS.prefLabel, Literal(scheme.title)))
@@ -237,7 +240,8 @@ class SKOSSerializer(OntologySerializer):
 
     def _add_class_to_graph(self, class_entity: Class) -> None:
         """Add a class as a skos:Concept to the graph."""
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
         class_uri = self._entity_uri(class_entity.id)
         self.graph.add((class_uri, RDF.type, SKOS.Concept))
         self.graph.add((class_uri, SKOS.prefLabel, Literal(class_entity.title)))
@@ -262,7 +266,8 @@ class SKOSSerializer(OntologySerializer):
 
     def _add_individual_to_graph(self, individual: Individual) -> None:
         """Add an individual to the graph as an RDF resource."""
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
         ind_uri = self._entity_uri(individual.id)
         # Represent individual with RDF type
         self.graph.add((ind_uri, RDF.type, OWL.NamedIndividual))
@@ -281,7 +286,8 @@ class SKOSSerializer(OntologySerializer):
 
     def _add_property_to_graph(self, prop: PropertyDefinition) -> None:
         """Add a property definition to the graph."""
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
         prop_uri = self._entity_uri(prop.id)
         # Represent property definition with RDF type
         self.graph.add((prop_uri, RDF.type, OWL.ObjectProperty))
@@ -300,7 +306,8 @@ class SKOSSerializer(OntologySerializer):
         2. dct:source pointing to the external URI (legacy format, only if uri is not None)
         3. skos:exactMatch pointing to the external URI (legacy format, only if uri is not None)
         """
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
         # Store full external reference object as JSON for faithful round-tripping
         # This includes source, identifier, and uri fields
         ref_dict = {
@@ -376,7 +383,6 @@ class SKOSDeserializer(OntologyDeserializer):
         """
         try:
             self.graph = Graph()
-            assert self.graph is not None
             self.warnings = []
             self.incoming_entities = {}
             self._entity_map = {}  # Reset entity map for this deserialization
@@ -390,24 +396,34 @@ class SKOSDeserializer(OntologyDeserializer):
                 source_bytes = source
 
             # Try to parse with auto-detection of format, collecting all errors
+            # Only catch format-related errors; re-raise system errors like MemoryError, KeyboardInterrupt, etc.
             format_errors: list[tuple[str, Exception]] = []
             for fmt in ["turtle", "xml", "json-ld"]:
                 try:
                     self.graph = Graph()
                     self.graph.parse(data=source_bytes, format=fmt)
                     break
-                except Exception as e:
+                except (ValueError, TypeError, UnicodeDecodeError, SyntaxError) as e:
+                    # These are format-related parsing errors; try next format
                     format_errors.append((fmt, e))
                     continue
+                except Exception as e:
+                    # Check if this is an rdflib ParserError or similar
+                    if "parse" in type(e).__name__.lower() or "syntax" in type(e).__name__.lower():
+                        format_errors.append((fmt, e))
+                        continue
+                    # For any other exception type, re-raise as it's not a format issue
+                    raise
             else:
                 # All formats failed - build error message from all attempts
-                error_parts = [f"{fmt}: {str(e)}" for fmt, e in format_errors]
-                error_msg = "Failed to parse SKOS RDF in any format. " + "; ".join(
-                    error_parts
-                )
-                raise ValueError(error_msg) from (
-                    format_errors[-1][1] if format_errors else None
-                )
+                if format_errors:
+                    error_parts = [f"{fmt}: {str(e)}" for fmt, e in format_errors]
+                    error_msg = "Failed to parse SKOS RDF in any format. " + "; ".join(
+                        error_parts
+                    )
+                    raise ValueError(error_msg) from format_errors[-1][1]
+                else:
+                    raise ValueError("Failed to parse SKOS RDF: no format could be attempted")
 
             # Extract entities from RDF
             self._extract_entities_from_graph()
@@ -520,7 +536,8 @@ class SKOSDeserializer(OntologyDeserializer):
 
     def _extract_entities_from_graph(self) -> None:
         """Extract taxonomies, concept schemes, and classes from the RDF graph."""
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
         # Process all skos:ConceptScheme entities
         for subject in self.graph.subjects(RDF.type, SKOS.ConceptScheme):
             self._extract_concept_scheme_or_taxonomy(subject)
@@ -531,7 +548,8 @@ class SKOSDeserializer(OntologyDeserializer):
 
     def _extract_concept_scheme_or_taxonomy(self, uri: Node) -> None:
         """Extract a ConceptScheme or Taxonomy from the graph."""
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
         entity_id = self._uri_to_id(uri)
         if not entity_id:
             return
@@ -571,7 +589,8 @@ class SKOSDeserializer(OntologyDeserializer):
 
     def _extract_class(self, uri: Node) -> None:
         """Extract a Class (skos:Concept) from the graph."""
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
         entity_id = self._uri_to_id(uri)
         if not entity_id:
             return
@@ -673,7 +692,8 @@ class SKOSDeserializer(OntologyDeserializer):
 
     def _check_unhandled_predicates(self, uri: Node) -> None:
         """Check for SKOS predicates that aren't being handled."""
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
         unhandled = {
             SKOS.related,
             SKOS.altLabel,

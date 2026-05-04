@@ -120,10 +120,12 @@ class OWLSerializer(OntologySerializer):
                 case SerializationScopeType.WHOLE_GRAPH:
                     self._serialize_whole_graph()
                 case SerializationScopeType.TAXONOMY:
-                    assert scope.taxonomy_id is not None
+                    if scope.taxonomy_id is None:
+                        raise ValueError("TAXONOMY scope requires taxonomy_id to be set")
                     self._serialize_taxonomy(scope.taxonomy_id)
                 case SerializationScopeType.SCHEME:
-                    assert scope.scheme_id is not None
+                    if scope.scheme_id is None:
+                        raise ValueError("SCHEME scope requires scheme_id to be set")
                     self._serialize_scheme(scope.scheme_id, scope.include_descendants)
                 case SerializationScopeType.ENTITY_SET:
                     self._serialize_entity_set(scope.entity_ids)
@@ -229,7 +231,8 @@ class OWLSerializer(OntologySerializer):
 
     def _add_taxonomy_to_graph(self, taxonomy: Taxonomy) -> None:
         """Add a taxonomy and its descendants to the graph."""
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
         tax_uri = self._entity_uri(taxonomy.id)
         self.graph.add((tax_uri, RDF.type, SKOS.ConceptScheme))
         self.graph.add((tax_uri, SKOS.prefLabel, Literal(taxonomy.title)))
@@ -251,7 +254,8 @@ class OWLSerializer(OntologySerializer):
             include_parent_taxonomy: If True, add link to parent taxonomy
             include_descendants: If True, add classes within the scheme; if False, only add the scheme itself
         """
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
         scheme_uri = self._entity_uri(scheme.id)
         self.graph.add((scheme_uri, RDF.type, SKOS.ConceptScheme))
         self.graph.add((scheme_uri, SKOS.prefLabel, Literal(scheme.title)))
@@ -270,7 +274,8 @@ class OWLSerializer(OntologySerializer):
 
     def _add_class_to_graph(self, class_entity: Class) -> None:
         """Add a class to the graph."""
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
         class_uri = self._entity_uri(class_entity.id)
         self.graph.add((class_uri, RDF.type, OWL.Class))
         self.graph.add((class_uri, RDFS.label, Literal(class_entity.title)))
@@ -293,7 +298,8 @@ class OWLSerializer(OntologySerializer):
 
     def _add_individual_to_graph(self, individual: Individual) -> None:
         """Add an individual to the graph."""
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
         ind_uri = self._entity_uri(individual.id)
         self.graph.add((ind_uri, RDF.type, OWL.NamedIndividual))
         self.graph.add((ind_uri, RDFS.label, Literal(individual.title)))
@@ -315,7 +321,8 @@ class OWLSerializer(OntologySerializer):
 
     def _add_property_to_graph(self, prop: PropertyDefinition) -> None:
         """Add a property definition to the graph."""
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
         prop_uri = self._entity_uri(prop.id)
         self.graph.add((prop_uri, RDF.type, OWL.ObjectProperty))
         self.graph.add((prop_uri, RDFS.label, Literal(prop.title)))
@@ -325,7 +332,8 @@ class OWLSerializer(OntologySerializer):
 
     def _add_relationship_to_graph(self, relationship: Relationship) -> None:
         """Add a relationship to the graph."""
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
         source_uri = self._entity_uri(relationship.source_id)
         target_uri = self._entity_uri(relationship.target_id)
         prop_uri = self._entity_uri(relationship.property_definition_id)
@@ -336,7 +344,8 @@ class OWLSerializer(OntologySerializer):
         self, entity_uri: URIRef, ext_ref: ExternalReference
     ) -> None:
         """Add an external reference to an entity using LOCAL:externalReferences JSON for faithful round-tripping."""
-        assert self.graph is not None
+        if self.graph is None:
+            raise RuntimeError("Graph not initialized")
         # Store full external reference object as JSON for faithful round-tripping
         # This includes source, identifier, and uri fields
         ref_dict = {
@@ -406,24 +415,34 @@ class OWLDeserializer(OntologyDeserializer):
                 source_bytes = source
 
             # Try to parse with auto-detection of format (RDF/XML, Turtle, JSON-LD)
+            # Only catch format-related errors; re-raise system errors like MemoryError, KeyboardInterrupt, etc.
             format_errors: list[tuple[str, Exception]] = []
             for fmt in ["xml", "turtle", "json-ld"]:
                 try:
                     self.graph = Graph()  # Reset graph for each format attempt
                     self.graph.parse(data=source_bytes, format=fmt)
                     break
-                except Exception as e:
+                except (ValueError, TypeError, UnicodeDecodeError, SyntaxError) as e:
+                    # These are format-related parsing errors; try next format
                     format_errors.append((fmt, e))
                     continue
+                except Exception as e:
+                    # Check if this is an rdflib ParserError or similar
+                    if "parse" in type(e).__name__.lower() or "syntax" in type(e).__name__.lower():
+                        format_errors.append((fmt, e))
+                        continue
+                    # For any other exception type, re-raise as it's not a format issue
+                    raise
             else:
                 # All formats failed - build error message from all attempts
-                error_parts = [f"{fmt}: {str(e)}" for fmt, e in format_errors]
-                error_msg = "Failed to parse OWL RDF in any format. " + "; ".join(
-                    error_parts
-                )
-                raise ValueError(error_msg) from (
-                    format_errors[-1][1] if format_errors else None
-                )
+                if format_errors:
+                    error_parts = [f"{fmt}: {str(e)}" for fmt, e in format_errors]
+                    error_msg = "Failed to parse OWL RDF in any format. " + "; ".join(
+                        error_parts
+                    )
+                    raise ValueError(error_msg) from format_errors[-1][1]
+                else:
+                    raise ValueError("Failed to parse OWL RDF: no format could be attempted")
 
             # Process taxonomies first (ConceptSchemes without dct:isPartOf)
             # Then concept schemes (with dct:isPartOf) to avoid duplicate creation
