@@ -149,6 +149,9 @@ class ImportConflict:
 
         Returns:
             The default resolution strategy for this match kind, or None if user must choose
+
+        Raises:
+            ValueError: If match_kind is unhandled (new MatchKind added without update)
         """
         match match_kind:
             case MatchKind.EXTERNAL_REFERENCE:
@@ -157,6 +160,8 @@ class ImportConflict:
                 return None
             case MatchKind.TITLE:
                 return None
+            case _:
+                raise ValueError(f"Unhandled match kind: {match_kind}")
 
 
 @dataclass(frozen=True)

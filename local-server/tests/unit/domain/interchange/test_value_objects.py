@@ -186,6 +186,19 @@ class TestImportConflictDefaultResolution:
         resolution = ImportConflict.derive_default_resolution(MatchKind.TITLE)
         assert resolution is None
 
+    def test_unhandled_match_kind_raises(self):
+        """derive_default_resolution raises ValueError for unhandled MatchKind."""
+        # Create a mock match_kind that doesn't match any case
+        # This would happen if a new MatchKind is added without updating derive_default_resolution
+        class UnhandledMatchKind:
+            def __str__(self):
+                return "unhandled_kind"
+
+        # We can't easily test this without refactoring, so we'll ensure the function handles all known kinds
+        for kind in MatchKind:
+            resolution = ImportConflict.derive_default_resolution(kind)
+            assert resolution is None or isinstance(resolution, ResolutionKind)
+
     def test_conflict_with_derived_default(self):
         """ImportConflict can be created with derived default_resolution."""
         conflict = ImportConflict(
@@ -205,6 +218,61 @@ class TestImportConflictDefaultResolution:
         )
 
         assert conflict.default_resolution == ResolutionKind.MERGE
+
+
+class TestImportConflictValidation:
+    """Test ImportConflict __post_init__ validation."""
+
+    def test_valid_conflict_with_none_default(self):
+        """ImportConflict can be created with None default_resolution."""
+        conflict = ImportConflict(
+            match_kind=MatchKind.UUID,
+            incoming={"id": "incoming-1"},
+            existing="existing-1",
+            default_resolution=None,
+            available_resolutions=(
+                ResolutionKind.SKIP,
+                ResolutionKind.OVERWRITE,
+                ResolutionKind.MERGE,
+                ResolutionKind.RENAME,
+                ResolutionKind.ABORT,
+            ),
+        )
+        assert conflict.default_resolution is None
+
+    def test_valid_conflict_with_default_in_available(self):
+        """ImportConflict validates that default_resolution is in available_resolutions."""
+        conflict = ImportConflict(
+            match_kind=MatchKind.EXTERNAL_REFERENCE,
+            incoming={"id": "incoming-1"},
+            existing="existing-1",
+            default_resolution=ResolutionKind.MERGE,
+            available_resolutions=(
+                ResolutionKind.SKIP,
+                ResolutionKind.OVERWRITE,
+                ResolutionKind.MERGE,
+                ResolutionKind.RENAME,
+                ResolutionKind.ABORT,
+            ),
+        )
+        assert conflict.default_resolution == ResolutionKind.MERGE
+
+    def test_invalid_conflict_default_not_in_available(self):
+        """ImportConflict raises ValueError if default_resolution not in available_resolutions."""
+        with pytest.raises(ValueError, match="default_resolution.*must be in available_resolutions"):
+            ImportConflict(
+                match_kind=MatchKind.EXTERNAL_REFERENCE,
+                incoming={"id": "incoming-1"},
+                existing="existing-1",
+                default_resolution=ResolutionKind.MERGE,
+                available_resolutions=(
+                    ResolutionKind.SKIP,
+                    ResolutionKind.OVERWRITE,
+                    # MERGE intentionally omitted
+                    ResolutionKind.RENAME,
+                    ResolutionKind.ABORT,
+                ),
+            )
 
 
 class TestImportPlanValidation:

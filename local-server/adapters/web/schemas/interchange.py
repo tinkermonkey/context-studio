@@ -70,7 +70,7 @@ class ImportConflictResponse(BaseModel):
     )
     incoming: dict[str, Any] = Field(..., description="Incoming entity data")
     existing: Optional[str] = Field(None, description="Reference to existing entity")
-    default_resolution: str = Field(..., description="Default resolution strategy")
+    default_resolution: Optional[str] = Field(None, description="Default resolution strategy (None means user must choose)")
     available_resolutions: List[str] = Field(..., description="Available resolutions")
 
 

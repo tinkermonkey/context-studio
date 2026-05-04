@@ -622,9 +622,10 @@ class GraphMLDeserializer(OntologyDeserializer):
         for conflict in conflicts:
             entity_id = conflict.incoming["id"]
             if entity_id not in resolution_map:
+                default_str = conflict.default_resolution.value if conflict.default_resolution else "none — user must choose"
                 raise ValueError(
                     f"Conflict for entity {entity_id} ({conflict.match_kind.value}) "
-                    f"requires resolution before commit (default: {conflict.default_resolution.value})"
+                    f"requires resolution before commit (default: {default_str})"
                 )
 
         # Create and persist ImportRun with resolutions

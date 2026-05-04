@@ -351,6 +351,7 @@ class SKOSDeserializer(OntologyDeserializer):
         self.incoming_entities: Dict[str, Dict[str, Any]] = {}
         self._entity_map: Dict[str, str] = {}  # URI -> local entity ID
         self._classes_cache: Optional[list[Class]] = None
+        self._individuals_cache: Optional[list[Individual]] = None
 
     def deserialize(
         self,
@@ -380,6 +381,7 @@ class SKOSDeserializer(OntologyDeserializer):
             self.incoming_entities = {}
             self._entity_map = {}  # Reset entity map for this deserialization
             self._classes_cache = None  # Reset classes cache
+            self._individuals_cache = None  # Reset individuals cache
 
             # Ensure source is bytes for hashing
             if isinstance(source, str):
@@ -480,9 +482,10 @@ class SKOSDeserializer(OntologyDeserializer):
         for conflict in conflicts:
             entity_id = conflict.incoming["id"]
             if entity_id not in resolution_map:
+                default_str = conflict.default_resolution.value if conflict.default_resolution else "none — user must choose"
                 raise ValueError(
                     f"Conflict for entity {entity_id} ({conflict.match_kind.value}) "
-                    f"requires resolution before commit (default: {conflict.default_resolution.value})"
+                    f"requires resolution before commit (default: {default_str})"
                 )
 
         # Create and persist ImportRun with resolutions
@@ -836,9 +839,11 @@ class SKOSDeserializer(OntologyDeserializer):
                 if ext_ref.source == source and ext_ref.identifier == identifier:
                     return class_entity.id
 
-        # Also search individuals
-        individuals = self.ontology_repo.list_individuals()
-        for individual in individuals:
+        # Also search individuals (cached on first access)
+        if self._individuals_cache is None:
+            self._individuals_cache = self.ontology_repo.list_individuals()
+
+        for individual in self._individuals_cache:
             for ext_ref in individual.external_references:
                 if ext_ref.source == source and ext_ref.identifier == identifier:
                     return individual.id

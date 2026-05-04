@@ -118,7 +118,7 @@ def _conflict_to_response(conflict) -> ImportConflictResponse:
         match_kind=conflict.match_kind.value,
         incoming=conflict.incoming,
         existing=conflict.existing,
-        default_resolution=conflict.default_resolution.value,
+        default_resolution=conflict.default_resolution.value if conflict.default_resolution else None,
         available_resolutions=[r.value for r in conflict.available_resolutions],
     )
 
