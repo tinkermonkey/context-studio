@@ -43,7 +43,6 @@ from domain.ontology.entities import (
     Relationship,
     PropertyDefinition,
 )
-from domain.ontology.value_objects import ExternalReference
 from adapters.interchange.persistence_helpers import persist_incoming_entities
 
 logger = get_logger(__name__)
