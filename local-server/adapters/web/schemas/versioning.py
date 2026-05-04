@@ -7,7 +7,7 @@ Request schemas (for POST/PUT bodies):
 - ResolveConflictsRequest
 
 Response schemas (for HTTP responses):
-- ChangeEventResponse
+- VersioningChangeEventResponse
 - ChangeHistoryResponse
 - ChangesetResponse
 - ProposalResponse
@@ -74,8 +74,8 @@ class AutoResolveConflictsRequest(BaseModel):
 # ============================================================================
 
 
-class ChangeEventResponse(BaseModel):
-    """Response representing a change event"""
+class VersioningChangeEventResponse(BaseModel):
+    """Response representing a versioning change event"""
 
     id: str = Field(..., description="Unique identifier of the change event")
     entity_id: str = Field(..., description="ID of the entity that changed")
@@ -118,7 +118,7 @@ class EntityVersionResponse(BaseModel):
 class ChangeHistoryResponse(BaseModel):
     """Response with paginated change history results"""
 
-    events: list[ChangeEventResponse] = Field(
+    events: list[VersioningChangeEventResponse] = Field(
         ...,
         description="List of change events matching the query (limited by limit parameter)",
     )

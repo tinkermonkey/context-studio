@@ -23,12 +23,8 @@ vi.mock("@tanstack/react-router", () => ({
 
 // Mock the sidebar component
 vi.mock("@/components/layout/cs_sidebar", () => ({
-  CsSidebar: ({ children }: any) => (
-    <aside data-testid="cs-sidebar">{children}</aside>
-  ),
-  CsSidebarTitle: ({ children }: any) => (
-    <h2 data-testid="cs-sidebar-title">{children}</h2>
-  ),
+  CsSidebar: ({ children }: any) => <aside>{children}</aside>,
+  CsSidebarTitle: ({ children }: any) => <h2>{children}</h2>,
 }));
 
 describe("InterchangeSidebar", () => {
@@ -52,9 +48,9 @@ describe("InterchangeSidebar", () => {
       isTransitioning: false,
     } as any);
 
-    render(<InterchangeSidebar />);
+    const { container } = render(<InterchangeSidebar />);
 
-    expect(screen.getByTestId("cs-sidebar")).toBeInTheDocument();
+    expect(container.querySelector("aside")).toBeInTheDocument();
   });
 
   it("renders sidebar title", () => {
@@ -73,9 +69,9 @@ describe("InterchangeSidebar", () => {
       isTransitioning: false,
     } as any);
 
-    render(<InterchangeSidebar />);
+    const { container } = render(<InterchangeSidebar />);
 
-    expect(screen.getByTestId("cs-sidebar-title")).toBeInTheDocument();
+    expect(container.querySelector("h2")).toBeInTheDocument();
     expect(screen.getByText("Interchange")).toBeInTheDocument();
   });
 

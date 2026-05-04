@@ -3943,7 +3943,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ListResponse_ChangeEventResponse_"
+                  "$ref": "#/components/schemas/ListResponse_InterchangeChangeEventResponse_"
                 }
               }
             }
@@ -4169,7 +4169,7 @@
         "properties": {
           "events": {
             "items": {
-              "$ref": "#/components/schemas/adapters__web__schemas__versioning__ChangeEventResponse"
+              "$ref": "#/components/schemas/VersioningChangeEventResponse"
             },
             "type": "array",
             "title": "Events",
@@ -5674,6 +5674,71 @@
         "title": "IndividualUpdateRequest",
         "description": "Request to update an individual."
       },
+      "InterchangeChangeEventResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique identifier"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp",
+            "description": "When the change occurred"
+          },
+          "entity_id": {
+            "type": "string",
+            "title": "Entity Id",
+            "description": "Entity that changed"
+          },
+          "entity_type": {
+            "type": "string",
+            "title": "Entity Type",
+            "description": "Type of entity"
+          },
+          "operation": {
+            "$ref": "#/components/schemas/ChangeOperation",
+            "description": "Operation performed"
+          },
+          "new_state": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New State",
+            "description": "New state after change"
+          },
+          "previous_state": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous State",
+            "description": "Previous state before change"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "timestamp",
+          "entity_id",
+          "entity_type",
+          "operation"
+        ],
+        "title": "InterchangeChangeEventResponse",
+        "description": "Response containing interchange change event data."
+      },
       "KnowledgeGraphResponse": {
         "properties": {
           "node_count": {
@@ -5725,36 +5790,6 @@
         "required": ["label", "language_code", "sense_type"],
         "title": "LexicalSenseResponse",
         "description": "Response containing lexical sense data."
-      },
-      "ListResponse_ChangeEventResponse_": {
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/adapters__web__schemas__interchange__ChangeEventResponse"
-            },
-            "type": "array",
-            "title": "Items",
-            "description": "List of items"
-          },
-          "total": {
-            "type": "integer",
-            "title": "Total",
-            "description": "Total number of items"
-          },
-          "limit": {
-            "type": "integer",
-            "title": "Limit",
-            "description": "Limit applied"
-          },
-          "offset": {
-            "type": "integer",
-            "title": "Offset",
-            "description": "Offset applied"
-          }
-        },
-        "type": "object",
-        "required": ["items", "total", "limit", "offset"],
-        "title": "ListResponse[ChangeEventResponse]"
       },
       "ListResponse_ClassResponse_": {
         "properties": {
@@ -5905,6 +5940,36 @@
         "type": "object",
         "required": ["items", "total", "limit", "offset"],
         "title": "ListResponse[IndividualResponse]"
+      },
+      "ListResponse_InterchangeChangeEventResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/InterchangeChangeEventResponse"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total number of items"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "description": "Limit applied"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "description": "Offset applied"
+          }
+        },
+        "type": "object",
+        "required": ["items", "total", "limit", "offset"],
+        "title": "ListResponse[InterchangeChangeEventResponse]"
       },
       "ListResponse_PropertyDefinitionResponse_": {
         "properties": {
@@ -7615,73 +7680,7 @@
         "required": ["loc", "msg", "type"],
         "title": "ValidationError"
       },
-      "adapters__web__schemas__interchange__ChangeEventResponse": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id",
-            "description": "Unique identifier"
-          },
-          "timestamp": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Timestamp",
-            "description": "When the change occurred"
-          },
-          "entity_id": {
-            "type": "string",
-            "title": "Entity Id",
-            "description": "Entity that changed"
-          },
-          "entity_type": {
-            "type": "string",
-            "title": "Entity Type",
-            "description": "Type of entity"
-          },
-          "operation": {
-            "type": "string",
-            "title": "Operation",
-            "description": "Operation performed"
-          },
-          "new_state": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "New State",
-            "description": "New state after change"
-          },
-          "previous_state": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Previous State",
-            "description": "Previous state before change"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "timestamp",
-          "entity_id",
-          "entity_type",
-          "operation"
-        ],
-        "title": "ChangeEventResponse",
-        "description": "Response containing change event data."
-      },
-      "adapters__web__schemas__versioning__ChangeEventResponse": {
+      "VersioningChangeEventResponse": {
         "properties": {
           "id": {
             "type": "string",
@@ -7767,8 +7766,8 @@
           "timestamp",
           "processed"
         ],
-        "title": "ChangeEventResponse",
-        "description": "Response representing a change event"
+        "title": "VersioningChangeEventResponse",
+        "description": "Response representing a versioning change event"
       }
     }
   }

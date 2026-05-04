@@ -35,7 +35,7 @@ from adapters.web.schemas.versioning import (
     ChangesetCreateRequest,
     ChangesetResponse,
     ChangeHistoryResponse,
-    ChangeEventResponse,
+    VersioningChangeEventResponse,
     EntityVersionResponse,
     ProposalResponse,
     RejectProposalRequest,
@@ -106,7 +106,7 @@ async def get_change_history_all(
     try:
         result = await run_sync_in_executor(service.get_change_history, limit=limit)
         return ChangeHistoryResponse(
-            events=[ChangeEventResponse.model_validate(e) for e in result.events],
+            events=[VersioningChangeEventResponse.model_validate(e) for e in result.events],
             total=result.total,
         )
     except Exception as exc:
@@ -139,7 +139,7 @@ async def get_change_history_by_entity(
             service.get_change_history, entity_id=entity_id, limit=limit
         )
         return ChangeHistoryResponse(
-            events=[ChangeEventResponse.model_validate(e) for e in result.events],
+            events=[VersioningChangeEventResponse.model_validate(e) for e in result.events],
             total=result.total,
         )
     except Exception as exc:

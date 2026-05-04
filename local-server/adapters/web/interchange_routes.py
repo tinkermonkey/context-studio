@@ -37,7 +37,7 @@ from adapters.web.schemas.interchange import (
     SerializationScopeRequest,
     ImportPlanResponse,
     ImportRunResponse,
-    ChangeEventResponse,
+    InterchangeChangeEventResponse,
     ImportConflictResponse,
     ResolutionRecordResponse,
     SerializationScopeResponse,
@@ -160,9 +160,9 @@ def _import_run_to_response(import_run, warnings: Optional[list[str]] = None) ->
     )
 
 
-def _change_event_to_response(event: ChangeEvent) -> ChangeEventResponse:
+def _change_event_to_response(event: ChangeEvent) -> InterchangeChangeEventResponse:
     """Convert ChangeEvent domain object to response."""
-    return ChangeEventResponse(
+    return InterchangeChangeEventResponse(
         id=event.id,
         timestamp=event.timestamp,
         entity_id=event.entity_id,
@@ -493,7 +493,7 @@ async def get_import_run(
 # ==================== Change Events Endpoints ====================
 
 
-@router.get("/runs/{run_id}/change-events", response_model=ListResponse[ChangeEventResponse])
+@router.get("/runs/{run_id}/change-events", response_model=ListResponse[InterchangeChangeEventResponse])
 async def get_run_change_events(
     run_id: str,
     interchange_repo: ImportRunRepository = Depends(get_interchange_repo),
@@ -501,7 +501,7 @@ async def get_run_change_events(
     limit: int = Query(100, ge=1, le=500, description="Maximum number of results"),
     entity_type: Optional[str] = Query(None, description="Filter by entity type"),
     change_type: Optional[str] = Query(None, description="Filter by change type"),
-) -> ListResponse[ChangeEventResponse]:
+) -> ListResponse[InterchangeChangeEventResponse]:
     """
     Get change events associated with an import run.
 

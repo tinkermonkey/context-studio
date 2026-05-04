@@ -2742,7 +2742,7 @@ export interface components {
        * Events
        * @description List of change events matching the query (limited by limit parameter)
        */
-      events: components["schemas"]["adapters__web__schemas__versioning__ChangeEventResponse"][];
+      events: components["schemas"]["VersioningChangeEventResponse"][];
       /**
        * Total
        * @description Total count of all events matching the query (without limit applied)
@@ -3736,6 +3736,49 @@ export interface components {
       description?: string | null;
     };
     /**
+     * InterchangeChangeEventResponse
+     * @description Response containing interchange change event data.
+     */
+    InterchangeChangeEventResponse: {
+      /**
+       * Id
+       * @description Unique identifier
+       */
+      id: string;
+      /**
+       * Timestamp
+       * Format: date-time
+       * @description When the change occurred
+       */
+      timestamp: string;
+      /**
+       * Entity Id
+       * @description Entity that changed
+       */
+      entity_id: string;
+      /**
+       * Entity Type
+       * @description Type of entity
+       */
+      entity_type: string;
+      /** @description Operation performed */
+      operation: components["schemas"]["ChangeOperation"];
+      /**
+       * New State
+       * @description New state after change
+       */
+      new_state?: {
+        [key: string]: unknown;
+      } | null;
+      /**
+       * Previous State
+       * @description Previous state before change
+       */
+      previous_state?: {
+        [key: string]: unknown;
+      } | null;
+    };
+    /**
      * KnowledgeGraphResponse
      * @description Response containing knowledge graph metadata.
      */
@@ -3782,29 +3825,6 @@ export interface components {
        * @description Type of sense
        */
       sense_type: string;
-    };
-    /** ListResponse[ChangeEventResponse] */
-    ListResponse_ChangeEventResponse_: {
-      /**
-       * Items
-       * @description List of items
-       */
-      items: components["schemas"]["adapters__web__schemas__interchange__ChangeEventResponse"][];
-      /**
-       * Total
-       * @description Total number of items
-       */
-      total: number;
-      /**
-       * Limit
-       * @description Limit applied
-       */
-      limit: number;
-      /**
-       * Offset
-       * @description Offset applied
-       */
-      offset: number;
     };
     /** ListResponse[ClassResponse] */
     ListResponse_ClassResponse_: {
@@ -3905,6 +3925,29 @@ export interface components {
        * @description List of items
        */
       items: components["schemas"]["IndividualResponse"][];
+      /**
+       * Total
+       * @description Total number of items
+       */
+      total: number;
+      /**
+       * Limit
+       * @description Limit applied
+       */
+      limit: number;
+      /**
+       * Offset
+       * @description Offset applied
+       */
+      offset: number;
+    };
+    /** ListResponse[InterchangeChangeEventResponse] */
+    ListResponse_InterchangeChangeEventResponse_: {
+      /**
+       * Items
+       * @description List of items
+       */
+      items: components["schemas"]["InterchangeChangeEventResponse"][];
       /**
        * Total
        * @description Total number of items
@@ -5084,56 +5127,10 @@ export interface components {
       ctx?: Record<string, never>;
     };
     /**
-     * ChangeEventResponse
-     * @description Response containing change event data.
+     * VersioningChangeEventResponse
+     * @description Response representing a versioning change event
      */
-    adapters__web__schemas__interchange__ChangeEventResponse: {
-      /**
-       * Id
-       * @description Unique identifier
-       */
-      id: string;
-      /**
-       * Timestamp
-       * Format: date-time
-       * @description When the change occurred
-       */
-      timestamp: string;
-      /**
-       * Entity Id
-       * @description Entity that changed
-       */
-      entity_id: string;
-      /**
-       * Entity Type
-       * @description Type of entity
-       */
-      entity_type: string;
-      /**
-       * Operation
-       * @description Operation performed
-       */
-      operation: string;
-      /**
-       * New State
-       * @description New state after change
-       */
-      new_state?: {
-        [key: string]: unknown;
-      } | null;
-      /**
-       * Previous State
-       * @description Previous state before change
-       */
-      previous_state?: {
-        [key: string]: unknown;
-      } | null;
-    };
-    /**
-     * ChangeEventResponse
-     * @description Response representing a change event
-     */
-    adapters__web__schemas__versioning__ChangeEventResponse: {
+    VersioningChangeEventResponse: {
       /**
        * Id
        * @description Unique identifier of the change event
@@ -8036,7 +8033,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ListResponse_ChangeEventResponse_"];
+          "application/json": components["schemas"]["ListResponse_InterchangeChangeEventResponse_"];
         };
       };
       /** @description Validation Error */

@@ -30,13 +30,13 @@ export type ResolutionRecord =
  * ChangeEvent - Change event associated with an import run.
  */
 export type ChangeEvent =
-  components["schemas"]["adapters__web__schemas__interchange__ChangeEventResponse"];
+  components["schemas"]["InterchangeChangeEventResponse"];
 
 /**
  * ChangeEventResponse - Response containing change event data.
  */
 export type ChangeEventResponse =
-  components["schemas"]["adapters__web__schemas__interchange__ChangeEventResponse"];
+  components["schemas"]["InterchangeChangeEventResponse"];
 
 /**
  * ImportRunResponse - Response containing import run data.
@@ -55,7 +55,7 @@ export type ImportRunListResponse =
  * Uses generic ListResponse pattern.
  */
 export type ChangeEventListResponse =
-  components["schemas"]["ListResponse_ChangeEventResponse_"];
+  components["schemas"]["ListResponse_InterchangeChangeEventResponse_"];
 
 /**
  * Resolution strategy for import conflicts.

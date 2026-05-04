@@ -11,7 +11,7 @@ Response schemas:
 - ImportPlanResponse: Result of import dry-run
 - ResolutionRecordResponse: Applied resolution
 - ImportRunResponse: Import run details
-- ChangeEventResponse: Change event details
+- InterchangeChangeEventResponse: Change event details
 """
 
 from datetime import datetime
@@ -144,8 +144,8 @@ class ImportRunResponse(BaseModel):
 # ==================== Change Event Schemas ====================
 
 
-class ChangeEventResponse(BaseModel):
-    """Response containing change event data."""
+class InterchangeChangeEventResponse(BaseModel):
+    """Response containing interchange change event data."""
 
     model_config = ConfigDict(from_attributes=True)
 
