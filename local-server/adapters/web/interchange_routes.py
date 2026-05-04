@@ -51,16 +51,19 @@ router = APIRouter(prefix="/api/v1/interchange", tags=["interchange"])
 
 _logger = get_logger(__name__)
 
+# Maximum file size for imports (500 MB)
+MAX_UPLOAD_SIZE = 500 * 1024 * 1024
+
 
 # ==================== Helper Functions ====================
 
 
-def _get_serializer(format: SerializationFormat, ontology_repo: OntologyRepository):
+def _get_serializer(format: SerializationFormat, ontology_repo: OntologyRepository, split_mode: bool = False):
     """Get the appropriate serializer for the format."""
     if format == SerializationFormat.SKOS:
         return SKOSSerializer(ontology_repo)
     elif format == SerializationFormat.OWL:
-        return OWLSerializer(ontology_repo)
+        return OWLSerializer(ontology_repo, split_mode=split_mode)
     elif format == SerializationFormat.GRAPHML:
         return GraphMLSerializer(ontology_repo)
     else:
@@ -205,8 +208,8 @@ async def export_ontology(
                 f"Unsupported format: {request.format}. Supported formats: {', '.join(f.value for f in SerializationFormat)}"
             )
 
-        # Get serializer
-        serializer = _get_serializer(enum_format, ontology_repo)
+        # Get serializer with split_mode for OWL
+        serializer = _get_serializer(enum_format, ontology_repo, split_mode=request.split_mode)
 
         # Serialize in executor to avoid blocking
         data = await run_sync_in_executor(
@@ -310,8 +313,22 @@ async def import_ontology(
                     detail=f"Invalid resolutions: {str(e)}",
                 )
 
+        # Check file size before reading
+        if file.size is not None and file.size > MAX_UPLOAD_SIZE:
+            raise HTTPException(
+                status_code=http_status.HTTP_413_PAYLOAD_TOO_LARGE,
+                detail=f"File size exceeds maximum allowed size of {MAX_UPLOAD_SIZE // (1024 * 1024)} MB",
+            )
+
         # Read file content
         content = await file.read()
+
+        # Double-check actual content size (in case size header was not set)
+        if len(content) > MAX_UPLOAD_SIZE:
+            raise HTTPException(
+                status_code=http_status.HTTP_413_PAYLOAD_TOO_LARGE,
+                detail=f"File size exceeds maximum allowed size of {MAX_UPLOAD_SIZE // (1024 * 1024)} MB",
+            )
 
         # Parse and validate format
         try:

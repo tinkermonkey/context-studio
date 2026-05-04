@@ -135,7 +135,7 @@ class TestExportEndpoint:
         # Mock serializer
         monkeypatch.setattr(
             "adapters.web.interchange_routes._get_serializer",
-            lambda fmt, repo: FakeSerializer(),
+            lambda fmt, repo, split_mode=False: FakeSerializer(),
         )
 
         request_body = {
@@ -152,7 +152,7 @@ class TestExportEndpoint:
         """Export endpoint returns binary data with correct media type."""
         monkeypatch.setattr(
             "adapters.web.interchange_routes._get_serializer",
-            lambda fmt, repo: FakeSerializer(),
+            lambda fmt, repo, split_mode=False: FakeSerializer(),
         )
 
         request_body = {
@@ -171,7 +171,7 @@ class TestExportEndpoint:
         """Export endpoint sets proper Content-Disposition header."""
         monkeypatch.setattr(
             "adapters.web.interchange_routes._get_serializer",
-            lambda fmt, repo: FakeSerializer(),
+            lambda fmt, repo, split_mode=False: FakeSerializer(),
         )
 
         request_body = {
@@ -187,7 +187,7 @@ class TestExportEndpoint:
         assert "graphml" in response.headers["Content-Disposition"]
 
     def test_export_rejects_invalid_format(self, client):
-        """Export endpoint returns 400 for unsupported format."""
+        """Export endpoint returns 422 for unsupported format (Pydantic validation)."""
         request_body = {
             "format": "invalid_format",
             "scope": {
@@ -196,15 +196,14 @@ class TestExportEndpoint:
         }
         response = client.post("/api/v1/interchange/export", json=request_body)
 
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-        data = response.json()
-        assert "Unsupported format" in data["detail"]
+        # Pydantic validates Literal types at schema level, returning 422
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_export_accepts_taxonomy_scope(self, client, monkeypatch):
         """Export endpoint accepts taxonomy scope."""
         monkeypatch.setattr(
             "adapters.web.interchange_routes._get_serializer",
-            lambda fmt, repo: FakeSerializer(),
+            lambda fmt, repo, split_mode=False: FakeSerializer(),
         )
 
         taxonomy_id = str(uuid4())
@@ -223,7 +222,7 @@ class TestExportEndpoint:
         """Export endpoint accepts concept scheme scope."""
         monkeypatch.setattr(
             "adapters.web.interchange_routes._get_serializer",
-            lambda fmt, repo: FakeSerializer(),
+            lambda fmt, repo, split_mode=False: FakeSerializer(),
         )
 
         scheme_id = str(uuid4())
@@ -243,7 +242,7 @@ class TestExportEndpoint:
         """Export endpoint accepts entity set scope."""
         monkeypatch.setattr(
             "adapters.web.interchange_routes._get_serializer",
-            lambda fmt, repo: FakeSerializer(),
+            lambda fmt, repo, split_mode=False: FakeSerializer(),
         )
 
         entity_ids = [str(uuid4()), str(uuid4())]

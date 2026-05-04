@@ -5341,13 +5341,23 @@
         "properties": {
           "format": {
             "type": "string",
-            "minLength": 1,
+            "enum": [
+              "skos",
+              "owl",
+              "graphml"
+            ],
             "title": "Format",
-            "description": "Export format: skos, owl, graphml, etc."
+            "description": "Export format: skos, owl, or graphml"
           },
           "scope": {
             "$ref": "#/components/schemas/SerializationScopeRequest",
             "description": "What to export"
+          },
+          "split_mode": {
+            "type": "boolean",
+            "title": "Split Mode",
+            "description": "For OWL format: if true, export only TBox (schema) without ABox (individuals)",
+            "default": false
           }
         },
         "type": "object",
@@ -5713,6 +5723,11 @@
           },
           "format": {
             "type": "string",
+            "enum": [
+              "skos",
+              "owl",
+              "graphml"
+            ],
             "title": "Format",
             "description": "Format of imported file"
           },
@@ -5753,8 +5768,22 @@
             "title": "Affected Entity Ids",
             "description": "Entities affected by import"
           },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings",
+            "description": "Warning messages from import operation"
+          },
           "status": {
             "type": "string",
+            "enum": [
+              "pending",
+              "committed",
+              "failed",
+              "rolled_back"
+            ],
             "title": "Status",
             "description": "Current status: pending, committed, failed, or rolled_back"
           }
@@ -7376,6 +7405,11 @@
         "properties": {
           "match_kind": {
             "type": "string",
+            "enum": [
+              "external_reference",
+              "uuid",
+              "title"
+            ],
             "title": "Match Kind",
             "description": "Type of match that was resolved"
           },
@@ -7386,6 +7420,13 @@
           },
           "resolution_chosen": {
             "type": "string",
+            "enum": [
+              "skip",
+              "overwrite",
+              "merge",
+              "rename",
+              "abort"
+            ],
             "title": "Resolution Chosen",
             "description": "Resolution applied"
           }
@@ -7463,6 +7504,12 @@
         "properties": {
           "scope_type": {
             "type": "string",
+            "enum": [
+              "whole_graph",
+              "taxonomy",
+              "scheme",
+              "entity_set"
+            ],
             "title": "Scope Type",
             "description": "Scope type: whole_graph, taxonomy, scheme, or entity_set"
           },
@@ -7523,6 +7570,12 @@
         "properties": {
           "scope_type": {
             "type": "string",
+            "enum": [
+              "whole_graph",
+              "taxonomy",
+              "scheme",
+              "entity_set"
+            ],
             "title": "Scope Type"
           },
           "taxonomy_id": {

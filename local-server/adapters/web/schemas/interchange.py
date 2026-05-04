@@ -3,7 +3,7 @@ Pydantic schemas for the Data Interchange bounded context.
 
 Request schemas:
 - ExportRequest: For export operations
-- ImportRequest: For import operations (multipart form data)
+- SerializationScopeRequest: Describes what to export
 
 Response schemas:
 - SerializationScopeResponse: Describes what was serialized
@@ -15,7 +15,7 @@ Response schemas:
 """
 
 from datetime import datetime
-from typing import Optional, Any, List
+from typing import Optional, Any, List, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -26,7 +26,7 @@ from pydantic import BaseModel, ConfigDict, Field
 class SerializationScopeRequest(BaseModel):
     """Request to specify what to export."""
 
-    scope_type: str = Field(
+    scope_type: Literal["whole_graph", "taxonomy", "scheme", "entity_set"] = Field(
         ..., description="Scope type: whole_graph, taxonomy, scheme, or entity_set"
     )
     taxonomy_id: Optional[str] = Field(None, description="Taxonomy ID for taxonomy scope")
@@ -40,7 +40,7 @@ class SerializationScopeRequest(BaseModel):
 class SerializationScopeResponse(BaseModel):
     """Response describing what was serialized."""
 
-    scope_type: str
+    scope_type: Literal["whole_graph", "taxonomy", "scheme", "entity_set"]
     taxonomy_id: Optional[str] = None
     scheme_id: Optional[str] = None
     include_descendants: bool = False
@@ -53,10 +53,13 @@ class SerializationScopeResponse(BaseModel):
 class ExportRequest(BaseModel):
     """Request to export ontology data."""
 
-    format: str = Field(
-        ..., description="Export format: skos, owl, graphml, etc.", min_length=1
+    format: Literal["skos", "owl", "graphml"] = Field(
+        ..., description="Export format: skos, owl, or graphml"
     )
     scope: SerializationScopeRequest = Field(..., description="What to export")
+    split_mode: bool = Field(
+        False, description="For OWL format: if true, export only TBox (schema) without ABox (individuals)"
+    )
 
 
 # ==================== Import Conflict and Plan Schemas ====================
@@ -65,21 +68,29 @@ class ExportRequest(BaseModel):
 class ImportConflictResponse(BaseModel):
     """Represents a conflict detected during import."""
 
-    match_kind: str = Field(
+    match_kind: Literal["external_reference", "uuid", "title"] = Field(
         ..., description="Type of match: external_reference, uuid, or title"
     )
     incoming: dict[str, Any] = Field(..., description="Incoming entity data")
     existing: Optional[str] = Field(None, description="Reference to existing entity")
-    default_resolution: Optional[str] = Field(None, description="Default resolution strategy (None means user must choose)")
-    available_resolutions: List[str] = Field(..., description="Available resolutions")
+    default_resolution: Optional[Literal["skip", "overwrite", "merge", "rename", "abort"]] = Field(
+        None, description="Default resolution strategy (None means user must choose)"
+    )
+    available_resolutions: List[Literal["skip", "overwrite", "merge", "rename", "abort"]] = Field(
+        ..., description="Available resolutions"
+    )
 
 
 class ResolutionRecordResponse(BaseModel):
     """Record of a resolution applied during import."""
 
-    match_kind: str = Field(..., description="Type of match that was resolved")
+    match_kind: Literal["external_reference", "uuid", "title"] = Field(
+        ..., description="Type of match that was resolved"
+    )
     entity_id: str = Field(..., description="Entity ID involved")
-    resolution_chosen: str = Field(..., description="Resolution applied")
+    resolution_chosen: Literal["skip", "overwrite", "merge", "rename", "abort"] = Field(
+        ..., description="Resolution applied"
+    )
 
 
 class ImportPlanResponse(BaseModel):
@@ -110,7 +121,7 @@ class ImportRunResponse(BaseModel):
     id: str = Field(..., description="Unique identifier")
     created_at: datetime = Field(..., description="Creation timestamp")
     created_by: Optional[str] = Field(None, description="User who initiated the import")
-    format: str = Field(..., description="Format of imported file")
+    format: Literal["skos", "owl", "graphml"] = Field(..., description="Format of imported file")
     source_uri: Optional[str] = Field(None, description="URI or filename of source")
     source_hash: str = Field(..., description="SHA256 hash of imported bytes")
     scope: SerializationScopeResponse = Field(..., description="Import scope")
@@ -123,7 +134,7 @@ class ImportRunResponse(BaseModel):
     warnings: List[str] = Field(
         default_factory=list, description="Warning messages from import operation"
     )
-    status: str = Field(
+    status: Literal["pending", "committed", "failed", "rolled_back"] = Field(
         ..., description="Current status: pending, committed, failed, or rolled_back"
     )
 

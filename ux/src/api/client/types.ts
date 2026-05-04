@@ -3336,11 +3336,18 @@ export interface components {
     ExportRequest: {
       /**
        * Format
-       * @description Export format: skos, owl, graphml, etc.
+       * @description Export format: skos, owl, or graphml
+       * @enum {string}
        */
-      format: string;
+      format: "skos" | "owl" | "graphml";
       /** @description What to export */
       scope: components["schemas"]["SerializationScopeRequest"];
+      /**
+       * Split Mode
+       * @description For OWL format: if true, export only TBox (schema) without ABox (individuals)
+       * @default false
+       */
+      split_mode: boolean;
     };
     /**
      * ExternalReferenceResponse
@@ -3586,8 +3593,9 @@ export interface components {
       /**
        * Format
        * @description Format of imported file
+       * @enum {string}
        */
-      format: string;
+      format: "skos" | "owl" | "graphml";
       /**
        * Source Uri
        * @description URI or filename of source
@@ -3611,10 +3619,16 @@ export interface components {
        */
       affected_entity_ids?: string[];
       /**
+       * Warnings
+       * @description Warning messages from import operation
+       */
+      warnings?: string[];
+      /**
        * Status
        * @description Current status: pending, committed, failed, or rolled_back
+       * @enum {string}
        */
-      status: string;
+      status: "pending" | "committed" | "failed" | "rolled_back";
     };
     /**
      * IndividualClassListRequest
@@ -4654,8 +4668,9 @@ export interface components {
       /**
        * Match Kind
        * @description Type of match that was resolved
+       * @enum {string}
        */
-      match_kind: string;
+      match_kind: "external_reference" | "uuid" | "title";
       /**
        * Entity Id
        * @description Entity ID involved
@@ -4664,8 +4679,9 @@ export interface components {
       /**
        * Resolution Chosen
        * @description Resolution applied
+       * @enum {string}
        */
-      resolution_chosen: string;
+      resolution_chosen: "skip" | "overwrite" | "merge" | "rename" | "abort";
     };
     /**
      * ResolveConflictsRequest
@@ -4719,8 +4735,9 @@ export interface components {
       /**
        * Scope Type
        * @description Scope type: whole_graph, taxonomy, scheme, or entity_set
+       * @enum {string}
        */
-      scope_type: string;
+      scope_type: "whole_graph" | "taxonomy" | "scheme" | "entity_set";
       /**
        * Taxonomy Id
        * @description Taxonomy ID for taxonomy scope
@@ -4748,8 +4765,11 @@ export interface components {
      * @description Response describing what was serialized.
      */
     SerializationScopeResponse: {
-      /** Scope Type */
-      scope_type: string;
+      /**
+       * Scope Type
+       * @enum {string}
+       */
+      scope_type: "whole_graph" | "taxonomy" | "scheme" | "entity_set";
       /** Taxonomy Id */
       taxonomy_id?: string | null;
       /** Scheme Id */
