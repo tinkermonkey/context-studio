@@ -175,7 +175,7 @@ export function ConflictResolutionModal({
                 <div className="mt-4 space-y-3">
                   {groupedConflicts.external_reference.map((conflict, idx) => (
                     <ConflictRow
-                      key={idx}
+                      key={conflict.incoming.id}
                       conflict={conflict}
                       conflictIndex={conflict.incoming.id}
                       resolution={
@@ -244,7 +244,7 @@ export function ConflictResolutionModal({
                 <div className="mt-4 space-y-3">
                   {groupedConflicts.uuid.map((conflict, idx) => (
                     <ConflictRow
-                      key={idx}
+                      key={conflict.incoming.id}
                       conflict={conflict}
                       conflictIndex={conflict.incoming.id}
                       resolution={
@@ -313,7 +313,7 @@ export function ConflictResolutionModal({
                 <div className="mt-4 space-y-3">
                   {groupedConflicts.title.map((conflict, idx) => (
                     <ConflictRow
-                      key={idx}
+                      key={conflict.incoming.id}
                       conflict={conflict}
                       conflictIndex={conflict.incoming.id}
                       resolution={

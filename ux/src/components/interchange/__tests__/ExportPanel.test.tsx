@@ -235,4 +235,132 @@ describe("ExportPanel", () => {
 
     expect(screen.getByTestId("interchange-export-panel")).toBeInTheDocument();
   });
+
+  describe("Taxonomy selector states", () => {
+    it("shows loading message while taxonomies are loading", async () => {
+      vi.mocked(taxonomyHooks.useTaxonomies).mockReturnValue({
+        isLoading: true,
+        data: undefined,
+        error: null,
+      } as any);
+
+      render(<ExportPanel />);
+
+      const scopeSelect = screen.getByTestId(
+        "interchange-export-scope-picker",
+      ) as HTMLSelectElement;
+      fireEvent.change(scopeSelect, { target: { value: "taxonomy" } });
+
+      await waitFor(() => {
+        expect(screen.getByText("Loading taxonomies...")).toBeInTheDocument();
+      });
+    });
+
+    it("shows error message when taxonomy fetch fails", async () => {
+      vi.mocked(taxonomyHooks.useTaxonomies).mockReturnValue({
+        isLoading: false,
+        data: undefined,
+        error: new Error("Failed to fetch"),
+      } as any);
+
+      render(<ExportPanel />);
+
+      const scopeSelect = screen.getByTestId(
+        "interchange-export-scope-picker",
+      ) as HTMLSelectElement;
+      fireEvent.change(scopeSelect, { target: { value: "taxonomy" } });
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Failed to load taxonomies"),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("shows empty message when no taxonomies are available", async () => {
+      vi.mocked(taxonomyHooks.useTaxonomies).mockReturnValue({
+        isLoading: false,
+        data: [],
+        error: null,
+      } as any);
+
+      render(<ExportPanel />);
+
+      const scopeSelect = screen.getByTestId(
+        "interchange-export-scope-picker",
+      ) as HTMLSelectElement;
+      fireEvent.change(scopeSelect, { target: { value: "taxonomy" } });
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("No taxonomies available"),
+        ).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Concept scheme selector states", () => {
+    it("shows loading message while concept schemes are loading", async () => {
+      vi.mocked(conceptSchemeHooks.useConceptSchemes).mockReturnValue({
+        isLoading: true,
+        data: undefined,
+        error: null,
+      } as any);
+
+      render(<ExportPanel />);
+
+      const scopeSelect = screen.getByTestId(
+        "interchange-export-scope-picker",
+      ) as HTMLSelectElement;
+      fireEvent.change(scopeSelect, { target: { value: "scheme" } });
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Loading concept schemes..."),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("shows error message when concept scheme fetch fails", async () => {
+      vi.mocked(conceptSchemeHooks.useConceptSchemes).mockReturnValue({
+        isLoading: false,
+        data: undefined,
+        error: new Error("Failed to fetch"),
+      } as any);
+
+      render(<ExportPanel />);
+
+      const scopeSelect = screen.getByTestId(
+        "interchange-export-scope-picker",
+      ) as HTMLSelectElement;
+      fireEvent.change(scopeSelect, { target: { value: "scheme" } });
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Failed to load concept schemes"),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("shows empty message when no concept schemes are available", async () => {
+      vi.mocked(conceptSchemeHooks.useConceptSchemes).mockReturnValue({
+        isLoading: false,
+        data: [],
+        error: null,
+      } as any);
+
+      render(<ExportPanel />);
+
+      const scopeSelect = screen.getByTestId(
+        "interchange-export-scope-picker",
+      ) as HTMLSelectElement;
+      fireEvent.change(scopeSelect, { target: { value: "scheme" } });
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("No concept schemes available"),
+        ).toBeInTheDocument();
+      });
+    });
+  });
 });
