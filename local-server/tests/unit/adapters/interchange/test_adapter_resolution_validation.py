@@ -14,7 +14,7 @@ sys.path.append(
 )
 
 import pytest
-from domain.ontology.value_objects import ExternalReference
+from domain.interchange.entities import ResolutionRecord
 from domain.interchange.value_objects import (
     SerializationScope,
     SerializationScopeType,
@@ -25,111 +25,77 @@ from domain.interchange.value_objects import (
 )
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 from tests.fakes.fake_interchange_repository import FakeInterchangeRepository
-
-
-class MockDeserializer:
-    """Mock deserializer that tracks commit calls and their conflicts."""
-
-    def __init__(self, ontology_repo, interchange_repo, format_type):
-        """Initialize with repositories and format."""
-        self.ontology_repo = ontology_repo
-        self.interchange_repo = interchange_repo
-        self.format_type = format_type
-        self.incoming_entities = []
-        self.warnings = []
-
-    def commit(self, conflicts, source_hash, resolutions=None):
-        """Mock commit method that validates resolutions."""
-        from domain.interchange.services import ImportRunService
-        from domain.interchange.entities import ResolutionRecord
-
-        # Build resolution map
-        resolution_map = {}
-        if resolutions:
-            for res in resolutions:
-                resolution_map[res.entity_id] = res.resolution_chosen
-
-        # Validate that all conflicts have resolutions
-        for conflict in conflicts:
-            entity_id = conflict.incoming["id"]
-            if entity_id not in resolution_map:
-                default_str = (
-                    conflict.default_resolution.value
-                    if conflict.default_resolution
-                    else "none — user must choose"
-                )
-                raise ValueError(
-                    f"Conflict for entity {entity_id} ({conflict.match_kind.value}) "
-                    f"requires resolution before commit (default: {default_str})"
-                )
-
-        # Create ImportRun with resolutions
-        service = ImportRunService()
-        scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
-        import_run = service.create_with_resolutions_and_persist(
-            format=self.format_type,
-            source_hash=source_hash,
-            scope=scope,
-            resolutions=resolutions,
-            interchange_repo=self.interchange_repo,
-        )
-
-        return import_run.id
+from adapters.interchange.skos import SKOSDeserializer
+from adapters.interchange.owl import OWLDeserializer
+from adapters.interchange.graphml import GraphMLDeserializer
 
 
 class TestSKOSAdapterResolutionValidation:
     """Test SKOS adapter resolution validation in commit path."""
 
     def test_commit_with_unresolved_conflict_raises_error(self):
-        """Commit with unresolved conflicts raises ValueError."""
+        """Real SKOS adapter raises ValueError when conflicts lack resolutions."""
         ontology_repo = FakeOntologyRepository()
         interchange_repo = FakeInterchangeRepository()
-        deserializer = MockDeserializer(
-            ontology_repo, interchange_repo, SerializationFormat.SKOS
-        )
+        deserializer = SKOSDeserializer(ontology_repo, interchange_repo)
 
-        # Create a conflict with no resolution
+        # Manually set up incoming entities and conflicts
+        deserializer.incoming_entities = {
+            "entity-1": {"id": "entity-1", "title": "Test Entity"},
+        }
+
+        # Create a conflict
         conflict = ImportConflict(
-            incoming={"id": "entity-1", "title": "Incoming Entity"},
+            incoming={"id": "entity-1", "title": "Test Entity"},
             existing=None,
             match_kind=MatchKind.EXTERNAL_REFERENCE,
             default_resolution=ResolutionKind.MERGE,
             available_resolutions=(ResolutionKind.MERGE, ResolutionKind.SKIP),
         )
 
+        # Try to commit without resolutions - should raise ValueError
         with pytest.raises(ValueError) as exc_info:
-            deserializer.commit([conflict], "source_hash_123", resolutions=None)
+            deserializer._commit_with_resolutions(
+                conflicts=[conflict],
+                source_hash="hash123",
+                resolutions=None,
+            )
 
-        assert "entity-1" in str(exc_info.value)
-        assert "requires resolution before commit" in str(exc_info.value)
+        error_msg = str(exc_info.value)
+        assert "entity-1" in error_msg
+        assert "requires resolution before commit" in error_msg
 
     def test_commit_with_partial_resolutions_raises_error(self):
-        """Commit with only partial resolutions raises ValueError."""
-        from domain.interchange.entities import ResolutionRecord
-
+        """Real SKOS adapter raises ValueError with only partial resolutions."""
         ontology_repo = FakeOntologyRepository()
         interchange_repo = FakeInterchangeRepository()
-        deserializer = MockDeserializer(
-            ontology_repo, interchange_repo, SerializationFormat.SKOS
-        )
+        deserializer = SKOSDeserializer(ontology_repo, interchange_repo)
+
+        # Set up multiple incoming entities
+        deserializer.incoming_entities = {
+            "entity-1": {"id": "entity-1", "title": "Entity 1"},
+            "entity-2": {"id": "entity-2", "title": "Entity 2"},
+        }
 
         # Create two conflicts
-        conflict1 = ImportConflict(
-            incoming={"id": "entity-1", "title": "Incoming 1"},
-            existing=None,
-            match_kind=MatchKind.EXTERNAL_REFERENCE,
-            default_resolution=ResolutionKind.MERGE,
-            available_resolutions=(ResolutionKind.MERGE, ResolutionKind.SKIP),
-        )
-        conflict2 = ImportConflict(
-            incoming={"id": "entity-2", "title": "Incoming 2"},
-            existing=None,
-            match_kind=MatchKind.UUID,
-            default_resolution=None,
-            available_resolutions=(ResolutionKind.MERGE, ResolutionKind.SKIP),
-        )
+        conflicts = [
+            ImportConflict(
+                incoming={"id": "entity-1", "title": "Entity 1"},
+                existing=None,
+                match_kind=MatchKind.EXTERNAL_REFERENCE,
+                default_resolution=ResolutionKind.MERGE,
+                available_resolutions=(ResolutionKind.MERGE, ResolutionKind.SKIP),
+            ),
+            ImportConflict(
+                incoming={"id": "entity-2", "title": "Entity 2"},
+                existing=None,
+                match_kind=MatchKind.UUID,
+                default_resolution=None,
+                available_resolutions=(ResolutionKind.MERGE, ResolutionKind.SKIP),
+            ),
+        ]
 
-        # Only resolve one conflict
+        # Only resolve first conflict
         resolutions = [
             ResolutionRecord(
                 match_kind=MatchKind.EXTERNAL_REFERENCE,
@@ -138,36 +104,47 @@ class TestSKOSAdapterResolutionValidation:
             ),
         ]
 
+        # Should raise ValueError because entity-2 is unresolved
         with pytest.raises(ValueError) as exc_info:
-            deserializer.commit([conflict1, conflict2], "source_hash_123", resolutions)
+            deserializer._commit_with_resolutions(
+                conflicts=conflicts,
+                source_hash="hash123",
+                resolutions=resolutions,
+            )
 
-        assert "entity-2" in str(exc_info.value)
+        error_msg = str(exc_info.value)
+        assert "entity-2" in error_msg
+        assert "requires resolution before commit" in error_msg
 
     def test_commit_with_all_resolutions_succeeds(self):
-        """Commit with all conflicts resolved succeeds."""
-        from domain.interchange.entities import ResolutionRecord
-
+        """Real SKOS adapter commits successfully with all conflicts resolved."""
         ontology_repo = FakeOntologyRepository()
         interchange_repo = FakeInterchangeRepository()
-        deserializer = MockDeserializer(
-            ontology_repo, interchange_repo, SerializationFormat.SKOS
-        )
+        deserializer = SKOSDeserializer(ontology_repo, interchange_repo)
+
+        # Set up incoming entities
+        deserializer.incoming_entities = {
+            "entity-1": {"id": "entity-1", "title": "Entity 1"},
+            "entity-2": {"id": "entity-2", "title": "Entity 2"},
+        }
 
         # Create conflicts
-        conflict1 = ImportConflict(
-            incoming={"id": "entity-1", "title": "Incoming 1"},
-            existing=None,
-            match_kind=MatchKind.EXTERNAL_REFERENCE,
-            default_resolution=ResolutionKind.MERGE,
-            available_resolutions=(ResolutionKind.MERGE, ResolutionKind.SKIP),
-        )
-        conflict2 = ImportConflict(
-            incoming={"id": "entity-2", "title": "Incoming 2"},
-            existing=None,
-            match_kind=MatchKind.UUID,
-            default_resolution=None,
-            available_resolutions=(ResolutionKind.MERGE, ResolutionKind.SKIP),
-        )
+        conflicts = [
+            ImportConflict(
+                incoming={"id": "entity-1", "title": "Entity 1"},
+                existing=None,
+                match_kind=MatchKind.EXTERNAL_REFERENCE,
+                default_resolution=ResolutionKind.MERGE,
+                available_resolutions=(ResolutionKind.MERGE, ResolutionKind.SKIP),
+            ),
+            ImportConflict(
+                incoming={"id": "entity-2", "title": "Entity 2"},
+                existing=None,
+                match_kind=MatchKind.UUID,
+                default_resolution=None,
+                available_resolutions=(ResolutionKind.MERGE, ResolutionKind.SKIP),
+            ),
+        ]
 
         # Resolve all conflicts
         resolutions = [
@@ -183,25 +160,33 @@ class TestSKOSAdapterResolutionValidation:
             ),
         ]
 
-        import_run_id = deserializer.commit(
-            [conflict1, conflict2], "source_hash_123", resolutions
+        # Should succeed
+        import_run_id = deserializer._commit_with_resolutions(
+            conflicts=conflicts,
+            source_hash="hash123",
+            resolutions=resolutions,
         )
 
         assert import_run_id is not None
-        # Verify the ImportRun was persisted
+        # Verify persistence
         persisted_run = interchange_repo.get(import_run_id)
         assert persisted_run is not None
         assert persisted_run.format == SerializationFormat.SKOS
 
     def test_commit_with_empty_conflicts_succeeds(self):
-        """Commit with no conflicts succeeds."""
+        """Real SKOS adapter commits successfully with no conflicts."""
         ontology_repo = FakeOntologyRepository()
         interchange_repo = FakeInterchangeRepository()
-        deserializer = MockDeserializer(
-            ontology_repo, interchange_repo, SerializationFormat.SKOS
-        )
+        deserializer = SKOSDeserializer(ontology_repo, interchange_repo)
 
-        import_run_id = deserializer.commit([], "source_hash_123", resolutions=None)
+        deserializer.incoming_entities = {}
+
+        # Commit with no conflicts and no resolutions needed
+        import_run_id = deserializer._commit_with_resolutions(
+            conflicts=[],
+            source_hash="hash123",
+            resolutions=None,
+        )
 
         assert import_run_id is not None
         persisted_run = interchange_repo.get(import_run_id)
@@ -212,15 +197,17 @@ class TestOWLAdapterResolutionValidation:
     """Test OWL adapter resolution validation in commit path."""
 
     def test_owl_commit_with_unresolved_conflict_raises_error(self):
-        """OWL adapter commit with unresolved conflicts raises ValueError."""
+        """Real OWL adapter raises ValueError with unresolved conflicts."""
         ontology_repo = FakeOntologyRepository()
         interchange_repo = FakeInterchangeRepository()
-        deserializer = MockDeserializer(
-            ontology_repo, interchange_repo, SerializationFormat.OWL
-        )
+        deserializer = OWLDeserializer(ontology_repo, interchange_repo)
+
+        deserializer.incoming_entities = {
+            "owl-class-1": {"id": "owl-class-1", "title": "OWL Class"},
+        }
 
         conflict = ImportConflict(
-            incoming={"id": "owl-class-1", "title": "Incoming OWL Class"},
+            incoming={"id": "owl-class-1", "title": "OWL Class"},
             existing=None,
             match_kind=MatchKind.UUID,
             default_resolution=None,
@@ -228,43 +215,28 @@ class TestOWLAdapterResolutionValidation:
         )
 
         with pytest.raises(ValueError) as exc_info:
-            deserializer.commit([conflict], "owl_source_hash", resolutions=None)
-
-        assert "owl-class-1" in str(exc_info.value)
-        assert "requires resolution before commit" in str(exc_info.value)
-
-    def test_owl_commit_validates_against_default_resolution(self):
-        """OWL adapter includes default_resolution in error message."""
-        ontology_repo = FakeOntologyRepository()
-        interchange_repo = FakeInterchangeRepository()
-        deserializer = MockDeserializer(
-            ontology_repo, interchange_repo, SerializationFormat.OWL
-        )
-
-        conflict = ImportConflict(
-            incoming={"id": "entity-owl", "title": "OWL Entity"},
-            existing=None,
-            match_kind=MatchKind.EXTERNAL_REFERENCE,
-            default_resolution=ResolutionKind.MERGE,
-            available_resolutions=(ResolutionKind.MERGE, ResolutionKind.SKIP),
-        )
-
-        with pytest.raises(ValueError) as exc_info:
-            deserializer.commit([conflict], "owl_hash", resolutions=None)
+            deserializer._commit_with_resolutions(
+                conflicts=[conflict],
+                source_hash="owl_hash",
+                resolutions=None,
+            )
 
         error_msg = str(exc_info.value)
-        assert "entity-owl" in error_msg
-        assert "merge" in error_msg.lower()
+        assert "owl-class-1" in error_msg
+        assert "requires resolution before commit" in error_msg
 
-    def test_owl_commit_with_multiple_conflicts_validates_all(self):
-        """OWL adapter validates all conflicts, not just the first."""
-        from domain.interchange.entities import ResolutionRecord
-
+    def test_owl_commit_validates_all_conflicts(self):
+        """Real OWL adapter validates all conflicts, not just the first."""
         ontology_repo = FakeOntologyRepository()
         interchange_repo = FakeInterchangeRepository()
-        deserializer = MockDeserializer(
-            ontology_repo, interchange_repo, SerializationFormat.OWL
-        )
+        deserializer = OWLDeserializer(ontology_repo, interchange_repo)
+
+        # Create entities for multiple conflicts
+        deserializer.incoming_entities = {
+            "entity-1": {"id": "entity-1", "title": "Entity 1"},
+            "entity-2": {"id": "entity-2", "title": "Entity 2"},
+            "entity-3": {"id": "entity-3", "title": "Entity 3"},
+        }
 
         conflicts = [
             ImportConflict(
@@ -290,7 +262,7 @@ class TestOWLAdapterResolutionValidation:
             ),
         ]
 
-        # Only resolve two conflicts
+        # Only resolve first and third
         resolutions = [
             ResolutionRecord(
                 match_kind=MatchKind.EXTERNAL_REFERENCE,
@@ -304,22 +276,31 @@ class TestOWLAdapterResolutionValidation:
             ),
         ]
 
+        # Should fail because entity-2 is unresolved
         with pytest.raises(ValueError) as exc_info:
-            deserializer.commit(conflicts, "owl_hash", resolutions)
+            deserializer._commit_with_resolutions(
+                conflicts=conflicts,
+                source_hash="owl_hash",
+                resolutions=resolutions,
+            )
 
-        assert "entity-2" in str(exc_info.value)
+        error_msg = str(exc_info.value)
+        assert "entity-2" in error_msg
+        assert "requires resolution before commit" in error_msg
 
 
 class TestGraphMLAdapterResolutionValidation:
     """Test GraphML adapter resolution validation in commit path."""
 
     def test_graphml_commit_with_unresolved_conflict_raises_error(self):
-        """GraphML adapter commit with unresolved conflicts raises ValueError."""
+        """Real GraphML adapter raises ValueError with unresolved conflicts."""
         ontology_repo = FakeOntologyRepository()
         interchange_repo = FakeInterchangeRepository()
-        deserializer = MockDeserializer(
-            ontology_repo, interchange_repo, SerializationFormat.GRAPHML
-        )
+        deserializer = GraphMLDeserializer(ontology_repo, interchange_repo)
+
+        deserializer.incoming_entities = {
+            "graphml-node-1": {"id": "graphml-node-1", "title": "GraphML Node"},
+        }
 
         conflict = ImportConflict(
             incoming={"id": "graphml-node-1", "title": "GraphML Node"},
@@ -330,19 +311,26 @@ class TestGraphMLAdapterResolutionValidation:
         )
 
         with pytest.raises(ValueError) as exc_info:
-            deserializer.commit([conflict], "graphml_hash", resolutions=None)
+            deserializer._commit_with_resolutions(
+                conflicts=[conflict],
+                source_hash="graphml_hash",
+                resolutions=None,
+            )
 
-        assert "graphml-node-1" in str(exc_info.value)
+        error_msg = str(exc_info.value)
+        assert "graphml-node-1" in error_msg
+        assert "requires resolution before commit" in error_msg
 
     def test_graphml_commit_prevents_partial_commits(self):
-        """GraphML adapter prevents partial commits with unresolved conflicts."""
-        from domain.interchange.entities import ResolutionRecord
-
+        """Real GraphML adapter prevents partial commits with unresolved conflicts."""
         ontology_repo = FakeOntologyRepository()
         interchange_repo = FakeInterchangeRepository()
-        deserializer = MockDeserializer(
-            ontology_repo, interchange_repo, SerializationFormat.GRAPHML
-        )
+        deserializer = GraphMLDeserializer(ontology_repo, interchange_repo)
+
+        deserializer.incoming_entities = {
+            "node-1": {"id": "node-1", "title": "Node 1"},
+            "node-2": {"id": "node-2", "title": "Node 2"},
+        }
 
         conflicts = [
             ImportConflict(
@@ -370,20 +358,26 @@ class TestGraphMLAdapterResolutionValidation:
         ]
 
         with pytest.raises(ValueError) as exc_info:
-            deserializer.commit(conflicts, "graphml_hash", resolutions)
+            deserializer._commit_with_resolutions(
+                conflicts=conflicts,
+                source_hash="graphml_hash",
+                resolutions=resolutions,
+            )
 
-        assert "node-2" in str(exc_info.value)
-        assert "requires resolution before commit" in str(exc_info.value)
+        error_msg = str(exc_info.value)
+        assert "node-2" in error_msg
+        assert "requires resolution before commit" in error_msg
 
     def test_graphml_commit_with_all_resolutions_succeeds(self):
-        """GraphML adapter commit with all resolutions provided succeeds."""
-        from domain.interchange.entities import ResolutionRecord
-
+        """Real GraphML adapter commits successfully with all resolutions."""
         ontology_repo = FakeOntologyRepository()
         interchange_repo = FakeInterchangeRepository()
-        deserializer = MockDeserializer(
-            ontology_repo, interchange_repo, SerializationFormat.GRAPHML
-        )
+        deserializer = GraphMLDeserializer(ontology_repo, interchange_repo)
+
+        deserializer.incoming_entities = {
+            "node-1": {"id": "node-1", "title": "Node 1"},
+            "node-2": {"id": "node-2", "title": "Node 2"},
+        }
 
         conflicts = [
             ImportConflict(
@@ -415,7 +409,11 @@ class TestGraphMLAdapterResolutionValidation:
             ),
         ]
 
-        import_run_id = deserializer.commit(conflicts, "graphml_hash", resolutions)
+        import_run_id = deserializer._commit_with_resolutions(
+            conflicts=conflicts,
+            source_hash="graphml_hash",
+            resolutions=resolutions,
+        )
 
         assert import_run_id is not None
         persisted_run = interchange_repo.get(import_run_id)

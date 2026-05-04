@@ -22,12 +22,15 @@ from domain.interchange.services import (
     get_current_import_run_id,
     set_import_run_context,
 )
-from domain.interchange.entities import ImportRunStatus
+from domain.interchange.entities import ImportRunStatus, ResolutionRecord
 from domain.interchange.value_objects import (
     SerializationScope,
     SerializationScopeType,
     SerializationFormat,
+    MatchKind,
+    ResolutionKind,
 )
+from tests.fakes.fake_interchange_repository import FakeInterchangeRepository
 
 
 class TestImportRunServiceStartRun:
@@ -376,9 +379,6 @@ class TestImportRunServiceCreateWithResolutionsAndPersist:
 
     def test_create_with_resolutions_without_repo(self):
         """create_with_resolutions_and_persist creates ImportRun without persisting when repo is None."""
-        from domain.interchange.entities import ResolutionRecord
-        from domain.interchange.value_objects import MatchKind, ResolutionKind
-
         service = ImportRunService()
         scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
         resolutions = [
@@ -418,10 +418,6 @@ class TestImportRunServiceCreateWithResolutionsAndPersist:
 
     def test_create_with_resolutions_with_repo(self):
         """create_with_resolutions_and_persist persists ImportRun when repo is provided."""
-        from domain.interchange.entities import ResolutionRecord
-        from domain.interchange.value_objects import MatchKind, ResolutionKind
-        from tests.fakes.fake_interchange_repository import FakeInterchangeRepository
-
         service = ImportRunService()
         scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
         resolutions = [
@@ -472,9 +468,6 @@ class TestImportRunServiceCreateWithResolutionsAndPersist:
 
     def test_create_records_all_resolutions(self):
         """create_with_resolutions_and_persist records all provided ResolutionRecords."""
-        from domain.interchange.entities import ResolutionRecord
-        from domain.interchange.value_objects import MatchKind, ResolutionKind
-
         service = ImportRunService()
         scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
         resolutions = [
@@ -526,8 +519,6 @@ class TestImportRunServiceCreateWithResolutionsAndPersist:
 
     def test_create_with_different_scopes(self):
         """create_with_resolutions_and_persist works with different SerializationScopes."""
-        from tests.fakes.fake_interchange_repository import FakeInterchangeRepository
-
         service = ImportRunService()
         repo = FakeInterchangeRepository()
 
