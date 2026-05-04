@@ -28,9 +28,8 @@ class OntologyRepository(Protocol):
     """
     Port for persisting and retrieving ontology entities.
 
-    All CRUD operations on Taxonomy, ConceptScheme, Class, Relationship, and
-    PropertyDefinition entities flow through this repository. Individual operations
-    are deferred (all raise NotImplementedError for now).
+    All CRUD operations on Taxonomy, ConceptScheme, Class, Individual, Relationship,
+    and PropertyDefinition entities flow through this repository.
     """
 
     # Taxonomy operations

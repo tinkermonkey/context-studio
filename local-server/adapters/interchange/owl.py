@@ -9,7 +9,7 @@ Mapping strategy:
 - ConceptScheme → skos:ConceptScheme (with parent reference via dct:isPartOf)
 - Class → owl:Class (with rdfs:subClassOf for hierarchy)
 - Individual → owl:NamedIndividual (with rdf:type indicating class membership)
-- PropertyDefinition → owl:ObjectProperty or owl:DatatypeProperty (inferred from usage)
+- PropertyDefinition → owl:ObjectProperty
 - Relationship → RDF triple using the property predicate
 - external_references → LOCAL:externalReferences (JSON-encoded full object with source/identifier/uri)
   - Backwards compatible with legacy owl:sameAs format (heuristically reconstructed on import)

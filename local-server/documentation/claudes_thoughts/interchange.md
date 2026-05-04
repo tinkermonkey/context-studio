@@ -75,7 +75,7 @@ This test validates that GraphML exports can be consumed by external visualizati
 1. **Export a graph from Context Studio:**
    ```bash
    # Using the GraphML adapter to export the whole graph
-   curl -X POST http://localhost:8000/api/ontology/export \
+   curl -X POST http://localhost:8000/api/v1/interchange/export \
      -H "Content-Type: application/json" \
      -d '{"format": "graphml", "scope": "whole_graph"}' \
      > /tmp/context_studio.graphml
@@ -101,9 +101,9 @@ This test validates that GraphML exports can be consumed by external visualizati
 5. **Re-import into Context Studio:**
    ```bash
    # Using the GraphML adapter to import the modified graph
-   curl -X POST http://localhost:8000/api/ontology/import \
-     -H "Content-Type: application/json" \
-     -d '{"format": "graphml", "file": "/tmp/context_studio.graphml"}' \
+   curl -X POST http://localhost:8000/api/v1/interchange/import \
+     -F "format=graphml" \
+     -F "file=@/tmp/context_studio.graphml" \
    ```
 
 6. **Verify round-trip integrity:**
