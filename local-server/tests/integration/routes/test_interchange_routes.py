@@ -58,7 +58,7 @@ class FakeSerializer:
 class FakeDeserializer:
     """Fake deserializer that returns an ImportPlan."""
 
-    def __init__(self, interchange_repo, format: SerializationFormat = None):
+    def __init__(self, interchange_repo, format: SerializationFormat | None = None):
         """Initialize with repository and format."""
         self.interchange_repo = interchange_repo
         self.format = format or SerializationFormat.SKOS
@@ -81,13 +81,15 @@ class FakeDeserializer:
         # For non-dry-run, create and store an ImportRun
         if not dry_run:
             import_run = ImportRun(
-                id=plan.import_run_id,
+                id=plan.import_run_id or str(uuid4()),
                 created_at=datetime.now(),
                 created_by=None,
                 format=self.format,
                 source_uri="test.skos",
                 source_hash="abc123",
-                scope=plan.scope,
+                scope=plan.scope or SerializationScope(
+                    scope_type=SerializationScopeType.WHOLE_GRAPH,
+                ),
                 resolutions=[],
                 affected_entity_ids=[],
                 status=ImportRunStatus.COMMITTED,
@@ -551,7 +553,7 @@ class TestListImportRunsEndpoint:
     def test_list_import_runs_filter_by_status(self, client, interchange_repo):
         """List endpoint filters by status parameter."""
         # Create runs with different statuses
-        for status in [
+        for run_status in [
             ImportRunStatus.COMMITTED,
             ImportRunStatus.COMMITTED,
             ImportRunStatus.FAILED,
@@ -566,7 +568,7 @@ class TestListImportRunsEndpoint:
                 scope=SerializationScope(
                     scope_type=SerializationScopeType.WHOLE_GRAPH,
                 ),
-                status=status,
+                status=run_status,
             )
             interchange_repo.create(run)
 
