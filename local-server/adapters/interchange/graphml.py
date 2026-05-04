@@ -44,6 +44,7 @@ from domain.ontology.entities import (
     PropertyDefinition,
 )
 from domain.ontology.value_objects import ExternalReference
+from adapters.interchange.persistence_helpers import persist_incoming_entities
 
 logger = get_logger(__name__)
 
@@ -618,9 +619,6 @@ class GraphMLDeserializer(OntologyDeserializer):
             for res in resolutions:
                 resolution_map[res.entity_id] = res.resolution_chosen
 
-        # Build conflict map: entity_id -> ImportConflict
-        {c.incoming["id"]: c for c in conflicts}
-
         # Validate that all conflicts have resolutions
         for conflict in conflicts:
             entity_id = conflict.incoming["id"]
@@ -645,70 +643,12 @@ class GraphMLDeserializer(OntologyDeserializer):
         )
 
         # Process entities and persist those that aren't skipped
-        affected_entity_ids = []
-        for entity_id, entity_dict in self.incoming_entities.items():
-            # Check if this entity should be skipped
-            if entity_id in resolution_map:
-                if resolution_map[entity_id] == ResolutionKind.SKIP:
-                    continue
-
-            # Persist the entity (assumes CREATE semantics)
-            entity_type = entity_dict.get("type")
-            try:
-                if entity_type == "class":
-                    # Create and persist Class entity
-                    # Get taxonomy_id from the parent concept scheme
-                    concept_scheme_id = entity_dict.get("concept_scheme_id", "")
-                    taxonomy_id = ""
-                    if (
-                        concept_scheme_id
-                        and concept_scheme_id in self.incoming_entities
-                    ):
-                        concept_scheme = self.incoming_entities[concept_scheme_id]
-                        taxonomy_id = concept_scheme.get("taxonomy_id", "")
-
-                    class_entity = Class(
-                        id=entity_dict["id"],
-                        title=entity_dict["title"],
-                        description=entity_dict.get("description"),
-                        concept_scheme_id=concept_scheme_id,
-                        taxonomy_id=taxonomy_id,
-                        parent_class_id=entity_dict.get("parent_class_id"),
-                        external_references=[
-                            ExternalReference(
-                                source=ref["source"],
-                                identifier=ref["identifier"],
-                                uri=ref.get("uri"),
-                            )
-                            for ref in entity_dict.get("external_references", [])
-                        ],
-                    )
-                    self.ontology_repo.save_class(class_entity)
-                    affected_entity_ids.append(entity_id)
-                elif entity_type == "concept_scheme":
-                    # Create and persist ConceptScheme entity
-                    scheme = ConceptScheme(
-                        id=entity_dict["id"],
-                        title=entity_dict["title"],
-                        description=entity_dict.get("description"),
-                        taxonomy_id=entity_dict.get("taxonomy_id", ""),
-                    )
-                    self.ontology_repo.save_concept_scheme(scheme)
-                    affected_entity_ids.append(entity_id)
-                elif entity_type == "taxonomy":
-                    # Create and persist Taxonomy entity
-                    taxonomy = Taxonomy(
-                        id=entity_dict["id"],
-                        title=entity_dict["title"],
-                        description=entity_dict.get("description"),
-                    )
-                    self.ontology_repo.save_taxonomy(taxonomy)
-                    affected_entity_ids.append(entity_id)
-            except Exception as e:
-                # Report failed entity in warnings
-                warning_msg = f"Failed to persist {entity_type or 'unknown'} entity {entity_id}: {str(e)}"
-                logger.error(warning_msg)
-                self.warnings.append(warning_msg)
+        affected_entity_ids = persist_incoming_entities(
+            self.incoming_entities,
+            resolution_map,
+            self.ontology_repo,
+            self.warnings,
+        )
 
         # Update ImportRun with affected entities and mark as committed
         import_run.affected_entity_ids = affected_entity_ids
