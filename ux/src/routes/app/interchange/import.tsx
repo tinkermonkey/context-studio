@@ -40,8 +40,9 @@ function ImportComponent() {
 
         // Build success message with conflicts and warnings
         const messages = [];
-        if (plan.conflicts.length > 0) {
-          messages.push(`Found ${plan.conflicts.length} conflicts`);
+        const conflicts = plan.conflicts ?? [];
+        if (conflicts.length > 0) {
+          messages.push(`Found ${conflicts.length} conflicts`);
         }
         if (plan.warnings && plan.warnings.length > 0) {
           plan.warnings.forEach((w) => {

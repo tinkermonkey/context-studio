@@ -96,6 +96,36 @@ export type ImportConflict = components["schemas"]["ImportConflictResponse"];
 export type ImportPlanResponse = components["schemas"]["ImportPlanResponse"];
 
 /**
+ * Type guards and narrowing utilities for weak generated types.
+ *
+ * The generated OpenAPI types use `unknown` for fields that should be typed.
+ * These utilities provide type-safe narrowing.
+ */
+
+/**
+ * Narrow an ImportConflict's incoming field to the expected IncomingEntity type.
+ * The generated type uses `unknown` but we know it has id and title from the backend.
+ */
+export function getIncomingEntity(
+  conflict: ImportConflict,
+): IncomingEntity {
+  const incoming = conflict.incoming as IncomingEntity;
+  return incoming;
+}
+
+/**
+ * Get the default resolution for a conflict, with null-safety.
+ * The generated type may have undefined but should always have a default.
+ */
+export function getDefaultResolution(
+  conflict: ImportConflict,
+): ResolutionKind {
+  // Cast to string to access the value, then validate it's a valid ResolutionKind
+  const resolution = conflict.default_resolution as ResolutionKind;
+  return resolution ?? "skip"; // Fallback to skip if somehow undefined
+}
+
+/**
  * Status of an import run.
  */
 export type ImportRunStatus =

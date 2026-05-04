@@ -10,6 +10,8 @@ import {
   ImportConflict,
   ResolutionRecord,
   ResolutionKind,
+  getIncomingEntity,
+  getDefaultResolution,
 } from "@/api/types/interchange";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
@@ -63,8 +65,9 @@ export function ConflictResolutionModal({
     const newResolutions = new Map<string, ResolutionKind>();
     Object.entries(groupedConflicts).forEach(([matchKind, group]) => {
       group.forEach((conflict) => {
-        const key = `${matchKind}-${conflict.incoming.id}`;
-        newResolutions.set(key, conflict.default_resolution);
+        const incoming = getIncomingEntity(conflict);
+        const key = `${matchKind}-${incoming.id}`;
+        newResolutions.set(key, getDefaultResolution(conflict));
       });
     });
     setResolutions(newResolutions);
@@ -85,7 +88,8 @@ export function ConflictResolutionModal({
     const newResolutions = new Map(resolutions);
     groupedConflicts[matchKind as keyof typeof groupedConflicts]?.forEach(
       (conflict) => {
-        const key = `${matchKind}-${conflict.incoming.id}`;
+        const incoming = getIncomingEntity(conflict);
+        const key = `${matchKind}-${incoming.id}`;
         newResolutions.set(key, resolution);
       },
     );
@@ -173,25 +177,28 @@ export function ConflictResolutionModal({
 
               {expandedGroups.has("external_reference") && (
                 <div className="mt-4 space-y-3">
-                  {groupedConflicts.external_reference.map((conflict, _idx) => (
-                    <ConflictRow
-                      key={conflict.incoming.id}
-                      conflict={conflict}
-                      conflictIndex={conflict.incoming.id}
-                      resolution={
-                        resolutions.get(
-                          `external_reference-${conflict.incoming.id}`,
-                        ) || conflict.default_resolution
-                      }
-                      onResolutionChange={(resolution) =>
-                        handleResolutionChange(
-                          "external_reference",
-                          conflict.incoming.id,
-                          resolution,
-                        )
-                      }
-                    />
-                  ))}
+                  {groupedConflicts.external_reference.map((conflict, _idx) => {
+                    const incoming = getIncomingEntity(conflict);
+                    return (
+                      <ConflictRow
+                        key={incoming.id}
+                        conflict={conflict}
+                        conflictIndex={incoming.id}
+                        resolution={
+                          resolutions.get(
+                            `external_reference-${incoming.id}`,
+                          ) || getDefaultResolution(conflict)
+                        }
+                        onResolutionChange={(resolution) =>
+                          handleResolutionChange(
+                            "external_reference",
+                            incoming.id,
+                            resolution,
+                          )
+                        }
+                      />
+                    );
+                  })}
                   <div className="mt-3 flex gap-2 border-t pt-3">
                     <span className="text-sm text-gray-600">Apply to all:</span>
                     {["skip", "overwrite", "merge"].map((res) => (
@@ -242,24 +249,27 @@ export function ConflictResolutionModal({
 
               {expandedGroups.has("uuid") && (
                 <div className="mt-4 space-y-3">
-                  {groupedConflicts.uuid.map((conflict, _idx) => (
-                    <ConflictRow
-                      key={conflict.incoming.id}
-                      conflict={conflict}
-                      conflictIndex={conflict.incoming.id}
-                      resolution={
-                        resolutions.get(`uuid-${conflict.incoming.id}`) ||
-                        conflict.default_resolution
-                      }
-                      onResolutionChange={(resolution) =>
-                        handleResolutionChange(
-                          "uuid",
-                          conflict.incoming.id,
-                          resolution,
-                        )
-                      }
-                    />
-                  ))}
+                  {groupedConflicts.uuid.map((conflict, _idx) => {
+                    const incoming = getIncomingEntity(conflict);
+                    return (
+                      <ConflictRow
+                        key={incoming.id}
+                        conflict={conflict}
+                        conflictIndex={incoming.id}
+                        resolution={
+                          resolutions.get(`uuid-${incoming.id}`) ||
+                          getDefaultResolution(conflict)
+                        }
+                        onResolutionChange={(resolution) =>
+                          handleResolutionChange(
+                            "uuid",
+                            incoming.id,
+                            resolution,
+                          )
+                        }
+                      />
+                    );
+                  })}
                   <div className="mt-3 flex gap-2 border-t pt-3">
                     <span className="text-sm text-gray-600">Apply to all:</span>
                     {["skip", "overwrite", "merge"].map((res) => (
@@ -310,24 +320,27 @@ export function ConflictResolutionModal({
 
               {expandedGroups.has("title") && (
                 <div className="mt-4 space-y-3">
-                  {groupedConflicts.title.map((conflict, _idx) => (
-                    <ConflictRow
-                      key={conflict.incoming.id}
-                      conflict={conflict}
-                      conflictIndex={conflict.incoming.id}
-                      resolution={
-                        resolutions.get(`title-${conflict.incoming.id}`) ||
-                        conflict.default_resolution
-                      }
-                      onResolutionChange={(resolution) =>
-                        handleResolutionChange(
-                          "title",
-                          conflict.incoming.id,
-                          resolution,
-                        )
-                      }
-                    />
-                  ))}
+                  {groupedConflicts.title.map((conflict, _idx) => {
+                    const incoming = getIncomingEntity(conflict);
+                    return (
+                      <ConflictRow
+                        key={incoming.id}
+                        conflict={conflict}
+                        conflictIndex={incoming.id}
+                        resolution={
+                          resolutions.get(`title-${incoming.id}`) ||
+                          getDefaultResolution(conflict)
+                        }
+                        onResolutionChange={(resolution) =>
+                          handleResolutionChange(
+                            "title",
+                            incoming.id,
+                            resolution,
+                          )
+                        }
+                      />
+                    );
+                  })}
                   <div className="mt-3 flex gap-2 border-t pt-3">
                     <span className="text-sm text-gray-600">Apply to all:</span>
                     {["skip", "overwrite", "merge"].map((res) => (
@@ -401,8 +414,10 @@ function ConflictRow({
   resolution,
   onResolutionChange,
 }: ConflictRowProps) {
-  const title = conflict.incoming.title;
+  const incoming = getIncomingEntity(conflict);
+  const title = incoming.title;
   const existingId = conflict.existing;
+  const availableResolutions = (conflict.available_resolutions ?? []) as ResolutionKind[];
 
   return (
     <div
@@ -422,7 +437,7 @@ function ConflictRow({
         value={resolution}
         onChange={(e) => onResolutionChange(e.target.value as ResolutionKind)}
       >
-        {conflict.available_resolutions.map((res) => (
+        {availableResolutions.map((res) => (
           <option key={res} value={res}>
             {res}
           </option>
