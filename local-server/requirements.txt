@@ -14,3 +14,4 @@ anthropic
 httpx
 python-dotenv
 boto3
+python-multipart

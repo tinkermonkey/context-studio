@@ -35,13 +35,12 @@ from uuid import uuid4
 from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 
-from domain.interchange.entities import ImportRun, ImportRunStatus, ResolutionRecord
+from domain.interchange.entities import ImportRun, ImportRunStatus
 from domain.interchange.value_objects import (
     SerializationScope,
     SerializationScopeType,
     SerializationFormat,
-    MatchKind,
-    ResolutionKind,
+    ImportPlan,
 )
 from adapters.web.interchange_routes import router
 from tests.fakes.fake_interchange_repository import FakeInterchangeRepository
@@ -65,16 +64,14 @@ class FakeDeserializer:
         self.format = format or SerializationFormat.SKOS
 
     def deserialize(
-        self, source: bytes, dry_run: bool = True, resolutions: list = None
+        self, source: bytes, dry_run: bool = True, resolutions: list | None = None
     ):
         """Return a minimal ImportPlan."""
-        from domain.interchange.value_objects import ImportPlan
-
         plan = ImportPlan(
-            conflicts=[],
+            conflicts=(),
             new_entity_count=0,
             import_run_id=str(uuid4()) if not dry_run else None,
-            warnings=[],
+            warnings=(),
             source_hash="abc123",
             scope=SerializationScope(
                 scope_type=SerializationScopeType.WHOLE_GRAPH,
