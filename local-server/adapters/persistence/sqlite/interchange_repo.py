@@ -6,7 +6,7 @@ change event correlations for the Data Interchange bounded context.
 """
 
 from datetime import datetime
-from typing import Optional, cast
+from typing import Optional, Sequence, cast
 
 from sqlalchemy import select, func
 from sqlalchemy.exc import SQLAlchemyError
@@ -315,7 +315,7 @@ class SQLiteInterchangeRepository:
         )
 
     @staticmethod
-    def _serialize_resolutions(resolutions: list[ResolutionRecord]) -> list[dict]:
+    def _serialize_resolutions(resolutions: Sequence[ResolutionRecord]) -> list[dict]:
         """Serialize ResolutionRecords to JSON-compatible dicts."""
         return [
             {
