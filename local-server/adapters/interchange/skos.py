@@ -284,8 +284,8 @@ class SKOSSerializer(OntologySerializer):
 
         Adds:
         1. LOCAL:externalReferences JSON for faithful round-tripping with full source/identifier/uri
-        2. dct:source pointing to the external URI (legacy format)
-        3. skos:exactMatch pointing to the external URI (legacy format)
+        2. dct:source pointing to the external URI (legacy format, only if uri is not None)
+        3. skos:exactMatch pointing to the external URI (legacy format, only if uri is not None)
         """
         assert self.graph is not None
         # Store full external reference object as JSON for faithful round-tripping
@@ -298,10 +298,11 @@ class SKOSSerializer(OntologySerializer):
         ref_json = json.dumps(ref_dict)
         self.graph.add((subject_uri, LOCAL.externalReferences, Literal(ref_json)))
 
-        # Add legacy predicates for backwards compatibility
-        ext_ref_uri = URIRef(ext_ref.uri)
-        self.graph.add((subject_uri, DCT.source, ext_ref_uri))
-        self.graph.add((subject_uri, SKOS.exactMatch, ext_ref_uri))
+        # Add legacy predicates for backwards compatibility (only if uri is available)
+        if ext_ref.uri is not None:
+            ext_ref_uri = URIRef(ext_ref.uri)
+            self.graph.add((subject_uri, DCT.source, ext_ref_uri))
+            self.graph.add((subject_uri, SKOS.exactMatch, ext_ref_uri))
 
     def _entity_uri(self, entity_id: str) -> URIRef:
         """Create a URI for an entity."""
