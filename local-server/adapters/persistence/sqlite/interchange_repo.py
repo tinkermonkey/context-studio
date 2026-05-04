@@ -288,7 +288,7 @@ class SQLiteInterchangeRepository:
             taxonomy_id=cast(str | None, orm_run.scope_taxonomy_id),
             scheme_id=cast(str | None, orm_run.scope_scheme_id),
             include_descendants=cast(bool, orm_run.scope_include_descendants or False),
-            entity_ids=tuple(orm_run.scope_entity_ids or []),
+            entity_ids=tuple(orm_run.scope_entity_ids) if orm_run.scope_entity_ids else None,
         )
 
         # Reconstruct resolutions with error handling for corrupted data
