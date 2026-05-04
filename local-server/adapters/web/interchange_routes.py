@@ -88,10 +88,8 @@ def _get_deserializer(
 
 def _scope_request_to_domain(scope_req: SerializationScopeRequest) -> SerializationScope:
     """Convert SerializationScopeRequest to domain SerializationScope."""
-    try:
-        scope_type = SerializationScopeType(scope_req.scope_type)
-    except ValueError:
-        raise ValueError(f"Invalid scope_type: {scope_req.scope_type}")
+    # Pydantic validates Literal["whole_graph", "taxonomy", "scheme", "entity_set"] at schema level
+    scope_type = SerializationScopeType(scope_req.scope_type)
 
     entity_ids_tuple = tuple(scope_req.entity_ids) if scope_req.entity_ids else None
 
@@ -200,13 +198,8 @@ async def export_ontology(
         # Convert request scope to domain scope
         scope = _scope_request_to_domain(request.scope)
 
-        # Parse and validate format
-        try:
-            enum_format = SerializationFormat(request.format.lower())
-        except ValueError:
-            raise ValueError(
-                f"Unsupported format: {request.format}. Supported formats: {', '.join(f.value for f in SerializationFormat)}"
-            )
+        # Parse format (Pydantic validates Literal["skos", "owl", "graphml"] at schema level)
+        enum_format = SerializationFormat(request.format)
 
         # Get serializer with split_mode for OWL
         serializer = _get_serializer(enum_format, ontology_repo, split_mode=request.split_mode)
@@ -313,22 +306,22 @@ async def import_ontology(
                     detail=f"Invalid resolutions: {str(e)}",
                 )
 
-        # Check file size before reading
-        if file.size is not None and file.size > MAX_UPLOAD_SIZE:
-            raise HTTPException(
-                status_code=http_status.HTTP_413_PAYLOAD_TOO_LARGE,
-                detail=f"File size exceeds maximum allowed size of {MAX_UPLOAD_SIZE // (1024 * 1024)} MB",
-            )
-
-        # Read file content
-        content = await file.read()
-
-        # Double-check actual content size (in case size header was not set)
-        if len(content) > MAX_UPLOAD_SIZE:
-            raise HTTPException(
-                status_code=http_status.HTTP_413_PAYLOAD_TOO_LARGE,
-                detail=f"File size exceeds maximum allowed size of {MAX_UPLOAD_SIZE // (1024 * 1024)} MB",
-            )
+        # Read file content in chunks with size check to prevent memory exhaustion
+        chunks = []
+        total_size = 0
+        chunk_size = 1024 * 1024  # 1 MB chunks
+        while True:
+            chunk = await file.read(chunk_size)
+            if not chunk:
+                break
+            total_size += len(chunk)
+            if total_size > MAX_UPLOAD_SIZE:
+                raise HTTPException(
+                    status_code=http_status.HTTP_413_CONTENT_TOO_LARGE,
+                    detail=f"File size exceeds maximum allowed size of {MAX_UPLOAD_SIZE // (1024 * 1024)} MB",
+                )
+            chunks.append(chunk)
+        content = b"".join(chunks)
 
         # Parse and validate format
         try:

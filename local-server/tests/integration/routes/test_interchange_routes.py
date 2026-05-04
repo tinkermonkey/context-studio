@@ -257,6 +257,57 @@ class TestExportEndpoint:
 
         assert response.status_code == status.HTTP_200_OK
 
+    def test_export_with_split_mode_true(self, client, monkeypatch):
+        """Export endpoint passes split_mode=True to serializer for OWL format."""
+        split_mode_received = []
+
+        def capture_serializer(fmt, repo, split_mode=False):
+            split_mode_received.append(split_mode)
+            return FakeSerializer()
+
+        monkeypatch.setattr(
+            "adapters.web.interchange_routes._get_serializer",
+            capture_serializer,
+        )
+
+        request_body = {
+            "format": "owl",
+            "scope": {
+                "scope_type": "whole_graph",
+            },
+            "split_mode": True,
+        }
+        response = client.post("/api/v1/interchange/export", json=request_body)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert len(split_mode_received) == 1
+        assert split_mode_received[0] is True
+
+    def test_export_with_split_mode_false(self, client, monkeypatch):
+        """Export endpoint passes split_mode=False to serializer by default."""
+        split_mode_received = []
+
+        def capture_serializer(fmt, repo, split_mode=False):
+            split_mode_received.append(split_mode)
+            return FakeSerializer()
+
+        monkeypatch.setattr(
+            "adapters.web.interchange_routes._get_serializer",
+            capture_serializer,
+        )
+
+        request_body = {
+            "format": "owl",
+            "scope": {
+                "scope_type": "whole_graph",
+            },
+        }
+        response = client.post("/api/v1/interchange/export", json=request_body)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert len(split_mode_received) == 1
+        assert split_mode_received[0] is False
+
 
 class TestImportEndpoint:
     """Tests for POST /api/v1/interchange/import endpoint."""
@@ -476,6 +527,84 @@ class TestImportEndpoint:
                 files={"file": (f"test.{format_name}", BytesIO(file_content))},
             )
             assert response.status_code == status.HTTP_200_OK
+
+    def test_import_rejects_oversized_file(self, client, monkeypatch):
+        """Import endpoint returns 413 Payload Too Large when file exceeds size limit."""
+        monkeypatch.setattr(
+            "adapters.web.interchange_routes._get_deserializer",
+            lambda fmt, onto_repo, int_repo: FakeDeserializer(client.app.state.interchange_repo),
+        )
+
+        # Create a file larger than MAX_UPLOAD_SIZE (500 MB)
+        # We'll use a custom UploadFile-like object that streams data
+        oversized_content = b"x" * (600 * 1024 * 1024)  # 600 MB
+
+        response = client.post(
+            "/api/v1/interchange/import",
+            data={"format": "skos", "dry_run": "true"},
+            files={"file": ("oversized.skos", BytesIO(oversized_content))},
+        )
+
+        assert response.status_code == status.HTTP_413_CONTENT_TOO_LARGE
+        data = response.json()
+        assert "exceeds maximum allowed size" in data["detail"]
+        assert "500" in data["detail"]  # MB limit should be mentioned
+
+    def test_import_accepts_file_at_size_limit(self, client, monkeypatch):
+        """Import endpoint accepts files at the exact size limit."""
+        monkeypatch.setattr(
+            "adapters.web.interchange_routes._get_deserializer",
+            lambda fmt, onto_repo, int_repo: FakeDeserializer(client.app.state.interchange_repo),
+        )
+
+        # Create a file at exactly the limit (500 MB)
+        # This would be too large in real usage, so we'll use a smaller test version
+        # by mocking MAX_UPLOAD_SIZE for this test
+        import adapters.web.interchange_routes as routes_module
+        original_max = routes_module.MAX_UPLOAD_SIZE
+
+        try:
+            # Set limit to 1 KB for testing
+            routes_module.MAX_UPLOAD_SIZE = 1024
+
+            file_content = b"x" * 1024  # Exactly at limit
+            response = client.post(
+                "/api/v1/interchange/import",
+                data={"format": "skos", "dry_run": "true"},
+                files={"file": ("at_limit.skos", BytesIO(file_content))},
+            )
+
+            assert response.status_code == status.HTTP_200_OK
+        finally:
+            # Restore original limit
+            routes_module.MAX_UPLOAD_SIZE = original_max
+
+    def test_import_rejects_file_just_over_limit(self, client, monkeypatch):
+        """Import endpoint rejects files just over the size limit."""
+        monkeypatch.setattr(
+            "adapters.web.interchange_routes._get_deserializer",
+            lambda fmt, onto_repo, int_repo: FakeDeserializer(client.app.state.interchange_repo),
+        )
+
+        # Mock MAX_UPLOAD_SIZE for testing
+        import adapters.web.interchange_routes as routes_module
+        original_max = routes_module.MAX_UPLOAD_SIZE
+
+        try:
+            # Set limit to 1 KB for testing
+            routes_module.MAX_UPLOAD_SIZE = 1024
+
+            file_content = b"x" * 1025  # One byte over limit
+            response = client.post(
+                "/api/v1/interchange/import",
+                data={"format": "skos", "dry_run": "true"},
+                files={"file": ("over_limit.skos", BytesIO(file_content))},
+            )
+
+            assert response.status_code == status.HTTP_413_CONTENT_TOO_LARGE
+        finally:
+            # Restore original limit
+            routes_module.MAX_UPLOAD_SIZE = original_max
 
 
 class TestListImportRunsEndpoint:

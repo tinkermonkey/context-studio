@@ -151,7 +151,7 @@ class ChangeEventResponse(BaseModel):
     timestamp: datetime = Field(..., description="When the change occurred")
     entity_id: str = Field(..., description="Entity that changed")
     entity_type: str = Field(..., description="Type of entity")
-    operation: str = Field(..., description="Operation performed")
+    operation: Literal["create", "update", "delete"] = Field(..., description="Operation performed")
     new_state: Optional[dict[str, Any]] = Field(None, description="New state after change")
     previous_state: Optional[dict[str, Any]] = Field(
         None, description="Previous state before change"
