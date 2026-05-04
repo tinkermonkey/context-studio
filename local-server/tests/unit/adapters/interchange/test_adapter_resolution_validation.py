@@ -16,8 +16,6 @@ sys.path.append(
 import pytest
 from domain.interchange.entities import ResolutionRecord
 from domain.interchange.value_objects import (
-    SerializationScope,
-    SerializationScopeType,
     MatchKind,
     ResolutionKind,
     SerializationFormat,
