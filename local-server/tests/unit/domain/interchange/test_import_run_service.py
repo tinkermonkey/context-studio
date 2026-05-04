@@ -369,3 +369,188 @@ class TestImportRunServiceLifecycle:
 
         run = service.rollback_run(run)
         assert run.status == ImportRunStatus.ROLLED_BACK
+
+
+class TestImportRunServiceCreateWithResolutionsAndPersist:
+    """Test ImportRunService.create_with_resolutions_and_persist method."""
+
+    def test_create_with_resolutions_without_repo(self):
+        """create_with_resolutions_and_persist creates ImportRun without persisting when repo is None."""
+        from domain.interchange.entities import ResolutionRecord
+        from domain.interchange.value_objects import MatchKind, ResolutionKind
+
+        service = ImportRunService()
+        scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+        resolutions = [
+            ResolutionRecord(
+                match_kind=MatchKind.EXTERNAL_REFERENCE,
+                entity_id="entity-1",
+                resolution_chosen=ResolutionKind.MERGE,
+            ),
+            ResolutionRecord(
+                match_kind=MatchKind.UUID,
+                entity_id="entity-2",
+                resolution_chosen=ResolutionKind.SKIP,
+            ),
+        ]
+
+        run = service.create_with_resolutions_and_persist(
+            format=SerializationFormat.SKOS,
+            source_hash="abc123def456",
+            scope=scope,
+            resolutions=resolutions,
+            source_uri="test.skos",
+            created_by="user-1",
+            interchange_repo=None,
+        )
+
+        assert run.id is not None
+        assert run.status == ImportRunStatus.PENDING
+        assert run.format == SerializationFormat.SKOS
+        assert run.source_hash == "abc123def456"
+        assert run.source_uri == "test.skos"
+        assert run.created_by == "user-1"
+        assert len(run.resolutions) == 2
+        assert run.resolutions[0].entity_id == "entity-1"
+        assert run.resolutions[0].resolution_chosen == ResolutionKind.MERGE
+        assert run.resolutions[1].entity_id == "entity-2"
+        assert run.resolutions[1].resolution_chosen == ResolutionKind.SKIP
+
+    def test_create_with_resolutions_with_repo(self):
+        """create_with_resolutions_and_persist persists ImportRun when repo is provided."""
+        from domain.interchange.entities import ResolutionRecord
+        from domain.interchange.value_objects import MatchKind, ResolutionKind
+        from tests.fakes.fake_interchange_repository import FakeInterchangeRepository
+
+        service = ImportRunService()
+        scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+        resolutions = [
+            ResolutionRecord(
+                match_kind=MatchKind.EXTERNAL_REFERENCE,
+                entity_id="entity-1",
+                resolution_chosen=ResolutionKind.MERGE,
+            ),
+        ]
+        repo = FakeInterchangeRepository()
+
+        run = service.create_with_resolutions_and_persist(
+            format=SerializationFormat.OWL,
+            source_hash="xyz789",
+            scope=scope,
+            resolutions=resolutions,
+            source_uri="test.owl",
+            created_by="alice",
+            interchange_repo=repo,
+        )
+
+        assert run.id is not None
+        assert len(run.resolutions) == 1
+        # Verify it was persisted by checking the repository
+        persisted_run = repo.get(run.id)
+        assert persisted_run is not None
+        assert persisted_run.id == run.id
+        assert persisted_run.format == SerializationFormat.OWL
+        assert persisted_run.created_by == "alice"
+
+    def test_create_without_resolutions(self):
+        """create_with_resolutions_and_persist works with no resolutions provided."""
+        service = ImportRunService()
+        scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+
+        run = service.create_with_resolutions_and_persist(
+            format=SerializationFormat.GRAPHML,
+            source_hash="graphml123",
+            scope=scope,
+            resolutions=None,
+            interchange_repo=None,
+        )
+
+        assert run.id is not None
+        assert run.status == ImportRunStatus.PENDING
+        assert len(run.resolutions) == 0
+        assert run.format == SerializationFormat.GRAPHML
+
+    def test_create_records_all_resolutions(self):
+        """create_with_resolutions_and_persist records all provided ResolutionRecords."""
+        from domain.interchange.entities import ResolutionRecord
+        from domain.interchange.value_objects import MatchKind, ResolutionKind
+
+        service = ImportRunService()
+        scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+        resolutions = [
+            ResolutionRecord(
+                match_kind=MatchKind.EXTERNAL_REFERENCE,
+                entity_id="entity-1",
+                resolution_chosen=ResolutionKind.MERGE,
+            ),
+            ResolutionRecord(
+                match_kind=MatchKind.UUID,
+                entity_id="entity-2",
+                resolution_chosen=ResolutionKind.SKIP,
+            ),
+            ResolutionRecord(
+                match_kind=MatchKind.TITLE,
+                entity_id="entity-3",
+                resolution_chosen=ResolutionKind.ABORT,
+            ),
+        ]
+
+        run = service.create_with_resolutions_and_persist(
+            format=SerializationFormat.SKOS,
+            source_hash="abc123",
+            scope=scope,
+            resolutions=resolutions,
+            interchange_repo=None,
+        )
+
+        assert len(run.resolutions) == 3
+        for i, expected_res in enumerate(resolutions):
+            assert run.resolutions[i].entity_id == expected_res.entity_id
+            assert run.resolutions[i].match_kind == expected_res.match_kind
+            assert run.resolutions[i].resolution_chosen == expected_res.resolution_chosen
+
+    def test_create_with_different_formats(self):
+        """create_with_resolutions_and_persist works with all SerializationFormats."""
+        service = ImportRunService()
+        scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+
+        for format_type in [SerializationFormat.SKOS, SerializationFormat.OWL, SerializationFormat.GRAPHML]:
+            run = service.create_with_resolutions_and_persist(
+                format=format_type,
+                source_hash=f"hash_{format_type.value}",
+                scope=scope,
+                interchange_repo=None,
+            )
+
+            assert run.format == format_type
+
+    def test_create_with_different_scopes(self):
+        """create_with_resolutions_and_persist works with different SerializationScopes."""
+        from tests.fakes.fake_interchange_repository import FakeInterchangeRepository
+
+        service = ImportRunService()
+        repo = FakeInterchangeRepository()
+
+        # Whole graph scope
+        scope_whole = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+        run_whole = service.create_with_resolutions_and_persist(
+            format=SerializationFormat.SKOS,
+            source_hash="hash1",
+            scope=scope_whole,
+            interchange_repo=repo,
+        )
+        assert run_whole.scope.scope_type == SerializationScopeType.WHOLE_GRAPH
+
+        # Taxonomy scope
+        scope_tax = SerializationScope(
+            scope_type=SerializationScopeType.TAXONOMY,
+            taxonomy_id="tax-1",
+        )
+        run_tax = service.create_with_resolutions_and_persist(
+            format=SerializationFormat.SKOS,
+            source_hash="hash2",
+            scope=scope_tax,
+            interchange_repo=repo,
+        )
+        assert run_tax.scope.scope_type == SerializationScopeType.TAXONOMY
+        assert run_tax.scope.taxonomy_id == "tax-1"
