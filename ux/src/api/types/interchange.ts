@@ -106,9 +106,7 @@ export type ImportPlanResponse = components["schemas"]["ImportPlanResponse"];
  * Narrow an ImportConflict's incoming field to the expected IncomingEntity type.
  * The generated type uses `unknown` but we know it has id and title from the backend.
  */
-export function getIncomingEntity(
-  conflict: ImportConflict,
-): IncomingEntity {
+export function getIncomingEntity(conflict: ImportConflict): IncomingEntity {
   const incoming = conflict.incoming as IncomingEntity;
   return incoming;
 }
@@ -117,9 +115,7 @@ export function getIncomingEntity(
  * Get the default resolution for a conflict, with null-safety.
  * The generated type may have undefined but should always have a default.
  */
-export function getDefaultResolution(
-  conflict: ImportConflict,
-): ResolutionKind {
+export function getDefaultResolution(conflict: ImportConflict): ResolutionKind {
   // Cast to string to access the value, then validate it's a valid ResolutionKind
   const resolution = conflict.default_resolution as ResolutionKind;
   return resolution ?? "skip"; // Fallback to skip if somehow undefined

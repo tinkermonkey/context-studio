@@ -17,7 +17,8 @@ vi.mock("../../../services/interchange");
 
 const mockInterchangeService = vi.mocked(interchangeService);
 
-type ChangeEventResponse = components["schemas"]["InterchangeChangeEventResponse"];
+type ChangeEventResponse =
+  components["schemas"]["InterchangeChangeEventResponse"];
 
 describe("useInterchangeRunChangeEvents", () => {
   let queryClient: QueryClient;

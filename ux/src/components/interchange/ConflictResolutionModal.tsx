@@ -417,7 +417,8 @@ function ConflictRow({
   const incoming = getIncomingEntity(conflict);
   const title = incoming.title;
   const existingId = conflict.existing;
-  const availableResolutions = (conflict.available_resolutions ?? []) as ResolutionKind[];
+  const availableResolutions = (conflict.available_resolutions ??
+    []) as ResolutionKind[];
 
   return (
     <div
