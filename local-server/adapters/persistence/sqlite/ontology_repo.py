@@ -424,7 +424,9 @@ class SQLiteOntologyRepository:
             if parent_class_id is not None:
                 query = query.filter(OntologyEntity.parent_class_id == parent_class_id)
 
-            orm_entities = query.limit(limit).offset(offset).all()
+            if limit is not None:
+                query = query.limit(limit)
+            orm_entities = query.offset(offset).all()
             return [cast(Class, map_orm_to_domain(e)) for e in orm_entities]
 
     def count_classes(

@@ -146,7 +146,7 @@ class OntologyRepository(Protocol):
         self,
         concept_scheme_id: str | None = None,
         parent_class_id: str | None = None,
-        limit: int = 100,
+        limit: int | None = 100,
         offset: int = 0,
     ) -> list[Class]:
         """
@@ -155,7 +155,7 @@ class OntologyRepository(Protocol):
         Args:
             concept_scheme_id: Optional concept scheme ID to filter by
             parent_class_id: Optional parent class ID to filter by (for hierarchy)
-            limit: Maximum number of results to return
+            limit: Maximum number of results to return; None means no limit
             offset: Number of results to skip
 
         Returns:

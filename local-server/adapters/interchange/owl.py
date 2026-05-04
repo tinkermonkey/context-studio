@@ -24,6 +24,8 @@ from typing import Optional, Dict, Any, cast
 
 from rdflib import Graph, Namespace, URIRef, Literal, RDF, RDFS
 from rdflib.term import Node
+from rdflib.exceptions import ParserError
+from xml.sax import SAXParseException
 
 from utils.logger import get_logger
 from domain.interchange.ports import OntologySerializer, OntologyDeserializer
@@ -415,24 +417,17 @@ class OWLDeserializer(OntologyDeserializer):
                 source_bytes = source
 
             # Try to parse with auto-detection of format (RDF/XML, Turtle, JSON-LD)
-            # Only catch format-related errors; re-raise system errors like MemoryError, KeyboardInterrupt, etc.
+            # Only catch format-related errors; re-raise system errors like MemoryError, etc.
             format_errors: list[tuple[str, Exception]] = []
             for fmt in ["xml", "turtle", "json-ld"]:
                 try:
                     self.graph = Graph()  # Reset graph for each format attempt
                     self.graph.parse(data=source_bytes, format=fmt)
                     break
-                except (ValueError, TypeError, UnicodeDecodeError, SyntaxError) as e:
+                except (ValueError, TypeError, UnicodeDecodeError, SyntaxError, ParserError, SAXParseException) as e:
                     # These are format-related parsing errors; try next format
                     format_errors.append((fmt, e))
                     continue
-                except Exception as e:
-                    # Check if this is an rdflib ParserError or similar
-                    if "parse" in type(e).__name__.lower() or "syntax" in type(e).__name__.lower():
-                        format_errors.append((fmt, e))
-                        continue
-                    # For any other exception type, re-raise as it's not a format issue
-                    raise
             else:
                 # All formats failed - build error message from all attempts
                 if format_errors:
@@ -441,8 +436,6 @@ class OWLDeserializer(OntologyDeserializer):
                         error_parts
                     )
                     raise ValueError(error_msg) from format_errors[-1][1]
-                else:
-                    raise ValueError("Failed to parse OWL RDF: no format could be attempted")
 
             # Process taxonomies first (ConceptSchemes without dct:isPartOf)
             # Then concept schemes (with dct:isPartOf) to avoid duplicate creation

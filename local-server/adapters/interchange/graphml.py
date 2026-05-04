@@ -126,7 +126,7 @@ class GraphMLSerializer(OntologySerializer):
             self._add_concept_scheme(scheme)
 
         # Add all classes (without limit to ensure complete export)
-        classes = self.ontology_repo.list_classes()
+        classes = self.ontology_repo.list_classes(limit=None)
         for cls in classes:
             self._add_class(cls)
 
@@ -162,7 +162,7 @@ class GraphMLSerializer(OntologySerializer):
             self._add_concept_scheme(scheme)
             # Add classes in this scheme (without limit to ensure complete export)
             classes = self.ontology_repo.list_classes(
-                concept_scheme_id=scheme.id
+                concept_scheme_id=scheme.id, limit=None
             )
             for cls in classes:
                 self._add_class(cls)
@@ -193,7 +193,7 @@ class GraphMLSerializer(OntologySerializer):
         if include_descendants:
             # Query all classes without limit to ensure complete export
             classes = self.ontology_repo.list_classes(
-                concept_scheme_id=scheme.id
+                concept_scheme_id=scheme.id, limit=None
             )
             for cls in classes:
                 self._add_class(cls)
@@ -1060,7 +1060,7 @@ class GraphMLDeserializer(OntologyDeserializer):
         """Find an existing entity by external reference."""
         if self._classes_cache is None:
             # Query all classes without limit to ensure complete search
-            self._classes_cache = self.ontology_repo.list_classes()
+            self._classes_cache = self.ontology_repo.list_classes(limit=None)
 
         for class_entity in self._classes_cache:
             for ext_ref in class_entity.external_references:
@@ -1083,7 +1083,7 @@ class GraphMLDeserializer(OntologyDeserializer):
         """Find an existing class by title (and optional scheme)."""
         # Query all classes without limit to ensure complete search
         all_classes = self.ontology_repo.list_classes(
-            concept_scheme_id=concept_scheme_id
+            concept_scheme_id=concept_scheme_id, limit=None
         )
         for class_entity in all_classes:
             if class_entity.title == title:
