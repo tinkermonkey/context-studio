@@ -3722,7 +3722,17 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ImportPlanResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ImportRunResponse"
+                    }
+                  ],
+                  "title": "Response Import Ontology Api V1 Interchange Import Post"
+                }
               }
             }
           },
@@ -5392,6 +5402,124 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "ImportConflictResponse": {
+        "properties": {
+          "match_kind": {
+            "type": "string",
+            "enum": ["external_reference", "uuid", "title"],
+            "title": "Match Kind",
+            "description": "Type of match: external_reference, uuid, or title"
+          },
+          "incoming": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Incoming",
+            "description": "Incoming entity data"
+          },
+          "existing": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Existing",
+            "description": "Reference to existing entity"
+          },
+          "default_resolution": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["skip", "overwrite", "merge", "rename", "abort"]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Resolution",
+            "description": "Default resolution strategy (None means user must choose)"
+          },
+          "available_resolutions": {
+            "items": {
+              "type": "string",
+              "enum": ["skip", "overwrite", "merge", "rename", "abort"]
+            },
+            "type": "array",
+            "title": "Available Resolutions",
+            "description": "Available resolutions"
+          }
+        },
+        "type": "object",
+        "required": ["match_kind", "incoming", "available_resolutions"],
+        "title": "ImportConflictResponse",
+        "description": "Represents a conflict detected during import."
+      },
+      "ImportPlanResponse": {
+        "properties": {
+          "conflicts": {
+            "items": {
+              "$ref": "#/components/schemas/ImportConflictResponse"
+            },
+            "type": "array",
+            "title": "Conflicts",
+            "description": "Detected conflicts"
+          },
+          "new_entity_count": {
+            "type": "integer",
+            "title": "New Entity Count",
+            "description": "Number of new entities to be created"
+          },
+          "import_run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Import Run Id",
+            "description": "Prospective import run ID"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings",
+            "description": "Warning messages"
+          },
+          "source_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Hash",
+            "description": "SHA256 hash of imported bytes"
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SerializationScopeResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Import scope"
+          }
+        },
+        "type": "object",
+        "required": ["new_entity_count"],
+        "title": "ImportPlanResponse",
+        "description": "Result of an import dry-run, describing what would be imported."
       },
       "ImportRunResponse": {
         "properties": {

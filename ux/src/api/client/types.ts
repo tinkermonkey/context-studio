@@ -3570,6 +3570,81 @@ export interface components {
       detail?: components["schemas"]["ValidationError"][];
     };
     /**
+     * ImportConflictResponse
+     * @description Represents a conflict detected during import.
+     */
+    ImportConflictResponse: {
+      /**
+       * Match Kind
+       * @description Type of match: external_reference, uuid, or title
+       * @enum {string}
+       */
+      match_kind: "external_reference" | "uuid" | "title";
+      /**
+       * Incoming
+       * @description Incoming entity data
+       */
+      incoming: {
+        [key: string]: unknown;
+      };
+      /**
+       * Existing
+       * @description Reference to existing entity
+       */
+      existing?: string | null;
+      /**
+       * Default Resolution
+       * @description Default resolution strategy (None means user must choose)
+       */
+      default_resolution?:
+        | ("skip" | "overwrite" | "merge" | "rename" | "abort")
+        | null;
+      /**
+       * Available Resolutions
+       * @description Available resolutions
+       */
+      available_resolutions: (
+        | "skip"
+        | "overwrite"
+        | "merge"
+        | "rename"
+        | "abort"
+      )[];
+    };
+    /**
+     * ImportPlanResponse
+     * @description Result of an import dry-run, describing what would be imported.
+     */
+    ImportPlanResponse: {
+      /**
+       * Conflicts
+       * @description Detected conflicts
+       */
+      conflicts?: components["schemas"]["ImportConflictResponse"][];
+      /**
+       * New Entity Count
+       * @description Number of new entities to be created
+       */
+      new_entity_count: number;
+      /**
+       * Import Run Id
+       * @description Prospective import run ID
+       */
+      import_run_id?: string | null;
+      /**
+       * Warnings
+       * @description Warning messages
+       */
+      warnings?: string[];
+      /**
+       * Source Hash
+       * @description SHA256 hash of imported bytes
+       */
+      source_hash?: string | null;
+      /** @description Import scope */
+      scope?: components["schemas"]["SerializationScopeResponse"] | null;
+    };
+    /**
      * ImportRunResponse
      * @description Response containing import run data.
      */
@@ -7926,7 +8001,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": unknown;
+          "application/json":
+            | components["schemas"]["ImportPlanResponse"]
+            | components["schemas"]["ImportRunResponse"];
         };
       };
       /** @description Validation Error */

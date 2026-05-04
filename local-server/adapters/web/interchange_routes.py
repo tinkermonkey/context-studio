@@ -15,7 +15,7 @@ Each endpoint is a thin adapter that:
 Note: Export returns binary data (Blob); import accepts multipart form data.
 """
 
-from typing import Optional
+from typing import Optional, Union
 import json
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status as http_status, UploadFile, File, Form
@@ -240,7 +240,7 @@ async def import_ontology(
     resolutions: Optional[str] = Form(None, description="JSON-encoded conflict resolutions to apply on commit"),
     ontology_repo: OntologyRepository = Depends(get_ontology_repo),
     interchange_repo: ImportRunRepository = Depends(get_interchange_repo),
-):
+) -> Union[ImportPlanResponse, ImportRunResponse]:
     """
     Import ontology data from a file.
 

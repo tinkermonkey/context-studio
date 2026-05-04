@@ -84,27 +84,16 @@ export interface IncomingEntity {
 }
 
 /**
- * Conflict detected during import dry-run.
+ * ImportConflict - Conflict detected during import dry-run.
+ * This is generated from the OpenAPI spec.
  */
-export interface ImportConflict {
-  match_kind: "external_reference" | "uuid" | "title";
-  incoming: IncomingEntity;
-  existing?: string;
-  default_resolution: ResolutionKind;
-  available_resolutions: ResolutionKind[];
-}
+export type ImportConflict = components["schemas"]["ImportConflictResponse"];
 
 /**
- * Result of an import dry-run, describing what would be imported.
+ * ImportPlanResponse - Result of an import dry-run, describing what would be imported.
+ * This is generated from the OpenAPI spec.
  */
-export interface ImportPlanResponse {
-  conflicts: ImportConflict[];
-  new_entity_count: number;
-  import_run_id?: string;
-  warnings: string[];
-  source_hash?: string;
-  scope?: SerializationScope;
-}
+export type ImportPlanResponse = components["schemas"]["ImportPlanResponse"];
 
 /**
  * Status of an import run.

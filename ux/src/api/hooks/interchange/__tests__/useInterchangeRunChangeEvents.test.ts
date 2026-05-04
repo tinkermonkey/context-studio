@@ -10,11 +10,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 import { useInterchangeRunChangeEvents } from "../useInterchangeRunChangeEvents";
 import { interchangeService } from "../../../services/interchange";
+import type { components } from "@/api/client/types";
 
 // Mock the service
 vi.mock("../../../services/interchange");
 
 const mockInterchangeService = vi.mocked(interchangeService);
+
+type ChangeEventResponse = components["schemas"]["InterchangeChangeEventResponse"];
 
 describe("useInterchangeRunChangeEvents", () => {
   let queryClient: QueryClient;
@@ -38,13 +41,13 @@ describe("useInterchangeRunChangeEvents", () => {
   };
 
   it("should fetch change events for a run", async () => {
-    const mockEvents = [
+    const mockEvents: ChangeEventResponse[] = [
       {
         id: "event-1",
         timestamp: "2024-01-01T00:00:00Z",
         entity_id: "entity-1",
         entity_type: "Class",
-        operation: "created",
+        operation: "create",
         new_state: { title: "New Class" },
       },
     ];
@@ -69,13 +72,13 @@ describe("useInterchangeRunChangeEvents", () => {
   });
 
   it("should filter change events by entity type", async () => {
-    const mockEvents = [
+    const mockEvents: ChangeEventResponse[] = [
       {
         id: "event-1",
         timestamp: "2024-01-01T00:00:00Z",
         entity_id: "entity-1",
         entity_type: "Class",
-        operation: "created",
+        operation: "create",
         new_state: { title: "New Class" },
       },
     ];
@@ -100,13 +103,13 @@ describe("useInterchangeRunChangeEvents", () => {
   });
 
   it("should filter change events by change type", async () => {
-    const mockEvents = [
+    const mockEvents: ChangeEventResponse[] = [
       {
         id: "event-1",
         timestamp: "2024-01-01T00:00:00Z",
         entity_id: "entity-1",
         entity_type: "Class",
-        operation: "created",
+        operation: "create",
         new_state: {},
       },
     ];
@@ -116,7 +119,7 @@ describe("useInterchangeRunChangeEvents", () => {
     const { result } = renderHook(
       () =>
         useInterchangeRunChangeEvents("run-123", {
-          change_type: "created",
+          change_type: "create",
           limit: 50,
         }),
       { wrapper: createWrapper() },
@@ -127,7 +130,7 @@ describe("useInterchangeRunChangeEvents", () => {
     });
 
     expect(result.current.data).toHaveLength(1);
-    expect(result.current.data?.[0].operation).toBe("created");
+    expect(result.current.data?.[0].operation).toBe("create");
   });
 
   it("should not fetch when run ID is empty", () => {
