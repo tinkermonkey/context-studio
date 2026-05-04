@@ -176,15 +176,15 @@ class TestImportConflictDefaultResolution:
         )
         assert resolution == ResolutionKind.MERGE
 
-    def test_uuid_defaults_to_skip(self):
-        """UUID matches default to SKIP."""
+    def test_uuid_has_no_default(self):
+        """UUID matches have no default (user must choose)."""
         resolution = ImportConflict.derive_default_resolution(MatchKind.UUID)
-        assert resolution == ResolutionKind.SKIP
+        assert resolution is None
 
-    def test_title_defaults_to_skip(self):
-        """TITLE matches default to SKIP."""
+    def test_title_has_no_default(self):
+        """TITLE matches have no default (user must choose)."""
         resolution = ImportConflict.derive_default_resolution(MatchKind.TITLE)
-        assert resolution == ResolutionKind.SKIP
+        assert resolution is None
 
     def test_conflict_with_derived_default(self):
         """ImportConflict can be created with derived default_resolution."""

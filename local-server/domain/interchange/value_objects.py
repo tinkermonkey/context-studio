@@ -115,34 +115,48 @@ class ImportConflict:
         match_kind: Type of match (external_reference, uuid, title)
         incoming: Serialized representation of the incoming entity
         existing: Reference to the existing entity (if matched)
-        default_resolution: Derived from match_kind per cascade table
+        default_resolution: Derived from match_kind per cascade table (None means no default, user must choose)
         available_resolutions: List of possible resolutions
     """
 
     match_kind: MatchKind
     incoming: dict[str, Any]
     existing: str | None
-    default_resolution: ResolutionKind
+    default_resolution: ResolutionKind | None
     available_resolutions: tuple[ResolutionKind, ...]
 
+    def __post_init__(self) -> None:
+        """Validate conflict invariants at construction time."""
+        # If a default_resolution is specified, it must be in available_resolutions
+        if self.default_resolution is not None and self.default_resolution not in self.available_resolutions:
+            raise ValueError(
+                f"default_resolution {self.default_resolution.value} must be in available_resolutions "
+                f"{tuple(r.value for r in self.available_resolutions)}"
+            )
+
     @staticmethod
-    def derive_default_resolution(match_kind: MatchKind) -> ResolutionKind:
+    def derive_default_resolution(match_kind: MatchKind) -> ResolutionKind | None:
         """
         Derive the default resolution based on match kind.
+
+        Per the spec cascade:
+        - EXTERNAL_REFERENCE: automatically merge (clear consensus)
+        - UUID: no default (user must choose)
+        - TITLE: no default (user must choose)
 
         Args:
             match_kind: The type of match found
 
         Returns:
-            The default resolution strategy for this match kind
+            The default resolution strategy for this match kind, or None if user must choose
         """
         match match_kind:
             case MatchKind.EXTERNAL_REFERENCE:
                 return ResolutionKind.MERGE
             case MatchKind.UUID:
-                return ResolutionKind.SKIP
+                return None
             case MatchKind.TITLE:
-                return ResolutionKind.SKIP
+                return None
 
 
 @dataclass(frozen=True)

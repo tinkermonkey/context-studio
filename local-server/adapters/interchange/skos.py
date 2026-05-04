@@ -806,11 +806,7 @@ class SKOSDeserializer(OntologyDeserializer):
 
             # If conflict found, record it
             if existing_entity and match_kind:
-                default_resolution = (
-                    ResolutionKind.MERGE
-                    if match_kind == MatchKind.EXTERNAL_REFERENCE
-                    else ResolutionKind.SKIP
-                )
+                default_resolution = ImportConflict.derive_default_resolution(match_kind)
                 conflict = ImportConflict(
                     match_kind=match_kind,
                     incoming=entity_dict,
@@ -820,6 +816,8 @@ class SKOSDeserializer(OntologyDeserializer):
                         ResolutionKind.SKIP,
                         ResolutionKind.OVERWRITE,
                         ResolutionKind.MERGE,
+                        ResolutionKind.RENAME,
+                        ResolutionKind.ABORT,
                     ),
                 )
                 conflicts.append(conflict)
@@ -829,7 +827,7 @@ class SKOSDeserializer(OntologyDeserializer):
     def _find_by_external_reference(
         self, source: str, identifier: str
     ) -> Optional[str]:
-        """Find an existing entity by external reference."""
+        """Find an existing entity by external reference (searches classes and individuals)."""
         if self._classes_cache is None:
             self._classes_cache = self.ontology_repo.list_classes()
 
@@ -837,6 +835,14 @@ class SKOSDeserializer(OntologyDeserializer):
             for ext_ref in class_entity.external_references:
                 if ext_ref.source == source and ext_ref.identifier == identifier:
                     return class_entity.id
+
+        # Also search individuals
+        individuals = self.ontology_repo.list_individuals()
+        for individual in individuals:
+            for ext_ref in individual.external_references:
+                if ext_ref.source == source and ext_ref.identifier == identifier:
+                    return individual.id
+
         return None
 
     def _find_class_by_title(

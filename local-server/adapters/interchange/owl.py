@@ -973,11 +973,7 @@ class OWLDeserializer(OntologyDeserializer):
 
             # If conflict found, record it
             if existing_entity and match_kind:
-                default_resolution = (
-                    ResolutionKind.MERGE
-                    if match_kind == MatchKind.EXTERNAL_REFERENCE
-                    else ResolutionKind.SKIP
-                )
+                default_resolution = ImportConflict.derive_default_resolution(match_kind)
                 conflict = ImportConflict(
                     match_kind=match_kind,
                     incoming=entity_dict,
@@ -987,6 +983,8 @@ class OWLDeserializer(OntologyDeserializer):
                         ResolutionKind.SKIP,
                         ResolutionKind.OVERWRITE,
                         ResolutionKind.MERGE,
+                        ResolutionKind.RENAME,
+                        ResolutionKind.ABORT,
                     ),
                 )
                 conflicts.append(conflict)
