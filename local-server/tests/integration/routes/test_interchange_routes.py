@@ -535,20 +535,27 @@ class TestImportEndpoint:
             lambda fmt, onto_repo, int_repo: FakeDeserializer(client.app.state.interchange_repo),
         )
 
-        # Create a file larger than MAX_UPLOAD_SIZE (500 MB)
-        # We'll use a custom UploadFile-like object that streams data
-        oversized_content = b"x" * (600 * 1024 * 1024)  # 600 MB
+        # Mock MAX_UPLOAD_SIZE for testing
+        import adapters.web.interchange_routes as routes_module
+        original_max = routes_module.MAX_UPLOAD_SIZE
 
-        response = client.post(
-            "/api/v1/interchange/import",
-            data={"format": "skos", "dry_run": "true"},
-            files={"file": ("oversized.skos", BytesIO(oversized_content))},
-        )
+        try:
+            # Set limit to 1 KB for testing
+            routes_module.MAX_UPLOAD_SIZE = 1024
 
-        assert response.status_code == status.HTTP_413_CONTENT_TOO_LARGE
-        data = response.json()
-        assert "exceeds maximum allowed size" in data["detail"]
-        assert "500" in data["detail"]  # MB limit should be mentioned
+            file_content = b"x" * 1025  # One byte over limit
+            response = client.post(
+                "/api/v1/interchange/import",
+                data={"format": "skos", "dry_run": "true"},
+                files={"file": ("oversized.skos", BytesIO(file_content))},
+            )
+
+            assert response.status_code == status.HTTP_413_CONTENT_TOO_LARGE
+            data = response.json()
+            assert "exceeds maximum allowed size" in data["detail"]
+        finally:
+            # Restore original limit
+            routes_module.MAX_UPLOAD_SIZE = original_max
 
     def test_import_accepts_file_at_size_limit(self, client, monkeypatch):
         """Import endpoint accepts files at the exact size limit."""
