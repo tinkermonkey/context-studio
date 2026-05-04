@@ -105,7 +105,7 @@ class FakeOntologyRepository:
         self,
         concept_scheme_id: str | None = None,
         parent_class_id: str | None = None,
-        limit: int = 100,
+        limit: int | None = 100,
         offset: int = 0,
     ) -> list[Class]:
         results = list(self._classes.values())
@@ -113,7 +113,8 @@ class FakeOntologyRepository:
             results = [c for c in results if c.concept_scheme_id == concept_scheme_id]
         if parent_class_id is not None:
             results = [c for c in results if c.parent_class_id == parent_class_id]
-        return results[offset : offset + limit]
+        end = None if limit is None else offset + limit
+        return results[offset:end]
 
     def search_classes(self, criteria: SearchCriteria) -> list[Class]:
         results = list(self._classes.values())

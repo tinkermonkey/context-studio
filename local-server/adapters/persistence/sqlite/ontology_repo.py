@@ -396,7 +396,7 @@ class SQLiteOntologyRepository:
         self,
         concept_scheme_id: Optional[str] = None,
         parent_class_id: Optional[str] = None,
-        limit: int = 100,
+        limit: int | None = 100,
         offset: int = 0,
     ) -> list[Class]:
         """
@@ -1437,7 +1437,7 @@ class SQLiteOntologyRepository:
         self,
         concept_scheme_id: Optional[str] = None,
         parent_class_id: Optional[str] = None,
-        limit: int = 100,
+        limit: int | None = 100,
         offset: int = 0,
     ) -> list[Class]:
         """
