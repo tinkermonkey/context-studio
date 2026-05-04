@@ -37,8 +37,18 @@ test.describe("Relationship List and Delete", () => {
   });
 
   test("should display relationships created via API", async ({ page }) => {
-    const rel1 = await createRelationship(page, classIds[0], classIds[1], "related_to");
-    const rel2 = await createRelationship(page, classIds[1], classIds[2], "parent_of");
+    const rel1 = await createRelationship(
+      page,
+      classIds[0],
+      classIds[1],
+      "related_to",
+    );
+    const rel2 = await createRelationship(
+      page,
+      classIds[1],
+      classIds[2],
+      "parent_of",
+    );
 
     await page.goto("/app/relationships");
     await waitForAppReady(page);
@@ -47,8 +57,15 @@ test.describe("Relationship List and Delete", () => {
     await expect(page.getByTestId(`relationship-row-${rel2.id}`)).toBeVisible();
   });
 
-  test("should delete a relationship via Actions dropdown", async ({ page }) => {
-    const rel = await createRelationship(page, classIds[0], classIds[1], "related_to");
+  test("should delete a relationship via Actions dropdown", async ({
+    page,
+  }) => {
+    const rel = await createRelationship(
+      page,
+      classIds[0],
+      classIds[1],
+      "related_to",
+    );
 
     await page.goto("/app/relationships");
     await waitForAppReady(page);
@@ -66,7 +83,9 @@ test.describe("Relationship List and Delete", () => {
     await expect(deleteModal).not.toBeVisible({ timeout: 5000 });
     await waitForAppReady(page);
 
-    await expect(page.getByTestId(`relationship-row-${rel.id}`)).not.toBeVisible();
+    await expect(
+      page.getByTestId(`relationship-row-${rel.id}`),
+    ).not.toBeVisible();
 
     try {
       await apiRequest(page, `/api/relationships/${rel.id}`);
@@ -77,7 +96,12 @@ test.describe("Relationship List and Delete", () => {
   });
 
   test("should cancel relationship deletion", async ({ page }) => {
-    const rel = await createRelationship(page, classIds[0], classIds[1], "related_to");
+    const rel = await createRelationship(
+      page,
+      classIds[0],
+      classIds[1],
+      "related_to",
+    );
 
     await page.goto("/app/relationships");
     await waitForAppReady(page);
@@ -95,7 +119,10 @@ test.describe("Relationship List and Delete", () => {
 
     // Relationship must still exist
     await expect(page.getByTestId(`relationship-row-${rel.id}`)).toBeVisible();
-    const existing = await apiRequest<{ id: string }>(page, `/api/relationships/${rel.id}`);
+    const existing = await apiRequest<{ id: string }>(
+      page,
+      `/api/relationships/${rel.id}`,
+    );
     expect(existing.id).toBe(rel.id);
   });
 });

@@ -9,7 +9,9 @@ import os
 import time
 import pytest
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 from domain.ontology.services import OntologyService
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
@@ -41,19 +43,20 @@ def _create_test_taxonomy_and_scheme(service: OntologyService) -> tuple[str, str
     """
     taxonomy = service.create_taxonomy("Test Taxonomy", "Test description")
     scheme = service.create_scheme(
-        taxonomy.id,
-        "Test Scheme",
-        "Test scheme description"
+        taxonomy.id, "Test Scheme", "Test scheme description"
     )
     return taxonomy.id, scheme.id
 
 
 @pytest.mark.performance
-@pytest.mark.parametrize("num_classes,max_time", [
-    (100, 0.01),
-    (500, 0.1),
-    (1000, 0.2),
-])
+@pytest.mark.parametrize(
+    "num_classes,max_time",
+    [
+        (100, 0.01),
+        (500, 0.1),
+        (1000, 0.2),
+    ],
+)
 def test_bulk_insert_fake_embedding(num_classes: int, max_time: float) -> None:
     """Measure throughput of inserting classes with fake embedding."""
     service, _ = _setup_ontology_context()
@@ -61,23 +64,24 @@ def test_bulk_insert_fake_embedding(num_classes: int, max_time: float) -> None:
 
     start = time.perf_counter()
     for i in range(num_classes):
-        service.create_class(
-            scheme_id,
-            f"Class_{i:04d}",
-            f"Description for class {i}"
-        )
+        service.create_class(scheme_id, f"Class_{i:04d}", f"Description for class {i}")
     elapsed = time.perf_counter() - start
 
-    print(f"\nBulk insert ({num_classes} classes, fake embedding): {elapsed:.4f}s ({num_classes / elapsed:.1f} classes/sec)")
+    print(
+        f"\nBulk insert ({num_classes} classes, fake embedding): {elapsed:.4f}s ({num_classes / elapsed:.1f} classes/sec)"
+    )
     assert elapsed < max_time
 
 
 @pytest.mark.performance
-@pytest.mark.parametrize("num_classes,max_time", [
-    (100, 0.5),
-    (500, 1.0),
-    (1000, 2.0),
-])
+@pytest.mark.parametrize(
+    "num_classes,max_time",
+    [
+        (100, 0.5),
+        (500, 1.0),
+        (1000, 2.0),
+    ],
+)
 def test_list_classes(num_classes: int, max_time: float) -> None:
     """Measure time to list classes from a scheme of specified size."""
     service, _ = _setup_ontology_context()
@@ -97,11 +101,14 @@ def test_list_classes(num_classes: int, max_time: float) -> None:
 
 
 @pytest.mark.performance
-@pytest.mark.parametrize("num_classes,max_time", [
-    (100, 0.01),
-    (500, 0.1),
-    (1000, 0.24),
-])
+@pytest.mark.parametrize(
+    "num_classes,max_time",
+    [
+        (100, 0.01),
+        (500, 0.1),
+        (1000, 0.24),
+    ],
+)
 def test_update_classes(num_classes: int, max_time: float) -> None:
     """Measure throughput of updating classes."""
     service, _ = _setup_ontology_context()
@@ -118,11 +125,13 @@ def test_update_classes(num_classes: int, max_time: float) -> None:
         service.update_class(
             class_id,
             title=f"Updated_Class_{i:04d}",
-            description=f"Updated description {i}"
+            description=f"Updated description {i}",
         )
     elapsed = time.perf_counter() - start
 
-    print(f"\nUpdate classes ({num_classes} entities): {elapsed:.4f}s ({num_classes / elapsed:.1f} updates/sec)")
+    print(
+        f"\nUpdate classes ({num_classes} entities): {elapsed:.4f}s ({num_classes / elapsed:.1f} updates/sec)"
+    )
     assert elapsed < max_time
 
 
@@ -147,12 +156,10 @@ def test_bulk_insert_100_classes_real_embedding() -> None:
 
     start = time.perf_counter()
     for i in range(100):
-        service.create_class(
-            scheme_id,
-            f"Class_{i:03d}",
-            f"Description for class {i}"
-        )
+        service.create_class(scheme_id, f"Class_{i:03d}", f"Description for class {i}")
     elapsed = time.perf_counter() - start
 
-    print(f"\nBulk insert (100 classes, real embedding): {elapsed:.4f}s ({100 / elapsed:.1f} classes/sec)")
+    print(
+        f"\nBulk insert (100 classes, real embedding): {elapsed:.4f}s ({100 / elapsed:.1f} classes/sec)"
+    )
     assert elapsed < 30.0

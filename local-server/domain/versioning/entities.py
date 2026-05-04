@@ -1,11 +1,18 @@
 """Domain entities for versioning context."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Optional
 
-from domain.versioning.value_objects import ChangeState, ProposalState, ChangeOperation, EntityVersionState, MergeStrategy
+from domain.versioning.value_objects import (
+    ChangeState,
+    ProposalState,
+    ChangeOperation,
+    EntityVersionState,
+    MergeStrategy,
+)
 
 
 @dataclass
@@ -22,6 +29,7 @@ class ChangeEvent:
     user_id: Optional[str] = None
     change_reason: Optional[str] = None
     changeset_id: Optional[str] = None
+    import_run_id: Optional[str] = None
     processed: bool = False
 
 

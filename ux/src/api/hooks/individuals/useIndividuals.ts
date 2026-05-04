@@ -11,7 +11,10 @@ import {
   UseQueryOptions,
   UseMutationOptions,
 } from "@tanstack/react-query";
-import { individualService, type IndividualListParams } from "../../services/individual";
+import {
+  individualService,
+  type IndividualListParams,
+} from "../../services/individual";
 import { QUERY_KEYS } from "../../config";
 import { createQueryKey } from "../../utils/queryClient";
 import type { components } from "../../client/types";
@@ -19,7 +22,8 @@ import type { components } from "../../client/types";
 type IndividualResponse = components["schemas"]["IndividualResponse"];
 type IndividualCreateRequest = components["schemas"]["IndividualCreateRequest"];
 type IndividualUpdateRequest = components["schemas"]["IndividualUpdateRequest"];
-type DataPropertyValueResponse = components["schemas"]["DataPropertyValueResponse"];
+type DataPropertyValueResponse =
+  components["schemas"]["DataPropertyValueResponse"];
 
 /**
  * Hook to fetch all individuals
@@ -54,7 +58,11 @@ export const useIndividual = (
  * Hook to create a new individual
  */
 export const useCreateIndividual = (
-  options?: UseMutationOptions<IndividualResponse, Error, IndividualCreateRequest>,
+  options?: UseMutationOptions<
+    IndividualResponse,
+    Error,
+    IndividualCreateRequest
+  >,
 ) => {
   const queryClient = useQueryClient();
 
@@ -166,11 +174,7 @@ export const useAddIndividualClass = (
  * Hook to remove a class from an individual
  */
 export const useRemoveIndividualClass = (
-  options?: UseMutationOptions<
-    void,
-    Error,
-    { id: string; classId: string }
-  >,
+  options?: UseMutationOptions<void, Error, { id: string; classId: string }>,
 ) => {
   const queryClient = useQueryClient();
 

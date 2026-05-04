@@ -8,7 +8,9 @@ property attribute inheritance with first-class-wins conflict resolution.
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import pytest
 
@@ -16,7 +18,9 @@ from domain.ontology.value_objects import DataPropertyValue
 from domain.ontology.services import OntologyService
 from domain.ontology.exceptions import EntityNotFoundError, DuplicateEntityError
 from domain.ontology.events import (
-    IndividualCreated, IndividualUpdated, IndividualDeleted
+    IndividualCreated,
+    IndividualUpdated,
+    IndividualDeleted,
 )
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
@@ -43,16 +47,15 @@ def sample_ontology(service):
 
     # Create three test classes
     class1 = svc.create_class(
-        scheme.id, "Database System",
-        description="A system for data storage and retrieval"
+        scheme.id,
+        "Database System",
+        description="A system for data storage and retrieval",
     )
     class2 = svc.create_class(
-        scheme.id, "SQL Dialect",
-        description="A SQL database implementation"
+        scheme.id, "SQL Dialect", description="A SQL database implementation"
     )
     class3 = svc.create_class(
-        scheme.id, "Open Source Software",
-        description="Software with open source code"
+        scheme.id, "Open Source Software", description="Software with open source code"
     )
 
     return svc, repo, tax, scheme, class1, class2, class3
@@ -169,9 +172,7 @@ class TestIndividualMultiClassOperations:
 
         ind = svc.create_individual([class1.id, class2.id], "PostgreSQL")
         with pytest.raises(ValueError, match="must contain exactly the same"):
-            svc.reorder_individual_classes(
-                ind.id, [class1.id, class3.id]
-            )
+            svc.reorder_individual_classes(ind.id, [class1.id, class3.id])
 
     def test_get_individual_properties_single_class(self, sample_ontology):
         """Get properties for individual with single parent class."""
@@ -191,7 +192,9 @@ class TestIndividualMultiClassOperations:
         assert any(p.property_identifier == "version" for p in props)
         assert any(p.property_identifier == "license" for p in props)
 
-    def test_get_individual_properties_multiple_classes_no_conflict(self, sample_ontology):
+    def test_get_individual_properties_multiple_classes_no_conflict(
+        self, sample_ontology
+    ):
         """Get properties for individual with multiple classes, no property conflicts."""
         svc, repo, tax, scheme, class1, class2, class3 = sample_ontology
 
@@ -223,7 +226,10 @@ class TestIndividualMultiClassOperations:
         ]
         class2.data_properties = [
             DataPropertyValue(property_identifier="license", value="MIT"),
-            DataPropertyValue(property_identifier="author", value="The PostgreSQL Global Development Group"),
+            DataPropertyValue(
+                property_identifier="author",
+                value="The PostgreSQL Global Development Group",
+            ),
         ]
         repo.save_class(class1)
         repo.save_class(class2)
@@ -263,7 +269,9 @@ class TestIndividualMultiClassOperations:
         prop = next(p for p in props if p.property_identifier == "release_type")
         assert prop.value == "stable"
 
-    def test_get_individual_properties_nonexistent_individual_raises(self, sample_ontology):
+    def test_get_individual_properties_nonexistent_individual_raises(
+        self, sample_ontology
+    ):
         """Get properties for nonexistent individual raises EntityNotFoundError."""
         svc, repo, tax, scheme, class1, class2, class3 = sample_ontology
 
@@ -289,18 +297,14 @@ class TestIndividualMultiClassOperations:
         repo.save_class(class3)
 
         # Create with class order: class1, class2, class3
-        ind = svc.create_individual(
-            [class1.id, class2.id, class3.id], "TestEntity"
-        )
+        ind = svc.create_individual([class1.id, class2.id, class3.id], "TestEntity")
         props = svc.get_individual_properties(ind.id)
 
         rating_prop = next(p for p in props if p.property_identifier == "rating")
         assert rating_prop.value == "1/5"
 
         # Reorder: class3, class2, class1 - class3 should now win
-        svc.reorder_individual_classes(
-            ind.id, [class3.id, class2.id, class1.id]
-        )
+        svc.reorder_individual_classes(ind.id, [class3.id, class2.id, class1.id])
         props = svc.get_individual_properties(ind.id)
         rating_prop = next(p for p in props if p.property_identifier == "rating")
         assert rating_prop.value == "3/5"
@@ -389,7 +393,6 @@ class TestIndividualEventEmission:
         assert updated_events[0].changed_fields == ("class_ids",)
 
 
-
 class TestIndividualRelationships:
     """Tests for relationships involving individuals."""
 
@@ -404,7 +407,7 @@ class TestIndividualRelationships:
         prop = svc.create_property_definition(
             identifier="depends_on",
             title="Depends On",
-            description="Indicates a dependency relationship"
+            description="Indicates a dependency relationship",
         )
 
         # Create a relationship from individual to class
@@ -428,7 +431,7 @@ class TestIndividualRelationships:
         prop = svc.create_property_definition(
             identifier="has_instance",
             title="Has Instance",
-            description="Indicates an instance relationship"
+            description="Indicates an instance relationship",
         )
 
         # Create a relationship from class to individual

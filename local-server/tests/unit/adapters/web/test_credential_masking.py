@@ -11,7 +11,12 @@ Tests the credential masking logic directly, including:
 import sys
 import os
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+sys.path.insert(
+    0,
+    os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    ),
+)
 
 from adapters.web.schemas.admin import _mask_credentials
 
@@ -21,9 +26,7 @@ class TestMaskCredentialsFunction:
 
     def test_masks_openai_api_key(self):
         """Test that openai_api_key is masked with last 4 characters."""
-        section = {
-            "openai_api_key": "sk-1234567890abcdef1234"
-        }
+        section = {"openai_api_key": "sk-1234567890abcdef1234"}
 
         result = _mask_credentials(section)
 
@@ -31,9 +34,7 @@ class TestMaskCredentialsFunction:
 
     def test_masks_anthropic_api_key(self):
         """Test that anthropic_api_key is masked with last 4 characters."""
-        section = {
-            "anthropic_api_key": "sk-ant-v0-abc1234567890"
-        }
+        section = {"anthropic_api_key": "sk-ant-v0-abc1234567890"}
 
         result = _mask_credentials(section)
 
@@ -41,9 +42,7 @@ class TestMaskCredentialsFunction:
 
     def test_masks_s3_access_key(self):
         """Test that s3_access_key is masked with last 4 characters."""
-        section = {
-            "s3_access_key": "AKIAIOSFODNN7EXAMPLE"
-        }
+        section = {"s3_access_key": "AKIAIOSFODNN7EXAMPLE"}
 
         result = _mask_credentials(section)
 
@@ -51,9 +50,7 @@ class TestMaskCredentialsFunction:
 
     def test_masks_s3_secret_key(self):
         """Test that s3_secret_key is masked with last 4 characters."""
-        section = {
-            "s3_secret_key": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-        }
+        section = {"s3_secret_key": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"}
 
         result = _mask_credentials(section)
 
@@ -61,9 +58,7 @@ class TestMaskCredentialsFunction:
 
     def test_short_key_masked_as_three_asterisks(self):
         """Test that keys shorter than 4 characters are masked as ***."""
-        section = {
-            "openai_api_key": "abc"
-        }
+        section = {"openai_api_key": "abc"}
 
         result = _mask_credentials(section)
 
@@ -71,9 +66,7 @@ class TestMaskCredentialsFunction:
 
     def test_single_character_key_masked_as_three_asterisks(self):
         """Test that single character key is masked as ***."""
-        section = {
-            "openai_api_key": "x"
-        }
+        section = {"openai_api_key": "x"}
 
         result = _mask_credentials(section)
 
@@ -81,9 +74,7 @@ class TestMaskCredentialsFunction:
 
     def test_exactly_four_character_key_shows_all_four(self):
         """Test that 4-character key shows all 4 characters."""
-        section = {
-            "openai_api_key": "abcd"
-        }
+        section = {"openai_api_key": "abcd"}
 
         result = _mask_credentials(section)
 
@@ -91,9 +82,7 @@ class TestMaskCredentialsFunction:
 
     def test_empty_string_key_not_masked(self):
         """Test that empty string API keys are not masked."""
-        section = {
-            "openai_api_key": ""
-        }
+        section = {"openai_api_key": ""}
 
         result = _mask_credentials(section)
 
@@ -101,9 +90,7 @@ class TestMaskCredentialsFunction:
 
     def test_none_credential_field_not_masked(self):
         """Test that None credential field values are not masked."""
-        section = {
-            "openai_api_key": None
-        }
+        section = {"openai_api_key": None}
 
         result = _mask_credentials(section)
 
@@ -112,9 +99,7 @@ class TestMaskCredentialsFunction:
     def test_deep_copy_preserves_original(self):
         """Test that original section dict is not modified (deep copy)."""
         original_key = "sk-test1234567890"
-        section = {
-            "openai_api_key": original_key
-        }
+        section = {"openai_api_key": original_key}
 
         _mask_credentials(section)
 
@@ -127,9 +112,7 @@ class TestMaskCredentialsFunction:
         section = {
             "openai_api_key": original_key,
             "model": "gpt-4",
-            "settings": {
-                "temperature": 0.7
-            }
+            "settings": {"temperature": 0.7},
         }
 
         result = _mask_credentials(section)
@@ -147,7 +130,7 @@ class TestMaskCredentialsFunction:
         section = {
             "provider": "openai",
             "model": "gpt-4",
-            "openai_api_key": "sk-test1234567890"
+            "openai_api_key": "sk-test1234567890",
         }
 
         result = _mask_credentials(section)
@@ -160,7 +143,7 @@ class TestMaskCredentialsFunction:
         """Test masking multiple credential fields."""
         section = {
             "openai_api_key": "sk-openai1234567890",
-            "anthropic_api_key": "sk-ant-anthropic1234567890"
+            "anthropic_api_key": "sk-ant-anthropic1234567890",
         }
 
         result = _mask_credentials(section)
@@ -170,9 +153,7 @@ class TestMaskCredentialsFunction:
 
     def test_non_string_credential_converted_to_string(self):
         """Test that non-string credential values are converted before masking."""
-        section = {
-            "openai_api_key": 12345678901234
-        }
+        section = {"openai_api_key": 12345678901234}
 
         result = _mask_credentials(section)
 
@@ -189,10 +170,7 @@ class TestMaskCredentialsFunction:
 
     def test_section_with_only_non_credential_fields(self):
         """Test section with only non-credential fields."""
-        section = {
-            "provider": "openai",
-            "model": "gpt-4"
-        }
+        section = {"provider": "openai", "model": "gpt-4"}
 
         result = _mask_credentials(section)
 
@@ -208,9 +186,9 @@ class TestMaskCredentialsFunction:
                 "s3_prefix": "context-studio",
                 "s3_access_key": "AKIAIOSFODNN7EXAMPLE",
                 "s3_secret_key": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
-                "s3_region": "us-east-1"
+                "s3_region": "us-east-1",
             },
-            "duckdb": None
+            "duckdb": None,
         }
 
         result = _mask_credentials(section)
@@ -234,8 +212,8 @@ class TestMaskCredentialsFunction:
             "adapter": "s3",
             "s3": {
                 "s3_access_key": original_access_key,
-                "s3_secret_key": original_secret_key
-            }
+                "s3_secret_key": original_secret_key,
+            },
         }
 
         _mask_credentials(section)
@@ -248,10 +226,7 @@ class TestMaskCredentialsFunction:
         """Test masking credentials in deeply nested structures."""
         section = {
             "level1": {
-                "level2": {
-                    "openai_api_key": "sk-test1234567890",
-                    "model": "gpt-4"
-                }
+                "level2": {"openai_api_key": "sk-test1234567890", "model": "gpt-4"}
             }
         }
 
@@ -266,8 +241,8 @@ class TestMaskCredentialsFunction:
             "adapter": "s3",
             "s3": {
                 "s3_access_key": None,
-                "s3_secret_key": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-            }
+                "s3_secret_key": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+            },
         }
 
         result = _mask_credentials(section)
@@ -277,11 +252,7 @@ class TestMaskCredentialsFunction:
 
     def test_handles_empty_nested_dicts(self):
         """Test handling of empty nested dicts."""
-        section = {
-            "adapter": "s3",
-            "s3": {},
-            "duckdb": None
-        }
+        section = {"adapter": "s3", "s3": {}, "duckdb": None}
 
         result = _mask_credentials(section)
 

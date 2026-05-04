@@ -131,9 +131,11 @@ class SQLiteExtractionRepository:
         """
         session = self._get_session()
         try:
-            orm_result = session.query(ExtractionResultORM).filter(
-                ExtractionResultORM.id == result_id
-            ).first()
+            orm_result = (
+                session.query(ExtractionResultORM)
+                .filter(ExtractionResultORM.id == result_id)
+                .first()
+            )
 
             if not orm_result:
                 return None
@@ -162,9 +164,13 @@ class SQLiteExtractionRepository:
         """
         session = self._get_session()
         try:
-            orm_results = session.query(ExtractionResultORM).order_by(
-                desc(ExtractionResultORM.created_at)
-            ).offset(offset).limit(limit).all()
+            orm_results = (
+                session.query(ExtractionResultORM)
+                .order_by(desc(ExtractionResultORM.created_at))
+                .offset(offset)
+                .limit(limit)
+                .all()
+            )
 
             return [self._orm_to_domain(orm) for orm in orm_results]
 

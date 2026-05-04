@@ -11,7 +11,8 @@ import type { components } from "../client/types";
 type IndividualResponse = components["schemas"]["IndividualResponse"];
 type IndividualCreateRequest = components["schemas"]["IndividualCreateRequest"];
 type IndividualUpdateRequest = components["schemas"]["IndividualUpdateRequest"];
-type DataPropertyValueResponse = components["schemas"]["DataPropertyValueResponse"];
+type DataPropertyValueResponse =
+  components["schemas"]["DataPropertyValueResponse"];
 
 export interface IndividualListParams {
   offset?: number;
@@ -38,7 +39,10 @@ export class IndividualService extends BaseService {
         );
       }
 
-      return this.getPage<IndividualResponse>(ENDPOINTS.INDIVIDUALS, queryParams);
+      return this.getPage<IndividualResponse>(
+        ENDPOINTS.INDIVIDUALS,
+        queryParams,
+      );
     }, "list");
   }
 
@@ -68,10 +72,7 @@ export class IndividualService extends BaseService {
 
       this.validateRequired(data.class_ids, "class_ids");
 
-      return this.postResource<IndividualResponse>(
-        ENDPOINTS.INDIVIDUALS,
-        data,
-      );
+      return this.postResource<IndividualResponse>(ENDPOINTS.INDIVIDUALS, data);
     }, "create");
   }
 

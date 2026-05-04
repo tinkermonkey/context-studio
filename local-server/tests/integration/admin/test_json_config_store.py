@@ -10,7 +10,9 @@ import os
 import tempfile
 import json
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 from config import ConfigurationManager
 from adapters.config.json_store import JSONFileConfigStore
@@ -182,13 +184,20 @@ def test_reset_to_defaults_preserves_credentials():
 
         # Create initial config with modified values and API keys
         config_data = {
-            "server": {"host": "192.168.1.1", "port": 9999, "cors_origins": ["http://localhost:3000"]},
+            "server": {
+                "host": "192.168.1.1",
+                "port": 9999,
+                "cors_origins": ["http://localhost:3000"],
+            },
             "database": {
                 "local_db_path": "./custom_local.db",
                 "operations_db_path": "./custom_operations.db",
             },
             "logging": {"log_level": "DEBUG", "max_bytes": 5242880, "backup_count": 10},
-            "llm": {"openai_api_key": "sk-test-123", "anthropic_api_key": "sk-ant-test-456"},
+            "llm": {
+                "openai_api_key": "sk-test-123",
+                "anthropic_api_key": "sk-ant-test-456",
+            },
             "reference": {
                 "cache_db_path": "./custom_cache.db",
                 "reference_db_path": "./custom_ref.db",
@@ -224,13 +233,20 @@ def test_reset_to_defaults_persists_changes():
         config_file = os.path.join(tmpdir, "config.json")
 
         config_data = {
-            "server": {"host": "192.168.1.1", "port": 9999, "cors_origins": ["http://localhost:3000"]},
+            "server": {
+                "host": "192.168.1.1",
+                "port": 9999,
+                "cors_origins": ["http://localhost:3000"],
+            },
             "database": {
                 "local_db_path": "./custom_local.db",
                 "operations_db_path": "./custom_operations.db",
             },
             "logging": {"log_level": "DEBUG", "max_bytes": 5242880, "backup_count": 10},
-            "llm": {"openai_api_key": "sk-test-123", "anthropic_api_key": "sk-ant-test-456"},
+            "llm": {
+                "openai_api_key": "sk-test-123",
+                "anthropic_api_key": "sk-ant-test-456",
+            },
             "reference": {
                 "cache_db_path": "./custom_cache.db",
                 "reference_db_path": "./custom_ref.db",
@@ -265,13 +281,20 @@ def test_reset_to_defaults_removes_sync_not_in_defaults():
         config_file = os.path.join(tmpdir, "config.json")
 
         config_data = {
-            "server": {"host": "192.168.1.1", "port": 9999, "cors_origins": ["http://localhost:3000"]},
+            "server": {
+                "host": "192.168.1.1",
+                "port": 9999,
+                "cors_origins": ["http://localhost:3000"],
+            },
             "database": {
                 "local_db_path": "./custom_local.db",
                 "operations_db_path": "./custom_operations.db",
             },
             "logging": {"log_level": "DEBUG", "max_bytes": 5242880, "backup_count": 10},
-            "llm": {"openai_api_key": "sk-test-123", "anthropic_api_key": "sk-ant-test-456"},
+            "llm": {
+                "openai_api_key": "sk-test-123",
+                "anthropic_api_key": "sk-ant-test-456",
+            },
             "reference": {
                 "cache_db_path": "./custom_cache.db",
                 "reference_db_path": "./custom_ref.db",
@@ -284,7 +307,7 @@ def test_reset_to_defaults_removes_sync_not_in_defaults():
                     "s3_access_key": "AKIA1234567890",
                     "s3_secret_key": "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
                     "s3_region": "us-west-2",
-                }
+                },
             },
         }
 
@@ -313,13 +336,20 @@ def test_reset_to_defaults_preserves_nested_s3_credentials():
 
         # Config with nested S3 credentials and modified non-credential values
         config_data = {
-            "server": {"host": "192.168.1.1", "port": 9999, "cors_origins": ["http://localhost:3000"]},
+            "server": {
+                "host": "192.168.1.1",
+                "port": 9999,
+                "cors_origins": ["http://localhost:3000"],
+            },
             "database": {
                 "local_db_path": "./custom_local.db",
                 "operations_db_path": "./custom_operations.db",
             },
             "logging": {"log_level": "DEBUG", "max_bytes": 5242880, "backup_count": 10},
-            "llm": {"openai_api_key": "sk-test-123", "anthropic_api_key": "sk-ant-test-456"},
+            "llm": {
+                "openai_api_key": "sk-test-123",
+                "anthropic_api_key": "sk-ant-test-456",
+            },
             "reference": {
                 "cache_db_path": "./custom_cache.db",
                 "reference_db_path": "./custom_ref.db",
@@ -332,7 +362,7 @@ def test_reset_to_defaults_preserves_nested_s3_credentials():
                     "s3_access_key": original_s3_access_key,
                     "s3_secret_key": original_s3_secret_key,
                     "s3_region": "eu-west-1",
-                }
+                },
             },
         }
 
@@ -384,10 +414,12 @@ def test_update_config_silently_skips_unknown_section():
 
         # Try to update with an unknown section - this tests the silent-skip behavior at line 120
         # The update should be silently ignored since "unknown_section" doesn't exist
-        updated = store.update_config({
-            "unknown_section": {"some_key": "some_value"},
-            "server": {"port": 9000}  # This valid update should still be applied
-        })
+        updated = store.update_config(
+            {
+                "unknown_section": {"some_key": "some_value"},
+                "server": {"port": 9000},  # This valid update should still be applied
+            }
+        )
 
         # Verify that the valid update (server.port) was applied
         assert updated.server["port"] == 9000

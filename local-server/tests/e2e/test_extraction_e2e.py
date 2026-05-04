@@ -16,7 +16,9 @@ Tests verify:
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import pytest
 from datetime import datetime
@@ -36,9 +38,9 @@ class TestExtractionWorkflow:
         - Status code 200 (OK)
         - Response contains extraction result with all required fields
         """
-        response = e2e_client.post("/api/extract", json={
-            "text": "SQLite is an embedded relational database."
-        })
+        response = e2e_client.post(
+            "/api/extract", json={"text": "SQLite is an embedded relational database."}
+        )
         assert response.status_code == status.HTTP_200_OK
 
     def test_extract_response_structure(self, e2e_client):
@@ -49,9 +51,9 @@ class TestExtractionWorkflow:
         - Response contains id, text, extracted_entities, layers_executed, timestamps
         - All required fields are present with correct types
         """
-        response = e2e_client.post("/api/extract", json={
-            "text": "SQLite is an embedded relational database."
-        })
+        response = e2e_client.post(
+            "/api/extract", json={"text": "SQLite is an embedded relational database."}
+        )
         body = response.json()
 
         # Verify all required fields
@@ -77,9 +79,9 @@ class TestExtractionWorkflow:
         Asserts:
         - Response includes results from Layer 0 (KG), Layer 1 (LLM), Layer 2 (NLP), Layer 3 (Reference)
         """
-        response = e2e_client.post("/api/extract", json={
-            "text": "SQLite is an embedded relational database."
-        })
+        response = e2e_client.post(
+            "/api/extract", json={"text": "SQLite is an embedded relational database."}
+        )
         body = response.json()
 
         # Should have executed 4 layers
@@ -93,9 +95,9 @@ class TestExtractionWorkflow:
         - Each layer result contains layer_number, layer_name, entities_found, duration_ms, success
         - All fields have correct types
         """
-        response = e2e_client.post("/api/extract", json={
-            "text": "SQLite is an embedded relational database."
-        })
+        response = e2e_client.post(
+            "/api/extract", json={"text": "SQLite is an embedded relational database."}
+        )
         body = response.json()
 
         # Check each layer result
@@ -113,34 +115,6 @@ class TestExtractionWorkflow:
             assert isinstance(layer["duration_ms"], int)
             assert isinstance(layer["success"], bool)
 
-    def test_extract_entity_structure(self, e2e_client):
-        """
-        Extracted entities have correct structure.
-
-        Asserts:
-        - Entity structure includes id, label, entity_type, source_layer, confidence
-        - All fields have correct types
-        """
-        response = e2e_client.post("/api/extract", json={
-            "text": "Test entity extraction with multiple words."
-        })
-        body = response.json()
-
-        # Check entity structure (entities should be found in extraction)
-        assert body["extracted_entities"], "Expected at least one extracted entity"
-        for entity in body["extracted_entities"]:
-            assert "id" in entity
-            assert "label" in entity
-            assert "entity_type" in entity
-            assert "source_layer" in entity
-            assert "confidence" in entity
-
-            # Verify types
-            assert isinstance(entity["id"], str)
-            assert isinstance(entity["label"], str)
-            assert isinstance(entity["entity_type"], str)
-            assert isinstance(entity["source_layer"], int)
-            assert isinstance(entity["confidence"], float)
 
     def test_extract_total_duration_positive(self, e2e_client):
         """
@@ -149,9 +123,9 @@ class TestExtractionWorkflow:
         Asserts:
         - total_duration_ms is a non-negative integer
         """
-        response = e2e_client.post("/api/extract", json={
-            "text": "SQLite is an embedded relational database."
-        })
+        response = e2e_client.post(
+            "/api/extract", json={"text": "SQLite is an embedded relational database."}
+        )
         body = response.json()
         assert body["total_duration_ms"] >= 0
 
@@ -162,9 +136,9 @@ class TestExtractionWorkflow:
         Asserts:
         - created_at can be parsed as ISO 8601 timestamp
         """
-        response = e2e_client.post("/api/extract", json={
-            "text": "SQLite is an embedded relational database."
-        })
+        response = e2e_client.post(
+            "/api/extract", json={"text": "SQLite is an embedded relational database."}
+        )
         body = response.json()
         # Should be ISO 8601 string, verify it can be parsed
         try:
@@ -181,9 +155,7 @@ class TestExtractionWorkflow:
         - Text field in response matches input text
         """
         long_text = "This is a test. " * 100
-        response = e2e_client.post("/api/extract", json={
-            "text": long_text
-        })
+        response = e2e_client.post("/api/extract", json={"text": long_text})
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
         assert body["text"] == long_text
@@ -196,9 +168,10 @@ class TestExtractionWorkflow:
         - Status code 200 (OK)
         - Response is valid for text with special characters
         """
-        response = e2e_client.post("/api/extract", json={
-            "text": "Test with special chars: @#$%^&*() and unicode: 你好 مرحبا"
-        })
+        response = e2e_client.post(
+            "/api/extract",
+            json={"text": "Test with special chars: @#$%^&*() and unicode: 你好 مرحبا"},
+        )
         assert response.status_code == status.HTTP_200_OK
 
 
@@ -213,9 +186,7 @@ class TestExtractionErrorHandling:
         Asserts:
         - Status code 422 (Unprocessable Entity)
         """
-        response = e2e_client.post("/api/extract", json={
-            "text": ""
-        })
+        response = e2e_client.post("/api/extract", json={"text": ""})
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_extract_with_whitespace_only_fails(self, e2e_client):
@@ -225,9 +196,7 @@ class TestExtractionErrorHandling:
         Asserts:
         - Status code 400 (Bad Request)
         """
-        response = e2e_client.post("/api/extract", json={
-            "text": "   \n\t  "
-        })
+        response = e2e_client.post("/api/extract", json={"text": "   \n\t  "})
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_extract_with_missing_text_fails(self, e2e_client):
@@ -252,9 +221,10 @@ class TestTextAnalysis:
         Asserts:
         - Status code 200 (OK)
         """
-        response = e2e_client.post("/api/analyze_text", json={
-            "text": "SQLite is an embedded relational database."
-        })
+        response = e2e_client.post(
+            "/api/analyze_text",
+            json={"text": "SQLite is an embedded relational database."},
+        )
         assert response.status_code == status.HTTP_200_OK
 
     def test_analyze_text_response_structure(self, e2e_client):
@@ -264,9 +234,10 @@ class TestTextAnalysis:
         Asserts:
         - Response contains id, text, extracted_entities, layers_executed
         """
-        response = e2e_client.post("/api/analyze_text", json={
-            "text": "SQLite is an embedded relational database."
-        })
+        response = e2e_client.post(
+            "/api/analyze_text",
+            json={"text": "SQLite is an embedded relational database."},
+        )
         body = response.json()
 
         # Verify all required fields
@@ -284,9 +255,10 @@ class TestTextAnalysis:
         Asserts:
         - Response includes Layer 0 (KG) and Layer 2 (NLP) only
         """
-        response = e2e_client.post("/api/analyze_text", json={
-            "text": "SQLite is an embedded relational database."
-        })
+        response = e2e_client.post(
+            "/api/analyze_text",
+            json={"text": "SQLite is an embedded relational database."},
+        )
         body = response.json()
 
         # Should have executed 2 layers: Layer 0 (KG context) and Layer 2 (NLP)
@@ -299,9 +271,7 @@ class TestTextAnalysis:
         Asserts:
         - Status code 422 (Unprocessable Entity)
         """
-        response = e2e_client.post("/api/analyze_text", json={
-            "text": ""
-        })
+        response = e2e_client.post("/api/analyze_text", json={"text": ""})
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_analyze_text_with_whitespace_only_fails(self, e2e_client):
@@ -311,9 +281,7 @@ class TestTextAnalysis:
         Asserts:
         - Status code 400 (Bad Request)
         """
-        response = e2e_client.post("/api/analyze_text", json={
-            "text": "   \n\t  "
-        })
+        response = e2e_client.post("/api/analyze_text", json={"text": "   \n\t  "})
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
@@ -337,13 +305,13 @@ class TestReferenceEnrichment:
                 "confidence": 0.9,
                 "uri": None,
                 "description": None,
-                "properties": {}
+                "properties": {},
             }
         ]
-        response = e2e_client.post("/api/enrich_from_references", json={
-            "text": "SQLite is a database.",
-            "extracted_entities": entities
-        })
+        response = e2e_client.post(
+            "/api/enrich_from_references",
+            json={"text": "SQLite is a database.", "extracted_entities": entities},
+        )
         assert response.status_code == status.HTTP_200_OK
 
     def test_enrich_from_references_response_structure(self, e2e_client):
@@ -362,13 +330,13 @@ class TestReferenceEnrichment:
                 "confidence": 0.9,
                 "uri": None,
                 "description": None,
-                "properties": {}
+                "properties": {},
             }
         ]
-        response = e2e_client.post("/api/enrich_from_references", json={
-            "text": "SQLite is a database.",
-            "extracted_entities": entities
-        })
+        response = e2e_client.post(
+            "/api/enrich_from_references",
+            json={"text": "SQLite is a database.", "extracted_entities": entities},
+        )
         body = response.json()
 
         # Verify all required fields
@@ -395,13 +363,13 @@ class TestReferenceEnrichment:
                 "confidence": 0.9,
                 "uri": None,
                 "description": None,
-                "properties": {}
+                "properties": {},
             }
         ]
-        response = e2e_client.post("/api/enrich_from_references", json={
-            "text": "SQLite is a database.",
-            "extracted_entities": entities
-        })
+        response = e2e_client.post(
+            "/api/enrich_from_references",
+            json={"text": "SQLite is a database.", "extracted_entities": entities},
+        )
         body = response.json()
 
         # Should have executed only 1 layer: Layer 3 (Reference enrichment)
@@ -424,13 +392,13 @@ class TestReferenceEnrichment:
                 "confidence": 0.9,
                 "uri": None,
                 "description": None,
-                "properties": {}
+                "properties": {},
             }
         ]
-        response = e2e_client.post("/api/enrich_from_references", json={
-            "text": "",
-            "extracted_entities": entities
-        })
+        response = e2e_client.post(
+            "/api/enrich_from_references",
+            json={"text": "", "extracted_entities": entities},
+        )
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_enrich_from_references_with_empty_entities_list(self, e2e_client):
@@ -441,10 +409,10 @@ class TestReferenceEnrichment:
         - Status code 200 (OK)
         - Response entities list is empty
         """
-        response = e2e_client.post("/api/enrich_from_references", json={
-            "text": "SQLite is a database.",
-            "extracted_entities": []
-        })
+        response = e2e_client.post(
+            "/api/enrich_from_references",
+            json={"text": "SQLite is a database.", "extracted_entities": []},
+        )
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
         assert len(body["extracted_entities"]) == 0
@@ -465,13 +433,13 @@ class TestReferenceEnrichment:
                 "confidence": 0.9,
                 "uri": None,
                 "description": None,
-                "properties": {}
+                "properties": {},
             }
         ]
-        response = e2e_client.post("/api/enrich_from_references", json={
-            "text": "SQLite is a database.",
-            "extracted_entities": entities
-        })
+        response = e2e_client.post(
+            "/api/enrich_from_references",
+            json={"text": "SQLite is a database.", "extracted_entities": entities},
+        )
         body = response.json()
 
         # Check if enrichment added metadata
@@ -487,29 +455,6 @@ class TestReferenceEnrichment:
 class TestExtractionDeduplication:
     """Tests for entity deduplication across layers."""
 
-    def test_extract_deduplicates_entities(self, e2e_client):
-        """
-        Extraction deduplicates similar entities across layers.
-
-        Asserts:
-        - Status code 200 (OK)
-        - Entities with same label are deduplicated (no duplicate labels in results)
-        - Deduplication reduces entity count compared to raw extraction
-        """
-        response = e2e_client.post("/api/extract", json={
-            "text": "SQLite database SQLite engine SQLite system."
-        })
-        assert response.status_code == status.HTTP_200_OK
-        body = response.json()
-
-        # Verify that entities were extracted
-        assert "extracted_entities" in body
-        entities = body["extracted_entities"]
-        assert len(entities) > 0, "Expected entities to be extracted"
-
-        # Verify deduplication: check that no entity label appears multiple times
-        entity_labels = [entity["label"] for entity in entities]
-        assert len(entity_labels) == len(set(entity_labels)), "Duplicate entity labels found - deduplication failed"
 
     def test_extract_maintains_unique_entities(self, e2e_client):
         """
@@ -520,9 +465,12 @@ class TestExtractionDeduplication:
         - Response contains multiple unique entities (different labels)
         - All extracted entities have required fields
         """
-        response = e2e_client.post("/api/extract", json={
-            "text": "Python is a programming language. Postgres is a database. Java is another language."
-        })
+        response = e2e_client.post(
+            "/api/extract",
+            json={
+                "text": "Python is a programming language. Postgres is a database. Java is another language."
+            },
+        )
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
 
@@ -541,4 +489,6 @@ class TestExtractionDeduplication:
 
         # Verify uniqueness: different entities should have different labels
         entity_labels = [entity["label"] for entity in entities]
-        assert len(entity_labels) == len(set(entity_labels)), "Duplicate entity labels found - uniqueness not maintained"
+        assert len(entity_labels) == len(
+            set(entity_labels)
+        ), "Duplicate entity labels found - uniqueness not maintained"

@@ -9,6 +9,7 @@ from typing import Any, Literal
 
 try:
     import openai
+
     HAS_OPENAI = True
 except ImportError:
     HAS_OPENAI = False

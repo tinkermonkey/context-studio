@@ -34,6 +34,7 @@ T = TypeVar("T")
 
 # ==================== Taxonomy Schemas ====================
 
+
 class TaxonomyCreateRequest(BaseModel):
     """Request to create a new taxonomy."""
 
@@ -44,7 +45,9 @@ class TaxonomyCreateRequest(BaseModel):
 class TaxonomyUpdateRequest(BaseModel):
     """Request to update a taxonomy."""
 
-    title: Optional[str] = Field(None, description="New title for the taxonomy", min_length=1)
+    title: Optional[str] = Field(
+        None, description="New title for the taxonomy", min_length=1
+    )
     description: Optional[str] = Field(None, description="New description")
 
 
@@ -57,16 +60,23 @@ class TaxonomyResponse(BaseModel):
     title: str = Field(..., description="Display name")
     description: Optional[str] = Field(None, description="Optional description")
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
-    last_modified: Optional[datetime] = Field(None, description="Last modification timestamp")
-    version: int = Field(default=1, description="Version number for optimistic concurrency control")
+    last_modified: Optional[datetime] = Field(
+        None, description="Last modification timestamp"
+    )
+    version: int = Field(
+        default=1, description="Version number for optimistic concurrency control"
+    )
 
 
 # ==================== ConceptScheme Schemas ====================
 
+
 class ConceptSchemeCreateRequest(BaseModel):
     """Request to create a new concept scheme."""
 
-    title: str = Field(..., description="Display name for the concept scheme", min_length=1)
+    title: str = Field(
+        ..., description="Display name for the concept scheme", min_length=1
+    )
     description: Optional[str] = Field(None, description="Optional longer description")
 
 
@@ -87,19 +97,28 @@ class ConceptSchemeResponse(BaseModel):
     title: str = Field(..., description="Display name")
     description: Optional[str] = Field(None, description="Optional description")
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
-    last_modified: Optional[datetime] = Field(None, description="Last modification timestamp")
-    version: int = Field(default=1, description="Version number for optimistic concurrency control")
+    last_modified: Optional[datetime] = Field(
+        None, description="Last modification timestamp"
+    )
+    version: int = Field(
+        default=1, description="Version number for optimistic concurrency control"
+    )
 
 
 # ==================== Class Schemas ====================
 
+
 class ExternalReferenceRequest(BaseModel):
     """Request to add an external reference."""
 
-    source: str = Field(..., description="Source of the reference (e.g., 'dbpedia', 'wikidata')")
+    source: str = Field(
+        ..., description="Source of the reference (e.g., 'dbpedia', 'wikidata')"
+    )
     identifier: str = Field(..., description="External identifier")
     uri: Optional[str] = Field(None, description="URI to external resource")
-    metadata: Optional[dict[str, Any]] = Field(None, description="Source-specific metadata")
+    metadata: Optional[dict[str, Any]] = Field(
+        None, description="Source-specific metadata"
+    )
 
 
 class LexicalSenseRequest(BaseModel):
@@ -107,15 +126,21 @@ class LexicalSenseRequest(BaseModel):
 
     label: str = Field(..., description="The sense label or term")
     language_code: str = Field(..., description="ISO 639-1 language code")
-    sense_type: str = Field(..., description="Type of sense (e.g., 'synset', 'word_sense')")
+    sense_type: str = Field(
+        ..., description="Type of sense (e.g., 'synset', 'word_sense')"
+    )
 
 
 class DataPropertyValueRequest(BaseModel):
     """Request to add a data property value."""
 
     property_identifier: str = Field(..., description="Property identifier")
-    value: str | int | float | bool | None = Field(..., description="Value of the property")
-    datatype: Optional[str] = Field(None, description="Type of the value (e.g., 'xsd:string', 'xsd:integer')")
+    value: str | int | float | bool | None = Field(
+        ..., description="Value of the property"
+    )
+    datatype: Optional[str] = Field(
+        None, description="Type of the value (e.g., 'xsd:string', 'xsd:integer')"
+    )
 
 
 class ClassCreateRequest(BaseModel):
@@ -123,7 +148,9 @@ class ClassCreateRequest(BaseModel):
 
     title: str = Field(..., description="Display name for the class", min_length=1)
     description: Optional[str] = Field(None, description="Optional longer description")
-    parent_class_id: Optional[str] = Field(None, description="Optional ID of parent class for hierarchy")
+    parent_class_id: Optional[str] = Field(
+        None, description="Optional ID of parent class for hierarchy"
+    )
 
 
 class ClassUpdateRequest(BaseModel):
@@ -145,7 +172,9 @@ class ExternalReferenceResponse(BaseModel):
     source: str = Field(..., description="Source of the reference")
     identifier: str = Field(..., description="External identifier")
     uri: Optional[str] = Field(None, description="External URI")
-    metadata: Optional[dict[str, Any]] = Field(None, description="Source-specific metadata")
+    metadata: Optional[dict[str, Any]] = Field(
+        None, description="Source-specific metadata"
+    )
 
 
 class LexicalSenseResponse(BaseModel):
@@ -160,7 +189,9 @@ class DataPropertyValueResponse(BaseModel):
     """Response containing data property value."""
 
     property_identifier: str = Field(..., description="Property identifier")
-    value: str | int | float | bool | None = Field(..., description="Value of the property")
+    value: str | int | float | bool | None = Field(
+        ..., description="Value of the property"
+    )
     datatype: Optional[str] = Field(None, description="Type of the value")
 
 
@@ -175,24 +206,36 @@ class ClassResponse(BaseModel):
     title: str = Field(..., description="Display name")
     description: Optional[str] = Field(None, description="Optional description")
     parent_class_id: Optional[str] = Field(None, description="Optional parent class ID")
-    structural_property_id: Optional[str] = Field(None, description="Optional structural property ID")
+    structural_property_id: Optional[str] = Field(
+        None, description="Optional structural property ID"
+    )
     external_references: list[ExternalReferenceResponse] = Field(default_factory=list)
     lexical_senses: list[LexicalSenseResponse] = Field(default_factory=list)
     data_properties: list[DataPropertyValueResponse] = Field(default_factory=list)
-    embedding: Optional[list[float]] = Field(None, description="Optional semantic embedding")
+    embedding: Optional[list[float]] = Field(
+        None, description="Optional semantic embedding"
+    )
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
-    last_modified: Optional[datetime] = Field(None, description="Last modification timestamp")
-    version: int = Field(default=1, description="Version number for optimistic concurrency control")
+    last_modified: Optional[datetime] = Field(
+        None, description="Last modification timestamp"
+    )
+    version: int = Field(
+        default=1, description="Version number for optimistic concurrency control"
+    )
 
 
 # ==================== Relationship Schemas ====================
+
 
 class RelationshipCreateRequest(BaseModel):
     """Request to create a new relationship."""
 
     source_id: str = Field(..., description="ID of source entity")
     target_id: str = Field(..., description="ID of target entity")
-    relationship_type: str = Field(..., description="Relationship type identifier (e.g., 'related_to', 'parent_of')")
+    relationship_type: str = Field(
+        ...,
+        description="Relationship type identifier (e.g., 'related_to', 'parent_of')",
+    )
 
 
 class RelationshipResponse(BaseModel):
@@ -203,16 +246,21 @@ class RelationshipResponse(BaseModel):
     id: str = Field(..., description="Unique identifier")
     source_id: str = Field(..., description="Source entity ID")
     target_id: str = Field(..., description="Target entity ID")
-    property_definition_id: str = Field(..., description="Property definition ID (relationship type)")
+    property_definition_id: str = Field(
+        ..., description="Property definition ID (relationship type)"
+    )
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
 
 
 # ==================== PropertyDefinition Schemas ====================
 
+
 class PropertyDefinitionCreateRequest(BaseModel):
     """Request to create a new property definition."""
 
-    identifier: str = Field(..., description="Machine-readable identifier", min_length=1)
+    identifier: str = Field(
+        ..., description="Machine-readable identifier", min_length=1
+    )
     title: str = Field(..., description="Display name for the property", min_length=1)
     description: Optional[str] = Field(None, description="Optional longer description")
 
@@ -233,18 +281,29 @@ class PropertyDefinitionResponse(BaseModel):
     identifier: str = Field(..., description="Machine-readable identifier")
     title: str = Field(..., description="Display name")
     description: Optional[str] = Field(None, description="Optional description")
-    is_relevant: Optional[bool] = Field(None, description="Relevance flag (None=not evaluated, True=relevant, False=irrelevant)")
+    is_relevant: Optional[bool] = Field(
+        None,
+        description="Relevance flag (None=not evaluated, True=relevant, False=irrelevant)",
+    )
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
-    last_modified: Optional[datetime] = Field(None, description="Last modification timestamp")
-    version: int = Field(default=1, description="Version number for optimistic concurrency control")
+    last_modified: Optional[datetime] = Field(
+        None, description="Last modification timestamp"
+    )
+    version: int = Field(
+        default=1, description="Version number for optimistic concurrency control"
+    )
 
 
 # ==================== Individual Schemas ====================
 
+
 class IndividualCreateRequest(BaseModel):
     """Request to create a new individual."""
 
-    class_ids: list[str] | str = Field(..., description="ID(s) of the class(es) this individual instantiates (≥1 required)")
+    class_ids: list[str] | str = Field(
+        ...,
+        description="ID(s) of the class(es) this individual instantiates (≥1 required)",
+    )
     title: str = Field(..., description="Display name for the individual", min_length=1)
     description: Optional[str] = Field(None, description="Optional longer description")
 
@@ -266,7 +325,9 @@ class IndividualCreateRequest(BaseModel):
 class IndividualUpdateRequest(BaseModel):
     """Request to update an individual."""
 
-    title: Optional[str] = Field(None, description="New title for the individual", min_length=1)
+    title: Optional[str] = Field(
+        None, description="New title for the individual", min_length=1
+    )
     description: Optional[str] = Field(None, description="New description")
 
 
@@ -282,8 +343,12 @@ class IndividualResponse(BaseModel):
     data_properties: list[DataPropertyValueResponse] = Field(default_factory=list)
     external_references: list[ExternalReferenceResponse] = Field(default_factory=list)
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
-    last_modified: Optional[datetime] = Field(None, description="Last modification timestamp")
-    version: int = Field(default=1, description="Version number for optimistic concurrency control")
+    last_modified: Optional[datetime] = Field(
+        None, description="Last modification timestamp"
+    )
+    version: int = Field(
+        default=1, description="Version number for optimistic concurrency control"
+    )
 
 
 class IndividualClassRequest(BaseModel):
@@ -295,10 +360,13 @@ class IndividualClassRequest(BaseModel):
 class IndividualClassListRequest(BaseModel):
     """Request to reorder individual class membership."""
 
-    class_ids: list[str] = Field(..., description="Ordered list of class IDs (must match current membership)")
+    class_ids: list[str] = Field(
+        ..., description="Ordered list of class IDs (must match current membership)"
+    )
 
 
 # ==================== List Response Schemas ====================
+
 
 class ListResponse(BaseModel, Generic[T]):
     """Generic paginated list response."""
@@ -313,8 +381,11 @@ class ListResponse(BaseModel, Generic[T]):
 
 # ==================== Error Response Schema ====================
 
+
 class ErrorResponse(BaseModel):
     """Error response."""
 
     detail: str = Field(..., description="Error message")
-    error_code: Optional[str] = Field(None, description="Error code for client handling")
+    error_code: Optional[str] = Field(
+        None, description="Error code for client handling"
+    )

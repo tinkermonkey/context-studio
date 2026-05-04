@@ -1,0 +1,36 @@
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix local: <http://context-studio.local/ontology/> .
+
+# External SKOS file created by an external tool
+# This is a simple taxonomy about animals
+
+local:animals-taxonomy a skos:ConceptScheme ;
+    skos:prefLabel "Animals"@en ;
+    skos:definition "A taxonomy of animal concepts"@en .
+
+local:animals-scheme a skos:ConceptScheme ;
+    skos:prefLabel "Fauna Classification"@en ;
+    skos:definition "Common fauna classification system"@en ;
+    dct:isPartOf local:animals-taxonomy .
+
+local:dog a skos:Concept ;
+    skos:prefLabel "Dog"@en ;
+    skos:definition "A domesticated carnivorous mammal"@en ;
+    skos:inScheme local:animals-scheme ;
+    dct:source <http://dbpedia.org/resource/Dog> ;
+    skos:exactMatch <https://www.wikidata.org/wiki/Q144> .
+
+local:cat a skos:Concept ;
+    skos:prefLabel "Cat"@en ;
+    skos:definition "A small domesticated carnivorous mammal"@en ;
+    skos:inScheme local:animals-scheme ;
+    skos:broader local:mammal ;
+    dct:source <http://dbpedia.org/resource/Cat> ;
+    skos:exactMatch <https://www.wikidata.org/wiki/Q146> .
+
+local:mammal a skos:Concept ;
+    skos:prefLabel "Mammal"@en ;
+    skos:definition "A warm-blooded vertebrate animal"@en ;
+    skos:inScheme local:animals-scheme ;
+    skos:narrower local:cat .

@@ -1,0 +1,567 @@
+"""
+FastAPI routes for the Data Interchange bounded context.
+
+This module implements HTTP endpoints for import/export operations:
+- Export ontology data in various formats
+- Import ontology data with conflict detection and resolution
+- Query import runs and their associated change events
+
+Each endpoint is a thin adapter that:
+1. Receives HTTP request + parsed request schema
+2. Calls domain service or adapter with domain entities
+3. Catches domain exceptions and maps to HTTP status codes
+4. Returns response schema serialized as JSON
+
+Note: Export returns binary data (Blob); import accepts multipart form data.
+"""
+
+from typing import Optional, Union
+import json
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status as http_status, UploadFile, File, Form
+from fastapi.responses import StreamingResponse
+
+from domain.interchange.value_objects import SerializationScope, SerializationScopeType, SerializationFormat, ChangeEvent, ResolutionKind, MatchKind
+from domain.interchange.entities import ImportRunStatus, ResolutionRecord
+from domain.interchange.ports import ImportRunRepository
+from domain.ontology.ports import OntologyRepository
+from utils.logger import get_logger
+from utils.async_executor import run_sync_in_executor
+
+from adapters.web.dependencies import (
+    get_ontology_repo,
+    get_interchange_repo,
+)
+from adapters.web.schemas.interchange import (
+    ExportRequest,
+    SerializationScopeRequest,
+    ImportPlanResponse,
+    ImportRunResponse,
+    InterchangeChangeEventResponse,
+    ImportConflictResponse,
+    ResolutionRecordResponse,
+    SerializationScopeResponse,
+)
+from adapters.web.schemas.ontology import ListResponse
+from adapters.interchange.skos import SKOSSerializer, SKOSDeserializer
+from adapters.interchange.owl import OWLSerializer, OWLDeserializer
+from adapters.interchange.graphml import GraphMLSerializer, GraphMLDeserializer
+
+router = APIRouter(prefix="/api/v1/interchange", tags=["interchange"])
+
+_logger = get_logger(__name__)
+
+# Maximum file size for imports (500 MB)
+MAX_UPLOAD_SIZE = 500 * 1024 * 1024
+
+
+# ==================== Helper Functions ====================
+
+
+def _get_serializer(format: SerializationFormat, ontology_repo: OntologyRepository, split_mode: bool = False):
+    """Get the appropriate serializer for the format."""
+    if format == SerializationFormat.SKOS:
+        return SKOSSerializer(ontology_repo)
+    elif format == SerializationFormat.OWL:
+        return OWLSerializer(ontology_repo, split_mode=split_mode)
+    elif format == SerializationFormat.GRAPHML:
+        return GraphMLSerializer(ontology_repo)
+    else:
+        raise ValueError(f"Unsupported format: {format}")
+
+
+def _get_deserializer(
+    format: SerializationFormat,
+    ontology_repo: OntologyRepository,
+    interchange_repo: ImportRunRepository,
+):
+    """Get the appropriate deserializer for the format."""
+    if format == SerializationFormat.SKOS:
+        return SKOSDeserializer(ontology_repo, interchange_repo)
+    elif format == SerializationFormat.OWL:
+        return OWLDeserializer(ontology_repo, interchange_repo)
+    elif format == SerializationFormat.GRAPHML:
+        return GraphMLDeserializer(ontology_repo, interchange_repo)
+    else:
+        raise ValueError(f"Unsupported format: {format}")
+
+
+def _scope_request_to_domain(scope_req: SerializationScopeRequest) -> SerializationScope:
+    """Convert SerializationScopeRequest to domain SerializationScope."""
+    # Pydantic validates Literal["whole_graph", "taxonomy", "scheme", "entity_set"] at schema level
+    scope_type = SerializationScopeType(scope_req.scope_type)
+
+    entity_ids_tuple = tuple(scope_req.entity_ids) if scope_req.entity_ids else None
+
+    return SerializationScope(
+        scope_type=scope_type,
+        taxonomy_id=scope_req.taxonomy_id,
+        scheme_id=scope_req.scheme_id,
+        include_descendants=scope_req.include_descendants,
+        entity_ids=entity_ids_tuple,
+    )
+
+
+def _scope_domain_to_response(scope: SerializationScope) -> SerializationScopeResponse:
+    """Convert domain SerializationScope to SerializationScopeResponse."""
+    return SerializationScopeResponse(
+        scope_type=scope.scope_type.value,
+        taxonomy_id=scope.taxonomy_id,
+        scheme_id=scope.scheme_id,
+        include_descendants=scope.include_descendants,
+        entity_ids=list(scope.entity_ids) if scope.entity_ids else None,
+    )
+
+
+def _conflict_to_response(conflict) -> ImportConflictResponse:
+    """Convert domain ImportConflict to response."""
+    return ImportConflictResponse(
+        match_kind=conflict.match_kind.value,
+        incoming=conflict.incoming,
+        existing=conflict.existing,
+        default_resolution=conflict.default_resolution.value if conflict.default_resolution else None,
+        available_resolutions=[r.value for r in conflict.available_resolutions],
+    )
+
+
+def _import_plan_to_response(plan) -> ImportPlanResponse:
+    """Convert domain ImportPlan to response."""
+    return ImportPlanResponse(
+        conflicts=[_conflict_to_response(c) for c in plan.conflicts],
+        new_entity_count=plan.new_entity_count,
+        import_run_id=plan.import_run_id,
+        warnings=plan.warnings,
+        source_hash=plan.source_hash,
+        scope=_scope_domain_to_response(plan.scope) if plan.scope else None,
+    )
+
+
+def _import_run_to_response(import_run, warnings: Optional[list[str]] = None) -> ImportRunResponse:
+    """Convert domain ImportRun to response, optionally with warnings from commit."""
+    return ImportRunResponse(
+        id=import_run.id,
+        created_at=import_run.created_at,
+        created_by=import_run.created_by,
+        format=import_run.format.value,
+        source_uri=import_run.source_uri,
+        source_hash=import_run.source_hash,
+        scope=_scope_domain_to_response(import_run.scope),
+        resolutions=[
+            ResolutionRecordResponse(
+                match_kind=r.match_kind.value,
+                entity_id=r.entity_id,
+                resolution_chosen=r.resolution_chosen.value,
+            )
+            for r in import_run.resolutions
+        ],
+        affected_entity_ids=import_run.affected_entity_ids,
+        warnings=warnings or [],
+        status=import_run.status.value,
+    )
+
+
+def _change_event_to_response(event: ChangeEvent) -> InterchangeChangeEventResponse:
+    """Convert ChangeEvent domain object to response."""
+    return InterchangeChangeEventResponse(
+        id=event.id,
+        timestamp=event.timestamp,
+        entity_id=event.entity_id,
+        entity_type=event.entity_type,
+        operation=event.operation,
+        new_state=event.new_state,
+        previous_state=event.previous_state,
+    )
+
+
+# ==================== Export Endpoints ====================
+
+
+@router.post("/export", response_class=StreamingResponse)
+async def export_ontology(
+    request: ExportRequest,
+    ontology_repo: OntologyRepository = Depends(get_ontology_repo),
+) -> StreamingResponse:
+    """
+    Export ontology data in the specified format.
+
+    Args:
+        request: Export request with format and scope
+        ontology_repo: Injected OntologyRepository
+
+    Returns:
+        Binary file data as blob
+
+    Raises:
+        HTTPException: If export fails or format is unsupported
+    """
+    try:
+        # Convert request scope to domain scope
+        scope = _scope_request_to_domain(request.scope)
+
+        # Parse format (Pydantic validates Literal["skos", "owl", "graphml"] at schema level)
+        enum_format = SerializationFormat(request.format)
+
+        # Get serializer with split_mode for OWL
+        serializer = _get_serializer(enum_format, ontology_repo, split_mode=request.split_mode)
+
+        # Serialize in executor to avoid blocking
+        data = await run_sync_in_executor(
+            lambda: serializer.serialize(scope)
+        )
+
+        # Return as binary file
+        return StreamingResponse(
+            iter([data]),
+            media_type="application/octet-stream",
+            headers={
+                "Content-Disposition": f'attachment; filename="export.{request.format}"'
+            },
+        )
+
+    except ValueError as e:
+        _logger.warning(f"Invalid export request: {e}")
+        raise HTTPException(status_code=http_status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        _logger.error(f"Export failed: {e}", exc_info=e)
+        raise HTTPException(
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Export operation failed",
+        )
+
+
+# ==================== Import Endpoints ====================
+
+
+@router.post("/import")
+async def import_ontology(
+    format: str = Form(..., description="Import format"),
+    file: UploadFile = File(..., description="File to import"),
+    dry_run: str = Form("true", description="If 'true', returns plan without committing"),
+    resolutions: Optional[str] = Form(None, description="JSON-encoded conflict resolutions to apply on commit"),
+    ontology_repo: OntologyRepository = Depends(get_ontology_repo),
+    interchange_repo: ImportRunRepository = Depends(get_interchange_repo),
+) -> Union[ImportPlanResponse, ImportRunResponse]:
+    """
+    Import ontology data from a file.
+
+    Supports dry-run mode to preview conflicts, or direct commit with user-chosen resolutions.
+
+    Args:
+        format: Import format (skos, owl, graphml)
+        file: File to import
+        dry_run: "true" for dry-run (returns plan), "false" to commit
+        resolutions: Optional JSON-encoded list of ResolutionRecord to apply when committing
+        ontology_repo: Injected OntologyRepository
+        interchange_repo: Injected ImportRunRepository
+
+    Returns:
+        ImportPlanResponse (dry-run) or ImportRunResponse (committed)
+
+    Raises:
+        HTTPException: If import fails or format is unsupported
+    """
+    try:
+        # Parse dry_run parameter
+        is_dry_run = dry_run.lower() == "true"
+
+        # Parse resolutions from JSON and convert to ResolutionRecord objects
+        parsed_resolutions = None
+        if resolutions:
+            try:
+                resolutions_list = json.loads(resolutions)
+                parsed_resolutions = []
+                for res in resolutions_list:
+                    try:
+                        # Validate that all required fields are present
+                        if not isinstance(res, dict):
+                            raise ValueError(f"Expected dict, got {type(res).__name__}")
+                        if "match_kind" not in res or "entity_id" not in res or "resolution_chosen" not in res:
+                            raise ValueError("Missing required fields: match_kind, entity_id, resolution_chosen")
+
+                        # Validate that the resolution type is supported
+                        resolution_kind = ResolutionKind(res["resolution_chosen"])
+                        if resolution_kind not in (ResolutionKind.SKIP, ResolutionKind.ABORT):
+                            raise ValueError(
+                                f"Resolution '{resolution_kind.value}' is not yet supported. "
+                                f"Supported resolutions: skip, abort"
+                            )
+
+                        # Convert to ResolutionRecord
+                        resolution_record = ResolutionRecord(
+                            match_kind=MatchKind(res["match_kind"]),
+                            entity_id=res["entity_id"],
+                            resolution_chosen=resolution_kind,
+                        )
+                        parsed_resolutions.append(resolution_record)
+                    except (KeyError, ValueError) as e:
+                        raise ValueError(f"Invalid resolution record: {str(e)}")
+            except json.JSONDecodeError as e:
+                raise HTTPException(
+                    status_code=http_status.HTTP_400_BAD_REQUEST,
+                    detail=f"Invalid resolutions JSON: {str(e)}",
+                )
+            except ValueError as e:
+                raise HTTPException(
+                    status_code=http_status.HTTP_400_BAD_REQUEST,
+                    detail=f"Invalid resolutions: {str(e)}",
+                )
+
+        # Read file content in chunks with size check to prevent memory exhaustion
+        chunks = []
+        total_size = 0
+        chunk_size = 1024 * 1024  # 1 MB chunks
+        while True:
+            chunk = await file.read(chunk_size)
+            if not chunk:
+                break
+            total_size += len(chunk)
+            if total_size > MAX_UPLOAD_SIZE:
+                raise HTTPException(
+                    status_code=http_status.HTTP_413_CONTENT_TOO_LARGE,
+                    detail=f"File size exceeds maximum allowed size of {MAX_UPLOAD_SIZE // (1024 * 1024)} MB",
+                )
+            chunks.append(chunk)
+        content = b"".join(chunks)
+
+        # Parse and validate format
+        try:
+            enum_format = SerializationFormat(format.lower())
+        except ValueError:
+            raise HTTPException(
+                status_code=http_status.HTTP_400_BAD_REQUEST,
+                detail=f"Unsupported format: {format}. Supported formats: {', '.join(f.value for f in SerializationFormat)}",
+            )
+
+        # Validate format with serializer
+        try:
+            _get_serializer(enum_format, ontology_repo)
+        except ValueError as e:
+            raise HTTPException(status_code=http_status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+        # Get deserializer
+        deserializer = _get_deserializer(enum_format, ontology_repo, interchange_repo)
+
+        # Deserialize in executor to avoid blocking
+        import_plan = await run_sync_in_executor(
+            lambda: deserializer.deserialize(content, dry_run=is_dry_run, resolutions=parsed_resolutions)
+        )
+
+        # Return appropriate response
+        if is_dry_run:
+            return _import_plan_to_response(import_plan)
+        else:
+            # When dry_run=False, the deserializer commits the import and returns
+            # an ImportPlan with the import_run_id. Fetch the actual ImportRun.
+            if not import_plan.import_run_id:
+                raise ValueError("Expected import_run_id in plan after non-dry-run deserialize")
+
+            import_run = await run_sync_in_executor(
+                lambda: interchange_repo.get(import_plan.import_run_id)
+            )
+
+            if not import_run:
+                raise RuntimeError(
+                    f"ImportRun {import_plan.import_run_id} not found after commit"
+                )
+
+            # Pass warnings from the commit operation to the response
+            return _import_run_to_response(import_run, warnings=list(import_plan.warnings))
+
+    except HTTPException:
+        raise
+    except ValueError as e:
+        _logger.warning(f"Invalid import request: {e}")
+        raise HTTPException(status_code=http_status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        _logger.error(f"Import failed: {e}", exc_info=e)
+        raise HTTPException(
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Import operation failed",
+        )
+
+
+# ==================== Import Run List Endpoints ====================
+
+
+@router.get("/runs", response_model=ListResponse[ImportRunResponse])
+async def list_import_runs(
+    interchange_repo: ImportRunRepository = Depends(get_interchange_repo),
+    offset: int = Query(0, ge=0, description="Number of results to skip"),
+    limit: int = Query(100, ge=1, le=500, description="Maximum number of results"),
+    status: Optional[str] = Query(None, description="Filter by status"),
+) -> ListResponse[ImportRunResponse]:
+    """
+    List all import runs with optional filtering.
+
+    Args:
+        interchange_repo: Injected interchange repository
+        offset: Number of results to skip
+        limit: Maximum number of results to return
+        status: Optional status filter (pending, committed, failed, rolled_back)
+
+    Returns:
+        Paginated list of import runs
+
+    Raises:
+        HTTPException: If query fails or invalid status provided
+    """
+    try:
+        if status:
+            # Validate status value
+            try:
+                ImportRunStatus(status)
+            except ValueError:
+                raise ValueError(f"Invalid status: {status}")
+            runs = await run_sync_in_executor(
+                lambda: interchange_repo.list_by_status(
+                    ImportRunStatus(status), limit=limit, offset=offset
+                )
+            )
+            total = await run_sync_in_executor(
+                lambda: interchange_repo.count_by_status(ImportRunStatus(status))
+            )
+        else:
+            runs = await run_sync_in_executor(
+                lambda: interchange_repo.list_all(limit=limit, offset=offset)
+            )
+            total = await run_sync_in_executor(
+                lambda: interchange_repo.count_all()
+            )
+
+        return ListResponse(
+            items=[_import_run_to_response(r) for r in runs],
+            total=total,
+            offset=offset,
+            limit=limit,
+        )
+
+    except ValueError as e:
+        _logger.warning(f"Invalid query parameters: {e}")
+        raise HTTPException(status_code=http_status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        _logger.error(f"Failed to list import runs: {e}", exc_info=e)
+        raise HTTPException(
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to list import runs",
+        )
+
+
+# ==================== Import Run Detail Endpoints ====================
+
+
+@router.get("/runs/{run_id}", response_model=ImportRunResponse)
+async def get_import_run(
+    run_id: str,
+    interchange_repo: ImportRunRepository = Depends(get_interchange_repo),
+) -> ImportRunResponse:
+    """
+    Get a specific import run by ID.
+
+    Args:
+        run_id: The import run ID
+        interchange_repo: Injected interchange repository
+
+    Returns:
+        Import run details
+
+    Raises:
+        HTTPException: If run not found or query fails
+    """
+    try:
+        import_run = await run_sync_in_executor(
+            lambda: interchange_repo.get(run_id)
+        )
+
+        if not import_run:
+            raise HTTPException(
+                status_code=http_status.HTTP_404_NOT_FOUND,
+                detail=f"Import run not found: {run_id}",
+            )
+
+        return _import_run_to_response(import_run)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        _logger.error(f"Failed to get import run: {e}", exc_info=e)
+        raise HTTPException(
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get import run",
+        )
+
+
+# ==================== Change Events Endpoints ====================
+
+
+@router.get("/runs/{run_id}/change-events", response_model=ListResponse[InterchangeChangeEventResponse])
+async def get_run_change_events(
+    run_id: str,
+    interchange_repo: ImportRunRepository = Depends(get_interchange_repo),
+    offset: int = Query(0, ge=0, description="Number of results to skip"),
+    limit: int = Query(100, ge=1, le=500, description="Maximum number of results"),
+    entity_type: Optional[str] = Query(None, description="Filter by entity type"),
+    change_type: Optional[str] = Query(None, description="Filter by change type"),
+) -> ListResponse[InterchangeChangeEventResponse]:
+    """
+    Get change events associated with an import run.
+
+    Args:
+        run_id: The import run ID
+        interchange_repo: Injected interchange repository
+        offset: Number of results to skip
+        limit: Maximum number of results to return
+        entity_type: Optional filter by entity type
+        change_type: Optional filter by change type
+
+    Returns:
+        Paginated list of change events
+
+    Raises:
+        HTTPException: If run not found or query fails
+    """
+    try:
+        # Verify run exists
+        import_run = await run_sync_in_executor(
+            lambda: interchange_repo.get(run_id)
+        )
+
+        if not import_run:
+            raise HTTPException(
+                status_code=http_status.HTTP_404_NOT_FOUND,
+                detail=f"Import run not found: {run_id}",
+            )
+
+        # Get change events
+        events = await run_sync_in_executor(
+            lambda: interchange_repo.get_change_events_for_run(run_id)
+        )
+
+        # Apply filters if provided
+        filtered_events = events
+        if entity_type:
+            filtered_events = [
+                e for e in filtered_events if e.entity_type == entity_type
+            ]
+        if change_type:
+            filtered_events = [
+                e for e in filtered_events if e.operation == change_type
+            ]
+
+        # Apply pagination
+        paginated_events = filtered_events[offset : offset + limit]
+
+        return ListResponse(
+            items=[_change_event_to_response(e) for e in paginated_events],
+            total=len(filtered_events),
+            offset=offset,
+            limit=limit,
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        _logger.error(f"Failed to get change events: {e}", exc_info=e)
+        raise HTTPException(
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get change events",
+        )

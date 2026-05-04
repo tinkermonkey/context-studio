@@ -28,7 +28,13 @@ from domain.versioning.entities import (
     Changeset as DomainChangeset,
     Proposal as DomainProposal,
 )
-from domain.versioning.value_objects import ChangeState, ProposalState, ChangeOperation, EntityVersionState, ChangeHistoryResult
+from domain.versioning.value_objects import (
+    ChangeState,
+    ProposalState,
+    ChangeOperation,
+    EntityVersionState,
+    ChangeHistoryResult,
+)
 from domain.versioning.exceptions import VersionNotFoundError
 
 
@@ -64,6 +70,7 @@ class SQLiteChangeRepository:
         user_id: Optional[str] = None,
         change_reason: Optional[str] = None,
         changeset_id: Optional[str] = None,
+        import_run_id: Optional[str] = None,
     ) -> str:
         """
         Record a change event to the audit trail.
@@ -77,6 +84,7 @@ class SQLiteChangeRepository:
             user_id: Optional ID of user who made the change
             change_reason: Optional explanation of the change
             changeset_id: Optional ID of a changeset this event belongs to
+            import_run_id: Optional ID of the import run that produced this change
 
         Returns:
             The ID of the recorded change event
@@ -97,6 +105,7 @@ class SQLiteChangeRepository:
                     user_id=user_id,
                     change_reason=change_reason,
                     changeset_id=changeset_id,
+                    import_run_id=import_run_id,
                     processed=False,
                 )
 
@@ -144,7 +153,9 @@ class SQLiteChangeRepository:
             total_count = session.execute(count_query).scalar() or 0
 
             # Apply ordering and limit to get paginated results
-            paginated_query = base_query.order_by(ChangeEvent.timestamp.desc()).limit(limit)
+            paginated_query = base_query.order_by(ChangeEvent.timestamp.desc()).limit(
+                limit
+            )
             orm_events = session.execute(paginated_query).scalars().all()
 
             events = [self._to_domain_change_event(e) for e in orm_events]
@@ -207,7 +218,9 @@ class SQLiteChangeRepository:
         except VersionNotFoundError:
             raise
         except SQLAlchemyError as e:
-            raise RuntimeError(f"Failed to mark change events as processed: {str(e)}") from e
+            raise RuntimeError(
+                f"Failed to mark change events as processed: {str(e)}"
+            ) from e
 
     def delete_changes(self, event_ids: list[str]) -> None:
         """
@@ -276,7 +289,11 @@ class SQLiteChangeRepository:
         """
         try:
             with self.session_factory() as session:
-                query = select(func.count()).select_from(ChangeEvent).where(~ChangeEvent.processed)
+                query = (
+                    select(func.count())
+                    .select_from(ChangeEvent)
+                    .where(~ChangeEvent.processed)
+                )
                 count = session.scalar(query)
                 return count or 0
         except SQLAlchemyError as e:
@@ -665,7 +682,9 @@ class SQLiteChangeRepository:
         except VersionNotFoundError:
             raise
         except SQLAlchemyError as e:
-            raise RuntimeError(f"Failed to update changeset and proposal: {str(e)}") from e
+            raise RuntimeError(
+                f"Failed to update changeset and proposal: {str(e)}"
+            ) from e
 
     def atomic_update_on_merge(
         self,
@@ -750,6 +769,7 @@ class SQLiteChangeRepository:
             user_id=cast(Optional[str], orm_event.user_id),
             change_reason=cast(Optional[str], orm_event.change_reason),
             changeset_id=cast(Optional[str], orm_event.changeset_id),
+            import_run_id=cast(Optional[str], orm_event.import_run_id),
             processed=cast(bool, orm_event.processed),
         )
 

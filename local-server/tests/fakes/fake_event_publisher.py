@@ -4,19 +4,20 @@ import sys
 import os
 from typing import Callable, TypeVar, cast
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 from domain.events import DomainEvent
 from utils.logger import get_logger
 
-
 logger = get_logger(__name__)
 
 # Contravariant TypeVar allows handlers typed for specific event subclasses
-EventT_contra = TypeVar('EventT_contra', bound=DomainEvent, contravariant=True)
+EventT_contra = TypeVar("EventT_contra", bound=DomainEvent, contravariant=True)
 
 # Covariant TypeVar for get_events_of_type to preserve specific event types
-EventT = TypeVar('EventT', bound=DomainEvent)
+EventT = TypeVar("EventT", bound=DomainEvent)
 
 
 class FakeEventPublisher:
@@ -24,7 +25,9 @@ class FakeEventPublisher:
 
     def __init__(self) -> None:
         self._events: list[DomainEvent] = []
-        self._handlers: dict[type[DomainEvent], list[Callable[[DomainEvent], None]]] = {}
+        self._handlers: dict[type[DomainEvent], list[Callable[[DomainEvent], None]]] = (
+            {}
+        )
 
     def publish(self, event: DomainEvent) -> list[tuple[str, Exception]]:
         """
@@ -46,7 +49,7 @@ class FakeEventPublisher:
             try:
                 handler(event)
             except Exception as e:
-                handler_name = getattr(handler, '__name__', repr(handler))
+                handler_name = getattr(handler, "__name__", repr(handler))
                 logger.error(
                     f"Handler {handler_name} raised exception while processing "
                     f"event {event_type.__name__} (id: {event.event_id}): {type(e).__name__}: {str(e)}",
@@ -56,7 +59,9 @@ class FakeEventPublisher:
 
         return failures
 
-    def subscribe(self, event_type: type[EventT_contra], handler: Callable[[EventT_contra], None]) -> None:
+    def subscribe(
+        self, event_type: type[EventT_contra], handler: Callable[[EventT_contra], None]
+    ) -> None:
         if event_type not in self._handlers:
             self._handlers[event_type] = []
         self._handlers[event_type].append(handler)  # type: ignore[arg-type]
@@ -74,7 +79,9 @@ class FakeEventPublisher:
         Returns:
             List of events of the specified type with proper type preservation.
         """
-        return cast(list[EventT], [e for e in self._events if isinstance(e, event_type)])
+        return cast(
+            list[EventT], [e for e in self._events if isinstance(e, event_type)]
+        )
 
     def clear(self) -> None:
         self._events.clear()

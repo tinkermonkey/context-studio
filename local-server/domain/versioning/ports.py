@@ -1,11 +1,17 @@
 """Port protocols for versioning domain."""
+
 from __future__ import annotations
 
 from datetime import datetime
 from typing import Optional, Protocol, Sequence
 
 from domain.versioning.entities import ChangeEvent, Changeset, EntityVersion, Proposal
-from domain.versioning.value_objects import SyncResult, ChangeOperation, ChangeHistoryResult, SyncStatus
+from domain.versioning.value_objects import (
+    SyncResult,
+    ChangeOperation,
+    ChangeHistoryResult,
+    SyncStatus,
+)
 
 
 class ChangeRepository(Protocol):
@@ -62,9 +68,7 @@ class ChangeRepository(Protocol):
         """Save an entity version snapshot."""
         ...
 
-    def get_version(
-        self, entity_id: str, version: int
-    ) -> Optional[EntityVersion]:
+    def get_version(self, entity_id: str, version: int) -> Optional[EntityVersion]:
         """Get a specific entity version."""
         ...
 

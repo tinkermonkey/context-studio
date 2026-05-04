@@ -250,7 +250,9 @@ class Individual:
         if class_id not in self.class_ids:
             raise ValueError(f"Class {class_id} is not a parent of this individual")
         if len(self.class_ids) == 1:
-            raise ValueError("Cannot remove the last parent class; Individual must have at least one parent class")
+            raise ValueError(
+                "Cannot remove the last parent class; Individual must have at least one parent class"
+            )
         self.class_ids.remove(class_id)
         self.last_modified = datetime.now(timezone.utc)
 

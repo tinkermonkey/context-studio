@@ -10,7 +10,9 @@ import tempfile
 import json
 from pathlib import Path
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import pytest
 from fastapi.testclient import TestClient
@@ -31,32 +33,19 @@ def e2e_config_file(temp_db_dir):
     Returns the path to the temporary config file.
     """
     config_data = {
-        "server": {
-            "host": "127.0.0.1",
-            "port": 8000,
-            "cors_origins": ["*"]
-        },
+        "server": {"host": "127.0.0.1", "port": 8000, "cors_origins": ["*"]},
         "database": {
             "local_db_path": str(temp_db_dir / "local.db"),
-            "operations_db_path": str(temp_db_dir / "operations.db")
+            "operations_db_path": str(temp_db_dir / "operations.db"),
         },
-        "logging": {
-            "log_level": "INFO",
-            "max_bytes": 10485760,
-            "backup_count": 5
-        },
-        "llm": {
-            "openai_api_key": "",
-            "anthropic_api_key": ""
-        },
+        "logging": {"log_level": "INFO", "max_bytes": 10485760, "backup_count": 5},
+        "llm": {"openai_api_key": "", "anthropic_api_key": ""},
         "nlp": {},
         "reference": {
             "cache_db_path": str(temp_db_dir / "reference_api_cache.db"),
-            "reference_db_path": str(temp_db_dir / "reference.db")
+            "reference_db_path": str(temp_db_dir / "reference.db"),
         },
-        "sync": {
-            "adapter": "none"
-        }
+        "sync": {"adapter": "none"},
     }
 
     config_file = temp_db_dir / "config.json"
@@ -79,6 +68,7 @@ def setup_e2e_config(e2e_config_file):
 
     # Clear the global config manager cache so it reloads with the new config path
     import config
+
     config._config_manager = None
 
     yield

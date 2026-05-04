@@ -14,7 +14,9 @@ These tests exercise the complete stack: routes → domain service → adapters 
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import pytest
 import tempfile
@@ -73,7 +75,9 @@ def repository(session_factory):
 def populated_repository(repository):
     """Populate repository with test data."""
     # Create taxonomy
-    tax = Taxonomy(id=str(uuid4()), title="Integration Test Taxonomy", description="Test")
+    tax = Taxonomy(
+        id=str(uuid4()), title="Integration Test Taxonomy", description="Test"
+    )
     repository.save_taxonomy(tax)
 
     # Create concept scheme
@@ -314,7 +318,9 @@ class TestPathFindingIntegration:
 class TestCentralityIntegration:
     """Integration tests for centrality computation with real algorithms."""
 
-    def test_centrality_algorithms_return_valid_scores(self, client, populated_repository):
+    def test_centrality_algorithms_return_valid_scores(
+        self, client, populated_repository
+    ):
         """All centrality algorithms return valid scores for all entity types."""
         algorithms = ["betweenness", "pagerank", "closeness", "degree"]
 
@@ -542,9 +548,7 @@ class TestRDFTripleIntegration:
 
     def test_rdf_triples_with_filters(self, client):
         """RDF triple retrieval accepts subject/predicate/object filters."""
-        response = client.get(
-            "/api/graph/rdf/triples?subject=s&predicate=p&object=o"
-        )
+        response = client.get("/api/graph/rdf/triples?subject=s&predicate=p&object=o")
         assert response.status_code == status.HTTP_200_OK
 
     def test_rdf_triple_count(self, client):
@@ -573,7 +577,9 @@ class TestErrorHandlingIntegration:
 
     def test_422_for_invalid_parameters(self, client):
         """Invalid parameters return 422 Unprocessable Entity."""
-        response = client.get("/api/graph/paths/all?source_id=a&target_id=b&max_depth=100")
+        response = client.get(
+            "/api/graph/paths/all?source_id=a&target_id=b&max_depth=100"
+        )
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_422_for_missing_required_fields(self, client):

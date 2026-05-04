@@ -51,7 +51,9 @@ test.describe("Reference Search", () => {
     await expect(page.getByText("DBpedia")).toBeVisible({ timeout: 5000 });
   });
 
-  test("should show empty results list for a zero-result mock response", async ({ page }) => {
+  test("should show empty results list for a zero-result mock response", async ({
+    page,
+  }) => {
     await page.route("**/api/reference/*/search*", (route) =>
       route.fulfill({
         status: 200,
@@ -71,7 +73,9 @@ test.describe("Reference Search", () => {
       }),
     );
 
-    await page.getByTestId("reference-search-input").fill("xyzzy-nothing-matches");
+    await page
+      .getByTestId("reference-search-input")
+      .fill("xyzzy-nothing-matches");
     await page.getByTestId("reference-search-button").click();
 
     // Wait briefly for the response to be processed, then assert the results

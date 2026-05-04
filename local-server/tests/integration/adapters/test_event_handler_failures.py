@@ -9,7 +9,9 @@ into audit trail gaps.
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 from domain.extraction.events import ExtractionCompleted
 from domain.pipeline.events import PipelineExecuted
@@ -55,7 +57,9 @@ class TestPipelineServiceEventHandlerFailures:
         publisher.subscribe(PipelineExecuted, failing_handler)
 
         # Publish an event directly to verify the failure is captured
-        event = PipelineExecuted(execution_id="exec_1", pipeline_id="pipe_1", status="success")
+        event = PipelineExecuted(
+            execution_id="exec_1", pipeline_id="pipe_1", status="success"
+        )
         failures = publisher.publish(event)
 
         # Verify that the failure was captured
@@ -76,10 +80,12 @@ class TestInProcessEventPublisherFailureReporting:
 
         def good_handler(event):
             successes.append("good_1")
+
         good_handler.__name__ = "good_handler"
 
         def bad_handler(event):
             raise ValueError("Intentional failure")
+
         bad_handler.__name__ = "bad_handler"
 
         publisher.subscribe(ExtractionCompleted, good_handler)

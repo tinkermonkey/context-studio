@@ -19,7 +19,6 @@ from .ports import PipelineRepository, LLMProvider
 from .events import PipelineExecuted
 from .exceptions import PipelineNotFoundError
 
-
 _logger = logging.getLogger(__name__)
 
 
@@ -168,8 +167,12 @@ class PipelineService:
             provider=provider if provider is not None else existing.provider,
             model=model if model is not None else existing.model,
             config=config if config is not None else existing.config,
-            system_prompt=system_prompt if system_prompt is not None else existing.system_prompt,
-            user_prompt=user_prompt if user_prompt is not None else existing.user_prompt,
+            system_prompt=(
+                system_prompt if system_prompt is not None else existing.system_prompt
+            ),
+            user_prompt=(
+                user_prompt if user_prompt is not None else existing.user_prompt
+            ),
             version=existing.version + 1,
             enabled=enabled if enabled is not None else existing.enabled,
             created_at=existing.created_at,

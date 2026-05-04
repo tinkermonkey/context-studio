@@ -23,7 +23,8 @@ import type { components } from "../../../client/types";
 type IndividualResponse = components["schemas"]["IndividualResponse"];
 type IndividualCreateRequest = components["schemas"]["IndividualCreateRequest"];
 type IndividualUpdateRequest = components["schemas"]["IndividualUpdateRequest"];
-type DataPropertyValueResponse = components["schemas"]["DataPropertyValueResponse"];
+type DataPropertyValueResponse =
+  components["schemas"]["DataPropertyValueResponse"];
 
 // Mock the service
 vi.mock("../../../services/individual");
@@ -184,7 +185,10 @@ describe("Individual Hooks", () => {
       });
 
       expect(result.current.data).toEqual(response);
-      expect(mockIndividualService.update).toHaveBeenCalledWith("ind-1", update);
+      expect(mockIndividualService.update).toHaveBeenCalledWith(
+        "ind-1",
+        update,
+      );
     });
   });
 

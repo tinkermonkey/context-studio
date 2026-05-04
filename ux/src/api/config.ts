@@ -48,6 +48,7 @@ export const QUERY_KEYS = {
   CHANGE_EVENTS: "change_events",
   RAG: "rag",
   RAG_EXPERIMENTS: "rag_experiments",
+  INTERCHANGE_RUNS: "interchange_runs",
 } as const;
 
 export const ENDPOINTS = {
@@ -100,5 +101,13 @@ export const ENDPOINTS = {
       `/api/rag-experiments/results/paragraphs/${paragraphId}`,
     RUN_DETAILS: (runId: string) =>
       `/api/rag-experiments/results/runs/${runId}`,
+  },
+  INTERCHANGE: {
+    EXPORT: "/api/v1/interchange/export",
+    IMPORT: "/api/v1/interchange/import",
+    RUNS: "/api/v1/interchange/runs",
+    RUN: (runId: string) => `/api/v1/interchange/runs/${runId}`,
+    RUN_CHANGE_EVENTS: (runId: string) =>
+      `/api/v1/interchange/runs/${runId}/change-events`,
   },
 } as const;

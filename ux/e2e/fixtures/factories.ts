@@ -374,7 +374,9 @@ export async function clearTestData(page: Page): Promise<void> {
       const items = extractItems(await apiRequest<any>(page, endpoint));
       for (const item of items) {
         try {
-          await apiRequest(page, `${endpoint}/${item.id}`, { method: "DELETE" });
+          await apiRequest(page, `${endpoint}/${item.id}`, {
+            method: "DELETE",
+          });
         } catch (error) {
           cleanupErrors.push({ step, error });
         }

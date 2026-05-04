@@ -25,7 +25,9 @@ Tests verify:
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import pytest
 from uuid import uuid4
@@ -52,7 +54,9 @@ def repository_with_data():
     repo.save_taxonomy(tax)
 
     # Create concept scheme
-    scheme = ConceptScheme(id=str(uuid4()), taxonomy_id=tax.id, title="Test Scheme", description="Test")
+    scheme = ConceptScheme(
+        id=str(uuid4()), taxonomy_id=tax.id, title="Test Scheme", description="Test"
+    )
     repo.save_concept_scheme(scheme)
 
     # Create classes
@@ -368,7 +372,9 @@ class TestNeighborsEndpoint:
         """GET /nodes/{node_id}/neighbors accepts direction parameter."""
         classes = repository_with_data.list_classes()
         for direction in ["in", "out", "both"]:
-            response = client.get(f"/api/graph/nodes/{classes[0].id}/neighbors?direction={direction}")
+            response = client.get(
+                f"/api/graph/nodes/{classes[0].id}/neighbors?direction={direction}"
+            )
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["direction"] == direction
@@ -379,10 +385,14 @@ class TestNeighborsEndpoint:
         # Fake engine returns empty set, implementation detail
         assert response.status_code in [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND]
 
-    def test_neighbors_invalid_direction_returns_422(self, client, repository_with_data):
+    def test_neighbors_invalid_direction_returns_422(
+        self, client, repository_with_data
+    ):
         """GET /nodes/{node_id}/neighbors with invalid direction returns 422."""
         classes = repository_with_data.list_classes()
-        response = client.get(f"/api/graph/nodes/{classes[0].id}/neighbors?direction=invalid")
+        response = client.get(
+            f"/api/graph/nodes/{classes[0].id}/neighbors?direction=invalid"
+        )
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_neighbors_with_depth_parameter(self, client, repository_with_data):
@@ -402,7 +412,9 @@ class TestNeighborsEndpoint:
         response = client.get(f"/api/graph/nodes/{classes[0].id}/neighbors?depth=0")
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    def test_neighbors_depth_exceeds_max_returns_422(self, client, repository_with_data):
+    def test_neighbors_depth_exceeds_max_returns_422(
+        self, client, repository_with_data
+    ):
         """GET /nodes/{node_id}/neighbors with depth>10 returns 422 validation error."""
         classes = repository_with_data.list_classes()
         response = client.get(f"/api/graph/nodes/{classes[0].id}/neighbors?depth=11")
@@ -560,24 +572,28 @@ class TestRDFTriplesEndpoint:
 
     def test_rdf_triples_with_subject_filter(self, client):
         """GET /rdf/triples accepts subject filter."""
-        response = client.get("/api/graph/rdf/triples?subject=http://example.org/subject1")
+        response = client.get(
+            "/api/graph/rdf/triples?subject=http://example.org/subject1"
+        )
         assert response.status_code == status.HTTP_200_OK
 
     def test_rdf_triples_with_predicate_filter(self, client):
         """GET /rdf/triples accepts predicate filter."""
-        response = client.get("/api/graph/rdf/triples?predicate=http://example.org/predicate1")
+        response = client.get(
+            "/api/graph/rdf/triples?predicate=http://example.org/predicate1"
+        )
         assert response.status_code == status.HTTP_200_OK
 
     def test_rdf_triples_with_object_filter(self, client):
         """GET /rdf/triples accepts object filter."""
-        response = client.get("/api/graph/rdf/triples?object=http://example.org/object1")
+        response = client.get(
+            "/api/graph/rdf/triples?object=http://example.org/object1"
+        )
         assert response.status_code == status.HTTP_200_OK
 
     def test_rdf_triples_with_all_filters(self, client):
         """GET /rdf/triples accepts all filters simultaneously."""
-        response = client.get(
-            "/api/graph/rdf/triples?subject=s&predicate=p&object=o"
-        )
+        response = client.get("/api/graph/rdf/triples?subject=s&predicate=p&object=o")
         assert response.status_code == status.HTTP_200_OK
 
 

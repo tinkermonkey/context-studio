@@ -3,7 +3,9 @@ import sys
 import os
 import pytest
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 from utils.async_executor import run_sync_in_executor
 
@@ -21,6 +23,7 @@ def failing_function():
 def slow_function(duration):
     """Simulates a slow blocking operation."""
     import time
+
     time.sleep(duration)
     return duration
 
@@ -80,6 +83,7 @@ async def test_run_sync_in_executor_return_type():
 @pytest.mark.asyncio
 async def test_run_sync_in_executor_none_return():
     """Test executor handles None return values."""
+
     def returns_none():
         pass
 

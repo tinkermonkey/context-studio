@@ -3,6 +3,7 @@ Extraction domain value objects.
 
 Immutable dataclasses representing immutable values in the extraction domain.
 """
+
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from types import MappingProxyType
@@ -27,6 +28,7 @@ class ExtractionLayerResult:
     Raises:
         ValueError: If layer_number is not 0-3
     """
+
     layer_number: int
     layer_name: str
     entities_found: int
@@ -50,6 +52,7 @@ class LayerInput:
         existing_entities: Entities found by previous layers
         kg_context: Optional knowledge graph context from layer 0
     """
+
     text: str
     existing_entities: tuple["ExtractedEntity", ...]
     kg_context: tuple[dict, ...] | None = None
@@ -64,5 +67,6 @@ class LayerOutput:
         entities: Tuple of entities found by this layer
         metadata: Optional immutable key-value metadata about the extraction
     """
+
     entities: tuple["ExtractedEntity", ...]
     metadata: MappingProxyType | None = None

@@ -9,7 +9,9 @@ import os
 import time
 import pytest
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 from domain.extraction.services import ExtractionService
 from domain.extraction.ports import NLPProcessor
@@ -32,11 +34,38 @@ def _generate_sample_text(num_words: int) -> str:
         Sample text string
     """
     words = [
-        "Microsoft", "Google", "Apple", "Amazon", "Meta", "Tesla", "Netflix", "Uber",
-        "technology", "company", "software", "hardware", "cloud", "artificial",
-        "intelligence", "machine", "learning", "data", "analysis", "processing",
-        "develops", "creates", "produces", "manufactures", "builds", "designs",
-        "launches", "releases", "announces", "reports", "introduces", "unveils"
+        "Microsoft",
+        "Google",
+        "Apple",
+        "Amazon",
+        "Meta",
+        "Tesla",
+        "Netflix",
+        "Uber",
+        "technology",
+        "company",
+        "software",
+        "hardware",
+        "cloud",
+        "artificial",
+        "intelligence",
+        "machine",
+        "learning",
+        "data",
+        "analysis",
+        "processing",
+        "develops",
+        "creates",
+        "produces",
+        "manufactures",
+        "builds",
+        "designs",
+        "launches",
+        "releases",
+        "announces",
+        "reports",
+        "introduces",
+        "unveils",
     ]
 
     # Generate text by cycling through words
@@ -81,12 +110,15 @@ def _setup_extraction_service(
 
 
 @pytest.mark.performance
-@pytest.mark.parametrize("num_words,max_time", [
-    (100, 1.0),
-    (500, 2.0),
-    (2000, 5.0),
-    (5000, 10.0),
-])
+@pytest.mark.parametrize(
+    "num_words,max_time",
+    [
+        (100, 1.0),
+        (500, 2.0),
+        (2000, 5.0),
+        (5000, 10.0),
+    ],
+)
 def test_extraction_fake_nlp(num_words: int, max_time: float) -> None:
     """Measure end-to-end extraction time with fake NLP at specified text length."""
     service = _setup_extraction_service()

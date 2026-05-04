@@ -3,6 +3,7 @@ Extraction domain entities.
 
 Mutable dataclasses representing the core domain model for knowledge extraction.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -33,6 +34,7 @@ class ExtractedEntity:
     Raises:
         ValueError: If source_layer is not 0-3 or confidence is not 0.0-1.0
     """
+
     id: str = field(default_factory=lambda: str(uuid4()))
     label: str = ""
     entity_type: str = ""
@@ -68,6 +70,7 @@ class ProcessingMetrics:
     Raises:
         ValueError: If any metric is negative
     """
+
     layer_name: str
     duration_ms: int
     tokens_processed: int = 0
@@ -79,17 +82,29 @@ class ProcessingMetrics:
     def __post_init__(self) -> None:
         """Validate processing metrics invariants."""
         if self.duration_ms < 0:
-            raise ValueError(f"duration_ms must be non-negative, got {self.duration_ms}")
+            raise ValueError(
+                f"duration_ms must be non-negative, got {self.duration_ms}"
+            )
         if self.tokens_processed < 0:
-            raise ValueError(f"tokens_processed must be non-negative, got {self.tokens_processed}")
+            raise ValueError(
+                f"tokens_processed must be non-negative, got {self.tokens_processed}"
+            )
         if self.entities_found < 0:
-            raise ValueError(f"entities_found must be non-negative, got {self.entities_found}")
+            raise ValueError(
+                f"entities_found must be non-negative, got {self.entities_found}"
+            )
         if self.relationships_found < 0:
-            raise ValueError(f"relationships_found must be non-negative, got {self.relationships_found}")
+            raise ValueError(
+                f"relationships_found must be non-negative, got {self.relationships_found}"
+            )
         if self.error_count < 0:
-            raise ValueError(f"error_count must be non-negative, got {self.error_count}")
+            raise ValueError(
+                f"error_count must be non-negative, got {self.error_count}"
+            )
         if self.skipped_count < 0:
-            raise ValueError(f"skipped_count must be non-negative, got {self.skipped_count}")
+            raise ValueError(
+                f"skipped_count must be non-negative, got {self.skipped_count}"
+            )
 
 
 @dataclass
@@ -108,6 +123,7 @@ class ExtractionResult:
     Raises:
         ValueError: If total_duration_ms is negative
     """
+
     id: str = field(default_factory=lambda: str(uuid4()))
     text: str = ""
     extracted_entities: list[ExtractedEntity] = field(default_factory=list)
@@ -118,4 +134,6 @@ class ExtractionResult:
     def __post_init__(self) -> None:
         """Validate extraction result invariants."""
         if self.total_duration_ms < 0:
-            raise ValueError(f"total_duration_ms must be non-negative, got {self.total_duration_ms}")
+            raise ValueError(
+                f"total_duration_ms must be non-negative, got {self.total_duration_ms}"
+            )

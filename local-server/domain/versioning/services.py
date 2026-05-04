@@ -32,7 +32,17 @@ from .exceptions import (
     SyncError,
 )
 from .ports import ChangeRepository, SyncTarget
-from .value_objects import SyncStatus, SyncResult, ChangeHistoryResult, SyncDirection, ChangeState, ProposalState, MergeStrategy, ChangeOperation, EntityVersionState
+from .value_objects import (
+    SyncStatus,
+    SyncResult,
+    ChangeHistoryResult,
+    SyncDirection,
+    ChangeState,
+    ProposalState,
+    MergeStrategy,
+    ChangeOperation,
+    EntityVersionState,
+)
 from .events import ChangesetMerged, SyncCompleted
 from domain.ports import EventPublisher
 
@@ -256,8 +266,8 @@ class VersioningService:
         )
 
         # Atomically update changeset and create proposal to prevent inconsistent state
-        updated_changeset, persisted_proposal = self._repo.update_changeset_and_proposal_on_submit(
-            changeset, proposal
+        updated_changeset, persisted_proposal = (
+            self._repo.update_changeset_and_proposal_on_submit(changeset, proposal)
         )
         _logger.info(
             "Proposal submitted (proposal_id=%s, changeset_id=%s, state=%s)",
@@ -301,8 +311,8 @@ class VersioningService:
         proposal.reviewed_at = now
 
         # Atomically update both entities to prevent inconsistent state
-        updated_changeset, updated_proposal = self._repo.atomic_update_changeset_and_proposal(
-            changeset, proposal
+        updated_changeset, updated_proposal = (
+            self._repo.atomic_update_changeset_and_proposal(changeset, proposal)
         )
         _logger.info(
             "Proposal approved (proposal_id=%s, changeset_id=%s, state=%s)",
@@ -348,8 +358,8 @@ class VersioningService:
         proposal.reviewer_notes = reason
 
         # Atomically update both entities to prevent inconsistent state
-        updated_changeset, updated_proposal = self._repo.atomic_update_changeset_and_proposal(
-            changeset, proposal
+        updated_changeset, updated_proposal = (
+            self._repo.atomic_update_changeset_and_proposal(changeset, proposal)
         )
         _logger.info(
             "Proposal rejected (proposal_id=%s, changeset_id=%s, state=%s, reason=%s)",
@@ -388,7 +398,9 @@ class VersioningService:
         return dict(events_by_entity)
 
     def detect_conflicts(
-        self, proposal_id: str, resolutions: Optional[dict[str, dict[str, object]]] = None
+        self,
+        proposal_id: str,
+        resolutions: Optional[dict[str, dict[str, object]]] = None,
     ) -> ConflictReport:
         """
         Detect field-level conflicts in a proposal.
@@ -459,7 +471,11 @@ class VersioningService:
                     if earlier_new_value != later_prev_value:
                         # Use the new_state of the first event that modified this field as the base_value
                         first_event = field_first_event.get(field_name, earlier)
-                        base_value = first_event.new_state.get(field_name) if first_event.new_state else None
+                        base_value = (
+                            first_event.new_state.get(field_name)
+                            if first_event.new_state
+                            else None
+                        )
 
                         conflict = Conflict(
                             entity_id=entity_id,
@@ -476,8 +492,7 @@ class VersioningService:
                 entity_resolutions = resolutions.get(conflict.entity_id, {})
                 if conflict.field_name in entity_resolutions:
                     conflict.resolve(
-                        entity_resolutions[conflict.field_name],
-                        MergeStrategy.MANUAL
+                        entity_resolutions[conflict.field_name], MergeStrategy.MANUAL
                     )
 
         _logger.info(
@@ -568,7 +583,9 @@ class VersioningService:
             if conflict.is_resolved:
                 if conflict.entity_id not in resolutions:
                     resolutions[conflict.entity_id] = {}
-                resolutions[conflict.entity_id][conflict.field_name] = conflict.resolved_value
+                resolutions[conflict.entity_id][
+                    conflict.field_name
+                ] = conflict.resolved_value
 
         # Only persist if there are resolutions (handles MANUAL strategy with unresolved conflicts)
         if resolutions:
@@ -608,7 +625,8 @@ class VersioningService:
         if not report.all_resolved:
             unresolved = [
                 f"{c.entity_id}.{c.field_name}"
-                for c in report.conflicts if not c.is_resolved
+                for c in report.conflicts
+                if not c.is_resolved
             ]
             error_msg = f"Unresolved conflicts: {unresolved}"
             _logger.error(error_msg)
@@ -670,19 +688,21 @@ class VersioningService:
         returned_ids = {e.id for e in changeset_events}
         if requested_ids != returned_ids:
             missing = requested_ids - returned_ids
-            error_msg = (
-                f"Missing events for changeset {changeset.id}: {missing}"
-            )
+            error_msg = f"Missing events for changeset {changeset.id}: {missing}"
             _logger.error(error_msg)
             raise ValueError(error_msg)
 
         # Group events by entity_id with timestamp ordering (reuse fetched events to avoid double-fetch)
-        events_by_entity = self._group_and_sort_events(changeset.event_ids, changeset_events)
+        events_by_entity = self._group_and_sort_events(
+            changeset.event_ids, changeset_events
+        )
 
         # Build versions for each entity
         versions = []
         for entity_id, entity_events in events_by_entity.items():
-            version = self._create_entity_version(entity_id, entity_events, stored_resolutions)
+            version = self._create_entity_version(
+                entity_id, entity_events, stored_resolutions
+            )
             if version:
                 versions.append(version)
 
@@ -813,9 +833,7 @@ class VersioningService:
         stored_resolutions = self._repo.get_conflict_resolutions(proposal_id)
         report = self.detect_conflicts(proposal_id, stored_resolutions)
         if report.has_conflicts and not report.all_resolved:
-            error_msg = (
-                f"Proposal {proposal_id} has {len(report.conflicts)} unresolved conflicts"
-            )
+            error_msg = f"Proposal {proposal_id} has {len(report.conflicts)} unresolved conflicts"
             _logger.error(error_msg)
             raise ConflictResolutionError(error_msg)
 
@@ -1085,9 +1103,7 @@ class VersioningService:
         try:
             is_configured = self._sync.is_configured()
         except (RuntimeError, OSError) as e:
-            _logger.warning(
-                "Failed to check sync configuration status: %s", str(e)
-            )
+            _logger.warning("Failed to check sync configuration status: %s", str(e))
 
         status = SyncStatus(
             last_pushed_at=None,

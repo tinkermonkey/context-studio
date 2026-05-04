@@ -13,7 +13,14 @@ from __future__ import annotations
 
 from typing import Protocol, Sequence
 
-from .entities import Class, ConceptScheme, Individual, PropertyDefinition, Relationship, Taxonomy
+from .entities import (
+    Class,
+    ConceptScheme,
+    Individual,
+    PropertyDefinition,
+    Relationship,
+    Taxonomy,
+)
 from .value_objects import SearchCriteria
 
 
@@ -21,9 +28,8 @@ class OntologyRepository(Protocol):
     """
     Port for persisting and retrieving ontology entities.
 
-    All CRUD operations on Taxonomy, ConceptScheme, Class, Relationship, and
-    PropertyDefinition entities flow through this repository. Individual operations
-    are deferred (all raise NotImplementedError for now).
+    All CRUD operations on Taxonomy, ConceptScheme, Class, Individual, Relationship,
+    and PropertyDefinition entities flow through this repository.
     """
 
     # Taxonomy operations
@@ -85,7 +91,9 @@ class OntologyRepository(Protocol):
         """
         ...
 
-    def list_concept_schemes(self, taxonomy_id: str | None = None) -> list[ConceptScheme]:
+    def list_concept_schemes(
+        self, taxonomy_id: str | None = None
+    ) -> list[ConceptScheme]:
         """
         Retrieve concept schemes, optionally filtered by taxonomy.
 
@@ -138,7 +146,7 @@ class OntologyRepository(Protocol):
         self,
         concept_scheme_id: str | None = None,
         parent_class_id: str | None = None,
-        limit: int = 100,
+        limit: int | None = 100,
         offset: int = 0,
     ) -> list[Class]:
         """
@@ -147,7 +155,7 @@ class OntologyRepository(Protocol):
         Args:
             concept_scheme_id: Optional concept scheme ID to filter by
             parent_class_id: Optional parent class ID to filter by (for hierarchy)
-            limit: Maximum number of results to return
+            limit: Maximum number of results to return; None means no limit
             offset: Number of results to skip
 
         Returns:
@@ -272,7 +280,9 @@ class OntologyRepository(Protocol):
         """
         ...
 
-    def get_property_definition_by_identifier(self, identifier: str) -> PropertyDefinition | None:
+    def get_property_definition_by_identifier(
+        self, identifier: str
+    ) -> PropertyDefinition | None:
         """
         Retrieve a property definition by its machine-readable identifier.
 
@@ -284,7 +294,9 @@ class OntologyRepository(Protocol):
         """
         ...
 
-    def list_property_definitions(self, is_relevant: bool | None = None) -> list[PropertyDefinition]:
+    def list_property_definitions(
+        self, is_relevant: bool | None = None
+    ) -> list[PropertyDefinition]:
         """
         Retrieve property definitions, optionally filtered by relevance.
 
@@ -382,7 +394,11 @@ class OntologyRepository(Protocol):
         ...
 
     # Bulk operations
-    def get_all_entities_and_relationships(self) -> tuple[Sequence[Taxonomy | ConceptScheme | Class | Individual], Sequence[Relationship]]:
+    def get_all_entities_and_relationships(
+        self,
+    ) -> tuple[
+        Sequence[Taxonomy | ConceptScheme | Class | Individual], Sequence[Relationship]
+    ]:
         """
         Retrieve all entities and relationships for graph building.
 
@@ -437,5 +453,3 @@ class EmbeddingService(Protocol):
             Similarity score as float (typically 0.0 to 1.0)
         """
         ...
-
-

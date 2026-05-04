@@ -23,8 +23,7 @@ def main():
 
         # Define back-end output path
         backend_doc_dir = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            "documentation"
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "documentation"
         )
         os.makedirs(backend_doc_dir, exist_ok=True)
         backend_output_path = os.path.join(backend_doc_dir, "openapi.json")
@@ -40,7 +39,7 @@ def main():
         ux_doc_dir = os.path.abspath(
             os.path.join(
                 os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                "../ux/documentation"
+                "../ux/documentation",
             )
         )
         os.makedirs(ux_doc_dir, exist_ok=True)

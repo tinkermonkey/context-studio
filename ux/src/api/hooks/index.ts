@@ -38,6 +38,7 @@ export {
   useNeighborsQuery,
 } from "./graph";
 export * from "./individuals";
+export * from "./interchange";
 export * from "./llm";
 export * from "./modelCapabilities";
 export * from "./nlp";

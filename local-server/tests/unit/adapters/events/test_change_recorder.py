@@ -2,7 +2,8 @@
 
 import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../../../'))
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../../"))
 
 from unittest.mock import Mock
 import pytest
@@ -61,13 +62,15 @@ class TestChangeEventRecorder:
 
         mock_change_repo.record_change.assert_called_once()
         call_args = mock_change_repo.record_change.call_args
-        assert call_args.kwargs['entity_id'] == "result-456"
-        assert call_args.kwargs['entity_type'] == "extraction_result"
-        assert call_args.kwargs['operation'] == "create"
-        assert call_args.kwargs['new_state']['entity_count'] == 42
-        assert call_args.kwargs['new_state']['duration_ms'] == 1250.5
+        assert call_args.kwargs["entity_id"] == "result-456"
+        assert call_args.kwargs["entity_type"] == "extraction_result"
+        assert call_args.kwargs["operation"] == "create"
+        assert call_args.kwargs["new_state"]["entity_count"] == 42
+        assert call_args.kwargs["new_state"]["duration_ms"] == 1250.5
 
-    def test_on_extraction_completed_propagates_exception(self, recorder, mock_change_repo):
+    def test_on_extraction_completed_propagates_exception(
+        self, recorder, mock_change_repo
+    ):
         """Test that repo exceptions propagate to the event publisher."""
         mock_change_repo.record_change.side_effect = RuntimeError("DB error")
         event = ExtractionCompleted(
@@ -94,13 +97,15 @@ class TestChangeEventRecorder:
 
         mock_change_repo.record_change.assert_called_once()
         call_args = mock_change_repo.record_change.call_args
-        assert call_args.kwargs['entity_id'] == "exec-123"
-        assert call_args.kwargs['entity_type'] == "pipeline_execution"
-        assert call_args.kwargs['operation'] == "create"
-        assert call_args.kwargs['new_state']['pipeline_id'] == "pipeline-456"
-        assert call_args.kwargs['new_state']['status'] == "success"
+        assert call_args.kwargs["entity_id"] == "exec-123"
+        assert call_args.kwargs["entity_type"] == "pipeline_execution"
+        assert call_args.kwargs["operation"] == "create"
+        assert call_args.kwargs["new_state"]["pipeline_id"] == "pipeline-456"
+        assert call_args.kwargs["new_state"]["status"] == "success"
 
-    def test_on_pipeline_executed_propagates_exception(self, recorder, mock_change_repo):
+    def test_on_pipeline_executed_propagates_exception(
+        self, recorder, mock_change_repo
+    ):
         """Test that repo exceptions propagate to the event publisher."""
         mock_change_repo.record_change.side_effect = RuntimeError("DB error")
         event = PipelineExecuted(
@@ -118,7 +123,9 @@ class TestChangeEventRecorder:
 class TestOntologyHandlers:
     """Tests for ontology event handlers."""
 
-    def test_record_helper_calls_repo_with_correct_args(self, recorder, mock_change_repo):
+    def test_record_helper_calls_repo_with_correct_args(
+        self, recorder, mock_change_repo
+    ):
         """Test that _record helper passes arguments correctly to repo."""
         mock_change_repo.record_change.return_value = "change-123"
 
@@ -134,13 +141,15 @@ class TestOntologyHandlers:
         assert change_id == "change-123"
         mock_change_repo.record_change.assert_called_once()
         call_args = mock_change_repo.record_change.call_args
-        assert call_args.kwargs['entity_id'] == "entity-1"
-        assert call_args.kwargs['entity_type'] == "test_entity"
-        assert call_args.kwargs['operation'] == "create"
-        assert call_args.kwargs['new_state'] == {"field": "value"}
-        assert call_args.kwargs['change_reason'] == "Test change"
+        assert call_args.kwargs["entity_id"] == "entity-1"
+        assert call_args.kwargs["entity_type"] == "test_entity"
+        assert call_args.kwargs["operation"] == "create"
+        assert call_args.kwargs["new_state"] == {"field": "value"}
+        assert call_args.kwargs["change_reason"] == "Test change"
 
-    def test_record_helper_converts_none_new_state_to_empty_dict(self, recorder, mock_change_repo):
+    def test_record_helper_converts_none_new_state_to_empty_dict(
+        self, recorder, mock_change_repo
+    ):
         """Test that _record helper converts None new_state to empty dict."""
         mock_change_repo.record_change.return_value = "change-123"
 
@@ -154,7 +163,7 @@ class TestOntologyHandlers:
         )
 
         call_args = mock_change_repo.record_change.call_args
-        assert call_args.kwargs['new_state'] == {}
+        assert call_args.kwargs["new_state"] == {}
 
     def test_record_helper_propagates_exception(self, recorder, mock_change_repo):
         """Test that _record helper propagates repo exceptions."""
@@ -183,12 +192,12 @@ class TestOntologyHandlers:
 
         mock_change_repo.record_change.assert_called_once()
         call_args = mock_change_repo.record_change.call_args
-        assert call_args.kwargs['entity_id'] == "scheme-1"
-        assert call_args.kwargs['entity_type'] == "concept_scheme"
-        assert call_args.kwargs['operation'] == "create"
-        assert call_args.kwargs['new_state']['concept_scheme_id'] == "scheme-1"
-        assert call_args.kwargs['new_state']['title'] == "My Concept Scheme"
-        assert call_args.kwargs['new_state']['taxonomy_id'] == "tax-1"
+        assert call_args.kwargs["entity_id"] == "scheme-1"
+        assert call_args.kwargs["entity_type"] == "concept_scheme"
+        assert call_args.kwargs["operation"] == "create"
+        assert call_args.kwargs["new_state"]["concept_scheme_id"] == "scheme-1"
+        assert call_args.kwargs["new_state"]["title"] == "My Concept Scheme"
+        assert call_args.kwargs["new_state"]["taxonomy_id"] == "tax-1"
 
     def test_on_relationship_created(self, recorder, mock_change_repo):
         """Test RelationshipCreated event recording."""
@@ -204,13 +213,13 @@ class TestOntologyHandlers:
 
         mock_change_repo.record_change.assert_called_once()
         call_args = mock_change_repo.record_change.call_args
-        assert call_args.kwargs['entity_id'] == "rel-1"
-        assert call_args.kwargs['entity_type'] == "relationship"
-        assert call_args.kwargs['operation'] == "create"
-        assert call_args.kwargs['new_state']['relationship_id'] == "rel-1"
-        assert call_args.kwargs['new_state']['source_id'] == "source-1"
-        assert call_args.kwargs['new_state']['target_id'] == "target-1"
-        assert call_args.kwargs['new_state']['property_definition_id'] == "prop-1"
+        assert call_args.kwargs["entity_id"] == "rel-1"
+        assert call_args.kwargs["entity_type"] == "relationship"
+        assert call_args.kwargs["operation"] == "create"
+        assert call_args.kwargs["new_state"]["relationship_id"] == "rel-1"
+        assert call_args.kwargs["new_state"]["source_id"] == "source-1"
+        assert call_args.kwargs["new_state"]["target_id"] == "target-1"
+        assert call_args.kwargs["new_state"]["property_definition_id"] == "prop-1"
 
     def test_on_taxonomy_created(self, recorder, mock_change_repo):
         """Test TaxonomyCreated event recording."""
@@ -221,11 +230,11 @@ class TestOntologyHandlers:
 
         mock_change_repo.record_change.assert_called_once()
         call_args = mock_change_repo.record_change.call_args
-        assert call_args.kwargs['entity_id'] == "tax-1"
-        assert call_args.kwargs['entity_type'] == "taxonomy"
-        assert call_args.kwargs['operation'] == "create"
-        assert call_args.kwargs['new_state']['taxonomy_id'] == "tax-1"
-        assert call_args.kwargs['new_state']['title'] == "My Taxonomy"
+        assert call_args.kwargs["entity_id"] == "tax-1"
+        assert call_args.kwargs["entity_type"] == "taxonomy"
+        assert call_args.kwargs["operation"] == "create"
+        assert call_args.kwargs["new_state"]["taxonomy_id"] == "tax-1"
+        assert call_args.kwargs["new_state"]["title"] == "My Taxonomy"
 
     def test_on_class_created(self, recorder, mock_change_repo):
         """Test ClassCreated event recording."""
@@ -241,10 +250,10 @@ class TestOntologyHandlers:
 
         mock_change_repo.record_change.assert_called_once()
         call_args = mock_change_repo.record_change.call_args
-        assert call_args.kwargs['entity_id'] == "class-1"
-        assert call_args.kwargs['entity_type'] == "class"
-        assert call_args.kwargs['operation'] == "create"
-        assert call_args.kwargs['new_state']['class_id'] == "class-1"
+        assert call_args.kwargs["entity_id"] == "class-1"
+        assert call_args.kwargs["entity_type"] == "class"
+        assert call_args.kwargs["operation"] == "create"
+        assert call_args.kwargs["new_state"]["class_id"] == "class-1"
 
     def test_on_property_definition_created(self, recorder, mock_change_repo):
         """Test PropertyDefinitionCreated event recording."""
@@ -259,10 +268,10 @@ class TestOntologyHandlers:
 
         mock_change_repo.record_change.assert_called_once()
         call_args = mock_change_repo.record_change.call_args
-        assert call_args.kwargs['entity_id'] == "prop-1"
-        assert call_args.kwargs['entity_type'] == "property_definition"
-        assert call_args.kwargs['operation'] == "create"
-        assert call_args.kwargs['new_state']['identifier'] == "hasChild"
+        assert call_args.kwargs["entity_id"] == "prop-1"
+        assert call_args.kwargs["entity_type"] == "property_definition"
+        assert call_args.kwargs["operation"] == "create"
+        assert call_args.kwargs["new_state"]["identifier"] == "hasChild"
 
     def test_on_individual_created(self, recorder, mock_change_repo):
         """Test IndividualCreated event recording."""
@@ -277,12 +286,12 @@ class TestOntologyHandlers:
 
         mock_change_repo.record_change.assert_called_once()
         call_args = mock_change_repo.record_change.call_args
-        assert call_args.kwargs['entity_id'] == "individual-1"
-        assert call_args.kwargs['entity_type'] == "individual"
-        assert call_args.kwargs['operation'] == "create"
-        assert call_args.kwargs['new_state']['individual_id'] == "individual-1"
-        assert call_args.kwargs['new_state']['title'] == "John Doe"
-        assert call_args.kwargs['new_state']['class_ids'] == ["class-1", "class-2"]
+        assert call_args.kwargs["entity_id"] == "individual-1"
+        assert call_args.kwargs["entity_type"] == "individual"
+        assert call_args.kwargs["operation"] == "create"
+        assert call_args.kwargs["new_state"]["individual_id"] == "individual-1"
+        assert call_args.kwargs["new_state"]["title"] == "John Doe"
+        assert call_args.kwargs["new_state"]["class_ids"] == ["class-1", "class-2"]
 
     # --- UPDATE Pattern Tests ---
 
@@ -301,13 +310,13 @@ class TestOntologyHandlers:
 
         mock_change_repo.record_change.assert_called_once()
         call_args = mock_change_repo.record_change.call_args
-        assert call_args.kwargs['entity_id'] == "scheme-1"
-        assert call_args.kwargs['entity_type'] == "concept_scheme"
-        assert call_args.kwargs['operation'] == "update"
-        assert call_args.kwargs['new_state'] == event.new_values
-        assert call_args.kwargs['previous_state'] == event.old_values
-        assert "title" in call_args.kwargs['change_reason']
-        assert "description" in call_args.kwargs['change_reason']
+        assert call_args.kwargs["entity_id"] == "scheme-1"
+        assert call_args.kwargs["entity_type"] == "concept_scheme"
+        assert call_args.kwargs["operation"] == "update"
+        assert call_args.kwargs["new_state"] == event.new_values
+        assert call_args.kwargs["previous_state"] == event.old_values
+        assert "title" in call_args.kwargs["change_reason"]
+        assert "description" in call_args.kwargs["change_reason"]
 
     def test_on_class_moved(self, recorder, mock_change_repo):
         """Test ClassMoved event recording with parent mapping logic."""
@@ -322,15 +331,15 @@ class TestOntologyHandlers:
 
         mock_change_repo.record_change.assert_called_once()
         call_args = mock_change_repo.record_change.call_args
-        assert call_args.kwargs['entity_id'] == "class-1"
-        assert call_args.kwargs['entity_type'] == "class"
-        assert call_args.kwargs['operation'] == "update"
+        assert call_args.kwargs["entity_id"] == "class-1"
+        assert call_args.kwargs["entity_type"] == "class"
+        assert call_args.kwargs["operation"] == "update"
         # Verify the unique mapping logic: parent IDs are captured in state
-        assert call_args.kwargs['new_state']['parent_id'] == "parent-2"
-        assert call_args.kwargs['previous_state']['parent_id'] == "parent-1"
+        assert call_args.kwargs["new_state"]["parent_id"] == "parent-2"
+        assert call_args.kwargs["previous_state"]["parent_id"] == "parent-1"
         # Verify the change reason mentions both old and new parent
-        assert "parent-1" in call_args.kwargs['change_reason']
-        assert "parent-2" in call_args.kwargs['change_reason']
+        assert "parent-1" in call_args.kwargs["change_reason"]
+        assert "parent-2" in call_args.kwargs["change_reason"]
 
     def test_on_class_moved_with_none_parents(self, recorder, mock_change_repo):
         """Test ClassMoved event with None parent IDs (root movements)."""
@@ -345,8 +354,8 @@ class TestOntologyHandlers:
 
         mock_change_repo.record_change.assert_called_once()
         call_args = mock_change_repo.record_change.call_args
-        assert call_args.kwargs['new_state']['parent_id'] == "parent-2"
-        assert call_args.kwargs['previous_state']['parent_id'] is None
+        assert call_args.kwargs["new_state"]["parent_id"] == "parent-2"
+        assert call_args.kwargs["previous_state"]["parent_id"] is None
 
     def test_on_taxonomy_updated(self, recorder, mock_change_repo):
         """Test TaxonomyUpdated event recording with change tracking."""
@@ -362,13 +371,13 @@ class TestOntologyHandlers:
 
         mock_change_repo.record_change.assert_called_once()
         call_args = mock_change_repo.record_change.call_args
-        assert call_args.kwargs['entity_id'] == "tax-1"
-        assert call_args.kwargs['entity_type'] == "taxonomy"
-        assert call_args.kwargs['operation'] == "update"
-        assert call_args.kwargs['new_state'] == event.new_values
-        assert call_args.kwargs['previous_state'] == event.old_values
-        assert "title" in call_args.kwargs['change_reason']
-        assert "description" in call_args.kwargs['change_reason']
+        assert call_args.kwargs["entity_id"] == "tax-1"
+        assert call_args.kwargs["entity_type"] == "taxonomy"
+        assert call_args.kwargs["operation"] == "update"
+        assert call_args.kwargs["new_state"] == event.new_values
+        assert call_args.kwargs["previous_state"] == event.old_values
+        assert "title" in call_args.kwargs["change_reason"]
+        assert "description" in call_args.kwargs["change_reason"]
 
     def test_on_class_updated(self, recorder, mock_change_repo):
         """Test ClassUpdated event recording."""
@@ -383,9 +392,9 @@ class TestOntologyHandlers:
         recorder.on_class_updated(event)
 
         call_args = mock_change_repo.record_change.call_args
-        assert call_args.kwargs['entity_id'] == "class-1"
-        assert call_args.kwargs['operation'] == "update"
-        assert call_args.kwargs['previous_state'] == event.old_values
+        assert call_args.kwargs["entity_id"] == "class-1"
+        assert call_args.kwargs["operation"] == "update"
+        assert call_args.kwargs["previous_state"] == event.old_values
 
     def test_on_property_definition_updated(self, recorder, mock_change_repo):
         """Test PropertyDefinitionUpdated event recording."""
@@ -400,11 +409,11 @@ class TestOntologyHandlers:
 
         mock_change_repo.record_change.assert_called_once()
         call_args = mock_change_repo.record_change.call_args
-        assert call_args.kwargs['entity_id'] == "prop-1"
-        assert call_args.kwargs['entity_type'] == "property_definition"
-        assert call_args.kwargs['operation'] == "update"
-        assert call_args.kwargs['new_state']['title'] == "Updated Title"
-        assert "title" in call_args.kwargs['change_reason']
+        assert call_args.kwargs["entity_id"] == "prop-1"
+        assert call_args.kwargs["entity_type"] == "property_definition"
+        assert call_args.kwargs["operation"] == "update"
+        assert call_args.kwargs["new_state"]["title"] == "Updated Title"
+        assert "title" in call_args.kwargs["change_reason"]
 
     def test_on_concept_scheme_updated(self, recorder, mock_change_repo):
         """Test ConceptSchemeUpdated event recording."""
@@ -418,11 +427,11 @@ class TestOntologyHandlers:
 
         mock_change_repo.record_change.assert_called_once()
         call_args = mock_change_repo.record_change.call_args
-        assert call_args.kwargs['entity_id'] == "scheme-1"
-        assert call_args.kwargs['entity_type'] == "concept_scheme"
-        assert call_args.kwargs['operation'] == "update"
-        assert call_args.kwargs['new_state']['title'] == "New Scheme Title"
-        assert "title" in call_args.kwargs['change_reason']
+        assert call_args.kwargs["entity_id"] == "scheme-1"
+        assert call_args.kwargs["entity_type"] == "concept_scheme"
+        assert call_args.kwargs["operation"] == "update"
+        assert call_args.kwargs["new_state"]["title"] == "New Scheme Title"
+        assert "title" in call_args.kwargs["change_reason"]
 
     def test_on_individual_updated(self, recorder, mock_change_repo):
         """Test IndividualUpdated event recording with change tracking."""
@@ -438,13 +447,13 @@ class TestOntologyHandlers:
 
         mock_change_repo.record_change.assert_called_once()
         call_args = mock_change_repo.record_change.call_args
-        assert call_args.kwargs['entity_id'] == "individual-1"
-        assert call_args.kwargs['entity_type'] == "individual"
-        assert call_args.kwargs['operation'] == "update"
-        assert call_args.kwargs['new_state'] == event.new_values
-        assert call_args.kwargs['previous_state'] == event.old_values
-        assert "title" in call_args.kwargs['change_reason']
-        assert "description" in call_args.kwargs['change_reason']
+        assert call_args.kwargs["entity_id"] == "individual-1"
+        assert call_args.kwargs["entity_type"] == "individual"
+        assert call_args.kwargs["operation"] == "update"
+        assert call_args.kwargs["new_state"] == event.new_values
+        assert call_args.kwargs["previous_state"] == event.old_values
+        assert "title" in call_args.kwargs["change_reason"]
+        assert "description" in call_args.kwargs["change_reason"]
 
     # --- DELETE Pattern Tests ---
 
@@ -461,12 +470,12 @@ class TestOntologyHandlers:
 
         mock_change_repo.record_change.assert_called_once()
         call_args = mock_change_repo.record_change.call_args
-        assert call_args.kwargs['entity_id'] == "scheme-1"
-        assert call_args.kwargs['entity_type'] == "concept_scheme"
-        assert call_args.kwargs['operation'] == "delete"
-        assert call_args.kwargs['previous_state']['concept_scheme_id'] == "scheme-1"
-        assert call_args.kwargs['previous_state']['title'] == "My Concept Scheme"
-        assert call_args.kwargs['previous_state']['taxonomy_id'] == "tax-1"
+        assert call_args.kwargs["entity_id"] == "scheme-1"
+        assert call_args.kwargs["entity_type"] == "concept_scheme"
+        assert call_args.kwargs["operation"] == "delete"
+        assert call_args.kwargs["previous_state"]["concept_scheme_id"] == "scheme-1"
+        assert call_args.kwargs["previous_state"]["title"] == "My Concept Scheme"
+        assert call_args.kwargs["previous_state"]["taxonomy_id"] == "tax-1"
 
     def test_on_taxonomy_deleted(self, recorder, mock_change_repo):
         """Test TaxonomyDeleted event recording."""
@@ -477,10 +486,10 @@ class TestOntologyHandlers:
 
         mock_change_repo.record_change.assert_called_once()
         call_args = mock_change_repo.record_change.call_args
-        assert call_args.kwargs['entity_id'] == "tax-1"
-        assert call_args.kwargs['entity_type'] == "taxonomy"
-        assert call_args.kwargs['operation'] == "delete"
-        assert call_args.kwargs['previous_state']['title'] == "My Taxonomy"
+        assert call_args.kwargs["entity_id"] == "tax-1"
+        assert call_args.kwargs["entity_type"] == "taxonomy"
+        assert call_args.kwargs["operation"] == "delete"
+        assert call_args.kwargs["previous_state"]["title"] == "My Taxonomy"
 
     def test_on_class_deleted(self, recorder, mock_change_repo):
         """Test ClassDeleted event recording."""
@@ -490,9 +499,9 @@ class TestOntologyHandlers:
         recorder.on_class_deleted(event)
 
         call_args = mock_change_repo.record_change.call_args
-        assert call_args.kwargs['entity_id'] == "class-1"
-        assert call_args.kwargs['operation'] == "delete"
-        assert call_args.kwargs['previous_state']['title'] == "My Class"
+        assert call_args.kwargs["entity_id"] == "class-1"
+        assert call_args.kwargs["operation"] == "delete"
+        assert call_args.kwargs["previous_state"]["title"] == "My Class"
 
     def test_on_relationship_deleted(self, recorder, mock_change_repo):
         """Test RelationshipDeleted event recording."""
@@ -507,9 +516,9 @@ class TestOntologyHandlers:
         recorder.on_relationship_deleted(event)
 
         call_args = mock_change_repo.record_change.call_args
-        assert call_args.kwargs['entity_id'] == "rel-1"
-        assert call_args.kwargs['operation'] == "delete"
-        assert call_args.kwargs['previous_state']['source_id'] == "source-1"
+        assert call_args.kwargs["entity_id"] == "rel-1"
+        assert call_args.kwargs["operation"] == "delete"
+        assert call_args.kwargs["previous_state"]["source_id"] == "source-1"
 
     def test_on_property_definition_deleted(self, recorder, mock_change_repo):
         """Test PropertyDefinitionDeleted event recording."""
@@ -524,11 +533,11 @@ class TestOntologyHandlers:
 
         mock_change_repo.record_change.assert_called_once()
         call_args = mock_change_repo.record_change.call_args
-        assert call_args.kwargs['entity_id'] == "prop-1"
-        assert call_args.kwargs['entity_type'] == "property_definition"
-        assert call_args.kwargs['operation'] == "delete"
-        assert call_args.kwargs['previous_state']['identifier'] == "hasChild"
-        assert call_args.kwargs['previous_state']['title'] == "Has Child"
+        assert call_args.kwargs["entity_id"] == "prop-1"
+        assert call_args.kwargs["entity_type"] == "property_definition"
+        assert call_args.kwargs["operation"] == "delete"
+        assert call_args.kwargs["previous_state"]["identifier"] == "hasChild"
+        assert call_args.kwargs["previous_state"]["title"] == "Has Child"
 
     def test_on_individual_deleted(self, recorder, mock_change_repo):
         """Test IndividualDeleted event recording."""
@@ -539,8 +548,8 @@ class TestOntologyHandlers:
 
         mock_change_repo.record_change.assert_called_once()
         call_args = mock_change_repo.record_change.call_args
-        assert call_args.kwargs['entity_id'] == "individual-1"
-        assert call_args.kwargs['entity_type'] == "individual"
-        assert call_args.kwargs['operation'] == "delete"
-        assert call_args.kwargs['previous_state']['individual_id'] == "individual-1"
-        assert call_args.kwargs['previous_state']['title'] == "John Doe"
+        assert call_args.kwargs["entity_id"] == "individual-1"
+        assert call_args.kwargs["entity_type"] == "individual"
+        assert call_args.kwargs["operation"] == "delete"
+        assert call_args.kwargs["previous_state"]["individual_id"] == "individual-1"
+        assert call_args.kwargs["previous_state"]["title"] == "John Doe"

@@ -49,7 +49,9 @@ class ReferenceResultSchema(BaseModel):
     uri: str = Field(..., description="Unique URI for this resource")
     label: str = Field(..., description="Human-readable label")
     description: Optional[str] = Field(None, description="Optional description")
-    confidence: float = Field(1.0, ge=0.0, le=1.0, description="Confidence score (0.0-1.0)")
+    confidence: float = Field(
+        1.0, ge=0.0, le=1.0, description="Confidence score (0.0-1.0)"
+    )
     source: str = Field(..., description="Reference source name")
 
 

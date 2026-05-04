@@ -153,7 +153,8 @@ class SQLitePipelineRepository:
             return [self._to_domain_execution(row) for row in rows]
 
     def _to_domain_config(
-        self, row: PipelineConfigurationModel,
+        self,
+        row: PipelineConfigurationModel,
     ) -> PipelineConfiguration:
         """
         Convert ORM model to domain entity for PipelineConfiguration.
@@ -180,7 +181,8 @@ class SQLitePipelineRepository:
         )
 
     def _to_model_config(
-        self, config: PipelineConfiguration,
+        self,
+        config: PipelineConfiguration,
     ) -> PipelineConfigurationModel:
         """
         Convert domain entity to ORM model for PipelineConfiguration.

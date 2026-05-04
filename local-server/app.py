@@ -29,6 +29,7 @@ from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
 from adapters.persistence.sqlite.pipeline_repo import SQLitePipelineRepository
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
+from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.llm.provider_router import LLMProviderRouter
 from adapters.events.in_process import InProcessEventPublisher
@@ -49,6 +50,7 @@ from domain.extraction.services import ExtractionService
 from domain.extraction.ports import ReferenceSource
 from domain.pipeline.services import PipelineService
 from domain.versioning.services import VersioningService
+from domain.interchange.services import ImportRunService
 from domain.ontology.events import (
     GraphInvalidated,
     TaxonomyCreated,
@@ -89,6 +91,7 @@ from adapters.web.pipeline_routes import router as pipeline_router
 from adapters.web.reference_routes import router as reference_router
 from adapters.web.versioning_routes import router as versioning_router
 from adapters.web.admin_routes import router as admin_router
+from adapters.web.interchange_routes import router as interchange_router
 
 # Import admin adapters and services
 from adapters.config.json_store import JSONFileConfigStore
@@ -151,7 +154,8 @@ async def lifespan(app: FastAPI):
         local_session_factory = db_manager.get_local_session_factory()
         ontology_repo = SQLiteOntologyRepository(local_session_factory)
         extraction_repo = SQLiteExtractionRepository(local_session_factory)
-        logger.info("OntologyRepository and ExtractionRepository created")
+        interchange_repo = SQLiteInterchangeRepository(local_session_factory)
+        logger.info("OntologyRepository, ExtractionRepository, and InterchangeRepository created")
 
         operations_session_factory = db_manager.get_operations_session_factory()
         pipeline_repo = SQLitePipelineRepository(operations_session_factory)
@@ -299,7 +303,13 @@ async def lifespan(app: FastAPI):
             sync_target=sync_target,
             event_publisher=event_publisher,
         )
-        logger.info("VersioningService created and wired with repository, sync adapter, and event publisher")
+        logger.info(
+            "VersioningService created and wired with repository, sync adapter, and event publisher"
+        )
+
+        # Interchange service for import run tracking
+        import_run_service = ImportRunService()
+        logger.info("ImportRunService created")
 
         # --- System Administration Service ---
 
@@ -324,78 +334,150 @@ async def lifespan(app: FastAPI):
         # --- Wire event subscriptions ---
 
         event_publisher.subscribe(GraphInvalidated, graph_service.on_graph_invalidated)
-        logger.info("Event subscription: GraphInvalidated -> GraphAnalysisService.on_graph_invalidated")
+        logger.info(
+            "Event subscription: GraphInvalidated -> GraphAnalysisService.on_graph_invalidated"
+        )
 
-        event_publisher.subscribe(ExtractionCompleted, change_recorder.on_extraction_completed)
-        logger.info("Event subscription: ExtractionCompleted -> ChangeEventRecorder.on_extraction_completed")
+        event_publisher.subscribe(
+            ExtractionCompleted, change_recorder.on_extraction_completed
+        )
+        logger.info(
+            "Event subscription: ExtractionCompleted -> ChangeEventRecorder.on_extraction_completed"
+        )
 
-        event_publisher.subscribe(PipelineExecuted, change_recorder.on_pipeline_executed)
-        logger.info("Event subscription: PipelineExecuted -> ChangeEventRecorder.on_pipeline_executed")
+        event_publisher.subscribe(
+            PipelineExecuted, change_recorder.on_pipeline_executed
+        )
+        logger.info(
+            "Event subscription: PipelineExecuted -> ChangeEventRecorder.on_pipeline_executed"
+        )
 
-        event_publisher.subscribe(ChangesetMerged, versioning_service.on_changeset_merged)
-        logger.info("Event subscription: ChangesetMerged -> VersioningService.on_changeset_merged")
+        event_publisher.subscribe(
+            ChangesetMerged, versioning_service.on_changeset_merged
+        )
+        logger.info(
+            "Event subscription: ChangesetMerged -> VersioningService.on_changeset_merged"
+        )
 
         event_publisher.subscribe(SyncCompleted, versioning_service.on_sync_completed)
-        logger.info("Event subscription: SyncCompleted -> VersioningService.on_sync_completed")
+        logger.info(
+            "Event subscription: SyncCompleted -> VersioningService.on_sync_completed"
+        )
 
         # --- Ontology change event subscriptions ---
 
         event_publisher.subscribe(TaxonomyCreated, change_recorder.on_taxonomy_created)
-        logger.info("Event subscription: TaxonomyCreated -> ChangeEventRecorder.on_taxonomy_created")
+        logger.info(
+            "Event subscription: TaxonomyCreated -> ChangeEventRecorder.on_taxonomy_created"
+        )
 
         event_publisher.subscribe(SchemeCreated, change_recorder.on_scheme_created)
-        logger.info("Event subscription: SchemeCreated -> ChangeEventRecorder.on_scheme_created")
+        logger.info(
+            "Event subscription: SchemeCreated -> ChangeEventRecorder.on_scheme_created"
+        )
 
         event_publisher.subscribe(ClassCreated, change_recorder.on_class_created)
-        logger.info("Event subscription: ClassCreated -> ChangeEventRecorder.on_class_created")
+        logger.info(
+            "Event subscription: ClassCreated -> ChangeEventRecorder.on_class_created"
+        )
 
         event_publisher.subscribe(ClassUpdated, change_recorder.on_class_updated)
-        logger.info("Event subscription: ClassUpdated -> ChangeEventRecorder.on_class_updated")
+        logger.info(
+            "Event subscription: ClassUpdated -> ChangeEventRecorder.on_class_updated"
+        )
 
         event_publisher.subscribe(ClassDeleted, change_recorder.on_class_deleted)
-        logger.info("Event subscription: ClassDeleted -> ChangeEventRecorder.on_class_deleted")
+        logger.info(
+            "Event subscription: ClassDeleted -> ChangeEventRecorder.on_class_deleted"
+        )
 
         event_publisher.subscribe(ClassMoved, change_recorder.on_class_moved)
-        logger.info("Event subscription: ClassMoved -> ChangeEventRecorder.on_class_moved")
+        logger.info(
+            "Event subscription: ClassMoved -> ChangeEventRecorder.on_class_moved"
+        )
 
-        event_publisher.subscribe(RelationshipCreated, change_recorder.on_relationship_created)
-        logger.info("Event subscription: RelationshipCreated -> ChangeEventRecorder.on_relationship_created")
+        event_publisher.subscribe(
+            RelationshipCreated, change_recorder.on_relationship_created
+        )
+        logger.info(
+            "Event subscription: RelationshipCreated -> ChangeEventRecorder.on_relationship_created"
+        )
 
-        event_publisher.subscribe(RelationshipDeleted, change_recorder.on_relationship_deleted)
-        logger.info("Event subscription: RelationshipDeleted -> ChangeEventRecorder.on_relationship_deleted")
+        event_publisher.subscribe(
+            RelationshipDeleted, change_recorder.on_relationship_deleted
+        )
+        logger.info(
+            "Event subscription: RelationshipDeleted -> ChangeEventRecorder.on_relationship_deleted"
+        )
 
-        event_publisher.subscribe(PropertyDefinitionCreated, change_recorder.on_property_definition_created)
-        logger.info("Event subscription: PropertyDefinitionCreated -> ChangeEventRecorder.on_property_definition_created")
+        event_publisher.subscribe(
+            PropertyDefinitionCreated, change_recorder.on_property_definition_created
+        )
+        logger.info(
+            "Event subscription: PropertyDefinitionCreated -> ChangeEventRecorder.on_property_definition_created"
+        )
 
-        event_publisher.subscribe(PropertyDefinitionUpdated, change_recorder.on_property_definition_updated)
-        logger.info("Event subscription: PropertyDefinitionUpdated -> ChangeEventRecorder.on_property_definition_updated")
+        event_publisher.subscribe(
+            PropertyDefinitionUpdated, change_recorder.on_property_definition_updated
+        )
+        logger.info(
+            "Event subscription: PropertyDefinitionUpdated -> ChangeEventRecorder.on_property_definition_updated"
+        )
 
-        event_publisher.subscribe(PropertyDefinitionDeleted, change_recorder.on_property_definition_deleted)
-        logger.info("Event subscription: PropertyDefinitionDeleted -> ChangeEventRecorder.on_property_definition_deleted")
+        event_publisher.subscribe(
+            PropertyDefinitionDeleted, change_recorder.on_property_definition_deleted
+        )
+        logger.info(
+            "Event subscription: PropertyDefinitionDeleted -> ChangeEventRecorder.on_property_definition_deleted"
+        )
 
         event_publisher.subscribe(TaxonomyUpdated, change_recorder.on_taxonomy_updated)
-        logger.info("Event subscription: TaxonomyUpdated -> ChangeEventRecorder.on_taxonomy_updated")
+        logger.info(
+            "Event subscription: TaxonomyUpdated -> ChangeEventRecorder.on_taxonomy_updated"
+        )
 
         event_publisher.subscribe(TaxonomyDeleted, change_recorder.on_taxonomy_deleted)
-        logger.info("Event subscription: TaxonomyDeleted -> ChangeEventRecorder.on_taxonomy_deleted")
+        logger.info(
+            "Event subscription: TaxonomyDeleted -> ChangeEventRecorder.on_taxonomy_deleted"
+        )
 
         event_publisher.subscribe(SchemeUpdated, change_recorder.on_scheme_updated)
-        logger.info("Event subscription: SchemeUpdated -> ChangeEventRecorder.on_scheme_updated")
+        logger.info(
+            "Event subscription: SchemeUpdated -> ChangeEventRecorder.on_scheme_updated"
+        )
 
         event_publisher.subscribe(SchemeDeleted, change_recorder.on_scheme_deleted)
-        logger.info("Event subscription: SchemeDeleted -> ChangeEventRecorder.on_scheme_deleted")
+        logger.info(
+            "Event subscription: SchemeDeleted -> ChangeEventRecorder.on_scheme_deleted"
+        )
 
-        event_publisher.subscribe(ConceptSchemeUpdated, change_recorder.on_concept_scheme_updated)
-        logger.info("Event subscription: ConceptSchemeUpdated -> ChangeEventRecorder.on_concept_scheme_updated")
+        event_publisher.subscribe(
+            ConceptSchemeUpdated, change_recorder.on_concept_scheme_updated
+        )
+        logger.info(
+            "Event subscription: ConceptSchemeUpdated -> ChangeEventRecorder.on_concept_scheme_updated"
+        )
 
-        event_publisher.subscribe(IndividualCreated, change_recorder.on_individual_created)
-        logger.info("Event subscription: IndividualCreated -> ChangeEventRecorder.on_individual_created")
+        event_publisher.subscribe(
+            IndividualCreated, change_recorder.on_individual_created
+        )
+        logger.info(
+            "Event subscription: IndividualCreated -> ChangeEventRecorder.on_individual_created"
+        )
 
-        event_publisher.subscribe(IndividualUpdated, change_recorder.on_individual_updated)
-        logger.info("Event subscription: IndividualUpdated -> ChangeEventRecorder.on_individual_updated")
+        event_publisher.subscribe(
+            IndividualUpdated, change_recorder.on_individual_updated
+        )
+        logger.info(
+            "Event subscription: IndividualUpdated -> ChangeEventRecorder.on_individual_updated"
+        )
 
-        event_publisher.subscribe(IndividualDeleted, change_recorder.on_individual_deleted)
-        logger.info("Event subscription: IndividualDeleted -> ChangeEventRecorder.on_individual_deleted")
+        event_publisher.subscribe(
+            IndividualDeleted, change_recorder.on_individual_deleted
+        )
+        logger.info(
+            "Event subscription: IndividualDeleted -> ChangeEventRecorder.on_individual_deleted"
+        )
 
         # --- Store services in app.state for dependency injection ---
 
@@ -407,6 +489,9 @@ async def lifespan(app: FastAPI):
         app.state.admin_service = admin_service
         app.state.db_manager = db_manager
         app.state.reference_sources = reference_sources
+        app.state.ontology_repo = ontology_repo
+        app.state.interchange_repo = interchange_repo
+        app.state.import_run_service = import_run_service
 
         # Store adapters needed for health checks
         app.state.nlp_processor = nlp_processor
@@ -456,6 +541,7 @@ app.include_router(pipeline_router)
 app.include_router(reference_router)
 app.include_router(versioning_router)
 app.include_router(admin_router)
+app.include_router(interchange_router)
 
 
 # ==================== Exception Handlers ====================

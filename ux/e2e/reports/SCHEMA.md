@@ -14,21 +14,25 @@ Each test run produces a JSON report containing comprehensive metadata about tes
   "started_at": "ISO 8601 timestamp",
   "ended_at": "ISO 8601 timestamp",
   "duration_ms": "number",
-  "tests": [/* TestReport[] */],
-  "selector_coverage": {/* SelectorCoverage */}
+  "tests": [
+    /* TestReport[] */
+  ],
+  "selector_coverage": {
+    /* SelectorCoverage */
+  }
 }
 ```
 
 ### Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `run_id` | string | Unique identifier for this run: `{timestamp}_{git-sha}` format. Timestamp is ISO-like with colons/dots replaced by hyphens. Git SHA is short commit hash (7 chars). Example: `2025-02-15T14-30-45_a1b2c3d` |
-| `started_at` | ISO 8601 | When the test run started (UTC) |
-| `ended_at` | ISO 8601 | When the test run completed (UTC) |
-| `duration_ms` | number | Total run duration in milliseconds |
-| `tests` | array | Array of `TestReport` objects (see below) |
-| `selector_coverage` | object | Selector coverage analysis (see below) |
+| Field               | Type     | Description                                                                                                                                                                                                |
+| ------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `run_id`            | string   | Unique identifier for this run: `{timestamp}_{git-sha}` format. Timestamp is ISO-like with colons/dots replaced by hyphens. Git SHA is short commit hash (7 chars). Example: `2025-02-15T14-30-45_a1b2c3d` |
+| `started_at`        | ISO 8601 | When the test run started (UTC)                                                                                                                                                                            |
+| `ended_at`          | ISO 8601 | When the test run completed (UTC)                                                                                                                                                                          |
+| `duration_ms`       | number   | Total run duration in milliseconds                                                                                                                                                                         |
+| `tests`             | array    | Array of `TestReport` objects (see below)                                                                                                                                                                  |
+| `selector_coverage` | object   | Selector coverage analysis (see below)                                                                                                                                                                     |
 
 ### Computing Summary Statistics
 
@@ -58,15 +62,15 @@ This approach maintains a single source of truth (the tests array) and avoids re
 
 ### Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `spec_file` | string | Absolute path to the test file (as provided by Playwright's `test.location.file`) |
-| `test_name` | string | Display name/title of the test |
-| `status` | enum | Test outcome: `passed`, `failed`, `skipped`, or `flaky`. A test is `flaky` if it failed on first attempt but passed on retry. |
-| `duration_ms` | number | Total test duration in milliseconds (sum of all attempts, including retries) |
-| `attempts` | array | Array of `AttemptReport` objects, one per test execution (normally 1, more if retried) |
-| `selectors_used` | array | List of `data-testid` selector strings extracted from the test file. **Note:** This is extracted from the entire test file, not scoped to the individual test. If a spec file contains multiple tests using different selectors, each `TestReport` will include the union of all selectors in that file. This means `selectors_used` reflects file-level selector coverage, not test-level coverage. |
-| `failure` | object | Present if test failed or flaky (failed on first attempt but passed on retry); see `FailureReport` below. Omitted for passed and skipped tests. |
+| Field            | Type   | Description                                                                                                                                                                                                                                                                                                                                                                                          |
+| ---------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `spec_file`      | string | Absolute path to the test file (as provided by Playwright's `test.location.file`)                                                                                                                                                                                                                                                                                                                    |
+| `test_name`      | string | Display name/title of the test                                                                                                                                                                                                                                                                                                                                                                       |
+| `status`         | enum   | Test outcome: `passed`, `failed`, `skipped`, or `flaky`. A test is `flaky` if it failed on first attempt but passed on retry.                                                                                                                                                                                                                                                                        |
+| `duration_ms`    | number | Total test duration in milliseconds (sum of all attempts, including retries)                                                                                                                                                                                                                                                                                                                         |
+| `attempts`       | array  | Array of `AttemptReport` objects, one per test execution (normally 1, more if retried)                                                                                                                                                                                                                                                                                                               |
+| `selectors_used` | array  | List of `data-testid` selector strings extracted from the test file. **Note:** This is extracted from the entire test file, not scoped to the individual test. If a spec file contains multiple tests using different selectors, each `TestReport` will include the union of all selectors in that file. This means `selectors_used` reflects file-level selector coverage, not test-level coverage. |
+| `failure`        | object | Present if test failed or flaky (failed on first attempt but passed on retry); see `FailureReport` below. Omitted for passed and skipped tests.                                                                                                                                                                                                                                                      |
 
 ## AttemptReport Object
 
@@ -80,11 +84,11 @@ This approach maintains a single source of truth (the tests array) and avoids re
 
 ### Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `status` | enum | Outcome of this attempt: `passed`, `failed`, `skipped`, `timedOut`, or `interrupted`. `timedOut` indicates test exceeded timeout. `interrupted` indicates test was interrupted (e.g., by Playwright's interrupt signal). |
-| `duration_ms` | number | Duration of this attempt in milliseconds |
-| `failure` | object | Only present if attempt failed, timed out, or was interrupted; see `FailureReport` below |
+| Field         | Type   | Description                                                                                                                                                                                                              |
+| ------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `status`      | enum   | Outcome of this attempt: `passed`, `failed`, `skipped`, `timedOut`, or `interrupted`. `timedOut` indicates test exceeded timeout. `interrupted` indicates test was interrupted (e.g., by Playwright's interrupt signal). |
+| `duration_ms` | number | Duration of this attempt in milliseconds                                                                                                                                                                                 |
+| `failure`     | object | Only present if attempt failed, timed out, or was interrupted; see `FailureReport` below                                                                                                                                 |
 
 ## FailureReport Object
 
@@ -99,12 +103,12 @@ This approach maintains a single source of truth (the tests array) and avoids re
 
 ### Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `message` | string | Error message from the test failure (e.g., assertion error, timeout, network failure) |
-| `stack` | string | Stack trace of the error (if available) |
-| `screenshots` | array | List of file paths (relative to repo root) to screenshots captured during failure. Playwright only captures on failure with `screenshot: "only-on-failure"` config. |
-| `video` | string | Path (relative to repo root) to video recording of the failed test execution (if retained). Only present if video capture was enabled. |
+| Field         | Type   | Description                                                                                                                                                         |
+| ------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `message`     | string | Error message from the test failure (e.g., assertion error, timeout, network failure)                                                                               |
+| `stack`       | string | Stack trace of the error (if available)                                                                                                                             |
+| `screenshots` | array  | List of file paths (relative to repo root) to screenshots captured during failure. Playwright only captures on failure with `screenshot: "only-on-failure"` config. |
+| `video`       | string | Path (relative to repo root) to video recording of the failed test execution (if retained). Only present if video capture was enabled.                              |
 
 ## SelectorCoverage Object
 
@@ -126,21 +130,21 @@ This approach maintains a single source of truth (the tests array) and avoids re
 
 ### Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `documented` | object | Map of selector ID to coverage info for all selectors in the registry. Keys are the documented `data-testid` values. |
-| `coverage_percentage` | number | Percentage of documented selectors that were exercised in this run (0–100). Calculated as: `(exercised / total_documented) * 100`. |
-| `gaps` | array | List of selector IDs that are documented in the registry but were **not** exercised in this run. Use to identify untested code paths. |
-| `undocumented` | array | List of selector values that were **used** in tests but not found in the selector registry. Indicates missing documentation. |
-| `registry_error` | string | **Optional.** Present if the selector registry YAML failed to parse. Contains the error message. When present, `documented` will be empty and coverage metrics are unreliable. Agents should treat this as a critical signal that selector tracking failed, distinct from legitimate 0% coverage. |
+| Field                 | Type   | Description                                                                                                                                                                                                                                                                                       |
+| --------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `documented`          | object | Map of selector ID to coverage info for all selectors in the registry. Keys are the documented `data-testid` values.                                                                                                                                                                              |
+| `coverage_percentage` | number | Percentage of documented selectors that were exercised in this run (0–100). Calculated as: `(exercised / total_documented) * 100`.                                                                                                                                                                |
+| `gaps`                | array  | List of selector IDs that are documented in the registry but were **not** exercised in this run. Use to identify untested code paths.                                                                                                                                                             |
+| `undocumented`        | array  | List of selector values that were **used** in tests but not found in the selector registry. Indicates missing documentation.                                                                                                                                                                      |
+| `registry_error`      | string | **Optional.** Present if the selector registry YAML failed to parse. Contains the error message. When present, `documented` will be empty and coverage metrics are unreliable. Agents should treat this as a critical signal that selector tracking failed, distinct from legitimate 0% coverage. |
 
 ## SelectorCoverage.documented[id] Object
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | string | The selector ID (data-testid value) |
-| `component` | string | Component or module name that owns this selector (from registry) |
-| `coverage` | enum | `exercised` (used in this run) or `not_exercised` (documented but unused). Note: Selectors that are used but NOT in the registry are tracked separately in the `undocumented` array, not in this coverage field. |
+| Field       | Type   | Description                                                                                                                                                                                                      |
+| ----------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`        | string | The selector ID (data-testid value)                                                                                                                                                                              |
+| `component` | string | Component or module name that owns this selector (from registry)                                                                                                                                                 |
+| `coverage`  | enum   | `exercised` (used in this run) or `not_exercised` (documented but unused). Note: Selectors that are used but NOT in the registry are tracked separately in the `undocumented` array, not in this coverage field. |
 
 ---
 
@@ -227,13 +231,8 @@ This approach maintains a single source of truth (the tests array) and avoids re
       }
     },
     "coverage_percentage": 75,
-    "gaps": [
-      "concept-scheme-form",
-      "concept-scheme-title-input"
-    ],
-    "undocumented": [
-      "custom-internal-selector"
-    ]
+    "gaps": ["concept-scheme-form", "concept-scheme-title-input"],
+    "undocumented": ["custom-internal-selector"]
   }
 }
 ```
@@ -245,6 +244,7 @@ This approach maintains a single source of truth (the tests array) and avoids re
 ### For Healer Agent (#598)
 
 The healer agent can:
+
 1. Load the JSON report for a failed test run
 2. Extract `failure.message` and `failure.stack` for root cause analysis
 3. Use `failure.screenshots` and `failure.video` paths for visual inspection
@@ -254,6 +254,7 @@ The healer agent can:
 ### For Planner Agent (#597)
 
 The planner agent can:
+
 1. Compare selector coverage across multiple runs to identify flaky coverage gaps
 2. Use `selector_coverage.gaps` to find untested code paths
 3. Use `selector_coverage.undocumented` to identify missing test IDs in components
@@ -263,6 +264,7 @@ The planner agent can:
 ### For CI/CD Integration
 
 Store the report as a CI artifact:
+
 - Path: `ux/e2e/reports/{run_id}.json`
 - Artifact name: `test-report-{run_id}.json`
 - Retention: Last 20 runs (hardcoded in reporter)
@@ -270,6 +272,7 @@ Store the report as a CI artifact:
 ### For Humans
 
 The accompanying Markdown file (`{run_id}.md`) provides a human-readable summary:
+
 - Test count and pass rate
 - Selector coverage percentage and gaps
 - Individual test results with failure details and artifact links

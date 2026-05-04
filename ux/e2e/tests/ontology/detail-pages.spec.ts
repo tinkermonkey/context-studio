@@ -2,7 +2,6 @@ import { test, expect } from "@playwright/test";
 import {
   createTaxonomy,
   createConceptScheme,
-  createClass,
   createIndividual,
   createTestHierarchy,
   clearTestData,
@@ -32,7 +31,9 @@ test.describe("Entity Detail Pages", () => {
   });
 
   test.describe("Taxonomy detail", () => {
-    test("should render taxonomy detail page with entity data", async ({ page }) => {
+    test("should render taxonomy detail page with entity data", async ({
+      page,
+    }) => {
       const taxonomy = await createTaxonomy(page, {
         title: "Detail Test Taxonomy",
         description: "For detail page testing",
@@ -42,29 +43,44 @@ test.describe("Entity Detail Pages", () => {
       await waitForAppReady(page);
 
       await expect(page.getByTestId("node-detail-title")).toBeVisible();
-      await expect(page.getByTestId("node-detail-title")).toContainText("Detail Test Taxonomy");
+      await expect(page.getByTestId("node-detail-title")).toContainText(
+        "Detail Test Taxonomy",
+      );
       await expect(page.getByTestId("node-detail-id")).toBeVisible();
       await expect(page.getByTestId("node-detail-type")).toBeVisible();
-      await expect(page.getByTestId("node-detail-definition-section")).toBeVisible();
+      await expect(
+        page.getByTestId("node-detail-definition-section"),
+      ).toBeVisible();
       await expect(page.getByTestId("node-attributes-section")).toBeVisible();
     });
 
-    test("should navigate to taxonomy detail from list page", async ({ page }) => {
-      const taxonomy = await createTaxonomy(page, { title: "Nav To Detail Taxonomy" });
+    test("should navigate to taxonomy detail from list page", async ({
+      page,
+    }) => {
+      const taxonomy = await createTaxonomy(page, {
+        title: "Nav To Detail Taxonomy",
+      });
 
       await page.goto("/app/taxonomies");
       await waitForAppReady(page);
 
-      await page.getByTestId(`taxonomy-row-${taxonomy.id}`).getByRole("link").click();
+      await page
+        .getByTestId(`taxonomy-row-${taxonomy.id}`)
+        .getByRole("link")
+        .click();
       await waitForAppReady(page);
 
       expect(page.url()).toContain(`/app/taxonomies/${taxonomy.id}`);
-      await expect(page.getByTestId("node-detail-title")).toContainText("Nav To Detail Taxonomy");
+      await expect(page.getByTestId("node-detail-title")).toContainText(
+        "Nav To Detail Taxonomy",
+      );
     });
   });
 
   test.describe("Concept scheme detail", () => {
-    test("should render concept scheme detail page with entity data", async ({ page }) => {
+    test("should render concept scheme detail page with entity data", async ({
+      page,
+    }) => {
       const taxonomy = await createTaxonomy(page);
       const scheme = await createConceptScheme(page, taxonomy.id, {
         title: "Detail Test Scheme",
@@ -75,14 +91,20 @@ test.describe("Entity Detail Pages", () => {
       await waitForAppReady(page);
 
       await expect(page.getByTestId("node-detail-title")).toBeVisible();
-      await expect(page.getByTestId("node-detail-title")).toContainText("Detail Test Scheme");
+      await expect(page.getByTestId("node-detail-title")).toContainText(
+        "Detail Test Scheme",
+      );
       await expect(page.getByTestId("node-detail-id")).toBeVisible();
       await expect(page.getByTestId("node-detail-type")).toBeVisible();
-      await expect(page.getByTestId("node-detail-definition-section")).toBeVisible();
+      await expect(
+        page.getByTestId("node-detail-definition-section"),
+      ).toBeVisible();
       await expect(page.getByTestId("node-attributes-section")).toBeVisible();
     });
 
-    test("should navigate to concept scheme detail from list page", async ({ page }) => {
+    test("should navigate to concept scheme detail from list page", async ({
+      page,
+    }) => {
       const taxonomy = await createTaxonomy(page);
       const scheme = await createConceptScheme(page, taxonomy.id, {
         title: "Nav To Detail Scheme",
@@ -91,16 +113,23 @@ test.describe("Entity Detail Pages", () => {
       await page.goto("/app/concept-schemes");
       await waitForAppReady(page);
 
-      await page.getByTestId(`concept-scheme-row-${scheme.id}`).getByRole("link").click();
+      await page
+        .getByTestId(`concept-scheme-row-${scheme.id}`)
+        .getByRole("link")
+        .click();
       await waitForAppReady(page);
 
       expect(page.url()).toContain(`/app/concept-schemes/${scheme.id}`);
-      await expect(page.getByTestId("node-detail-title")).toContainText("Nav To Detail Scheme");
+      await expect(page.getByTestId("node-detail-title")).toContainText(
+        "Nav To Detail Scheme",
+      );
     });
   });
 
   test.describe("Class detail", () => {
-    test("should render class detail page with entity data", async ({ page }) => {
+    test("should render class detail page with entity data", async ({
+      page,
+    }) => {
       const hierarchy = await createTestHierarchy(page, 1);
       const cls = hierarchy.classes[0];
 
@@ -110,7 +139,9 @@ test.describe("Entity Detail Pages", () => {
       await expect(page.getByTestId("node-detail-title")).toBeVisible();
       await expect(page.getByTestId("node-detail-id")).toBeVisible();
       await expect(page.getByTestId("node-detail-type")).toBeVisible();
-      await expect(page.getByTestId("node-detail-definition-section")).toBeVisible();
+      await expect(
+        page.getByTestId("node-detail-definition-section"),
+      ).toBeVisible();
       await expect(page.getByTestId("node-attributes-section")).toBeVisible();
     });
 
@@ -127,7 +158,9 @@ test.describe("Entity Detail Pages", () => {
       await waitForAppReady(page);
 
       expect(page.url()).toContain(`/app/classes/${cls.id}`);
-      await expect(page.getByTestId("node-detail-title")).toContainText("Nav To Detail Class");
+      await expect(page.getByTestId("node-detail-title")).toContainText(
+        "Nav To Detail Class",
+      );
     });
   });
 
@@ -136,10 +169,14 @@ test.describe("Entity Detail Pages", () => {
       page,
     }) => {
       const hierarchy = await createTestHierarchy(page, 1);
-      const individual = await createIndividual(page, [hierarchy.classes[0].id], {
-        title: "Detail Test Individual",
-        description: "For detail page testing",
-      });
+      const individual = await createIndividual(
+        page,
+        [hierarchy.classes[0].id],
+        {
+          title: "Detail Test Individual",
+          description: "For detail page testing",
+        },
+      );
 
       await page.goto(`/app/individuals/${individual.id}`);
       await waitForAppReady(page);
@@ -149,12 +186,20 @@ test.describe("Entity Detail Pages", () => {
         "Detail Test Individual",
       );
       await expect(page.getByTestId("individual-detail-id")).toBeVisible();
-      await expect(page.getByTestId("individual-detail-description")).toBeVisible();
-      await expect(page.getByTestId("individual-classes-section")).toBeVisible();
-      await expect(page.getByTestId("inherited-properties-section")).toBeVisible();
+      await expect(
+        page.getByTestId("individual-detail-description"),
+      ).toBeVisible();
+      await expect(
+        page.getByTestId("individual-classes-section"),
+      ).toBeVisible();
+      await expect(
+        page.getByTestId("inherited-properties-section"),
+      ).toBeVisible();
     });
 
-    test("should display both parent classes in individual detail", async ({ page }) => {
+    test("should display both parent classes in individual detail", async ({
+      page,
+    }) => {
       const hierarchy = await createTestHierarchy(page, 2, {
         classTitle: "multi-class-parent",
       });
@@ -176,16 +221,25 @@ test.describe("Entity Detail Pages", () => {
       await expect(classesSection).toContainText(hierarchy.classes[1].title);
     });
 
-    test("should navigate to individual detail from list page", async ({ page }) => {
+    test("should navigate to individual detail from list page", async ({
+      page,
+    }) => {
       const hierarchy = await createTestHierarchy(page, 1);
-      const individual = await createIndividual(page, [hierarchy.classes[0].id], {
-        title: "Nav To Detail Individual",
-      });
+      const individual = await createIndividual(
+        page,
+        [hierarchy.classes[0].id],
+        {
+          title: "Nav To Detail Individual",
+        },
+      );
 
       await page.goto("/app/individuals");
       await waitForAppReady(page);
 
-      await page.getByTestId(`individual-row-${individual.id}`).getByRole("link").click();
+      await page
+        .getByTestId(`individual-row-${individual.id}`)
+        .getByRole("link")
+        .click();
       await waitForAppReady(page);
 
       expect(page.url()).toContain(`/app/individuals/${individual.id}`);

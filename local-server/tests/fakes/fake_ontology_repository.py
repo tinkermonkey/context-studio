@@ -9,7 +9,9 @@ import sys
 import os
 from typing import Any
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 from uuid import uuid4
 
@@ -46,8 +48,13 @@ class FakeOntologyRepository:
 
     def save_taxonomy(self, taxonomy: Taxonomy) -> Taxonomy:
         for existing_taxonomy in self._taxonomies.values():
-            if existing_taxonomy.title == taxonomy.title and existing_taxonomy.id != taxonomy.id:
-                raise DuplicateEntityError(f"Taxonomy with title '{taxonomy.title}' already exists")
+            if (
+                existing_taxonomy.title == taxonomy.title
+                and existing_taxonomy.id != taxonomy.id
+            ):
+                raise DuplicateEntityError(
+                    f"Taxonomy with title '{taxonomy.title}' already exists"
+                )
         self._taxonomies[taxonomy.id] = taxonomy
         return taxonomy
 
@@ -72,8 +79,14 @@ class FakeOntologyRepository:
 
     def save_concept_scheme(self, scheme: ConceptScheme) -> ConceptScheme:
         for existing_scheme in self._schemes.values():
-            if existing_scheme.title == scheme.title and existing_scheme.id != scheme.id and existing_scheme.taxonomy_id == scheme.taxonomy_id:
-                raise DuplicateEntityError(f"ConceptScheme with title '{scheme.title}' already exists in this taxonomy")
+            if (
+                existing_scheme.title == scheme.title
+                and existing_scheme.id != scheme.id
+                and existing_scheme.taxonomy_id == scheme.taxonomy_id
+            ):
+                raise DuplicateEntityError(
+                    f"ConceptScheme with title '{scheme.title}' already exists in this taxonomy"
+                )
         self._schemes[scheme.id] = scheme
         return scheme
 
@@ -92,7 +105,7 @@ class FakeOntologyRepository:
         self,
         concept_scheme_id: str | None = None,
         parent_class_id: str | None = None,
-        limit: int = 100,
+        limit: int | None = 100,
         offset: int = 0,
     ) -> list[Class]:
         results = list(self._classes.values())
@@ -100,7 +113,8 @@ class FakeOntologyRepository:
             results = [c for c in results if c.concept_scheme_id == concept_scheme_id]
         if parent_class_id is not None:
             results = [c for c in results if c.parent_class_id == parent_class_id]
-        return results[offset : offset + limit]
+        end = None if limit is None else offset + limit
+        return results[offset:end]
 
     def search_classes(self, criteria: SearchCriteria) -> list[Class]:
         results = list(self._classes.values())
@@ -115,7 +129,9 @@ class FakeOntologyRepository:
             ]
 
         if criteria.concept_scheme_id:
-            results = [c for c in results if c.concept_scheme_id == criteria.concept_scheme_id]
+            results = [
+                c for c in results if c.concept_scheme_id == criteria.concept_scheme_id
+            ]
 
         if criteria.taxonomy_id:
             results = [c for c in results if c.taxonomy_id == criteria.taxonomy_id]
@@ -124,13 +140,23 @@ class FakeOntologyRepository:
 
     def count_classes(self, concept_scheme_id: str | None = None) -> int:
         if concept_scheme_id:
-            return sum(1 for c in self._classes.values() if c.concept_scheme_id == concept_scheme_id)
+            return sum(
+                1
+                for c in self._classes.values()
+                if c.concept_scheme_id == concept_scheme_id
+            )
         return len(self._classes)
 
     def save_class(self, cls: Class) -> Class:
         for existing_class in self._classes.values():
-            if existing_class.title == cls.title and existing_class.id != cls.id and existing_class.concept_scheme_id == cls.concept_scheme_id:
-                raise DuplicateEntityError(f"Class with title '{cls.title}' already exists in this scheme")
+            if (
+                existing_class.title == cls.title
+                and existing_class.id != cls.id
+                and existing_class.concept_scheme_id == cls.concept_scheme_id
+            ):
+                raise DuplicateEntityError(
+                    f"Class with title '{cls.title}' already exists in this scheme"
+                )
         self._classes[cls.id] = cls
         return cls
 
@@ -241,9 +267,11 @@ class FakeOntologyRepository:
         # Check for duplicate title within each of the individual's classes (excluding the individual being updated)
         for class_id in individual.class_ids:
             for existing in self._individuals.values():
-                if (class_id in existing.class_ids and
-                    existing.title == individual.title and
-                    existing.id != individual.id):
+                if (
+                    class_id in existing.class_ids
+                    and existing.title == individual.title
+                    and existing.id != individual.id
+                ):
                     raise DuplicateEntityError(
                         f"Individual with title '{individual.title}' already exists in class '{class_id}'"
                     )
@@ -266,7 +294,9 @@ class FakeOntologyRepository:
 
     # Bulk operations
 
-    def get_all_entities_and_relationships(self) -> tuple[list[Any], list[Relationship]]:
+    def get_all_entities_and_relationships(
+        self,
+    ) -> tuple[list[Any], list[Relationship]]:
         """
         Retrieve all entities and relationships for graph building.
 
@@ -292,7 +322,7 @@ class FakeOntologyRepository:
         taxonomy = Taxonomy(
             id=str(uuid4()),
             title="Technology Concepts",
-            description="Sample taxonomy for tech-related extraction testing"
+            description="Sample taxonomy for tech-related extraction testing",
         )
         self.save_taxonomy(taxonomy)
 
@@ -301,14 +331,17 @@ class FakeOntologyRepository:
             id=str(uuid4()),
             title="Tech Terms",
             description="Common technology terminology",
-            taxonomy_id=taxonomy.id
+            taxonomy_id=taxonomy.id,
         )
         self.save_concept_scheme(scheme)
 
         # Create sample classes
         classes_data = [
             ("Microsoft", "American multinational software corporation"),
-            ("Google", "American technology company specializing in search and advertising"),
+            (
+                "Google",
+                "American technology company specializing in search and advertising",
+            ),
             ("Apple", "American technology company known for consumer electronics"),
             ("Database", "Organized collection of structured data"),
             ("SQL", "Structured Query Language for database management"),
@@ -320,6 +353,6 @@ class FakeOntologyRepository:
                 title=title,
                 description=description,
                 concept_scheme_id=scheme.id,
-                taxonomy_id=taxonomy.id
+                taxonomy_id=taxonomy.id,
             )
             self.save_class(cls)

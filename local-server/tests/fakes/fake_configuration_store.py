@@ -5,7 +5,9 @@ import sys
 import os
 from typing import Optional
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 from domain.admin.entities import AppConfiguration
 from domain.admin.value_objects import CREDENTIAL_FIELD_NAMES
@@ -87,7 +89,9 @@ class FakeConfigurationStore:
         for section_name, section_updates in updates.items():
             if hasattr(updated_config, section_name):
                 current_section = getattr(updated_config, section_name)
-                if isinstance(current_section, dict) and isinstance(section_updates, dict):
+                if isinstance(current_section, dict) and isinstance(
+                    section_updates, dict
+                ):
                     current_section.update(section_updates)
                 else:
                     setattr(updated_config, section_name, section_updates)
@@ -110,7 +114,16 @@ class FakeConfigurationStore:
 
         # Preserve credentials from current config
         # Only preserve credentials in sections that exist in the defaults
-        for attr_name in ["server", "database", "logging", "llm", "nlp", "embedding", "reference_sources", "sync"]:
+        for attr_name in [
+            "server",
+            "database",
+            "logging",
+            "llm",
+            "nlp",
+            "embedding",
+            "reference_sources",
+            "sync",
+        ]:
             current_section = getattr(self._config, attr_name, None)
             reset_section = getattr(reset_config, attr_name, None)
 

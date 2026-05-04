@@ -34,6 +34,8 @@ from fastapi import Request
 from sqlalchemy.orm import Session
 
 from domain.ontology.services import OntologyService
+from domain.ontology.ports import OntologyRepository
+from domain.interchange.ports import ImportRunRepository
 from domain.graph.services import GraphAnalysisService
 from domain.extraction.services import ExtractionService
 from domain.extraction.ports import ReferenceSource
@@ -237,3 +239,41 @@ async def get_admin_service(request: Request) -> AdminService:
     if service is None:
         raise RuntimeError("AdminService not initialized in app.state")
     return service
+
+
+async def get_ontology_repo(request: Request) -> OntologyRepository:
+    """
+    Extract the OntologyRepository from app state.
+
+    Args:
+        request: FastAPI request object
+
+    Returns:
+        The OntologyRepository instance from app.state
+
+    Raises:
+        RuntimeError: If repository is not initialized in app.state
+    """
+    repo = getattr(request.app.state, "ontology_repo", None)
+    if repo is None:
+        raise RuntimeError("OntologyRepository not initialized in app.state")
+    return repo
+
+
+async def get_interchange_repo(request: Request) -> ImportRunRepository:
+    """
+    Extract the ImportRunRepository from app state.
+
+    Args:
+        request: FastAPI request object
+
+    Returns:
+        The ImportRunRepository instance from app.state (concrete: SQLiteInterchangeRepository)
+
+    Raises:
+        RuntimeError: If repository is not initialized in app.state
+    """
+    repo = getattr(request.app.state, "interchange_repo", None)
+    if repo is None:
+        raise RuntimeError("InterchangeRepository not initialized in app.state")
+    return repo

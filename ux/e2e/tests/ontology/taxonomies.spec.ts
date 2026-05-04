@@ -39,19 +39,27 @@ test.describe("Taxonomy CRUD Operations", () => {
     await expect(form).not.toBeVisible();
     await waitForAppReady(page);
 
-    await expect(page.getByTestId("taxonomy-table").getByText("Test Taxonomy", { exact: true })).toBeVisible();
+    await expect(
+      page
+        .getByTestId("taxonomy-table")
+        .getByText("Test Taxonomy", { exact: true }),
+    ).toBeVisible();
 
     // Verify persistence via API
     const list = await apiRequest<{ items: Array<{ title: string }> }>(
       page,
-      "/api/taxonomies"
+      "/api/taxonomies",
     );
     expect(list.items.some((t) => t.title === "Test Taxonomy")).toBe(true);
   });
 
   test("should display created taxonomies in the list", async ({ page }) => {
-    const taxonomy1 = await createTaxonomy(page, { title: "List Taxonomy Alpha" });
-    const taxonomy2 = await createTaxonomy(page, { title: "List Taxonomy Beta" });
+    const taxonomy1 = await createTaxonomy(page, {
+      title: "List Taxonomy Alpha",
+    });
+    const taxonomy2 = await createTaxonomy(page, {
+      title: "List Taxonomy Beta",
+    });
 
     await page.goto("/app/taxonomies");
     await waitForAppReady(page);
@@ -60,8 +68,12 @@ test.describe("Taxonomy CRUD Operations", () => {
     await expect(page.getByText("List Taxonomy Beta")).toBeVisible();
 
     // Confirm both rows are present by testid
-    await expect(page.getByTestId(`taxonomy-row-${taxonomy1.id}`)).toBeVisible();
-    await expect(page.getByTestId(`taxonomy-row-${taxonomy2.id}`)).toBeVisible();
+    await expect(
+      page.getByTestId(`taxonomy-row-${taxonomy1.id}`),
+    ).toBeVisible();
+    await expect(
+      page.getByTestId(`taxonomy-row-${taxonomy2.id}`),
+    ).toBeVisible();
   });
 
   test("should navigate to taxonomy detail page on row click", async ({
@@ -98,28 +110,32 @@ test.describe("Taxonomy CRUD Operations", () => {
     await expect(editModal).toBeVisible({ timeout: 5000 });
 
     await page.getByTestId("taxonomy-title-input").fill("Updated Title");
-    await page.getByTestId("taxonomy-description-input").fill("Updated description");
+    await page
+      .getByTestId("taxonomy-description-input")
+      .fill("Updated description");
     await page.getByTestId("taxonomy-submit-button").click();
 
     await expect(editModal).not.toBeVisible({ timeout: 5000 });
     await waitForAppReady(page);
 
     // Row should reflect the new title
-    await expect(
-      page.getByTestId(`taxonomy-row-${taxonomy.id}`)
-    ).toContainText("Updated Title");
+    await expect(page.getByTestId(`taxonomy-row-${taxonomy.id}`)).toContainText(
+      "Updated Title",
+    );
 
     // Confirm persistence via API
     const updated = await apiRequest<{ title: string; description: string }>(
       page,
-      `/api/taxonomies/${taxonomy.id}`
+      `/api/taxonomies/${taxonomy.id}`,
     );
     expect(updated.title).toBe("Updated Title");
     expect(updated.description).toBe("Updated description");
   });
 
   test("should delete a taxonomy via Actions dropdown", async ({ page }) => {
-    const taxonomy = await createTaxonomy(page, { title: "Taxonomy to Delete" });
+    const taxonomy = await createTaxonomy(page, {
+      title: "Taxonomy to Delete",
+    });
 
     await page.goto("/app/taxonomies");
     await waitForAppReady(page);
@@ -182,12 +198,16 @@ test.describe("Taxonomy CRUD Operations", () => {
     await expect(form).toBeVisible();
 
     await page.getByTestId("taxonomy-title-input").fill(specialTitle);
-    await page.getByTestId("taxonomy-description-input").fill("Special chars test");
+    await page
+      .getByTestId("taxonomy-description-input")
+      .fill("Special chars test");
     await page.getByTestId("taxonomy-submit-button").click();
 
     await expect(form).not.toBeVisible();
     await waitForAppReady(page);
 
-    await expect(page.getByTestId("taxonomy-table")).toContainText(specialTitle);
+    await expect(page.getByTestId("taxonomy-table")).toContainText(
+      specialTitle,
+    );
   });
 });

@@ -11,7 +11,12 @@ from __future__ import annotations
 from typing import Protocol, Any
 
 from .entities import AppConfiguration
-from .value_objects import DatabaseHealth, ServiceMetrics, ComponentStatus, BackgroundTaskSummary
+from .value_objects import (
+    DatabaseHealth,
+    ServiceMetrics,
+    ComponentStatus,
+    BackgroundTaskSummary,
+)
 
 
 class MetricsCollector(Protocol):

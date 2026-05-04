@@ -50,7 +50,7 @@ export const IndividualDetails: React.FC<IndividualDetailsProps> = ({
           <div className="space-y-4">
             <div data-testid="individual-detail-id">
               <h3 className="font-semibold text-gray-700">ID</h3>
-              <p className="break-all text-sm text-gray-600">{individual.id}</p>
+              <p className="text-sm break-all text-gray-600">{individual.id}</p>
             </div>
             {parentClasses.length > 0 && (
               <div>
@@ -145,7 +145,9 @@ export const IndividualDetails: React.FC<IndividualDetailsProps> = ({
                         <div className="text-xs font-medium text-gray-500 uppercase">
                           Property
                         </div>
-                        <div className="font-medium">{prop.property_identifier}</div>
+                        <div className="font-medium">
+                          {prop.property_identifier}
+                        </div>
                       </div>
                       <div>
                         <div className="text-xs font-medium text-gray-500 uppercase">

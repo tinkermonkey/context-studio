@@ -15,7 +15,9 @@ All tests complete quickly and provide rapid feedback on core extraction logic.
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import pytest
 
@@ -40,7 +42,9 @@ class TestFullExtractionPipeline:
         service = ExtractionService(
             ontology_repo=FakeOntologyRepository(),
             embedding_service=FakeEmbeddingService(),
-            llm=FakeLLMProvider(response_content='[{"label": "Apple", "type": "ORG", "confidence": 0.95}]'),
+            llm=FakeLLMProvider(
+                response_content='[{"label": "Apple", "type": "ORG", "confidence": 0.95}]'
+            ),
             nlp=FakeNLPProcessor(),
             reference_sources=[FakeReferenceSource("TestSource")],
             event_publisher=FakeEventPublisher(),
@@ -67,7 +71,9 @@ class TestFullExtractionPipeline:
         service = ExtractionService(
             ontology_repo=FakeOntologyRepository(),
             embedding_service=FakeEmbeddingService(),
-            llm=FakeLLMProvider(response_content='[{"label": "TestEntity", "type": "ORG", "confidence": 0.9}]'),
+            llm=FakeLLMProvider(
+                response_content='[{"label": "TestEntity", "type": "ORG", "confidence": 0.9}]'
+            ),
             nlp=FakeNLPProcessor(),
             reference_sources=[FakeReferenceSource()],
             event_publisher=event_publisher,
@@ -137,7 +143,9 @@ class TestEntityDeduplication:
         service = ExtractionService(
             ontology_repo=FakeOntologyRepository(),
             embedding_service=FakeEmbeddingService(),
-            llm=FakeLLMProvider(response_content='[{"label": "Apple", "type": "ORG", "confidence": 0.95}]'),
+            llm=FakeLLMProvider(
+                response_content='[{"label": "Apple", "type": "ORG", "confidence": 0.95}]'
+            ),
             nlp=FakeNLPProcessor(),
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
@@ -226,10 +234,18 @@ class TestLayerPriority:
 
         # Same entity from all layers
         entities = [
-            ExtractedEntity(label="Entity", entity_type="ORG", source_layer=0, confidence=0.5),
-            ExtractedEntity(label="Entity", entity_type="ORG", source_layer=1, confidence=0.9),
-            ExtractedEntity(label="Entity", entity_type="ORG", source_layer=2, confidence=0.7),
-            ExtractedEntity(label="Entity", entity_type="ORG", source_layer=3, confidence=0.6),
+            ExtractedEntity(
+                label="Entity", entity_type="ORG", source_layer=0, confidence=0.5
+            ),
+            ExtractedEntity(
+                label="Entity", entity_type="ORG", source_layer=1, confidence=0.9
+            ),
+            ExtractedEntity(
+                label="Entity", entity_type="ORG", source_layer=2, confidence=0.7
+            ),
+            ExtractedEntity(
+                label="Entity", entity_type="ORG", source_layer=3, confidence=0.6
+            ),
         ]
 
         deduplicated = service._deduplicate(entities)
@@ -409,19 +425,24 @@ class TestErrorHandling:
 
     def test_graceful_degradation(self):
         """Extraction degrades gracefully with missing services."""
+
         # NLP processor not ready
         class NotReadyNLPProcessor:
             def is_ready(self):
                 return False
+
             def process(self, text):
                 raise RuntimeError("Not ready")
+
             def extract_entities(self, text):
                 raise RuntimeError("Not ready")
 
         service = ExtractionService(
             ontology_repo=FakeOntologyRepository(),
             embedding_service=FakeEmbeddingService(),
-            llm=FakeLLMProvider(response_content='[{"label": "Entity", "type": "ORG", "confidence": 0.9}]'),
+            llm=FakeLLMProvider(
+                response_content='[{"label": "Entity", "type": "ORG", "confidence": 0.9}]'
+            ),
             nlp=NotReadyNLPProcessor(),
             reference_sources=[FakeReferenceSource()],
             event_publisher=FakeEventPublisher(),

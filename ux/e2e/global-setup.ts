@@ -188,7 +188,9 @@ async function globalSetup(): Promise<void> {
     );
   }
 
-  console.log(`🔍 Backend spawned (PID: ${backendProcess.pid}) with CONFIG_PATH: ${e2eConfigPath}`);
+  console.log(
+    `🔍 Backend spawned (PID: ${backendProcess.pid}) with CONFIG_PATH: ${e2eConfigPath}`,
+  );
 
   // Log backend output
   // Set SHOW_BACKEND_LOGS=true to also see backend stdout (stderr is always logged)
@@ -350,6 +352,7 @@ async function globalSetup(): Promise<void> {
     if (backendProcess) backendProcess.kill("SIGTERM");
     throw new Error(
       `Browser health check failed: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
     );
   } finally {
     // Runs on both success and failure — browser is always closed.

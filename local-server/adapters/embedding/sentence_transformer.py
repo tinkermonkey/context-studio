@@ -139,7 +139,9 @@ class SentenceTransformerEmbedding:
             similarity_score = cosine_similarity(arr_a, arr_b)[0, 0]
             return float(similarity_score)
         except ImportError:
-            logger.error("scikit-learn not installed. Install with: pip install scikit-learn")
+            logger.error(
+                "scikit-learn not installed. Install with: pip install scikit-learn"
+            )
             raise RuntimeError("Similarity computation requires scikit-learn")
         except Exception as e:
             logger.error(f"Failed to compute similarity: {e}")
@@ -198,7 +200,9 @@ class SentenceTransformerEmbedding:
         """
         return await run_sync_in_executor(self.embed_batch, texts)
 
-    async def similarity_async(self, embedding_a: list[float], embedding_b: list[float]) -> float:
+    async def similarity_async(
+        self, embedding_a: list[float], embedding_b: list[float]
+    ) -> float:
         """
         Compute similarity between two embeddings (async version).
 

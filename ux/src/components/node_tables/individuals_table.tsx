@@ -4,10 +4,7 @@ import { Checkbox } from "flowbite-react";
 import type { components } from "@/api/client/types";
 import { renderShortDateTime, renderShortUuid } from "@/utils/renderers";
 import { BaseNodeTable } from "./node_table";
-import {
-  useIndividuals,
-  useDeleteIndividual,
-} from "@/api/hooks/individuals";
+import { useIndividuals, useDeleteIndividual } from "@/api/hooks/individuals";
 import { IndividualForm } from "@/components/forms/individual_form";
 import type { FieldDefinition } from "@/components/misc/query_filters";
 
@@ -72,9 +69,7 @@ const columns = [
   columnHelper.accessor("class_ids", {
     cell: (info) => {
       const classIds = info.getValue() ?? [];
-      return classIds.length > 0
-        ? `${classIds.length} class(es)`
-        : "-";
+      return classIds.length > 0 ? `${classIds.length} class(es)` : "-";
     },
     header: () => "Parent Classes",
   }),
@@ -167,9 +162,7 @@ const IndividualsTable = React.forwardRef<any, IndividualsTableProps>(
         onDelete={async (ids: string[]) => {
           await Promise.all(ids.map((id) => deleteIndividual.mutateAsync(id)));
         }}
-        createForm={({ onSuccess }) => (
-          <IndividualForm onSuccess={onSuccess} />
-        )}
+        createForm={({ onSuccess }) => <IndividualForm onSuccess={onSuccess} />}
         editForm={({ node, onSuccess }) => (
           <IndividualForm individual={node} onSuccess={onSuccess} />
         )}

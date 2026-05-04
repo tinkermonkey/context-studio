@@ -35,7 +35,9 @@ from adapters.persistence.sqlite.models import (
 )
 
 
-def serialize_external_references(refs: list[ExternalReference]) -> list[dict[str, Any]]:
+def serialize_external_references(
+    refs: list[ExternalReference],
+) -> list[dict[str, Any]]:
     """
     Serialize ExternalReference value objects to JSON-compatible dicts.
 
@@ -56,7 +58,9 @@ def serialize_external_references(refs: list[ExternalReference]) -> list[dict[st
     ]
 
 
-def deserialize_external_references(data: list[dict[str, Any]]) -> list[ExternalReference]:
+def deserialize_external_references(
+    data: list[dict[str, Any]],
+) -> list[ExternalReference]:
     """
     Deserialize JSON data to ExternalReference value objects.
 
@@ -167,7 +171,9 @@ def deserialize_data_properties(data: list[dict[str, Any]]) -> list[DataProperty
     ]
 
 
-def serialize_ontology_mapping(mapping: OntologyMapping | None) -> dict[str, str] | None:
+def serialize_ontology_mapping(
+    mapping: OntologyMapping | None,
+) -> dict[str, str] | None:
     """
     Serialize OntologyMapping value object to JSON-compatible dict.
 
@@ -207,7 +213,9 @@ def deserialize_ontology_mapping(data: dict[str, str] | None) -> OntologyMapping
     )
 
 
-def map_orm_to_domain(orm_entity: OntologyEntity) -> Union[Taxonomy, ConceptScheme, Class, PropertyDefinition]:
+def map_orm_to_domain(
+    orm_entity: OntologyEntity,
+) -> Union[Taxonomy, ConceptScheme, Class, PropertyDefinition]:
     """
     Convert an OntologyEntity ORM model to the appropriate domain entity type.
 
@@ -263,9 +271,15 @@ def map_orm_to_domain(orm_entity: OntologyEntity) -> Union[Taxonomy, ConceptSche
             taxonomy_id=cast(str, orm_entity.taxonomy_id),
             parent_class_id=cast(str | None, orm_entity.parent_class_id),
             structural_property_id=cast(str | None, orm_entity.structural_property_id),
-            external_references=deserialize_external_references(cast(list[dict[str, Any]], orm_entity.external_references) or []),
-            lexical_senses=deserialize_lexical_senses(cast(list[dict[str, str]], orm_entity.lexical_senses) or []),
-            data_properties=deserialize_data_properties(cast(list[dict[str, Any]], orm_entity.data_properties) or []),
+            external_references=deserialize_external_references(
+                cast(list[dict[str, Any]], orm_entity.external_references) or []
+            ),
+            lexical_senses=deserialize_lexical_senses(
+                cast(list[dict[str, str]], orm_entity.lexical_senses) or []
+            ),
+            data_properties=deserialize_data_properties(
+                cast(list[dict[str, Any]], orm_entity.data_properties) or []
+            ),
             embedding=_deserialize_embedding(cast(bytes | None, orm_entity.embedding)),
         )
 
@@ -285,7 +299,9 @@ def map_orm_to_domain(orm_entity: OntologyEntity) -> Union[Taxonomy, ConceptSche
             last_modified=entity_last_modified,
             version=entity_version,
             identifier=cast(str, orm_entity.identifier),
-            ontology_mapping=deserialize_ontology_mapping(cast(dict[str, str] | None, orm_entity.ontology_mapping)),
+            ontology_mapping=deserialize_ontology_mapping(
+                cast(dict[str, str] | None, orm_entity.ontology_mapping)
+            ),
             is_relevant=cast(bool | None, orm_entity.is_relevant),
         )
 
@@ -294,7 +310,7 @@ def map_orm_to_domain(orm_entity: OntologyEntity) -> Union[Taxonomy, ConceptSche
 
 
 def map_domain_to_orm(
-    entity: Union[Taxonomy, ConceptScheme, Class, Individual, PropertyDefinition]
+    entity: Union[Taxonomy, ConceptScheme, Class, Individual, PropertyDefinition],
 ) -> OntologyEntity:
     """
     Convert a domain entity to an OntologyEntity ORM model.
@@ -338,7 +354,9 @@ def map_domain_to_orm(
             taxonomy_id=entity.taxonomy_id,
             parent_class_id=entity.parent_class_id,
             structural_property_id=entity.structural_property_id,
-            external_references=serialize_external_references(entity.external_references),
+            external_references=serialize_external_references(
+                entity.external_references
+            ),
             lexical_senses=serialize_lexical_senses(entity.lexical_senses),
             data_properties=serialize_data_properties(entity.data_properties),
             embedding=_serialize_embedding(entity.embedding),
@@ -349,7 +367,9 @@ def map_domain_to_orm(
             **common_args,
             node_type=NodeType.INDIVIDUAL,
             data_properties=serialize_data_properties(entity.data_properties),
-            external_references=serialize_external_references(entity.external_references),
+            external_references=serialize_external_references(
+                entity.external_references
+            ),
         )
 
     elif isinstance(entity, PropertyDefinition):
@@ -403,7 +423,9 @@ def map_relationship_domain_to_orm(rel: Relationship) -> RelationshipORM:
     )
 
 
-def map_property_definition_orm_to_domain(orm_prop: PropertyDefinitionORM) -> PropertyDefinition:
+def map_property_definition_orm_to_domain(
+    orm_prop: PropertyDefinitionORM,
+) -> PropertyDefinition:
     """
     Convert a PropertyDefinition ORM model from the property_definitions table to domain entity.
 
@@ -421,7 +443,9 @@ def map_property_definition_orm_to_domain(orm_prop: PropertyDefinitionORM) -> Pr
         identifier=cast(str, orm_prop.identifier),
         title=cast(str, orm_prop.title),
         description=cast(str | None, orm_prop.description),
-        ontology_mapping=deserialize_ontology_mapping(cast(dict[str, str] | None, orm_prop.ontology_mapping)),
+        ontology_mapping=deserialize_ontology_mapping(
+            cast(dict[str, str] | None, orm_prop.ontology_mapping)
+        ),
         is_relevant=cast(bool | None, orm_prop.is_relevant),
         created_at=cast(datetime | None, orm_prop.created_at),
         last_modified=cast(datetime | None, orm_prop.last_modified),
@@ -429,7 +453,9 @@ def map_property_definition_orm_to_domain(orm_prop: PropertyDefinitionORM) -> Pr
     )
 
 
-def map_property_definition_domain_to_orm(prop: PropertyDefinition) -> PropertyDefinitionORM:
+def map_property_definition_domain_to_orm(
+    prop: PropertyDefinition,
+) -> PropertyDefinitionORM:
     """
     Convert a domain PropertyDefinition entity to an ORM model for the property_definitions table.
 
@@ -456,7 +482,7 @@ def _serialize_embedding(embedding: list[float] | None) -> bytes | None:
     """Serialize embedding vector to bytes using struct packing."""
     if not embedding:
         return None
-    return struct.pack(f'{len(embedding)}f', *embedding)
+    return struct.pack(f"{len(embedding)}f", *embedding)
 
 
 def _deserialize_embedding(data: bytes | None) -> list[float] | None:
@@ -464,4 +490,4 @@ def _deserialize_embedding(data: bytes | None) -> list[float] | None:
     if not data:
         return None
     size = len(data) // 4
-    return list(struct.unpack(f'{size}f', data))
+    return list(struct.unpack(f"{size}f", data))

@@ -3,6 +3,7 @@ import {
   modelCapabilitiesService,
   type ModelCapabilitiesResponse,
   type ModelCapabilities,
+  type SupportedModelsResponse,
 } from "@/api/services/modelCapabilities";
 
 /**
@@ -55,10 +56,7 @@ export function useTypedModelCapabilities(
 export function useModelCapabilitiesByProvider(
   providerName: string | undefined,
   options?: Omit<
-    UseQueryOptions<
-      import("@/api/services/modelCapabilities").SupportedModelsResponse,
-      Error
-    >,
+    UseQueryOptions<SupportedModelsResponse, Error>,
     "queryKey" | "queryFn"
   >,
 ) {

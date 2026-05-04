@@ -34,12 +34,20 @@ test.describe("Property Definition CRUD Operations", () => {
     // typeName="Property Definition" → "property-definition-add-button" (normalized from typeName "Property Definition")
     await page.getByTestId("property-definition-add-button").click();
 
-    const createModal = page.getByTestId("property-definition-create-modal").first();
+    const createModal = page
+      .getByTestId("property-definition-create-modal")
+      .first();
     await expect(createModal).toBeVisible({ timeout: 5000 });
 
-    await page.getByTestId("property-definition-identifier-input").fill("e2e_test_property");
-    await page.getByTestId("property-definition-title-input").fill("E2E Test Property");
-    await page.getByTestId("property-definition-description-input").fill("Created via E2E");
+    await page
+      .getByTestId("property-definition-identifier-input")
+      .fill("e2e_test_property");
+    await page
+      .getByTestId("property-definition-title-input")
+      .fill("E2E Test Property");
+    await page
+      .getByTestId("property-definition-description-input")
+      .fill("Created via E2E");
     await page.getByTestId("property-definition-submit-button").click();
 
     await expect(createModal).not.toBeVisible({ timeout: 5000 });
@@ -49,7 +57,7 @@ test.describe("Property Definition CRUD Operations", () => {
 
     const list = await apiRequest<{ items: Array<{ title: string }> }>(
       page,
-      "/api/properties"
+      "/api/properties",
     );
     expect(list.items.some((p) => p.title === "E2E Test Property")).toBe(true);
   });
@@ -71,10 +79,10 @@ test.describe("Property Definition CRUD Operations", () => {
     await expect(page.getByText("Property Beta")).toBeVisible();
 
     await expect(
-      page.getByTestId(`property-definition-row-${prop1.id}`)
+      page.getByTestId(`property-definition-row-${prop1.id}`),
     ).toBeVisible();
     await expect(
-      page.getByTestId(`property-definition-row-${prop2.id}`)
+      page.getByTestId(`property-definition-row-${prop2.id}`),
     ).toBeVisible();
   });
 
@@ -92,23 +100,29 @@ test.describe("Property Definition CRUD Operations", () => {
 
     await page.getByTestId(`property-definition-row-${prop.id}`).dblclick();
 
-    const editModal = page.getByTestId("property-definition-edit-modal").first();
+    const editModal = page
+      .getByTestId("property-definition-edit-modal")
+      .first();
     await expect(editModal).toBeVisible({ timeout: 5000 });
 
-    await page.getByTestId("property-definition-title-input").fill("Property After Update");
-    await page.getByTestId("property-definition-description-input").fill("Updated description");
+    await page
+      .getByTestId("property-definition-title-input")
+      .fill("Property After Update");
+    await page
+      .getByTestId("property-definition-description-input")
+      .fill("Updated description");
     await page.getByTestId("property-definition-submit-button").click();
 
     await expect(editModal).not.toBeVisible({ timeout: 5000 });
     await waitForAppReady(page);
 
     await expect(
-      page.getByTestId(`property-definition-row-${prop.id}`)
+      page.getByTestId(`property-definition-row-${prop.id}`),
     ).toContainText("Property After Update");
 
     const updated = await apiRequest<{ title: string; description: string }>(
       page,
-      `/api/properties/${prop.id}`
+      `/api/properties/${prop.id}`,
     );
     expect(updated.title).toBe("Property After Update");
     expect(updated.description).toBe("Updated description");
@@ -131,9 +145,13 @@ test.describe("Property Definition CRUD Operations", () => {
     await row.getByRole("checkbox").click();
 
     await page.getByTestId("property-definition-actions-dropdown").click();
-    await page.getByTestId("property-definition-delete-selected-action").click();
+    await page
+      .getByTestId("property-definition-delete-selected-action")
+      .click();
 
-    const deleteModal = page.getByTestId("property-definition-delete-modal").first();
+    const deleteModal = page
+      .getByTestId("property-definition-delete-modal")
+      .first();
     await expect(deleteModal).toBeVisible();
     await page.getByTestId("property-definition-delete-confirm-button").click();
     await expect(deleteModal).not.toBeVisible({ timeout: 5000 });

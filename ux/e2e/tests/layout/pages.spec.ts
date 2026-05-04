@@ -22,7 +22,9 @@ test.describe("Entity Page Layout", () => {
     await clearTestData(page);
   });
 
-  test("taxonomies page shows add button and table when data exists", async ({ page }) => {
+  test("taxonomies page shows add button and table when data exists", async ({
+    page,
+  }) => {
     await createTestHierarchy(page, 1);
 
     await page.goto("/app/taxonomies");
@@ -32,7 +34,9 @@ test.describe("Entity Page Layout", () => {
     await expect(page.getByTestId("taxonomy-table")).toBeVisible();
   });
 
-  test("classes page shows add button and table when data exists", async ({ page }) => {
+  test("classes page shows add button and table when data exists", async ({
+    page,
+  }) => {
     await createTestHierarchy(page, 1);
 
     await page.goto("/app/classes");
@@ -42,7 +46,9 @@ test.describe("Entity Page Layout", () => {
     await expect(page.getByTestId("class-table")).toBeVisible();
   });
 
-  test("concept schemes page shows add button and table when data exists", async ({ page }) => {
+  test("concept schemes page shows add button and table when data exists", async ({
+    page,
+  }) => {
     const { taxonomy } = await createTestHierarchy(page, 1);
     // scheme already created by createTestHierarchy
     void taxonomy;
@@ -54,7 +60,9 @@ test.describe("Entity Page Layout", () => {
     await expect(page.getByTestId("concept-scheme-table")).toBeVisible();
   });
 
-  test("properties page shows add button and table when data exists", async ({ page }) => {
+  test("properties page shows add button and table when data exists", async ({
+    page,
+  }) => {
     await createPropertyDefinition(page, {
       title: "Layout Test Property",
       identifier: "layout_test",
@@ -63,7 +71,9 @@ test.describe("Entity Page Layout", () => {
     await page.goto("/app/properties");
     await waitForAppReady(page);
 
-    await expect(page.getByTestId("property-definition-add-button")).toBeVisible();
+    await expect(
+      page.getByTestId("property-definition-add-button"),
+    ).toBeVisible();
     await expect(page.getByTestId("property-definition-table")).toBeVisible();
   });
 
@@ -87,13 +97,17 @@ test.describe("Entity Page Layout", () => {
     await waitForAppReady(page);
 
     await page.getByTestId("taxonomy-add-button").click();
-    await expect(page.getByTestId("taxonomy-create-modal").first()).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId("taxonomy-create-modal").first()).toBeVisible(
+      { timeout: 5000 },
+    );
 
     // Cancel to leave the page clean.
     await page.keyboard.press("Escape");
   });
 
-  test("responsive layout — pages render at tablet and mobile widths", async ({ page }) => {
+  test("responsive layout — pages render at tablet and mobile widths", async ({
+    page,
+  }) => {
     const routes = ["/app/taxonomies", "/app/classes"];
 
     for (const width of [768, 375]) {

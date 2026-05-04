@@ -61,25 +61,21 @@ class CachedReferenceSource(ReferenceSource):
             Path(self._cache_db_path).parent.mkdir(parents=True, exist_ok=True)
 
             with sqlite3.connect(self._cache_db_path) as conn:
-                conn.execute(
-                    """
+                conn.execute("""
                     CREATE TABLE IF NOT EXISTS cache (
                         key TEXT PRIMARY KEY,
                         value TEXT NOT NULL,
                         cached_at TEXT NOT NULL
                     )
-                    """
-                )
+                    """)
 
-                conn.execute(
-                    """
+                conn.execute("""
                     CREATE TABLE IF NOT EXISTS relations_cache (
                         key TEXT PRIMARY KEY,
                         value TEXT NOT NULL,
                         cached_at TEXT NOT NULL
                     )
-                    """
-                )
+                    """)
 
                 conn.commit()
         except OSError as e:
@@ -188,7 +184,9 @@ class CachedReferenceSource(ReferenceSource):
         """
         return await run_sync_in_executor(self.search, term, limit)
 
-    async def get_relations_async(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
+    async def get_relations_async(
+        self, uri: str, limit: int = 10
+    ) -> list[ReferenceRelation]:
         """
         Get relationships for a URI asynchronously, using cache if available.
 
@@ -219,14 +217,12 @@ class CachedReferenceSource(ReferenceSource):
     @overload
     def _get_cached(
         self, key: str, is_relations: Literal[False] = False
-    ) -> list[ReferenceResult] | None:
-        ...
+    ) -> list[ReferenceResult] | None: ...
 
     @overload
     def _get_cached(
         self, key: str, is_relations: Literal[True]
-    ) -> list[ReferenceRelation] | None:
-        ...
+    ) -> list[ReferenceRelation] | None: ...
 
     def _get_cached(
         self, key: str, is_relations: bool = False
@@ -302,8 +298,7 @@ class CachedReferenceSource(ReferenceSource):
         key: str,
         value: list[ReferenceResult],
         is_relations: Literal[False] = False,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @overload
     def _set_cached(
@@ -311,8 +306,7 @@ class CachedReferenceSource(ReferenceSource):
         key: str,
         value: list[ReferenceRelation],
         is_relations: Literal[True],
-    ) -> None:
-        ...
+    ) -> None: ...
 
     def _set_cached(
         self,

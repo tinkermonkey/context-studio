@@ -45,7 +45,7 @@ function extractSelectorsFromDirectory(
     fileExtensions: string[];
     patterns: RegExp[];
     skipDotFiles?: boolean;
-  }
+  },
 ): Set<string> {
   const selectors = new Set<string>();
   const { fileExtensions, patterns, skipDotFiles = true } = options;
@@ -89,10 +89,9 @@ function extractSelectorsFromDirectory(
             }
           }
         } catch (err) {
-          const fileType =
-            fileExtensions[0] === ".spec.ts" ? "test" : "source";
+          const fileType = fileExtensions[0] === ".spec.ts" ? "test" : "source";
           console.warn(
-            `⚠️  Warning: Could not read ${fileType} file ${filePath}: ${err instanceof Error ? err.message : String(err)}`
+            `⚠️  Warning: Could not read ${fileType} file ${filePath}: ${err instanceof Error ? err.message : String(err)}`,
           );
         }
       }
@@ -145,7 +144,7 @@ function loadRegistry(): {
     return { documented, patterns, knownFuture };
   } catch (err) {
     console.error(
-      `❌ ${err instanceof Error ? err.message : "Error loading registry"}`
+      `❌ ${err instanceof Error ? err.message : "Error loading registry"}`,
     );
     process.exit(1);
   }
@@ -162,7 +161,7 @@ function validate() {
   if (!fs.existsSync(srcDir)) {
     console.error(
       `❌ FATAL: Required directory not found: ${srcDir}\n` +
-      `This script must be run from the /ux directory.`
+        `This script must be run from the /ux directory.`,
     );
     process.exit(1);
   }
@@ -170,7 +169,7 @@ function validate() {
   if (!fs.existsSync(e2eDir)) {
     console.error(
       `❌ FATAL: Required directory not found: ${e2eDir}\n` +
-      `This script must be run from the /ux directory.`
+        `This script must be run from the /ux directory.`,
     );
     process.exit(1);
   }
@@ -199,14 +198,14 @@ function validate() {
       !matchesPattern(testSelector, patterns)
     ) {
       result.errors.push(
-        `❌ Test references non-existent selector: "${testSelector}"`
+        `❌ Test references non-existent selector: "${testSelector}"`,
       );
     }
   }
 
   if (result.errors.length === 0) {
     console.log(
-      "✓ All test selectors exist in code or match documented patterns\n"
+      "✓ All test selectors exist in code or match documented patterns\n",
     );
   } else {
     console.log(`✗ Found ${result.errors.length} invalid test selectors\n`);
@@ -214,10 +213,10 @@ function validate() {
 
   if (futureSelectors.size > 0) {
     console.log(
-      `ℹ️  Found ${futureSelectors.size} known future selectors (not implemented yet):`
+      `ℹ️  Found ${futureSelectors.size} known future selectors (not implemented yet):`,
     );
     futureSelectors.forEach((sel) =>
-      console.log(`  ℹ️  ${sel} (planned for future implementation)`)
+      console.log(`  ℹ️  ${sel} (planned for future implementation)`),
     );
     console.log();
   }
@@ -231,7 +230,7 @@ function validate() {
       !knownFuture.has(codeSelector)
     ) {
       result.warnings.push(
-        `⚠️  Code selector not in registry: "${codeSelector}"`
+        `⚠️  Code selector not in registry: "${codeSelector}"`,
       );
     }
   }
@@ -240,7 +239,7 @@ function validate() {
     console.log("✓ All code selectors are documented in registry\n");
   } else {
     console.log(
-      `⚠️  Found ${result.warnings.length} undocumented code selectors (warnings)\n`
+      `⚠️  Found ${result.warnings.length} undocumented code selectors (warnings)\n`,
     );
   }
 
@@ -278,7 +277,7 @@ function validate() {
   } else if (result.warnings.length > 0) {
     if (STRICT) {
       console.log(
-        "❌ Validation FAILED (--strict): undocumented source selectors are not allowed in CI"
+        "❌ Validation FAILED (--strict): undocumented source selectors are not allowed in CI",
       );
       process.exit(1);
     }
@@ -309,7 +308,7 @@ const API_ONLY_PATTERN = /\bapiRequest\s*[(<]/;
 
 function checkSpecClassification(
   testDir: string,
-  result: ValidationResult
+  result: ValidationResult,
 ): void {
   const apiContractsDir = path.join(testDir, "api-contracts");
 
@@ -339,17 +338,16 @@ function stripComments(source: string): string {
   // heuristic classification check — the patterns we're matching (apiRequest,
   // page.goto, getByTestId) are unlikely to appear solely inside string literals
   // — but it means the classifier is not a strict parser.
-  return source
-    .replace(/\/\/[^\n]*/g, "")
-    .replace(/\/\*[\s\S]*?\*\//g, "");
+  return source.replace(/\/\/[^\n]*/g, "").replace(/\/\*[\s\S]*?\*\//g, "");
 }
 
 function classifySpec(
   filePath: string,
   apiContractsDir: string,
-  result: ValidationResult
+  result: ValidationResult,
 ): void {
-  const isInApiContracts = filePath.startsWith(apiContractsDir + path.sep) ||
+  const isInApiContracts =
+    filePath.startsWith(apiContractsDir + path.sep) ||
     path.dirname(filePath) === apiContractsDir;
 
   let rawContent: string;
@@ -368,7 +366,7 @@ function classifySpec(
     // api-contracts/ specs should NOT have UI interactions — that's what ui-flows/ is for.
     if (hasUiInteraction) {
       result.warnings.push(
-        `⚠️  api-contracts spec has UI interactions (move to ui-flows/): ${relPath}`
+        `⚠️  api-contracts spec has UI interactions (move to ui-flows/): ${relPath}`,
       );
     }
   } else {
@@ -377,7 +375,7 @@ function classifySpec(
     if (hasApiRequest && !hasUiInteraction) {
       result.errors.push(
         `❌ Spec has no UI interactions — will pass against a blank frontend. ` +
-        `Move to api-contracts/ or add browser-level assertions: ${relPath}`
+          `Move to api-contracts/ or add browser-level assertions: ${relPath}`,
       );
     }
   }

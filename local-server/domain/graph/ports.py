@@ -20,7 +20,9 @@ class GraphEngine(Protocol):
     is called, the engine holds the graph until build_from_data() is called again.
     """
 
-    def build_from_data(self, nodes: Sequence[dict[str, Any]], edges: Sequence[dict[str, Any]]) -> None:
+    def build_from_data(
+        self, nodes: Sequence[dict[str, Any]], edges: Sequence[dict[str, Any]]
+    ) -> None:
         """
         Construct the graph from node and edge data.
 
@@ -71,7 +73,9 @@ class GraphEngine(Protocol):
         """
         ...
 
-    def all_paths(self, source_id: str, target_id: str, max_depth: int = 5) -> list[list[str]]:
+    def all_paths(
+        self, source_id: str, target_id: str, max_depth: int = 5
+    ) -> list[list[str]]:
         """
         Find all simple paths between two nodes up to a maximum depth.
 
@@ -160,7 +164,9 @@ class GraphEngine(Protocol):
         """
         ...
 
-    def neighbors(self, node_id: str, direction: str = "both", depth: int = 1) -> set[str]:
+    def neighbors(
+        self, node_id: str, direction: str = "both", depth: int = 1
+    ) -> set[str]:
         """
         Get all neighbors of a node up to a specified depth with optional directional filtering.
 
@@ -232,7 +238,10 @@ class SemanticQueryEngine(Protocol):
     """
 
     def load_ontology(
-        self, nodes: Sequence[dict[str, Any]], edges: Sequence[dict[str, Any]], property_definitions: Sequence[dict[str, Any]]
+        self,
+        nodes: Sequence[dict[str, Any]],
+        edges: Sequence[dict[str, Any]],
+        property_definitions: Sequence[dict[str, Any]],
     ) -> None:
         """
         Load ontology data into the RDF graph.
@@ -260,7 +269,10 @@ class SemanticQueryEngine(Protocol):
         ...
 
     def get_triples(
-        self, subject: str | None = None, predicate: str | None = None, object: str | None = None
+        self,
+        subject: str | None = None,
+        predicate: str | None = None,
+        object: str | None = None,
     ) -> list[tuple[str, str, str]]:
         """
         Retrieve RDF triples matching the given pattern.

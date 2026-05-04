@@ -320,7 +320,7 @@ export interface paths {
      *         service: OntologyService from dependency injection
      *
      *     Raises:
-     *         HTTPException: 404 if not found, 422 if it has subclasses
+     *         HTTPException: 404 if not found, 422 if it has subclasses or individuals
      */
     delete: operations["delete_class_api_classes__class_id__delete"];
     options?: never;
@@ -2416,6 +2416,168 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/interchange/export": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Export Ontology
+     * @description Export ontology data in the specified format.
+     *
+     *     Args:
+     *         request: Export request with format and scope
+     *         ontology_repo: Injected OntologyRepository
+     *
+     *     Returns:
+     *         Binary file data as blob
+     *
+     *     Raises:
+     *         HTTPException: If export fails or format is unsupported
+     */
+    post: operations["export_ontology_api_v1_interchange_export_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/interchange/import": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Import Ontology
+     * @description Import ontology data from a file.
+     *
+     *     Supports dry-run mode to preview conflicts, or direct commit with user-chosen resolutions.
+     *
+     *     Args:
+     *         format: Import format (skos, owl, graphml)
+     *         file: File to import
+     *         dry_run: "true" for dry-run (returns plan), "false" to commit
+     *         resolutions: Optional JSON-encoded list of ResolutionRecord to apply when committing
+     *         ontology_repo: Injected OntologyRepository
+     *         interchange_repo: Injected ImportRunRepository
+     *
+     *     Returns:
+     *         ImportPlanResponse (dry-run) or ImportRunResponse (committed)
+     *
+     *     Raises:
+     *         HTTPException: If import fails or format is unsupported
+     */
+    post: operations["import_ontology_api_v1_interchange_import_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/interchange/runs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Import Runs
+     * @description List all import runs with optional filtering.
+     *
+     *     Args:
+     *         interchange_repo: Injected interchange repository
+     *         offset: Number of results to skip
+     *         limit: Maximum number of results to return
+     *         status: Optional status filter (pending, committed, failed, rolled_back)
+     *
+     *     Returns:
+     *         Paginated list of import runs
+     *
+     *     Raises:
+     *         HTTPException: If query fails or invalid status provided
+     */
+    get: operations["list_import_runs_api_v1_interchange_runs_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/interchange/runs/{run_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Import Run
+     * @description Get a specific import run by ID.
+     *
+     *     Args:
+     *         run_id: The import run ID
+     *         interchange_repo: Injected interchange repository
+     *
+     *     Returns:
+     *         Import run details
+     *
+     *     Raises:
+     *         HTTPException: If run not found or query fails
+     */
+    get: operations["get_import_run_api_v1_interchange_runs__run_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/interchange/runs/{run_id}/change-events": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Run Change Events
+     * @description Get change events associated with an import run.
+     *
+     *     Args:
+     *         run_id: The import run ID
+     *         interchange_repo: Injected interchange repository
+     *         offset: Number of results to skip
+     *         limit: Maximum number of results to return
+     *         entity_type: Optional filter by entity type
+     *         change_type: Optional filter by change type
+     *
+     *     Returns:
+     *         Paginated list of change events
+     *
+     *     Raises:
+     *         HTTPException: If run not found or query fails
+     */
+    get: operations["get_run_change_events_api_v1_interchange_runs__run_id__change_events_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2529,6 +2691,30 @@ export interface components {
         [key: string]: number;
       };
     };
+    /** Body_import_ontology_api_v1_interchange_import_post */
+    Body_import_ontology_api_v1_interchange_import_post: {
+      /**
+       * Format
+       * @description Import format
+       */
+      format: string;
+      /**
+       * File
+       * @description File to import
+       */
+      file: string;
+      /**
+       * Dry Run
+       * @description If 'true', returns plan without committing
+       * @default true
+       */
+      dry_run: string;
+      /**
+       * Resolutions
+       * @description JSON-encoded conflict resolutions to apply on commit
+       */
+      resolutions?: string | null;
+    };
     /**
      * CentralityResponse
      * @description Response containing centrality scores.
@@ -2548,64 +2734,6 @@ export interface components {
       };
     };
     /**
-     * ChangeEventResponse
-     * @description Response representing a change event
-     */
-    ChangeEventResponse: {
-      /**
-       * Id
-       * @description Unique identifier of the change event
-       */
-      id: string;
-      /**
-       * Entity Id
-       * @description ID of the entity that changed
-       */
-      entity_id: string;
-      /**
-       * Entity Type
-       * @description Type of the entity
-       */
-      entity_type: string;
-      /** @description Type of operation (create, update, delete) */
-      operation: components["schemas"]["ChangeOperation"];
-      /**
-       * New State
-       * @description New state of the entity after this change
-       */
-      new_state: {
-        [key: string]: unknown;
-      };
-      /**
-       * Timestamp
-       * Format: date-time
-       * @description When the change occurred
-       */
-      timestamp: string;
-      /**
-       * Processed
-       * @description Whether change has been synced to remote
-       */
-      processed: boolean;
-      /**
-       * User Id
-       * @description User who made the change
-       */
-      user_id?: string | null;
-      /**
-       * Change Reason
-       * @description Why the change was made
-       */
-      change_reason?: string | null;
-      /**
-       * Previous State
-       * @description Previous state of the entity before this change
-       */
-      previous_state?: {
-        [key: string]: unknown;
-      } | null;
-    };
-    /**
      * ChangeHistoryResponse
      * @description Response with paginated change history results
      */
@@ -2614,7 +2742,7 @@ export interface components {
        * Events
        * @description List of change events matching the query (limited by limit parameter)
        */
-      events: components["schemas"]["ChangeEventResponse"][];
+      events: components["schemas"]["VersioningChangeEventResponse"][];
       /**
        * Total
        * @description Total count of all events matching the query (without limit applied)
@@ -3202,6 +3330,26 @@ export interface components {
       timestamp: string;
     };
     /**
+     * ExportRequest
+     * @description Request to export ontology data.
+     */
+    ExportRequest: {
+      /**
+       * Format
+       * @description Export format: skos, owl, or graphml
+       * @enum {string}
+       */
+      format: "skos" | "owl" | "graphml";
+      /** @description What to export */
+      scope: components["schemas"]["SerializationScopeRequest"];
+      /**
+       * Split Mode
+       * @description For OWL format: if true, export only TBox (schema) without ABox (individuals)
+       * @default false
+       */
+      split_mode: boolean;
+    };
+    /**
      * ExternalReferenceResponse
      * @description Response containing external reference data.
      */
@@ -3422,6 +3570,142 @@ export interface components {
       detail?: components["schemas"]["ValidationError"][];
     };
     /**
+     * ImportConflictResponse
+     * @description Represents a conflict detected during import.
+     */
+    ImportConflictResponse: {
+      /**
+       * Match Kind
+       * @description Type of match: external_reference, uuid, or title
+       * @enum {string}
+       */
+      match_kind: "external_reference" | "uuid" | "title";
+      /**
+       * Incoming
+       * @description Incoming entity data
+       */
+      incoming: {
+        [key: string]: unknown;
+      };
+      /**
+       * Existing
+       * @description Reference to existing entity
+       */
+      existing?: string | null;
+      /**
+       * Default Resolution
+       * @description Default resolution strategy (None means user must choose)
+       */
+      default_resolution?:
+        | ("skip" | "overwrite" | "merge" | "rename" | "abort")
+        | null;
+      /**
+       * Available Resolutions
+       * @description Available resolutions
+       */
+      available_resolutions: (
+        | "skip"
+        | "overwrite"
+        | "merge"
+        | "rename"
+        | "abort"
+      )[];
+    };
+    /**
+     * ImportPlanResponse
+     * @description Result of an import dry-run, describing what would be imported.
+     */
+    ImportPlanResponse: {
+      /**
+       * Conflicts
+       * @description Detected conflicts
+       */
+      conflicts?: components["schemas"]["ImportConflictResponse"][];
+      /**
+       * New Entity Count
+       * @description Number of new entities to be created
+       */
+      new_entity_count: number;
+      /**
+       * Import Run Id
+       * @description Prospective import run ID
+       */
+      import_run_id?: string | null;
+      /**
+       * Warnings
+       * @description Warning messages
+       */
+      warnings?: string[];
+      /**
+       * Source Hash
+       * @description SHA256 hash of imported bytes
+       */
+      source_hash?: string | null;
+      /** @description Import scope */
+      scope?: components["schemas"]["SerializationScopeResponse"] | null;
+    };
+    /**
+     * ImportRunResponse
+     * @description Response containing import run data.
+     */
+    ImportRunResponse: {
+      /**
+       * Id
+       * @description Unique identifier
+       */
+      id: string;
+      /**
+       * Created At
+       * Format: date-time
+       * @description Creation timestamp
+       */
+      created_at: string;
+      /**
+       * Created By
+       * @description User who initiated the import
+       */
+      created_by?: string | null;
+      /**
+       * Format
+       * @description Format of imported file
+       * @enum {string}
+       */
+      format: "skos" | "owl" | "graphml";
+      /**
+       * Source Uri
+       * @description URI or filename of source
+       */
+      source_uri?: string | null;
+      /**
+       * Source Hash
+       * @description SHA256 hash of imported bytes
+       */
+      source_hash: string;
+      /** @description Import scope */
+      scope: components["schemas"]["SerializationScopeResponse"];
+      /**
+       * Resolutions
+       * @description Applied conflict resolutions
+       */
+      resolutions?: components["schemas"]["ResolutionRecordResponse"][];
+      /**
+       * Affected Entity Ids
+       * @description Entities affected by import
+       */
+      affected_entity_ids?: string[];
+      /**
+       * Warnings
+       * @description Warning messages from import operation
+       */
+      warnings?: string[];
+      /**
+       * Status
+       * @description Current status: pending, committed, failed, or rolled_back
+       * @enum {string}
+       */
+      status: "pending" | "committed" | "failed" | "rolled_back";
+    };
+    /**
      * IndividualClassListRequest
      * @description Request to reorder individual class membership.
      */
@@ -3525,6 +3809,49 @@ export interface components {
        * @description New description
        */
       description?: string | null;
+    };
+    /**
+     * InterchangeChangeEventResponse
+     * @description Response containing interchange change event data.
+     */
+    InterchangeChangeEventResponse: {
+      /**
+       * Id
+       * @description Unique identifier
+       */
+      id: string;
+      /**
+       * Timestamp
+       * Format: date-time
+       * @description When the change occurred
+       */
+      timestamp: string;
+      /**
+       * Entity Id
+       * @description Entity that changed
+       */
+      entity_id: string;
+      /**
+       * Entity Type
+       * @description Type of entity
+       */
+      entity_type: string;
+      /** @description Operation performed */
+      operation: components["schemas"]["ChangeOperation"];
+      /**
+       * New State
+       * @description New state after change
+       */
+      new_state?: {
+        [key: string]: unknown;
+      } | null;
+      /**
+       * Previous State
+       * @description Previous state before change
+       */
+      previous_state?: {
+        [key: string]: unknown;
+      } | null;
     };
     /**
      * KnowledgeGraphResponse
@@ -3643,6 +3970,29 @@ export interface components {
        */
       offset: number;
     };
+    /** ListResponse[ImportRunResponse] */
+    ListResponse_ImportRunResponse_: {
+      /**
+       * Items
+       * @description List of items
+       */
+      items: components["schemas"]["ImportRunResponse"][];
+      /**
+       * Total
+       * @description Total number of items
+       */
+      total: number;
+      /**
+       * Limit
+       * @description Limit applied
+       */
+      limit: number;
+      /**
+       * Offset
+       * @description Offset applied
+       */
+      offset: number;
+    };
     /** ListResponse[IndividualResponse] */
     ListResponse_IndividualResponse_: {
       /**
@@ -3650,6 +4000,29 @@ export interface components {
        * @description List of items
        */
       items: components["schemas"]["IndividualResponse"][];
+      /**
+       * Total
+       * @description Total number of items
+       */
+      total: number;
+      /**
+       * Limit
+       * @description Limit applied
+       */
+      limit: number;
+      /**
+       * Offset
+       * @description Offset applied
+       */
+      offset: number;
+    };
+    /** ListResponse[InterchangeChangeEventResponse] */
+    ListResponse_InterchangeChangeEventResponse_: {
+      /**
+       * Items
+       * @description List of items
+       */
+      items: components["schemas"]["InterchangeChangeEventResponse"][];
       /**
        * Total
        * @description Total number of items
@@ -4406,6 +4779,29 @@ export interface components {
       created_at?: string | null;
     };
     /**
+     * ResolutionRecordResponse
+     * @description Record of a resolution applied during import.
+     */
+    ResolutionRecordResponse: {
+      /**
+       * Match Kind
+       * @description Type of match that was resolved
+       * @enum {string}
+       */
+      match_kind: "external_reference" | "uuid" | "title";
+      /**
+       * Entity Id
+       * @description Entity ID involved
+       */
+      entity_id: string;
+      /**
+       * Resolution Chosen
+       * @description Resolution applied
+       * @enum {string}
+       */
+      resolution_chosen: "skip" | "overwrite" | "merge" | "rename" | "abort";
+    };
+    /**
      * ResolveConflictsRequest
      * @description Request to resolve conflicts in a proposal
      */
@@ -4448,6 +4844,61 @@ export interface components {
        * @description Total number of triples in the graph
        */
       triple_count: number;
+    };
+    /**
+     * SerializationScopeRequest
+     * @description Request to specify what to export.
+     */
+    SerializationScopeRequest: {
+      /**
+       * Scope Type
+       * @description Scope type: whole_graph, taxonomy, scheme, or entity_set
+       * @enum {string}
+       */
+      scope_type: "whole_graph" | "taxonomy" | "scheme" | "entity_set";
+      /**
+       * Taxonomy Id
+       * @description Taxonomy ID for taxonomy scope
+       */
+      taxonomy_id?: string | null;
+      /**
+       * Scheme Id
+       * @description Scheme ID for scheme scope
+       */
+      scheme_id?: string | null;
+      /**
+       * Include Descendants
+       * @description Include descendants for scheme scope
+       * @default false
+       */
+      include_descendants: boolean;
+      /**
+       * Entity Ids
+       * @description Entity IDs for entity_set scope
+       */
+      entity_ids?: string[] | null;
+    };
+    /**
+     * SerializationScopeResponse
+     * @description Response describing what was serialized.
+     */
+    SerializationScopeResponse: {
+      /**
+       * Scope Type
+       * @enum {string}
+       */
+      scope_type: "whole_graph" | "taxonomy" | "scheme" | "entity_set";
+      /** Taxonomy Id */
+      taxonomy_id?: string | null;
+      /** Scheme Id */
+      scheme_id?: string | null;
+      /**
+       * Include Descendants
+       * @default false
+       */
+      include_descendants: boolean;
+      /** Entity Ids */
+      entity_ids?: string[] | null;
     };
     /**
      * ServiceMetricsResponse
@@ -4749,6 +5200,64 @@ export interface components {
       input?: unknown;
       /** Context */
       ctx?: Record<string, never>;
+    };
+    /**
+     * VersioningChangeEventResponse
+     * @description Response representing a versioning change event
+     */
+    VersioningChangeEventResponse: {
+      /**
+       * Id
+       * @description Unique identifier of the change event
+       */
+      id: string;
+      /**
+       * Entity Id
+       * @description ID of the entity that changed
+       */
+      entity_id: string;
+      /**
+       * Entity Type
+       * @description Type of the entity
+       */
+      entity_type: string;
+      /** @description Type of operation (create, update, delete) */
+      operation: components["schemas"]["ChangeOperation"];
+      /**
+       * New State
+       * @description New state of the entity after this change
+       */
+      new_state: {
+        [key: string]: unknown;
+      };
+      /**
+       * Timestamp
+       * Format: date-time
+       * @description When the change occurred
+       */
+      timestamp: string;
+      /**
+       * Processed
+       * @description Whether change has been synced to remote
+       */
+      processed: boolean;
+      /**
+       * User Id
+       * @description User who made the change
+       */
+      user_id?: string | null;
+      /**
+       * Change Reason
+       * @description Why the change was made
+       */
+      change_reason?: string | null;
+      /**
+       * Previous State
+       * @description Previous state of the entity before this change
+       */
+      previous_state?: {
+        [key: string]: unknown;
+      } | null;
     };
   };
   responses: never;
@@ -7429,6 +7938,179 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["BackgroundTaskResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  export_ontology_api_v1_interchange_export_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ExportRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  import_ontology_api_v1_interchange_import_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": components["schemas"]["Body_import_ontology_api_v1_interchange_import_post"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json":
+            | components["schemas"]["ImportPlanResponse"]
+            | components["schemas"]["ImportRunResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_import_runs_api_v1_interchange_runs_get: {
+    parameters: {
+      query?: {
+        /** @description Number of results to skip */
+        offset?: number;
+        /** @description Maximum number of results */
+        limit?: number;
+        /** @description Filter by status */
+        status?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListResponse_ImportRunResponse_"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_import_run_api_v1_interchange_runs__run_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ImportRunResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_run_change_events_api_v1_interchange_runs__run_id__change_events_get: {
+    parameters: {
+      query?: {
+        /** @description Number of results to skip */
+        offset?: number;
+        /** @description Maximum number of results */
+        limit?: number;
+        /** @description Filter by entity type */
+        entity_type?: string | null;
+        /** @description Filter by change type */
+        change_type?: string | null;
+      };
+      header?: never;
+      path: {
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListResponse_InterchangeChangeEventResponse_"];
         };
       };
       /** @description Validation Error */

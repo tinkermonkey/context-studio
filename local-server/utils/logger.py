@@ -8,7 +8,6 @@ import sys
 from pathlib import Path
 from config import get_settings
 
-
 _file_handler: logging.Handler | None = None
 _handler_init_attempted = False
 

@@ -8,12 +8,12 @@ Revises: da604771ce10
 Create Date: 2026-03-29 12:00:00.000000
 
 """
+
 from alembic import op
 
-
 # revision identifiers, used by Alembic.
-revision = '5b3d9c2a8e4f'
-down_revision = 'da604771ce10'
+revision = "5b3d9c2a8e4f"
+down_revision = "da604771ce10"
 branch_labels = None
 depends_on = None
 
@@ -26,11 +26,11 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     # Restore the FK constraint
-    with op.batch_alter_table('change_events', schema=None) as batch_op:
+    with op.batch_alter_table("change_events", schema=None) as batch_op:
         batch_op.create_foreign_key(
-            'change_events_ibfk_1',
-            'ontology_entities',
-            ['entity_id'],
-            ['id'],
-            ondelete='CASCADE'
+            "change_events_ibfk_1",
+            "ontology_entities",
+            ["entity_id"],
+            ["id"],
+            ondelete="CASCADE",
         )

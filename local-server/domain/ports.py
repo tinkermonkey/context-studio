@@ -14,12 +14,13 @@ from .events import DomainEvent
 from .versioning.value_objects import ChangeOperation
 
 # Contravariant TypeVar for event handlers
-EventT_contra = TypeVar('EventT_contra', bound=DomainEvent, contravariant=True)
+EventT_contra = TypeVar("EventT_contra", bound=DomainEvent, contravariant=True)
 
 
 # ============================================================================
 # Value types used in port contracts
 # ============================================================================
+
 
 class ChangeRecordPort(Protocol):
     """Port for recording change events to the audit trail."""
@@ -34,6 +35,7 @@ class ChangeRecordPort(Protocol):
         user_id: str | None = None,
         change_reason: str | None = None,
         changeset_id: str | None = None,
+        import_run_id: str | None = None,
     ) -> str:
         """
         Record a change event.
@@ -47,6 +49,7 @@ class ChangeRecordPort(Protocol):
             user_id: Optional user ID
             change_reason: Optional explanation
             changeset_id: Optional changeset reference
+            import_run_id: Optional ID of the import run that triggered this change
 
         Returns:
             The ID of the recorded change event
@@ -76,7 +79,9 @@ class EventPublisher(Protocol):
         """
         ...
 
-    def subscribe(self, event_type: type[EventT_contra], handler: Callable[[EventT_contra], None]) -> None:
+    def subscribe(
+        self, event_type: type[EventT_contra], handler: Callable[[EventT_contra], None]
+    ) -> None:
         """
         Subscribe a handler to events of a specific type.
 

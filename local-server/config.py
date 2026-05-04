@@ -72,7 +72,8 @@ class ReferenceConfig(BaseModel):
     """Reference data configuration section"""
 
     cache_db_path: str = Field(
-        default="./reference_api_cache.db", description="Reference API cache database path"
+        default="./reference_api_cache.db",
+        description="Reference API cache database path",
     )
     reference_db_path: str = Field(
         default="./reference.db", description="Reference data database path"
@@ -83,9 +84,13 @@ class S3Config(BaseModel):
     """S3 synchronization configuration section"""
 
     s3_bucket: Optional[str] = Field(default=None, description="S3 bucket name")
-    s3_prefix: Optional[str] = Field(default=None, description="S3 key prefix for changes")
+    s3_prefix: Optional[str] = Field(
+        default=None, description="S3 key prefix for changes"
+    )
     s3_access_key: Optional[str] = Field(default=None, description="AWS access key ID")
-    s3_secret_key: Optional[str] = Field(default=None, description="AWS secret access key")
+    s3_secret_key: Optional[str] = Field(
+        default=None, description="AWS secret access key"
+    )
     s3_region: Optional[str] = Field(default="us-east-1", description="AWS region")
 
 
@@ -98,9 +103,16 @@ class DuckDBConfig(BaseModel):
 class SyncConfig(BaseModel):
     """Synchronization configuration with adapter selection"""
 
-    adapter: SyncAdapterType = Field(default=SyncAdapterType.NONE, description="Sync adapter type: 's3', 'duckdb', or 'none'")
-    s3: Optional[S3Config] = Field(default=None, description="S3-specific configuration")
-    duckdb: Optional[DuckDBConfig] = Field(default=None, description="DuckDB-specific configuration")
+    adapter: SyncAdapterType = Field(
+        default=SyncAdapterType.NONE,
+        description="Sync adapter type: 's3', 'duckdb', or 'none'",
+    )
+    s3: Optional[S3Config] = Field(
+        default=None, description="S3-specific configuration"
+    )
+    duckdb: Optional[DuckDBConfig] = Field(
+        default=None, description="DuckDB-specific configuration"
+    )
 
     @field_validator("adapter", mode="before")
     @classmethod
@@ -146,9 +158,13 @@ class Settings(BaseModel):
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
     llm: LLMConfig = Field(default_factory=LLMConfig)
     nlp: dict = Field(default_factory=dict, description="NLP pipeline configuration")
-    embedding: dict = Field(default_factory=dict, description="Embedding model configuration")
+    embedding: dict = Field(
+        default_factory=dict, description="Embedding model configuration"
+    )
     reference: ReferenceConfig = Field(default_factory=ReferenceConfig)
-    sync: Optional[SyncConfig] = Field(default=None, description="Synchronization configuration")
+    sync: Optional[SyncConfig] = Field(
+        default=None, description="Synchronization configuration"
+    )
 
 
 class ConfigurationManager:
@@ -168,7 +184,9 @@ class ConfigurationManager:
                 with open(self.config_file, "r") as f:
                     config_data = json.load(f)
                 self.settings = Settings(**config_data)
-                _config_logger.info(f"Successfully loaded configuration from {self.config_file}")
+                _config_logger.info(
+                    f"Successfully loaded configuration from {self.config_file}"
+                )
             except json.JSONDecodeError as e:
                 _config_logger.error(
                     f"Failed to parse {self.config_file}: Invalid JSON at line {e.lineno}, "
@@ -216,10 +234,14 @@ class ConfigurationManager:
                 os.makedirs(config_dir, exist_ok=True)
             with open(self.config_file, "w") as f:
                 json.dump(self.settings.model_dump(), f, indent=2)
-            _config_logger.info(f"Successfully saved configuration to {self.config_file}")
+            _config_logger.info(
+                f"Successfully saved configuration to {self.config_file}"
+            )
             return True
         except PermissionError as e:
-            _config_logger.error(f"Permission denied writing to {self.config_file}: {e}")
+            _config_logger.error(
+                f"Permission denied writing to {self.config_file}: {e}"
+            )
             return False
         except FileNotFoundError as e:
             _config_logger.error(f"Configuration file path not found: {e}")

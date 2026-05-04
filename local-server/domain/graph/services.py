@@ -117,7 +117,11 @@ class GraphAnalysisService:
                 "id": str(rel.id),
                 "source_id": str(rel.source_id),
                 "target_id": str(rel.target_id),
-                "property_definition_id": str(rel.property_definition_id) if rel.property_definition_id else None,
+                "property_definition_id": (
+                    str(rel.property_definition_id)
+                    if rel.property_definition_id
+                    else None
+                ),
             }
             edges.append(edge_dict)
 
@@ -171,7 +175,11 @@ class GraphAnalysisService:
                 "id": str(rel.id),
                 "source_id": str(rel.source_id),
                 "target_id": str(rel.target_id),
-                "property_definition_id": str(rel.property_definition_id) if rel.property_definition_id else None,
+                "property_definition_id": (
+                    str(rel.property_definition_id)
+                    if rel.property_definition_id
+                    else None
+                ),
             }
             edges.append(edge_dict)
 
@@ -293,7 +301,9 @@ class GraphAnalysisService:
 
         # Compute average degree and degree distribution
         degree_dist = self._graph_engine.degree_distribution()
-        avg_degree = sum(degree_dist.values()) / len(degree_dist) if degree_dist else 0.0
+        avg_degree = (
+            sum(degree_dist.values()) / len(degree_dist) if degree_dist else 0.0
+        )
 
         # Count connected components using graph engine
         connected_components = self._graph_engine.connected_components()
@@ -351,7 +361,9 @@ class GraphAnalysisService:
             relationships=relationships,
         )
 
-    def find_all_paths(self, source_id: str, target_id: str, max_depth: int = 5) -> list[PathResult]:
+    def find_all_paths(
+        self, source_id: str, target_id: str, max_depth: int = 5
+    ) -> list[PathResult]:
         """
         Find all simple paths between two nodes up to a maximum depth.
 
@@ -430,7 +442,9 @@ class GraphAnalysisService:
         self._ensure_graph()
         return self._graph_engine.communities(algorithm)
 
-    def get_neighbors(self, node_id: str, direction: str = "both", depth: int = 1) -> set[str]:
+    def get_neighbors(
+        self, node_id: str, direction: str = "both", depth: int = 1
+    ) -> set[str]:
         """
         Get all neighbors of a node up to a specified depth with optional directional filtering.
 
@@ -543,7 +557,9 @@ class GraphAnalysisService:
             edge_count=subgraph.edge_count(),
         )
 
-    def extract_subgraph_by_depth(self, center_node_id: str, depth: int) -> SubgraphResult:
+    def extract_subgraph_by_depth(
+        self, center_node_id: str, depth: int
+    ) -> SubgraphResult:
         """
         Extract a subgraph containing a center node and all nodes within a specified depth.
 
@@ -573,7 +589,9 @@ class GraphAnalysisService:
 
         # Get all nodes within the specified depth
         # neighbors() with depth=N returns all nodes within N hops (excluding the center node)
-        neighborhood = self._graph_engine.neighbors(center_node_id, direction="both", depth=depth)
+        neighborhood = self._graph_engine.neighbors(
+            center_node_id, direction="both", depth=depth
+        )
 
         # Create the subgraph with the center node plus all nodes in the neighborhood
         subgraph_nodes = {center_node_id} | neighborhood
@@ -623,7 +641,10 @@ class GraphAnalysisService:
         return self._query_engine.triple_count()
 
     def get_triples(
-        self, subject: str | None = None, predicate: str | None = None, object: str | None = None
+        self,
+        subject: str | None = None,
+        predicate: str | None = None,
+        object: str | None = None,
     ) -> list[tuple[str, str, str]]:
         """
         Retrieve RDF triples matching the given pattern.
@@ -652,7 +673,9 @@ class GraphAnalysisService:
         self._graph_stale = True
         self._rdf_stale = True
 
-    def _get_path_relationships(self, path: list[str], prop_def_map: dict[str, str]) -> list[str]:
+    def _get_path_relationships(
+        self, path: list[str], prop_def_map: dict[str, str]
+    ) -> list[str]:
         """
         Get relationship labels for all edges in a path.
 
@@ -706,14 +729,12 @@ class GraphAnalysisService:
                                    or is considered unsafe.
         """
         # Forbidden keywords that indicate mutation or unsafe operations
-        forbidden_keywords = {
-            "INSERT", "DELETE", "DROP", "CLEAR", "LOAD", "CREATE"
-        }
+        forbidden_keywords = {"INSERT", "DELETE", "DROP", "CLEAR", "LOAD", "CREATE"}
 
         # Remove string literals from the query to avoid matching keywords inside strings
         # This regex matches same-type quote pairs: double-quoted strings and single-quoted strings
         # This correctly handles apostrophes inside double-quoted strings and vice versa
-        query_without_literals = re.sub(r'"[^"]*"|\'[^\']*\'', ' ', query)
+        query_without_literals = re.sub(r'"[^"]*"|\'[^\']*\'', " ", query)
         query_upper = query_without_literals.upper()
 
         for keyword in forbidden_keywords:
@@ -723,5 +744,5 @@ class GraphAnalysisService:
                 raise SPARQLValidationError(
                     query,
                     f"Query contains forbidden keyword '{keyword}'. "
-                    "Only SELECT queries are supported."
+                    "Only SELECT queries are supported.",
                 )

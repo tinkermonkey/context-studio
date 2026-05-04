@@ -11,7 +11,8 @@ Tests ensure the complete workflow: domain operation → event → recording.
 
 import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../'))
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../"))
 
 import pytest
 from sqlalchemy import create_engine
@@ -108,9 +109,15 @@ def change_recorder(change_repo, event_publisher):
     event_publisher.subscribe(ClassMoved, recorder.on_class_moved)
     event_publisher.subscribe(RelationshipCreated, recorder.on_relationship_created)
     event_publisher.subscribe(RelationshipDeleted, recorder.on_relationship_deleted)
-    event_publisher.subscribe(PropertyDefinitionCreated, recorder.on_property_definition_created)
-    event_publisher.subscribe(PropertyDefinitionUpdated, recorder.on_property_definition_updated)
-    event_publisher.subscribe(PropertyDefinitionDeleted, recorder.on_property_definition_deleted)
+    event_publisher.subscribe(
+        PropertyDefinitionCreated, recorder.on_property_definition_created
+    )
+    event_publisher.subscribe(
+        PropertyDefinitionUpdated, recorder.on_property_definition_updated
+    )
+    event_publisher.subscribe(
+        PropertyDefinitionDeleted, recorder.on_property_definition_deleted
+    )
     event_publisher.subscribe(TaxonomyUpdated, recorder.on_taxonomy_updated)
     event_publisher.subscribe(TaxonomyDeleted, recorder.on_taxonomy_deleted)
     event_publisher.subscribe(SchemeUpdated, recorder.on_scheme_updated)
@@ -123,7 +130,9 @@ def change_recorder(change_repo, event_publisher):
 
 
 @pytest.fixture
-def ontology_service(change_recorder, ontology_repo, embedding_service, event_publisher):
+def ontology_service(
+    change_recorder, ontology_repo, embedding_service, event_publisher
+):
     """
     Create the ontology service with all dependencies.
 
@@ -156,10 +165,14 @@ class TestChangeRecordingIntegration:
         )
 
         # Verify change was recorded
-        change_events = session.query(ChangeEvent).filter_by(
-            entity_id=taxonomy.id,
-            entity_type="taxonomy",
-        ).all()
+        change_events = (
+            session.query(ChangeEvent)
+            .filter_by(
+                entity_id=taxonomy.id,
+                entity_type="taxonomy",
+            )
+            .all()
+        )
 
         assert len(change_events) == 1
         change_event = change_events[0]
@@ -181,10 +194,14 @@ class TestChangeRecordingIntegration:
         )
 
         # Verify change was recorded
-        change_events = session.query(ChangeEvent).filter_by(
-            entity_id=scheme.id,
-            entity_type="concept_scheme",
-        ).all()
+        change_events = (
+            session.query(ChangeEvent)
+            .filter_by(
+                entity_id=scheme.id,
+                entity_type="concept_scheme",
+            )
+            .all()
+        )
 
         assert len(change_events) == 1
         change_event = change_events[0]
@@ -211,10 +228,14 @@ class TestChangeRecordingIntegration:
         )
 
         # Verify change was recorded
-        change_events = session.query(ChangeEvent).filter_by(
-            entity_id=clazz.id,
-            entity_type="class",
-        ).all()
+        change_events = (
+            session.query(ChangeEvent)
+            .filter_by(
+                entity_id=clazz.id,
+                entity_type="class",
+            )
+            .all()
+        )
 
         assert len(change_events) == 1
         change_event = change_events[0]
@@ -223,7 +244,9 @@ class TestChangeRecordingIntegration:
         assert change_event.new_state["title"] == "Mammal"
         assert change_event.change_reason == "Class created"
 
-    def test_class_hierarchy_change_records_class_moved(self, ontology_service, session_factory):
+    def test_class_hierarchy_change_records_class_moved(
+        self, ontology_service, session_factory
+    ):
         """Test that moving a class in the hierarchy records a ClassMoved event."""
         # Setup hierarchy
         taxonomy = ontology_service.create_taxonomy("Biology")
@@ -263,18 +286,24 @@ class TestChangeRecordingIntegration:
         # Verify ClassMoved was recorded
         session = session_factory()
         try:
-            change_events = session.query(ChangeEvent).filter_by(
-                entity_id=child.id,
-                entity_type="class",
-            ).all()
+            change_events = (
+                session.query(ChangeEvent)
+                .filter_by(
+                    entity_id=child.id,
+                    entity_type="class",
+                )
+                .all()
+            )
 
             # Should have an UPDATE operation for the parent change
             assert len(change_events) > 0
             # Find the parent change event
             parent_change = None
             for event in change_events:
-                if event.operation == ChangeOperation.UPDATE and \
-                   event.new_state.get("parent_id") == parent2.id:
+                if (
+                    event.operation == ChangeOperation.UPDATE
+                    and event.new_state.get("parent_id") == parent2.id
+                ):
                     parent_change = event
                     break
 
@@ -287,7 +316,9 @@ class TestChangeRecordingIntegration:
         finally:
             session.close()
 
-    def test_property_definition_creation_records_change(self, ontology_service, session):
+    def test_property_definition_creation_records_change(
+        self, ontology_service, session
+    ):
         """Test that creating a property definition produces a change event."""
         # Create property definition
         prop_def = ontology_service.create_property_definition(
@@ -297,10 +328,14 @@ class TestChangeRecordingIntegration:
         )
 
         # Verify change was recorded
-        change_events = session.query(ChangeEvent).filter_by(
-            entity_id=prop_def.id,
-            entity_type="property_definition",
-        ).all()
+        change_events = (
+            session.query(ChangeEvent)
+            .filter_by(
+                entity_id=prop_def.id,
+                entity_type="property_definition",
+            )
+            .all()
+        )
 
         assert len(change_events) == 1
         change_event = change_events[0]
@@ -309,7 +344,9 @@ class TestChangeRecordingIntegration:
         assert change_event.new_state["identifier"] == "hasChild"
         assert change_event.change_reason == "Property definition created"
 
-    def test_relationship_creation_records_change(self, ontology_service, session_factory):
+    def test_relationship_creation_records_change(
+        self, ontology_service, session_factory
+    ):
         """Test that creating a relationship produces a change event."""
         # Setup: create entities and property definition
         taxonomy = ontology_service.create_taxonomy("Biology")
@@ -348,10 +385,14 @@ class TestChangeRecordingIntegration:
         # Verify change was recorded
         session = session_factory()
         try:
-            change_events = session.query(ChangeEvent).filter_by(
-                entity_id=relationship.id,
-                entity_type="relationship",
-            ).all()
+            change_events = (
+                session.query(ChangeEvent)
+                .filter_by(
+                    entity_id=relationship.id,
+                    entity_type="relationship",
+                )
+                .all()
+            )
 
             assert len(change_events) == 1
             change_event = change_events[0]
@@ -389,10 +430,14 @@ class TestChangeRecordingIntegration:
         # Verify change was recorded
         session = session_factory()
         try:
-            change_events = session.query(ChangeEvent).filter_by(
-                entity_id=taxonomy.id,
-                entity_type="taxonomy",
-            ).all()
+            change_events = (
+                session.query(ChangeEvent)
+                .filter_by(
+                    entity_id=taxonomy.id,
+                    entity_type="taxonomy",
+                )
+                .all()
+            )
 
             assert len(change_events) == 1
             change_event = change_events[0]
@@ -423,10 +468,14 @@ class TestChangeRecordingIntegration:
         # Verify change was recorded
         session = session_factory()
         try:
-            change_events = session.query(ChangeEvent).filter_by(
-                entity_id=taxonomy_id,
-                entity_type="taxonomy",
-            ).all()
+            change_events = (
+                session.query(ChangeEvent)
+                .filter_by(
+                    entity_id=taxonomy_id,
+                    entity_type="taxonomy",
+                )
+                .all()
+            )
 
             assert len(change_events) == 1
             change_event = change_events[0]

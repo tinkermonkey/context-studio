@@ -180,7 +180,7 @@ class LLMProviderRouter:
         """
         provider = self._route_to_provider(model)
         # Check if provider has async method and use it, otherwise fallback to sync
-        if hasattr(provider, 'complete_async'):
+        if hasattr(provider, "complete_async"):
             return await provider.complete_async(
                 system_prompt=system_prompt,
                 user_prompt=user_prompt,

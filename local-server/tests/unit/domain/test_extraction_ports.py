@@ -8,11 +8,18 @@ which are used in port contracts.
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import pytest
 
-from domain.extraction.ports import NLPEntity, NLPResult, ReferenceResult, ReferenceRelation
+from domain.extraction.ports import (
+    NLPEntity,
+    NLPResult,
+    ReferenceResult,
+    ReferenceRelation,
+)
 
 
 class TestNLPEntity:

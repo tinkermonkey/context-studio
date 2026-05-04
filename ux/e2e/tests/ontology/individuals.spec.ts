@@ -49,8 +49,12 @@ test.describe("Ontology Individual CRUD and Class Membership Operations", () => 
     const createModal = page.getByTestId("individual-create-modal").first();
     await expect(createModal).toBeVisible({ timeout: 5000 });
 
-    await page.getByTestId("individual-title-input").fill("UI Created Individual");
-    await page.getByTestId("individual-description-input").fill("Created via UI form");
+    await page
+      .getByTestId("individual-title-input")
+      .fill("UI Created Individual");
+    await page
+      .getByTestId("individual-description-input")
+      .fill("Created via UI form");
 
     // Selecting the class via onChange fires immediately — no button click required.
     await page.locator("#add-class-select").selectOption(classIds[0]);
@@ -63,10 +67,9 @@ test.describe("Ontology Individual CRUD and Class Membership Operations", () => 
     await expect(page.getByText("UI Created Individual")).toBeVisible();
 
     // Confirm persistence via API
-    const list = await apiRequest<{ items: Array<{ id: string; title: string; class_ids: string[] }> }>(
-      page,
-      "/api/individuals"
-    );
+    const list = await apiRequest<{
+      items: Array<{ id: string; title: string; class_ids: string[] }>;
+    }>(page, "/api/individuals");
     const created = list.items.find((i) => i.title === "UI Created Individual");
     expect(created).toBeDefined();
     expect(created!.class_ids).toContain(classIds[0]);
@@ -92,7 +95,9 @@ test.describe("Ontology Individual CRUD and Class Membership Operations", () => 
     await expect(page.getByTestId(`individual-row-${ind2.id}`)).toBeVisible();
   });
 
-  test("should update an individual via double-click edit", async ({ page }) => {
+  test("should update an individual via double-click edit", async ({
+    page,
+  }) => {
     const individual = await apiRequest<{ id: string }>(
       page,
       "/api/individuals",
@@ -103,7 +108,7 @@ test.describe("Ontology Individual CRUD and Class Membership Operations", () => 
           description: "Original description",
           class_ids: [classIds[0]],
         },
-      }
+      },
     );
 
     await page.goto("/app/individuals");
@@ -114,20 +119,24 @@ test.describe("Ontology Individual CRUD and Class Membership Operations", () => 
     const editModal = page.getByTestId("individual-edit-modal").first();
     await expect(editModal).toBeVisible({ timeout: 5000 });
 
-    await page.getByTestId("individual-title-input").fill("Individual After Update");
-    await page.getByTestId("individual-description-input").fill("Updated description");
+    await page
+      .getByTestId("individual-title-input")
+      .fill("Individual After Update");
+    await page
+      .getByTestId("individual-description-input")
+      .fill("Updated description");
     await page.getByTestId("individual-form-submit").click();
 
     await expect(editModal).not.toBeVisible({ timeout: 5000 });
     await waitForAppReady(page);
 
     await expect(
-      page.getByTestId(`individual-row-${individual.id}`)
+      page.getByTestId(`individual-row-${individual.id}`),
     ).toContainText("Individual After Update");
 
     const updated = await apiRequest<{ title: string; description: string }>(
       page,
-      `/api/individuals/${individual.id}`
+      `/api/individuals/${individual.id}`,
     );
     expect(updated.title).toBe("Individual After Update");
     expect(updated.description).toBe("Updated description");
@@ -143,7 +152,7 @@ test.describe("Ontology Individual CRUD and Class Membership Operations", () => 
           title: "Individual to Delete",
           class_ids: [classIds[0]],
         },
-      }
+      },
     );
 
     await page.goto("/app/individuals");
@@ -183,7 +192,7 @@ test.describe("Ontology Individual CRUD and Class Membership Operations", () => 
           title: "Individual for Class Addition",
           class_ids: [classIds[0]],
         },
-      }
+      },
     );
 
     await page.goto("/app/individuals");
@@ -202,7 +211,7 @@ test.describe("Ontology Individual CRUD and Class Membership Operations", () => 
 
     const updated = await apiRequest<{ class_ids: string[] }>(
       page,
-      `/api/individuals/${individual.id}`
+      `/api/individuals/${individual.id}`,
     );
     expect(updated.class_ids).toContain(classIds[0]);
     expect(updated.class_ids).toContain(classIds[1]);
@@ -218,7 +227,7 @@ test.describe("Ontology Individual CRUD and Class Membership Operations", () => 
           title: "Individual for Class Removal",
           class_ids: [classIds[0], classIds[1]],
         },
-      }
+      },
     );
 
     await page.goto("/app/individuals");
@@ -239,7 +248,7 @@ test.describe("Ontology Individual CRUD and Class Membership Operations", () => 
 
     const updated = await apiRequest<{ class_ids: string[] }>(
       page,
-      `/api/individuals/${individual.id}`
+      `/api/individuals/${individual.id}`,
     );
     expect(updated.class_ids).toEqual([classIds[0]]);
   });
@@ -255,7 +264,9 @@ test.describe("Ontology Individual CRUD and Class Membership Operations", () => 
     const createModal = page.getByTestId("individual-create-modal").first();
     await expect(createModal).toBeVisible({ timeout: 5000 });
 
-    await page.getByTestId("individual-title-input").fill("No Class Individual");
+    await page
+      .getByTestId("individual-title-input")
+      .fill("No Class Individual");
     // Intentionally skip class selection
 
     await page.getByTestId("individual-form-submit").click();
@@ -276,13 +287,15 @@ test.describe("Ontology Individual CRUD and Class Membership Operations", () => 
           title: "Inherited Props Individual",
           class_ids: [classIds[0]],
         },
-      }
+      },
     );
 
     await page.goto("/app/individuals");
     await waitForAppReady(page);
 
-    await expect(page.getByTestId(`individual-row-${individual.id}`)).toBeVisible();
+    await expect(
+      page.getByTestId(`individual-row-${individual.id}`),
+    ).toBeVisible();
 
     const response = await apiRequest<{
       items: unknown[];

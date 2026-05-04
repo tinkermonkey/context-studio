@@ -22,12 +22,14 @@ class BackgroundTaskStatus(str, Enum):
     FAILED = "failed"
 
 
-CREDENTIAL_FIELD_NAMES = frozenset({
-    "openai_api_key",
-    "anthropic_api_key",
-    "s3_access_key",
-    "s3_secret_key",
-})
+CREDENTIAL_FIELD_NAMES = frozenset(
+    {
+        "openai_api_key",
+        "anthropic_api_key",
+        "s3_access_key",
+        "s3_secret_key",
+    }
+)
 
 
 @dataclass(frozen=True)

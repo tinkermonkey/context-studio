@@ -9,7 +9,9 @@ import os
 import time
 import pytest
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 from domain.pipeline.services import PipelineService
 from tests.fakes.fake_pipeline_repository import FakePipelineRepository
@@ -31,11 +33,14 @@ def _setup_pipeline_context() -> tuple[PipelineService, FakePipelineRepository]:
 
 
 @pytest.mark.performance
-@pytest.mark.parametrize("num_configs,max_time", [
-    (10, 0.01),
-    (50, 0.05),
-    (100, 0.1),
-])
+@pytest.mark.parametrize(
+    "num_configs,max_time",
+    [
+        (10, 0.01),
+        (50, 0.05),
+        (100, 0.1),
+    ],
+)
 def test_bulk_create_pipeline_configs(num_configs: int, max_time: float) -> None:
     """Measure throughput of creating pipeline configurations."""
     service, _ = _setup_pipeline_context()
@@ -53,16 +58,21 @@ def test_bulk_create_pipeline_configs(num_configs: int, max_time: float) -> None
         )
     elapsed = time.perf_counter() - start
 
-    print(f"\nBulk create pipeline configs ({num_configs} configs): {elapsed:.4f}s ({num_configs / elapsed:.1f} configs/sec)")
+    print(
+        f"\nBulk create pipeline configs ({num_configs} configs): {elapsed:.4f}s ({num_configs / elapsed:.1f} configs/sec)"
+    )
     assert elapsed < max_time
 
 
 @pytest.mark.performance
-@pytest.mark.parametrize("num_configs,max_time", [
-    (10, 0.01),
-    (50, 0.05),
-    (100, 0.1),
-])
+@pytest.mark.parametrize(
+    "num_configs,max_time",
+    [
+        (10, 0.01),
+        (50, 0.05),
+        (100, 0.1),
+    ],
+)
 def test_list_pipeline_configs(num_configs: int, max_time: float) -> None:
     """Measure time to list pipeline configurations."""
     service, _ = _setup_pipeline_context()
@@ -89,11 +99,14 @@ def test_list_pipeline_configs(num_configs: int, max_time: float) -> None:
 
 
 @pytest.mark.performance
-@pytest.mark.parametrize("num_configs,max_time", [
-    (10, 0.01),
-    (50, 0.05),
-    (100, 0.1),
-])
+@pytest.mark.parametrize(
+    "num_configs,max_time",
+    [
+        (10, 0.01),
+        (50, 0.05),
+        (100, 0.1),
+    ],
+)
 def test_update_pipeline_configs(num_configs: int, max_time: float) -> None:
     """Measure throughput of updating pipeline configurations."""
     service, _ = _setup_pipeline_context()
@@ -121,16 +134,23 @@ def test_update_pipeline_configs(num_configs: int, max_time: float) -> None:
         )
     elapsed = time.perf_counter() - start
 
-    print(f"\nUpdate pipeline configs ({num_configs} configs): {elapsed:.4f}s ({num_configs / elapsed:.1f} updates/sec)")
+    print(
+        f"\nUpdate pipeline configs ({num_configs} configs): {elapsed:.4f}s ({num_configs / elapsed:.1f} updates/sec)"
+    )
     assert elapsed < max_time
 
 
 @pytest.mark.performance
-@pytest.mark.parametrize("num_configs,num_executions,max_time", [
-    (5, 20, 0.02),
-    (10, 50, 0.1),
-])
-def test_execute_pipelines(num_configs: int, num_executions: int, max_time: float) -> None:
+@pytest.mark.parametrize(
+    "num_configs,num_executions,max_time",
+    [
+        (5, 20, 0.02),
+        (10, 50, 0.1),
+    ],
+)
+def test_execute_pipelines(
+    num_configs: int, num_executions: int, max_time: float
+) -> None:
     """Measure throughput of executing pipelines."""
     service, _ = _setup_pipeline_context()
 
@@ -154,16 +174,21 @@ def test_execute_pipelines(num_configs: int, num_executions: int, max_time: floa
         service.execute_pipeline(config_id, f"Input text {i}")
     elapsed = time.perf_counter() - start
 
-    print(f"\nExecute pipelines ({num_executions} executions across {num_configs} configs): {elapsed:.4f}s ({num_executions / elapsed:.1f} executions/sec)")
+    print(
+        f"\nExecute pipelines ({num_executions} executions across {num_configs} configs): {elapsed:.4f}s ({num_executions / elapsed:.1f} executions/sec)"
+    )
     assert elapsed < max_time
 
 
 @pytest.mark.performance
-@pytest.mark.parametrize("num_configs,max_time", [
-    (10, 0.02),
-    (50, 0.1),
-    (100, 0.2),
-])
+@pytest.mark.parametrize(
+    "num_configs,max_time",
+    [
+        (10, 0.02),
+        (50, 0.1),
+        (100, 0.2),
+    ],
+)
 def test_delete_pipeline_configs(num_configs: int, max_time: float) -> None:
     """Measure throughput of deleting pipeline configurations."""
     service, _ = _setup_pipeline_context()
@@ -187,5 +212,7 @@ def test_delete_pipeline_configs(num_configs: int, max_time: float) -> None:
         service.delete_config(config_id)
     elapsed = time.perf_counter() - start
 
-    print(f"\nDelete pipeline configs ({num_configs} configs): {elapsed:.4f}s ({num_configs / elapsed:.1f} deletes/sec)")
+    print(
+        f"\nDelete pipeline configs ({num_configs} configs): {elapsed:.4f}s ({num_configs / elapsed:.1f} deletes/sec)"
+    )
     assert elapsed < max_time
