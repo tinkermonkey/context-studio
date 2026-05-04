@@ -614,6 +614,11 @@ class GraphMLDeserializer(OntologyDeserializer):
         """
         Commit the import by applying resolutions and persisting entities.
 
+        For each incoming entity:
+        - If it has a SKIP resolution, skip it
+        - If it has ABORT resolution or is in conflict with no resolution, raise ValueError
+        - Otherwise, create/update the entity in the ontology
+
         Args:
             conflicts: List of detected conflicts
             source_hash: SHA256 hash of the imported source

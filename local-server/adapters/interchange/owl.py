@@ -372,7 +372,8 @@ class OWLDeserializer(OntologyDeserializer):
     - owl:Class → Class
     - owl:NamedIndividual → Individual
     - owl:ObjectProperty → PropertyDefinition
-    - owl:sameAs → external_references (single source of truth)
+    - LOCAL:externalReferences (JSON) → external_references (primary format)
+    - owl:sameAs → external_references (legacy fallback format)
     - rdfs:subClassOf → parent_class_id
     - rdf:type (when object is owl:NamedIndividual) → class membership
     """
@@ -498,6 +499,11 @@ class OWLDeserializer(OntologyDeserializer):
     ) -> str:
         """
         Commit the import by applying resolutions and persisting entities.
+
+        For each incoming entity:
+        - If it has a SKIP resolution, skip it
+        - If it has ABORT resolution or is in conflict with no resolution, raise ValueError
+        - Otherwise, create/update the entity in the ontology
 
         Args:
             conflicts: List of detected conflicts

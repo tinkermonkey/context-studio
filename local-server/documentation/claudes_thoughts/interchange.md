@@ -28,7 +28,7 @@ OWL is the most expressive RDF-based format, designed for full ontology definiti
 
 **Data encoding:**
 - Entity attributes are stored as RDF properties (rdfs:label, rdfs:comment, etc.)
-- external_references are encoded using `owl:sameAs` for entity identity
+- external_references are encoded using `LOCAL:externalReferences` (JSON, primary) or legacy `owl:sameAs` (fallback)
 - Multi-class Individual membership is preserved in order using indexed predicates (LOCAL:hasClass_0, LOCAL:hasClass_1, etc.)
 
 **Supported scopes:**
@@ -77,7 +77,7 @@ This test validates that GraphML exports can be consumed by external visualizati
    # Using the GraphML adapter to export the whole graph
    curl -X POST http://localhost:8000/api/v1/interchange/export \
      -H "Content-Type: application/json" \
-     -d '{"format": "graphml", "scope": "whole_graph"}' \
+     -d '{"format": "graphml", "scope": {"scope_type": "whole_graph"}}' \
      > /tmp/context_studio.graphml
    ```
 
@@ -104,6 +104,7 @@ This test validates that GraphML exports can be consumed by external visualizati
    curl -X POST http://localhost:8000/api/v1/interchange/import \
      -F "format=graphml" \
      -F "file=@/tmp/context_studio.graphml" \
+     -F "dry_run=false"
    ```
 
 6. **Verify round-trip integrity:**
