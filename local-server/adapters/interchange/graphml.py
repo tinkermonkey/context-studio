@@ -796,10 +796,14 @@ class GraphMLDeserializer(OntologyDeserializer):
                             "uri": ref["uri"],
                         }
                     )
-            except (json.JSONDecodeError, KeyError) as e:
-                self.warnings.append(
-                    f"Class {node_id} has malformed cs:external_references: {e}"
-                )
+            except json.JSONDecodeError as e:
+                raise ValueError(
+                    f"Class {node_id} has malformed cs:external_references JSON: {e}"
+                ) from e
+            except KeyError as e:
+                raise ValueError(
+                    f"Class {node_id} external reference missing required field: {e}"
+                ) from e
 
         known_keys = {
             "kind",
@@ -876,10 +880,14 @@ class GraphMLDeserializer(OntologyDeserializer):
                             "uri": ref["uri"],
                         }
                     )
-            except (json.JSONDecodeError, KeyError) as e:
-                self.warnings.append(
-                    f"Individual {node_id} has malformed cs:external_references: {e}"
-                )
+            except json.JSONDecodeError as e:
+                raise ValueError(
+                    f"Individual {node_id} has malformed cs:external_references JSON: {e}"
+                ) from e
+            except KeyError as e:
+                raise ValueError(
+                    f"Individual {node_id} external reference missing required field: {e}"
+                ) from e
 
         known_keys = {
             "kind",

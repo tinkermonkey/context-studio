@@ -565,6 +565,132 @@ class TestGraphMLExternalReferences:
             for r in fido_incoming["external_references"]
         )
 
+    def test_malformed_external_references_in_class_raises_error(self):
+        """Test that malformed external references JSON in Class causes deserialization to fail."""
+        import networkx as nx
+        import io
+
+        # Create GraphML with malformed JSON in external_references
+        G = nx.MultiDiGraph()
+        G.add_node(
+            "scheme1",
+            kind="concept_scheme",
+            **{"cs:title": "TestScheme", "cs:description": "A test scheme"}
+        )
+        G.add_node(
+            "class1",
+            kind="class",
+            **{
+                "cs:title": "TestClass",
+                "cs:description": "A test class",
+                "cs:external_references": '{"invalid json'  # Malformed JSON
+            }
+        )
+        G.add_edge("scheme1", "class1", kind="has_class")
+
+        output = io.BytesIO()
+        nx.write_graphml(G, output)
+        graphml_bytes = output.getvalue()
+
+        fresh_engine = create_engine(
+            "sqlite:///:memory:", connect_args={"check_same_thread": False}
+        )
+        Base.metadata.create_all(fresh_engine)
+        fresh_session_factory = sessionmaker(bind=fresh_engine)
+        fresh_repo = SQLiteOntologyRepository(fresh_session_factory)
+
+        deserializer = GraphMLDeserializer(fresh_repo)
+
+        # Should raise ValueError for malformed JSON
+        with pytest.raises(ValueError) as exc_info:
+            deserializer.deserialize(graphml_bytes, dry_run=True)
+
+        assert "malformed" in str(exc_info.value).lower()
+
+    def test_missing_external_reference_field_raises_error(self):
+        """Test that missing required field in external reference causes deserialization to fail."""
+        import networkx as nx
+        import io
+
+        # Create GraphML with missing required field in external reference
+        G = nx.MultiDiGraph()
+        G.add_node(
+            "scheme1",
+            kind="concept_scheme",
+            **{"cs:title": "TestScheme", "cs:description": "A test scheme"}
+        )
+        G.add_node(
+            "class1",
+            kind="class",
+            **{
+                "cs:title": "TestClass",
+                "cs:description": "A test class",
+                "cs:external_references": '[{"source": "dbpedia", "identifier": "Test"}]'  # Missing 'uri'
+            }
+        )
+        G.add_edge("scheme1", "class1", kind="has_class")
+
+        output = io.BytesIO()
+        nx.write_graphml(G, output)
+        graphml_bytes = output.getvalue()
+
+        fresh_engine = create_engine(
+            "sqlite:///:memory:", connect_args={"check_same_thread": False}
+        )
+        Base.metadata.create_all(fresh_engine)
+        fresh_session_factory = sessionmaker(bind=fresh_engine)
+        fresh_repo = SQLiteOntologyRepository(fresh_session_factory)
+
+        deserializer = GraphMLDeserializer(fresh_repo)
+
+        # Should raise ValueError for missing required field
+        with pytest.raises(ValueError) as exc_info:
+            deserializer.deserialize(graphml_bytes, dry_run=True)
+
+        assert "missing required field" in str(exc_info.value).lower() or "uri" in str(exc_info.value).lower()
+
+    def test_malformed_external_references_in_individual_raises_error(self):
+        """Test that malformed external references JSON in Individual causes deserialization to fail."""
+        import networkx as nx
+        import io
+
+        # Create GraphML with malformed JSON in individual's external_references
+        G = nx.MultiDiGraph()
+        G.add_node(
+            "class1",
+            kind="class",
+            **{"cs:title": "TestClass", "cs:description": "A test class"}
+        )
+        G.add_node(
+            "individual1",
+            kind="individual",
+            **{
+                "cs:title": "TestIndividual",
+                "cs:description": "A test individual",
+                "cs:external_references": '[{"invalid"'  # Malformed JSON
+            }
+        )
+        G.add_edge("individual1", "class1", kind="class_membership", **{"cs:class_order": "0"})
+
+        output = io.BytesIO()
+        nx.write_graphml(G, output)
+        graphml_bytes = output.getvalue()
+
+        fresh_engine = create_engine(
+            "sqlite:///:memory:", connect_args={"check_same_thread": False}
+        )
+        Base.metadata.create_all(fresh_engine)
+        fresh_session_factory = sessionmaker(bind=fresh_engine)
+        fresh_repo = SQLiteOntologyRepository(fresh_session_factory)
+
+        deserializer = GraphMLDeserializer(fresh_repo)
+
+        # Should raise ValueError for malformed JSON
+        with pytest.raises(ValueError) as exc_info:
+            deserializer.deserialize(graphml_bytes, dry_run=True)
+
+        assert "malformed" in str(exc_info.value).lower()
+
 
 class TestGraphMLIdempotentReimport:
     """Test that reimporting produces idempotent results."""
