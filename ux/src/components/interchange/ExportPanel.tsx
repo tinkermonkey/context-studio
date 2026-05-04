@@ -24,13 +24,8 @@ export function ExportPanel() {
   const [selectedTaxonomy, setSelectedTaxonomy] = React.useState<string>("");
   const [selectedScheme, setSelectedScheme] = React.useState<string>("");
 
-  const { data: taxonomiesResponse } = useTaxonomies();
-  const { data: schemesResponse } = useConceptSchemes();
-
-  const taxonomies = Array.isArray(taxonomiesResponse)
-    ? taxonomiesResponse
-    : [];
-  const schemes = Array.isArray(schemesResponse) ? schemesResponse : [];
+  const taxonomiesQuery = useTaxonomies();
+  const schemesQuery = useConceptSchemes();
 
   const exportMutation = useInterchangeExport({
     onSuccess: (blob) => {
@@ -136,18 +131,32 @@ export function ExportPanel() {
             <Label htmlFor="taxonomy-select" className="mb-2 block">
               Select Taxonomy
             </Label>
-            <Select
-              id="taxonomy-select"
-              value={selectedTaxonomy}
-              onChange={(e) => setSelectedTaxonomy(e.target.value)}
-            >
-              <option value="">-- Choose a taxonomy --</option>
-              {taxonomies.map((tax: Taxonomy) => (
-                <option key={tax.id} value={tax.id}>
-                  {tax.title}
-                </option>
-              ))}
-            </Select>
+            {taxonomiesQuery.isLoading ? (
+              <div className="rounded bg-blue-50 px-3 py-2 text-sm text-blue-700 dark:bg-blue-900 dark:text-blue-100">
+                Loading taxonomies...
+              </div>
+            ) : taxonomiesQuery.error ? (
+              <div className="rounded bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-900 dark:text-red-100">
+                Failed to load taxonomies
+              </div>
+            ) : !taxonomiesQuery.data || taxonomiesQuery.data.length === 0 ? (
+              <div className="rounded bg-gray-50 px-3 py-2 text-sm text-gray-600 dark:bg-gray-900 dark:text-gray-400">
+                No taxonomies available
+              </div>
+            ) : (
+              <Select
+                id="taxonomy-select"
+                value={selectedTaxonomy}
+                onChange={(e) => setSelectedTaxonomy(e.target.value)}
+              >
+                <option value="">-- Choose a taxonomy --</option>
+                {taxonomiesQuery.data.map((tax: Taxonomy) => (
+                  <option key={tax.id} value={tax.id}>
+                    {tax.title}
+                  </option>
+                ))}
+              </Select>
+            )}
           </div>
         )}
 
@@ -156,18 +165,32 @@ export function ExportPanel() {
             <Label htmlFor="scheme-select" className="mb-2 block">
               Select Concept Scheme
             </Label>
-            <Select
-              id="scheme-select"
-              value={selectedScheme}
-              onChange={(e) => setSelectedScheme(e.target.value)}
-            >
-              <option value="">-- Choose a concept scheme --</option>
-              {schemes.map((scheme: ConceptScheme) => (
-                <option key={scheme.id} value={scheme.id}>
-                  {scheme.title}
-                </option>
-              ))}
-            </Select>
+            {schemesQuery.isLoading ? (
+              <div className="rounded bg-blue-50 px-3 py-2 text-sm text-blue-700 dark:bg-blue-900 dark:text-blue-100">
+                Loading concept schemes...
+              </div>
+            ) : schemesQuery.error ? (
+              <div className="rounded bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-900 dark:text-red-100">
+                Failed to load concept schemes
+              </div>
+            ) : !schemesQuery.data || schemesQuery.data.length === 0 ? (
+              <div className="rounded bg-gray-50 px-3 py-2 text-sm text-gray-600 dark:bg-gray-900 dark:text-gray-400">
+                No concept schemes available
+              </div>
+            ) : (
+              <Select
+                id="scheme-select"
+                value={selectedScheme}
+                onChange={(e) => setSelectedScheme(e.target.value)}
+              >
+                <option value="">-- Choose a concept scheme --</option>
+                {schemesQuery.data.map((scheme: ConceptScheme) => (
+                  <option key={scheme.id} value={scheme.id}>
+                    {scheme.title}
+                  </option>
+                ))}
+              </Select>
+            )}
           </div>
         )}
       </Card>

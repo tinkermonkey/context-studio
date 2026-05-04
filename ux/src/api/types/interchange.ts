@@ -68,11 +68,27 @@ export type ResolutionKind =
   | "abort";
 
 /**
+ * Incoming entity from import file.
+ *
+ * Shape varies by serialization format (SKOS, OWL, GraphML),
+ * but the following fields are always extracted and available:
+ * - id: Unique identifier for deduplication and keying
+ * - title: Display label
+ *
+ * Additional fields (description, properties, etc.) depend on source format.
+ */
+export interface IncomingEntity {
+  id: string;
+  title: string;
+  [key: string]: unknown;
+}
+
+/**
  * Conflict detected during import dry-run.
  */
 export interface ImportConflict {
   match_kind: "external_reference" | "uuid" | "title";
-  incoming: Record<string, unknown>;
+  incoming: IncomingEntity;
   existing?: string;
   default_resolution: ResolutionKind;
   available_resolutions: ResolutionKind[];

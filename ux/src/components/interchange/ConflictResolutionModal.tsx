@@ -62,8 +62,8 @@ export function ConflictResolutionModal({
   React.useEffect(() => {
     const newResolutions = new Map<string, ResolutionKind>();
     Object.entries(groupedConflicts).forEach(([matchKind, group]) => {
-      group.forEach((conflict, index) => {
-        const key = `${matchKind}-${conflict.incoming.id || index}`;
+      group.forEach((conflict) => {
+        const key = `${matchKind}-${conflict.incoming.id}`;
         newResolutions.set(key, conflict.default_resolution);
       });
     });
@@ -84,8 +84,8 @@ export function ConflictResolutionModal({
   const handleApplyAll = (matchKind: string, resolution: ResolutionKind) => {
     const newResolutions = new Map(resolutions);
     groupedConflicts[matchKind as keyof typeof groupedConflicts]?.forEach(
-      (conflict, index) => {
-        const key = `${matchKind}-${conflict.incoming.id || index}`;
+      (conflict) => {
+        const key = `${matchKind}-${conflict.incoming.id}`;
         newResolutions.set(key, resolution);
       },
     );
@@ -177,16 +177,16 @@ export function ConflictResolutionModal({
                     <ConflictRow
                       key={idx}
                       conflict={conflict}
-                      conflictIndex={String(conflict.incoming.id || idx)}
+                      conflictIndex={conflict.incoming.id}
                       resolution={
                         resolutions.get(
-                          `external_reference-${conflict.incoming.id || idx}`,
+                          `external_reference-${conflict.incoming.id}`,
                         ) || conflict.default_resolution
                       }
                       onResolutionChange={(resolution) =>
                         handleResolutionChange(
                           "external_reference",
-                          String(conflict.incoming.id || idx),
+                          conflict.incoming.id,
                           resolution,
                         )
                       }
@@ -246,16 +246,16 @@ export function ConflictResolutionModal({
                     <ConflictRow
                       key={idx}
                       conflict={conflict}
-                      conflictIndex={String(conflict.incoming.id || idx)}
+                      conflictIndex={conflict.incoming.id}
                       resolution={
                         resolutions.get(
-                          `uuid-${conflict.incoming.id || idx}`,
+                          `uuid-${conflict.incoming.id}`,
                         ) || conflict.default_resolution
                       }
                       onResolutionChange={(resolution) =>
                         handleResolutionChange(
                           "uuid",
-                          String(conflict.incoming.id || idx),
+                          conflict.incoming.id,
                           resolution,
                         )
                       }
@@ -315,16 +315,16 @@ export function ConflictResolutionModal({
                     <ConflictRow
                       key={idx}
                       conflict={conflict}
-                      conflictIndex={String(conflict.incoming.id || idx)}
+                      conflictIndex={conflict.incoming.id}
                       resolution={
                         resolutions.get(
-                          `title-${conflict.incoming.id || idx}`,
+                          `title-${conflict.incoming.id}`,
                         ) || conflict.default_resolution
                       }
                       onResolutionChange={(resolution) =>
                         handleResolutionChange(
                           "title",
-                          String(conflict.incoming.id || idx),
+                          conflict.incoming.id,
                           resolution,
                         )
                       }
@@ -403,7 +403,7 @@ function ConflictRow({
   resolution,
   onResolutionChange,
 }: ConflictRowProps) {
-  const title = String(conflict.incoming?.title || "Untitled");
+  const title = conflict.incoming.title;
   const existingId = conflict.existing;
 
   return (
