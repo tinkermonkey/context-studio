@@ -13,6 +13,14 @@ from enum import Enum
 from typing import Any, Optional
 
 
+class ChangeOperation(str, Enum):
+    """Types of operations on entities."""
+
+    CREATE = "create"
+    UPDATE = "update"
+    DELETE = "delete"
+
+
 class ResolutionKind(str, Enum):
     """Resolution strategy for import conflicts."""
 
@@ -217,6 +225,6 @@ class ChangeEvent:
     timestamp: datetime
     entity_id: str
     entity_type: str
-    operation: str
+    operation: ChangeOperation
     new_state: Optional[dict[str, Any]] = None
     previous_state: Optional[dict[str, Any]] = None

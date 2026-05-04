@@ -28,6 +28,7 @@ from domain.interchange.value_objects import (
     MatchKind,
     ResolutionKind,
     ChangeEvent,
+    ChangeOperation,
 )
 
 
@@ -240,7 +241,7 @@ class SQLiteInterchangeRepository:
                         timestamp=e.timestamp,
                         entity_id=e.entity_id,
                         entity_type=e.entity_type,
-                        operation=e.operation,
+                        operation=ChangeOperation(e.operation),
                         new_state=e.new_state,
                         previous_state=e.previous_state,
                     )

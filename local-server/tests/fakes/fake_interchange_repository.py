@@ -8,7 +8,7 @@ without requiring database persistence.
 from typing import Optional
 
 from domain.interchange.entities import ImportRun, ImportRunStatus
-from domain.interchange.value_objects import ChangeEvent
+from domain.interchange.value_objects import ChangeEvent, ChangeOperation
 
 
 class FakeInterchangeRepository:
@@ -141,7 +141,7 @@ class FakeInterchangeRepository:
                 timestamp=e["timestamp"],
                 entity_id=e["entity_id"],
                 entity_type=e["entity_type"],
-                operation=e["operation"],
+                operation=ChangeOperation(e["operation"]),
                 new_state=e.get("new_state"),
                 previous_state=e.get("previous_state"),
             )
