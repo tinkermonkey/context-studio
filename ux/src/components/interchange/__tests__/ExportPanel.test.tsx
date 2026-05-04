@@ -292,9 +292,7 @@ describe("ExportPanel", () => {
       fireEvent.change(scopeSelect, { target: { value: "taxonomy" } });
 
       await waitFor(() => {
-        expect(
-          screen.getByText("No taxonomies available"),
-        ).toBeInTheDocument();
+        expect(screen.getByText("No taxonomies available")).toBeInTheDocument();
       });
     });
   });

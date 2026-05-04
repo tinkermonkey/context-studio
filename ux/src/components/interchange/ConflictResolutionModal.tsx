@@ -173,7 +173,7 @@ export function ConflictResolutionModal({
 
               {expandedGroups.has("external_reference") && (
                 <div className="mt-4 space-y-3">
-                  {groupedConflicts.external_reference.map((conflict, idx) => (
+                  {groupedConflicts.external_reference.map((conflict, _idx) => (
                     <ConflictRow
                       key={conflict.incoming.id}
                       conflict={conflict}
@@ -242,15 +242,14 @@ export function ConflictResolutionModal({
 
               {expandedGroups.has("uuid") && (
                 <div className="mt-4 space-y-3">
-                  {groupedConflicts.uuid.map((conflict, idx) => (
+                  {groupedConflicts.uuid.map((conflict, _idx) => (
                     <ConflictRow
                       key={conflict.incoming.id}
                       conflict={conflict}
                       conflictIndex={conflict.incoming.id}
                       resolution={
-                        resolutions.get(
-                          `uuid-${conflict.incoming.id}`,
-                        ) || conflict.default_resolution
+                        resolutions.get(`uuid-${conflict.incoming.id}`) ||
+                        conflict.default_resolution
                       }
                       onResolutionChange={(resolution) =>
                         handleResolutionChange(
@@ -311,15 +310,14 @@ export function ConflictResolutionModal({
 
               {expandedGroups.has("title") && (
                 <div className="mt-4 space-y-3">
-                  {groupedConflicts.title.map((conflict, idx) => (
+                  {groupedConflicts.title.map((conflict, _idx) => (
                     <ConflictRow
                       key={conflict.incoming.id}
                       conflict={conflict}
                       conflictIndex={conflict.incoming.id}
                       resolution={
-                        resolutions.get(
-                          `title-${conflict.incoming.id}`,
-                        ) || conflict.default_resolution
+                        resolutions.get(`title-${conflict.incoming.id}`) ||
+                        conflict.default_resolution
                       }
                       onResolutionChange={(resolution) =>
                         handleResolutionChange(

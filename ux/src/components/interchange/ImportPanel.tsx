@@ -91,7 +91,7 @@ export function ImportPanel({ onPreviewRequested }: ImportPanelProps) {
     }
     if (format === "auto") {
       error(
-        "Unable to detect file format. Please select a format manually or use a recognized file extension (.owl, .ttl, .json, .graphml, etc.)"
+        "Unable to detect file format. Please select a format manually or use a recognized file extension (.owl, .ttl, .json, .graphml, etc.)",
       );
       return;
     }
@@ -125,7 +125,8 @@ export function ImportPanel({ onPreviewRequested }: ImportPanelProps) {
             </button>
           </p>
           <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            Supported formats: SKOS (TTL, N3, JSON, JSON-LD, NT, NQ), OWL (RDF, XML, OWL), GraphML
+            Supported formats: SKOS (TTL, N3, JSON, JSON-LD, NT, NQ), OWL (RDF,
+            XML, OWL), GraphML
           </p>
           <input
             ref={fileInputRef}
