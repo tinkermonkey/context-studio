@@ -21,8 +21,8 @@ import json
 from fastapi import APIRouter, Depends, HTTPException, Query, status as http_status, UploadFile, File, Form
 from fastapi.responses import StreamingResponse
 
-from domain.interchange.value_objects import SerializationScope, SerializationScopeType, SerializationFormat, ChangeEvent
-from domain.interchange.entities import ImportRunStatus
+from domain.interchange.value_objects import SerializationScope, SerializationScopeType, SerializationFormat, ChangeEvent, ResolutionKind, MatchKind
+from domain.interchange.entities import ImportRunStatus, ResolutionRecord
 from domain.interchange.ports import ImportRunRepository
 from domain.ontology.ports import OntologyRepository
 from utils.logger import get_logger
@@ -135,8 +135,8 @@ def _import_plan_to_response(plan) -> ImportPlanResponse:
     )
 
 
-def _import_run_to_response(import_run) -> ImportRunResponse:
-    """Convert domain ImportRun to response."""
+def _import_run_to_response(import_run, warnings: Optional[list[str]] = None) -> ImportRunResponse:
+    """Convert domain ImportRun to response, optionally with warnings from commit."""
     return ImportRunResponse(
         id=import_run.id,
         created_at=import_run.created_at,
@@ -154,6 +154,7 @@ def _import_run_to_response(import_run) -> ImportRunResponse:
             for r in import_run.resolutions
         ],
         affected_entity_ids=import_run.affected_entity_ids,
+        warnings=warnings or [],
         status=import_run.status.value,
     )
 
@@ -267,15 +268,46 @@ async def import_ontology(
         # Parse dry_run parameter
         is_dry_run = dry_run.lower() == "true"
 
-        # Parse resolutions from JSON if provided
+        # Parse resolutions from JSON and convert to ResolutionRecord objects
         parsed_resolutions = None
         if resolutions:
             try:
-                parsed_resolutions = json.loads(resolutions)
+                resolutions_list = json.loads(resolutions)
+                parsed_resolutions = []
+                for res in resolutions_list:
+                    try:
+                        # Validate that all required fields are present
+                        if not isinstance(res, dict):
+                            raise ValueError(f"Expected dict, got {type(res).__name__}")
+                        if "match_kind" not in res or "entity_id" not in res or "resolution_chosen" not in res:
+                            raise ValueError("Missing required fields: match_kind, entity_id, resolution_chosen")
+
+                        # Validate that the resolution type is supported
+                        resolution_kind = ResolutionKind(res["resolution_chosen"])
+                        if resolution_kind not in (ResolutionKind.SKIP, ResolutionKind.ABORT):
+                            raise ValueError(
+                                f"Resolution '{resolution_kind.value}' is not yet supported. "
+                                f"Supported resolutions: skip, abort"
+                            )
+
+                        # Convert to ResolutionRecord
+                        resolution_record = ResolutionRecord(
+                            match_kind=MatchKind(res["match_kind"]),
+                            entity_id=res["entity_id"],
+                            resolution_chosen=resolution_kind,
+                        )
+                        parsed_resolutions.append(resolution_record)
+                    except (KeyError, ValueError) as e:
+                        raise ValueError(f"Invalid resolution record: {str(e)}")
             except json.JSONDecodeError as e:
                 raise HTTPException(
                     status_code=http_status.HTTP_400_BAD_REQUEST,
                     detail=f"Invalid resolutions JSON: {str(e)}",
+                )
+            except ValueError as e:
+                raise HTTPException(
+                    status_code=http_status.HTTP_400_BAD_REQUEST,
+                    detail=f"Invalid resolutions: {str(e)}",
                 )
 
         # Read file content
@@ -322,7 +354,8 @@ async def import_ontology(
                     f"ImportRun {import_plan.import_run_id} not found after commit"
                 )
 
-            return _import_run_to_response(import_run)
+            # Pass warnings from the commit operation to the response
+            return _import_run_to_response(import_run, warnings=list(import_plan.warnings))
 
     except HTTPException:
         raise

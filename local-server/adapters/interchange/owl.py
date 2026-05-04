@@ -528,15 +528,69 @@ class OWLDeserializer(OntologyDeserializer):
 
         # Process entities and persist those that aren't skipped
         affected_entity_ids = []
-        for entity_id in self.incoming_entities.keys():
+        for entity_id, entity_dict in self.incoming_entities.items():
             # Check if this entity should be skipped
             if entity_id in resolution_map:
                 if resolution_map[entity_id] == ResolutionKind.SKIP:
                     continue
 
-            # For OWL, we persist entities during processing
-            # This is a simplified implementation that just tracks affected entities
-            affected_entity_ids.append(entity_id)
+            # Persist the entity (assumes CREATE semantics)
+            entity_type = entity_dict.get("type")
+            try:
+                if entity_type == "class":
+                    # Create and persist Class entity
+                    # Get taxonomy_id from the parent concept scheme
+                    concept_scheme_id = entity_dict.get("concept_scheme_id", "")
+                    taxonomy_id = ""
+                    if (
+                        concept_scheme_id
+                        and concept_scheme_id in self.incoming_entities
+                    ):
+                        concept_scheme = self.incoming_entities[concept_scheme_id]
+                        taxonomy_id = concept_scheme.get("taxonomy_id", "")
+
+                    class_entity = Class(
+                        id=entity_dict["id"],
+                        title=entity_dict["title"],
+                        description=entity_dict.get("description"),
+                        concept_scheme_id=concept_scheme_id,
+                        taxonomy_id=taxonomy_id,
+                        parent_class_id=entity_dict.get("parent_class_id"),
+                        external_references=[
+                            ExternalReference(
+                                source=ref["source"],
+                                identifier=ref["identifier"],
+                                uri=ref.get("uri"),
+                            )
+                            for ref in entity_dict.get("external_references", [])
+                        ],
+                    )
+                    self.ontology_repo.save_class(class_entity)
+                    affected_entity_ids.append(entity_id)
+                elif entity_type == "concept_scheme":
+                    # Create and persist ConceptScheme entity
+                    scheme = ConceptScheme(
+                        id=entity_dict["id"],
+                        title=entity_dict["title"],
+                        description=entity_dict.get("description"),
+                        taxonomy_id=entity_dict.get("taxonomy_id", ""),
+                    )
+                    self.ontology_repo.save_concept_scheme(scheme)
+                    affected_entity_ids.append(entity_id)
+                elif entity_type == "taxonomy":
+                    # Create and persist Taxonomy entity
+                    taxonomy = Taxonomy(
+                        id=entity_dict["id"],
+                        title=entity_dict["title"],
+                        description=entity_dict.get("description"),
+                    )
+                    self.ontology_repo.save_taxonomy(taxonomy)
+                    affected_entity_ids.append(entity_id)
+            except Exception as e:
+                # Report failed entity in warnings
+                warning_msg = f"Failed to persist {entity_type or 'unknown'} entity {entity_id}: {str(e)}"
+                logger.error(warning_msg)
+                self.warnings.append(warning_msg)
 
         # Update ImportRun with affected entities and mark as committed
         import_run.affected_entity_ids = affected_entity_ids

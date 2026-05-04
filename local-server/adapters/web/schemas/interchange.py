@@ -120,6 +120,9 @@ class ImportRunResponse(BaseModel):
     affected_entity_ids: List[str] = Field(
         default_factory=list, description="Entities affected by import"
     )
+    warnings: List[str] = Field(
+        default_factory=list, description="Warning messages from import operation"
+    )
     status: str = Field(
         ..., description="Current status: pending, committed, failed, or rolled_back"
     )
