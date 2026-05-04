@@ -2,14 +2,15 @@
 Value objects for the Data Interchange bounded context.
 
 These are immutable dataclasses representing concepts without identity:
-SerializationScope, ImportConflict, and ImportPlan.
+SerializationScope, ImportConflict, ImportPlan, and ChangeEvent.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 
 class ResolutionKind(str, Enum):
@@ -173,3 +174,30 @@ class ImportPlan:
             raise ValueError(
                 f"new_entity_count must be non-negative, got {self.new_entity_count}"
             )
+
+
+@dataclass(frozen=True)
+class ChangeEvent:
+    """
+    Represents a change event associated with an import run.
+
+    Immutable value object capturing the audit trail of changes made during
+    an import operation.
+
+    Attributes:
+        id: Unique identifier for the change event
+        timestamp: UTC timestamp of when the change occurred
+        entity_id: ID of the entity that changed
+        entity_type: Type of the entity (taxonomy, concept_scheme, class, etc.)
+        operation: Operation performed (create, update, delete)
+        new_state: JSON snapshot of entity after change
+        previous_state: JSON snapshot of entity before change (optional, for updates)
+    """
+
+    id: str
+    timestamp: datetime
+    entity_id: str
+    entity_type: str
+    operation: str
+    new_state: Optional[dict[str, Any]] = None
+    previous_state: Optional[dict[str, Any]] = None

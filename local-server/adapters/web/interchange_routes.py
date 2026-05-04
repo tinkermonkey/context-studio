@@ -21,7 +21,7 @@ import json
 from fastapi import APIRouter, Depends, HTTPException, Query, status as http_status, UploadFile, File, Form
 from fastapi.responses import StreamingResponse
 
-from domain.interchange.value_objects import SerializationScope, SerializationScopeType, SerializationFormat
+from domain.interchange.value_objects import SerializationScope, SerializationScopeType, SerializationFormat, ChangeEvent
 from domain.interchange.entities import ImportRunStatus
 from domain.interchange.ports import ImportRunRepository
 from domain.ontology.ports import OntologyRepository
@@ -158,16 +158,16 @@ def _import_run_to_response(import_run) -> ImportRunResponse:
     )
 
 
-def _change_event_to_response(event: dict) -> ChangeEventResponse:
-    """Convert change event dict to response."""
+def _change_event_to_response(event: ChangeEvent) -> ChangeEventResponse:
+    """Convert ChangeEvent domain object to response."""
     return ChangeEventResponse(
-        id=event["id"],
-        timestamp=event["timestamp"],
-        entity_id=event["entity_id"],
-        entity_type=event["entity_type"],
-        operation=event["operation"],
-        new_state=event.get("new_state"),
-        previous_state=event.get("previous_state"),
+        id=event.id,
+        timestamp=event.timestamp,
+        entity_id=event.entity_id,
+        entity_type=event.entity_type,
+        operation=event.operation,
+        new_state=event.new_state,
+        previous_state=event.previous_state,
     )
 
 
@@ -497,11 +497,11 @@ async def get_run_change_events(
         filtered_events = events
         if entity_type:
             filtered_events = [
-                e for e in filtered_events if e.get("entity_type") == entity_type
+                e for e in filtered_events if e.entity_type == entity_type
             ]
         if change_type:
             filtered_events = [
-                e for e in filtered_events if e.get("operation") == change_type
+                e for e in filtered_events if e.operation == change_type
             ]
 
         # Apply pagination

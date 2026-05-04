@@ -95,7 +95,7 @@ class GraphMLSerializer(OntologySerializer):
                     self._serialize_taxonomy(scope.taxonomy_id)
                 case SerializationScopeType.SCHEME:
                     assert scope.scheme_id is not None
-                    self._serialize_scheme(scope.scheme_id)
+                    self._serialize_scheme(scope.scheme_id, scope.include_descendants)
                 case SerializationScopeType.ENTITY_SET:
                     self._serialize_entity_set(scope.entity_ids)
 
@@ -167,8 +167,13 @@ class GraphMLSerializer(OntologySerializer):
         # Add relationships within this taxonomy
         self._add_structural_edges_for_taxonomy(taxonomy, schemes)
 
-    def _serialize_scheme(self, scheme_id: str) -> None:
-        """Serialize a single concept scheme and its classes."""
+    def _serialize_scheme(self, scheme_id: str, include_descendants: bool = True) -> None:
+        """Serialize a single concept scheme and optionally its classes.
+
+        Args:
+            scheme_id: The concept scheme ID
+            include_descendants: If True, include classes within the scheme; if False, only serialize the scheme itself
+        """
         scheme = self.ontology_repo.get_concept_scheme(scheme_id)
         if not scheme:
             raise ValueError(f"Concept scheme not found: {scheme_id}")
@@ -180,12 +185,14 @@ class GraphMLSerializer(OntologySerializer):
 
         self._add_concept_scheme(scheme)
 
-        # Add classes in this scheme
-        classes = self.ontology_repo.list_classes(
-            concept_scheme_id=scheme.id, limit=10000
-        )
-        for cls in classes:
-            self._add_class(cls)
+        # Add classes in this scheme only if include_descendants is True
+        classes = []
+        if include_descendants:
+            classes = self.ontology_repo.list_classes(
+                concept_scheme_id=scheme.id, limit=10000
+            )
+            for cls in classes:
+                self._add_class(cls)
 
         # Add structural edges
         self._add_structural_edges_for_scheme(scheme, classes)

@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 from typing import Protocol
 
 from .entities import ImportRun, ImportRunStatus, ResolutionRecord
-from .value_objects import SerializationScope, ImportPlan
+from .value_objects import SerializationScope, ImportPlan, ChangeEvent
 
 
 class OntologySerializer(ABC):
@@ -166,7 +166,7 @@ class ImportRunRepository(Protocol):
         """
         ...
 
-    def get_change_events_for_run(self, import_run_id: str) -> list[dict]:
+    def get_change_events_for_run(self, import_run_id: str) -> list[ChangeEvent]:
         """
         Retrieve change events associated with an import run.
 
@@ -174,6 +174,6 @@ class ImportRunRepository(Protocol):
             import_run_id: The ID of the import run
 
         Returns:
-            List of change event dicts for the run
+            List of ChangeEvent objects for the run
         """
         ...

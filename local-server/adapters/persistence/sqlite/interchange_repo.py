@@ -14,7 +14,7 @@ from sqlalchemy.orm import sessionmaker
 
 from adapters.persistence.sqlite.models import (
     ImportRun as ImportRunORM,
-    ChangeEvent,
+    ChangeEvent as ChangeEventORM,
 )
 from domain.interchange.entities import (
     ImportRun,
@@ -27,6 +27,7 @@ from domain.interchange.value_objects import (
     SerializationFormat,
     MatchKind,
     ResolutionKind,
+    ChangeEvent,
 )
 
 
@@ -215,7 +216,7 @@ class SQLiteInterchangeRepository:
         except SQLAlchemyError as e:
             raise RuntimeError(f"Failed to update import run: {str(e)}") from e
 
-    def get_change_events_for_run(self, import_run_id: str) -> list[dict]:
+    def get_change_events_for_run(self, import_run_id: str) -> list[ChangeEvent]:
         """
         Retrieve all change events associated with an import run.
 
@@ -223,26 +224,26 @@ class SQLiteInterchangeRepository:
             import_run_id: The ID of the import run
 
         Returns:
-            List of change event records (as dicts for flexibility)
+            List of ChangeEvent domain objects
         """
         try:
             with self.session_factory() as session:
                 query = (
-                    select(ChangeEvent)
-                    .where(ChangeEvent.import_run_id == import_run_id)
-                    .order_by(ChangeEvent.timestamp.asc())
+                    select(ChangeEventORM)
+                    .where(ChangeEventORM.import_run_id == import_run_id)
+                    .order_by(ChangeEventORM.timestamp.asc())
                 )
                 orm_events = session.execute(query).scalars().all()
                 return [
-                    {
-                        "id": e.id,
-                        "entity_id": e.entity_id,
-                        "entity_type": e.entity_type,
-                        "operation": e.operation,
-                        "timestamp": e.timestamp,
-                        "new_state": e.new_state,
-                        "previous_state": e.previous_state,
-                    }
+                    ChangeEvent(
+                        id=e.id,
+                        timestamp=e.timestamp,
+                        entity_id=e.entity_id,
+                        entity_type=e.entity_type,
+                        operation=e.operation,
+                        new_state=e.new_state,
+                        previous_state=e.previous_state,
+                    )
                     for e in orm_events
                 ]
         except SQLAlchemyError as e:
@@ -274,7 +275,11 @@ class SQLiteInterchangeRepository:
         )
 
     def _orm_to_domain(self, orm_run: ImportRunORM) -> ImportRun:
-        """Convert ORM ImportRun to domain entity."""
+        """Convert ORM ImportRun to domain entity.
+
+        Raises:
+            RuntimeError: If resolutions data is corrupted or invalid
+        """
         # Reconstruct scope
         scope_type = SerializationScopeType(orm_run.scope_type)
         scope = SerializationScope(
@@ -285,10 +290,15 @@ class SQLiteInterchangeRepository:
             entity_ids=tuple(orm_run.scope_entity_ids or []),
         )
 
-        # Reconstruct resolutions
-        resolutions = self._deserialize_resolutions(
-            cast(list[dict], orm_run.resolutions or [])
-        )
+        # Reconstruct resolutions with error handling for corrupted data
+        try:
+            resolutions = self._deserialize_resolutions(
+                cast(list[dict], orm_run.resolutions or [])
+            )
+        except ValueError as e:
+            raise RuntimeError(
+                f"Failed to deserialize resolutions for import run {orm_run.id}: {str(e)}"
+            ) from e
 
         return ImportRun(
             id=cast(str, orm_run.id),
@@ -319,12 +329,27 @@ class SQLiteInterchangeRepository:
     def _deserialize_resolutions(
         resolutions_data: list[dict],
     ) -> list[ResolutionRecord]:
-        """Deserialize JSON resolutions to ResolutionRecord objects."""
-        return [
-            ResolutionRecord(
-                match_kind=MatchKind(r["match_kind"]),
-                entity_id=r["entity_id"],
-                resolution_chosen=ResolutionKind(r["resolution_chosen"]),
-            )
-            for r in resolutions_data
-        ]
+        """Deserialize JSON resolutions to ResolutionRecord objects.
+
+        Raises:
+            ValueError: If resolution data is corrupted or missing required fields
+        """
+        result = []
+        for i, r in enumerate(resolutions_data):
+            try:
+                result.append(
+                    ResolutionRecord(
+                        match_kind=MatchKind(r["match_kind"]),
+                        entity_id=r["entity_id"],
+                        resolution_chosen=ResolutionKind(r["resolution_chosen"]),
+                    )
+                )
+            except KeyError as e:
+                raise ValueError(
+                    f"Corrupted resolution record at index {i}: missing required field {str(e)}"
+                ) from e
+            except ValueError as e:
+                raise ValueError(
+                    f"Corrupted resolution record at index {i}: invalid enum value in {str(e)}"
+                ) from e
+        return result

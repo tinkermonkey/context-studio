@@ -8,6 +8,7 @@ without requiring database persistence.
 from typing import Optional
 
 from domain.interchange.entities import ImportRun, ImportRunStatus
+from domain.interchange.value_objects import ChangeEvent
 
 
 class FakeInterchangeRepository:
@@ -123,7 +124,7 @@ class FakeInterchangeRepository:
         """
         return sum(1 for r in self.runs.values() if r.status == status)
 
-    def get_change_events_for_run(self, import_run_id: str) -> list[dict]:
+    def get_change_events_for_run(self, import_run_id: str) -> list[ChangeEvent]:
         """
         Retrieve change events associated with an import run.
 
@@ -131,9 +132,21 @@ class FakeInterchangeRepository:
             import_run_id: The ID of the import run
 
         Returns:
-            List of change event dicts for the run
+            List of ChangeEvent domain objects for the run
         """
-        return self.change_events.get(import_run_id, [])
+        events = self.change_events.get(import_run_id, [])
+        return [
+            ChangeEvent(
+                id=e["id"],
+                timestamp=e["timestamp"],
+                entity_id=e["entity_id"],
+                entity_type=e["entity_type"],
+                operation=e["operation"],
+                new_state=e.get("new_state"),
+                previous_state=e.get("previous_state"),
+            )
+            for e in events
+        ]
 
     def add_change_event(self, import_run_id: str, event: dict) -> None:
         """

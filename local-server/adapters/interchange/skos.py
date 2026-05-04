@@ -113,7 +113,7 @@ class SKOSSerializer(OntologySerializer):
                     self._serialize_taxonomy(scope.taxonomy_id)
                 case SerializationScopeType.SCHEME:
                     assert scope.scheme_id is not None
-                    self._serialize_scheme(scope.scheme_id)
+                    self._serialize_scheme(scope.scheme_id, scope.include_descendants)
                 case SerializationScopeType.ENTITY_SET:
                     self._serialize_entity_set(scope.entity_ids)
 
@@ -142,13 +142,18 @@ class SKOSSerializer(OntologySerializer):
 
         self._add_taxonomy_to_graph(taxonomy)
 
-    def _serialize_scheme(self, scheme_id: str) -> None:
-        """Serialize a single concept scheme and its classes."""
+    def _serialize_scheme(self, scheme_id: str, include_descendants: bool = True) -> None:
+        """Serialize a single concept scheme and optionally its classes.
+
+        Args:
+            scheme_id: The concept scheme ID
+            include_descendants: If True, include classes within the scheme; if False, only serialize the scheme itself
+        """
         scheme = self.ontology_repo.get_concept_scheme(scheme_id)
         if not scheme:
             raise ValueError(f"Concept scheme not found: {scheme_id}")
 
-        self._add_concept_scheme_to_graph(scheme, include_parent_taxonomy=True)
+        self._add_concept_scheme_to_graph(scheme, include_parent_taxonomy=True, include_descendants=include_descendants)
 
     def _serialize_entity_set(self, entity_ids: Optional[tuple[str, ...]]) -> None:
         """Serialize a specified set of entities."""
@@ -202,9 +207,15 @@ class SKOSSerializer(OntologySerializer):
             self._add_concept_scheme_to_graph(scheme, include_parent_taxonomy=True)
 
     def _add_concept_scheme_to_graph(
-        self, scheme: ConceptScheme, include_parent_taxonomy: bool = True
+        self, scheme: ConceptScheme, include_parent_taxonomy: bool = True, include_descendants: bool = True
     ) -> None:
-        """Add a concept scheme and its classes to the graph."""
+        """Add a concept scheme and optionally its classes to the graph.
+
+        Args:
+            scheme: The concept scheme to add
+            include_parent_taxonomy: If True, add link to parent taxonomy
+            include_descendants: If True, add classes within the scheme; if False, only add the scheme itself
+        """
         assert self.graph is not None
         scheme_uri = self._entity_uri(scheme.id)
         self.graph.add((scheme_uri, RDF.type, SKOS.ConceptScheme))
@@ -217,10 +228,11 @@ class SKOSSerializer(OntologySerializer):
             taxonomy_uri = self._entity_uri(scheme.taxonomy_id)
             self.graph.add((scheme_uri, DCT.isPartOf, taxonomy_uri))
 
-        # Add classes that belong to this scheme
-        classes = self.ontology_repo.list_classes(concept_scheme_id=scheme.id)
-        for class_entity in classes:
-            self._add_class_to_graph(class_entity)
+        # Add classes that belong to this scheme only if include_descendants is True
+        if include_descendants:
+            classes = self.ontology_repo.list_classes(concept_scheme_id=scheme.id)
+            for class_entity in classes:
+                self._add_class_to_graph(class_entity)
 
     def _add_class_to_graph(self, class_entity: Class) -> None:
         """Add a class as a skos:Concept to the graph."""
