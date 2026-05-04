@@ -338,3 +338,53 @@ class TestImportRunAffectedEntities:
 
         with pytest.raises(ValueError, match="terminal state"):
             run.add_affected_entity("entity-1")
+
+    def test_resolutions_immutable(self):
+        """Resolutions field returns immutable tuple, preventing direct modification."""
+        scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+        run = ImportRun(
+            id="test-run-1",
+            created_at=datetime.now(timezone.utc),
+            created_by="user-1",
+            format=SerializationFormat.SKOS,
+            source_uri="test.skos",
+            source_hash="abc123",
+            scope=scope,
+        )
+
+        run.add_resolution(
+            MatchKind.EXTERNAL_REFERENCE, "entity-1", ResolutionKind.MERGE
+        )
+
+        # Returned resolutions is a tuple (immutable)
+        assert isinstance(run.resolutions, tuple)
+        assert len(run.resolutions) == 1
+
+        # Cannot modify the returned tuple
+        with pytest.raises(AttributeError):
+            run.resolutions.append(  # type: ignore
+                type("obj", (), {})()
+            )
+
+    def test_affected_entity_ids_immutable(self):
+        """Affected entity IDs field returns immutable tuple, preventing direct modification."""
+        scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+        run = ImportRun(
+            id="test-run-1",
+            created_at=datetime.now(timezone.utc),
+            created_by="user-1",
+            format=SerializationFormat.SKOS,
+            source_uri="test.skos",
+            source_hash="abc123",
+            scope=scope,
+        )
+
+        run.add_affected_entity("entity-1")
+
+        # Returned affected_entity_ids is a tuple (immutable)
+        assert isinstance(run.affected_entity_ids, tuple)
+        assert len(run.affected_entity_ids) == 1
+
+        # Cannot modify the returned tuple
+        with pytest.raises(AttributeError):
+            run.affected_entity_ids.append("entity-2")  # type: ignore

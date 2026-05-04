@@ -669,7 +669,8 @@ class GraphMLDeserializer(OntologyDeserializer):
         )
 
         # Update ImportRun with affected entities and mark as committed
-        import_run.affected_entity_ids = affected_entity_ids
+        for entity_id in affected_entity_ids:
+            import_run.add_affected_entity(entity_id)
         import_run.mark_committed()
         if self.interchange_repo:
             self.interchange_repo.update(import_run)
