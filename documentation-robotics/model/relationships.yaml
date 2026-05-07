@@ -1,6 +1,6 @@
 # Intra-layer relationships
 # Format: source_id -> predicate -> target_id
-# Last updated: 2026-03-24T10:44:35.863Z
+# Last updated: 2026-05-07T22:24:32.004Z
 
 - source: motivation.assessment.security-posture-assessment
   target: motivation.outcome.curated-domain-ontology
@@ -696,3 +696,499 @@
   predicate: governs
   layer: ux
   category: structural
+- source: technology.systemsoftware.python
+  target: application.applicationservice.ontology-service
+  predicate: realizes
+  layer: technology
+  targetLayer: application
+  category: structural
+- source: technology.systemsoftware.fast-api
+  target: application.applicationservice.ontology-service
+  predicate: realizes
+  layer: technology
+  targetLayer: application
+  category: structural
+- source: technology.systemsoftware.sentence-transformers
+  target: application.applicationservice.extraction-service
+  predicate: realizes
+  layer: technology
+  targetLayer: application
+  category: structural
+- source: technology.systemsoftware.sqlalchemy
+  target: application.applicationcomponent.sqlite-persistence-adapter
+  predicate: serves
+  layer: technology
+  targetLayer: application
+  category: structural
+- source: technology.systemsoftware.network-x
+  target: application.applicationcomponent.network-x-graph-engine-adapter
+  predicate: serves
+  layer: technology
+  targetLayer: application
+  category: structural
+- source: technology.systemsoftware.rdflib
+  target: application.applicationservice.graph-analysis-service
+  predicate: realizes
+  layer: technology
+  targetLayer: application
+  category: structural
+- source: technology.systemsoftware.spa-cy
+  target: application.applicationservice.extraction-service
+  predicate: realizes
+  layer: technology
+  targetLayer: application
+  category: structural
+- source: technology.systemsoftware.duck-db
+  target: application.applicationservice.versioning-service
+  predicate: realizes
+  layer: technology
+  targetLayer: application
+  category: structural
+- source: application.applicationservice.ontology-service
+  target: application.applicationservice.extraction-service
+  predicate: depends-on
+  layer: application
+  category: structural
+- source: application.applicationcomponent.sqlite-persistence-adapter
+  target: application.applicationservice.ontology-service
+  predicate: realizes
+  layer: application
+  category: structural
+- source: application.applicationcomponent.network-x-graph-engine-adapter
+  target: application.applicationservice.graph-analysis-service
+  predicate: realizes
+  layer: application
+  category: structural
+- source: application.applicationcomponent.sentence-transformer-embedding-adapter
+  target: application.applicationservice.extraction-service
+  predicate: realizes
+  layer: application
+  category: structural
+- source: application.applicationcomponent.llm-provider-router
+  target: application.applicationservice.pipeline-service
+  predicate: realizes
+  layer: application
+  category: structural
+- source: application.applicationcomponent.system-metrics-collector-adapter
+  target: application.applicationservice.admin-service
+  predicate: realizes
+  layer: application
+  category: structural
+- source: application.applicationcomponent.sqlite-persistence-adapter
+  target: application.applicationcomponent.llm-provider-router
+  predicate: uses
+  layer: application
+  category: structural
+- source: technology.systemsoftware.python
+  target: application.applicationservice.versioning-service
+  predicate: realizes
+  layer: technology
+  targetLayer: application
+  category: structural
+- source: technology.systemsoftware.python
+  target: application.applicationservice.pipeline-service
+  predicate: realizes
+  layer: technology
+  targetLayer: application
+  category: structural
+- source: technology.systemsoftware.python
+  target: application.applicationservice.admin-service
+  predicate: realizes
+  layer: technology
+  targetLayer: application
+  category: structural
+- source: technology.systemsoftware.react
+  target: application.applicationservice.admin-service
+  predicate: realizes
+  layer: technology
+  targetLayer: application
+  category: structural
+- source: data-model.objectschema.ontology-entity
+  target: technology.systemsoftware.sqlalchemy
+  predicate: depends-on
+  layer: data-model
+  targetLayer: technology
+  category: structural
+- source: data-model.objectschema.relationship
+  target: technology.systemsoftware.sqlalchemy
+  predicate: depends-on
+  layer: data-model
+  targetLayer: technology
+  category: structural
+- source: data-model.objectschema.change-event
+  target: technology.systemsoftware.sqlalchemy
+  predicate: depends-on
+  layer: data-model
+  targetLayer: technology
+  category: structural
+- source: data-model.objectschema.changeset
+  target: technology.systemsoftware.sqlalchemy
+  predicate: depends-on
+  layer: data-model
+  targetLayer: technology
+  category: structural
+- source: data-model.objectschema.import-run
+  target: technology.systemsoftware.sqlalchemy
+  predicate: depends-on
+  layer: data-model
+  targetLayer: technology
+  category: structural
+- source: data-model.objectschema.pipeline-configuration
+  target: technology.systemsoftware.sqlalchemy
+  predicate: depends-on
+  layer: data-model
+  targetLayer: technology
+  category: structural
+- source: technology.systemsoftware.alembic
+  target: technology.systemsoftware.sqlalchemy
+  predicate: depends-on
+  layer: technology
+  category: structural
+- source: technology.systemsoftware.pydantic
+  target: application.applicationservice.ontology-service
+  predicate: realizes
+  layer: technology
+  targetLayer: application
+  category: structural
+- source: application.applicationservice.import-run-service
+  target: application.applicationservice.versioning-service
+  predicate: depends-on
+  layer: application
+  category: structural
+- source: technology.systemsoftware.vite
+  target: technology.systemsoftware.react
+  predicate: depends-on
+  layer: technology
+  category: structural
+- source: technology.systemsoftware.tan-stack-router
+  target: technology.systemsoftware.react
+  predicate: depends-on
+  layer: technology
+  category: structural
+- source: technology.systemsoftware.tan-stack-query
+  target: technology.systemsoftware.react
+  predicate: depends-on
+  layer: technology
+  category: structural
+- source: technology.systemsoftware.flowbite-react
+  target: technology.systemsoftware.react
+  predicate: depends-on
+  layer: technology
+  category: structural
+- source: technology.systemsoftware.tailwind-css
+  target: technology.systemsoftware.vite
+  predicate: depends-on
+  layer: technology
+  category: structural
+- source: application.applicationfunction.embedding-generation
+  target: application.applicationservice.extraction-service
+  predicate: delivers-value
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: application.applicationfunction.sparql-query-function
+  target: application.applicationservice.graph-analysis-service
+  predicate: delivers-value
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: application.applicationfunction.network-metrics-function
+  target: application.applicationservice.graph-analysis-service
+  predicate: delivers-value
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: application.applicationfunction.llm-provider-routing
+  target: application.applicationservice.pipeline-service
+  predicate: delivers-value
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: application.applicationcomponent.sentence-transformer-embedding-adapter
+  target: application.applicationfunction.embedding-generation
+  predicate: composes
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: application.applicationcomponent.llm-provider-router
+  target: application.applicationfunction.llm-provider-routing
+  predicate: composes
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: application.applicationcomponent.network-x-graph-engine-adapter
+  target: application.applicationfunction.network-metrics-function
+  predicate: composes
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: application.applicationcomponent.network-x-graph-engine-adapter
+  target: application.applicationfunction.sparql-query-function
+  predicate: composes
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: medium
+    basis: domain pattern
+- source: application.applicationservice.extraction-service
+  target: application.applicationservice.graph-analysis-service
+  predicate: depends-on
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: medium
+    basis: domain pattern
+- source: application.applicationservice.pipeline-service
+  target: application.applicationservice.ontology-service
+  predicate: depends-on
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: medium
+    basis: domain pattern
+- source: application.applicationservice.ontology-service
+  target: application.applicationservice.versioning-service
+  predicate: flows-to
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: domain pattern
+- source: technology.systemsoftware.fast-api
+  target: technology.systemsoftware.python
+  predicate: depends-on
+  layer: technology
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: import dependency
+- source: technology.systemsoftware.sqlalchemy
+  target: technology.systemsoftware.python
+  predicate: depends-on
+  layer: technology
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: import dependency
+- source: technology.systemsoftware.alembic
+  target: technology.systemsoftware.python
+  predicate: depends-on
+  layer: technology
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: import dependency
+- source: technology.systemsoftware.pydantic
+  target: technology.systemsoftware.python
+  predicate: depends-on
+  layer: technology
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: import dependency
+- source: technology.systemsoftware.sentence-transformers
+  target: technology.systemsoftware.python
+  predicate: depends-on
+  layer: technology
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: import dependency
+- source: technology.systemsoftware.spa-cy
+  target: technology.systemsoftware.python
+  predicate: depends-on
+  layer: technology
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: import dependency
+- source: technology.systemsoftware.network-x
+  target: technology.systemsoftware.python
+  predicate: depends-on
+  layer: technology
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: import dependency
+- source: technology.systemsoftware.rdflib
+  target: technology.systemsoftware.python
+  predicate: depends-on
+  layer: technology
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: import dependency
+- source: technology.systemsoftware.duck-db
+  target: technology.systemsoftware.python
+  predicate: depends-on
+  layer: technology
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: import dependency
+- source: technology.systemsoftware.fast-api
+  target: technology.technologyevent.rate-limit-threshold-event
+  predicate: triggers
+  layer: technology
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: domain pattern
+- source: technology.systemsoftware.fast-api
+  target: technology.communicationnetwork.localhost-lan
+  predicate: uses
+  layer: technology
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: domain pattern
+- source: technology.systemsoftware.vite
+  target: technology.communicationnetwork.localhost-lan
+  predicate: uses
+  layer: technology
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: domain pattern
+- source: technology.technologyinteraction.s3-sync-via-boto3
+  target: technology.technologyevent.rate-limit-threshold-event
+  predicate: triggers
+  layer: technology
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: medium
+    basis: domain pattern
+- source: technology.technologycollaboration.external-knowledge-integration
+  target: technology.technologyinteraction.s3-sync-via-boto3
+  predicate: performs
+  layer: technology
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: medium
+    basis: domain pattern
+- source: data-model.arrayschema.external-references-list
+  target: data-model.objectschema.ontology-entity
+  predicate: aggregates
+  layer: data-model
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: data-model.objectschema.import-run
+  target: data-model.objectschema.changeset
+  predicate: extends
+  layer: data-model
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: medium
+    basis: domain pattern
+- source: data-model.objectschema.change-event
+  target: data-model.objectschema.ontology-entity
+  predicate: extends
+  layer: data-model
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: medium
+    basis: domain pattern
+- source: technology.systemsoftware.sentence-transformers
+  target: application.applicationcomponent.sentence-transformer-embedding-adapter
+  predicate: serves
+  layer: technology
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: technology.systemsoftware.spa-cy
+  target: application.applicationcomponent.sentence-transformer-embedding-adapter
+  predicate: serves
+  layer: technology
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: medium
+    basis: domain pattern
+- source: technology.systemsoftware.fast-api
+  target: application.applicationcomponent.sqlite-persistence-adapter
+  predicate: serves
+  layer: technology
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: domain pattern
+- source: technology.systemsoftware.alembic
+  target: application.applicationcomponent.sqlite-persistence-adapter
+  predicate: serves
+  layer: technology
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: domain pattern
+- source: technology.systemsoftware.tan-stack-query
+  target: application.applicationservice.admin-service
+  predicate: realizes
+  layer: technology
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: medium
+    basis: domain pattern
+- source: technology.systemsoftware.tan-stack-router
+  target: application.applicationservice.admin-service
+  predicate: realizes
+  layer: technology
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: medium
+    basis: domain pattern

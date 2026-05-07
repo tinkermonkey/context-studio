@@ -1,0 +1,119 @@
+data-model.objectschema.ontology-entity:
+  id: cedda25c-fa94-4038-8f3d-39163451298e
+  path: data-model.objectschema.ontology-entity
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Ontology Entity
+  description: Single-table inheritance ORM schema for all ontology entities
+    (taxonomy, concept_scheme, class, individual, property_definition) — stores
+    title, description, hierarchy FKs, JSON value objects (external_references,
+    lexical_senses, data_properties), binary embedding, and optimistic-locking
+    version
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+        symbol: OntologyEntity
+  metadata:
+    created_at: 2026-05-07T22:15:40.570Z
+    updated_at: 2026-05-07T22:15:40.570Z
+    version: 1
+data-model.objectschema.relationship:
+  id: f182c279-93a0-46c6-b913-346527b6bf7c
+  path: data-model.objectschema.relationship
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Relationship
+  description: ORM schema for typed directed edges between ontology entities —
+    stores source_id, target_id, optional property_definition_id FK, float
+    weight (0–1), and JSON metadata; used by GraphAnalysisService for graph
+    construction
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+        symbol: Relationship
+  metadata:
+    created_at: 2026-05-07T22:15:43.227Z
+    updated_at: 2026-05-07T22:15:43.227Z
+    version: 1
+data-model.objectschema.change-event:
+  id: b761a8f5-49c0-4049-a2ad-67a8a2fb74c9
+  path: data-model.objectschema.change-event
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Change Event
+  description: ORM schema for the audit trail of all entity mutations — stores
+    entity_id, entity_type, operation (CREATE/UPDATE/DELETE), new_state and
+    previous_state JSON snapshots, user_id, change_reason, and optional
+    import_run_id correlation
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+        symbol: ChangeEvent
+  metadata:
+    created_at: 2026-05-07T22:15:45.059Z
+    updated_at: 2026-05-07T22:15:45.059Z
+    version: 1
+data-model.objectschema.changeset:
+  id: 58e489ea-7f4a-4918-9fec-fe37e404b25a
+  path: data-model.objectschema.changeset
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Changeset
+  description: ORM schema for named collections of change events progressing
+    through version control states (WORKING→STAGED→PROPOSED→APPROVED→MERGED) —
+    stores name, description, state, and a JSON array of event_ids
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+        symbol: Changeset
+  metadata:
+    created_at: 2026-05-07T22:15:50.409Z
+    updated_at: 2026-05-07T22:15:50.409Z
+    version: 1
+data-model.objectschema.pipeline-configuration:
+  id: 7b29fc18-a3a5-4cd6-a820-775b55d2445f
+  path: data-model.objectschema.pipeline-configuration
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Pipeline Configuration
+  description: ORM schema for LLM pipeline configurations in operations.db —
+    stores pipeline slug, title, provider, model, config JSON, system_prompt,
+    user_prompt template, enabled flag, and version counter
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/operations/models.py
+        symbol: PipelineConfigurationModel
+  metadata:
+    created_at: 2026-05-07T22:15:52.486Z
+    updated_at: 2026-05-07T22:15:52.486Z
+    version: 1
+data-model.objectschema.import-run:
+  id: 53226528-2abc-4e32-bb3a-eadd21097894
+  path: data-model.objectschema.import-run
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Import Run
+  description: ORM schema tracking interchange import operations
+    (SKOS/OWL/GraphML) — stores format, source_hash, source_uri, scope, status
+    (PENDING/COMMITTED/FAILED/ROLLED_BACK), resolution records, and created_by
+    for auditability
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+        symbol: ImportRun
+  metadata:
+    created_at: 2026-05-07T22:15:54.863Z
+    updated_at: 2026-05-07T22:15:54.864Z
+    version: 1

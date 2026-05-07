@@ -235,4 +235,4 @@ Business contract defining the REST API surface for Context Studio: endpoint sig
 
 ---
 
-Generated: 2026-05-07T22:00:51.579Z | Model Version: 0.1.0
+Generated: 2026-05-07T22:24:32.020Z | Model Version: 0.1.0

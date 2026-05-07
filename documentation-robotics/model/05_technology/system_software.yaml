@@ -1,0 +1,274 @@
+technology.systemsoftware.python:
+  id: d3a2f657-63bd-400d-a680-0210c78741d1
+  path: technology.systemsoftware.python
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: Python
+  description: Primary backend runtime for local-server — all domain services,
+    adapters, and API routes are implemented in Python 3.x
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/requirements.txt
+  metadata:
+    created_at: 2026-05-07T22:14:21.881Z
+    updated_at: 2026-05-07T22:14:21.882Z
+    version: 1
+technology.systemsoftware.fast-api:
+  id: 8c59c9c2-f8ce-41a6-9a21-741d543f451d
+  path: technology.systemsoftware.fast-api
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: FastAPI
+  description: Python HTTP API framework — provides route declarations, dependency
+    injection, and automatic OpenAPI spec generation for the backend
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/requirements.txt
+  metadata:
+    created_at: 2026-05-07T22:14:28.763Z
+    updated_at: 2026-05-07T22:14:28.764Z
+    version: 1
+technology.systemsoftware.sqlalchemy:
+  id: f04a4a91-1f72-4f8f-8db6-53b1313d88e4
+  path: technology.systemsoftware.sqlalchemy
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: SQLAlchemy
+  description: Python ORM and SQL toolkit (v2.0+) used for all SQLite persistence
+    — models, repositories, and connection management in local-server
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/requirements.txt
+  metadata:
+    created_at: 2026-05-07T22:14:30.118Z
+    updated_at: 2026-05-07T22:14:30.119Z
+    version: 1
+technology.systemsoftware.alembic:
+  id: f390418a-1d19-443b-9fa0-46f16f21314f
+  path: technology.systemsoftware.alembic
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: Alembic
+  description: Database schema migration tool for SQLite — autogenerates migration
+    scripts from SQLAlchemy ORM models for local.db and operations.db
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/requirements.txt
+  metadata:
+    created_at: 2026-05-07T22:14:31.499Z
+    updated_at: 2026-05-07T22:14:31.499Z
+    version: 1
+technology.systemsoftware.pydantic:
+  id: 1c99df39-7178-477e-b4bf-4940d323dab3
+  path: technology.systemsoftware.pydantic
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: Pydantic
+  description: Data validation library used exclusively in the adapter/web layer —
+    Pydantic schemas define request and response shapes for all FastAPI routes
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/requirements.txt
+  metadata:
+    created_at: 2026-05-07T22:14:35.262Z
+    updated_at: 2026-05-07T22:14:35.262Z
+    version: 1
+technology.systemsoftware.sentence-transformers:
+  id: f91ad4d2-7043-4730-aa85-1898ffa6bb5e
+  path: technology.systemsoftware.sentence-transformers
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: sentence-transformers
+  description: "Python library providing pre-trained SentenceTransformer models —
+    used by SentenceTransformerEmbedding adapter to generate semantic vector
+    embeddings (default: all-MiniLM-L12-v2)"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/requirements.txt
+  metadata:
+    created_at: 2026-05-07T22:14:37.059Z
+    updated_at: 2026-05-07T22:14:37.059Z
+    version: 1
+technology.systemsoftware.spa-cy:
+  id: 7c952006-e3a2-4c72-b236-842a330f5430
+  path: technology.systemsoftware.spa-cy
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: spaCy
+  description: Industrial-strength NLP library used by SpacyProcessor adapter for
+    tokenization, named entity recognition, and linguistic feature extraction
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/requirements.txt
+  metadata:
+    created_at: 2026-05-07T22:14:38.485Z
+    updated_at: 2026-05-07T22:14:38.485Z
+    version: 1
+technology.systemsoftware.network-x:
+  id: 2e4f203f-6844-4478-a940-581fb0ed1c7f
+  path: technology.systemsoftware.network-x
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: NetworkX
+  description: Python graph library (v3.1+) used by NetworkXGraphEngine adapter —
+    provides directed graph construction, shortest path, centrality, and
+    community detection algorithms
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/requirements.txt
+  metadata:
+    created_at: 2026-05-07T22:14:42.665Z
+    updated_at: 2026-05-07T22:14:42.665Z
+    version: 1
+technology.systemsoftware.rdflib:
+  id: 00b63b48-83d7-4707-bf7c-a46ae692cf3f
+  path: technology.systemsoftware.rdflib
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: RDFLib
+  description: Python RDF library used by the graph adapter for RDF graph
+    construction, SPARQL query execution, and ontology triple management
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/requirements.txt
+  metadata:
+    created_at: 2026-05-07T22:14:43.935Z
+    updated_at: 2026-05-07T22:14:43.936Z
+    version: 1
+technology.systemsoftware.duck-db:
+  id: 6e8f65e7-7434-41ca-990e-b9b3e7ef7371
+  path: technology.systemsoftware.duck-db
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: DuckDB
+  description: In-process analytical SQL engine used by DuckDBSyncAdapter for
+    serializing the local knowledge graph to Parquet format for remote sync
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/requirements.txt
+  metadata:
+    created_at: 2026-05-07T22:14:45.418Z
+    updated_at: 2026-05-07T22:14:45.418Z
+    version: 1
+technology.systemsoftware.react:
+  id: d0f3a83a-bea7-46a3-94d3-bd14c1fc6807
+  path: technology.systemsoftware.react
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: React
+  description: JavaScript UI library (v19.1) powering the Context Studio front-end
+    — all UX components are React functional components with hooks
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/package.json
+  metadata:
+    created_at: 2026-05-07T22:14:48.747Z
+    updated_at: 2026-05-07T22:14:48.747Z
+    version: 1
+technology.systemsoftware.vite:
+  id: ea06db87-30b6-491b-8e54-8a49fa8221b6
+  path: technology.systemsoftware.vite
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: Vite
+  description: Frontend build tool (v6.2) for the React UX — handles TypeScript
+    compilation, hot module replacement, and production bundling
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/package.json
+  metadata:
+    created_at: 2026-05-07T22:14:50.065Z
+    updated_at: 2026-05-07T22:14:50.066Z
+    version: 1
+technology.systemsoftware.tan-stack-router:
+  id: 6f3dba1e-729d-4728-9f64-cca1af9382c5
+  path: technology.systemsoftware.tan-stack-router
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: TanStack Router
+  description: Type-safe file-based router (v1.116) for the React UX — manages all
+    client-side navigation routes
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/package.json
+  metadata:
+    created_at: 2026-05-07T22:14:51.661Z
+    updated_at: 2026-05-07T22:14:51.662Z
+    version: 1
+technology.systemsoftware.tan-stack-query:
+  id: 3ae35e7f-3b44-497a-8df7-bc389e49ee53
+  path: technology.systemsoftware.tan-stack-query
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: TanStack Query
+  description: Server-state management library (v5.83) for the React UX — handles
+    API data fetching, caching, and synchronization
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/package.json
+  metadata:
+    created_at: 2026-05-07T22:14:54.922Z
+    updated_at: 2026-05-07T22:14:54.922Z
+    version: 1
+technology.systemsoftware.flowbite-react:
+  id: b0271a62-58a0-4d6d-bc50-b37d03f4b1f9
+  path: technology.systemsoftware.flowbite-react
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: Flowbite React
+  description: Component library (v0.11) built on Tailwind CSS used for UX
+    interface elements — buttons, modals, tables, and form controls
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/package.json
+  metadata:
+    created_at: 2026-05-07T22:14:56.652Z
+    updated_at: 2026-05-07T22:14:56.652Z
+    version: 1
+technology.systemsoftware.tailwind-css:
+  id: f812888a-4e4c-4846-b635-aafd756f2939
+  path: technology.systemsoftware.tailwind-css
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: Tailwind CSS
+  description: Utility-first CSS framework (v4.1) used for all frontend styling in
+    the React UX
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/package.json
+  metadata:
+    created_at: 2026-05-07T22:14:57.665Z
+    updated_at: 2026-05-07T22:14:57.665Z
+    version: 1

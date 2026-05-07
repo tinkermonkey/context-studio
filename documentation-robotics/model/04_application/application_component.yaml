@@ -1,0 +1,98 @@
+application.applicationcomponent.sentence-transformer-embedding-adapter:
+  id: 20a3b980-7c51-4475-a20d-8252bb300fdc
+  path: application.applicationcomponent.sentence-transformer-embedding-adapter
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Sentence Transformer Embedding Adapter
+  description: Infrastructure adapter wrapping the sentence-transformers library —
+    provides lazy-loaded semantic embedding generation (all-MiniLM-L12-v2) with
+    sync and async interfaces for single and batch text encoding
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/embedding/sentence_transformer.py
+        symbol: SentenceTransformerEmbedding
+  metadata:
+    created_at: 2026-05-07T22:15:24.991Z
+    updated_at: 2026-05-07T22:15:24.991Z
+    version: 1
+application.applicationcomponent.network-x-graph-engine-adapter:
+  id: 26cde2dc-6d76-4649-b5ab-959492b92d83
+  path: application.applicationcomponent.network-x-graph-engine-adapter
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: NetworkX Graph Engine Adapter
+  description: Infrastructure adapter implementing the GraphEngine port using
+    NetworkX DiGraph — supports directed graph construction, shortest/all paths,
+    centrality algorithms (betweenness, pagerank, closeness, degree), community
+    detection, and subgraph extraction
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/graph/networkx_engine.py
+        symbol: NetworkXGraphEngine
+  metadata:
+    created_at: 2026-05-07T22:15:27.074Z
+    updated_at: 2026-05-07T22:15:27.074Z
+    version: 1
+application.applicationcomponent.system-metrics-collector-adapter:
+  id: 1886180d-07df-4683-9144-bd31e646e773
+  path: application.applicationcomponent.system-metrics-collector-adapter
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: System Metrics Collector Adapter
+  description: Infrastructure adapter implementing the MetricsCollector port —
+    aggregates health status from LLM providers, NLP pipeline, embedding model,
+    and SQLite database connectivity; tracks service uptime
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/metrics/system_collector.py
+        symbol: SystemMetricsCollector
+  metadata:
+    created_at: 2026-05-07T22:15:29.257Z
+    updated_at: 2026-05-07T22:15:29.257Z
+    version: 1
+application.applicationcomponent.sqlite-persistence-adapter:
+  id: 1dd279b7-e7b5-4d9d-807d-9be87ff19edb
+  path: application.applicationcomponent.sqlite-persistence-adapter
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: SQLite Persistence Adapter
+  description: Infrastructure adapter implementing repository ports via SQLAlchemy
+    — persists ontology entities, relationships, change events, changesets,
+    proposals, and extraction results to local.db using single-table inheritance
+    ORM model
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/ontology_repo.py
+        symbol: SQLiteOntologyRepository
+  metadata:
+    created_at: 2026-05-07T22:15:33.271Z
+    updated_at: 2026-05-07T22:15:33.272Z
+    version: 1
+application.applicationcomponent.llm-provider-router:
+  id: fb040a66-cac1-4907-8612-c8468399e183
+  path: application.applicationcomponent.llm-provider-router
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: LLM Provider Router
+  description: Infrastructure adapter routing LLM completion requests to the
+    appropriate provider — selects between OpenAI and Anthropic providers based
+    on pipeline configuration and exposes available provider list for health
+    checks
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/llm/provider_router.py
+        symbol: LLMProviderRouter
+  metadata:
+    created_at: 2026-05-07T22:15:35.396Z
+    updated_at: 2026-05-07T22:15:35.396Z
+    version: 1
