@@ -54,7 +54,6 @@ import argparse
 from pathlib import Path
 from datetime import datetime, timezone
 from typing import Any
-import hashlib
 import time
 
 # Ensure local-server is in the path
@@ -111,6 +110,45 @@ class BenchmarkResult:
             "samples_processed": self.samples_processed,
             "errors": self.errors[:5],  # Limit error reporting
         }
+
+
+def load_dataset_from_jsonl(dataset_name: str, split: str = "test") -> list[dict] | None:
+    """
+    Attempt to load dataset from local JSONL file.
+
+    Checks for datafiles/benchmarks/{org}/{project}/{split}.jsonl (created by download_benchmarks.py).
+
+    Args:
+        dataset_name: HuggingFace dataset identifier (e.g., 'text2kg-bench/text2kgbench')
+        split: Dataset split (e.g., 'test', 'train')
+
+    Returns:
+        List of samples if local file exists, None otherwise
+    """
+    try:
+        parts = dataset_name.split("/")
+        if len(parts) != 2:
+            return None
+
+        org, project = parts
+        local_path = Path("datafiles") / "benchmarks" / org / project / f"{split}.jsonl"
+
+        if not local_path.exists():
+            return None
+
+        _logger.info(f"Loading dataset from local JSONL: {local_path}")
+        samples = []
+        with open(local_path, "r") as f:
+            for line in f:
+                if line.strip():
+                    samples.append(json.loads(line))
+
+        _logger.info(f"Loaded {len(samples)} samples from local JSONL")
+        return samples
+
+    except Exception as e:
+        _logger.warning(f"Failed to load from local JSONL: {e}")
+        return None
 
 
 def load_extraction_config(config_path: str) -> dict[str, Any]:
@@ -376,7 +414,11 @@ def compute_metrics(
     gold_set = set(triple_key(t) for t in gold_triples)
 
     if not gold_set:
-        return 1.0 if not pred_set else 0.0, 1.0 if not pred_set else 0.0, 1.0 if not pred_set else 0.0, 1.0
+        # All gold triples normalized to empty strings (degenerate case)
+        if not pred_set:
+            return 1.0, 1.0, 1.0, 1.0
+        else:
+            return 0.0, 0.0, 0.0, 0.0
 
     # Compute metrics
     true_positives = len(pred_set & gold_set)
@@ -419,7 +461,6 @@ def compute_metrics(
 def run_benchmark(
     dataset_name: str,
     config_path: str,
-    output_path: str,
     max_cost: float = 50.0,
     api_base_url: str = "http://localhost:8000",
 ) -> dict[str, Any]:
@@ -429,7 +470,6 @@ def run_benchmark(
     Args:
         dataset_name: HuggingFace dataset identifier
         config_path: Path to extraction config JSON
-        output_path: Output path for results (JSON)
         max_cost: Maximum cost ceiling in USD
         api_base_url: Base URL for extraction API
 
@@ -441,18 +481,26 @@ def run_benchmark(
     # Load configuration
     config = load_extraction_config(config_path)
 
-    # Load dataset
+    # Load dataset — try local JSONL first, then fall back to HuggingFace
     _logger.info(f"Loading dataset {dataset_name}")
-    try:
-        dataset = load_dataset(
-            "text2kg-bench/text2kgbench",
-            split="test",
-        )
-    except Exception as e:
-        _logger.error(f"Failed to load dataset: {e}")
-        _logger.error("Dataset may not be available yet or may be private.")
-        _logger.error(f"Check: https://huggingface.co/datasets/{dataset_name}")
-        raise
+    samples = load_dataset_from_jsonl(dataset_name, split="test")
+
+    if samples is None:
+        # Fall back to loading from HuggingFace
+        _logger.info("Local JSONL not found, loading from HuggingFace")
+        try:
+            dataset = load_dataset(dataset_name, split="test")
+            samples = [dict(item) for item in dataset]
+        except Exception as e:
+            _logger.error(f"Failed to load dataset: {e}")
+            _logger.error("Dataset may not be available yet or may be private.")
+            _logger.error(f"Check: https://huggingface.co/datasets/{dataset_name}")
+            _logger.info("To avoid repeated downloads, run: python scripts/download_benchmarks.py --dataset {dataset_name}")
+            raise
+    else:
+        _logger.info(f"Loaded {len(samples)} samples from cache")
+
+    dataset = samples
 
     # Apply stratified sampling if needed
     samples = stratified_sample_dataset(dataset, max_cost, config)
@@ -683,7 +731,6 @@ def main():
         results = run_benchmark(
             dataset_name=args.dataset,
             config_path=args.pipeline,
-            output_path=args.out,
             max_cost=args.max_cost,
             api_base_url=args.api_url,
         )
