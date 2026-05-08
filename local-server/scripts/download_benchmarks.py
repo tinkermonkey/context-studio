@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 """
-Download the Text2KGBench dataset from HuggingFace.
+Download Text2KGBench datasets from HuggingFace.
 
-This script fetches the text2kg-bench/text2kgbench dataset from HuggingFace
-and saves it locally for benchmarking purposes.
+This script downloads Text2KGBench datasets from HuggingFace and caches them locally
+for benchmarking purposes. Supports multiple dataset tracks.
+
+Supported datasets:
+- text2kg-bench/wikidata-tekgen (10 ontologies)
+- text2kg-bench/dbpedia-webnlg (19 ontologies)
 
 Usage:
     python scripts/download_benchmarks.py --dataset text2kg-bench/wikidata-tekgen
+    python scripts/download_benchmarks.py --dataset text2kg-bench/dbpedia-webnlg
 """
 
 import os
@@ -90,8 +95,8 @@ def main():
     parser.add_argument(
         "--dataset",
         type=str,
-        default="text2kg-bench/text2kgbench",
-        help="HuggingFace dataset identifier (default: text2kg-bench/text2kgbench)",
+        default="text2kg-bench/wikidata-tekgen",
+        help="HuggingFace dataset identifier (default: text2kg-bench/wikidata-tekgen)",
     )
     parser.add_argument(
         "--split",

@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 """
-Run benchmark harness for Text2KGBench Wikidata-TekGen track.
+Run benchmark harness for Text2KGBench datasets (TekGen, DBpedia-WebNLG, etc).
 
 This script:
-1. Loads the Text2KGBench Wikidata-TekGen dataset from HuggingFace
-2. Runs extraction against all 10 ontologies via the extraction API
+1. Loads a Text2KGBench dataset from HuggingFace
+2. Runs extraction against all ontologies in the dataset via the extraction API
 3. Computes precision, recall, F1, and conformance metrics for each ontology
 4. Generates machine-readable (JSON) and human-readable (Markdown) reports
-5. Tracks extraction run IDs for agent integration (once API is fully implemented)
+5. Optionally generates cross-dataset comparison reports
+
+Supported datasets:
+- text2kg-bench/wikidata-tekgen (10 ontologies)
+- text2kg-bench/dbpedia-webnlg (19 ontologies)
 
 ## Quick Start
 
@@ -21,17 +25,35 @@ From a clean checkout:
     # Start the extraction API server (in another terminal)
     python app.py
 
+    # Download datasets (optional, harness will fetch from HuggingFace if not cached)
+    python scripts/download_benchmarks.py --dataset text2kg-bench/wikidata-tekgen
+    python scripts/download_benchmarks.py --dataset text2kg-bench/dbpedia-webnlg
+
     # Run the benchmark
     python scripts/run_benchmark.py \\
       --dataset text2kg-bench/wikidata-tekgen \\
       --pipeline configs/extraction-default.json \\
-      --out reports/2026-05-08.json
+      --out reports/tekgen.json
+
+    python scripts/run_benchmark.py \\
+      --dataset text2kg-bench/dbpedia-webnlg \\
+      --pipeline configs/extraction-default.json \\
+      --out reports/webnlg.json
+
+    # Generate cross-dataset comparison
+    python scripts/compare_benchmarks.py \\
+      --results reports/tekgen.json reports/webnlg.json \\
+      --out reports/comparison.json
 
 ## Output
 
 The benchmark generates two reports in local-server/reports/:
-- `YYYY-MM-DD.json`: Machine-readable results for agent analysis
-- `YYYY-MM-DD.md`: Human-readable summary with metrics table
+- `{dataset}-YYYY-MM-DD.json`: Machine-readable results for agent analysis
+- `{dataset}-YYYY-MM-DD.md`: Human-readable summary with metrics table
+
+Cross-dataset comparison generates:
+- `comparison-YYYY-MM-DD.json`: Machine-readable comparison data
+- `comparison-YYYY-MM-DD.md`: Human-readable comparison table
 
 ## Cost Management
 
@@ -51,6 +73,7 @@ import os
 import sys
 import json
 import argparse
+import importlib.util
 from pathlib import Path
 from datetime import datetime, timezone
 from typing import Any
@@ -682,6 +705,64 @@ def save_markdown_report(results: dict[str, Any], output_path: str) -> Path:
     return output_file
 
 
+def generate_comparison_from_current(
+    current_results: dict[str, Any],
+    comparison_file: str,
+    output_path: str,
+) -> None:
+    """
+    Generate a comparison report between current and previous results.
+
+    Args:
+        current_results: Current benchmark results
+        comparison_file: Path to previous benchmark results JSON
+        output_path: Base path for comparison output (will generate .json and .md)
+    """
+    try:
+        # Import the comparison module
+        comparison_script_path = Path(__file__).parent / "compare_benchmarks.py"
+        spec = importlib.util.spec_from_file_location("compare_benchmarks", comparison_script_path)
+        compare_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(compare_module)
+
+        # Save current results to temp file for comparison
+        current_dataset = current_results.get("dataset", "current")
+        # Sanitize dataset name for use in filename (remove slashes)
+        safe_dataset_name = current_dataset.replace("/", "_")
+        temp_current = Path(output_path).parent / f"_temp_{safe_dataset_name}.json"
+        with open(temp_current, "w") as f:
+            json.dump(current_results, f)
+
+        # Load previous results
+        previous_results = compare_module.load_results_file(comparison_file)
+
+        # Build comparison
+        results_by_dataset = {
+            previous_results.get("dataset", Path(comparison_file).stem): previous_results,
+            current_dataset: current_results,
+        }
+        comparison = compare_module.build_comparison_matrix(results_by_dataset)
+
+        # Save comparison reports
+        comparison_json = compare_module.save_json_comparison(comparison, output_path)
+        comparison_md = compare_module.save_markdown_comparison(
+            comparison, results_by_dataset, output_path
+        )
+
+        _logger.info(f"Cross-dataset comparison generated!")
+        _logger.info(f"Comparison JSON: {comparison_json}")
+        _logger.info(f"Comparison Markdown: {comparison_md}")
+
+        # Clean up temp file
+        if temp_current.exists():
+            temp_current.unlink()
+
+    except Exception as e:
+        _logger.warning(f"Could not generate comparison report: {e}")
+        import traceback
+        traceback.print_exc()
+
+
 def main():
     """Command-line interface for benchmark harness."""
     parser = argparse.ArgumentParser(
@@ -703,7 +784,7 @@ def main():
         "--out",
         type=str,
         default=None,
-        help="Output path for JSON report (default: reports/YYYY-MM-DD.json)",
+        help="Output path for JSON report (default: reports/{dataset_abbrev}-YYYY-MM-DD.json)",
     )
     parser.add_argument(
         "--max-cost",
@@ -717,13 +798,20 @@ def main():
         default="http://localhost:8000",
         help="Extraction API base URL (default: http://localhost:8000)",
     )
+    parser.add_argument(
+        "--comparison",
+        type=str,
+        default=None,
+        help="Path to previous results JSON for cross-dataset comparison (optional)",
+    )
 
     args = parser.parse_args()
 
     # Default output path
     if args.out is None:
         today = datetime.now().strftime("%Y-%m-%d")
-        args.out = f"reports/{today}.json"
+        dataset_abbrev = args.dataset.split("/")[-1][:6]
+        args.out = f"reports/{dataset_abbrev}-{today}.json"
 
     try:
         results = run_benchmark(
@@ -741,6 +829,11 @@ def main():
         _logger.info(f"JSON report: {json_path}")
         _logger.info(f"Markdown report: {md_path}")
         _logger.info(f"Total cost: ${results['total_cost_usd']:.2f}")
+
+        # Generate comparison if requested
+        if args.comparison:
+            comparison_out = str(Path(args.out).parent / "comparison")
+            generate_comparison_from_current(results, args.comparison, comparison_out)
 
         return 0
 
