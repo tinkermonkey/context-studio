@@ -144,8 +144,7 @@ class ExtractTripleRequest(BaseModel):
         description="ID of the ontology scoping extraction to specific classes/individuals",
     )
     options: ExtractTripleOptions = Field(
-        default_factory=ExtractTripleOptions,
-        description="Extraction options (model, temperature, etc.)",
+        ..., description="Extraction options (model, temperature, etc.)"
     )
 
 

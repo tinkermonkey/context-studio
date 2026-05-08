@@ -105,7 +105,7 @@ class SQLiteChangeRepository:
                     user_id=user_id,
                     change_reason=change_reason,
                     changeset_id=changeset_id,
-                    import_run_id=import_run_id,
+                    batch_run_id=import_run_id,
                     processed=False,
                 )
 
@@ -769,7 +769,7 @@ class SQLiteChangeRepository:
             user_id=cast(Optional[str], orm_event.user_id),
             change_reason=cast(Optional[str], orm_event.change_reason),
             changeset_id=cast(Optional[str], orm_event.changeset_id),
-            import_run_id=cast(Optional[str], orm_event.import_run_id),
+            import_run_id=cast(Optional[str], orm_event.batch_run_id),
             processed=cast(bool, orm_event.processed),
         )
 

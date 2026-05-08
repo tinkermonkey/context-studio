@@ -231,7 +231,7 @@ class SQLiteInterchangeRepository:
             with self.session_factory() as session:
                 query = (
                     select(ChangeEventORM)
-                    .where(ChangeEventORM.import_run_id == import_run_id)
+                    .where(ChangeEventORM.batch_run_id == import_run_id)
                     .order_by(ChangeEventORM.timestamp.asc())
                 )
                 orm_events = session.execute(query).scalars().all()

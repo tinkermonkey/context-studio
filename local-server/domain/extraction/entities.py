@@ -171,6 +171,9 @@ class ExtractionRun:
     is a read-only audit record of what was extracted, not a reversible
     operation.
 
+    This entity carries no reference to benchmark runs; that link belongs in
+    the benchmark harness (see #698), not in the core data model.
+
     Attributes:
         id: Unique identifier (UUID as string)
         source_document_uri: Optional URI/filename of the source document
