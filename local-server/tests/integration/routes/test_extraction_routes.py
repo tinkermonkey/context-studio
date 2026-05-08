@@ -477,7 +477,7 @@ class TestTripleExtraction:
             "object_class": classes[1],
         }
 
-    def test_extract_triples_returns_501_not_implemented(
+    def test_extract_triples_valid_request_returns_501(
         self, client, ontology_with_individuals
     ):
         """POST /api/extraction/extract returns 501 Not Implemented."""
@@ -611,7 +611,7 @@ class TestTripleExtraction:
         assert response.status_code == status.HTTP_501_NOT_IMPLEMENTED
 
     @pytest.mark.skip(
-        reason="Endpoint returns placeholder triples=[] — see #695 for full implementation"
+        reason="Endpoint returns 501 Not Implemented — see #704 for full implementation"
     )
     def test_extract_triples_triple_structure_when_returned(
         self, client, ontology_with_individuals
@@ -682,7 +682,7 @@ class TestTripleExtraction:
             )
 
     @pytest.mark.skip(
-        reason="Endpoint returns placeholder triples=[] — see #695 for full implementation"
+        reason="Endpoint returns 501 Not Implemented — see #704 for full implementation"
     )
     def test_extract_triples_confidence_values_valid(
         self, client, ontology_with_individuals
@@ -708,7 +708,7 @@ class TestTripleExtraction:
             assert 0.0 <= triple["confidence"] <= 1.0
 
     @pytest.mark.skip(
-        reason="Endpoint returns placeholder triples=[] — see #695 for full implementation"
+        reason="Endpoint returns 501 Not Implemented — see #704 for full implementation"
     )
     def test_extract_triples_object_kind_values_valid(
         self, client, ontology_with_individuals
@@ -734,7 +734,7 @@ class TestTripleExtraction:
             assert obj["kind"] in ["individual", "class", "literal"]
 
     @pytest.mark.skip(
-        reason="Endpoint returns placeholder triples=[] — see #695 for full implementation"
+        reason="Endpoint returns 501 Not Implemented — see #704 for full implementation"
     )
     def test_extract_triples_subject_kind_values_valid(
         self, client, ontology_with_individuals
@@ -760,7 +760,7 @@ class TestTripleExtraction:
             assert subject["kind"] in ["individual", "class"]
 
     @pytest.mark.skip(
-        reason="Endpoint returns placeholder triples=[] — see #695 for full implementation"
+        reason="Endpoint returns 501 Not Implemented — see #704 for full implementation"
     )
     def test_extract_triples_provenance_offsets_within_bounds(
         self, client, ontology_with_individuals

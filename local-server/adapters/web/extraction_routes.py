@@ -254,7 +254,8 @@ async def enrich_from_references(
 @router.post(
     "/extraction/extract",
     response_model=ExtractTripleResponse,
-    status_code=status.HTTP_501_NOT_IMPLEMENTED,
+    status_code=status.HTTP_200_OK,
+    responses={501: {"description": "Not yet implemented"}},
     tags=["extraction"],
 )
 async def extract_triples(
