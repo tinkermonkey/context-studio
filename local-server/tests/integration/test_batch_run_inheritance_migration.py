@@ -13,7 +13,6 @@ import os
 from uuid import uuid4
 from datetime import datetime, timezone
 import tempfile
-import subprocess
 import json
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../"))
