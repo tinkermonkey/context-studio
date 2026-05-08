@@ -29,7 +29,7 @@ vim logs/extraction-iteration-log.md
 
 ### 1. Configuration Changes
 
-Edit `configs/extraction-experimental.json` with your hypothesis changes:
+First create the experimental config by copying the default (`cp configs/extraction-default.json configs/extraction-experimental.json`), then edit it with your hypothesis changes:
 
 ```json
 {
