@@ -59,6 +59,7 @@ class AnthropicProvider:
         max_tokens: int = 2000,
         response_format: Literal["json", "text"] | None = None,
         timeout: float | None = None,
+        seed: int | None = None,
     ) -> LLMResponse:
         """
         Request a completion from Anthropic Claude.
@@ -71,6 +72,7 @@ class AnthropicProvider:
             max_tokens: Maximum tokens to generate
             response_format: Optional JSON schema for structured output (not used by Anthropic)
             timeout: Request timeout in seconds (passed to Anthropic client)
+            seed: Optional random seed for reproducible generation (currently unused by Anthropic API)
 
         Returns:
             LLMResponse with generated content and metadata
@@ -145,6 +147,7 @@ class AnthropicProvider:
         max_tokens: int = 2000,
         response_format: Literal["json", "text"] | None = None,
         timeout: float | None = None,
+        seed: int | None = None,
     ) -> LLMResponse:
         """
         Request a completion from Anthropic Claude (async version).
@@ -159,6 +162,7 @@ class AnthropicProvider:
             max_tokens: Maximum tokens to generate
             response_format: Optional JSON schema for structured output (not used by Anthropic)
             timeout: Request timeout in seconds (passed to Anthropic client)
+            seed: Optional random seed for reproducible generation (currently unused by Anthropic API)
 
         Returns:
             LLMResponse with generated content and metadata
@@ -175,4 +179,5 @@ class AnthropicProvider:
             max_tokens,
             response_format,
             timeout,
+            seed,
         )

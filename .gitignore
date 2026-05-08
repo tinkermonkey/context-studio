@@ -20,6 +20,7 @@ local-server/datasets.json
 local-server/downloads/
 local-server/logs/
 local-server/reports/
+local-server/.benchmark-cache/
 
 # Build and runtime artifacts
 *.log

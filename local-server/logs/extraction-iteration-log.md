@@ -28,6 +28,35 @@ Append-only log documenting each iteration of the knowledge graph extraction pip
 
 ---
 
+## 2026-05-08 — Iteration tooling validation
+
+This entry documents the first iteration using the agent-driven iteration tooling (issue #696).
+
+- Config change: None — validate iteration tooling infrastructure
+- Hypothesis: Iteration loop (Makefile, caching, seed support, diffing) is ready for productive use
+- TekGen F1: 0.000 → 0.000 (50 samples, 10 ontologies)
+- WebNLG F1: 0.000 → 0.000 (95 samples, 19 ontologies)
+- Cost (TekGen): $0.00 | Cost (WebNLG): $0.00
+- Hallucination rate: 0.0 (no triples predicted)
+- Decision: promote to default — iteration tooling validated; ready for active extraction improvements
+
+**Workflow used:**
+```bash
+cd local-server
+# Edit configs/extraction-experimental.json with hypothesis changes
+make benchmark-experiment PIPELINE=configs/extraction-experimental.json
+# Tool automatically:
+#  - Runs benchmarks on both TekGen and WebNLG
+#  - Saves to reports/{date}-{config-slug}.json
+#  - Diffs against baseline-comparison.json
+#  - Prints human + agent-readable summary
+#  - Caches LLM responses by prompt hash (invalidates on config change)
+#  - Wires seed parameter through to model calls for reproducibility
+# Human reviews diff output and updates this log with results
+```
+
+---
+
 ## Iteration Template
 
 Use this template for future iterations:

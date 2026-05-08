@@ -63,6 +63,7 @@ class LLMProviderRouter:
         max_tokens: int = 2000,
         response_format: Literal["json", "text"] | None = None,
         timeout: float | None = None,
+        seed: int | None = None,
     ) -> LLMResponse:
         """
         Request a completion from an LLM provider.
@@ -77,6 +78,7 @@ class LLMProviderRouter:
             max_tokens: Maximum tokens in response
             response_format: Optional response format specification
             timeout: Request timeout in seconds (provider-specific behavior)
+            seed: Optional random seed for reproducible generation
 
         Returns:
             LLMResponse with the completion
@@ -93,6 +95,7 @@ class LLMProviderRouter:
             max_tokens=max_tokens,
             response_format=response_format,
             timeout=timeout,
+            seed=seed,
         )
 
     def _route_to_provider(self, model: str) -> LLMProvider:
@@ -157,6 +160,7 @@ class LLMProviderRouter:
         max_tokens: int = 2000,
         response_format: Literal["json", "text"] | None = None,
         timeout: float | None = None,
+        seed: int | None = None,
     ) -> LLMResponse:
         """
         Request a completion from an LLM provider (async version).
@@ -171,6 +175,7 @@ class LLMProviderRouter:
             max_tokens: Maximum tokens in response
             response_format: Optional response format specification
             timeout: Request timeout in seconds (provider-specific behavior)
+            seed: Optional random seed for reproducible generation
 
         Returns:
             LLMResponse with the completion
@@ -189,6 +194,7 @@ class LLMProviderRouter:
                 max_tokens=max_tokens,
                 response_format=response_format,
                 timeout=timeout,
+                seed=seed,
             )
         else:
             # Fallback for providers without async support — run sync method in executor
@@ -201,4 +207,5 @@ class LLMProviderRouter:
                 max_tokens=max_tokens,
                 response_format=response_format,
                 timeout=timeout,
+                seed=seed,
             )
