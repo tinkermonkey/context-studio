@@ -254,7 +254,6 @@ async def enrich_from_references(
     "/extraction/extract",
     response_model=ExtractTripleResponse,
     status_code=status.HTTP_200_OK,
-    responses={501: {"description": "Not yet implemented"}},
     tags=["extraction"],
 )
 async def extract_triples(
@@ -277,10 +276,44 @@ async def extract_triples(
         ExtractTripleResponse with extracted triples, warnings, and metadata
 
     Raises:
-        HTTPException: 501 Not Implemented (feature not yet available)
+        HTTPException: 400 if input is invalid, 500 for internal errors
     """
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Triple extraction is not yet implemented. "
-        "The ExtractionRunRepository port and service method are under development.",
-    )
+    try:
+        result = await run_sync_in_executor(
+            service.extract_triples,
+            request.text,
+            request.ontology_id,
+            request.options.model,
+            request.options.temperature,
+        )
+
+        triples = [
+            {
+                "subject": triple["subject"],
+                "predicate": triple["predicate"],
+                "object": triple["object"],
+                "confidence": triple["confidence"],
+                "provenance": triple["provenance"],
+            }
+            for triple in result["triples"]
+        ]
+
+        return ExtractTripleResponse(
+            triples=triples,
+            warnings=result.get("warnings", []),
+            metadata={
+                "model": result["metadata"]["model"],
+                "tokens_used": result["metadata"]["tokens_used"],
+                "duration_ms": result["metadata"]["duration_ms"],
+            },
+        )
+    except (InvalidInputError, ExtractionError) as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+    except Exception as exc:
+        _logger.error(f"Triple extraction error: {exc}", exc_info=exc)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Triple extraction failed",
+        )

@@ -132,9 +132,12 @@ def extraction_repository(session_factory):
 
 @pytest.fixture
 def extraction_service(
-    populated_repository, embedding_service, event_publisher, extraction_repository
+    populated_repository, embedding_service, event_publisher, extraction_repository, session_factory
 ):
     """Create ExtractionService with fake adapters."""
+    from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunRepository
+    extraction_run_repo = SQLiteExtractionRunRepository(session_factory)
+
     service = ExtractionService(
         ontology_repo=populated_repository,
         embedding_service=embedding_service,
@@ -143,6 +146,7 @@ def extraction_service(
         reference_sources=[FakeReferenceSource()],
         event_publisher=event_publisher,
         extraction_repo=extraction_repository,
+        extraction_run_repo=extraction_run_repo,
     )
     return service
 
@@ -477,10 +481,10 @@ class TestTripleExtraction:
             "object_class": classes[1],
         }
 
-    def test_extract_triples_valid_request_returns_501(
+    def test_extract_triples_valid_request_returns_200(
         self, client, ontology_with_individuals
     ):
-        """POST /api/extraction/extract returns 501 Not Implemented."""
+        """POST /api/extraction/extract returns 200 with valid input."""
         response = client.post(
             "/api/extraction/extract",
             json={
@@ -493,11 +497,8 @@ class TestTripleExtraction:
                 },
             },
         )
-        assert response.status_code == status.HTTP_501_NOT_IMPLEMENTED
+        assert response.status_code == status.HTTP_200_OK
 
-    @pytest.mark.skip(
-        reason="Endpoint returns 501 Not Implemented — see #704 for full implementation"
-    )
     def test_extract_triples_response_structure(self, client, ontology_with_individuals):
         """POST /api/extraction/extract response has correct structure."""
         response = client.post(
@@ -512,6 +513,7 @@ class TestTripleExtraction:
                 },
             },
         )
+        assert response.status_code == status.HTTP_200_OK
         body = response.json()
 
         # Verify required fields
@@ -524,9 +526,6 @@ class TestTripleExtraction:
         assert isinstance(body["warnings"], list)
         assert isinstance(body["metadata"], dict)
 
-    @pytest.mark.skip(
-        reason="Endpoint returns 501 Not Implemented — see #704 for full implementation"
-    )
     def test_extract_triples_response_metadata_structure(
         self, client, ontology_with_individuals
     ):
@@ -543,6 +542,7 @@ class TestTripleExtraction:
                 },
             },
         )
+        assert response.status_code == status.HTTP_200_OK
         body = response.json()
         metadata = body["metadata"]
 
@@ -592,10 +592,10 @@ class TestTripleExtraction:
         )
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    def test_extract_triples_with_whitespace_only_returns_501(
+    def test_extract_triples_with_whitespace_only_returns_400(
         self, client, ontology_with_individuals
     ):
-        """POST /api/extraction/extract with whitespace-only text returns 501 Not Implemented."""
+        """POST /api/extraction/extract with whitespace-only text returns 400."""
         response = client.post(
             "/api/extraction/extract",
             json={
@@ -608,11 +608,8 @@ class TestTripleExtraction:
                 },
             },
         )
-        assert response.status_code == status.HTTP_501_NOT_IMPLEMENTED
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-    @pytest.mark.skip(
-        reason="Endpoint returns 501 Not Implemented — see #704 for full implementation"
-    )
     def test_extract_triples_triple_structure_when_returned(
         self, client, ontology_with_individuals
     ):
@@ -629,6 +626,7 @@ class TestTripleExtraction:
                 },
             },
         )
+        assert response.status_code == status.HTTP_200_OK
         body = response.json()
         triples = body["triples"]
 
@@ -681,9 +679,6 @@ class TestTripleExtraction:
                 "The database stores information."
             )
 
-    @pytest.mark.skip(
-        reason="Endpoint returns 501 Not Implemented — see #704 for full implementation"
-    )
     def test_extract_triples_confidence_values_valid(
         self, client, ontology_with_individuals
     ):
@@ -700,6 +695,7 @@ class TestTripleExtraction:
                 },
             },
         )
+        assert response.status_code == status.HTTP_200_OK
         body = response.json()
         triples = body["triples"]
 
@@ -707,9 +703,6 @@ class TestTripleExtraction:
             assert isinstance(triple["confidence"], (int, float))
             assert 0.0 <= triple["confidence"] <= 1.0
 
-    @pytest.mark.skip(
-        reason="Endpoint returns 501 Not Implemented — see #704 for full implementation"
-    )
     def test_extract_triples_object_kind_values_valid(
         self, client, ontology_with_individuals
     ):
@@ -726,6 +719,7 @@ class TestTripleExtraction:
                 },
             },
         )
+        assert response.status_code == status.HTTP_200_OK
         body = response.json()
         triples = body["triples"]
 
@@ -733,9 +727,6 @@ class TestTripleExtraction:
             obj = triple["object"]
             assert obj["kind"] in ["individual", "class", "literal"]
 
-    @pytest.mark.skip(
-        reason="Endpoint returns 501 Not Implemented — see #704 for full implementation"
-    )
     def test_extract_triples_subject_kind_values_valid(
         self, client, ontology_with_individuals
     ):
@@ -752,6 +743,7 @@ class TestTripleExtraction:
                 },
             },
         )
+        assert response.status_code == status.HTTP_200_OK
         body = response.json()
         triples = body["triples"]
 
@@ -759,9 +751,6 @@ class TestTripleExtraction:
             subject = triple["subject"]
             assert subject["kind"] in ["individual", "class"]
 
-    @pytest.mark.skip(
-        reason="Endpoint returns 501 Not Implemented — see #704 for full implementation"
-    )
     def test_extract_triples_provenance_offsets_within_bounds(
         self, client, ontology_with_individuals
     ):
@@ -779,6 +768,7 @@ class TestTripleExtraction:
                 },
             },
         )
+        assert response.status_code == status.HTTP_200_OK
         body = response.json()
         triples = body["triples"]
 
@@ -796,7 +786,7 @@ class TestTripleExtraction:
             assert provenance["raw"] == extracted_text
 
     def test_extract_triples_with_long_text(self, client, ontology_with_individuals):
-        """POST /api/extraction/extract returns 501 with long text input."""
+        """POST /api/extraction/extract returns 200 with long text input."""
         long_text = "This is a test sentence. " * 100
         response = client.post(
             "/api/extraction/extract",
@@ -810,11 +800,8 @@ class TestTripleExtraction:
                 },
             },
         )
-        assert response.status_code == status.HTTP_501_NOT_IMPLEMENTED
+        assert response.status_code == status.HTTP_200_OK
 
-    @pytest.mark.skip(
-        reason="Endpoint returns 501 Not Implemented — see #704 for full implementation"
-    )
     def test_extract_triples_response_validates_against_schema(
         self, client, ontology_with_individuals
     ):
@@ -846,7 +833,7 @@ class TestTripleExtraction:
     def test_extract_triples_with_different_models(
         self, client, ontology_with_individuals
     ):
-        """POST /api/extraction/extract returns 501 regardless of model."""
+        """POST /api/extraction/extract works regardless of model."""
         models = ["gpt-4", "claude-opus", "gpt-3.5-turbo"]
 
         for model in models:
@@ -862,12 +849,12 @@ class TestTripleExtraction:
                     },
                 },
             )
-            assert response.status_code == status.HTTP_501_NOT_IMPLEMENTED
+            assert response.status_code == status.HTTP_200_OK
 
     def test_extract_triples_temperature_variation(
         self, client, ontology_with_individuals
     ):
-        """POST /api/extraction/extract returns 501 regardless of temperature."""
+        """POST /api/extraction/extract works regardless of temperature."""
         temperatures = [0.0, 0.5, 1.0, 1.5, 2.0]
 
         for temp in temperatures:
@@ -883,12 +870,12 @@ class TestTripleExtraction:
                     },
                 },
             )
-            assert response.status_code == status.HTTP_501_NOT_IMPLEMENTED
+            assert response.status_code == status.HTTP_200_OK
 
-    def test_extract_triples_returns_501_not_implemented(
+    def test_extract_triples_returns_200_ok(
         self, client, ontology_with_individuals
     ):
-        """POST /api/extraction/extract returns 501 Not Implemented."""
+        """POST /api/extraction/extract returns 200 OK."""
         response = client.post(
             "/api/extraction/extract",
             json={
@@ -901,13 +888,10 @@ class TestTripleExtraction:
                 },
             },
         )
-        assert response.status_code == status.HTTP_501_NOT_IMPLEMENTED
+        assert response.status_code == status.HTTP_200_OK
 
-    @pytest.mark.skip(
-        reason="ExtractionRun entity and extraction_repo integration not yet implemented — see #695"
-    )
     def test_extract_triples_creates_extraction_run_record(
-        self, client, ontology_with_individuals, extraction_repository
+        self, client, ontology_with_individuals, session_factory
     ):
         """POST /api/extraction/extract creates an ExtractionRun record with status completed."""
         response = client.post(
@@ -925,10 +909,12 @@ class TestTripleExtraction:
         assert response.status_code == status.HTTP_200_OK
 
         # Verify ExtractionRun record exists in database
-        runs = extraction_repository.list_extraction_runs()
+        from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunRepository
+        extraction_run_repo = SQLiteExtractionRunRepository(session_factory)
+        runs = extraction_run_repo.list_extraction_runs()
         assert len(runs) > 0
         run = runs[-1]  # Most recent run
-        assert run.status == "completed"
+        assert run.status.value == "completed"
 
     @pytest.mark.skip(
         reason="batch_run_id correlation and change_events integration not yet implemented — see #695"

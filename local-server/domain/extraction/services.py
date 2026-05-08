@@ -18,10 +18,10 @@ from domain.ontology.ports import OntologyRepository, EmbeddingService
 from domain.ports import EventPublisher
 from domain.pipeline.ports import LLMProvider
 from . import layers
-from .entities import ExtractedEntity, ExtractionResult
+from .entities import ExtractedEntity, ExtractionResult, ExtractionRun, ExtractionRunStatus
 from .events import ExtractionCompleted
 from .exceptions import ExtractionError
-from .ports import NLPProcessor, ReferenceSource, ExtractionRepository
+from .ports import NLPProcessor, ReferenceSource, ExtractionRepository, ExtractionRunRepository
 from .value_objects import ExtractionLayerResult, LayerInput, LayerOutput
 
 _logger = logging.getLogger(__name__)
@@ -52,6 +52,7 @@ class ExtractionService:
         reference_sources: list[ReferenceSource],
         event_publisher: EventPublisher,
         extraction_repo: ExtractionRepository,
+        extraction_run_repo: ExtractionRunRepository,
         similarity_threshold: float = 0.85,
     ) -> None:
         """
@@ -65,6 +66,7 @@ class ExtractionService:
             reference_sources: List of reference source ports
             event_publisher: Port for publishing domain events
             extraction_repo: Port for persisting extraction results
+            extraction_run_repo: Port for persisting extraction runs
             similarity_threshold: Threshold for entity label similarity matching (0.0–1.0).
                 Defaults to 0.85. Entities with normalized label similarity >= this value
                 are considered duplicates.
@@ -80,6 +82,7 @@ class ExtractionService:
         self._reference_sources = reference_sources
         self._event_publisher = event_publisher
         self._extraction_repo = extraction_repo
+        self._extraction_run_repo = extraction_run_repo
         self._similarity_threshold = similarity_threshold
 
     def extract(self, text: str) -> ExtractionResult:
@@ -311,6 +314,268 @@ class ExtractionService:
             layers_executed=layers_executed,
             start_time=start_time,
         )
+
+    def extract_triples(
+        self,
+        text: str,
+        ontology_id: str,
+        model: str,
+        temperature: float,
+    ) -> dict:
+        """
+        Extract RDF triples from text, scoped to a specific ontology.
+
+        This method uses an LLM to extract subject-predicate-object triples
+        from the input text, linking them to classes and individuals from a
+        specific ontology. Each triple is returned with confidence and provenance.
+
+        Args:
+            text: Source text to extract triples from
+            ontology_id: ID of the target ontology
+            model: LLM model name (e.g., 'gpt-4', 'claude-opus')
+            temperature: Sampling temperature (0.0–2.0)
+
+        Returns:
+            Dictionary with keys:
+                - triples: list of extracted triples
+                - warnings: list of warnings or validation issues
+                - metadata: extraction metadata (model, tokens_used, duration_ms)
+
+        Raises:
+            ExtractionError: If text validation fails
+            ValueError: If ontology_id not found
+        """
+        if not text or not text.strip():
+            raise ExtractionError("Text cannot be empty")
+        if not 0.0 <= temperature <= 2.0:
+            raise ValueError(f"temperature must be 0.0–2.0, got {temperature}")
+
+        import hashlib
+        from uuid import uuid4
+
+        # Create extraction run record
+        run_id = str(uuid4())
+        text_hash = hashlib.sha256(text.encode()).hexdigest()
+
+        run = ExtractionRun.create(
+            id=run_id,
+            source_document_uri=None,
+            source_text_hash=text_hash,
+            pipeline_config_ref="extraction-default",
+            model=model,
+            temperature=temperature,
+        )
+
+        # Save initial run record
+        self._extraction_run_repo.save_extraction_run(run)
+
+        start_time = time.time()
+        triples_extracted = 0
+        triples_committed = 0
+        warnings = []
+        tokens_used = 0
+        run_status = ExtractionRunStatus.COMPLETED
+
+        try:
+            # Get ontology to validate it exists
+            try:
+                ontology = self._ontology_repo.get_taxonomy(ontology_id)
+                if not ontology:
+                    raise ValueError(f"Ontology {ontology_id} not found")
+            except Exception as e:
+                raise ValueError(f"Failed to load ontology {ontology_id}: {str(e)}")
+
+            # Call LLM to extract triples
+            prompt = self._build_triple_extraction_prompt(text, ontology)
+            llm_response = self._llm.complete(prompt, model, temperature, max_tokens=8000)
+            tokens_used = getattr(llm_response, "usage", {}).get("total_tokens", 0)
+
+            # Parse LLM response
+            extracted_triples = self._parse_triple_extraction_response(
+                llm_response.content, text, ontology_id
+            )
+            triples_extracted = len(extracted_triples)
+            triples_committed = triples_extracted
+
+        except Exception as exc:
+            _logger.error(f"Triple extraction failed: {exc}", exc_info=exc)
+            tokens_used = 0
+            extracted_triples = []
+            run_status = ExtractionRunStatus.FAILED
+            warnings.append(f"Extraction failed: {str(exc)}")
+
+        # Update run record
+        duration_ms = int((time.time() - start_time) * 1000)
+        run = ExtractionRun(
+            id=run.id,
+            source_document_uri=run.source_document_uri,
+            source_text_hash=run.source_text_hash,
+            pipeline_config_ref=run.pipeline_config_ref,
+            model=run.model,
+            temperature=run.temperature,
+            tokens_used=tokens_used,
+            duration_ms=duration_ms,
+            triples_extracted=triples_extracted,
+            triples_committed=triples_committed,
+            status=run_status,
+        )
+
+        self._extraction_run_repo.update_extraction_run(run)
+
+        return {
+            "triples": extracted_triples,
+            "warnings": warnings,
+            "metadata": {
+                "model": model,
+                "tokens_used": tokens_used,
+                "duration_ms": duration_ms,
+            },
+        }
+
+    def _build_triple_extraction_prompt(self, text: str, ontology) -> str:
+        """
+        Build a prompt for the LLM to extract triples from text.
+
+        Args:
+            text: Source text to extract from
+            ontology: The target ontology
+
+        Returns:
+            Prompt string for the LLM
+        """
+        return f"""Extract RDF triples from the following text, scoped to the ontology context provided.
+
+Text:
+{text}
+
+Ontology: {ontology.title if hasattr(ontology, 'title') else str(ontology)}
+
+Extract triples in the following JSON format:
+{{
+  "triples": [
+    {{
+      "subject": {{"kind": "individual|class", "id": "...", "label": "..."}},
+      "predicate": {{"property_definition_id": "...", "label": "..."}},
+      "object": {{"kind": "individual|class|literal", "id": "...", "label": "...", "value": "..."}},
+      "confidence": 0.95,
+      "provenance": {{"text_offset_start": 0, "text_offset_end": 10, "raw": "..."}}
+    }}
+  ]
+}}
+
+Return only valid JSON. If no triples can be extracted, return {{"triples": []}}."""
+
+    def _parse_triple_extraction_response(
+        self, response: str, text: str, ontology_id: str
+    ) -> list[dict]:
+        """
+        Parse LLM response to extract structured triples.
+
+        Args:
+            response: LLM response text
+            text: Original source text
+            ontology_id: Target ontology ID
+
+        Returns:
+            List of extracted triple dictionaries
+        """
+        import json
+
+        try:
+            # Extract JSON from response
+            import re
+            json_match = re.search(r"\{.*\}", response, re.DOTALL)
+            if not json_match:
+                return []
+
+            response_json = json.loads(json_match.group())
+            triples_data = response_json.get("triples", [])
+
+            triples = []
+            for triple_data in triples_data:
+                try:
+                    triple = self._build_triple_from_llm_output(
+                        triple_data, text, ontology_id
+                    )
+                    triples.append(triple)
+                except Exception as e:
+                    _logger.warning(f"Failed to parse triple: {e}")
+                    continue
+
+            return triples
+
+        except json.JSONDecodeError as e:
+            _logger.error(f"Failed to parse LLM JSON response: {e}")
+            return []
+
+    def _build_triple_from_llm_output(
+        self, triple_data: dict, text: str, ontology_id: str
+    ) -> dict:
+        """
+        Build a triple dict from LLM-extracted data.
+
+        Args:
+            triple_data: Triple data from LLM
+            text: Original source text
+            ontology_id: Target ontology ID
+
+        Returns:
+            Triple dictionary matching ExtractedTriple schema
+        """
+        subject_data = triple_data.get("subject", {})
+        predicate_data = triple_data.get("predicate", {})
+        object_data = triple_data.get("object", {})
+        confidence = float(triple_data.get("confidence", 0.5))
+        provenance_data = triple_data.get("provenance", {})
+
+        # Build provenance
+        start = provenance_data.get("text_offset_start", 0)
+        end = provenance_data.get("text_offset_end", min(start + 10, len(text)))
+        raw = text[start:end] if start < len(text) else ""
+
+        provenance = {
+            "text_offset_start": max(0, start),
+            "text_offset_end": min(end, len(text)),
+            "raw": raw,
+        }
+
+        # Build subject
+        subject = {
+            "kind": subject_data.get("kind", "class"),
+            "id": subject_data.get("id", ""),
+            "label": subject_data.get("label", ""),
+        }
+
+        # Build predicate
+        predicate = {
+            "property_definition_id": predicate_data.get(
+                "property_definition_id", ""
+            ),
+            "label": predicate_data.get("label", ""),
+        }
+
+        # Build object (discriminated by kind)
+        object_kind = object_data.get("kind", "literal")
+        if object_kind == "literal":
+            obj = {
+                "kind": "literal",
+                "value": object_data.get("value"),
+                "datatype": object_data.get("datatype"),
+            }
+        else:
+            obj = {
+                "kind": object_kind,
+                "id": object_data.get("id", ""),
+                "label": object_data.get("label", ""),
+            }
+
+        return {
+            "subject": subject,
+            "predicate": predicate,
+            "object": obj,
+            "confidence": max(0.0, min(1.0, confidence)),
+            "provenance": provenance,
+        }
 
     def _build_result(
         self,
