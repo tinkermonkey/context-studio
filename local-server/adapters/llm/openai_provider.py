@@ -121,7 +121,10 @@ class OpenAIProvider:
                 model=model,
             )
         except Exception as e:
-            logger.error(f"OpenAI API error: {str(e)}")
+            logger.error(
+                f"OpenAI API error for model {model}: {type(e).__name__}: {e}",
+                exc_info=True,
+            )
             raise
 
     def is_model_available(self, model: str) -> bool:

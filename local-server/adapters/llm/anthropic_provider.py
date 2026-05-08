@@ -114,7 +114,10 @@ class AnthropicProvider:
                 model=model,
             )
         except Exception as e:
-            logger.error(f"Anthropic API error: {str(e)}")
+            logger.error(
+                f"Anthropic API error for model {model}: {type(e).__name__}: {e}",
+                exc_info=True,
+            )
             raise
 
     def is_model_available(self, model: str) -> bool:

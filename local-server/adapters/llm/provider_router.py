@@ -37,22 +37,42 @@ class LLMProviderRouter:
         Args:
             openai_api_key: OpenAI API key (optional)
             anthropic_api_key: Anthropic API key (optional)
+
+        Raises:
+            ValueError: If all configured providers fail to initialize
         """
         self._providers: dict[str, LLMProvider] = {}
+        init_errors: dict[str, Exception] = {}
 
         if openai_api_key:
             try:
                 self._providers["openai"] = OpenAIProvider(openai_api_key)
                 logger.info("OpenAI provider initialized")
             except Exception as e:
-                logger.error(f"Failed to initialize OpenAI provider: {str(e)}")
+                init_errors["openai"] = e
+                logger.error(
+                    f"Failed to initialize OpenAI provider: {type(e).__name__}: {e}",
+                    exc_info=True,
+                )
 
         if anthropic_api_key:
             try:
                 self._providers["anthropic"] = AnthropicProvider(anthropic_api_key)
                 logger.info("Anthropic provider initialized")
             except Exception as e:
-                logger.error(f"Failed to initialize Anthropic provider: {str(e)}")
+                init_errors["anthropic"] = e
+                logger.error(
+                    f"Failed to initialize Anthropic provider: {type(e).__name__}: {e}",
+                    exc_info=True,
+                )
+
+        if init_errors and not self._providers:
+            error_details = "; ".join(
+                f"{name}: {type(e).__name__}: {e}" for name, e in init_errors.items()
+            )
+            raise ValueError(
+                f"No LLM providers could be initialized. Errors: {error_details}"
+            )
 
     def complete(
         self,
