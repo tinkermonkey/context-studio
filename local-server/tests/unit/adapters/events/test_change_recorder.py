@@ -5,7 +5,7 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../../"))
 
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 import pytest
 
 from domain.extraction.events import ExtractionCompleted
