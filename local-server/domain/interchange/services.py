@@ -34,9 +34,9 @@ def get_current_batch_run_id() -> Optional[str]:
 
 def get_current_import_run_id() -> Optional[str]:
     """
-    Backward-compatible convenience method to get the current import run ID.
+    Backward-compatible convenience method to get the current batch run ID.
 
-    Returns None if no import is in progress.
+    Returns None if no batch operation (import or extraction) is in progress.
     """
     return _batch_run_context.get()
 

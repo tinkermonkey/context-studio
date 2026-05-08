@@ -1,7 +1,7 @@
 """
 Extraction domain entities.
 
-Mutable dataclasses representing the core domain model for knowledge extraction.
+Immutable dataclasses representing the core domain model for knowledge extraction.
 """
 
 from __future__ import annotations
@@ -161,8 +161,9 @@ class ExtractionRun:
 
     Tracks an extraction operation from inception through completion,
     recording the pipeline configuration, LLM settings, resource metrics,
-    and outcome counts. This entity is immutable once constructed; all
-    state transitions occur in the repository layer.
+    and outcome counts. This entity is immutable once constructed. State
+    transitions are represented by constructing new ExtractionRun instances
+    with updated field values; the repository manages this lifecycle.
 
     ARCHITECTURAL NOTE: This entity MUST NOT have a rollback mechanism.
     Unlike ImportRun (which can be rolled back, undoing all changes),

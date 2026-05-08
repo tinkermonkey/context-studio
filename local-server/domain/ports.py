@@ -35,7 +35,7 @@ class ChangeRecordPort(Protocol):
         user_id: str | None = None,
         change_reason: str | None = None,
         changeset_id: str | None = None,
-        import_run_id: str | None = None,
+        batch_run_id: str | None = None,
     ) -> str:
         """
         Record a change event.
@@ -49,7 +49,7 @@ class ChangeRecordPort(Protocol):
             user_id: Optional user ID
             change_reason: Optional explanation
             changeset_id: Optional changeset reference
-            import_run_id: Optional ID of the import run that triggered this change
+            batch_run_id: Optional ID of the batch run (import or extraction) that triggered this change
 
         Returns:
             The ID of the recorded change event

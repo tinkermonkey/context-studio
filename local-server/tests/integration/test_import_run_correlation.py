@@ -22,7 +22,7 @@ from adapters.events.in_process import InProcessEventPublisher
 from domain.interchange.services import (
     ImportRunService,
     set_import_run_context,
-    get_current_import_run_id,
+    get_current_batch_run_id,
 )
 from domain.interchange.value_objects import (
     SerializationScope,
@@ -86,10 +86,10 @@ def ontology_service(ontology_repo, embedding_service, event_publisher):
     return OntologyService(ontology_repo, embedding_service, event_publisher)
 
 
-def test_change_events_outside_import_have_null_import_run_id(change_repo):
-    """Change events outside an import have NULL import_run_id."""
+def test_change_events_outside_import_have_null_batch_run_id(change_repo):
+    """Change events outside an import have NULL batch_run_id."""
     # Ensure no import context is active
-    assert get_current_import_run_id() is None
+    assert get_current_batch_run_id() is None
 
     # Directly record a change event without import context
     change_repo.record_change(
@@ -100,18 +100,18 @@ def test_change_events_outside_import_have_null_import_run_id(change_repo):
         change_reason="test change",
     )
 
-    # Verify the change event was recorded with NULL import_run_id
+    # Verify the change event was recorded with NULL batch_run_id
     retrieved_event = (
         change_repo.get_changes(limit=1).events[0]
         if change_repo.get_changes(limit=1).events
         else None
     )
     assert retrieved_event is not None
-    assert retrieved_event.import_run_id is None
+    assert retrieved_event.batch_run_id is None
 
 
-def test_change_events_inside_import_have_import_run_id(change_repo):
-    """Change events inside an import have the import_run_id set."""
+def test_change_events_inside_import_have_batch_run_id(change_repo):
+    """Change events inside an import have the batch_run_id set."""
     # Create an import run and set context
     import_service = ImportRunService()
     scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
@@ -128,7 +128,7 @@ def test_change_events_inside_import_have_import_run_id(change_repo):
 
     try:
         # Verify context is set
-        assert get_current_import_run_id() == import_run.id
+        assert get_current_batch_run_id() == import_run.id
 
         # Record a change event within the import context
         change_repo.record_change(
@@ -137,15 +137,15 @@ def test_change_events_inside_import_have_import_run_id(change_repo):
             operation=ChangeOperation.CREATE,
             new_state={"title": "Test"},
             change_reason="test change",
-            import_run_id=get_current_import_run_id(),
+            batch_run_id=get_current_batch_run_id(),
         )
 
-        # Verify the change event was recorded with the import_run_id
+        # Verify the change event was recorded with the batch_run_id
         retrieved_events = change_repo.get_changes(limit=10).events
         assert len(retrieved_events) > 0
-        # Check that at least one event has the import_run_id
+        # Check that at least one event has the batch_run_id
         events_with_import_run = [
-            e for e in retrieved_events if e.import_run_id == import_run.id
+            e for e in retrieved_events if e.batch_run_id == import_run.id
         ]
         assert len(events_with_import_run) > 0
     finally:
@@ -158,11 +158,11 @@ def test_context_cleared_after_import(session_factory):
     # Set context
     test_id = str(uuid4())
     set_import_run_context(test_id)
-    assert get_current_import_run_id() == test_id
+    assert get_current_batch_run_id() == test_id
 
     # Clear context
     set_import_run_context(None)
-    assert get_current_import_run_id() is None
+    assert get_current_batch_run_id() is None
 
 
 def test_multiple_events_in_same_import_linked_to_same_run(change_repo):
@@ -181,14 +181,14 @@ def test_multiple_events_in_same_import_linked_to_same_run(change_repo):
 
     try:
         # Record multiple change events within the import context
-        current_import_run_id = get_current_import_run_id()
+        current_batch_run_id = get_current_batch_run_id()
 
         change_repo.record_change(
             entity_id="entity-1",
             entity_type="taxonomy",
             operation=ChangeOperation.CREATE,
             new_state={"title": "Taxonomy 1"},
-            import_run_id=current_import_run_id,
+            batch_run_id=current_batch_run_id,
         )
 
         change_repo.record_change(
@@ -196,7 +196,7 @@ def test_multiple_events_in_same_import_linked_to_same_run(change_repo):
             entity_type="concept_scheme",
             operation=ChangeOperation.CREATE,
             new_state={"title": "Scheme 1"},
-            import_run_id=current_import_run_id,
+            batch_run_id=current_batch_run_id,
         )
 
         change_repo.record_change(
@@ -204,19 +204,19 @@ def test_multiple_events_in_same_import_linked_to_same_run(change_repo):
             entity_type="class",
             operation=ChangeOperation.CREATE,
             new_state={"title": "Class 1"},
-            import_run_id=current_import_run_id,
+            batch_run_id=current_batch_run_id,
         )
 
-        # Verify all change events have the same import_run_id
+        # Verify all change events have the same batch_run_id
         retrieved_events = change_repo.get_changes(limit=10).events
 
         # Should have at least 3 events
         assert len(retrieved_events) >= 3
 
-        # All events should have the same import_run_id
+        # All events should have the same batch_run_id
         for event in retrieved_events:
-            if event.import_run_id is not None:
-                assert event.import_run_id == import_run.id
+            if event.batch_run_id is not None:
+                assert event.batch_run_id == import_run.id
     finally:
         set_import_run_context(None)
 
@@ -224,7 +224,7 @@ def test_multiple_events_in_same_import_linked_to_same_run(change_repo):
 def test_change_event_recorder_auto_correlation_from_context(
     change_recorder, db_engine, change_repo
 ):
-    """ChangeEventRecorder automatically reads import_run_id from context."""
+    """ChangeEventRecorder automatically reads batch_run_id from context."""
     # Create an import run and set context
     import_service = ImportRunService()
     scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
@@ -240,7 +240,7 @@ def test_change_event_recorder_auto_correlation_from_context(
 
     try:
         # Verify context is set
-        assert get_current_import_run_id() == import_run.id
+        assert get_current_batch_run_id() == import_run.id
 
         # Call the _record() method directly to exercise the automatic correlation path
         # This simulates what happens when a domain event triggers the recorder
@@ -252,7 +252,7 @@ def test_change_event_recorder_auto_correlation_from_context(
             change_reason="Created during import",
         )
 
-        # Verify the change event was recorded with the import_run_id automatically
+        # Verify the change event was recorded with the batch_run_id automatically
         retrieved_events = change_repo.get_changes(limit=10).events
         assert len(retrieved_events) > 0
 
@@ -260,7 +260,7 @@ def test_change_event_recorder_auto_correlation_from_context(
         auto_correlated_events = [
             e
             for e in retrieved_events
-            if e.entity_id == "test-entity-auto" and e.import_run_id == import_run.id
+            if e.entity_id == "test-entity-auto" and e.batch_run_id == import_run.id
         ]
 
         # Verify at least one event was auto-correlated
