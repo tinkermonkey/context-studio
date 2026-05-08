@@ -182,6 +182,80 @@ class TestPipelineServiceConfigurationCRUD:
         with pytest.raises(PipelineNotFoundError, match="not found"):
             self.service.update_config("nonexistent-id", title="New Title")
 
+    def test_update_config_with_explicit_seed_sets_it(self):
+        """Updating config with explicit seed value sets the seed."""
+        created = self.service.create_config(
+            pipeline="test",
+            title="Test",
+            provider="openai",
+            model="gpt-4",
+            config={},
+            system_prompt="System",
+            user_prompt="User: {text}",
+        )
+
+        updated = self.service.update_config(created.id, seed=42)
+
+        assert updated.seed == 42
+
+    def test_update_config_with_explicit_seed_zero_sets_it(self):
+        """Updating config with explicit seed=0 sets zero as the seed."""
+        created = self.service.create_config(
+            pipeline="test",
+            title="Test",
+            provider="openai",
+            model="gpt-4",
+            config={},
+            system_prompt="System",
+            user_prompt="User: {text}",
+        )
+
+        updated = self.service.update_config(created.id, seed=0)
+
+        assert updated.seed == 0
+
+    def test_update_config_with_seed_none_clears_it(self):
+        """Updating config with seed=None clears the seed."""
+        created = self.service.create_config(
+            pipeline="test",
+            title="Test",
+            provider="openai",
+            model="gpt-4",
+            config={},
+            system_prompt="System",
+            user_prompt="User: {text}",
+        )
+
+        # First set a seed value
+        with_seed = self.service.update_config(created.id, seed=42)
+        assert with_seed.seed == 42
+
+        # Clear it by passing None
+        updated = self.service.update_config(created.id, seed=None)
+
+        assert updated.seed is None
+
+    def test_update_config_without_seed_preserves_existing(self):
+        """Updating config without specifying seed preserves the existing value."""
+        created = self.service.create_config(
+            pipeline="test",
+            title="Test",
+            provider="openai",
+            model="gpt-4",
+            config={},
+            system_prompt="System",
+            user_prompt="User: {text}",
+        )
+
+        # First set a seed value
+        with_seed = self.service.update_config(created.id, seed=42)
+        assert with_seed.seed == 42
+
+        # Update other fields without mentioning seed
+        updated = self.service.update_config(created.id, title="New Title")
+
+        assert updated.seed == 42  # Seed is preserved
+
     def test_delete_config(self):
         """Delete a pipeline configuration."""
         config = self.service.create_config(

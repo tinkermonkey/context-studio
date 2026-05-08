@@ -1,8 +1,8 @@
 """add seed column to pipeline_configurations
 
-Revision ID: fad7094bbd6
+Revision ID: b3e4c9d7f2a1
 Revises: 619a27b89a15
-Create Date: 2026-05-08 20:00:00.000000
+Create Date: 2026-05-08 20:15:00.123456
 
 """
 
@@ -10,7 +10,7 @@ from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
-revision = "fad7094bbd6"
+revision = "b3e4c9d7f2a1"
 down_revision = "619a27b89a15"
 branch_labels = None
 depends_on = None

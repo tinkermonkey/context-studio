@@ -21,6 +21,8 @@ from .exceptions import PipelineNotFoundError
 
 _logger = logging.getLogger(__name__)
 
+_UNSET = object()
+
 
 class PipelineService:
     """
@@ -135,7 +137,7 @@ class PipelineService:
         system_prompt: str | None = None,
         user_prompt: str | None = None,
         enabled: bool | None = None,
-        seed: int | None = ...,
+        seed: int | None | object = _UNSET,
     ) -> PipelineConfiguration:
         """
         Update a pipeline configuration.
@@ -179,7 +181,7 @@ class PipelineService:
             enabled=enabled if enabled is not None else existing.enabled,
             created_at=existing.created_at,
             last_updated=datetime.now(timezone.utc),
-            seed=seed if seed is not ... else existing.seed,
+            seed=seed if seed is not _UNSET else existing.seed,
         )
         return self._pipeline_repo.save_config(updated)
 
