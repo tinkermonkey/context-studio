@@ -39,11 +39,11 @@ def upgrade() -> None:
     count_result = op.get_bind().execute(sa.text("SELECT COUNT(*) FROM import_runs"))
     import_run_count = count_result.scalar()
 
-    insert_result = op.execute("""
+    insert_result = op.get_bind().execute(sa.text("""
         INSERT INTO batch_runs (id, created_at, created_by, status, affected_entity_ids, run_type)
         SELECT id, created_at, created_by, status, affected_entity_ids, 'import' as run_type
         FROM import_runs
-    """)
+    """))
 
     # Verify all import_runs were migrated
     if insert_result.rowcount != import_run_count:
@@ -78,9 +78,9 @@ def upgrade() -> None:
     ).scalar()
 
     # Migrate data from import_run_id to batch_run_id with integrity verification
-    update_result = op.execute("""
+    update_result = op.get_bind().execute(sa.text("""
         UPDATE change_events SET batch_run_id = import_run_id WHERE import_run_id IS NOT NULL
-    """)
+    """))
 
     if update_result.rowcount != events_with_import_run:
         raise Exception(
