@@ -19,6 +19,7 @@ local-server/datafiles/
 local-server/datasets.json
 local-server/downloads/
 local-server/logs/
+local-server/reports/
 
 # Build and runtime artifacts
 *.log
