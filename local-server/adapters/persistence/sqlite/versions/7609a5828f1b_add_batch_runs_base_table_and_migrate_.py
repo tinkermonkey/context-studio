@@ -133,22 +133,22 @@ def downgrade() -> None:
         batch_op.drop_constraint('fk_import_runs_batch_runs_id', type_='foreignkey')
 
     # Migrate data back to import_runs (restore from batch_runs)
-    op.execute("""
+    op.get_bind().execute(sa.text("""
         UPDATE import_runs SET created_at = (SELECT created_at FROM batch_runs WHERE batch_runs.id = import_runs.id)
         WHERE EXISTS (SELECT 1 FROM batch_runs WHERE batch_runs.id = import_runs.id)
-    """)
-    op.execute("""
+    """))
+    op.get_bind().execute(sa.text("""
         UPDATE import_runs SET created_by = (SELECT created_by FROM batch_runs WHERE batch_runs.id = import_runs.id)
         WHERE EXISTS (SELECT 1 FROM batch_runs WHERE batch_runs.id = import_runs.id)
-    """)
-    op.execute("""
+    """))
+    op.get_bind().execute(sa.text("""
         UPDATE import_runs SET status = (SELECT status FROM batch_runs WHERE batch_runs.id = import_runs.id)
         WHERE EXISTS (SELECT 1 FROM batch_runs WHERE batch_runs.id = import_runs.id)
-    """)
-    op.execute("""
+    """))
+    op.get_bind().execute(sa.text("""
         UPDATE import_runs SET affected_entity_ids = (SELECT affected_entity_ids FROM batch_runs WHERE batch_runs.id = import_runs.id)
         WHERE EXISTS (SELECT 1 FROM batch_runs WHERE batch_runs.id = import_runs.id)
-    """)
+    """))
 
     # Restore change_events columns with batch mode
     # Step 1: Add import_run_id column back
@@ -156,9 +156,9 @@ def downgrade() -> None:
         batch_op.add_column(sa.Column('import_run_id', sa.VARCHAR(length=36), nullable=True))
 
     # Step 2: Copy data back from batch_run_id to import_run_id while both columns exist
-    op.execute("""
+    op.get_bind().execute(sa.text("""
         UPDATE change_events SET import_run_id = batch_run_id WHERE batch_run_id IS NOT NULL
-    """)
+    """))
 
     # Step 3: Drop batch_run_id and restore indexes/constraints
     with op.batch_alter_table('change_events', schema=None) as batch_op:
