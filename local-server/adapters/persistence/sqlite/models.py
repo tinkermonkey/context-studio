@@ -16,6 +16,7 @@ Design Notes:
 """
 
 from datetime import datetime, timezone
+from typing import Any, Dict, Tuple
 
 from sqlalchemy import (
     Column,
@@ -749,7 +750,7 @@ class BatchRun(Base):  # type: ignore[misc,valid-type]
         doc="Discriminator: import, extraction, etc.",
     )
 
-    __mapper_args__ = {  # type: ignore[assignment]
+    __mapper_args__: Dict[str, Any] = {
         "polymorphic_on": run_type,
     }
     __table_args__ = (
@@ -830,7 +831,7 @@ class ImportRun(BatchRun):  # type: ignore[misc,valid-type]
         JSON, nullable=False, default=list, doc="JSON list of applied resolutions"
     )
 
-    __mapper_args__ = {  # type: ignore[assignment]
+    __mapper_args__: Dict[str, Any] = {
         "polymorphic_identity": "import",
     }
 
@@ -889,10 +890,10 @@ class ExtractionRun(BatchRun):  # type: ignore[misc,valid-type]
         Integer, nullable=False, doc="Count of triples persisted after review"
     )
 
-    __mapper_args__ = {  # type: ignore[assignment]
+    __mapper_args__: Dict[str, Any] = {
         "polymorphic_identity": "extraction",
     }
-    __table_args__ = (
+    __table_args__: Tuple[Any, ...] = (
         CheckConstraint("temperature >= 0.0", name="check_temperature_min"),
         CheckConstraint("temperature <= 2.0", name="check_temperature_max"),
         CheckConstraint("tokens_used >= 0", name="check_tokens_non_negative"),
