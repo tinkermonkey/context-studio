@@ -84,13 +84,13 @@ class BenchmarkResult:
         self.recall = 0.0
         self.f1 = 0.0
         self.conformance = 0.0
-        self.extraction_run_ids = []  # TODO: Populate from API response when implemented
+        self.extraction_run_ids: list[str] = []  # TODO: Populate from API response when implemented
         self.timestamp = datetime.now(timezone.utc).isoformat()
         self.model = ""
         self.cost_usd = 0.0
         self.total_duration_ms = 0
         self.samples_processed = 0
-        self.errors = []
+        self.errors: list[str] = []
 
     def to_dict(self) -> dict[str, Any]:
         """Convert result to dictionary for JSON serialization."""
@@ -230,7 +230,7 @@ def estimate_cost(
 
 
 def stratified_sample_dataset(
-    dataset,
+    dataset: list[dict] | Any,
     max_cost: float,
     config: dict[str, Any],
 ) -> list[dict]:
@@ -500,21 +500,19 @@ def run_benchmark(
     else:
         _logger.info(f"Loaded {len(samples)} samples from cache")
 
-    dataset = samples
-
     # Apply stratified sampling if needed
-    samples = stratified_sample_dataset(dataset, max_cost, config)
+    samples = stratified_sample_dataset(samples, max_cost, config)
 
     # Collect unique ontologies from samples
-    ontologies = set()
+    ontologies_set: set[Any] = set()
     for sample in samples:
         if "ontology" in sample:
-            ontologies.add(sample["ontology"])
+            ontologies_set.add(sample["ontology"])
         elif "ontologies" in sample and isinstance(sample["ontologies"], list):
-            ontologies.update(sample["ontologies"])
+            ontologies_set.update(sample["ontologies"])
 
-    _logger.info(f"Found {len(ontologies)} unique ontologies")
-    ontologies = sorted(list(ontologies))
+    _logger.info(f"Found {len(ontologies_set)} unique ontologies")
+    ontologies = sorted(list(ontologies_set))
 
     # Run extraction for each ontology
     results_by_ontology = {}
