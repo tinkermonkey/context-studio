@@ -739,7 +739,7 @@ def main():
         json_path = save_json_report(results, args.out)
         md_path = save_markdown_report(results, args.out)
 
-        _logger.info(f"Benchmark complete!")
+        _logger.info("Benchmark complete!")
         _logger.info(f"JSON report: {json_path}")
         _logger.info(f"Markdown report: {md_path}")
         _logger.info(f"Total cost: ${results['total_cost_usd']:.2f}")

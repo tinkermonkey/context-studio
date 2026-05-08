@@ -78,7 +78,7 @@ def download_benchmark_dataset(dataset_name: str, split: str = "test", output_di
         _logger.error(f"Failed to download dataset {dataset_name}: {e}")
         _logger.error("Dataset may not be available yet. Check:")
         _logger.error(f"  - https://huggingface.co/datasets/{dataset_name}")
-        _logger.error(f"  - Correct dataset name and accessibility")
+        _logger.error("  - Correct dataset name and accessibility")
         raise
 
 
