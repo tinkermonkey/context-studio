@@ -67,7 +67,7 @@ This document tracks the performance of the knowledge graph extraction pipeline 
 - **Recall:** Proportion of ground truth triples that were predicted (TP / (TP + FN))
 - **F1:** Harmonic mean of precision and recall (2 * P * R / (P + R))
 - **Conformance:** Proportion of predicted triples with valid format and confidence scores (0-1)
-- **Hallucination Rate:** Percentage of predicted triples with no text support in provenance (to be measured in next iteration)
+- **Hallucination Rate:** Percentage of predicted triples with no text support in provenance (0.0 — no triples predicted)
 
 ### Cost Analysis
 
