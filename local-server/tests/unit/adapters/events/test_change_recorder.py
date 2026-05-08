@@ -5,7 +5,7 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../../"))
 
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 import pytest
 
 from domain.extraction.events import ExtractionCompleted
@@ -32,6 +32,7 @@ from domain.ontology.events import (
     IndividualDeleted,
 )
 from adapters.events.change_recorder import ChangeEventRecorder
+from domain.interchange.services import set_batch_run_context
 
 
 @pytest.fixture
@@ -51,6 +52,8 @@ class TestChangeEventRecorder:
 
     def test_on_extraction_completed_records_change(self, recorder, mock_change_repo):
         """Test that ExtractionCompleted event is recorded."""
+        # Reset context to ensure no batch_run_id is set
+        set_batch_run_context(None)
         mock_change_repo.record_change.return_value = "change-123"
         event = ExtractionCompleted(
             result_id="result-456",
@@ -67,11 +70,35 @@ class TestChangeEventRecorder:
         assert call_args.kwargs["operation"] == "create"
         assert call_args.kwargs["new_state"]["entity_count"] == 42
         assert call_args.kwargs["new_state"]["duration_ms"] == 1250.5
+        assert call_args.kwargs["batch_run_id"] is None
+
+    def test_on_extraction_completed_propagates_batch_run_id(
+        self, recorder, mock_change_repo
+    ):
+        """Test that batch_run_id is propagated from context to record_change."""
+        batch_run_id = "batch-789"
+        set_batch_run_context(batch_run_id)
+        try:
+            mock_change_repo.record_change.return_value = "change-123"
+            event = ExtractionCompleted(
+                result_id="result-456",
+                entity_count=42,
+                duration_ms=1250.5,
+            )
+
+            recorder.on_extraction_completed(event)
+
+            mock_change_repo.record_change.assert_called_once()
+            call_args = mock_change_repo.record_change.call_args
+            assert call_args.kwargs["batch_run_id"] == batch_run_id
+        finally:
+            set_batch_run_context(None)
 
     def test_on_extraction_completed_propagates_exception(
         self, recorder, mock_change_repo
     ):
         """Test that repo exceptions propagate to the event publisher."""
+        set_batch_run_context(None)
         mock_change_repo.record_change.side_effect = RuntimeError("DB error")
         event = ExtractionCompleted(
             result_id="result-456",
@@ -86,6 +113,8 @@ class TestChangeEventRecorder:
 
     def test_on_pipeline_executed_records_change(self, recorder, mock_change_repo):
         """Test that PipelineExecuted event is recorded."""
+        # Reset context to ensure no batch_run_id is set
+        set_batch_run_context(None)
         mock_change_repo.record_change.return_value = "change-789"
         event = PipelineExecuted(
             execution_id="exec-123",
@@ -102,11 +131,35 @@ class TestChangeEventRecorder:
         assert call_args.kwargs["operation"] == "create"
         assert call_args.kwargs["new_state"]["pipeline_id"] == "pipeline-456"
         assert call_args.kwargs["new_state"]["status"] == "success"
+        assert call_args.kwargs["batch_run_id"] is None
+
+    def test_on_pipeline_executed_propagates_batch_run_id(
+        self, recorder, mock_change_repo
+    ):
+        """Test that batch_run_id is propagated from context to record_change."""
+        batch_run_id = "batch-999"
+        set_batch_run_context(batch_run_id)
+        try:
+            mock_change_repo.record_change.return_value = "change-789"
+            event = PipelineExecuted(
+                execution_id="exec-123",
+                pipeline_id="pipeline-456",
+                status="success",
+            )
+
+            recorder.on_pipeline_executed(event)
+
+            mock_change_repo.record_change.assert_called_once()
+            call_args = mock_change_repo.record_change.call_args
+            assert call_args.kwargs["batch_run_id"] == batch_run_id
+        finally:
+            set_batch_run_context(None)
 
     def test_on_pipeline_executed_propagates_exception(
         self, recorder, mock_change_repo
     ):
         """Test that repo exceptions propagate to the event publisher."""
+        set_batch_run_context(None)
         mock_change_repo.record_change.side_effect = RuntimeError("DB error")
         event = PipelineExecuted(
             execution_id="exec-123",
@@ -127,6 +180,8 @@ class TestOntologyHandlers:
         self, recorder, mock_change_repo
     ):
         """Test that _record helper passes arguments correctly to repo."""
+        # Reset context to ensure no batch_run_id is set
+        set_batch_run_context(None)
         mock_change_repo.record_change.return_value = "change-123"
 
         change_id = recorder._record(
@@ -146,11 +201,35 @@ class TestOntologyHandlers:
         assert call_args.kwargs["operation"] == "create"
         assert call_args.kwargs["new_state"] == {"field": "value"}
         assert call_args.kwargs["change_reason"] == "Test change"
+        assert call_args.kwargs["batch_run_id"] is None
+
+    def test_record_helper_propagates_batch_run_id(self, recorder, mock_change_repo):
+        """Test that _record helper propagates batch_run_id from context."""
+        batch_run_id = "batch-555"
+        set_batch_run_context(batch_run_id)
+        try:
+            mock_change_repo.record_change.return_value = "change-123"
+
+            change_id = recorder._record(
+                entity_id="entity-1",
+                entity_type="test_entity",
+                operation="create",
+                new_state={"field": "value"},
+                previous_state=None,
+                change_reason="Test change",
+            )
+
+            assert change_id == "change-123"
+            call_args = mock_change_repo.record_change.call_args
+            assert call_args.kwargs["batch_run_id"] == batch_run_id
+        finally:
+            set_batch_run_context(None)
 
     def test_record_helper_converts_none_new_state_to_empty_dict(
         self, recorder, mock_change_repo
     ):
         """Test that _record helper converts None new_state to empty dict."""
+        set_batch_run_context(None)
         mock_change_repo.record_change.return_value = "change-123"
 
         recorder._record(
@@ -167,6 +246,7 @@ class TestOntologyHandlers:
 
     def test_record_helper_propagates_exception(self, recorder, mock_change_repo):
         """Test that _record helper propagates repo exceptions."""
+        set_batch_run_context(None)
         mock_change_repo.record_change.side_effect = RuntimeError("DB error")
 
         with pytest.raises(RuntimeError, match="DB error"):
