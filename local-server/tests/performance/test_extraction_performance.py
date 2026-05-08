@@ -20,6 +20,7 @@ from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_extraction_repository import FakeExtractionRepository
+from tests.fakes.fake_extraction_run_repo import FakeExtractionRunRepository
 from tests.fakes.fake_event_publisher import FakeEventPublisher
 from tests.fakes.fake_reference_source import FakeReferenceSource
 
@@ -104,6 +105,7 @@ def _setup_extraction_service(
         nlp=nlp_processor,
         reference_sources=[reference_source],
         extraction_repo=extraction_repo,
+        extraction_run_repo=FakeExtractionRunRepository(),
         event_publisher=event_publisher,
     )
     return service

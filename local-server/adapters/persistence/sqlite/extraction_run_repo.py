@@ -11,7 +11,7 @@ Key responsibilities:
 - Update extraction run status and metrics
 """
 
-from typing import Sequence
+from typing import Sequence, cast
 
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy import desc
@@ -182,11 +182,11 @@ class SQLiteExtractionRunRepository:
             if not orm_run:
                 raise ValueError(f"ExtractionRun with id {run.id} not found")
 
-            orm_run.status = run.status.value
-            orm_run.tokens_used = run.tokens_used
-            orm_run.duration_ms = run.duration_ms
-            orm_run.triples_extracted = run.triples_extracted
-            orm_run.triples_committed = run.triples_committed
+            orm_run.status = run.status.value  # type: ignore[assignment]
+            orm_run.tokens_used = run.tokens_used  # type: ignore[assignment]
+            orm_run.duration_ms = run.duration_ms  # type: ignore[assignment]
+            orm_run.triples_extracted = run.triples_extracted  # type: ignore[assignment]
+            orm_run.triples_committed = run.triples_committed  # type: ignore[assignment]
 
             session.commit()
 
@@ -213,11 +213,12 @@ class SQLiteExtractionRunRepository:
             "completed": ExtractionRunStatus.COMPLETED,
             "failed": ExtractionRunStatus.FAILED,
         }
-        status = status_map.get(orm_run.status, ExtractionRunStatus.PENDING)
+        status_str = cast(str, orm_run.status)
+        status = status_map.get(status_str, ExtractionRunStatus.PENDING)
 
         return ExtractionRun(
             id=str(orm_run.id) if orm_run.id else "",
-            source_document_uri=orm_run.source_document_uri,
+            source_document_uri=cast(str | None, orm_run.source_document_uri),
             source_text_hash=str(orm_run.source_text_hash) if orm_run.source_text_hash else "",
             pipeline_config_ref=str(orm_run.pipeline_config_ref) if orm_run.pipeline_config_ref else "",
             model=str(orm_run.model) if orm_run.model else "",

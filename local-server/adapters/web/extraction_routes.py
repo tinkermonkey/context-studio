@@ -17,6 +17,8 @@ No business logic lives here—all validation and constraints are in the domain 
 Error handling translates domain exceptions to appropriate HTTP responses.
 """
 
+from typing import cast
+
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from domain.extraction.entities import ExtractedEntity
@@ -39,6 +41,8 @@ from adapters.web.schemas.extraction import (
     ExtractionLayerResultSchema,
     ExtractTripleRequest,
     ExtractTripleResponse,
+    ExtractedTriple,
+    ExtractionMetadata,
 )
 
 router = APIRouter(prefix="/api", tags=["extraction"])
@@ -287,10 +291,17 @@ async def extract_triples(
             request.options.temperature,
         )
 
+        triples = [ExtractedTriple.model_validate(t) for t in result.triples]
+        metadata = ExtractionMetadata(
+            model=cast(str, result.metadata["model"]),
+            tokens_used=cast(int, result.metadata["tokens_used"]),
+            duration_ms=cast(int, result.metadata["duration_ms"]),
+        )
+
         return ExtractTripleResponse(
-            triples=result.triples,
+            triples=triples,
             warnings=result.warnings,
-            metadata=result.metadata,
+            metadata=metadata,
         )
     except (InvalidInputError, ExtractionError) as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
