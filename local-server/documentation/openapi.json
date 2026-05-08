@@ -3934,7 +3934,7 @@
           "interchange"
         ],
         "summary": "Import Ontology",
-        "description": "Import ontology data from a file.\n\nSupports dry-run mode to preview conflicts, or direct commit with user-chosen resolutions.\n\nArgs:\n    format: Import format (skos, owl, graphml)\n    file: File to import\n    dry_run: \"true\" for dry-run (returns plan), \"false\" to commit\n    resolutions: Optional JSON-encoded list of ResolutionRecord to apply when committing\n    ontology_repo: Injected OntologyRepository\n    interchange_repo: Injected ImportRunRepository\n\nReturns:\n    ImportPlanResponse (dry-run) or ImportRunResponse (committed)\n\nRaises:\n    HTTPException: If import fails or format is unsupported",
+        "description": "Import ontology data from a file.\n\nSupports dry-run mode to preview conflicts, or direct commit with user-chosen resolutions.\n\nArgs:\n    format: Import format (skos, owl, graphml)\n    file: File to import\n    dry_run: \"true\" for dry-run (returns plan), \"false\" to commit\n    resolutions: Optional JSON-encoded list of ResolutionRecord to apply when committing\n    ontology_repo: Injected OntologyRepository\n    interchange_repo: Injected BatchRunRepository\n\nReturns:\n    ImportPlanResponse (dry-run) or ImportRunResponse (committed)\n\nRaises:\n    HTTPException: If import fails or format is unsupported",
         "operationId": "import_ontology_api_v1_interchange_import_post",
         "requestBody": {
           "content": {

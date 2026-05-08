@@ -1332,7 +1332,7 @@ export interface paths {
      *         ExtractTripleResponse with extracted triples, warnings, and metadata
      *
      *     Raises:
-     *         HTTPException: 400 if text/ontology invalid, 404 if ontology not found, 500 if extraction fails
+     *         HTTPException: 400 if input is invalid, 500 for internal errors
      */
     post: operations["extract_triples_api_extraction_extract_post"];
     delete?: never;
@@ -2502,7 +2502,7 @@ export interface paths {
      *         dry_run: "true" for dry-run (returns plan), "false" to commit
      *         resolutions: Optional JSON-encoded list of ResolutionRecord to apply when committing
      *         ontology_repo: Injected OntologyRepository
-     *         interchange_repo: Injected ImportRunRepository
+     *         interchange_repo: Injected BatchRunRepository
      *
      *     Returns:
      *         ImportPlanResponse (dry-run) or ImportRunResponse (committed)
@@ -3435,7 +3435,7 @@ export interface components {
       model: string;
       /**
        * Temperature
-       * @description Sampling temperature (0.0 = deterministic)
+       * @description Sampling temperature (0.0 = deterministic, up to 2.0)
        * @default 0
        */
       temperature: number;
@@ -3461,7 +3461,7 @@ export interface components {
        */
       ontology_id: string;
       /** @description Extraction options (model, temperature, etc.) */
-      options?: components["schemas"]["ExtractTripleOptions"];
+      options: components["schemas"]["ExtractTripleOptions"];
     };
     /**
      * ExtractTripleResponse
