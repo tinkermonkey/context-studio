@@ -14,7 +14,7 @@ from typing import Optional
 
 from .entities import ImportRun, ResolutionRecord
 from .value_objects import SerializationScope, SerializationFormat
-from .ports import ImportRunRepository
+from .ports import BatchRunRepository
 
 # Context variable for tracking the current batch run ID (import or extraction) across async boundaries
 _batch_run_context: ContextVar[Optional[str]] = ContextVar(
@@ -195,7 +195,7 @@ class ImportRunService:
         resolutions: Optional[list[ResolutionRecord]] = None,
         source_uri: Optional[str] = None,
         created_by: Optional[str] = None,
-        interchange_repo: Optional[ImportRunRepository] = None,
+        interchange_repo: Optional[BatchRunRepository] = None,
     ) -> ImportRun:
         """
         Create and persist an ImportRun with validated resolutions.

@@ -2438,7 +2438,7 @@
           "extraction"
         ],
         "summary": "Extract Triples",
-        "description": "Extract RDF triples from text, scoped to a specific ontology.\n\nThis endpoint uses an LLM to extract subject-predicate-object triples\nfrom the input text, linking them to classes and individuals from a\nspecific ontology. Each triple is returned with confidence and provenance\n(character offsets into the source text).\n\nArgs:\n    request: ExtractTripleRequest with text, ontology_id, and extraction options\n    service: ExtractionService from dependency injection\n\nReturns:\n    ExtractTripleResponse with extracted triples, warnings, and metadata\n\nRaises:\n    HTTPException: 400 if text/ontology invalid, 404 if ontology not found, 500 if extraction fails",
+        "description": "Extract RDF triples from text, scoped to a specific ontology.\n\nThis endpoint uses an LLM to extract subject-predicate-object triples\nfrom the input text, linking them to classes and individuals from a\nspecific ontology. Each triple is returned with confidence and provenance\n(character offsets into the source text).\n\nArgs:\n    request: ExtractTripleRequest with text, ontology_id, and extraction options\n    service: ExtractionService from dependency injection\n\nReturns:\n    ExtractTripleResponse with extracted triples, warnings, and metadata\n\nRaises:\n    HTTPException: 400 if input is invalid, 500 for internal errors",
         "operationId": "extract_triples_api_extraction_extract_post",
         "requestBody": {
           "content": {
@@ -5492,10 +5492,10 @@
           },
           "temperature": {
             "type": "number",
-            "maximum": 1.0,
+            "maximum": 2.0,
             "minimum": 0.0,
             "title": "Temperature",
-            "description": "Sampling temperature (0.0 = deterministic)",
+            "description": "Sampling temperature (0.0 = deterministic, up to 2.0)",
             "default": 0.0
           },
           "max_tokens": {
@@ -5541,7 +5541,8 @@
         "type": "object",
         "required": [
           "text",
-          "ontology_id"
+          "ontology_id",
+          "options"
         ],
         "title": "ExtractTripleRequest",
         "description": "Request to extract triples from text scoped to an ontology."

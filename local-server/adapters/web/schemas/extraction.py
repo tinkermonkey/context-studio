@@ -19,7 +19,7 @@ These schemas handle serialization/deserialization between HTTP and domain model
 
 from typing import Literal, Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class ExtractedEntitySchema(BaseModel):
@@ -158,6 +158,15 @@ class TripleProvenance(BaseModel):
         ..., ge=0, description="Character offset where triple evidence ends"
     )
     raw: str = Field(..., description="Exact text span supporting this triple")
+
+    @model_validator(mode="after")
+    def validate_offsets(self) -> "TripleProvenance":
+        """Ensure text_offset_end >= text_offset_start."""
+        if self.text_offset_end < self.text_offset_start:
+            raise ValueError(
+                f"text_offset_end ({self.text_offset_end}) must be >= text_offset_start ({self.text_offset_start})"
+            )
+        return self
 
 
 class SubjectNode(BaseModel):

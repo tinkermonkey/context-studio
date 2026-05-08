@@ -1,5 +1,5 @@
 """
-Fake in-memory implementation of ImportRunRepository for testing.
+Fake in-memory implementation of BatchRunRepository for testing.
 
 Provides a simple implementation suitable for integration tests
 without requiring database persistence.

@@ -66,12 +66,13 @@ class OntologyDeserializer(ABC):
         ...
 
 
-class ImportRunRepository(Protocol):
+class BatchRunRepository(Protocol):
     """
-    Port for persisting and querying import runs.
+    Port for persisting and querying batch runs (import and extraction).
 
     Implementations handle storage and retrieval of ImportRun entities
-    with support for filtering by status and pagination.
+    with support for filtering by status and pagination, as well as
+    querying change events for both import and extraction runs.
     """
 
     def create(self, import_run: ImportRun) -> ImportRun:

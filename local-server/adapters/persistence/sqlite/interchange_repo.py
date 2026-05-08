@@ -36,7 +36,7 @@ class SQLiteInterchangeRepository:
     """
     SQLAlchemy-based repository for interchange domain persistence.
 
-    Concrete adapter implementing the ImportRunRepository port.
+    Concrete adapter implementing the BatchRunRepository port.
 
     Implements persistence operations for ImportRun entities and their
     change event correlations using SQLite.

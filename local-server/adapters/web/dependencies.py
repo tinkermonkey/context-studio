@@ -35,7 +35,7 @@ from sqlalchemy.orm import Session
 
 from domain.ontology.services import OntologyService
 from domain.ontology.ports import OntologyRepository
-from domain.interchange.ports import ImportRunRepository
+from domain.interchange.ports import BatchRunRepository
 from domain.graph.services import GraphAnalysisService
 from domain.extraction.services import ExtractionService
 from domain.extraction.ports import ReferenceSource
@@ -260,15 +260,15 @@ async def get_ontology_repo(request: Request) -> OntologyRepository:
     return repo
 
 
-async def get_interchange_repo(request: Request) -> ImportRunRepository:
+async def get_interchange_repo(request: Request) -> BatchRunRepository:
     """
-    Extract the ImportRunRepository from app state.
+    Extract the BatchRunRepository from app state.
 
     Args:
         request: FastAPI request object
 
     Returns:
-        The ImportRunRepository instance from app.state (concrete: SQLiteInterchangeRepository)
+        The BatchRunRepository instance from app.state (concrete: SQLiteInterchangeRepository)
 
     Raises:
         RuntimeError: If repository is not initialized in app.state
