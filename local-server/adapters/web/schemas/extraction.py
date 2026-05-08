@@ -122,8 +122,8 @@ class ExtractTripleOptions(BaseModel):
     temperature: float = Field(
         default=0.0,
         ge=0.0,
-        le=1.0,
-        description="Sampling temperature (0.0 = deterministic)",
+        le=2.0,
+        description="Sampling temperature (0.0 = deterministic, up to 2.0)",
     )
     max_tokens: Optional[int] = Field(
         None,

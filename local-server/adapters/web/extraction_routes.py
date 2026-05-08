@@ -254,7 +254,7 @@ async def enrich_from_references(
 @router.post(
     "/extraction/extract",
     response_model=ExtractTripleResponse,
-    status_code=status.HTTP_200_OK,
+    status_code=status.HTTP_501_NOT_IMPLEMENTED,
     tags=["extraction"],
 )
 async def extract_triples(
@@ -277,40 +277,10 @@ async def extract_triples(
         ExtractTripleResponse with extracted triples, warnings, and metadata
 
     Raises:
-        HTTPException: 400 if text/ontology invalid, 404 if ontology not found, 500 if extraction fails
+        HTTPException: 501 Not Implemented (feature not yet available)
     """
-    try:
-        # Validate input
-        if not request.text or not request.text.strip():
-            raise InvalidInputError("Text cannot be empty")
-        if not request.ontology_id:
-            raise InvalidInputError("ontology_id is required")
-
-        # TODO: Implement extract_triples service method and integration
-        # For now, return a placeholder response to establish the API contract
-        _logger.info(
-            f"Triple extraction request received for ontology {request.ontology_id}"
-        )
-
-        # Placeholder response showing the API contract
-        response = ExtractTripleResponse(
-            triples=[],
-            warnings=[
-                "Triple extraction not yet fully implemented. This is a placeholder response."
-            ],
-            metadata=ExtractionMetadata(
-                model=request.options.model,
-                tokens_used=0,
-                duration_ms=0,
-            ),
-        )
-        return response
-
-    except InvalidInputError as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
-    except Exception as exc:
-        _logger.error(f"Unexpected error in triple extraction: {exc}", exc_info=exc)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected error occurred during triple extraction",
-        )
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail="Triple extraction is not yet implemented. "
+        "The ExtractionRunRepository port and service method are under development.",
+    )

@@ -477,10 +477,10 @@ class TestTripleExtraction:
             "object_class": classes[1],
         }
 
-    def test_extract_triples_returns_200_with_valid_request(
+    def test_extract_triples_returns_501_not_implemented(
         self, client, ontology_with_individuals
     ):
-        """POST /api/extraction/extract returns 200 with valid request."""
+        """POST /api/extraction/extract returns 501 Not Implemented."""
         response = client.post(
             "/api/extraction/extract",
             json={
@@ -493,8 +493,11 @@ class TestTripleExtraction:
                 },
             },
         )
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_501_NOT_IMPLEMENTED
 
+    @pytest.mark.skip(
+        reason="Endpoint returns 501 Not Implemented — see #704 for full implementation"
+    )
     def test_extract_triples_response_structure(self, client, ontology_with_individuals):
         """POST /api/extraction/extract response has correct structure."""
         response = client.post(
@@ -521,6 +524,9 @@ class TestTripleExtraction:
         assert isinstance(body["warnings"], list)
         assert isinstance(body["metadata"], dict)
 
+    @pytest.mark.skip(
+        reason="Endpoint returns 501 Not Implemented — see #704 for full implementation"
+    )
     def test_extract_triples_response_metadata_structure(
         self, client, ontology_with_individuals
     ):
@@ -586,10 +592,10 @@ class TestTripleExtraction:
         )
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    def test_extract_triples_with_whitespace_only_returns_400(
+    def test_extract_triples_with_whitespace_only_returns_501(
         self, client, ontology_with_individuals
     ):
-        """POST /api/extraction/extract with whitespace-only text returns 400."""
+        """POST /api/extraction/extract with whitespace-only text returns 501 Not Implemented."""
         response = client.post(
             "/api/extraction/extract",
             json={
@@ -602,7 +608,7 @@ class TestTripleExtraction:
                 },
             },
         )
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.status_code == status.HTTP_501_NOT_IMPLEMENTED
 
     @pytest.mark.skip(
         reason="Endpoint returns placeholder triples=[] — see #695 for full implementation"
@@ -790,7 +796,7 @@ class TestTripleExtraction:
             assert provenance["raw"] == extracted_text
 
     def test_extract_triples_with_long_text(self, client, ontology_with_individuals):
-        """POST /api/extraction/extract handles long text input."""
+        """POST /api/extraction/extract returns 501 with long text input."""
         long_text = "This is a test sentence. " * 100
         response = client.post(
             "/api/extraction/extract",
@@ -804,11 +810,11 @@ class TestTripleExtraction:
                 },
             },
         )
-        assert response.status_code == status.HTTP_200_OK
-        body = response.json()
-        assert "triples" in body
-        assert "metadata" in body
+        assert response.status_code == status.HTTP_501_NOT_IMPLEMENTED
 
+    @pytest.mark.skip(
+        reason="Endpoint returns 501 Not Implemented — see #704 for full implementation"
+    )
     def test_extract_triples_response_validates_against_schema(
         self, client, ontology_with_individuals
     ):
@@ -840,7 +846,7 @@ class TestTripleExtraction:
     def test_extract_triples_with_different_models(
         self, client, ontology_with_individuals
     ):
-        """POST /api/extraction/extract accepts different model names."""
+        """POST /api/extraction/extract returns 501 regardless of model."""
         models = ["gpt-4", "claude-opus", "gpt-3.5-turbo"]
 
         for model in models:
@@ -856,15 +862,13 @@ class TestTripleExtraction:
                     },
                 },
             )
-            assert response.status_code == status.HTTP_200_OK
-            body = response.json()
-            assert body["metadata"]["model"] == model
+            assert response.status_code == status.HTTP_501_NOT_IMPLEMENTED
 
     def test_extract_triples_temperature_variation(
         self, client, ontology_with_individuals
     ):
-        """POST /api/extraction/extract accepts different temperature values."""
-        temperatures = [0.0, 0.5, 1.0]
+        """POST /api/extraction/extract returns 501 regardless of temperature."""
+        temperatures = [0.0, 0.5, 1.0, 1.5, 2.0]
 
         for temp in temperatures:
             response = client.post(
@@ -879,12 +883,12 @@ class TestTripleExtraction:
                     },
                 },
             )
-            assert response.status_code == status.HTTP_200_OK
+            assert response.status_code == status.HTTP_501_NOT_IMPLEMENTED
 
-    def test_extract_triples_metadata_present_and_valid(
+    def test_extract_triples_returns_501_not_implemented(
         self, client, ontology_with_individuals
     ):
-        """POST /api/extraction/extract metadata is complete and valid."""
+        """POST /api/extraction/extract returns 501 Not Implemented."""
         response = client.post(
             "/api/extraction/extract",
             json={
@@ -897,21 +901,7 @@ class TestTripleExtraction:
                 },
             },
         )
-        body = response.json()
-        metadata = body["metadata"]
-
-        # Verify all required metadata fields are present
-        assert "model" in metadata
-        assert "tokens_used" in metadata
-        assert "duration_ms" in metadata
-
-        # Verify types and valid values
-        assert isinstance(metadata["model"], str)
-        assert len(metadata["model"]) > 0
-        assert isinstance(metadata["tokens_used"], int)
-        assert metadata["tokens_used"] >= 0
-        assert isinstance(metadata["duration_ms"], int)
-        assert metadata["duration_ms"] >= 0
+        assert response.status_code == status.HTTP_501_NOT_IMPLEMENTED
 
     @pytest.mark.skip(
         reason="ExtractionRun entity and extraction_repo integration not yet implemented — see #695"
