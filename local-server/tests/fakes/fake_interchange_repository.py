@@ -124,17 +124,17 @@ class FakeInterchangeRepository:
         """
         return sum(1 for r in self.runs.values() if r.status == status)
 
-    def get_change_events_for_run(self, import_run_id: str) -> list[ChangeEvent]:
+    def get_change_events_for_run(self, batch_run_id: str) -> list[ChangeEvent]:
         """
-        Retrieve change events associated with an import run.
+        Retrieve change events associated with a batch run.
 
         Args:
-            import_run_id: The ID of the import run
+            batch_run_id: The ID of the batch run (import or extraction)
 
         Returns:
             List of ChangeEvent domain objects for the run
         """
-        events = self.change_events.get(import_run_id, [])
+        events = self.change_events.get(batch_run_id, [])
         return [
             ChangeEvent(
                 id=e["id"],
@@ -144,18 +144,19 @@ class FakeInterchangeRepository:
                 operation=ChangeOperation(e["operation"]),
                 new_state=e.get("new_state"),
                 previous_state=e.get("previous_state"),
+                batch_run_id=e.get("batch_run_id"),
             )
             for e in events
         ]
 
-    def add_change_event(self, import_run_id: str, event: dict) -> None:
+    def add_change_event(self, batch_run_id: str, event: dict) -> None:
         """
-        Add a change event to an import run (for testing).
+        Add a change event to a batch run (for testing).
 
         Args:
-            import_run_id: The ID of the import run
+            batch_run_id: The ID of the batch run (import or extraction)
             event: The change event dict
         """
-        if import_run_id not in self.change_events:
-            self.change_events[import_run_id] = []
-        self.change_events[import_run_id].append(event)
+        if batch_run_id not in self.change_events:
+            self.change_events[batch_run_id] = []
+        self.change_events[batch_run_id].append(event)

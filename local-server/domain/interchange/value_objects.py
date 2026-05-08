@@ -206,10 +206,10 @@ class ImportPlan:
 @dataclass(frozen=True)
 class ChangeEvent:
     """
-    Represents a change event associated with an import run.
+    Represents a change event associated with a batch run.
 
     Immutable value object capturing the audit trail of changes made during
-    an import operation.
+    an import or extraction operation.
 
     Attributes:
         id: Unique identifier for the change event
@@ -219,6 +219,7 @@ class ChangeEvent:
         operation: Operation performed (create, update, delete)
         new_state: JSON snapshot of entity after change
         previous_state: JSON snapshot of entity before change (optional, for updates)
+        batch_run_id: ID of the batch run (import or extraction) that produced this change
     """
 
     id: str
@@ -228,3 +229,4 @@ class ChangeEvent:
     operation: ChangeOperation
     new_state: Optional[dict[str, Any]] = None
     previous_state: Optional[dict[str, Any]] = None
+    batch_run_id: Optional[str] = None
