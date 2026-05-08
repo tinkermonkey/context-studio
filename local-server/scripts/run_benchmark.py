@@ -459,10 +459,10 @@ def compute_metrics(
     gold_set = set(triple_key(t) for t in gold_triples)
 
     if not gold_set:
-        return 0.0, 0.0, 0.0, 0.0
+        return 0.0, 0.0, 0.0, 0.0, 0, len(predicted_triples)
 
     if not pred_set:
-        return 0.0, 0.0, 0.0, 0.0
+        return 0.0, 0.0, 0.0, 0.0, 0, 0
 
     # Compute metrics
     true_positives = len(pred_set & gold_set)
