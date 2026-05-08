@@ -5,6 +5,7 @@ This module implements HTTP endpoints for knowledge extraction:
 - POST /api/extract — Extract entities from text through coordinated layers
 - POST /api/analyze_text — Analyze text for linguistic features and named entities
 - POST /api/enrich_from_references — Enrich extracted entities with external knowledge
+- POST /api/extraction/extract — Extract RDF triples from text scoped to an ontology
 
 Each endpoint is a thin adapter that:
 1. Receives HTTP request + parsed Pydantic schema
@@ -36,6 +37,16 @@ from adapters.web.schemas.extraction import (
     ExtractionResultSchema,
     ExtractedEntitySchema,
     ExtractionLayerResultSchema,
+    ExtractTripleRequest,
+    ExtractTripleResponse,
+    ExtractedTriple,
+    SubjectNode,
+    PredicateNode,
+    ObjectNodeIndividual,
+    ObjectNodeClass,
+    ObjectNodeLiteral,
+    TripleProvenance,
+    ExtractionMetadata,
 )
 
 router = APIRouter(prefix="/api", tags=["extraction"])
@@ -242,3 +253,71 @@ async def enrich_from_references(
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
+
+
+# ==================== Triple Extraction (RDF) Endpoint ====================
+
+
+@router.post(
+    "/extraction/extract",
+    response_model=ExtractTripleResponse,
+    status_code=status.HTTP_200_OK,
+    tags=["extraction"],
+)
+async def extract_triples(
+    request: ExtractTripleRequest,
+    service: ExtractionService = Depends(get_extraction_service),
+) -> ExtractTripleResponse:
+    """
+    Extract RDF triples from text, scoped to a specific ontology.
+
+    This endpoint uses an LLM to extract subject-predicate-object triples
+    from the input text, linking them to classes and individuals from a
+    specific ontology. Each triple is returned with confidence and provenance
+    (character offsets into the source text).
+
+    Args:
+        request: ExtractTripleRequest with text, ontology_id, and extraction options
+        service: ExtractionService from dependency injection
+
+    Returns:
+        ExtractTripleResponse with extracted triples, warnings, and metadata
+
+    Raises:
+        HTTPException: 400 if text/ontology invalid, 404 if ontology not found, 500 if extraction fails
+    """
+    try:
+        # Validate input
+        if not request.text or not request.text.strip():
+            raise InvalidInputError("Text cannot be empty")
+        if not request.ontology_id:
+            raise InvalidInputError("ontology_id is required")
+
+        # TODO: Implement extract_triples service method and integration
+        # For now, return a placeholder response to establish the API contract
+        _logger.info(
+            f"Triple extraction request received for ontology {request.ontology_id}"
+        )
+
+        # Placeholder response showing the API contract
+        response = ExtractTripleResponse(
+            triples=[],
+            warnings=[
+                "Triple extraction not yet fully implemented. This is a placeholder response."
+            ],
+            metadata=ExtractionMetadata(
+                model=request.options.model,
+                tokens_used=0,
+                duration_ms=0,
+            ),
+        )
+        return response
+
+    except InvalidInputError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+    except Exception as exc:
+        _logger.error(f"Unexpected error in triple extraction: {exc}", exc_info=exc)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred during triple extraction",
+        )

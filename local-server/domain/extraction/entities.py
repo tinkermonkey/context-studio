@@ -8,11 +8,26 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from enum import Enum
 from uuid import uuid4
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from domain.extraction.value_objects import ExtractionLayerResult
+
+
+class ExtractionRunStatus(str, Enum):
+    """
+    Status of an extraction run.
+
+    Unlike ImportRunStatus (which has ROLLED_BACK), ExtractionRunStatus
+    is simpler: extraction produces candidate triples that are individually
+    revertable via change_events. The run itself has no rollback operation.
+    """
+
+    PENDING = "pending"
+    COMPLETED = "completed"
+    FAILED = "failed"
 
 
 @dataclass
@@ -137,3 +152,116 @@ class ExtractionResult:
             raise ValueError(
                 f"total_duration_ms must be non-negative, got {self.total_duration_ms}"
             )
+
+
+@dataclass(frozen=True)
+class ExtractionRun:
+    """
+    First-class domain entity representing an extraction operation.
+
+    Tracks an extraction operation from inception through completion,
+    recording the pipeline configuration, LLM settings, resource metrics,
+    and outcome counts. This entity is immutable once constructed; all
+    state transitions occur in the repository layer.
+
+    ARCHITECTURAL NOTE: This entity MUST NOT have a rollback mechanism.
+    Unlike ImportRun (which can be rolled back, undoing all changes),
+    extraction produces candidate triples that are individually revertable
+    via change_events in the versioning context. The ExtractionRun itself
+    is a read-only audit record of what was extracted, not a reversible
+    operation.
+
+    Attributes:
+        id: Unique identifier (UUID as string)
+        source_document_uri: Optional URI/filename of the source document
+        source_text_hash: SHA256 hash of the extracted-from text (audit)
+        pipeline_config_ref: Pipeline configuration slug (e.g., "extraction-default")
+            Validation that this slug exists is deferred to the repository.
+        model: LLM model name (e.g., "gpt-4", "claude-opus")
+        temperature: Sampling temperature (0.0–2.0, typically 0.0–1.0)
+        tokens_used: Total tokens consumed by the LLM call
+        duration_ms: Total wall-clock execution time (milliseconds)
+        triples_extracted: Count of triples returned by the LLM API
+        triples_committed: Count of triples persisted after review
+        status: Current status (pending, completed, failed)
+            Status transitions are managed by the repository, not by this entity.
+    """
+
+    id: str
+    source_document_uri: str | None
+    source_text_hash: str
+    pipeline_config_ref: str
+    model: str
+    temperature: float
+    tokens_used: int
+    duration_ms: int
+    triples_extracted: int
+    triples_committed: int
+    status: ExtractionRunStatus
+
+    def __post_init__(self) -> None:
+        """Validate extraction run invariants."""
+        if not 0.0 <= self.temperature <= 2.0:
+            raise ValueError(
+                f"temperature must be between 0.0 and 2.0, got {self.temperature}"
+            )
+        if self.tokens_used < 0:
+            raise ValueError(f"tokens_used must be non-negative, got {self.tokens_used}")
+        if self.duration_ms < 0:
+            raise ValueError(f"duration_ms must be non-negative, got {self.duration_ms}")
+        if self.triples_extracted < 0:
+            raise ValueError(
+                f"triples_extracted must be non-negative, got {self.triples_extracted}"
+            )
+        if self.triples_committed < 0:
+            raise ValueError(
+                f"triples_committed must be non-negative, got {self.triples_committed}"
+            )
+        if self.triples_committed > self.triples_extracted:
+            raise ValueError(
+                f"triples_committed ({self.triples_committed}) cannot exceed "
+                f"triples_extracted ({self.triples_extracted})"
+            )
+
+    @staticmethod
+    def create(
+        id: str,
+        source_document_uri: str | None,
+        source_text_hash: str,
+        pipeline_config_ref: str,
+        model: str,
+        temperature: float,
+    ) -> ExtractionRun:
+        """
+        Create a new ExtractionRun with status=PENDING.
+
+        The created run has all metrics zeroed; the repository will update
+        these fields as the extraction completes.
+
+        Args:
+            id: Unique identifier (UUID string)
+            source_document_uri: Optional document URI for audit trail
+            source_text_hash: SHA256 hash of source text
+            pipeline_config_ref: Pipeline configuration slug
+            model: LLM model name
+            temperature: Sampling temperature
+
+        Returns:
+            New ExtractionRun with status=PENDING, all metrics at 0
+
+        Raises:
+            ValueError: If temperature is invalid (not 0.0–2.0)
+        """
+        return ExtractionRun(
+            id=id,
+            source_document_uri=source_document_uri,
+            source_text_hash=source_text_hash,
+            pipeline_config_ref=pipeline_config_ref,
+            model=model,
+            temperature=temperature,
+            tokens_used=0,
+            duration_ms=0,
+            triples_extracted=0,
+            triples_committed=0,
+            status=ExtractionRunStatus.PENDING,
+        )

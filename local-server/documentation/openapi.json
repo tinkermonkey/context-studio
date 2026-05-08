@@ -2431,6 +2431,49 @@
         }
       }
     },
+    "/api/extraction/extract": {
+      "post": {
+        "tags": [
+          "extraction",
+          "extraction"
+        ],
+        "summary": "Extract Triples",
+        "description": "Extract RDF triples from text, scoped to a specific ontology.\n\nThis endpoint uses an LLM to extract subject-predicate-object triples\nfrom the input text, linking them to classes and individuals from a\nspecific ontology. Each triple is returned with confidence and provenance\n(character offsets into the source text).\n\nArgs:\n    request: ExtractTripleRequest with text, ontology_id, and extraction options\n    service: ExtractionService from dependency injection\n\nReturns:\n    ExtractTripleResponse with extracted triples, warnings, and metadata\n\nRaises:\n    HTTPException: 400 if text/ontology invalid, 404 if ontology not found, 500 if extraction fails",
+        "operationId": "extract_triples_api_extraction_extract_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExtractTripleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtractTripleResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/pipelines": {
       "get": {
         "tags": [
@@ -5440,6 +5483,100 @@
         "title": "ExtractRequest",
         "description": "Request to extract entities from text."
       },
+      "ExtractTripleOptions": {
+        "properties": {
+          "model": {
+            "type": "string",
+            "title": "Model",
+            "description": "Model identifier for extraction (e.g., 'gpt-4', 'claude-opus')"
+          },
+          "temperature": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Temperature",
+            "description": "Sampling temperature (0.0 = deterministic)",
+            "default": 0.0
+          },
+          "max_tokens": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 8000.0,
+                "minimum": 100.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Tokens",
+            "description": "Maximum tokens in LLM response"
+          }
+        },
+        "type": "object",
+        "required": [
+          "model"
+        ],
+        "title": "ExtractTripleOptions",
+        "description": "Options for triple extraction."
+      },
+      "ExtractTripleRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Text",
+            "description": "Source text to extract triples from"
+          },
+          "ontology_id": {
+            "type": "string",
+            "title": "Ontology Id",
+            "description": "ID of the ontology scoping extraction to specific classes/individuals"
+          },
+          "options": {
+            "$ref": "#/components/schemas/ExtractTripleOptions",
+            "description": "Extraction options (model, temperature, etc.)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "ontology_id"
+        ],
+        "title": "ExtractTripleRequest",
+        "description": "Request to extract triples from text scoped to an ontology."
+      },
+      "ExtractTripleResponse": {
+        "properties": {
+          "triples": {
+            "items": {
+              "$ref": "#/components/schemas/ExtractedTriple"
+            },
+            "type": "array",
+            "title": "Triples",
+            "description": "List of extracted triples"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings",
+            "description": "Warnings (e.g., confidence out of range, invalid provenance)"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/ExtractionMetadata",
+            "description": "Metadata about the extraction operation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "triples",
+          "metadata"
+        ],
+        "title": "ExtractTripleResponse",
+        "description": "Response containing extracted triples."
+      },
       "ExtractedEntitySchema": {
         "properties": {
           "id": {
@@ -5523,6 +5660,60 @@
         "title": "ExtractedEntitySchema",
         "description": "Response containing extracted entity data."
       },
+      "ExtractedTriple": {
+        "properties": {
+          "subject": {
+            "$ref": "#/components/schemas/SubjectNode"
+          },
+          "predicate": {
+            "$ref": "#/components/schemas/PredicateNode"
+          },
+          "object": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ObjectNodeIndividual"
+              },
+              {
+                "$ref": "#/components/schemas/ObjectNodeClass"
+              },
+              {
+                "$ref": "#/components/schemas/ObjectNodeLiteral"
+              }
+            ],
+            "title": "Object",
+            "description": "Object node discriminated by 'kind' field",
+            "discriminator": {
+              "propertyName": "kind",
+              "mapping": {
+                "class": "#/components/schemas/ObjectNodeClass",
+                "individual": "#/components/schemas/ObjectNodeIndividual",
+                "literal": "#/components/schemas/ObjectNodeLiteral"
+              }
+            }
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "description": "Confidence score (0.0\u20131.0)"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/TripleProvenance",
+            "description": "Provenance linking triple to source text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "subject",
+          "predicate",
+          "object",
+          "confidence",
+          "provenance"
+        ],
+        "title": "ExtractedTriple",
+        "description": "A single extracted triple with confidence and provenance."
+      },
       "ExtractionLayerResultSchema": {
         "properties": {
           "layer_number": {
@@ -5573,6 +5764,35 @@
         ],
         "title": "ExtractionLayerResultSchema",
         "description": "Response containing execution metadata for a single extraction layer."
+      },
+      "ExtractionMetadata": {
+        "properties": {
+          "model": {
+            "type": "string",
+            "title": "Model",
+            "description": "Model used for extraction"
+          },
+          "tokens_used": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Tokens Used",
+            "description": "Total tokens consumed"
+          },
+          "duration_ms": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Duration Ms",
+            "description": "Extraction duration in milliseconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "model",
+          "tokens_used",
+          "duration_ms"
+        ],
+        "title": "ExtractionMetadata",
+        "description": "Metadata about a triple extraction operation."
       },
       "ExtractionResultSchema": {
         "properties": {
@@ -6682,6 +6902,109 @@
         "title": "NeighborsResponse",
         "description": "Response containing neighbor nodes."
       },
+      "ObjectNodeClass": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "class",
+            "title": "Kind",
+            "default": "class"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Class ID in the ontology"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Human-readable label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label"
+        ],
+        "title": "ObjectNodeClass",
+        "description": "Object node: class/concept."
+      },
+      "ObjectNodeIndividual": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "individual",
+            "title": "Kind",
+            "default": "individual"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Individual ID in the ontology"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Human-readable label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label"
+        ],
+        "title": "ObjectNodeIndividual",
+        "description": "Object node: individual instance."
+      },
+      "ObjectNodeLiteral": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "literal",
+            "title": "Kind",
+            "default": "literal"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value",
+            "description": "Literal value (string, number, boolean, or null)"
+          },
+          "datatype": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Datatype",
+            "description": "XSD datatype (e.g., 'xsd:string', 'xsd:integer')"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value"
+        ],
+        "title": "ObjectNodeLiteral",
+        "description": "Object node: literal value."
+      },
       "PathResultResponse": {
         "properties": {
           "source_id": {
@@ -6985,6 +7308,27 @@
         ],
         "title": "PipelineExecuteRequest",
         "description": "Request to execute a pipeline."
+      },
+      "PredicateNode": {
+        "properties": {
+          "property_definition_id": {
+            "type": "string",
+            "title": "Property Definition Id",
+            "description": "ID of the property definition"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Human-readable property name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "property_definition_id",
+          "label"
+        ],
+        "title": "PredicateNode",
+        "description": "Predicate node of a triple\u2014a property definition."
       },
       "PropertyDefinitionCreateRequest": {
         "properties": {
@@ -7940,6 +8284,36 @@
         "title": "SubgraphResultResponse",
         "description": "Response containing depth-based subgraph extraction result."
       },
+      "SubjectNode": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "individual",
+              "class"
+            ],
+            "title": "Kind"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Entity ID in the ontology"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Human-readable label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "id",
+          "label"
+        ],
+        "title": "SubjectNode",
+        "description": "Subject node of a triple\u2014individual or class."
+      },
       "SyncResultResponse": {
         "properties": {
           "pushed": {
@@ -8254,6 +8628,35 @@
         ],
         "title": "TripleCountResponse",
         "description": "Response containing RDF triple count."
+      },
+      "TripleProvenance": {
+        "properties": {
+          "text_offset_start": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Text Offset Start",
+            "description": "Character offset where triple evidence begins"
+          },
+          "text_offset_end": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Text Offset End",
+            "description": "Character offset where triple evidence ends"
+          },
+          "raw": {
+            "type": "string",
+            "title": "Raw",
+            "description": "Exact text span supporting this triple"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text_offset_start",
+          "text_offset_end",
+          "raw"
+        ],
+        "title": "TripleProvenance",
+        "description": "Provenance metadata for an extracted triple."
       },
       "TripleResponse": {
         "properties": {
