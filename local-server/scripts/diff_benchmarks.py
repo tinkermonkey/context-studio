@@ -27,18 +27,25 @@ _logger = get_logger(__name__)
 
 
 def load_comparison(file_path: str) -> Optional[dict[str, Any]]:
-    """Load a comparison JSON file."""
-    try:
-        comparison_file = Path(file_path)
-        if not comparison_file.exists():
-            _logger.warning(f"Comparison file not found: {file_path}")
-            return None
+    """
+    Load a comparison JSON file.
 
-        with open(comparison_file) as f:
-            return json.load(f)
-    except Exception as e:
-        _logger.error(f"Error loading comparison: {e}")
+    Args:
+        file_path: Path to comparison JSON file
+
+    Returns:
+        Comparison results dictionary, or None if file does not exist
+
+    Raises:
+        json.JSONDecodeError: If file contains invalid JSON
+        PermissionError: If file cannot be read due to permission issues
+    """
+    comparison_file = Path(file_path)
+    if not comparison_file.exists():
         return None
+
+    with open(comparison_file) as f:
+        return json.load(f)
 
 
 def compute_delta(current: float, baseline: float) -> tuple[float, str]:
@@ -308,16 +315,30 @@ def main():
 
     args = parser.parse_args()
 
-    # Load current results
-    current = load_comparison(args.current)
-    if not current:
-        _logger.error("Failed to load current comparison")
+    try:
+        # Load current results
+        current = load_comparison(args.current)
+        if not current:
+            _logger.error(f"Current comparison file not found: {args.current}")
+            return 1
+    except json.JSONDecodeError as e:
+        _logger.error(f"Invalid JSON in current comparison file: {e}", exc_info=True)
+        return 1
+    except PermissionError as e:
+        _logger.error(f"Permission denied reading current comparison file: {e}", exc_info=True)
         return 1
 
-    # Load baseline if it exists
-    baseline = load_comparison(args.baseline)
-    if not baseline:
-        _logger.info(f"No baseline found at {args.baseline} — running in baseline-establishment mode")
+    try:
+        # Load baseline if it exists
+        baseline = load_comparison(args.baseline)
+        if not baseline:
+            _logger.info(f"No baseline found at {args.baseline} — running in baseline-establishment mode")
+    except json.JSONDecodeError as e:
+        _logger.error(f"Invalid JSON in baseline comparison file: {e}", exc_info=True)
+        return 1
+    except PermissionError as e:
+        _logger.error(f"Permission denied reading baseline comparison file: {e}", exc_info=True)
+        return 1
 
     # Print human-readable summary
     print_summary_diff(current, baseline)

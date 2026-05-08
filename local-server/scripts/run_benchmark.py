@@ -66,7 +66,6 @@ Cross-dataset comparison generates:
 
 - datasets: For loading HuggingFace datasets
 - httpx: For API calls
-- scikit-learn: For metric computation utilities
 """
 
 import os
@@ -108,12 +107,14 @@ class BenchmarkResult:
         self.recall = 0.0
         self.f1 = 0.0
         self.conformance = 0.0
+        self.hallucination_rate = 0.0
         self.extraction_run_ids: list[str] = []  # TODO: Populate from API response when implemented
         self.timestamp = datetime.now(timezone.utc).isoformat()
         self.model = ""
         self.cost_usd = 0.0
         self.total_duration_ms = 0
         self.samples_processed = 0
+        self.total_error_count = 0
         self.errors: list[str] = []
 
     def to_dict(self) -> dict[str, Any]:
@@ -125,6 +126,7 @@ class BenchmarkResult:
             "recall": self.recall,
             "f1": self.f1,
             "conformance": self.conformance,
+            "hallucination_rate": self.hallucination_rate,
             "timestamp": self.timestamp,
             "pipeline_config": self.pipeline_config,
             "model": self.model,
@@ -132,7 +134,8 @@ class BenchmarkResult:
             "extraction_run_ids": self.extraction_run_ids,
             "total_duration_ms": self.total_duration_ms,
             "samples_processed": self.samples_processed,
-            "errors": self.errors[:5],  # Limit error reporting
+            "total_error_count": self.total_error_count,
+            "errors": self.errors,
         }
 
 
@@ -148,31 +151,37 @@ def load_dataset_from_jsonl(dataset_name: str, split: str = "test") -> list[dict
 
     Returns:
         List of samples if local file exists, None otherwise
+
+    Raises:
+        json.JSONDecodeError: If a line in the JSONL file is invalid JSON
+        PermissionError: If the file cannot be read due to permission issues
     """
-    try:
-        parts = dataset_name.split("/")
-        if len(parts) != 2:
-            return None
-
-        org, project = parts
-        local_path = Path("datafiles") / "benchmarks" / org / project / f"{split}.jsonl"
-
-        if not local_path.exists():
-            return None
-
-        _logger.info(f"Loading dataset from local JSONL: {local_path}")
-        samples = []
-        with open(local_path, "r") as f:
-            for line in f:
-                if line.strip():
-                    samples.append(json.loads(line))
-
-        _logger.info(f"Loaded {len(samples)} samples from local JSONL")
-        return samples
-
-    except Exception as e:
-        _logger.warning(f"Failed to load from local JSONL: {e}")
+    parts = dataset_name.split("/")
+    if len(parts) != 2:
         return None
+
+    org, project = parts
+    local_path = Path("datafiles") / "benchmarks" / org / project / f"{split}.jsonl"
+
+    if not local_path.exists():
+        return None
+
+    _logger.info(f"Loading dataset from local JSONL: {local_path}")
+    samples = []
+    with open(local_path, "r") as f:
+        for line_num, line in enumerate(f, start=1):
+            if line.strip():
+                try:
+                    samples.append(json.loads(line))
+                except json.JSONDecodeError as e:
+                    raise json.JSONDecodeError(
+                        f"Invalid JSON at line {line_num}: {e.msg}",
+                        e.doc,
+                        e.pos
+                    ) from e
+
+    _logger.info(f"Loaded {len(samples)} samples from local JSONL")
+    return samples
 
 
 def load_extraction_config(config_path: str) -> dict[str, Any]:
@@ -223,14 +232,14 @@ def estimate_cost(
     """
     model = config.get("model", "gpt-3.5-turbo")
 
-    # Simple pricing model (as of May 2026)
-    # These are estimates and should be updated with actual pricing
+    # Pricing model (as of May 2026)
+    # Updated with current Claude model pricing
     pricing = {
         "gpt-3.5-turbo": {"input": 0.0005, "output": 0.0015},  # per 1K tokens
         "gpt-4": {"input": 0.03, "output": 0.06},  # per 1K tokens
         "gpt-4-turbo": {"input": 0.01, "output": 0.03},  # per 1K tokens
-        "claude-opus-4-7": {"input": 0.003, "output": 0.015},  # per 1K tokens
-        "claude-sonnet": {"input": 0.003, "output": 0.015},  # per 1K tokens
+        "claude-opus-4-7": {"input": 0.015, "output": 0.075},  # per 1K tokens
+        "claude-sonnet-4-6": {"input": 0.003, "output": 0.015},  # per 1K tokens
     }
 
     if model not in pricing:
@@ -338,6 +347,11 @@ def extract_triples_http(
     Returns:
         Tuple of (triples, duration_ms, model_used)
 
+    Raises:
+        ConnectionError: If unable to connect to the API (API not running)
+        httpx.HTTPStatusError: If API returns non-200 status
+        ValueError: If API response cannot be parsed
+
     Note:
         The API response currently is a placeholder. When the extraction is fully
         implemented, this should also track extraction_run_id from the response.
@@ -365,10 +379,12 @@ def extract_triples_http(
         duration_ms = int((time.time() - start_time) * 1000)
 
         if response.status_code != 200:
-            _logger.warning(
-                f"Extraction API returned {response.status_code}: {response.text[:200]}"
+            error_detail = response.text[:200] if response.text else f"HTTP {response.status_code}"
+            raise httpx.HTTPStatusError(
+                f"Extraction API returned {response.status_code}: {error_detail}",
+                request=response.request,
+                response=response
             )
-            return [], duration_ms, config.get("model", "unknown")
 
         data = response.json()
         triples = data.get("triples", [])
@@ -377,12 +393,18 @@ def extract_triples_http(
 
         return triples, duration_ms, model_used
 
-    except httpx.ConnectError:
-        _logger.warning("Could not connect to extraction API (running standalone mode)")
-        return [], int((time.time() - start_time) * 1000), config.get("model", "unknown")
+    except httpx.ConnectError as e:
+        _logger.error(f"Could not connect to extraction API at {url}: {e}")
+        raise ConnectionError(f"Extraction API not responding at {base_url}") from e
+    except httpx.HTTPStatusError as e:
+        _logger.error(f"Extraction API error: {e}")
+        raise
+    except (json.JSONDecodeError, ValueError) as e:
+        _logger.error(f"Failed to parse extraction API response: {e}")
+        raise ValueError(f"Invalid API response format: {e}") from e
     except Exception as e:
-        _logger.error(f"Error calling extraction API: {e}")
-        return [], int((time.time() - start_time) * 1000), config.get("model", "unknown")
+        _logger.error(f"Unexpected error calling extraction API: {e}")
+        raise
 
 
 def compute_metrics(
@@ -406,16 +428,21 @@ def compute_metrics(
 
     Returns:
         Tuple of (precision, recall, f1, conformance)
+
+    Note:
+        Returns 0.0 for all metrics when both predicted and gold are empty,
+        as this is an unevaluable case, not a successful match.
     """
+    if not gold_triples and not predicted_triples:
+        return 0.0, 0.0, 0.0, 0.0
+
     if not gold_triples:
-        # No gold triples to match against
         if not predicted_triples:
-            return 1.0, 1.0, 1.0, 1.0  # Both empty = perfect
+            return 0.0, 0.0, 0.0, 0.0
         else:
-            return 0.0, 0.0, 0.0, 0.0  # Predicted something when nothing expected
+            return 0.0, 0.0, 0.0, 0.0
 
     if not predicted_triples:
-        # No predictions but there are gold triples
         return 0.0, 0.0, 0.0, 0.0
 
     # Normalize triples for comparison (handle both formats)
@@ -442,11 +469,10 @@ def compute_metrics(
     gold_set = set(triple_key(t) for t in gold_triples)
 
     if not gold_set:
-        # All gold triples normalized to empty strings (degenerate case)
-        if not pred_set:
-            return 1.0, 1.0, 1.0, 1.0
-        else:
-            return 0.0, 0.0, 0.0, 0.0
+        return 0.0, 0.0, 0.0, 0.0
+
+    if not pred_set:
+        return 0.0, 0.0, 0.0, 0.0
 
     # Compute metrics
     true_positives = len(pred_set & gold_set)
@@ -569,6 +595,8 @@ def run_benchmark(
         recall_scores = []
         f1_scores = []
         conformance_scores = []
+        consecutive_failures = 0
+        failure_threshold = 5  # Early abort if 5 consecutive API failures
 
         for sample_idx, sample in enumerate(ontology_samples):
             text = sample.get("text", "")
@@ -599,10 +627,31 @@ def run_benchmark(
                 f1_scores.append(f1)
                 conformance_scores.append(conformance)
                 result.samples_processed += 1
+                consecutive_failures = 0
 
+            except (ConnectionError, httpx.HTTPStatusError) as e:
+                consecutive_failures += 1
+                result.total_error_count += 1
+                error_msg = f"Sample {sample_idx}: {str(e)[:150]}"
+                result.errors.append(error_msg)
+                _logger.error(error_msg)
+                if consecutive_failures >= failure_threshold:
+                    _logger.error(
+                        f"API failure threshold reached ({failure_threshold} consecutive failures), "
+                        f"aborting benchmark for {ontology}"
+                    )
+                    break
+            except (ValueError, json.JSONDecodeError) as e:
+                consecutive_failures += 1
+                result.total_error_count += 1
+                error_msg = f"Sample {sample_idx}: Invalid response format: {str(e)[:150]}"
+                result.errors.append(error_msg)
+                _logger.error(error_msg)
             except Exception as e:
-                _logger.error(f"Error processing sample {sample_idx}: {e}")
-                result.errors.append(f"Sample {sample_idx}: {str(e)[:100]}")
+                result.total_error_count += 1
+                error_msg = f"Sample {sample_idx}: Unexpected error: {str(e)[:150]}"
+                result.errors.append(error_msg)
+                _logger.error(error_msg, exc_info=True)
 
         # Aggregate metrics
         if precision_scores:
@@ -722,32 +771,35 @@ def generate_comparison_from_current(
         current_results: Current benchmark results
         comparison_file: Path to previous benchmark results JSON
         output_path: Base path for comparison output (will generate .json and .md)
+
+    Raises:
+        FileNotFoundError: If comparison file not found
+        json.JSONDecodeError: If comparison file contains invalid JSON
+        ValueError: If comparison data is malformed
     """
+    _logger.info(f"Loading comparison file: {comparison_file}")
+    previous_results = compare_benchmarks.load_results_file(comparison_file)
+
+    current_dataset = current_results.get("dataset", "current")
+    results_by_dataset = {
+        previous_results.get("dataset", Path(comparison_file).stem): previous_results,
+        current_dataset: current_results,
+    }
+
     try:
-        # Load previous results
-        previous_results = compare_benchmarks.load_results_file(comparison_file)
-
-        # Build comparison
-        current_dataset = current_results.get("dataset", "current")
-        results_by_dataset = {
-            previous_results.get("dataset", Path(comparison_file).stem): previous_results,
-            current_dataset: current_results,
-        }
         comparison = compare_benchmarks.build_comparison_matrix(results_by_dataset)
-
-        # Save comparison reports
-        comparison_json = compare_benchmarks.save_json_comparison(comparison, output_path)
-        comparison_md = compare_benchmarks.save_markdown_comparison(
-            comparison, results_by_dataset, output_path
-        )
-
-        _logger.info("Cross-dataset comparison generated!")
-        _logger.info(f"Comparison JSON: {comparison_json}")
-        _logger.info(f"Comparison Markdown: {comparison_md}")
-
     except Exception as e:
-        _logger.warning(f"Could not generate comparison report: {e}")
-        traceback.print_exc()
+        raise ValueError(f"Failed to build comparison matrix: {e}") from e
+
+    # Save comparison reports
+    comparison_json = compare_benchmarks.save_json_comparison(comparison, output_path)
+    comparison_md = compare_benchmarks.save_markdown_comparison(
+        comparison, results_by_dataset, output_path
+    )
+
+    _logger.info("Cross-dataset comparison generated!")
+    _logger.info(f"Comparison JSON: {comparison_json}")
+    _logger.info(f"Comparison Markdown: {comparison_md}")
 
 
 def main():
@@ -819,14 +871,32 @@ def main():
 
         # Generate comparison if requested
         if args.comparison:
-            comparison_out = str(Path(args.out).parent / "comparison")
-            generate_comparison_from_current(results, args.comparison, comparison_out)
+            try:
+                comparison_out = str(Path(args.out).parent / "comparison")
+                generate_comparison_from_current(results, args.comparison, comparison_out)
+            except FileNotFoundError as e:
+                _logger.error(f"Comparison file not found: {e}")
+                return 1
+            except json.JSONDecodeError as e:
+                _logger.error(f"Invalid JSON in comparison file: {e}", exc_info=True)
+                return 1
+            except ValueError as e:
+                _logger.error(f"Comparison generation failed: {e}", exc_info=True)
+                return 1
 
         return 0
 
+    except FileNotFoundError as e:
+        _logger.error(f"Required file not found: {e}", exc_info=True)
+        return 1
+    except json.JSONDecodeError as e:
+        _logger.error(f"Invalid JSON in configuration or data: {e}", exc_info=True)
+        return 1
+    except ConnectionError as e:
+        _logger.error(f"API connection failed: {e}", exc_info=True)
+        return 1
     except Exception as e:
-        _logger.error(f"Benchmark failed: {e}")
-        traceback.print_exc()
+        _logger.error(f"Benchmark failed: {e}", exc_info=True)
         return 1
 
 
