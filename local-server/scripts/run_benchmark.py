@@ -737,7 +737,7 @@ def generate_comparison_from_current(
             comparison, results_by_dataset, output_path
         )
 
-        _logger.info(f"Cross-dataset comparison generated!")
+        _logger.info("Cross-dataset comparison generated!")
         _logger.info(f"Comparison JSON: {comparison_json}")
         _logger.info(f"Comparison Markdown: {comparison_md}")
 

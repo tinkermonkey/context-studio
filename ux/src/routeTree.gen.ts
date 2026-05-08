@@ -8,1011 +8,1011 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as AppRouteImport } from './routes/app'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AppIndexRouteImport } from './routes/app/index'
-import { Route as AppTaxonomiesRouteImport } from './routes/app/taxonomies'
-import { Route as AppRelationshipsRouteImport } from './routes/app/relationships'
-import { Route as AppPropertiesRouteImport } from './routes/app/properties'
-import { Route as AppInterchangeRouteImport } from './routes/app/interchange'
-import { Route as AppIndividualsRouteImport } from './routes/app/individuals'
-import { Route as AppDatasetsRouteImport } from './routes/app/datasets'
-import { Route as AppConfigRouteImport } from './routes/app/config'
-import { Route as AppConceptSchemesRouteImport } from './routes/app/concept-schemes'
-import { Route as AppClassesRouteImport } from './routes/app/classes'
-import { Route as AppTaxonomiesIndexRouteImport } from './routes/app/taxonomies.index'
-import { Route as AppReferenceIndexRouteImport } from './routes/app/reference/index'
-import { Route as AppInterchangeIndexRouteImport } from './routes/app/interchange/index'
-import { Route as AppIndividualsIndexRouteImport } from './routes/app/individuals.index'
-import { Route as AppConfigIndexRouteImport } from './routes/app/config/index'
-import { Route as AppConceptSchemesIndexRouteImport } from './routes/app/concept-schemes.index'
-import { Route as AppClassesIndexRouteImport } from './routes/app/classes.index'
-import { Route as AppTaxonomiesTaxonomyIdRouteImport } from './routes/app/taxonomies.$taxonomyId'
-import { Route as AppReferenceSearchRouteImport } from './routes/app/reference/search'
-import { Route as AppReferenceRagTestRouteImport } from './routes/app/reference/rag-test'
-import { Route as AppReferencePropertiesRouteImport } from './routes/app/reference/properties'
-import { Route as AppRagTestRunnerRouteImport } from './routes/app/rag/test-runner'
-import { Route as AppRagPipelineComparisonRouteImport } from './routes/app/rag/pipeline-comparison'
-import { Route as AppRagExperimentsRouteImport } from './routes/app/rag/experiments'
-import { Route as AppMonitoringTaskManagerRouteImport } from './routes/app/monitoring/task-manager'
-import { Route as AppMonitoringSystemHealthRouteImport } from './routes/app/monitoring/system-health'
-import { Route as AppMonitoringPerformanceRouteImport } from './routes/app/monitoring/performance'
-import { Route as AppMonitoringLlmTraceabilityRouteImport } from './routes/app/monitoring/llm-traceability'
-import { Route as AppMonitoringAnalyticsRouteImport } from './routes/app/monitoring/analytics'
-import { Route as AppInterchangeImportRouteImport } from './routes/app/interchange/import'
-import { Route as AppInterchangeExportRouteImport } from './routes/app/interchange/export'
-import { Route as AppIndividualsIndividualIdRouteImport } from './routes/app/individuals.$individualId'
-import { Route as AppConfigSystemRouteImport } from './routes/app/config/system'
-import { Route as AppConfigProcessingRouteImport } from './routes/app/config/processing'
-import { Route as AppConfigPipelinesRouteImport } from './routes/app/config/pipelines'
-import { Route as AppConfigNetworkRouteImport } from './routes/app/config/network'
-import { Route as AppConfigModelsRouteImport } from './routes/app/config/models'
-import { Route as AppConfigDataSourcesRouteImport } from './routes/app/config/data-sources'
-import { Route as AppConfigAdvancedRouteImport } from './routes/app/config/advanced'
-import { Route as AppConceptSchemesSchemeIdRouteImport } from './routes/app/concept-schemes.$schemeId'
-import { Route as AppClassesClassIdRouteImport } from './routes/app/classes.$classId'
-import { Route as AppConfigPipelinesIndexRouteImport } from './routes/app/config/pipelines.index'
-import { Route as AppInterchangeRunsRunIdRouteImport } from './routes/app/interchange/runs.$runId'
-import { Route as AppConfigPipelinesPipelineTypeRouteImport } from './routes/app/config/pipelines.$pipelineType'
-import { Route as AppConfigPipelinesPipelineTypeIndexRouteImport } from './routes/app/config/pipelines.$pipelineType.index'
-import { Route as AppConfigPipelinesPipelineTypeCreateRouteImport } from './routes/app/config/pipelines.$pipelineType.create'
-import { Route as AppConfigPipelinesPipelineTypeTestFlavorIdRouteImport } from './routes/app/config/pipelines.$pipelineType.test.$flavorId'
-import { Route as AppConfigPipelinesPipelineTypeEditFlavorIdRouteImport } from './routes/app/config/pipelines.$pipelineType.edit.$flavorId'
+import { Route as rootRouteImport } from "./routes/__root";
+import { Route as AppRouteImport } from "./routes/app";
+import { Route as IndexRouteImport } from "./routes/index";
+import { Route as AppIndexRouteImport } from "./routes/app/index";
+import { Route as AppTaxonomiesRouteImport } from "./routes/app/taxonomies";
+import { Route as AppRelationshipsRouteImport } from "./routes/app/relationships";
+import { Route as AppPropertiesRouteImport } from "./routes/app/properties";
+import { Route as AppInterchangeRouteImport } from "./routes/app/interchange";
+import { Route as AppIndividualsRouteImport } from "./routes/app/individuals";
+import { Route as AppDatasetsRouteImport } from "./routes/app/datasets";
+import { Route as AppConfigRouteImport } from "./routes/app/config";
+import { Route as AppConceptSchemesRouteImport } from "./routes/app/concept-schemes";
+import { Route as AppClassesRouteImport } from "./routes/app/classes";
+import { Route as AppTaxonomiesIndexRouteImport } from "./routes/app/taxonomies.index";
+import { Route as AppReferenceIndexRouteImport } from "./routes/app/reference/index";
+import { Route as AppInterchangeIndexRouteImport } from "./routes/app/interchange/index";
+import { Route as AppIndividualsIndexRouteImport } from "./routes/app/individuals.index";
+import { Route as AppConfigIndexRouteImport } from "./routes/app/config/index";
+import { Route as AppConceptSchemesIndexRouteImport } from "./routes/app/concept-schemes.index";
+import { Route as AppClassesIndexRouteImport } from "./routes/app/classes.index";
+import { Route as AppTaxonomiesTaxonomyIdRouteImport } from "./routes/app/taxonomies.$taxonomyId";
+import { Route as AppReferenceSearchRouteImport } from "./routes/app/reference/search";
+import { Route as AppReferenceRagTestRouteImport } from "./routes/app/reference/rag-test";
+import { Route as AppReferencePropertiesRouteImport } from "./routes/app/reference/properties";
+import { Route as AppRagTestRunnerRouteImport } from "./routes/app/rag/test-runner";
+import { Route as AppRagPipelineComparisonRouteImport } from "./routes/app/rag/pipeline-comparison";
+import { Route as AppRagExperimentsRouteImport } from "./routes/app/rag/experiments";
+import { Route as AppMonitoringTaskManagerRouteImport } from "./routes/app/monitoring/task-manager";
+import { Route as AppMonitoringSystemHealthRouteImport } from "./routes/app/monitoring/system-health";
+import { Route as AppMonitoringPerformanceRouteImport } from "./routes/app/monitoring/performance";
+import { Route as AppMonitoringLlmTraceabilityRouteImport } from "./routes/app/monitoring/llm-traceability";
+import { Route as AppMonitoringAnalyticsRouteImport } from "./routes/app/monitoring/analytics";
+import { Route as AppInterchangeImportRouteImport } from "./routes/app/interchange/import";
+import { Route as AppInterchangeExportRouteImport } from "./routes/app/interchange/export";
+import { Route as AppIndividualsIndividualIdRouteImport } from "./routes/app/individuals.$individualId";
+import { Route as AppConfigSystemRouteImport } from "./routes/app/config/system";
+import { Route as AppConfigProcessingRouteImport } from "./routes/app/config/processing";
+import { Route as AppConfigPipelinesRouteImport } from "./routes/app/config/pipelines";
+import { Route as AppConfigNetworkRouteImport } from "./routes/app/config/network";
+import { Route as AppConfigModelsRouteImport } from "./routes/app/config/models";
+import { Route as AppConfigDataSourcesRouteImport } from "./routes/app/config/data-sources";
+import { Route as AppConfigAdvancedRouteImport } from "./routes/app/config/advanced";
+import { Route as AppConceptSchemesSchemeIdRouteImport } from "./routes/app/concept-schemes.$schemeId";
+import { Route as AppClassesClassIdRouteImport } from "./routes/app/classes.$classId";
+import { Route as AppConfigPipelinesIndexRouteImport } from "./routes/app/config/pipelines.index";
+import { Route as AppInterchangeRunsRunIdRouteImport } from "./routes/app/interchange/runs.$runId";
+import { Route as AppConfigPipelinesPipelineTypeRouteImport } from "./routes/app/config/pipelines.$pipelineType";
+import { Route as AppConfigPipelinesPipelineTypeIndexRouteImport } from "./routes/app/config/pipelines.$pipelineType.index";
+import { Route as AppConfigPipelinesPipelineTypeCreateRouteImport } from "./routes/app/config/pipelines.$pipelineType.create";
+import { Route as AppConfigPipelinesPipelineTypeTestFlavorIdRouteImport } from "./routes/app/config/pipelines.$pipelineType.test.$flavorId";
+import { Route as AppConfigPipelinesPipelineTypeEditFlavorIdRouteImport } from "./routes/app/config/pipelines.$pipelineType.edit.$flavorId";
 
 const AppRoute = AppRouteImport.update({
-  id: '/app',
-  path: '/app',
+  id: "/app",
+  path: "/app",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const AppIndexRoute = AppIndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => AppRoute,
-} as any)
+} as any);
 const AppTaxonomiesRoute = AppTaxonomiesRouteImport.update({
-  id: '/taxonomies',
-  path: '/taxonomies',
+  id: "/taxonomies",
+  path: "/taxonomies",
   getParentRoute: () => AppRoute,
-} as any)
+} as any);
 const AppRelationshipsRoute = AppRelationshipsRouteImport.update({
-  id: '/relationships',
-  path: '/relationships',
+  id: "/relationships",
+  path: "/relationships",
   getParentRoute: () => AppRoute,
-} as any)
+} as any);
 const AppPropertiesRoute = AppPropertiesRouteImport.update({
-  id: '/properties',
-  path: '/properties',
+  id: "/properties",
+  path: "/properties",
   getParentRoute: () => AppRoute,
-} as any)
+} as any);
 const AppInterchangeRoute = AppInterchangeRouteImport.update({
-  id: '/interchange',
-  path: '/interchange',
+  id: "/interchange",
+  path: "/interchange",
   getParentRoute: () => AppRoute,
-} as any)
+} as any);
 const AppIndividualsRoute = AppIndividualsRouteImport.update({
-  id: '/individuals',
-  path: '/individuals',
+  id: "/individuals",
+  path: "/individuals",
   getParentRoute: () => AppRoute,
-} as any)
+} as any);
 const AppDatasetsRoute = AppDatasetsRouteImport.update({
-  id: '/datasets',
-  path: '/datasets',
+  id: "/datasets",
+  path: "/datasets",
   getParentRoute: () => AppRoute,
-} as any)
+} as any);
 const AppConfigRoute = AppConfigRouteImport.update({
-  id: '/config',
-  path: '/config',
+  id: "/config",
+  path: "/config",
   getParentRoute: () => AppRoute,
-} as any)
+} as any);
 const AppConceptSchemesRoute = AppConceptSchemesRouteImport.update({
-  id: '/concept-schemes',
-  path: '/concept-schemes',
+  id: "/concept-schemes",
+  path: "/concept-schemes",
   getParentRoute: () => AppRoute,
-} as any)
+} as any);
 const AppClassesRoute = AppClassesRouteImport.update({
-  id: '/classes',
-  path: '/classes',
+  id: "/classes",
+  path: "/classes",
   getParentRoute: () => AppRoute,
-} as any)
+} as any);
 const AppTaxonomiesIndexRoute = AppTaxonomiesIndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => AppTaxonomiesRoute,
-} as any)
+} as any);
 const AppReferenceIndexRoute = AppReferenceIndexRouteImport.update({
-  id: '/reference/',
-  path: '/reference/',
+  id: "/reference/",
+  path: "/reference/",
   getParentRoute: () => AppRoute,
-} as any)
+} as any);
 const AppInterchangeIndexRoute = AppInterchangeIndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => AppInterchangeRoute,
-} as any)
+} as any);
 const AppIndividualsIndexRoute = AppIndividualsIndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => AppIndividualsRoute,
-} as any)
+} as any);
 const AppConfigIndexRoute = AppConfigIndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => AppConfigRoute,
-} as any)
+} as any);
 const AppConceptSchemesIndexRoute = AppConceptSchemesIndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => AppConceptSchemesRoute,
-} as any)
+} as any);
 const AppClassesIndexRoute = AppClassesIndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => AppClassesRoute,
-} as any)
+} as any);
 const AppTaxonomiesTaxonomyIdRoute = AppTaxonomiesTaxonomyIdRouteImport.update({
-  id: '/$taxonomyId',
-  path: '/$taxonomyId',
+  id: "/$taxonomyId",
+  path: "/$taxonomyId",
   getParentRoute: () => AppTaxonomiesRoute,
-} as any)
+} as any);
 const AppReferenceSearchRoute = AppReferenceSearchRouteImport.update({
-  id: '/reference/search',
-  path: '/reference/search',
+  id: "/reference/search",
+  path: "/reference/search",
   getParentRoute: () => AppRoute,
-} as any)
+} as any);
 const AppReferenceRagTestRoute = AppReferenceRagTestRouteImport.update({
-  id: '/reference/rag-test',
-  path: '/reference/rag-test',
+  id: "/reference/rag-test",
+  path: "/reference/rag-test",
   getParentRoute: () => AppRoute,
-} as any)
+} as any);
 const AppReferencePropertiesRoute = AppReferencePropertiesRouteImport.update({
-  id: '/reference/properties',
-  path: '/reference/properties',
+  id: "/reference/properties",
+  path: "/reference/properties",
   getParentRoute: () => AppRoute,
-} as any)
+} as any);
 const AppRagTestRunnerRoute = AppRagTestRunnerRouteImport.update({
-  id: '/rag/test-runner',
-  path: '/rag/test-runner',
+  id: "/rag/test-runner",
+  path: "/rag/test-runner",
   getParentRoute: () => AppRoute,
-} as any)
+} as any);
 const AppRagPipelineComparisonRoute =
   AppRagPipelineComparisonRouteImport.update({
-    id: '/rag/pipeline-comparison',
-    path: '/rag/pipeline-comparison',
+    id: "/rag/pipeline-comparison",
+    path: "/rag/pipeline-comparison",
     getParentRoute: () => AppRoute,
-  } as any)
+  } as any);
 const AppRagExperimentsRoute = AppRagExperimentsRouteImport.update({
-  id: '/rag/experiments',
-  path: '/rag/experiments',
+  id: "/rag/experiments",
+  path: "/rag/experiments",
   getParentRoute: () => AppRoute,
-} as any)
+} as any);
 const AppMonitoringTaskManagerRoute =
   AppMonitoringTaskManagerRouteImport.update({
-    id: '/monitoring/task-manager',
-    path: '/monitoring/task-manager',
+    id: "/monitoring/task-manager",
+    path: "/monitoring/task-manager",
     getParentRoute: () => AppRoute,
-  } as any)
+  } as any);
 const AppMonitoringSystemHealthRoute =
   AppMonitoringSystemHealthRouteImport.update({
-    id: '/monitoring/system-health',
-    path: '/monitoring/system-health',
+    id: "/monitoring/system-health",
+    path: "/monitoring/system-health",
     getParentRoute: () => AppRoute,
-  } as any)
+  } as any);
 const AppMonitoringPerformanceRoute =
   AppMonitoringPerformanceRouteImport.update({
-    id: '/monitoring/performance',
-    path: '/monitoring/performance',
+    id: "/monitoring/performance",
+    path: "/monitoring/performance",
     getParentRoute: () => AppRoute,
-  } as any)
+  } as any);
 const AppMonitoringLlmTraceabilityRoute =
   AppMonitoringLlmTraceabilityRouteImport.update({
-    id: '/monitoring/llm-traceability',
-    path: '/monitoring/llm-traceability',
+    id: "/monitoring/llm-traceability",
+    path: "/monitoring/llm-traceability",
     getParentRoute: () => AppRoute,
-  } as any)
+  } as any);
 const AppMonitoringAnalyticsRoute = AppMonitoringAnalyticsRouteImport.update({
-  id: '/monitoring/analytics',
-  path: '/monitoring/analytics',
+  id: "/monitoring/analytics",
+  path: "/monitoring/analytics",
   getParentRoute: () => AppRoute,
-} as any)
+} as any);
 const AppInterchangeImportRoute = AppInterchangeImportRouteImport.update({
-  id: '/import',
-  path: '/import',
+  id: "/import",
+  path: "/import",
   getParentRoute: () => AppInterchangeRoute,
-} as any)
+} as any);
 const AppInterchangeExportRoute = AppInterchangeExportRouteImport.update({
-  id: '/export',
-  path: '/export',
+  id: "/export",
+  path: "/export",
   getParentRoute: () => AppInterchangeRoute,
-} as any)
+} as any);
 const AppIndividualsIndividualIdRoute =
   AppIndividualsIndividualIdRouteImport.update({
-    id: '/$individualId',
-    path: '/$individualId',
+    id: "/$individualId",
+    path: "/$individualId",
     getParentRoute: () => AppIndividualsRoute,
-  } as any)
+  } as any);
 const AppConfigSystemRoute = AppConfigSystemRouteImport.update({
-  id: '/system',
-  path: '/system',
+  id: "/system",
+  path: "/system",
   getParentRoute: () => AppConfigRoute,
-} as any)
+} as any);
 const AppConfigProcessingRoute = AppConfigProcessingRouteImport.update({
-  id: '/processing',
-  path: '/processing',
+  id: "/processing",
+  path: "/processing",
   getParentRoute: () => AppConfigRoute,
-} as any)
+} as any);
 const AppConfigPipelinesRoute = AppConfigPipelinesRouteImport.update({
-  id: '/pipelines',
-  path: '/pipelines',
+  id: "/pipelines",
+  path: "/pipelines",
   getParentRoute: () => AppConfigRoute,
-} as any)
+} as any);
 const AppConfigNetworkRoute = AppConfigNetworkRouteImport.update({
-  id: '/network',
-  path: '/network',
+  id: "/network",
+  path: "/network",
   getParentRoute: () => AppConfigRoute,
-} as any)
+} as any);
 const AppConfigModelsRoute = AppConfigModelsRouteImport.update({
-  id: '/models',
-  path: '/models',
+  id: "/models",
+  path: "/models",
   getParentRoute: () => AppConfigRoute,
-} as any)
+} as any);
 const AppConfigDataSourcesRoute = AppConfigDataSourcesRouteImport.update({
-  id: '/data-sources',
-  path: '/data-sources',
+  id: "/data-sources",
+  path: "/data-sources",
   getParentRoute: () => AppConfigRoute,
-} as any)
+} as any);
 const AppConfigAdvancedRoute = AppConfigAdvancedRouteImport.update({
-  id: '/advanced',
-  path: '/advanced',
+  id: "/advanced",
+  path: "/advanced",
   getParentRoute: () => AppConfigRoute,
-} as any)
+} as any);
 const AppConceptSchemesSchemeIdRoute =
   AppConceptSchemesSchemeIdRouteImport.update({
-    id: '/$schemeId',
-    path: '/$schemeId',
+    id: "/$schemeId",
+    path: "/$schemeId",
     getParentRoute: () => AppConceptSchemesRoute,
-  } as any)
+  } as any);
 const AppClassesClassIdRoute = AppClassesClassIdRouteImport.update({
-  id: '/$classId',
-  path: '/$classId',
+  id: "/$classId",
+  path: "/$classId",
   getParentRoute: () => AppClassesRoute,
-} as any)
+} as any);
 const AppConfigPipelinesIndexRoute = AppConfigPipelinesIndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => AppConfigPipelinesRoute,
-} as any)
+} as any);
 const AppInterchangeRunsRunIdRoute = AppInterchangeRunsRunIdRouteImport.update({
-  id: '/runs/$runId',
-  path: '/runs/$runId',
+  id: "/runs/$runId",
+  path: "/runs/$runId",
   getParentRoute: () => AppInterchangeRoute,
-} as any)
+} as any);
 const AppConfigPipelinesPipelineTypeRoute =
   AppConfigPipelinesPipelineTypeRouteImport.update({
-    id: '/$pipelineType',
-    path: '/$pipelineType',
+    id: "/$pipelineType",
+    path: "/$pipelineType",
     getParentRoute: () => AppConfigPipelinesRoute,
-  } as any)
+  } as any);
 const AppConfigPipelinesPipelineTypeIndexRoute =
   AppConfigPipelinesPipelineTypeIndexRouteImport.update({
-    id: '/',
-    path: '/',
+    id: "/",
+    path: "/",
     getParentRoute: () => AppConfigPipelinesPipelineTypeRoute,
-  } as any)
+  } as any);
 const AppConfigPipelinesPipelineTypeCreateRoute =
   AppConfigPipelinesPipelineTypeCreateRouteImport.update({
-    id: '/create',
-    path: '/create',
+    id: "/create",
+    path: "/create",
     getParentRoute: () => AppConfigPipelinesPipelineTypeRoute,
-  } as any)
+  } as any);
 const AppConfigPipelinesPipelineTypeTestFlavorIdRoute =
   AppConfigPipelinesPipelineTypeTestFlavorIdRouteImport.update({
-    id: '/test/$flavorId',
-    path: '/test/$flavorId',
+    id: "/test/$flavorId",
+    path: "/test/$flavorId",
     getParentRoute: () => AppConfigPipelinesPipelineTypeRoute,
-  } as any)
+  } as any);
 const AppConfigPipelinesPipelineTypeEditFlavorIdRoute =
   AppConfigPipelinesPipelineTypeEditFlavorIdRouteImport.update({
-    id: '/edit/$flavorId',
-    path: '/edit/$flavorId',
+    id: "/edit/$flavorId",
+    path: "/edit/$flavorId",
     getParentRoute: () => AppConfigPipelinesPipelineTypeRoute,
-  } as any)
+  } as any);
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/app': typeof AppRouteWithChildren
-  '/app/classes': typeof AppClassesRouteWithChildren
-  '/app/concept-schemes': typeof AppConceptSchemesRouteWithChildren
-  '/app/config': typeof AppConfigRouteWithChildren
-  '/app/datasets': typeof AppDatasetsRoute
-  '/app/individuals': typeof AppIndividualsRouteWithChildren
-  '/app/interchange': typeof AppInterchangeRouteWithChildren
-  '/app/properties': typeof AppPropertiesRoute
-  '/app/relationships': typeof AppRelationshipsRoute
-  '/app/taxonomies': typeof AppTaxonomiesRouteWithChildren
-  '/app/': typeof AppIndexRoute
-  '/app/classes/$classId': typeof AppClassesClassIdRoute
-  '/app/concept-schemes/$schemeId': typeof AppConceptSchemesSchemeIdRoute
-  '/app/config/advanced': typeof AppConfigAdvancedRoute
-  '/app/config/data-sources': typeof AppConfigDataSourcesRoute
-  '/app/config/models': typeof AppConfigModelsRoute
-  '/app/config/network': typeof AppConfigNetworkRoute
-  '/app/config/pipelines': typeof AppConfigPipelinesRouteWithChildren
-  '/app/config/processing': typeof AppConfigProcessingRoute
-  '/app/config/system': typeof AppConfigSystemRoute
-  '/app/individuals/$individualId': typeof AppIndividualsIndividualIdRoute
-  '/app/interchange/export': typeof AppInterchangeExportRoute
-  '/app/interchange/import': typeof AppInterchangeImportRoute
-  '/app/monitoring/analytics': typeof AppMonitoringAnalyticsRoute
-  '/app/monitoring/llm-traceability': typeof AppMonitoringLlmTraceabilityRoute
-  '/app/monitoring/performance': typeof AppMonitoringPerformanceRoute
-  '/app/monitoring/system-health': typeof AppMonitoringSystemHealthRoute
-  '/app/monitoring/task-manager': typeof AppMonitoringTaskManagerRoute
-  '/app/rag/experiments': typeof AppRagExperimentsRoute
-  '/app/rag/pipeline-comparison': typeof AppRagPipelineComparisonRoute
-  '/app/rag/test-runner': typeof AppRagTestRunnerRoute
-  '/app/reference/properties': typeof AppReferencePropertiesRoute
-  '/app/reference/rag-test': typeof AppReferenceRagTestRoute
-  '/app/reference/search': typeof AppReferenceSearchRoute
-  '/app/taxonomies/$taxonomyId': typeof AppTaxonomiesTaxonomyIdRoute
-  '/app/classes/': typeof AppClassesIndexRoute
-  '/app/concept-schemes/': typeof AppConceptSchemesIndexRoute
-  '/app/config/': typeof AppConfigIndexRoute
-  '/app/individuals/': typeof AppIndividualsIndexRoute
-  '/app/interchange/': typeof AppInterchangeIndexRoute
-  '/app/reference': typeof AppReferenceIndexRoute
-  '/app/taxonomies/': typeof AppTaxonomiesIndexRoute
-  '/app/config/pipelines/$pipelineType': typeof AppConfigPipelinesPipelineTypeRouteWithChildren
-  '/app/interchange/runs/$runId': typeof AppInterchangeRunsRunIdRoute
-  '/app/config/pipelines/': typeof AppConfigPipelinesIndexRoute
-  '/app/config/pipelines/$pipelineType/create': typeof AppConfigPipelinesPipelineTypeCreateRoute
-  '/app/config/pipelines/$pipelineType/': typeof AppConfigPipelinesPipelineTypeIndexRoute
-  '/app/config/pipelines/$pipelineType/edit/$flavorId': typeof AppConfigPipelinesPipelineTypeEditFlavorIdRoute
-  '/app/config/pipelines/$pipelineType/test/$flavorId': typeof AppConfigPipelinesPipelineTypeTestFlavorIdRoute
+  "/": typeof IndexRoute;
+  "/app": typeof AppRouteWithChildren;
+  "/app/classes": typeof AppClassesRouteWithChildren;
+  "/app/concept-schemes": typeof AppConceptSchemesRouteWithChildren;
+  "/app/config": typeof AppConfigRouteWithChildren;
+  "/app/datasets": typeof AppDatasetsRoute;
+  "/app/individuals": typeof AppIndividualsRouteWithChildren;
+  "/app/interchange": typeof AppInterchangeRouteWithChildren;
+  "/app/properties": typeof AppPropertiesRoute;
+  "/app/relationships": typeof AppRelationshipsRoute;
+  "/app/taxonomies": typeof AppTaxonomiesRouteWithChildren;
+  "/app/": typeof AppIndexRoute;
+  "/app/classes/$classId": typeof AppClassesClassIdRoute;
+  "/app/concept-schemes/$schemeId": typeof AppConceptSchemesSchemeIdRoute;
+  "/app/config/advanced": typeof AppConfigAdvancedRoute;
+  "/app/config/data-sources": typeof AppConfigDataSourcesRoute;
+  "/app/config/models": typeof AppConfigModelsRoute;
+  "/app/config/network": typeof AppConfigNetworkRoute;
+  "/app/config/pipelines": typeof AppConfigPipelinesRouteWithChildren;
+  "/app/config/processing": typeof AppConfigProcessingRoute;
+  "/app/config/system": typeof AppConfigSystemRoute;
+  "/app/individuals/$individualId": typeof AppIndividualsIndividualIdRoute;
+  "/app/interchange/export": typeof AppInterchangeExportRoute;
+  "/app/interchange/import": typeof AppInterchangeImportRoute;
+  "/app/monitoring/analytics": typeof AppMonitoringAnalyticsRoute;
+  "/app/monitoring/llm-traceability": typeof AppMonitoringLlmTraceabilityRoute;
+  "/app/monitoring/performance": typeof AppMonitoringPerformanceRoute;
+  "/app/monitoring/system-health": typeof AppMonitoringSystemHealthRoute;
+  "/app/monitoring/task-manager": typeof AppMonitoringTaskManagerRoute;
+  "/app/rag/experiments": typeof AppRagExperimentsRoute;
+  "/app/rag/pipeline-comparison": typeof AppRagPipelineComparisonRoute;
+  "/app/rag/test-runner": typeof AppRagTestRunnerRoute;
+  "/app/reference/properties": typeof AppReferencePropertiesRoute;
+  "/app/reference/rag-test": typeof AppReferenceRagTestRoute;
+  "/app/reference/search": typeof AppReferenceSearchRoute;
+  "/app/taxonomies/$taxonomyId": typeof AppTaxonomiesTaxonomyIdRoute;
+  "/app/classes/": typeof AppClassesIndexRoute;
+  "/app/concept-schemes/": typeof AppConceptSchemesIndexRoute;
+  "/app/config/": typeof AppConfigIndexRoute;
+  "/app/individuals/": typeof AppIndividualsIndexRoute;
+  "/app/interchange/": typeof AppInterchangeIndexRoute;
+  "/app/reference": typeof AppReferenceIndexRoute;
+  "/app/taxonomies/": typeof AppTaxonomiesIndexRoute;
+  "/app/config/pipelines/$pipelineType": typeof AppConfigPipelinesPipelineTypeRouteWithChildren;
+  "/app/interchange/runs/$runId": typeof AppInterchangeRunsRunIdRoute;
+  "/app/config/pipelines/": typeof AppConfigPipelinesIndexRoute;
+  "/app/config/pipelines/$pipelineType/create": typeof AppConfigPipelinesPipelineTypeCreateRoute;
+  "/app/config/pipelines/$pipelineType/": typeof AppConfigPipelinesPipelineTypeIndexRoute;
+  "/app/config/pipelines/$pipelineType/edit/$flavorId": typeof AppConfigPipelinesPipelineTypeEditFlavorIdRoute;
+  "/app/config/pipelines/$pipelineType/test/$flavorId": typeof AppConfigPipelinesPipelineTypeTestFlavorIdRoute;
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/app/datasets': typeof AppDatasetsRoute
-  '/app/properties': typeof AppPropertiesRoute
-  '/app/relationships': typeof AppRelationshipsRoute
-  '/app': typeof AppIndexRoute
-  '/app/classes/$classId': typeof AppClassesClassIdRoute
-  '/app/concept-schemes/$schemeId': typeof AppConceptSchemesSchemeIdRoute
-  '/app/config/advanced': typeof AppConfigAdvancedRoute
-  '/app/config/data-sources': typeof AppConfigDataSourcesRoute
-  '/app/config/models': typeof AppConfigModelsRoute
-  '/app/config/network': typeof AppConfigNetworkRoute
-  '/app/config/processing': typeof AppConfigProcessingRoute
-  '/app/config/system': typeof AppConfigSystemRoute
-  '/app/individuals/$individualId': typeof AppIndividualsIndividualIdRoute
-  '/app/interchange/export': typeof AppInterchangeExportRoute
-  '/app/interchange/import': typeof AppInterchangeImportRoute
-  '/app/monitoring/analytics': typeof AppMonitoringAnalyticsRoute
-  '/app/monitoring/llm-traceability': typeof AppMonitoringLlmTraceabilityRoute
-  '/app/monitoring/performance': typeof AppMonitoringPerformanceRoute
-  '/app/monitoring/system-health': typeof AppMonitoringSystemHealthRoute
-  '/app/monitoring/task-manager': typeof AppMonitoringTaskManagerRoute
-  '/app/rag/experiments': typeof AppRagExperimentsRoute
-  '/app/rag/pipeline-comparison': typeof AppRagPipelineComparisonRoute
-  '/app/rag/test-runner': typeof AppRagTestRunnerRoute
-  '/app/reference/properties': typeof AppReferencePropertiesRoute
-  '/app/reference/rag-test': typeof AppReferenceRagTestRoute
-  '/app/reference/search': typeof AppReferenceSearchRoute
-  '/app/taxonomies/$taxonomyId': typeof AppTaxonomiesTaxonomyIdRoute
-  '/app/classes': typeof AppClassesIndexRoute
-  '/app/concept-schemes': typeof AppConceptSchemesIndexRoute
-  '/app/config': typeof AppConfigIndexRoute
-  '/app/individuals': typeof AppIndividualsIndexRoute
-  '/app/interchange': typeof AppInterchangeIndexRoute
-  '/app/reference': typeof AppReferenceIndexRoute
-  '/app/taxonomies': typeof AppTaxonomiesIndexRoute
-  '/app/interchange/runs/$runId': typeof AppInterchangeRunsRunIdRoute
-  '/app/config/pipelines': typeof AppConfigPipelinesIndexRoute
-  '/app/config/pipelines/$pipelineType/create': typeof AppConfigPipelinesPipelineTypeCreateRoute
-  '/app/config/pipelines/$pipelineType': typeof AppConfigPipelinesPipelineTypeIndexRoute
-  '/app/config/pipelines/$pipelineType/edit/$flavorId': typeof AppConfigPipelinesPipelineTypeEditFlavorIdRoute
-  '/app/config/pipelines/$pipelineType/test/$flavorId': typeof AppConfigPipelinesPipelineTypeTestFlavorIdRoute
+  "/": typeof IndexRoute;
+  "/app/datasets": typeof AppDatasetsRoute;
+  "/app/properties": typeof AppPropertiesRoute;
+  "/app/relationships": typeof AppRelationshipsRoute;
+  "/app": typeof AppIndexRoute;
+  "/app/classes/$classId": typeof AppClassesClassIdRoute;
+  "/app/concept-schemes/$schemeId": typeof AppConceptSchemesSchemeIdRoute;
+  "/app/config/advanced": typeof AppConfigAdvancedRoute;
+  "/app/config/data-sources": typeof AppConfigDataSourcesRoute;
+  "/app/config/models": typeof AppConfigModelsRoute;
+  "/app/config/network": typeof AppConfigNetworkRoute;
+  "/app/config/processing": typeof AppConfigProcessingRoute;
+  "/app/config/system": typeof AppConfigSystemRoute;
+  "/app/individuals/$individualId": typeof AppIndividualsIndividualIdRoute;
+  "/app/interchange/export": typeof AppInterchangeExportRoute;
+  "/app/interchange/import": typeof AppInterchangeImportRoute;
+  "/app/monitoring/analytics": typeof AppMonitoringAnalyticsRoute;
+  "/app/monitoring/llm-traceability": typeof AppMonitoringLlmTraceabilityRoute;
+  "/app/monitoring/performance": typeof AppMonitoringPerformanceRoute;
+  "/app/monitoring/system-health": typeof AppMonitoringSystemHealthRoute;
+  "/app/monitoring/task-manager": typeof AppMonitoringTaskManagerRoute;
+  "/app/rag/experiments": typeof AppRagExperimentsRoute;
+  "/app/rag/pipeline-comparison": typeof AppRagPipelineComparisonRoute;
+  "/app/rag/test-runner": typeof AppRagTestRunnerRoute;
+  "/app/reference/properties": typeof AppReferencePropertiesRoute;
+  "/app/reference/rag-test": typeof AppReferenceRagTestRoute;
+  "/app/reference/search": typeof AppReferenceSearchRoute;
+  "/app/taxonomies/$taxonomyId": typeof AppTaxonomiesTaxonomyIdRoute;
+  "/app/classes": typeof AppClassesIndexRoute;
+  "/app/concept-schemes": typeof AppConceptSchemesIndexRoute;
+  "/app/config": typeof AppConfigIndexRoute;
+  "/app/individuals": typeof AppIndividualsIndexRoute;
+  "/app/interchange": typeof AppInterchangeIndexRoute;
+  "/app/reference": typeof AppReferenceIndexRoute;
+  "/app/taxonomies": typeof AppTaxonomiesIndexRoute;
+  "/app/interchange/runs/$runId": typeof AppInterchangeRunsRunIdRoute;
+  "/app/config/pipelines": typeof AppConfigPipelinesIndexRoute;
+  "/app/config/pipelines/$pipelineType/create": typeof AppConfigPipelinesPipelineTypeCreateRoute;
+  "/app/config/pipelines/$pipelineType": typeof AppConfigPipelinesPipelineTypeIndexRoute;
+  "/app/config/pipelines/$pipelineType/edit/$flavorId": typeof AppConfigPipelinesPipelineTypeEditFlavorIdRoute;
+  "/app/config/pipelines/$pipelineType/test/$flavorId": typeof AppConfigPipelinesPipelineTypeTestFlavorIdRoute;
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/app': typeof AppRouteWithChildren
-  '/app/classes': typeof AppClassesRouteWithChildren
-  '/app/concept-schemes': typeof AppConceptSchemesRouteWithChildren
-  '/app/config': typeof AppConfigRouteWithChildren
-  '/app/datasets': typeof AppDatasetsRoute
-  '/app/individuals': typeof AppIndividualsRouteWithChildren
-  '/app/interchange': typeof AppInterchangeRouteWithChildren
-  '/app/properties': typeof AppPropertiesRoute
-  '/app/relationships': typeof AppRelationshipsRoute
-  '/app/taxonomies': typeof AppTaxonomiesRouteWithChildren
-  '/app/': typeof AppIndexRoute
-  '/app/classes/$classId': typeof AppClassesClassIdRoute
-  '/app/concept-schemes/$schemeId': typeof AppConceptSchemesSchemeIdRoute
-  '/app/config/advanced': typeof AppConfigAdvancedRoute
-  '/app/config/data-sources': typeof AppConfigDataSourcesRoute
-  '/app/config/models': typeof AppConfigModelsRoute
-  '/app/config/network': typeof AppConfigNetworkRoute
-  '/app/config/pipelines': typeof AppConfigPipelinesRouteWithChildren
-  '/app/config/processing': typeof AppConfigProcessingRoute
-  '/app/config/system': typeof AppConfigSystemRoute
-  '/app/individuals/$individualId': typeof AppIndividualsIndividualIdRoute
-  '/app/interchange/export': typeof AppInterchangeExportRoute
-  '/app/interchange/import': typeof AppInterchangeImportRoute
-  '/app/monitoring/analytics': typeof AppMonitoringAnalyticsRoute
-  '/app/monitoring/llm-traceability': typeof AppMonitoringLlmTraceabilityRoute
-  '/app/monitoring/performance': typeof AppMonitoringPerformanceRoute
-  '/app/monitoring/system-health': typeof AppMonitoringSystemHealthRoute
-  '/app/monitoring/task-manager': typeof AppMonitoringTaskManagerRoute
-  '/app/rag/experiments': typeof AppRagExperimentsRoute
-  '/app/rag/pipeline-comparison': typeof AppRagPipelineComparisonRoute
-  '/app/rag/test-runner': typeof AppRagTestRunnerRoute
-  '/app/reference/properties': typeof AppReferencePropertiesRoute
-  '/app/reference/rag-test': typeof AppReferenceRagTestRoute
-  '/app/reference/search': typeof AppReferenceSearchRoute
-  '/app/taxonomies/$taxonomyId': typeof AppTaxonomiesTaxonomyIdRoute
-  '/app/classes/': typeof AppClassesIndexRoute
-  '/app/concept-schemes/': typeof AppConceptSchemesIndexRoute
-  '/app/config/': typeof AppConfigIndexRoute
-  '/app/individuals/': typeof AppIndividualsIndexRoute
-  '/app/interchange/': typeof AppInterchangeIndexRoute
-  '/app/reference/': typeof AppReferenceIndexRoute
-  '/app/taxonomies/': typeof AppTaxonomiesIndexRoute
-  '/app/config/pipelines/$pipelineType': typeof AppConfigPipelinesPipelineTypeRouteWithChildren
-  '/app/interchange/runs/$runId': typeof AppInterchangeRunsRunIdRoute
-  '/app/config/pipelines/': typeof AppConfigPipelinesIndexRoute
-  '/app/config/pipelines/$pipelineType/create': typeof AppConfigPipelinesPipelineTypeCreateRoute
-  '/app/config/pipelines/$pipelineType/': typeof AppConfigPipelinesPipelineTypeIndexRoute
-  '/app/config/pipelines/$pipelineType/edit/$flavorId': typeof AppConfigPipelinesPipelineTypeEditFlavorIdRoute
-  '/app/config/pipelines/$pipelineType/test/$flavorId': typeof AppConfigPipelinesPipelineTypeTestFlavorIdRoute
+  __root__: typeof rootRouteImport;
+  "/": typeof IndexRoute;
+  "/app": typeof AppRouteWithChildren;
+  "/app/classes": typeof AppClassesRouteWithChildren;
+  "/app/concept-schemes": typeof AppConceptSchemesRouteWithChildren;
+  "/app/config": typeof AppConfigRouteWithChildren;
+  "/app/datasets": typeof AppDatasetsRoute;
+  "/app/individuals": typeof AppIndividualsRouteWithChildren;
+  "/app/interchange": typeof AppInterchangeRouteWithChildren;
+  "/app/properties": typeof AppPropertiesRoute;
+  "/app/relationships": typeof AppRelationshipsRoute;
+  "/app/taxonomies": typeof AppTaxonomiesRouteWithChildren;
+  "/app/": typeof AppIndexRoute;
+  "/app/classes/$classId": typeof AppClassesClassIdRoute;
+  "/app/concept-schemes/$schemeId": typeof AppConceptSchemesSchemeIdRoute;
+  "/app/config/advanced": typeof AppConfigAdvancedRoute;
+  "/app/config/data-sources": typeof AppConfigDataSourcesRoute;
+  "/app/config/models": typeof AppConfigModelsRoute;
+  "/app/config/network": typeof AppConfigNetworkRoute;
+  "/app/config/pipelines": typeof AppConfigPipelinesRouteWithChildren;
+  "/app/config/processing": typeof AppConfigProcessingRoute;
+  "/app/config/system": typeof AppConfigSystemRoute;
+  "/app/individuals/$individualId": typeof AppIndividualsIndividualIdRoute;
+  "/app/interchange/export": typeof AppInterchangeExportRoute;
+  "/app/interchange/import": typeof AppInterchangeImportRoute;
+  "/app/monitoring/analytics": typeof AppMonitoringAnalyticsRoute;
+  "/app/monitoring/llm-traceability": typeof AppMonitoringLlmTraceabilityRoute;
+  "/app/monitoring/performance": typeof AppMonitoringPerformanceRoute;
+  "/app/monitoring/system-health": typeof AppMonitoringSystemHealthRoute;
+  "/app/monitoring/task-manager": typeof AppMonitoringTaskManagerRoute;
+  "/app/rag/experiments": typeof AppRagExperimentsRoute;
+  "/app/rag/pipeline-comparison": typeof AppRagPipelineComparisonRoute;
+  "/app/rag/test-runner": typeof AppRagTestRunnerRoute;
+  "/app/reference/properties": typeof AppReferencePropertiesRoute;
+  "/app/reference/rag-test": typeof AppReferenceRagTestRoute;
+  "/app/reference/search": typeof AppReferenceSearchRoute;
+  "/app/taxonomies/$taxonomyId": typeof AppTaxonomiesTaxonomyIdRoute;
+  "/app/classes/": typeof AppClassesIndexRoute;
+  "/app/concept-schemes/": typeof AppConceptSchemesIndexRoute;
+  "/app/config/": typeof AppConfigIndexRoute;
+  "/app/individuals/": typeof AppIndividualsIndexRoute;
+  "/app/interchange/": typeof AppInterchangeIndexRoute;
+  "/app/reference/": typeof AppReferenceIndexRoute;
+  "/app/taxonomies/": typeof AppTaxonomiesIndexRoute;
+  "/app/config/pipelines/$pipelineType": typeof AppConfigPipelinesPipelineTypeRouteWithChildren;
+  "/app/interchange/runs/$runId": typeof AppInterchangeRunsRunIdRoute;
+  "/app/config/pipelines/": typeof AppConfigPipelinesIndexRoute;
+  "/app/config/pipelines/$pipelineType/create": typeof AppConfigPipelinesPipelineTypeCreateRoute;
+  "/app/config/pipelines/$pipelineType/": typeof AppConfigPipelinesPipelineTypeIndexRoute;
+  "/app/config/pipelines/$pipelineType/edit/$flavorId": typeof AppConfigPipelinesPipelineTypeEditFlavorIdRoute;
+  "/app/config/pipelines/$pipelineType/test/$flavorId": typeof AppConfigPipelinesPipelineTypeTestFlavorIdRoute;
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
+  fileRoutesByFullPath: FileRoutesByFullPath;
   fullPaths:
-    | '/'
-    | '/app'
-    | '/app/classes'
-    | '/app/concept-schemes'
-    | '/app/config'
-    | '/app/datasets'
-    | '/app/individuals'
-    | '/app/interchange'
-    | '/app/properties'
-    | '/app/relationships'
-    | '/app/taxonomies'
-    | '/app/'
-    | '/app/classes/$classId'
-    | '/app/concept-schemes/$schemeId'
-    | '/app/config/advanced'
-    | '/app/config/data-sources'
-    | '/app/config/models'
-    | '/app/config/network'
-    | '/app/config/pipelines'
-    | '/app/config/processing'
-    | '/app/config/system'
-    | '/app/individuals/$individualId'
-    | '/app/interchange/export'
-    | '/app/interchange/import'
-    | '/app/monitoring/analytics'
-    | '/app/monitoring/llm-traceability'
-    | '/app/monitoring/performance'
-    | '/app/monitoring/system-health'
-    | '/app/monitoring/task-manager'
-    | '/app/rag/experiments'
-    | '/app/rag/pipeline-comparison'
-    | '/app/rag/test-runner'
-    | '/app/reference/properties'
-    | '/app/reference/rag-test'
-    | '/app/reference/search'
-    | '/app/taxonomies/$taxonomyId'
-    | '/app/classes/'
-    | '/app/concept-schemes/'
-    | '/app/config/'
-    | '/app/individuals/'
-    | '/app/interchange/'
-    | '/app/reference'
-    | '/app/taxonomies/'
-    | '/app/config/pipelines/$pipelineType'
-    | '/app/interchange/runs/$runId'
-    | '/app/config/pipelines/'
-    | '/app/config/pipelines/$pipelineType/create'
-    | '/app/config/pipelines/$pipelineType/'
-    | '/app/config/pipelines/$pipelineType/edit/$flavorId'
-    | '/app/config/pipelines/$pipelineType/test/$flavorId'
-  fileRoutesByTo: FileRoutesByTo
+    | "/"
+    | "/app"
+    | "/app/classes"
+    | "/app/concept-schemes"
+    | "/app/config"
+    | "/app/datasets"
+    | "/app/individuals"
+    | "/app/interchange"
+    | "/app/properties"
+    | "/app/relationships"
+    | "/app/taxonomies"
+    | "/app/"
+    | "/app/classes/$classId"
+    | "/app/concept-schemes/$schemeId"
+    | "/app/config/advanced"
+    | "/app/config/data-sources"
+    | "/app/config/models"
+    | "/app/config/network"
+    | "/app/config/pipelines"
+    | "/app/config/processing"
+    | "/app/config/system"
+    | "/app/individuals/$individualId"
+    | "/app/interchange/export"
+    | "/app/interchange/import"
+    | "/app/monitoring/analytics"
+    | "/app/monitoring/llm-traceability"
+    | "/app/monitoring/performance"
+    | "/app/monitoring/system-health"
+    | "/app/monitoring/task-manager"
+    | "/app/rag/experiments"
+    | "/app/rag/pipeline-comparison"
+    | "/app/rag/test-runner"
+    | "/app/reference/properties"
+    | "/app/reference/rag-test"
+    | "/app/reference/search"
+    | "/app/taxonomies/$taxonomyId"
+    | "/app/classes/"
+    | "/app/concept-schemes/"
+    | "/app/config/"
+    | "/app/individuals/"
+    | "/app/interchange/"
+    | "/app/reference"
+    | "/app/taxonomies/"
+    | "/app/config/pipelines/$pipelineType"
+    | "/app/interchange/runs/$runId"
+    | "/app/config/pipelines/"
+    | "/app/config/pipelines/$pipelineType/create"
+    | "/app/config/pipelines/$pipelineType/"
+    | "/app/config/pipelines/$pipelineType/edit/$flavorId"
+    | "/app/config/pipelines/$pipelineType/test/$flavorId";
+  fileRoutesByTo: FileRoutesByTo;
   to:
-    | '/'
-    | '/app/datasets'
-    | '/app/properties'
-    | '/app/relationships'
-    | '/app'
-    | '/app/classes/$classId'
-    | '/app/concept-schemes/$schemeId'
-    | '/app/config/advanced'
-    | '/app/config/data-sources'
-    | '/app/config/models'
-    | '/app/config/network'
-    | '/app/config/processing'
-    | '/app/config/system'
-    | '/app/individuals/$individualId'
-    | '/app/interchange/export'
-    | '/app/interchange/import'
-    | '/app/monitoring/analytics'
-    | '/app/monitoring/llm-traceability'
-    | '/app/monitoring/performance'
-    | '/app/monitoring/system-health'
-    | '/app/monitoring/task-manager'
-    | '/app/rag/experiments'
-    | '/app/rag/pipeline-comparison'
-    | '/app/rag/test-runner'
-    | '/app/reference/properties'
-    | '/app/reference/rag-test'
-    | '/app/reference/search'
-    | '/app/taxonomies/$taxonomyId'
-    | '/app/classes'
-    | '/app/concept-schemes'
-    | '/app/config'
-    | '/app/individuals'
-    | '/app/interchange'
-    | '/app/reference'
-    | '/app/taxonomies'
-    | '/app/interchange/runs/$runId'
-    | '/app/config/pipelines'
-    | '/app/config/pipelines/$pipelineType/create'
-    | '/app/config/pipelines/$pipelineType'
-    | '/app/config/pipelines/$pipelineType/edit/$flavorId'
-    | '/app/config/pipelines/$pipelineType/test/$flavorId'
+    | "/"
+    | "/app/datasets"
+    | "/app/properties"
+    | "/app/relationships"
+    | "/app"
+    | "/app/classes/$classId"
+    | "/app/concept-schemes/$schemeId"
+    | "/app/config/advanced"
+    | "/app/config/data-sources"
+    | "/app/config/models"
+    | "/app/config/network"
+    | "/app/config/processing"
+    | "/app/config/system"
+    | "/app/individuals/$individualId"
+    | "/app/interchange/export"
+    | "/app/interchange/import"
+    | "/app/monitoring/analytics"
+    | "/app/monitoring/llm-traceability"
+    | "/app/monitoring/performance"
+    | "/app/monitoring/system-health"
+    | "/app/monitoring/task-manager"
+    | "/app/rag/experiments"
+    | "/app/rag/pipeline-comparison"
+    | "/app/rag/test-runner"
+    | "/app/reference/properties"
+    | "/app/reference/rag-test"
+    | "/app/reference/search"
+    | "/app/taxonomies/$taxonomyId"
+    | "/app/classes"
+    | "/app/concept-schemes"
+    | "/app/config"
+    | "/app/individuals"
+    | "/app/interchange"
+    | "/app/reference"
+    | "/app/taxonomies"
+    | "/app/interchange/runs/$runId"
+    | "/app/config/pipelines"
+    | "/app/config/pipelines/$pipelineType/create"
+    | "/app/config/pipelines/$pipelineType"
+    | "/app/config/pipelines/$pipelineType/edit/$flavorId"
+    | "/app/config/pipelines/$pipelineType/test/$flavorId";
   id:
-    | '__root__'
-    | '/'
-    | '/app'
-    | '/app/classes'
-    | '/app/concept-schemes'
-    | '/app/config'
-    | '/app/datasets'
-    | '/app/individuals'
-    | '/app/interchange'
-    | '/app/properties'
-    | '/app/relationships'
-    | '/app/taxonomies'
-    | '/app/'
-    | '/app/classes/$classId'
-    | '/app/concept-schemes/$schemeId'
-    | '/app/config/advanced'
-    | '/app/config/data-sources'
-    | '/app/config/models'
-    | '/app/config/network'
-    | '/app/config/pipelines'
-    | '/app/config/processing'
-    | '/app/config/system'
-    | '/app/individuals/$individualId'
-    | '/app/interchange/export'
-    | '/app/interchange/import'
-    | '/app/monitoring/analytics'
-    | '/app/monitoring/llm-traceability'
-    | '/app/monitoring/performance'
-    | '/app/monitoring/system-health'
-    | '/app/monitoring/task-manager'
-    | '/app/rag/experiments'
-    | '/app/rag/pipeline-comparison'
-    | '/app/rag/test-runner'
-    | '/app/reference/properties'
-    | '/app/reference/rag-test'
-    | '/app/reference/search'
-    | '/app/taxonomies/$taxonomyId'
-    | '/app/classes/'
-    | '/app/concept-schemes/'
-    | '/app/config/'
-    | '/app/individuals/'
-    | '/app/interchange/'
-    | '/app/reference/'
-    | '/app/taxonomies/'
-    | '/app/config/pipelines/$pipelineType'
-    | '/app/interchange/runs/$runId'
-    | '/app/config/pipelines/'
-    | '/app/config/pipelines/$pipelineType/create'
-    | '/app/config/pipelines/$pipelineType/'
-    | '/app/config/pipelines/$pipelineType/edit/$flavorId'
-    | '/app/config/pipelines/$pipelineType/test/$flavorId'
-  fileRoutesById: FileRoutesById
+    | "__root__"
+    | "/"
+    | "/app"
+    | "/app/classes"
+    | "/app/concept-schemes"
+    | "/app/config"
+    | "/app/datasets"
+    | "/app/individuals"
+    | "/app/interchange"
+    | "/app/properties"
+    | "/app/relationships"
+    | "/app/taxonomies"
+    | "/app/"
+    | "/app/classes/$classId"
+    | "/app/concept-schemes/$schemeId"
+    | "/app/config/advanced"
+    | "/app/config/data-sources"
+    | "/app/config/models"
+    | "/app/config/network"
+    | "/app/config/pipelines"
+    | "/app/config/processing"
+    | "/app/config/system"
+    | "/app/individuals/$individualId"
+    | "/app/interchange/export"
+    | "/app/interchange/import"
+    | "/app/monitoring/analytics"
+    | "/app/monitoring/llm-traceability"
+    | "/app/monitoring/performance"
+    | "/app/monitoring/system-health"
+    | "/app/monitoring/task-manager"
+    | "/app/rag/experiments"
+    | "/app/rag/pipeline-comparison"
+    | "/app/rag/test-runner"
+    | "/app/reference/properties"
+    | "/app/reference/rag-test"
+    | "/app/reference/search"
+    | "/app/taxonomies/$taxonomyId"
+    | "/app/classes/"
+    | "/app/concept-schemes/"
+    | "/app/config/"
+    | "/app/individuals/"
+    | "/app/interchange/"
+    | "/app/reference/"
+    | "/app/taxonomies/"
+    | "/app/config/pipelines/$pipelineType"
+    | "/app/interchange/runs/$runId"
+    | "/app/config/pipelines/"
+    | "/app/config/pipelines/$pipelineType/create"
+    | "/app/config/pipelines/$pipelineType/"
+    | "/app/config/pipelines/$pipelineType/edit/$flavorId"
+    | "/app/config/pipelines/$pipelineType/test/$flavorId";
+  fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  AppRoute: typeof AppRouteWithChildren
+  IndexRoute: typeof IndexRoute;
+  AppRoute: typeof AppRouteWithChildren;
 }
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    '/app': {
-      id: '/app'
-      path: '/app'
-      fullPath: '/app'
-      preLoaderRoute: typeof AppRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app/': {
-      id: '/app/'
-      path: '/'
-      fullPath: '/app/'
-      preLoaderRoute: typeof AppIndexRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/taxonomies': {
-      id: '/app/taxonomies'
-      path: '/taxonomies'
-      fullPath: '/app/taxonomies'
-      preLoaderRoute: typeof AppTaxonomiesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/relationships': {
-      id: '/app/relationships'
-      path: '/relationships'
-      fullPath: '/app/relationships'
-      preLoaderRoute: typeof AppRelationshipsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/properties': {
-      id: '/app/properties'
-      path: '/properties'
-      fullPath: '/app/properties'
-      preLoaderRoute: typeof AppPropertiesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/interchange': {
-      id: '/app/interchange'
-      path: '/interchange'
-      fullPath: '/app/interchange'
-      preLoaderRoute: typeof AppInterchangeRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/individuals': {
-      id: '/app/individuals'
-      path: '/individuals'
-      fullPath: '/app/individuals'
-      preLoaderRoute: typeof AppIndividualsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/datasets': {
-      id: '/app/datasets'
-      path: '/datasets'
-      fullPath: '/app/datasets'
-      preLoaderRoute: typeof AppDatasetsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/config': {
-      id: '/app/config'
-      path: '/config'
-      fullPath: '/app/config'
-      preLoaderRoute: typeof AppConfigRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/concept-schemes': {
-      id: '/app/concept-schemes'
-      path: '/concept-schemes'
-      fullPath: '/app/concept-schemes'
-      preLoaderRoute: typeof AppConceptSchemesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/classes': {
-      id: '/app/classes'
-      path: '/classes'
-      fullPath: '/app/classes'
-      preLoaderRoute: typeof AppClassesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/taxonomies/': {
-      id: '/app/taxonomies/'
-      path: '/'
-      fullPath: '/app/taxonomies/'
-      preLoaderRoute: typeof AppTaxonomiesIndexRouteImport
-      parentRoute: typeof AppTaxonomiesRoute
-    }
-    '/app/reference/': {
-      id: '/app/reference/'
-      path: '/reference'
-      fullPath: '/app/reference'
-      preLoaderRoute: typeof AppReferenceIndexRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/interchange/': {
-      id: '/app/interchange/'
-      path: '/'
-      fullPath: '/app/interchange/'
-      preLoaderRoute: typeof AppInterchangeIndexRouteImport
-      parentRoute: typeof AppInterchangeRoute
-    }
-    '/app/individuals/': {
-      id: '/app/individuals/'
-      path: '/'
-      fullPath: '/app/individuals/'
-      preLoaderRoute: typeof AppIndividualsIndexRouteImport
-      parentRoute: typeof AppIndividualsRoute
-    }
-    '/app/config/': {
-      id: '/app/config/'
-      path: '/'
-      fullPath: '/app/config/'
-      preLoaderRoute: typeof AppConfigIndexRouteImport
-      parentRoute: typeof AppConfigRoute
-    }
-    '/app/concept-schemes/': {
-      id: '/app/concept-schemes/'
-      path: '/'
-      fullPath: '/app/concept-schemes/'
-      preLoaderRoute: typeof AppConceptSchemesIndexRouteImport
-      parentRoute: typeof AppConceptSchemesRoute
-    }
-    '/app/classes/': {
-      id: '/app/classes/'
-      path: '/'
-      fullPath: '/app/classes/'
-      preLoaderRoute: typeof AppClassesIndexRouteImport
-      parentRoute: typeof AppClassesRoute
-    }
-    '/app/taxonomies/$taxonomyId': {
-      id: '/app/taxonomies/$taxonomyId'
-      path: '/$taxonomyId'
-      fullPath: '/app/taxonomies/$taxonomyId'
-      preLoaderRoute: typeof AppTaxonomiesTaxonomyIdRouteImport
-      parentRoute: typeof AppTaxonomiesRoute
-    }
-    '/app/reference/search': {
-      id: '/app/reference/search'
-      path: '/reference/search'
-      fullPath: '/app/reference/search'
-      preLoaderRoute: typeof AppReferenceSearchRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/reference/rag-test': {
-      id: '/app/reference/rag-test'
-      path: '/reference/rag-test'
-      fullPath: '/app/reference/rag-test'
-      preLoaderRoute: typeof AppReferenceRagTestRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/reference/properties': {
-      id: '/app/reference/properties'
-      path: '/reference/properties'
-      fullPath: '/app/reference/properties'
-      preLoaderRoute: typeof AppReferencePropertiesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/rag/test-runner': {
-      id: '/app/rag/test-runner'
-      path: '/rag/test-runner'
-      fullPath: '/app/rag/test-runner'
-      preLoaderRoute: typeof AppRagTestRunnerRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/rag/pipeline-comparison': {
-      id: '/app/rag/pipeline-comparison'
-      path: '/rag/pipeline-comparison'
-      fullPath: '/app/rag/pipeline-comparison'
-      preLoaderRoute: typeof AppRagPipelineComparisonRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/rag/experiments': {
-      id: '/app/rag/experiments'
-      path: '/rag/experiments'
-      fullPath: '/app/rag/experiments'
-      preLoaderRoute: typeof AppRagExperimentsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/monitoring/task-manager': {
-      id: '/app/monitoring/task-manager'
-      path: '/monitoring/task-manager'
-      fullPath: '/app/monitoring/task-manager'
-      preLoaderRoute: typeof AppMonitoringTaskManagerRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/monitoring/system-health': {
-      id: '/app/monitoring/system-health'
-      path: '/monitoring/system-health'
-      fullPath: '/app/monitoring/system-health'
-      preLoaderRoute: typeof AppMonitoringSystemHealthRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/monitoring/performance': {
-      id: '/app/monitoring/performance'
-      path: '/monitoring/performance'
-      fullPath: '/app/monitoring/performance'
-      preLoaderRoute: typeof AppMonitoringPerformanceRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/monitoring/llm-traceability': {
-      id: '/app/monitoring/llm-traceability'
-      path: '/monitoring/llm-traceability'
-      fullPath: '/app/monitoring/llm-traceability'
-      preLoaderRoute: typeof AppMonitoringLlmTraceabilityRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/monitoring/analytics': {
-      id: '/app/monitoring/analytics'
-      path: '/monitoring/analytics'
-      fullPath: '/app/monitoring/analytics'
-      preLoaderRoute: typeof AppMonitoringAnalyticsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/interchange/import': {
-      id: '/app/interchange/import'
-      path: '/import'
-      fullPath: '/app/interchange/import'
-      preLoaderRoute: typeof AppInterchangeImportRouteImport
-      parentRoute: typeof AppInterchangeRoute
-    }
-    '/app/interchange/export': {
-      id: '/app/interchange/export'
-      path: '/export'
-      fullPath: '/app/interchange/export'
-      preLoaderRoute: typeof AppInterchangeExportRouteImport
-      parentRoute: typeof AppInterchangeRoute
-    }
-    '/app/individuals/$individualId': {
-      id: '/app/individuals/$individualId'
-      path: '/$individualId'
-      fullPath: '/app/individuals/$individualId'
-      preLoaderRoute: typeof AppIndividualsIndividualIdRouteImport
-      parentRoute: typeof AppIndividualsRoute
-    }
-    '/app/config/system': {
-      id: '/app/config/system'
-      path: '/system'
-      fullPath: '/app/config/system'
-      preLoaderRoute: typeof AppConfigSystemRouteImport
-      parentRoute: typeof AppConfigRoute
-    }
-    '/app/config/processing': {
-      id: '/app/config/processing'
-      path: '/processing'
-      fullPath: '/app/config/processing'
-      preLoaderRoute: typeof AppConfigProcessingRouteImport
-      parentRoute: typeof AppConfigRoute
-    }
-    '/app/config/pipelines': {
-      id: '/app/config/pipelines'
-      path: '/pipelines'
-      fullPath: '/app/config/pipelines'
-      preLoaderRoute: typeof AppConfigPipelinesRouteImport
-      parentRoute: typeof AppConfigRoute
-    }
-    '/app/config/network': {
-      id: '/app/config/network'
-      path: '/network'
-      fullPath: '/app/config/network'
-      preLoaderRoute: typeof AppConfigNetworkRouteImport
-      parentRoute: typeof AppConfigRoute
-    }
-    '/app/config/models': {
-      id: '/app/config/models'
-      path: '/models'
-      fullPath: '/app/config/models'
-      preLoaderRoute: typeof AppConfigModelsRouteImport
-      parentRoute: typeof AppConfigRoute
-    }
-    '/app/config/data-sources': {
-      id: '/app/config/data-sources'
-      path: '/data-sources'
-      fullPath: '/app/config/data-sources'
-      preLoaderRoute: typeof AppConfigDataSourcesRouteImport
-      parentRoute: typeof AppConfigRoute
-    }
-    '/app/config/advanced': {
-      id: '/app/config/advanced'
-      path: '/advanced'
-      fullPath: '/app/config/advanced'
-      preLoaderRoute: typeof AppConfigAdvancedRouteImport
-      parentRoute: typeof AppConfigRoute
-    }
-    '/app/concept-schemes/$schemeId': {
-      id: '/app/concept-schemes/$schemeId'
-      path: '/$schemeId'
-      fullPath: '/app/concept-schemes/$schemeId'
-      preLoaderRoute: typeof AppConceptSchemesSchemeIdRouteImport
-      parentRoute: typeof AppConceptSchemesRoute
-    }
-    '/app/classes/$classId': {
-      id: '/app/classes/$classId'
-      path: '/$classId'
-      fullPath: '/app/classes/$classId'
-      preLoaderRoute: typeof AppClassesClassIdRouteImport
-      parentRoute: typeof AppClassesRoute
-    }
-    '/app/config/pipelines/': {
-      id: '/app/config/pipelines/'
-      path: '/'
-      fullPath: '/app/config/pipelines/'
-      preLoaderRoute: typeof AppConfigPipelinesIndexRouteImport
-      parentRoute: typeof AppConfigPipelinesRoute
-    }
-    '/app/interchange/runs/$runId': {
-      id: '/app/interchange/runs/$runId'
-      path: '/runs/$runId'
-      fullPath: '/app/interchange/runs/$runId'
-      preLoaderRoute: typeof AppInterchangeRunsRunIdRouteImport
-      parentRoute: typeof AppInterchangeRoute
-    }
-    '/app/config/pipelines/$pipelineType': {
-      id: '/app/config/pipelines/$pipelineType'
-      path: '/$pipelineType'
-      fullPath: '/app/config/pipelines/$pipelineType'
-      preLoaderRoute: typeof AppConfigPipelinesPipelineTypeRouteImport
-      parentRoute: typeof AppConfigPipelinesRoute
-    }
-    '/app/config/pipelines/$pipelineType/': {
-      id: '/app/config/pipelines/$pipelineType/'
-      path: '/'
-      fullPath: '/app/config/pipelines/$pipelineType/'
-      preLoaderRoute: typeof AppConfigPipelinesPipelineTypeIndexRouteImport
-      parentRoute: typeof AppConfigPipelinesPipelineTypeRoute
-    }
-    '/app/config/pipelines/$pipelineType/create': {
-      id: '/app/config/pipelines/$pipelineType/create'
-      path: '/create'
-      fullPath: '/app/config/pipelines/$pipelineType/create'
-      preLoaderRoute: typeof AppConfigPipelinesPipelineTypeCreateRouteImport
-      parentRoute: typeof AppConfigPipelinesPipelineTypeRoute
-    }
-    '/app/config/pipelines/$pipelineType/test/$flavorId': {
-      id: '/app/config/pipelines/$pipelineType/test/$flavorId'
-      path: '/test/$flavorId'
-      fullPath: '/app/config/pipelines/$pipelineType/test/$flavorId'
-      preLoaderRoute: typeof AppConfigPipelinesPipelineTypeTestFlavorIdRouteImport
-      parentRoute: typeof AppConfigPipelinesPipelineTypeRoute
-    }
-    '/app/config/pipelines/$pipelineType/edit/$flavorId': {
-      id: '/app/config/pipelines/$pipelineType/edit/$flavorId'
-      path: '/edit/$flavorId'
-      fullPath: '/app/config/pipelines/$pipelineType/edit/$flavorId'
-      preLoaderRoute: typeof AppConfigPipelinesPipelineTypeEditFlavorIdRouteImport
-      parentRoute: typeof AppConfigPipelinesPipelineTypeRoute
-    }
+    "/app": {
+      id: "/app";
+      path: "/app";
+      fullPath: "/app";
+      preLoaderRoute: typeof AppRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/": {
+      id: "/";
+      path: "/";
+      fullPath: "/";
+      preLoaderRoute: typeof IndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/app/": {
+      id: "/app/";
+      path: "/";
+      fullPath: "/app/";
+      preLoaderRoute: typeof AppIndexRouteImport;
+      parentRoute: typeof AppRoute;
+    };
+    "/app/taxonomies": {
+      id: "/app/taxonomies";
+      path: "/taxonomies";
+      fullPath: "/app/taxonomies";
+      preLoaderRoute: typeof AppTaxonomiesRouteImport;
+      parentRoute: typeof AppRoute;
+    };
+    "/app/relationships": {
+      id: "/app/relationships";
+      path: "/relationships";
+      fullPath: "/app/relationships";
+      preLoaderRoute: typeof AppRelationshipsRouteImport;
+      parentRoute: typeof AppRoute;
+    };
+    "/app/properties": {
+      id: "/app/properties";
+      path: "/properties";
+      fullPath: "/app/properties";
+      preLoaderRoute: typeof AppPropertiesRouteImport;
+      parentRoute: typeof AppRoute;
+    };
+    "/app/interchange": {
+      id: "/app/interchange";
+      path: "/interchange";
+      fullPath: "/app/interchange";
+      preLoaderRoute: typeof AppInterchangeRouteImport;
+      parentRoute: typeof AppRoute;
+    };
+    "/app/individuals": {
+      id: "/app/individuals";
+      path: "/individuals";
+      fullPath: "/app/individuals";
+      preLoaderRoute: typeof AppIndividualsRouteImport;
+      parentRoute: typeof AppRoute;
+    };
+    "/app/datasets": {
+      id: "/app/datasets";
+      path: "/datasets";
+      fullPath: "/app/datasets";
+      preLoaderRoute: typeof AppDatasetsRouteImport;
+      parentRoute: typeof AppRoute;
+    };
+    "/app/config": {
+      id: "/app/config";
+      path: "/config";
+      fullPath: "/app/config";
+      preLoaderRoute: typeof AppConfigRouteImport;
+      parentRoute: typeof AppRoute;
+    };
+    "/app/concept-schemes": {
+      id: "/app/concept-schemes";
+      path: "/concept-schemes";
+      fullPath: "/app/concept-schemes";
+      preLoaderRoute: typeof AppConceptSchemesRouteImport;
+      parentRoute: typeof AppRoute;
+    };
+    "/app/classes": {
+      id: "/app/classes";
+      path: "/classes";
+      fullPath: "/app/classes";
+      preLoaderRoute: typeof AppClassesRouteImport;
+      parentRoute: typeof AppRoute;
+    };
+    "/app/taxonomies/": {
+      id: "/app/taxonomies/";
+      path: "/";
+      fullPath: "/app/taxonomies/";
+      preLoaderRoute: typeof AppTaxonomiesIndexRouteImport;
+      parentRoute: typeof AppTaxonomiesRoute;
+    };
+    "/app/reference/": {
+      id: "/app/reference/";
+      path: "/reference";
+      fullPath: "/app/reference";
+      preLoaderRoute: typeof AppReferenceIndexRouteImport;
+      parentRoute: typeof AppRoute;
+    };
+    "/app/interchange/": {
+      id: "/app/interchange/";
+      path: "/";
+      fullPath: "/app/interchange/";
+      preLoaderRoute: typeof AppInterchangeIndexRouteImport;
+      parentRoute: typeof AppInterchangeRoute;
+    };
+    "/app/individuals/": {
+      id: "/app/individuals/";
+      path: "/";
+      fullPath: "/app/individuals/";
+      preLoaderRoute: typeof AppIndividualsIndexRouteImport;
+      parentRoute: typeof AppIndividualsRoute;
+    };
+    "/app/config/": {
+      id: "/app/config/";
+      path: "/";
+      fullPath: "/app/config/";
+      preLoaderRoute: typeof AppConfigIndexRouteImport;
+      parentRoute: typeof AppConfigRoute;
+    };
+    "/app/concept-schemes/": {
+      id: "/app/concept-schemes/";
+      path: "/";
+      fullPath: "/app/concept-schemes/";
+      preLoaderRoute: typeof AppConceptSchemesIndexRouteImport;
+      parentRoute: typeof AppConceptSchemesRoute;
+    };
+    "/app/classes/": {
+      id: "/app/classes/";
+      path: "/";
+      fullPath: "/app/classes/";
+      preLoaderRoute: typeof AppClassesIndexRouteImport;
+      parentRoute: typeof AppClassesRoute;
+    };
+    "/app/taxonomies/$taxonomyId": {
+      id: "/app/taxonomies/$taxonomyId";
+      path: "/$taxonomyId";
+      fullPath: "/app/taxonomies/$taxonomyId";
+      preLoaderRoute: typeof AppTaxonomiesTaxonomyIdRouteImport;
+      parentRoute: typeof AppTaxonomiesRoute;
+    };
+    "/app/reference/search": {
+      id: "/app/reference/search";
+      path: "/reference/search";
+      fullPath: "/app/reference/search";
+      preLoaderRoute: typeof AppReferenceSearchRouteImport;
+      parentRoute: typeof AppRoute;
+    };
+    "/app/reference/rag-test": {
+      id: "/app/reference/rag-test";
+      path: "/reference/rag-test";
+      fullPath: "/app/reference/rag-test";
+      preLoaderRoute: typeof AppReferenceRagTestRouteImport;
+      parentRoute: typeof AppRoute;
+    };
+    "/app/reference/properties": {
+      id: "/app/reference/properties";
+      path: "/reference/properties";
+      fullPath: "/app/reference/properties";
+      preLoaderRoute: typeof AppReferencePropertiesRouteImport;
+      parentRoute: typeof AppRoute;
+    };
+    "/app/rag/test-runner": {
+      id: "/app/rag/test-runner";
+      path: "/rag/test-runner";
+      fullPath: "/app/rag/test-runner";
+      preLoaderRoute: typeof AppRagTestRunnerRouteImport;
+      parentRoute: typeof AppRoute;
+    };
+    "/app/rag/pipeline-comparison": {
+      id: "/app/rag/pipeline-comparison";
+      path: "/rag/pipeline-comparison";
+      fullPath: "/app/rag/pipeline-comparison";
+      preLoaderRoute: typeof AppRagPipelineComparisonRouteImport;
+      parentRoute: typeof AppRoute;
+    };
+    "/app/rag/experiments": {
+      id: "/app/rag/experiments";
+      path: "/rag/experiments";
+      fullPath: "/app/rag/experiments";
+      preLoaderRoute: typeof AppRagExperimentsRouteImport;
+      parentRoute: typeof AppRoute;
+    };
+    "/app/monitoring/task-manager": {
+      id: "/app/monitoring/task-manager";
+      path: "/monitoring/task-manager";
+      fullPath: "/app/monitoring/task-manager";
+      preLoaderRoute: typeof AppMonitoringTaskManagerRouteImport;
+      parentRoute: typeof AppRoute;
+    };
+    "/app/monitoring/system-health": {
+      id: "/app/monitoring/system-health";
+      path: "/monitoring/system-health";
+      fullPath: "/app/monitoring/system-health";
+      preLoaderRoute: typeof AppMonitoringSystemHealthRouteImport;
+      parentRoute: typeof AppRoute;
+    };
+    "/app/monitoring/performance": {
+      id: "/app/monitoring/performance";
+      path: "/monitoring/performance";
+      fullPath: "/app/monitoring/performance";
+      preLoaderRoute: typeof AppMonitoringPerformanceRouteImport;
+      parentRoute: typeof AppRoute;
+    };
+    "/app/monitoring/llm-traceability": {
+      id: "/app/monitoring/llm-traceability";
+      path: "/monitoring/llm-traceability";
+      fullPath: "/app/monitoring/llm-traceability";
+      preLoaderRoute: typeof AppMonitoringLlmTraceabilityRouteImport;
+      parentRoute: typeof AppRoute;
+    };
+    "/app/monitoring/analytics": {
+      id: "/app/monitoring/analytics";
+      path: "/monitoring/analytics";
+      fullPath: "/app/monitoring/analytics";
+      preLoaderRoute: typeof AppMonitoringAnalyticsRouteImport;
+      parentRoute: typeof AppRoute;
+    };
+    "/app/interchange/import": {
+      id: "/app/interchange/import";
+      path: "/import";
+      fullPath: "/app/interchange/import";
+      preLoaderRoute: typeof AppInterchangeImportRouteImport;
+      parentRoute: typeof AppInterchangeRoute;
+    };
+    "/app/interchange/export": {
+      id: "/app/interchange/export";
+      path: "/export";
+      fullPath: "/app/interchange/export";
+      preLoaderRoute: typeof AppInterchangeExportRouteImport;
+      parentRoute: typeof AppInterchangeRoute;
+    };
+    "/app/individuals/$individualId": {
+      id: "/app/individuals/$individualId";
+      path: "/$individualId";
+      fullPath: "/app/individuals/$individualId";
+      preLoaderRoute: typeof AppIndividualsIndividualIdRouteImport;
+      parentRoute: typeof AppIndividualsRoute;
+    };
+    "/app/config/system": {
+      id: "/app/config/system";
+      path: "/system";
+      fullPath: "/app/config/system";
+      preLoaderRoute: typeof AppConfigSystemRouteImport;
+      parentRoute: typeof AppConfigRoute;
+    };
+    "/app/config/processing": {
+      id: "/app/config/processing";
+      path: "/processing";
+      fullPath: "/app/config/processing";
+      preLoaderRoute: typeof AppConfigProcessingRouteImport;
+      parentRoute: typeof AppConfigRoute;
+    };
+    "/app/config/pipelines": {
+      id: "/app/config/pipelines";
+      path: "/pipelines";
+      fullPath: "/app/config/pipelines";
+      preLoaderRoute: typeof AppConfigPipelinesRouteImport;
+      parentRoute: typeof AppConfigRoute;
+    };
+    "/app/config/network": {
+      id: "/app/config/network";
+      path: "/network";
+      fullPath: "/app/config/network";
+      preLoaderRoute: typeof AppConfigNetworkRouteImport;
+      parentRoute: typeof AppConfigRoute;
+    };
+    "/app/config/models": {
+      id: "/app/config/models";
+      path: "/models";
+      fullPath: "/app/config/models";
+      preLoaderRoute: typeof AppConfigModelsRouteImport;
+      parentRoute: typeof AppConfigRoute;
+    };
+    "/app/config/data-sources": {
+      id: "/app/config/data-sources";
+      path: "/data-sources";
+      fullPath: "/app/config/data-sources";
+      preLoaderRoute: typeof AppConfigDataSourcesRouteImport;
+      parentRoute: typeof AppConfigRoute;
+    };
+    "/app/config/advanced": {
+      id: "/app/config/advanced";
+      path: "/advanced";
+      fullPath: "/app/config/advanced";
+      preLoaderRoute: typeof AppConfigAdvancedRouteImport;
+      parentRoute: typeof AppConfigRoute;
+    };
+    "/app/concept-schemes/$schemeId": {
+      id: "/app/concept-schemes/$schemeId";
+      path: "/$schemeId";
+      fullPath: "/app/concept-schemes/$schemeId";
+      preLoaderRoute: typeof AppConceptSchemesSchemeIdRouteImport;
+      parentRoute: typeof AppConceptSchemesRoute;
+    };
+    "/app/classes/$classId": {
+      id: "/app/classes/$classId";
+      path: "/$classId";
+      fullPath: "/app/classes/$classId";
+      preLoaderRoute: typeof AppClassesClassIdRouteImport;
+      parentRoute: typeof AppClassesRoute;
+    };
+    "/app/config/pipelines/": {
+      id: "/app/config/pipelines/";
+      path: "/";
+      fullPath: "/app/config/pipelines/";
+      preLoaderRoute: typeof AppConfigPipelinesIndexRouteImport;
+      parentRoute: typeof AppConfigPipelinesRoute;
+    };
+    "/app/interchange/runs/$runId": {
+      id: "/app/interchange/runs/$runId";
+      path: "/runs/$runId";
+      fullPath: "/app/interchange/runs/$runId";
+      preLoaderRoute: typeof AppInterchangeRunsRunIdRouteImport;
+      parentRoute: typeof AppInterchangeRoute;
+    };
+    "/app/config/pipelines/$pipelineType": {
+      id: "/app/config/pipelines/$pipelineType";
+      path: "/$pipelineType";
+      fullPath: "/app/config/pipelines/$pipelineType";
+      preLoaderRoute: typeof AppConfigPipelinesPipelineTypeRouteImport;
+      parentRoute: typeof AppConfigPipelinesRoute;
+    };
+    "/app/config/pipelines/$pipelineType/": {
+      id: "/app/config/pipelines/$pipelineType/";
+      path: "/";
+      fullPath: "/app/config/pipelines/$pipelineType/";
+      preLoaderRoute: typeof AppConfigPipelinesPipelineTypeIndexRouteImport;
+      parentRoute: typeof AppConfigPipelinesPipelineTypeRoute;
+    };
+    "/app/config/pipelines/$pipelineType/create": {
+      id: "/app/config/pipelines/$pipelineType/create";
+      path: "/create";
+      fullPath: "/app/config/pipelines/$pipelineType/create";
+      preLoaderRoute: typeof AppConfigPipelinesPipelineTypeCreateRouteImport;
+      parentRoute: typeof AppConfigPipelinesPipelineTypeRoute;
+    };
+    "/app/config/pipelines/$pipelineType/test/$flavorId": {
+      id: "/app/config/pipelines/$pipelineType/test/$flavorId";
+      path: "/test/$flavorId";
+      fullPath: "/app/config/pipelines/$pipelineType/test/$flavorId";
+      preLoaderRoute: typeof AppConfigPipelinesPipelineTypeTestFlavorIdRouteImport;
+      parentRoute: typeof AppConfigPipelinesPipelineTypeRoute;
+    };
+    "/app/config/pipelines/$pipelineType/edit/$flavorId": {
+      id: "/app/config/pipelines/$pipelineType/edit/$flavorId";
+      path: "/edit/$flavorId";
+      fullPath: "/app/config/pipelines/$pipelineType/edit/$flavorId";
+      preLoaderRoute: typeof AppConfigPipelinesPipelineTypeEditFlavorIdRouteImport;
+      parentRoute: typeof AppConfigPipelinesPipelineTypeRoute;
+    };
   }
 }
 
 interface AppClassesRouteChildren {
-  AppClassesClassIdRoute: typeof AppClassesClassIdRoute
-  AppClassesIndexRoute: typeof AppClassesIndexRoute
+  AppClassesClassIdRoute: typeof AppClassesClassIdRoute;
+  AppClassesIndexRoute: typeof AppClassesIndexRoute;
 }
 
 const AppClassesRouteChildren: AppClassesRouteChildren = {
   AppClassesClassIdRoute: AppClassesClassIdRoute,
   AppClassesIndexRoute: AppClassesIndexRoute,
-}
+};
 
 const AppClassesRouteWithChildren = AppClassesRoute._addFileChildren(
   AppClassesRouteChildren,
-)
+);
 
 interface AppConceptSchemesRouteChildren {
-  AppConceptSchemesSchemeIdRoute: typeof AppConceptSchemesSchemeIdRoute
-  AppConceptSchemesIndexRoute: typeof AppConceptSchemesIndexRoute
+  AppConceptSchemesSchemeIdRoute: typeof AppConceptSchemesSchemeIdRoute;
+  AppConceptSchemesIndexRoute: typeof AppConceptSchemesIndexRoute;
 }
 
 const AppConceptSchemesRouteChildren: AppConceptSchemesRouteChildren = {
   AppConceptSchemesSchemeIdRoute: AppConceptSchemesSchemeIdRoute,
   AppConceptSchemesIndexRoute: AppConceptSchemesIndexRoute,
-}
+};
 
 const AppConceptSchemesRouteWithChildren =
-  AppConceptSchemesRoute._addFileChildren(AppConceptSchemesRouteChildren)
+  AppConceptSchemesRoute._addFileChildren(AppConceptSchemesRouteChildren);
 
 interface AppConfigPipelinesPipelineTypeRouteChildren {
-  AppConfigPipelinesPipelineTypeCreateRoute: typeof AppConfigPipelinesPipelineTypeCreateRoute
-  AppConfigPipelinesPipelineTypeIndexRoute: typeof AppConfigPipelinesPipelineTypeIndexRoute
-  AppConfigPipelinesPipelineTypeEditFlavorIdRoute: typeof AppConfigPipelinesPipelineTypeEditFlavorIdRoute
-  AppConfigPipelinesPipelineTypeTestFlavorIdRoute: typeof AppConfigPipelinesPipelineTypeTestFlavorIdRoute
+  AppConfigPipelinesPipelineTypeCreateRoute: typeof AppConfigPipelinesPipelineTypeCreateRoute;
+  AppConfigPipelinesPipelineTypeIndexRoute: typeof AppConfigPipelinesPipelineTypeIndexRoute;
+  AppConfigPipelinesPipelineTypeEditFlavorIdRoute: typeof AppConfigPipelinesPipelineTypeEditFlavorIdRoute;
+  AppConfigPipelinesPipelineTypeTestFlavorIdRoute: typeof AppConfigPipelinesPipelineTypeTestFlavorIdRoute;
 }
 
 const AppConfigPipelinesPipelineTypeRouteChildren: AppConfigPipelinesPipelineTypeRouteChildren =
@@ -1025,36 +1025,36 @@ const AppConfigPipelinesPipelineTypeRouteChildren: AppConfigPipelinesPipelineTyp
       AppConfigPipelinesPipelineTypeEditFlavorIdRoute,
     AppConfigPipelinesPipelineTypeTestFlavorIdRoute:
       AppConfigPipelinesPipelineTypeTestFlavorIdRoute,
-  }
+  };
 
 const AppConfigPipelinesPipelineTypeRouteWithChildren =
   AppConfigPipelinesPipelineTypeRoute._addFileChildren(
     AppConfigPipelinesPipelineTypeRouteChildren,
-  )
+  );
 
 interface AppConfigPipelinesRouteChildren {
-  AppConfigPipelinesPipelineTypeRoute: typeof AppConfigPipelinesPipelineTypeRouteWithChildren
-  AppConfigPipelinesIndexRoute: typeof AppConfigPipelinesIndexRoute
+  AppConfigPipelinesPipelineTypeRoute: typeof AppConfigPipelinesPipelineTypeRouteWithChildren;
+  AppConfigPipelinesIndexRoute: typeof AppConfigPipelinesIndexRoute;
 }
 
 const AppConfigPipelinesRouteChildren: AppConfigPipelinesRouteChildren = {
   AppConfigPipelinesPipelineTypeRoute:
     AppConfigPipelinesPipelineTypeRouteWithChildren,
   AppConfigPipelinesIndexRoute: AppConfigPipelinesIndexRoute,
-}
+};
 
 const AppConfigPipelinesRouteWithChildren =
-  AppConfigPipelinesRoute._addFileChildren(AppConfigPipelinesRouteChildren)
+  AppConfigPipelinesRoute._addFileChildren(AppConfigPipelinesRouteChildren);
 
 interface AppConfigRouteChildren {
-  AppConfigAdvancedRoute: typeof AppConfigAdvancedRoute
-  AppConfigDataSourcesRoute: typeof AppConfigDataSourcesRoute
-  AppConfigModelsRoute: typeof AppConfigModelsRoute
-  AppConfigNetworkRoute: typeof AppConfigNetworkRoute
-  AppConfigPipelinesRoute: typeof AppConfigPipelinesRouteWithChildren
-  AppConfigProcessingRoute: typeof AppConfigProcessingRoute
-  AppConfigSystemRoute: typeof AppConfigSystemRoute
-  AppConfigIndexRoute: typeof AppConfigIndexRoute
+  AppConfigAdvancedRoute: typeof AppConfigAdvancedRoute;
+  AppConfigDataSourcesRoute: typeof AppConfigDataSourcesRoute;
+  AppConfigModelsRoute: typeof AppConfigModelsRoute;
+  AppConfigNetworkRoute: typeof AppConfigNetworkRoute;
+  AppConfigPipelinesRoute: typeof AppConfigPipelinesRouteWithChildren;
+  AppConfigProcessingRoute: typeof AppConfigProcessingRoute;
+  AppConfigSystemRoute: typeof AppConfigSystemRoute;
+  AppConfigIndexRoute: typeof AppConfigIndexRoute;
 }
 
 const AppConfigRouteChildren: AppConfigRouteChildren = {
@@ -1066,31 +1066,31 @@ const AppConfigRouteChildren: AppConfigRouteChildren = {
   AppConfigProcessingRoute: AppConfigProcessingRoute,
   AppConfigSystemRoute: AppConfigSystemRoute,
   AppConfigIndexRoute: AppConfigIndexRoute,
-}
+};
 
 const AppConfigRouteWithChildren = AppConfigRoute._addFileChildren(
   AppConfigRouteChildren,
-)
+);
 
 interface AppIndividualsRouteChildren {
-  AppIndividualsIndividualIdRoute: typeof AppIndividualsIndividualIdRoute
-  AppIndividualsIndexRoute: typeof AppIndividualsIndexRoute
+  AppIndividualsIndividualIdRoute: typeof AppIndividualsIndividualIdRoute;
+  AppIndividualsIndexRoute: typeof AppIndividualsIndexRoute;
 }
 
 const AppIndividualsRouteChildren: AppIndividualsRouteChildren = {
   AppIndividualsIndividualIdRoute: AppIndividualsIndividualIdRoute,
   AppIndividualsIndexRoute: AppIndividualsIndexRoute,
-}
+};
 
 const AppIndividualsRouteWithChildren = AppIndividualsRoute._addFileChildren(
   AppIndividualsRouteChildren,
-)
+);
 
 interface AppInterchangeRouteChildren {
-  AppInterchangeExportRoute: typeof AppInterchangeExportRoute
-  AppInterchangeImportRoute: typeof AppInterchangeImportRoute
-  AppInterchangeIndexRoute: typeof AppInterchangeIndexRoute
-  AppInterchangeRunsRunIdRoute: typeof AppInterchangeRunsRunIdRoute
+  AppInterchangeExportRoute: typeof AppInterchangeExportRoute;
+  AppInterchangeImportRoute: typeof AppInterchangeImportRoute;
+  AppInterchangeIndexRoute: typeof AppInterchangeIndexRoute;
+  AppInterchangeRunsRunIdRoute: typeof AppInterchangeRunsRunIdRoute;
 }
 
 const AppInterchangeRouteChildren: AppInterchangeRouteChildren = {
@@ -1098,49 +1098,49 @@ const AppInterchangeRouteChildren: AppInterchangeRouteChildren = {
   AppInterchangeImportRoute: AppInterchangeImportRoute,
   AppInterchangeIndexRoute: AppInterchangeIndexRoute,
   AppInterchangeRunsRunIdRoute: AppInterchangeRunsRunIdRoute,
-}
+};
 
 const AppInterchangeRouteWithChildren = AppInterchangeRoute._addFileChildren(
   AppInterchangeRouteChildren,
-)
+);
 
 interface AppTaxonomiesRouteChildren {
-  AppTaxonomiesTaxonomyIdRoute: typeof AppTaxonomiesTaxonomyIdRoute
-  AppTaxonomiesIndexRoute: typeof AppTaxonomiesIndexRoute
+  AppTaxonomiesTaxonomyIdRoute: typeof AppTaxonomiesTaxonomyIdRoute;
+  AppTaxonomiesIndexRoute: typeof AppTaxonomiesIndexRoute;
 }
 
 const AppTaxonomiesRouteChildren: AppTaxonomiesRouteChildren = {
   AppTaxonomiesTaxonomyIdRoute: AppTaxonomiesTaxonomyIdRoute,
   AppTaxonomiesIndexRoute: AppTaxonomiesIndexRoute,
-}
+};
 
 const AppTaxonomiesRouteWithChildren = AppTaxonomiesRoute._addFileChildren(
   AppTaxonomiesRouteChildren,
-)
+);
 
 interface AppRouteChildren {
-  AppClassesRoute: typeof AppClassesRouteWithChildren
-  AppConceptSchemesRoute: typeof AppConceptSchemesRouteWithChildren
-  AppConfigRoute: typeof AppConfigRouteWithChildren
-  AppDatasetsRoute: typeof AppDatasetsRoute
-  AppIndividualsRoute: typeof AppIndividualsRouteWithChildren
-  AppInterchangeRoute: typeof AppInterchangeRouteWithChildren
-  AppPropertiesRoute: typeof AppPropertiesRoute
-  AppRelationshipsRoute: typeof AppRelationshipsRoute
-  AppTaxonomiesRoute: typeof AppTaxonomiesRouteWithChildren
-  AppIndexRoute: typeof AppIndexRoute
-  AppMonitoringAnalyticsRoute: typeof AppMonitoringAnalyticsRoute
-  AppMonitoringLlmTraceabilityRoute: typeof AppMonitoringLlmTraceabilityRoute
-  AppMonitoringPerformanceRoute: typeof AppMonitoringPerformanceRoute
-  AppMonitoringSystemHealthRoute: typeof AppMonitoringSystemHealthRoute
-  AppMonitoringTaskManagerRoute: typeof AppMonitoringTaskManagerRoute
-  AppRagExperimentsRoute: typeof AppRagExperimentsRoute
-  AppRagPipelineComparisonRoute: typeof AppRagPipelineComparisonRoute
-  AppRagTestRunnerRoute: typeof AppRagTestRunnerRoute
-  AppReferencePropertiesRoute: typeof AppReferencePropertiesRoute
-  AppReferenceRagTestRoute: typeof AppReferenceRagTestRoute
-  AppReferenceSearchRoute: typeof AppReferenceSearchRoute
-  AppReferenceIndexRoute: typeof AppReferenceIndexRoute
+  AppClassesRoute: typeof AppClassesRouteWithChildren;
+  AppConceptSchemesRoute: typeof AppConceptSchemesRouteWithChildren;
+  AppConfigRoute: typeof AppConfigRouteWithChildren;
+  AppDatasetsRoute: typeof AppDatasetsRoute;
+  AppIndividualsRoute: typeof AppIndividualsRouteWithChildren;
+  AppInterchangeRoute: typeof AppInterchangeRouteWithChildren;
+  AppPropertiesRoute: typeof AppPropertiesRoute;
+  AppRelationshipsRoute: typeof AppRelationshipsRoute;
+  AppTaxonomiesRoute: typeof AppTaxonomiesRouteWithChildren;
+  AppIndexRoute: typeof AppIndexRoute;
+  AppMonitoringAnalyticsRoute: typeof AppMonitoringAnalyticsRoute;
+  AppMonitoringLlmTraceabilityRoute: typeof AppMonitoringLlmTraceabilityRoute;
+  AppMonitoringPerformanceRoute: typeof AppMonitoringPerformanceRoute;
+  AppMonitoringSystemHealthRoute: typeof AppMonitoringSystemHealthRoute;
+  AppMonitoringTaskManagerRoute: typeof AppMonitoringTaskManagerRoute;
+  AppRagExperimentsRoute: typeof AppRagExperimentsRoute;
+  AppRagPipelineComparisonRoute: typeof AppRagPipelineComparisonRoute;
+  AppRagTestRunnerRoute: typeof AppRagTestRunnerRoute;
+  AppReferencePropertiesRoute: typeof AppReferencePropertiesRoute;
+  AppReferenceRagTestRoute: typeof AppReferenceRagTestRoute;
+  AppReferenceSearchRoute: typeof AppReferenceSearchRoute;
+  AppReferenceIndexRoute: typeof AppReferenceIndexRoute;
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -1166,14 +1166,14 @@ const AppRouteChildren: AppRouteChildren = {
   AppReferenceRagTestRoute: AppReferenceRagTestRoute,
   AppReferenceSearchRoute: AppReferenceSearchRoute,
   AppReferenceIndexRoute: AppReferenceIndexRoute,
-}
+};
 
-const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren);
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
-}
+};
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+  ._addFileTypes<FileRouteTypes>();
