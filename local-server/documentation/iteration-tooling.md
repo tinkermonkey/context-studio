@@ -7,18 +7,21 @@ This document describes the benchmarking iteration loop for knowledge graph extr
 From the `local-server/` directory:
 
 ```bash
-# 1. Edit the experimental config
+# 1. Create an experimental config by copying the default as a starting point
+cp configs/extraction-default.json configs/extraction-experimental.json
+
+# 2. Edit the experimental config with your hypothesis changes
 vim configs/extraction-experimental.json
 
-# 2. Run the benchmark experiment (both datasets, auto-diff against baseline)
+# 3. Run the benchmark experiment (both datasets, auto-diff against baseline)
 make benchmark-experiment PIPELINE=configs/extraction-experimental.json
 
-# 3. Review the output summary and decision guidance
+# 4. Review the output summary and decision guidance
 
-# 4. If results are broadly positive, promote the config to default
+# 5. If results are broadly positive, promote the config to default
 cp configs/extraction-experimental.json configs/extraction-default.json
 
-# 5. Append entry to iteration log
+# 6. Append entry to iteration log
 vim logs/extraction-iteration-log.md
 ```
 
@@ -152,7 +155,7 @@ make benchmark-experiment PIPELINE=configs/extraction-experimental.json
 local-server/
 ├── configs/
 │   ├── extraction-default.json      (production config)
-│   └── extraction-experimental.json (iteration scratch space)
+│   └── extraction-experimental.json (created on-demand for iterations, not in git)
 ├── reports/                         (benchmark outputs, gitignored)
 │   ├── extraction-experimental-tekgen.json
 │   ├── extraction-experimental-webnlg.json
@@ -171,11 +174,12 @@ Agents can drive the full loop by:
 1. **Read** latest baseline from `reports/baseline-comparison.json`
 2. **Read** iteration log from `logs/extraction-iteration-log.md`
 3. **Hypothesis:** Form a targeted improvement (e.g., "improve recall by adding entity type hints")
-4. **Edit** `configs/extraction-experimental.json`
-5. **Run** `make benchmark-experiment PIPELINE=configs/extraction-experimental.json`
-6. **Parse** diff output (look for F1 delta, regressions)
-7. **Decision:** If broadly improved, promote and log entry
-8. **Append** to iteration log with results and decision
+4. **Create** `configs/extraction-experimental.json` by copying `configs/extraction-default.json`
+5. **Edit** `configs/extraction-experimental.json` with hypothesis changes
+6. **Run** `make benchmark-experiment PIPELINE=configs/extraction-experimental.json`
+7. **Parse** diff output (look for F1 delta, regressions)
+8. **Decision:** If broadly improved, promote and log entry
+9. **Append** to iteration log with results and decision
 
 ## Cost Management
 

@@ -1,9 +1,0 @@
-{
-  "provider": "anthropic",
-  "model": "claude-opus-4-7",
-  "temperature": 0.0,
-  "max_tokens": 4096,
-  "system_prompt": "You are a knowledge graph extraction assistant. Extract structured triples from text that conform to the provided ontology. Return only triples that are explicitly supported by the text.",
-  "user_prompt_template": "Extract triples from the following text using the ontology provided.\n\nOntology classes and properties:\n{ontology}\n\nText:\n{text}\n\nReturn a JSON array of triples with subject, predicate, object, confidence (0-1), and provenance (text offsets).",
-  "seed": null
-}
