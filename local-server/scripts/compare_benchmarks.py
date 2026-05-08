@@ -15,6 +15,7 @@ import os
 import sys
 import json
 import argparse
+import traceback
 from pathlib import Path
 from datetime import datetime, timezone
 from typing import Any
@@ -165,10 +166,12 @@ def save_markdown_comparison(
     output_file = Path(output_path).with_suffix(".md")
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
+    timestamp = datetime.now(timezone.utc).isoformat()
+
     lines = [
         "# Cross-Dataset Benchmark Comparison",
         "",
-        f"**Generated:** {datetime.now(timezone.utc).isoformat()}",
+        f"**Generated:** {timestamp}",
         "",
         "## Summary",
         "",
@@ -211,13 +214,13 @@ def save_markdown_comparison(
 
     datasets_list = comparison.get("datasets", [])
     if datasets_list:
-        # Create header row
+        # Create header row with separate columns for each metric
         header = "| Ontology |"
         separator = "|----------|"
 
         for dataset in datasets_list:
-            header += f" {dataset} Metrics |"
-            separator += "---|"
+            header += f" {dataset} P | {dataset} R | {dataset} F1 |"
+            separator += "---|---|---|"
 
         lines.append(header)
         lines.append(separator)
@@ -229,12 +232,12 @@ def save_markdown_comparison(
             for dataset in datasets_list:
                 dataset_metrics = ontology_data["datasets"].get(dataset, {})
                 if dataset_metrics.get("f1") is not None:
-                    f1 = dataset_metrics["f1"]
                     precision = dataset_metrics["precision"]
                     recall = dataset_metrics["recall"]
-                    row += f" P={precision:.3f} R={recall:.3f} F1={f1:.3f} |"
+                    f1 = dataset_metrics["f1"]
+                    row += f" {precision:.3f} | {recall:.3f} | {f1:.3f} |"
                 else:
-                    row += " N/A |"
+                    row += " N/A | N/A | N/A |"
 
             lines.append(row)
 
@@ -248,7 +251,7 @@ def save_markdown_comparison(
         "- **Conformance:** Proportion of triples with valid format and confidence (0-1)",
         "",
         "---",
-        f"*Cross-dataset comparison generated on {datetime.now(timezone.utc).isoformat()}*",
+        f"*Cross-dataset comparison generated on {timestamp}*",
     ])
 
     with open(output_file, "w") as f:
@@ -309,7 +312,6 @@ def main():
 
     except Exception as e:
         _logger.error(f"Comparison failed: {e}")
-        import traceback
         traceback.print_exc()
         return 1
 

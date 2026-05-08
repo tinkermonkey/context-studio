@@ -73,7 +73,7 @@ import os
 import sys
 import json
 import argparse
-import importlib.util
+import traceback
 from pathlib import Path
 from datetime import datetime, timezone
 from typing import Any
@@ -85,6 +85,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import httpx
 from datasets import load_dataset
 from utils.logger import get_logger
+from scripts import compare_benchmarks
 
 _logger = get_logger(__name__)
 
@@ -719,33 +720,20 @@ def generate_comparison_from_current(
         output_path: Base path for comparison output (will generate .json and .md)
     """
     try:
-        # Import the comparison module
-        comparison_script_path = Path(__file__).parent / "compare_benchmarks.py"
-        spec = importlib.util.spec_from_file_location("compare_benchmarks", comparison_script_path)
-        compare_module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(compare_module)
-
-        # Save current results to temp file for comparison
-        current_dataset = current_results.get("dataset", "current")
-        # Sanitize dataset name for use in filename (remove slashes)
-        safe_dataset_name = current_dataset.replace("/", "_")
-        temp_current = Path(output_path).parent / f"_temp_{safe_dataset_name}.json"
-        with open(temp_current, "w") as f:
-            json.dump(current_results, f)
-
         # Load previous results
-        previous_results = compare_module.load_results_file(comparison_file)
+        previous_results = compare_benchmarks.load_results_file(comparison_file)
 
         # Build comparison
+        current_dataset = current_results.get("dataset", "current")
         results_by_dataset = {
             previous_results.get("dataset", Path(comparison_file).stem): previous_results,
             current_dataset: current_results,
         }
-        comparison = compare_module.build_comparison_matrix(results_by_dataset)
+        comparison = compare_benchmarks.build_comparison_matrix(results_by_dataset)
 
         # Save comparison reports
-        comparison_json = compare_module.save_json_comparison(comparison, output_path)
-        comparison_md = compare_module.save_markdown_comparison(
+        comparison_json = compare_benchmarks.save_json_comparison(comparison, output_path)
+        comparison_md = compare_benchmarks.save_markdown_comparison(
             comparison, results_by_dataset, output_path
         )
 
@@ -753,13 +741,8 @@ def generate_comparison_from_current(
         _logger.info(f"Comparison JSON: {comparison_json}")
         _logger.info(f"Comparison Markdown: {comparison_md}")
 
-        # Clean up temp file
-        if temp_current.exists():
-            temp_current.unlink()
-
     except Exception as e:
         _logger.warning(f"Could not generate comparison report: {e}")
-        import traceback
         traceback.print_exc()
 
 
@@ -810,7 +793,7 @@ def main():
     # Default output path
     if args.out is None:
         today = datetime.now().strftime("%Y-%m-%d")
-        dataset_abbrev = args.dataset.split("/")[-1][:6]
+        dataset_abbrev = args.dataset.split("/")[-1]
         args.out = f"reports/{dataset_abbrev}-{today}.json"
 
     try:
@@ -839,7 +822,6 @@ def main():
 
     except Exception as e:
         _logger.error(f"Benchmark failed: {e}")
-        import traceback
         traceback.print_exc()
         return 1
 
