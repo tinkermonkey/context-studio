@@ -626,7 +626,7 @@ def run_benchmark(
             except (ConnectionError, httpx.HTTPStatusError) as e:
                 consecutive_failures += 1
                 result.total_error_count += 1
-                error_msg = f"Sample {sample_idx}: {str(e)[:150]}"
+                error_msg = f"Sample {sample_idx}: {str(e)}"
                 result.errors.append(error_msg)
                 _logger.error(error_msg)
                 if consecutive_failures >= failure_threshold:
@@ -638,7 +638,7 @@ def run_benchmark(
             except (ValueError, json.JSONDecodeError) as e:
                 consecutive_failures += 1
                 result.total_error_count += 1
-                error_msg = f"Sample {sample_idx}: Invalid response format: {str(e)[:150]}"
+                error_msg = f"Sample {sample_idx}: Invalid response format: {str(e)}"
                 result.errors.append(error_msg)
                 _logger.error(error_msg)
                 if consecutive_failures >= failure_threshold:
@@ -648,10 +648,17 @@ def run_benchmark(
                     )
                     break
             except Exception as e:
+                consecutive_failures += 1
                 result.total_error_count += 1
-                error_msg = f"Sample {sample_idx}: Unexpected error: {str(e)[:150]}"
+                error_msg = f"Sample {sample_idx}: Unexpected error: {str(e)}"
                 result.errors.append(error_msg)
                 _logger.error(error_msg, exc_info=True)
+                if consecutive_failures >= failure_threshold:
+                    _logger.error(
+                        f"Unexpected error threshold reached ({failure_threshold} consecutive failures), "
+                        f"aborting benchmark for {ontology}"
+                    )
+                    break
 
         # Aggregate metrics
         if precision_scores:

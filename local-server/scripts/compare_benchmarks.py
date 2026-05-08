@@ -15,7 +15,6 @@ import os
 import sys
 import json
 import argparse
-import traceback
 from pathlib import Path
 from datetime import datetime, timezone
 from typing import Any
@@ -329,8 +328,7 @@ def main():
         return 0
 
     except Exception as e:
-        _logger.error(f"Comparison failed: {e}")
-        traceback.print_exc()
+        _logger.error(f"Comparison failed: {e}", exc_info=True)
         return 1
 
 

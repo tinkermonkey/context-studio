@@ -1,7 +1,7 @@
 .PHONY: benchmark-experiment help
 
 # Default pipeline config if not specified
-PIPELINE ?= configs/extraction-experimental.json
+PIPELINE ?= configs/extraction-default.json
 CACHE_DIR := .benchmark-cache
 REPORTS_DIR := reports
 DATE := $(shell date +%Y%m%d)
