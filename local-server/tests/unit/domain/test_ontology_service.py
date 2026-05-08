@@ -13,10 +13,11 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import logging
+from unittest.mock import MagicMock
 
 import pytest
 
+import domain.ontology.services
 from domain.ontology.services import OntologyService
 from domain.ontology.events import (
     TaxonomyCreated,
@@ -1431,8 +1432,6 @@ class TestDeleteRelationship:
         self, service, monkeypatch
     ):
         """Delete relationship where both Individuals have deleted parent classes emits warning and no GraphInvalidated."""
-        from unittest.mock import MagicMock
-
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         animal_class = service.create_class(concept_scheme_id=scheme.id, title="Animal")
@@ -1465,8 +1464,6 @@ class TestDeleteRelationship:
             [e for e in existing_graph_events if e.reason == "relationship_deleted"]
         )
 
-        # Mock the logger to verify warning is called
-        import domain.ontology.services
         logger_mock = MagicMock()
         monkeypatch.setattr(domain.ontology.services, "_logger", logger_mock)
 
