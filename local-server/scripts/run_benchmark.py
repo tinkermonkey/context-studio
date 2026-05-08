@@ -72,7 +72,6 @@ import os
 import sys
 import json
 import argparse
-import traceback
 from pathlib import Path
 from datetime import datetime, timezone
 from typing import Any
@@ -410,7 +409,7 @@ def extract_triples_http(
 def compute_metrics(
     predicted_triples: list[dict],
     gold_triples: list[dict],
-) -> tuple[float, float, float, float]:
+) -> tuple[float, float, float, float, int, int]:
     """
     Compute precision, recall, F1, and conformance metrics.
 
@@ -427,23 +426,14 @@ def compute_metrics(
         gold_triples: Ground truth triples
 
     Returns:
-        Tuple of (precision, recall, f1, conformance)
+        Tuple of (precision, recall, f1, conformance, false_positives, total_predicted)
 
     Note:
         Returns 0.0 for all metrics when both predicted and gold are empty,
         as this is an unevaluable case, not a successful match.
     """
-    if not gold_triples and not predicted_triples:
-        return 0.0, 0.0, 0.0, 0.0
-
-    if not gold_triples:
-        if not predicted_triples:
-            return 0.0, 0.0, 0.0, 0.0
-        else:
-            return 0.0, 0.0, 0.0, 0.0
-
-    if not predicted_triples:
-        return 0.0, 0.0, 0.0, 0.0
+    if not gold_triples or not predicted_triples:
+        return 0.0, 0.0, 0.0, 0.0, 0, len(predicted_triples)
 
     # Normalize triples for comparison (handle both formats)
     def triple_key(t):
@@ -509,7 +499,7 @@ def compute_metrics(
 
     conformance = valid_count / len(predicted_triples) if predicted_triples else 0.0
 
-    return precision, recall, f1, conformance
+    return precision, recall, f1, conformance, false_positives, len(predicted_triples)
 
 
 def run_benchmark(
@@ -595,6 +585,8 @@ def run_benchmark(
         recall_scores = []
         f1_scores = []
         conformance_scores = []
+        total_false_positives = 0
+        total_predicted_triples = 0
         consecutive_failures = 0
         failure_threshold = 5  # Early abort if 5 consecutive API failures
 
@@ -619,13 +611,15 @@ def run_benchmark(
                     result.model = model_used
 
                 # Compute metrics
-                precision, recall, f1, conformance = compute_metrics(
+                precision, recall, f1, conformance, false_positives, num_predicted = compute_metrics(
                     pred_triples, gold_triples
                 )
                 precision_scores.append(precision)
                 recall_scores.append(recall)
                 f1_scores.append(f1)
                 conformance_scores.append(conformance)
+                total_false_positives += false_positives
+                total_predicted_triples += num_predicted
                 result.samples_processed += 1
                 consecutive_failures = 0
 
@@ -647,6 +641,12 @@ def run_benchmark(
                 error_msg = f"Sample {sample_idx}: Invalid response format: {str(e)[:150]}"
                 result.errors.append(error_msg)
                 _logger.error(error_msg)
+                if consecutive_failures >= failure_threshold:
+                    _logger.error(
+                        f"Parse failure threshold reached ({failure_threshold} consecutive failures), "
+                        f"aborting benchmark for {ontology}"
+                    )
+                    break
             except Exception as e:
                 result.total_error_count += 1
                 error_msg = f"Sample {sample_idx}: Unexpected error: {str(e)[:150]}"
@@ -659,6 +659,12 @@ def run_benchmark(
             result.recall = sum(recall_scores) / len(recall_scores)
             result.f1 = sum(f1_scores) / len(f1_scores)
             result.conformance = sum(conformance_scores) / len(conformance_scores)
+
+        # Compute hallucination rate (false_positives / total_predicted_triples)
+        if total_predicted_triples > 0:
+            result.hallucination_rate = total_false_positives / total_predicted_triples
+        else:
+            result.hallucination_rate = 0.0
 
         # Estimate cost
         result.cost_usd = estimate_cost(result.samples_processed, config)
