@@ -64,7 +64,7 @@ class OpenAIProvider:
             system_prompt: System context for the model
             user_prompt: User message to respond to
             model: Model identifier (e.g., 'gpt-4o')
-            temperature: Sampling temperature (0.0–1.0)
+            temperature: Sampling temperature (0.0–2.0)
             max_tokens: Maximum tokens to generate
             response_format: Optional JSON schema for structured output
             timeout: Request timeout in seconds (passed to OpenAI client)
@@ -168,7 +168,7 @@ class OpenAIProvider:
             system_prompt: System context for the model
             user_prompt: User message to respond to
             model: Model identifier (e.g., 'gpt-4o')
-            temperature: Sampling temperature (0.0–1.0)
+            temperature: Sampling temperature (0.0–2.0)
             max_tokens: Maximum tokens to generate
             response_format: Optional JSON schema for structured output
             timeout: Request timeout in seconds (passed to OpenAI client)

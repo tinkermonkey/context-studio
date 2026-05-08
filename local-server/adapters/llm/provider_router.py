@@ -39,10 +39,15 @@ class LLMProviderRouter:
             anthropic_api_key: Anthropic API key (optional)
 
         Raises:
-            ValueError: If all configured providers fail to initialize
+            ValueError: If no API keys are provided or all configured providers fail to initialize
         """
         self._providers: dict[str, LLMProvider] = {}
         init_errors: dict[str, Exception] = {}
+
+        if not openai_api_key and not anthropic_api_key:
+            raise ValueError(
+                "At least one LLM provider API key must be configured (openai_api_key or anthropic_api_key)"
+            )
 
         if openai_api_key:
             try:
@@ -94,7 +99,7 @@ class LLMProviderRouter:
             system_prompt: System context for the model
             user_prompt: The user's prompt
             model: Model identifier (e.g., 'gpt-4o', 'claude-opus-4-6')
-            temperature: Sampling temperature (0.0-1.0)
+            temperature: Sampling temperature (0.0-2.0)
             max_tokens: Maximum tokens in response
             response_format: Optional response format specification
             timeout: Request timeout in seconds (provider-specific behavior)
@@ -191,7 +196,7 @@ class LLMProviderRouter:
             system_prompt: System context for the model
             user_prompt: The user's prompt
             model: Model identifier (e.g., 'gpt-4o', 'claude-opus-4-6')
-            temperature: Sampling temperature (0.0-1.0)
+            temperature: Sampling temperature (0.0-2.0)
             max_tokens: Maximum tokens in response
             response_format: Optional response format specification
             timeout: Request timeout in seconds (provider-specific behavior)

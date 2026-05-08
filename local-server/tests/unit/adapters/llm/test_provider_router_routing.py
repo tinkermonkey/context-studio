@@ -65,10 +65,21 @@ class MockLLMProvider:
 class TestLLMProviderRouter:
     """Tests for LLMProviderRouter adapter."""
 
+    @staticmethod
+    def create_test_router():
+        """Create a router with a dummy API key for testing routing logic."""
+        router = LLMProviderRouter(openai_api_key="dummy-key")
+        router._providers.clear()
+        return router
+
     def test_router_init_with_no_keys(self):
-        """Router initializes with no keys and has no providers."""
-        router = LLMProviderRouter()
-        assert router.list_available_models() == []
+        """Router raises ValueError when initialized with no API keys."""
+        with pytest.raises(ValueError) as exc_info:
+            LLMProviderRouter()
+
+        assert "At least one LLM provider API key must be configured" in str(
+            exc_info.value
+        )
 
     @patch("adapters.llm.provider_router.OpenAIProvider")
     def test_router_init_with_valid_openai_key(self, mock_openai_class):
@@ -113,20 +124,20 @@ class TestLLMProviderRouter:
 
     def test_router_is_model_available_with_no_providers(self):
         """is_model_available returns False when no providers are configured."""
-        router = LLMProviderRouter()
+        router = self.create_test_router()
 
         assert router.is_model_available("gpt-4o") is False
         assert router.is_model_available("claude-opus-4-6") is False
 
     def test_router_list_available_models_with_no_providers(self):
         """list_available_models returns empty list when no providers are configured."""
-        router = LLMProviderRouter()
+        router = self.create_test_router()
 
         assert router.list_available_models() == []
 
     def test_router_routes_to_openai_provider(self):
         """Router routes OpenAI models to OpenAI provider."""
-        router = LLMProviderRouter()
+        router = self.create_test_router()
         openai_provider = MockLLMProvider(["gpt-4o", "gpt-3.5-turbo"])
         router._providers["openai"] = openai_provider
 
@@ -136,7 +147,7 @@ class TestLLMProviderRouter:
 
     def test_router_routes_to_anthropic_provider(self):
         """Router routes Anthropic models to Anthropic provider."""
-        router = LLMProviderRouter()
+        router = self.create_test_router()
         anthropic_provider = MockLLMProvider(["claude-opus-4-6"])
         router._providers["anthropic"] = anthropic_provider
 
@@ -146,7 +157,7 @@ class TestLLMProviderRouter:
 
     def test_router_raises_for_unavailable_model(self):
         """Router raises ValueError when model is not available from any provider."""
-        router = LLMProviderRouter()
+        router = self.create_test_router()
         openai_provider = MockLLMProvider(["gpt-4o"])
         router._providers["openai"] = openai_provider
 
@@ -157,7 +168,7 @@ class TestLLMProviderRouter:
 
     def test_router_is_model_available_openai(self):
         """is_model_available returns True for OpenAI models."""
-        router = LLMProviderRouter()
+        router = self.create_test_router()
         openai_provider = MockLLMProvider(["gpt-4o", "gpt-3.5-turbo"])
         router._providers["openai"] = openai_provider
 
@@ -167,7 +178,7 @@ class TestLLMProviderRouter:
 
     def test_router_is_model_available_anthropic(self):
         """is_model_available returns True for Anthropic models."""
-        router = LLMProviderRouter()
+        router = self.create_test_router()
         anthropic_provider = MockLLMProvider(["claude-opus-4-6", "claude-sonnet-4-6"])
         router._providers["anthropic"] = anthropic_provider
 
@@ -177,7 +188,7 @@ class TestLLMProviderRouter:
 
     def test_router_list_available_models_single_provider(self):
         """list_available_models returns union when only one provider is configured."""
-        router = LLMProviderRouter()
+        router = self.create_test_router()
         openai_provider = MockLLMProvider(["gpt-4o", "gpt-3.5-turbo"])
         router._providers["openai"] = openai_provider
 
@@ -187,7 +198,7 @@ class TestLLMProviderRouter:
 
     def test_router_list_available_models_multiple_providers(self):
         """list_available_models returns union of models from all providers."""
-        router = LLMProviderRouter()
+        router = self.create_test_router()
         openai_provider = MockLLMProvider(["gpt-4o", "gpt-3.5-turbo"])
         anthropic_provider = MockLLMProvider(["claude-opus-4-6", "claude-sonnet-4-6"])
         router._providers["openai"] = openai_provider
@@ -200,7 +211,7 @@ class TestLLMProviderRouter:
 
     def test_router_complete_routes_to_correct_provider(self):
         """complete method routes to correct provider based on model."""
-        router = LLMProviderRouter()
+        router = self.create_test_router()
         openai_provider = MockLLMProvider(["gpt-4o"])
         openai_provider.complete = Mock(
             return_value=LLMResponse(
@@ -226,7 +237,7 @@ class TestLLMProviderRouter:
 
     def test_router_complete_raises_for_unavailable_model(self):
         """complete method raises ValueError for unavailable models."""
-        router = LLMProviderRouter()
+        router = self.create_test_router()
 
         with pytest.raises(ValueError) as exc_info:
             router.complete(
@@ -239,7 +250,7 @@ class TestLLMProviderRouter:
 
     def test_router_complete_with_all_parameters(self):
         """complete method passes all parameters to provider."""
-        router = LLMProviderRouter()
+        router = self.create_test_router()
         openai_provider = Mock()
         openai_provider.is_model_available.return_value = True
         expected_response = LLMResponse(

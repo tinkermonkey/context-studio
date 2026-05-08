@@ -68,11 +68,11 @@ class AnthropicProvider:
             system_prompt: System context for the model
             user_prompt: User message to respond to
             model: Model identifier (e.g., 'claude-opus-4-6')
-            temperature: Sampling temperature (0.0–1.0)
+            temperature: Sampling temperature (0.0–2.0)
             max_tokens: Maximum tokens to generate
             response_format: Optional JSON schema for structured output (not used by Anthropic)
             timeout: Request timeout in seconds (passed to Anthropic client)
-            seed: Optional random seed for reproducible generation (currently unused by Anthropic API)
+            seed: Optional random seed for reproducible generation (passed to Anthropic API if supported)
 
         Returns:
             LLMResponse with generated content and metadata
@@ -96,6 +96,9 @@ class AnthropicProvider:
                 "system": system_prompt,
                 "messages": [{"role": "user", "content": user_prompt}],
             }
+
+            if seed is not None:
+                kwargs["seed"] = seed
 
             if timeout is not None:
                 kwargs["timeout"] = timeout
@@ -161,11 +164,11 @@ class AnthropicProvider:
             system_prompt: System context for the model
             user_prompt: User message to respond to
             model: Model identifier (e.g., 'claude-opus-4-6')
-            temperature: Sampling temperature (0.0–1.0)
+            temperature: Sampling temperature (0.0–2.0)
             max_tokens: Maximum tokens to generate
             response_format: Optional JSON schema for structured output (not used by Anthropic)
             timeout: Request timeout in seconds (passed to Anthropic client)
-            seed: Optional random seed for reproducible generation (currently unused by Anthropic API)
+            seed: Optional random seed for reproducible generation (passed to Anthropic API if supported)
 
         Returns:
             LLMResponse with generated content and metadata
