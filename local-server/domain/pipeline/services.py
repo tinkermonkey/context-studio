@@ -135,6 +135,7 @@ class PipelineService:
         system_prompt: str | None = None,
         user_prompt: str | None = None,
         enabled: bool | None = None,
+        seed: int | None = ...,
     ) -> PipelineConfiguration:
         """
         Update a pipeline configuration.
@@ -148,6 +149,7 @@ class PipelineService:
             system_prompt: Updated system prompt (optional)
             user_prompt: Updated user prompt (optional)
             enabled: Updated enabled status (optional)
+            seed: Updated random seed (optional); pass None to clear, omit to preserve existing
 
         Returns:
             The updated PipelineConfiguration
@@ -177,6 +179,7 @@ class PipelineService:
             enabled=enabled if enabled is not None else existing.enabled,
             created_at=existing.created_at,
             last_updated=datetime.now(timezone.utc),
+            seed=seed if seed is not ... else existing.seed,
         )
         return self._pipeline_repo.save_config(updated)
 

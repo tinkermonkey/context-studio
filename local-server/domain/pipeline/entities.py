@@ -61,6 +61,8 @@ class PipelineConfiguration:
             )
         if self.version < 1:
             raise ValueError(f"version must be >= 1, got {self.version}")
+        if self.seed is not None and self.seed < 0:
+            raise ValueError(f"seed must be non-negative if provided, got {self.seed}")
 
 
 @dataclass
