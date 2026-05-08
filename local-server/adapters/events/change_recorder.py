@@ -13,7 +13,7 @@ without modifying domain code.
 from typing import Optional
 
 from domain.ports import ChangeRecordPort
-from domain.interchange.services import get_current_import_run_id
+from domain.interchange.services import get_current_batch_run_id
 from domain.extraction.events import ExtractionCompleted
 from domain.pipeline.events import PipelineExecuted
 from domain.ontology.events import (
@@ -78,6 +78,7 @@ class ChangeEventRecorder:
             Any exception from the change repository is propagated to allow
             the event publisher to include it in the failures list.
         """
+        batch_run_id = get_current_batch_run_id()
         change_id = self.change_repo.record_change(
             entity_id=event.result_id,
             entity_type="extraction_result",
@@ -88,10 +89,12 @@ class ChangeEventRecorder:
                 "duration_ms": event.duration_ms,
             },
             change_reason="Extraction processing completed",
+            batch_run_id=batch_run_id,
         )
         logger.debug(
             f"Recorded extraction completion: result_id={event.result_id}, "
             f"change_event_id={change_id}"
+            + (f", batch_run_id={batch_run_id}" if batch_run_id else "")
         )
 
     def on_pipeline_executed(self, event: PipelineExecuted) -> None:
@@ -111,6 +114,7 @@ class ChangeEventRecorder:
             Any exception from the change repository is propagated to allow
             the event publisher to include it in the failures list.
         """
+        batch_run_id = get_current_batch_run_id()
         change_id = self.change_repo.record_change(
             entity_id=event.execution_id,
             entity_type="pipeline_execution",
@@ -121,11 +125,13 @@ class ChangeEventRecorder:
                 "status": event.status,
             },
             change_reason="Pipeline execution completed",
+            batch_run_id=batch_run_id,
         )
         logger.debug(
             f"Recorded pipeline execution: execution_id={event.execution_id}, "
             f"pipeline_id={event.pipeline_id}, status={event.status}, "
             f"change_event_id={change_id}"
+            + (f", batch_run_id={batch_run_id}" if batch_run_id else "")
         )
 
     # ==================== Ontology Event Handlers ====================
@@ -162,7 +168,7 @@ class ChangeEventRecorder:
             the event publisher to include it in the failures list.
         """
         # Get current batch_run_id from correlation context if set
-        batch_run_id = get_current_import_run_id()
+        batch_run_id = get_current_batch_run_id()
 
         # The correlation context holds either an import or extraction run ID
         # The change repository will persist this as batch_run_id
