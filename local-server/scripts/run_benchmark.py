@@ -495,7 +495,7 @@ def run_benchmark(
             _logger.error(f"Failed to load dataset: {e}")
             _logger.error("Dataset may not be available yet or may be private.")
             _logger.error(f"Check: https://huggingface.co/datasets/{dataset_name}")
-            _logger.info("To avoid repeated downloads, run: python scripts/download_benchmarks.py --dataset {dataset_name}")
+            _logger.info(f"To avoid repeated downloads, run: python scripts/download_benchmarks.py --dataset {dataset_name}")
             raise
     else:
         _logger.info(f"Loaded {len(samples)} samples from cache")
