@@ -1,0 +1,187 @@
+- type: relationship-add
+  elementId: application.applicationservice.ontology-service::depends-on::application.applicationservice.import-run-service
+  layerName: application
+  after:
+    source: application.applicationservice.ontology-service
+    target: application.applicationservice.import-run-service
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-05-08T09:48:16.498Z
+  sequenceNumber: 0
+- type: relationship-add
+  elementId: application.applicationservice.ontology-service::depends-on::application.applicationservice.graph-analysis-service
+  layerName: application
+  after:
+    source: application.applicationservice.ontology-service
+    target: application.applicationservice.graph-analysis-service
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-05-08T09:48:20.581Z
+  sequenceNumber: 1
+- type: relationship-add
+  elementId: application.applicationservice.ontology-service::depends-on::application.applicationservice.versioning-service
+  layerName: application
+  after:
+    source: application.applicationservice.ontology-service
+    target: application.applicationservice.versioning-service
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-05-08T09:48:21.276Z
+  sequenceNumber: 2
+- type: relationship-add
+  elementId: application.applicationservice.graph-analysis-service::depends-on::application.applicationservice.ontology-service
+  layerName: application
+  after:
+    source: application.applicationservice.graph-analysis-service
+    target: application.applicationservice.ontology-service
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-05-08T09:48:21.635Z
+  sequenceNumber: 3
+- type: relationship-add
+  elementId: application.applicationservice.extraction-service::depends-on::application.applicationservice.ontology-service
+  layerName: application
+  after:
+    source: application.applicationservice.extraction-service
+    target: application.applicationservice.ontology-service
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-05-08T09:48:21.993Z
+  sequenceNumber: 4
+- type: relationship-add
+  elementId: application.applicationservice.pipeline-service::depends-on::application.applicationservice.extraction-service
+  layerName: application
+  after:
+    source: application.applicationservice.pipeline-service
+    target: application.applicationservice.extraction-service
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-05-08T09:48:28.799Z
+  sequenceNumber: 5
+- type: relationship-add
+  elementId: application.applicationservice.versioning-service::depends-on::application.applicationservice.ontology-service
+  layerName: application
+  after:
+    source: application.applicationservice.versioning-service
+    target: application.applicationservice.ontology-service
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-05-08T09:48:29.297Z
+  sequenceNumber: 6
+- type: relationship-add
+  elementId: application.applicationservice.admin-service::depends-on::application.applicationservice.pipeline-service
+  layerName: application
+  after:
+    source: application.applicationservice.admin-service
+    target: application.applicationservice.pipeline-service
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-05-08T09:48:29.693Z
+  sequenceNumber: 7
+- type: relationship-add
+  elementId: application.applicationservice.import-run-service::depends-on::application.applicationservice.ontology-service
+  layerName: application
+  after:
+    source: application.applicationservice.import-run-service
+    target: application.applicationservice.ontology-service
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-05-08T09:48:33.275Z
+  sequenceNumber: 8
+- type: relationship-add
+  elementId: application.applicationservice.import-run-service::flows-to::application.applicationservice.versioning-service
+  layerName: application
+  after:
+    source: application.applicationservice.import-run-service
+    target: application.applicationservice.versioning-service
+    predicate: flows-to
+    layer: application
+    category: structural
+  timestamp: 2026-05-08T09:48:36.661Z
+  sequenceNumber: 9
+- type: relationship-add
+  elementId: application.applicationservice.extraction-service::flows-to::application.applicationservice.graph-analysis-service
+  layerName: application
+  after:
+    source: application.applicationservice.extraction-service
+    target: application.applicationservice.graph-analysis-service
+    predicate: flows-to
+    layer: application
+    category: structural
+  timestamp: 2026-05-08T09:48:37.035Z
+  sequenceNumber: 10
+- type: relationship-add
+  elementId: data-model.objectschema.ontology-entity::extends::data-model.objectschema.relationship
+  layerName: data-model
+  after:
+    source: data-model.objectschema.ontology-entity
+    target: data-model.objectschema.relationship
+    predicate: extends
+    layer: data-model
+    category: structural
+  timestamp: 2026-05-08T09:49:00.816Z
+  sequenceNumber: 11
+- type: relationship-add
+  elementId: data-model.objectschema.changeset::extends::data-model.objectschema.changeset-event
+  layerName: data-model
+  after:
+    source: data-model.objectschema.changeset
+    target: data-model.objectschema.changeset-event
+    predicate: extends
+    layer: data-model
+    category: structural
+  timestamp: 2026-05-08T09:49:08.785Z
+  sequenceNumber: 12
+- type: relationship-add
+  elementId: data-model.objectschema.changeset::extends::data-model.objectschema.proposal
+  layerName: data-model
+  after:
+    source: data-model.objectschema.changeset
+    target: data-model.objectschema.proposal
+    predicate: extends
+    layer: data-model
+    category: structural
+  timestamp: 2026-05-08T09:49:09.199Z
+  sequenceNumber: 13
+- type: relationship-add
+  elementId: data-model.objectschema.proposal::extends::data-model.objectschema.conflict-resolution
+  layerName: data-model
+  after:
+    source: data-model.objectschema.proposal
+    target: data-model.objectschema.conflict-resolution
+    predicate: extends
+    layer: data-model
+    category: structural
+  timestamp: 2026-05-08T09:49:09.568Z
+  sequenceNumber: 14
+- type: relationship-add
+  elementId: data-model.objectschema.pipeline-configuration::extends::data-model.objectschema.pipeline-execution
+  layerName: data-model
+  after:
+    source: data-model.objectschema.pipeline-configuration
+    target: data-model.objectschema.pipeline-execution
+    predicate: extends
+    layer: data-model
+    category: structural
+  timestamp: 2026-05-08T09:49:09.967Z
+  sequenceNumber: 15
+- type: relationship-add
+  elementId: data-model.objectschema.import-run::extends::data-model.objectschema.change-event
+  layerName: data-model
+  after:
+    source: data-model.objectschema.import-run
+    target: data-model.objectschema.change-event
+    predicate: extends
+    layer: data-model
+    category: structural
+  timestamp: 2026-05-08T09:49:13.275Z
+  sequenceNumber: 16

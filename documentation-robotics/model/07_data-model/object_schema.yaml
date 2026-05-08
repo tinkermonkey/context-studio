@@ -117,3 +117,155 @@ data-model.objectschema.import-run:
     created_at: 2026-05-07T22:15:54.863Z
     updated_at: 2026-05-07T22:15:54.864Z
     version: 1
+data-model.objectschema.individual-class:
+  id: 81636aa6-1dc7-4d11-8ff1-1eb6711bc2fa
+  path: data-model.objectschema.individual-class
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Individual Class
+  description: Association table ORM schema linking individual instances to their
+    parent classes — stores individual_id, class_id FK pair with ordering index
+    for class priority
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+        symbol: IndividualClass
+  metadata:
+    created_at: 2026-05-08T09:47:12.588Z
+    updated_at: 2026-05-08T09:47:12.588Z
+    version: 1
+data-model.objectschema.property-definition:
+  id: 28a5e618-1868-4f0c-aec2-d800f13dad2a
+  path: data-model.objectschema.property-definition
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Property Definition
+  description: ORM schema for property definitions (relationship types/object
+    properties) — stores name, description, domain_id and range_id class FKs,
+    and optional inverse property ID
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+        symbol: PropertyDefinition
+  metadata:
+    created_at: 2026-05-08T09:47:13.213Z
+    updated_at: 2026-05-08T09:47:13.213Z
+    version: 1
+data-model.objectschema.extraction-result:
+  id: e0b164ca-6809-4568-9649-5eb503b980ac
+  path: data-model.objectschema.extraction-result
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Extraction Result
+  description: ORM schema for persisted extraction results — stores source text,
+    NLP/LLM pipeline output (JSON), extracted entity IDs, processing metrics,
+    and run timestamps
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+        symbol: ExtractionResult
+  metadata:
+    created_at: 2026-05-08T09:47:13.733Z
+    updated_at: 2026-05-08T09:47:13.733Z
+    version: 1
+data-model.objectschema.entity-version:
+  id: 45811c9e-1774-42e5-9980-bf90cfd9c090
+  path: data-model.objectschema.entity-version
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Entity Version
+  description: ORM schema for entity version snapshots — stores entity_id FK,
+    version number, full JSON snapshot, and the change event that triggered the
+    version
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+        symbol: EntityVersion
+  metadata:
+    created_at: 2026-05-08T09:47:14.222Z
+    updated_at: 2026-05-08T09:47:14.222Z
+    version: 1
+data-model.objectschema.changeset-event:
+  id: a9e77d2d-f901-43d3-bc9f-29ad229c9ba5
+  path: data-model.objectschema.changeset-event
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Changeset Event
+  description: ORM schema for individual change events within a versioning
+    changeset — stores changeset_id FK, entity_id, operation
+    (create/update/delete), before/after JSON snapshots
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+        symbol: ChangesetEvent
+  metadata:
+    created_at: 2026-05-08T09:47:14.708Z
+    updated_at: 2026-05-08T09:47:14.708Z
+    version: 1
+data-model.objectschema.proposal:
+  id: 6aa7f2cd-9171-4746-8412-26d03f1e7523
+  path: data-model.objectschema.proposal
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Proposal
+  description: ORM schema for merge proposals — stores changeset_id FK, submitter,
+    status (pending/approved/rejected/merged), review metadata, and conflict
+    resolution references
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+        symbol: Proposal
+  metadata:
+    created_at: 2026-05-08T09:47:20.656Z
+    updated_at: 2026-05-08T09:47:20.656Z
+    version: 1
+data-model.objectschema.conflict-resolution:
+  id: c5484bfb-26e2-4629-afe0-f7caa0048b79
+  path: data-model.objectschema.conflict-resolution
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Conflict Resolution
+  description: ORM schema for manual conflict resolution records — stores
+    proposal_id FK, entity_id, conflict type, chosen resolution strategy, and
+    resolved snapshot
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+        symbol: ConflictResolution
+  metadata:
+    created_at: 2026-05-08T09:47:21.153Z
+    updated_at: 2026-05-08T09:47:21.153Z
+    version: 1
+data-model.objectschema.pipeline-execution:
+  id: 69626d71-fe27-42b4-aaf3-31e7c7fa0457
+  path: data-model.objectschema.pipeline-execution
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Pipeline Execution
+  description: ORM schema for pipeline execution records in operations.db — stores
+    pipeline_id FK, trigger, status, input/output JSON, LLM traceability log,
+    and timing metadata
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/operations/models.py
+        symbol: ExecutionModel
+  metadata:
+    created_at: 2026-05-08T09:47:21.641Z
+    updated_at: 2026-05-08T09:47:21.641Z
+    version: 1

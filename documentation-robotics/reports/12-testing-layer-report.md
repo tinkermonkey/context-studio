@@ -14,15 +14,15 @@ Test strategies, test cases, test data, and test coverage.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 11    |
+| Elements                  | 16    |
 | Intra-Layer Relationships | 6     |
-| Inter-Layer Relationships | 13    |
+| Inter-Layer Relationships | 15    |
 | Inbound Relationships     | 0     |
-| Outbound Relationships    | 13    |
+| Outbound Relationships    | 15    |
 
 **Cross-Layer References**:
 
-- **Downstream layers**: [APM](./11-apm-layer-report.md), [Data Store](./08-data-store-layer-report.md), [UX](./09-ux-layer-report.md)
+- **Downstream layers**: [APM](./11-apm-layer-report.md), [Application](./04-application-layer-report.md), [Data Store](./08-data-store-layer-report.md), [UX](./09-ux-layer-report.md)
 
 ## Intra-Layer Relationships
 
@@ -35,10 +35,15 @@ flowchart LR
     testing_outcomecategory_entity_creation_success["Entity Creation Success"]
     testing_outcomecategory_validation_error["Validation Error"]
     testing_testcoveragetarget_admin_health["Admin Health"]
+    testing_testcoveragetarget_e2e_test_suite["E2E Test Suite"]
     testing_testcoveragetarget_extraction_pipeline["Extraction Pipeline"]
     testing_testcoveragetarget_graph_analysis["Graph Analysis"]
+    testing_testcoveragetarget_interchange_integration_tests["Interchange Integration Tests"]
     testing_testcoveragetarget_llm_pipeline_execution["LLM Pipeline Execution"]
     testing_testcoveragetarget_ontology_crud["Ontology CRUD"]
+    testing_testcoveragetarget_performance_test_suite["Performance Test Suite"]
+    testing_testcoveragetarget_route_integration_tests["Route Integration Tests"]
+    testing_testcoveragetarget_versioning_integration_tests["Versioning Integration Tests"]
     testing_testcoveragetarget_versioning_workflow["Versioning Workflow"]
     testing_coverageexclusion_llm_api_live_call_tests -->|references| testing_testcoveragetarget_llm_pipeline_execution
     testing_coveragegap_s3_sync_e2e_coverage -->|references| testing_testcoveragetarget_versioning_workflow
@@ -67,6 +72,7 @@ flowchart TB
   apm["APM"]
   testing["Testing"]
   testing --> apm
+  testing --> application
   testing --> data_store
   testing --> ux
   class testing current
@@ -74,21 +80,23 @@ flowchart TB
 
 ## Inter-Layer Relationships Table
 
-| Relationship ID                                              | Source Node                                         | Dest Node                                             | Dest Layer   | Predicate    | Cardinality  | Strength |
-| ------------------------------------------------------------ | --------------------------------------------------- | ----------------------------------------------------- | ------------ | ------------ | ------------ | -------- |
-| `testing.testcoveragetarget.covers.ux.view`                  | `testing.testcoveragetarget.admin-health`           | `ux.view.admin-view`                                  | `ux`         | `covers`     | many-to-many | medium   |
-| `testing.testcoveragetarget.references.apm.metricinstrument` | `testing.testcoveragetarget.admin-health`           | `apm.metricinstrument.background-task-queue-depth`    | `apm`        | `references` | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`                  | `testing.testcoveragetarget.extraction-pipeline`    | `ux.view.rag-experiments-view`                        | `ux`         | `covers`     | many-to-many | medium   |
-| `testing.testcoveragetarget.references.apm.metricinstrument` | `testing.testcoveragetarget.extraction-pipeline`    | `apm.metricinstrument.llm-execution-tracker`          | `apm`        | `references` | many-to-many | medium   |
-| `testing.testcoveragetarget.tests.data-store.storedlogic`    | `testing.testcoveragetarget.extraction-pipeline`    | `data-store.storedlogic.sqlite-vec-cosine-similarity` | `data-store` | `tests`      | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`                  | `testing.testcoveragetarget.graph-analysis`         | `ux.view.rag-experiments-view`                        | `ux`         | `covers`     | many-to-many | medium   |
-| `testing.testcoveragetarget.references.apm.metricinstrument` | `testing.testcoveragetarget.graph-analysis`         | `apm.metricinstrument.rag-processing-time`            | `apm`        | `references` | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`                  | `testing.testcoveragetarget.llm-pipeline-execution` | `ux.view.rag-experiments-view`                        | `ux`         | `covers`     | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`                  | `testing.testcoveragetarget.ontology-crud`          | `ux.view.domains-view`                                | `ux`         | `covers`     | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`                  | `testing.testcoveragetarget.ontology-crud`          | `ux.view.layers-view`                                 | `ux`         | `covers`     | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`                  | `testing.testcoveragetarget.ontology-crud`          | `ux.view.terms-view`                                  | `ux`         | `covers`     | many-to-many | medium   |
-| `testing.testcoveragetarget.tests.data-store.storedlogic`    | `testing.testcoveragetarget.ontology-crud`          | `data-store.storedlogic.sqlite-vec-cosine-similarity` | `data-store` | `tests`      | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view`                  | `testing.testcoveragetarget.versioning-workflow`    | `ux.view.datasets-view`                               | `ux`         | `covers`     | many-to-many | medium   |
+| Relationship ID                                                     | Source Node                                                | Dest Node                                                        | Dest Layer    | Predicate    | Cardinality  | Strength |
+| ------------------------------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------- | ------------- | ------------ | ------------ | -------- |
+| `testing.testcoveragetarget.covers.ux.view`                         | `testing.testcoveragetarget.admin-health`                  | `ux.view.admin-view`                                             | `ux`          | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.references.apm.metricinstrument`        | `testing.testcoveragetarget.admin-health`                  | `apm.metricinstrument.background-task-queue-depth`               | `apm`         | `references` | many-to-many | medium   |
+| `testing.testcoveragetarget.tests.data-store.collection`            | `testing.testcoveragetarget.e2e-test-suite`                | `data-store.collection.ontology-entities`                        | `data-store`  | `tests`      | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                         | `testing.testcoveragetarget.extraction-pipeline`           | `ux.view.rag-experiments-view`                                   | `ux`          | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.references.apm.metricinstrument`        | `testing.testcoveragetarget.extraction-pipeline`           | `apm.metricinstrument.llm-execution-tracker`                     | `apm`         | `references` | many-to-many | medium   |
+| `testing.testcoveragetarget.tests.data-store.storedlogic`           | `testing.testcoveragetarget.extraction-pipeline`           | `data-store.storedlogic.sqlite-vec-cosine-similarity`            | `data-store`  | `tests`      | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                         | `testing.testcoveragetarget.graph-analysis`                | `ux.view.rag-experiments-view`                                   | `ux`          | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.references.apm.metricinstrument`        | `testing.testcoveragetarget.graph-analysis`                | `apm.metricinstrument.rag-processing-time`                       | `apm`         | `references` | many-to-many | medium   |
+| `testing.testcoveragetarget.tests.application.applicationcomponent` | `testing.testcoveragetarget.interchange-integration-tests` | `application.applicationcomponent.sqlite-interchange-repository` | `application` | `tests`      | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                         | `testing.testcoveragetarget.llm-pipeline-execution`        | `ux.view.rag-experiments-view`                                   | `ux`          | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.tests.data-store.storedlogic`           | `testing.testcoveragetarget.ontology-crud`                 | `data-store.storedlogic.sqlite-vec-cosine-similarity`            | `data-store`  | `tests`      | many-to-many | medium   |
+| `testing.testcoveragetarget.tests.data-store.collection`            | `testing.testcoveragetarget.performance-test-suite`        | `data-store.collection.ontology-entities`                        | `data-store`  | `tests`      | many-to-many | medium   |
+| `testing.testcoveragetarget.tests.application.applicationcomponent` | `testing.testcoveragetarget.route-integration-tests`       | `application.applicationcomponent.sqlite-ontology-repository`    | `application` | `tests`      | many-to-many | medium   |
+| `testing.testcoveragetarget.tests.application.applicationcomponent` | `testing.testcoveragetarget.versioning-integration-tests`  | `application.applicationcomponent.sqlite-change-repository`      | `application` | `tests`      | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`                         | `testing.testcoveragetarget.versioning-workflow`           | `ux.view.datasets-view`                                          | `ux`          | `covers`     | many-to-many | medium   |
 
 ## Element Reference
 
@@ -226,6 +234,27 @@ Coverage target for health checks, background task management, and configuration
 | inter-layer | `ux.view.admin-view`                               | `covers`     | outbound  |
 | inter-layer | `apm.metricinstrument.background-task-queue-depth` | `references` | outbound  |
 
+### E2E Test Suite {#e2e-test-suite}
+
+**ID**: `testing.testcoveragetarget.e2e-test-suite`
+
+**Type**: `testcoveragetarget`
+
+End-to-end tests covering full-stack service interaction across ontology, graph, extraction, pipeline, versioning, and interchange contexts (8 test files)
+
+#### Attributes
+
+| Name       | Value             |
+| ---------- | ----------------- |
+| priority   | high              |
+| targetType | business-workflow |
+
+#### Relationships
+
+| Type        | Related Element                           | Predicate | Direction |
+| ----------- | ----------------------------------------- | --------- | --------- |
+| inter-layer | `data-store.collection.ontology-entities` | `tests`   | outbound  |
+
 ### Extraction Pipeline {#extraction-pipeline}
 
 **ID**: `testing.testcoveragetarget.extraction-pipeline`
@@ -274,6 +303,27 @@ Coverage target for in-memory graph construction, traversal, SPARQL query execut
 | inter-layer | `ux.view.rag-experiments-view`             | `covers`     | outbound  |
 | inter-layer | `apm.metricinstrument.rag-processing-time` | `references` | outbound  |
 
+### Interchange Integration Tests {#interchange-integration-tests}
+
+**ID**: `testing.testcoveragetarget.interchange-integration-tests`
+
+**Type**: `testcoveragetarget`
+
+Integration test suite for SKOS/OWL/GraphML round-trip serialization, import run lifecycle, and persistence adapter correctness (6 test files)
+
+#### Attributes
+
+| Name       | Value            |
+| ---------- | ---------------- |
+| priority   | high             |
+| targetType | integration-flow |
+
+#### Relationships
+
+| Type        | Related Element                                                  | Predicate | Direction |
+| ----------- | ---------------------------------------------------------------- | --------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-interchange-repository` | `tests`   | outbound  |
+
 ### LLM Pipeline Execution {#llm-pipeline-execution}
 
 **ID**: `testing.testcoveragetarget.llm-pipeline-execution`
@@ -317,13 +367,73 @@ Coverage target for the full CRUD lifecycle of ontology entities (Taxonomy, Conc
 
 | Type        | Related Element                                              | Predicate  | Direction |
 | ----------- | ------------------------------------------------------------ | ---------- | --------- |
-| inter-layer | `ux.view.domains-view`                                       | `covers`   | outbound  |
-| inter-layer | `ux.view.layers-view`                                        | `covers`   | outbound  |
-| inter-layer | `ux.view.terms-view`                                         | `covers`   | outbound  |
 | inter-layer | `data-store.storedlogic.sqlite-vec-cosine-similarity`        | `tests`    | outbound  |
 | intra-layer | `testing.inputspacepartition.entity-node-type-discriminator` | `serves`   | inbound   |
 | intra-layer | `testing.outcomecategory.entity-creation-success`            | `composes` | outbound  |
 | intra-layer | `testing.outcomecategory.validation-error`                   | `composes` | outbound  |
+
+### Performance Test Suite {#performance-test-suite}
+
+**ID**: `testing.testcoveragetarget.performance-test-suite`
+
+**Type**: `testcoveragetarget`
+
+Performance tests covering scalability and throughput for ontology operations, graph traversal, extraction pipeline, and API response times (6 test files)
+
+#### Attributes
+
+| Name       | Value        |
+| ---------- | ------------ |
+| priority   | medium       |
+| targetType | api-endpoint |
+
+#### Relationships
+
+| Type        | Related Element                           | Predicate | Direction |
+| ----------- | ----------------------------------------- | --------- | --------- |
+| inter-layer | `data-store.collection.ontology-entities` | `tests`   | outbound  |
+
+### Route Integration Tests {#route-integration-tests}
+
+**ID**: `testing.testcoveragetarget.route-integration-tests`
+
+**Type**: `testcoveragetarget`
+
+Route-level integration tests covering all 8 FastAPI route modules (ontology, graph, extraction, admin, reference, interchange, versioning, pipeline) against real SQLite (7 test files)
+
+#### Attributes
+
+| Name       | Value        |
+| ---------- | ------------ |
+| priority   | high         |
+| targetType | api-endpoint |
+
+#### Relationships
+
+| Type        | Related Element                                               | Predicate | Direction |
+| ----------- | ------------------------------------------------------------- | --------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-ontology-repository` | `tests`   | outbound  |
+
+### Versioning Integration Tests {#versioning-integration-tests}
+
+**ID**: `testing.testcoveragetarget.versioning-integration-tests`
+
+**Type**: `testcoveragetarget`
+
+Integration test suite for the versioning bounded context — change event persistence, entity versions, changeset lifecycle, and proposal workflows (3 test files)
+
+#### Attributes
+
+| Name       | Value            |
+| ---------- | ---------------- |
+| priority   | high             |
+| targetType | integration-flow |
+
+#### Relationships
+
+| Type        | Related Element                                             | Predicate | Direction |
+| ----------- | ----------------------------------------------------------- | --------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-change-repository` | `tests`   | outbound  |
 
 ### Versioning Workflow {#versioning-workflow}
 
@@ -350,4 +460,4 @@ Coverage target for the complete version control workflow: change events, change
 
 ---
 
-Generated: 2026-05-07T22:00:51.579Z | Model Version: 0.1.0
+Generated: 2026-05-08T12:53:37.492Z | Model Version: 0.1.0

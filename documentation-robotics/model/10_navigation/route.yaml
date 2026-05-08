@@ -18,63 +18,6 @@ navigation.route.app-root-route:
     created_at: 2026-03-24T09:20:07.548Z
     updated_at: 2026-03-24T09:20:07.548Z
     version: 1
-navigation.route.layers-route:
-  id: f756097c-0203-497c-af7e-6990410c8375
-  path: navigation.route.layers-route
-  spec_node_id: navigation.route
-  type: route
-  layer_id: navigation
-  name: Layers Route
-  description: Route for the Taxonomy (Layers) management page — /app/layers
-  attributes:
-    type: public
-    title: Layers
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: ux/src/routes/app/layers.tsx
-  metadata:
-    created_at: 2026-03-24T09:20:07.851Z
-    updated_at: 2026-03-24T09:20:07.851Z
-    version: 1
-navigation.route.domains-route:
-  id: 80b0086b-fe11-43b6-8182-38fbe8e513ea
-  path: navigation.route.domains-route
-  spec_node_id: navigation.route
-  type: route
-  layer_id: navigation
-  name: Domains Route
-  description: Route for the Concept Schemes (Domains) management page — /app/domains
-  attributes:
-    type: public
-    title: Domains
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: ux/src/routes/app/domains.tsx
-  metadata:
-    created_at: 2026-03-24T09:20:08.130Z
-    updated_at: 2026-03-24T09:20:08.130Z
-    version: 1
-navigation.route.terms-route:
-  id: 2986b8fe-7794-4b09-80a5-7130faf843d2
-  path: navigation.route.terms-route
-  spec_node_id: navigation.route
-  type: route
-  layer_id: navigation
-  name: Terms Route
-  description: Route for the Classes (Terms) management page — /app/terms
-  attributes:
-    type: public
-    title: Terms
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: ux/src/routes/app/terms.tsx
-  metadata:
-    created_at: 2026-03-24T09:20:12.506Z
-    updated_at: 2026-03-24T09:20:12.506Z
-    version: 1
 navigation.route.datasets-route:
   id: 16df9462-4b03-4924-889e-4834f03aa772
   path: navigation.route.datasets-route
@@ -93,25 +36,6 @@ navigation.route.datasets-route:
   metadata:
     created_at: 2026-03-24T09:20:12.797Z
     updated_at: 2026-03-24T09:20:12.797Z
-    version: 1
-navigation.route.predicates-route:
-  id: 1036cdcb-413a-426c-9485-9eaa7e2b8606
-  path: navigation.route.predicates-route
-  spec_node_id: navigation.route
-  type: route
-  layer_id: navigation
-  name: Predicates Route
-  description: Route for the property definitions management page — /app/predicates
-  attributes:
-    type: public
-    title: Predicates
-  source_reference:
-    provenance: extracted
-    locations:
-      - file: ux/src/routes/app/predicates.tsx
-  metadata:
-    created_at: 2026-03-24T09:20:13.088Z
-    updated_at: 2026-03-24T09:20:13.088Z
     version: 1
 navigation.route.rag-experiments-route:
   id: b6188367-6496-450a-8115-f53cb9bf3c44
@@ -169,4 +93,116 @@ navigation.route.admin-route:
   metadata:
     created_at: 2026-03-24T09:20:19.255Z
     updated_at: 2026-03-24T09:20:19.255Z
+    version: 1
+navigation.route.taxonomies-route:
+  id: c5fcfaa8-d362-49b7-ab14-35d040b48cfe
+  path: navigation.route.taxonomies-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Taxonomies Route
+  description: Route for /app/taxonomies — renders Taxonomies View
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/taxonomies.tsx
+  metadata:
+    created_at: 2026-05-08T10:03:18.901Z
+    updated_at: 2026-05-08T10:03:18.902Z
+    version: 1
+navigation.route.concept-schemes-route:
+  id: 4e630648-630f-4eaa-9ac2-fed53c102329
+  path: navigation.route.concept-schemes-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Concept Schemes Route
+  description: Route for /app/concept-schemes — renders Concept Schemes View
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/concept-schemes.tsx
+  metadata:
+    created_at: 2026-05-08T10:03:19.193Z
+    updated_at: 2026-05-08T10:03:19.193Z
+    version: 1
+navigation.route.classes-route:
+  id: 421aec8f-b5dc-44f3-9324-2d56f3430ab5
+  path: navigation.route.classes-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Classes Route
+  description: Route for /app/classes — renders Classes View
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/classes.tsx
+  metadata:
+    created_at: 2026-05-08T10:03:19.494Z
+    updated_at: 2026-05-08T10:03:19.494Z
+    version: 1
+navigation.route.individuals-route:
+  id: 3236e2ec-fe22-4125-9a59-cf0adc292513
+  path: navigation.route.individuals-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Individuals Route
+  description: Route for /app/individuals — renders Individuals View
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/individuals.tsx
+  metadata:
+    created_at: 2026-05-08T10:03:19.786Z
+    updated_at: 2026-05-08T10:03:19.786Z
+    version: 1
+navigation.route.properties-route:
+  id: fe87aac8-c4a9-4988-b29c-3e19026490b2
+  path: navigation.route.properties-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Properties Route
+  description: Route for /app/properties — renders Properties View
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/properties.tsx
+  metadata:
+    created_at: 2026-05-08T10:03:20.080Z
+    updated_at: 2026-05-08T10:03:20.080Z
+    version: 1
+navigation.route.relationships-route:
+  id: 52194df4-909f-476f-acfe-50efcfdb34c0
+  path: navigation.route.relationships-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Relationships Route
+  description: Route for /app/relationships — renders Relationships View
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/relationships.tsx
+  metadata:
+    created_at: 2026-05-08T10:03:20.374Z
+    updated_at: 2026-05-08T10:03:20.374Z
+    version: 1
+navigation.route.interchange-route:
+  id: 4129e8cc-836e-40a0-a429-ce2c4701a599
+  path: navigation.route.interchange-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Interchange Route
+  description: Route for /app/interchange — renders Interchange View
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/interchange.tsx
+  metadata:
+    created_at: 2026-05-08T10:03:20.684Z
+    updated_at: 2026-05-08T10:03:20.684Z
     version: 1

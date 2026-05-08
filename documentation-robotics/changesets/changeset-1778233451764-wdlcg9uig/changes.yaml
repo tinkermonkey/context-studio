@@ -1,0 +1,2825 @@
+- type: add
+  elementId: api.operation.create-taxonomy
+  layerName: api
+  after:
+    id: c5906cf4-a80c-4d07-866d-09a804ab4ac7
+    path: api.operation.create-taxonomy
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Create Taxonomy
+    description: POST /api/taxonomies — create a new taxonomy in the ontology
+      management context
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: create_taxonomy
+    metadata:
+      created_at: 2026-05-08T09:44:15.939Z
+      updated_at: 2026-05-08T09:44:15.939Z
+      version: 1
+  timestamp: 2026-05-08T09:44:15.960Z
+  sequenceNumber: 0
+- type: add
+  elementId: api.operation.list-taxonomies
+  layerName: api
+  after:
+    id: 355aabae-b3af-43de-a7be-ff73fa83f194
+    path: api.operation.list-taxonomies
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: List Taxonomies
+    description: GET /api/taxonomies — list all taxonomies with optional filtering
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: list_taxonomies
+    metadata:
+      created_at: 2026-05-08T09:44:16.770Z
+      updated_at: 2026-05-08T09:44:16.770Z
+      version: 1
+  timestamp: 2026-05-08T09:44:16.792Z
+  sequenceNumber: 1
+- type: add
+  elementId: api.operation.get-taxonomy
+  layerName: api
+  after:
+    id: cc3d2a31-bc04-44f5-ac92-d708cc8294e3
+    path: api.operation.get-taxonomy
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Taxonomy
+    description: GET /api/taxonomies/{taxonomy_id} — retrieve a single taxonomy by ID
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: get_taxonomy
+    metadata:
+      created_at: 2026-05-08T09:44:17.864Z
+      updated_at: 2026-05-08T09:44:17.864Z
+      version: 1
+  timestamp: 2026-05-08T09:44:17.887Z
+  sequenceNumber: 2
+- type: add
+  elementId: api.operation.update-taxonomy
+  layerName: api
+  after:
+    id: e70963d8-53d8-429d-8fe3-5112bc58962d
+    path: api.operation.update-taxonomy
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Update Taxonomy
+    description: PUT /api/taxonomies/{taxonomy_id} — update an existing taxonomy
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: update_taxonomy
+    metadata:
+      created_at: 2026-05-08T09:44:18.652Z
+      updated_at: 2026-05-08T09:44:18.652Z
+      version: 1
+  timestamp: 2026-05-08T09:44:18.675Z
+  sequenceNumber: 3
+- type: add
+  elementId: api.operation.delete-taxonomy
+  layerName: api
+  after:
+    id: bf9079f7-d372-47be-aa03-22b7a6875dd7
+    path: api.operation.delete-taxonomy
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Delete Taxonomy
+    description: DELETE /api/taxonomies/{taxonomy_id} — delete a taxonomy and
+      cascade to child entities
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: delete_taxonomy
+    metadata:
+      created_at: 2026-05-08T09:44:19.580Z
+      updated_at: 2026-05-08T09:44:19.580Z
+      version: 1
+  timestamp: 2026-05-08T09:44:19.603Z
+  sequenceNumber: 4
+- type: add
+  elementId: api.operation.create-concept-scheme
+  layerName: api
+  after:
+    id: 5114ebe6-07bb-41a7-9aad-6024594ad6ba
+    path: api.operation.create-concept-scheme
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Create Concept Scheme
+    description: POST /api/taxonomies/{taxonomy_id}/schemes — create a concept
+      scheme within a taxonomy
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: create_concept_scheme
+    metadata:
+      created_at: 2026-05-08T09:44:22.518Z
+      updated_at: 2026-05-08T09:44:22.518Z
+      version: 1
+  timestamp: 2026-05-08T09:44:22.541Z
+  sequenceNumber: 5
+- type: add
+  elementId: api.operation.list-concept-schemes
+  layerName: api
+  after:
+    id: f9d5f980-a6f7-40dc-b101-9e52519988c0
+    path: api.operation.list-concept-schemes
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: List Concept Schemes
+    description: GET /api/schemes — list all concept schemes with optional taxonomy filter
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: list_concept_schemes
+    metadata:
+      created_at: 2026-05-08T09:44:23.610Z
+      updated_at: 2026-05-08T09:44:23.610Z
+      version: 1
+  timestamp: 2026-05-08T09:44:23.633Z
+  sequenceNumber: 6
+- type: add
+  elementId: api.operation.get-concept-scheme
+  layerName: api
+  after:
+    id: 80d32e96-e5c8-4269-b942-bcc486595db4
+    path: api.operation.get-concept-scheme
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Concept Scheme
+    description: GET /api/schemes/{scheme_id} — retrieve a single concept scheme by ID
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: get_concept_scheme
+    metadata:
+      created_at: 2026-05-08T09:44:24.417Z
+      updated_at: 2026-05-08T09:44:24.417Z
+      version: 1
+  timestamp: 2026-05-08T09:44:24.440Z
+  sequenceNumber: 7
+- type: add
+  elementId: api.operation.update-concept-scheme
+  layerName: api
+  after:
+    id: b949ff2a-822a-4005-b352-6a0ceb937860
+    path: api.operation.update-concept-scheme
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Update Concept Scheme
+    description: PUT /api/schemes/{scheme_id} — update an existing concept scheme
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: update_concept_scheme
+    metadata:
+      created_at: 2026-05-08T09:44:25.139Z
+      updated_at: 2026-05-08T09:44:25.139Z
+      version: 1
+  timestamp: 2026-05-08T09:44:25.161Z
+  sequenceNumber: 8
+- type: add
+  elementId: api.operation.delete-concept-scheme
+  layerName: api
+  after:
+    id: 6e1bdc62-dcc9-4576-9dec-c08727a06927
+    path: api.operation.delete-concept-scheme
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Delete Concept Scheme
+    description: DELETE /api/schemes/{scheme_id} — delete a concept scheme and its classes
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: delete_concept_scheme
+    metadata:
+      created_at: 2026-05-08T09:44:25.800Z
+      updated_at: 2026-05-08T09:44:25.800Z
+      version: 1
+  timestamp: 2026-05-08T09:44:25.826Z
+  sequenceNumber: 9
+- type: add
+  elementId: api.operation.create-class
+  layerName: api
+  after:
+    id: 9eacb84a-1f25-41f6-bca1-dac1c90593e8
+    path: api.operation.create-class
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Create Class
+    description: POST /api/schemes/{scheme_id}/classes — create a class within a
+      concept scheme
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: create_class
+    metadata:
+      created_at: 2026-05-08T09:44:28.616Z
+      updated_at: 2026-05-08T09:44:28.616Z
+      version: 1
+  timestamp: 2026-05-08T09:44:28.640Z
+  sequenceNumber: 10
+- type: add
+  elementId: api.operation.list-classes
+  layerName: api
+  after:
+    id: 64d0dfe7-1fe8-47a3-bd67-dd852e1dc72b
+    path: api.operation.list-classes
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: List Classes
+    description: GET /api/classes — list all classes with optional filtering by
+      scheme, parent, search
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: list_classes
+    metadata:
+      created_at: 2026-05-08T09:44:29.368Z
+      updated_at: 2026-05-08T09:44:29.368Z
+      version: 1
+  timestamp: 2026-05-08T09:44:29.392Z
+  sequenceNumber: 11
+- type: add
+  elementId: api.operation.get-class
+  layerName: api
+  after:
+    id: a1445eeb-dd46-4520-bcd4-9677873ace77
+    path: api.operation.get-class
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Class
+    description: GET /api/classes/{class_id} — retrieve a single ontology class by ID
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: get_class
+    metadata:
+      created_at: 2026-05-08T09:44:30.686Z
+      updated_at: 2026-05-08T09:44:30.686Z
+      version: 1
+  timestamp: 2026-05-08T09:44:30.713Z
+  sequenceNumber: 12
+- type: add
+  elementId: api.operation.update-class
+  layerName: api
+  after:
+    id: 6e7c4e7b-9c22-45fa-bcdc-04818a1caaa6
+    path: api.operation.update-class
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Update Class
+    description: PUT /api/classes/{class_id} — update an existing ontology class
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: update_class
+    metadata:
+      created_at: 2026-05-08T09:44:31.254Z
+      updated_at: 2026-05-08T09:44:31.254Z
+      version: 1
+  timestamp: 2026-05-08T09:44:31.279Z
+  sequenceNumber: 13
+- type: add
+  elementId: api.operation.move-class
+  layerName: api
+  after:
+    id: 80b40e06-ae52-433a-ad6d-28491f2b2229
+    path: api.operation.move-class
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Move Class
+    description: POST /api/classes/{class_id}/move — move a class to a different
+      parent within the hierarchy
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: move_class
+    metadata:
+      created_at: 2026-05-08T09:44:31.917Z
+      updated_at: 2026-05-08T09:44:31.917Z
+      version: 1
+  timestamp: 2026-05-08T09:44:31.942Z
+  sequenceNumber: 14
+- type: add
+  elementId: api.operation.delete-class
+  layerName: api
+  after:
+    id: cd9a7ee5-60dd-45b8-a705-3621d525ae3b
+    path: api.operation.delete-class
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Delete Class
+    description: DELETE /api/classes/{class_id} — delete a class and cascade to subclasses
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: delete_class
+    metadata:
+      created_at: 2026-05-08T09:44:37.310Z
+      updated_at: 2026-05-08T09:44:37.310Z
+      version: 1
+  timestamp: 2026-05-08T09:44:37.336Z
+  sequenceNumber: 15
+- type: add
+  elementId: api.operation.create-relationship
+  layerName: api
+  after:
+    id: 997670c6-4e77-4976-9878-146914813910
+    path: api.operation.create-relationship
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Create Relationship
+    description: POST /api/relationships — create a typed directed relationship
+      between two ontology entities
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: create_relationship
+    metadata:
+      created_at: 2026-05-08T09:44:37.630Z
+      updated_at: 2026-05-08T09:44:37.630Z
+      version: 1
+  timestamp: 2026-05-08T09:44:37.656Z
+  sequenceNumber: 16
+- type: add
+  elementId: api.operation.list-relationships
+  layerName: api
+  after:
+    id: 17a19ab8-bf18-472e-9e92-13eeb05e0f9b
+    path: api.operation.list-relationships
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: List Relationships
+    description: GET /api/relationships — list relationships with optional
+      source/target/type filtering
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: list_relationships
+    metadata:
+      created_at: 2026-05-08T09:44:37.951Z
+      updated_at: 2026-05-08T09:44:37.951Z
+      version: 1
+  timestamp: 2026-05-08T09:44:37.977Z
+  sequenceNumber: 17
+- type: add
+  elementId: api.operation.get-relationship
+  layerName: api
+  after:
+    id: 5ac37879-a59e-42e4-82f7-fcc01e4297e3
+    path: api.operation.get-relationship
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Relationship
+    description: GET /api/relationships/{relationship_id} — retrieve a single
+      relationship by ID
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: get_relationship
+    metadata:
+      created_at: 2026-05-08T09:44:38.275Z
+      updated_at: 2026-05-08T09:44:38.275Z
+      version: 1
+  timestamp: 2026-05-08T09:44:38.301Z
+  sequenceNumber: 18
+- type: add
+  elementId: api.operation.delete-relationship
+  layerName: api
+  after:
+    id: 2e0ad663-7c36-42bc-b47f-58c752d38e4c
+    path: api.operation.delete-relationship
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Delete Relationship
+    description: DELETE /api/relationships/{relationship_id} — remove a typed
+      relationship between ontology entities
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: delete_relationship
+    metadata:
+      created_at: 2026-05-08T09:44:38.605Z
+      updated_at: 2026-05-08T09:44:38.605Z
+      version: 1
+  timestamp: 2026-05-08T09:44:38.632Z
+  sequenceNumber: 19
+- type: add
+  elementId: api.operation.create-property-definition
+  layerName: api
+  after:
+    id: 947d613b-6b89-488d-9154-bf530313f19e
+    path: api.operation.create-property-definition
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Create Property Definition
+    description: POST /api/properties — define a new relationship type (object
+      property) in the ontology
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: create_property_definition
+    metadata:
+      created_at: 2026-05-08T09:44:43.832Z
+      updated_at: 2026-05-08T09:44:43.832Z
+      version: 1
+  timestamp: 2026-05-08T09:44:43.858Z
+  sequenceNumber: 20
+- type: add
+  elementId: api.operation.list-property-definitions
+  layerName: api
+  after:
+    id: 47090eae-f5be-4c15-b161-7a13702aa729
+    path: api.operation.list-property-definitions
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: List Property Definitions
+    description: GET /api/properties — list all property definitions (relationship types)
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: list_property_definitions
+    metadata:
+      created_at: 2026-05-08T09:44:44.164Z
+      updated_at: 2026-05-08T09:44:44.164Z
+      version: 1
+  timestamp: 2026-05-08T09:44:44.191Z
+  sequenceNumber: 21
+- type: add
+  elementId: api.operation.get-property-definition
+  layerName: api
+  after:
+    id: acea373e-108f-47cb-9b51-7e322e310a18
+    path: api.operation.get-property-definition
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Property Definition
+    description: GET /api/properties/{property_id} — retrieve a single property
+      definition by ID
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: get_property_definition
+    metadata:
+      created_at: 2026-05-08T09:44:44.500Z
+      updated_at: 2026-05-08T09:44:44.500Z
+      version: 1
+  timestamp: 2026-05-08T09:44:44.529Z
+  sequenceNumber: 22
+- type: add
+  elementId: api.operation.update-property-definition
+  layerName: api
+  after:
+    id: 80251f2b-5b3c-4fce-84dc-88c84595ad14
+    path: api.operation.update-property-definition
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Update Property Definition
+    description: PUT /api/properties/{property_id} — update an existing property definition
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: update_property_definition
+    metadata:
+      created_at: 2026-05-08T09:44:44.832Z
+      updated_at: 2026-05-08T09:44:44.832Z
+      version: 1
+  timestamp: 2026-05-08T09:44:44.861Z
+  sequenceNumber: 23
+- type: add
+  elementId: api.operation.delete-property-definition
+  layerName: api
+  after:
+    id: df8cce62-0097-4f35-b774-d26e857d5df0
+    path: api.operation.delete-property-definition
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Delete Property Definition
+    description: DELETE /api/properties/{property_id} — delete a property definition
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: delete_property_definition
+    metadata:
+      created_at: 2026-05-08T09:44:45.342Z
+      updated_at: 2026-05-08T09:44:45.342Z
+      version: 1
+  timestamp: 2026-05-08T09:44:45.433Z
+  sequenceNumber: 24
+- type: add
+  elementId: api.operation.create-individual
+  layerName: api
+  after:
+    id: 2031417a-ecd6-4f93-bdfc-1e87af706ce4
+    path: api.operation.create-individual
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Create Individual
+    description: POST /api/individuals — create an individual (named instance) of
+      one or more classes
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: create_individual
+    metadata:
+      created_at: 2026-05-08T09:44:50.338Z
+      updated_at: 2026-05-08T09:44:50.338Z
+      version: 1
+  timestamp: 2026-05-08T09:44:50.367Z
+  sequenceNumber: 25
+- type: add
+  elementId: api.operation.list-individuals
+  layerName: api
+  after:
+    id: ab31e2ff-0737-47c6-9053-d8f361f859bf
+    path: api.operation.list-individuals
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: List Individuals
+    description: GET /api/individuals — list all individuals with optional
+      class/scheme filtering
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: list_individuals
+    metadata:
+      created_at: 2026-05-08T09:44:50.676Z
+      updated_at: 2026-05-08T09:44:50.676Z
+      version: 1
+  timestamp: 2026-05-08T09:44:50.705Z
+  sequenceNumber: 26
+- type: add
+  elementId: api.operation.get-individual
+  layerName: api
+  after:
+    id: a15d2100-326a-414f-aac6-96959d83b2fb
+    path: api.operation.get-individual
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Individual
+    description: GET /api/individuals/{individual_id} — retrieve a single individual by ID
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: get_individual
+    metadata:
+      created_at: 2026-05-08T09:44:51.014Z
+      updated_at: 2026-05-08T09:44:51.014Z
+      version: 1
+  timestamp: 2026-05-08T09:44:51.043Z
+  sequenceNumber: 27
+- type: add
+  elementId: api.operation.update-individual
+  layerName: api
+  after:
+    id: eb31c869-9a33-47be-85ef-aac06d664b71
+    path: api.operation.update-individual
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Update Individual
+    description: PUT /api/individuals/{individual_id} — update an existing individual
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: update_individual
+    metadata:
+      created_at: 2026-05-08T09:44:51.350Z
+      updated_at: 2026-05-08T09:44:51.350Z
+      version: 1
+  timestamp: 2026-05-08T09:44:51.380Z
+  sequenceNumber: 28
+- type: add
+  elementId: api.operation.delete-individual
+  layerName: api
+  after:
+    id: ea09199d-0b91-443d-8e1b-34fdaafca85d
+    path: api.operation.delete-individual
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Delete Individual
+    description: DELETE /api/individuals/{individual_id} — delete an individual
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: delete_individual
+    metadata:
+      created_at: 2026-05-08T09:44:51.699Z
+      updated_at: 2026-05-08T09:44:51.699Z
+      version: 1
+  timestamp: 2026-05-08T09:44:51.730Z
+  sequenceNumber: 29
+- type: add
+  elementId: api.operation.add-parent-class-to-individual
+  layerName: api
+  after:
+    id: babb1dfb-b071-41fc-89da-9bd41927fe91
+    path: api.operation.add-parent-class-to-individual
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Add Parent Class To Individual
+    description: POST /api/individuals/{individual_id}/classes — add a parent class
+      assignment to an individual
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: add_parent_class_to_individual
+    metadata:
+      created_at: 2026-05-08T09:44:58.232Z
+      updated_at: 2026-05-08T09:44:58.232Z
+      version: 1
+  timestamp: 2026-05-08T09:44:58.278Z
+  sequenceNumber: 30
+- type: add
+  elementId: api.operation.remove-parent-class-from-individual
+  layerName: api
+  after:
+    id: 1715cdce-83c9-4bbd-ae8c-aa5387d61e6f
+    path: api.operation.remove-parent-class-from-individual
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Remove Parent Class From Individual
+    description: DELETE /api/individuals/{individual_id}/classes/{class_id} — remove
+      a class assignment from an individual
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: remove_parent_class_from_individual
+    metadata:
+      created_at: 2026-05-08T09:44:58.690Z
+      updated_at: 2026-05-08T09:44:58.690Z
+      version: 1
+  timestamp: 2026-05-08T09:44:58.722Z
+  sequenceNumber: 31
+- type: add
+  elementId: api.operation.reorder-individual-classes
+  layerName: api
+  after:
+    id: 5cd45b62-9b56-42a4-92aa-4d5b59afb5ea
+    path: api.operation.reorder-individual-classes
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Reorder Individual Classes
+    description: PUT /api/individuals/{individual_id}/classes — reorder the class
+      assignments on an individual
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: reorder_individual_classes
+    metadata:
+      created_at: 2026-05-08T09:44:59.049Z
+      updated_at: 2026-05-08T09:44:59.049Z
+      version: 1
+  timestamp: 2026-05-08T09:44:59.082Z
+  sequenceNumber: 32
+- type: add
+  elementId: api.operation.get-individual-inherited-properties
+  layerName: api
+  after:
+    id: 43f8d655-befb-4f29-9b26-190f3d461e61
+    path: api.operation.get-individual-inherited-properties
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Individual Inherited Properties
+    description: GET /api/individuals/{individual_id}/inherited-properties —
+      retrieve data properties inherited from parent classes
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: get_individual_inherited_properties
+    metadata:
+      created_at: 2026-05-08T09:44:59.396Z
+      updated_at: 2026-05-08T09:44:59.396Z
+      version: 1
+  timestamp: 2026-05-08T09:44:59.427Z
+  sequenceNumber: 33
+- type: add
+  elementId: api.operation.build-knowledge-graph
+  layerName: api
+  after:
+    id: 0ea9c252-7048-486d-b02e-ab189fbc0e96
+    path: api.operation.build-knowledge-graph
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Build Knowledge Graph
+    description: POST /api/graph/build — build an in-memory knowledge graph from
+      persisted ontology entities and relationships
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/graph_routes.py
+          symbol: build_graph
+    metadata:
+      created_at: 2026-05-08T09:45:12.490Z
+      updated_at: 2026-05-08T09:45:12.490Z
+      version: 1
+  timestamp: 2026-05-08T09:45:12.523Z
+  sequenceNumber: 34
+- type: add
+  elementId: api.operation.get-graph-metrics
+  layerName: api
+  after:
+    id: a549f8dd-e104-4c29-a346-3a02abee36fa
+    path: api.operation.get-graph-metrics
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Graph Metrics
+    description: GET /api/graph/metrics — retrieve global graph statistics (node
+      count, edge count, density, diameter)
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/graph_routes.py
+          symbol: get_metrics
+    metadata:
+      created_at: 2026-05-08T09:45:12.855Z
+      updated_at: 2026-05-08T09:45:12.855Z
+      version: 1
+  timestamp: 2026-05-08T09:45:12.888Z
+  sequenceNumber: 35
+- type: add
+  elementId: api.operation.get-degree-distribution
+  layerName: api
+  after:
+    id: 7b7e9785-5363-4972-ba70-fce7098eb1ff
+    path: api.operation.get-degree-distribution
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Degree Distribution
+    description: GET /api/graph/degree-distribution — retrieve node degree
+      distribution histogram
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/graph_routes.py
+          symbol: get_degree_distribution
+    metadata:
+      created_at: 2026-05-08T09:45:13.225Z
+      updated_at: 2026-05-08T09:45:13.225Z
+      version: 1
+  timestamp: 2026-05-08T09:45:13.258Z
+  sequenceNumber: 36
+- type: add
+  elementId: api.operation.get-shortest-path
+  layerName: api
+  after:
+    id: f0893677-65e6-457c-91c5-b54a27fe8750
+    path: api.operation.get-shortest-path
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Shortest Path
+    description: GET /api/graph/paths/shortest — find shortest path between two graph nodes
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/graph_routes.py
+          symbol: get_shortest_path
+    metadata:
+      created_at: 2026-05-08T09:45:13.593Z
+      updated_at: 2026-05-08T09:45:13.593Z
+      version: 1
+  timestamp: 2026-05-08T09:45:13.627Z
+  sequenceNumber: 37
+- type: add
+  elementId: api.operation.get-all-paths
+  layerName: api
+  after:
+    id: d9df8617-2815-43a3-8bfd-56ac3564e6a2
+    path: api.operation.get-all-paths
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get All Paths
+    description: GET /api/graph/paths/all — find all paths between two graph nodes
+      up to a maximum depth
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/graph_routes.py
+          symbol: get_all_paths
+    metadata:
+      created_at: 2026-05-08T09:45:13.961Z
+      updated_at: 2026-05-08T09:45:13.961Z
+      version: 1
+  timestamp: 2026-05-08T09:45:13.995Z
+  sequenceNumber: 38
+- type: add
+  elementId: api.operation.get-centrality
+  layerName: api
+  after:
+    id: 843879af-44fd-4ffa-9825-8f87b550a47e
+    path: api.operation.get-centrality
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Centrality
+    description: GET /api/graph/centrality — compute node centrality scores
+      (betweenness, pagerank, closeness, degree)
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/graph_routes.py
+          symbol: get_centrality
+    metadata:
+      created_at: 2026-05-08T09:45:19.673Z
+      updated_at: 2026-05-08T09:45:19.673Z
+      version: 1
+  timestamp: 2026-05-08T09:45:19.709Z
+  sequenceNumber: 39
+- type: add
+  elementId: api.operation.get-communities
+  layerName: api
+  after:
+    id: 7e8660b9-054d-4514-9b4f-ac0e4a14b2fd
+    path: api.operation.get-communities
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Communities
+    description: GET /api/graph/communities — detect communities/clusters in the
+      knowledge graph
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/graph_routes.py
+          symbol: get_communities
+    metadata:
+      created_at: 2026-05-08T09:45:20.034Z
+      updated_at: 2026-05-08T09:45:20.034Z
+      version: 1
+  timestamp: 2026-05-08T09:45:20.069Z
+  sequenceNumber: 40
+- type: add
+  elementId: api.operation.get-neighbors
+  layerName: api
+  after:
+    id: b570951a-182a-498c-9617-4cfb07b26568
+    path: api.operation.get-neighbors
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Neighbors
+    description: GET /api/graph/nodes/{node_id}/neighbors — retrieve immediate
+      neighbors of a graph node
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/graph_routes.py
+          symbol: get_neighbors
+    metadata:
+      created_at: 2026-05-08T09:45:20.398Z
+      updated_at: 2026-05-08T09:45:20.398Z
+      version: 1
+  timestamp: 2026-05-08T09:45:20.434Z
+  sequenceNumber: 41
+- type: add
+  elementId: api.operation.get-subgraph
+  layerName: api
+  after:
+    id: 646612b7-c0a7-438e-9300-1d6fb0249d8b
+    path: api.operation.get-subgraph
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Subgraph
+    description: GET /api/graph/subgraph — extract a subgraph for a set of root node IDs
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/graph_routes.py
+          symbol: get_subgraph
+    metadata:
+      created_at: 2026-05-08T09:45:20.761Z
+      updated_at: 2026-05-08T09:45:20.761Z
+      version: 1
+  timestamp: 2026-05-08T09:45:20.794Z
+  sequenceNumber: 42
+- type: add
+  elementId: api.operation.get-subgraph-by-depth
+  layerName: api
+  after:
+    id: f30e26ff-8143-4fb3-8cdb-76e614138cbb
+    path: api.operation.get-subgraph-by-depth
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Subgraph By Depth
+    description: GET /api/graph/nodes/{node_id}/subgraph — extract a depth-bounded
+      subgraph rooted at a node
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/graph_routes.py
+          symbol: get_subgraph_by_depth
+    metadata:
+      created_at: 2026-05-08T09:45:21.123Z
+      updated_at: 2026-05-08T09:45:21.123Z
+      version: 1
+  timestamp: 2026-05-08T09:45:21.157Z
+  sequenceNumber: 43
+- type: add
+  elementId: api.operation.check-cycle
+  layerName: api
+  after:
+    id: 929855cb-182d-4098-93a0-ed208e7528fe
+    path: api.operation.check-cycle
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Check Cycle
+    description: POST /api/graph/cycle-check — detect if adding a directed edge
+      would create a cycle
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/graph_routes.py
+          symbol: check_cycle
+    metadata:
+      created_at: 2026-05-08T09:45:26.488Z
+      updated_at: 2026-05-08T09:45:26.488Z
+      version: 1
+  timestamp: 2026-05-08T09:45:26.521Z
+  sequenceNumber: 44
+- type: add
+  elementId: api.operation.execute-sparql
+  layerName: api
+  after:
+    id: 70bc0452-a370-41c8-ad36-7de7e4595231
+    path: api.operation.execute-sparql
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Execute SPARQL
+    description: POST /api/graph/sparql — execute a SPARQL SELECT query over the
+      in-memory RDF graph
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/graph_routes.py
+          symbol: execute_sparql
+    metadata:
+      created_at: 2026-05-08T09:45:26.852Z
+      updated_at: 2026-05-08T09:45:26.852Z
+      version: 1
+  timestamp: 2026-05-08T09:45:26.888Z
+  sequenceNumber: 45
+- type: add
+  elementId: api.operation.get-rdf-triples
+  layerName: api
+  after:
+    id: 2344ba06-5017-4931-a246-172c7e678dab
+    path: api.operation.get-rdf-triples
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get RDF Triples
+    description: GET /api/graph/rdf/triples — retrieve all RDF triples from the
+      knowledge graph
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/graph_routes.py
+          symbol: get_rdf_triples
+    metadata:
+      created_at: 2026-05-08T09:45:27.225Z
+      updated_at: 2026-05-08T09:45:27.225Z
+      version: 1
+  timestamp: 2026-05-08T09:45:27.261Z
+  sequenceNumber: 46
+- type: add
+  elementId: api.operation.get-rdf-triple-count
+  layerName: api
+  after:
+    id: 7d8c00df-ada0-4a3c-b157-32bf5092de51
+    path: api.operation.get-rdf-triple-count
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get RDF Triple Count
+    description: GET /api/graph/rdf/count — get the count of RDF triples in the
+      knowledge graph
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/graph_routes.py
+          symbol: get_rdf_triple_count
+    metadata:
+      created_at: 2026-05-08T09:45:27.597Z
+      updated_at: 2026-05-08T09:45:27.597Z
+      version: 1
+  timestamp: 2026-05-08T09:45:27.631Z
+  sequenceNumber: 47
+- type: add
+  elementId: api.operation.extract-entities
+  layerName: api
+  after:
+    id: 25678ade-9314-40aa-ac25-926308c41113
+    path: api.operation.extract-entities
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Extract Entities
+    description: POST /api/extract — extract ontology entities from a text corpus
+      using NLP and LLM pipelines
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/extraction_routes.py
+          symbol: extract_entities
+    metadata:
+      created_at: 2026-05-08T09:45:33.069Z
+      updated_at: 2026-05-08T09:45:33.069Z
+      version: 1
+  timestamp: 2026-05-08T09:45:33.103Z
+  sequenceNumber: 48
+- type: add
+  elementId: api.operation.analyze-text
+  layerName: api
+  after:
+    id: fc25b9c0-0c78-42b2-821c-5b2e94da3850
+    path: api.operation.analyze-text
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Analyze Text
+    description: POST /api/analyze_text — analyze text for entities, concepts, and
+      relationships without persisting
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/extraction_routes.py
+          symbol: analyze_text
+    metadata:
+      created_at: 2026-05-08T09:45:33.438Z
+      updated_at: 2026-05-08T09:45:33.438Z
+      version: 1
+  timestamp: 2026-05-08T09:45:33.474Z
+  sequenceNumber: 49
+- type: add
+  elementId: api.operation.enrich-from-references
+  layerName: api
+  after:
+    id: 58e5c09b-6bb8-4f4e-8387-966f55d1d475
+    path: api.operation.enrich-from-references
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Enrich From References
+    description: POST /api/enrich_from_references — enrich existing ontology
+      entities with data from external reference sources
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/extraction_routes.py
+          symbol: enrich_from_references
+    metadata:
+      created_at: 2026-05-08T09:45:33.815Z
+      updated_at: 2026-05-08T09:45:33.815Z
+      version: 1
+  timestamp: 2026-05-08T09:45:33.851Z
+  sequenceNumber: 50
+- type: add
+  elementId: api.operation.get-system-health
+  layerName: api
+  after:
+    id: 12393536-4173-4905-a5a8-9e063332008e
+    path: api.operation.get-system-health
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get System Health
+    description: GET /api/v1/admin/health — retrieve overall system health status
+      across all services
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/admin_routes.py
+          symbol: get_system_health
+    metadata:
+      created_at: 2026-05-08T09:45:39.941Z
+      updated_at: 2026-05-08T09:45:39.941Z
+      version: 1
+  timestamp: 2026-05-08T09:45:39.977Z
+  sequenceNumber: 51
+- type: add
+  elementId: api.operation.get-database-health
+  layerName: api
+  after:
+    id: 2d785575-dfce-4f98-9f51-4cc3a30c4450
+    path: api.operation.get-database-health
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Database Health
+    description: GET /api/v1/admin/health/database — check database connectivity and
+      integrity for local.db and operations.db
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/admin_routes.py
+          symbol: get_database_health
+    metadata:
+      created_at: 2026-05-08T09:45:40.317Z
+      updated_at: 2026-05-08T09:45:40.317Z
+      version: 1
+  timestamp: 2026-05-08T09:45:40.352Z
+  sequenceNumber: 52
+- type: add
+  elementId: api.operation.get-service-metrics
+  layerName: api
+  after:
+    id: a20a4911-ef16-4571-aec7-ddf163021c36
+    path: api.operation.get-service-metrics
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Service Metrics
+    description: GET /api/v1/admin/health/services — retrieve per-service metrics
+      and uptime statistics
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/admin_routes.py
+          symbol: get_service_metrics
+    metadata:
+      created_at: 2026-05-08T09:45:40.685Z
+      updated_at: 2026-05-08T09:45:40.685Z
+      version: 1
+  timestamp: 2026-05-08T09:45:40.720Z
+  sequenceNumber: 53
+- type: add
+  elementId: api.operation.get-embedding-health
+  layerName: api
+  after:
+    id: 4d06791e-740c-4d1c-8d0e-5c7262f69e51
+    path: api.operation.get-embedding-health
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Embedding Health
+    description: GET /api/v1/admin/health/embedding — check embedding model
+      availability and readiness
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/admin_routes.py
+          symbol: get_embedding_health
+    metadata:
+      created_at: 2026-05-08T09:45:41.060Z
+      updated_at: 2026-05-08T09:45:41.060Z
+      version: 1
+  timestamp: 2026-05-08T09:45:41.095Z
+  sequenceNumber: 54
+- type: add
+  elementId: api.operation.get-nlp-health
+  layerName: api
+  after:
+    id: 7daa16af-29b3-4611-9e15-76055f056132
+    path: api.operation.get-nlp-health
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get NLP Health
+    description: GET /api/v1/admin/health/nlp — check spaCy NLP processor
+      availability and readiness
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/admin_routes.py
+          symbol: get_nlp_health
+    metadata:
+      created_at: 2026-05-08T09:45:41.441Z
+      updated_at: 2026-05-08T09:45:41.441Z
+      version: 1
+  timestamp: 2026-05-08T09:45:41.474Z
+  sequenceNumber: 55
+- type: add
+  elementId: api.operation.get-background-tasks-summary
+  layerName: api
+  after:
+    id: 4161e295-71ff-482c-ba4b-60ec9887cc2d
+    path: api.operation.get-background-tasks-summary
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Background Tasks Summary
+    description: GET /api/v1/admin/health/tasks — retrieve background task queue
+      summary and counts
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/admin_routes.py
+          symbol: get_background_tasks_summary
+    metadata:
+      created_at: 2026-05-08T09:45:47.065Z
+      updated_at: 2026-05-08T09:45:47.065Z
+      version: 1
+  timestamp: 2026-05-08T09:45:47.160Z
+  sequenceNumber: 56
+- type: add
+  elementId: api.operation.get-configuration
+  layerName: api
+  after:
+    id: 514271f4-201b-4683-b4f3-f9fefb7ebb66
+    path: api.operation.get-configuration
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Configuration
+    description: GET /api/v1/admin/configuration — retrieve current application
+      configuration
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/admin_routes.py
+          symbol: get_configuration
+    metadata:
+      created_at: 2026-05-08T09:45:47.555Z
+      updated_at: 2026-05-08T09:45:47.555Z
+      version: 1
+  timestamp: 2026-05-08T09:45:47.590Z
+  sequenceNumber: 57
+- type: add
+  elementId: api.operation.update-configuration-section
+  layerName: api
+  after:
+    id: 7a236dc9-96cb-44ac-89e5-682298f50292
+    path: api.operation.update-configuration-section
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Update Configuration Section
+    description: PATCH /api/v1/admin/configuration — update a section of the
+      application configuration
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/admin_routes.py
+          symbol: update_configuration_section
+    metadata:
+      created_at: 2026-05-08T09:45:47.959Z
+      updated_at: 2026-05-08T09:45:47.959Z
+      version: 1
+  timestamp: 2026-05-08T09:45:47.995Z
+  sequenceNumber: 58
+- type: add
+  elementId: api.operation.reset-configuration
+  layerName: api
+  after:
+    id: 4a1107be-24bb-4a20-aa70-98359f508319
+    path: api.operation.reset-configuration
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Reset Configuration
+    description: POST /api/v1/admin/configuration/reset — reset configuration to
+      defaults from config.json
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/admin_routes.py
+          symbol: reset_configuration
+    metadata:
+      created_at: 2026-05-08T09:45:48.338Z
+      updated_at: 2026-05-08T09:45:48.338Z
+      version: 1
+  timestamp: 2026-05-08T09:45:48.372Z
+  sequenceNumber: 59
+- type: add
+  elementId: api.operation.list-background-tasks
+  layerName: api
+  after:
+    id: db0b2644-3581-4127-9f26-af5d013cd3ff
+    path: api.operation.list-background-tasks
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: List Background Tasks
+    description: GET /api/v1/admin/tasks — list all background tasks with status
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/admin_routes.py
+          symbol: list_background_tasks
+    metadata:
+      created_at: 2026-05-08T09:45:48.738Z
+      updated_at: 2026-05-08T09:45:48.738Z
+      version: 1
+  timestamp: 2026-05-08T09:45:48.774Z
+  sequenceNumber: 60
+- type: add
+  elementId: api.operation.get-background-task
+  layerName: api
+  after:
+    id: a8200aca-ddd4-4c05-9a13-bda04e2f350b
+    path: api.operation.get-background-task
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Background Task
+    description: GET /api/v1/admin/tasks/{task_id} — retrieve a single background task by ID
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/admin_routes.py
+          symbol: get_background_task
+    metadata:
+      created_at: 2026-05-08T09:45:54.231Z
+      updated_at: 2026-05-08T09:45:54.231Z
+      version: 1
+  timestamp: 2026-05-08T09:45:54.268Z
+  sequenceNumber: 61
+- type: add
+  elementId: api.operation.get-reference-status
+  layerName: api
+  after:
+    id: 1f549e7c-52e3-4f60-b9dc-4f2a80e350db
+    path: api.operation.get-reference-status
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Reference Status
+    description: GET /api/reference/status — check availability and status of
+      external reference sources (ConceptNet, DBpedia, Wikidata, schema.org)
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/reference_routes.py
+          symbol: reference_status
+    metadata:
+      created_at: 2026-05-08T09:45:54.628Z
+      updated_at: 2026-05-08T09:45:54.628Z
+      version: 1
+  timestamp: 2026-05-08T09:45:54.669Z
+  sequenceNumber: 62
+- type: add
+  elementId: api.operation.search-references
+  layerName: api
+  after:
+    id: d4532f3f-577d-4e9f-822e-1c716bba5103
+    path: api.operation.search-references
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Search References
+    description: POST /api/reference/search — search external reference sources for
+      concepts matching a query
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/reference_routes.py
+          symbol: search_references
+    metadata:
+      created_at: 2026-05-08T09:45:55.040Z
+      updated_at: 2026-05-08T09:45:55.040Z
+      version: 1
+  timestamp: 2026-05-08T09:45:55.079Z
+  sequenceNumber: 63
+- type: add
+  elementId: api.operation.get-reference-relations
+  layerName: api
+  after:
+    id: 5d27c045-ae42-4505-91f1-00f012e97837
+    path: api.operation.get-reference-relations
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Reference Relations
+    description: POST /api/reference/relations — retrieve semantic relations for a
+      concept from external reference sources
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/reference_routes.py
+          symbol: get_reference_relations
+    metadata:
+      created_at: 2026-05-08T09:45:55.450Z
+      updated_at: 2026-05-08T09:45:55.450Z
+      version: 1
+  timestamp: 2026-05-08T09:45:55.488Z
+  sequenceNumber: 64
+- type: add
+  elementId: api.operation.export-ontology
+  layerName: api
+  after:
+    id: 22f970a7-b13e-4d50-af4f-3745eca56b0a
+    path: api.operation.export-ontology
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Export Ontology
+    description: POST /api/v1/interchange/export — export ontology in SKOS, OWL, or
+      GraphML format as streaming response
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/interchange_routes.py
+          symbol: export_ontology
+    metadata:
+      created_at: 2026-05-08T09:46:03.208Z
+      updated_at: 2026-05-08T09:46:03.208Z
+      version: 1
+  timestamp: 2026-05-08T09:46:03.246Z
+  sequenceNumber: 65
+- type: add
+  elementId: api.operation.import-ontology
+  layerName: api
+  after:
+    id: 8153a2e8-28ad-43d6-bef3-544885a35819
+    path: api.operation.import-ontology
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Import Ontology
+    description: POST /api/v1/interchange/import — import ontology from SKOS, OWL,
+      or GraphML file; creates ImportRun record
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/interchange_routes.py
+          symbol: import_ontology
+    metadata:
+      created_at: 2026-05-08T09:46:03.604Z
+      updated_at: 2026-05-08T09:46:03.604Z
+      version: 1
+  timestamp: 2026-05-08T09:46:03.643Z
+  sequenceNumber: 66
+- type: add
+  elementId: api.operation.list-import-runs
+  layerName: api
+  after:
+    id: 71ca5451-4e96-4c4a-bded-bafc65704883
+    path: api.operation.list-import-runs
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: List Import Runs
+    description: GET /api/v1/interchange/runs — list all import run records with
+      status and metadata
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/interchange_routes.py
+          symbol: list_import_runs
+    metadata:
+      created_at: 2026-05-08T09:46:04.005Z
+      updated_at: 2026-05-08T09:46:04.005Z
+      version: 1
+  timestamp: 2026-05-08T09:46:04.042Z
+  sequenceNumber: 67
+- type: add
+  elementId: api.operation.get-import-run
+  layerName: api
+  after:
+    id: 6ab9b745-fde0-4bfe-b39e-4961d616125f
+    path: api.operation.get-import-run
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Import Run
+    description: GET /api/v1/interchange/runs/{run_id} — retrieve a single import
+      run record by ID
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/interchange_routes.py
+          symbol: get_import_run
+    metadata:
+      created_at: 2026-05-08T09:46:04.404Z
+      updated_at: 2026-05-08T09:46:04.404Z
+      version: 1
+  timestamp: 2026-05-08T09:46:04.443Z
+  sequenceNumber: 68
+- type: add
+  elementId: api.operation.get-run-change-events
+  layerName: api
+  after:
+    id: 814665a8-4682-43cb-9718-b2914b39ae21
+    path: api.operation.get-run-change-events
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Run Change Events
+    description: GET /api/v1/interchange/runs/{run_id}/change-events — retrieve all
+      change events generated by an import run
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/interchange_routes.py
+          symbol: get_run_change_events
+    metadata:
+      created_at: 2026-05-08T09:46:04.805Z
+      updated_at: 2026-05-08T09:46:04.805Z
+      version: 1
+  timestamp: 2026-05-08T09:46:04.846Z
+  sequenceNumber: 69
+- type: add
+  elementId: api.operation.get-change-history-all
+  layerName: api
+  after:
+    id: 1199168b-6b0b-458a-afce-d50812d2934b
+    path: api.operation.get-change-history-all
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Change History All
+    description: GET /api/v1/versioning/changes — retrieve full change history for
+      all entities
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: get_change_history_all
+    metadata:
+      created_at: 2026-05-08T09:46:10.590Z
+      updated_at: 2026-05-08T09:46:10.590Z
+      version: 1
+  timestamp: 2026-05-08T09:46:10.639Z
+  sequenceNumber: 70
+- type: add
+  elementId: api.operation.get-change-history-by-entity
+  layerName: api
+  after:
+    id: 15370a2a-6988-4475-83e9-44c80bda2d43
+    path: api.operation.get-change-history-by-entity
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Change History By Entity
+    description: GET /api/v1/versioning/changes/{entity_id} — retrieve change
+      history for a specific entity
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: get_change_history_by_entity
+    metadata:
+      created_at: 2026-05-08T09:46:11.311Z
+      updated_at: 2026-05-08T09:46:11.311Z
+      version: 1
+  timestamp: 2026-05-08T09:46:11.351Z
+  sequenceNumber: 71
+- type: add
+  elementId: api.operation.list-entity-versions
+  layerName: api
+  after:
+    id: d2b3e3df-f074-4935-b530-7f183a58ea4b
+    path: api.operation.list-entity-versions
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: List Entity Versions
+    description: GET /api/v1/versioning/versions/{entity_id} — list all stored
+      versions of an entity
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: list_versions
+    metadata:
+      created_at: 2026-05-08T09:46:11.949Z
+      updated_at: 2026-05-08T09:46:11.949Z
+      version: 1
+  timestamp: 2026-05-08T09:46:11.993Z
+  sequenceNumber: 72
+- type: add
+  elementId: api.operation.get-entity-version
+  layerName: api
+  after:
+    id: bc0e23cb-fafa-4ceb-ab2e-074670f0beff
+    path: api.operation.get-entity-version
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Entity Version
+    description: GET /api/v1/versioning/versions/{entity_id}/{version} — retrieve a
+      specific historical version of an entity
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: get_entity_version
+    metadata:
+      created_at: 2026-05-08T09:46:12.375Z
+      updated_at: 2026-05-08T09:46:12.375Z
+      version: 1
+  timestamp: 2026-05-08T09:46:12.414Z
+  sequenceNumber: 73
+- type: add
+  elementId: api.operation.create-changeset
+  layerName: api
+  after:
+    id: 11d6e3a0-f37b-4393-936f-1a3faf794f07
+    path: api.operation.create-changeset
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Create Changeset
+    description: POST /api/v1/versioning/changesets — create a new versioning
+      changeset for grouping changes
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: create_changeset
+    metadata:
+      created_at: 2026-05-08T09:46:12.821Z
+      updated_at: 2026-05-08T09:46:12.821Z
+      version: 1
+  timestamp: 2026-05-08T09:46:12.865Z
+  sequenceNumber: 74
+- type: add
+  elementId: api.operation.get-changeset
+  layerName: api
+  after:
+    id: eefff472-4192-4e15-bf89-9b420ae7be1d
+    path: api.operation.get-changeset
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Changeset
+    description: GET /api/v1/versioning/changesets/{changeset_id} — retrieve a
+      versioning changeset by ID
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: get_changeset
+    metadata:
+      created_at: 2026-05-08T09:46:18.182Z
+      updated_at: 2026-05-08T09:46:18.182Z
+      version: 1
+  timestamp: 2026-05-08T09:46:18.221Z
+  sequenceNumber: 75
+- type: add
+  elementId: api.operation.stage-changeset
+  layerName: api
+  after:
+    id: 232444b8-5d30-4619-84dc-a56179f614da
+    path: api.operation.stage-changeset
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Stage Changeset
+    description: POST /api/v1/versioning/changesets/{changeset_id}/stage — mark a
+      changeset as staged for review
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: stage_changeset
+    metadata:
+      created_at: 2026-05-08T09:46:18.606Z
+      updated_at: 2026-05-08T09:46:18.606Z
+      version: 1
+  timestamp: 2026-05-08T09:46:18.644Z
+  sequenceNumber: 76
+- type: add
+  elementId: api.operation.submit-proposal
+  layerName: api
+  after:
+    id: 0f305fa0-7e4d-48b5-b5df-974a98633269
+    path: api.operation.submit-proposal
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Submit Proposal
+    description: POST /api/v1/versioning/changesets/{changeset_id}/submit — submit a
+      changeset as a merge proposal
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: submit_proposal
+    metadata:
+      created_at: 2026-05-08T09:46:19.022Z
+      updated_at: 2026-05-08T09:46:19.022Z
+      version: 1
+  timestamp: 2026-05-08T09:46:19.061Z
+  sequenceNumber: 77
+- type: add
+  elementId: api.operation.approve-proposal
+  layerName: api
+  after:
+    id: 79fbc927-57cd-4102-bb1b-8ae507d15300
+    path: api.operation.approve-proposal
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Approve Proposal
+    description: POST /api/v1/versioning/proposals/{proposal_id}/approve — approve a
+      merge proposal
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: approve_proposal
+    metadata:
+      created_at: 2026-05-08T09:46:19.445Z
+      updated_at: 2026-05-08T09:46:19.445Z
+      version: 1
+  timestamp: 2026-05-08T09:46:19.484Z
+  sequenceNumber: 78
+- type: add
+  elementId: api.operation.reject-proposal
+  layerName: api
+  after:
+    id: 19d891df-4b26-41aa-a6b7-eee2c7fe6373
+    path: api.operation.reject-proposal
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Reject Proposal
+    description: POST /api/v1/versioning/proposals/{proposal_id}/reject — reject a
+      merge proposal
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: reject_proposal
+    metadata:
+      created_at: 2026-05-08T09:46:19.864Z
+      updated_at: 2026-05-08T09:46:19.864Z
+      version: 1
+  timestamp: 2026-05-08T09:46:19.903Z
+  sequenceNumber: 79
+- type: add
+  elementId: api.operation.detect-conflicts
+  layerName: api
+  after:
+    id: 5abff700-5b70-4bf1-a631-06d48f153372
+    path: api.operation.detect-conflicts
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Detect Conflicts
+    description: GET /api/v1/versioning/proposals/{proposal_id}/conflicts — detect
+      merge conflicts in a proposal
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: detect_conflicts
+    metadata:
+      created_at: 2026-05-08T09:46:26.312Z
+      updated_at: 2026-05-08T09:46:26.312Z
+      version: 1
+  timestamp: 2026-05-08T09:46:26.350Z
+  sequenceNumber: 80
+- type: add
+  elementId: api.operation.auto-resolve-conflicts
+  layerName: api
+  after:
+    id: f647936a-1745-4af7-9fa5-3a9c2999ba11
+    path: api.operation.auto-resolve-conflicts
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Auto Resolve Conflicts
+    description: POST /api/v1/versioning/proposals/{proposal_id}/auto-resolve —
+      automatically resolve merge conflicts using default strategies
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: auto_resolve_conflicts
+    metadata:
+      created_at: 2026-05-08T09:46:26.734Z
+      updated_at: 2026-05-08T09:46:26.734Z
+      version: 1
+  timestamp: 2026-05-08T09:46:26.774Z
+  sequenceNumber: 81
+- type: add
+  elementId: api.operation.resolve-conflicts
+  layerName: api
+  after:
+    id: 8d1f510e-a30b-4b68-8ce1-db37146056d0
+    path: api.operation.resolve-conflicts
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Resolve Conflicts
+    description: POST /api/v1/versioning/proposals/{proposal_id}/resolve — manually
+      resolve merge conflicts with explicit resolutions
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: resolve_conflicts
+    metadata:
+      created_at: 2026-05-08T09:46:27.160Z
+      updated_at: 2026-05-08T09:46:27.160Z
+      version: 1
+  timestamp: 2026-05-08T09:46:27.201Z
+  sequenceNumber: 82
+- type: add
+  elementId: api.operation.merge-proposal
+  layerName: api
+  after:
+    id: c8903eed-8fd7-46fb-abe5-2e5cf9115ed7
+    path: api.operation.merge-proposal
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Merge Proposal
+    description: POST /api/v1/versioning/proposals/{proposal_id}/merge — merge an
+      approved proposal into the main ontology
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: merge_proposal
+    metadata:
+      created_at: 2026-05-08T09:46:27.595Z
+      updated_at: 2026-05-08T09:46:27.595Z
+      version: 1
+  timestamp: 2026-05-08T09:46:27.636Z
+  sequenceNumber: 83
+- type: add
+  elementId: api.operation.get-sync-status
+  layerName: api
+  after:
+    id: 77f6db28-e0b9-4eaf-9e07-0df5935329f0
+    path: api.operation.get-sync-status
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Sync Status
+    description: GET /api/v1/versioning/sync/status — retrieve current remote sync
+      status and last sync timestamps
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: get_sync_status
+    metadata:
+      created_at: 2026-05-08T09:46:28.032Z
+      updated_at: 2026-05-08T09:46:28.032Z
+      version: 1
+  timestamp: 2026-05-08T09:46:28.075Z
+  sequenceNumber: 84
+- type: add
+  elementId: api.operation.push-changes
+  layerName: api
+  after:
+    id: 1ccfbb1a-0ce9-4bf5-a5f9-be3725267042
+    path: api.operation.push-changes
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Push Changes
+    description: POST /api/v1/versioning/sync/push — push local changes to remote
+      sync target (S3/DuckDB)
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: push_changes
+    metadata:
+      created_at: 2026-05-08T09:46:31.608Z
+      updated_at: 2026-05-08T09:46:31.608Z
+      version: 1
+  timestamp: 2026-05-08T09:46:31.650Z
+  sequenceNumber: 85
+- type: add
+  elementId: api.operation.pull-changes
+  layerName: api
+  after:
+    id: d44839b0-5d9f-480b-8239-ce4b4b1df790
+    path: api.operation.pull-changes
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Pull Changes
+    description: POST /api/v1/versioning/sync/pull — pull remote changes from sync
+      target into local ontology
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/versioning_routes.py
+          symbol: pull_changes
+    metadata:
+      created_at: 2026-05-08T09:46:32.095Z
+      updated_at: 2026-05-08T09:46:32.095Z
+      version: 1
+  timestamp: 2026-05-08T09:46:32.161Z
+  sequenceNumber: 86
+- type: add
+  elementId: api.operation.create-pipeline-configuration
+  layerName: api
+  after:
+    id: 9cbd33f9-e6f9-4283-af01-6eca4c99d54a
+    path: api.operation.create-pipeline-configuration
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Create Pipeline Configuration
+    description: POST /api/pipelines — create a new LLM pipeline configuration
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/pipeline_routes.py
+          symbol: create_pipeline_configuration
+    metadata:
+      created_at: 2026-05-08T09:46:37.383Z
+      updated_at: 2026-05-08T09:46:37.383Z
+      version: 1
+  timestamp: 2026-05-08T09:46:37.424Z
+  sequenceNumber: 87
+- type: add
+  elementId: api.operation.list-pipeline-configurations
+  layerName: api
+  after:
+    id: ec486b2f-96b5-4fa7-bd4c-d06cc2e859f0
+    path: api.operation.list-pipeline-configurations
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: List Pipeline Configurations
+    description: GET /api/pipelines — list all LLM pipeline configurations
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/pipeline_routes.py
+          symbol: list_pipeline_configurations
+    metadata:
+      created_at: 2026-05-08T09:46:37.855Z
+      updated_at: 2026-05-08T09:46:37.855Z
+      version: 1
+  timestamp: 2026-05-08T09:46:37.900Z
+  sequenceNumber: 88
+- type: add
+  elementId: api.operation.get-pipeline-configuration
+  layerName: api
+  after:
+    id: ff3b075e-7107-4f9f-b738-e4b48f2ae4ef
+    path: api.operation.get-pipeline-configuration
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Pipeline Configuration
+    description: GET /api/pipelines/{pipeline_id} — retrieve a single pipeline
+      configuration by ID
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/pipeline_routes.py
+          symbol: get_pipeline_configuration
+    metadata:
+      created_at: 2026-05-08T09:46:38.306Z
+      updated_at: 2026-05-08T09:46:38.306Z
+      version: 1
+  timestamp: 2026-05-08T09:46:38.348Z
+  sequenceNumber: 89
+- type: add
+  elementId: api.operation.update-pipeline-configuration
+  layerName: api
+  after:
+    id: 0473584c-d935-4a04-9c34-5a1b91e6fcd3
+    path: api.operation.update-pipeline-configuration
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Update Pipeline Configuration
+    description: PUT /api/pipelines/{pipeline_id} — update an existing pipeline
+      configuration
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/pipeline_routes.py
+          symbol: update_pipeline_configuration
+    metadata:
+      created_at: 2026-05-08T09:46:38.765Z
+      updated_at: 2026-05-08T09:46:38.765Z
+      version: 1
+  timestamp: 2026-05-08T09:46:38.807Z
+  sequenceNumber: 90
+- type: add
+  elementId: api.operation.delete-pipeline-configuration
+  layerName: api
+  after:
+    id: 3dc9516d-e9a5-4d6a-807b-7cdd202334d0
+    path: api.operation.delete-pipeline-configuration
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Delete Pipeline Configuration
+    description: DELETE /api/pipelines/{pipeline_id} — delete a pipeline configuration
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/pipeline_routes.py
+          symbol: delete_pipeline_configuration
+    metadata:
+      created_at: 2026-05-08T09:46:39.215Z
+      updated_at: 2026-05-08T09:46:39.215Z
+      version: 1
+  timestamp: 2026-05-08T09:46:39.257Z
+  sequenceNumber: 91
+- type: add
+  elementId: api.operation.execute-pipeline
+  layerName: api
+  after:
+    id: bc42b14c-7145-48d9-b21a-042bdc1c4712
+    path: api.operation.execute-pipeline
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Execute Pipeline
+    description: POST /api/pipelines/{pipeline_id}/execute — execute a pipeline
+      configuration with optional input overrides
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/pipeline_routes.py
+          symbol: execute_pipeline
+    metadata:
+      created_at: 2026-05-08T09:46:42.924Z
+      updated_at: 2026-05-08T09:46:42.924Z
+      version: 1
+  timestamp: 2026-05-08T09:46:42.965Z
+  sequenceNumber: 92
+- type: add
+  elementId: api.operation.get-pipeline-executions
+  layerName: api
+  after:
+    id: 495a7876-bdfc-41bd-8b90-34f3553fe164
+    path: api.operation.get-pipeline-executions
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Pipeline Executions
+    description: GET /api/pipelines/{pipeline_id}/executions — list all execution
+      records for a pipeline
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/pipeline_routes.py
+          symbol: get_pipeline_executions
+    metadata:
+      created_at: 2026-05-08T09:46:43.386Z
+      updated_at: 2026-05-08T09:46:43.386Z
+      version: 1
+  timestamp: 2026-05-08T09:46:43.429Z
+  sequenceNumber: 93
+- type: add
+  elementId: application.applicationcomponent.skos-interchange-adapter
+  layerName: application
+  after:
+    id: 5c685481-0f3a-4b1e-a57f-0e46d8d30a0c
+    path: application.applicationcomponent.skos-interchange-adapter
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: SKOS Interchange Adapter
+    description: Infrastructure adapter implementing SKOS (Simple Knowledge
+      Organization System) serialization and deserialization for ontology
+      round-trip import/export in Turtle/RDF format
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/interchange/skos.py
+          symbol: SKOSSerializer
+    metadata:
+      created_at: 2026-05-08T09:46:51.799Z
+      updated_at: 2026-05-08T09:46:51.799Z
+      version: 1
+  timestamp: 2026-05-08T09:46:51.840Z
+  sequenceNumber: 94
+- type: add
+  elementId: application.applicationcomponent.owl-interchange-adapter
+  layerName: application
+  after:
+    id: ccb85d25-a44c-43ad-8b57-6d379cc92a74
+    path: application.applicationcomponent.owl-interchange-adapter
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: OWL Interchange Adapter
+    description: Infrastructure adapter implementing OWL (Web Ontology Language)
+      serialization and deserialization for ontology round-trip import/export
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/interchange/owl.py
+          symbol: OWLSerializer
+    metadata:
+      created_at: 2026-05-08T09:46:52.253Z
+      updated_at: 2026-05-08T09:46:52.253Z
+      version: 1
+  timestamp: 2026-05-08T09:46:52.295Z
+  sequenceNumber: 95
+- type: add
+  elementId: application.applicationcomponent.graph-ml-interchange-adapter
+  layerName: application
+  after:
+    id: 5e565d07-f56c-4fd9-86a3-cf53ac980625
+    path: application.applicationcomponent.graph-ml-interchange-adapter
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: GraphML Interchange Adapter
+    description: Infrastructure adapter implementing GraphML serialization and
+      deserialization for graph-structured ontology import/export
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/interchange/graphml.py
+          symbol: GraphMLSerializer
+    metadata:
+      created_at: 2026-05-08T09:46:52.730Z
+      updated_at: 2026-05-08T09:46:52.730Z
+      version: 1
+  timestamp: 2026-05-08T09:46:52.774Z
+  sequenceNumber: 96
+- type: add
+  elementId: application.applicationcomponent.spa-cy-nlp-processor
+  layerName: application
+  after:
+    id: 9d3243d3-0ff2-4e8f-868c-7a8e74c3fdc7
+    path: application.applicationcomponent.spa-cy-nlp-processor
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: SpaCy NLP Processor
+    description: Infrastructure adapter implementing NLP text processing using spaCy
+      — performs named entity recognition, dependency parsing, and concept
+      extraction
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/nlp/spacy_processor.py
+          symbol: SpacyNLPProcessor
+    metadata:
+      created_at: 2026-05-08T09:46:53.188Z
+      updated_at: 2026-05-08T09:46:53.188Z
+      version: 1
+  timestamp: 2026-05-08T09:46:53.230Z
+  sequenceNumber: 97
+- type: add
+  elementId: application.applicationcomponent.s3-sync-adapter
+  layerName: application
+  after:
+    id: 2930ae7c-25c6-4c3f-bfdb-526a36a1c158
+    path: application.applicationcomponent.s3-sync-adapter
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: S3 Sync Adapter
+    description: Infrastructure adapter implementing remote sync via AWS S3 — pushes
+      and pulls Parquet snapshots for cross-device ontology synchronization
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/sync/s3_sync.py
+          symbol: S3SyncAdapter
+    metadata:
+      created_at: 2026-05-08T09:46:53.654Z
+      updated_at: 2026-05-08T09:46:53.654Z
+      version: 1
+  timestamp: 2026-05-08T09:46:53.697Z
+  sequenceNumber: 98
+- type: add
+  elementId: application.applicationcomponent.duck-db-sync-adapter
+  layerName: application
+  after:
+    id: a8bc63e7-1933-4178-8335-7dfb4ee377ef
+    path: application.applicationcomponent.duck-db-sync-adapter
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: DuckDB Sync Adapter
+    description: Infrastructure adapter implementing remote sync via DuckDB and
+      Parquet files — provides efficient columnar snapshot-based synchronization
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/sync/duckdb_sync.py
+          symbol: DuckDBSyncAdapter
+    metadata:
+      created_at: 2026-05-08T09:47:00.967Z
+      updated_at: 2026-05-08T09:47:00.967Z
+      version: 1
+  timestamp: 2026-05-08T09:47:01.010Z
+  sequenceNumber: 99
+- type: add
+  elementId: application.applicationcomponent.concept-net-reference-source
+  layerName: application
+  after:
+    id: 4eb0e9ea-dccc-413d-81cb-cddb545b1268
+    path: application.applicationcomponent.concept-net-reference-source
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: ConceptNet Reference Source
+    description: Infrastructure adapter fetching semantic relation data from the
+      ConceptNet knowledge graph API for ontology enrichment
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/reference/conceptnet.py
+          symbol: ConceptNetSource
+    metadata:
+      created_at: 2026-05-08T09:47:01.453Z
+      updated_at: 2026-05-08T09:47:01.453Z
+      version: 1
+  timestamp: 2026-05-08T09:47:01.500Z
+  sequenceNumber: 100
+- type: add
+  elementId: application.applicationcomponent.dbpedia-reference-source
+  layerName: application
+  after:
+    id: 56d18422-d443-4d10-8c0d-6bc15dbaf043
+    path: application.applicationcomponent.dbpedia-reference-source
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: DBpedia Reference Source
+    description: Infrastructure adapter fetching entity data from DBpedia SPARQL
+      endpoint for ontology enrichment
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/reference/dbpedia.py
+          symbol: DBpediaSource
+    metadata:
+      created_at: 2026-05-08T09:47:01.943Z
+      updated_at: 2026-05-08T09:47:01.943Z
+      version: 1
+  timestamp: 2026-05-08T09:47:01.986Z
+  sequenceNumber: 101
+- type: add
+  elementId: application.applicationcomponent.wikidata-reference-source
+  layerName: application
+  after:
+    id: 63d9609e-d1fc-4599-8e22-e5f398dc4606
+    path: application.applicationcomponent.wikidata-reference-source
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: Wikidata Reference Source
+    description: Infrastructure adapter fetching entity data from Wikidata SPARQL
+      endpoint for ontology enrichment
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/reference/wikidata.py
+          symbol: WikidataSource
+    metadata:
+      created_at: 2026-05-08T09:47:02.431Z
+      updated_at: 2026-05-08T09:47:02.431Z
+      version: 1
+  timestamp: 2026-05-08T09:47:02.486Z
+  sequenceNumber: 102
+- type: add
+  elementId: application.applicationcomponent.schema-org-reference-source
+  layerName: application
+  after:
+    id: c2c35ac2-67d9-40d7-9242-38c1c96ca268
+    path: application.applicationcomponent.schema-org-reference-source
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: Schema Org Reference Source
+    description: Infrastructure adapter fetching type and property definitions from
+      schema.org vocabulary for ontology enrichment
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/reference/schema_org.py
+          symbol: SchemaOrgSource
+    metadata:
+      created_at: 2026-05-08T09:47:02.922Z
+      updated_at: 2026-05-08T09:47:02.922Z
+      version: 1
+  timestamp: 2026-05-08T09:47:02.966Z
+  sequenceNumber: 103
+- type: add
+  elementId: data-model.objectschema.individual-class
+  layerName: data-model
+  after:
+    id: 81636aa6-1dc7-4d11-8ff1-1eb6711bc2fa
+    path: data-model.objectschema.individual-class
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Individual Class
+    description: Association table ORM schema linking individual instances to their
+      parent classes — stores individual_id, class_id FK pair with ordering
+      index for class priority
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: IndividualClass
+    metadata:
+      created_at: 2026-05-08T09:47:12.588Z
+      updated_at: 2026-05-08T09:47:12.588Z
+      version: 1
+  timestamp: 2026-05-08T09:47:12.685Z
+  sequenceNumber: 104
+- type: add
+  elementId: data-model.objectschema.property-definition
+  layerName: data-model
+  after:
+    id: 28a5e618-1868-4f0c-aec2-d800f13dad2a
+    path: data-model.objectschema.property-definition
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Property Definition
+    description: ORM schema for property definitions (relationship types/object
+      properties) — stores name, description, domain_id and range_id class FKs,
+      and optional inverse property ID
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: PropertyDefinition
+    metadata:
+      created_at: 2026-05-08T09:47:13.213Z
+      updated_at: 2026-05-08T09:47:13.213Z
+      version: 1
+  timestamp: 2026-05-08T09:47:13.261Z
+  sequenceNumber: 105
+- type: add
+  elementId: data-model.objectschema.extraction-result
+  layerName: data-model
+  after:
+    id: e0b164ca-6809-4568-9649-5eb503b980ac
+    path: data-model.objectschema.extraction-result
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Extraction Result
+    description: ORM schema for persisted extraction results — stores source text,
+      NLP/LLM pipeline output (JSON), extracted entity IDs, processing metrics,
+      and run timestamps
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: ExtractionResult
+    metadata:
+      created_at: 2026-05-08T09:47:13.733Z
+      updated_at: 2026-05-08T09:47:13.733Z
+      version: 1
+  timestamp: 2026-05-08T09:47:13.787Z
+  sequenceNumber: 106
+- type: add
+  elementId: data-model.objectschema.entity-version
+  layerName: data-model
+  after:
+    id: 45811c9e-1774-42e5-9980-bf90cfd9c090
+    path: data-model.objectschema.entity-version
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Entity Version
+    description: ORM schema for entity version snapshots — stores entity_id FK,
+      version number, full JSON snapshot, and the change event that triggered
+      the version
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: EntityVersion
+    metadata:
+      created_at: 2026-05-08T09:47:14.222Z
+      updated_at: 2026-05-08T09:47:14.222Z
+      version: 1
+  timestamp: 2026-05-08T09:47:14.268Z
+  sequenceNumber: 107
+- type: add
+  elementId: data-model.objectschema.changeset-event
+  layerName: data-model
+  after:
+    id: a9e77d2d-f901-43d3-bc9f-29ad229c9ba5
+    path: data-model.objectschema.changeset-event
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Changeset Event
+    description: ORM schema for individual change events within a versioning
+      changeset — stores changeset_id FK, entity_id, operation
+      (create/update/delete), before/after JSON snapshots
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: ChangesetEvent
+    metadata:
+      created_at: 2026-05-08T09:47:14.708Z
+      updated_at: 2026-05-08T09:47:14.708Z
+      version: 1
+  timestamp: 2026-05-08T09:47:14.755Z
+  sequenceNumber: 108
+- type: add
+  elementId: data-model.objectschema.proposal
+  layerName: data-model
+  after:
+    id: 6aa7f2cd-9171-4746-8412-26d03f1e7523
+    path: data-model.objectschema.proposal
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Proposal
+    description: ORM schema for merge proposals — stores changeset_id FK, submitter,
+      status (pending/approved/rejected/merged), review metadata, and conflict
+      resolution references
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: Proposal
+    metadata:
+      created_at: 2026-05-08T09:47:20.656Z
+      updated_at: 2026-05-08T09:47:20.656Z
+      version: 1
+  timestamp: 2026-05-08T09:47:20.704Z
+  sequenceNumber: 109
+- type: add
+  elementId: data-model.objectschema.conflict-resolution
+  layerName: data-model
+  after:
+    id: c5484bfb-26e2-4629-afe0-f7caa0048b79
+    path: data-model.objectschema.conflict-resolution
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Conflict Resolution
+    description: ORM schema for manual conflict resolution records — stores
+      proposal_id FK, entity_id, conflict type, chosen resolution strategy, and
+      resolved snapshot
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: ConflictResolution
+    metadata:
+      created_at: 2026-05-08T09:47:21.153Z
+      updated_at: 2026-05-08T09:47:21.153Z
+      version: 1
+  timestamp: 2026-05-08T09:47:21.199Z
+  sequenceNumber: 110
+- type: add
+  elementId: data-model.objectschema.pipeline-execution
+  layerName: data-model
+  after:
+    id: 69626d71-fe27-42b4-aaf3-31e7c7fa0457
+    path: data-model.objectschema.pipeline-execution
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Pipeline Execution
+    description: ORM schema for pipeline execution records in operations.db — stores
+      pipeline_id FK, trigger, status, input/output JSON, LLM traceability log,
+      and timing metadata
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/operations/models.py
+          symbol: ExecutionModel
+    metadata:
+      created_at: 2026-05-08T09:47:21.641Z
+      updated_at: 2026-05-08T09:47:21.641Z
+      version: 1
+  timestamp: 2026-05-08T09:47:21.687Z
+  sequenceNumber: 111
+- type: add
+  elementId: data-store.storedlogic.individual-classes-table
+  layerName: data-store
+  after:
+    id: 10494615-c0eb-4682-9129-301a9ccd93b5
+    path: data-store.storedlogic.individual-classes-table
+    spec_node_id: data-store.storedlogic
+    type: storedlogic
+    layer_id: data-store
+    name: individual_classes table
+    description: "SQLite table: individual_classes — association table mapping
+      individual instances to their parent classes with ordering index; in
+      local.db"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: IndividualClass
+    metadata:
+      created_at: 2026-05-08T09:47:29.478Z
+      updated_at: 2026-05-08T09:47:29.478Z
+      version: 1
+  timestamp: 2026-05-08T09:47:29.525Z
+  sequenceNumber: 112
+- type: add
+  elementId: data-store.storedlogic.property-definitions-table
+  layerName: data-store
+  after:
+    id: 1b0504f7-c7af-4ecf-9ab8-ba7ea96f4e7b
+    path: data-store.storedlogic.property-definitions-table
+    spec_node_id: data-store.storedlogic
+    type: storedlogic
+    layer_id: data-store
+    name: property_definitions table
+    description: "SQLite table: property_definitions — stores relationship type
+      definitions (object properties) with domain, range, and inverse property
+      FKs; in local.db"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: PropertyDefinition
+    metadata:
+      created_at: 2026-05-08T09:47:29.963Z
+      updated_at: 2026-05-08T09:47:29.963Z
+      version: 1
+  timestamp: 2026-05-08T09:47:30.012Z
+  sequenceNumber: 113
+- type: add
+  elementId: data-store.storedlogic.extraction-results-table
+  layerName: data-store
+  after:
+    id: 2873e347-6429-4992-a7fc-e4ce725ccb91
+    path: data-store.storedlogic.extraction-results-table
+    spec_node_id: data-store.storedlogic
+    type: storedlogic
+    layer_id: data-store
+    name: extraction_results table
+    description: "SQLite table: extraction_results — stores NLP/LLM extraction run
+      outputs, source text, extracted entity IDs, and processing metrics; in
+      local.db"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: ExtractionResult
+    metadata:
+      created_at: 2026-05-08T09:47:30.449Z
+      updated_at: 2026-05-08T09:47:30.449Z
+      version: 1
+  timestamp: 2026-05-08T09:47:30.497Z
+  sequenceNumber: 114
+- type: add
+  elementId: data-store.storedlogic.entity-versions-table
+  layerName: data-store
+  after:
+    id: 6f27d647-f041-4f5e-aabc-76ed371e6461
+    path: data-store.storedlogic.entity-versions-table
+    spec_node_id: data-store.storedlogic
+    type: storedlogic
+    layer_id: data-store
+    name: entity_versions table
+    description: "SQLite table: entity_versions — stores JSON snapshots of entity
+      state at each version for point-in-time recovery; in local.db"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: EntityVersion
+    metadata:
+      created_at: 2026-05-08T09:47:30.933Z
+      updated_at: 2026-05-08T09:47:30.933Z
+      version: 1
+  timestamp: 2026-05-08T09:47:30.980Z
+  sequenceNumber: 115
+- type: add
+  elementId: data-store.storedlogic.changesets-table
+  layerName: data-store
+  after:
+    id: cdc82b3e-bb3b-4d47-8ab1-526477d6fef0
+    path: data-store.storedlogic.changesets-table
+    spec_node_id: data-store.storedlogic
+    type: storedlogic
+    layer_id: data-store
+    name: changesets table
+    description: "SQLite table: changesets — groups related change events into a
+      reviewable unit with state machine (draft/staged/submitted/merged); in
+      local.db"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: Changeset
+    metadata:
+      created_at: 2026-05-08T09:47:31.424Z
+      updated_at: 2026-05-08T09:47:31.424Z
+      version: 1
+  timestamp: 2026-05-08T09:47:31.472Z
+  sequenceNumber: 116
+- type: add
+  elementId: data-store.storedlogic.changeset-events-table
+  layerName: data-store
+  after:
+    id: a58a8fc1-28e6-4c53-910a-e4ded08dddf3
+    path: data-store.storedlogic.changeset-events-table
+    spec_node_id: data-store.storedlogic
+    type: storedlogic
+    layer_id: data-store
+    name: changeset_events table
+    description: "SQLite table: changeset_events — stores individual entity-level
+      changes within a changeset (operation, entity_id, before/after snapshots);
+      in local.db"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: ChangesetEvent
+    metadata:
+      created_at: 2026-05-08T09:47:38.344Z
+      updated_at: 2026-05-08T09:47:38.344Z
+      version: 1
+  timestamp: 2026-05-08T09:47:38.393Z
+  sequenceNumber: 117
+- type: add
+  elementId: data-store.storedlogic.proposals-table
+  layerName: data-store
+  after:
+    id: faeb63a9-bccc-4338-9231-82302c6ac195
+    path: data-store.storedlogic.proposals-table
+    spec_node_id: data-store.storedlogic
+    type: storedlogic
+    layer_id: data-store
+    name: proposals table
+    description: "SQLite table: proposals — stores merge proposals linking
+      changesets to review workflow (status, reviewer, timestamps, conflict
+      state); in local.db"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: Proposal
+    metadata:
+      created_at: 2026-05-08T09:47:38.838Z
+      updated_at: 2026-05-08T09:47:38.838Z
+      version: 1
+  timestamp: 2026-05-08T09:47:38.887Z
+  sequenceNumber: 118
+- type: add
+  elementId: data-store.storedlogic.conflict-resolutions-table
+  layerName: data-store
+  after:
+    id: b71d2585-d135-4b44-87f3-8d3e15641e26
+    path: data-store.storedlogic.conflict-resolutions-table
+    spec_node_id: data-store.storedlogic
+    type: storedlogic
+    layer_id: data-store
+    name: conflict_resolutions table
+    description: "SQLite table: conflict_resolutions — stores manual conflict
+      resolution decisions with chosen resolution strategy per entity conflict;
+      in local.db"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: ConflictResolution
+    metadata:
+      created_at: 2026-05-08T09:47:39.329Z
+      updated_at: 2026-05-08T09:47:39.329Z
+      version: 1
+  timestamp: 2026-05-08T09:47:39.378Z
+  sequenceNumber: 119
+- type: add
+  elementId: data-store.storedlogic.import-runs-table
+  layerName: data-store
+  after:
+    id: 51b61df7-f087-49fd-8f09-2883067a8279
+    path: data-store.storedlogic.import-runs-table
+    spec_node_id: data-store.storedlogic
+    type: storedlogic
+    layer_id: data-store
+    name: import_runs table
+    description: "SQLite table: import_runs — stores interchange import run metadata
+      (format, status, entity counts, error details, timestamps); in local.db"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: ImportRun
+    metadata:
+      created_at: 2026-05-08T09:47:39.817Z
+      updated_at: 2026-05-08T09:47:39.817Z
+      version: 1
+  timestamp: 2026-05-08T09:47:39.867Z
+  sequenceNumber: 120
+- type: add
+  elementId: data-store.storedlogic.pipeline-configurations-table
+  layerName: data-store
+  after:
+    id: 22c8b69c-f019-4f26-9b03-bf202450ceaf
+    path: data-store.storedlogic.pipeline-configurations-table
+    spec_node_id: data-store.storedlogic
+    type: storedlogic
+    layer_id: data-store
+    name: pipeline_configurations table
+    description: "SQLite table: pipeline_configurations — stores LLM pipeline
+      definitions (provider, model, prompt templates, parameters) in
+      operations.db"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/operations/models.py
+          symbol: PipelineConfigurationModel
+    metadata:
+      created_at: 2026-05-08T09:47:40.316Z
+      updated_at: 2026-05-08T09:47:40.316Z
+      version: 1
+  timestamp: 2026-05-08T09:47:40.366Z
+  sequenceNumber: 121
+- type: add
+  elementId: data-store.storedlogic.pipeline-executions-table
+  layerName: data-store
+  after:
+    id: 1c05ad57-a95a-4039-bd27-370c437d0937
+    path: data-store.storedlogic.pipeline-executions-table
+    spec_node_id: data-store.storedlogic
+    type: storedlogic
+    layer_id: data-store
+    name: pipeline_executions table
+    description: "SQLite table: pipeline_executions — stores LLM pipeline execution
+      records (status, input/output, LLM traceability log, timing) in
+      operations.db"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/operations/models.py
+          symbol: ExecutionModel
+    metadata:
+      created_at: 2026-05-08T09:47:43.693Z
+      updated_at: 2026-05-08T09:47:43.693Z
+      version: 1
+  timestamp: 2026-05-08T09:47:43.746Z
+  sequenceNumber: 122

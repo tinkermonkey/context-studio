@@ -1,0 +1,922 @@
+- type: add
+  elementId: application.applicationcomponent.json-file-config-store
+  layerName: application
+  after:
+    id: 87bdb82e-f331-4288-8ef7-fb0f038cedbf
+    path: application.applicationcomponent.json-file-config-store
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: JSON File Config Store
+    description: Wraps ConfigurationManager to implement the ConfigurationStore port
+      — converts Pydantic Settings objects to plain dicts for the domain entity,
+      maintaining separation between infrastructure and domain logic
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/config/json_store.py
+          symbol: JSONFileConfigStore
+    metadata:
+      created_at: 2026-05-08T12:19:20.298Z
+      updated_at: 2026-05-08T12:19:20.298Z
+      version: 1
+  timestamp: 2026-05-08T12:19:20.320Z
+  sequenceNumber: 0
+- type: add
+  elementId: application.applicationcomponent.change-event-recorder
+  layerName: application
+  after:
+    id: eef2ca34-b430-48b8-bbe4-3f57f0cd71b2
+    path: application.applicationcomponent.change-event-recorder
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: Change Event Recorder
+    description: Records domain events to the change audit trail — subscribes to
+      domain events and persists them as change records using a change record
+      port, registered with the event publisher during application startup
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/events/change_recorder.py
+          symbol: ChangeEventRecorder
+    metadata:
+      created_at: 2026-05-08T12:19:22.129Z
+      updated_at: 2026-05-08T12:19:22.129Z
+      version: 1
+  timestamp: 2026-05-08T12:19:22.199Z
+  sequenceNumber: 1
+- type: add
+  elementId: application.applicationcomponent.in-process-event-publisher
+  layerName: application
+  after:
+    id: 858b99ca-ddff-45e1-a95b-f8066dcd8348
+    path: application.applicationcomponent.in-process-event-publisher
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: In-Process Event Publisher
+    description: In-process event publisher using the observer pattern — handlers
+      execute synchronously within the same transaction boundary, implementing
+      the EventPublisher port for local single-process deployments with isolated
+      exception handling to prevent cascade failures
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/events/in_process.py
+          symbol: InProcessEventPublisher
+    metadata:
+      created_at: 2026-05-08T12:19:27.045Z
+      updated_at: 2026-05-08T12:19:27.045Z
+      version: 1
+  timestamp: 2026-05-08T12:19:27.069Z
+  sequenceNumber: 2
+- type: add
+  elementId: application.applicationcomponent.rdflib-query-engine-adapter
+  layerName: application
+  after:
+    id: 76b70381-245d-4604-b90d-10bbcb27ab96
+    path: application.applicationcomponent.rdflib-query-engine-adapter
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: RDFLib Query Engine Adapter
+    description: Semantic query engine implementation using RDFLib for RDF/SPARQL
+      operations — provides the SemanticQueryEngine protocol interface via an
+      RDFLib in-memory graph supporting SPARQL queries with validation
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/graph/rdflib_engine.py
+          symbol: RDFLibQueryEngine
+    metadata:
+      created_at: 2026-05-08T12:19:28.512Z
+      updated_at: 2026-05-08T12:19:28.512Z
+      version: 1
+  timestamp: 2026-05-08T12:19:28.542Z
+  sequenceNumber: 3
+- type: add
+  elementId: application.applicationcomponent.anthropic-llm-provider
+  layerName: application
+  after:
+    id: 6e3418fe-e9f1-4a38-a0a3-3f9fe14a2a39
+    path: application.applicationcomponent.anthropic-llm-provider
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: Anthropic LLM Provider
+    description: LLM provider for Anthropic Claude models (Opus, Sonnet, Haiku) —
+      implements the LLMProvider protocol to provide access to Anthropic's API
+      for knowledge extraction and pipeline tasks
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/llm/anthropic_provider.py
+          symbol: AnthropicProvider
+    metadata:
+      created_at: 2026-05-08T12:19:32.101Z
+      updated_at: 2026-05-08T12:19:32.101Z
+      version: 1
+  timestamp: 2026-05-08T12:19:32.126Z
+  sequenceNumber: 4
+- type: add
+  elementId: application.applicationcomponent.open-ai-llm-provider
+  layerName: application
+  after:
+    id: ddfdd760-589f-4d25-886c-f2f6430fbcf0
+    path: application.applicationcomponent.open-ai-llm-provider
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: OpenAI LLM Provider
+    description: LLM provider for OpenAI models (GPT-4o, GPT-4-turbo, GPT-3.5-turbo)
+      — implements the LLMProvider protocol to provide access to OpenAI's API
+      for knowledge extraction and pipeline tasks
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/llm/openai_provider.py
+          symbol: OpenAIProvider
+    metadata:
+      created_at: 2026-05-08T12:19:33.013Z
+      updated_at: 2026-05-08T12:19:33.013Z
+      version: 1
+  timestamp: 2026-05-08T12:19:33.038Z
+  sequenceNumber: 5
+- type: add
+  elementId: application.applicationcomponent.sqlite-ontology-repository
+  layerName: application
+  after:
+    id: 9f9cf90a-869f-4daa-b77e-f9bd606e4b72
+    path: application.applicationcomponent.sqlite-ontology-repository
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: SQLite Ontology Repository
+    description: SQLAlchemy-based implementation of the OntologyRepository port —
+      manages persistence of all ontology entities using a unified single-table
+      inheritance pattern with node_type discriminator, enforcing invariants and
+      maintaining referential integrity
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/ontology_repo.py
+          symbol: SQLiteOntologyRepository
+    metadata:
+      created_at: 2026-05-08T12:19:37.498Z
+      updated_at: 2026-05-08T12:19:37.498Z
+      version: 1
+  timestamp: 2026-05-08T12:19:37.524Z
+  sequenceNumber: 6
+- type: add
+  elementId: application.applicationcomponent.sqlite-change-repository
+  layerName: application
+  after:
+    id: 0f058b73-e96f-416f-9ff2-a090b740a7a0
+    path: application.applicationcomponent.sqlite-change-repository
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: SQLite Change Repository
+    description: SQLAlchemy-based repository for persisting versioning domain
+      entities — implements the ChangeRepository protocol handling persistence
+      of change events, entity versions, changesets, and proposals to SQLite
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/change_repo.py
+          symbol: SQLiteChangeRepository
+    metadata:
+      created_at: 2026-05-08T12:19:39.024Z
+      updated_at: 2026-05-08T12:19:39.024Z
+      version: 1
+  timestamp: 2026-05-08T12:19:39.049Z
+  sequenceNumber: 7
+- type: add
+  elementId: application.applicationcomponent.sqlite-extraction-repository
+  layerName: application
+  after:
+    id: 1bfd1b27-4994-4c19-9e98-a64f527f28b5
+    path: application.applicationcomponent.sqlite-extraction-repository
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: SQLite Extraction Repository
+    description: SQLAlchemy-based implementation of the ExtractionRepository port —
+      manages persistence of extraction results using SQLAlchemy ORM with full
+      entity and layer execution metadata
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/extraction_repo.py
+          symbol: SQLiteExtractionRepository
+    metadata:
+      created_at: 2026-05-08T12:19:42.929Z
+      updated_at: 2026-05-08T12:19:42.929Z
+      version: 1
+  timestamp: 2026-05-08T12:19:42.953Z
+  sequenceNumber: 8
+- type: add
+  elementId: application.applicationcomponent.sqlite-interchange-repository
+  layerName: application
+  after:
+    id: a7f15c63-8bbe-4a12-b281-cca450fe7241
+    path: application.applicationcomponent.sqlite-interchange-repository
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: SQLite Interchange Repository
+    description: SQLAlchemy-based repository for interchange domain persistence —
+      implements the ImportRunRepository port handling persistence of ImportRun
+      entities and their change event correlations using SQLite
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/interchange_repo.py
+          symbol: SQLiteInterchangeRepository
+    metadata:
+      created_at: 2026-05-08T12:19:44.442Z
+      updated_at: 2026-05-08T12:19:44.442Z
+      version: 1
+  timestamp: 2026-05-08T12:19:44.467Z
+  sequenceNumber: 9
+- type: add
+  elementId: application.applicationcomponent.sqlite-pipeline-repository
+  layerName: application
+  after:
+    id: 07532edd-1c3d-4fe3-bf94-d97b6047be63
+    path: application.applicationcomponent.sqlite-pipeline-repository
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: SQLite Pipeline Repository
+    description: SQLite implementation of the PipelineRepository port for
+      operations.db — manages persistence of pipeline configurations and
+      execution records with complete instrumentation for observability
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/pipeline_repo.py
+          symbol: SQLitePipelineRepository
+    metadata:
+      created_at: 2026-05-08T12:19:49.956Z
+      updated_at: 2026-05-08T12:19:49.956Z
+      version: 1
+  timestamp: 2026-05-08T12:19:49.981Z
+  sequenceNumber: 10
+- type: add
+  elementId: application.applicationcomponent.local-reference-repository
+  layerName: application
+  after:
+    id: 5fdb0736-3d9c-4bb6-b20a-98c99134b701
+    path: application.applicationcomponent.local-reference-repository
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: Local Reference Repository
+    description: Repository for offline reference data lookups — queries
+      pre-imported reference.db to provide fast offline access to reference data
+      from ConceptNet, DBpedia, Wikidata, and schema.org
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/reference_repo.py
+          symbol: LocalReferenceRepository
+    metadata:
+      created_at: 2026-05-08T12:19:51.138Z
+      updated_at: 2026-05-08T12:19:51.138Z
+      version: 1
+  timestamp: 2026-05-08T12:19:51.162Z
+  sequenceNumber: 11
+- type: add
+  elementId: application.applicationcomponent.cached-reference-source
+  layerName: application
+  after:
+    id: 0cd5b507-1e3d-449c-b734-4ae383985b02
+    path: application.applicationcomponent.cached-reference-source
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: Cached Reference Source
+    description: Decorator that wraps a ReferenceSource and caches results to SQLite
+      — provides TTL-based expiry ensuring stale data is refreshed while
+      improving efficiency when querying the same terms repeatedly
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/reference/cache.py
+          symbol: CachedReferenceSource
+    metadata:
+      created_at: 2026-05-08T12:19:55.023Z
+      updated_at: 2026-05-08T12:19:55.023Z
+      version: 1
+  timestamp: 2026-05-08T12:19:55.048Z
+  sequenceNumber: 12
+- type: add
+  elementId: application.applicationcomponent.no-op-sync-adapter
+  layerName: application
+  after:
+    id: 0a5b0cc0-416c-4e99-88da-08c6c4b61875
+    path: application.applicationcomponent.no-op-sync-adapter
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: No-Op Sync Adapter
+    description: No-op implementation of the SyncTarget port — used when remote
+      synchronization is not configured, all operations succeed without side
+      effects allowing the versioning system to function normally in
+      single-workspace scenarios
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/sync/noop_sync.py
+          symbol: NoOpSyncTarget
+    metadata:
+      created_at: 2026-05-08T12:19:56.922Z
+      updated_at: 2026-05-08T12:19:56.922Z
+      version: 1
+  timestamp: 2026-05-08T12:19:56.947Z
+  sequenceNumber: 13
+- type: add
+  elementId: data-store.database.localdb
+  layerName: data-store
+  after:
+    id: c7299596-123b-4aaf-966a-cf666b9956f4
+    path: data-store.database.localdb
+    spec_node_id: data-store.database
+    type: database
+    layer_id: data-store
+    name: local.db
+    description: Primary workspace database (Alembic-managed SQLite) — stores
+      ontology entities, relationships, property definitions, change events,
+      extraction results, versioning artefacts, and interchange import runs
+    attributes:
+      engine: SQLite
+      paradigm: RELATIONAL
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/alembic.ini
+          symbol: local.db
+    metadata:
+      created_at: 2026-05-08T12:20:26.785Z
+      updated_at: 2026-05-08T12:20:26.785Z
+      version: 1
+  timestamp: 2026-05-08T12:20:26.809Z
+  sequenceNumber: 14
+- type: add
+  elementId: data-store.database.operationsdb
+  layerName: data-store
+  after:
+    id: c7e1c741-b8d8-403b-87d5-c720d571ce43
+    path: data-store.database.operationsdb
+    spec_node_id: data-store.database
+    type: database
+    layer_id: data-store
+    name: operations.db
+    description: Operational database (Alembic-managed SQLite) — stores pipeline
+      configurations and execution records with LLM traceability logs
+    attributes:
+      engine: SQLite
+      paradigm: RELATIONAL
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/operations/models.py
+          symbol: OperationsBase
+    metadata:
+      created_at: 2026-05-08T12:20:29.689Z
+      updated_at: 2026-05-08T12:20:29.689Z
+      version: 1
+  timestamp: 2026-05-08T12:20:29.718Z
+  sequenceNumber: 15
+- type: add
+  elementId: data-store.database.reference-api-cachedb
+  layerName: data-store
+  after:
+    id: 587e56fc-b760-4365-ba4f-783d29eb4abf
+    path: data-store.database.reference-api-cachedb
+    spec_node_id: data-store.database
+    type: database
+    layer_id: data-store
+    name: reference_api_cache.db
+    description: Cached responses from external knowledge source APIs (ConceptNet,
+      DBpedia, Wikidata, schema.org) — no Alembic migrations, can be dropped and
+      rebuilt
+    attributes:
+      engine: SQLite
+      paradigm: RELATIONAL
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/reference/cache.py
+          symbol: CachedReferenceSource
+    metadata:
+      created_at: 2026-05-08T12:20:31.707Z
+      updated_at: 2026-05-08T12:20:31.707Z
+      version: 1
+  timestamp: 2026-05-08T12:20:31.772Z
+  sequenceNumber: 16
+- type: add
+  elementId: data-store.database.referencedb
+  layerName: data-store
+  after:
+    id: b934a6e4-4b08-4ab8-8ce5-38bfa159c18c
+    path: data-store.database.referencedb
+    spec_node_id: data-store.database
+    type: database
+    layer_id: data-store
+    name: reference.db
+    description: Imported reference data from ConceptNet, DBpedia, Wikidata, and
+      schema.org — no Alembic migrations, can be dropped and rebuilt from source
+      APIs
+    attributes:
+      engine: SQLite
+      paradigm: RELATIONAL
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/reference_repo.py
+          symbol: LocalReferenceRepository
+    metadata:
+      created_at: 2026-05-08T12:20:35.043Z
+      updated_at: 2026-05-08T12:20:35.043Z
+      version: 1
+  timestamp: 2026-05-08T12:20:35.070Z
+  sequenceNumber: 17
+- type: add
+  elementId: data-store.collection.ontology-entities
+  layerName: data-store
+  after:
+    id: 123b9277-ff57-4b3b-b1a2-9dfeaf698f98
+    path: data-store.collection.ontology-entities
+    spec_node_id: data-store.collection
+    type: collection
+    layer_id: data-store
+    name: ontology_entities
+    description: Unified table for all ontology entities (Taxonomy, ConceptScheme,
+      Class, Individual) using single-table inheritance with node_type
+      discriminator — includes vector embedding column for semantic search via
+      sqlite-vec
+    attributes:
+      collectionType: TABLE
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: OntologyEntity
+    metadata:
+      created_at: 2026-05-08T12:20:51.904Z
+      updated_at: 2026-05-08T12:20:51.904Z
+      version: 1
+  timestamp: 2026-05-08T12:20:51.929Z
+  sequenceNumber: 18
+- type: add
+  elementId: data-store.collection.relationships
+  layerName: data-store
+  after:
+    id: 36fd4668-0524-4fd1-8cce-42e5ff664ed5
+    path: data-store.collection.relationships
+    spec_node_id: data-store.collection
+    type: collection
+    layer_id: data-store
+    name: relationships
+    description: Typed directed edges between ontology entities — stores
+      source/target entity references, relationship type, and optional metadata
+      for the knowledge graph structure
+    attributes:
+      collectionType: TABLE
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: Relationship
+    metadata:
+      created_at: 2026-05-08T12:20:53.134Z
+      updated_at: 2026-05-08T12:20:53.134Z
+      version: 1
+  timestamp: 2026-05-08T12:20:53.160Z
+  sequenceNumber: 19
+- type: add
+  elementId: data-store.collection.change-events
+  layerName: data-store
+  after:
+    id: ab06d8e1-18e9-44c3-930e-4255ad4d629b
+    path: data-store.collection.change-events
+    spec_node_id: data-store.collection
+    type: collection
+    layer_id: data-store
+    name: change_events
+    description: Audit trail of all entity changes — stores entity_id, entity_type,
+      event_type, actor, timestamp, and before/after snapshots for versioning
+      and audit compliance
+    attributes:
+      collectionType: TABLE
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: ChangeEvent
+    metadata:
+      created_at: 2026-05-08T12:20:56.233Z
+      updated_at: 2026-05-08T12:20:56.233Z
+      version: 1
+  timestamp: 2026-05-08T12:20:56.284Z
+  sequenceNumber: 20
+- type: add
+  elementId: testing.testcoveragetarget.interchange-integration-tests
+  layerName: testing
+  after:
+    id: d2878f80-86be-434f-b14c-18b80de01984
+    path: testing.testcoveragetarget.interchange-integration-tests
+    spec_node_id: testing.testcoveragetarget
+    type: testcoveragetarget
+    layer_id: testing
+    name: Interchange Integration Tests
+    description: Integration test suite for SKOS/OWL/GraphML round-trip
+      serialization, import run lifecycle, and persistence adapter correctness
+      (6 test files)
+    attributes:
+      targetType: integration-flow
+      priority: high
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/integration/interchange/
+    metadata:
+      created_at: 2026-05-08T12:21:07.031Z
+      updated_at: 2026-05-08T12:21:07.031Z
+      version: 1
+  timestamp: 2026-05-08T12:21:07.056Z
+  sequenceNumber: 21
+- type: add
+  elementId: testing.testcoveragetarget.e2e-test-suite
+  layerName: testing
+  after:
+    id: 1aa03e06-03b2-4186-9809-efbca7962695
+    path: testing.testcoveragetarget.e2e-test-suite
+    spec_node_id: testing.testcoveragetarget
+    type: testcoveragetarget
+    layer_id: testing
+    name: E2E Test Suite
+    description: End-to-end tests covering full-stack service interaction across
+      ontology, graph, extraction, pipeline, versioning, and interchange
+      contexts (8 test files)
+    attributes:
+      targetType: business-workflow
+      priority: high
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/e2e/
+    metadata:
+      created_at: 2026-05-08T12:21:07.826Z
+      updated_at: 2026-05-08T12:21:07.826Z
+      version: 1
+  timestamp: 2026-05-08T12:21:07.853Z
+  sequenceNumber: 22
+- type: add
+  elementId: testing.testcoveragetarget.performance-test-suite
+  layerName: testing
+  after:
+    id: d1c171b7-3105-42ea-9494-cf34902d8490
+    path: testing.testcoveragetarget.performance-test-suite
+    spec_node_id: testing.testcoveragetarget
+    type: testcoveragetarget
+    layer_id: testing
+    name: Performance Test Suite
+    description: Performance tests covering scalability and throughput for ontology
+      operations, graph traversal, extraction pipeline, and API response times
+      (6 test files)
+    attributes:
+      targetType: api-endpoint
+      priority: medium
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/performance/
+    metadata:
+      created_at: 2026-05-08T12:21:11.060Z
+      updated_at: 2026-05-08T12:21:11.060Z
+      version: 1
+  timestamp: 2026-05-08T12:21:11.086Z
+  sequenceNumber: 23
+- type: add
+  elementId: testing.testcoveragetarget.versioning-integration-tests
+  layerName: testing
+  after:
+    id: b5e05ece-1f94-48b0-9ea9-7ff031f64015
+    path: testing.testcoveragetarget.versioning-integration-tests
+    spec_node_id: testing.testcoveragetarget
+    type: testcoveragetarget
+    layer_id: testing
+    name: Versioning Integration Tests
+    description: Integration test suite for the versioning bounded context — change
+      event persistence, entity versions, changeset lifecycle, and proposal
+      workflows (3 test files)
+    attributes:
+      targetType: integration-flow
+      priority: high
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/integration/versioning/
+    metadata:
+      created_at: 2026-05-08T12:21:12.236Z
+      updated_at: 2026-05-08T12:21:12.236Z
+      version: 1
+  timestamp: 2026-05-08T12:21:12.263Z
+  sequenceNumber: 24
+- type: add
+  elementId: testing.testcoveragetarget.route-integration-tests
+  layerName: testing
+  after:
+    id: 3a1df1b8-e1a5-489a-a07c-ea1b1df8ae95
+    path: testing.testcoveragetarget.route-integration-tests
+    spec_node_id: testing.testcoveragetarget
+    type: testcoveragetarget
+    layer_id: testing
+    name: Route Integration Tests
+    description: Route-level integration tests covering all 8 FastAPI route modules
+      (ontology, graph, extraction, admin, reference, interchange, versioning,
+      pipeline) against real SQLite (7 test files)
+    attributes:
+      targetType: api-endpoint
+      priority: high
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/integration/routes/
+    metadata:
+      created_at: 2026-05-08T12:21:16.528Z
+      updated_at: 2026-05-08T12:21:16.528Z
+      version: 1
+  timestamp: 2026-05-08T12:21:16.556Z
+  sequenceNumber: 25
+- type: relationship-add
+  elementId: application.applicationcomponent.json-file-config-store::realizes::application.applicationservice.admin-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.json-file-config-store
+    target: application.applicationservice.admin-service
+    predicate: realizes
+    layer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+  timestamp: 2026-05-08T12:21:26.716Z
+  sequenceNumber: 26
+- type: relationship-add
+  elementId: application.applicationcomponent.change-event-recorder::realizes::application.applicationservice.ontology-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.change-event-recorder
+    target: application.applicationservice.ontology-service
+    predicate: realizes
+    layer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+  timestamp: 2026-05-08T12:21:27.374Z
+  sequenceNumber: 27
+- type: relationship-add
+  elementId: application.applicationcomponent.in-process-event-publisher::realizes::application.applicationservice.ontology-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.in-process-event-publisher
+    target: application.applicationservice.ontology-service
+    predicate: realizes
+    layer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+  timestamp: 2026-05-08T12:21:35.673Z
+  sequenceNumber: 28
+- type: relationship-add
+  elementId: application.applicationcomponent.in-process-event-publisher::realizes::application.applicationservice.extraction-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.in-process-event-publisher
+    target: application.applicationservice.extraction-service
+    predicate: realizes
+    layer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+  timestamp: 2026-05-08T12:21:36.141Z
+  sequenceNumber: 29
+- type: relationship-add
+  elementId: application.applicationcomponent.rdflib-query-engine-adapter::realizes::application.applicationservice.graph-analysis-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.rdflib-query-engine-adapter
+    target: application.applicationservice.graph-analysis-service
+    predicate: realizes
+    layer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+  timestamp: 2026-05-08T12:21:40.148Z
+  sequenceNumber: 30
+- type: relationship-add
+  elementId: application.applicationcomponent.anthropic-llm-provider::realizes::application.applicationservice.extraction-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.anthropic-llm-provider
+    target: application.applicationservice.extraction-service
+    predicate: realizes
+    layer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+  timestamp: 2026-05-08T12:21:40.635Z
+  sequenceNumber: 31
+- type: relationship-add
+  elementId: application.applicationcomponent.open-ai-llm-provider::realizes::application.applicationservice.extraction-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.open-ai-llm-provider
+    target: application.applicationservice.extraction-service
+    predicate: realizes
+    layer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+  timestamp: 2026-05-08T12:21:43.567Z
+  sequenceNumber: 32
+- type: relationship-add
+  elementId: application.applicationcomponent.sqlite-ontology-repository::realizes::application.applicationservice.ontology-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.sqlite-ontology-repository
+    target: application.applicationservice.ontology-service
+    predicate: realizes
+    layer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+  timestamp: 2026-05-08T12:21:44.057Z
+  sequenceNumber: 33
+- type: relationship-add
+  elementId: application.applicationcomponent.sqlite-change-repository::realizes::application.applicationservice.versioning-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.sqlite-change-repository
+    target: application.applicationservice.versioning-service
+    predicate: realizes
+    layer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+  timestamp: 2026-05-08T12:21:47.924Z
+  sequenceNumber: 34
+- type: relationship-add
+  elementId: application.applicationcomponent.sqlite-extraction-repository::realizes::application.applicationservice.extraction-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.sqlite-extraction-repository
+    target: application.applicationservice.extraction-service
+    predicate: realizes
+    layer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+  timestamp: 2026-05-08T12:21:48.417Z
+  sequenceNumber: 35
+- type: relationship-add
+  elementId: application.applicationcomponent.sqlite-interchange-repository::realizes::application.applicationservice.import-run-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.sqlite-interchange-repository
+    target: application.applicationservice.import-run-service
+    predicate: realizes
+    layer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+  timestamp: 2026-05-08T12:21:52.044Z
+  sequenceNumber: 36
+- type: relationship-add
+  elementId: application.applicationcomponent.sqlite-pipeline-repository::realizes::application.applicationservice.pipeline-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.sqlite-pipeline-repository
+    target: application.applicationservice.pipeline-service
+    predicate: realizes
+    layer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+  timestamp: 2026-05-08T12:21:52.539Z
+  sequenceNumber: 37
+- type: relationship-add
+  elementId: application.applicationcomponent.local-reference-repository::realizes::application.applicationservice.extraction-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.local-reference-repository
+    target: application.applicationservice.extraction-service
+    predicate: realizes
+    layer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+  timestamp: 2026-05-08T12:21:57.067Z
+  sequenceNumber: 38
+- type: relationship-add
+  elementId: application.applicationcomponent.cached-reference-source::realizes::application.applicationservice.extraction-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.cached-reference-source
+    target: application.applicationservice.extraction-service
+    predicate: realizes
+    layer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+  timestamp: 2026-05-08T12:21:57.612Z
+  sequenceNumber: 39
+- type: relationship-add
+  elementId: application.applicationcomponent.no-op-sync-adapter::realizes::application.applicationservice.versioning-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.no-op-sync-adapter
+    target: application.applicationservice.versioning-service
+    predicate: realizes
+    layer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+  timestamp: 2026-05-08T12:22:00.446Z
+  sequenceNumber: 40
+- type: relationship-add
+  elementId: data-store.database.localdb::composes::data-store.collection.ontology-entities
+  layerName: data-store
+  after:
+    source: data-store.database.localdb
+    target: data-store.collection.ontology-entities
+    predicate: composes
+    layer: data-store
+    category: structural
+  timestamp: 2026-05-08T12:22:12.519Z
+  sequenceNumber: 41
+- type: relationship-add
+  elementId: data-store.database.localdb::composes::data-store.collection.relationships
+  layerName: data-store
+  after:
+    source: data-store.database.localdb
+    target: data-store.collection.relationships
+    predicate: composes
+    layer: data-store
+    category: structural
+  timestamp: 2026-05-08T12:22:15.456Z
+  sequenceNumber: 42
+- type: relationship-add
+  elementId: data-store.database.localdb::composes::data-store.collection.change-events
+  layerName: data-store
+  after:
+    source: data-store.database.localdb
+    target: data-store.collection.change-events
+    predicate: composes
+    layer: data-store
+    category: structural
+  timestamp: 2026-05-08T12:22:15.991Z
+  sequenceNumber: 43
+- type: relationship-add
+  elementId: data-store.collection.ontology-entities::serves::application.applicationcomponent.sqlite-ontology-repository
+  layerName: data-store
+  after:
+    source: data-store.collection.ontology-entities
+    target: application.applicationcomponent.sqlite-ontology-repository
+    predicate: serves
+    layer: data-store
+    targetLayer: application
+    category: structural
+  timestamp: 2026-05-08T12:22:19.929Z
+  sequenceNumber: 44
+- type: relationship-add
+  elementId: data-store.collection.change-events::serves::application.applicationcomponent.sqlite-change-repository
+  layerName: data-store
+  after:
+    source: data-store.collection.change-events
+    target: application.applicationcomponent.sqlite-change-repository
+    predicate: serves
+    layer: data-store
+    targetLayer: application
+    category: structural
+  timestamp: 2026-05-08T12:22:20.465Z
+  sequenceNumber: 45

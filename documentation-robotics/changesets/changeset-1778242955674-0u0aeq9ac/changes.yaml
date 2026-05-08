@@ -1,0 +1,96 @@
+- type: relationship-add
+  elementId: data-store.database.operationsdb::serves::application.applicationcomponent.sqlite-pipeline-repository
+  layerName: data-store
+  after:
+    source: data-store.database.operationsdb
+    target: application.applicationcomponent.sqlite-pipeline-repository
+    predicate: serves
+    layer: data-store
+    targetLayer: application
+    category: structural
+  timestamp: 2026-05-08T12:22:38.481Z
+  sequenceNumber: 0
+- type: relationship-add
+  elementId: data-store.database.reference-api-cachedb::serves::application.applicationcomponent.cached-reference-source
+  layerName: data-store
+  after:
+    source: data-store.database.reference-api-cachedb
+    target: application.applicationcomponent.cached-reference-source
+    predicate: serves
+    layer: data-store
+    targetLayer: application
+    category: structural
+  timestamp: 2026-05-08T12:22:39.065Z
+  sequenceNumber: 1
+- type: relationship-add
+  elementId: data-store.database.referencedb::serves::application.applicationcomponent.local-reference-repository
+  layerName: data-store
+  after:
+    source: data-store.database.referencedb
+    target: application.applicationcomponent.local-reference-repository
+    predicate: serves
+    layer: data-store
+    targetLayer: application
+    category: structural
+  timestamp: 2026-05-08T12:22:42.574Z
+  sequenceNumber: 2
+- type: relationship-add
+  elementId: testing.testcoveragetarget.interchange-integration-tests::tests::application.applicationcomponent.sqlite-interchange-repository
+  layerName: testing
+  after:
+    source: testing.testcoveragetarget.interchange-integration-tests
+    target: application.applicationcomponent.sqlite-interchange-repository
+    predicate: tests
+    layer: testing
+    targetLayer: application
+    category: structural
+  timestamp: 2026-05-08T12:22:51.805Z
+  sequenceNumber: 3
+- type: relationship-add
+  elementId: testing.testcoveragetarget.versioning-integration-tests::tests::application.applicationcomponent.sqlite-change-repository
+  layerName: testing
+  after:
+    source: testing.testcoveragetarget.versioning-integration-tests
+    target: application.applicationcomponent.sqlite-change-repository
+    predicate: tests
+    layer: testing
+    targetLayer: application
+    category: structural
+  timestamp: 2026-05-08T12:22:52.244Z
+  sequenceNumber: 4
+- type: relationship-add
+  elementId: testing.testcoveragetarget.e2e-test-suite::tests::data-store.collection.ontology-entities
+  layerName: testing
+  after:
+    source: testing.testcoveragetarget.e2e-test-suite
+    target: data-store.collection.ontology-entities
+    predicate: tests
+    layer: testing
+    targetLayer: data-store
+    category: structural
+  timestamp: 2026-05-08T12:22:55.006Z
+  sequenceNumber: 5
+- type: relationship-add
+  elementId: testing.testcoveragetarget.performance-test-suite::tests::data-store.collection.ontology-entities
+  layerName: testing
+  after:
+    source: testing.testcoveragetarget.performance-test-suite
+    target: data-store.collection.ontology-entities
+    predicate: tests
+    layer: testing
+    targetLayer: data-store
+    category: structural
+  timestamp: 2026-05-08T12:22:55.449Z
+  sequenceNumber: 6
+- type: relationship-add
+  elementId: testing.testcoveragetarget.route-integration-tests::tests::application.applicationcomponent.sqlite-ontology-repository
+  layerName: testing
+  after:
+    source: testing.testcoveragetarget.route-integration-tests
+    target: application.applicationcomponent.sqlite-ontology-repository
+    predicate: tests
+    layer: testing
+    targetLayer: application
+    category: structural
+  timestamp: 2026-05-08T12:22:58.790Z
+  sequenceNumber: 7

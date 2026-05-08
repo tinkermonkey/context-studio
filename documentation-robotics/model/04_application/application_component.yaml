@@ -96,3 +96,454 @@ application.applicationcomponent.llm-provider-router:
     created_at: 2026-05-07T22:15:35.396Z
     updated_at: 2026-05-07T22:15:35.396Z
     version: 1
+application.applicationcomponent.skos-interchange-adapter:
+  id: 5c685481-0f3a-4b1e-a57f-0e46d8d30a0c
+  path: application.applicationcomponent.skos-interchange-adapter
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: SKOS Interchange Adapter
+  description: Infrastructure adapter implementing SKOS (Simple Knowledge
+    Organization System) serialization and deserialization for ontology
+    round-trip import/export in Turtle/RDF format
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/interchange/skos.py
+        symbol: SKOSSerializer
+  metadata:
+    created_at: 2026-05-08T09:46:51.799Z
+    updated_at: 2026-05-08T09:46:51.799Z
+    version: 1
+application.applicationcomponent.owl-interchange-adapter:
+  id: ccb85d25-a44c-43ad-8b57-6d379cc92a74
+  path: application.applicationcomponent.owl-interchange-adapter
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: OWL Interchange Adapter
+  description: Infrastructure adapter implementing OWL (Web Ontology Language)
+    serialization and deserialization for ontology round-trip import/export
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/interchange/owl.py
+        symbol: OWLSerializer
+  metadata:
+    created_at: 2026-05-08T09:46:52.253Z
+    updated_at: 2026-05-08T09:46:52.253Z
+    version: 1
+application.applicationcomponent.graph-ml-interchange-adapter:
+  id: 5e565d07-f56c-4fd9-86a3-cf53ac980625
+  path: application.applicationcomponent.graph-ml-interchange-adapter
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: GraphML Interchange Adapter
+  description: Infrastructure adapter implementing GraphML serialization and
+    deserialization for graph-structured ontology import/export
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/interchange/graphml.py
+        symbol: GraphMLSerializer
+  metadata:
+    created_at: 2026-05-08T09:46:52.730Z
+    updated_at: 2026-05-08T09:46:52.730Z
+    version: 1
+application.applicationcomponent.spa-cy-nlp-processor:
+  id: 9d3243d3-0ff2-4e8f-868c-7a8e74c3fdc7
+  path: application.applicationcomponent.spa-cy-nlp-processor
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: SpaCy NLP Processor
+  description: Infrastructure adapter implementing NLP text processing using spaCy
+    — performs named entity recognition, dependency parsing, and concept
+    extraction
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/nlp/spacy_processor.py
+        symbol: SpacyNLPProcessor
+  metadata:
+    created_at: 2026-05-08T09:46:53.188Z
+    updated_at: 2026-05-08T09:46:53.188Z
+    version: 1
+application.applicationcomponent.s3-sync-adapter:
+  id: 2930ae7c-25c6-4c3f-bfdb-526a36a1c158
+  path: application.applicationcomponent.s3-sync-adapter
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: S3 Sync Adapter
+  description: Infrastructure adapter implementing remote sync via AWS S3 — pushes
+    and pulls Parquet snapshots for cross-device ontology synchronization
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/sync/s3_sync.py
+        symbol: S3SyncAdapter
+  metadata:
+    created_at: 2026-05-08T09:46:53.654Z
+    updated_at: 2026-05-08T09:46:53.654Z
+    version: 1
+application.applicationcomponent.duck-db-sync-adapter:
+  id: a8bc63e7-1933-4178-8335-7dfb4ee377ef
+  path: application.applicationcomponent.duck-db-sync-adapter
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: DuckDB Sync Adapter
+  description: Infrastructure adapter implementing remote sync via DuckDB and
+    Parquet files — provides efficient columnar snapshot-based synchronization
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/sync/duckdb_sync.py
+        symbol: DuckDBSyncAdapter
+  metadata:
+    created_at: 2026-05-08T09:47:00.967Z
+    updated_at: 2026-05-08T09:47:00.967Z
+    version: 1
+application.applicationcomponent.concept-net-reference-source:
+  id: 4eb0e9ea-dccc-413d-81cb-cddb545b1268
+  path: application.applicationcomponent.concept-net-reference-source
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: ConceptNet Reference Source
+  description: Infrastructure adapter fetching semantic relation data from the
+    ConceptNet knowledge graph API for ontology enrichment
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/reference/conceptnet.py
+        symbol: ConceptNetSource
+  metadata:
+    created_at: 2026-05-08T09:47:01.453Z
+    updated_at: 2026-05-08T09:47:01.453Z
+    version: 1
+application.applicationcomponent.dbpedia-reference-source:
+  id: 56d18422-d443-4d10-8c0d-6bc15dbaf043
+  path: application.applicationcomponent.dbpedia-reference-source
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: DBpedia Reference Source
+  description: Infrastructure adapter fetching entity data from DBpedia SPARQL
+    endpoint for ontology enrichment
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/reference/dbpedia.py
+        symbol: DBpediaSource
+  metadata:
+    created_at: 2026-05-08T09:47:01.943Z
+    updated_at: 2026-05-08T09:47:01.943Z
+    version: 1
+application.applicationcomponent.wikidata-reference-source:
+  id: 63d9609e-d1fc-4599-8e22-e5f398dc4606
+  path: application.applicationcomponent.wikidata-reference-source
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Wikidata Reference Source
+  description: Infrastructure adapter fetching entity data from Wikidata SPARQL
+    endpoint for ontology enrichment
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/reference/wikidata.py
+        symbol: WikidataSource
+  metadata:
+    created_at: 2026-05-08T09:47:02.431Z
+    updated_at: 2026-05-08T09:47:02.431Z
+    version: 1
+application.applicationcomponent.schema-org-reference-source:
+  id: c2c35ac2-67d9-40d7-9242-38c1c96ca268
+  path: application.applicationcomponent.schema-org-reference-source
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Schema Org Reference Source
+  description: Infrastructure adapter fetching type and property definitions from
+    schema.org vocabulary for ontology enrichment
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/reference/schema_org.py
+        symbol: SchemaOrgSource
+  metadata:
+    created_at: 2026-05-08T09:47:02.922Z
+    updated_at: 2026-05-08T09:47:02.922Z
+    version: 1
+application.applicationcomponent.json-file-config-store:
+  id: 87bdb82e-f331-4288-8ef7-fb0f038cedbf
+  path: application.applicationcomponent.json-file-config-store
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: JSON File Config Store
+  description: Wraps ConfigurationManager to implement the ConfigurationStore port
+    — converts Pydantic Settings objects to plain dicts for the domain entity,
+    maintaining separation between infrastructure and domain logic
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/config/json_store.py
+        symbol: JSONFileConfigStore
+  metadata:
+    created_at: 2026-05-08T12:19:20.298Z
+    updated_at: 2026-05-08T12:19:20.298Z
+    version: 1
+application.applicationcomponent.change-event-recorder:
+  id: eef2ca34-b430-48b8-bbe4-3f57f0cd71b2
+  path: application.applicationcomponent.change-event-recorder
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Change Event Recorder
+  description: Records domain events to the change audit trail — subscribes to
+    domain events and persists them as change records using a change record
+    port, registered with the event publisher during application startup
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/events/change_recorder.py
+        symbol: ChangeEventRecorder
+  metadata:
+    created_at: 2026-05-08T12:19:22.129Z
+    updated_at: 2026-05-08T12:19:22.129Z
+    version: 1
+application.applicationcomponent.in-process-event-publisher:
+  id: 858b99ca-ddff-45e1-a95b-f8066dcd8348
+  path: application.applicationcomponent.in-process-event-publisher
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: In-Process Event Publisher
+  description: In-process event publisher using the observer pattern — handlers
+    execute synchronously within the same transaction boundary, implementing the
+    EventPublisher port for local single-process deployments with isolated
+    exception handling to prevent cascade failures
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/events/in_process.py
+        symbol: InProcessEventPublisher
+  metadata:
+    created_at: 2026-05-08T12:19:27.045Z
+    updated_at: 2026-05-08T12:19:27.045Z
+    version: 1
+application.applicationcomponent.rdflib-query-engine-adapter:
+  id: 76b70381-245d-4604-b90d-10bbcb27ab96
+  path: application.applicationcomponent.rdflib-query-engine-adapter
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: RDFLib Query Engine Adapter
+  description: Semantic query engine implementation using RDFLib for RDF/SPARQL
+    operations — provides the SemanticQueryEngine protocol interface via an
+    RDFLib in-memory graph supporting SPARQL queries with validation
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/graph/rdflib_engine.py
+        symbol: RDFLibQueryEngine
+  metadata:
+    created_at: 2026-05-08T12:19:28.512Z
+    updated_at: 2026-05-08T12:19:28.512Z
+    version: 1
+application.applicationcomponent.anthropic-llm-provider:
+  id: 6e3418fe-e9f1-4a38-a0a3-3f9fe14a2a39
+  path: application.applicationcomponent.anthropic-llm-provider
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Anthropic LLM Provider
+  description: LLM provider for Anthropic Claude models (Opus, Sonnet, Haiku) —
+    implements the LLMProvider protocol to provide access to Anthropic's API for
+    knowledge extraction and pipeline tasks
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/llm/anthropic_provider.py
+        symbol: AnthropicProvider
+  metadata:
+    created_at: 2026-05-08T12:19:32.101Z
+    updated_at: 2026-05-08T12:19:32.101Z
+    version: 1
+application.applicationcomponent.open-ai-llm-provider:
+  id: ddfdd760-589f-4d25-886c-f2f6430fbcf0
+  path: application.applicationcomponent.open-ai-llm-provider
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: OpenAI LLM Provider
+  description: LLM provider for OpenAI models (GPT-4o, GPT-4-turbo, GPT-3.5-turbo)
+    — implements the LLMProvider protocol to provide access to OpenAI's API for
+    knowledge extraction and pipeline tasks
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/llm/openai_provider.py
+        symbol: OpenAIProvider
+  metadata:
+    created_at: 2026-05-08T12:19:33.013Z
+    updated_at: 2026-05-08T12:19:33.013Z
+    version: 1
+application.applicationcomponent.sqlite-ontology-repository:
+  id: 9f9cf90a-869f-4daa-b77e-f9bd606e4b72
+  path: application.applicationcomponent.sqlite-ontology-repository
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: SQLite Ontology Repository
+  description: SQLAlchemy-based implementation of the OntologyRepository port —
+    manages persistence of all ontology entities using a unified single-table
+    inheritance pattern with node_type discriminator, enforcing invariants and
+    maintaining referential integrity
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/ontology_repo.py
+        symbol: SQLiteOntologyRepository
+  metadata:
+    created_at: 2026-05-08T12:19:37.498Z
+    updated_at: 2026-05-08T12:19:37.498Z
+    version: 1
+application.applicationcomponent.sqlite-change-repository:
+  id: 0f058b73-e96f-416f-9ff2-a090b740a7a0
+  path: application.applicationcomponent.sqlite-change-repository
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: SQLite Change Repository
+  description: SQLAlchemy-based repository for persisting versioning domain
+    entities — implements the ChangeRepository protocol handling persistence of
+    change events, entity versions, changesets, and proposals to SQLite
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/change_repo.py
+        symbol: SQLiteChangeRepository
+  metadata:
+    created_at: 2026-05-08T12:19:39.024Z
+    updated_at: 2026-05-08T12:19:39.024Z
+    version: 1
+application.applicationcomponent.sqlite-extraction-repository:
+  id: 1bfd1b27-4994-4c19-9e98-a64f527f28b5
+  path: application.applicationcomponent.sqlite-extraction-repository
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: SQLite Extraction Repository
+  description: SQLAlchemy-based implementation of the ExtractionRepository port —
+    manages persistence of extraction results using SQLAlchemy ORM with full
+    entity and layer execution metadata
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/extraction_repo.py
+        symbol: SQLiteExtractionRepository
+  metadata:
+    created_at: 2026-05-08T12:19:42.929Z
+    updated_at: 2026-05-08T12:19:42.929Z
+    version: 1
+application.applicationcomponent.sqlite-interchange-repository:
+  id: a7f15c63-8bbe-4a12-b281-cca450fe7241
+  path: application.applicationcomponent.sqlite-interchange-repository
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: SQLite Interchange Repository
+  description: SQLAlchemy-based repository for interchange domain persistence —
+    implements the ImportRunRepository port handling persistence of ImportRun
+    entities and their change event correlations using SQLite
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/interchange_repo.py
+        symbol: SQLiteInterchangeRepository
+  metadata:
+    created_at: 2026-05-08T12:19:44.442Z
+    updated_at: 2026-05-08T12:19:44.442Z
+    version: 1
+application.applicationcomponent.sqlite-pipeline-repository:
+  id: 07532edd-1c3d-4fe3-bf94-d97b6047be63
+  path: application.applicationcomponent.sqlite-pipeline-repository
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: SQLite Pipeline Repository
+  description: SQLite implementation of the PipelineRepository port for
+    operations.db — manages persistence of pipeline configurations and execution
+    records with complete instrumentation for observability
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/pipeline_repo.py
+        symbol: SQLitePipelineRepository
+  metadata:
+    created_at: 2026-05-08T12:19:49.956Z
+    updated_at: 2026-05-08T12:19:49.956Z
+    version: 1
+application.applicationcomponent.local-reference-repository:
+  id: 5fdb0736-3d9c-4bb6-b20a-98c99134b701
+  path: application.applicationcomponent.local-reference-repository
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Local Reference Repository
+  description: Repository for offline reference data lookups — queries
+    pre-imported reference.db to provide fast offline access to reference data
+    from ConceptNet, DBpedia, Wikidata, and schema.org
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/reference_repo.py
+        symbol: LocalReferenceRepository
+  metadata:
+    created_at: 2026-05-08T12:19:51.138Z
+    updated_at: 2026-05-08T12:19:51.138Z
+    version: 1
+application.applicationcomponent.cached-reference-source:
+  id: 0cd5b507-1e3d-449c-b734-4ae383985b02
+  path: application.applicationcomponent.cached-reference-source
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Cached Reference Source
+  description: Decorator that wraps a ReferenceSource and caches results to SQLite
+    — provides TTL-based expiry ensuring stale data is refreshed while improving
+    efficiency when querying the same terms repeatedly
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/reference/cache.py
+        symbol: CachedReferenceSource
+  metadata:
+    created_at: 2026-05-08T12:19:55.023Z
+    updated_at: 2026-05-08T12:19:55.023Z
+    version: 1
+application.applicationcomponent.no-op-sync-adapter:
+  id: 0a5b0cc0-416c-4e99-88da-08c6c4b61875
+  path: application.applicationcomponent.no-op-sync-adapter
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: No-Op Sync Adapter
+  description: No-op implementation of the SyncTarget port — used when remote
+    synchronization is not configured, all operations succeed without side
+    effects allowing the versioning system to function normally in
+    single-workspace scenarios
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/sync/noop_sync.py
+        symbol: NoOpSyncTarget
+  metadata:
+    created_at: 2026-05-08T12:19:56.922Z
+    updated_at: 2026-05-08T12:19:56.922Z
+    version: 1

@@ -127,3 +127,108 @@ testing.testcoveragetarget.admin-health:
     created_at: 2026-03-24T09:21:39.519Z
     updated_at: 2026-03-24T09:21:39.519Z
     version: 1
+testing.testcoveragetarget.interchange-integration-tests:
+  id: d2878f80-86be-434f-b14c-18b80de01984
+  path: testing.testcoveragetarget.interchange-integration-tests
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: Interchange Integration Tests
+  description: Integration test suite for SKOS/OWL/GraphML round-trip
+    serialization, import run lifecycle, and persistence adapter correctness (6
+    test files)
+  attributes:
+    targetType: integration-flow
+    priority: high
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/tests/integration/interchange/
+  metadata:
+    created_at: 2026-05-08T12:21:07.031Z
+    updated_at: 2026-05-08T12:21:07.031Z
+    version: 1
+testing.testcoveragetarget.e2e-test-suite:
+  id: 1aa03e06-03b2-4186-9809-efbca7962695
+  path: testing.testcoveragetarget.e2e-test-suite
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: E2E Test Suite
+  description: End-to-end tests covering full-stack service interaction across
+    ontology, graph, extraction, pipeline, versioning, and interchange contexts
+    (8 test files)
+  attributes:
+    targetType: business-workflow
+    priority: high
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/tests/e2e/
+  metadata:
+    created_at: 2026-05-08T12:21:07.826Z
+    updated_at: 2026-05-08T12:21:07.826Z
+    version: 1
+testing.testcoveragetarget.performance-test-suite:
+  id: d1c171b7-3105-42ea-9494-cf34902d8490
+  path: testing.testcoveragetarget.performance-test-suite
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: Performance Test Suite
+  description: Performance tests covering scalability and throughput for ontology
+    operations, graph traversal, extraction pipeline, and API response times (6
+    test files)
+  attributes:
+    targetType: api-endpoint
+    priority: medium
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/tests/performance/
+  metadata:
+    created_at: 2026-05-08T12:21:11.060Z
+    updated_at: 2026-05-08T12:21:11.060Z
+    version: 1
+testing.testcoveragetarget.versioning-integration-tests:
+  id: b5e05ece-1f94-48b0-9ea9-7ff031f64015
+  path: testing.testcoveragetarget.versioning-integration-tests
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: Versioning Integration Tests
+  description: Integration test suite for the versioning bounded context — change
+    event persistence, entity versions, changeset lifecycle, and proposal
+    workflows (3 test files)
+  attributes:
+    targetType: integration-flow
+    priority: high
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/tests/integration/versioning/
+  metadata:
+    created_at: 2026-05-08T12:21:12.236Z
+    updated_at: 2026-05-08T12:21:12.236Z
+    version: 1
+testing.testcoveragetarget.route-integration-tests:
+  id: 3a1df1b8-e1a5-489a-a07c-ea1b1df8ae95
+  path: testing.testcoveragetarget.route-integration-tests
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: Route Integration Tests
+  description: Route-level integration tests covering all 8 FastAPI route modules
+    (ontology, graph, extraction, admin, reference, interchange, versioning,
+    pipeline) against real SQLite (7 test files)
+  attributes:
+    targetType: api-endpoint
+    priority: high
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/tests/integration/routes/
+  metadata:
+    created_at: 2026-05-08T12:21:16.528Z
+    updated_at: 2026-05-08T12:21:16.528Z
+    version: 1

@@ -1,0 +1,87 @@
+data-store.database.localdb:
+  id: c7299596-123b-4aaf-966a-cf666b9956f4
+  path: data-store.database.localdb
+  spec_node_id: data-store.database
+  type: database
+  layer_id: data-store
+  name: local.db
+  description: Primary workspace database (Alembic-managed SQLite) — stores
+    ontology entities, relationships, property definitions, change events,
+    extraction results, versioning artefacts, and interchange import runs
+  attributes:
+    engine: SQLite
+    paradigm: RELATIONAL
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/alembic.ini
+        symbol: local.db
+  metadata:
+    created_at: 2026-05-08T12:20:26.785Z
+    updated_at: 2026-05-08T12:20:26.785Z
+    version: 1
+data-store.database.operationsdb:
+  id: c7e1c741-b8d8-403b-87d5-c720d571ce43
+  path: data-store.database.operationsdb
+  spec_node_id: data-store.database
+  type: database
+  layer_id: data-store
+  name: operations.db
+  description: Operational database (Alembic-managed SQLite) — stores pipeline
+    configurations and execution records with LLM traceability logs
+  attributes:
+    engine: SQLite
+    paradigm: RELATIONAL
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/operations/models.py
+        symbol: OperationsBase
+  metadata:
+    created_at: 2026-05-08T12:20:29.689Z
+    updated_at: 2026-05-08T12:20:29.689Z
+    version: 1
+data-store.database.reference-api-cachedb:
+  id: 587e56fc-b760-4365-ba4f-783d29eb4abf
+  path: data-store.database.reference-api-cachedb
+  spec_node_id: data-store.database
+  type: database
+  layer_id: data-store
+  name: reference_api_cache.db
+  description: Cached responses from external knowledge source APIs (ConceptNet,
+    DBpedia, Wikidata, schema.org) — no Alembic migrations, can be dropped and
+    rebuilt
+  attributes:
+    engine: SQLite
+    paradigm: RELATIONAL
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/reference/cache.py
+        symbol: CachedReferenceSource
+  metadata:
+    created_at: 2026-05-08T12:20:31.707Z
+    updated_at: 2026-05-08T12:20:31.707Z
+    version: 1
+data-store.database.referencedb:
+  id: b934a6e4-4b08-4ab8-8ce5-38bfa159c18c
+  path: data-store.database.referencedb
+  spec_node_id: data-store.database
+  type: database
+  layer_id: data-store
+  name: reference.db
+  description: Imported reference data from ConceptNet, DBpedia, Wikidata, and
+    schema.org — no Alembic migrations, can be dropped and rebuilt from source
+    APIs
+  attributes:
+    engine: SQLite
+    paradigm: RELATIONAL
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/reference_repo.py
+        symbol: LocalReferenceRepository
+  metadata:
+    created_at: 2026-05-08T12:20:35.043Z
+    updated_at: 2026-05-08T12:20:35.043Z
+    version: 1

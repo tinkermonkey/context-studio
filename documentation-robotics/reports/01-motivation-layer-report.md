@@ -16,8 +16,8 @@ Goals, requirements, drivers, and strategic outcomes of the architecture.
 | ------------------------- | ----- |
 | Elements                  | 13    |
 | Intra-Layer Relationships | 12    |
-| Inter-Layer Relationships | 12    |
-| Inbound Relationships     | 12    |
+| Inter-Layer Relationships | 7     |
+| Inbound Relationships     | 7     |
 | Outbound Relationships    | 0     |
 
 **Cross-Layer References**:
@@ -89,13 +89,8 @@ flowchart TB
 | `ux.view.serves.motivation.stakeholder`                      | `ux.view.admin-view`                                     | `motivation.stakeholder.platform-developer`                   | `motivation` | `serves`    | many-to-many | medium   |
 | `ux.view.serves.motivation.stakeholder`                      | `ux.view.configuration-view`                             | `motivation.stakeholder.platform-developer`                   | `motivation` | `serves`    | many-to-many | medium   |
 | `ux.view.serves.motivation.stakeholder`                      | `ux.view.datasets-view`                                  | `motivation.stakeholder.knowledge-manager`                    | `motivation` | `serves`    | many-to-many | medium   |
-| `ux.view.serves.motivation.stakeholder`                      | `ux.view.domains-view`                                   | `motivation.stakeholder.knowledge-manager`                    | `motivation` | `serves`    | many-to-many | medium   |
-| `ux.view.maps-to.motivation.outcome`                         | `ux.view.layers-view`                                    | `motivation.outcome.curated-domain-ontology`                  | `motivation` | `maps-to`   | many-to-many | medium   |
-| `ux.view.serves.motivation.stakeholder`                      | `ux.view.layers-view`                                    | `motivation.stakeholder.knowledge-manager`                    | `motivation` | `serves`    | many-to-many | medium   |
-| `ux.view.serves.motivation.stakeholder`                      | `ux.view.predicates-view`                                | `motivation.stakeholder.knowledge-manager`                    | `motivation` | `serves`    | many-to-many | medium   |
 | `ux.view.maps-to.motivation.outcome`                         | `ux.view.rag-experiments-view`                           | `motivation.outcome.improved-ai-inference-quality`            | `motivation` | `maps-to`   | many-to-many | medium   |
 | `ux.view.serves.motivation.stakeholder`                      | `ux.view.rag-experiments-view`                           | `motivation.stakeholder.ai-agent-consumer`                    | `motivation` | `serves`    | many-to-many | medium   |
-| `ux.view.serves.motivation.stakeholder`                      | `ux.view.terms-view`                                     | `motivation.stakeholder.knowledge-manager`                    | `motivation` | `serves`    | many-to-many | medium   |
 
 ## Element Reference
 
@@ -215,7 +210,6 @@ The primary deliverable: a version-controlled, semantically enriched knowledge g
 
 | Type        | Related Element                                     | Predicate         | Direction |
 | ----------- | --------------------------------------------------- | ----------------- | --------- |
-| inter-layer | `ux.view.layers-view`                               | `maps-to`         | inbound   |
 | intra-layer | `motivation.assessment.security-posture-assessment` | `associated-with` | inbound   |
 | intra-layer | `motivation.stakeholder.knowledge-manager`          | `associated-with` | outbound  |
 | intra-layer | `motivation.value.reduced-manual-curation-effort`   | `associated-with` | inbound   |
@@ -303,10 +297,6 @@ Internal stakeholder: domain experts and ontology authors who create and curate 
 | Type        | Related Element                                   | Predicate         | Direction |
 | ----------- | ------------------------------------------------- | ----------------- | --------- |
 | inter-layer | `ux.view.datasets-view`                           | `serves`          | inbound   |
-| inter-layer | `ux.view.domains-view`                            | `serves`          | inbound   |
-| inter-layer | `ux.view.layers-view`                             | `serves`          | inbound   |
-| inter-layer | `ux.view.predicates-view`                         | `serves`          | inbound   |
-| inter-layer | `ux.view.terms-view`                              | `serves`          | inbound   |
 | intra-layer | `motivation.outcome.curated-domain-ontology`      | `associated-with` | inbound   |
 | intra-layer | `motivation.stakeholder.desktop-application-user` | `associated-with` | outbound  |
 | intra-layer | `motivation.stakeholder.platform-developer`       | `associated-with` | inbound   |
@@ -378,4 +368,4 @@ Automated enrichment from multiple external knowledge bases significantly reduce
 
 ---
 
-Generated: 2026-05-07T22:00:51.579Z | Model Version: 0.1.0
+Generated: 2026-05-08T12:53:37.492Z | Model Version: 0.1.0

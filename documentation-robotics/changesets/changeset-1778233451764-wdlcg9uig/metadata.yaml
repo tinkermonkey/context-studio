@@ -1,0 +1,10 @@
+id: changeset-1778233451764-wdlcg9uig
+name: extract-api-application-data-layers
+created: 2026-05-08T09:44:11.772Z
+modified: 2026-05-08T09:47:48.033Z
+status: committed
+baseSnapshot: sha256:15f80c1b9cda1bb328e10b4053450dcc28a4c339921003679b5248cbfe42f0a9
+stats:
+  additions: 123
+  modifications: 0
+  deletions: 0

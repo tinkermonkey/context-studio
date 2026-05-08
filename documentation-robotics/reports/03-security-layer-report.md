@@ -16,8 +16,8 @@ Authentication, authorization, security threats, and controls.
 | ------------------------- | ----- |
 | Elements                  | 8     |
 | Intra-Layer Relationships | 9     |
-| Inter-Layer Relationships | 3     |
-| Inbound Relationships     | 3     |
+| Inter-Layer Relationships | 2     |
+| Inbound Relationships     | 2     |
 | Outbound Relationships    | 0     |
 
 **Cross-Layer References**:
@@ -77,7 +77,6 @@ flowchart TB
 | -------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------- | ---------- | ------------ | ------------ | -------- |
 | `api.ratelimit.implements.security.countermeasure` | `api.ratelimit.external-reference-api-rate-limit` | `security.countermeasure.parameterized-queries-via-orm` | `security` | `implements` | many-to-many | medium   |
 | `ux.view.requires.security.role`                   | `ux.view.admin-view`                              | `security.role.administrator`                           | `security` | `requires`   | many-to-many | medium   |
-| `ux.view.requires.security.role`                   | `ux.view.layers-view`                             | `security.role.administrator`                           | `security` | `requires`   | many-to-many | medium   |
 
 ## Element Reference
 
@@ -197,7 +196,6 @@ Full administrator role — has unrestricted access to all ontology entities, da
 | Type        | Related Element                                        | Predicate    | Direction |
 | ----------- | ------------------------------------------------------ | ------------ | --------- |
 | inter-layer | `ux.view.admin-view`                                   | `requires`   | inbound   |
-| inter-layer | `ux.view.layers-view`                                  | `requires`   | inbound   |
 | intra-layer | `security.securitymodel.context-studio-security-model` | `aggregates` | inbound   |
 
 ### Context Studio Security Model {#context-studio-security-model}
@@ -280,4 +278,4 @@ Threat: SQL injection attacks against the SQLite databases (local.db, operations
 
 ---
 
-Generated: 2026-05-07T22:00:51.579Z | Model Version: 0.1.0
+Generated: 2026-05-08T11:56:41.266Z | Model Version: 0.1.0

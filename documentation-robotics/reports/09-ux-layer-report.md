@@ -14,16 +14,16 @@ User interface components, screens, and user experience elements.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 14    |
+| Elements                  | 17    |
 | Intra-Layer Relationships | 3     |
-| Inter-Layer Relationships | 42    |
-| Inbound Relationships     | 22    |
-| Outbound Relationships    | 20    |
+| Inter-Layer Relationships | 40    |
+| Inbound Relationships     | 19    |
+| Outbound Relationships    | 21    |
 
 **Cross-Layer References**:
 
 - **Upstream layers**: [APM](./11-apm-layer-report.md), [Navigation](./10-navigation-layer-report.md), [Testing](./12-testing-layer-report.md)
-- **Downstream layers**: [API](./06-api-layer-report.md), [Motivation](./01-motivation-layer-report.md), [Security](./03-security-layer-report.md)
+- **Downstream layers**: [API](./06-api-layer-report.md), [Application](./04-application-layer-report.md), [Motivation](./01-motivation-layer-report.md), [Security](./03-security-layer-report.md)
 
 ## Intra-Layer Relationships
 
@@ -37,13 +37,16 @@ flowchart LR
     ux_uxlibrary_flowbite_react_component_library["Flowbite React Component Library"]
     ux_uxspec_ontology_editor_ux_spec["Ontology Editor UX Spec"]
     ux_view_admin_view["Admin View"]
+    ux_view_classes_view["Classes View"]
+    ux_view_concept_schemes_view["Concept Schemes View"]
     ux_view_configuration_view["Configuration View"]
     ux_view_datasets_view["Datasets View"]
-    ux_view_domains_view["Domains View"]
-    ux_view_layers_view["Layers View"]
-    ux_view_predicates_view["Predicates View"]
+    ux_view_individuals_view["Individuals View"]
+    ux_view_interchange_view["Interchange View"]
+    ux_view_properties_view["Properties View"]
     ux_view_rag_experiments_view["RAG Experiments View"]
-    ux_view_terms_view["Terms View"]
+    ux_view_relationships_view["Relationships View"]
+    ux_view_taxonomies_view["Taxonomies View"]
     ux_statepattern_crud_entity_pattern -->|governs| ux_experiencestate_entity_crud_state
     ux_uxapplication_context_studio_spa -->|aggregates| ux_uxspec_ontology_editor_ux_spec
     ux_uxlibrary_flowbite_react_component_library -->|aggregates| ux_librarycomponent_flowbite_react_components
@@ -71,6 +74,7 @@ flowchart TB
   navigation --> ux
   testing --> ux
   ux --> api
+  ux --> application
   ux --> motivation
   ux --> security
   class ux current
@@ -78,50 +82,48 @@ flowchart TB
 
 ## Inter-Layer Relationships Table
 
-| Relationship ID                             | Source Node                                         | Dest Node                                          | Dest Layer   | Predicate  | Cardinality  | Strength |
-| ------------------------------------------- | --------------------------------------------------- | -------------------------------------------------- | ------------ | ---------- | ------------ | -------- |
-| `apm.metricinstrument.monitors.ux.view`     | `apm.metricinstrument.rag-processing-time`          | `ux.view.rag-experiments-view`                     | `ux`         | `monitors` | many-to-many | medium   |
-| `apm.span.monitors.ux.view`                 | `apm.span.api-request-span`                         | `ux.view.layers-view`                              | `ux`         | `monitors` | many-to-many | medium   |
-| `apm.span.monitors.ux.view`                 | `apm.span.api-request-span`                         | `ux.view.rag-experiments-view`                     | `ux`         | `monitors` | many-to-many | medium   |
-| `apm.span.monitors.ux.view`                 | `apm.span.database-query-span`                      | `ux.view.datasets-view`                            | `ux`         | `monitors` | many-to-many | medium   |
-| `apm.span.monitors.ux.view`                 | `apm.span.database-query-span`                      | `ux.view.layers-view`                              | `ux`         | `monitors` | many-to-many | medium   |
-| `apm.span.monitors.ux.view`                 | `apm.span.database-query-span`                      | `ux.view.terms-view`                               | `ux`         | `monitors` | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`          | `navigation.route.admin-route`                      | `ux.view.admin-view`                               | `ux`         | `maps-to`  | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`          | `navigation.route.configuration-route`              | `ux.view.configuration-view`                       | `ux`         | `maps-to`  | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`          | `navigation.route.datasets-route`                   | `ux.view.datasets-view`                            | `ux`         | `maps-to`  | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`          | `navigation.route.domains-route`                    | `ux.view.domains-view`                             | `ux`         | `maps-to`  | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`          | `navigation.route.layers-route`                     | `ux.view.layers-view`                              | `ux`         | `maps-to`  | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`          | `navigation.route.predicates-route`                 | `ux.view.predicates-view`                          | `ux`         | `maps-to`  | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`          | `navigation.route.rag-experiments-route`            | `ux.view.rag-experiments-view`                     | `ux`         | `maps-to`  | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`          | `navigation.route.terms-route`                      | `ux.view.terms-view`                               | `ux`         | `maps-to`  | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view` | `testing.testcoveragetarget.admin-health`           | `ux.view.admin-view`                               | `ux`         | `covers`   | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view` | `testing.testcoveragetarget.extraction-pipeline`    | `ux.view.rag-experiments-view`                     | `ux`         | `covers`   | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view` | `testing.testcoveragetarget.graph-analysis`         | `ux.view.rag-experiments-view`                     | `ux`         | `covers`   | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view` | `testing.testcoveragetarget.llm-pipeline-execution` | `ux.view.rag-experiments-view`                     | `ux`         | `covers`   | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view` | `testing.testcoveragetarget.ontology-crud`          | `ux.view.domains-view`                             | `ux`         | `covers`   | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view` | `testing.testcoveragetarget.ontology-crud`          | `ux.view.layers-view`                              | `ux`         | `covers`   | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view` | `testing.testcoveragetarget.ontology-crud`          | `ux.view.terms-view`                               | `ux`         | `covers`   | many-to-many | medium   |
-| `testing.testcoveragetarget.covers.ux.view` | `testing.testcoveragetarget.versioning-workflow`    | `ux.view.datasets-view`                            | `ux`         | `covers`   | many-to-many | medium   |
-| `ux.view.requires.security.role`            | `ux.view.admin-view`                                | `security.role.administrator`                      | `security`   | `requires` | many-to-many | medium   |
-| `ux.view.serves.motivation.stakeholder`     | `ux.view.admin-view`                                | `motivation.stakeholder.platform-developer`        | `motivation` | `serves`   | many-to-many | medium   |
-| `ux.view.uses.api.securityscheme`           | `ux.view.admin-view`                                | `api.securityscheme.api-key`                       | `api`        | `uses`     | many-to-many | medium   |
-| `ux.view.serves.motivation.stakeholder`     | `ux.view.configuration-view`                        | `motivation.stakeholder.platform-developer`        | `motivation` | `serves`   | many-to-many | medium   |
-| `ux.view.uses.api.securityscheme`           | `ux.view.configuration-view`                        | `api.securityscheme.api-key`                       | `api`        | `uses`     | many-to-many | medium   |
-| `ux.view.serves.motivation.stakeholder`     | `ux.view.datasets-view`                             | `motivation.stakeholder.knowledge-manager`         | `motivation` | `serves`   | many-to-many | medium   |
-| `ux.view.uses.api.securityscheme`           | `ux.view.datasets-view`                             | `api.securityscheme.api-key`                       | `api`        | `uses`     | many-to-many | medium   |
-| `ux.view.serves.motivation.stakeholder`     | `ux.view.domains-view`                              | `motivation.stakeholder.knowledge-manager`         | `motivation` | `serves`   | many-to-many | medium   |
-| `ux.view.uses.api.securityscheme`           | `ux.view.domains-view`                              | `api.securityscheme.api-key`                       | `api`        | `uses`     | many-to-many | medium   |
-| `ux.view.maps-to.motivation.outcome`        | `ux.view.layers-view`                               | `motivation.outcome.curated-domain-ontology`       | `motivation` | `maps-to`  | many-to-many | medium   |
-| `ux.view.requires.security.role`            | `ux.view.layers-view`                               | `security.role.administrator`                      | `security`   | `requires` | many-to-many | medium   |
-| `ux.view.serves.motivation.stakeholder`     | `ux.view.layers-view`                               | `motivation.stakeholder.knowledge-manager`         | `motivation` | `serves`   | many-to-many | medium   |
-| `ux.view.uses.api.securityscheme`           | `ux.view.layers-view`                               | `api.securityscheme.api-key`                       | `api`        | `uses`     | many-to-many | medium   |
-| `ux.view.serves.motivation.stakeholder`     | `ux.view.predicates-view`                           | `motivation.stakeholder.knowledge-manager`         | `motivation` | `serves`   | many-to-many | medium   |
-| `ux.view.uses.api.securityscheme`           | `ux.view.predicates-view`                           | `api.securityscheme.api-key`                       | `api`        | `uses`     | many-to-many | medium   |
-| `ux.view.maps-to.motivation.outcome`        | `ux.view.rag-experiments-view`                      | `motivation.outcome.improved-ai-inference-quality` | `motivation` | `maps-to`  | many-to-many | medium   |
-| `ux.view.serves.motivation.stakeholder`     | `ux.view.rag-experiments-view`                      | `motivation.stakeholder.ai-agent-consumer`         | `motivation` | `serves`   | many-to-many | medium   |
-| `ux.view.uses.api.securityscheme`           | `ux.view.rag-experiments-view`                      | `api.securityscheme.api-key`                       | `api`        | `uses`     | many-to-many | medium   |
-| `ux.view.serves.motivation.stakeholder`     | `ux.view.terms-view`                                | `motivation.stakeholder.knowledge-manager`         | `motivation` | `serves`   | many-to-many | medium   |
-| `ux.view.uses.api.securityscheme`           | `ux.view.terms-view`                                | `api.securityscheme.api-key`                       | `api`        | `uses`     | many-to-many | medium   |
+| Relationship ID                                 | Source Node                                         | Dest Node                                           | Dest Layer    | Predicate  | Cardinality  | Strength |
+| ----------------------------------------------- | --------------------------------------------------- | --------------------------------------------------- | ------------- | ---------- | ------------ | -------- |
+| `apm.metricinstrument.monitors.ux.view`         | `apm.metricinstrument.rag-processing-time`          | `ux.view.rag-experiments-view`                      | `ux`          | `monitors` | many-to-many | medium   |
+| `apm.span.monitors.ux.view`                     | `apm.span.api-request-span`                         | `ux.view.rag-experiments-view`                      | `ux`          | `monitors` | many-to-many | medium   |
+| `apm.span.monitors.ux.view`                     | `apm.span.database-query-span`                      | `ux.view.datasets-view`                             | `ux`          | `monitors` | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`              | `navigation.route.admin-route`                      | `ux.view.admin-view`                                | `ux`          | `maps-to`  | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`              | `navigation.route.classes-route`                    | `ux.view.classes-view`                              | `ux`          | `maps-to`  | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`              | `navigation.route.concept-schemes-route`            | `ux.view.concept-schemes-view`                      | `ux`          | `maps-to`  | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`              | `navigation.route.configuration-route`              | `ux.view.configuration-view`                        | `ux`          | `maps-to`  | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`              | `navigation.route.datasets-route`                   | `ux.view.datasets-view`                             | `ux`          | `maps-to`  | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`              | `navigation.route.individuals-route`                | `ux.view.individuals-view`                          | `ux`          | `maps-to`  | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`              | `navigation.route.interchange-route`                | `ux.view.interchange-view`                          | `ux`          | `maps-to`  | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`              | `navigation.route.properties-route`                 | `ux.view.properties-view`                           | `ux`          | `maps-to`  | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`              | `navigation.route.rag-experiments-route`            | `ux.view.rag-experiments-view`                      | `ux`          | `maps-to`  | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`              | `navigation.route.relationships-route`              | `ux.view.relationships-view`                        | `ux`          | `maps-to`  | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`              | `navigation.route.taxonomies-route`                 | `ux.view.taxonomies-view`                           | `ux`          | `maps-to`  | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`     | `testing.testcoveragetarget.admin-health`           | `ux.view.admin-view`                                | `ux`          | `covers`   | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`     | `testing.testcoveragetarget.extraction-pipeline`    | `ux.view.rag-experiments-view`                      | `ux`          | `covers`   | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`     | `testing.testcoveragetarget.graph-analysis`         | `ux.view.rag-experiments-view`                      | `ux`          | `covers`   | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`     | `testing.testcoveragetarget.llm-pipeline-execution` | `ux.view.rag-experiments-view`                      | `ux`          | `covers`   | many-to-many | medium   |
+| `testing.testcoveragetarget.covers.ux.view`     | `testing.testcoveragetarget.versioning-workflow`    | `ux.view.datasets-view`                             | `ux`          | `covers`   | many-to-many | medium   |
+| `ux.view.requires.security.role`                | `ux.view.admin-view`                                | `security.role.administrator`                       | `security`    | `requires` | many-to-many | medium   |
+| `ux.view.serves.application.applicationservice` | `ux.view.admin-view`                                | `application.applicationservice.admin-service`      | `application` | `serves`   | many-to-many | medium   |
+| `ux.view.serves.motivation.stakeholder`         | `ux.view.admin-view`                                | `motivation.stakeholder.platform-developer`         | `motivation`  | `serves`   | many-to-many | medium   |
+| `ux.view.uses.api.securityscheme`               | `ux.view.admin-view`                                | `api.securityscheme.api-key`                        | `api`         | `uses`     | many-to-many | medium   |
+| `ux.view.serves.application.applicationservice` | `ux.view.classes-view`                              | `application.applicationservice.ontology-service`   | `application` | `serves`   | many-to-many | medium   |
+| `ux.view.serves.application.applicationservice` | `ux.view.concept-schemes-view`                      | `application.applicationservice.ontology-service`   | `application` | `serves`   | many-to-many | medium   |
+| `ux.view.serves.application.applicationservice` | `ux.view.configuration-view`                        | `application.applicationservice.admin-service`      | `application` | `serves`   | many-to-many | medium   |
+| `ux.view.serves.motivation.stakeholder`         | `ux.view.configuration-view`                        | `motivation.stakeholder.platform-developer`         | `motivation`  | `serves`   | many-to-many | medium   |
+| `ux.view.uses.api.securityscheme`               | `ux.view.configuration-view`                        | `api.securityscheme.api-key`                        | `api`         | `uses`     | many-to-many | medium   |
+| `ux.view.serves.application.applicationservice` | `ux.view.datasets-view`                             | `application.applicationservice.ontology-service`   | `application` | `serves`   | many-to-many | medium   |
+| `ux.view.serves.motivation.stakeholder`         | `ux.view.datasets-view`                             | `motivation.stakeholder.knowledge-manager`          | `motivation`  | `serves`   | many-to-many | medium   |
+| `ux.view.uses.api.securityscheme`               | `ux.view.datasets-view`                             | `api.securityscheme.api-key`                        | `api`         | `uses`     | many-to-many | medium   |
+| `ux.view.serves.application.applicationservice` | `ux.view.individuals-view`                          | `application.applicationservice.ontology-service`   | `application` | `serves`   | many-to-many | medium   |
+| `ux.view.serves.application.applicationservice` | `ux.view.interchange-view`                          | `application.applicationservice.import-run-service` | `application` | `serves`   | many-to-many | medium   |
+| `ux.view.serves.application.applicationservice` | `ux.view.properties-view`                           | `application.applicationservice.ontology-service`   | `application` | `serves`   | many-to-many | medium   |
+| `ux.view.maps-to.motivation.outcome`            | `ux.view.rag-experiments-view`                      | `motivation.outcome.improved-ai-inference-quality`  | `motivation`  | `maps-to`  | many-to-many | medium   |
+| `ux.view.serves.application.applicationservice` | `ux.view.rag-experiments-view`                      | `application.applicationservice.extraction-service` | `application` | `serves`   | many-to-many | medium   |
+| `ux.view.serves.motivation.stakeholder`         | `ux.view.rag-experiments-view`                      | `motivation.stakeholder.ai-agent-consumer`          | `motivation`  | `serves`   | many-to-many | medium   |
+| `ux.view.uses.api.securityscheme`               | `ux.view.rag-experiments-view`                      | `api.securityscheme.api-key`                        | `api`         | `uses`     | many-to-many | medium   |
+| `ux.view.serves.application.applicationservice` | `ux.view.relationships-view`                        | `application.applicationservice.ontology-service`   | `application` | `serves`   | many-to-many | medium   |
+| `ux.view.serves.application.applicationservice` | `ux.view.taxonomies-view`                           | `application.applicationservice.ontology-service`   | `application` | `serves`   | many-to-many | medium   |
 
 ## Element Reference
 
@@ -270,13 +272,44 @@ Administrative view for system health monitoring, background task management, an
 
 #### Relationships
 
-| Type        | Related Element                             | Predicate  | Direction |
-| ----------- | ------------------------------------------- | ---------- | --------- |
-| inter-layer | `navigation.route.admin-route`              | `maps-to`  | inbound   |
-| inter-layer | `testing.testcoveragetarget.admin-health`   | `covers`   | inbound   |
-| inter-layer | `security.role.administrator`               | `requires` | outbound  |
-| inter-layer | `motivation.stakeholder.platform-developer` | `serves`   | outbound  |
-| inter-layer | `api.securityscheme.api-key`                | `uses`     | outbound  |
+| Type        | Related Element                                | Predicate  | Direction |
+| ----------- | ---------------------------------------------- | ---------- | --------- |
+| inter-layer | `navigation.route.admin-route`                 | `maps-to`  | inbound   |
+| inter-layer | `testing.testcoveragetarget.admin-health`      | `covers`   | inbound   |
+| inter-layer | `security.role.administrator`                  | `requires` | outbound  |
+| inter-layer | `application.applicationservice.admin-service` | `serves`   | outbound  |
+| inter-layer | `motivation.stakeholder.platform-developer`    | `serves`   | outbound  |
+| inter-layer | `api.securityscheme.api-key`                   | `uses`     | outbound  |
+
+### Classes View {#classes-view}
+
+**ID**: `ux.view.classes-view`
+
+**Type**: `view`
+
+Browse and manage ontology classes
+
+#### Relationships
+
+| Type        | Related Element                                   | Predicate | Direction |
+| ----------- | ------------------------------------------------- | --------- | --------- |
+| inter-layer | `navigation.route.classes-route`                  | `maps-to` | inbound   |
+| inter-layer | `application.applicationservice.ontology-service` | `serves`  | outbound  |
+
+### Concept Schemes View {#concept-schemes-view}
+
+**ID**: `ux.view.concept-schemes-view`
+
+**Type**: `view`
+
+Browse and manage concept schemes within taxonomies
+
+#### Relationships
+
+| Type        | Related Element                                   | Predicate | Direction |
+| ----------- | ------------------------------------------------- | --------- | --------- |
+| inter-layer | `navigation.route.concept-schemes-route`          | `maps-to` | inbound   |
+| inter-layer | `application.applicationservice.ontology-service` | `serves`  | outbound  |
 
 ### Configuration View {#configuration-view}
 
@@ -296,11 +329,12 @@ Page view for server configuration management and LLM pipeline settings
 
 #### Relationships
 
-| Type        | Related Element                             | Predicate | Direction |
-| ----------- | ------------------------------------------- | --------- | --------- |
-| inter-layer | `navigation.route.configuration-route`      | `maps-to` | inbound   |
-| inter-layer | `motivation.stakeholder.platform-developer` | `serves`  | outbound  |
-| inter-layer | `api.securityscheme.api-key`                | `uses`    | outbound  |
+| Type        | Related Element                                | Predicate | Direction |
+| ----------- | ---------------------------------------------- | --------- | --------- |
+| inter-layer | `navigation.route.configuration-route`         | `maps-to` | inbound   |
+| inter-layer | `application.applicationservice.admin-service` | `serves`  | outbound  |
+| inter-layer | `motivation.stakeholder.platform-developer`    | `serves`  | outbound  |
+| inter-layer | `api.securityscheme.api-key`                   | `uses`    | outbound  |
 
 ### Datasets View {#datasets-view}
 
@@ -320,91 +354,59 @@ Page view for dataset workspace management — list, create, activate, and switc
 
 #### Relationships
 
-| Type        | Related Element                                  | Predicate  | Direction |
-| ----------- | ------------------------------------------------ | ---------- | --------- |
-| inter-layer | `apm.span.database-query-span`                   | `monitors` | inbound   |
-| inter-layer | `navigation.route.datasets-route`                | `maps-to`  | inbound   |
-| inter-layer | `testing.testcoveragetarget.versioning-workflow` | `covers`   | inbound   |
-| inter-layer | `motivation.stakeholder.knowledge-manager`       | `serves`   | outbound  |
-| inter-layer | `api.securityscheme.api-key`                     | `uses`     | outbound  |
+| Type        | Related Element                                   | Predicate  | Direction |
+| ----------- | ------------------------------------------------- | ---------- | --------- |
+| inter-layer | `apm.span.database-query-span`                    | `monitors` | inbound   |
+| inter-layer | `navigation.route.datasets-route`                 | `maps-to`  | inbound   |
+| inter-layer | `testing.testcoveragetarget.versioning-workflow`  | `covers`   | inbound   |
+| inter-layer | `application.applicationservice.ontology-service` | `serves`   | outbound  |
+| inter-layer | `motivation.stakeholder.knowledge-manager`        | `serves`   | outbound  |
+| inter-layer | `api.securityscheme.api-key`                      | `uses`     | outbound  |
 
-### Domains View {#domains-view}
+### Individuals View {#individuals-view}
 
-**ID**: `ux.view.domains-view`
-
-**Type**: `view`
-
-Page view for managing concept scheme entities within a taxonomy
-
-#### Attributes
-
-| Name     | Value   |
-| -------- | ------- |
-| routable | true    |
-| title    | Domains |
-| type     | page    |
-
-#### Relationships
-
-| Type        | Related Element                            | Predicate | Direction |
-| ----------- | ------------------------------------------ | --------- | --------- |
-| inter-layer | `navigation.route.domains-route`           | `maps-to` | inbound   |
-| inter-layer | `testing.testcoveragetarget.ontology-crud` | `covers`  | inbound   |
-| inter-layer | `motivation.stakeholder.knowledge-manager` | `serves`  | outbound  |
-| inter-layer | `api.securityscheme.api-key`               | `uses`    | outbound  |
-
-### Layers View {#layers-view}
-
-**ID**: `ux.view.layers-view`
+**ID**: `ux.view.individuals-view`
 
 **Type**: `view`
 
-Page view for managing taxonomy entities — list, create, edit, and delete taxonomies (Layers)
-
-#### Attributes
-
-| Name     | Value  |
-| -------- | ------ |
-| routable | true   |
-| title    | Layers |
-| type     | page   |
+Browse and manage individual instances of classes
 
 #### Relationships
 
-| Type        | Related Element                              | Predicate  | Direction |
-| ----------- | -------------------------------------------- | ---------- | --------- |
-| inter-layer | `apm.span.api-request-span`                  | `monitors` | inbound   |
-| inter-layer | `apm.span.database-query-span`               | `monitors` | inbound   |
-| inter-layer | `navigation.route.layers-route`              | `maps-to`  | inbound   |
-| inter-layer | `testing.testcoveragetarget.ontology-crud`   | `covers`   | inbound   |
-| inter-layer | `motivation.outcome.curated-domain-ontology` | `maps-to`  | outbound  |
-| inter-layer | `security.role.administrator`                | `requires` | outbound  |
-| inter-layer | `motivation.stakeholder.knowledge-manager`   | `serves`   | outbound  |
-| inter-layer | `api.securityscheme.api-key`                 | `uses`     | outbound  |
+| Type        | Related Element                                   | Predicate | Direction |
+| ----------- | ------------------------------------------------- | --------- | --------- |
+| inter-layer | `navigation.route.individuals-route`              | `maps-to` | inbound   |
+| inter-layer | `application.applicationservice.ontology-service` | `serves`  | outbound  |
 
-### Predicates View {#predicates-view}
+### Interchange View {#interchange-view}
 
-**ID**: `ux.view.predicates-view`
+**ID**: `ux.view.interchange-view`
 
 **Type**: `view`
 
-Page view for managing property definitions in the ontology
-
-#### Attributes
-
-| Name     | Value      |
-| -------- | ---------- |
-| routable | true       |
-| title    | Predicates |
-| type     | page       |
+Import and export ontology in SKOS, OWL, and GraphML formats
 
 #### Relationships
 
-| Type        | Related Element                            | Predicate | Direction |
-| ----------- | ------------------------------------------ | --------- | --------- |
-| inter-layer | `navigation.route.predicates-route`        | `maps-to` | inbound   |
-| inter-layer | `motivation.stakeholder.knowledge-manager` | `serves`  | outbound  |
-| inter-layer | `api.securityscheme.api-key`               | `uses`    | outbound  |
+| Type        | Related Element                                     | Predicate | Direction |
+| ----------- | --------------------------------------------------- | --------- | --------- |
+| inter-layer | `navigation.route.interchange-route`                | `maps-to` | inbound   |
+| inter-layer | `application.applicationservice.import-run-service` | `serves`  | outbound  |
+
+### Properties View {#properties-view}
+
+**ID**: `ux.view.properties-view`
+
+**Type**: `view`
+
+Browse and manage object property definitions
+
+#### Relationships
+
+| Type        | Related Element                                   | Predicate | Direction |
+| ----------- | ------------------------------------------------- | --------- | --------- |
+| inter-layer | `navigation.route.properties-route`               | `maps-to` | inbound   |
+| inter-layer | `application.applicationservice.ontology-service` | `serves`  | outbound  |
 
 ### RAG Experiments View {#rag-experiments-view}
 
@@ -433,35 +435,40 @@ View for managing RAG test paragraphs, running experiments, and comparing pipeli
 | inter-layer | `testing.testcoveragetarget.graph-analysis`         | `covers`   | inbound   |
 | inter-layer | `testing.testcoveragetarget.llm-pipeline-execution` | `covers`   | inbound   |
 | inter-layer | `motivation.outcome.improved-ai-inference-quality`  | `maps-to`  | outbound  |
+| inter-layer | `application.applicationservice.extraction-service` | `serves`   | outbound  |
 | inter-layer | `motivation.stakeholder.ai-agent-consumer`          | `serves`   | outbound  |
 | inter-layer | `api.securityscheme.api-key`                        | `uses`     | outbound  |
 
-### Terms View {#terms-view}
+### Relationships View {#relationships-view}
 
-**ID**: `ux.view.terms-view`
+**ID**: `ux.view.relationships-view`
 
 **Type**: `view`
 
-Page view for managing class entities within a concept scheme, including relationship editing
-
-#### Attributes
-
-| Name     | Value |
-| -------- | ----- |
-| routable | true  |
-| title    | Terms |
-| type     | page  |
+Browse and manage typed relationships between entities
 
 #### Relationships
 
-| Type        | Related Element                            | Predicate  | Direction |
-| ----------- | ------------------------------------------ | ---------- | --------- |
-| inter-layer | `apm.span.database-query-span`             | `monitors` | inbound   |
-| inter-layer | `navigation.route.terms-route`             | `maps-to`  | inbound   |
-| inter-layer | `testing.testcoveragetarget.ontology-crud` | `covers`   | inbound   |
-| inter-layer | `motivation.stakeholder.knowledge-manager` | `serves`   | outbound  |
-| inter-layer | `api.securityscheme.api-key`               | `uses`     | outbound  |
+| Type        | Related Element                                   | Predicate | Direction |
+| ----------- | ------------------------------------------------- | --------- | --------- |
+| inter-layer | `navigation.route.relationships-route`            | `maps-to` | inbound   |
+| inter-layer | `application.applicationservice.ontology-service` | `serves`  | outbound  |
+
+### Taxonomies View {#taxonomies-view}
+
+**ID**: `ux.view.taxonomies-view`
+
+**Type**: `view`
+
+Browse and manage taxonomy containers
+
+#### Relationships
+
+| Type        | Related Element                                   | Predicate | Direction |
+| ----------- | ------------------------------------------------- | --------- | --------- |
+| inter-layer | `navigation.route.taxonomies-route`               | `maps-to` | inbound   |
+| inter-layer | `application.applicationservice.ontology-service` | `serves`  | outbound  |
 
 ---
 
-Generated: 2026-05-07T22:00:51.579Z | Model Version: 0.1.0
+Generated: 2026-05-08T12:53:37.492Z | Model Version: 0.1.0

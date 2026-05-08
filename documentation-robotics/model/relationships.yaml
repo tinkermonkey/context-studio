@@ -1,6 +1,6 @@
 # Intra-layer relationships
 # Format: source_id -> predicate -> target_id
-# Last updated: 2026-05-07T22:24:32.004Z
+# Last updated: 2026-05-08T12:53:37.461Z
 
 - source: motivation.assessment.security-posture-assessment
   target: motivation.outcome.curated-domain-ontology
@@ -192,31 +192,7 @@
   layer: data-store
   targetLayer: motivation
   category: structural
-- source: ux.view.layers-view
-  target: api.securityscheme.api-key
-  predicate: uses
-  layer: ux
-  targetLayer: api
-  category: structural
-- source: ux.view.domains-view
-  target: api.securityscheme.api-key
-  predicate: uses
-  layer: ux
-  targetLayer: api
-  category: structural
-- source: ux.view.terms-view
-  target: api.securityscheme.api-key
-  predicate: uses
-  layer: ux
-  targetLayer: api
-  category: structural
 - source: ux.view.datasets-view
-  target: api.securityscheme.api-key
-  predicate: uses
-  layer: ux
-  targetLayer: api
-  category: structural
-- source: ux.view.predicates-view
   target: api.securityscheme.api-key
   predicate: uses
   layer: ux
@@ -240,31 +216,7 @@
   layer: ux
   targetLayer: api
   category: structural
-- source: ux.view.layers-view
-  target: motivation.stakeholder.knowledge-manager
-  predicate: serves
-  layer: ux
-  targetLayer: motivation
-  category: structural
-- source: ux.view.domains-view
-  target: motivation.stakeholder.knowledge-manager
-  predicate: serves
-  layer: ux
-  targetLayer: motivation
-  category: structural
-- source: ux.view.terms-view
-  target: motivation.stakeholder.knowledge-manager
-  predicate: serves
-  layer: ux
-  targetLayer: motivation
-  category: structural
 - source: ux.view.datasets-view
-  target: motivation.stakeholder.knowledge-manager
-  predicate: serves
-  layer: ux
-  targetLayer: motivation
-  category: structural
-- source: ux.view.predicates-view
   target: motivation.stakeholder.knowledge-manager
   predicate: serves
   layer: ux
@@ -288,32 +240,8 @@
   layer: ux
   targetLayer: motivation
   category: structural
-- source: navigation.route.layers-route
-  target: ux.view.layers-view
-  predicate: maps-to
-  layer: navigation
-  targetLayer: ux
-  category: structural
-- source: navigation.route.domains-route
-  target: ux.view.domains-view
-  predicate: maps-to
-  layer: navigation
-  targetLayer: ux
-  category: structural
-- source: navigation.route.terms-route
-  target: ux.view.terms-view
-  predicate: maps-to
-  layer: navigation
-  targetLayer: ux
-  category: structural
 - source: navigation.route.datasets-route
   target: ux.view.datasets-view
-  predicate: maps-to
-  layer: navigation
-  targetLayer: ux
-  category: structural
-- source: navigation.route.predicates-route
-  target: ux.view.predicates-view
   predicate: maps-to
   layer: navigation
   targetLayer: ux
@@ -337,27 +265,7 @@
   targetLayer: ux
   category: structural
 - source: navigation.route.app-root-route
-  target: navigation.route.layers-route
-  predicate: navigates-to
-  layer: navigation
-  category: structural
-- source: navigation.route.app-root-route
-  target: navigation.route.domains-route
-  predicate: navigates-to
-  layer: navigation
-  category: structural
-- source: navigation.route.app-root-route
-  target: navigation.route.terms-route
-  predicate: navigates-to
-  layer: navigation
-  category: structural
-- source: navigation.route.app-root-route
   target: navigation.route.datasets-route
-  predicate: navigates-to
-  layer: navigation
-  category: structural
-- source: navigation.route.app-root-route
-  target: navigation.route.predicates-route
   predicate: navigates-to
   layer: navigation
   category: structural
@@ -381,24 +289,6 @@
   predicate: monitors
   layer: apm
   targetLayer: navigation
-  category: structural
-- source: apm.span.database-query-span
-  target: navigation.route.layers-route
-  predicate: monitors
-  layer: apm
-  targetLayer: navigation
-  category: structural
-- source: apm.span.api-request-span
-  target: ux.view.layers-view
-  predicate: monitors
-  layer: apm
-  targetLayer: ux
-  category: structural
-- source: apm.span.database-query-span
-  target: ux.view.layers-view
-  predicate: monitors
-  layer: apm
-  targetLayer: ux
   category: structural
 - source: apm.metricinstrument.rag-processing-time
   target: navigation.route.rag-experiments-route
@@ -455,24 +345,6 @@
   predicate: tests
   layer: testing
   targetLayer: data-store
-  category: structural
-- source: testing.testcoveragetarget.ontology-crud
-  target: ux.view.layers-view
-  predicate: covers
-  layer: testing
-  targetLayer: ux
-  category: structural
-- source: testing.testcoveragetarget.ontology-crud
-  target: ux.view.domains-view
-  predicate: covers
-  layer: testing
-  targetLayer: ux
-  category: structural
-- source: testing.testcoveragetarget.ontology-crud
-  target: ux.view.terms-view
-  predicate: covers
-  layer: testing
-  targetLayer: ux
   category: structural
 - source: testing.testcoveragetarget.extraction-pipeline
   target: ux.view.rag-experiments-view
@@ -561,12 +433,6 @@
   layer: ux
   targetLayer: motivation
   category: structural
-- source: ux.view.layers-view
-  target: motivation.outcome.curated-domain-ontology
-  predicate: maps-to
-  layer: ux
-  targetLayer: motivation
-  category: structural
 - source: apm.span.api-request-span
   target: ux.view.rag-experiments-view
   predicate: monitors
@@ -575,12 +441,6 @@
   category: structural
 - source: apm.span.database-query-span
   target: ux.view.datasets-view
-  predicate: monitors
-  layer: apm
-  targetLayer: ux
-  category: structural
-- source: apm.span.database-query-span
-  target: ux.view.terms-view
   predicate: monitors
   layer: apm
   targetLayer: ux
@@ -615,12 +475,6 @@
   target: data-store.validationrule.entity-cascade-delete
   predicate: composes
   layer: data-store
-  category: structural
-- source: ux.view.layers-view
-  target: security.role.administrator
-  predicate: requires
-  layer: ux
-  targetLayer: security
   category: structural
 - source: ux.view.admin-view
   target: security.role.administrator
@@ -1192,3 +1046,2334 @@
     source_provenance: inferred
     confidence: medium
     basis: domain pattern
+- source: application.applicationservice.ontology-service
+  target: application.applicationservice.import-run-service
+  predicate: depends-on
+  layer: application
+  category: structural
+- source: application.applicationservice.ontology-service
+  target: application.applicationservice.graph-analysis-service
+  predicate: depends-on
+  layer: application
+  category: structural
+- source: application.applicationservice.ontology-service
+  target: application.applicationservice.versioning-service
+  predicate: depends-on
+  layer: application
+  category: structural
+- source: application.applicationservice.graph-analysis-service
+  target: application.applicationservice.ontology-service
+  predicate: depends-on
+  layer: application
+  category: structural
+- source: application.applicationservice.extraction-service
+  target: application.applicationservice.ontology-service
+  predicate: depends-on
+  layer: application
+  category: structural
+- source: application.applicationservice.pipeline-service
+  target: application.applicationservice.extraction-service
+  predicate: depends-on
+  layer: application
+  category: structural
+- source: application.applicationservice.versioning-service
+  target: application.applicationservice.ontology-service
+  predicate: depends-on
+  layer: application
+  category: structural
+- source: application.applicationservice.admin-service
+  target: application.applicationservice.pipeline-service
+  predicate: depends-on
+  layer: application
+  category: structural
+- source: application.applicationservice.import-run-service
+  target: application.applicationservice.ontology-service
+  predicate: depends-on
+  layer: application
+  category: structural
+- source: application.applicationservice.import-run-service
+  target: application.applicationservice.versioning-service
+  predicate: flows-to
+  layer: application
+  category: structural
+- source: application.applicationservice.extraction-service
+  target: application.applicationservice.graph-analysis-service
+  predicate: flows-to
+  layer: application
+  category: structural
+- source: data-model.objectschema.ontology-entity
+  target: data-model.objectschema.relationship
+  predicate: extends
+  layer: data-model
+  category: structural
+- source: data-model.objectschema.changeset
+  target: data-model.objectschema.changeset-event
+  predicate: extends
+  layer: data-model
+  category: structural
+- source: data-model.objectschema.changeset
+  target: data-model.objectschema.proposal
+  predicate: extends
+  layer: data-model
+  category: structural
+- source: data-model.objectschema.proposal
+  target: data-model.objectschema.conflict-resolution
+  predicate: extends
+  layer: data-model
+  category: structural
+- source: data-model.objectschema.pipeline-configuration
+  target: data-model.objectschema.pipeline-execution
+  predicate: extends
+  layer: data-model
+  category: structural
+- source: data-model.objectschema.import-run
+  target: data-model.objectschema.change-event
+  predicate: extends
+  layer: data-model
+  category: structural
+- source: api.operation.create-taxonomy
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.list-taxonomies
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-taxonomy
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.update-taxonomy
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.delete-taxonomy
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.create-concept-scheme
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.list-concept-schemes
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-concept-scheme
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.update-concept-scheme
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.delete-concept-scheme
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.create-class
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.list-classes
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-class
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.update-class
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.move-class
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.delete-class
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.create-relationship
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.list-relationships
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-relationship
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.delete-relationship
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.create-property-definition
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.list-property-definitions
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-property-definition
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.update-property-definition
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.delete-property-definition
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.create-individual
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.list-individuals
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-individual
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.update-individual
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.delete-individual
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.add-parent-class-to-individual
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.remove-parent-class-from-individual
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.reorder-individual-classes
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-individual-inherited-properties
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.build-knowledge-graph
+  target: application.applicationservice.graph-analysis-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-graph-metrics
+  target: application.applicationservice.graph-analysis-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-degree-distribution
+  target: application.applicationservice.graph-analysis-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-shortest-path
+  target: application.applicationservice.graph-analysis-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-all-paths
+  target: application.applicationservice.graph-analysis-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-centrality
+  target: application.applicationservice.graph-analysis-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-communities
+  target: application.applicationservice.graph-analysis-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-neighbors
+  target: application.applicationservice.graph-analysis-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-subgraph
+  target: application.applicationservice.graph-analysis-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-subgraph-by-depth
+  target: application.applicationservice.graph-analysis-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.check-cycle
+  target: application.applicationservice.graph-analysis-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.execute-sparql
+  target: application.applicationservice.graph-analysis-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-rdf-triples
+  target: application.applicationservice.graph-analysis-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-rdf-triple-count
+  target: application.applicationservice.graph-analysis-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.extract-entities
+  target: application.applicationservice.extraction-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.analyze-text
+  target: application.applicationservice.extraction-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.enrich-from-references
+  target: application.applicationservice.extraction-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-system-health
+  target: application.applicationservice.admin-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-database-health
+  target: application.applicationservice.admin-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-service-metrics
+  target: application.applicationservice.admin-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-embedding-health
+  target: application.applicationservice.admin-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-nlp-health
+  target: application.applicationservice.admin-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-background-tasks-summary
+  target: application.applicationservice.admin-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-configuration
+  target: application.applicationservice.admin-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.update-configuration-section
+  target: application.applicationservice.admin-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.reset-configuration
+  target: application.applicationservice.admin-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.list-background-tasks
+  target: application.applicationservice.admin-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-background-task
+  target: application.applicationservice.admin-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-reference-status
+  target: application.applicationservice.extraction-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.search-references
+  target: application.applicationservice.extraction-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-reference-relations
+  target: application.applicationservice.extraction-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.export-ontology
+  target: application.applicationservice.import-run-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.import-ontology
+  target: application.applicationservice.import-run-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.list-import-runs
+  target: application.applicationservice.import-run-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-import-run
+  target: application.applicationservice.import-run-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-run-change-events
+  target: application.applicationservice.import-run-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-change-history-all
+  target: application.applicationservice.versioning-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-change-history-by-entity
+  target: application.applicationservice.versioning-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.list-entity-versions
+  target: application.applicationservice.versioning-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-entity-version
+  target: application.applicationservice.versioning-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.create-changeset
+  target: application.applicationservice.versioning-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-changeset
+  target: application.applicationservice.versioning-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.stage-changeset
+  target: application.applicationservice.versioning-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.submit-proposal
+  target: application.applicationservice.versioning-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.approve-proposal
+  target: application.applicationservice.versioning-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.reject-proposal
+  target: application.applicationservice.versioning-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.detect-conflicts
+  target: application.applicationservice.versioning-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.auto-resolve-conflicts
+  target: application.applicationservice.versioning-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.resolve-conflicts
+  target: application.applicationservice.versioning-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.merge-proposal
+  target: application.applicationservice.versioning-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-sync-status
+  target: application.applicationservice.versioning-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.push-changes
+  target: application.applicationservice.versioning-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.pull-changes
+  target: application.applicationservice.versioning-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.create-pipeline-configuration
+  target: application.applicationservice.pipeline-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.list-pipeline-configurations
+  target: application.applicationservice.pipeline-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-pipeline-configuration
+  target: application.applicationservice.pipeline-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.update-pipeline-configuration
+  target: application.applicationservice.pipeline-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.delete-pipeline-configuration
+  target: application.applicationservice.pipeline-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.execute-pipeline
+  target: application.applicationservice.pipeline-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: api.operation.get-pipeline-executions
+  target: application.applicationservice.pipeline-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: shared source file
+- source: application.applicationcomponent.skos-interchange-adapter
+  target: application.applicationservice.import-run-service
+  predicate: realizes
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: architectural role
+- source: application.applicationcomponent.owl-interchange-adapter
+  target: application.applicationservice.import-run-service
+  predicate: realizes
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: architectural role
+- source: application.applicationcomponent.graph-ml-interchange-adapter
+  target: application.applicationservice.import-run-service
+  predicate: realizes
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: architectural role
+- source: application.applicationcomponent.spa-cy-nlp-processor
+  target: application.applicationservice.extraction-service
+  predicate: realizes
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: architectural role
+- source: application.applicationcomponent.s3-sync-adapter
+  target: application.applicationservice.versioning-service
+  predicate: realizes
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: architectural role
+- source: application.applicationcomponent.duck-db-sync-adapter
+  target: application.applicationservice.versioning-service
+  predicate: realizes
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: architectural role
+- source: application.applicationcomponent.concept-net-reference-source
+  target: application.applicationservice.extraction-service
+  predicate: realizes
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: architectural role
+- source: application.applicationcomponent.dbpedia-reference-source
+  target: application.applicationservice.extraction-service
+  predicate: realizes
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: architectural role
+- source: application.applicationcomponent.wikidata-reference-source
+  target: application.applicationservice.extraction-service
+  predicate: realizes
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: architectural role
+- source: application.applicationcomponent.schema-org-reference-source
+  target: application.applicationservice.extraction-service
+  predicate: realizes
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: architectural role
+- source: data-store.storedlogic.sqlite-vec-cosine-similarity
+  target: application.applicationservice.extraction-service
+  predicate: serves
+  layer: data-store
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: cosine similarity function serves extraction service embedding search
+- source: ux.view.taxonomies-view
+  target: application.applicationservice.ontology-service
+  predicate: serves
+  layer: ux
+  targetLayer: application
+  category: structural
+- source: ux.view.concept-schemes-view
+  target: application.applicationservice.ontology-service
+  predicate: serves
+  layer: ux
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: UI view backed by application service
+- source: ux.view.classes-view
+  target: application.applicationservice.ontology-service
+  predicate: serves
+  layer: ux
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: UI view backed by application service
+- source: ux.view.individuals-view
+  target: application.applicationservice.ontology-service
+  predicate: serves
+  layer: ux
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: UI view backed by application service
+- source: ux.view.properties-view
+  target: application.applicationservice.ontology-service
+  predicate: serves
+  layer: ux
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: UI view backed by application service
+- source: ux.view.relationships-view
+  target: application.applicationservice.ontology-service
+  predicate: serves
+  layer: ux
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: UI view backed by application service
+- source: ux.view.interchange-view
+  target: application.applicationservice.import-run-service
+  predicate: serves
+  layer: ux
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: UI view backed by application service
+- source: navigation.route.taxonomies-route
+  target: ux.view.taxonomies-view
+  predicate: maps-to
+  layer: navigation
+  targetLayer: ux
+  category: structural
+- source: navigation.route.concept-schemes-route
+  target: ux.view.concept-schemes-view
+  predicate: maps-to
+  layer: navigation
+  targetLayer: ux
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: route maps to corresponding view
+- source: navigation.route.classes-route
+  target: ux.view.classes-view
+  predicate: maps-to
+  layer: navigation
+  targetLayer: ux
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: route maps to corresponding view
+- source: navigation.route.individuals-route
+  target: ux.view.individuals-view
+  predicate: maps-to
+  layer: navigation
+  targetLayer: ux
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: route maps to corresponding view
+- source: navigation.route.properties-route
+  target: ux.view.properties-view
+  predicate: maps-to
+  layer: navigation
+  targetLayer: ux
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: route maps to corresponding view
+- source: navigation.route.relationships-route
+  target: ux.view.relationships-view
+  predicate: maps-to
+  layer: navigation
+  targetLayer: ux
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: route maps to corresponding view
+- source: navigation.route.interchange-route
+  target: ux.view.interchange-view
+  predicate: maps-to
+  layer: navigation
+  targetLayer: ux
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: route maps to corresponding view
+- source: ux.view.datasets-view
+  target: application.applicationservice.ontology-service
+  predicate: serves
+  layer: ux
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: medium
+    basis: datasets view manages ontology data
+- source: ux.view.rag-experiments-view
+  target: application.applicationservice.extraction-service
+  predicate: serves
+  layer: ux
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: RAG experiments UI backed by extraction/pipeline services
+- source: ux.view.configuration-view
+  target: application.applicationservice.admin-service
+  predicate: serves
+  layer: ux
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: configuration view backed by admin service
+- source: ux.view.admin-view
+  target: application.applicationservice.admin-service
+  predicate: serves
+  layer: ux
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: admin view backed by admin service
+- source: data-model.objectschema.individual-class
+  target: api.requestbody.individual-class-request
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+- source: data-model.objectschema.property-definition
+  target: api.response.property-definition-response
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+- source: data-model.objectschema.extraction-result
+  target: api.response.extraction-result-schema
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+- source: data-model.objectschema.entity-version
+  target: api.response.entity-version-response
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+- source: data-model.objectschema.individual-class
+  target: api.requestbody.individual-class-list-request
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+- source: data-model.objectschema.property-definition
+  target: api.requestbody.property-definition-create-request
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+- source: api.operation.create-taxonomy
+  target: api.requestbody.taxonomy-create-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.create-taxonomy
+  target: api.response.taxonomy-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.update-taxonomy
+  target: api.requestbody.taxonomy-update-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.update-taxonomy
+  target: api.response.taxonomy-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-taxonomy
+  target: api.response.taxonomy-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.list-taxonomies
+  target: api.response.taxonomy-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.delete-taxonomy
+  target: api.response.taxonomy-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.create-concept-scheme
+  target: api.requestbody.concept-scheme-create-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.create-concept-scheme
+  target: api.response.concept-scheme-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.update-concept-scheme
+  target: api.requestbody.concept-scheme-update-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.update-concept-scheme
+  target: api.response.concept-scheme-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-concept-scheme
+  target: api.response.concept-scheme-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.list-concept-schemes
+  target: api.response.concept-scheme-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.delete-concept-scheme
+  target: api.response.concept-scheme-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.create-class
+  target: api.requestbody.class-create-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.create-class
+  target: api.response.class-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.update-class
+  target: api.requestbody.class-update-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.update-class
+  target: api.response.class-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-class
+  target: api.response.class-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.list-classes
+  target: api.response.class-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.delete-class
+  target: api.response.class-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.move-class
+  target: api.requestbody.class-move-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.move-class
+  target: api.response.class-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.create-relationship
+  target: api.requestbody.relationship-create-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.create-relationship
+  target: api.response.relationship-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-relationship
+  target: api.response.relationship-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.list-relationships
+  target: api.response.relationship-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.delete-relationship
+  target: api.response.relationship-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.create-property-definition
+  target: api.requestbody.property-definition-create-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.create-property-definition
+  target: api.response.property-definition-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.update-property-definition
+  target: api.requestbody.property-definition-update-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.update-property-definition
+  target: api.response.property-definition-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-property-definition
+  target: api.response.property-definition-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.list-property-definitions
+  target: api.response.property-definition-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.delete-property-definition
+  target: api.response.property-definition-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.create-individual
+  target: api.requestbody.individual-create-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.create-individual
+  target: api.response.individual-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.create-individual
+  target: api.requestbody.external-reference-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.create-individual
+  target: api.requestbody.lexical-sense-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.update-individual
+  target: api.requestbody.individual-update-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.update-individual
+  target: api.response.individual-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-individual
+  target: api.response.individual-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-individual
+  target: api.response.lexical-sense-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-individual
+  target: api.requestbody.data-property-value-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.list-individuals
+  target: api.response.individual-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.delete-individual
+  target: api.response.individual-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.add-parent-class-to-individual
+  target: api.requestbody.individual-class-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.add-parent-class-to-individual
+  target: api.response.individual-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.remove-parent-class-from-individual
+  target: api.response.individual-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.reorder-individual-classes
+  target: api.requestbody.individual-class-list-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.reorder-individual-classes
+  target: api.response.individual-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-individual-inherited-properties
+  target: api.response.data-property-value-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-graph-metrics
+  target: api.response.graph-metrics-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-shortest-path
+  target: api.response.path-result-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-all-paths
+  target: api.response.path-result-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-neighbors
+  target: api.response.neighbors-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-subgraph
+  target: api.response.subgraph-result-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-subgraph-by-depth
+  target: api.response.subgraph-data-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-centrality
+  target: api.response.centrality-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-communities
+  target: api.response.communities-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-degree-distribution
+  target: api.response.degree-distribution-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.check-cycle
+  target: api.requestbody.cycle-check-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.check-cycle
+  target: api.response.cycle-check-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.execute-sparql
+  target: api.requestbody.sparqlrequest
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.execute-sparql
+  target: api.response.sparqlresponse
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.build-knowledge-graph
+  target: api.response.knowledge-graph-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-rdf-triples
+  target: api.response.triples-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-rdf-triples
+  target: api.response.triple-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-rdf-triple-count
+  target: api.response.triple-count-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.analyze-text
+  target: api.requestbody.analyze-text-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.analyze-text
+  target: api.response.extraction-result-schema
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.extract-entities
+  target: api.requestbody.extract-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.extract-entities
+  target: api.response.extraction-result-schema
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.enrich-from-references
+  target: api.requestbody.enrich-from-references-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.enrich-from-references
+  target: api.response.external-reference-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.search-references
+  target: api.requestbody.reference-search-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.search-references
+  target: api.response.reference-search-response-schema
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.search-references
+  target: api.response.reference-result-schema
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-reference-relations
+  target: api.requestbody.reference-relations-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.get-reference-relations
+  target: api.response.reference-relations-response-schema
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-reference-relations
+  target: api.response.reference-relation-schema
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-reference-status
+  target: api.response.reference-status-response-schema
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-reference-status
+  target: api.response.reference-source-status-schema
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.export-ontology
+  target: api.requestbody.export-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.export-ontology
+  target: api.response.serialization-scope-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.import-ontology
+  target: api.requestbody.serialization-scope-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.import-ontology
+  target: api.response.import-plan-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.import-ontology
+  target: api.response.import-conflict-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-import-run
+  target: api.response.import-run-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.list-import-runs
+  target: api.response.import-run-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-run-change-events
+  target: api.response.interchange-change-event-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.create-changeset
+  target: api.requestbody.changeset-create-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.create-changeset
+  target: api.response.changeset-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-changeset
+  target: api.response.changeset-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.stage-changeset
+  target: api.response.changeset-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.submit-proposal
+  target: api.response.proposal-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.approve-proposal
+  target: api.response.proposal-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.reject-proposal
+  target: api.requestbody.reject-proposal-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.reject-proposal
+  target: api.response.proposal-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.merge-proposal
+  target: api.response.merge-result-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.detect-conflicts
+  target: api.response.conflict-report-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.resolve-conflicts
+  target: api.requestbody.resolve-conflicts-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.resolve-conflicts
+  target: api.response.resolution-record-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.auto-resolve-conflicts
+  target: api.requestbody.auto-resolve-conflicts-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.auto-resolve-conflicts
+  target: api.response.conflict-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-change-history-all
+  target: api.response.change-history-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-change-history-all
+  target: api.response.versioning-change-event-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-change-history-by-entity
+  target: api.response.change-history-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-entity-version
+  target: api.response.entity-version-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.list-entity-versions
+  target: api.response.entity-version-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.push-changes
+  target: api.response.sync-result-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.pull-changes
+  target: api.response.sync-result-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-sync-status
+  target: api.response.sync-status-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.create-pipeline-configuration
+  target: api.requestbody.pipeline-configuration-create
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.create-pipeline-configuration
+  target: api.response.pipeline-configuration-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.update-pipeline-configuration
+  target: api.requestbody.pipeline-configuration-update
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.update-pipeline-configuration
+  target: api.response.pipeline-configuration-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-pipeline-configuration
+  target: api.response.pipeline-configuration-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.list-pipeline-configurations
+  target: api.response.pipeline-configuration-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.delete-pipeline-configuration
+  target: api.response.pipeline-configuration-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.execute-pipeline
+  target: api.requestbody.pipeline-execute-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.execute-pipeline
+  target: api.response.execution-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-pipeline-executions
+  target: api.response.execution-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-system-health
+  target: api.response.system-health-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-database-health
+  target: api.response.database-health-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-embedding-health
+  target: api.response.component-status-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-nlp-health
+  target: api.response.component-status-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-service-metrics
+  target: api.response.service-metrics-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-configuration
+  target: api.response.app-configuration-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.update-configuration-section
+  target: api.requestbody.config-section-update-request
+  predicate: aggregates
+  layer: api
+  category: structural
+- source: api.operation.update-configuration-section
+  target: api.response.app-configuration-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.reset-configuration
+  target: api.response.app-configuration-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.list-background-tasks
+  target: api.response.background-task-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-background-task
+  target: api.response.background-task-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: api.operation.get-background-tasks-summary
+  target: api.response.background-task-summary-response
+  predicate: delivers
+  layer: api
+  category: structural
+- source: application.applicationcomponent.json-file-config-store
+  target: application.applicationservice.admin-service
+  predicate: realizes
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+- source: application.applicationcomponent.change-event-recorder
+  target: application.applicationservice.ontology-service
+  predicate: realizes
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+- source: application.applicationcomponent.in-process-event-publisher
+  target: application.applicationservice.ontology-service
+  predicate: realizes
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+- source: application.applicationcomponent.in-process-event-publisher
+  target: application.applicationservice.extraction-service
+  predicate: realizes
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+- source: application.applicationcomponent.rdflib-query-engine-adapter
+  target: application.applicationservice.graph-analysis-service
+  predicate: realizes
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+- source: application.applicationcomponent.anthropic-llm-provider
+  target: application.applicationservice.extraction-service
+  predicate: realizes
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+- source: application.applicationcomponent.open-ai-llm-provider
+  target: application.applicationservice.extraction-service
+  predicate: realizes
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+- source: application.applicationcomponent.sqlite-ontology-repository
+  target: application.applicationservice.ontology-service
+  predicate: realizes
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+- source: application.applicationcomponent.sqlite-change-repository
+  target: application.applicationservice.versioning-service
+  predicate: realizes
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+- source: application.applicationcomponent.sqlite-extraction-repository
+  target: application.applicationservice.extraction-service
+  predicate: realizes
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+- source: application.applicationcomponent.sqlite-interchange-repository
+  target: application.applicationservice.import-run-service
+  predicate: realizes
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+- source: application.applicationcomponent.sqlite-pipeline-repository
+  target: application.applicationservice.pipeline-service
+  predicate: realizes
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+- source: application.applicationcomponent.local-reference-repository
+  target: application.applicationservice.extraction-service
+  predicate: realizes
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+- source: application.applicationcomponent.cached-reference-source
+  target: application.applicationservice.extraction-service
+  predicate: realizes
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+- source: application.applicationcomponent.no-op-sync-adapter
+  target: application.applicationservice.versioning-service
+  predicate: realizes
+  layer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+- source: data-store.database.localdb
+  target: data-store.collection.ontology-entities
+  predicate: composes
+  layer: data-store
+  category: structural
+- source: data-store.database.localdb
+  target: data-store.collection.relationships
+  predicate: composes
+  layer: data-store
+  category: structural
+- source: data-store.database.localdb
+  target: data-store.collection.change-events
+  predicate: composes
+  layer: data-store
+  category: structural
+- source: data-store.collection.ontology-entities
+  target: application.applicationcomponent.sqlite-ontology-repository
+  predicate: serves
+  layer: data-store
+  targetLayer: application
+  category: structural
+- source: data-store.collection.change-events
+  target: application.applicationcomponent.sqlite-change-repository
+  predicate: serves
+  layer: data-store
+  targetLayer: application
+  category: structural
+- source: data-store.database.operationsdb
+  target: application.applicationcomponent.sqlite-pipeline-repository
+  predicate: serves
+  layer: data-store
+  targetLayer: application
+  category: structural
+- source: data-store.database.reference-api-cachedb
+  target: application.applicationcomponent.cached-reference-source
+  predicate: serves
+  layer: data-store
+  targetLayer: application
+  category: structural
+- source: data-store.database.referencedb
+  target: application.applicationcomponent.local-reference-repository
+  predicate: serves
+  layer: data-store
+  targetLayer: application
+  category: structural
+- source: testing.testcoveragetarget.interchange-integration-tests
+  target: application.applicationcomponent.sqlite-interchange-repository
+  predicate: tests
+  layer: testing
+  targetLayer: application
+  category: structural
+- source: testing.testcoveragetarget.versioning-integration-tests
+  target: application.applicationcomponent.sqlite-change-repository
+  predicate: tests
+  layer: testing
+  targetLayer: application
+  category: structural
+- source: testing.testcoveragetarget.e2e-test-suite
+  target: data-store.collection.ontology-entities
+  predicate: tests
+  layer: testing
+  targetLayer: data-store
+  category: structural
+- source: testing.testcoveragetarget.performance-test-suite
+  target: data-store.collection.ontology-entities
+  predicate: tests
+  layer: testing
+  targetLayer: data-store
+  category: structural
+- source: testing.testcoveragetarget.route-integration-tests
+  target: application.applicationcomponent.sqlite-ontology-repository
+  predicate: tests
+  layer: testing
+  targetLayer: application
+  category: structural
+- source: data-store.collection.individual-classes-table
+  target: application.applicationcomponent.sqlite-ontology-repository
+  predicate: serves
+  layer: data-store
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: repository-table ownership
+- source: data-store.collection.property-definitions-table
+  target: application.applicationcomponent.sqlite-ontology-repository
+  predicate: serves
+  layer: data-store
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: repository-table ownership
+- source: data-store.collection.extraction-results-table
+  target: application.applicationcomponent.sqlite-extraction-repository
+  predicate: serves
+  layer: data-store
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: repository-table ownership
+- source: data-store.collection.entity-versions-table
+  target: application.applicationcomponent.sqlite-change-repository
+  predicate: serves
+  layer: data-store
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: repository-table ownership
+- source: data-store.collection.changesets-table
+  target: application.applicationcomponent.sqlite-change-repository
+  predicate: serves
+  layer: data-store
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: repository-table ownership
+- source: data-store.collection.changeset-events-table
+  target: application.applicationcomponent.sqlite-change-repository
+  predicate: serves
+  layer: data-store
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: repository-table ownership
+- source: data-store.collection.proposals-table
+  target: application.applicationcomponent.sqlite-change-repository
+  predicate: serves
+  layer: data-store
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: repository-table ownership
+- source: data-store.collection.conflict-resolutions-table
+  target: application.applicationcomponent.sqlite-change-repository
+  predicate: serves
+  layer: data-store
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: repository-table ownership
+- source: data-store.collection.import-runs-table
+  target: application.applicationcomponent.sqlite-interchange-repository
+  predicate: serves
+  layer: data-store
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: repository-table ownership
+- source: data-store.collection.pipeline-configurations-table
+  target: application.applicationcomponent.sqlite-pipeline-repository
+  predicate: serves
+  layer: data-store
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: repository-table ownership
+- source: data-store.collection.pipeline-executions-table
+  target: application.applicationcomponent.sqlite-pipeline-repository
+  predicate: serves
+  layer: data-store
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: repository-table ownership

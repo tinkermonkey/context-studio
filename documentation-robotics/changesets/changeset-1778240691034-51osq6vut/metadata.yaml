@@ -1,0 +1,10 @@
+id: changeset-1778240691034-51osq6vut
+name: extract-api-requestbody-response
+created: 2026-05-08T11:44:51.044Z
+modified: 2026-05-08T11:48:16.679Z
+status: committed
+baseSnapshot: sha256:4cc24e278cc065be705f31f5511a89cbca9fb755844bf17f71e74db82b9db98a
+stats:
+  additions: 95
+  modifications: 0
+  deletions: 0

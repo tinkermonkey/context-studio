@@ -16,9 +16,9 @@ Observability, monitoring, metrics, logging, and tracing.
 | ------------------------- | ----- |
 | Elements                  | 8     |
 | Intra-Layer Relationships | 4     |
-| Inter-Layer Relationships | 15    |
+| Inter-Layer Relationships | 11    |
 | Inbound Relationships     | 3     |
-| Outbound Relationships    | 12    |
+| Outbound Relationships    | 8     |
 
 **Cross-Layer References**:
 
@@ -79,12 +79,8 @@ flowchart TB
 | `apm.metricinstrument.monitors.navigation.route`             | `apm.metricinstrument.rag-processing-time`         | `navigation.route.rag-experiments-route`            | `navigation` | `monitors`   | many-to-many | medium   |
 | `apm.metricinstrument.monitors.ux.view`                      | `apm.metricinstrument.rag-processing-time`         | `ux.view.rag-experiments-view`                      | `ux`         | `monitors`   | many-to-many | medium   |
 | `apm.span.monitors.navigation.navigationflow`                | `apm.span.api-request-span`                        | `navigation.navigationflow.ontology-hierarchy-flow` | `navigation` | `monitors`   | many-to-many | medium   |
-| `apm.span.monitors.ux.view`                                  | `apm.span.api-request-span`                        | `ux.view.layers-view`                               | `ux`         | `monitors`   | many-to-many | medium   |
 | `apm.span.monitors.ux.view`                                  | `apm.span.api-request-span`                        | `ux.view.rag-experiments-view`                      | `ux`         | `monitors`   | many-to-many | medium   |
-| `apm.span.monitors.navigation.route`                         | `apm.span.database-query-span`                     | `navigation.route.layers-route`                     | `navigation` | `monitors`   | many-to-many | medium   |
 | `apm.span.monitors.ux.view`                                  | `apm.span.database-query-span`                     | `ux.view.datasets-view`                             | `ux`         | `monitors`   | many-to-many | medium   |
-| `apm.span.monitors.ux.view`                                  | `apm.span.database-query-span`                     | `ux.view.layers-view`                               | `ux`         | `monitors`   | many-to-many | medium   |
-| `apm.span.monitors.ux.view`                                  | `apm.span.database-query-span`                     | `ux.view.terms-view`                                | `ux`         | `monitors`   | many-to-many | medium   |
 | `testing.testcoveragetarget.references.apm.metricinstrument` | `testing.testcoveragetarget.admin-health`          | `apm.metricinstrument.background-task-queue-depth`  | `apm`        | `references` | many-to-many | medium   |
 | `testing.testcoveragetarget.references.apm.metricinstrument` | `testing.testcoveragetarget.extraction-pipeline`   | `apm.metricinstrument.llm-execution-tracker`        | `apm`        | `references` | many-to-many | medium   |
 | `testing.testcoveragetarget.references.apm.metricinstrument` | `testing.testcoveragetarget.graph-analysis`        | `apm.metricinstrument.rag-processing-time`          | `apm`        | `references` | many-to-many | medium   |
@@ -266,7 +262,6 @@ Trace span representing the full duration of a single HTTP API request, from rec
 | Type        | Related Element                                     | Predicate  | Direction |
 | ----------- | --------------------------------------------------- | ---------- | --------- |
 | inter-layer | `navigation.navigationflow.ontology-hierarchy-flow` | `monitors` | outbound  |
-| inter-layer | `ux.view.layers-view`                               | `monitors` | outbound  |
 | inter-layer | `ux.view.rag-experiments-view`                      | `monitors` | outbound  |
 | intra-layer | `apm.alert.background-task-dead-letter-alert`       | `monitors` | inbound   |
 
@@ -295,13 +290,10 @@ OpenTelemetry span covering SQLAlchemy database query execution across local.db 
 
 #### Relationships
 
-| Type        | Related Element                 | Predicate  | Direction |
-| ----------- | ------------------------------- | ---------- | --------- |
-| inter-layer | `navigation.route.layers-route` | `monitors` | outbound  |
-| inter-layer | `ux.view.datasets-view`         | `monitors` | outbound  |
-| inter-layer | `ux.view.layers-view`           | `monitors` | outbound  |
-| inter-layer | `ux.view.terms-view`            | `monitors` | outbound  |
+| Type        | Related Element         | Predicate  | Direction |
+| ----------- | ----------------------- | ---------- | --------- |
+| inter-layer | `ux.view.datasets-view` | `monitors` | outbound  |
 
 ---
 
-Generated: 2026-05-07T22:00:51.579Z | Model Version: 0.1.0
+Generated: 2026-05-08T12:23:03.369Z | Model Version: 0.1.0

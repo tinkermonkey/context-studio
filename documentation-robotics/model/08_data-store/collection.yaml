@@ -1,0 +1,293 @@
+data-store.collection.ontology-entities:
+  id: 123b9277-ff57-4b3b-b1a2-9dfeaf698f98
+  path: data-store.collection.ontology-entities
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: ontology_entities
+  description: Unified table for all ontology entities (Taxonomy, ConceptScheme,
+    Class, Individual) using single-table inheritance with node_type
+    discriminator — includes vector embedding column for semantic search via
+    sqlite-vec
+  attributes:
+    collectionType: TABLE
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+        symbol: OntologyEntity
+  metadata:
+    created_at: 2026-05-08T12:20:51.904Z
+    updated_at: 2026-05-08T12:20:51.904Z
+    version: 1
+data-store.collection.relationships:
+  id: 36fd4668-0524-4fd1-8cce-42e5ff664ed5
+  path: data-store.collection.relationships
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: relationships
+  description: Typed directed edges between ontology entities — stores
+    source/target entity references, relationship type, and optional metadata
+    for the knowledge graph structure
+  attributes:
+    collectionType: TABLE
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+        symbol: Relationship
+  metadata:
+    created_at: 2026-05-08T12:20:53.134Z
+    updated_at: 2026-05-08T12:20:53.134Z
+    version: 1
+data-store.collection.change-events:
+  id: ab06d8e1-18e9-44c3-930e-4255ad4d629b
+  path: data-store.collection.change-events
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: change_events
+  description: Audit trail of all entity changes — stores entity_id, entity_type,
+    event_type, actor, timestamp, and before/after snapshots for versioning and
+    audit compliance
+  attributes:
+    collectionType: TABLE
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+        symbol: ChangeEvent
+  metadata:
+    created_at: 2026-05-08T12:20:56.233Z
+    updated_at: 2026-05-08T12:20:56.233Z
+    version: 1
+data-store.collection.individual-classes-table:
+  id: 26e182d7-7558-4bc6-8475-649b76ca5902
+  path: data-store.collection.individual-classes-table
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: individual_classes table
+  description: "SQLite table: individual_classes — association table mapping
+    individual instances to their parent classes with ordering index; in
+    local.db"
+  attributes:
+    collectionType: TABLE
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+        symbol: IndividualClass
+  metadata:
+    created_at: 2026-05-08T12:52:57.813Z
+    updated_at: 2026-05-08T12:52:57.813Z
+    version: 1
+data-store.collection.property-definitions-table:
+  id: a17b3d1a-a286-4b61-9619-083b0d540f93
+  path: data-store.collection.property-definitions-table
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: property_definitions table
+  description: "SQLite table: property_definitions — stores relationship type
+    definitions (object properties) with domain, range, and inverse property
+    FKs; in local.db"
+  attributes:
+    collectionType: TABLE
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+        symbol: PropertyDefinition
+  metadata:
+    created_at: 2026-05-08T12:52:58.162Z
+    updated_at: 2026-05-08T12:52:58.162Z
+    version: 1
+data-store.collection.extraction-results-table:
+  id: da240f89-17dc-4c75-9603-3eada0b5902f
+  path: data-store.collection.extraction-results-table
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: extraction_results table
+  description: "SQLite table: extraction_results — stores NLP/LLM extraction run
+    outputs, source text, extracted entity IDs, and processing metrics; in
+    local.db"
+  attributes:
+    collectionType: TABLE
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+        symbol: ExtractionResult
+  metadata:
+    created_at: 2026-05-08T12:52:58.501Z
+    updated_at: 2026-05-08T12:52:58.502Z
+    version: 1
+data-store.collection.entity-versions-table:
+  id: bc67068f-6317-4f62-b8bd-d7fb2ff28342
+  path: data-store.collection.entity-versions-table
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: entity_versions table
+  description: "SQLite table: entity_versions — stores JSON snapshots of entity
+    state at each version for point-in-time recovery; in local.db"
+  attributes:
+    collectionType: TABLE
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+        symbol: EntityVersion
+  metadata:
+    created_at: 2026-05-08T12:52:58.840Z
+    updated_at: 2026-05-08T12:52:58.841Z
+    version: 1
+data-store.collection.changesets-table:
+  id: 7e0f290d-b69a-4aa0-9e18-7dec70caeb54
+  path: data-store.collection.changesets-table
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: changesets table
+  description: "SQLite table: changesets — groups related change events into a
+    reviewable unit with state machine (draft/staged/submitted/merged); in
+    local.db"
+  attributes:
+    collectionType: TABLE
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+        symbol: Changeset
+  metadata:
+    created_at: 2026-05-08T12:52:59.184Z
+    updated_at: 2026-05-08T12:52:59.185Z
+    version: 1
+data-store.collection.changeset-events-table:
+  id: caec9d4a-827a-46f9-82e2-0af3566129db
+  path: data-store.collection.changeset-events-table
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: changeset_events table
+  description: "SQLite table: changeset_events — stores individual entity-level
+    changes within a changeset (operation, entity_id, before/after snapshots);
+    in local.db"
+  attributes:
+    collectionType: TABLE
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+        symbol: ChangesetEvent
+  metadata:
+    created_at: 2026-05-08T12:52:59.560Z
+    updated_at: 2026-05-08T12:52:59.561Z
+    version: 1
+data-store.collection.proposals-table:
+  id: 8cad338c-9de8-4360-9f05-5f413b54f244
+  path: data-store.collection.proposals-table
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: proposals table
+  description: "SQLite table: proposals — stores merge proposals linking
+    changesets to review workflow (status, reviewer, timestamps, conflict
+    state); in local.db"
+  attributes:
+    collectionType: TABLE
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+        symbol: Proposal
+  metadata:
+    created_at: 2026-05-08T12:52:59.920Z
+    updated_at: 2026-05-08T12:52:59.920Z
+    version: 1
+data-store.collection.conflict-resolutions-table:
+  id: c8f8d0f5-f43a-4665-9e58-447775ea9a00
+  path: data-store.collection.conflict-resolutions-table
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: conflict_resolutions table
+  description: "SQLite table: conflict_resolutions — stores manual conflict
+    resolution decisions with chosen resolution strategy per entity conflict; in
+    local.db"
+  attributes:
+    collectionType: TABLE
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+        symbol: ConflictResolution
+  metadata:
+    created_at: 2026-05-08T12:53:00.274Z
+    updated_at: 2026-05-08T12:53:00.274Z
+    version: 1
+data-store.collection.import-runs-table:
+  id: 0655671c-27f8-4331-b13d-97efe34a3e21
+  path: data-store.collection.import-runs-table
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: import_runs table
+  description: "SQLite table: import_runs — stores interchange import run metadata
+    (format, status, entity counts, error details, timestamps); in local.db"
+  attributes:
+    collectionType: TABLE
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+        symbol: ImportRun
+  metadata:
+    created_at: 2026-05-08T12:53:00.622Z
+    updated_at: 2026-05-08T12:53:00.622Z
+    version: 1
+data-store.collection.pipeline-configurations-table:
+  id: cedc58c4-d1fd-40e1-b336-a75b9a245f56
+  path: data-store.collection.pipeline-configurations-table
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: pipeline_configurations table
+  description: "SQLite table: pipeline_configurations — stores LLM pipeline
+    definitions (provider, model, prompt templates, parameters) in
+    operations.db"
+  attributes:
+    collectionType: TABLE
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/operations/models.py
+        symbol: PipelineConfiguration
+  metadata:
+    created_at: 2026-05-08T12:53:00.969Z
+    updated_at: 2026-05-08T12:53:00.969Z
+    version: 1
+data-store.collection.pipeline-executions-table:
+  id: 71997377-bca7-42c2-bcbd-53068cd66f42
+  path: data-store.collection.pipeline-executions-table
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: pipeline_executions table
+  description: "SQLite table: pipeline_executions — stores LLM pipeline execution
+    records (status, input/output, LLM traceability log, timing) in
+    operations.db"
+  attributes:
+    collectionType: TABLE
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/operations/models.py
+        symbol: ExecutionModel
+  metadata:
+    created_at: 2026-05-08T12:53:01.359Z
+    updated_at: 2026-05-08T12:53:01.359Z
+    version: 1

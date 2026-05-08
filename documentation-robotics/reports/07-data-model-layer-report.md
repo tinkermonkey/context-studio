@@ -14,15 +14,15 @@ Data entities, relationships, and data structure definitions.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 10    |
-| Intra-Layer Relationships | 6     |
-| Inter-Layer Relationships | 6     |
+| Elements                  | 18    |
+| Intra-Layer Relationships | 12    |
+| Inter-Layer Relationships | 12    |
 | Inbound Relationships     | 0     |
-| Outbound Relationships    | 6     |
+| Outbound Relationships    | 12    |
 
 **Cross-Layer References**:
 
-- **Downstream layers**: [Technology](./05-technology-layer-report.md)
+- **Downstream layers**: [API](./06-api-layer-report.md), [Technology](./05-technology-layer-report.md)
 
 ## Intra-Layer Relationships
 
@@ -33,9 +33,17 @@ flowchart LR
     data_model_numericschema_relationship_weight["relationship weight"]
     data_model_objectschema_change_event["Change Event"]
     data_model_objectschema_changeset["Changeset"]
+    data_model_objectschema_changeset_event["Changeset Event"]
+    data_model_objectschema_conflict_resolution["Conflict Resolution"]
+    data_model_objectschema_entity_version["Entity Version"]
+    data_model_objectschema_extraction_result["Extraction Result"]
     data_model_objectschema_import_run["Import Run"]
+    data_model_objectschema_individual_class["Individual Class"]
     data_model_objectschema_ontology_entity["Ontology Entity"]
     data_model_objectschema_pipeline_configuration["Pipeline Configuration"]
+    data_model_objectschema_pipeline_execution["Pipeline Execution"]
+    data_model_objectschema_property_definition["Property Definition"]
+    data_model_objectschema_proposal["Proposal"]
     data_model_objectschema_relationship["Relationship"]
     data_model_stringschema_iso_8601_datetime["ISO 8601 datetime"]
     data_model_stringschema_uuid_string["UUID string"]
@@ -44,7 +52,13 @@ flowchart LR
     data_model_arrayschema_external_references_list -->|aggregates| data_model_stringschema_iso_8601_datetime
     data_model_arrayschema_external_references_list -->|aggregates| data_model_stringschema_uuid_string
     data_model_objectschema_change_event -->|extends| data_model_objectschema_ontology_entity
+    data_model_objectschema_changeset -->|extends| data_model_objectschema_changeset_event
+    data_model_objectschema_changeset -->|extends| data_model_objectschema_proposal
+    data_model_objectschema_import_run -->|extends| data_model_objectschema_change_event
     data_model_objectschema_import_run -->|extends| data_model_objectschema_changeset
+    data_model_objectschema_ontology_entity -->|extends| data_model_objectschema_relationship
+    data_model_objectschema_pipeline_configuration -->|extends| data_model_objectschema_pipeline_execution
+    data_model_objectschema_proposal -->|extends| data_model_objectschema_conflict_resolution
   end
 ```
 
@@ -65,20 +79,27 @@ flowchart TB
   navigation["Navigation"]
   apm["APM"]
   testing["Testing"]
+  data_model --> api
   data_model --> technology
   class data_model current
 ```
 
 ## Inter-Layer Relationships Table
 
-| Relationship ID                                                | Source Node                                      | Dest Node                              | Dest Layer   | Predicate    | Cardinality  | Strength |
-| -------------------------------------------------------------- | ------------------------------------------------ | -------------------------------------- | ------------ | ------------ | ------------ | -------- |
-| `data-model.objectschema.depends-on.technology.systemsoftware` | `data-model.objectschema.change-event`           | `technology.systemsoftware.sqlalchemy` | `technology` | `depends-on` | many-to-many | medium   |
-| `data-model.objectschema.depends-on.technology.systemsoftware` | `data-model.objectschema.changeset`              | `technology.systemsoftware.sqlalchemy` | `technology` | `depends-on` | many-to-many | medium   |
-| `data-model.objectschema.depends-on.technology.systemsoftware` | `data-model.objectschema.import-run`             | `technology.systemsoftware.sqlalchemy` | `technology` | `depends-on` | many-to-many | medium   |
-| `data-model.objectschema.depends-on.technology.systemsoftware` | `data-model.objectschema.ontology-entity`        | `technology.systemsoftware.sqlalchemy` | `technology` | `depends-on` | many-to-many | medium   |
-| `data-model.objectschema.depends-on.technology.systemsoftware` | `data-model.objectschema.pipeline-configuration` | `technology.systemsoftware.sqlalchemy` | `technology` | `depends-on` | many-to-many | medium   |
-| `data-model.objectschema.depends-on.technology.systemsoftware` | `data-model.objectschema.relationship`           | `technology.systemsoftware.sqlalchemy` | `technology` | `depends-on` | many-to-many | medium   |
+| Relationship ID                                                | Source Node                                      | Dest Node                                            | Dest Layer   | Predicate    | Cardinality  | Strength |
+| -------------------------------------------------------------- | ------------------------------------------------ | ---------------------------------------------------- | ------------ | ------------ | ------------ | -------- |
+| `data-model.objectschema.depends-on.technology.systemsoftware` | `data-model.objectschema.change-event`           | `technology.systemsoftware.sqlalchemy`               | `technology` | `depends-on` | many-to-many | medium   |
+| `data-model.objectschema.depends-on.technology.systemsoftware` | `data-model.objectschema.changeset`              | `technology.systemsoftware.sqlalchemy`               | `technology` | `depends-on` | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`                 | `data-model.objectschema.entity-version`         | `api.response.entity-version-response`               | `api`        | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`                 | `data-model.objectschema.extraction-result`      | `api.response.extraction-result-schema`              | `api`        | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.depends-on.technology.systemsoftware` | `data-model.objectschema.import-run`             | `technology.systemsoftware.sqlalchemy`               | `technology` | `depends-on` | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.requestbody`              | `data-model.objectschema.individual-class`       | `api.requestbody.individual-class-list-request`      | `api`        | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.requestbody`              | `data-model.objectschema.individual-class`       | `api.requestbody.individual-class-request`           | `api`        | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.depends-on.technology.systemsoftware` | `data-model.objectschema.ontology-entity`        | `technology.systemsoftware.sqlalchemy`               | `technology` | `depends-on` | many-to-many | medium   |
+| `data-model.objectschema.depends-on.technology.systemsoftware` | `data-model.objectschema.pipeline-configuration` | `technology.systemsoftware.sqlalchemy`               | `technology` | `depends-on` | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.requestbody`              | `data-model.objectschema.property-definition`    | `api.requestbody.property-definition-create-request` | `api`        | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`                 | `data-model.objectschema.property-definition`    | `api.response.property-definition-response`          | `api`        | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.depends-on.technology.systemsoftware` | `data-model.objectschema.relationship`           | `technology.systemsoftware.sqlalchemy`               | `technology` | `depends-on` | many-to-many | medium   |
 
 ## Element Reference
 
@@ -143,6 +164,7 @@ ORM schema for the audit trail of all entity mutations — stores entity_id, ent
 | ----------- | ----------------------------------------- | ------------ | --------- |
 | inter-layer | `technology.systemsoftware.sqlalchemy`    | `depends-on` | outbound  |
 | intra-layer | `data-model.objectschema.ontology-entity` | `extends`    | outbound  |
+| intra-layer | `data-model.objectschema.import-run`      | `extends`    | inbound   |
 
 ### Changeset {#changeset}
 
@@ -154,10 +176,68 @@ ORM schema for named collections of change events progressing through version co
 
 #### Relationships
 
-| Type        | Related Element                        | Predicate    | Direction |
-| ----------- | -------------------------------------- | ------------ | --------- |
-| inter-layer | `technology.systemsoftware.sqlalchemy` | `depends-on` | outbound  |
-| intra-layer | `data-model.objectschema.import-run`   | `extends`    | inbound   |
+| Type        | Related Element                           | Predicate    | Direction |
+| ----------- | ----------------------------------------- | ------------ | --------- |
+| inter-layer | `technology.systemsoftware.sqlalchemy`    | `depends-on` | outbound  |
+| intra-layer | `data-model.objectschema.changeset-event` | `extends`    | outbound  |
+| intra-layer | `data-model.objectschema.proposal`        | `extends`    | outbound  |
+| intra-layer | `data-model.objectschema.import-run`      | `extends`    | inbound   |
+
+### Changeset Event {#changeset-event}
+
+**ID**: `data-model.objectschema.changeset-event`
+
+**Type**: `objectschema`
+
+ORM schema for individual change events within a versioning changeset — stores changeset_id FK, entity_id, operation (create/update/delete), before/after JSON snapshots
+
+#### Relationships
+
+| Type        | Related Element                     | Predicate | Direction |
+| ----------- | ----------------------------------- | --------- | --------- |
+| intra-layer | `data-model.objectschema.changeset` | `extends` | inbound   |
+
+### Conflict Resolution {#conflict-resolution}
+
+**ID**: `data-model.objectschema.conflict-resolution`
+
+**Type**: `objectschema`
+
+ORM schema for manual conflict resolution records — stores proposal_id FK, entity_id, conflict type, chosen resolution strategy, and resolved snapshot
+
+#### Relationships
+
+| Type        | Related Element                    | Predicate | Direction |
+| ----------- | ---------------------------------- | --------- | --------- |
+| intra-layer | `data-model.objectschema.proposal` | `extends` | inbound   |
+
+### Entity Version {#entity-version}
+
+**ID**: `data-model.objectschema.entity-version`
+
+**Type**: `objectschema`
+
+ORM schema for entity version snapshots — stores entity_id FK, version number, full JSON snapshot, and the change event that triggered the version
+
+#### Relationships
+
+| Type        | Related Element                        | Predicate | Direction |
+| ----------- | -------------------------------------- | --------- | --------- |
+| inter-layer | `api.response.entity-version-response` | `maps-to` | outbound  |
+
+### Extraction Result {#extraction-result}
+
+**ID**: `data-model.objectschema.extraction-result`
+
+**Type**: `objectschema`
+
+ORM schema for persisted extraction results — stores source text, NLP/LLM pipeline output (JSON), extracted entity IDs, processing metrics, and run timestamps
+
+#### Relationships
+
+| Type        | Related Element                         | Predicate | Direction |
+| ----------- | --------------------------------------- | --------- | --------- |
+| inter-layer | `api.response.extraction-result-schema` | `maps-to` | outbound  |
 
 ### Import Run {#import-run}
 
@@ -172,7 +252,23 @@ ORM schema tracking interchange import operations (SKOS/OWL/GraphML) — stores 
 | Type        | Related Element                        | Predicate    | Direction |
 | ----------- | -------------------------------------- | ------------ | --------- |
 | inter-layer | `technology.systemsoftware.sqlalchemy` | `depends-on` | outbound  |
+| intra-layer | `data-model.objectschema.change-event` | `extends`    | outbound  |
 | intra-layer | `data-model.objectschema.changeset`    | `extends`    | outbound  |
+
+### Individual Class {#individual-class}
+
+**ID**: `data-model.objectschema.individual-class`
+
+**Type**: `objectschema`
+
+Association table ORM schema linking individual instances to their parent classes — stores individual_id, class_id FK pair with ordering index for class priority
+
+#### Relationships
+
+| Type        | Related Element                                 | Predicate | Direction |
+| ----------- | ----------------------------------------------- | --------- | --------- |
+| inter-layer | `api.requestbody.individual-class-list-request` | `maps-to` | outbound  |
+| inter-layer | `api.requestbody.individual-class-request`      | `maps-to` | outbound  |
 
 ### Ontology Entity {#ontology-entity}
 
@@ -189,6 +285,7 @@ Single-table inheritance ORM schema for all ontology entities (taxonomy, concept
 | inter-layer | `technology.systemsoftware.sqlalchemy`            | `depends-on` | outbound  |
 | intra-layer | `data-model.arrayschema.external-references-list` | `aggregates` | inbound   |
 | intra-layer | `data-model.objectschema.change-event`            | `extends`    | inbound   |
+| intra-layer | `data-model.objectschema.relationship`            | `extends`    | outbound  |
 
 ### Pipeline Configuration {#pipeline-configuration}
 
@@ -200,9 +297,54 @@ ORM schema for LLM pipeline configurations in operations.db — stores pipeline 
 
 #### Relationships
 
-| Type        | Related Element                        | Predicate    | Direction |
-| ----------- | -------------------------------------- | ------------ | --------- |
-| inter-layer | `technology.systemsoftware.sqlalchemy` | `depends-on` | outbound  |
+| Type        | Related Element                              | Predicate    | Direction |
+| ----------- | -------------------------------------------- | ------------ | --------- |
+| inter-layer | `technology.systemsoftware.sqlalchemy`       | `depends-on` | outbound  |
+| intra-layer | `data-model.objectschema.pipeline-execution` | `extends`    | outbound  |
+
+### Pipeline Execution {#pipeline-execution}
+
+**ID**: `data-model.objectschema.pipeline-execution`
+
+**Type**: `objectschema`
+
+ORM schema for pipeline execution records in operations.db — stores pipeline_id FK, trigger, status, input/output JSON, LLM traceability log, and timing metadata
+
+#### Relationships
+
+| Type        | Related Element                                  | Predicate | Direction |
+| ----------- | ------------------------------------------------ | --------- | --------- |
+| intra-layer | `data-model.objectschema.pipeline-configuration` | `extends` | inbound   |
+
+### Property Definition {#property-definition}
+
+**ID**: `data-model.objectschema.property-definition`
+
+**Type**: `objectschema`
+
+ORM schema for property definitions (relationship types/object properties) — stores name, description, domain_id and range_id class FKs, and optional inverse property ID
+
+#### Relationships
+
+| Type        | Related Element                                      | Predicate | Direction |
+| ----------- | ---------------------------------------------------- | --------- | --------- |
+| inter-layer | `api.requestbody.property-definition-create-request` | `maps-to` | outbound  |
+| inter-layer | `api.response.property-definition-response`          | `maps-to` | outbound  |
+
+### Proposal {#proposal}
+
+**ID**: `data-model.objectschema.proposal`
+
+**Type**: `objectschema`
+
+ORM schema for merge proposals — stores changeset_id FK, submitter, status (pending/approved/rejected/merged), review metadata, and conflict resolution references
+
+#### Relationships
+
+| Type        | Related Element                               | Predicate | Direction |
+| ----------- | --------------------------------------------- | --------- | --------- |
+| intra-layer | `data-model.objectschema.changeset`           | `extends` | inbound   |
+| intra-layer | `data-model.objectschema.conflict-resolution` | `extends` | outbound  |
 
 ### Relationship {#relationship}
 
@@ -214,9 +356,10 @@ ORM schema for typed directed edges between ontology entities — stores source_
 
 #### Relationships
 
-| Type        | Related Element                        | Predicate    | Direction |
-| ----------- | -------------------------------------- | ------------ | --------- |
-| inter-layer | `technology.systemsoftware.sqlalchemy` | `depends-on` | outbound  |
+| Type        | Related Element                           | Predicate    | Direction |
+| ----------- | ----------------------------------------- | ------------ | --------- |
+| inter-layer | `technology.systemsoftware.sqlalchemy`    | `depends-on` | outbound  |
+| intra-layer | `data-model.objectschema.ontology-entity` | `extends`    | inbound   |
 
 ### ISO 8601 datetime {#iso-8601-datetime}
 
@@ -264,4 +407,4 @@ String schema for entity identifiers — UUID v4 format, used as primary keys ac
 
 ---
 
-Generated: 2026-05-07T22:24:32.020Z | Model Version: 0.1.0
+Generated: 2026-05-08T11:56:41.266Z | Model Version: 0.1.0

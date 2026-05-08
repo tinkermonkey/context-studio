@@ -1,0 +1,2127 @@
+- type: add
+  elementId: api.requestbody.taxonomy-create-request
+  layerName: api
+  after:
+    id: 1aaf2fb9-0efe-417a-a264-bc30c16d20a3
+    path: api.requestbody.taxonomy-create-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: TaxonomyCreateRequest
+    description: Request body to create a new taxonomy with title and optional description
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/ontology.py
+          symbol: TaxonomyCreateRequest
+    metadata:
+      created_at: 2026-05-08T11:44:57.425Z
+      updated_at: 2026-05-08T11:44:57.425Z
+      version: 1
+  timestamp: 2026-05-08T11:44:57.449Z
+  sequenceNumber: 0
+- type: add
+  elementId: api.requestbody.taxonomy-update-request
+  layerName: api
+  after:
+    id: d9da05eb-4516-494c-a4d5-227f9a99c661
+    path: api.requestbody.taxonomy-update-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: TaxonomyUpdateRequest
+    description: Request body to update an existing taxonomy's title or description
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/ontology.py
+          symbol: TaxonomyUpdateRequest
+    metadata:
+      created_at: 2026-05-08T11:44:57.785Z
+      updated_at: 2026-05-08T11:44:57.785Z
+      version: 1
+  timestamp: 2026-05-08T11:44:57.807Z
+  sequenceNumber: 1
+- type: add
+  elementId: api.requestbody.concept-scheme-create-request
+  layerName: api
+  after:
+    id: e3230990-8dc0-4450-9d9e-b6e662763598
+    path: api.requestbody.concept-scheme-create-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: ConceptSchemeCreateRequest
+    description: Request body to create a new SKOS concept scheme with title and
+      optional description
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/ontology.py
+          symbol: ConceptSchemeCreateRequest
+    metadata:
+      created_at: 2026-05-08T11:44:58.137Z
+      updated_at: 2026-05-08T11:44:58.137Z
+      version: 1
+  timestamp: 2026-05-08T11:44:58.159Z
+  sequenceNumber: 2
+- type: add
+  elementId: api.requestbody.concept-scheme-update-request
+  layerName: api
+  after:
+    id: c6bab7c1-1cea-4a73-9f60-4e0588a82bdd
+    path: api.requestbody.concept-scheme-update-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: ConceptSchemeUpdateRequest
+    description: Request body to update an existing concept scheme's title or description
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/ontology.py
+          symbol: ConceptSchemeUpdateRequest
+    metadata:
+      created_at: 2026-05-08T11:44:58.497Z
+      updated_at: 2026-05-08T11:44:58.497Z
+      version: 1
+  timestamp: 2026-05-08T11:44:58.518Z
+  sequenceNumber: 3
+- type: add
+  elementId: api.requestbody.external-reference-request
+  layerName: api
+  after:
+    id: d7477e52-018f-4fe7-85c3-1007089f0972
+    path: api.requestbody.external-reference-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: ExternalReferenceRequest
+    description: Request body containing external reference details to attach to an
+      ontology entity
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/ontology.py
+          symbol: ExternalReferenceRequest
+    metadata:
+      created_at: 2026-05-08T11:44:58.847Z
+      updated_at: 2026-05-08T11:44:58.847Z
+      version: 1
+  timestamp: 2026-05-08T11:44:58.870Z
+  sequenceNumber: 4
+- type: add
+  elementId: api.requestbody.lexical-sense-request
+  layerName: api
+  after:
+    id: ae11bf27-6408-480b-a976-118b73c7b06b
+    path: api.requestbody.lexical-sense-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: LexicalSenseRequest
+    description: Request body containing lexical sense details (label, language,
+      definition) for an ontology entity
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/ontology.py
+          symbol: LexicalSenseRequest
+    metadata:
+      created_at: 2026-05-08T11:45:03.921Z
+      updated_at: 2026-05-08T11:45:03.921Z
+      version: 1
+  timestamp: 2026-05-08T11:45:03.942Z
+  sequenceNumber: 5
+- type: add
+  elementId: api.requestbody.data-property-value-request
+  layerName: api
+  after:
+    id: f77efe88-b37d-4085-9785-bb8b2e1e5704
+    path: api.requestbody.data-property-value-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: DataPropertyValueRequest
+    description: Request body to set a typed data property value on an ontology entity
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/ontology.py
+          symbol: DataPropertyValueRequest
+    metadata:
+      created_at: 2026-05-08T11:45:04.265Z
+      updated_at: 2026-05-08T11:45:04.265Z
+      version: 1
+  timestamp: 2026-05-08T11:45:04.288Z
+  sequenceNumber: 6
+- type: add
+  elementId: api.requestbody.class-create-request
+  layerName: api
+  after:
+    id: fd76382b-867a-4079-8e1f-08bddebd2045
+    path: api.requestbody.class-create-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: ClassCreateRequest
+    description: Request body to create a new ontology class with label, definition,
+      and optional parent class
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/ontology.py
+          symbol: ClassCreateRequest
+    metadata:
+      created_at: 2026-05-08T11:45:04.598Z
+      updated_at: 2026-05-08T11:45:04.598Z
+      version: 1
+  timestamp: 2026-05-08T11:45:04.621Z
+  sequenceNumber: 7
+- type: add
+  elementId: api.requestbody.class-update-request
+  layerName: api
+  after:
+    id: a41f471e-06b5-4f38-b8ae-b4e6232034d6
+    path: api.requestbody.class-update-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: ClassUpdateRequest
+    description: Request body to update an existing ontology class label or definition
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/ontology.py
+          symbol: ClassUpdateRequest
+    metadata:
+      created_at: 2026-05-08T11:45:04.939Z
+      updated_at: 2026-05-08T11:45:04.939Z
+      version: 1
+  timestamp: 2026-05-08T11:45:04.962Z
+  sequenceNumber: 8
+- type: add
+  elementId: api.requestbody.class-move-request
+  layerName: api
+  after:
+    id: e4074a4b-a03b-45fb-af16-9cfc23739ca2
+    path: api.requestbody.class-move-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: ClassMoveRequest
+    description: Request body to move an ontology class to a new parent class in the
+      hierarchy
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/ontology.py
+          symbol: ClassMoveRequest
+    metadata:
+      created_at: 2026-05-08T11:45:05.279Z
+      updated_at: 2026-05-08T11:45:05.279Z
+      version: 1
+  timestamp: 2026-05-08T11:45:05.302Z
+  sequenceNumber: 9
+- type: add
+  elementId: api.requestbody.relationship-create-request
+  layerName: api
+  after:
+    id: 1d1b1db4-41e6-43c0-854f-535c4046d752
+    path: api.requestbody.relationship-create-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: RelationshipCreateRequest
+    description: Request body to create a directed typed relationship between two
+      ontology entities
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/ontology.py
+          symbol: RelationshipCreateRequest
+    metadata:
+      created_at: 2026-05-08T11:45:12.458Z
+      updated_at: 2026-05-08T11:45:12.458Z
+      version: 1
+  timestamp: 2026-05-08T11:45:12.482Z
+  sequenceNumber: 10
+- type: add
+  elementId: api.requestbody.property-definition-create-request
+  layerName: api
+  after:
+    id: f5b0a52d-518f-47e0-926a-85ab866151db
+    path: api.requestbody.property-definition-create-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: PropertyDefinitionCreateRequest
+    description: Request body to create a new property definition (object property)
+      for ontology relationships
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/ontology.py
+          symbol: PropertyDefinitionCreateRequest
+    metadata:
+      created_at: 2026-05-08T11:45:12.808Z
+      updated_at: 2026-05-08T11:45:12.808Z
+      version: 1
+  timestamp: 2026-05-08T11:45:12.831Z
+  sequenceNumber: 11
+- type: add
+  elementId: api.requestbody.property-definition-update-request
+  layerName: api
+  after:
+    id: 6d5b9cee-3bcf-4941-a683-6c699ed9fd87
+    path: api.requestbody.property-definition-update-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: PropertyDefinitionUpdateRequest
+    description: Request body to update an existing property definition's label or metadata
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/ontology.py
+          symbol: PropertyDefinitionUpdateRequest
+    metadata:
+      created_at: 2026-05-08T11:45:13.155Z
+      updated_at: 2026-05-08T11:45:13.155Z
+      version: 1
+  timestamp: 2026-05-08T11:45:13.179Z
+  sequenceNumber: 12
+- type: add
+  elementId: api.requestbody.individual-create-request
+  layerName: api
+  after:
+    id: c27c4fc0-97f0-44d0-9ed1-f0db752b86c9
+    path: api.requestbody.individual-create-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: IndividualCreateRequest
+    description: Request body to create a new ontology individual (named instance)
+      with class membership and properties
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/ontology.py
+          symbol: IndividualCreateRequest
+    metadata:
+      created_at: 2026-05-08T11:45:13.570Z
+      updated_at: 2026-05-08T11:45:13.570Z
+      version: 1
+  timestamp: 2026-05-08T11:45:13.605Z
+  sequenceNumber: 13
+- type: add
+  elementId: api.requestbody.individual-update-request
+  layerName: api
+  after:
+    id: a1e423d8-cb8d-4ae8-94da-5859d744f1d0
+    path: api.requestbody.individual-update-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: IndividualUpdateRequest
+    description: Request body to update an existing ontology individual's label or
+      properties
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/ontology.py
+          symbol: IndividualUpdateRequest
+    metadata:
+      created_at: 2026-05-08T11:45:14.080Z
+      updated_at: 2026-05-08T11:45:14.080Z
+      version: 1
+  timestamp: 2026-05-08T11:45:14.110Z
+  sequenceNumber: 14
+- type: add
+  elementId: api.requestbody.individual-class-request
+  layerName: api
+  after:
+    id: 03e68462-e349-459d-96a8-59c068df07e1
+    path: api.requestbody.individual-class-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: IndividualClassRequest
+    description: Request body specifying a single class ID for managing individual
+      class membership
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/ontology.py
+          symbol: IndividualClassRequest
+    metadata:
+      created_at: 2026-05-08T11:45:18.231Z
+      updated_at: 2026-05-08T11:45:18.231Z
+      version: 1
+  timestamp: 2026-05-08T11:45:18.256Z
+  sequenceNumber: 15
+- type: add
+  elementId: api.requestbody.individual-class-list-request
+  layerName: api
+  after:
+    id: ba16e07f-8c4d-489a-b6ff-c5591f5fb8f2
+    path: api.requestbody.individual-class-list-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: IndividualClassListRequest
+    description: Request body providing an ordered list of class IDs to reorder
+      individual class membership
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/ontology.py
+          symbol: IndividualClassListRequest
+    metadata:
+      created_at: 2026-05-08T11:45:18.603Z
+      updated_at: 2026-05-08T11:45:18.603Z
+      version: 1
+  timestamp: 2026-05-08T11:45:18.629Z
+  sequenceNumber: 16
+- type: add
+  elementId: api.response.taxonomy-response
+  layerName: api
+  after:
+    id: 1332a8a9-ba24-45b2-8b52-f71e13328d50
+    path: api.response.taxonomy-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: TaxonomyResponse
+    description: Response containing a taxonomy's ID, title, description, and
+      associated concept schemes
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/ontology.py
+          symbol: TaxonomyResponse
+    metadata:
+      created_at: 2026-05-08T11:45:49.981Z
+      updated_at: 2026-05-08T11:45:49.981Z
+      version: 1
+  timestamp: 2026-05-08T11:45:50.006Z
+  sequenceNumber: 17
+- type: add
+  elementId: api.response.concept-scheme-response
+  layerName: api
+  after:
+    id: 7dc7cf9f-4414-478c-b7e3-f3c00148924e
+    path: api.response.concept-scheme-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ConceptSchemeResponse
+    description: Response containing a concept scheme's ID, title, description, and
+      root concept count
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/ontology.py
+          symbol: ConceptSchemeResponse
+    metadata:
+      created_at: 2026-05-08T11:45:50.373Z
+      updated_at: 2026-05-08T11:45:50.373Z
+      version: 1
+  timestamp: 2026-05-08T11:45:50.399Z
+  sequenceNumber: 18
+- type: add
+  elementId: api.response.external-reference-response
+  layerName: api
+  after:
+    id: d251744b-d322-42da-a0df-d33cdf992336
+    path: api.response.external-reference-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ExternalReferenceResponse
+    description: Response containing an external reference with source URI, label,
+      and relation type
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/ontology.py
+          symbol: ExternalReferenceResponse
+    metadata:
+      created_at: 2026-05-08T11:45:50.752Z
+      updated_at: 2026-05-08T11:45:50.752Z
+      version: 1
+  timestamp: 2026-05-08T11:45:50.779Z
+  sequenceNumber: 19
+- type: add
+  elementId: api.response.lexical-sense-response
+  layerName: api
+  after:
+    id: 28476e04-b5d3-4e35-9868-bc740f002df8
+    path: api.response.lexical-sense-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: LexicalSenseResponse
+    description: Response containing a lexical sense with label, language, and
+      optional definition
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/ontology.py
+          symbol: LexicalSenseResponse
+    metadata:
+      created_at: 2026-05-08T11:45:51.147Z
+      updated_at: 2026-05-08T11:45:51.147Z
+      version: 1
+  timestamp: 2026-05-08T11:45:51.172Z
+  sequenceNumber: 20
+- type: add
+  elementId: api.response.data-property-value-response
+  layerName: api
+  after:
+    id: 9488de98-4e34-41b3-8923-020e42468949
+    path: api.response.data-property-value-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: DataPropertyValueResponse
+    description: Response containing a data property value with property ID, typed
+      value, and unit
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/ontology.py
+          symbol: DataPropertyValueResponse
+    metadata:
+      created_at: 2026-05-08T11:45:51.535Z
+      updated_at: 2026-05-08T11:45:51.535Z
+      version: 1
+  timestamp: 2026-05-08T11:45:51.561Z
+  sequenceNumber: 21
+- type: add
+  elementId: api.response.class-response
+  layerName: api
+  after:
+    id: 249ea622-b2d9-42c4-bb45-ff856ae6eb39
+    path: api.response.class-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ClassResponse
+    description: Response containing an ontology class with ID, label, definition,
+      parent hierarchy, and child count
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/ontology.py
+          symbol: ClassResponse
+    metadata:
+      created_at: 2026-05-08T11:45:57.229Z
+      updated_at: 2026-05-08T11:45:57.229Z
+      version: 1
+  timestamp: 2026-05-08T11:45:57.254Z
+  sequenceNumber: 22
+- type: add
+  elementId: api.response.relationship-response
+  layerName: api
+  after:
+    id: 71e9d78d-e6ae-42b2-8637-f5d383d0c91e
+    path: api.response.relationship-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: RelationshipResponse
+    description: Response containing a typed directed relationship between two
+      ontology entities with property definition details
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/ontology.py
+          symbol: RelationshipResponse
+    metadata:
+      created_at: 2026-05-08T11:45:57.602Z
+      updated_at: 2026-05-08T11:45:57.602Z
+      version: 1
+  timestamp: 2026-05-08T11:45:57.627Z
+  sequenceNumber: 23
+- type: add
+  elementId: api.response.property-definition-response
+  layerName: api
+  after:
+    id: d3244979-e4db-4728-9ab8-e0ca8573270c
+    path: api.response.property-definition-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: PropertyDefinitionResponse
+    description: Response containing a property definition with ID, label,
+      domain/range constraints, and symmetry metadata
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/ontology.py
+          symbol: PropertyDefinitionResponse
+    metadata:
+      created_at: 2026-05-08T11:45:57.988Z
+      updated_at: 2026-05-08T11:45:57.988Z
+      version: 1
+  timestamp: 2026-05-08T11:45:58.016Z
+  sequenceNumber: 24
+- type: add
+  elementId: api.response.individual-response
+  layerName: api
+  after:
+    id: db77feb0-bfad-4082-8787-3f3f8fa57101
+    path: api.response.individual-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: IndividualResponse
+    description: Response containing a named ontology individual with class
+      memberships, lexical senses, and property values
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/ontology.py
+          symbol: IndividualResponse
+    metadata:
+      created_at: 2026-05-08T11:45:58.372Z
+      updated_at: 2026-05-08T11:45:58.372Z
+      version: 1
+  timestamp: 2026-05-08T11:45:58.398Z
+  sequenceNumber: 25
+- type: add
+  elementId: api.requestbody.changeset-create-request
+  layerName: api
+  after:
+    id: 27d7028e-0117-4e19-bbbe-4cb01b8c30f3
+    path: api.requestbody.changeset-create-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: ChangesetCreateRequest
+    description: Request body to create a new versioning changeset with title and
+      optional description
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/versioning.py
+          symbol: ChangesetCreateRequest
+    metadata:
+      created_at: 2026-05-08T11:46:04.058Z
+      updated_at: 2026-05-08T11:46:04.058Z
+      version: 1
+  timestamp: 2026-05-08T11:46:04.087Z
+  sequenceNumber: 26
+- type: add
+  elementId: api.requestbody.reject-proposal-request
+  layerName: api
+  after:
+    id: e6f80079-a4f2-414b-9729-b1a1e280202f
+    path: api.requestbody.reject-proposal-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: RejectProposalRequest
+    description: Request body to reject a merge proposal with a mandatory rejection reason
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/versioning.py
+          symbol: RejectProposalRequest
+    metadata:
+      created_at: 2026-05-08T11:46:04.474Z
+      updated_at: 2026-05-08T11:46:04.474Z
+      version: 1
+  timestamp: 2026-05-08T11:46:04.512Z
+  sequenceNumber: 27
+- type: add
+  elementId: api.requestbody.resolve-conflicts-request
+  layerName: api
+  after:
+    id: 50e16d8c-63fb-4ac6-b113-49628030ca5e
+    path: api.requestbody.resolve-conflicts-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: ResolveConflictsRequest
+    description: Request body containing resolution decisions for each conflict in a
+      merge proposal
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/versioning.py
+          symbol: ResolveConflictsRequest
+    metadata:
+      created_at: 2026-05-08T11:46:04.900Z
+      updated_at: 2026-05-08T11:46:04.900Z
+      version: 1
+  timestamp: 2026-05-08T11:46:04.928Z
+  sequenceNumber: 28
+- type: add
+  elementId: api.requestbody.auto-resolve-conflicts-request
+  layerName: api
+  after:
+    id: dff8f9d9-52c7-4a12-b7cd-a8c88e94747a
+    path: api.requestbody.auto-resolve-conflicts-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: AutoResolveConflictsRequest
+    description: Request body specifying automatic conflict resolution strategy
+      (e.g., accept-ours, accept-theirs)
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/versioning.py
+          symbol: AutoResolveConflictsRequest
+    metadata:
+      created_at: 2026-05-08T11:46:05.337Z
+      updated_at: 2026-05-08T11:46:05.337Z
+      version: 1
+  timestamp: 2026-05-08T11:46:05.394Z
+  sequenceNumber: 29
+- type: add
+  elementId: api.response.versioning-change-event-response
+  layerName: api
+  after:
+    id: 7e0b00aa-4c5f-4acb-b543-8f0bd834cd2f
+    path: api.response.versioning-change-event-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: VersioningChangeEventResponse
+    description: Response containing a versioning change event with operation type,
+      entity reference, before/after state, and author
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/versioning.py
+          symbol: VersioningChangeEventResponse
+    metadata:
+      created_at: 2026-05-08T11:46:11.684Z
+      updated_at: 2026-05-08T11:46:11.684Z
+      version: 1
+  timestamp: 2026-05-08T11:46:11.712Z
+  sequenceNumber: 30
+- type: add
+  elementId: api.response.entity-version-response
+  layerName: api
+  after:
+    id: eba90bae-c3af-4884-bc5b-abf34637b6ca
+    path: api.response.entity-version-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: EntityVersionResponse
+    description: Response containing a point-in-time snapshot of an entity version
+      with changeset reference and full state
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/versioning.py
+          symbol: EntityVersionResponse
+    metadata:
+      created_at: 2026-05-08T11:46:12.072Z
+      updated_at: 2026-05-08T11:46:12.072Z
+      version: 1
+  timestamp: 2026-05-08T11:46:12.101Z
+  sequenceNumber: 31
+- type: add
+  elementId: api.response.change-history-response
+  layerName: api
+  after:
+    id: 99516707-3be6-4d2b-8b77-fa205039c22f
+    path: api.response.change-history-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ChangeHistoryResponse
+    description: Response containing paginated change history for an entity with
+      ordered change events
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/versioning.py
+          symbol: ChangeHistoryResponse
+    metadata:
+      created_at: 2026-05-08T11:46:12.448Z
+      updated_at: 2026-05-08T11:46:12.448Z
+      version: 1
+  timestamp: 2026-05-08T11:46:12.476Z
+  sequenceNumber: 32
+- type: add
+  elementId: api.response.changeset-response
+  layerName: api
+  after:
+    id: 22fe7d70-7ac8-4f0c-b161-34dd7b8d811d
+    path: api.response.changeset-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ChangesetResponse
+    description: Response containing a changeset with ID, title, status, change
+      count, and creation metadata
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/versioning.py
+          symbol: ChangesetResponse
+    metadata:
+      created_at: 2026-05-08T11:46:12.825Z
+      updated_at: 2026-05-08T11:46:12.825Z
+      version: 1
+  timestamp: 2026-05-08T11:46:12.853Z
+  sequenceNumber: 33
+- type: add
+  elementId: api.response.proposal-response
+  layerName: api
+  after:
+    id: aa10b453-737e-4ec9-858c-9ecc305ad66d
+    path: api.response.proposal-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ProposalResponse
+    description: Response containing a merge proposal with source/target changeset
+      references, status, and conflict summary
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/versioning.py
+          symbol: ProposalResponse
+    metadata:
+      created_at: 2026-05-08T11:46:13.202Z
+      updated_at: 2026-05-08T11:46:13.202Z
+      version: 1
+  timestamp: 2026-05-08T11:46:13.231Z
+  sequenceNumber: 34
+- type: add
+  elementId: api.response.conflict-response
+  layerName: api
+  after:
+    id: 84cb0118-6eef-499c-98dd-297c815f3ff8
+    path: api.response.conflict-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ConflictResponse
+    description: Response containing a merge conflict with conflicting entity state,
+      conflict type, and resolution options
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/versioning.py
+          symbol: ConflictResponse
+    metadata:
+      created_at: 2026-05-08T11:46:19.012Z
+      updated_at: 2026-05-08T11:46:19.012Z
+      version: 1
+  timestamp: 2026-05-08T11:46:19.041Z
+  sequenceNumber: 35
+- type: add
+  elementId: api.response.conflict-report-response
+  layerName: api
+  after:
+    id: f291862f-12cd-4ac7-afdb-8caf87330e9f
+    path: api.response.conflict-report-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ConflictReportResponse
+    description: Response containing a summary report of all conflicts in a merge
+      proposal with counts by type
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/versioning.py
+          symbol: ConflictReportResponse
+    metadata:
+      created_at: 2026-05-08T11:46:19.421Z
+      updated_at: 2026-05-08T11:46:19.421Z
+      version: 1
+  timestamp: 2026-05-08T11:46:19.451Z
+  sequenceNumber: 36
+- type: add
+  elementId: api.response.merge-result-response
+  layerName: api
+  after:
+    id: 4b82915d-63db-4442-b3cc-df3cf7b9c8fe
+    path: api.response.merge-result-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: MergeResultResponse
+    description: Response containing the outcome of a merge operation with
+      resolved/unresolved conflict counts
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/versioning.py
+          symbol: MergeResultResponse
+    metadata:
+      created_at: 2026-05-08T11:46:19.829Z
+      updated_at: 2026-05-08T11:46:19.829Z
+      version: 1
+  timestamp: 2026-05-08T11:46:19.859Z
+  sequenceNumber: 37
+- type: add
+  elementId: api.response.sync-status-response
+  layerName: api
+  after:
+    id: c8d39b3c-9294-4af7-b681-a14ddaa0fe29
+    path: api.response.sync-status-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: SyncStatusResponse
+    description: Response containing current sync status with remote, including last
+      sync time and pending change count
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/versioning.py
+          symbol: SyncStatusResponse
+    metadata:
+      created_at: 2026-05-08T11:46:20.235Z
+      updated_at: 2026-05-08T11:46:20.235Z
+      version: 1
+  timestamp: 2026-05-08T11:46:20.267Z
+  sequenceNumber: 38
+- type: add
+  elementId: api.response.sync-result-response
+  layerName: api
+  after:
+    id: 60f5104a-18d8-4cd1-82df-79afadc3866a
+    path: api.response.sync-result-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: SyncResultResponse
+    description: Response containing the result of a sync operation with
+      pushed/pulled entity counts and conflict summary
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/versioning.py
+          symbol: SyncResultResponse
+    metadata:
+      created_at: 2026-05-08T11:46:20.677Z
+      updated_at: 2026-05-08T11:46:20.677Z
+      version: 1
+  timestamp: 2026-05-08T11:46:20.712Z
+  sequenceNumber: 39
+- type: add
+  elementId: api.requestbody.cycle-check-request
+  layerName: api
+  after:
+    id: a8e45720-a421-49d0-ab4e-3827df9ad9fb
+    path: api.requestbody.cycle-check-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: CycleCheckRequest
+    description: Request body specifying a starting node ID for directed cycle
+      detection in the knowledge graph
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/graph.py
+          symbol: CycleCheckRequest
+    metadata:
+      created_at: 2026-05-08T11:46:32.890Z
+      updated_at: 2026-05-08T11:46:32.890Z
+      version: 1
+  timestamp: 2026-05-08T11:46:32.921Z
+  sequenceNumber: 40
+- type: add
+  elementId: api.requestbody.sparqlrequest
+  layerName: api
+  after:
+    id: d67ae73b-06d4-4ace-83dd-6d962850307a
+    path: api.requestbody.sparqlrequest
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: SPARQLRequest
+    description: Request body containing a SPARQL query string with optional result
+      limit for knowledge graph querying
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/graph.py
+          symbol: SPARQLRequest
+    metadata:
+      created_at: 2026-05-08T11:46:33.293Z
+      updated_at: 2026-05-08T11:46:33.293Z
+      version: 1
+  timestamp: 2026-05-08T11:46:33.325Z
+  sequenceNumber: 41
+- type: add
+  elementId: api.response.knowledge-graph-response
+  layerName: api
+  after:
+    id: e51cd8cd-b110-4dd0-8739-811776d1feec
+    path: api.response.knowledge-graph-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: KnowledgeGraphResponse
+    description: Response containing the full in-memory knowledge graph with nodes,
+      edges, and metadata
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/graph.py
+          symbol: KnowledgeGraphResponse
+    metadata:
+      created_at: 2026-05-08T11:46:33.709Z
+      updated_at: 2026-05-08T11:46:33.709Z
+      version: 1
+  timestamp: 2026-05-08T11:46:33.743Z
+  sequenceNumber: 42
+- type: add
+  elementId: api.response.graph-metrics-response
+  layerName: api
+  after:
+    id: 0734a89c-8044-4840-823e-76f2fca2ec24
+    path: api.response.graph-metrics-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: GraphMetricsResponse
+    description: Response containing computed graph metrics including node count,
+      edge count, density, diameter, and clustering coefficient
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/graph.py
+          symbol: GraphMetricsResponse
+    metadata:
+      created_at: 2026-05-08T11:46:34.153Z
+      updated_at: 2026-05-08T11:46:34.153Z
+      version: 1
+  timestamp: 2026-05-08T11:46:34.192Z
+  sequenceNumber: 43
+- type: add
+  elementId: api.response.path-result-response
+  layerName: api
+  after:
+    id: f0dd7bae-ecac-49c0-8249-8c663b029ed3
+    path: api.response.path-result-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: PathResultResponse
+    description: Response containing shortest path results between two nodes with
+      node sequence and path length
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/graph.py
+          symbol: PathResultResponse
+    metadata:
+      created_at: 2026-05-08T11:46:34.797Z
+      updated_at: 2026-05-08T11:46:34.797Z
+      version: 1
+  timestamp: 2026-05-08T11:46:34.828Z
+  sequenceNumber: 44
+- type: add
+  elementId: api.response.centrality-response
+  layerName: api
+  after:
+    id: 32d26798-275d-4571-a6d0-e707a753446f
+    path: api.response.centrality-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: CentralityResponse
+    description: Response containing node centrality scores (degree, betweenness,
+      pagerank) for knowledge graph nodes
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/graph.py
+          symbol: CentralityResponse
+    metadata:
+      created_at: 2026-05-08T11:46:40.982Z
+      updated_at: 2026-05-08T11:46:40.982Z
+      version: 1
+  timestamp: 2026-05-08T11:46:41.013Z
+  sequenceNumber: 45
+- type: add
+  elementId: api.response.communities-response
+  layerName: api
+  after:
+    id: 6b9edade-0f08-49e5-892b-cef4b3013cb3
+    path: api.response.communities-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: CommunitiesResponse
+    description: Response containing detected graph communities with member node IDs
+      and community metadata
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/graph.py
+          symbol: CommunitiesResponse
+    metadata:
+      created_at: 2026-05-08T11:46:41.387Z
+      updated_at: 2026-05-08T11:46:41.387Z
+      version: 1
+  timestamp: 2026-05-08T11:46:41.417Z
+  sequenceNumber: 46
+- type: add
+  elementId: api.response.neighbors-response
+  layerName: api
+  after:
+    id: 687142da-34ad-4761-9fe2-a2d049a5a730
+    path: api.response.neighbors-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: NeighborsResponse
+    description: Response containing direct neighbors of a node with relationship
+      type and direction
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/graph.py
+          symbol: NeighborsResponse
+    metadata:
+      created_at: 2026-05-08T11:46:41.788Z
+      updated_at: 2026-05-08T11:46:41.788Z
+      version: 1
+  timestamp: 2026-05-08T11:46:41.819Z
+  sequenceNumber: 47
+- type: add
+  elementId: api.response.cycle-check-response
+  layerName: api
+  after:
+    id: e4db7993-00d0-4f12-996c-36b28d8c7b38
+    path: api.response.cycle-check-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: CycleCheckResponse
+    description: Response indicating whether directed cycles exist from a starting
+      node with cycle path details
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/graph.py
+          symbol: CycleCheckResponse
+    metadata:
+      created_at: 2026-05-08T11:46:42.193Z
+      updated_at: 2026-05-08T11:46:42.193Z
+      version: 1
+  timestamp: 2026-05-08T11:46:42.224Z
+  sequenceNumber: 48
+- type: add
+  elementId: api.response.sparqlresponse
+  layerName: api
+  after:
+    id: 9b32d425-1670-4d5e-86e5-1ec20d5c5455
+    path: api.response.sparqlresponse
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: SPARQLResponse
+    description: Response containing SPARQL query results as variable bindings with
+      row count
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/graph.py
+          symbol: SPARQLResponse
+    metadata:
+      created_at: 2026-05-08T11:46:42.637Z
+      updated_at: 2026-05-08T11:46:42.637Z
+      version: 1
+  timestamp: 2026-05-08T11:46:42.669Z
+  sequenceNumber: 49
+- type: add
+  elementId: api.response.triple-response
+  layerName: api
+  after:
+    id: d93419ae-9e01-433a-bb10-65ad1aee062a
+    path: api.response.triple-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: TripleResponse
+    description: Response containing a single RDF triple with subject, predicate, and object
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/graph.py
+          symbol: TripleResponse
+    metadata:
+      created_at: 2026-05-08T11:46:49.208Z
+      updated_at: 2026-05-08T11:46:49.208Z
+      version: 1
+  timestamp: 2026-05-08T11:46:49.240Z
+  sequenceNumber: 50
+- type: add
+  elementId: api.response.triples-response
+  layerName: api
+  after:
+    id: ce676f09-b109-494e-83f8-2e6fc57e98e5
+    path: api.response.triples-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: TriplesResponse
+    description: Response containing a collection of RDF triples extracted from the
+      knowledge graph
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/graph.py
+          symbol: TriplesResponse
+    metadata:
+      created_at: 2026-05-08T11:46:49.639Z
+      updated_at: 2026-05-08T11:46:49.639Z
+      version: 1
+  timestamp: 2026-05-08T11:46:49.696Z
+  sequenceNumber: 51
+- type: add
+  elementId: api.response.triple-count-response
+  layerName: api
+  after:
+    id: d8276447-b2c0-43c0-9b90-f90a7947f39c
+    path: api.response.triple-count-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: TripleCountResponse
+    description: Response containing the total count of RDF triples in the knowledge graph
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/graph.py
+          symbol: TripleCountResponse
+    metadata:
+      created_at: 2026-05-08T11:46:50.389Z
+      updated_at: 2026-05-08T11:46:50.389Z
+      version: 1
+  timestamp: 2026-05-08T11:46:50.443Z
+  sequenceNumber: 52
+- type: add
+  elementId: api.response.degree-distribution-response
+  layerName: api
+  after:
+    id: eac51686-e3d6-40e7-8d2b-fb9e05e0c48c
+    path: api.response.degree-distribution-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: DegreeDistributionResponse
+    description: Response containing the degree distribution histogram of the
+      knowledge graph
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/graph.py
+          symbol: DegreeDistributionResponse
+    metadata:
+      created_at: 2026-05-08T11:46:50.995Z
+      updated_at: 2026-05-08T11:46:50.995Z
+      version: 1
+  timestamp: 2026-05-08T11:46:51.030Z
+  sequenceNumber: 53
+- type: add
+  elementId: api.response.subgraph-data-response
+  layerName: api
+  after:
+    id: c2cb88c5-a0be-49f9-890b-19b6957a8419
+    path: api.response.subgraph-data-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: SubgraphDataResponse
+    description: Response containing subgraph node and edge data for a given node
+      set and depth
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/graph.py
+          symbol: SubgraphDataResponse
+    metadata:
+      created_at: 2026-05-08T11:46:51.436Z
+      updated_at: 2026-05-08T11:46:51.436Z
+      version: 1
+  timestamp: 2026-05-08T11:46:51.470Z
+  sequenceNumber: 54
+- type: add
+  elementId: api.response.subgraph-result-response
+  layerName: api
+  after:
+    id: bc57a579-b712-40d4-9d32-5d1b9a0988fd
+    path: api.response.subgraph-result-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: SubgraphResultResponse
+    description: Response containing the result of a subgraph extraction with
+      node/edge counts and data
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/graph.py
+          symbol: SubgraphResultResponse
+    metadata:
+      created_at: 2026-05-08T11:46:51.861Z
+      updated_at: 2026-05-08T11:46:51.861Z
+      version: 1
+  timestamp: 2026-05-08T11:46:51.896Z
+  sequenceNumber: 55
+- type: add
+  elementId: api.requestbody.serialization-scope-request
+  layerName: api
+  after:
+    id: 7af4488b-de76-46bc-922b-fac525cc61ed
+    path: api.requestbody.serialization-scope-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: SerializationScopeRequest
+    description: Request body defining the scope (taxonomy IDs, entity types, depth)
+      for a graph serialization export
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/interchange.py
+          symbol: SerializationScopeRequest
+    metadata:
+      created_at: 2026-05-08T11:46:59.822Z
+      updated_at: 2026-05-08T11:46:59.822Z
+      version: 1
+  timestamp: 2026-05-08T11:46:59.860Z
+  sequenceNumber: 56
+- type: add
+  elementId: api.requestbody.export-request
+  layerName: api
+  after:
+    id: cc5cb7d3-f452-4c17-915c-c5f9e2f5801e
+    path: api.requestbody.export-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: ExportRequest
+    description: Request body specifying export format (SKOS/OWL/GraphML) and scope
+      for data interchange export
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/interchange.py
+          symbol: ExportRequest
+    metadata:
+      created_at: 2026-05-08T11:47:00.280Z
+      updated_at: 2026-05-08T11:47:00.280Z
+      version: 1
+  timestamp: 2026-05-08T11:47:00.316Z
+  sequenceNumber: 57
+- type: add
+  elementId: api.response.serialization-scope-response
+  layerName: api
+  after:
+    id: 6099a277-30ee-41d0-b3ae-ba96c42fe991
+    path: api.response.serialization-scope-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: SerializationScopeResponse
+    description: Response confirming the resolved scope for a serialization
+      operation with entity counts
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/interchange.py
+          symbol: SerializationScopeResponse
+    metadata:
+      created_at: 2026-05-08T11:47:00.719Z
+      updated_at: 2026-05-08T11:47:00.719Z
+      version: 1
+  timestamp: 2026-05-08T11:47:00.752Z
+  sequenceNumber: 58
+- type: add
+  elementId: api.response.import-conflict-response
+  layerName: api
+  after:
+    id: 1b7c4112-7867-449c-ab75-1e872f6248dd
+    path: api.response.import-conflict-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ImportConflictResponse
+    description: Response describing a conflict detected during an import operation
+      with existing and incoming values
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/interchange.py
+          symbol: ImportConflictResponse
+    metadata:
+      created_at: 2026-05-08T11:47:01.153Z
+      updated_at: 2026-05-08T11:47:01.153Z
+      version: 1
+  timestamp: 2026-05-08T11:47:01.187Z
+  sequenceNumber: 59
+- type: add
+  elementId: api.response.resolution-record-response
+  layerName: api
+  after:
+    id: c4badd9f-ac13-4aac-b73a-60e6a45ec19a
+    path: api.response.resolution-record-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ResolutionRecordResponse
+    description: Response recording the resolution applied to an import conflict
+      with resolution strategy
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/interchange.py
+          symbol: ResolutionRecordResponse
+    metadata:
+      created_at: 2026-05-08T11:47:01.625Z
+      updated_at: 2026-05-08T11:47:01.625Z
+      version: 1
+  timestamp: 2026-05-08T11:47:01.661Z
+  sequenceNumber: 60
+- type: add
+  elementId: api.response.import-plan-response
+  layerName: api
+  after:
+    id: 6c7ca586-b08e-4431-9fb8-daf304028acf
+    path: api.response.import-plan-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ImportPlanResponse
+    description: Response containing a preview import plan with entity counts,
+      conflicts, and resolution recommendations
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/interchange.py
+          symbol: ImportPlanResponse
+    metadata:
+      created_at: 2026-05-08T11:47:06.232Z
+      updated_at: 2026-05-08T11:47:06.232Z
+      version: 1
+  timestamp: 2026-05-08T11:47:06.269Z
+  sequenceNumber: 61
+- type: add
+  elementId: api.response.import-run-response
+  layerName: api
+  after:
+    id: 851105ee-f5c2-4e04-ae60-2363f01e97c1
+    path: api.response.import-run-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ImportRunResponse
+    description: Response containing the result of an executed import with imported,
+      skipped, and conflicted entity counts
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/interchange.py
+          symbol: ImportRunResponse
+    metadata:
+      created_at: 2026-05-08T11:47:06.719Z
+      updated_at: 2026-05-08T11:47:06.719Z
+      version: 1
+  timestamp: 2026-05-08T11:47:06.754Z
+  sequenceNumber: 62
+- type: add
+  elementId: api.response.interchange-change-event-response
+  layerName: api
+  after:
+    id: 56d2d4a4-3c1b-4787-8d73-d9a4099ebfe2
+    path: api.response.interchange-change-event-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: InterchangeChangeEventResponse
+    description: Response containing a change event generated during an interchange
+      import or export operation
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/interchange.py
+          symbol: InterchangeChangeEventResponse
+    metadata:
+      created_at: 2026-05-08T11:47:07.214Z
+      updated_at: 2026-05-08T11:47:07.214Z
+      version: 1
+  timestamp: 2026-05-08T11:47:07.252Z
+  sequenceNumber: 63
+- type: add
+  elementId: api.requestbody.reference-search-request
+  layerName: api
+  after:
+    id: aea5c118-7a13-46e5-b006-61d9ad6a8c19
+    path: api.requestbody.reference-search-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: ReferenceSearchRequest
+    description: Request body with a search query and optional source filters for
+      searching external knowledge references
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/reference.py
+          symbol: ReferenceSearchRequest
+    metadata:
+      created_at: 2026-05-08T11:47:13.656Z
+      updated_at: 2026-05-08T11:47:13.656Z
+      version: 1
+  timestamp: 2026-05-08T11:47:13.692Z
+  sequenceNumber: 64
+- type: add
+  elementId: api.requestbody.reference-relations-request
+  layerName: api
+  after:
+    id: 72f4de77-c873-462d-a6eb-e64a480bc5f2
+    path: api.requestbody.reference-relations-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: ReferenceRelationsRequest
+    description: Request body specifying a concept URI and relation types to fetch
+      from external reference sources
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/reference.py
+          symbol: ReferenceRelationsRequest
+    metadata:
+      created_at: 2026-05-08T11:47:14.140Z
+      updated_at: 2026-05-08T11:47:14.140Z
+      version: 1
+  timestamp: 2026-05-08T11:47:14.199Z
+  sequenceNumber: 65
+- type: add
+  elementId: api.response.reference-result-schema
+  layerName: api
+  after:
+    id: 9433c5be-df4f-45c7-ad55-3010b9b4bdd5
+    path: api.response.reference-result-schema
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ReferenceResultSchema
+    description: Response containing a single external reference result with URI,
+      label, definition, and source metadata
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/reference.py
+          symbol: ReferenceResultSchema
+    metadata:
+      created_at: 2026-05-08T11:47:15.082Z
+      updated_at: 2026-05-08T11:47:15.082Z
+      version: 1
+  timestamp: 2026-05-08T11:47:15.146Z
+  sequenceNumber: 66
+- type: add
+  elementId: api.response.reference-relation-schema
+  layerName: api
+  after:
+    id: 3a779f50-1a6b-42e0-898d-418ca437ba35
+    path: api.response.reference-relation-schema
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ReferenceRelationSchema
+    description: Response containing a typed relation between two concepts from an
+      external knowledge source
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/reference.py
+          symbol: ReferenceRelationSchema
+    metadata:
+      created_at: 2026-05-08T11:47:15.644Z
+      updated_at: 2026-05-08T11:47:15.644Z
+      version: 1
+  timestamp: 2026-05-08T11:47:15.681Z
+  sequenceNumber: 67
+- type: add
+  elementId: api.response.reference-search-response-schema
+  layerName: api
+  after:
+    id: f70ef0d4-67dd-402d-a9fe-8df88ec94f51
+    path: api.response.reference-search-response-schema
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ReferenceSearchResponseSchema
+    description: Response containing paginated external reference search results
+      with total count
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/reference.py
+          symbol: ReferenceSearchResponseSchema
+    metadata:
+      created_at: 2026-05-08T11:47:16.118Z
+      updated_at: 2026-05-08T11:47:16.118Z
+      version: 1
+  timestamp: 2026-05-08T11:47:16.156Z
+  sequenceNumber: 68
+- type: add
+  elementId: api.response.reference-relations-response-schema
+  layerName: api
+  after:
+    id: fe83b92b-a4ec-44bf-ab52-45d0f9ae65ec
+    path: api.response.reference-relations-response-schema
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ReferenceRelationsResponseSchema
+    description: Response containing typed relations for a concept from external
+      knowledge sources
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/reference.py
+          symbol: ReferenceRelationsResponseSchema
+    metadata:
+      created_at: 2026-05-08T11:47:20.783Z
+      updated_at: 2026-05-08T11:47:20.783Z
+      version: 1
+  timestamp: 2026-05-08T11:47:20.820Z
+  sequenceNumber: 69
+- type: add
+  elementId: api.response.reference-source-status-schema
+  layerName: api
+  after:
+    id: 59106944-d6e7-4f78-83ed-ee369d41a38b
+    path: api.response.reference-source-status-schema
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ReferenceSourceStatusSchema
+    description: Response containing the availability status of a single external
+      reference source
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/reference.py
+          symbol: ReferenceSourceStatusSchema
+    metadata:
+      created_at: 2026-05-08T11:47:21.246Z
+      updated_at: 2026-05-08T11:47:21.246Z
+      version: 1
+  timestamp: 2026-05-08T11:47:21.282Z
+  sequenceNumber: 70
+- type: add
+  elementId: api.response.reference-status-response-schema
+  layerName: api
+  after:
+    id: 5cc09393-8536-45d6-88c4-b8b1f4591847
+    path: api.response.reference-status-response-schema
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ReferenceStatusResponseSchema
+    description: Response containing the status of all configured external reference sources
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/reference.py
+          symbol: ReferenceStatusResponseSchema
+    metadata:
+      created_at: 2026-05-08T11:47:21.725Z
+      updated_at: 2026-05-08T11:47:21.725Z
+      version: 1
+  timestamp: 2026-05-08T11:47:21.761Z
+  sequenceNumber: 71
+- type: add
+  elementId: api.requestbody.extract-request
+  layerName: api
+  after:
+    id: a41ff927-303a-4d6b-83ab-c96488630c19
+    path: api.requestbody.extract-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: ExtractRequest
+    description: Request body specifying text and optional configuration for entity
+      extraction from unstructured text
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/extraction.py
+          symbol: ExtractRequest
+    metadata:
+      created_at: 2026-05-08T11:47:28.885Z
+      updated_at: 2026-05-08T11:47:28.885Z
+      version: 1
+  timestamp: 2026-05-08T11:47:28.925Z
+  sequenceNumber: 72
+- type: add
+  elementId: api.requestbody.analyze-text-request
+  layerName: api
+  after:
+    id: f46aaaff-f977-41f7-9c2b-83faf0dae3e3
+    path: api.requestbody.analyze-text-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: AnalyzeTextRequest
+    description: Request body containing text for NLP analysis including entity
+      recognition and relationship detection
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/extraction.py
+          symbol: AnalyzeTextRequest
+    metadata:
+      created_at: 2026-05-08T11:47:29.366Z
+      updated_at: 2026-05-08T11:47:29.366Z
+      version: 1
+  timestamp: 2026-05-08T11:47:29.404Z
+  sequenceNumber: 73
+- type: add
+  elementId: api.requestbody.enrich-from-references-request
+  layerName: api
+  after:
+    id: 6f9f8c11-ef26-470b-9af3-3fc0c40ddf08
+    path: api.requestbody.enrich-from-references-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: EnrichFromReferencesRequest
+    description: Request body specifying entity IDs and reference sources for
+      enriching ontology entities from external knowledge
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/extraction.py
+          symbol: EnrichFromReferencesRequest
+    metadata:
+      created_at: 2026-05-08T11:47:29.834Z
+      updated_at: 2026-05-08T11:47:29.834Z
+      version: 1
+  timestamp: 2026-05-08T11:47:29.873Z
+  sequenceNumber: 74
+- type: add
+  elementId: api.response.extraction-result-schema
+  layerName: api
+  after:
+    id: 0aa0dc56-d469-4b2c-affd-079097fc3812
+    path: api.response.extraction-result-schema
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ExtractionResultSchema
+    description: Response containing extraction results organized by layer with
+      extracted entities and confidence scores
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/extraction.py
+          symbol: ExtractionResultSchema
+    metadata:
+      created_at: 2026-05-08T11:47:30.299Z
+      updated_at: 2026-05-08T11:47:30.299Z
+      version: 1
+  timestamp: 2026-05-08T11:47:30.336Z
+  sequenceNumber: 75
+- type: add
+  elementId: api.requestbody.config-section-update-request
+  layerName: api
+  after:
+    id: 6ab6d184-431e-4c7b-8ea3-5c5e6c34d4ea
+    path: api.requestbody.config-section-update-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: ConfigSectionUpdateRequest
+    description: Request body containing key-value pairs to update a specific
+      section of the application configuration
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/admin.py
+          symbol: ConfigSectionUpdateRequest
+    metadata:
+      created_at: 2026-05-08T11:47:36.870Z
+      updated_at: 2026-05-08T11:47:36.870Z
+      version: 1
+  timestamp: 2026-05-08T11:47:36.937Z
+  sequenceNumber: 76
+- type: add
+  elementId: api.response.system-health-response
+  layerName: api
+  after:
+    id: 543de7d0-1547-4788-ab37-6fa8a2e79910
+    path: api.response.system-health-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: SystemHealthResponse
+    description: Response containing overall system health status with per-service
+      health checks and uptime
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/admin.py
+          symbol: SystemHealthResponse
+    metadata:
+      created_at: 2026-05-08T11:47:37.845Z
+      updated_at: 2026-05-08T11:47:37.845Z
+      version: 1
+  timestamp: 2026-05-08T11:47:37.882Z
+  sequenceNumber: 77
+- type: add
+  elementId: api.response.database-health-response
+  layerName: api
+  after:
+    id: 4d776d34-0f3e-4104-af2d-4a26c0cfc3a6
+    path: api.response.database-health-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: DatabaseHealthResponse
+    description: Response containing database health details including connection
+      status, size, and migration version
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/admin.py
+          symbol: DatabaseHealthResponse
+    metadata:
+      created_at: 2026-05-08T11:47:38.388Z
+      updated_at: 2026-05-08T11:47:38.388Z
+      version: 1
+  timestamp: 2026-05-08T11:47:38.427Z
+  sequenceNumber: 78
+- type: add
+  elementId: api.response.service-metrics-response
+  layerName: api
+  after:
+    id: d2c1f430-41b2-485d-bc45-54d4527e6669
+    path: api.response.service-metrics-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ServiceMetricsResponse
+    description: Response containing service-level metrics including request counts,
+      error rates, and latency percentiles
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/admin.py
+          symbol: ServiceMetricsResponse
+    metadata:
+      created_at: 2026-05-08T11:47:38.870Z
+      updated_at: 2026-05-08T11:47:38.870Z
+      version: 1
+  timestamp: 2026-05-08T11:47:38.908Z
+  sequenceNumber: 79
+- type: add
+  elementId: api.response.component-status-response
+  layerName: api
+  after:
+    id: fae1bcf8-68be-44ca-8914-eaee5b73ecd1
+    path: api.response.component-status-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ComponentStatusResponse
+    description: Response containing the operational status of a named system
+      component with details
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/admin.py
+          symbol: ComponentStatusResponse
+    metadata:
+      created_at: 2026-05-08T11:47:39.356Z
+      updated_at: 2026-05-08T11:47:39.356Z
+      version: 1
+  timestamp: 2026-05-08T11:47:39.395Z
+  sequenceNumber: 80
+- type: add
+  elementId: api.response.background-task-summary-response
+  layerName: api
+  after:
+    id: 2d4159e0-f885-41c4-8687-b2d1afb028bd
+    path: api.response.background-task-summary-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: BackgroundTaskSummaryResponse
+    description: Response containing a summary of background task statuses with
+      counts by state
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/admin.py
+          symbol: BackgroundTaskSummaryResponse
+    metadata:
+      created_at: 2026-05-08T11:47:44.527Z
+      updated_at: 2026-05-08T11:47:44.527Z
+      version: 1
+  timestamp: 2026-05-08T11:47:44.564Z
+  sequenceNumber: 81
+- type: add
+  elementId: api.response.app-configuration-response
+  layerName: api
+  after:
+    id: 03db0c6d-af8c-4a97-b75f-406bbb9b4ad0
+    path: api.response.app-configuration-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: AppConfigurationResponse
+    description: Response containing the full application configuration with all
+      sections and current values
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/admin.py
+          symbol: AppConfigurationResponse
+    metadata:
+      created_at: 2026-05-08T11:47:44.997Z
+      updated_at: 2026-05-08T11:47:44.997Z
+      version: 1
+  timestamp: 2026-05-08T11:47:45.038Z
+  sequenceNumber: 82
+- type: add
+  elementId: api.response.background-task-response
+  layerName: api
+  after:
+    id: a82c9e82-a1a4-417e-97a1-cee7f9022c42
+    path: api.response.background-task-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: BackgroundTaskResponse
+    description: Response containing a background task's ID, status, progress
+      percentage, and result or error details
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/admin.py
+          symbol: BackgroundTaskResponse
+    metadata:
+      created_at: 2026-05-08T11:47:45.465Z
+      updated_at: 2026-05-08T11:47:45.465Z
+      version: 1
+  timestamp: 2026-05-08T11:47:45.505Z
+  sequenceNumber: 83
+- type: add
+  elementId: api.requestbody.pipeline-configuration-create
+  layerName: api
+  after:
+    id: 169fe0f4-4410-48e6-8515-94ba35085f15
+    path: api.requestbody.pipeline-configuration-create
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: PipelineConfigurationCreate
+    description: Request body to create a new LLM pipeline configuration with
+      provider, model, and parameter settings
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/pipeline.py
+          symbol: PipelineConfigurationCreate
+    metadata:
+      created_at: 2026-05-08T11:47:51.396Z
+      updated_at: 2026-05-08T11:47:51.396Z
+      version: 1
+  timestamp: 2026-05-08T11:47:51.437Z
+  sequenceNumber: 84
+- type: add
+  elementId: api.requestbody.pipeline-configuration-update
+  layerName: api
+  after:
+    id: 77c1880a-9c95-4587-b0d1-d40aa8756733
+    path: api.requestbody.pipeline-configuration-update
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: PipelineConfigurationUpdate
+    description: Request body to update an existing LLM pipeline configuration with
+      new provider or model settings
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/pipeline.py
+          symbol: PipelineConfigurationUpdate
+    metadata:
+      created_at: 2026-05-08T11:47:51.876Z
+      updated_at: 2026-05-08T11:47:51.876Z
+      version: 1
+  timestamp: 2026-05-08T11:47:51.914Z
+  sequenceNumber: 85
+- type: add
+  elementId: api.requestbody.pipeline-execute-request
+  layerName: api
+  after:
+    id: 76dc6d6b-ca93-49c6-aa0b-116f267f4569
+    path: api.requestbody.pipeline-execute-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: PipelineExecuteRequest
+    description: Request body specifying pipeline ID and input payload to execute an
+      LLM pipeline
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/pipeline.py
+          symbol: PipelineExecuteRequest
+    metadata:
+      created_at: 2026-05-08T11:47:52.352Z
+      updated_at: 2026-05-08T11:47:52.352Z
+      version: 1
+  timestamp: 2026-05-08T11:47:52.392Z
+  sequenceNumber: 86
+- type: add
+  elementId: api.response.pipeline-configuration-response
+  layerName: api
+  after:
+    id: e8cfe0d0-87d1-4e11-9cc4-638c2077dfef
+    path: api.response.pipeline-configuration-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: PipelineConfigurationResponse
+    description: Response containing a pipeline configuration with ID, name,
+      provider, model, and parameter settings
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/pipeline.py
+          symbol: PipelineConfigurationResponse
+    metadata:
+      created_at: 2026-05-08T11:47:52.839Z
+      updated_at: 2026-05-08T11:47:52.839Z
+      version: 1
+  timestamp: 2026-05-08T11:47:52.879Z
+  sequenceNumber: 87
+- type: add
+  elementId: api.response.execution-response
+  layerName: api
+  after:
+    id: e4ca7535-a869-46ef-8a81-b55b3ac376d6
+    path: api.response.execution-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ExecutionResponse
+    description: Response containing a pipeline execution record with input, output,
+      token usage, and duration
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/pipeline.py
+          symbol: ExecutionResponse
+    metadata:
+      created_at: 2026-05-08T11:47:53.319Z
+      updated_at: 2026-05-08T11:47:53.319Z
+      version: 1
+  timestamp: 2026-05-08T11:47:53.360Z
+  sequenceNumber: 88
+- type: relationship-add
+  elementId: data-model.objectschema.individual-class::maps-to::api.requestbody.individual-class-request
+  layerName: data-model
+  after:
+    source: data-model.objectschema.individual-class
+    target: api.requestbody.individual-class-request
+    predicate: maps-to
+    layer: data-model
+    targetLayer: api
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+  timestamp: 2026-05-08T11:48:03.351Z
+  sequenceNumber: 89
+- type: relationship-add
+  elementId: data-model.objectschema.property-definition::maps-to::api.response.property-definition-response
+  layerName: data-model
+  after:
+    source: data-model.objectschema.property-definition
+    target: api.response.property-definition-response
+    predicate: maps-to
+    layer: data-model
+    targetLayer: api
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+  timestamp: 2026-05-08T11:48:04.022Z
+  sequenceNumber: 90
+- type: relationship-add
+  elementId: data-model.objectschema.extraction-result::maps-to::api.response.extraction-result-schema
+  layerName: data-model
+  after:
+    source: data-model.objectschema.extraction-result
+    target: api.response.extraction-result-schema
+    predicate: maps-to
+    layer: data-model
+    targetLayer: api
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+  timestamp: 2026-05-08T11:48:04.625Z
+  sequenceNumber: 91
+- type: relationship-add
+  elementId: data-model.objectschema.entity-version::maps-to::api.response.entity-version-response
+  layerName: data-model
+  after:
+    source: data-model.objectschema.entity-version
+    target: api.response.entity-version-response
+    predicate: maps-to
+    layer: data-model
+    targetLayer: api
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+  timestamp: 2026-05-08T11:48:05.226Z
+  sequenceNumber: 92
+- type: relationship-add
+  elementId: data-model.objectschema.individual-class::maps-to::api.requestbody.individual-class-list-request
+  layerName: data-model
+  after:
+    source: data-model.objectschema.individual-class
+    target: api.requestbody.individual-class-list-request
+    predicate: maps-to
+    layer: data-model
+    targetLayer: api
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+  timestamp: 2026-05-08T11:48:11.496Z
+  sequenceNumber: 93
+- type: relationship-add
+  elementId: data-model.objectschema.property-definition::maps-to::api.requestbody.property-definition-create-request
+  layerName: data-model
+  after:
+    source: data-model.objectschema.property-definition
+    target: api.requestbody.property-definition-create-request
+    predicate: maps-to
+    layer: data-model
+    targetLayer: api
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+  timestamp: 2026-05-08T11:48:12.133Z
+  sequenceNumber: 94

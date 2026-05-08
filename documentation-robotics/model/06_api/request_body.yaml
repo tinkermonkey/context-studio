@@ -1,0 +1,603 @@
+api.requestbody.taxonomy-create-request:
+  id: 1aaf2fb9-0efe-417a-a264-bc30c16d20a3
+  path: api.requestbody.taxonomy-create-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: TaxonomyCreateRequest
+  description: Request body to create a new taxonomy with title and optional description
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/ontology.py
+        symbol: TaxonomyCreateRequest
+  metadata:
+    created_at: 2026-05-08T11:44:57.425Z
+    updated_at: 2026-05-08T11:44:57.425Z
+    version: 1
+api.requestbody.taxonomy-update-request:
+  id: d9da05eb-4516-494c-a4d5-227f9a99c661
+  path: api.requestbody.taxonomy-update-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: TaxonomyUpdateRequest
+  description: Request body to update an existing taxonomy's title or description
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/ontology.py
+        symbol: TaxonomyUpdateRequest
+  metadata:
+    created_at: 2026-05-08T11:44:57.785Z
+    updated_at: 2026-05-08T11:44:57.785Z
+    version: 1
+api.requestbody.concept-scheme-create-request:
+  id: e3230990-8dc0-4450-9d9e-b6e662763598
+  path: api.requestbody.concept-scheme-create-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: ConceptSchemeCreateRequest
+  description: Request body to create a new SKOS concept scheme with title and
+    optional description
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/ontology.py
+        symbol: ConceptSchemeCreateRequest
+  metadata:
+    created_at: 2026-05-08T11:44:58.137Z
+    updated_at: 2026-05-08T11:44:58.137Z
+    version: 1
+api.requestbody.concept-scheme-update-request:
+  id: c6bab7c1-1cea-4a73-9f60-4e0588a82bdd
+  path: api.requestbody.concept-scheme-update-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: ConceptSchemeUpdateRequest
+  description: Request body to update an existing concept scheme's title or description
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/ontology.py
+        symbol: ConceptSchemeUpdateRequest
+  metadata:
+    created_at: 2026-05-08T11:44:58.497Z
+    updated_at: 2026-05-08T11:44:58.497Z
+    version: 1
+api.requestbody.external-reference-request:
+  id: d7477e52-018f-4fe7-85c3-1007089f0972
+  path: api.requestbody.external-reference-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: ExternalReferenceRequest
+  description: Request body containing external reference details to attach to an
+    ontology entity
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/ontology.py
+        symbol: ExternalReferenceRequest
+  metadata:
+    created_at: 2026-05-08T11:44:58.847Z
+    updated_at: 2026-05-08T11:44:58.847Z
+    version: 1
+api.requestbody.lexical-sense-request:
+  id: ae11bf27-6408-480b-a976-118b73c7b06b
+  path: api.requestbody.lexical-sense-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: LexicalSenseRequest
+  description: Request body containing lexical sense details (label, language,
+    definition) for an ontology entity
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/ontology.py
+        symbol: LexicalSenseRequest
+  metadata:
+    created_at: 2026-05-08T11:45:03.921Z
+    updated_at: 2026-05-08T11:45:03.921Z
+    version: 1
+api.requestbody.data-property-value-request:
+  id: f77efe88-b37d-4085-9785-bb8b2e1e5704
+  path: api.requestbody.data-property-value-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: DataPropertyValueRequest
+  description: Request body to set a typed data property value on an ontology entity
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/ontology.py
+        symbol: DataPropertyValueRequest
+  metadata:
+    created_at: 2026-05-08T11:45:04.265Z
+    updated_at: 2026-05-08T11:45:04.265Z
+    version: 1
+api.requestbody.class-create-request:
+  id: fd76382b-867a-4079-8e1f-08bddebd2045
+  path: api.requestbody.class-create-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: ClassCreateRequest
+  description: Request body to create a new ontology class with label, definition,
+    and optional parent class
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/ontology.py
+        symbol: ClassCreateRequest
+  metadata:
+    created_at: 2026-05-08T11:45:04.598Z
+    updated_at: 2026-05-08T11:45:04.598Z
+    version: 1
+api.requestbody.class-update-request:
+  id: a41f471e-06b5-4f38-b8ae-b4e6232034d6
+  path: api.requestbody.class-update-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: ClassUpdateRequest
+  description: Request body to update an existing ontology class label or definition
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/ontology.py
+        symbol: ClassUpdateRequest
+  metadata:
+    created_at: 2026-05-08T11:45:04.939Z
+    updated_at: 2026-05-08T11:45:04.939Z
+    version: 1
+api.requestbody.class-move-request:
+  id: e4074a4b-a03b-45fb-af16-9cfc23739ca2
+  path: api.requestbody.class-move-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: ClassMoveRequest
+  description: Request body to move an ontology class to a new parent class in the hierarchy
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/ontology.py
+        symbol: ClassMoveRequest
+  metadata:
+    created_at: 2026-05-08T11:45:05.279Z
+    updated_at: 2026-05-08T11:45:05.279Z
+    version: 1
+api.requestbody.relationship-create-request:
+  id: 1d1b1db4-41e6-43c0-854f-535c4046d752
+  path: api.requestbody.relationship-create-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: RelationshipCreateRequest
+  description: Request body to create a directed typed relationship between two
+    ontology entities
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/ontology.py
+        symbol: RelationshipCreateRequest
+  metadata:
+    created_at: 2026-05-08T11:45:12.458Z
+    updated_at: 2026-05-08T11:45:12.458Z
+    version: 1
+api.requestbody.property-definition-create-request:
+  id: f5b0a52d-518f-47e0-926a-85ab866151db
+  path: api.requestbody.property-definition-create-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: PropertyDefinitionCreateRequest
+  description: Request body to create a new property definition (object property)
+    for ontology relationships
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/ontology.py
+        symbol: PropertyDefinitionCreateRequest
+  metadata:
+    created_at: 2026-05-08T11:45:12.808Z
+    updated_at: 2026-05-08T11:45:12.808Z
+    version: 1
+api.requestbody.property-definition-update-request:
+  id: 6d5b9cee-3bcf-4941-a683-6c699ed9fd87
+  path: api.requestbody.property-definition-update-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: PropertyDefinitionUpdateRequest
+  description: Request body to update an existing property definition's label or metadata
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/ontology.py
+        symbol: PropertyDefinitionUpdateRequest
+  metadata:
+    created_at: 2026-05-08T11:45:13.155Z
+    updated_at: 2026-05-08T11:45:13.155Z
+    version: 1
+api.requestbody.individual-create-request:
+  id: c27c4fc0-97f0-44d0-9ed1-f0db752b86c9
+  path: api.requestbody.individual-create-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: IndividualCreateRequest
+  description: Request body to create a new ontology individual (named instance)
+    with class membership and properties
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/ontology.py
+        symbol: IndividualCreateRequest
+  metadata:
+    created_at: 2026-05-08T11:45:13.570Z
+    updated_at: 2026-05-08T11:45:13.570Z
+    version: 1
+api.requestbody.individual-update-request:
+  id: a1e423d8-cb8d-4ae8-94da-5859d744f1d0
+  path: api.requestbody.individual-update-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: IndividualUpdateRequest
+  description: Request body to update an existing ontology individual's label or properties
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/ontology.py
+        symbol: IndividualUpdateRequest
+  metadata:
+    created_at: 2026-05-08T11:45:14.080Z
+    updated_at: 2026-05-08T11:45:14.080Z
+    version: 1
+api.requestbody.individual-class-request:
+  id: 03e68462-e349-459d-96a8-59c068df07e1
+  path: api.requestbody.individual-class-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: IndividualClassRequest
+  description: Request body specifying a single class ID for managing individual
+    class membership
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/ontology.py
+        symbol: IndividualClassRequest
+  metadata:
+    created_at: 2026-05-08T11:45:18.231Z
+    updated_at: 2026-05-08T11:45:18.231Z
+    version: 1
+api.requestbody.individual-class-list-request:
+  id: ba16e07f-8c4d-489a-b6ff-c5591f5fb8f2
+  path: api.requestbody.individual-class-list-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: IndividualClassListRequest
+  description: Request body providing an ordered list of class IDs to reorder
+    individual class membership
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/ontology.py
+        symbol: IndividualClassListRequest
+  metadata:
+    created_at: 2026-05-08T11:45:18.603Z
+    updated_at: 2026-05-08T11:45:18.603Z
+    version: 1
+api.requestbody.changeset-create-request:
+  id: 27d7028e-0117-4e19-bbbe-4cb01b8c30f3
+  path: api.requestbody.changeset-create-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: ChangesetCreateRequest
+  description: Request body to create a new versioning changeset with title and
+    optional description
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/versioning.py
+        symbol: ChangesetCreateRequest
+  metadata:
+    created_at: 2026-05-08T11:46:04.058Z
+    updated_at: 2026-05-08T11:46:04.058Z
+    version: 1
+api.requestbody.reject-proposal-request:
+  id: e6f80079-a4f2-414b-9729-b1a1e280202f
+  path: api.requestbody.reject-proposal-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: RejectProposalRequest
+  description: Request body to reject a merge proposal with a mandatory rejection reason
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/versioning.py
+        symbol: RejectProposalRequest
+  metadata:
+    created_at: 2026-05-08T11:46:04.474Z
+    updated_at: 2026-05-08T11:46:04.474Z
+    version: 1
+api.requestbody.resolve-conflicts-request:
+  id: 50e16d8c-63fb-4ac6-b113-49628030ca5e
+  path: api.requestbody.resolve-conflicts-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: ResolveConflictsRequest
+  description: Request body containing resolution decisions for each conflict in a
+    merge proposal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/versioning.py
+        symbol: ResolveConflictsRequest
+  metadata:
+    created_at: 2026-05-08T11:46:04.900Z
+    updated_at: 2026-05-08T11:46:04.900Z
+    version: 1
+api.requestbody.auto-resolve-conflicts-request:
+  id: dff8f9d9-52c7-4a12-b7cd-a8c88e94747a
+  path: api.requestbody.auto-resolve-conflicts-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: AutoResolveConflictsRequest
+  description: Request body specifying automatic conflict resolution strategy
+    (e.g., accept-ours, accept-theirs)
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/versioning.py
+        symbol: AutoResolveConflictsRequest
+  metadata:
+    created_at: 2026-05-08T11:46:05.337Z
+    updated_at: 2026-05-08T11:46:05.337Z
+    version: 1
+api.requestbody.cycle-check-request:
+  id: a8e45720-a421-49d0-ab4e-3827df9ad9fb
+  path: api.requestbody.cycle-check-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: CycleCheckRequest
+  description: Request body specifying a starting node ID for directed cycle
+    detection in the knowledge graph
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/graph.py
+        symbol: CycleCheckRequest
+  metadata:
+    created_at: 2026-05-08T11:46:32.890Z
+    updated_at: 2026-05-08T11:46:32.890Z
+    version: 1
+api.requestbody.sparqlrequest:
+  id: d67ae73b-06d4-4ace-83dd-6d962850307a
+  path: api.requestbody.sparqlrequest
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: SPARQLRequest
+  description: Request body containing a SPARQL query string with optional result
+    limit for knowledge graph querying
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/graph.py
+        symbol: SPARQLRequest
+  metadata:
+    created_at: 2026-05-08T11:46:33.293Z
+    updated_at: 2026-05-08T11:46:33.293Z
+    version: 1
+api.requestbody.serialization-scope-request:
+  id: 7af4488b-de76-46bc-922b-fac525cc61ed
+  path: api.requestbody.serialization-scope-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: SerializationScopeRequest
+  description: Request body defining the scope (taxonomy IDs, entity types, depth)
+    for a graph serialization export
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/interchange.py
+        symbol: SerializationScopeRequest
+  metadata:
+    created_at: 2026-05-08T11:46:59.822Z
+    updated_at: 2026-05-08T11:46:59.822Z
+    version: 1
+api.requestbody.export-request:
+  id: cc5cb7d3-f452-4c17-915c-c5f9e2f5801e
+  path: api.requestbody.export-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: ExportRequest
+  description: Request body specifying export format (SKOS/OWL/GraphML) and scope
+    for data interchange export
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/interchange.py
+        symbol: ExportRequest
+  metadata:
+    created_at: 2026-05-08T11:47:00.280Z
+    updated_at: 2026-05-08T11:47:00.280Z
+    version: 1
+api.requestbody.reference-search-request:
+  id: aea5c118-7a13-46e5-b006-61d9ad6a8c19
+  path: api.requestbody.reference-search-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: ReferenceSearchRequest
+  description: Request body with a search query and optional source filters for
+    searching external knowledge references
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/reference.py
+        symbol: ReferenceSearchRequest
+  metadata:
+    created_at: 2026-05-08T11:47:13.656Z
+    updated_at: 2026-05-08T11:47:13.656Z
+    version: 1
+api.requestbody.reference-relations-request:
+  id: 72f4de77-c873-462d-a6eb-e64a480bc5f2
+  path: api.requestbody.reference-relations-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: ReferenceRelationsRequest
+  description: Request body specifying a concept URI and relation types to fetch
+    from external reference sources
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/reference.py
+        symbol: ReferenceRelationsRequest
+  metadata:
+    created_at: 2026-05-08T11:47:14.140Z
+    updated_at: 2026-05-08T11:47:14.140Z
+    version: 1
+api.requestbody.extract-request:
+  id: a41ff927-303a-4d6b-83ab-c96488630c19
+  path: api.requestbody.extract-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: ExtractRequest
+  description: Request body specifying text and optional configuration for entity
+    extraction from unstructured text
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/extraction.py
+        symbol: ExtractRequest
+  metadata:
+    created_at: 2026-05-08T11:47:28.885Z
+    updated_at: 2026-05-08T11:47:28.885Z
+    version: 1
+api.requestbody.analyze-text-request:
+  id: f46aaaff-f977-41f7-9c2b-83faf0dae3e3
+  path: api.requestbody.analyze-text-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: AnalyzeTextRequest
+  description: Request body containing text for NLP analysis including entity
+    recognition and relationship detection
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/extraction.py
+        symbol: AnalyzeTextRequest
+  metadata:
+    created_at: 2026-05-08T11:47:29.366Z
+    updated_at: 2026-05-08T11:47:29.366Z
+    version: 1
+api.requestbody.enrich-from-references-request:
+  id: 6f9f8c11-ef26-470b-9af3-3fc0c40ddf08
+  path: api.requestbody.enrich-from-references-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: EnrichFromReferencesRequest
+  description: Request body specifying entity IDs and reference sources for
+    enriching ontology entities from external knowledge
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/extraction.py
+        symbol: EnrichFromReferencesRequest
+  metadata:
+    created_at: 2026-05-08T11:47:29.834Z
+    updated_at: 2026-05-08T11:47:29.834Z
+    version: 1
+api.requestbody.config-section-update-request:
+  id: 6ab6d184-431e-4c7b-8ea3-5c5e6c34d4ea
+  path: api.requestbody.config-section-update-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: ConfigSectionUpdateRequest
+  description: Request body containing key-value pairs to update a specific
+    section of the application configuration
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/admin.py
+        symbol: ConfigSectionUpdateRequest
+  metadata:
+    created_at: 2026-05-08T11:47:36.870Z
+    updated_at: 2026-05-08T11:47:36.870Z
+    version: 1
+api.requestbody.pipeline-configuration-create:
+  id: 169fe0f4-4410-48e6-8515-94ba35085f15
+  path: api.requestbody.pipeline-configuration-create
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: PipelineConfigurationCreate
+  description: Request body to create a new LLM pipeline configuration with
+    provider, model, and parameter settings
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/pipeline.py
+        symbol: PipelineConfigurationCreate
+  metadata:
+    created_at: 2026-05-08T11:47:51.396Z
+    updated_at: 2026-05-08T11:47:51.396Z
+    version: 1
+api.requestbody.pipeline-configuration-update:
+  id: 77c1880a-9c95-4587-b0d1-d40aa8756733
+  path: api.requestbody.pipeline-configuration-update
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: PipelineConfigurationUpdate
+  description: Request body to update an existing LLM pipeline configuration with
+    new provider or model settings
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/pipeline.py
+        symbol: PipelineConfigurationUpdate
+  metadata:
+    created_at: 2026-05-08T11:47:51.876Z
+    updated_at: 2026-05-08T11:47:51.876Z
+    version: 1
+api.requestbody.pipeline-execute-request:
+  id: 76dc6d6b-ca93-49c6-aa0b-116f267f4569
+  path: api.requestbody.pipeline-execute-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: PipelineExecuteRequest
+  description: Request body specifying pipeline ID and input payload to execute an
+    LLM pipeline
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/pipeline.py
+        symbol: PipelineExecuteRequest
+  metadata:
+    created_at: 2026-05-08T11:47:52.352Z
+    updated_at: 2026-05-08T11:47:52.352Z
+    version: 1

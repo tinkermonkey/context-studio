@@ -1,0 +1,10 @@
+id: changeset-1778241266864-3ff75tuu8
+name: wire-api-requestbody-response
+created: 2026-05-08T11:54:26.875Z
+modified: 2026-05-08T11:56:41.254Z
+status: committed
+baseSnapshot: sha256:3e7bbaa8b9a21d2e07a5e36d3c544224eba8fccb6f5f6e090a7a8bdb49d90d3b
+stats:
+  additions: 135
+  modifications: 0
+  deletions: 0

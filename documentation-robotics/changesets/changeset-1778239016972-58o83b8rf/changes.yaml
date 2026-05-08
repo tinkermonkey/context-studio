@@ -1,0 +1,2126 @@
+- type: relationship-add
+  elementId: api.operation.create-taxonomy::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.create-taxonomy
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:31.637Z
+  sequenceNumber: 0
+- type: relationship-add
+  elementId: api.operation.list-taxonomies::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.list-taxonomies
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:31.996Z
+  sequenceNumber: 1
+- type: relationship-add
+  elementId: api.operation.get-taxonomy::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.get-taxonomy
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:32.357Z
+  sequenceNumber: 2
+- type: relationship-add
+  elementId: api.operation.update-taxonomy::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.update-taxonomy
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:32.716Z
+  sequenceNumber: 3
+- type: relationship-add
+  elementId: api.operation.delete-taxonomy::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.delete-taxonomy
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:33.073Z
+  sequenceNumber: 4
+- type: relationship-add
+  elementId: api.operation.create-concept-scheme::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.create-concept-scheme
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:33.448Z
+  sequenceNumber: 5
+- type: relationship-add
+  elementId: api.operation.list-concept-schemes::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.list-concept-schemes
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:33.821Z
+  sequenceNumber: 6
+- type: relationship-add
+  elementId: api.operation.get-concept-scheme::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.get-concept-scheme
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:34.302Z
+  sequenceNumber: 7
+- type: relationship-add
+  elementId: api.operation.update-concept-scheme::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.update-concept-scheme
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:34.770Z
+  sequenceNumber: 8
+- type: relationship-add
+  elementId: api.operation.delete-concept-scheme::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.delete-concept-scheme
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:35.159Z
+  sequenceNumber: 9
+- type: relationship-add
+  elementId: api.operation.create-class::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.create-class
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:35.561Z
+  sequenceNumber: 10
+- type: relationship-add
+  elementId: api.operation.list-classes::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.list-classes
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:35.965Z
+  sequenceNumber: 11
+- type: relationship-add
+  elementId: api.operation.get-class::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.get-class
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:36.368Z
+  sequenceNumber: 12
+- type: relationship-add
+  elementId: api.operation.update-class::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.update-class
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:36.762Z
+  sequenceNumber: 13
+- type: relationship-add
+  elementId: api.operation.move-class::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.move-class
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:37.148Z
+  sequenceNumber: 14
+- type: relationship-add
+  elementId: api.operation.delete-class::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.delete-class
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:37.551Z
+  sequenceNumber: 15
+- type: relationship-add
+  elementId: api.operation.create-relationship::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.create-relationship
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:37.947Z
+  sequenceNumber: 16
+- type: relationship-add
+  elementId: api.operation.list-relationships::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.list-relationships
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:38.330Z
+  sequenceNumber: 17
+- type: relationship-add
+  elementId: api.operation.get-relationship::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.get-relationship
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:38.730Z
+  sequenceNumber: 18
+- type: relationship-add
+  elementId: api.operation.delete-relationship::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.delete-relationship
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:39.124Z
+  sequenceNumber: 19
+- type: relationship-add
+  elementId: api.operation.create-property-definition::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.create-property-definition
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:39.808Z
+  sequenceNumber: 20
+- type: relationship-add
+  elementId: api.operation.list-property-definitions::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.list-property-definitions
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:40.395Z
+  sequenceNumber: 21
+- type: relationship-add
+  elementId: api.operation.get-property-definition::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.get-property-definition
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:40.800Z
+  sequenceNumber: 22
+- type: relationship-add
+  elementId: api.operation.update-property-definition::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.update-property-definition
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:41.209Z
+  sequenceNumber: 23
+- type: relationship-add
+  elementId: api.operation.delete-property-definition::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.delete-property-definition
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:41.612Z
+  sequenceNumber: 24
+- type: relationship-add
+  elementId: api.operation.create-individual::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.create-individual
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:42.021Z
+  sequenceNumber: 25
+- type: relationship-add
+  elementId: api.operation.list-individuals::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.list-individuals
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:42.424Z
+  sequenceNumber: 26
+- type: relationship-add
+  elementId: api.operation.get-individual::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.get-individual
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:42.829Z
+  sequenceNumber: 27
+- type: relationship-add
+  elementId: api.operation.update-individual::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.update-individual
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:43.247Z
+  sequenceNumber: 28
+- type: relationship-add
+  elementId: api.operation.delete-individual::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.delete-individual
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:43.677Z
+  sequenceNumber: 29
+- type: relationship-add
+  elementId: api.operation.add-parent-class-to-individual::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.add-parent-class-to-individual
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:44.084Z
+  sequenceNumber: 30
+- type: relationship-add
+  elementId: api.operation.remove-parent-class-from-individual::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.remove-parent-class-from-individual
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:44.503Z
+  sequenceNumber: 31
+- type: relationship-add
+  elementId: api.operation.reorder-individual-classes::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.reorder-individual-classes
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:44.917Z
+  sequenceNumber: 32
+- type: relationship-add
+  elementId: api.operation.get-individual-inherited-properties::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.get-individual-inherited-properties
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:45.321Z
+  sequenceNumber: 33
+- type: relationship-add
+  elementId: api.operation.build-knowledge-graph::references::application.applicationservice.graph-analysis-service
+  layerName: api
+  after:
+    source: api.operation.build-knowledge-graph
+    target: application.applicationservice.graph-analysis-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:45.735Z
+  sequenceNumber: 34
+- type: relationship-add
+  elementId: api.operation.get-graph-metrics::references::application.applicationservice.graph-analysis-service
+  layerName: api
+  after:
+    source: api.operation.get-graph-metrics
+    target: application.applicationservice.graph-analysis-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:46.191Z
+  sequenceNumber: 35
+- type: relationship-add
+  elementId: api.operation.get-degree-distribution::references::application.applicationservice.graph-analysis-service
+  layerName: api
+  after:
+    source: api.operation.get-degree-distribution
+    target: application.applicationservice.graph-analysis-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:46.617Z
+  sequenceNumber: 36
+- type: relationship-add
+  elementId: api.operation.get-shortest-path::references::application.applicationservice.graph-analysis-service
+  layerName: api
+  after:
+    source: api.operation.get-shortest-path
+    target: application.applicationservice.graph-analysis-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:47.044Z
+  sequenceNumber: 37
+- type: relationship-add
+  elementId: api.operation.get-all-paths::references::application.applicationservice.graph-analysis-service
+  layerName: api
+  after:
+    source: api.operation.get-all-paths
+    target: application.applicationservice.graph-analysis-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:47.486Z
+  sequenceNumber: 38
+- type: relationship-add
+  elementId: api.operation.get-centrality::references::application.applicationservice.graph-analysis-service
+  layerName: api
+  after:
+    source: api.operation.get-centrality
+    target: application.applicationservice.graph-analysis-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:47.931Z
+  sequenceNumber: 39
+- type: relationship-add
+  elementId: api.operation.get-communities::references::application.applicationservice.graph-analysis-service
+  layerName: api
+  after:
+    source: api.operation.get-communities
+    target: application.applicationservice.graph-analysis-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:48.383Z
+  sequenceNumber: 40
+- type: relationship-add
+  elementId: api.operation.get-neighbors::references::application.applicationservice.graph-analysis-service
+  layerName: api
+  after:
+    source: api.operation.get-neighbors
+    target: application.applicationservice.graph-analysis-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:48.822Z
+  sequenceNumber: 41
+- type: relationship-add
+  elementId: api.operation.get-subgraph::references::application.applicationservice.graph-analysis-service
+  layerName: api
+  after:
+    source: api.operation.get-subgraph
+    target: application.applicationservice.graph-analysis-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:49.283Z
+  sequenceNumber: 42
+- type: relationship-add
+  elementId: api.operation.get-subgraph-by-depth::references::application.applicationservice.graph-analysis-service
+  layerName: api
+  after:
+    source: api.operation.get-subgraph-by-depth
+    target: application.applicationservice.graph-analysis-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:49.730Z
+  sequenceNumber: 43
+- type: relationship-add
+  elementId: api.operation.check-cycle::references::application.applicationservice.graph-analysis-service
+  layerName: api
+  after:
+    source: api.operation.check-cycle
+    target: application.applicationservice.graph-analysis-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:50.166Z
+  sequenceNumber: 44
+- type: relationship-add
+  elementId: api.operation.execute-sparql::references::application.applicationservice.graph-analysis-service
+  layerName: api
+  after:
+    source: api.operation.execute-sparql
+    target: application.applicationservice.graph-analysis-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:50.603Z
+  sequenceNumber: 45
+- type: relationship-add
+  elementId: api.operation.get-rdf-triples::references::application.applicationservice.graph-analysis-service
+  layerName: api
+  after:
+    source: api.operation.get-rdf-triples
+    target: application.applicationservice.graph-analysis-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:51.040Z
+  sequenceNumber: 46
+- type: relationship-add
+  elementId: api.operation.get-rdf-triple-count::references::application.applicationservice.graph-analysis-service
+  layerName: api
+  after:
+    source: api.operation.get-rdf-triple-count
+    target: application.applicationservice.graph-analysis-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:51.597Z
+  sequenceNumber: 47
+- type: relationship-add
+  elementId: api.operation.extract-entities::references::application.applicationservice.extraction-service
+  layerName: api
+  after:
+    source: api.operation.extract-entities
+    target: application.applicationservice.extraction-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:52.514Z
+  sequenceNumber: 48
+- type: relationship-add
+  elementId: api.operation.analyze-text::references::application.applicationservice.extraction-service
+  layerName: api
+  after:
+    source: api.operation.analyze-text
+    target: application.applicationservice.extraction-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:53.021Z
+  sequenceNumber: 49
+- type: relationship-add
+  elementId: api.operation.enrich-from-references::references::application.applicationservice.extraction-service
+  layerName: api
+  after:
+    source: api.operation.enrich-from-references
+    target: application.applicationservice.extraction-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:53.463Z
+  sequenceNumber: 50
+- type: relationship-add
+  elementId: api.operation.get-system-health::references::application.applicationservice.admin-service
+  layerName: api
+  after:
+    source: api.operation.get-system-health
+    target: application.applicationservice.admin-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:53.922Z
+  sequenceNumber: 51
+- type: relationship-add
+  elementId: api.operation.get-database-health::references::application.applicationservice.admin-service
+  layerName: api
+  after:
+    source: api.operation.get-database-health
+    target: application.applicationservice.admin-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:54.375Z
+  sequenceNumber: 52
+- type: relationship-add
+  elementId: api.operation.get-service-metrics::references::application.applicationservice.admin-service
+  layerName: api
+  after:
+    source: api.operation.get-service-metrics
+    target: application.applicationservice.admin-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:54.847Z
+  sequenceNumber: 53
+- type: relationship-add
+  elementId: api.operation.get-embedding-health::references::application.applicationservice.admin-service
+  layerName: api
+  after:
+    source: api.operation.get-embedding-health
+    target: application.applicationservice.admin-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:55.317Z
+  sequenceNumber: 54
+- type: relationship-add
+  elementId: api.operation.get-nlp-health::references::application.applicationservice.admin-service
+  layerName: api
+  after:
+    source: api.operation.get-nlp-health
+    target: application.applicationservice.admin-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:55.772Z
+  sequenceNumber: 55
+- type: relationship-add
+  elementId: api.operation.get-background-tasks-summary::references::application.applicationservice.admin-service
+  layerName: api
+  after:
+    source: api.operation.get-background-tasks-summary
+    target: application.applicationservice.admin-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:56.242Z
+  sequenceNumber: 56
+- type: relationship-add
+  elementId: api.operation.get-configuration::references::application.applicationservice.admin-service
+  layerName: api
+  after:
+    source: api.operation.get-configuration
+    target: application.applicationservice.admin-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:56.712Z
+  sequenceNumber: 57
+- type: relationship-add
+  elementId: api.operation.update-configuration-section::references::application.applicationservice.admin-service
+  layerName: api
+  after:
+    source: api.operation.update-configuration-section
+    target: application.applicationservice.admin-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:57.196Z
+  sequenceNumber: 58
+- type: relationship-add
+  elementId: api.operation.reset-configuration::references::application.applicationservice.admin-service
+  layerName: api
+  after:
+    source: api.operation.reset-configuration
+    target: application.applicationservice.admin-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:57.769Z
+  sequenceNumber: 59
+- type: relationship-add
+  elementId: api.operation.list-background-tasks::references::application.applicationservice.admin-service
+  layerName: api
+  after:
+    source: api.operation.list-background-tasks
+    target: application.applicationservice.admin-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:58.351Z
+  sequenceNumber: 60
+- type: relationship-add
+  elementId: api.operation.get-background-task::references::application.applicationservice.admin-service
+  layerName: api
+  after:
+    source: api.operation.get-background-task
+    target: application.applicationservice.admin-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:58.824Z
+  sequenceNumber: 61
+- type: relationship-add
+  elementId: api.operation.get-reference-status::references::application.applicationservice.extraction-service
+  layerName: api
+  after:
+    source: api.operation.get-reference-status
+    target: application.applicationservice.extraction-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:59.285Z
+  sequenceNumber: 62
+- type: relationship-add
+  elementId: api.operation.search-references::references::application.applicationservice.extraction-service
+  layerName: api
+  after:
+    source: api.operation.search-references
+    target: application.applicationservice.extraction-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:18:59.762Z
+  sequenceNumber: 63
+- type: relationship-add
+  elementId: api.operation.get-reference-relations::references::application.applicationservice.extraction-service
+  layerName: api
+  after:
+    source: api.operation.get-reference-relations
+    target: application.applicationservice.extraction-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:00.236Z
+  sequenceNumber: 64
+- type: relationship-add
+  elementId: api.operation.export-ontology::references::application.applicationservice.import-run-service
+  layerName: api
+  after:
+    source: api.operation.export-ontology
+    target: application.applicationservice.import-run-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:00.711Z
+  sequenceNumber: 65
+- type: relationship-add
+  elementId: api.operation.import-ontology::references::application.applicationservice.import-run-service
+  layerName: api
+  after:
+    source: api.operation.import-ontology
+    target: application.applicationservice.import-run-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:01.188Z
+  sequenceNumber: 66
+- type: relationship-add
+  elementId: api.operation.list-import-runs::references::application.applicationservice.import-run-service
+  layerName: api
+  after:
+    source: api.operation.list-import-runs
+    target: application.applicationservice.import-run-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:01.689Z
+  sequenceNumber: 67
+- type: relationship-add
+  elementId: api.operation.get-import-run::references::application.applicationservice.import-run-service
+  layerName: api
+  after:
+    source: api.operation.get-import-run
+    target: application.applicationservice.import-run-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:02.170Z
+  sequenceNumber: 68
+- type: relationship-add
+  elementId: api.operation.get-run-change-events::references::application.applicationservice.import-run-service
+  layerName: api
+  after:
+    source: api.operation.get-run-change-events
+    target: application.applicationservice.import-run-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:02.664Z
+  sequenceNumber: 69
+- type: relationship-add
+  elementId: api.operation.get-change-history-all::references::application.applicationservice.versioning-service
+  layerName: api
+  after:
+    source: api.operation.get-change-history-all
+    target: application.applicationservice.versioning-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:03.191Z
+  sequenceNumber: 70
+- type: relationship-add
+  elementId: api.operation.get-change-history-by-entity::references::application.applicationservice.versioning-service
+  layerName: api
+  after:
+    source: api.operation.get-change-history-by-entity
+    target: application.applicationservice.versioning-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:03.678Z
+  sequenceNumber: 71
+- type: relationship-add
+  elementId: api.operation.list-entity-versions::references::application.applicationservice.versioning-service
+  layerName: api
+  after:
+    source: api.operation.list-entity-versions
+    target: application.applicationservice.versioning-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:04.516Z
+  sequenceNumber: 72
+- type: relationship-add
+  elementId: api.operation.get-entity-version::references::application.applicationservice.versioning-service
+  layerName: api
+  after:
+    source: api.operation.get-entity-version
+    target: application.applicationservice.versioning-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:05.142Z
+  sequenceNumber: 73
+- type: relationship-add
+  elementId: api.operation.create-changeset::references::application.applicationservice.versioning-service
+  layerName: api
+  after:
+    source: api.operation.create-changeset
+    target: application.applicationservice.versioning-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:05.653Z
+  sequenceNumber: 74
+- type: relationship-add
+  elementId: api.operation.get-changeset::references::application.applicationservice.versioning-service
+  layerName: api
+  after:
+    source: api.operation.get-changeset
+    target: application.applicationservice.versioning-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:06.161Z
+  sequenceNumber: 75
+- type: relationship-add
+  elementId: api.operation.stage-changeset::references::application.applicationservice.versioning-service
+  layerName: api
+  after:
+    source: api.operation.stage-changeset
+    target: application.applicationservice.versioning-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:06.650Z
+  sequenceNumber: 76
+- type: relationship-add
+  elementId: api.operation.submit-proposal::references::application.applicationservice.versioning-service
+  layerName: api
+  after:
+    source: api.operation.submit-proposal
+    target: application.applicationservice.versioning-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:07.150Z
+  sequenceNumber: 77
+- type: relationship-add
+  elementId: api.operation.approve-proposal::references::application.applicationservice.versioning-service
+  layerName: api
+  after:
+    source: api.operation.approve-proposal
+    target: application.applicationservice.versioning-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:07.652Z
+  sequenceNumber: 78
+- type: relationship-add
+  elementId: api.operation.reject-proposal::references::application.applicationservice.versioning-service
+  layerName: api
+  after:
+    source: api.operation.reject-proposal
+    target: application.applicationservice.versioning-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:08.164Z
+  sequenceNumber: 79
+- type: relationship-add
+  elementId: api.operation.detect-conflicts::references::application.applicationservice.versioning-service
+  layerName: api
+  after:
+    source: api.operation.detect-conflicts
+    target: application.applicationservice.versioning-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:08.664Z
+  sequenceNumber: 80
+- type: relationship-add
+  elementId: api.operation.auto-resolve-conflicts::references::application.applicationservice.versioning-service
+  layerName: api
+  after:
+    source: api.operation.auto-resolve-conflicts
+    target: application.applicationservice.versioning-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:09.186Z
+  sequenceNumber: 81
+- type: relationship-add
+  elementId: api.operation.resolve-conflicts::references::application.applicationservice.versioning-service
+  layerName: api
+  after:
+    source: api.operation.resolve-conflicts
+    target: application.applicationservice.versioning-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:09.727Z
+  sequenceNumber: 82
+- type: relationship-add
+  elementId: api.operation.merge-proposal::references::application.applicationservice.versioning-service
+  layerName: api
+  after:
+    source: api.operation.merge-proposal
+    target: application.applicationservice.versioning-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:10.249Z
+  sequenceNumber: 83
+- type: relationship-add
+  elementId: api.operation.get-sync-status::references::application.applicationservice.versioning-service
+  layerName: api
+  after:
+    source: api.operation.get-sync-status
+    target: application.applicationservice.versioning-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:10.780Z
+  sequenceNumber: 84
+- type: relationship-add
+  elementId: api.operation.push-changes::references::application.applicationservice.versioning-service
+  layerName: api
+  after:
+    source: api.operation.push-changes
+    target: application.applicationservice.versioning-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:11.299Z
+  sequenceNumber: 85
+- type: relationship-add
+  elementId: api.operation.pull-changes::references::application.applicationservice.versioning-service
+  layerName: api
+  after:
+    source: api.operation.pull-changes
+    target: application.applicationservice.versioning-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:11.812Z
+  sequenceNumber: 86
+- type: relationship-add
+  elementId: api.operation.create-pipeline-configuration::references::application.applicationservice.pipeline-service
+  layerName: api
+  after:
+    source: api.operation.create-pipeline-configuration
+    target: application.applicationservice.pipeline-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:12.322Z
+  sequenceNumber: 87
+- type: relationship-add
+  elementId: api.operation.list-pipeline-configurations::references::application.applicationservice.pipeline-service
+  layerName: api
+  after:
+    source: api.operation.list-pipeline-configurations
+    target: application.applicationservice.pipeline-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:12.812Z
+  sequenceNumber: 88
+- type: relationship-add
+  elementId: api.operation.get-pipeline-configuration::references::application.applicationservice.pipeline-service
+  layerName: api
+  after:
+    source: api.operation.get-pipeline-configuration
+    target: application.applicationservice.pipeline-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:13.331Z
+  sequenceNumber: 89
+- type: relationship-add
+  elementId: api.operation.update-pipeline-configuration::references::application.applicationservice.pipeline-service
+  layerName: api
+  after:
+    source: api.operation.update-pipeline-configuration
+    target: application.applicationservice.pipeline-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:13.841Z
+  sequenceNumber: 90
+- type: relationship-add
+  elementId: api.operation.delete-pipeline-configuration::references::application.applicationservice.pipeline-service
+  layerName: api
+  after:
+    source: api.operation.delete-pipeline-configuration
+    target: application.applicationservice.pipeline-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:14.331Z
+  sequenceNumber: 91
+- type: relationship-add
+  elementId: api.operation.execute-pipeline::references::application.applicationservice.pipeline-service
+  layerName: api
+  after:
+    source: api.operation.execute-pipeline
+    target: application.applicationservice.pipeline-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:14.861Z
+  sequenceNumber: 92
+- type: relationship-add
+  elementId: api.operation.get-pipeline-executions::references::application.applicationservice.pipeline-service
+  layerName: api
+  after:
+    source: api.operation.get-pipeline-executions
+    target: application.applicationservice.pipeline-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: shared source file
+  timestamp: 2026-05-08T11:19:15.378Z
+  sequenceNumber: 93
+- type: relationship-add
+  elementId: application.applicationcomponent.skos-interchange-adapter::realizes::application.applicationservice.import-run-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.skos-interchange-adapter
+    target: application.applicationservice.import-run-service
+    predicate: realizes
+    layer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: architectural role
+  timestamp: 2026-05-08T11:19:24.351Z
+  sequenceNumber: 94
+- type: relationship-add
+  elementId: application.applicationcomponent.owl-interchange-adapter::realizes::application.applicationservice.import-run-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.owl-interchange-adapter
+    target: application.applicationservice.import-run-service
+    predicate: realizes
+    layer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: architectural role
+  timestamp: 2026-05-08T11:19:24.840Z
+  sequenceNumber: 95
+- type: relationship-add
+  elementId: application.applicationcomponent.graph-ml-interchange-adapter::realizes::application.applicationservice.import-run-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.graph-ml-interchange-adapter
+    target: application.applicationservice.import-run-service
+    predicate: realizes
+    layer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: architectural role
+  timestamp: 2026-05-08T11:19:25.323Z
+  sequenceNumber: 96
+- type: relationship-add
+  elementId: application.applicationcomponent.spa-cy-nlp-processor::realizes::application.applicationservice.extraction-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.spa-cy-nlp-processor
+    target: application.applicationservice.extraction-service
+    predicate: realizes
+    layer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: architectural role
+  timestamp: 2026-05-08T11:19:25.798Z
+  sequenceNumber: 97
+- type: relationship-add
+  elementId: application.applicationcomponent.s3-sync-adapter::realizes::application.applicationservice.versioning-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.s3-sync-adapter
+    target: application.applicationservice.versioning-service
+    predicate: realizes
+    layer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: architectural role
+  timestamp: 2026-05-08T11:19:26.272Z
+  sequenceNumber: 98
+- type: relationship-add
+  elementId: application.applicationcomponent.duck-db-sync-adapter::realizes::application.applicationservice.versioning-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.duck-db-sync-adapter
+    target: application.applicationservice.versioning-service
+    predicate: realizes
+    layer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: architectural role
+  timestamp: 2026-05-08T11:19:26.750Z
+  sequenceNumber: 99
+- type: relationship-add
+  elementId: application.applicationcomponent.concept-net-reference-source::realizes::application.applicationservice.extraction-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.concept-net-reference-source
+    target: application.applicationservice.extraction-service
+    predicate: realizes
+    layer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: architectural role
+  timestamp: 2026-05-08T11:19:27.242Z
+  sequenceNumber: 100
+- type: relationship-add
+  elementId: application.applicationcomponent.dbpedia-reference-source::realizes::application.applicationservice.extraction-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.dbpedia-reference-source
+    target: application.applicationservice.extraction-service
+    predicate: realizes
+    layer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: architectural role
+  timestamp: 2026-05-08T11:19:27.731Z
+  sequenceNumber: 101
+- type: relationship-add
+  elementId: application.applicationcomponent.wikidata-reference-source::realizes::application.applicationservice.extraction-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.wikidata-reference-source
+    target: application.applicationservice.extraction-service
+    predicate: realizes
+    layer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: architectural role
+  timestamp: 2026-05-08T11:19:28.226Z
+  sequenceNumber: 102
+- type: relationship-add
+  elementId: application.applicationcomponent.schema-org-reference-source::realizes::application.applicationservice.extraction-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.schema-org-reference-source
+    target: application.applicationservice.extraction-service
+    predicate: realizes
+    layer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: architectural role
+  timestamp: 2026-05-08T11:19:29.032Z
+  sequenceNumber: 103
+- type: relationship-add
+  elementId: data-store.storedlogic.individual-classes-table::serves::application.applicationservice.ontology-service
+  layerName: data-store
+  after:
+    source: data-store.storedlogic.individual-classes-table
+    target: application.applicationservice.ontology-service
+    predicate: serves
+    layer: data-store
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: bounded context ownership
+  timestamp: 2026-05-08T11:20:16.867Z
+  sequenceNumber: 104
+- type: relationship-add
+  elementId: data-store.storedlogic.property-definitions-table::serves::application.applicationservice.ontology-service
+  layerName: data-store
+  after:
+    source: data-store.storedlogic.property-definitions-table
+    target: application.applicationservice.ontology-service
+    predicate: serves
+    layer: data-store
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: bounded context ownership
+  timestamp: 2026-05-08T11:20:17.454Z
+  sequenceNumber: 105
+- type: relationship-add
+  elementId: data-store.storedlogic.extraction-results-table::serves::application.applicationservice.extraction-service
+  layerName: data-store
+  after:
+    source: data-store.storedlogic.extraction-results-table
+    target: application.applicationservice.extraction-service
+    predicate: serves
+    layer: data-store
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: bounded context ownership
+  timestamp: 2026-05-08T11:20:18.028Z
+  sequenceNumber: 106
+- type: relationship-add
+  elementId: data-store.storedlogic.entity-versions-table::serves::application.applicationservice.versioning-service
+  layerName: data-store
+  after:
+    source: data-store.storedlogic.entity-versions-table
+    target: application.applicationservice.versioning-service
+    predicate: serves
+    layer: data-store
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: bounded context ownership
+  timestamp: 2026-05-08T11:20:18.605Z
+  sequenceNumber: 107
+- type: relationship-add
+  elementId: data-store.storedlogic.changeset-events-table::serves::application.applicationservice.versioning-service
+  layerName: data-store
+  after:
+    source: data-store.storedlogic.changeset-events-table
+    target: application.applicationservice.versioning-service
+    predicate: serves
+    layer: data-store
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: bounded context ownership
+  timestamp: 2026-05-08T11:20:19.188Z
+  sequenceNumber: 108
+- type: relationship-add
+  elementId: data-store.storedlogic.proposals-table::serves::application.applicationservice.versioning-service
+  layerName: data-store
+  after:
+    source: data-store.storedlogic.proposals-table
+    target: application.applicationservice.versioning-service
+    predicate: serves
+    layer: data-store
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: bounded context ownership
+  timestamp: 2026-05-08T11:20:19.765Z
+  sequenceNumber: 109
+- type: relationship-add
+  elementId: data-store.storedlogic.conflict-resolutions-table::serves::application.applicationservice.versioning-service
+  layerName: data-store
+  after:
+    source: data-store.storedlogic.conflict-resolutions-table
+    target: application.applicationservice.versioning-service
+    predicate: serves
+    layer: data-store
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: bounded context ownership
+  timestamp: 2026-05-08T11:20:20.390Z
+  sequenceNumber: 110
+- type: relationship-add
+  elementId: data-store.storedlogic.pipeline-executions-table::serves::application.applicationservice.pipeline-service
+  layerName: data-store
+  after:
+    source: data-store.storedlogic.pipeline-executions-table
+    target: application.applicationservice.pipeline-service
+    predicate: serves
+    layer: data-store
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: bounded context ownership
+  timestamp: 2026-05-08T11:20:21.071Z
+  sequenceNumber: 111
+- type: relationship-add
+  elementId: data-store.storedlogic.changesets-table::serves::application.applicationservice.versioning-service
+  layerName: data-store
+  after:
+    source: data-store.storedlogic.changesets-table
+    target: application.applicationservice.versioning-service
+    predicate: serves
+    layer: data-store
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: bounded context ownership
+  timestamp: 2026-05-08T11:20:22.080Z
+  sequenceNumber: 112
+- type: relationship-add
+  elementId: data-store.storedlogic.import-runs-table::serves::application.applicationservice.import-run-service
+  layerName: data-store
+  after:
+    source: data-store.storedlogic.import-runs-table
+    target: application.applicationservice.import-run-service
+    predicate: serves
+    layer: data-store
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: bounded context ownership
+  timestamp: 2026-05-08T11:20:22.781Z
+  sequenceNumber: 113
+- type: relationship-add
+  elementId: data-store.storedlogic.pipeline-configurations-table::serves::application.applicationservice.pipeline-service
+  layerName: data-store
+  after:
+    source: data-store.storedlogic.pipeline-configurations-table
+    target: application.applicationservice.pipeline-service
+    predicate: serves
+    layer: data-store
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: bounded context ownership
+  timestamp: 2026-05-08T11:20:23.365Z
+  sequenceNumber: 114
+- type: relationship-add
+  elementId: data-store.storedlogic.sqlite-vec-cosine-similarity::serves::application.applicationservice.extraction-service
+  layerName: data-store
+  after:
+    source: data-store.storedlogic.sqlite-vec-cosine-similarity
+    target: application.applicationservice.extraction-service
+    predicate: serves
+    layer: data-store
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: cosine similarity function serves extraction service embedding search
+  timestamp: 2026-05-08T11:21:26.821Z
+  sequenceNumber: 115
+- type: relationship-add
+  elementId: ux.view.taxonomies-view::serves::application.applicationservice.ontology-service
+  layerName: ux
+  after:
+    source: ux.view.taxonomies-view
+    target: application.applicationservice.ontology-service
+    predicate: serves
+    layer: ux
+    targetLayer: application
+    category: structural
+  timestamp: 2026-05-08T11:21:52.289Z
+  sequenceNumber: 116
+- type: relationship-add
+  elementId: ux.view.concept-schemes-view::serves::application.applicationservice.ontology-service
+  layerName: ux
+  after:
+    source: ux.view.concept-schemes-view
+    target: application.applicationservice.ontology-service
+    predicate: serves
+    layer: ux
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: UI view backed by application service
+  timestamp: 2026-05-08T11:21:59.326Z
+  sequenceNumber: 117
+- type: relationship-add
+  elementId: ux.view.classes-view::serves::application.applicationservice.ontology-service
+  layerName: ux
+  after:
+    source: ux.view.classes-view
+    target: application.applicationservice.ontology-service
+    predicate: serves
+    layer: ux
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: UI view backed by application service
+  timestamp: 2026-05-08T11:21:59.989Z
+  sequenceNumber: 118
+- type: relationship-add
+  elementId: ux.view.individuals-view::serves::application.applicationservice.ontology-service
+  layerName: ux
+  after:
+    source: ux.view.individuals-view
+    target: application.applicationservice.ontology-service
+    predicate: serves
+    layer: ux
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: UI view backed by application service
+  timestamp: 2026-05-08T11:22:00.645Z
+  sequenceNumber: 119
+- type: relationship-add
+  elementId: ux.view.properties-view::serves::application.applicationservice.ontology-service
+  layerName: ux
+  after:
+    source: ux.view.properties-view
+    target: application.applicationservice.ontology-service
+    predicate: serves
+    layer: ux
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: UI view backed by application service
+  timestamp: 2026-05-08T11:22:01.298Z
+  sequenceNumber: 120
+- type: relationship-add
+  elementId: ux.view.relationships-view::serves::application.applicationservice.ontology-service
+  layerName: ux
+  after:
+    source: ux.view.relationships-view
+    target: application.applicationservice.ontology-service
+    predicate: serves
+    layer: ux
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: UI view backed by application service
+  timestamp: 2026-05-08T11:22:01.964Z
+  sequenceNumber: 121
+- type: relationship-add
+  elementId: ux.view.interchange-view::serves::application.applicationservice.import-run-service
+  layerName: ux
+  after:
+    source: ux.view.interchange-view
+    target: application.applicationservice.import-run-service
+    predicate: serves
+    layer: ux
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: UI view backed by application service
+  timestamp: 2026-05-08T11:22:02.571Z
+  sequenceNumber: 122
+- type: relationship-add
+  elementId: navigation.route.taxonomies-route::maps-to::ux.view.taxonomies-view
+  layerName: navigation
+  after:
+    source: navigation.route.taxonomies-route
+    target: ux.view.taxonomies-view
+    predicate: maps-to
+    layer: navigation
+    targetLayer: ux
+    category: structural
+  timestamp: 2026-05-08T11:22:06.427Z
+  sequenceNumber: 123
+- type: relationship-add
+  elementId: navigation.route.concept-schemes-route::maps-to::ux.view.concept-schemes-view
+  layerName: navigation
+  after:
+    source: navigation.route.concept-schemes-route
+    target: ux.view.concept-schemes-view
+    predicate: maps-to
+    layer: navigation
+    targetLayer: ux
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: route maps to corresponding view
+  timestamp: 2026-05-08T11:22:11.926Z
+  sequenceNumber: 124
+- type: relationship-add
+  elementId: navigation.route.classes-route::maps-to::ux.view.classes-view
+  layerName: navigation
+  after:
+    source: navigation.route.classes-route
+    target: ux.view.classes-view
+    predicate: maps-to
+    layer: navigation
+    targetLayer: ux
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: route maps to corresponding view
+  timestamp: 2026-05-08T11:22:12.618Z
+  sequenceNumber: 125
+- type: relationship-add
+  elementId: navigation.route.individuals-route::maps-to::ux.view.individuals-view
+  layerName: navigation
+  after:
+    source: navigation.route.individuals-route
+    target: ux.view.individuals-view
+    predicate: maps-to
+    layer: navigation
+    targetLayer: ux
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: route maps to corresponding view
+  timestamp: 2026-05-08T11:22:13.280Z
+  sequenceNumber: 126
+- type: relationship-add
+  elementId: navigation.route.properties-route::maps-to::ux.view.properties-view
+  layerName: navigation
+  after:
+    source: navigation.route.properties-route
+    target: ux.view.properties-view
+    predicate: maps-to
+    layer: navigation
+    targetLayer: ux
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: route maps to corresponding view
+  timestamp: 2026-05-08T11:22:13.947Z
+  sequenceNumber: 127
+- type: relationship-add
+  elementId: navigation.route.relationships-route::maps-to::ux.view.relationships-view
+  layerName: navigation
+  after:
+    source: navigation.route.relationships-route
+    target: ux.view.relationships-view
+    predicate: maps-to
+    layer: navigation
+    targetLayer: ux
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: route maps to corresponding view
+  timestamp: 2026-05-08T11:22:14.609Z
+  sequenceNumber: 128
+- type: relationship-add
+  elementId: navigation.route.interchange-route::maps-to::ux.view.interchange-view
+  layerName: navigation
+  after:
+    source: navigation.route.interchange-route
+    target: ux.view.interchange-view
+    predicate: maps-to
+    layer: navigation
+    targetLayer: ux
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: route maps to corresponding view
+  timestamp: 2026-05-08T11:22:15.275Z
+  sequenceNumber: 129
+- type: relationship-add
+  elementId: ux.view.datasets-view::serves::application.applicationservice.ontology-service
+  layerName: ux
+  after:
+    source: ux.view.datasets-view
+    target: application.applicationservice.ontology-service
+    predicate: serves
+    layer: ux
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: medium
+      basis: datasets view manages ontology data
+  timestamp: 2026-05-08T11:22:27.859Z
+  sequenceNumber: 130
+- type: relationship-add
+  elementId: ux.view.rag-experiments-view::serves::application.applicationservice.extraction-service
+  layerName: ux
+  after:
+    source: ux.view.rag-experiments-view
+    target: application.applicationservice.extraction-service
+    predicate: serves
+    layer: ux
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: RAG experiments UI backed by extraction/pipeline services
+  timestamp: 2026-05-08T11:22:28.519Z
+  sequenceNumber: 131
+- type: relationship-add
+  elementId: ux.view.configuration-view::serves::application.applicationservice.admin-service
+  layerName: ux
+  after:
+    source: ux.view.configuration-view
+    target: application.applicationservice.admin-service
+    predicate: serves
+    layer: ux
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: configuration view backed by admin service
+  timestamp: 2026-05-08T11:22:29.180Z
+  sequenceNumber: 132
+- type: relationship-add
+  elementId: ux.view.admin-view::serves::application.applicationservice.admin-service
+  layerName: ux
+  after:
+    source: ux.view.admin-view
+    target: application.applicationservice.admin-service
+    predicate: serves
+    layer: ux
+    targetLayer: application
+    category: structural
+    properties:
+      source_provenance: inferred
+      confidence: high
+      basis: admin view backed by admin service
+  timestamp: 2026-05-08T11:22:30.077Z
+  sequenceNumber: 133

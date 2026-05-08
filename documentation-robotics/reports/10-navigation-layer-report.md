@@ -14,11 +14,11 @@ Application routing, navigation flows, and page structures.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 10    |
-| Intra-Layer Relationships | 8     |
-| Inter-Layer Relationships | 13    |
-| Inbound Relationships     | 5     |
-| Outbound Relationships    | 8     |
+| Elements                  | 13    |
+| Intra-Layer Relationships | 4     |
+| Inter-Layer Relationships | 15    |
+| Inbound Relationships     | 4     |
+| Outbound Relationships    | 11    |
 
 **Cross-Layer References**:
 
@@ -33,21 +33,20 @@ flowchart LR
     navigation_navigationflow_ontology_hierarchy_flow["Ontology Hierarchy Flow"]
     navigation_route_admin_route["Admin Route"]
     navigation_route_app_root_route["App Root Route"]
+    navigation_route_classes_route["Classes Route"]
+    navigation_route_concept_schemes_route["Concept Schemes Route"]
     navigation_route_configuration_route["Configuration Route"]
     navigation_route_datasets_route["Datasets Route"]
-    navigation_route_domains_route["Domains Route"]
-    navigation_route_layers_route["Layers Route"]
-    navigation_route_predicates_route["Predicates Route"]
+    navigation_route_individuals_route["Individuals Route"]
+    navigation_route_interchange_route["Interchange Route"]
+    navigation_route_properties_route["Properties Route"]
     navigation_route_rag_experiments_route["RAG Experiments Route"]
-    navigation_route_terms_route["Terms Route"]
+    navigation_route_relationships_route["Relationships Route"]
+    navigation_route_taxonomies_route["Taxonomies Route"]
     navigation_route_app_root_route -->|navigates-to| navigation_route_admin_route
     navigation_route_app_root_route -->|navigates-to| navigation_route_configuration_route
     navigation_route_app_root_route -->|navigates-to| navigation_route_datasets_route
-    navigation_route_app_root_route -->|navigates-to| navigation_route_domains_route
-    navigation_route_app_root_route -->|navigates-to| navigation_route_layers_route
-    navigation_route_app_root_route -->|navigates-to| navigation_route_predicates_route
     navigation_route_app_root_route -->|navigates-to| navigation_route_rag_experiments_route
-    navigation_route_app_root_route -->|navigates-to| navigation_route_terms_route
   end
 ```
 
@@ -81,15 +80,17 @@ flowchart TB
 | `apm.metricinstrument.monitors.navigation.route` | `apm.metricinstrument.llm-execution-tracker`       | `navigation.route.rag-experiments-route`            | `navigation` | `monitors` | many-to-many | medium   |
 | `apm.metricinstrument.monitors.navigation.route` | `apm.metricinstrument.rag-processing-time`         | `navigation.route.rag-experiments-route`            | `navigation` | `monitors` | many-to-many | medium   |
 | `apm.span.monitors.navigation.navigationflow`    | `apm.span.api-request-span`                        | `navigation.navigationflow.ontology-hierarchy-flow` | `navigation` | `monitors` | many-to-many | medium   |
-| `apm.span.monitors.navigation.route`             | `apm.span.database-query-span`                     | `navigation.route.layers-route`                     | `navigation` | `monitors` | many-to-many | medium   |
 | `navigation.route.maps-to.ux.view`               | `navigation.route.admin-route`                     | `ux.view.admin-view`                                | `ux`         | `maps-to`  | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`               | `navigation.route.classes-route`                   | `ux.view.classes-view`                              | `ux`         | `maps-to`  | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`               | `navigation.route.concept-schemes-route`           | `ux.view.concept-schemes-view`                      | `ux`         | `maps-to`  | many-to-many | medium   |
 | `navigation.route.maps-to.ux.view`               | `navigation.route.configuration-route`             | `ux.view.configuration-view`                        | `ux`         | `maps-to`  | many-to-many | medium   |
 | `navigation.route.maps-to.ux.view`               | `navigation.route.datasets-route`                  | `ux.view.datasets-view`                             | `ux`         | `maps-to`  | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`               | `navigation.route.domains-route`                   | `ux.view.domains-view`                              | `ux`         | `maps-to`  | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`               | `navigation.route.layers-route`                    | `ux.view.layers-view`                               | `ux`         | `maps-to`  | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`               | `navigation.route.predicates-route`                | `ux.view.predicates-view`                           | `ux`         | `maps-to`  | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`               | `navigation.route.individuals-route`               | `ux.view.individuals-view`                          | `ux`         | `maps-to`  | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`               | `navigation.route.interchange-route`               | `ux.view.interchange-view`                          | `ux`         | `maps-to`  | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`               | `navigation.route.properties-route`                | `ux.view.properties-view`                           | `ux`         | `maps-to`  | many-to-many | medium   |
 | `navigation.route.maps-to.ux.view`               | `navigation.route.rag-experiments-route`           | `ux.view.rag-experiments-view`                      | `ux`         | `maps-to`  | many-to-many | medium   |
-| `navigation.route.maps-to.ux.view`               | `navigation.route.terms-route`                     | `ux.view.terms-view`                                | `ux`         | `maps-to`  | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`               | `navigation.route.relationships-route`             | `ux.view.relationships-view`                        | `ux`         | `maps-to`  | many-to-many | medium   |
+| `navigation.route.maps-to.ux.view`               | `navigation.route.taxonomies-route`                | `ux.view.taxonomies-view`                           | `ux`         | `maps-to`  | many-to-many | medium   |
 
 ## Element Reference
 
@@ -158,11 +159,35 @@ Root application layout route — renders the navigation shell, sidebar, and mai
 | intra-layer | `navigation.route.admin-route`           | `navigates-to` | outbound  |
 | intra-layer | `navigation.route.configuration-route`   | `navigates-to` | outbound  |
 | intra-layer | `navigation.route.datasets-route`        | `navigates-to` | outbound  |
-| intra-layer | `navigation.route.domains-route`         | `navigates-to` | outbound  |
-| intra-layer | `navigation.route.layers-route`          | `navigates-to` | outbound  |
-| intra-layer | `navigation.route.predicates-route`      | `navigates-to` | outbound  |
 | intra-layer | `navigation.route.rag-experiments-route` | `navigates-to` | outbound  |
-| intra-layer | `navigation.route.terms-route`           | `navigates-to` | outbound  |
+
+### Classes Route {#classes-route}
+
+**ID**: `navigation.route.classes-route`
+
+**Type**: `route`
+
+Route for /app/classes — renders Classes View
+
+#### Relationships
+
+| Type        | Related Element        | Predicate | Direction |
+| ----------- | ---------------------- | --------- | --------- |
+| inter-layer | `ux.view.classes-view` | `maps-to` | outbound  |
+
+### Concept Schemes Route {#concept-schemes-route}
+
+**ID**: `navigation.route.concept-schemes-route`
+
+**Type**: `route`
+
+Route for /app/concept-schemes — renders Concept Schemes View
+
+#### Relationships
+
+| Type        | Related Element                | Predicate | Direction |
+| ----------- | ------------------------------ | --------- | --------- |
+| inter-layer | `ux.view.concept-schemes-view` | `maps-to` | outbound  |
 
 ### Configuration Route {#configuration-route}
 
@@ -208,72 +233,47 @@ Route for the dataset workspace management page — /app/datasets
 | inter-layer | `ux.view.datasets-view`           | `maps-to`      | outbound  |
 | intra-layer | `navigation.route.app-root-route` | `navigates-to` | inbound   |
 
-### Domains Route {#domains-route}
+### Individuals Route {#individuals-route}
 
-**ID**: `navigation.route.domains-route`
-
-**Type**: `route`
-
-Route for the Concept Schemes (Domains) management page — /app/domains
-
-#### Attributes
-
-| Name  | Value   |
-| ----- | ------- |
-| title | Domains |
-| type  | public  |
-
-#### Relationships
-
-| Type        | Related Element                   | Predicate      | Direction |
-| ----------- | --------------------------------- | -------------- | --------- |
-| inter-layer | `ux.view.domains-view`            | `maps-to`      | outbound  |
-| intra-layer | `navigation.route.app-root-route` | `navigates-to` | inbound   |
-
-### Layers Route {#layers-route}
-
-**ID**: `navigation.route.layers-route`
+**ID**: `navigation.route.individuals-route`
 
 **Type**: `route`
 
-Route for the Taxonomy (Layers) management page — /app/layers
-
-#### Attributes
-
-| Name  | Value  |
-| ----- | ------ |
-| title | Layers |
-| type  | public |
+Route for /app/individuals — renders Individuals View
 
 #### Relationships
 
-| Type        | Related Element                   | Predicate      | Direction |
-| ----------- | --------------------------------- | -------------- | --------- |
-| inter-layer | `apm.span.database-query-span`    | `monitors`     | inbound   |
-| inter-layer | `ux.view.layers-view`             | `maps-to`      | outbound  |
-| intra-layer | `navigation.route.app-root-route` | `navigates-to` | inbound   |
+| Type        | Related Element            | Predicate | Direction |
+| ----------- | -------------------------- | --------- | --------- |
+| inter-layer | `ux.view.individuals-view` | `maps-to` | outbound  |
 
-### Predicates Route {#predicates-route}
+### Interchange Route {#interchange-route}
 
-**ID**: `navigation.route.predicates-route`
+**ID**: `navigation.route.interchange-route`
 
 **Type**: `route`
 
-Route for the property definitions management page — /app/predicates
-
-#### Attributes
-
-| Name  | Value      |
-| ----- | ---------- |
-| title | Predicates |
-| type  | public     |
+Route for /app/interchange — renders Interchange View
 
 #### Relationships
 
-| Type        | Related Element                   | Predicate      | Direction |
-| ----------- | --------------------------------- | -------------- | --------- |
-| inter-layer | `ux.view.predicates-view`         | `maps-to`      | outbound  |
-| intra-layer | `navigation.route.app-root-route` | `navigates-to` | inbound   |
+| Type        | Related Element            | Predicate | Direction |
+| ----------- | -------------------------- | --------- | --------- |
+| inter-layer | `ux.view.interchange-view` | `maps-to` | outbound  |
+
+### Properties Route {#properties-route}
+
+**ID**: `navigation.route.properties-route`
+
+**Type**: `route`
+
+Route for /app/properties — renders Properties View
+
+#### Relationships
+
+| Type        | Related Element           | Predicate | Direction |
+| ----------- | ------------------------- | --------- | --------- |
+| inter-layer | `ux.view.properties-view` | `maps-to` | outbound  |
 
 ### RAG Experiments Route {#rag-experiments-route}
 
@@ -299,28 +299,34 @@ Route serving the RAG experiments and pipeline testing view
 | inter-layer | `ux.view.rag-experiments-view`               | `maps-to`      | outbound  |
 | intra-layer | `navigation.route.app-root-route`            | `navigates-to` | inbound   |
 
-### Terms Route {#terms-route}
+### Relationships Route {#relationships-route}
 
-**ID**: `navigation.route.terms-route`
+**ID**: `navigation.route.relationships-route`
 
 **Type**: `route`
 
-Route for the Classes (Terms) management page — /app/terms
-
-#### Attributes
-
-| Name  | Value  |
-| ----- | ------ |
-| title | Terms  |
-| type  | public |
+Route for /app/relationships — renders Relationships View
 
 #### Relationships
 
-| Type        | Related Element                   | Predicate      | Direction |
-| ----------- | --------------------------------- | -------------- | --------- |
-| inter-layer | `ux.view.terms-view`              | `maps-to`      | outbound  |
-| intra-layer | `navigation.route.app-root-route` | `navigates-to` | inbound   |
+| Type        | Related Element              | Predicate | Direction |
+| ----------- | ---------------------------- | --------- | --------- |
+| inter-layer | `ux.view.relationships-view` | `maps-to` | outbound  |
+
+### Taxonomies Route {#taxonomies-route}
+
+**ID**: `navigation.route.taxonomies-route`
+
+**Type**: `route`
+
+Route for /app/taxonomies — renders Taxonomies View
+
+#### Relationships
+
+| Type        | Related Element           | Predicate | Direction |
+| ----------- | ------------------------- | --------- | --------- |
+| inter-layer | `ux.view.taxonomies-view` | `maps-to` | outbound  |
 
 ---
 
-Generated: 2026-05-07T22:00:51.579Z | Model Version: 0.1.0
+Generated: 2026-05-08T11:23:07.657Z | Model Version: 0.1.0
