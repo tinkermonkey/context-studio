@@ -831,7 +831,6 @@ class ImportRun(BatchRun):  # type: ignore[misc,valid-type]
     __mapper_args__ = {  # type: ignore[assignment]
         "polymorphic_identity": "import",
     }
-    __table_args__ = ()
 
     def __repr__(self) -> str:
         return f"<ImportRun(id={self.id}, format={self.format}, status={self.status})>"
@@ -891,7 +890,6 @@ class ExtractionRun(BatchRun):  # type: ignore[misc,valid-type]
     __mapper_args__ = {  # type: ignore[assignment]
         "polymorphic_identity": "extraction",
     }
-    __table_args__ = ()
 
     def __repr__(self) -> str:
         return f"<ExtractionRun(id={self.id}, model={self.model}, status={self.status})>"

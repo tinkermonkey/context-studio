@@ -39,13 +39,6 @@ from adapters.web.schemas.extraction import (
     ExtractionLayerResultSchema,
     ExtractTripleRequest,
     ExtractTripleResponse,
-    ExtractedTriple,
-    SubjectNode,
-    PredicateNode,
-    ObjectNodeIndividual,
-    ObjectNodeClass,
-    ObjectNodeLiteral,
-    TripleProvenance,
     ExtractionMetadata,
 )
 
