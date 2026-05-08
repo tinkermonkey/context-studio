@@ -1428,9 +1428,11 @@ class TestDeleteRelationship:
         assert delete_graph_events[0].taxonomy_id == tax.id
 
     def test_delete_relationship_with_individuals_and_deleted_parent_classes(
-        self, service, caplog
+        self, service, monkeypatch
     ):
         """Delete relationship where both Individuals have deleted parent classes emits warning and no GraphInvalidated."""
+        from unittest.mock import MagicMock
+
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         animal_class = service.create_class(concept_scheme_id=scheme.id, title="Animal")
@@ -1463,9 +1465,13 @@ class TestDeleteRelationship:
             [e for e in existing_graph_events if e.reason == "relationship_deleted"]
         )
 
+        # Mock the logger to verify warning is called
+        import domain.ontology.services
+        logger_mock = MagicMock()
+        monkeypatch.setattr(domain.ontology.services, "_logger", logger_mock)
+
         # Delete the relationship - should not emit GraphInvalidated and should log warning
-        with caplog.at_level(logging.WARNING):
-            service.delete_relationship(relationship_id=rel.id)
+        service.delete_relationship(relationship_id=rel.id)
 
         # Verify the relationship is deleted
         with pytest.raises(EntityNotFoundError):
@@ -1479,7 +1485,11 @@ class TestDeleteRelationship:
         assert len(delete_graph_events) == existing_count
 
         # Verify warning was logged
-        assert "Could not determine taxonomy for relationship deletion" in caplog.text
+        warning_calls = [
+            call for call in logger_mock.warning.call_args_list
+            if call[0] and "Could not determine taxonomy for relationship deletion" in str(call[0][0])
+        ]
+        assert warning_calls
 
 
 class TestGetPropertyDefinition:
