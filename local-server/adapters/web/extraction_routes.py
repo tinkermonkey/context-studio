@@ -39,7 +39,6 @@ from adapters.web.schemas.extraction import (
     ExtractionLayerResultSchema,
     ExtractTripleRequest,
     ExtractTripleResponse,
-    ExtractionMetadata,
 )
 
 router = APIRouter(prefix="/api", tags=["extraction"])
