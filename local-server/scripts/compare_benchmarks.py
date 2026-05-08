@@ -74,7 +74,7 @@ def build_comparison_matrix(
     ontologies = sorted(list(all_ontologies))
 
     # Build comparison table
-    comparison = {
+    comparison: dict[str, Any] = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "datasets": list(results_by_dataset.keys()),
         "ontologies_count": len(ontologies),
@@ -82,7 +82,7 @@ def build_comparison_matrix(
     }
 
     for ontology in ontologies:
-        ontology_data = {
+        ontology_data: dict[str, Any] = {
             "ontology": ontology,
             "datasets": {},
         }
@@ -116,7 +116,7 @@ def build_comparison_matrix(
         comparison["ontology_comparisons"].append(ontology_data)
 
     # Compute aggregate statistics
-    aggregate_stats = {
+    aggregate_stats: dict[str, Any] = {
         "by_dataset": {},
     }
 
@@ -125,16 +125,22 @@ def build_comparison_matrix(
         if not dataset_results:
             continue
 
-        precisions = [r["precision"] for r in dataset_results if r["precision"] is not None]
+        precisions = [
+            r["precision"] for r in dataset_results if r["precision"] is not None
+        ]
         recalls = [r["recall"] for r in dataset_results if r["recall"] is not None]
         f1s = [r["f1"] for r in dataset_results if r["f1"] is not None]
-        conformances = [r["conformance"] for r in dataset_results if r["conformance"] is not None]
+        conformances = [
+            r["conformance"] for r in dataset_results if r["conformance"] is not None
+        ]
 
         aggregate_stats["by_dataset"][dataset_name] = {
             "avg_precision": sum(precisions) / len(precisions) if precisions else 0.0,
             "avg_recall": sum(recalls) / len(recalls) if recalls else 0.0,
             "avg_f1": sum(f1s) / len(f1s) if f1s else 0.0,
-            "avg_conformance": sum(conformances) / len(conformances) if conformances else 0.0,
+            "avg_conformance": (
+                sum(conformances) / len(conformances) if conformances else 0.0
+            ),
             "total_samples": results.get("samples_processed", 0),
             "total_cost_usd": results.get("total_cost_usd", 0.0),
             "ontologies_count": results.get("ontologies_count", 0),
@@ -190,27 +196,35 @@ def save_markdown_comparison(
     lines.append("")
 
     # Aggregate statistics
-    lines.extend([
-        "## Aggregate Statistics",
-        "",
-    ])
+    lines.extend(
+        [
+            "## Aggregate Statistics",
+            "",
+        ]
+    )
 
-    for dataset_name, stats in comparison.get("aggregate_stats", {}).get("by_dataset", {}).items():
-        lines.extend([
-            f"### {dataset_name}",
-            "",
-            f"- **Average Precision:** {stats['avg_precision']:.3f}",
-            f"- **Average Recall:** {stats['avg_recall']:.3f}",
-            f"- **Average F1:** {stats['avg_f1']:.3f}",
-            f"- **Average Conformance:** {stats['avg_conformance']:.3f}",
-            "",
-        ])
+    for dataset_name, stats in (
+        comparison.get("aggregate_stats", {}).get("by_dataset", {}).items()
+    ):
+        lines.extend(
+            [
+                f"### {dataset_name}",
+                "",
+                f"- **Average Precision:** {stats['avg_precision']:.3f}",
+                f"- **Average Recall:** {stats['avg_recall']:.3f}",
+                f"- **Average F1:** {stats['avg_f1']:.3f}",
+                f"- **Average Conformance:** {stats['avg_conformance']:.3f}",
+                "",
+            ]
+        )
 
     # Detailed ontology comparison
-    lines.extend([
-        "## Ontology-by-Ontology Comparison",
-        "",
-    ])
+    lines.extend(
+        [
+            "## Ontology-by-Ontology Comparison",
+            "",
+        ]
+    )
 
     datasets_list = comparison.get("datasets", [])
     if datasets_list:
@@ -241,18 +255,20 @@ def save_markdown_comparison(
 
             lines.append(row)
 
-    lines.extend([
-        "",
-        "## Metrics Explanation",
-        "",
-        "- **Precision:** Proportion of predicted triples that match ground truth",
-        "- **Recall:** Proportion of ground truth triples that were predicted",
-        "- **F1:** Harmonic mean of precision and recall",
-        "- **Conformance:** Proportion of triples with valid format and confidence (0-1)",
-        "",
-        "---",
-        f"*Cross-dataset comparison generated on {timestamp}*",
-    ])
+    lines.extend(
+        [
+            "",
+            "## Metrics Explanation",
+            "",
+            "- **Precision:** Proportion of predicted triples that match ground truth",
+            "- **Recall:** Proportion of ground truth triples that were predicted",
+            "- **F1:** Harmonic mean of precision and recall",
+            "- **Conformance:** Proportion of triples with valid format and confidence (0-1)",
+            "",
+            "---",
+            f"*Cross-dataset comparison generated on {timestamp}*",
+        ]
+    )
 
     with open(output_file, "w") as f:
         f.write("\n".join(lines))
@@ -297,7 +313,9 @@ def main():
             dataset_name = results.get("dataset", Path(result_file).stem)
             results_by_dataset[dataset_name] = results
 
-        _logger.info(f"Building comparison matrix across {len(results_by_dataset)} datasets")
+        _logger.info(
+            f"Building comparison matrix across {len(results_by_dataset)} datasets"
+        )
         comparison = build_comparison_matrix(results_by_dataset)
 
         # Save reports
