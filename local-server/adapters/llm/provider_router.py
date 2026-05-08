@@ -26,8 +26,8 @@ class LLMProviderRouter:
 
     Manages multiple LLM providers and routes completion requests to the correct
     provider based on which models are available. Initialization errors are logged
-    but do not prevent router initialization — the router will function with any
-    available providers.
+    and tolerated as long as at least one configured provider succeeds. A ValueError
+    is raised if all configured providers fail to initialize.
     """
 
     def __init__(self, openai_api_key: str = "", anthropic_api_key: str = "") -> None:

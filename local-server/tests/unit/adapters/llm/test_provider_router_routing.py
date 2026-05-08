@@ -6,7 +6,8 @@ Tests verify:
 - Model routing to correct providers
 - Model availability checking
 - Union of available models from all providers
-- Initialization errors are logged but do not prevent router from functioning
+- Initialization errors are logged and tolerated if at least one provider succeeds
+- ValueError is raised when all configured providers fail to initialize
 """
 
 import sys
@@ -272,3 +273,58 @@ class TestLLMProviderRouter:
             seed=None,
         )
         assert response is expected_response
+
+    @patch("adapters.llm.provider_router.OpenAIProvider")
+    def test_router_init_single_configured_provider_fails(self, mock_openai_class):
+        """Router raises ValueError when single configured provider fails to initialize."""
+        mock_openai_class.side_effect = ValueError("Invalid API key")
+
+        with pytest.raises(ValueError) as exc_info:
+            LLMProviderRouter(openai_api_key="invalid-key")
+
+        error_msg = str(exc_info.value)
+        assert "No LLM providers could be initialized" in error_msg
+        assert "openai" in error_msg
+        assert "ValueError: Invalid API key" in error_msg
+
+    @patch("adapters.llm.provider_router.OpenAIProvider")
+    @patch("adapters.llm.provider_router.AnthropicProvider")
+    def test_router_init_both_configured_providers_fail(
+        self, mock_anthropic_class, mock_openai_class
+    ):
+        """Router raises ValueError with all error details when both providers fail."""
+        mock_openai_class.side_effect = ValueError("OpenAI key invalid")
+        mock_anthropic_class.side_effect = RuntimeError("Anthropic connection failed")
+
+        with pytest.raises(ValueError) as exc_info:
+            LLMProviderRouter(
+                openai_api_key="invalid-openai-key",
+                anthropic_api_key="invalid-anthropic-key",
+            )
+
+        error_msg = str(exc_info.value)
+        assert "No LLM providers could be initialized" in error_msg
+        assert "openai" in error_msg
+        assert "ValueError: OpenAI key invalid" in error_msg
+        assert "anthropic" in error_msg
+        assert "RuntimeError: Anthropic connection failed" in error_msg
+
+    @patch("adapters.llm.provider_router.OpenAIProvider")
+    @patch("adapters.llm.provider_router.AnthropicProvider")
+    def test_router_init_one_provider_succeeds_one_fails(
+        self, mock_anthropic_class, mock_openai_class
+    ):
+        """Router initializes successfully with only the working provider when one fails."""
+        mock_openai_provider = Mock()
+        mock_openai_class.return_value = mock_openai_provider
+        mock_anthropic_class.side_effect = ValueError("Anthropic key invalid")
+
+        router = LLMProviderRouter(
+            openai_api_key="valid-openai-key",
+            anthropic_api_key="invalid-anthropic-key",
+        )
+
+        # OpenAI should be initialized and working
+        assert "openai" in router._providers
+        assert "anthropic" not in router._providers
+        assert router._providers["openai"] is mock_openai_provider
