@@ -4,14 +4,14 @@ This document tracks the performance of the knowledge graph extraction pipeline 
 
 ## Baseline (Phase 4.5) — 2026-05-08
 
-**Note:** The triple extraction endpoint (POST /api/extraction/extract) is currently implemented as a specification stub returning empty triples. This baseline establishes the zero-state measurement point and validates the benchmarking infrastructure. Full extraction implementation will follow in subsequent iterations.
+**Note:** The triple extraction endpoint (POST /api/extraction/extract) is currently implemented as a specification stub returning empty triples. This baseline establishes the zero-state measurement point. Since the stub returns empty predictions and all API calls incur near-zero processing time, all metrics, costs, and durations reflect zero actual extraction work. Full extraction implementation will follow in subsequent iterations.
 
 ### Results Summary
 
 | Dataset | Ontologies | Samples | Precision | Recall | F1 | Conformance | Cost (USD) | Duration (ms) |
 |---------|-----------|---------|-----------|--------|-----|-------------|-----------|---------------|
-| TekGen | 10 | 45 | 0.000 | 0.000 | 0.000 | 0.000 | $0.23 | 2340 |
-| WebNLG | 19 | 38 | 0.000 | 0.000 | 0.000 | 0.000 | $0.19 | 1980 |
+| TekGen | 10 | 50 | 0.000 | 0.000 | 0.000 | 0.000 | $0.00 | 0 |
+| WebNLG | 19 | 95 | 0.000 | 0.000 | 0.000 | 0.000 | $0.00 | 0 |
 
 ### Per-Ontology Results
 
@@ -19,39 +19,40 @@ This document tracks the performance of the knowledge graph extraction pipeline 
 
 | Ontology | Precision | Recall | F1 | Samples | Cost |
 |----------|-----------|--------|-----|---------|------|
-| organisation | 0.000 | 0.000 | 0.000 | 5 | $0.02 |
-| university | 0.000 | 0.000 | 0.000 | 5 | $0.02 |
-| company | 0.000 | 0.000 | 0.000 | 5 | $0.02 |
-| person | 0.000 | 0.000 | 0.000 | 5 | $0.02 |
-| building | 0.000 | 0.000 | 0.000 | 5 | $0.03 |
-| city | 0.000 | 0.000 | 0.000 | 5 | $0.03 |
-| sports | 0.000 | 0.000 | 0.000 | 5 | $0.03 |
-| medical | 0.000 | 0.000 | 0.000 | 5 | $0.03 |
-| film | 0.000 | 0.000 | 0.000 | 5 | $0.03 |
-| music | 0.000 | 0.000 | 0.000 | 3 | $0.02 |
+| organisation | 0.000 | 0.000 | 0.000 | 5 | $0.00 |
+| university | 0.000 | 0.000 | 0.000 | 5 | $0.00 |
+| company | 0.000 | 0.000 | 0.000 | 5 | $0.00 |
+| person | 0.000 | 0.000 | 0.000 | 5 | $0.00 |
+| building | 0.000 | 0.000 | 0.000 | 5 | $0.00 |
+| city | 0.000 | 0.000 | 0.000 | 5 | $0.00 |
+| sports | 0.000 | 0.000 | 0.000 | 5 | $0.00 |
+| medical | 0.000 | 0.000 | 0.000 | 5 | $0.00 |
+| film | 0.000 | 0.000 | 0.000 | 5 | $0.00 |
+| music | 0.000 | 0.000 | 0.000 | 5 | $0.00 |
 
 #### WebNLG (text2kg-bench/dbpedia-webnlg)
 
 | Ontology | Precision | Recall | F1 | Samples | Cost |
 |----------|-----------|--------|-----|---------|------|
-| athlete | 0.000 | 0.000 | 0.000 | 2 | $0.01 |
-| basket | 0.000 | 0.000 | 0.000 | 2 | $0.01 |
-| buildingstructure | 0.000 | 0.000 | 0.000 | 2 | $0.01 |
-| city | 0.000 | 0.000 | 0.000 | 3 | $0.02 |
-| company | 0.000 | 0.000 | 0.000 | 2 | $0.01 |
-| creator | 0.000 | 0.000 | 0.000 | 2 | $0.01 |
-| dishes | 0.000 | 0.000 | 0.000 | 2 | $0.01 |
-| hacker | 0.000 | 0.000 | 0.000 | 2 | $0.01 |
-| military | 0.000 | 0.000 | 0.000 | 2 | $0.01 |
-| music | 0.000 | 0.000 | 0.000 | 2 | $0.01 |
-| royalty | 0.000 | 0.000 | 0.000 | 2 | $0.01 |
-| scientist | 0.000 | 0.000 | 0.000 | 2 | $0.01 |
-| software | 0.000 | 0.000 | 0.000 | 2 | $0.01 |
-| sportsteam | 0.000 | 0.000 | 0.000 | 2 | $0.01 |
-| university | 0.000 | 0.000 | 0.000 | 3 | $0.02 |
-| vehicle | 0.000 | 0.000 | 0.000 | 2 | $0.01 |
-| writerartist | 0.000 | 0.000 | 0.000 | 2 | $0.01 |
-| writer | 0.000 | 0.000 | 0.000 | 2 | $0.01 |
+| athlete | 0.000 | 0.000 | 0.000 | 5 | $0.00 |
+| basket | 0.000 | 0.000 | 0.000 | 5 | $0.00 |
+| buildingstructure | 0.000 | 0.000 | 0.000 | 5 | $0.00 |
+| city | 0.000 | 0.000 | 0.000 | 5 | $0.00 |
+| company | 0.000 | 0.000 | 0.000 | 5 | $0.00 |
+| creator | 0.000 | 0.000 | 0.000 | 5 | $0.00 |
+| dishes | 0.000 | 0.000 | 0.000 | 5 | $0.00 |
+| hacker | 0.000 | 0.000 | 0.000 | 5 | $0.00 |
+| military | 0.000 | 0.000 | 0.000 | 5 | $0.00 |
+| music | 0.000 | 0.000 | 0.000 | 5 | $0.00 |
+| royalty | 0.000 | 0.000 | 0.000 | 5 | $0.00 |
+| scientist | 0.000 | 0.000 | 0.000 | 5 | $0.00 |
+| software | 0.000 | 0.000 | 0.000 | 5 | $0.00 |
+| sportsteam | 0.000 | 0.000 | 0.000 | 5 | $0.00 |
+| university | 0.000 | 0.000 | 0.000 | 5 | $0.00 |
+| vehicle | 0.000 | 0.000 | 0.000 | 5 | $0.00 |
+| writerartist | 0.000 | 0.000 | 0.000 | 5 | $0.00 |
+| writer | 0.000 | 0.000 | 0.000 | 5 | $0.00 |
+| explorer | 0.000 | 0.000 | 0.000 | 5 | $0.00 |
 
 ### Configuration
 
@@ -71,22 +72,23 @@ This document tracks the performance of the knowledge graph extraction pipeline 
 
 ### Cost Analysis
 
-- **TekGen Total Cost:** $0.23
-- **WebNLG Total Cost:** $0.19
-- **Combined Total:** $0.42
-- **Budget Ceiling:** $50.00 (92% headroom)
-- **Cost per Sample (avg):** $0.004
+- **TekGen Total Cost:** $0.00
+- **WebNLG Total Cost:** $0.00
+- **Combined Total:** $0.00
+- **Budget Ceiling:** $50.00 (100% headroom)
+- **Cost per Sample (avg):** $0.00 (no extraction processed by stub)
 
-Pricing based on Claude Opus 4.7 rates (as of May 2026):
+Pricing model based on Claude Opus 4.7 rates (as of May 2026):
 - Input: $0.003 per 1K tokens
 - Output: $0.015 per 1K tokens
+- Note: Current stub incurs no cost as no actual API calls to LLM occur
 
 ### Infrastructure Notes
 
-- **Extraction Endpoint Status:** Currently a specification stub; returns empty triples to establish the API contract and validate benchmarking harness
-- **Dataset Source:** HuggingFace (text2kg-bench organization)
-- **Sampling:** Stratified to respect cost budget; roughly equal samples per ontology
-- **Timestamp:** 2026-05-08T15:30:00Z
+- **Extraction Endpoint Status:** Specification stub returning empty triples (no actual extraction processing)
+- **Dataset Status:** HuggingFace datasets (text2kg-bench/wikidata-tekgen, text2kg-bench/dbpedia-webnlg) unavailable in test environment; zero-state baseline uses projected sample allocation
+- **Sample Allocation:** Stratified with equal allocation per ontology (5 samples each) to demonstrate benchmarking infrastructure
+- **Timestamp:** 2026-05-08T00:00:00Z (projected baseline, not measured runtime)
 
 ### Next Iteration Expectations
 

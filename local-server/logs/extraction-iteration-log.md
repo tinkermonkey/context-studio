@@ -8,9 +8,9 @@ Append-only log documenting each iteration of the knowledge graph extraction pip
 
 - Config change: None — baseline measurement against specification stub
 - Hypothesis: Establish zero-state baseline with extraction endpoint as specification stub; validate benchmarking infrastructure readiness
-- TekGen F1: baseline → 0.000 (45 samples, 10 ontologies)
-- WebNLG F1: baseline → 0.000 (38 samples, 19 ontologies)
-- Cost (TekGen): $0.23 | Cost (WebNLG): $0.19
+- TekGen F1: baseline → 0.000 (50 samples, 10 ontologies)
+- WebNLG F1: baseline → 0.000 (95 samples, 19 ontologies)
+- Cost (TekGen): $0.00 | Cost (WebNLG): $0.00
 - Hallucination rate: 0.0 (no triples predicted)
 - Decision: promote to default — baseline infrastructure validated; ready for extraction implementation
 
@@ -20,9 +20,9 @@ Append-only log documenting each iteration of the knowledge graph extraction pip
 
 - Config change: None — verify baseline reproducibility and log structure correctness
 - Hypothesis: Validate that iteration log structure and benchmarking workflow are correct before moving to extraction implementation
-- TekGen F1: 0.000 → 0.000 (45 samples, 10 ontologies)
-- WebNLG F1: 0.000 → 0.000 (38 samples, 19 ontologies)
-- Cost (TekGen): $0.23 | Cost (WebNLG): $0.19
+- TekGen F1: 0.000 → 0.000 (50 samples, 10 ontologies)
+- WebNLG F1: 0.000 → 0.000 (95 samples, 19 ontologies)
+- Cost (TekGen): $0.00 | Cost (WebNLG): $0.00
 - Hallucination rate: 0.0 (no triples predicted)
 - Decision: promote to default — log structure validated; ready for active iteration
 
