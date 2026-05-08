@@ -88,7 +88,7 @@ class TestExtractionRunConstruction:
             status=ExtractionRunStatus.PENDING,
         )
 
-        with pytest.raises(Exception):
+        with pytest.raises(AttributeError):
             run.status = ExtractionRunStatus.COMPLETED
 
 
