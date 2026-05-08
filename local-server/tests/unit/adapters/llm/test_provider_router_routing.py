@@ -39,6 +39,7 @@ class MockLLMProvider:
         max_tokens=2000,
         response_format=None,
         timeout=None,
+        seed=None,
     ):
         """Mock complete method."""
         return LLMResponse(
@@ -268,5 +269,6 @@ class TestLLMProviderRouter:
             max_tokens=1000,
             response_format="json",
             timeout=None,
+            seed=None,
         )
         assert response is expected_response

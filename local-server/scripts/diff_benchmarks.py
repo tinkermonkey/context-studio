@@ -323,7 +323,7 @@ def main():
     print_summary_diff(current, baseline)
 
     # Generate and optionally save JSON diff
-    json_diff = print_json_diff(current, baseline, args.json_out)
+    print_json_diff(current, baseline, args.json_out)
 
     # Print agent-readable decision hints
     print("\n📋 AGENT-READABLE METADATA\n")
