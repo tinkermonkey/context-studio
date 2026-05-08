@@ -32,6 +32,7 @@ from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
 from tests.fakes.fake_event_publisher import FakeEventPublisher
 from tests.fakes.fake_extraction_repository import FakeExtractionRepository
+from tests.fakes.fake_extraction_run_repo import FakeExtractionRunRepository
 
 
 class TestFullExtractionPipeline:
@@ -49,6 +50,7 @@ class TestFullExtractionPipeline:
             reference_sources=[FakeReferenceSource("TestSource")],
             event_publisher=FakeEventPublisher(),
             extraction_repo=FakeExtractionRepository(),
+            extraction_run_repo=FakeExtractionRunRepository(),
         )
 
         result = service.extract("Apple and Microsoft are technology companies.")
@@ -78,6 +80,7 @@ class TestFullExtractionPipeline:
             reference_sources=[FakeReferenceSource()],
             event_publisher=event_publisher,
             extraction_repo=FakeExtractionRepository(),
+            extraction_run_repo=FakeExtractionRunRepository(),
         )
 
         result = service.extract("Test content")
@@ -101,6 +104,7 @@ class TestFullExtractionPipeline:
             reference_sources=[FakeReferenceSource()],
             event_publisher=FakeEventPublisher(),
             extraction_repo=FakeExtractionRepository(),
+            extraction_run_repo=FakeExtractionRunRepository(),
         )
 
         result = service.extract("Test text for extraction")
@@ -124,6 +128,7 @@ class TestFullExtractionPipeline:
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
             extraction_repo=FakeExtractionRepository(),
+            extraction_run_repo=FakeExtractionRunRepository(),
         )
 
         # Empty text
@@ -150,6 +155,7 @@ class TestEntityDeduplication:
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
             extraction_repo=FakeExtractionRepository(),
+            extraction_run_repo=FakeExtractionRunRepository(),
         )
 
         # Create entities with same label from different layers
@@ -183,6 +189,7 @@ class TestEntityDeduplication:
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
             extraction_repo=FakeExtractionRepository(),
+            extraction_run_repo=FakeExtractionRunRepository(),
         )
 
         entities = [
@@ -205,6 +212,7 @@ class TestEntityDeduplication:
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
             extraction_repo=FakeExtractionRepository(),
+            extraction_run_repo=FakeExtractionRunRepository(),
         )
 
         entities = [
@@ -230,6 +238,7 @@ class TestLayerPriority:
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
             extraction_repo=FakeExtractionRepository(),
+            extraction_run_repo=FakeExtractionRunRepository(),
         )
 
         # Same entity from all layers
@@ -268,6 +277,7 @@ class TestUseCase_AnalyzeText:
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
             extraction_repo=FakeExtractionRepository(),
+            extraction_run_repo=FakeExtractionRunRepository(),
         )
 
         result = service.analyze_text("Apple and Microsoft are companies.")
@@ -287,6 +297,7 @@ class TestUseCase_AnalyzeText:
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
             extraction_repo=FakeExtractionRepository(),
+            extraction_run_repo=FakeExtractionRunRepository(),
         )
 
         with pytest.raises(ExtractionError):
@@ -309,6 +320,7 @@ class TestUseCase_EnrichFromReferences:
             reference_sources=[FakeReferenceSource("TestSource")],
             event_publisher=FakeEventPublisher(),
             extraction_repo=FakeExtractionRepository(),
+            extraction_run_repo=FakeExtractionRunRepository(),
         )
 
         input_entities = [
@@ -350,6 +362,7 @@ class TestUseCase_EnrichFromReferences:
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
             extraction_repo=FakeExtractionRepository(),
+            extraction_run_repo=FakeExtractionRunRepository(),
         )
 
         result = service.enrich_from_references("Test text", [])
@@ -368,6 +381,7 @@ class TestUseCase_EnrichFromReferences:
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
             extraction_repo=FakeExtractionRepository(),
+            extraction_run_repo=FakeExtractionRunRepository(),
         )
 
         entities = [ExtractedEntity(label="Test", entity_type="ORG", source_layer=1)]
@@ -393,6 +407,7 @@ class TestErrorHandling:
             reference_sources=[FakeReferenceSource(should_fail=True)],
             event_publisher=FakeEventPublisher(),
             extraction_repo=FakeExtractionRepository(),
+            extraction_run_repo=FakeExtractionRunRepository(),
         )
 
         # Should not raise, but return empty result
@@ -410,6 +425,7 @@ class TestErrorHandling:
             reference_sources=[FakeReferenceSource()],
             event_publisher=FakeEventPublisher(),
             extraction_repo=FakeExtractionRepository(),
+            extraction_run_repo=FakeExtractionRunRepository(),
         )
 
         result = service.extract("Test content for extraction")
@@ -447,6 +463,7 @@ class TestErrorHandling:
             reference_sources=[FakeReferenceSource()],
             event_publisher=FakeEventPublisher(),
             extraction_repo=FakeExtractionRepository(),
+            extraction_run_repo=FakeExtractionRunRepository(),
         )
 
         # Should not raise despite NLP not being ready
@@ -469,6 +486,7 @@ class TestPerformance:
             reference_sources=[FakeReferenceSource()],
             event_publisher=FakeEventPublisher(),
             extraction_repo=FakeExtractionRepository(),
+            extraction_run_repo=FakeExtractionRunRepository(),
         )
 
         result = service.extract("Test text for performance measurement")
@@ -487,6 +505,7 @@ class TestPerformance:
             reference_sources=[FakeReferenceSource()],
             event_publisher=FakeEventPublisher(),
             extraction_repo=FakeExtractionRepository(),
+            extraction_run_repo=FakeExtractionRunRepository(),
         )
 
         texts = [
