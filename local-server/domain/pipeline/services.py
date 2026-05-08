@@ -257,6 +257,7 @@ class PipelineService:
                 max_tokens=config.config.get("max_tokens", 2000),
                 response_format=config.config.get("response_format"),
                 timeout=timeout,
+                seed=config.seed,
             )
 
             duration_ms = int((time.time() - start_time) * 1000)

@@ -84,13 +84,6 @@ def print_metric_diff(
     delta, direction = compute_delta(current, baseline)
 
     if is_cost:
-        # For cost, invert direction (lower is better)
-        if direction == "↑":
-            direction = "↓"  # Cost went down (good)
-        elif direction == "↓":
-            direction = "↑"  # Cost went up (bad)
-
-    if is_cost:
         print(f"  {metric_name:20s} ${baseline:7.2f} → ${current:7.2f} ({direction} ${delta:+7.2f})")
     else:
         print(f"  {metric_name:20s} {baseline:7.4f} → {current:7.4f} ({direction} {delta:+7.4f})")
@@ -216,7 +209,7 @@ def print_json_diff(
     current: dict[str, Any],
     baseline: Optional[dict[str, Any]],
     output_path: Optional[str] = None,
-) -> None:
+) -> dict[str, Any]:
     """
     Generate and optionally save JSON diff output.
 
@@ -224,6 +217,9 @@ def print_json_diff(
         current: Current comparison results
         baseline: Baseline comparison results
         output_path: Optional path to save JSON diff
+
+    Returns:
+        Dictionary with current, baseline, and delta metrics by dataset
     """
     diff: dict[str, Any] = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -302,12 +298,6 @@ def main():
         type=str,
         default="reports/baseline-comparison.json",
         help="Path to baseline comparison JSON file (optional)",
-    )
-    parser.add_argument(
-        "--cache",
-        type=str,
-        default=".benchmark-cache",
-        help="Cache directory for prompt hashes",
     )
     parser.add_argument(
         "--json-out",

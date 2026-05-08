@@ -345,14 +345,18 @@ def extract_triples_http(
         in the metadata or response body.
     """
     url = f"{base_url}/api/extraction/extract"
+    options = {
+        "model": config.get("model", "gpt-3.5-turbo"),
+        "temperature": config.get("temperature", 0.0),
+        "max_tokens": config.get("max_tokens", 4096),
+    }
+    if "seed" in config and config["seed"] is not None:
+        options["seed"] = config["seed"]
+
     payload = {
         "text": text,
         "ontology_id": ontology_id,
-        "options": {
-            "model": config.get("model", "gpt-3.5-turbo"),
-            "temperature": config.get("temperature", 0.0),
-            "max_tokens": config.get("max_tokens", 4096),
-        },
+        "options": options,
     }
 
     start_time = time.time()

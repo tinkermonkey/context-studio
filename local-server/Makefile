@@ -4,6 +4,7 @@
 PIPELINE ?= configs/extraction-experimental.json
 CACHE_DIR := .benchmark-cache
 REPORTS_DIR := reports
+DATE := $(shell date +%Y%m%d)
 
 help:
 	@echo "Context Studio Benchmarking Makefile"
@@ -24,27 +25,26 @@ benchmark-experiment: check-pipeline validate-cache create-reports
 	python scripts/run_benchmark.py \
 		--dataset text2kg-bench/wikidata-tekgen \
 		--pipeline $(PIPELINE) \
-		--out $(REPORTS_DIR)/$(CONFIG_SLUG)-tekgen.json
+		--out $(REPORTS_DIR)/$(DATE)-$(CONFIG_SLUG)-tekgen.json
 
 	@echo ""
 	@echo "=== Running benchmark on WebNLG dataset ==="
 	python scripts/run_benchmark.py \
 		--dataset text2kg-bench/dbpedia-webnlg \
 		--pipeline $(PIPELINE) \
-		--out $(REPORTS_DIR)/$(CONFIG_SLUG)-webnlg.json
+		--out $(REPORTS_DIR)/$(DATE)-$(CONFIG_SLUG)-webnlg.json
 
 	@echo ""
 	@echo "=== Generating cross-dataset comparison ==="
 	python scripts/compare_benchmarks.py \
-		--results $(REPORTS_DIR)/$(CONFIG_SLUG)-tekgen.json $(REPORTS_DIR)/$(CONFIG_SLUG)-webnlg.json \
-		--out $(REPORTS_DIR)/$(CONFIG_SLUG)-comparison
+		--results $(REPORTS_DIR)/$(DATE)-$(CONFIG_SLUG)-tekgen.json $(REPORTS_DIR)/$(DATE)-$(CONFIG_SLUG)-webnlg.json \
+		--out $(REPORTS_DIR)/$(DATE)-$(CONFIG_SLUG)-comparison
 
 	@echo ""
 	@echo "=== Auto-diffing against baseline ==="
 	@python scripts/diff_benchmarks.py \
-		--current $(REPORTS_DIR)/$(CONFIG_SLUG)-comparison.json \
-		--baseline reports/baseline-comparison.json \
-		--cache $(CACHE_DIR)
+		--current $(REPORTS_DIR)/$(DATE)-$(CONFIG_SLUG)-comparison.json \
+		--baseline reports/baseline-comparison.json
 
 check-pipeline:
 	@if [ ! -f "$(PIPELINE)" ]; then \
