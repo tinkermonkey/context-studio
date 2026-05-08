@@ -137,7 +137,7 @@ class PipelineService:
         system_prompt: str | None = None,
         user_prompt: str | None = None,
         enabled: bool | None = None,
-        seed: int | None | object = _UNSET,
+        seed: int | None = _UNSET,  # type: ignore
     ) -> PipelineConfiguration:
         """
         Update a pipeline configuration.
@@ -163,6 +163,13 @@ class PipelineService:
         if existing is None:
             raise PipelineNotFoundError(f"Pipeline configuration {config_id} not found")
 
+        # Resolve seed: use existing value if not explicitly provided
+        resolved_seed: int | None
+        if seed is _UNSET:
+            resolved_seed = existing.seed
+        else:
+            resolved_seed = seed
+
         # Create updated config by copying and applying changes
         updated = PipelineConfiguration(
             id=existing.id,
@@ -181,7 +188,7 @@ class PipelineService:
             enabled=enabled if enabled is not None else existing.enabled,
             created_at=existing.created_at,
             last_updated=datetime.now(timezone.utc),
-            seed=seed if seed is not _UNSET else existing.seed,
+            seed=resolved_seed,
         )
         return self._pipeline_repo.save_config(updated)
 
