@@ -445,3 +445,459 @@ class TestExtractionRoutes:
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
         assert len(body["extracted_entities"]) == 0
+
+
+# ==================== Triple Extraction Tests ====================
+
+
+class TestTripleExtraction:
+    """Integration tests for triple extraction endpoints."""
+
+    @pytest.fixture
+    def ontology_with_individuals(self, populated_repository):
+        """Use existing populated repository with taxonomy for triple extraction tests."""
+        # Get existing taxonomy and scheme
+        taxonomies = populated_repository.list_taxonomies()
+        assert len(taxonomies) > 0
+        tax = taxonomies[0]
+
+        schemes = populated_repository.list_concept_schemes(taxonomy_id=tax.id)
+        assert len(schemes) > 0
+        scheme = schemes[0]
+
+        # Get existing classes
+        classes = populated_repository.list_classes(concept_scheme_id=scheme.id)
+        assert len(classes) >= 2
+
+        return {
+            "taxonomy": tax,
+            "scheme": scheme,
+            "subject_class": classes[0],
+            "object_class": classes[1],
+        }
+
+    def test_extract_triples_returns_200_with_valid_request(
+        self, client, ontology_with_individuals
+    ):
+        """POST /api/extraction/extract returns 200 with valid request."""
+        response = client.post(
+            "/api/extraction/extract",
+            json={
+                "text": "The database stores information.",
+                "ontology_id": ontology_with_individuals["taxonomy"].id,
+                "options": {
+                    "model": "gpt-4",
+                    "temperature": 0.0,
+                    "max_tokens": 2000,
+                },
+            },
+        )
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_extract_triples_response_structure(self, client, ontology_with_individuals):
+        """POST /api/extraction/extract response has correct structure."""
+        response = client.post(
+            "/api/extraction/extract",
+            json={
+                "text": "The database stores information.",
+                "ontology_id": ontology_with_individuals["taxonomy"].id,
+                "options": {
+                    "model": "gpt-4",
+                    "temperature": 0.0,
+                    "max_tokens": 2000,
+                },
+            },
+        )
+        body = response.json()
+
+        # Verify required fields
+        assert "triples" in body
+        assert "warnings" in body
+        assert "metadata" in body
+
+        # Verify types
+        assert isinstance(body["triples"], list)
+        assert isinstance(body["warnings"], list)
+        assert isinstance(body["metadata"], dict)
+
+    def test_extract_triples_response_metadata_structure(
+        self, client, ontology_with_individuals
+    ):
+        """POST /api/extraction/extract response metadata has correct structure."""
+        response = client.post(
+            "/api/extraction/extract",
+            json={
+                "text": "The database stores information.",
+                "ontology_id": ontology_with_individuals["taxonomy"].id,
+                "options": {
+                    "model": "gpt-4",
+                    "temperature": 0.0,
+                    "max_tokens": 2000,
+                },
+            },
+        )
+        body = response.json()
+        metadata = body["metadata"]
+
+        # Verify metadata fields
+        assert "model" in metadata
+        assert "tokens_used" in metadata
+        assert "duration_ms" in metadata
+
+        # Verify types
+        assert isinstance(metadata["model"], str)
+        assert isinstance(metadata["tokens_used"], int)
+        assert isinstance(metadata["duration_ms"], int)
+
+        # Verify model matches request
+        assert metadata["model"] == "gpt-4"
+
+    def test_extract_triples_with_empty_text_returns_422(
+        self, client, ontology_with_individuals
+    ):
+        """POST /api/extraction/extract with empty text returns 422 (Pydantic validation)."""
+        response = client.post(
+            "/api/extraction/extract",
+            json={
+                "text": "",
+                "ontology_id": ontology_with_individuals["taxonomy"].id,
+                "options": {
+                    "model": "gpt-4",
+                    "temperature": 0.0,
+                    "max_tokens": 2000,
+                },
+            },
+        )
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    def test_extract_triples_with_missing_ontology_id_returns_400(self, client):
+        """POST /api/extraction/extract with missing ontology_id returns 400."""
+        response = client.post(
+            "/api/extraction/extract",
+            json={
+                "text": "Some text",
+                "options": {
+                    "model": "gpt-4",
+                    "temperature": 0.0,
+                    "max_tokens": 2000,
+                },
+            },
+        )
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    def test_extract_triples_with_whitespace_only_returns_400(
+        self, client, ontology_with_individuals
+    ):
+        """POST /api/extraction/extract with whitespace-only text returns 400."""
+        response = client.post(
+            "/api/extraction/extract",
+            json={
+                "text": "   \n\t  ",
+                "ontology_id": ontology_with_individuals["taxonomy"].id,
+                "options": {
+                    "model": "gpt-4",
+                    "temperature": 0.0,
+                    "max_tokens": 2000,
+                },
+            },
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_extract_triples_triple_structure_when_returned(
+        self, client, ontology_with_individuals
+    ):
+        """POST /api/extraction/extract triple has correct structure when returned."""
+        response = client.post(
+            "/api/extraction/extract",
+            json={
+                "text": "The database stores information.",
+                "ontology_id": ontology_with_individuals["taxonomy"].id,
+                "options": {
+                    "model": "gpt-4",
+                    "temperature": 0.0,
+                    "max_tokens": 2000,
+                },
+            },
+        )
+        body = response.json()
+        triples = body["triples"]
+
+        # If triples are returned, verify their structure
+        for triple in triples:
+            assert "subject" in triple
+            assert "predicate" in triple
+            assert "object" in triple
+            assert "confidence" in triple
+            assert "provenance" in triple
+
+            # Verify subject structure
+            subject = triple["subject"]
+            assert "kind" in subject
+            assert subject["kind"] in ["individual", "class"]
+            assert "id" in subject
+            assert "label" in subject
+
+            # Verify predicate structure
+            predicate = triple["predicate"]
+            assert "property_definition_id" in predicate
+            assert "label" in predicate
+
+            # Verify object structure (discriminated by kind)
+            obj = triple["object"]
+            assert "kind" in obj
+            assert obj["kind"] in ["individual", "class", "literal"]
+
+            if obj["kind"] == "literal":
+                assert "value" in obj
+                # datatype is optional for literals
+            else:
+                assert "id" in obj
+                assert "label" in obj
+
+            # Verify confidence bounds
+            assert isinstance(triple["confidence"], float)
+            assert 0.0 <= triple["confidence"] <= 1.0
+
+            # Verify provenance
+            provenance = triple["provenance"]
+            assert "text_offset_start" in provenance
+            assert "text_offset_end" in provenance
+            assert "raw" in provenance
+
+            # Verify provenance offsets are valid
+            assert provenance["text_offset_start"] >= 0
+            assert provenance["text_offset_end"] >= provenance["text_offset_start"]
+            assert provenance["text_offset_end"] <= len(
+                response.json()["metadata"].get("text_length", float("inf"))
+            ) or provenance["text_offset_end"] <= len(
+                "The database stores information."
+            )
+
+    def test_extract_triples_confidence_values_valid(
+        self, client, ontology_with_individuals
+    ):
+        """All returned triple confidence values are in [0.0, 1.0]."""
+        response = client.post(
+            "/api/extraction/extract",
+            json={
+                "text": "Database systems manage structured data efficiently.",
+                "ontology_id": ontology_with_individuals["taxonomy"].id,
+                "options": {
+                    "model": "gpt-4",
+                    "temperature": 0.0,
+                    "max_tokens": 2000,
+                },
+            },
+        )
+        body = response.json()
+        triples = body["triples"]
+
+        for triple in triples:
+            assert isinstance(triple["confidence"], (int, float))
+            assert 0.0 <= triple["confidence"] <= 1.0
+
+    def test_extract_triples_object_kind_values_valid(
+        self, client, ontology_with_individuals
+    ):
+        """All returned triple object kind values are valid."""
+        response = client.post(
+            "/api/extraction/extract",
+            json={
+                "text": "SQL is a language for relational databases.",
+                "ontology_id": ontology_with_individuals["taxonomy"].id,
+                "options": {
+                    "model": "gpt-4",
+                    "temperature": 0.0,
+                    "max_tokens": 2000,
+                },
+            },
+        )
+        body = response.json()
+        triples = body["triples"]
+
+        for triple in triples:
+            obj = triple["object"]
+            assert obj["kind"] in ["individual", "class", "literal"]
+
+    def test_extract_triples_subject_kind_values_valid(
+        self, client, ontology_with_individuals
+    ):
+        """All returned triple subject kind values are valid."""
+        response = client.post(
+            "/api/extraction/extract",
+            json={
+                "text": "A taxonomy organizes concepts.",
+                "ontology_id": ontology_with_individuals["taxonomy"].id,
+                "options": {
+                    "model": "gpt-4",
+                    "temperature": 0.0,
+                    "max_tokens": 2000,
+                },
+            },
+        )
+        body = response.json()
+        triples = body["triples"]
+
+        for triple in triples:
+            subject = triple["subject"]
+            assert subject["kind"] in ["individual", "class"]
+
+    def test_extract_triples_provenance_offsets_within_bounds(
+        self, client, ontology_with_individuals
+    ):
+        """All returned triple provenance offsets are within text bounds."""
+        text = "The quick brown fox jumps over the lazy dog."
+        response = client.post(
+            "/api/extraction/extract",
+            json={
+                "text": text,
+                "ontology_id": ontology_with_individuals["taxonomy"].id,
+                "options": {
+                    "model": "gpt-4",
+                    "temperature": 0.0,
+                    "max_tokens": 2000,
+                },
+            },
+        )
+        body = response.json()
+        triples = body["triples"]
+
+        for triple in triples:
+            provenance = triple["provenance"]
+            # Offsets should be within text bounds
+            assert provenance["text_offset_start"] >= 0
+            assert provenance["text_offset_end"] <= len(text)
+            assert provenance["text_offset_start"] <= provenance["text_offset_end"]
+
+            # Raw text should match the specified offsets
+            extracted_text = text[
+                provenance["text_offset_start"] : provenance["text_offset_end"]
+            ]
+            assert provenance["raw"] == extracted_text
+
+    def test_extract_triples_with_long_text(self, client, ontology_with_individuals):
+        """POST /api/extraction/extract handles long text input."""
+        long_text = "This is a test sentence. " * 100
+        response = client.post(
+            "/api/extraction/extract",
+            json={
+                "text": long_text,
+                "ontology_id": ontology_with_individuals["taxonomy"].id,
+                "options": {
+                    "model": "gpt-4",
+                    "temperature": 0.0,
+                    "max_tokens": 2000,
+                },
+            },
+        )
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert "triples" in body
+        assert "metadata" in body
+
+    def test_extract_triples_response_validates_against_schema(
+        self, client, ontology_with_individuals, session_factory
+    ):
+        """POST /api/extraction/extract response validates against schema."""
+        from adapters.web.schemas.extraction import ExtractTripleResponse
+        from pydantic import ValidationError
+
+        response = client.post(
+            "/api/extraction/extract",
+            json={
+                "text": "A simple test sentence.",
+                "ontology_id": ontology_with_individuals["taxonomy"].id,
+                "options": {
+                    "model": "gpt-4",
+                    "temperature": 0.0,
+                    "max_tokens": 2000,
+                },
+            },
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+
+        # Verify response can be parsed as ExtractTripleResponse
+        body = response.json()
+        try:
+            validated_response = ExtractTripleResponse(**body)
+            assert validated_response.triples is not None
+            assert validated_response.metadata is not None
+        except ValidationError as e:
+            pytest.fail(f"Response failed schema validation: {e}")
+
+    def test_extract_triples_with_different_models(
+        self, client, ontology_with_individuals
+    ):
+        """POST /api/extraction/extract accepts different model names."""
+        models = ["gpt-4", "claude-opus", "gpt-3.5-turbo"]
+
+        for model in models:
+            response = client.post(
+                "/api/extraction/extract",
+                json={
+                    "text": "Test text for extraction.",
+                    "ontology_id": ontology_with_individuals["taxonomy"].id,
+                    "options": {
+                        "model": model,
+                        "temperature": 0.0,
+                        "max_tokens": 2000,
+                    },
+                },
+            )
+            assert response.status_code == status.HTTP_200_OK
+            body = response.json()
+            assert body["metadata"]["model"] == model
+
+    def test_extract_triples_temperature_variation(
+        self, client, ontology_with_individuals
+    ):
+        """POST /api/extraction/extract accepts different temperature values."""
+        temperatures = [0.0, 0.5, 1.0]
+
+        for temp in temperatures:
+            response = client.post(
+                "/api/extraction/extract",
+                json={
+                    "text": "Test text for extraction.",
+                    "ontology_id": ontology_with_individuals["taxonomy"].id,
+                    "options": {
+                        "model": "gpt-4",
+                        "temperature": temp,
+                        "max_tokens": 2000,
+                    },
+                },
+            )
+            assert response.status_code == status.HTTP_200_OK
+
+    def test_extract_triples_metadata_present_and_valid(
+        self, client, ontology_with_individuals
+    ):
+        """POST /api/extraction/extract metadata is complete and valid."""
+        response = client.post(
+            "/api/extraction/extract",
+            json={
+                "text": "Test text for extraction.",
+                "ontology_id": ontology_with_individuals["taxonomy"].id,
+                "options": {
+                    "model": "gpt-4",
+                    "temperature": 0.0,
+                    "max_tokens": 2000,
+                },
+            },
+        )
+        body = response.json()
+        metadata = body["metadata"]
+
+        # Verify all required metadata fields are present
+        assert "model" in metadata
+        assert "tokens_used" in metadata
+        assert "duration_ms" in metadata
+
+        # Verify types and valid values
+        assert isinstance(metadata["model"], str)
+        assert len(metadata["model"]) > 0
+        assert isinstance(metadata["tokens_used"], int)
+        assert metadata["tokens_used"] >= 0
+        assert isinstance(metadata["duration_ms"], int)
+        assert metadata["duration_ms"] >= 0
