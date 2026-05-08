@@ -21,7 +21,7 @@ import pytest
 from sqlalchemy import create_engine, text, inspect
 from sqlalchemy.orm import sessionmaker
 from alembic.config import Config
-from alembic.command import downgrade, upgrade
+from alembic.command import upgrade
 
 from adapters.persistence.sqlite.models import Base, BatchRun, ImportRun, ExtractionRun, ChangeEvent
 
@@ -800,7 +800,6 @@ class TestMigrationDataSurvival:
             engine4 = create_engine(f"sqlite:///{db_path}")
 
             # Reload the models to use the current schema
-            from adapters.persistence.sqlite.models import Base as CurrentBase
             Base.metadata.bind = engine4
             SessionLocal4 = sessionmaker(bind=engine4)
             session4 = SessionLocal4()
