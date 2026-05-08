@@ -34,12 +34,23 @@ def upgrade() -> None:
     op.create_index(op.f('ix_batch_runs_run_type'), 'batch_runs', ['run_type'], unique=False)
     op.create_index(op.f('ix_batch_runs_status'), 'batch_runs', ['status'], unique=False)
 
-    # Step 2: Migrate data from import_runs to batch_runs
-    op.execute("""
+    # Step 2: Migrate data from import_runs to batch_runs with integrity verification
+    # First, count existing import_runs for validation
+    count_result = op.get_bind().execute(sa.text("SELECT COUNT(*) FROM import_runs"))
+    import_run_count = count_result.scalar()
+
+    insert_result = op.execute("""
         INSERT INTO batch_runs (id, created_at, created_by, status, affected_entity_ids, run_type)
         SELECT id, created_at, created_by, status, affected_entity_ids, 'import' as run_type
         FROM import_runs
     """)
+
+    # Verify all import_runs were migrated
+    if insert_result.rowcount != import_run_count:
+        raise Exception(
+            f"Data migration integrity error: expected to insert {import_run_count} rows, "
+            f"but inserted {insert_result.rowcount}"
+        )
 
     # Step 3: Create extraction_runs table
     op.create_table('extraction_runs',
@@ -61,10 +72,21 @@ def upgrade() -> None:
     # First, add the new column and copy data over
     op.add_column('change_events', sa.Column('batch_run_id', sa.String(length=36), nullable=True))
 
-    # Migrate data from import_run_id to batch_run_id
-    op.execute("""
+    # Count change_events that have import_run_id before migration
+    events_with_import_run = op.get_bind().execute(
+        sa.text("SELECT COUNT(*) FROM change_events WHERE import_run_id IS NOT NULL")
+    ).scalar()
+
+    # Migrate data from import_run_id to batch_run_id with integrity verification
+    update_result = op.execute("""
         UPDATE change_events SET batch_run_id = import_run_id WHERE import_run_id IS NOT NULL
     """)
+
+    if update_result.rowcount != events_with_import_run:
+        raise Exception(
+            f"Data migration integrity error: expected to update {events_with_import_run} rows, "
+            f"but updated {update_result.rowcount}"
+        )
 
     # Now use batch mode to drop the old column and update constraints
     with op.batch_alter_table('change_events', schema=None) as batch_op:

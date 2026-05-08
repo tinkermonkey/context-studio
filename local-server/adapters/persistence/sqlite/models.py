@@ -698,11 +698,14 @@ class ConflictResolution(Base):  # type: ignore[misc,valid-type]
 
 class BatchRun(Base):  # type: ignore[misc,valid-type]
     """
-    Base class for all batch run types using joined-table inheritance.
+    Abstract base class for all batch run types using joined-table inheritance.
 
     Batch runs (imports, extractions, etc.) share common fields and are
     distinguished by the run_type discriminator column. Subclasses use
     joined-table inheritance, with their own tables containing type-specific fields.
+
+    This class is abstract and should not be instantiated directly.
+    Use ImportRun or ExtractionRun instead.
 
     Attributes:
         id: UUID as string, primary key
@@ -747,7 +750,6 @@ class BatchRun(Base):  # type: ignore[misc,valid-type]
     )
 
     __mapper_args__ = {  # type: ignore[assignment]
-        "polymorphic_identity": "batch_run",
         "polymorphic_on": run_type,
     }
     __table_args__ = (
@@ -890,6 +892,18 @@ class ExtractionRun(BatchRun):  # type: ignore[misc,valid-type]
     __mapper_args__ = {  # type: ignore[assignment]
         "polymorphic_identity": "extraction",
     }
+    __table_args__ = (
+        CheckConstraint("temperature >= 0.0", name="check_temperature_min"),
+        CheckConstraint("temperature <= 2.0", name="check_temperature_max"),
+        CheckConstraint("tokens_used >= 0", name="check_tokens_non_negative"),
+        CheckConstraint("duration_ms >= 0", name="check_duration_non_negative"),
+        CheckConstraint("triples_extracted >= 0", name="check_triples_extracted_non_negative"),
+        CheckConstraint("triples_committed >= 0", name="check_triples_committed_non_negative"),
+        CheckConstraint(
+            "triples_committed <= triples_extracted",
+            name="check_triples_committed_le_extracted",
+        ),
+    )
 
     def __repr__(self) -> str:
         return f"<ExtractionRun(id={self.id}, model={self.model}, status={self.status})>"
