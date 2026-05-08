@@ -12,7 +12,6 @@ Key responsibilities:
 """
 
 from typing import Sequence
-from uuid import uuid4
 
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy import desc
@@ -217,15 +216,15 @@ class SQLiteExtractionRunRepository:
         status = status_map.get(orm_run.status, ExtractionRunStatus.PENDING)
 
         return ExtractionRun(
-            id=orm_run.id or "",  # type: ignore[arg-type]
-            source_document_uri=orm_run.source_document_uri,  # type: ignore[arg-type]
-            source_text_hash=orm_run.source_text_hash or "",  # type: ignore[arg-type]
-            pipeline_config_ref=orm_run.pipeline_config_ref or "",  # type: ignore[arg-type]
-            model=orm_run.model or "",  # type: ignore[arg-type]
-            temperature=orm_run.temperature or 0.0,  # type: ignore[arg-type]
-            tokens_used=orm_run.tokens_used or 0,  # type: ignore[arg-type]
-            duration_ms=orm_run.duration_ms or 0,  # type: ignore[arg-type]
-            triples_extracted=orm_run.triples_extracted or 0,  # type: ignore[arg-type]
-            triples_committed=orm_run.triples_committed or 0,  # type: ignore[arg-type]
+            id=str(orm_run.id) if orm_run.id else "",
+            source_document_uri=orm_run.source_document_uri,
+            source_text_hash=str(orm_run.source_text_hash) if orm_run.source_text_hash else "",
+            pipeline_config_ref=str(orm_run.pipeline_config_ref) if orm_run.pipeline_config_ref else "",
+            model=str(orm_run.model) if orm_run.model else "",
+            temperature=float(orm_run.temperature) if orm_run.temperature is not None else 0.0,
+            tokens_used=int(orm_run.tokens_used) if orm_run.tokens_used is not None else 0,
+            duration_ms=int(orm_run.duration_ms) if orm_run.duration_ms is not None else 0,
+            triples_extracted=int(orm_run.triples_extracted) if orm_run.triples_extracted is not None else 0,
+            triples_committed=int(orm_run.triples_committed) if orm_run.triples_committed is not None else 0,
             status=status,
         )

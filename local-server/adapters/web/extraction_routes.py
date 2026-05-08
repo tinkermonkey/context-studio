@@ -287,25 +287,10 @@ async def extract_triples(
             request.options.temperature,
         )
 
-        triples = [
-            {
-                "subject": triple["subject"],
-                "predicate": triple["predicate"],
-                "object": triple["object"],
-                "confidence": triple["confidence"],
-                "provenance": triple["provenance"],
-            }
-            for triple in result["triples"]
-        ]
-
         return ExtractTripleResponse(
-            triples=triples,
-            warnings=result.get("warnings", []),
-            metadata={
-                "model": result["metadata"]["model"],
-                "tokens_used": result["metadata"]["tokens_used"],
-                "duration_ms": result["metadata"]["duration_ms"],
-            },
+            triples=result.triples,
+            warnings=result.warnings,
+            metadata=result.metadata,
         )
     except (InvalidInputError, ExtractionError) as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))

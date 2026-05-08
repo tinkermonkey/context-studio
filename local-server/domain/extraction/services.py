@@ -8,7 +8,10 @@ embedding services, LLM providers, NLP processors, and reference sources.
 
 from __future__ import annotations
 
+import hashlib
+import json
 import logging
+import re
 import time
 from datetime import datetime, timezone
 from types import MappingProxyType
@@ -18,7 +21,7 @@ from domain.ontology.ports import OntologyRepository, EmbeddingService
 from domain.ports import EventPublisher
 from domain.pipeline.ports import LLMProvider
 from . import layers
-from .entities import ExtractedEntity, ExtractionResult, ExtractionRun, ExtractionRunStatus
+from .entities import ExtractedEntity, ExtractionResult, ExtractionRun, ExtractionRunStatus, TripleExtractionResult
 from .events import ExtractionCompleted
 from .exceptions import ExtractionError
 from .ports import NLPProcessor, ReferenceSource, ExtractionRepository, ExtractionRunRepository
@@ -321,7 +324,7 @@ class ExtractionService:
         ontology_id: str,
         model: str,
         temperature: float,
-    ) -> dict:
+    ) -> TripleExtractionResult:
         """
         Extract RDF triples from text, scoped to a specific ontology.
 
@@ -350,9 +353,6 @@ class ExtractionService:
         if not 0.0 <= temperature <= 2.0:
             raise ValueError(f"temperature must be 0.0–2.0, got {temperature}")
 
-        import hashlib
-        from uuid import uuid4
-
         # Create extraction run record
         run_id = str(uuid4())
         text_hash = hashlib.sha256(text.encode()).hexdigest()
@@ -378,17 +378,21 @@ class ExtractionService:
 
         try:
             # Get ontology to validate it exists
-            try:
-                ontology = self._ontology_repo.get_taxonomy(ontology_id)
-                if not ontology:
-                    raise ValueError(f"Ontology {ontology_id} not found")
-            except Exception as e:
-                raise ValueError(f"Failed to load ontology {ontology_id}: {str(e)}")
+            ontology = self._ontology_repo.get_taxonomy(ontology_id)
+            if not ontology:
+                raise ValueError(f"Ontology {ontology_id} not found")
 
             # Call LLM to extract triples
-            prompt = self._build_triple_extraction_prompt(text, ontology)
-            llm_response = self._llm.complete(prompt, model, temperature, max_tokens=8000)
-            tokens_used = getattr(llm_response, "usage", {}).get("total_tokens", 0)
+            system_prompt, user_prompt = self._build_triple_extraction_prompt(text, ontology)
+            llm_response = self._llm.complete(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                model=model,
+                temperature=temperature,
+                max_tokens=8000,
+                response_format="json",
+            )
+            tokens_used = llm_response.tokens_in + llm_response.tokens_out
 
             # Parse LLM response
             extracted_triples = self._parse_triple_extraction_response(
@@ -422,48 +426,53 @@ class ExtractionService:
 
         self._extraction_run_repo.update_extraction_run(run)
 
-        return {
-            "triples": extracted_triples,
-            "warnings": warnings,
-            "metadata": {
+        return TripleExtractionResult(
+            triples=extracted_triples,
+            warnings=warnings,
+            metadata={
                 "model": model,
                 "tokens_used": tokens_used,
                 "duration_ms": duration_ms,
             },
-        }
+        )
 
-    def _build_triple_extraction_prompt(self, text: str, ontology) -> str:
+    def _build_triple_extraction_prompt(self, text: str, ontology) -> tuple[str, str]:
         """
-        Build a prompt for the LLM to extract triples from text.
+        Build system and user prompts for LLM triple extraction.
 
         Args:
             text: Source text to extract from
             ontology: The target ontology
 
         Returns:
-            Prompt string for the LLM
+            Tuple of (system_prompt, user_prompt)
         """
-        return f"""Extract RDF triples from the following text, scoped to the ontology context provided.
+        system_prompt = """You are an expert knowledge graph extraction assistant.
+Your task is to extract RDF triples from text, scoped to an ontology context.
+
+Extract triples in the following JSON format:
+{
+  "triples": [
+    {
+      "subject": {"kind": "individual|class", "id": "...", "label": "..."},
+      "predicate": {"property_definition_id": "...", "label": "..."},
+      "object": {"kind": "individual|class|literal", "id": "...", "label": "...", "value": "..."},
+      "confidence": 0.95,
+      "provenance": {"text_offset_start": 0, "text_offset_end": 10, "raw": "..."}
+    }
+  ]
+}
+
+Return only valid JSON. If no triples can be extracted, return {"triples": []}."""
+
+        user_prompt = f"""Extract RDF triples from the following text, scoped to the ontology context provided.
 
 Text:
 {text}
 
-Ontology: {ontology.title if hasattr(ontology, 'title') else str(ontology)}
+Ontology: {ontology.title if hasattr(ontology, 'title') else str(ontology)}"""
 
-Extract triples in the following JSON format:
-{{
-  "triples": [
-    {{
-      "subject": {{"kind": "individual|class", "id": "...", "label": "..."}},
-      "predicate": {{"property_definition_id": "...", "label": "..."}},
-      "object": {{"kind": "individual|class|literal", "id": "...", "label": "...", "value": "..."}},
-      "confidence": 0.95,
-      "provenance": {{"text_offset_start": 0, "text_offset_end": 10, "raw": "..."}}
-    }}
-  ]
-}}
-
-Return only valid JSON. If no triples can be extracted, return {{"triples": []}}."""
+        return system_prompt, user_prompt
 
     def _parse_triple_extraction_response(
         self, response: str, text: str, ontology_id: str
@@ -479,11 +488,8 @@ Return only valid JSON. If no triples can be extracted, return {{"triples": []}}
         Returns:
             List of extracted triple dictionaries
         """
-        import json
-
         try:
             # Extract JSON from response
-            import re
             json_match = re.search(r"\{.*\}", response, re.DOTALL)
             if not json_match:
                 return []

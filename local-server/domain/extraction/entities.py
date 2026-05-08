@@ -269,3 +269,19 @@ class ExtractionRun:
             triples_committed=0,
             status=ExtractionRunStatus.PENDING,
         )
+
+
+@dataclass
+class TripleExtractionResult:
+    """
+    Result of triple extraction from text.
+
+    Attributes:
+        triples: List of extracted triple dictionaries
+        warnings: List of warnings or validation issues encountered
+        metadata: Extraction metadata (model, tokens_used, duration_ms)
+    """
+
+    triples: list[dict]
+    warnings: list[str]
+    metadata: dict[str, int | str]
