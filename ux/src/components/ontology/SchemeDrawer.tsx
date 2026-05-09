@@ -34,6 +34,9 @@ export function SchemeDrawer({ scheme, taxonomyName, onClose }: SchemeDrawerProp
 
   const { performDelete, undo } = useUndoDelete({
     onDelete: (id: string) => deleteMutation.mutateAsync(id),
+    onDeleteError: (id: string, error: Error) => {
+      toast("error", `Failed to delete scheme: ${error.message}`);
+    },
     undoWindowMs: 8000,
   });
 
@@ -74,19 +77,15 @@ export function SchemeDrawer({ scheme, taxonomyName, onClose }: SchemeDrawerProp
 
   const handleDelete = async () => {
     if (!scheme) return;
-    try {
-      await performDelete(scheme.id);
-      toast("success", schemesCopy.delete.successToast, "Undo", {
-        action: {
-          label: "Undo",
-          onAction: undo,
-        },
-        autoDismissMs: 8000,
-      });
-      onClose();
-    } catch {
-      toast("error", "Failed to delete scheme");
-    }
+    await performDelete(scheme.id);
+    toast("success", schemesCopy.delete.successToast, "Undo", {
+      action: {
+        label: "Undo",
+        onAction: undo,
+      },
+      autoDismissMs: 8000,
+    });
+    onClose();
   };
 
   const handleDeleteClick = () => {

@@ -35,6 +35,9 @@ function TaxonomyDetailContent({ taxonomy }: { taxonomy: TaxonomyResponse }) {
 
   const { performDelete, undo } = useUndoDelete({
     onDelete: (id: string) => deleteMutation.mutateAsync(id),
+    onDeleteError: (id: string, error: Error) => {
+      toast("error", `Failed to delete taxonomy: ${error.message}`);
+    },
     undoWindowMs: 8000,
   });
 
@@ -73,19 +76,15 @@ function TaxonomyDetailContent({ taxonomy }: { taxonomy: TaxonomyResponse }) {
   };
 
   const handleDelete = async () => {
-    try {
-      await performDelete(taxonomy.id);
-      toast("success", taxonomiesCopy.delete.successToast, "Undo", {
-        action: {
-          label: "Undo",
-          onAction: undo,
-        },
-        autoDismissMs: 8000,
-      });
-      navigate({ to: "/app/schema/taxonomies" });
-    } catch {
-      toast("error", "Failed to delete taxonomy");
-    }
+    await performDelete(taxonomy.id);
+    toast("success", taxonomiesCopy.delete.successToast, "Undo", {
+      action: {
+        label: "Undo",
+        onAction: undo,
+      },
+      autoDismissMs: 8000,
+    });
+    navigate({ to: "/app/schema/taxonomies" });
   };
 
   return (

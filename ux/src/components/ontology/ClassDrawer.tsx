@@ -43,6 +43,9 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
 
   const { performDelete, undo } = useUndoDelete({
     onDelete: (id: string) => deleteMutation.mutateAsync(id),
+    onDeleteError: (id: string, error: Error) => {
+      toast("error", `Failed to delete class: ${error.message}`);
+    },
     undoWindowMs: 8000,
   });
 
@@ -87,19 +90,15 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
 
   const handleDelete = async () => {
     if (!classData) return;
-    try {
-      await performDelete(classData.id);
-      toast("success", classesCopy.delete.successToast, "Undo", {
-        action: {
-          label: "Undo",
-          onAction: undo,
-        },
-        autoDismissMs: 8000,
-      });
-      onClose();
-    } catch {
-      toast("error", "Failed to delete class");
-    }
+    await performDelete(classData.id);
+    toast("success", classesCopy.delete.successToast, "Undo", {
+      action: {
+        label: "Undo",
+        onAction: undo,
+      },
+      autoDismissMs: 8000,
+    });
+    onClose();
   };
 
   const handleDeleteClick = () => {

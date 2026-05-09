@@ -30,6 +30,9 @@ export function TaxonomyDrawer({ taxonomy, onClose }: TaxonomyDrawerProps) {
   const deleteMutation = useDeleteTaxonomy();
   const { performDelete, undo } = useUndoDelete({
     onDelete: (id: string) => deleteMutation.mutateAsync(id),
+    onDeleteError: (id: string, error: Error) => {
+      toast("error", `Failed to delete taxonomy: ${error.message}`);
+    },
     undoWindowMs: 8000,
   });
 
@@ -70,19 +73,15 @@ export function TaxonomyDrawer({ taxonomy, onClose }: TaxonomyDrawerProps) {
 
   const handleDelete = async () => {
     if (!taxonomy) return;
-    try {
-      await performDelete(taxonomy.id);
-      toast("success", taxonomiesCopy.delete.successToast, "Undo", {
-        action: {
-          label: "Undo",
-          onAction: undo,
-        },
-        autoDismissMs: 8000,
-      });
-      onClose();
-    } catch {
-      toast("error", "Failed to delete taxonomy");
-    }
+    await performDelete(taxonomy.id);
+    toast("success", taxonomiesCopy.delete.successToast, "Undo", {
+      action: {
+        label: "Undo",
+        onAction: undo,
+      },
+      autoDismissMs: 8000,
+    });
+    onClose();
   };
 
   const handleDeleteClick = () => {
