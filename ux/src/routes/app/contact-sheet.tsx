@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus, Trash2, Edit2, ExternalLink, Globe, Cpu, GitMerge, Database } from "lucide-react";
+import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { Input, Textarea, Select } from "@/components/ui/Input";
@@ -11,6 +12,11 @@ import { StatTile } from "@/components/ui/StatTile";
 import { Panel } from "@/components/ui/Panel";
 import { ToastViewport, useToasts } from "@/components/ui/Toast";
 import { useCanvasStore } from "@/stores/canvas";
+import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
+import { SchemaTable } from "@/components/schema/SchemaTable";
+import { FilterBar } from "@/components/schema/FilterBar";
+import { SchemaDrawer } from "@/components/schema/SchemaDrawer";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export const Route = createFileRoute("/app/contact-sheet")({
   component: ContactSheet,
@@ -44,12 +50,60 @@ function Row({ gap = 8, wrap = false, children }: { gap?: number; wrap?: boolean
   );
 }
 
+interface MockEntity {
+  id: string;
+  title: string;
+  description?: string;
+}
+
 export default function ContactSheet() {
   const [modalOpen, setModalOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [schemaDrawerOpen, setSchemaDrawerOpen] = useState(false);
+  const [selectedSchemaId, setSelectedSchemaId] = useState<string | undefined>();
+  const [searchFilter, setSearchFilter] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
   const { darkCanvas, toggleDarkCanvas } = useCanvasStore();
   const { toasts, dismiss, toast } = useToasts();
+
+  const mockSchemaData: MockEntity[] = [
+    { id: "1", title: "Organism", description: "All living entities" },
+    { id: "2", title: "Plant", description: "Photosynthetic organisms" },
+    { id: "3", title: "Animal", description: "Heterotrophic organisms" },
+  ];
+
+  const schemaColumns: ColumnDef<MockEntity>[] = [
+    {
+      accessorKey: "id",
+      header: "ID",
+      size: 100,
+      cell: (info) => <span className="mono">{info.getValue() as string}</span>,
+    },
+    {
+      accessorKey: "title",
+      header: "Title",
+      cell: (info) => (
+        <span className="row-link">{info.getValue() as string}</span>
+      ),
+    },
+    {
+      accessorKey: "description",
+      header: "Description",
+      cell: (info) => (
+        <span style={{ color: "var(--canvas-fg-2)" }}>
+          {info.getValue() as string}
+        </span>
+      ),
+    },
+  ];
+
+  const filteredSchemaData = mockSchemaData.filter(
+    (item) =>
+      item.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
+      item.description?.toLowerCase().includes(searchFilter.toLowerCase())
+  );
+
+  const selectedEntity = mockSchemaData.find((item) => item.id === selectedSchemaId);
 
   return (
     <div>
@@ -342,6 +396,55 @@ export default function ContactSheet() {
             <dt>Taxonomy</dt><dd>PlantOntology</dd>
           </dl>
         </Drawer>
+      </Section>
+
+      {/* ── Schema Components ── */}
+      <Section title="Schema Components">
+        <div style={{ marginBottom: "var(--space-6)" }}>
+          <h3 style={{ fontSize: "var(--text-sm)", fontWeight: 600, marginBottom: "var(--space-3)" }}>
+            Filter Bar + Table + Drawer Layout
+          </h3>
+          <div style={{ maxWidth: 800 }}>
+            <FilterBar
+              searchValue={searchFilter}
+              onSearchChange={setSearchFilter}
+              placeholder="Search by title or description…"
+              data-testid="schema-filter-bar"
+            />
+            <div style={{ marginTop: "var(--space-4)" }}>
+              <SchemaTable
+                columns={schemaColumns}
+                data={filteredSchemaData}
+                onRowSelect={(id) => setSelectedSchemaId(id)}
+                selectedId={selectedSchemaId}
+                data-testid="schema-table"
+              />
+            </div>
+          </div>
+        </div>
+        {selectedEntity && (
+          <div style={{ marginTop: "var(--space-6)", padding: "var(--space-4)", border: "1px dashed var(--canvas-bd)", borderRadius: "8px" }}>
+            <h4 style={{ fontSize: "var(--text-sm)", fontWeight: 600, marginBottom: "var(--space-2)" }}>
+              SchemaDrawer (selected: {selectedEntity.title})
+            </h4>
+            <SchemaDrawer
+              open={!!selectedEntity}
+              onClose={() => setSelectedSchemaId(undefined)}
+              title={selectedEntity.title}
+              autosaveState="idle"
+              isDirty={false}
+            >
+              <dl className="kv">
+                <dt>Title</dt>
+                <dd>{selectedEntity.title}</dd>
+                <dt>ID</dt>
+                <dd style={{ fontFamily: "var(--mono)", fontSize: "11px" }}>{selectedEntity.id}</dd>
+                <dt>Description</dt>
+                <dd>{selectedEntity.description}</dd>
+              </dl>
+            </SchemaDrawer>
+          </div>
+        )}
       </Section>
 
       {/* ── Intent banners ── */}

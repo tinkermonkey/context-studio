@@ -64,3 +64,32 @@ selectors:
   - selector: type-confirm-cancel
     component: components/ui/TypeToConfirmDialog.tsx
     description: Cancel button in type-confirm dialog
+
+  # Schema Components
+  - selector: schema-page-layout
+    component: components/schema/SchemaPageLayout.tsx
+    description: Main split-pane layout container with table and drawer
+  - selector: schema-table
+    component: components/schema/SchemaTable.tsx
+    description: Main table container for schema entities
+  - selector: schema-header-*
+    component: components/schema/SchemaTable.tsx
+    description: Table header cell with optional sort indicator
+  - selector: schema-row-*
+    component: components/schema/SchemaTable.tsx
+    description: Table row for entity with dynamic ID suffix
+  - selector: schema-pagination-prev
+    component: components/schema/SchemaTable.tsx
+    description: Previous page button in table pagination
+  - selector: schema-pagination-next
+    component: components/schema/SchemaTable.tsx
+    description: Next page button in table pagination
+  - selector: schema-search-input
+    component: components/schema/FilterBar.tsx
+    description: Search input for filtering table rows
+  - selector: schema-filter-bar
+    component: components/schema/FilterBar.tsx
+    description: Filter bar container with search and filter chips
+  - selector: schema-drawer-container
+    component: components/schema/SchemaPageLayout.tsx
+    description: Drawer container when entity is selected
