@@ -8,392 +8,392 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./routes/__root";
-import { Route as WelcomeRouteImport } from "./routes/welcome";
-import { Route as AppRouteImport } from "./routes/app";
-import { Route as IndexRouteImport } from "./routes/index";
-import { Route as AppIndexRouteImport } from "./routes/app/index";
-import { Route as AppSettingsRouteImport } from "./routes/app/settings";
-import { Route as AppContactSheetRouteImport } from "./routes/app/contact-sheet";
-import { Route as AppPipelinesIndexRouteImport } from "./routes/app/pipelines/index";
-import { Route as AppSchemaTaxonomiesRouteImport } from "./routes/app/schema/taxonomies";
-import { Route as AppSchemaSchemesRouteImport } from "./routes/app/schema/schemes";
-import { Route as AppSchemaRelationshipsRouteImport } from "./routes/app/schema/relationships";
-import { Route as AppSchemaPropertiesRouteImport } from "./routes/app/schema/properties";
-import { Route as AppSchemaClassesRouteImport } from "./routes/app/schema/classes";
-import { Route as AppReferenceWorkflowsRouteImport } from "./routes/app/reference/workflows";
-import { Route as AppReferenceSourcesRouteImport } from "./routes/app/reference/sources";
-import { Route as AppPipelinesRunsRouteImport } from "./routes/app/pipelines/runs";
-import { Route as AppPipelinesFlavorsRouteImport } from "./routes/app/pipelines/flavors";
-import { Route as AppDataIndividualsRouteImport } from "./routes/app/data/individuals";
-import { Route as AppDataDatasetsRouteImport } from "./routes/app/data/datasets";
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as WelcomeRouteImport } from './routes/welcome'
+import { Route as AppRouteImport } from './routes/app'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppIndexRouteImport } from './routes/app/index'
+import { Route as AppSettingsRouteImport } from './routes/app/settings'
+import { Route as AppContactSheetRouteImport } from './routes/app/contact-sheet'
+import { Route as AppPipelinesIndexRouteImport } from './routes/app/pipelines/index'
+import { Route as AppSchemaTaxonomiesRouteImport } from './routes/app/schema/taxonomies'
+import { Route as AppSchemaSchemesRouteImport } from './routes/app/schema/schemes'
+import { Route as AppSchemaRelationshipsRouteImport } from './routes/app/schema/relationships'
+import { Route as AppSchemaPropertiesRouteImport } from './routes/app/schema/properties'
+import { Route as AppSchemaClassesRouteImport } from './routes/app/schema/classes'
+import { Route as AppReferenceWorkflowsRouteImport } from './routes/app/reference/workflows'
+import { Route as AppReferenceSourcesRouteImport } from './routes/app/reference/sources'
+import { Route as AppPipelinesRunsRouteImport } from './routes/app/pipelines/runs'
+import { Route as AppPipelinesFlavorsRouteImport } from './routes/app/pipelines/flavors'
+import { Route as AppDataIndividualsRouteImport } from './routes/app/data/individuals'
+import { Route as AppDataDatasetsRouteImport } from './routes/app/data/datasets'
 
 const WelcomeRoute = WelcomeRouteImport.update({
-  id: "/welcome",
-  path: "/welcome",
+  id: '/welcome',
+  path: '/welcome',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const AppRoute = AppRouteImport.update({
-  id: "/app",
-  path: "/app",
+  id: '/app',
+  path: '/app',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const IndexRoute = IndexRouteImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const AppIndexRoute = AppIndexRouteImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => AppRoute,
-} as any);
+} as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
-  id: "/settings",
-  path: "/settings",
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => AppRoute,
-} as any);
+} as any)
 const AppContactSheetRoute = AppContactSheetRouteImport.update({
-  id: "/contact-sheet",
-  path: "/contact-sheet",
+  id: '/contact-sheet',
+  path: '/contact-sheet',
   getParentRoute: () => AppRoute,
-} as any);
+} as any)
 const AppPipelinesIndexRoute = AppPipelinesIndexRouteImport.update({
-  id: "/pipelines/",
-  path: "/pipelines/",
+  id: '/pipelines/',
+  path: '/pipelines/',
   getParentRoute: () => AppRoute,
-} as any);
+} as any)
 const AppSchemaTaxonomiesRoute = AppSchemaTaxonomiesRouteImport.update({
-  id: "/schema/taxonomies",
-  path: "/schema/taxonomies",
+  id: '/schema/taxonomies',
+  path: '/schema/taxonomies',
   getParentRoute: () => AppRoute,
-} as any);
+} as any)
 const AppSchemaSchemesRoute = AppSchemaSchemesRouteImport.update({
-  id: "/schema/schemes",
-  path: "/schema/schemes",
+  id: '/schema/schemes',
+  path: '/schema/schemes',
   getParentRoute: () => AppRoute,
-} as any);
+} as any)
 const AppSchemaRelationshipsRoute = AppSchemaRelationshipsRouteImport.update({
-  id: "/schema/relationships",
-  path: "/schema/relationships",
+  id: '/schema/relationships',
+  path: '/schema/relationships',
   getParentRoute: () => AppRoute,
-} as any);
+} as any)
 const AppSchemaPropertiesRoute = AppSchemaPropertiesRouteImport.update({
-  id: "/schema/properties",
-  path: "/schema/properties",
+  id: '/schema/properties',
+  path: '/schema/properties',
   getParentRoute: () => AppRoute,
-} as any);
+} as any)
 const AppSchemaClassesRoute = AppSchemaClassesRouteImport.update({
-  id: "/schema/classes",
-  path: "/schema/classes",
+  id: '/schema/classes',
+  path: '/schema/classes',
   getParentRoute: () => AppRoute,
-} as any);
+} as any)
 const AppReferenceWorkflowsRoute = AppReferenceWorkflowsRouteImport.update({
-  id: "/reference/workflows",
-  path: "/reference/workflows",
+  id: '/reference/workflows',
+  path: '/reference/workflows',
   getParentRoute: () => AppRoute,
-} as any);
+} as any)
 const AppReferenceSourcesRoute = AppReferenceSourcesRouteImport.update({
-  id: "/reference/sources",
-  path: "/reference/sources",
+  id: '/reference/sources',
+  path: '/reference/sources',
   getParentRoute: () => AppRoute,
-} as any);
+} as any)
 const AppPipelinesRunsRoute = AppPipelinesRunsRouteImport.update({
-  id: "/pipelines/runs",
-  path: "/pipelines/runs",
+  id: '/pipelines/runs',
+  path: '/pipelines/runs',
   getParentRoute: () => AppRoute,
-} as any);
+} as any)
 const AppPipelinesFlavorsRoute = AppPipelinesFlavorsRouteImport.update({
-  id: "/pipelines/flavors",
-  path: "/pipelines/flavors",
+  id: '/pipelines/flavors',
+  path: '/pipelines/flavors',
   getParentRoute: () => AppRoute,
-} as any);
+} as any)
 const AppDataIndividualsRoute = AppDataIndividualsRouteImport.update({
-  id: "/data/individuals",
-  path: "/data/individuals",
+  id: '/data/individuals',
+  path: '/data/individuals',
   getParentRoute: () => AppRoute,
-} as any);
+} as any)
 const AppDataDatasetsRoute = AppDataDatasetsRouteImport.update({
-  id: "/data/datasets",
-  path: "/data/datasets",
+  id: '/data/datasets',
+  path: '/data/datasets',
   getParentRoute: () => AppRoute,
-} as any);
+} as any)
 
 export interface FileRoutesByFullPath {
-  "/": typeof IndexRoute;
-  "/app": typeof AppRouteWithChildren;
-  "/welcome": typeof WelcomeRoute;
-  "/app/contact-sheet": typeof AppContactSheetRoute;
-  "/app/settings": typeof AppSettingsRoute;
-  "/app/": typeof AppIndexRoute;
-  "/app/data/datasets": typeof AppDataDatasetsRoute;
-  "/app/data/individuals": typeof AppDataIndividualsRoute;
-  "/app/pipelines/flavors": typeof AppPipelinesFlavorsRoute;
-  "/app/pipelines/runs": typeof AppPipelinesRunsRoute;
-  "/app/reference/sources": typeof AppReferenceSourcesRoute;
-  "/app/reference/workflows": typeof AppReferenceWorkflowsRoute;
-  "/app/schema/classes": typeof AppSchemaClassesRoute;
-  "/app/schema/properties": typeof AppSchemaPropertiesRoute;
-  "/app/schema/relationships": typeof AppSchemaRelationshipsRoute;
-  "/app/schema/schemes": typeof AppSchemaSchemesRoute;
-  "/app/schema/taxonomies": typeof AppSchemaTaxonomiesRoute;
-  "/app/pipelines/": typeof AppPipelinesIndexRoute;
+  '/': typeof IndexRoute
+  '/app': typeof AppRouteWithChildren
+  '/welcome': typeof WelcomeRoute
+  '/app/contact-sheet': typeof AppContactSheetRoute
+  '/app/settings': typeof AppSettingsRoute
+  '/app/': typeof AppIndexRoute
+  '/app/data/datasets': typeof AppDataDatasetsRoute
+  '/app/data/individuals': typeof AppDataIndividualsRoute
+  '/app/pipelines/flavors': typeof AppPipelinesFlavorsRoute
+  '/app/pipelines/runs': typeof AppPipelinesRunsRoute
+  '/app/reference/sources': typeof AppReferenceSourcesRoute
+  '/app/reference/workflows': typeof AppReferenceWorkflowsRoute
+  '/app/schema/classes': typeof AppSchemaClassesRoute
+  '/app/schema/properties': typeof AppSchemaPropertiesRoute
+  '/app/schema/relationships': typeof AppSchemaRelationshipsRoute
+  '/app/schema/schemes': typeof AppSchemaSchemesRoute
+  '/app/schema/taxonomies': typeof AppSchemaTaxonomiesRoute
+  '/app/pipelines/': typeof AppPipelinesIndexRoute
 }
 export interface FileRoutesByTo {
-  "/": typeof IndexRoute;
-  "/welcome": typeof WelcomeRoute;
-  "/app/contact-sheet": typeof AppContactSheetRoute;
-  "/app/settings": typeof AppSettingsRoute;
-  "/app": typeof AppIndexRoute;
-  "/app/data/datasets": typeof AppDataDatasetsRoute;
-  "/app/data/individuals": typeof AppDataIndividualsRoute;
-  "/app/pipelines/flavors": typeof AppPipelinesFlavorsRoute;
-  "/app/pipelines/runs": typeof AppPipelinesRunsRoute;
-  "/app/reference/sources": typeof AppReferenceSourcesRoute;
-  "/app/reference/workflows": typeof AppReferenceWorkflowsRoute;
-  "/app/schema/classes": typeof AppSchemaClassesRoute;
-  "/app/schema/properties": typeof AppSchemaPropertiesRoute;
-  "/app/schema/relationships": typeof AppSchemaRelationshipsRoute;
-  "/app/schema/schemes": typeof AppSchemaSchemesRoute;
-  "/app/schema/taxonomies": typeof AppSchemaTaxonomiesRoute;
-  "/app/pipelines": typeof AppPipelinesIndexRoute;
+  '/': typeof IndexRoute
+  '/welcome': typeof WelcomeRoute
+  '/app/contact-sheet': typeof AppContactSheetRoute
+  '/app/settings': typeof AppSettingsRoute
+  '/app': typeof AppIndexRoute
+  '/app/data/datasets': typeof AppDataDatasetsRoute
+  '/app/data/individuals': typeof AppDataIndividualsRoute
+  '/app/pipelines/flavors': typeof AppPipelinesFlavorsRoute
+  '/app/pipelines/runs': typeof AppPipelinesRunsRoute
+  '/app/reference/sources': typeof AppReferenceSourcesRoute
+  '/app/reference/workflows': typeof AppReferenceWorkflowsRoute
+  '/app/schema/classes': typeof AppSchemaClassesRoute
+  '/app/schema/properties': typeof AppSchemaPropertiesRoute
+  '/app/schema/relationships': typeof AppSchemaRelationshipsRoute
+  '/app/schema/schemes': typeof AppSchemaSchemesRoute
+  '/app/schema/taxonomies': typeof AppSchemaTaxonomiesRoute
+  '/app/pipelines': typeof AppPipelinesIndexRoute
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport;
-  "/": typeof IndexRoute;
-  "/app": typeof AppRouteWithChildren;
-  "/welcome": typeof WelcomeRoute;
-  "/app/contact-sheet": typeof AppContactSheetRoute;
-  "/app/settings": typeof AppSettingsRoute;
-  "/app/": typeof AppIndexRoute;
-  "/app/data/datasets": typeof AppDataDatasetsRoute;
-  "/app/data/individuals": typeof AppDataIndividualsRoute;
-  "/app/pipelines/flavors": typeof AppPipelinesFlavorsRoute;
-  "/app/pipelines/runs": typeof AppPipelinesRunsRoute;
-  "/app/reference/sources": typeof AppReferenceSourcesRoute;
-  "/app/reference/workflows": typeof AppReferenceWorkflowsRoute;
-  "/app/schema/classes": typeof AppSchemaClassesRoute;
-  "/app/schema/properties": typeof AppSchemaPropertiesRoute;
-  "/app/schema/relationships": typeof AppSchemaRelationshipsRoute;
-  "/app/schema/schemes": typeof AppSchemaSchemesRoute;
-  "/app/schema/taxonomies": typeof AppSchemaTaxonomiesRoute;
-  "/app/pipelines/": typeof AppPipelinesIndexRoute;
+  __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/app': typeof AppRouteWithChildren
+  '/welcome': typeof WelcomeRoute
+  '/app/contact-sheet': typeof AppContactSheetRoute
+  '/app/settings': typeof AppSettingsRoute
+  '/app/': typeof AppIndexRoute
+  '/app/data/datasets': typeof AppDataDatasetsRoute
+  '/app/data/individuals': typeof AppDataIndividualsRoute
+  '/app/pipelines/flavors': typeof AppPipelinesFlavorsRoute
+  '/app/pipelines/runs': typeof AppPipelinesRunsRoute
+  '/app/reference/sources': typeof AppReferenceSourcesRoute
+  '/app/reference/workflows': typeof AppReferenceWorkflowsRoute
+  '/app/schema/classes': typeof AppSchemaClassesRoute
+  '/app/schema/properties': typeof AppSchemaPropertiesRoute
+  '/app/schema/relationships': typeof AppSchemaRelationshipsRoute
+  '/app/schema/schemes': typeof AppSchemaSchemesRoute
+  '/app/schema/taxonomies': typeof AppSchemaTaxonomiesRoute
+  '/app/pipelines/': typeof AppPipelinesIndexRoute
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
+  fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | "/"
-    | "/app"
-    | "/welcome"
-    | "/app/contact-sheet"
-    | "/app/settings"
-    | "/app/"
-    | "/app/data/datasets"
-    | "/app/data/individuals"
-    | "/app/pipelines/flavors"
-    | "/app/pipelines/runs"
-    | "/app/reference/sources"
-    | "/app/reference/workflows"
-    | "/app/schema/classes"
-    | "/app/schema/properties"
-    | "/app/schema/relationships"
-    | "/app/schema/schemes"
-    | "/app/schema/taxonomies"
-    | "/app/pipelines/";
-  fileRoutesByTo: FileRoutesByTo;
+    | '/'
+    | '/app'
+    | '/welcome'
+    | '/app/contact-sheet'
+    | '/app/settings'
+    | '/app/'
+    | '/app/data/datasets'
+    | '/app/data/individuals'
+    | '/app/pipelines/flavors'
+    | '/app/pipelines/runs'
+    | '/app/reference/sources'
+    | '/app/reference/workflows'
+    | '/app/schema/classes'
+    | '/app/schema/properties'
+    | '/app/schema/relationships'
+    | '/app/schema/schemes'
+    | '/app/schema/taxonomies'
+    | '/app/pipelines/'
+  fileRoutesByTo: FileRoutesByTo
   to:
-    | "/"
-    | "/welcome"
-    | "/app/contact-sheet"
-    | "/app/settings"
-    | "/app"
-    | "/app/data/datasets"
-    | "/app/data/individuals"
-    | "/app/pipelines/flavors"
-    | "/app/pipelines/runs"
-    | "/app/reference/sources"
-    | "/app/reference/workflows"
-    | "/app/schema/classes"
-    | "/app/schema/properties"
-    | "/app/schema/relationships"
-    | "/app/schema/schemes"
-    | "/app/schema/taxonomies"
-    | "/app/pipelines";
+    | '/'
+    | '/welcome'
+    | '/app/contact-sheet'
+    | '/app/settings'
+    | '/app'
+    | '/app/data/datasets'
+    | '/app/data/individuals'
+    | '/app/pipelines/flavors'
+    | '/app/pipelines/runs'
+    | '/app/reference/sources'
+    | '/app/reference/workflows'
+    | '/app/schema/classes'
+    | '/app/schema/properties'
+    | '/app/schema/relationships'
+    | '/app/schema/schemes'
+    | '/app/schema/taxonomies'
+    | '/app/pipelines'
   id:
-    | "__root__"
-    | "/"
-    | "/app"
-    | "/welcome"
-    | "/app/contact-sheet"
-    | "/app/settings"
-    | "/app/"
-    | "/app/data/datasets"
-    | "/app/data/individuals"
-    | "/app/pipelines/flavors"
-    | "/app/pipelines/runs"
-    | "/app/reference/sources"
-    | "/app/reference/workflows"
-    | "/app/schema/classes"
-    | "/app/schema/properties"
-    | "/app/schema/relationships"
-    | "/app/schema/schemes"
-    | "/app/schema/taxonomies"
-    | "/app/pipelines/";
-  fileRoutesById: FileRoutesById;
+    | '__root__'
+    | '/'
+    | '/app'
+    | '/welcome'
+    | '/app/contact-sheet'
+    | '/app/settings'
+    | '/app/'
+    | '/app/data/datasets'
+    | '/app/data/individuals'
+    | '/app/pipelines/flavors'
+    | '/app/pipelines/runs'
+    | '/app/reference/sources'
+    | '/app/reference/workflows'
+    | '/app/schema/classes'
+    | '/app/schema/properties'
+    | '/app/schema/relationships'
+    | '/app/schema/schemes'
+    | '/app/schema/taxonomies'
+    | '/app/pipelines/'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute;
-  AppRoute: typeof AppRouteWithChildren;
-  WelcomeRoute: typeof WelcomeRoute;
+  IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
+  WelcomeRoute: typeof WelcomeRoute
 }
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/welcome": {
-      id: "/welcome";
-      path: "/welcome";
-      fullPath: "/welcome";
-      preLoaderRoute: typeof WelcomeRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/app": {
-      id: "/app";
-      path: "/app";
-      fullPath: "/app";
-      preLoaderRoute: typeof AppRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/": {
-      id: "/";
-      path: "/";
-      fullPath: "/";
-      preLoaderRoute: typeof IndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/app/": {
-      id: "/app/";
-      path: "/";
-      fullPath: "/app/";
-      preLoaderRoute: typeof AppIndexRouteImport;
-      parentRoute: typeof AppRoute;
-    };
-    "/app/settings": {
-      id: "/app/settings";
-      path: "/settings";
-      fullPath: "/app/settings";
-      preLoaderRoute: typeof AppSettingsRouteImport;
-      parentRoute: typeof AppRoute;
-    };
-    "/app/contact-sheet": {
-      id: "/app/contact-sheet";
-      path: "/contact-sheet";
-      fullPath: "/app/contact-sheet";
-      preLoaderRoute: typeof AppContactSheetRouteImport;
-      parentRoute: typeof AppRoute;
-    };
-    "/app/pipelines/": {
-      id: "/app/pipelines/";
-      path: "/pipelines";
-      fullPath: "/app/pipelines/";
-      preLoaderRoute: typeof AppPipelinesIndexRouteImport;
-      parentRoute: typeof AppRoute;
-    };
-    "/app/schema/taxonomies": {
-      id: "/app/schema/taxonomies";
-      path: "/schema/taxonomies";
-      fullPath: "/app/schema/taxonomies";
-      preLoaderRoute: typeof AppSchemaTaxonomiesRouteImport;
-      parentRoute: typeof AppRoute;
-    };
-    "/app/schema/schemes": {
-      id: "/app/schema/schemes";
-      path: "/schema/schemes";
-      fullPath: "/app/schema/schemes";
-      preLoaderRoute: typeof AppSchemaSchemesRouteImport;
-      parentRoute: typeof AppRoute;
-    };
-    "/app/schema/relationships": {
-      id: "/app/schema/relationships";
-      path: "/schema/relationships";
-      fullPath: "/app/schema/relationships";
-      preLoaderRoute: typeof AppSchemaRelationshipsRouteImport;
-      parentRoute: typeof AppRoute;
-    };
-    "/app/schema/properties": {
-      id: "/app/schema/properties";
-      path: "/schema/properties";
-      fullPath: "/app/schema/properties";
-      preLoaderRoute: typeof AppSchemaPropertiesRouteImport;
-      parentRoute: typeof AppRoute;
-    };
-    "/app/schema/classes": {
-      id: "/app/schema/classes";
-      path: "/schema/classes";
-      fullPath: "/app/schema/classes";
-      preLoaderRoute: typeof AppSchemaClassesRouteImport;
-      parentRoute: typeof AppRoute;
-    };
-    "/app/reference/workflows": {
-      id: "/app/reference/workflows";
-      path: "/reference/workflows";
-      fullPath: "/app/reference/workflows";
-      preLoaderRoute: typeof AppReferenceWorkflowsRouteImport;
-      parentRoute: typeof AppRoute;
-    };
-    "/app/reference/sources": {
-      id: "/app/reference/sources";
-      path: "/reference/sources";
-      fullPath: "/app/reference/sources";
-      preLoaderRoute: typeof AppReferenceSourcesRouteImport;
-      parentRoute: typeof AppRoute;
-    };
-    "/app/pipelines/runs": {
-      id: "/app/pipelines/runs";
-      path: "/pipelines/runs";
-      fullPath: "/app/pipelines/runs";
-      preLoaderRoute: typeof AppPipelinesRunsRouteImport;
-      parentRoute: typeof AppRoute;
-    };
-    "/app/pipelines/flavors": {
-      id: "/app/pipelines/flavors";
-      path: "/pipelines/flavors";
-      fullPath: "/app/pipelines/flavors";
-      preLoaderRoute: typeof AppPipelinesFlavorsRouteImport;
-      parentRoute: typeof AppRoute;
-    };
-    "/app/data/individuals": {
-      id: "/app/data/individuals";
-      path: "/data/individuals";
-      fullPath: "/app/data/individuals";
-      preLoaderRoute: typeof AppDataIndividualsRouteImport;
-      parentRoute: typeof AppRoute;
-    };
-    "/app/data/datasets": {
-      id: "/app/data/datasets";
-      path: "/data/datasets";
-      fullPath: "/app/data/datasets";
-      preLoaderRoute: typeof AppDataDatasetsRouteImport;
-      parentRoute: typeof AppRoute;
-    };
+    '/welcome': {
+      id: '/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof WelcomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/': {
+      id: '/app/'
+      path: '/'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/settings': {
+      id: '/app/settings'
+      path: '/settings'
+      fullPath: '/app/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/contact-sheet': {
+      id: '/app/contact-sheet'
+      path: '/contact-sheet'
+      fullPath: '/app/contact-sheet'
+      preLoaderRoute: typeof AppContactSheetRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/pipelines/': {
+      id: '/app/pipelines/'
+      path: '/pipelines'
+      fullPath: '/app/pipelines/'
+      preLoaderRoute: typeof AppPipelinesIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/schema/taxonomies': {
+      id: '/app/schema/taxonomies'
+      path: '/schema/taxonomies'
+      fullPath: '/app/schema/taxonomies'
+      preLoaderRoute: typeof AppSchemaTaxonomiesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/schema/schemes': {
+      id: '/app/schema/schemes'
+      path: '/schema/schemes'
+      fullPath: '/app/schema/schemes'
+      preLoaderRoute: typeof AppSchemaSchemesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/schema/relationships': {
+      id: '/app/schema/relationships'
+      path: '/schema/relationships'
+      fullPath: '/app/schema/relationships'
+      preLoaderRoute: typeof AppSchemaRelationshipsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/schema/properties': {
+      id: '/app/schema/properties'
+      path: '/schema/properties'
+      fullPath: '/app/schema/properties'
+      preLoaderRoute: typeof AppSchemaPropertiesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/schema/classes': {
+      id: '/app/schema/classes'
+      path: '/schema/classes'
+      fullPath: '/app/schema/classes'
+      preLoaderRoute: typeof AppSchemaClassesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/reference/workflows': {
+      id: '/app/reference/workflows'
+      path: '/reference/workflows'
+      fullPath: '/app/reference/workflows'
+      preLoaderRoute: typeof AppReferenceWorkflowsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/reference/sources': {
+      id: '/app/reference/sources'
+      path: '/reference/sources'
+      fullPath: '/app/reference/sources'
+      preLoaderRoute: typeof AppReferenceSourcesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/pipelines/runs': {
+      id: '/app/pipelines/runs'
+      path: '/pipelines/runs'
+      fullPath: '/app/pipelines/runs'
+      preLoaderRoute: typeof AppPipelinesRunsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/pipelines/flavors': {
+      id: '/app/pipelines/flavors'
+      path: '/pipelines/flavors'
+      fullPath: '/app/pipelines/flavors'
+      preLoaderRoute: typeof AppPipelinesFlavorsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/data/individuals': {
+      id: '/app/data/individuals'
+      path: '/data/individuals'
+      fullPath: '/app/data/individuals'
+      preLoaderRoute: typeof AppDataIndividualsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/data/datasets': {
+      id: '/app/data/datasets'
+      path: '/data/datasets'
+      fullPath: '/app/data/datasets'
+      preLoaderRoute: typeof AppDataDatasetsRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
-  AppContactSheetRoute: typeof AppContactSheetRoute;
-  AppSettingsRoute: typeof AppSettingsRoute;
-  AppIndexRoute: typeof AppIndexRoute;
-  AppDataDatasetsRoute: typeof AppDataDatasetsRoute;
-  AppDataIndividualsRoute: typeof AppDataIndividualsRoute;
-  AppPipelinesFlavorsRoute: typeof AppPipelinesFlavorsRoute;
-  AppPipelinesRunsRoute: typeof AppPipelinesRunsRoute;
-  AppReferenceSourcesRoute: typeof AppReferenceSourcesRoute;
-  AppReferenceWorkflowsRoute: typeof AppReferenceWorkflowsRoute;
-  AppSchemaClassesRoute: typeof AppSchemaClassesRoute;
-  AppSchemaPropertiesRoute: typeof AppSchemaPropertiesRoute;
-  AppSchemaRelationshipsRoute: typeof AppSchemaRelationshipsRoute;
-  AppSchemaSchemesRoute: typeof AppSchemaSchemesRoute;
-  AppSchemaTaxonomiesRoute: typeof AppSchemaTaxonomiesRoute;
-  AppPipelinesIndexRoute: typeof AppPipelinesIndexRoute;
+  AppContactSheetRoute: typeof AppContactSheetRoute
+  AppSettingsRoute: typeof AppSettingsRoute
+  AppIndexRoute: typeof AppIndexRoute
+  AppDataDatasetsRoute: typeof AppDataDatasetsRoute
+  AppDataIndividualsRoute: typeof AppDataIndividualsRoute
+  AppPipelinesFlavorsRoute: typeof AppPipelinesFlavorsRoute
+  AppPipelinesRunsRoute: typeof AppPipelinesRunsRoute
+  AppReferenceSourcesRoute: typeof AppReferenceSourcesRoute
+  AppReferenceWorkflowsRoute: typeof AppReferenceWorkflowsRoute
+  AppSchemaClassesRoute: typeof AppSchemaClassesRoute
+  AppSchemaPropertiesRoute: typeof AppSchemaPropertiesRoute
+  AppSchemaRelationshipsRoute: typeof AppSchemaRelationshipsRoute
+  AppSchemaSchemesRoute: typeof AppSchemaSchemesRoute
+  AppSchemaTaxonomiesRoute: typeof AppSchemaTaxonomiesRoute
+  AppPipelinesIndexRoute: typeof AppPipelinesIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -412,15 +412,15 @@ const AppRouteChildren: AppRouteChildren = {
   AppSchemaSchemesRoute: AppSchemaSchemesRoute,
   AppSchemaTaxonomiesRoute: AppSchemaTaxonomiesRoute,
   AppPipelinesIndexRoute: AppPipelinesIndexRoute,
-};
+}
 
-const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren);
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   WelcomeRoute: WelcomeRoute,
-};
+}
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>();
+  ._addFileTypes<FileRouteTypes>()

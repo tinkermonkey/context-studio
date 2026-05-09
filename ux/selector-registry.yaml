@@ -93,3 +93,69 @@ selectors:
   - selector: schema-drawer-container
     component: components/schema/SchemaPageLayout.tsx
     description: Drawer container when entity is selected
+
+  # Property Definition Form
+  - selector: property-definition-form
+    component: components/schema/PropertyDefinitionForm.tsx
+    description: Form for creating/editing property definitions
+  - selector: property-definition-identifier-input
+    component: components/schema/PropertyDefinitionForm.tsx
+    description: Snake-case identifier input field
+  - selector: property-definition-title-input
+    component: components/schema/PropertyDefinitionForm.tsx
+    description: Display name input field
+  - selector: property-definition-description-input
+    component: components/schema/PropertyDefinitionForm.tsx
+    description: Description textarea for property definition
+  - selector: property-definition-submit-button
+    component: components/schema/PropertyDefinitionForm.tsx
+    description: Submit button for property form
+
+  # Property Drawer
+  - selector: property-drawer
+    component: components/ontology/PropertyDrawer.tsx
+    description: Drawer for editing property definition details
+  - selector: property-drawer-identifier
+    component: components/ontology/PropertyDrawer.tsx
+    description: Read-only identifier field in property drawer
+  - selector: property-drawer-title-input
+    component: components/ontology/PropertyDrawer.tsx
+    description: Editable title field in property drawer
+  - selector: property-drawer-description-input
+    component: components/ontology/PropertyDrawer.tsx
+    description: Editable description field in property drawer
+  - selector: property-delete-confirm
+    component: components/ontology/PropertyDrawer.tsx
+    description: Confirmation dialog for property deletion
+
+  # Properties Page
+  - selector: property-add-button
+    component: routes/app/schema/properties.tsx
+    description: Button to open create property modal
+  - selector: property-create-modal
+    component: routes/app/schema/properties.tsx
+    description: Modal for creating new property definition
+  - selector: property-create-form
+    component: routes/app/schema/properties.tsx
+    description: Create property form inside modal
+  - selector: properties-page
+    component: routes/app/schema/properties.tsx
+    description: Main properties page container
+  - selector: properties-filter-bar
+    component: routes/app/schema/properties.tsx
+    description: Filter bar on properties page
+  - selector: properties-table
+    component: routes/app/schema/properties.tsx
+    description: Properties table container
+  - selector: properties-drawer
+    component: routes/app/schema/properties.tsx
+    description: Property drawer on properties page
+  - selector: properties-empty-state
+    component: routes/app/schema/properties.tsx
+    description: Empty state shown when no properties exist
+  - selector: property-row-actions-*
+    component: routes/app/schema/properties.tsx
+    description: Actions menu button for property row
+  - selector: properties-content
+    component: routes/app/schema/properties.tsx
+    description: Main content area of properties page
