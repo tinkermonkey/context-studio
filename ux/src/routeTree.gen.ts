@@ -30,6 +30,7 @@ import { Route as AppDataDatasetsRouteImport } from './routes/app/data/datasets'
 import { Route as AppSchemaSchemesIndexRouteImport } from './routes/app/schema/schemes.index'
 import { Route as AppSchemaTaxonomiesTaxonomyIdRouteImport } from './routes/app/schema/taxonomies.$taxonomyId'
 import { Route as AppSchemaSchemesSchemeIdRouteImport } from './routes/app/schema/schemes.$schemeId'
+import { Route as AppSchemaClassesClassIdRouteImport } from './routes/app/schema/classes.$classId'
 
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
@@ -138,6 +139,11 @@ const AppSchemaSchemesSchemeIdRoute =
     path: '/$schemeId',
     getParentRoute: () => AppSchemaSchemesRoute,
   } as any)
+const AppSchemaClassesClassIdRoute = AppSchemaClassesClassIdRouteImport.update({
+  id: '/$classId',
+  path: '/$classId',
+  getParentRoute: () => AppSchemaClassesRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -152,12 +158,13 @@ export interface FileRoutesByFullPath {
   '/app/pipelines/runs': typeof AppPipelinesRunsRoute
   '/app/reference/sources': typeof AppReferenceSourcesRoute
   '/app/reference/workflows': typeof AppReferenceWorkflowsRoute
-  '/app/schema/classes': typeof AppSchemaClassesRoute
+  '/app/schema/classes': typeof AppSchemaClassesRouteWithChildren
   '/app/schema/properties': typeof AppSchemaPropertiesRoute
   '/app/schema/relationships': typeof AppSchemaRelationshipsRoute
   '/app/schema/schemes': typeof AppSchemaSchemesRouteWithChildren
   '/app/schema/taxonomies': typeof AppSchemaTaxonomiesRouteWithChildren
   '/app/pipelines/': typeof AppPipelinesIndexRoute
+  '/app/schema/classes/$classId': typeof AppSchemaClassesClassIdRoute
   '/app/schema/schemes/$schemeId': typeof AppSchemaSchemesSchemeIdRoute
   '/app/schema/taxonomies/$taxonomyId': typeof AppSchemaTaxonomiesTaxonomyIdRoute
   '/app/schema/schemes/': typeof AppSchemaSchemesIndexRoute
@@ -174,11 +181,12 @@ export interface FileRoutesByTo {
   '/app/pipelines/runs': typeof AppPipelinesRunsRoute
   '/app/reference/sources': typeof AppReferenceSourcesRoute
   '/app/reference/workflows': typeof AppReferenceWorkflowsRoute
-  '/app/schema/classes': typeof AppSchemaClassesRoute
+  '/app/schema/classes': typeof AppSchemaClassesRouteWithChildren
   '/app/schema/properties': typeof AppSchemaPropertiesRoute
   '/app/schema/relationships': typeof AppSchemaRelationshipsRoute
   '/app/schema/taxonomies': typeof AppSchemaTaxonomiesRouteWithChildren
   '/app/pipelines': typeof AppPipelinesIndexRoute
+  '/app/schema/classes/$classId': typeof AppSchemaClassesClassIdRoute
   '/app/schema/schemes/$schemeId': typeof AppSchemaSchemesSchemeIdRoute
   '/app/schema/taxonomies/$taxonomyId': typeof AppSchemaTaxonomiesTaxonomyIdRoute
   '/app/schema/schemes': typeof AppSchemaSchemesIndexRoute
@@ -197,12 +205,13 @@ export interface FileRoutesById {
   '/app/pipelines/runs': typeof AppPipelinesRunsRoute
   '/app/reference/sources': typeof AppReferenceSourcesRoute
   '/app/reference/workflows': typeof AppReferenceWorkflowsRoute
-  '/app/schema/classes': typeof AppSchemaClassesRoute
+  '/app/schema/classes': typeof AppSchemaClassesRouteWithChildren
   '/app/schema/properties': typeof AppSchemaPropertiesRoute
   '/app/schema/relationships': typeof AppSchemaRelationshipsRoute
   '/app/schema/schemes': typeof AppSchemaSchemesRouteWithChildren
   '/app/schema/taxonomies': typeof AppSchemaTaxonomiesRouteWithChildren
   '/app/pipelines/': typeof AppPipelinesIndexRoute
+  '/app/schema/classes/$classId': typeof AppSchemaClassesClassIdRoute
   '/app/schema/schemes/$schemeId': typeof AppSchemaSchemesSchemeIdRoute
   '/app/schema/taxonomies/$taxonomyId': typeof AppSchemaTaxonomiesTaxonomyIdRoute
   '/app/schema/schemes/': typeof AppSchemaSchemesIndexRoute
@@ -228,6 +237,7 @@ export interface FileRouteTypes {
     | '/app/schema/schemes'
     | '/app/schema/taxonomies'
     | '/app/pipelines/'
+    | '/app/schema/classes/$classId'
     | '/app/schema/schemes/$schemeId'
     | '/app/schema/taxonomies/$taxonomyId'
     | '/app/schema/schemes/'
@@ -249,6 +259,7 @@ export interface FileRouteTypes {
     | '/app/schema/relationships'
     | '/app/schema/taxonomies'
     | '/app/pipelines'
+    | '/app/schema/classes/$classId'
     | '/app/schema/schemes/$schemeId'
     | '/app/schema/taxonomies/$taxonomyId'
     | '/app/schema/schemes'
@@ -272,6 +283,7 @@ export interface FileRouteTypes {
     | '/app/schema/schemes'
     | '/app/schema/taxonomies'
     | '/app/pipelines/'
+    | '/app/schema/classes/$classId'
     | '/app/schema/schemes/$schemeId'
     | '/app/schema/taxonomies/$taxonomyId'
     | '/app/schema/schemes/'
@@ -432,8 +444,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSchemaSchemesSchemeIdRouteImport
       parentRoute: typeof AppSchemaSchemesRoute
     }
+    '/app/schema/classes/$classId': {
+      id: '/app/schema/classes/$classId'
+      path: '/$classId'
+      fullPath: '/app/schema/classes/$classId'
+      preLoaderRoute: typeof AppSchemaClassesClassIdRouteImport
+      parentRoute: typeof AppSchemaClassesRoute
+    }
   }
 }
+
+interface AppSchemaClassesRouteChildren {
+  AppSchemaClassesClassIdRoute: typeof AppSchemaClassesClassIdRoute
+}
+
+const AppSchemaClassesRouteChildren: AppSchemaClassesRouteChildren = {
+  AppSchemaClassesClassIdRoute: AppSchemaClassesClassIdRoute,
+}
+
+const AppSchemaClassesRouteWithChildren =
+  AppSchemaClassesRoute._addFileChildren(AppSchemaClassesRouteChildren)
 
 interface AppSchemaSchemesRouteChildren {
   AppSchemaSchemesSchemeIdRoute: typeof AppSchemaSchemesSchemeIdRoute
@@ -469,7 +499,7 @@ interface AppRouteChildren {
   AppPipelinesRunsRoute: typeof AppPipelinesRunsRoute
   AppReferenceSourcesRoute: typeof AppReferenceSourcesRoute
   AppReferenceWorkflowsRoute: typeof AppReferenceWorkflowsRoute
-  AppSchemaClassesRoute: typeof AppSchemaClassesRoute
+  AppSchemaClassesRoute: typeof AppSchemaClassesRouteWithChildren
   AppSchemaPropertiesRoute: typeof AppSchemaPropertiesRoute
   AppSchemaRelationshipsRoute: typeof AppSchemaRelationshipsRoute
   AppSchemaSchemesRoute: typeof AppSchemaSchemesRouteWithChildren
@@ -487,7 +517,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppPipelinesRunsRoute: AppPipelinesRunsRoute,
   AppReferenceSourcesRoute: AppReferenceSourcesRoute,
   AppReferenceWorkflowsRoute: AppReferenceWorkflowsRoute,
-  AppSchemaClassesRoute: AppSchemaClassesRoute,
+  AppSchemaClassesRoute: AppSchemaClassesRouteWithChildren,
   AppSchemaPropertiesRoute: AppSchemaPropertiesRoute,
   AppSchemaRelationshipsRoute: AppSchemaRelationshipsRoute,
   AppSchemaSchemesRoute: AppSchemaSchemesRouteWithChildren,

@@ -92,6 +92,7 @@ function TreeNodeRenderer({
           <div
             className="kg-node"
             data-testid={`hierarchy-node-${node.class.id}`}
+            data-domain={node.class.concept_scheme_id}
             onClick={() => onNodeSelect?.(node.class.id)}
             style={{
               flex: 1,
