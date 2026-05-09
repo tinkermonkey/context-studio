@@ -74,8 +74,8 @@ class OntologyService extends BaseService {
     return this.delete<void>(`/api/taxonomies/${id}`);
   }
 
-  async publishTaxonomy(id: string): Promise<TaxonomyResponse> {
-    return this.post<TaxonomyResponse>(`/api/taxonomies/${id}/publish`, {});
+  async publishTaxonomy(id: string, commitMessage: string): Promise<TaxonomyResponse> {
+    return this.post<TaxonomyResponse>(`/api/taxonomies/${id}/publish`, { commit_message: commitMessage });
   }
 
   // Concept Schemes

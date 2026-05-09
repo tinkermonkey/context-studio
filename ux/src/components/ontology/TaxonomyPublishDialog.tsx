@@ -25,7 +25,10 @@ export function TaxonomyPublishDialog({
 
   const handlePublish = async () => {
     try {
-      await publishMutation.mutateAsync(taxonomy.id);
+      await publishMutation.mutateAsync({
+        id: taxonomy.id,
+        commitMessage,
+      });
       setCommitMessage("");
       onPublish?.();
       onClose();
@@ -49,6 +52,11 @@ export function TaxonomyPublishDialog({
           <p style={{ fontSize: "var(--text-sm)", color: "var(--canvas-fg-2)", marginBottom: "var(--space-2)" }}>
             Publishing will transition this taxonomy from draft to published status.
           </p>
+        </div>
+
+        {/* TODO: Add diff summary display when backend provides changeset/diff endpoint */}
+        <div style={{ padding: "var(--space-2)", backgroundColor: "var(--canvas-fg-4)", borderRadius: "4px", fontSize: "var(--text-xs)", color: "var(--canvas-fg-3)" }}>
+          Diff summary coming soon…
         </div>
 
         <div>

@@ -5,20 +5,25 @@ import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { ToastViewport, useToasts } from "@/components/ui/Toast";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useToasts } from "@/components/ui/Toast";
 import { useAutosave } from "@/hooks/useAutosave";
 import { useUndoDelete } from "@/hooks/useUndoDelete";
+import { formatTimeAgo } from "@/utils/dateFormatting";
 import { useTaxonomy, useUpdateTaxonomy, useDeleteTaxonomy, usePublishTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
+import { TaxonomyPublishDialog } from "@/components/ontology/TaxonomyPublishDialog";
 import { taxonomiesCopy } from "./taxonomies/-copy";
 import type { components } from "@/api/types";
 
 type TaxonomyResponse = components["schemas"]["TaxonomyResponse"];
+type ConceptSchemeResponse = components["schemas"]["ConceptSchemeResponse"];
 
 function TaxonomyDetailContent({ taxonomy }: { taxonomy: TaxonomyResponse }) {
   const [title, setTitle] = useState(taxonomy?.title ?? "");
   const [description, setDescription] = useState(taxonomy?.description ?? "");
   const [showPublishDialog, setShowPublishDialog] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const lastSavedAtRef = useRef<Date | null>(null);
   const navigate = useNavigate();
 
@@ -65,13 +70,7 @@ function TaxonomyDetailContent({ taxonomy }: { taxonomy: TaxonomyResponse }) {
   const autosaveState: "saving" | "saved" | "error" | undefined = status === "idle" ? undefined : (status as "saving" | "saved" | "error");
 
   const handlePublish = async () => {
-    try {
-      await publishMutation.mutateAsync(taxonomy.id);
-      toast("success", taxonomiesCopy.publish.successToast(taxonomy.title, taxonomy.version + 1));
-      setShowPublishDialog(false);
-    } catch {
-      toast("error", "Failed to publish taxonomy");
-    }
+    toast("success", taxonomiesCopy.publish.successToast(taxonomy.title, taxonomy.version + 1));
   };
 
   const handleDelete = async () => {
@@ -106,7 +105,7 @@ function TaxonomyDetailContent({ taxonomy }: { taxonomy: TaxonomyResponse }) {
           )}
           <Button
             variant="danger"
-            onClick={handleDelete}
+            onClick={() => setShowDeleteConfirm(true)}
             data-testid="taxonomy-detail-delete-button"
           >
             Delete
@@ -189,7 +188,7 @@ function TaxonomyDetailContent({ taxonomy }: { taxonomy: TaxonomyResponse }) {
           />
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
-            {schemes.map((scheme: any) => (
+            {schemes.map((scheme: ConceptSchemeResponse) => (
               <div
                 key={scheme.id}
                 style={{
@@ -210,57 +209,24 @@ function TaxonomyDetailContent({ taxonomy }: { taxonomy: TaxonomyResponse }) {
         )}
       </div>
 
-      {showPublishDialog && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-          }}
-          onClick={() => setShowPublishDialog(false)}
-          data-testid="taxonomy-detail-publish-dialog"
-        >
-          <div
-            style={{
-              backgroundColor: "var(--canvas-bg)",
-              padding: "var(--space-4)",
-              borderRadius: "8px",
-              minWidth: "400px",
-              maxWidth: "90vw",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 style={{ margin: "0 0 var(--space-2) 0", fontSize: "var(--text-lg)" }}>
-              Publish Taxonomy?
-            </h2>
-            <p style={{ color: "var(--canvas-fg-2)", fontSize: "var(--text-sm)", marginBottom: "var(--space-4)" }}>
-              Publishing will transition this taxonomy from draft to published status.
-            </p>
-            <div style={{ display: "flex", gap: "var(--space-2)", justifyContent: "flex-end" }}>
-              <Button
-                variant="ghost"
-                onClick={() => setShowPublishDialog(false)}
-                disabled={publishMutation.isPending}
-                data-testid="taxonomy-detail-publish-dialog-cancel"
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="primary"
-                onClick={handlePublish}
-                disabled={publishMutation.isPending}
-                data-testid="taxonomy-detail-publish-dialog-confirm"
-              >
-                {publishMutation.isPending ? "Publishing…" : "Publish"}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <TaxonomyPublishDialog
+        open={showPublishDialog}
+        onClose={() => setShowPublishDialog(false)}
+        taxonomy={taxonomy}
+        onPublish={handlePublish}
+      />
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        title={taxonomiesCopy.delete.confirmTitle}
+        message="This taxonomy and all its concept schemes will be permanently deleted."
+        confirmLabel={taxonomiesCopy.delete.confirmButton}
+        onConfirm={handleDelete}
+        danger
+        isLoading={deleteMutation.isPending}
+        data-testid="taxonomy-detail-delete-confirm"
+      />
     </div>
   );
 }
@@ -308,23 +274,9 @@ function TaxonomyDetailPage() {
     );
   }
 
-  return (
-    <>
-      <TaxonomyDetailContent taxonomy={taxonomy} />
-      <ToastViewport toasts={toasts} onDismiss={dismiss} />
-    </>
-  );
-}
-
-function formatTimeAgo(date: Date): string {
-  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (seconds < 60) return `${seconds}s ago`;
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  return `${hours}h ago`;
+  return <TaxonomyDetailContent taxonomy={taxonomy} />;
 }
 
 export const Route = createFileRoute("/app/schema/taxonomies/$taxonomyId")({
   component: TaxonomyDetailPage,
-} as any);
+});

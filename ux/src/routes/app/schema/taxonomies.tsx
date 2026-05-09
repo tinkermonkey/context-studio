@@ -2,13 +2,13 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreVertical } from "lucide-react";
-import { ToastViewport, useToasts } from "@/components/ui/Toast";
+import { useToasts } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { FilterBar, type FilterChip } from "@/components/schema/FilterBar";
+import { FilterBar } from "@/components/schema/FilterBar";
 import { SchemaTable } from "@/components/schema/SchemaTable";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import { TaxonomyForm } from "@/components/schema/TaxonomyForm";
@@ -216,24 +216,33 @@ function TaxonomiesPageContent({ onCreateClick }: TaxonomiesPageContentProps) {
 
 function TaxonomiesPageWrapper() {
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
   const createMutation = useCreateTaxonomy();
-  const { toasts, dismiss, toast } = useToasts();
+  const { toast } = useToasts();
 
   const handleCreateSubmit = async (data: TaxonomyCreateRequest) => {
+    setCreateError(null);
     try {
       const result = await createMutation.mutateAsync(data);
       setShowCreateModal(false);
       toast("success", taxonomiesCopy.create.successToast(result.id));
-    } catch {
-      toast("error", "Failed to create taxonomy");
+    } catch (error) {
+      setCreateError(error instanceof Error ? error.message : "Failed to create taxonomy");
     }
   };
 
   return (
-    <>
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>Taxonomies</h1>
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>Taxonomies</h1>
+        <div style={{ display: "flex", gap: "var(--space-2)" }}>
+          <Button
+            variant="ghost"
+            onClick={() => {}}
+            data-testid="taxonomy-import-button"
+          >
+            Import
+          </Button>
           <Button
             variant="primary"
             onClick={() => setShowCreateModal(true)}
@@ -242,25 +251,36 @@ function TaxonomiesPageWrapper() {
             + New taxonomy
           </Button>
         </div>
-        <div data-testid="taxonomies-content">
-          <TaxonomiesPageContent onCreateClick={() => setShowCreateModal(true)} />
-        </div>
-
-        <Modal
-          open={showCreateModal}
-          onClose={() => setShowCreateModal(false)}
-          title="Create Taxonomy"
-          size="sm"
-          data-testid="taxonomy-create-modal"
-        >
-          <TaxonomyForm
-            onSubmit={handleCreateSubmit}
-            isLoading={createMutation.isPending}
-          />
-        </Modal>
       </div>
-      <ToastViewport toasts={toasts} onDismiss={dismiss} />
-    </>
+      <div data-testid="taxonomies-content">
+        <TaxonomiesPageContent onCreateClick={() => setShowCreateModal(true)} />
+      </div>
+
+      <Modal
+        open={showCreateModal}
+        onClose={() => {
+          setShowCreateModal(false);
+          setCreateError(null);
+        }}
+        title="Create Taxonomy"
+        size="sm"
+        data-testid="taxonomy-create-modal"
+      >
+        {createError && (
+          <div style={{ marginBottom: "var(--space-3)" }}>
+            <ErrorBanner
+              error={new Error(createError)}
+              onRetry={() => setCreateError(null)}
+              message="Failed to create taxonomy"
+            />
+          </div>
+        )}
+        <TaxonomyForm
+          onSubmit={handleCreateSubmit}
+          isLoading={createMutation.isPending}
+        />
+      </Modal>
+    </div>
   );
 }
 

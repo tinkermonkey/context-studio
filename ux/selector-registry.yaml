@@ -249,6 +249,9 @@ selectors:
     description: Confirm/publish button in publish dialog
 
   # Taxonomies Page
+  - selector: taxonomy-import-button
+    component: routes/app/schema/taxonomies.tsx
+    description: Ghost button to import taxonomy data
   - selector: taxonomy-add-button
     component: routes/app/schema/taxonomies.tsx
     description: Button to open create taxonomy modal
@@ -281,12 +284,9 @@ selectors:
   - selector: taxonomy-detail-delete-button
     component: routes/app/schema/taxonomies.$taxonomyId.tsx
     description: Delete button in taxonomy detail page
+  - selector: taxonomy-detail-delete-confirm
+    component: routes/app/schema/taxonomies.$taxonomyId.tsx
+    description: Confirmation dialog for deleting taxonomy from detail page
   - selector: taxonomy-detail-publish-dialog
     component: routes/app/schema/taxonomies.$taxonomyId.tsx
-    description: Modal dialog for publishing taxonomy from detail page
-  - selector: taxonomy-detail-publish-dialog-cancel
-    component: routes/app/schema/taxonomies.$taxonomyId.tsx
-    description: Cancel button in taxonomy detail publish dialog
-  - selector: taxonomy-detail-publish-dialog-confirm
-    component: routes/app/schema/taxonomies.$taxonomyId.tsx
-    description: Confirm button in taxonomy detail publish dialog
+    description: Modal dialog for publishing taxonomy from detail page (now using TaxonomyPublishDialog)

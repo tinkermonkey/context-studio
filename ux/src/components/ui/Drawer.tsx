@@ -1,6 +1,7 @@
 import { type ReactNode } from "react";
 import { X, Loader, CheckCircle, AlertCircle } from "lucide-react";
 import { useKeyboardShortcut } from "@/hooks/useKeyboardShortcut";
+import { formatTimeAgo } from "@/utils/dateFormatting";
 import { Button } from "./Button";
 
 type AutosaveState = "idle" | "saving" | "saved" | "error";
@@ -16,15 +17,6 @@ interface DrawerProps {
   onDelete?: () => void;
   lastSavedAt?: Date;
   headerAction?: ReactNode;
-}
-
-function formatTimeAgo(date: Date): string {
-  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (seconds < 60) return `${seconds}s ago`;
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  return `${hours}h ago`;
 }
 
 export function Drawer({

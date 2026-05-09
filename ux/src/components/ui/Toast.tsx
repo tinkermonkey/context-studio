@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, createContext, useContext, ReactNode } from "react";
 import { CheckCircle, AlertCircle, AlertTriangle, Info, X } from "lucide-react";
 import { Button } from "./Button";
 
@@ -13,6 +13,52 @@ interface ToastItem {
     label: string;
     onAction: () => void;
   };
+}
+
+interface ToastContextType {
+  toasts: ToastItem[];
+  dismiss: (id: string) => void;
+  toast: (
+    type: ToastType,
+    title: string,
+    sub?: string,
+    options?: { action?: ToastItem["action"]; autoDismissMs?: number },
+  ) => void;
+}
+
+const ToastContext = createContext<ToastContextType | undefined>(undefined);
+
+interface ToastProviderProps {
+  children: ReactNode;
+}
+
+export function ToastProvider({ children }: ToastProviderProps) {
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
+
+  const dismiss = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  const toast = useCallback(
+    (
+      type: ToastType,
+      title: string,
+      sub?: string,
+      options?: { action?: ToastItem["action"]; autoDismissMs?: number },
+    ) => {
+      const id = crypto.randomUUID();
+      setToasts((prev) => [...prev, { id, type, title, sub, action: options?.action }]);
+      const dismissDelay = options?.autoDismissMs ?? 8000;
+      setTimeout(() => dismiss(id), dismissDelay);
+    },
+    [dismiss],
+  );
+
+  return (
+    <ToastContext.Provider value={{ toasts, dismiss, toast }}>
+      {children}
+    </ToastContext.Provider>
+  );
 }
 
 interface ToastProps {
@@ -72,29 +118,12 @@ export function ToastViewport({ toasts, onDismiss }: ToastViewportProps) {
   );
 }
 
-export function useToasts() {
-  const [toasts, setToasts] = useState<ToastItem[]>([]);
-
-  const dismiss = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  }, []);
-
-  const toast = useCallback(
-    (
-      type: ToastType,
-      title: string,
-      sub?: string,
-      options?: { action?: ToastItem["action"]; autoDismissMs?: number },
-    ) => {
-      const id = crypto.randomUUID();
-      setToasts((prev) => [...prev, { id, type, title, sub, action: options?.action }]);
-      const dismissDelay = options?.autoDismissMs ?? 8000;
-      setTimeout(() => dismiss(id), dismissDelay);
-    },
-    [dismiss],
-  );
-
-  return { toasts, dismiss, toast };
+export function useToasts(): ToastContextType {
+  const context = useContext(ToastContext);
+  if (!context) {
+    throw new Error("useToasts must be used within a ToastProvider");
+  }
+  return context;
 }
 
 export type { ToastItem };
