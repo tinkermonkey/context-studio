@@ -71,8 +71,8 @@
   --intent-info-bd:    #A5F3FC;
 
   /* ---- Type families ---------------------------------------------------- */
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono: "JetBrains Mono", Menlo, ui-monospace, SFMono-Regular, monospace;
+  --font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", Menlo, ui-monospace, SFMono-Regular, monospace;
   --mono: var(--font-mono);
 
   /* ---- Type scale ------------------------------------------------------- */

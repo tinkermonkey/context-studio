@@ -24,6 +24,8 @@
     "generate-types": "openapi-typescript ../local-server/documentation/openapi.json -o src/api/types/index.ts && prettier --write src/api/types/index.ts"
   },
   "dependencies": {
+    "@fontsource-variable/inter": "^5.2.8",
+    "@fontsource-variable/jetbrains-mono": "^5.2.8",
     "@tanstack/react-form": "^1.14.2",
     "@tanstack/react-query": "^5.83.0",
     "@tanstack/react-router": "^1.116.0",
