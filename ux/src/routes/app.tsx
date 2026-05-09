@@ -20,8 +20,10 @@ function AppShell() {
         <div className="workspace">
           <Topbar />
           <div className="canvas-area">
-            <div className="canvas-inner">
-              <Outlet />
+            <div className="canvas-scroll">
+              <div className="canvas-inner">
+                <Outlet />
+              </div>
             </div>
           </div>
           <Statusbar />

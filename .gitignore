@@ -30,8 +30,8 @@ ux/node_modules
 ux/dist/
 ux/.vite/
 
-# Contact sheet screenshots
-contact-sheet-*.png
+# Screenshots (Claude debugging/review artifacts)
+screenshots/
 
 # Build and runtime artifacts
 *.log

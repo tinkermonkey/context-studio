@@ -1,11 +1,12 @@
-import { Command } from "lucide-react";
+import { Folder, ChevronDown, Search } from "lucide-react";
 import { useCommandPaletteStore } from "@/stores/commandPalette";
 
 interface TitlebarProps {
   workspaceName?: string;
+  workspacePath?: string;
 }
 
-export function Titlebar({ workspaceName = "Context Studio" }: TitlebarProps) {
+export function Titlebar({ workspaceName = "Context Studio", workspacePath = "~/Projects/context-studio" }: TitlebarProps) {
   const openPalette = useCommandPaletteStore((s) => s.openPalette);
 
   return (
@@ -15,14 +16,22 @@ export function Titlebar({ workspaceName = "Context Studio" }: TitlebarProps) {
         <span className="l-min" title="Minimize" />
         <span className="l-max" title="Zoom" />
       </div>
-      <button className="titlebar-ws" type="button">
-        <span>{workspaceName}</span>
-      </button>
+      <div className="titlebar-app">
+        <span className="titlebar-app-name">{workspaceName}</span>
+        <span className="titlebar-app-sep">—</span>
+        <button className="titlebar-ws" type="button" title="Switch workspace">
+          <Folder size={12} />
+          <span>{workspacePath}</span>
+          <ChevronDown size={10} />
+        </button>
+      </div>
       <div className="titlebar-spacer" />
-      <button className="titlebar-btn" onClick={openPalette} type="button" title="Command palette (⌘K)">
-        <Command size={12} strokeWidth={2} />
-        <span className="kbd-mini">⌘K</span>
-      </button>
+      <div className="titlebar-actions">
+        <button className="titlebar-btn" onClick={openPalette} type="button" title="Command palette (⌘K)">
+          <Search size={12} />
+          <span className="kbd-mini">⌘K</span>
+        </button>
+      </div>
     </div>
   );
 }

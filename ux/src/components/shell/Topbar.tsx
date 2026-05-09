@@ -1,5 +1,5 @@
 import { useRouterState } from "@tanstack/react-router";
-import { Search, Bell, FileText } from "lucide-react";
+import { Search, Bell, FileText, ChevronDown } from "lucide-react";
 import { useCommandPaletteStore } from "@/stores/commandPalette";
 
 const ROUTE_LABELS: Record<string, string[]> = {
@@ -31,11 +31,12 @@ export function Topbar({ workspaceName = "context-studio" }: TopbarProps) {
 
   return (
     <header className="topbar">
-      <button className="ws-chip" type="button">
+      <button className="ws-chip" type="button" title="Switch workspace">
         <span className="ws-chip-dot" />
         <span className="ws-chip-name">{workspaceName}</span>
+        <ChevronDown size={11} />
       </button>
-      <span style={{ color: "var(--shell-fg-3)", fontSize: "12px", margin: "0 4px" }}>/</span>
+      <span className="crumbs-sep">/</span>
       <div className="crumbs">
         {crumbs.map((crumb, i) => (
           <span key={i}>
