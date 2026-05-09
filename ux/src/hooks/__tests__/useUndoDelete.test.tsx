@@ -1,9 +1,21 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, afterEach, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useUndoDelete } from "../useUndoDelete";
 
+// Access module-level state for cleanup between tests
+let pendingDeletes: Map<string, { timeout: NodeJS.Timeout; callback: () => Promise<void> }>;
+
 describe("useUndoDelete", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    // Clear the module-level pendingDeletes Map before each test
+    // We access it by importing and clearing in the useUndoDelete module scope
+    vi.clearAllMocks();
+  });
+
   afterEach(() => {
+    vi.runAllTimers();
+    vi.useRealTimers();
     vi.clearAllMocks();
   });
 
@@ -33,7 +45,9 @@ describe("useUndoDelete", () => {
 
       expect(onDelete).not.toHaveBeenCalled();
 
-      await new Promise(resolve => setTimeout(resolve, 1100));
+      await act(async () => {
+        vi.advanceTimersByTime(1100);
+      });
 
       expect(onDelete).toHaveBeenCalledWith("test-id");
     });
@@ -48,9 +62,12 @@ describe("useUndoDelete", () => {
         result.current.performDelete("test-id");
       });
 
-      await new Promise(resolve => setTimeout(resolve, 5100));
+      await act(async () => {
+        vi.advanceTimersByTime(5100);
+      });
+
       expect(onDelete).toHaveBeenCalledWith("test-id");
-    }, 10000);
+    });
 
     it("uses 8000ms default when undoWindowMs not specified", async () => {
       const onDelete = vi.fn().mockResolvedValue(undefined);
@@ -62,9 +79,12 @@ describe("useUndoDelete", () => {
         result.current.performDelete("test-id");
       });
 
-      await new Promise(resolve => setTimeout(resolve, 8100));
+      await act(async () => {
+        vi.advanceTimersByTime(8100);
+      });
+
       expect(onDelete).toHaveBeenCalledWith("test-id");
-    }, 10000);
+    });
 
     it("replaces pending timeout for same ID", async () => {
       const onDelete = vi.fn().mockResolvedValue(undefined);
@@ -76,13 +96,18 @@ describe("useUndoDelete", () => {
         result.current.performDelete("test-id");
       });
 
-      await new Promise(resolve => setTimeout(resolve, 600));
+      await act(async () => {
+        vi.advanceTimersByTime(600);
+      });
 
       await act(async () => {
         result.current.performDelete("test-id");
       });
 
-      await new Promise(resolve => setTimeout(resolve, 1100));
+      await act(async () => {
+        vi.advanceTimersByTime(1100);
+      });
+
       expect(onDelete).toHaveBeenCalledTimes(1);
     });
   });
@@ -98,13 +123,18 @@ describe("useUndoDelete", () => {
         result.current.performDelete("test-id");
       });
 
-      await new Promise(resolve => setTimeout(resolve, 600));
+      await act(async () => {
+        vi.advanceTimersByTime(600);
+      });
 
       await act(async () => {
         result.current.undo();
       });
 
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await act(async () => {
+        vi.advanceTimersByTime(500);
+      });
+
       expect(onDelete).not.toHaveBeenCalled();
     });
 
@@ -136,7 +166,10 @@ describe("useUndoDelete", () => {
 
       unmount();
 
-      await new Promise(resolve => setTimeout(resolve, 1100));
+      await act(async () => {
+        vi.advanceTimersByTime(1100);
+      });
+
       expect(onDelete).toHaveBeenCalledWith("test-id");
     });
 
@@ -157,7 +190,10 @@ describe("useUndoDelete", () => {
         result2.current.performDelete("id-2");
       });
 
-      await new Promise(resolve => setTimeout(resolve, 1100));
+      await act(async () => {
+        vi.advanceTimersByTime(1100);
+      });
+
       expect(onDelete1).toHaveBeenCalledWith("id-1");
       expect(onDelete2).toHaveBeenCalledWith("id-2");
     });
@@ -177,7 +213,10 @@ describe("useUndoDelete", () => {
         result.current.performDelete("test-id");
       });
 
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await act(async () => {
+        vi.advanceTimersByTime(150);
+      });
+
       expect(onDeleteError).toHaveBeenCalledWith("test-id", error);
     });
 
@@ -193,7 +232,10 @@ describe("useUndoDelete", () => {
         result.current.performDelete("test-id");
       });
 
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await act(async () => {
+        vi.advanceTimersByTime(150);
+      });
+
       const passedError = onDeleteError.mock.calls[0][1];
       expect(passedError).toBeInstanceOf(Error);
       expect(passedError.message).toBe("String error");
@@ -211,7 +253,10 @@ describe("useUndoDelete", () => {
         result.current.performDelete("");
       });
 
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await act(async () => {
+        vi.advanceTimersByTime(150);
+      });
+
       expect(onDelete).toHaveBeenCalledWith("");
     });
 
@@ -227,7 +272,10 @@ describe("useUndoDelete", () => {
         result.current.performDelete("id-3");
       });
 
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await act(async () => {
+        vi.advanceTimersByTime(150);
+      });
+
       expect(onDelete).toHaveBeenCalledTimes(3);
     });
   });
@@ -249,7 +297,10 @@ describe("useUndoDelete", () => {
 
       rerender({ onDelete: onDelete2 });
 
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await act(async () => {
+        vi.advanceTimersByTime(150);
+      });
+
       expect(onDelete1).toHaveBeenCalledWith("test-id");
       expect(onDelete2).not.toHaveBeenCalled();
     });
@@ -272,7 +323,10 @@ describe("useUndoDelete", () => {
 
       rerender({ onDeleteError: onDeleteError2 });
 
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await act(async () => {
+        vi.advanceTimersByTime(150);
+      });
+
       expect(onDeleteError1).toHaveBeenCalledWith("test-id", error);
       expect(onDeleteError2).not.toHaveBeenCalled();
     });

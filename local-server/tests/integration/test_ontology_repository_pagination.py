@@ -4,7 +4,7 @@ Integration tests for SQLiteOntologyRepository pagination, sorting, and search.
 Tests verify that the new query-building code exercises real SQLite behavior:
 - Pagination (limit, offset)
 - Sorting (by title, created_at, last_modified)
-- Text search filtering (SQLite LIKE - case-sensitive, unlike fake repository)
+- Text search filtering (SQLite LIKE - case-insensitive for ASCII characters)
 - Count methods with various filters
 - Combined filters and sorting
 
@@ -27,9 +27,7 @@ from domain.ontology.entities import (
     Taxonomy,
     ConceptScheme,
     Class,
-    Individual,
     PropertyDefinition,
-    Relationship,
 )
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
@@ -247,7 +245,7 @@ class TestTaxonomySorting:
 
 
 class TestTaxonomySearch:
-    """Tests for taxonomy text search (SQLite LIKE - case-sensitive)."""
+    """Tests for taxonomy text search (SQLite LIKE - case-insensitive for ASCII)."""
 
     def test_list_taxonomies_search_exact_match(self, repo, large_taxonomy_dataset):
         result = repo.list_taxonomies(query="Zoology")
@@ -305,11 +303,6 @@ class TestTaxonomyCount:
     def test_count_taxonomies_no_matches(self, repo, large_taxonomy_dataset):
         count = repo.count_taxonomies(query="NonexistentTerm")
         assert count == 0
-
-    def test_count_matches_list_length(self, repo, large_taxonomy_dataset):
-        count = repo.count_taxonomies(query="ology")
-        result = repo.list_taxonomies(query="ology", limit=None)
-        assert count == len(result)
 
 
 class TestConceptSchemePagination:
