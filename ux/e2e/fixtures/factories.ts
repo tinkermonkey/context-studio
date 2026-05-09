@@ -79,8 +79,7 @@ export async function createTaxonomy(
 ): Promise<Taxonomy> {
   const timestamp = getRunTimestamp();
   const title = overrides?.title || `test-taxonomy-${timestamp}`;
-  const description =
-    overrides?.description || `Test taxonomy created at ${timestamp}`;
+  const description = overrides?.description || `Test taxonomy created at ${timestamp}`;
 
   const response = await apiRequest<Taxonomy>(page, "/api/taxonomies", {
     method: "POST",
@@ -111,8 +110,7 @@ export async function createConceptScheme(
 
   const timestamp = getRunTimestamp();
   const title = overrides?.title || `test-scheme-${timestamp}`;
-  const description =
-    overrides?.description || `Test scheme created at ${timestamp}`;
+  const description = overrides?.description || `Test scheme created at ${timestamp}`;
 
   const response = await apiRequest<ConceptScheme>(
     page,
@@ -143,8 +141,7 @@ export async function createClass(
 ): Promise<OntologyClass> {
   const timestamp = getRunTimestamp();
   const title = overrides?.title || `test-class-${timestamp}`;
-  const description =
-    overrides?.description || `Test class definition created at ${timestamp}`;
+  const description = overrides?.description || `Test class definition created at ${timestamp}`;
 
   const body: {
     title: string;
@@ -159,14 +156,10 @@ export async function createClass(
     body.parent_class_id = overrides.parent_class_id;
   }
 
-  const response = await apiRequest<OntologyClass>(
-    page,
-    `/api/schemes/${schemeId}/classes`,
-    {
-      method: "POST",
-      body,
-    },
-  );
+  const response = await apiRequest<OntologyClass>(page, `/api/schemes/${schemeId}/classes`, {
+    method: "POST",
+    body,
+  });
 
   return response;
 }
@@ -181,22 +174,16 @@ export async function createPropertyDefinition(
   const timestamp = getRunTimestamp();
   const identifier = overrides?.identifier || `prop-${timestamp}`;
   const title = overrides?.title || `test-property-${timestamp}`;
-  const description =
-    overrides?.description ||
-    `Test property definition created at ${timestamp}`;
+  const description = overrides?.description || `Test property definition created at ${timestamp}`;
 
-  const response = await apiRequest<PropertyDefinition>(
-    page,
-    "/api/properties",
-    {
-      method: "POST",
-      body: {
-        identifier,
-        title,
-        description,
-      },
+  const response = await apiRequest<PropertyDefinition>(page, "/api/properties", {
+    method: "POST",
+    body: {
+      identifier,
+      title,
+      description,
     },
-  );
+  });
 
   return response;
 }
@@ -210,18 +197,14 @@ export async function createRelationship(
   targetClassId: string,
   propertyDefinitionId: string,
 ): Promise<Relationship> {
-  const response = await apiRequest<Relationship>(
-    page,
-    "/api/relationships",
-    {
-      method: "POST",
-      body: {
-        source_id: sourceClassId,
-        target_id: targetClassId,
-        property_definition_id: propertyDefinitionId,
-      },
+  const response = await apiRequest<Relationship>(page, "/api/relationships", {
+    method: "POST",
+    body: {
+      source_id: sourceClassId,
+      target_id: targetClassId,
+      property_definition_id: propertyDefinitionId,
     },
-  );
+  });
 
   return response;
 }
@@ -237,21 +220,27 @@ interface PaginatedResponse<T> {
 export async function clearTestData(page: Page): Promise<void> {
   try {
     // Delete all relationships first
-    const relationshipsResponse = await apiRequest<PaginatedResponse<Relationship>>(page, "/api/relationships");
+    const relationshipsResponse = await apiRequest<PaginatedResponse<Relationship>>(
+      page,
+      "/api/relationships",
+    );
     if (relationshipsResponse.items) {
       for (const relationship of relationshipsResponse.items) {
         try {
           await apiRequest(page, `/api/relationships/${relationship.id}`, {
             method: "DELETE",
           });
-        } catch (e) {
+        } catch {
           // Ignore deletion errors
         }
       }
     }
 
     // Get all taxonomies and delete them
-    const taxonomiesResponse = await apiRequest<PaginatedResponse<Taxonomy>>(page, "/api/taxonomies");
+    const taxonomiesResponse = await apiRequest<PaginatedResponse<Taxonomy>>(
+      page,
+      "/api/taxonomies",
+    );
     if (taxonomiesResponse.items) {
       for (const taxonomy of taxonomiesResponse.items) {
         // Try to delete, but don't fail if it doesn't work
@@ -259,27 +248,30 @@ export async function clearTestData(page: Page): Promise<void> {
           await apiRequest(page, `/api/taxonomies/${taxonomy.id}`, {
             method: "DELETE",
           });
-        } catch (e) {
+        } catch {
           // Ignore deletion errors
         }
       }
     }
 
     // Get all properties and delete them
-    const propertiesResponse = await apiRequest<PaginatedResponse<PropertyDefinition>>(page, "/api/properties");
+    const propertiesResponse = await apiRequest<PaginatedResponse<PropertyDefinition>>(
+      page,
+      "/api/properties",
+    );
     if (propertiesResponse.items) {
       for (const prop of propertiesResponse.items) {
         try {
           await apiRequest(page, `/api/properties/${prop.id}`, {
             method: "DELETE",
           });
-        } catch (e) {
+        } catch {
           // Ignore deletion errors
         }
       }
     }
-  } catch (e) {
+  } catch (_e) {
     // Ignore errors during cleanup
-    console.log("Cleanup completed with some errors (expected)", e);
+    console.log("Cleanup completed with some errors (expected)", _e);
   }
 }
