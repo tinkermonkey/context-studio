@@ -226,14 +226,32 @@ export async function createRelationship(
   return response;
 }
 
+interface PaginatedResponse<T> {
+  items: T[];
+}
+
 /**
  * Clear all test data by deleting all non-default entities
  * This is a simple implementation that calls delete endpoints
  */
 export async function clearTestData(page: Page): Promise<void> {
   try {
+    // Delete all relationships first
+    const relationshipsResponse = await apiRequest<PaginatedResponse<Relationship>>(page, "/api/relationships");
+    if (relationshipsResponse.items) {
+      for (const relationship of relationshipsResponse.items) {
+        try {
+          await apiRequest(page, `/api/relationships/${relationship.id}`, {
+            method: "DELETE",
+          });
+        } catch (e) {
+          // Ignore deletion errors
+        }
+      }
+    }
+
     // Get all taxonomies and delete them
-    const taxonomiesResponse = await apiRequest<any>(page, "/api/taxonomies");
+    const taxonomiesResponse = await apiRequest<PaginatedResponse<Taxonomy>>(page, "/api/taxonomies");
     if (taxonomiesResponse.items) {
       for (const taxonomy of taxonomiesResponse.items) {
         // Try to delete, but don't fail if it doesn't work
@@ -248,7 +266,7 @@ export async function clearTestData(page: Page): Promise<void> {
     }
 
     // Get all properties and delete them
-    const propertiesResponse = await apiRequest<any>(page, "/api/properties");
+    const propertiesResponse = await apiRequest<PaginatedResponse<PropertyDefinition>>(page, "/api/properties");
     if (propertiesResponse.items) {
       for (const prop of propertiesResponse.items) {
         try {

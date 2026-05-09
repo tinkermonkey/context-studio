@@ -100,7 +100,7 @@ test.describe("Ontology Management Full CRUD Chain", () => {
     const propertyRows = page.locator('[data-testid^="schema-row-"]');
     const firstPropertyRow = propertyRows.first();
     await firstPropertyRow.click();
-    await page.waitForLoadState("networkidle");
+    await expect(page.getByTestId("property-drawer")).toBeVisible();
 
     // Verify property drawer appears with expected fields
     await expect(page.getByTestId("property-drawer")).toBeVisible();
@@ -147,20 +147,12 @@ test.describe("Ontology Management Full CRUD Chain", () => {
     const classRowId = classRowTestId?.replace("schema-row-", "") || "";
 
     // Click the actions button using the extracted ID
-    const actionsButton = page.locator(
-      `[data-testid^="class-row-actions-"]`,
-    ).filter({ hasText: /.*/ }).first();
-
-    // Alternative: find actions button within the row
     await classRow.hover();
-    const actionsInRow = classRow.locator("button").filter({ has: page.locator("svg") });
-    const firstActionButton = actionsInRow.first();
-    await firstActionButton.click();
-    await page.waitForLoadState("networkidle");
+    const actionsButton = page.locator(`[data-testid="class-row-actions-${classRowId}"]`);
+    await actionsButton.click();
 
     // Click delete option from context menu
     await page.getByRole("button", { name: /delete/i }).click();
-    await page.waitForLoadState("networkidle");
 
     // Verify type-to-confirm dialog appears
     await expect(page.getByTestId("type-confirm-dialog")).toBeVisible();
@@ -168,13 +160,11 @@ test.describe("Ontology Management Full CRUD Chain", () => {
     // Type confirmation phrase
     const confirmInput = page.getByTestId("type-confirm-input");
     await confirmInput.fill("Delete");
-    await page.waitForLoadState("networkidle");
 
     // Click confirm button
     const confirmButton = page.getByTestId("type-confirm-button");
     await expect(confirmButton).toBeEnabled();
     await confirmButton.click();
-    await page.waitForLoadState("networkidle");
 
     // Verify class is removed from the visible table
     const schemaTable = page.getByTestId("schema-table");
@@ -187,10 +177,9 @@ test.describe("Ontology Management Full CRUD Chain", () => {
 
     // Click the undo action button
     await toastAction.click();
-    await page.waitForLoadState("networkidle");
 
-    // Wait for the toast to close
-    await page.waitForTimeout(500);
+    // Wait for the toast to disappear
+    await expect(toastAction).not.toBeVisible();
 
     // Test Case 8: Verify the Restored Class Appears in the Table
     // The restored class should have a new ID (UUID) but the same title and description
@@ -201,7 +190,7 @@ test.describe("Ontology Management Full CRUD Chain", () => {
 
     // Verify the restored class row exists (but with a potentially different ID)
     const restoredClassRows = page.locator(
-      '[data-testid^="schema-row-"][data-testid$=""]',
+      '[data-testid^="schema-row-"]',
     );
     const rowCount = await restoredClassRows.count();
     expect(rowCount).toBeGreaterThan(0);
