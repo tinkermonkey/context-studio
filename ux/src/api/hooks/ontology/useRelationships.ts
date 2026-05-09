@@ -3,7 +3,6 @@ import { QUERY_KEYS } from "@/api/config";
 import { ontologyService } from "@/api/services/ontology";
 import type { components } from "@/api/types";
 
-type RelationshipResponse = components["schemas"]["RelationshipResponse"];
 type RelationshipCreateRequest = components["schemas"]["RelationshipCreateRequest"];
 
 interface RelationshipListParams {
