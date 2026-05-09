@@ -11,6 +11,7 @@ import { useUndoDelete } from "@/hooks/useUndoDelete";
 import { TypeToConfirmDialog } from "@/components/ui/TypeToConfirmDialog";
 import { useIndividuals } from "@/api/hooks/ontology/useIndividuals";
 import { useRelationships } from "@/api/hooks/ontology/useRelationships";
+import { ApiError } from "@/api/client/interceptors";
 import { classesCopy } from "@/routes/app/schema/classes/-copy";
 import type { components } from "@/api/types";
 
@@ -62,7 +63,7 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
       toast("success", "Class moved to new domain");
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Failed to move class";
+        error instanceof ApiError ? error.detail : "Failed to move class";
       toast("error", message);
     }
   };
