@@ -5,7 +5,7 @@ import { rest } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
 import { createListTaxonomies, createTaxonomy } from "@/api/services/__tests__/fixtures/ontology.fixtures";
-import TaxonomiesPage from "../taxonomies";
+import { TaxonomiesPage } from "../taxonomies";
 
 const server = setupServer();
 
@@ -26,7 +26,7 @@ describe("Taxonomies Schema Page", () => {
   // Loading State
   // ========================================================================
   describe("loading state", () => {
-    it("displays loading skeleton state before data arrives", async () => {
+    it("displays loading skeleton state with 5 skeleton rows matching table layout", async () => {
       server.use(
         rest.get("*/api/taxonomies", async (req, res, ctx) => {
           await new Promise((resolve) => setTimeout(resolve, 100));
@@ -36,8 +36,11 @@ describe("Taxonomies Schema Page", () => {
 
       const { container } = render(<TaxonomiesPage />);
 
-      // Verify the component renders (skeleton or data)
-      expect(container.querySelector("div")).toBeInTheDocument();
+      // Verify skeleton rows are rendered before data arrives
+      const skeletonElements = container.querySelectorAll(
+        "div[style*='animation: skeleton-shimmer']"
+      );
+      expect(skeletonElements.length).toBeGreaterThanOrEqual(5);
     });
   });
 
@@ -167,9 +170,9 @@ describe("Taxonomies Schema Page", () => {
   });
 
   // ========================================================================
-  // Partial State (Filtered)
+  // Filtered State
   // ========================================================================
-  describe("partial state with filtering", () => {
+  describe("filtered state", () => {
     it("filters taxonomies by search term", async () => {
       const mockTaxonomies = createListTaxonomies([
         createTaxonomy({

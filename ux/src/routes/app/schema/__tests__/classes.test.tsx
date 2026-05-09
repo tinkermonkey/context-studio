@@ -5,7 +5,7 @@ import { rest } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
 import { createListClasses, createClass, createListSchemes } from "@/api/services/__tests__/fixtures/ontology.fixtures";
-import ClassesPage from "../classes";
+import { ClassesPage } from "../classes";
 
 const server = setupServer();
 
@@ -26,7 +26,7 @@ describe("Classes Schema Page", () => {
   // Loading State
   // ========================================================================
   describe("loading state", () => {
-    it("displays loading skeleton state before data arrives", async () => {
+    it("displays loading skeleton state with 5 skeleton rows matching table layout", async () => {
       server.use(
         rest.get("*/api/classes", async (req, res, ctx) => {
           await new Promise((resolve) => setTimeout(resolve, 100));
@@ -39,8 +39,11 @@ describe("Classes Schema Page", () => {
 
       const { container } = render(<ClassesPage />);
 
-      // Verify the component renders (skeleton or data)
-      expect(container.querySelector("div")).toBeInTheDocument();
+      // Verify skeleton rows are rendered before data arrives
+      const skeletonElements = container.querySelectorAll(
+        "div[style*='animation: skeleton-shimmer']"
+      );
+      expect(skeletonElements.length).toBeGreaterThanOrEqual(5);
     });
   });
 
@@ -170,9 +173,9 @@ describe("Classes Schema Page", () => {
   });
 
   // ========================================================================
-  // Partial State (Filtered)
+  // Filtered State
   // ========================================================================
-  describe("partial state with filtering", () => {
+  describe("filtered state", () => {
     it("filters classes by search term", async () => {
       const mockClasses = createListClasses([
         createClass({

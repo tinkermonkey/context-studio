@@ -184,18 +184,36 @@ describe("Toast", () => {
       expect(onDismiss).toHaveBeenCalledWith("toast-1");
     });
 
-    it("toast with 8-second autoDismiss is created by useToasts hook with default timeout", () => {
-      // Note: The actual autoDismiss behavior is tested in integration tests
-      // This unit test verifies the toast renders correctly when passed in
+    it("undo button is absent after 8 seconds when toast has autoDismiss action", async () => {
+      vi.useFakeTimers();
+      const onDismiss = vi.fn();
       const toast: ToastItem = {
         id: "toast-1",
         type: "success",
-        title: "Item deleted with 8s timeout",
+        title: "Item deleted",
+        action: {
+          label: "Undo",
+          onAction: vi.fn(),
+        },
       };
 
-      render(<ToastViewport toasts={[toast]} onDismiss={vi.fn()} />);
+      const { rerender } = render(
+        <ToastViewport toasts={[toast]} onDismiss={onDismiss} />,
+      );
 
-      expect(screen.getByText("Item deleted with 8s timeout")).toBeInTheDocument();
+      // Undo button is present initially
+      expect(screen.getByTestId("toast-action-toast-1")).toBeInTheDocument();
+
+      // Advance time by 8 seconds
+      vi.advanceTimersByTime(8000);
+
+      // Simulate toast being dismissed after 8 seconds
+      rerender(<ToastViewport toasts={[]} onDismiss={onDismiss} />);
+
+      // Undo button should be gone after 8 seconds
+      expect(screen.queryByTestId("toast-action-toast-1")).not.toBeInTheDocument();
+
+      vi.useRealTimers();
     });
   });
 

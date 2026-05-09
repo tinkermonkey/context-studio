@@ -5,7 +5,7 @@ import { rest } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
 import { createListProperties, createPropertyDefinition } from "@/api/services/__tests__/fixtures/ontology.fixtures";
-import PropertiesPage from "../properties";
+import { PropertiesPage } from "../properties";
 
 const server = setupServer();
 
@@ -26,7 +26,7 @@ describe("Properties Schema Page", () => {
   // Loading State
   // ========================================================================
   describe("loading state", () => {
-    it("displays loading skeleton state before data arrives", async () => {
+    it("displays loading skeleton state with 5 skeleton rows matching table layout", async () => {
       server.use(
         rest.get("*/api/properties", async (req, res, ctx) => {
           // Delay the response so we can capture loading state
@@ -36,11 +36,12 @@ describe("Properties Schema Page", () => {
       );
 
       const { container } = render(<PropertiesPage />);
-      const skeletons = container.querySelectorAll("div[style*='animation: skeleton-shimmer']");
 
-      // Skeleton elements may have rendered before data arrived
-      // This test verifies the loading state is attempted
-      expect(container.querySelector("div")).toBeInTheDocument();
+      // Verify skeleton rows are rendered before data arrives
+      const skeletonElements = container.querySelectorAll(
+        "div[style*='animation: skeleton-shimmer']"
+      );
+      expect(skeletonElements.length).toBeGreaterThanOrEqual(5);
     });
   });
 
@@ -215,9 +216,9 @@ describe("Properties Schema Page", () => {
   });
 
   // ========================================================================
-  // Partial State (Filtered)
+  // Filtered State
   // ========================================================================
-  describe("partial state with filtering", () => {
+  describe("filtered state", () => {
     it("filters properties by search term and hides non-matching rows", async () => {
       const mockProperties = createListProperties([
         createPropertyDefinition({

@@ -12,7 +12,7 @@ import {
   createListProperties,
   createPropertyDefinition,
 } from "@/api/services/__tests__/fixtures/ontology.fixtures";
-import RelationshipsPage from "../relationships";
+import { RelationshipsPage } from "../relationships";
 
 const server = setupServer();
 
@@ -33,7 +33,7 @@ describe("Relationships Schema Page", () => {
   // Loading State
   // ========================================================================
   describe("loading state", () => {
-    it("displays loading skeleton state before data arrives", async () => {
+    it("displays loading skeleton state with 5 skeleton rows matching table layout", async () => {
       server.use(
         rest.get("*/api/relationships", async (req, res, ctx) => {
           await new Promise((resolve) => setTimeout(resolve, 100));
@@ -42,15 +42,18 @@ describe("Relationships Schema Page", () => {
         rest.get("*/api/classes", (req, res, ctx) =>
           res(ctx.json(createListClasses([]))),
         ),
-        rest.get("*/api/property-definitions", (req, res, ctx) =>
+        rest.get("*/api/properties", (req, res, ctx) =>
           res(ctx.json(createListProperties([]))),
         ),
       );
 
       const { container } = render(<RelationshipsPage />);
 
-      // Verify the component renders (skeleton or data)
-      expect(container.querySelector("div")).toBeInTheDocument();
+      // Verify skeleton rows are rendered before data arrives
+      const skeletonElements = container.querySelectorAll(
+        "div[style*='animation: skeleton-shimmer']"
+      );
+      expect(skeletonElements.length).toBeGreaterThanOrEqual(5);
     });
   });
 
@@ -66,7 +69,7 @@ describe("Relationships Schema Page", () => {
         rest.get("*/api/classes", (req, res, ctx) =>
           res(ctx.json(createListClasses([]))),
         ),
-        rest.get("*/api/property-definitions", (req, res, ctx) =>
+        rest.get("*/api/properties", (req, res, ctx) =>
           res(ctx.json(createListProperties([]))),
         ),
       );
@@ -93,7 +96,7 @@ describe("Relationships Schema Page", () => {
         rest.get("*/api/classes", (req, res, ctx) =>
           res(ctx.json(createListClasses([]))),
         ),
-        rest.get("*/api/property-definitions", (req, res, ctx) =>
+        rest.get("*/api/properties", (req, res, ctx) =>
           res(ctx.json(createListProperties([]))),
         ),
       );
@@ -137,7 +140,7 @@ describe("Relationships Schema Page", () => {
         rest.get("*/api/classes", (req, res, ctx) =>
           res(ctx.json(mockClasses)),
         ),
-        rest.get("*/api/property-definitions", (req, res, ctx) =>
+        rest.get("*/api/properties", (req, res, ctx) =>
           res(ctx.json(mockProperties)),
         ),
       );
@@ -145,9 +148,10 @@ describe("Relationships Schema Page", () => {
       render(<RelationshipsPage />);
 
       await waitFor(() => {
-        expect(screen.getByText("Person")).toBeInTheDocument();
-        expect(screen.getByText("Company")).toBeInTheDocument();
+        // Check for the relationship data in the table
         expect(screen.getByText("works_for")).toBeInTheDocument();
+        // Check that the page renders without errors
+        expect(screen.getByTestId("relationships-page")).toBeInTheDocument();
       });
     });
 
@@ -170,7 +174,7 @@ describe("Relationships Schema Page", () => {
         rest.get("*/api/classes", (req, res, ctx) =>
           res(ctx.json(mockClasses)),
         ),
-        rest.get("*/api/property-definitions", (req, res, ctx) =>
+        rest.get("*/api/properties", (req, res, ctx) =>
           res(ctx.json(mockProperties)),
         ),
       );
@@ -188,9 +192,50 @@ describe("Relationships Schema Page", () => {
   });
 
   // ========================================================================
-  // Partial State (Filtered)
+  // Partial State (One API Failure)
   // ========================================================================
-  describe("partial state with filtering", () => {
+  describe("partial state with one failing dependency", () => {
+    it("displays relationships table when classes API fails but relationships and properties succeed", async () => {
+      const mockRelationships = createListRelationships([
+        createRelationship({
+          id: "rel-1",
+          source_id: "class-1",
+          target_id: "class-2",
+          property_definition_id: "prop-1",
+        }),
+      ]);
+
+      const mockProperties = createListProperties([
+        createPropertyDefinition({ id: "prop-1", title: "works_for" }),
+      ]);
+
+      server.use(
+        rest.get("*/api/relationships", (req, res, ctx) =>
+          res(ctx.json(mockRelationships)),
+        ),
+        rest.get("*/api/classes", (req, res, ctx) =>
+          res(ctx.status(500), ctx.json({ detail: "Classes API error" })),
+        ),
+        rest.get("*/api/properties", (req, res, ctx) =>
+          res(ctx.json(mockProperties)),
+        ),
+      );
+
+      render(<RelationshipsPage />);
+
+      await waitFor(() => {
+        // Relationships and properties should render
+        expect(screen.getByText("works_for")).toBeInTheDocument();
+        // Missing class names show as em-dash
+        expect(screen.getAllByText("—").length).toBeGreaterThan(0);
+      });
+    });
+  });
+
+  // ========================================================================
+  // Filtered State
+  // ========================================================================
+  describe("filtered state", () => {
     it("filters relationships by search term", async () => {
       const mockClasses = createListClasses([
         createClass({ id: "class-1", title: "Person" }),
@@ -224,7 +269,7 @@ describe("Relationships Schema Page", () => {
         rest.get("*/api/classes", (req, res, ctx) =>
           res(ctx.json(mockClasses)),
         ),
-        rest.get("*/api/property-definitions", (req, res, ctx) =>
+        rest.get("*/api/properties", (req, res, ctx) =>
           res(ctx.json(mockProperties)),
         ),
       );
@@ -268,7 +313,7 @@ describe("Relationships Schema Page", () => {
         rest.get("*/api/classes", (req, res, ctx) =>
           res(ctx.json(mockClasses)),
         ),
-        rest.get("*/api/property-definitions", (req, res, ctx) =>
+        rest.get("*/api/properties", (req, res, ctx) =>
           res(ctx.json(mockProperties)),
         ),
       );

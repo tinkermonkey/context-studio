@@ -219,7 +219,7 @@ function SchemesPageContent({ onCreateClick, taxonomiesById }: SchemesPageConten
   );
 }
 
-function SchemesIndexPage() {
+export function SchemesIndexPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const createMutation = useCreateScheme();
@@ -295,8 +295,6 @@ function SchemesIndexPage() {
     </>
   );
 }
-
-export default SchemesIndexPage;
 
 export const Route = createFileRoute("/app/schema/schemes/")({
   component: SchemesIndexPage,

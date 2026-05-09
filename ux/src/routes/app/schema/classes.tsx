@@ -289,11 +289,9 @@ function ClassesPageWrapper() {
   );
 }
 
-function ClassesPage() {
+export function ClassesPage() {
   return <ClassesPageWrapper />;
 }
-
-export default ClassesPage;
 
 export const Route = createFileRoute("/app/schema/classes")({
   component: ClassesPage,

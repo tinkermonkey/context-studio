@@ -5,7 +5,7 @@ import { rest } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
 import { createListSchemes, createConceptScheme } from "@/api/services/__tests__/fixtures/ontology.fixtures";
-import SchemesPage from "../schemes.index";
+import { SchemesIndexPage } from "../schemes.index";
 
 const server = setupServer();
 
@@ -26,7 +26,7 @@ describe("Schemes Schema Page", () => {
   // Loading State
   // ========================================================================
   describe("loading state", () => {
-    it("displays loading skeleton state before data arrives", async () => {
+    it("displays loading skeleton state with 5 skeleton rows matching table layout", async () => {
       server.use(
         rest.get("*/api/schemes", async (req, res, ctx) => {
           await new Promise((resolve) => setTimeout(resolve, 100));
@@ -34,10 +34,16 @@ describe("Schemes Schema Page", () => {
         }),
       );
 
-      const { container } = render(<SchemesPage />);
+      const { container } = render(<SchemesIndexPage />, { includeRouter: true });
 
-      // Verify the component renders (skeleton or data)
-      expect(container.querySelector("div")).toBeInTheDocument();
+      // Wait a bit for the component to render
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      // Verify skeleton rows are rendered before data arrives
+      const skeletonElements = container.querySelectorAll(
+        "div[style*='animation: skeleton-shimmer']"
+      );
+      expect(skeletonElements.length).toBeGreaterThanOrEqual(5);
     });
   });
 
@@ -52,7 +58,7 @@ describe("Schemes Schema Page", () => {
         ),
       );
 
-      render(<SchemesPage />);
+      render(<SchemesIndexPage />, { includeRouter: true });
 
       await waitFor(() => {
         expect(screen.getByText(/Failed to load concept schemes/i)).toBeInTheDocument();
@@ -73,7 +79,7 @@ describe("Schemes Schema Page", () => {
         ),
       );
 
-      render(<SchemesPage />);
+      render(<SchemesIndexPage />, { includeRouter: true });
 
       await waitFor(() => {
         expect(screen.getByText("No concept schemes yet")).toBeInTheDocument();
@@ -108,7 +114,7 @@ describe("Schemes Schema Page", () => {
         ),
       );
 
-      render(<SchemesPage />);
+      render(<SchemesIndexPage />, { includeRouter: true });
 
       await waitFor(() => {
         expect(screen.getByText("Biological Classification")).toBeInTheDocument();
@@ -130,7 +136,7 @@ describe("Schemes Schema Page", () => {
         ),
       );
 
-      render(<SchemesPage />);
+      render(<SchemesIndexPage />, { includeRouter: true });
 
       await waitFor(() => {
         expect(screen.getByText("TestScheme")).toBeInTheDocument();
@@ -155,7 +161,7 @@ describe("Schemes Schema Page", () => {
         ),
       );
 
-      render(<SchemesPage />);
+      render(<SchemesIndexPage />, { includeRouter: true });
 
       await waitFor(() => {
         expect(screen.getByText("TestScheme")).toBeInTheDocument();
@@ -167,9 +173,9 @@ describe("Schemes Schema Page", () => {
   });
 
   // ========================================================================
-  // Partial State (Filtered)
+  // Filtered State
   // ========================================================================
-  describe("partial state with filtering", () => {
+  describe("filtered state", () => {
     it("filters concept schemes by search term", async () => {
       const mockSchemes = createListSchemes([
         createConceptScheme({
@@ -192,7 +198,7 @@ describe("Schemes Schema Page", () => {
         ),
       );
 
-      render(<SchemesPage />);
+      render(<SchemesIndexPage />, { includeRouter: true });
 
       await waitFor(() => {
         expect(screen.getByText("Biology")).toBeInTheDocument();
@@ -226,7 +232,7 @@ describe("Schemes Schema Page", () => {
         ),
       );
 
-      render(<SchemesPage />);
+      render(<SchemesIndexPage />, { includeRouter: true });
 
       await waitFor(() => {
         expect(screen.getByText("Biology")).toBeInTheDocument();
