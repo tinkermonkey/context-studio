@@ -27,6 +27,7 @@ import { Route as AppPipelinesRunsRouteImport } from './routes/app/pipelines/run
 import { Route as AppPipelinesFlavorsRouteImport } from './routes/app/pipelines/flavors'
 import { Route as AppDataIndividualsRouteImport } from './routes/app/data/individuals'
 import { Route as AppDataDatasetsRouteImport } from './routes/app/data/datasets'
+import { Route as AppSchemaSchemesIndexRouteImport } from './routes/app/schema/schemes.index'
 import { Route as AppSchemaTaxonomiesTaxonomyIdRouteImport } from './routes/app/schema/taxonomies.$taxonomyId'
 import { Route as AppSchemaSchemesSchemeIdRouteImport } from './routes/app/schema/schemes.$schemeId'
 
@@ -120,6 +121,11 @@ const AppDataDatasetsRoute = AppDataDatasetsRouteImport.update({
   path: '/data/datasets',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSchemaSchemesIndexRoute = AppSchemaSchemesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppSchemaSchemesRoute,
+} as any)
 const AppSchemaTaxonomiesTaxonomyIdRoute =
   AppSchemaTaxonomiesTaxonomyIdRouteImport.update({
     id: '/$taxonomyId',
@@ -154,6 +160,7 @@ export interface FileRoutesByFullPath {
   '/app/pipelines/': typeof AppPipelinesIndexRoute
   '/app/schema/schemes/$schemeId': typeof AppSchemaSchemesSchemeIdRoute
   '/app/schema/taxonomies/$taxonomyId': typeof AppSchemaTaxonomiesTaxonomyIdRoute
+  '/app/schema/schemes/': typeof AppSchemaSchemesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -170,11 +177,11 @@ export interface FileRoutesByTo {
   '/app/schema/classes': typeof AppSchemaClassesRoute
   '/app/schema/properties': typeof AppSchemaPropertiesRoute
   '/app/schema/relationships': typeof AppSchemaRelationshipsRoute
-  '/app/schema/schemes': typeof AppSchemaSchemesRouteWithChildren
   '/app/schema/taxonomies': typeof AppSchemaTaxonomiesRouteWithChildren
   '/app/pipelines': typeof AppPipelinesIndexRoute
   '/app/schema/schemes/$schemeId': typeof AppSchemaSchemesSchemeIdRoute
   '/app/schema/taxonomies/$taxonomyId': typeof AppSchemaTaxonomiesTaxonomyIdRoute
+  '/app/schema/schemes': typeof AppSchemaSchemesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -198,6 +205,7 @@ export interface FileRoutesById {
   '/app/pipelines/': typeof AppPipelinesIndexRoute
   '/app/schema/schemes/$schemeId': typeof AppSchemaSchemesSchemeIdRoute
   '/app/schema/taxonomies/$taxonomyId': typeof AppSchemaTaxonomiesTaxonomyIdRoute
+  '/app/schema/schemes/': typeof AppSchemaSchemesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -222,6 +230,7 @@ export interface FileRouteTypes {
     | '/app/pipelines/'
     | '/app/schema/schemes/$schemeId'
     | '/app/schema/taxonomies/$taxonomyId'
+    | '/app/schema/schemes/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -238,11 +247,11 @@ export interface FileRouteTypes {
     | '/app/schema/classes'
     | '/app/schema/properties'
     | '/app/schema/relationships'
-    | '/app/schema/schemes'
     | '/app/schema/taxonomies'
     | '/app/pipelines'
     | '/app/schema/schemes/$schemeId'
     | '/app/schema/taxonomies/$taxonomyId'
+    | '/app/schema/schemes'
   id:
     | '__root__'
     | '/'
@@ -265,6 +274,7 @@ export interface FileRouteTypes {
     | '/app/pipelines/'
     | '/app/schema/schemes/$schemeId'
     | '/app/schema/taxonomies/$taxonomyId'
+    | '/app/schema/schemes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -401,6 +411,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDataDatasetsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/schema/schemes/': {
+      id: '/app/schema/schemes/'
+      path: '/'
+      fullPath: '/app/schema/schemes/'
+      preLoaderRoute: typeof AppSchemaSchemesIndexRouteImport
+      parentRoute: typeof AppSchemaSchemesRoute
+    }
     '/app/schema/taxonomies/$taxonomyId': {
       id: '/app/schema/taxonomies/$taxonomyId'
       path: '/$taxonomyId'
@@ -420,10 +437,12 @@ declare module '@tanstack/react-router' {
 
 interface AppSchemaSchemesRouteChildren {
   AppSchemaSchemesSchemeIdRoute: typeof AppSchemaSchemesSchemeIdRoute
+  AppSchemaSchemesIndexRoute: typeof AppSchemaSchemesIndexRoute
 }
 
 const AppSchemaSchemesRouteChildren: AppSchemaSchemesRouteChildren = {
   AppSchemaSchemesSchemeIdRoute: AppSchemaSchemesSchemeIdRoute,
+  AppSchemaSchemesIndexRoute: AppSchemaSchemesIndexRoute,
 }
 
 const AppSchemaSchemesRouteWithChildren =
