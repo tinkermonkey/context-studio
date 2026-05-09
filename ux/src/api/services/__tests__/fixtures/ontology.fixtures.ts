@@ -223,7 +223,6 @@ export function createRelationship(
     source_id: "class-123",
     target_id: "class-456",
     property_definition_id: "prop-123",
-    status: "active",
     ...overrides,
   };
 }

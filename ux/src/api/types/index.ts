@@ -105,6 +105,36 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/taxonomies/{taxonomy_id}/publish-diff": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Publish Diff Stats
+     * @description Get diff statistics for publishing a taxonomy.
+     *
+     *     Args:
+     *         taxonomy_id: The taxonomy ID
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         PublishDiffStats with counts of added, modified, and removed classes
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found
+     */
+    get: operations["get_publish_diff_stats_api_taxonomies__taxonomy_id__publish_diff_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/taxonomies/{taxonomy_id}/publish": {
     parameters: {
       query?: never;
@@ -120,6 +150,7 @@ export interface paths {
      *
      *     Args:
      *         taxonomy_id: The taxonomy ID
+     *         request: TaxonomyPublishRequest with commit message
      *         service: OntologyService from dependency injection
      *
      *     Returns:
@@ -4787,6 +4818,27 @@ export interface components {
      */
     ProposalState: "open" | "approved" | "rejected" | "merged";
     /**
+     * PublishDiffStats
+     * @description Response containing diff statistics for publishing.
+     */
+    PublishDiffStats: {
+      /**
+       * Added
+       * @description Number of classes that will be added
+       */
+      added: number;
+      /**
+       * Modified
+       * @description Number of classes that will be modified
+       */
+      modified: number;
+      /**
+       * Removed
+       * @description Number of classes that will be removed
+       */
+      removed: number;
+    };
+    /**
      * ReferenceRelationSchema
      * @description Response containing a single reference relationship.
      */
@@ -5062,12 +5114,6 @@ export interface components {
        * @description Creation timestamp
        */
       created_at?: string | null;
-      /**
-       * Status
-       * @description Publication status (draft or published)
-       * @default draft
-       */
-      status: string;
     };
     /**
      * ResolutionRecordResponse
@@ -5398,6 +5444,17 @@ export interface components {
        * @description Optional longer description
        */
       description?: string | null;
+    };
+    /**
+     * TaxonomyPublishRequest
+     * @description Request to publish a taxonomy.
+     */
+    TaxonomyPublishRequest: {
+      /**
+       * Commit Message
+       * @description Commit message for the publication
+       */
+      commit_message: string;
     };
     /**
      * TaxonomyResponse
@@ -5775,7 +5832,7 @@ export interface operations {
       };
     };
   };
-  publish_taxonomy_api_taxonomies__taxonomy_id__publish_post: {
+  get_publish_diff_stats_api_taxonomies__taxonomy_id__publish_diff_get: {
     parameters: {
       query?: never;
       header?: never;
@@ -5785,6 +5842,41 @@ export interface operations {
       cookie?: never;
     };
     requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PublishDiffStats"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  publish_taxonomy_api_taxonomies__taxonomy_id__publish_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        taxonomy_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TaxonomyPublishRequest"];
+      };
+    };
     responses: {
       /** @description Successful Response */
       200: {

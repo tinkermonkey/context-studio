@@ -387,12 +387,13 @@ class OntologyService:
                 handler_names,
             )
 
-    def publish_taxonomy(self, taxonomy_id: str) -> Taxonomy:
+    def publish_taxonomy(self, taxonomy_id: str, commit_message: str | None = None) -> Taxonomy:
         """
         Publish a taxonomy, transitioning status from draft to published.
 
         Args:
             taxonomy_id: The ID of the taxonomy to publish
+            commit_message: Optional commit message for the publication
 
         Returns:
             The updated Taxonomy with status=published
@@ -407,6 +408,7 @@ class OntologyService:
         if taxonomy.status == "published":
             return taxonomy
 
+        old_status = taxonomy.status
         taxonomy.status = "published"
         taxonomy.last_modified = datetime.now(timezone.utc)
         taxonomy = self._repository.save_taxonomy(taxonomy)
@@ -415,8 +417,9 @@ class OntologyService:
             TaxonomyUpdated(
                 taxonomy_id=taxonomy_id,
                 changed_fields=("status",),
-                old_values={"status": "draft"},
+                old_values={"status": old_status},
                 new_values={"status": "published"},
+                commit_message=commit_message,
             )
         )
         if failures:
@@ -429,6 +432,38 @@ class OntologyService:
             )
 
         return taxonomy
+
+    def get_publish_diff_stats(self, taxonomy_id: str) -> dict[str, int]:
+        """
+        Calculate diff statistics for publishing a taxonomy.
+
+        Returns counts of classes that will be affected by the publish action.
+
+        Args:
+            taxonomy_id: The ID of the taxonomy to get publish diff stats for
+
+        Returns:
+            Dictionary with keys: 'added', 'modified', 'removed' (counts)
+
+        Raises:
+            EntityNotFoundError: If the taxonomy does not exist
+        """
+        taxonomy = self._repository.get_taxonomy(taxonomy_id)
+        if taxonomy is None:
+            raise EntityNotFoundError("Taxonomy", taxonomy_id)
+
+        # For a draft taxonomy, count all classes as "added" (they will be published)
+        # In a full version history system, we would compare with the last published version
+        schemes = self._repository.list_concept_schemes(taxonomy_id=taxonomy_id)
+        total_classes = 0
+        for scheme in schemes:
+            total_classes += self.count_classes(concept_scheme_id=scheme.id)
+
+        return {
+            "added": total_classes if taxonomy.status == "draft" else 0,
+            "modified": 0,
+            "removed": 0,
+        }
 
     # ConceptScheme operations
 

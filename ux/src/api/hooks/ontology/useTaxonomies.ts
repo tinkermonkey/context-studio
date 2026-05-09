@@ -53,6 +53,14 @@ export function useDeleteTaxonomy() {
   });
 }
 
+export function usePublishDiffStats(id: string) {
+  return useQuery({
+    queryKey: QUERY_KEYS.taxonomy(id).concat("publish-diff"),
+    queryFn: () => ontologyService.getPublishDiffStats(id),
+    enabled: !!id,
+  });
+}
+
 export function usePublishTaxonomy() {
   const queryClient = useQueryClient();
   return useMutation({

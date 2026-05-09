@@ -51,6 +51,20 @@ class TaxonomyUpdateRequest(BaseModel):
     description: Optional[str] = Field(None, description="New description")
 
 
+class TaxonomyPublishRequest(BaseModel):
+    """Request to publish a taxonomy."""
+
+    commit_message: str = Field(..., description="Commit message for the publication", min_length=1)
+
+
+class PublishDiffStats(BaseModel):
+    """Response containing diff statistics for publishing."""
+
+    added: int = Field(..., description="Number of classes that will be added")
+    modified: int = Field(..., description="Number of classes that will be modified")
+    removed: int = Field(..., description="Number of classes that will be removed")
+
+
 class TaxonomyResponse(BaseModel):
     """Response containing taxonomy data."""
 

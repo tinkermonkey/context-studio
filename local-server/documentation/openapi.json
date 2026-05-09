@@ -283,13 +283,56 @@
         }
       }
     },
+    "/api/taxonomies/{taxonomy_id}/publish-diff": {
+      "get": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Get Publish Diff Stats",
+        "description": "Get diff statistics for publishing a taxonomy.\n\nArgs:\n    taxonomy_id: The taxonomy ID\n    service: OntologyService from dependency injection\n\nReturns:\n    PublishDiffStats with counts of added, modified, and removed classes\n\nRaises:\n    HTTPException: 404 if not found",
+        "operationId": "get_publish_diff_stats_api_taxonomies__taxonomy_id__publish_diff_get",
+        "parameters": [
+          {
+            "name": "taxonomy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Taxonomy Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishDiffStats"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/taxonomies/{taxonomy_id}/publish": {
       "post": {
         "tags": [
           "ontology"
         ],
         "summary": "Publish Taxonomy",
-        "description": "Publish a taxonomy, transitioning status from draft to published.\n\nArgs:\n    taxonomy_id: The taxonomy ID\n    service: OntologyService from dependency injection\n\nReturns:\n    Updated TaxonomyResponse with status=published\n\nRaises:\n    HTTPException: 404 if not found",
+        "description": "Publish a taxonomy, transitioning status from draft to published.\n\nArgs:\n    taxonomy_id: The taxonomy ID\n    request: TaxonomyPublishRequest with commit message\n    service: OntologyService from dependency injection\n\nReturns:\n    Updated TaxonomyResponse with status=published\n\nRaises:\n    HTTPException: 404 if not found",
         "operationId": "publish_taxonomy_api_taxonomies__taxonomy_id__publish_post",
         "parameters": [
           {
@@ -302,6 +345,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaxonomyPublishRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -7933,6 +7986,33 @@
         "title": "ProposalState",
         "description": "Valid states for a proposal."
       },
+      "PublishDiffStats": {
+        "properties": {
+          "added": {
+            "type": "integer",
+            "title": "Added",
+            "description": "Number of classes that will be added"
+          },
+          "modified": {
+            "type": "integer",
+            "title": "Modified",
+            "description": "Number of classes that will be modified"
+          },
+          "removed": {
+            "type": "integer",
+            "title": "Removed",
+            "description": "Number of classes that will be removed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "added",
+          "modified",
+          "removed"
+        ],
+        "title": "PublishDiffStats",
+        "description": "Response containing diff statistics for publishing."
+      },
       "ReferenceRelationSchema": {
         "properties": {
           "subject_uri": {
@@ -8332,12 +8412,6 @@
             ],
             "title": "Created At",
             "description": "Creation timestamp"
-          },
-          "status": {
-            "type": "string",
-            "title": "Status",
-            "description": "Publication status (draft or published)",
-            "default": "draft"
           }
         },
         "type": "object",
@@ -8906,6 +8980,22 @@
         ],
         "title": "TaxonomyCreateRequest",
         "description": "Request to create a new taxonomy."
+      },
+      "TaxonomyPublishRequest": {
+        "properties": {
+          "commit_message": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Commit Message",
+            "description": "Commit message for the publication"
+          }
+        },
+        "type": "object",
+        "required": [
+          "commit_message"
+        ],
+        "title": "TaxonomyPublishRequest",
+        "description": "Request to publish a taxonomy."
       },
       "TaxonomyResponse": {
         "properties": {

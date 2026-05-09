@@ -37,7 +37,9 @@ from adapters.web.dependencies import get_ontology_service
 from adapters.web.schemas.ontology import (
     TaxonomyCreateRequest,
     TaxonomyUpdateRequest,
+    TaxonomyPublishRequest,
     TaxonomyResponse,
+    PublishDiffStats,
     ConceptSchemeCreateRequest,
     ConceptSchemeUpdateRequest,
     ConceptSchemeResponse,
@@ -255,9 +257,36 @@ async def delete_taxonomy(
         raise HTTPException(status_code=status_code, detail=message)
 
 
+@router.get("/taxonomies/{taxonomy_id}/publish-diff", response_model=PublishDiffStats)
+async def get_publish_diff_stats(
+    taxonomy_id: str,
+    service: OntologyService = Depends(get_ontology_service),
+) -> PublishDiffStats:
+    """
+    Get diff statistics for publishing a taxonomy.
+
+    Args:
+        taxonomy_id: The taxonomy ID
+        service: OntologyService from dependency injection
+
+    Returns:
+        PublishDiffStats with counts of added, modified, and removed classes
+
+    Raises:
+        HTTPException: 404 if not found
+    """
+    try:
+        stats = await run_sync_in_executor(service.get_publish_diff_stats, taxonomy_id)
+        return PublishDiffStats(**stats)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
 @router.post("/taxonomies/{taxonomy_id}/publish", response_model=TaxonomyResponse)
 async def publish_taxonomy(
     taxonomy_id: str,
+    request: TaxonomyPublishRequest,
     service: OntologyService = Depends(get_ontology_service),
 ) -> TaxonomyResponse:
     """
@@ -265,6 +294,7 @@ async def publish_taxonomy(
 
     Args:
         taxonomy_id: The taxonomy ID
+        request: TaxonomyPublishRequest with commit message
         service: OntologyService from dependency injection
 
     Returns:
@@ -274,7 +304,9 @@ async def publish_taxonomy(
         HTTPException: 404 if not found
     """
     try:
-        taxonomy = await run_sync_in_executor(service.publish_taxonomy, taxonomy_id)
+        taxonomy = await run_sync_in_executor(
+            service.publish_taxonomy, taxonomy_id, request.commit_message
+        )
         return TaxonomyResponse.model_validate(taxonomy)
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)

@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Textarea } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { usePublishTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
+import { useToasts } from "@/components/ui/Toast";
+import { usePublishTaxonomy, usePublishDiffStats } from "@/api/hooks/ontology/useTaxonomies";
 import type { components } from "@/api/types";
 
 type TaxonomyResponse = components["schemas"]["TaxonomyResponse"];
@@ -22,6 +23,8 @@ export function TaxonomyPublishDialog({
 }: TaxonomyPublishDialogProps) {
   const [commitMessage, setCommitMessage] = useState("");
   const publishMutation = usePublishTaxonomy();
+  const diffStatsQuery = usePublishDiffStats(taxonomy.id);
+  const { toast } = useToasts();
 
   const handlePublish = async () => {
     try {
@@ -32,8 +35,9 @@ export function TaxonomyPublishDialog({
       setCommitMessage("");
       onPublish?.();
       onClose();
-    } catch {
-      // Error is handled by the mutation error state
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to publish taxonomy";
+      toast("error", message);
     }
   };
 
@@ -54,9 +58,19 @@ export function TaxonomyPublishDialog({
           </p>
         </div>
 
-        {/* TODO: Add diff summary display when backend provides changeset/diff endpoint */}
         <div style={{ padding: "var(--space-2)", backgroundColor: "var(--canvas-fg-4)", borderRadius: "4px", fontSize: "var(--text-xs)", color: "var(--canvas-fg-3)" }}>
-          Diff summary coming soon…
+          {diffStatsQuery.isLoading ? (
+            <span>Loading diff summary…</span>
+          ) : diffStatsQuery.data ? (
+            <span>
+              {diffStatsQuery.data.added > 0 && `${diffStatsQuery.data.added} class${diffStatsQuery.data.added !== 1 ? "es" : ""} added`}
+              {diffStatsQuery.data.modified > 0 && `, ${diffStatsQuery.data.modified} modified`}
+              {diffStatsQuery.data.removed > 0 && `, ${diffStatsQuery.data.removed} removed`}
+              {diffStatsQuery.data.added === 0 && diffStatsQuery.data.modified === 0 && diffStatsQuery.data.removed === 0 && "No changes to publish"}
+            </span>
+          ) : (
+            <span>Unable to load diff summary</span>
+          )}
         </div>
 
         <div>
