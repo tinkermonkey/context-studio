@@ -6,7 +6,6 @@ import type { components } from "@/api/types";
 type ConceptSchemeCreateRequest = components["schemas"]["ConceptSchemeCreateRequest"];
 
 interface SchemeFormProps {
-  taxonomyId: string;
   onSubmit: (data: ConceptSchemeCreateRequest) => Promise<void>;
   isLoading?: boolean;
 }

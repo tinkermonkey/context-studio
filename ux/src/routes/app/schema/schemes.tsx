@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Outlet } from "@tanstack/react-router";
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreVertical } from "lucide-react";
-import { ToastViewport, useToasts } from "@/components/ui/Toast";
+import { useToasts } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -29,6 +29,7 @@ interface SchemesPageContentProps {
 function SchemesPageContent({ onCreateClick, taxonomiesById }: SchemesPageContentProps) {
   const [selectedId, setSelectedId] = useState<string>();
   const [searchFilter, setSearchFilter] = useState("");
+  const navigate = useNavigate();
 
   const { data: listResponse, isLoading, error, refetch } = useSchemes();
   const schemes = listResponse?.items || [];
@@ -54,15 +55,21 @@ function SchemesPageContent({ onCreateClick, taxonomiesById }: SchemesPageConten
       accessorKey: "title",
       header: "Name",
       cell: (info) => (
-        <span
+        <button
+          onClick={() => navigate({ to: `/app/schema/schemes/${info.row.original.id}` })}
           style={{
+            background: "none",
+            border: "none",
             color: "var(--cyan-600, #0891b2)",
             fontWeight: 500,
             cursor: "pointer",
+            padding: 0,
+            font: "inherit",
           }}
+          data-testid={`scheme-name-link-${info.row.original.id}`}
         >
           {info.getValue() as string}
-        </span>
+        </button>
       ),
     },
     {
@@ -219,7 +226,7 @@ function SchemesPageWrapper() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const createMutation = useCreateScheme();
-  const { toasts, dismiss, toast } = useToasts();
+  const { toast } = useToasts();
   const { data: taxonomiesResponse } = useTaxonomies();
   const taxonomies = taxonomiesResponse?.items || [];
 
@@ -248,6 +255,7 @@ function SchemesPageWrapper() {
 
   return (
     <>
+      <Outlet />
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>Concept Schemes</h1>
@@ -283,13 +291,11 @@ function SchemesPageWrapper() {
             </div>
           )}
           <SchemeForm
-            taxonomyId={taxonomies[0]?.id || ""}
             onSubmit={handleCreateSubmit}
             isLoading={createMutation.isPending}
           />
         </Modal>
       </div>
-      <ToastViewport toasts={toasts} onDismiss={dismiss} />
     </>
   );
 }
