@@ -38,11 +38,19 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
   const schemes = schemesResponse?.items || [];
   const { data: classesResponse } = useClasses();
   const allClasses = classesResponse?.items || [];
-  const { data: individualsResponse, isLoading: individualsLoading, error: individualsError, refetch: refetchIndividuals } = useIndividuals({
+  const {
+    data: individualsResponse,
+    error: individualsError,
+    refetch: refetchIndividuals,
+  } = useIndividuals({
     class_id: classData?.id,
   });
 
-  const { data: relationshipsResponse, isLoading: relationshipsLoading, error: relationshipsError, refetch: refetchRelationships } = useRelationships();
+  const {
+    data: relationshipsResponse,
+    error: relationshipsError,
+    refetch: refetchRelationships,
+  } = useRelationships();
 
   const { performDelete, undo } = useUndoDelete({
     onDelete: (id: string) => deleteMutation.mutateAsync(id),
@@ -62,8 +70,7 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
       setDomainId(newSchemeId);
       toast("success", "Class moved to new domain");
     } catch (error) {
-      const message =
-        error instanceof ApiError ? error.detail : "Failed to move class";
+      const message = error instanceof ApiError ? error.detail : "Failed to move class";
       toast("error", message);
     }
   };
