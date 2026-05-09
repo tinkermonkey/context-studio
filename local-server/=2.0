@@ -1,9 +1,0 @@
-Defaulting to user installation because normal site-packages is not writeable
-Collecting sqlalchemy
-  Downloading sqlalchemy-2.0.48-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (9.5 kB)
-Requirement already satisfied: greenlet>=1 in /usr/local/lib/python3.11/site-packages (from sqlalchemy) (3.3.1)
-Requirement already satisfied: typing-extensions>=4.6.0 in /usr/local/lib/python3.11/site-packages (from sqlalchemy) (4.15.0)
-Downloading sqlalchemy-2.0.48-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (3.3 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.3/3.3 MB 44.1 MB/s eta 0:00:00
-Installing collected packages: sqlalchemy
-Successfully installed sqlalchemy-2.0.48

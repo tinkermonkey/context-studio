@@ -1,0 +1,187 @@
+/* =========================================================================
+   Flowbite React — Colors & Type
+   Source of truth: themesberg/flowbite-react (apps/web/tailwind.config.cjs
+   + Tailwind CSS default palette consumed by component theme.ts files).
+   Stock Flowbite primary = cyan/teal-blue. Neutrals = Tailwind gray.
+   Family = Inter (var(--font-inter) in source).
+   ========================================================================= */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap");
+
+:root {
+  /* ---- Primary (Flowbite stock — apps/web/tailwind.config.cjs) ----------- */
+  --primary-50:  #E7F2F6;
+  --primary-100: #CFE5ED;
+  --primary-200: #B7D8E3;
+  --primary-300: #9FCBDA;
+  --primary-400: #87BFD1;
+  --primary-500: #3E98B5;
+  --primary-600: #268BAC;
+  --primary-700: #0E7EA3;   /* default button bg */
+  --primary-800: #0A5872;   /* hover */
+  --primary-900: #084C62;
+
+  /* ---- Gray (Tailwind default — used everywhere as neutrals) ------------ */
+  --gray-50:  #F9FAFB;
+  --gray-100: #F3F4F6;
+  --gray-200: #E5E7EB;
+  --gray-300: #D1D5DB;
+  --gray-400: #9CA3AF;
+  --gray-500: #6B7280;
+  --gray-600: #4B5563;
+  --gray-700: #374151;
+  --gray-800: #1F2937;
+  --gray-900: #111827;
+  --gray-950: #030712;
+
+  /* ---- Semantic accent scales (Tailwind defaults; appear in Badge/Alert) - */
+  --red-100:    #FEE2E2;  --red-500:    #EF4444;  --red-700:   #B91C1C;  --red-800:   #991B1B;
+  --green-100:  #DCFCE7;  --green-500:  #22C55E;  --green-700: #15803D;  --green-800: #166534;
+  --yellow-100: #FEF9C3;  --yellow-400: #FACC15;  --yellow-500:#EAB308;  --yellow-800:#854D0E;
+  --blue-100:   #DBEAFE;  --blue-500:   #3B82F6;  --blue-700:  #1D4ED8;  --blue-800:  #1E40AF;
+  --cyan-100:   #CFFAFE;  --cyan-500:   #06B6D4;  --cyan-700:  #0E7490;  --cyan-800:  #155E75;
+  --indigo-100: #E0E7FF;  --indigo-500: #6366F1;  --indigo-700:#4338CA;  --indigo-800:#3730A3;
+  --purple-100: #F3E8FF;  --purple-500: #A855F7;  --purple-700:#7E22CE;  --purple-800:#6B21A8;
+  --pink-100:   #FCE7F3;  --pink-500:   #EC4899;  --pink-700:  #BE185D;  --pink-800:  #9D174D;
+  --teal-100:   #CCFBF1;  --teal-500:   #14B8A6;  --teal-700:  #0F766E;  --teal-800:  #115E59;
+  --lime-100:   #ECFCCB;  --lime-500:   #84CC16;  --lime-700:  #4D7C0F;  --lime-800:  #3F6212;
+
+  /* ---- Semantic intent (Flowbite Alert/Badge naming) -------------------- */
+  --intent-info-fg:    var(--cyan-700);
+  --intent-info-bg:    var(--cyan-100);
+  --intent-info-bd:    var(--cyan-500);
+  --intent-success-fg: var(--green-700);
+  --intent-success-bg: var(--green-100);
+  --intent-success-bd: var(--green-500);
+  --intent-warning-fg: #854D0E;
+  --intent-warning-bg: var(--yellow-100);
+  --intent-warning-bd: var(--yellow-500);
+  --intent-failure-fg: var(--red-700);
+  --intent-failure-bg: var(--red-100);
+  --intent-failure-bd: var(--red-500);
+
+  /* ---- Foreground / background tokens (light) --------------------------- */
+  --fg-1: var(--gray-900);          /* primary text on white */
+  --fg-2: var(--gray-700);          /* body / secondary */
+  --fg-3: var(--gray-500);          /* muted / placeholder / table body */
+  --fg-4: var(--gray-400);          /* disabled / icons subtle */
+  --fg-link: var(--primary-700);
+  --fg-link-hover: var(--primary-800);
+  --fg-on-primary: #FFFFFF;
+
+  --bg-canvas: #FFFFFF;             /* page */
+  --bg-surface: #FFFFFF;            /* card */
+  --bg-subtle:  var(--gray-50);     /* sidebar inner / striped row / table head */
+  --bg-muted:   var(--gray-100);    /* hover, addon */
+  --bd-default: var(--gray-200);    /* card border */
+  --bd-strong:  var(--gray-300);    /* input border */
+
+  /* ---- Radius (Tailwind defaults — Flowbite uses lg, full, md mostly) --- */
+  --radius-sm:   0.125rem;   /* 2px */
+  --radius-md:   0.375rem;   /* 6px — button group */
+  --radius-lg:   0.5rem;     /* 8px — buttons, cards, inputs (DEFAULT) */
+  --radius-xl:   0.75rem;
+  --radius-2xl:  1rem;
+  --radius-full: 9999px;     /* pill buttons, avatars, badges-icon */
+
+  /* ---- Shadows (Tailwind tokens used in Flowbite) ----------------------- */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow:    0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); /* cards */
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --ring-primary: 0 0 0 4px rgba(62, 152, 181, 0.30);  /* focus:ring-primary-300 */
+  --ring-gray:    0 0 0 4px rgba(209, 213, 219, 0.50); /* focus:ring-gray-100/300 */
+
+  /* ---- Spacing (Tailwind 4px scale, named for clarity) ------------------ */
+  --space-0_5:  0.125rem;
+  --space-1:    0.25rem;
+  --space-1_5:  0.375rem;
+  --space-2:    0.5rem;
+  --space-2_5:  0.625rem;
+  --space-3:    0.75rem;
+  --space-4:    1rem;
+  --space-5:    1.25rem;
+  --space-6:    1.5rem;   /* card padding */
+  --space-8:    2rem;
+  --space-10:   2.5rem;
+  --space-12:   3rem;
+  --space-16:   4rem;
+
+  /* ---- Type families ---------------------------------------------------- */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+               Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", Menlo, ui-monospace, SFMono-Regular, Monaco,
+               Consolas, "Liberation Mono", "Courier New", monospace;
+
+  /* ---- Type scale (Tailwind text-* — sizes Flowbite components reference) */
+  --text-xs:   0.75rem;     /* 12 — badges, button xs */
+  --text-sm:   0.875rem;    /* 14 — body small / button md / table */
+  --text-base: 1rem;        /* 16 — body / button lg */
+  --text-lg:   1.125rem;    /* 18 — emphasized body */
+  --text-xl:   1.25rem;     /* 20 — modal title */
+  --text-2xl:  1.5rem;      /* 24 — card title */
+  --text-3xl:  1.875rem;    /* 30 */
+  --text-4xl:  2.25rem;     /* 36 */
+  --text-5xl:  3rem;        /* 48 */
+  --text-6xl:  3.75rem;     /* 60 — marketing hero */
+
+  /* ---- Type weights ----------------------------------------------------- */
+  --w-normal:    400;
+  --w-medium:    500;        /* button text */
+  --w-semibold:  600;        /* badges */
+  --w-bold:      700;        /* headings */
+  --w-extrabold: 800;        /* hero */
+}
+
+/* ============== DARK MODE — Flowbite uses .dark class on <html> ========== */
+.dark {
+  --fg-1: #FFFFFF;
+  --fg-2: var(--gray-300);
+  --fg-3: var(--gray-400);
+  --fg-4: var(--gray-500);
+  --fg-link: #FFFFFF;
+  --fg-link-hover: var(--primary-400);
+
+  --bg-canvas: var(--gray-900);
+  --bg-surface: var(--gray-800);
+  --bg-subtle:  var(--gray-800);
+  --bg-muted:   var(--gray-700);
+  --bd-default: var(--gray-700);
+  --bd-strong:  var(--gray-600);
+}
+
+/* ============== Semantic element styles ================================== */
+html { font-family: var(--font-sans); color: var(--fg-1); background: var(--bg-canvas); }
+body { font-family: var(--font-sans); font-size: var(--text-base); line-height: 1.5; color: var(--fg-1); }
+
+h1, .h1 { font-size: var(--text-5xl); font-weight: var(--w-extrabold); line-height: 1.1; letter-spacing: -0.02em; color: var(--fg-1); }
+h2, .h2 { font-size: var(--text-4xl); font-weight: var(--w-extrabold); line-height: 1.15; letter-spacing: -0.02em; color: var(--fg-1); }
+h3, .h3 { font-size: var(--text-3xl); font-weight: var(--w-bold);      line-height: 1.2;  letter-spacing: -0.01em; color: var(--fg-1); }
+h4, .h4 { font-size: var(--text-2xl); font-weight: var(--w-bold);      line-height: 1.25; color: var(--fg-1); }
+h5, .h5 { font-size: var(--text-xl);  font-weight: var(--w-medium);    line-height: 1.3;  color: var(--fg-1); } /* modal title */
+h6, .h6 { font-size: var(--text-lg);  font-weight: var(--w-semibold);  line-height: 1.4;  color: var(--fg-1); }
+
+p { color: var(--fg-2); line-height: 1.625; }
+small, .text-sm { font-size: var(--text-sm); }
+.text-xs  { font-size: var(--text-xs); }
+.text-muted { color: var(--fg-3); }
+.text-uppercase-label { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.04em; color: var(--fg-3); font-weight: var(--w-medium); }
+
+a { color: var(--fg-link); text-decoration: none; }
+a:hover { color: var(--fg-link-hover); text-decoration: underline; }
+
+code, kbd, samp, pre {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+code { color: var(--pink-500); background: var(--gray-50); padding: 0.1em 0.3em; border-radius: var(--radius-sm); }
+.dark code { background: var(--gray-800); color: #F472B6; }
+
+kbd {
+  display: inline-flex; align-items: center; padding: 2px 8px;
+  font-size: var(--text-xs); font-weight: var(--w-semibold);
+  color: var(--gray-800); background: var(--gray-100);
+  border: 1px solid var(--gray-200); border-radius: var(--radius-lg);
+}
