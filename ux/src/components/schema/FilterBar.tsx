@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/Input";
 import { Chip } from "@/components/ui/Chip";
 import { X } from "lucide-react";
 
-interface FilterChip {
+export interface FilterChip {
   label: string;
   value: string;
   onRemove: () => void;

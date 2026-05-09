@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Drawer } from "@/components/ui/Drawer";
 import { Input } from "@/components/ui/Input";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useDeleteRelationship } from "@/api/hooks/ontology/useRelationships";
-import { useClasses } from "@/api/hooks/ontology/useClasses";
-import { useProperties } from "@/api/hooks/ontology/useProperties";
 import { useToasts } from "@/components/ui/Toast";
 import { relationshipsCopy } from "@/routes/app/schema/relationships/-copy";
 import type { components } from "@/api/types";
@@ -12,33 +11,22 @@ type RelationshipResponse = components["schemas"]["RelationshipResponse"];
 
 interface RelationshipDrawerProps {
   relationship: RelationshipResponse | null;
+  sourceName: string;
+  targetName: string;
+  propertyName: string;
   onClose: () => void;
 }
 
-export function RelationshipDrawer({ relationship, onClose }: RelationshipDrawerProps) {
-  const [sourceName, setSourceName] = useState("");
-  const [targetName, setTargetName] = useState("");
-  const [propertyName, setPropertyName] = useState("");
-
+export function RelationshipDrawer({
+  relationship,
+  sourceName,
+  targetName,
+  propertyName,
+  onClose,
+}: RelationshipDrawerProps) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { toast } = useToasts();
   const deleteMutation = useDeleteRelationship();
-  const { data: classesResponse } = useClasses();
-  const { data: propertiesResponse } = useProperties();
-
-  const classes = classesResponse?.items || [];
-  const properties = propertiesResponse?.items || [];
-
-  useEffect(() => {
-    if (relationship) {
-      const source = classes.find((c) => c.id === relationship.source_id);
-      const target = classes.find((c) => c.id === relationship.target_id);
-      const property = properties.find((p) => p.id === relationship.property_definition_id);
-
-      setSourceName(source?.title || "—");
-      setTargetName(target?.title || "—");
-      setPropertyName(property?.title || "—");
-    }
-  }, [relationship, classes, properties]);
 
   const handleDelete = async () => {
     if (!relationship) return;
@@ -51,17 +39,22 @@ export function RelationshipDrawer({ relationship, onClose }: RelationshipDrawer
     }
   };
 
+  const handleDeleteClick = () => {
+    setShowDeleteConfirm(true);
+  };
+
   if (!relationship) return null;
 
   return (
-    <Drawer
-      open={!!relationship}
-      onClose={onClose}
-      title={`${sourceName} → ${targetName}`}
-      isDirty={false}
-      onDelete={handleDelete}
-      data-testid="relationship-drawer"
-    >
+    <>
+      <Drawer
+        open={!!relationship}
+        onClose={onClose}
+        title={`${sourceName} → ${targetName}`}
+        isDirty={false}
+        onDelete={handleDeleteClick}
+        data-testid="relationship-drawer"
+      >
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
         <div>
           <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
@@ -118,6 +111,19 @@ export function RelationshipDrawer({ relationship, onClose }: RelationshipDrawer
           </span>
         </div>
       </div>
-    </Drawer>
+      </Drawer>
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        title={relationshipsCopy.delete.confirmTitle}
+        message="This relationship and all its instances will be permanently deleted."
+        confirmLabel={relationshipsCopy.delete.confirmButton}
+        onConfirm={handleDelete}
+        danger
+        isLoading={deleteMutation.isPending}
+        data-testid="relationship-delete-confirm"
+      />
+    </>
   );
 }

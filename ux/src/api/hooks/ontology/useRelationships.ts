@@ -19,14 +19,6 @@ export function useRelationships(params?: RelationshipListParams) {
   });
 }
 
-export function useRelationship(id: string) {
-  return useQuery({
-    queryKey: QUERY_KEYS.relationship(id),
-    queryFn: () => ontologyService.getRelationship(id),
-    enabled: !!id,
-  });
-}
-
 export function useCreateRelationship() {
   const queryClient = useQueryClient();
   return useMutation({

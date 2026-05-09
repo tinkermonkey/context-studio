@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, ChevronDown } from "lucide-react";
 import { ToastViewport, useToasts } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { FilterBar } from "@/components/schema/FilterBar";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { FilterBar, type FilterChip } from "@/components/schema/FilterBar";
 import { SchemaTable } from "@/components/schema/SchemaTable";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import { RelationshipDrawer } from "@/components/ontology/RelationshipDrawer";
@@ -18,12 +19,6 @@ import { relationshipsCopy } from "./relationships/-copy";
 import type { components } from "@/api/types";
 
 type RelationshipResponse = components["schemas"]["RelationshipResponse"];
-
-interface FilterChip {
-  label: string;
-  value: string;
-  onRemove: () => void;
-}
 
 interface RelationshipsPageContentProps {
   classesById: Map<string, string>;
@@ -184,13 +179,111 @@ function RelationshipsPageContent({
     );
   }
 
+  const hasFilters = !!searchFilter || !!sourceClassFilter || !!targetClassFilter;
+  const showFilteredEmpty = relationships.length > 0 && filteredData.length === 0 && hasFilters;
+
+  if (showFilteredEmpty) {
+    return (
+      <div data-testid="relationships-page">
+        <FilterBar
+          searchValue={searchFilter}
+          onSearchChange={setSearchFilter}
+          filterChips={filterChips}
+        />
+        <div style={{ marginTop: "var(--space-6)" }}>
+          <EmptyState
+            title={relationshipsCopy.filteredEmpty.title}
+            description={relationshipsCopy.filteredEmpty.description}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div data-testid="relationships-page">
-      <FilterBar
-        searchValue={searchFilter}
-        onSearchChange={setSearchFilter}
-        filterChips={filterChips}
-      />
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+        <div style={{ display: "flex", gap: "var(--space-2)", alignItems: "center", flexWrap: "wrap" }}>
+          <div style={{ position: "relative" }}>
+            <select
+              value={sourceClassFilter || ""}
+              onChange={(e) => setSourceClassFilter(e.target.value || undefined)}
+              data-testid="relationship-source-class-filter"
+              style={{
+                padding: "6px 8px",
+                borderRadius: "4px",
+                border: "1px solid var(--canvas-fg-4, #e5e7eb)",
+                backgroundColor: "var(--canvas-bg, #ffffff)",
+                cursor: "pointer",
+                fontSize: "var(--text-sm)",
+                appearance: "none",
+                paddingRight: "24px",
+              }}
+            >
+              <option value="">Source Class</option>
+              {Array.from(classesById.entries()).map(([id, name]) => (
+                <option key={id} value={id}>
+                  {name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown
+              size={14}
+              style={{
+                position: "absolute",
+                right: "8px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                pointerEvents: "none",
+                color: "var(--canvas-fg-3)",
+              }}
+            />
+          </div>
+
+          <div style={{ position: "relative" }}>
+            <select
+              value={targetClassFilter || ""}
+              onChange={(e) => setTargetClassFilter(e.target.value || undefined)}
+              data-testid="relationship-target-class-filter"
+              style={{
+                padding: "6px 8px",
+                borderRadius: "4px",
+                border: "1px solid var(--canvas-fg-4, #e5e7eb)",
+                backgroundColor: "var(--canvas-bg, #ffffff)",
+                cursor: "pointer",
+                fontSize: "var(--text-sm)",
+                appearance: "none",
+                paddingRight: "24px",
+              }}
+            >
+              <option value="">Target Class</option>
+              {Array.from(classesById.entries()).map(([id, name]) => (
+                <option key={id} value={id}>
+                  {name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown
+              size={14}
+              style={{
+                position: "absolute",
+                right: "8px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                pointerEvents: "none",
+                color: "var(--canvas-fg-3)",
+              }}
+            />
+          </div>
+        </div>
+
+        <FilterBar
+          searchValue={searchFilter}
+          onSearchChange={setSearchFilter}
+          filterChips={filterChips}
+        />
+      </div>
+
       <SchemaPageLayout
         data={filteredData}
         selectedId={selectedId}
@@ -198,6 +291,9 @@ function RelationshipsPageContent({
           <RelationshipDrawer
             key={rel.id}
             relationship={rel}
+            sourceName={classesById.get(rel.source_id) || "—"}
+            targetName={classesById.get(rel.target_id) || "—"}
+            propertyName={propertiesById.get(rel.property_definition_id) || "—"}
             onClose={() => setSelectedId(undefined)}
           />
         )}

@@ -4,6 +4,10 @@ export const relationshipsCopy = {
     description: "Relationships are typed edges between classes.",
     actionLabel: "+ New relationship",
   },
+  filteredEmpty: {
+    title: "No matching relationships",
+    description: "Try adjusting your search or filters to find relationships.",
+  },
   create: {
     buttonLabel: "+ New relationship",
     successToast: "Relationship created",

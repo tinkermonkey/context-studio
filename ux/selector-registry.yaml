@@ -176,6 +176,9 @@ selectors:
   - selector: relationship-drawer-property-type
     component: components/ontology/RelationshipDrawer.tsx
     description: Read-only property type field in relationship drawer
+  - selector: relationship-delete-confirm
+    component: components/ontology/RelationshipDrawer.tsx
+    description: Confirmation dialog for deleting a relationship
 
   # Relationships Page
   - selector: relationship-add-button
@@ -190,3 +193,9 @@ selectors:
   - selector: relationship-row-actions-*
     component: routes/app/schema/relationships.tsx
     description: Actions menu button for relationship row
+  - selector: relationship-source-class-filter
+    component: routes/app/schema/relationships.tsx
+    description: Dropdown select for filtering relationships by source class
+  - selector: relationship-target-class-filter
+    component: routes/app/schema/relationships.tsx
+    description: Dropdown select for filtering relationships by target class
