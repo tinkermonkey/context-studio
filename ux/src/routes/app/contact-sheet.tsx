@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Trash2, Edit2, ExternalLink, ChevronRight, Globe, Cpu, GitMerge, Database } from "lucide-react";
+import { Plus, Trash2, Edit2, ExternalLink, Globe, Cpu, GitMerge, Database } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { Input, Textarea, Select } from "@/components/ui/Input";

@@ -893,7 +893,7 @@ async def list_property_definitions(
         )
         return ListResponse(
             items=[PropertyDefinitionResponse.model_validate(p) for p in properties],
-            total=len(total),
+            total=total,
             limit=limit,
             offset=offset,
         )

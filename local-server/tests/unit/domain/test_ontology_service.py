@@ -2260,9 +2260,9 @@ class TestPaginationSortingAndSearch:
     def test_list_concept_schemes_pagination(self, service):
         """Test pagination of concept schemes."""
         tax = service.create_taxonomy(title="Test Taxonomy")
-        scheme1 = service.create_scheme(tax.id, title="Scheme 1")
-        scheme2 = service.create_scheme(tax.id, title="Scheme 2")
-        scheme3 = service.create_scheme(tax.id, title="Scheme 3")
+        service.create_scheme(tax.id, title="Scheme 1")
+        service.create_scheme(tax.id, title="Scheme 2")
+        service.create_scheme(tax.id, title="Scheme 3")
 
         page1 = service.list_concept_schemes(limit=2, offset=0)
         assert len(page1) == 2
