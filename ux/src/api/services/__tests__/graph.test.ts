@@ -33,8 +33,8 @@ describe("GraphService", () => {
   describe("buildGraph", () => {
     it("builds graph and returns KnowledgeGraphResponse", async () => {
       const mockGraph = createKnowledgeGraph({
-        nodes_count: 150,
-        edges_count: 300,
+        node_count: 150,
+        edge_count: 300,
       });
 
       server.use(
