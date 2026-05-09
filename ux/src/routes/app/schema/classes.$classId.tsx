@@ -186,12 +186,8 @@ function ClassDetailContent({ classId }: ClassDetailContentProps) {
   );
 }
 
-interface RouteParams {
-  classId: string;
-}
-
 function ClassDetailPage() {
-  const { classId } = Route.useParams() as RouteParams;
+  const { classId } = Route.useParams();
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
@@ -201,5 +197,5 @@ function ClassDetailPage() {
 }
 
 export const Route = createFileRoute("/app/schema/classes/$classId")({
-  component: ClassDetailPage as any,
+  component: ClassDetailPage,
 });

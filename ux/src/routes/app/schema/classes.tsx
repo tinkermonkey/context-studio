@@ -15,7 +15,6 @@ import { ClassEditor } from "@/components/ontology/ClassEditor";
 import { ClassDrawer } from "@/components/ontology/ClassDrawer";
 import { useClasses, useCreateClass } from "@/api/hooks/ontology/useClasses";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
-import { useIndividuals } from "@/api/hooks/ontology/useIndividuals";
 import { classesCopy } from "./classes/-copy";
 import type { components } from "@/api/types";
 
@@ -284,7 +283,7 @@ function ClassesPageWrapper() {
           setCreateError(null);
         }}
         title="Create Class"
-        size="sm"
+        size="md"
         data-testid="class-create-modal"
       >
         {createError && (

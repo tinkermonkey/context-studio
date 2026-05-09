@@ -9,6 +9,7 @@ import { useToasts } from "@/components/ui/Toast";
 import { useUndoDelete } from "@/hooks/useUndoDelete";
 import { TypeToConfirmDialog } from "@/components/ui/TypeToConfirmDialog";
 import { useIndividuals } from "@/api/hooks/ontology/useIndividuals";
+import { useRelationships } from "@/api/hooks/ontology/useRelationships";
 import { classesCopy } from "@/routes/app/schema/classes/-copy";
 import type { components } from "@/api/types";
 
@@ -43,6 +44,8 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
     class_id: classData?.id,
   });
 
+  const { data: relationshipsResponse } = useRelationships();
+
   const { performDelete, undo } = useUndoDelete({
     onDelete: (id: string) => deleteMutation.mutateAsync(id),
     undoWindowMs: 8000,
@@ -58,9 +61,7 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
 
   const isDirty =
     title !== classData?.title ||
-    description !== classData?.description ||
-    domainId !== classData?.concept_scheme_id ||
-    parentClassId !== classData?.parent_class_id;
+    description !== classData?.description;
 
   const updateData = {
     title,
@@ -109,12 +110,15 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
   };
 
   const handleDeleteClick = () => {
-    setShowDeleteConfirm(true);
+    if (individualCount > 0) {
+      setShowDeleteConfirm(true);
+    } else {
+      handleDelete();
+    }
   };
 
   if (!classData) return null;
 
-  const selectedDomain = schemes.find((s) => s.id === domainId);
   const selectedParent = allClasses.find((c) => c.id === parentClassId);
 
   const filteredClasses = allClasses
@@ -130,6 +134,13 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
 
   const propertyCount = classData.data_properties?.length ?? 0;
   const individualCount = individualsResponse?.total ?? 0;
+
+  const allRelationships = relationshipsResponse?.items || [];
+  const relationshipsForClass = allRelationships.filter(
+    (rel: any) =>
+      rel.source_id === classData.id || rel.target_id === classData.id
+  );
+  const relationshipCount = relationshipsForClass.length;
 
   return (
     <>
@@ -188,7 +199,7 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
             </label>
             <Select
               value={domainId}
-              onChange={(e) => setDomainId(e.target.value)}
+              disabled
               data-testid="class-drawer-domain-select"
             >
               <option value="">Select a domain</option>
@@ -220,86 +231,20 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
                   {selectedParent.id.slice(0, 8)}
                 </span>
                 <span>{selectedParent.title}</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setParentClassId("");
-                    setSearchParent("");
-                  }}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    padding: 0,
-                    color: "var(--canvas-fg-3)",
-                  }}
-                  data-testid="class-drawer-parent-clear"
-                >
-                  ✕
-                </button>
               </div>
             ) : (
-              <div style={{ position: "relative" }}>
-                <Input
-                  type="text"
-                  placeholder="Search for parent class"
-                  value={searchParent}
-                  onChange={(e) => {
-                    setSearchParent(e.target.value);
-                    setShowParentOptions(true);
-                  }}
-                  onFocus={() => setShowParentOptions(true)}
-                  data-testid="class-drawer-parent-input"
-                />
-                {showParentOptions && filteredClasses.length > 0 && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: "100%",
-                      left: 0,
-                      right: 0,
-                      background: "var(--canvas-bg)",
-                      border: "1px solid var(--canvas-fg-4)",
-                      borderRadius: "var(--radius-sm)",
-                      marginTop: "4px",
-                      zIndex: 10,
-                      maxHeight: "200px",
-                      overflowY: "auto",
-                    }}
-                  >
-                    {filteredClasses.map((cls) => (
-                      <button
-                        key={cls.id}
-                        type="button"
-                        onClick={() => {
-                          setParentClassId(cls.id);
-                          setSearchParent("");
-                          setShowParentOptions(false);
-                        }}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "var(--space-2)",
-                          padding: "var(--space-2) var(--space-3)",
-                          width: "100%",
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          textAlign: "left",
-                          fontSize: "var(--text-sm)",
-                          color: "var(--canvas-fg)",
-                          borderBottom: "1px solid var(--canvas-fg-4)",
-                        }}
-                        data-testid={`class-drawer-parent-option-${cls.id}`}
-                      >
-                        <span className="mono" style={{ fontSize: "var(--text-xs)", color: "var(--canvas-fg-3)" }}>
-                          {cls.id.slice(0, 8)}
-                        </span>
-                        <span>{cls.title}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  padding: "var(--space-2) var(--space-3)",
+                  background: "var(--canvas-bg-2)",
+                  borderRadius: "var(--radius-sm)",
+                  fontSize: "var(--text-sm)",
+                  color: "var(--canvas-fg-3)",
+                }}
+              >
+                —
               </div>
             )}
           </div>
@@ -307,6 +252,9 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
           <div style={{ display: "flex", gap: "var(--space-2)", fontSize: "var(--text-xs)" }}>
             <span style={{ color: "var(--canvas-fg-3)" }}>
               Properties: <span style={{ fontWeight: 500 }}>{propertyCount}</span>
+            </span>
+            <span style={{ color: "var(--canvas-fg-3)" }}>
+              Relationships: <span style={{ fontWeight: 500 }}>{relationshipCount}</span>
             </span>
           </div>
 

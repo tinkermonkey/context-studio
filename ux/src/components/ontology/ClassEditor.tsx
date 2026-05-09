@@ -1,19 +1,23 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { Input, Textarea, Select } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
 import type { components } from "@/api/types";
 
-type ClassCreateRequest = components["schemas"]["ClassCreateRequest"];
-type ClassUpdateRequest = components["schemas"]["ClassUpdateRequest"];
 type ClassResponse = components["schemas"]["ClassResponse"];
+
+interface ClassEditorSubmitData {
+  title: string;
+  description?: string | null;
+  parent_class_id?: string | null;
+}
 
 interface ClassEditorProps {
   schemeId?: string;
   initialData?: ClassResponse;
   onSubmit: (
-    data: any,
+    data: ClassEditorSubmitData,
     schemeId?: string
   ) => Promise<void>;
   isLoading?: boolean;
@@ -86,25 +90,14 @@ export function ClassEditor({
       return;
     }
 
-    if (initialData) {
-      await onSubmit(
-        {
-          title: name,
-          description: description || null,
-          parent_class_id: parentClassId || null,
-        } as ClassUpdateRequest,
-        domain
-      );
-    } else {
-      await onSubmit(
-        {
-          title: name,
-          description: description || null,
-          parent_class_id: parentClassId || null,
-        } as ClassCreateRequest,
-        domain
-      );
-    }
+    await onSubmit(
+      {
+        title: name,
+        description: description || null,
+        parent_class_id: parentClassId || null,
+      },
+      domain
+    );
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -137,20 +130,6 @@ export function ClassEditor({
               {nameError}
             </div>
           )}
-        </div>
-
-        <div>
-          <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
-            Description (optional)
-          </label>
-          <Textarea
-            placeholder="Optional description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            onKeyDown={handleKeyDown}
-            data-testid="class-editor-description-input"
-            rows={4}
-          />
         </div>
 
         {!initialData && (
@@ -279,6 +258,20 @@ export function ClassEditor({
               </>
             )}
           </div>
+        </div>
+
+        <div>
+          <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
+            Description (optional)
+          </label>
+          <Textarea
+            placeholder="Optional description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            onKeyDown={handleKeyDown}
+            data-testid="class-editor-description-input"
+            rows={4}
+          />
         </div>
 
         <Button
