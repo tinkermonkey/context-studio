@@ -5,6 +5,8 @@ import { Sidebar } from "@/components/shell/Sidebar";
 import { Topbar } from "@/components/shell/Topbar";
 import { Statusbar } from "@/components/shell/Statusbar";
 import { useCommandPaletteStore } from "@/stores/commandPalette";
+import { useCommandPaletteActions } from "@/hooks/useCommandPaletteActions";
+import { createStaticPaletteActions } from "@/config/staticPaletteActions";
 import { getWorkspacePath } from "@/lib/workspaceStorage";
 
 export const Route = createFileRoute("/app")({
@@ -36,17 +38,26 @@ function AppShell() {
   const [collapsed, setCollapsed] = useState(false);
   const { registerActions, unregisterActions } = useCommandPaletteStore();
   const navigate = useNavigate();
+  useCommandPaletteActions();
 
   useEffect(() => {
-    const actions = NAV_ACTIONS.map((item) => ({
+    const navActions = NAV_ACTIONS.map((item) => ({
       id: item.id,
       label: item.label,
       description: item.description,
       onSelect: () => navigate({ to: item.to }),
     }));
-    registerActions(actions);
+    registerActions(navActions);
     return () => {
-      unregisterActions(actions.map((a) => a.id));
+      unregisterActions(navActions.map((a) => a.id));
+    };
+  }, [registerActions, unregisterActions, navigate]);
+
+  useEffect(() => {
+    const staticActions = createStaticPaletteActions(navigate);
+    registerActions(staticActions);
+    return () => {
+      unregisterActions(staticActions.map((a) => a.id));
     };
   }, [registerActions, unregisterActions, navigate]);
 

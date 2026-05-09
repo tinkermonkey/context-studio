@@ -3,6 +3,8 @@ import { Network, Layers, GitBranch, Cpu, Plus, RefreshCw } from "lucide-react";
 import { StatTile } from "@/components/ui/StatTile";
 import { Panel } from "@/components/ui/Panel";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { ErrorBanner } from "@/components/ui/ErrorBanner";
+import { HierarchyTree } from "@/components/ontology/HierarchyTree";
 import { PipelineCard } from "@/components/pipeline/PipelineCard";
 import { useHealth } from "@/api/hooks/admin";
 import { useTaxonomies } from "@/api/hooks/ontology";
@@ -141,10 +143,10 @@ function EmptyState() {
 function Dashboard() {
   const { data: health } = useHealth();
   const { data: taxonomies, isLoading: taxonomiesLoading, error: taxonomiesError, refetch: refetchTaxonomies } = useTaxonomies();
-  const { data: classes, isLoading: classesLoading } = useClasses();
-  const { data: individuals, isLoading: individualsLoading } = useIndividuals();
-  const { data: pipelines, isLoading: pipelinesLoading } = usePipelines();
-  const { data: changesData, isLoading: changesLoading } = useChanges({ limit: 10 });
+  const { data: classes, isLoading: classesLoading, error: classesError, refetch: refetchClasses } = useClasses();
+  const { data: individuals, isLoading: individualsLoading, error: individualsError, refetch: refetchIndividuals } = useIndividuals();
+  const { data: pipelines, isLoading: pipelinesLoading, error: pipelinesError, refetch: refetchPipelines } = usePipelines();
+  const { data: changesData, isLoading: changesLoading, error: changesError, refetch: refetchChanges } = useChanges({ limit: 10 });
 
   const taxonomyCount = taxonomies?.total ?? 0;
   const classCount = classes?.total ?? 0;
@@ -262,47 +264,52 @@ function Dashboard() {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-6)", marginBottom: "var(--space-6)" }}>
         {/* Recent Activity */}
         <Panel title="Recent Activity">
-          {changesLoading ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} height="36px" style={{ borderRadius: "var(--radius-md, 6px)" }} />
-              ))}
-            </div>
-          ) : !changesData?.events.length ? (
-            <p style={{ fontSize: "var(--text-sm)", color: "var(--canvas-fg-3)", margin: 0 }}>
-              No recent changes.
-            </p>
-          ) : (
-            <div className="activity-list">
-              {changesData.events.slice(0, 8).map((event) => {
-                const stateTitle =
-                  typeof event.new_state?.title === "string"
-                    ? event.new_state.title
-                    : event.entity_id;
-                return (
-                  <div key={event.id} className="activity-item">
-                    <span
-                      className="activity-dot"
-                      style={{ background: changeOperationColor(event.operation) }}
-                    />
-                    <div>
-                      <div style={{ fontSize: "var(--text-sm)", color: "var(--canvas-fg)" }}>
-                        {event.operation} {event.entity_type}
+          <ErrorBanner error={changesError} onRetry={refetchChanges} message="Could not load recent changes" compact />
+          {!changesError && (
+            <>
+              {changesLoading ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <Skeleton key={i} height="36px" style={{ borderRadius: "var(--radius-md, 6px)" }} />
+                  ))}
+                </div>
+              ) : !changesData?.events.length ? (
+                <p style={{ fontSize: "var(--text-sm)", color: "var(--canvas-fg-3)", margin: 0 }}>
+                  No recent changes.
+                </p>
+              ) : (
+                <div className="activity-list">
+                  {changesData.events.slice(0, 8).map((event) => {
+                    const stateTitle =
+                      typeof event.new_state?.title === "string"
+                        ? event.new_state.title
+                        : event.entity_id;
+                    return (
+                      <div key={event.id} className="activity-item">
+                        <span
+                          className="activity-dot"
+                          style={{ background: changeOperationColor(event.operation) }}
+                        />
+                        <div>
+                          <div style={{ fontSize: "var(--text-sm)", color: "var(--canvas-fg)" }}>
+                            {event.operation} {event.entity_type}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: "var(--text-xs)",
+                              color: "var(--canvas-fg-3)",
+                              fontFamily: "var(--mono)",
+                            }}
+                          >
+                            {stateTitle} · {formatRelativeTime(event.timestamp)}
+                          </div>
+                        </div>
                       </div>
-                      <div
-                        style={{
-                          fontSize: "var(--text-xs)",
-                          color: "var(--canvas-fg-3)",
-                          fontFamily: "var(--mono)",
-                        }}
-                      >
-                        {stateTitle} · {formatRelativeTime(event.timestamp)}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
           )}
         </Panel>
 
@@ -369,43 +376,88 @@ function Dashboard() {
         </Panel>
       </div>
 
+      {/* Knowledge Graph Structure */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "var(--space-6)",
+          marginBottom: "var(--space-6)",
+        }}
+      >
+        <Panel title="Knowledge Graph Structure">
+          <ErrorBanner error={classesError} onRetry={refetchClasses} message="Could not load class hierarchy" compact />
+          {!classesError && (
+            <HierarchyTree
+              classes={classes?.items}
+              loading={classesLoading}
+              error={classesError}
+            />
+          )}
+        </Panel>
+
+        <Panel title="Individuals by Class">
+          <ErrorBanner error={individualsError} onRetry={refetchIndividuals} message="Could not load individuals" compact />
+          {!individualsError && individualsLoading && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} height="28px" style={{ borderRadius: "var(--radius-md, 6px)" }} />
+              ))}
+            </div>
+          )}
+          {!individualsError && !individualsLoading && individualCount === 0 && (
+            <p style={{ fontSize: "var(--text-sm)", color: "var(--canvas-fg-3)", margin: 0 }}>
+              No individuals yet.
+            </p>
+          )}
+          {!individualsError && !individualsLoading && individuals && individuals.items.length > 0 && (
+            <div style={{ fontSize: "var(--text-xs)", color: "var(--canvas-fg-3)" }}>
+              Showing {Math.min(individuals.items.length, 10)} of {individuals.total} individuals
+            </div>
+          )}
+        </Panel>
+      </div>
+
       {/* Active Pipelines */}
-      {!pipelinesLoading && pipelines && pipelines.length > 0 && (
-        <div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "var(--space-2)",
-              marginBottom: "var(--space-4)",
-            }}
-          >
-            <Layers size={16} style={{ color: "var(--canvas-fg-3)" }} />
-            <span
+      <div>
+        <ErrorBanner error={pipelinesError} onRetry={refetchPipelines} message="Could not load pipelines" compact />
+        {!pipelinesError && !pipelinesLoading && pipelines && pipelines.length > 0 && (
+          <div>
+            <div
               style={{
-                fontSize: "var(--text-sm)",
-                fontWeight: 600,
-                color: "var(--canvas-fg)",
+                display: "flex",
+                alignItems: "center",
+                gap: "var(--space-2)",
+                marginBottom: "var(--space-4)",
               }}
             >
-              Active Pipelines
-            </span>
+              <Layers size={16} style={{ color: "var(--canvas-fg-3)" }} />
+              <span
+                style={{
+                  fontSize: "var(--text-sm)",
+                  fontWeight: 600,
+                  color: "var(--canvas-fg)",
+                }}
+              >
+                Active Pipelines
+              </span>
+            </div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+                gap: "var(--space-4)",
+              }}
+            >
+              {pipelines
+                .filter((p) => p.enabled)
+                .map((pipeline) => (
+                  <PipelineCard key={pipeline.id} pipeline={pipeline} />
+                ))}
+            </div>
           </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-              gap: "var(--space-4)",
-            }}
-          >
-            {pipelines
-              .filter((p) => p.enabled)
-              .map((pipeline) => (
-                <PipelineCard key={pipeline.id} pipeline={pipeline} />
-              ))}
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
