@@ -2,22 +2,6 @@ import "@testing-library/jest-dom";
 import { afterEach, beforeEach, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
 
-vi.mock("axios", () => ({
-  default: {
-    create: vi.fn(() => ({
-      interceptors: {
-        request: { use: vi.fn() },
-        response: { use: vi.fn() },
-      },
-      request: vi.fn(() => Promise.resolve({ data: {} })),
-      get: vi.fn(() => Promise.resolve({ data: {} })),
-      post: vi.fn(() => Promise.resolve({ data: {} })),
-      put: vi.fn(() => Promise.resolve({ data: {} })),
-      delete: vi.fn(() => Promise.resolve({ data: {} })),
-    })),
-  },
-}));
-
 afterEach(() => {
   cleanup();
 });
