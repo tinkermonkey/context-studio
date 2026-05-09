@@ -5,6 +5,7 @@ import type { components } from "@/api/types";
 
 type ClassCreateRequest = components["schemas"]["ClassCreateRequest"];
 type ClassUpdateRequest = components["schemas"]["ClassUpdateRequest"];
+type ClassMoveRequest = components["schemas"]["ClassMoveRequest"];
 
 interface ClassListParams {
   concept_scheme_id?: string;
@@ -54,7 +55,7 @@ export function useUpdateClass() {
 export function useMoveClass() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { target_scheme_id: string } }) =>
+    mutationFn: ({ id, data }: { id: string; data: ClassMoveRequest }) =>
       ontologyService.moveClass(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.classes() });
