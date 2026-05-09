@@ -287,3 +287,65 @@ selectors:
   - selector: taxonomy-detail-delete-confirm
     component: routes/app/schema/taxonomies.$taxonomyId.tsx
     description: Confirmation dialog for deleting taxonomy from detail page
+
+  # Concept Schemes Form
+  - selector: scheme-form
+    component: components/schema/SchemeForm.tsx
+    description: Form for creating new concept scheme
+  - selector: scheme-title-input
+    component: components/schema/SchemeForm.tsx
+    description: Title input field in scheme form
+  - selector: scheme-description-input
+    component: components/schema/SchemeForm.tsx
+    description: Description textarea in scheme form
+  - selector: scheme-submit-button
+    component: components/schema/SchemeForm.tsx
+    description: Submit button for scheme form
+
+  # Concept Schemes Drawer
+  - selector: scheme-drawer
+    component: components/ontology/SchemeDrawer.tsx
+    description: Drawer for editing concept scheme details
+  - selector: scheme-drawer-id
+    component: components/ontology/SchemeDrawer.tsx
+    description: Read-only ID field in scheme drawer
+  - selector: scheme-drawer-title-input
+    component: components/ontology/SchemeDrawer.tsx
+    description: Editable title field in scheme drawer
+  - selector: scheme-drawer-description-input
+    component: components/ontology/SchemeDrawer.tsx
+    description: Editable description field in scheme drawer
+  - selector: scheme-drawer-parent-taxonomy
+    component: components/ontology/SchemeDrawer.tsx
+    description: Read-only parent taxonomy field in scheme drawer
+  - selector: scheme-delete-confirm
+    component: components/ontology/SchemeDrawer.tsx
+    description: Confirmation dialog for scheme deletion
+
+  # Concept Schemes Page
+  - selector: scheme-add-button
+    component: routes/app/schema/schemes.tsx
+    description: Button to open create concept scheme modal
+  - selector: scheme-create-modal
+    component: routes/app/schema/schemes.tsx
+    description: Modal for creating new concept scheme
+  - selector: schemes-page
+    component: routes/app/schema/schemes.tsx
+    description: Main concept schemes page container
+  - selector: schemes-content
+    component: routes/app/schema/schemes.tsx
+    description: Main content area of concept schemes page
+  - selector: scheme-row-actions-*
+    component: routes/app/schema/schemes.tsx
+    description: Actions menu button for scheme row
+
+  # Concept Scheme Detail Page
+  - selector: scheme-detail-page
+    component: routes/app/schema/schemes.$schemeId.tsx
+    description: Main concept scheme detail page container
+  - selector: scheme-detail-add-class-button
+    component: routes/app/schema/schemes.$schemeId.tsx
+    description: Button to open create class modal in scheme detail page
+  - selector: class-row-actions-*
+    component: routes/app/schema/schemes.$schemeId.tsx
+    description: Actions menu button for class row in scheme detail page
