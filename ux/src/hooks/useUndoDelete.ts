@@ -1,32 +1,28 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-interface UseUndoDeleteOptions<T> {
+interface UseUndoDeleteOptions {
   onDelete: (id: string) => Promise<void>;
   undoWindowMs?: number;
 }
 
-export function useUndoDelete<T>({
+export function useUndoDelete({
   onDelete,
   undoWindowMs = 8000,
-}: UseUndoDeleteOptions<T>) {
+}: UseUndoDeleteOptions) {
   const [deletedId, setDeletedId] = useState<string | null>(null);
-  const [deletedData, setDeletedData] = useState<T | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const performDelete = useCallback(
-    async (id: string, data: T) => {
+    async (id: string) => {
       setDeletedId(id);
-      setDeletedData(data);
 
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(async () => {
         try {
           await onDelete(id);
           setDeletedId(null);
-          setDeletedData(null);
         } catch {
           setDeletedId(null);
-          setDeletedData(null);
         }
       }, undoWindowMs);
     },
@@ -38,7 +34,6 @@ export function useUndoDelete<T>({
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
       setDeletedId(null);
-      setDeletedData(null);
     }
   }, []);
 
