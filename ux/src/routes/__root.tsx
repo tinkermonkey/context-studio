@@ -1,6 +1,5 @@
 import { createRootRoute, Outlet } from "@tanstack/react-router";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { queryClient } from "@/api/utils/queryClient";
+import { ApiProvider } from "@/api/ApiProvider";
 import { CommandPalette } from "@/components/shell/CommandPalette";
 
 export const Route = createRootRoute({
@@ -9,9 +8,9 @@ export const Route = createRootRoute({
 
 function Root() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <ApiProvider>
       <Outlet />
       <CommandPalette />
-    </QueryClientProvider>
+    </ApiProvider>
   );
 }
