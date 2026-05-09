@@ -296,6 +296,8 @@ function SchemesIndexPage() {
   );
 }
 
+export default SchemesIndexPage;
+
 export const Route = createFileRoute("/app/schema/schemes/")({
   component: SchemesIndexPage,
 });

@@ -224,6 +224,8 @@ function PropertiesPage() {
   return <PropertiesPageWrapper />;
 }
 
+export default PropertiesPage;
+
 export const Route = createFileRoute("/app/schema/properties")({
   component: PropertiesPage,
 });

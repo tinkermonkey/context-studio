@@ -288,6 +288,8 @@ function TaxonomiesPage() {
   return <TaxonomiesPageWrapper />;
 }
 
+export default TaxonomiesPage;
+
 export const Route = createFileRoute("/app/schema/taxonomies")({
   component: TaxonomiesPage,
 });

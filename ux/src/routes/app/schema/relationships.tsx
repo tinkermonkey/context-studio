@@ -338,6 +338,8 @@ function RelationshipsPage() {
   return <RelationshipsPageWrapper />;
 }
 
+export default RelationshipsPage;
+
 export const Route = createFileRoute("/app/schema/relationships")({
   component: RelationshipsPage,
 });
