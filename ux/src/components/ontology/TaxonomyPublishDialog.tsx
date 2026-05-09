@@ -63,10 +63,19 @@ export function TaxonomyPublishDialog({
             <span>Loading diff summary…</span>
           ) : diffStatsQuery.data ? (
             <span>
-              {diffStatsQuery.data.added > 0 && `${diffStatsQuery.data.added} class${diffStatsQuery.data.added !== 1 ? "es" : ""} added`}
-              {diffStatsQuery.data.modified > 0 && `, ${diffStatsQuery.data.modified} modified`}
-              {diffStatsQuery.data.removed > 0 && `, ${diffStatsQuery.data.removed} removed`}
-              {diffStatsQuery.data.added === 0 && diffStatsQuery.data.modified === 0 && diffStatsQuery.data.removed === 0 && "No changes to publish"}
+              {(() => {
+                const parts = [];
+                if (diffStatsQuery.data.added > 0) {
+                  parts.push(`${diffStatsQuery.data.added} class${diffStatsQuery.data.added !== 1 ? "es" : ""} added`);
+                }
+                if (diffStatsQuery.data.modified > 0) {
+                  parts.push(`${diffStatsQuery.data.modified} modified`);
+                }
+                if (diffStatsQuery.data.removed > 0) {
+                  parts.push(`${diffStatsQuery.data.removed} removed`);
+                }
+                return parts.length > 0 ? parts.join(", ") : "No changes to publish";
+              })()}
             </span>
           ) : (
             <span>Unable to load diff summary</span>

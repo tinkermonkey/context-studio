@@ -2449,9 +2449,60 @@ class TestPublishTaxonomy:
             service.publish_taxonomy("nonexistent-id")
 
     def test_publish_taxonomy_emits_event(self, service):
-        """Test that publishing a taxonomy emits a TaxonomyUpdated event."""
+        """Test that publishing a taxonomy emits a TaxonomyUpdated event with correct values."""
         tax = service.create_taxonomy(title="Test Taxonomy")
-        service.publish_taxonomy(tax.id)
+        commit_message = "Publishing initial version"
+        service.publish_taxonomy(tax.id, commit_message=commit_message)
 
         update_events = service._event_publisher.get_events_of_type(TaxonomyUpdated)
         assert len(update_events) >= 1
+
+        event = update_events[0]
+        assert event.taxonomy_id == tax.id
+        assert "status" in event.changed_fields
+        assert event.old_values == {"status": "draft"}
+        assert event.new_values == {"status": "published"}
+        assert event.commit_message == commit_message
+
+
+class TestGetPublishDiffStats:
+    """Test publish diff statistics calculation."""
+
+    def test_get_publish_diff_stats_nonexistent_taxonomy_raises_error(self, service):
+        """Test that requesting diff stats for a nonexistent taxonomy raises EntityNotFoundError."""
+        with pytest.raises(EntityNotFoundError):
+            service.get_publish_diff_stats("nonexistent-id")
+
+    def test_get_publish_diff_stats_draft_taxonomy_with_classes(self, service):
+        """Test diff stats for a draft taxonomy with classes shows them as added."""
+        tax = service.create_taxonomy(title="Test Taxonomy")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        service.create_class(scheme.id, title="Class 1")
+        service.create_class(scheme.id, title="Class 2")
+        service.create_class(scheme.id, title="Class 3")
+
+        stats = service.get_publish_diff_stats(tax.id)
+        assert stats["added"] == 3
+        assert stats["modified"] == 0
+        assert stats["removed"] == 0
+
+    def test_get_publish_diff_stats_draft_taxonomy_with_no_classes(self, service):
+        """Test diff stats for an empty draft taxonomy shows no changes."""
+        tax = service.create_taxonomy(title="Test Taxonomy")
+
+        stats = service.get_publish_diff_stats(tax.id)
+        assert stats["added"] == 0
+        assert stats["modified"] == 0
+        assert stats["removed"] == 0
+
+    def test_get_publish_diff_stats_published_taxonomy_shows_no_changes(self, service):
+        """Test diff stats for a published taxonomy shows no changes."""
+        tax = service.create_taxonomy(title="Test Taxonomy")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        service.create_class(scheme.id, title="Class 1")
+        service.publish_taxonomy(tax.id)
+
+        stats = service.get_publish_diff_stats(tax.id)
+        assert stats["added"] == 0
+        assert stats["modified"] == 0
+        assert stats["removed"] == 0
