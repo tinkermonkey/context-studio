@@ -8,7 +8,6 @@ import { propertiesCopy } from "@/routes/app/schema/properties/-copy";
 import type { components } from "@/api/types";
 
 type PropertyDefinitionResponse = components["schemas"]["PropertyDefinitionResponse"];
-type PropertyDefinitionUpdateRequest = components["schemas"]["PropertyDefinitionUpdateRequest"];
 
 interface PropertyDrawerProps {
   property: PropertyDefinitionResponse | null;
@@ -28,7 +27,7 @@ export function PropertyDrawer({ property, onClose }: PropertyDrawerProps) {
     setTitle(property?.title ?? "");
     setDescription(property?.description ?? "");
     lastSavedAtRef.current = null;
-  }, [property?.id]);
+  }, [property]);
 
   const isDirty = title !== property?.title || description !== property?.description;
 

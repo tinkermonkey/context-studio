@@ -180,7 +180,7 @@ function PropertiesPageWrapper() {
       }
       setShowCreateModal(false);
       toast("success", propertiesCopy.create.successToast);
-    } catch (error) {
+    } catch {
       toast("error", "Failed to create property");
     }
   };
