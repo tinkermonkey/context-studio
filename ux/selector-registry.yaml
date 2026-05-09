@@ -159,3 +159,34 @@ selectors:
   - selector: properties-content
     component: routes/app/schema/properties.tsx
     description: Main content area of properties page
+
+  # Relationship Drawer
+  - selector: relationship-drawer
+    component: components/ontology/RelationshipDrawer.tsx
+    description: Drawer for viewing relationship details
+  - selector: relationship-drawer-id
+    component: components/ontology/RelationshipDrawer.tsx
+    description: Read-only ID field in relationship drawer
+  - selector: relationship-drawer-source-class
+    component: components/ontology/RelationshipDrawer.tsx
+    description: Read-only source class field in relationship drawer
+  - selector: relationship-drawer-target-class
+    component: components/ontology/RelationshipDrawer.tsx
+    description: Read-only target class field in relationship drawer
+  - selector: relationship-drawer-property-type
+    component: components/ontology/RelationshipDrawer.tsx
+    description: Read-only property type field in relationship drawer
+
+  # Relationships Page
+  - selector: relationship-add-button
+    component: routes/app/schema/relationships.tsx
+    description: Button to open create relationship dialog
+  - selector: relationships-page
+    component: routes/app/schema/relationships.tsx
+    description: Main relationships page container
+  - selector: relationships-content
+    component: routes/app/schema/relationships.tsx
+    description: Main content area of relationships page
+  - selector: relationship-row-actions-*
+    component: routes/app/schema/relationships.tsx
+    description: Actions menu button for relationship row

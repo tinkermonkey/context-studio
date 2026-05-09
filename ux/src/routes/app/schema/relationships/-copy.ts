@@ -11,5 +11,7 @@ export const relationshipsCopy = {
   delete: {
     confirmTitle: "Delete relationship?",
     confirmButton: "Delete relationship",
+    successToast: "Relationship deleted",
+    failureToast: "Failed to delete relationship",
   },
 };

@@ -3,6 +3,7 @@ import { QUERY_KEYS } from "@/api/config";
 import { ontologyService } from "@/api/services/ontology";
 import type { components } from "@/api/types";
 
+type RelationshipResponse = components["schemas"]["RelationshipResponse"];
 type RelationshipCreateRequest = components["schemas"]["RelationshipCreateRequest"];
 
 interface RelationshipListParams {
@@ -15,6 +16,14 @@ export function useRelationships(params?: RelationshipListParams) {
   return useQuery({
     queryKey: QUERY_KEYS.relationships(params),
     queryFn: () => ontologyService.listRelationships(params),
+  });
+}
+
+export function useRelationship(id: string) {
+  return useQuery({
+    queryKey: QUERY_KEYS.relationship(id),
+    queryFn: () => ontologyService.getRelationship(id),
+    enabled: !!id,
   });
 }
 

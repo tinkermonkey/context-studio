@@ -16,6 +16,7 @@ export const QUERY_KEYS = {
   properties: ["properties"] as const,
   property: (id: string) => ["properties", id] as const,
   relationships: (params?: object) => ["relationships", params] as const,
+  relationship: (id: string) => ["relationships", id] as const,
   // Graph
   graph: ["graph"] as const,
   graphMetrics: ["graph", "metrics"] as const,
