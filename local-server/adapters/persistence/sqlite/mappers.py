@@ -336,7 +336,7 @@ def map_domain_to_orm(
         "created_at": entity.created_at,
         "last_modified": entity.last_modified,
         "version": entity.version,
-        "status": entity.status.value if isinstance(entity.status, Status) else entity.status,
+        "status": entity.status.value,
     }
 
     if isinstance(entity, Taxonomy):

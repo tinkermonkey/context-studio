@@ -23,7 +23,7 @@ from .entities import (
     PropertyDefinition,
     Individual,
 )
-from .value_objects import DataPropertyValue
+from .value_objects import DataPropertyValue, Status
 from .events import (
     TaxonomyCreated,
     TaxonomyUpdated,
@@ -406,11 +406,11 @@ class OntologyService:
         if taxonomy is None:
             raise EntityNotFoundError("Taxonomy", taxonomy_id)
 
-        if taxonomy.status == "published":
+        if taxonomy.status == Status.PUBLISHED:
             return taxonomy
 
         old_status = taxonomy.status
-        taxonomy.status = "published"
+        taxonomy.status = Status.PUBLISHED
         taxonomy.last_modified = datetime.now(timezone.utc)
         taxonomy = self._repository.save_taxonomy(taxonomy)
 
@@ -419,7 +419,7 @@ class OntologyService:
                 taxonomy_id=taxonomy_id,
                 changed_fields=("status",),
                 old_values={"status": old_status},
-                new_values={"status": "published"},
+                new_values={"status": Status.PUBLISHED.value},
                 commit_message=commit_message,
             )
         )
@@ -461,7 +461,7 @@ class OntologyService:
             total_classes += self.count_classes(concept_scheme_id=scheme.id)
 
         return {
-            "added": total_classes if taxonomy.status == "draft" else 0,
+            "added": total_classes if taxonomy.status == Status.DRAFT else 0,
             "modified": 0,
             "removed": 0,
         }
