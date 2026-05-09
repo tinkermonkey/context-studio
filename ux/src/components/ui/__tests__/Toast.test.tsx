@@ -1,8 +1,8 @@
-import { describe, it, expect, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { screen, act, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { render } from "@/test/test-utils";
-import { ToastViewport, type ToastItem } from "../Toast";
+import { ToastViewport, useToasts, type ToastItem } from "../Toast";
 
 describe("Toast", () => {
   // ========================================================================
@@ -184,34 +184,54 @@ describe("Toast", () => {
       expect(onDismiss).toHaveBeenCalledWith("toast-1");
     });
 
-    it("undo button is absent after 8 seconds when toast has autoDismiss action", async () => {
+    it("undo button is absent after 8 seconds when toast has autoDismiss action", () => {
       vi.useFakeTimers();
-      const onDismiss = vi.fn();
-      const toast: ToastItem = {
-        id: "toast-1",
-        type: "success",
-        title: "Item deleted",
-        action: {
-          label: "Undo",
-          onAction: vi.fn(),
-        },
+
+      const TestComponent = () => {
+        const { toast, toasts } = useToasts();
+
+        return (
+          <>
+            <button
+              data-testid="create-toast-btn"
+              onClick={() => {
+                toast("success", "Item deleted", undefined, {
+                  action: {
+                    label: "Undo",
+                    onAction: vi.fn(),
+                  },
+                });
+              }}
+            >
+              Create Toast
+            </button>
+            <ToastViewport
+              toasts={toasts}
+              onDismiss={() => {
+                // This will be called by the timeout
+              }}
+            />
+          </>
+        );
       };
 
-      const { rerender } = render(
-        <ToastViewport toasts={[toast]} onDismiss={onDismiss} />,
-      );
+      render(<TestComponent />);
+
+      // Create the toast
+      const createBtn = screen.getByTestId("create-toast-btn");
+      fireEvent.click(createBtn);
 
       // Undo button is present initially
-      expect(screen.getByTestId("toast-action-toast-1")).toBeInTheDocument();
+      const undoButton = screen.getByTestId(/toast-action-/);
+      expect(undoButton).toBeInTheDocument();
 
       // Advance time by 8 seconds
-      vi.advanceTimersByTime(8000);
-
-      // Simulate toast being dismissed after 8 seconds
-      rerender(<ToastViewport toasts={[]} onDismiss={onDismiss} />);
+      act(() => {
+        vi.advanceTimersByTime(8000);
+      });
 
       // Undo button should be gone after 8 seconds
-      expect(screen.queryByTestId("toast-action-toast-1")).not.toBeInTheDocument();
+      expect(screen.queryByTestId(/toast-action-/)).not.toBeInTheDocument();
 
       vi.useRealTimers();
     });
