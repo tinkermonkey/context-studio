@@ -18,9 +18,14 @@ import { propertiesCopy } from "./properties/-copy";
 import type { components } from "@/api/types";
 
 type PropertyDefinitionResponse = components["schemas"]["PropertyDefinitionResponse"];
-type ListPropertiesResponse = components["schemas"]["ListResponse_PropertyDefinitionResponse_"];
+type PropertyDefinitionCreateRequest = components["schemas"]["PropertyDefinitionCreateRequest"];
+type PropertyDefinitionUpdateRequest = components["schemas"]["PropertyDefinitionUpdateRequest"];
 
-function PropertiesPageContent() {
+interface PropertiesPageContentProps {
+  onCreateClick: () => void;
+}
+
+function PropertiesPageContent({ onCreateClick }: PropertiesPageContentProps) {
   const [selectedId, setSelectedId] = useState<string>();
   const [searchFilter, setSearchFilter] = useState("");
   const { data: listResponse, isLoading, error, refetch } = useProperties();
@@ -129,11 +134,8 @@ function PropertiesPageContent() {
         description={propertiesCopy.emptyState.description}
         action={{
           label: propertiesCopy.emptyState.actionLabel,
-          onClick: () => {
-            // This will be handled by parent component
-          },
+          onClick: onCreateClick,
         }}
-        data-testid="properties-empty-state"
       />
     );
   }
@@ -143,16 +145,15 @@ function PropertiesPageContent() {
       <FilterBar
         searchValue={searchFilter}
         onSearchChange={setSearchFilter}
-        data-testid="properties-filter-bar"
       />
       <SchemaPageLayout
         data={filteredData}
         selectedId={selectedId}
         renderDrawerContent={(prop) => (
           <PropertyDrawer
+            key={prop.id}
             property={prop}
             onClose={() => setSelectedId(undefined)}
-            data-testid="properties-drawer"
           />
         )}
       >
@@ -161,7 +162,6 @@ function PropertiesPageContent() {
           data={filteredData}
           onRowSelect={setSelectedId}
           selectedId={selectedId}
-          data-testid="properties-table"
         />
       </SchemaPageLayout>
     </div>
@@ -173,9 +173,11 @@ function PropertiesPageWrapper() {
   const createMutation = useCreateProperty();
   const { toasts, dismiss, toast } = useToasts();
 
-  const handleCreateSubmit = async (data: any) => {
+  const handleCreateSubmit = async (data: PropertyDefinitionCreateRequest | PropertyDefinitionUpdateRequest) => {
     try {
-      await createMutation.mutateAsync(data);
+      if ("identifier" in data) {
+        await createMutation.mutateAsync(data as PropertyDefinitionCreateRequest);
+      }
       setShowCreateModal(false);
       toast("success", propertiesCopy.create.successToast);
     } catch (error) {
@@ -197,7 +199,7 @@ function PropertiesPageWrapper() {
           </Button>
         </div>
         <div data-testid="properties-content">
-          <PropertiesPageContent />
+          <PropertiesPageContent onCreateClick={() => setShowCreateModal(true)} />
         </div>
 
         <Modal
@@ -210,7 +212,6 @@ function PropertiesPageWrapper() {
           <PropertyDefinitionForm
             onSubmit={handleCreateSubmit}
             isLoading={createMutation.isPending}
-            data-testid="property-create-form"
           />
         </Modal>
       </div>

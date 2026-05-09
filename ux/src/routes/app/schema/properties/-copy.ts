@@ -11,5 +11,7 @@ export const propertiesCopy = {
   delete: {
     confirmTitle: "Delete property?",
     confirmButton: "Delete property",
+    successToast: "Property deleted",
+    failureToast: "Failed to delete property",
   },
 };

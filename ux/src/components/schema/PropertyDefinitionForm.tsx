@@ -63,21 +63,17 @@ export function PropertyDefinitionForm({
       return;
     }
 
-    try {
-      if (initialData) {
-        await onSubmit({
-          title,
-          description: description || null,
-        } as PropertyDefinitionUpdateRequest);
-      } else {
-        await onSubmit({
-          identifier,
-          title,
-          description: description || null,
-        } as PropertyDefinitionCreateRequest);
-      }
-    } catch (error) {
-      // Error is handled by the consumer's error handling
+    if (initialData) {
+      await onSubmit({
+        title,
+        description: description || null,
+      } as PropertyDefinitionUpdateRequest);
+    } else {
+      await onSubmit({
+        identifier,
+        title,
+        description: description || null,
+      } as PropertyDefinitionCreateRequest);
     }
   };
 
