@@ -1,14 +1,19 @@
 import { useState, useEffect } from "react";
-import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate, redirect } from "@tanstack/react-router";
 import { Titlebar } from "@/components/shell/Titlebar";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { Topbar } from "@/components/shell/Topbar";
 import { Statusbar } from "@/components/shell/Statusbar";
-import { WorkspaceErrorCard } from "@/components/workspace/WorkspaceErrorCard";
 import { useCommandPaletteStore } from "@/stores/commandPalette";
-import { useWorkspaceStorage } from "@/hooks/useWorkspaceStorage";
+import { getWorkspacePath } from "@/hooks/useWorkspaceStorage";
 
 export const Route = createFileRoute("/app")({
+  beforeLoad: () => {
+    const workspacePath = getWorkspacePath();
+    if (!workspacePath) {
+      throw redirect({ to: "/welcome" });
+    }
+  },
   component: AppShell,
 });
 
@@ -29,19 +34,8 @@ const NAV_ACTIONS = [
 
 function AppShell() {
   const [collapsed, setCollapsed] = useState(false);
-  const [workspaceError, setWorkspaceError] = useState(false);
   const { registerActions, unregisterActions } = useCommandPaletteStore();
   const navigate = useNavigate();
-  const { getWorkspacePath, clearWorkspacePath } = useWorkspaceStorage();
-
-  useEffect(() => {
-    const workspacePath = getWorkspacePath();
-
-    if (!workspacePath) {
-      navigate({ to: "/welcome" });
-      return;
-    }
-  }, [getWorkspacePath, navigate]);
 
   useEffect(() => {
     const actions = NAV_ACTIONS.map((item) => ({
@@ -55,34 +49,6 @@ function AppShell() {
       unregisterActions(actions.map((a) => a.id));
     };
   }, [registerActions, unregisterActions, navigate]);
-
-  const handleErrorRetry = () => {
-    setWorkspaceError(false);
-    window.location.reload();
-  };
-
-  const handleErrorChooseAnother = () => {
-    clearWorkspacePath();
-    navigate({ to: "/welcome" });
-  };
-
-  if (workspaceError) {
-    return (
-      <div className="desktop-frame">
-        <Titlebar />
-        <div className="app-shell">
-          <div className="workspace flex items-center justify-center">
-            <div className="w-full max-w-md">
-              <WorkspaceErrorCard
-                onRetry={handleErrorRetry}
-                onChooseAnother={handleErrorChooseAnother}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="desktop-frame">

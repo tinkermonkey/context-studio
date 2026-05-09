@@ -1,5 +1,5 @@
 import { AlertCircle, RefreshCw, FolderOpen, RotateCcw } from "lucide-react";
-import { useWorkspaceStorage } from "@/hooks/useWorkspaceStorage";
+import { clearWorkspacePath } from "@/hooks/useWorkspaceStorage";
 
 interface WorkspaceErrorCardProps {
   onRetry: () => void;
@@ -10,8 +10,6 @@ export function WorkspaceErrorCard({
   onRetry,
   onChooseAnother,
 }: WorkspaceErrorCardProps) {
-  const { clearWorkspacePath } = useWorkspaceStorage();
-
   const handleReset = () => {
     clearWorkspacePath();
     window.location.href = "/";

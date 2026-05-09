@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { WorkspaceSwitcher } from "@/components/workspace/WorkspaceSwitcher";
-import { useWorkspaceStorage } from "@/hooks/useWorkspaceStorage";
+import { setWorkspacePath } from "@/hooks/useWorkspaceStorage";
 
 export const Route = createFileRoute("/welcome")({
   component: WelcomePage,
@@ -8,7 +8,6 @@ export const Route = createFileRoute("/welcome")({
 
 function WelcomePage() {
   const navigate = useNavigate();
-  const { setWorkspacePath } = useWorkspaceStorage();
 
   const handleWorkspaceSelect = (path: string) => {
     setWorkspacePath(path);
