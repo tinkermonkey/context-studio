@@ -51,6 +51,17 @@ export function useUpdateClass() {
   });
 }
 
+export function useMoveClass() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { target_scheme_id: string } }) =>
+      ontologyService.moveClass(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.classes() });
+    },
+  });
+}
+
 export function useDeleteClass() {
   const queryClient = useQueryClient();
   return useMutation({

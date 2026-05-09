@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { FolderOpen, Plus, GitBranch } from "lucide-react";
 
 interface WorkspaceSwitcherProps {
@@ -6,28 +6,48 @@ interface WorkspaceSwitcherProps {
   isLoading?: boolean;
 }
 
-export function WorkspaceSwitcher({ onSelect: _, isLoading = false }: WorkspaceSwitcherProps) {
+export function WorkspaceSwitcher({ onSelect, isLoading = false }: WorkspaceSwitcherProps) {
   const [isSelectingFolder, setIsSelectingFolder] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleOpenFolder = async () => {
     setIsSelectingFolder(true);
     try {
-      // TODO: Implement folder picker once Tauri integration is complete
-      // For now, show a placeholder workflow
-      console.log("Open folder workflow");
+      if (fileInputRef.current) {
+        fileInputRef.current.click();
+      }
+    } catch (error) {
+      console.error("Failed to open folder picker:", error);
     } finally {
       setIsSelectingFolder(false);
     }
   };
 
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.currentTarget.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      const path = file.webkitRelativePath || file.name;
+      onSelect(path);
+    }
+  };
+
   const handleNewWorkspace = async () => {
-    // TODO: Implement new workspace creation workflow
-    console.log("New workspace workflow");
+    const folderName = prompt("Enter workspace folder name:");
+    if (folderName) {
+      onSelect(folderName);
+    }
   };
 
   const handleCloneFromGit = async () => {
-    // TODO: Implement git clone workflow
-    console.log("Clone from git workflow");
+    const gitUrl = prompt("Enter git repository URL:");
+    if (gitUrl) {
+      try {
+        onSelect(gitUrl);
+      } catch (error) {
+        console.error("Failed to clone from git:", error);
+      }
+    }
   };
 
   const isDisabled = isLoading || isSelectingFolder;
@@ -37,6 +57,14 @@ export function WorkspaceSwitcher({ onSelect: _, isLoading = false }: WorkspaceS
       data-testid="workspace-switcher-overlay"
       className="fixed inset-0 flex items-center justify-center bg-black/50"
     >
+      <input
+        ref={fileInputRef}
+        type="file"
+        style={{ display: "none" }}
+        onChange={handleFileInputChange}
+        data-testid="workspace-folder-input"
+        {...({ webkitdirectory: "" } as any)}
+      />
       <div
         data-testid="workspace-switcher-modal"
         className="w-[700px] rounded-lg border border-gray-700 bg-gray-900 shadow-lg"

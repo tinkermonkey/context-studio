@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Drawer } from "@/components/ui/Drawer";
 import { Input, Textarea, Select } from "@/components/ui/Input";
-import { useUpdateClass, useDeleteClass } from "@/api/hooks/ontology/useClasses";
+import { ErrorBanner } from "@/components/ui/ErrorBanner";
+import { useUpdateClass, useDeleteClass, useMoveClass } from "@/api/hooks/ontology/useClasses";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { useAutosave } from "@/hooks/useAutosave";
@@ -31,15 +32,16 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
   const { toast } = useToasts();
   const updateMutation = useUpdateClass();
   const deleteMutation = useDeleteClass();
+  const moveMutation = useMoveClass();
   const { data: schemesResponse } = useSchemes();
   const schemes = schemesResponse?.items || [];
   const { data: classesResponse } = useClasses();
   const allClasses = classesResponse?.items || [];
-  const { data: individualsResponse } = useIndividuals({
+  const { data: individualsResponse, isLoading: individualsLoading, error: individualsError, refetch: refetchIndividuals } = useIndividuals({
     class_id: classData?.id,
   });
 
-  const { data: relationshipsResponse } = useRelationships();
+  const { data: relationshipsResponse, isLoading: relationshipsLoading, error: relationshipsError, refetch: refetchRelationships } = useRelationships();
 
   const { performDelete, undo } = useUndoDelete({
     onDelete: (id: string) => deleteMutation.mutateAsync(id),
@@ -48,6 +50,22 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
     },
     undoWindowMs: 8000,
   });
+
+  const handleSchemeChange = async (newSchemeId: string) => {
+    if (!classData || !newSchemeId) return;
+    try {
+      await moveMutation.mutateAsync({
+        id: classData.id,
+        data: { target_scheme_id: newSchemeId },
+      });
+      setDomainId(newSchemeId);
+      toast("success", "Class moved to new domain");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to move class";
+      toast("error", message);
+    }
+  };
 
   useEffect(() => {
     setTitle(classData?.title ?? "");
@@ -141,6 +159,22 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
         data-testid="class-drawer"
       >
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+          {individualsError && (
+            <ErrorBanner
+              error={individualsError as Error}
+              onRetry={() => refetchIndividuals()}
+              message="Failed to load individuals"
+              compact
+            />
+          )}
+          {relationshipsError && (
+            <ErrorBanner
+              error={relationshipsError as Error}
+              onRetry={() => refetchRelationships()}
+              message="Failed to load relationships"
+              compact
+            />
+          )}
           <div>
             <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
               ID
@@ -176,7 +210,12 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
             <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
               Domain
             </label>
-            <Select value={domainId} disabled data-testid="class-drawer-domain-select">
+            <Select
+              value={domainId}
+              onChange={(e) => handleSchemeChange(e.target.value)}
+              disabled={moveMutation.isPending}
+              data-testid="class-drawer-domain-select"
+            >
               <option value="">Select a domain</option>
               {schemes.map((scheme) => (
                 <option key={scheme.id} value={scheme.id}>

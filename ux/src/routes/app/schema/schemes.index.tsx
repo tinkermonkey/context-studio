@@ -24,9 +24,11 @@ type ConceptSchemeCreateRequest = components["schemas"]["ConceptSchemeCreateRequ
 interface SchemesPageContentProps {
   onCreateClick: () => void;
   taxonomiesById: Map<string, string>;
+  taxonomiesError?: Error | null;
+  onRetryTaxonomies?: () => void;
 }
 
-function SchemesPageContent({ onCreateClick, taxonomiesById }: SchemesPageContentProps) {
+function SchemesPageContent({ onCreateClick, taxonomiesById, taxonomiesError, onRetryTaxonomies }: SchemesPageContentProps) {
   const [selectedId, setSelectedId] = useState<string>();
   const [searchFilter, setSearchFilter] = useState("");
 
@@ -187,6 +189,17 @@ function SchemesPageContent({ onCreateClick, taxonomiesById }: SchemesPageConten
         onSearchChange={setSearchFilter}
       />
 
+      {taxonomiesError && onRetryTaxonomies && (
+        <div style={{ marginBottom: "var(--space-3)" }}>
+          <ErrorBanner
+            error={taxonomiesError}
+            onRetry={onRetryTaxonomies}
+            message="Failed to load parent taxonomies"
+            compact
+          />
+        </div>
+      )}
+
       {showFilteredEmpty ? (
         <div style={{ marginTop: "var(--space-6)" }}>
           <EmptyState
@@ -224,7 +237,7 @@ export function SchemesIndexPage() {
   const [createError, setCreateError] = useState<string | null>(null);
   const createMutation = useCreateScheme();
   const { toast } = useToasts();
-  const { data: taxonomiesResponse } = useTaxonomies();
+  const { data: taxonomiesResponse, error: taxonomiesError, refetch: refetchTaxonomies } = useTaxonomies();
   const taxonomies = taxonomiesResponse?.items || [];
 
   const taxonomiesById = new Map(taxonomies.map((t) => [t.id, t.title]));
@@ -264,7 +277,12 @@ export function SchemesIndexPage() {
           </Button>
         </div>
         <div data-testid="schemes-content">
-          <SchemesPageContent onCreateClick={() => setShowCreateModal(true)} taxonomiesById={taxonomiesById} />
+          <SchemesPageContent
+            onCreateClick={() => setShowCreateModal(true)}
+            taxonomiesById={taxonomiesById}
+            taxonomiesError={taxonomiesError}
+            onRetryTaxonomies={() => refetchTaxonomies()}
+          />
         </div>
 
         <Modal

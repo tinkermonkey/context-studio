@@ -22,11 +22,19 @@ type RelationshipResponse = components["schemas"]["RelationshipResponse"];
 interface RelationshipsPageContentProps {
   classesById: Map<string, string>;
   propertiesById: Map<string, string>;
+  classesError?: Error | null;
+  onRetryClasses?: () => void;
+  propertiesError?: Error | null;
+  onRetryProperties?: () => void;
 }
 
 function RelationshipsPageContent({
   classesById,
   propertiesById,
+  classesError,
+  onRetryClasses,
+  propertiesError,
+  onRetryProperties,
 }: RelationshipsPageContentProps) {
   const [selectedId, setSelectedId] = useState<string>();
   const [searchFilter, setSearchFilter] = useState("");
@@ -265,6 +273,28 @@ function RelationshipsPageContent({
         />
       </div>
 
+      {classesError && onRetryClasses && (
+        <div style={{ marginBottom: "var(--space-3)" }}>
+          <ErrorBanner
+            error={classesError}
+            onRetry={onRetryClasses}
+            message="Failed to load classes"
+            compact
+          />
+        </div>
+      )}
+
+      {propertiesError && onRetryProperties && (
+        <div style={{ marginBottom: "var(--space-3)" }}>
+          <ErrorBanner
+            error={propertiesError}
+            onRetry={onRetryProperties}
+            message="Failed to load properties"
+            compact
+          />
+        </div>
+      )}
+
       {showFilteredEmpty ? (
         <div style={{ marginTop: "var(--space-6)" }}>
           <EmptyState
@@ -300,8 +330,8 @@ function RelationshipsPageContent({
 }
 
 function RelationshipsPageWrapper() {
-  const { data: classesResponse } = useClasses();
-  const { data: propertiesResponse } = useProperties();
+  const { data: classesResponse, error: classesError, refetch: refetchClasses } = useClasses();
+  const { data: propertiesResponse, error: propertiesError, refetch: refetchProperties } = useProperties();
   const { toasts, dismiss } = useToasts();
 
   const classes = classesResponse?.items || [];
@@ -326,7 +356,14 @@ function RelationshipsPageWrapper() {
           </Button>
         </div>
         <div data-testid="relationships-content">
-          <RelationshipsPageContent classesById={classesById} propertiesById={propertiesById} />
+          <RelationshipsPageContent
+            classesById={classesById}
+            propertiesById={propertiesById}
+            classesError={classesError}
+            onRetryClasses={() => refetchClasses()}
+            propertiesError={propertiesError}
+            onRetryProperties={() => refetchProperties()}
+          />
         </div>
       </div>
       <ToastViewport toasts={toasts} onDismiss={dismiss} />

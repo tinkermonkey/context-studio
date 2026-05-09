@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/Input";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useDeleteRelationship } from "@/api/hooks/ontology/useRelationships";
 import { useToasts } from "@/components/ui/Toast";
+import { useUndoDelete } from "@/hooks/useUndoDelete";
 import { ApiError } from "@/api/client/interceptors";
 import { relationshipsCopy } from "@/routes/app/schema/relationships/-copy";
 import type { components } from "@/api/types";
@@ -28,12 +29,25 @@ export function RelationshipDrawer({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { toast } = useToasts();
   const deleteMutation = useDeleteRelationship();
+  const { performDelete, undo } = useUndoDelete({
+    onDelete: (id: string) => deleteMutation.mutateAsync(id),
+    onDeleteError: (id: string, error: Error) => {
+      toast("error", `Failed to delete relationship: ${error.message}`);
+    },
+    undoWindowMs: 8000,
+  });
 
   const handleDelete = async () => {
     if (!relationship) return;
     try {
-      await deleteMutation.mutateAsync(relationship.id);
-      toast("success", relationshipsCopy.delete.successToast);
+      await performDelete(relationship.id);
+      toast("success", relationshipsCopy.delete.successToast, "Undo", {
+        action: {
+          label: "Undo",
+          onAction: undo,
+        },
+        autoDismissMs: 8000,
+      });
       onClose();
     } catch (error) {
       const message =

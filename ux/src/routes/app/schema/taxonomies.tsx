@@ -22,10 +22,11 @@ type TaxonomyCreateRequest = components["schemas"]["TaxonomyCreateRequest"];
 
 interface TaxonomiesPageContentProps {
   onCreateClick: () => void;
+  selectedId?: string;
+  onSelectedIdChange: (id: string | undefined) => void;
 }
 
-function TaxonomiesPageContent({ onCreateClick }: TaxonomiesPageContentProps) {
-  const [selectedId, setSelectedId] = useState<string>();
+function TaxonomiesPageContent({ onCreateClick, selectedId, onSelectedIdChange }: TaxonomiesPageContentProps) {
   const [searchFilter, setSearchFilter] = useState("");
 
   const { data: listResponse, isLoading, error, refetch } = useTaxonomies();
@@ -198,14 +199,14 @@ function TaxonomiesPageContent({ onCreateClick }: TaxonomiesPageContentProps) {
             <TaxonomyDrawer
               key={tax.id}
               taxonomy={tax}
-              onClose={() => setSelectedId(undefined)}
+              onClose={() => onSelectedIdChange(undefined)}
             />
           )}
         >
           <SchemaTable
             columns={taxonomyColumns}
             data={filteredData}
-            onRowSelect={setSelectedId}
+            onRowSelect={onSelectedIdChange}
             selectedId={selectedId}
           />
         </SchemaPageLayout>
@@ -217,7 +218,9 @@ function TaxonomiesPageContent({ onCreateClick }: TaxonomiesPageContentProps) {
 function TaxonomiesPageWrapper() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | undefined>();
   const createMutation = useCreateTaxonomy();
+  const { refetch } = useTaxonomies();
   const { toast } = useToasts();
 
   const handleCreateSubmit = async (data: TaxonomyCreateRequest) => {
@@ -225,6 +228,8 @@ function TaxonomiesPageWrapper() {
     try {
       const result = await createMutation.mutateAsync(data);
       setShowCreateModal(false);
+      await refetch();
+      setSelectedId(result.id);
       toast("success", taxonomiesCopy.create.successToast(result.id));
     } catch (error) {
       setCreateError(error instanceof Error ? error.message : "Failed to create taxonomy");
@@ -253,7 +258,11 @@ function TaxonomiesPageWrapper() {
         </div>
       </div>
       <div data-testid="taxonomies-content">
-        <TaxonomiesPageContent onCreateClick={() => setShowCreateModal(true)} />
+        <TaxonomiesPageContent
+          onCreateClick={() => setShowCreateModal(true)}
+          selectedId={selectedId}
+          onSelectedIdChange={setSelectedId}
+        />
       </div>
 
       <Modal

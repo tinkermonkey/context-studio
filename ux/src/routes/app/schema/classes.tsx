@@ -31,7 +31,7 @@ function ClassesPageContent({ onCreateClick }: ClassesPageContentProps) {
   const { data: listResponse, isLoading, error, refetch } = useClasses();
   const classes = listResponse?.items || [];
 
-  const { data: schemesResponse } = useSchemes();
+  const { data: schemesResponse, error: schemesError, refetch: refetchSchemes } = useSchemes();
   const schemes = schemesResponse?.items || [];
 
   const schemeMap = new Map(schemes.map((s) => [s.id, s.title]));
@@ -187,6 +187,17 @@ function ClassesPageContent({ onCreateClick }: ClassesPageContentProps) {
   return (
     <div data-testid="classes-page">
       <FilterBar searchValue={searchFilter} onSearchChange={setSearchFilter} />
+
+      {schemesError && (
+        <div style={{ marginBottom: "var(--space-3)" }}>
+          <ErrorBanner
+            error={schemesError as Error}
+            onRetry={() => refetchSchemes()}
+            message="Failed to load domains"
+            compact
+          />
+        </div>
+      )}
 
       {showFilteredEmpty ? (
         <div style={{ marginTop: "var(--space-6)" }}>
