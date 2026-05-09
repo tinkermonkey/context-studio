@@ -25,8 +25,6 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
   const [description, setDescription] = useState(classData?.description ?? "");
   const [domainId, setDomainId] = useState(classData?.concept_scheme_id ?? "");
   const [parentClassId, setParentClassId] = useState(classData?.parent_class_id ?? "");
-  const [searchParent, setSearchParent] = useState("");
-  const [showParentOptions, setShowParentOptions] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const lastSavedAtRef = useRef<Date | null>(null);
 
@@ -115,14 +113,6 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
   if (!classData) return null;
 
   const selectedParent = allClasses.find((c) => c.id === parentClassId);
-
-  const filteredClasses = allClasses
-    .filter((cls) => cls.id !== classData.id)
-    .filter(
-      (cls) =>
-        cls.title.toLowerCase().includes(searchParent.toLowerCase()) ||
-        cls.id.toLowerCase().includes(searchParent.toLowerCase()),
-    );
 
   const autosaveState = status === "idle" ? undefined : (status as "saving" | "saved" | "error");
 
