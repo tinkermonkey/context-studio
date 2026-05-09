@@ -14,7 +14,6 @@ All tests use real in-memory SQLite to expose differences from the fake reposito
 import sys
 import os
 import pytest
-from datetime import datetime, timezone, timedelta
 
 sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
