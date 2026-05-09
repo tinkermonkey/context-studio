@@ -44,6 +44,21 @@ function findTestidUsages(dir: string, ext: string[]): Set<string> {
   return usages;
 }
 
+function isRegistered(testid: string, registered: Set<string>): boolean {
+  // Check for exact match
+  if (registered.has(testid)) return true;
+
+  // Check for pattern matches (e.g., "toast-action-*" matches "toast-action-toast-1")
+  for (const pattern of registered) {
+    if (pattern.endsWith("*")) {
+      const prefix = pattern.slice(0, -1); // Remove the "*"
+      if (testid.startsWith(prefix)) return true;
+    }
+  }
+
+  return false;
+}
+
 function main() {
   const registry = loadRegistry();
   const registered = new Set(registry.selectors.map((s) => s.selector));
@@ -52,7 +67,7 @@ function main() {
   const e2eUsages = findTestidUsages(e2eDir, [".ts", ".js"]);
   const allUsages = new Set([...srcUsages, ...e2eUsages]);
 
-  const unregistered = [...allUsages].filter((s) => !registered.has(s));
+  const unregistered = [...allUsages].filter((s) => !isRegistered(s, registered));
 
   if (unregistered.length > 0) {
     console.error("❌ Selector contract violation — unregistered data-testid attributes:");

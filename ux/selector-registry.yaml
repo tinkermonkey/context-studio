@@ -346,6 +346,88 @@ selectors:
   - selector: scheme-detail-add-class-button
     component: routes/app/schema/schemes.$schemeId.tsx
     description: Button to open create class modal in scheme detail page
+  - selector: scheme-name-link-*
+    component: routes/app/schema/schemes.index.tsx
+    description: Clickable scheme name link in table with dynamic ID suffix
+  - selector: scheme-row-actions-*
+    component: routes/app/schema/schemes.index.tsx
+    description: Actions menu button for scheme row
+
+  # Classes Page
+  - selector: classes-page
+    component: routes/app/schema/classes.tsx
+    description: Main classes page container
+  - selector: classes-content
+    component: routes/app/schema/classes.tsx
+    description: Main content area of classes page
+  - selector: class-add-button
+    component: routes/app/schema/classes.tsx
+    description: Button to open create class modal
+  - selector: class-create-modal
+    component: routes/app/schema/classes.tsx
+    description: Modal for creating new class
+  - selector: class-name-*
+    component: routes/app/schema/classes.tsx
+    description: Clickable class name cell in table with dynamic ID suffix
+  - selector: class-domain-*
+    component: routes/app/schema/classes.tsx
+    description: Class domain/scheme cell in table with dynamic ID suffix
   - selector: class-row-actions-*
-    component: routes/app/schema/schemes.$schemeId.tsx
-    description: Actions menu button for class row in scheme detail page
+    component: routes/app/schema/classes.tsx
+    description: Actions menu button for class row
+
+  # Class Drawer
+  - selector: class-drawer
+    component: components/ontology/ClassDrawer.tsx
+    description: Drawer for editing class details
+  - selector: class-drawer-id
+    component: components/ontology/ClassDrawer.tsx
+    description: Read-only ID field in class drawer
+  - selector: class-drawer-name-input
+    component: components/ontology/ClassDrawer.tsx
+    description: Editable name field in class drawer
+  - selector: class-drawer-description-input
+    component: components/ontology/ClassDrawer.tsx
+    description: Editable description field in class drawer
+  - selector: class-drawer-domain-select
+    component: components/ontology/ClassDrawer.tsx
+    description: Domain/scheme selector in class drawer
+  - selector: class-delete-confirm
+    component: components/ontology/ClassDrawer.tsx
+    description: Confirmation dialog for class deletion
+
+  # Class Editor Form
+  - selector: class-editor-form
+    component: components/ontology/ClassEditor.tsx
+    description: Form for creating/editing classes
+  - selector: class-editor-name-input
+    component: components/ontology/ClassEditor.tsx
+    description: Name input field in class editor
+  - selector: class-editor-description-input
+    component: components/ontology/ClassEditor.tsx
+    description: Description textarea in class editor
+  - selector: class-editor-domain-select
+    component: components/ontology/ClassEditor.tsx
+    description: Domain/scheme selector in class editor
+  - selector: class-editor-parent-input
+    component: components/ontology/ClassEditor.tsx
+    description: Parent class input/search field in class editor
+  - selector: class-editor-parent-clear
+    component: components/ontology/ClassEditor.tsx
+    description: Clear button for parent class selection
+  - selector: class-editor-parent-option-*
+    component: components/ontology/ClassEditor.tsx
+    description: Parent class option in dropdown with dynamic ID suffix
+  - selector: class-editor-submit-button
+    component: components/ontology/ClassEditor.tsx
+    description: Submit button for class editor form
+
+  # Hierarchy Tree
+  - selector: hierarchy-node-*
+    component: components/ontology/HierarchyTree.tsx
+    description: Hierarchy tree node with dynamic ID suffix
+
+  # Miscellaneous
+  - selector: create-toast-btn
+    component: routes/app/contact-sheet.tsx
+    description: Create toast button on contact sheet
