@@ -181,6 +181,18 @@ class OntologyService:
             limit=limit, offset=offset, sort_by=sort_by, sort_order=sort_order, query=query
         )
 
+    def count_taxonomies(self, query: str | None = None) -> int:
+        """
+        Count taxonomies, optionally filtered by text search.
+
+        Args:
+            query: Optional text query for LIKE search on title
+
+        Returns:
+            Total count of taxonomies
+        """
+        return self._repository.count_taxonomies(query=query)
+
     def update_taxonomy(
         self,
         taxonomy_id: str,
@@ -539,6 +551,21 @@ class OntologyService:
             sort_order=sort_order,
             query=query,
         )
+
+    def count_concept_schemes(
+        self, taxonomy_id: str | None = None, query: str | None = None
+    ) -> int:
+        """
+        Count concept schemes, optionally filtered by taxonomy and text search.
+
+        Args:
+            taxonomy_id: Optional taxonomy ID to filter by
+            query: Optional text query for LIKE search on title
+
+        Returns:
+            Total count of concept schemes
+        """
+        return self._repository.count_concept_schemes(taxonomy_id=taxonomy_id, query=query)
 
     def rename_scheme(self, concept_scheme_id: str, new_title: str) -> ConceptScheme:
         """
@@ -1330,6 +1357,27 @@ class OntologyService:
             query=query,
         )
 
+    def count_relationships(
+        self,
+        source_id: str | None = None,
+        target_id: str | None = None,
+        property_id: str | None = None,
+    ) -> int:
+        """
+        Count relationships, optionally filtered by source, target, or property.
+
+        Args:
+            source_id: Optional source entity ID to filter by
+            target_id: Optional target entity ID to filter by
+            property_id: Optional property definition ID to filter by (relationship type)
+
+        Returns:
+            Total count of relationships
+        """
+        return self._repository.count_relationships(
+            source_id=source_id, target_id=target_id, property_id=property_id
+        )
+
     def delete_relationship(self, relationship_id: str) -> None:
         """
         Delete a relationship.
@@ -1596,6 +1644,21 @@ class OntologyService:
             sort_order=sort_order,
             query=query,
         )
+
+    def count_property_definitions(
+        self, is_relevant: bool | None = None, query: str | None = None
+    ) -> int:
+        """
+        Count property definitions, optionally filtered by relevance and text search.
+
+        Args:
+            is_relevant: Optional filter for relevant property definitions
+            query: Optional text query for LIKE search on title
+
+        Returns:
+            Total count of property definitions
+        """
+        return self._repository.count_property_definitions(is_relevant=is_relevant, query=query)
 
     def update_property_definition(
         self,

@@ -162,6 +162,26 @@ class SQLiteOntologyRepository:
             orm_entities = q.offset(offset).all()
             return [cast(Taxonomy, map_orm_to_domain(e)) for e in orm_entities]
 
+    def count_taxonomies(self, query: Optional[str] = None) -> int:
+        """
+        Count taxonomies, optionally filtered by text search.
+
+        Args:
+            query: Optional text query for LIKE search on title
+
+        Returns:
+            Total count of taxonomies
+        """
+        with self.session_factory() as session:
+            q = session.query(OntologyEntity).filter(
+                OntologyEntity.node_type == NodeType.TAXONOMY
+            )
+
+            if query:
+                q = q.filter(OntologyEntity.title.like(f"%{query}%"))
+
+            return q.count()
+
     def save_taxonomy(self, taxonomy: Taxonomy) -> Taxonomy:
         """
         Create or update a taxonomy.
@@ -331,6 +351,32 @@ class SQLiteOntologyRepository:
                 q = q.limit(limit)
             orm_entities = q.offset(offset).all()
             return [cast(ConceptScheme, map_orm_to_domain(e)) for e in orm_entities]
+
+    def count_concept_schemes(
+        self, taxonomy_id: Optional[str] = None, query: Optional[str] = None
+    ) -> int:
+        """
+        Count concept schemes, optionally filtered by taxonomy and text search.
+
+        Args:
+            taxonomy_id: Optional taxonomy ID to filter by
+            query: Optional text query for LIKE search on title
+
+        Returns:
+            Total count of concept schemes
+        """
+        with self.session_factory() as session:
+            q = session.query(OntologyEntity).filter(
+                OntologyEntity.node_type == NodeType.CONCEPT_SCHEME
+            )
+
+            if taxonomy_id is not None:
+                q = q.filter(OntologyEntity.taxonomy_id == taxonomy_id)
+
+            if query:
+                q = q.filter(OntologyEntity.title.like(f"%{query}%"))
+
+            return q.count()
 
     def save_concept_scheme(self, scheme: ConceptScheme) -> ConceptScheme:
         """
@@ -987,6 +1033,32 @@ class SQLiteOntologyRepository:
                 cast(PropertyDefinition, map_orm_to_domain(e)) for e in orm_entities
             ]
 
+    def count_property_definitions(
+        self, is_relevant: Optional[bool] = None, query: Optional[str] = None
+    ) -> int:
+        """
+        Count property definitions, optionally filtered by relevance and text search.
+
+        Args:
+            is_relevant: Optional filter for relevant property definitions
+            query: Optional text query for LIKE search on title
+
+        Returns:
+            Total count of property definitions
+        """
+        with self.session_factory() as session:
+            q = session.query(OntologyEntity).filter(
+                OntologyEntity.node_type == NodeType.PROPERTY_DEFINITION
+            )
+
+            if is_relevant is not None:
+                q = q.filter(OntologyEntity.is_relevant == is_relevant)
+
+            if query:
+                q = q.filter(OntologyEntity.title.like(f"%{query}%"))
+
+            return q.count()
+
     def get_property_definition_by_identifier(
         self, identifier: str
     ) -> Optional[PropertyDefinition]:
@@ -1226,6 +1298,37 @@ class SQLiteOntologyRepository:
                 q = q.limit(limit)
             orm_rels = q.offset(offset).all()
             return [map_relationship_orm_to_domain(r) for r in orm_rels]
+
+    def count_relationships(
+        self,
+        source_id: Optional[str] = None,
+        target_id: Optional[str] = None,
+        property_id: Optional[str] = None,
+    ) -> int:
+        """
+        Count relationships, optionally filtered by source, target, or property.
+
+        Args:
+            source_id: Optional source entity ID to filter by
+            target_id: Optional target entity ID to filter by
+            property_id: Optional property definition ID to filter by (relationship type)
+
+        Returns:
+            Total count of relationships
+        """
+        with self.session_factory() as session:
+            q = session.query(RelationshipORM)
+
+            if source_id is not None:
+                q = q.filter(RelationshipORM.source_id == source_id)
+
+            if target_id is not None:
+                q = q.filter(RelationshipORM.target_id == target_id)
+
+            if property_id is not None:
+                q = q.filter(RelationshipORM.property_definition_id == property_id)
+
+            return q.count()
 
     def save_relationship(self, rel: Relationship) -> Relationship:
         """

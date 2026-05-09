@@ -2207,3 +2207,251 @@ class TestDeleteIndividual:
         assert len(rel_delete_events) == 2
         rel_ids = {event.relationship_id for event in rel_delete_events}
         assert rel_ids == {rel1.id, rel2.id}
+
+
+class TestPaginationSortingAndSearch:
+    """Test pagination, sorting, and text search functionality."""
+
+    def test_list_taxonomies_pagination(self, service):
+        """Test pagination of taxonomies."""
+        tax1 = service.create_taxonomy(title="Alpha")
+        tax2 = service.create_taxonomy(title="Beta")
+        tax3 = service.create_taxonomy(title="Gamma")
+
+        page1 = service.list_taxonomies(limit=2, offset=0)
+        assert len(page1) == 2
+
+        page2 = service.list_taxonomies(limit=2, offset=2)
+        assert len(page2) == 1
+
+        all_ids = {t.id for page in [page1, page2] for t in page}
+        assert all_ids == {tax1.id, tax2.id, tax3.id}
+
+    def test_list_taxonomies_sorting_by_title_asc(self, service):
+        """Test sorting taxonomies by title ascending."""
+        service.create_taxonomy(title="Gamma")
+        service.create_taxonomy(title="Alpha")
+        service.create_taxonomy(title="Beta")
+
+        results = service.list_taxonomies(limit=None, sort_by="title", sort_order="asc")
+        titles = [t.title for t in results]
+        assert titles == ["Alpha", "Beta", "Gamma"]
+
+    def test_list_taxonomies_sorting_by_title_desc(self, service):
+        """Test sorting taxonomies by title descending."""
+        service.create_taxonomy(title="Gamma")
+        service.create_taxonomy(title="Alpha")
+        service.create_taxonomy(title="Beta")
+
+        results = service.list_taxonomies(limit=None, sort_by="title", sort_order="desc")
+        titles = [t.title for t in results]
+        assert titles == ["Gamma", "Beta", "Alpha"]
+
+    def test_list_taxonomies_text_search(self, service):
+        """Test text search on taxonomies."""
+        service.create_taxonomy(title="Animals Taxonomy")
+        service.create_taxonomy(title="Plants Taxonomy")
+        service.create_taxonomy(title="Minerals Database")
+
+        results = service.list_taxonomies(limit=None, query="animals")
+        assert len(results) == 1
+        assert results[0].title == "Animals Taxonomy"
+
+    def test_list_concept_schemes_pagination(self, service):
+        """Test pagination of concept schemes."""
+        tax = service.create_taxonomy(title="Test Taxonomy")
+        scheme1 = service.create_scheme(tax.id, title="Scheme 1")
+        scheme2 = service.create_scheme(tax.id, title="Scheme 2")
+        scheme3 = service.create_scheme(tax.id, title="Scheme 3")
+
+        page1 = service.list_concept_schemes(limit=2, offset=0)
+        assert len(page1) == 2
+
+        page2 = service.list_concept_schemes(limit=2, offset=2)
+        assert len(page2) == 1
+
+    def test_list_concept_schemes_sorting_by_title_asc(self, service):
+        """Test sorting concept schemes by title ascending."""
+        tax = service.create_taxonomy(title="Test Taxonomy")
+        service.create_scheme(tax.id, title="Zebra")
+        service.create_scheme(tax.id, title="Apple")
+        service.create_scheme(tax.id, title="Mango")
+
+        results = service.list_concept_schemes(
+            limit=None, sort_by="title", sort_order="asc"
+        )
+        titles = [s.title for s in results]
+        assert titles == ["Apple", "Mango", "Zebra"]
+
+    def test_list_concept_schemes_text_search(self, service):
+        """Test text search on concept schemes."""
+        tax = service.create_taxonomy(title="Test Taxonomy")
+        service.create_scheme(tax.id, title="Animal Concepts")
+        service.create_scheme(tax.id, title="Plant Concepts")
+        service.create_scheme(tax.id, title="Mineral Taxonomy")
+
+        results = service.list_concept_schemes(limit=None, query="plant")
+        assert len(results) == 1
+        assert results[0].title == "Plant Concepts"
+
+    def test_list_relationships_pagination(self, service):
+        """Test pagination of relationships."""
+        tax = service.create_taxonomy(title="Test Taxonomy")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        class1 = service.create_class(scheme.id, title="Class 1")
+        class2 = service.create_class(scheme.id, title="Class 2")
+        class3 = service.create_class(scheme.id, title="Class 3")
+        class4 = service.create_class(scheme.id, title="Class 4")
+
+        prop = service.create_property_definition(
+            identifier="related_to", title="Related To"
+        )
+
+        service.create_relationship(class1.id, class2.id, prop.id)
+        service.create_relationship(class1.id, class3.id, prop.id)
+        service.create_relationship(class1.id, class4.id, prop.id)
+
+        page1 = service.list_relationships(limit=2, offset=0)
+        assert len(page1) == 2
+
+        page2 = service.list_relationships(limit=2, offset=2)
+        assert len(page2) == 1
+
+    def test_list_relationships_sorting_by_created_at(self, service):
+        """Test sorting relationships by created_at."""
+        tax = service.create_taxonomy(title="Test Taxonomy")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        class1 = service.create_class(scheme.id, title="Class 1")
+        class2 = service.create_class(scheme.id, title="Class 2")
+        class3 = service.create_class(scheme.id, title="Class 3")
+        class4 = service.create_class(scheme.id, title="Class 4")
+
+        prop = service.create_property_definition(
+            identifier="related_to", title="Related To"
+        )
+
+        rel1 = service.create_relationship(class1.id, class2.id, prop.id)
+        rel2 = service.create_relationship(class1.id, class3.id, prop.id)
+        rel3 = service.create_relationship(class1.id, class4.id, prop.id)
+
+        results_asc = service.list_relationships(
+            limit=None, sort_by="created_at", sort_order="asc"
+        )
+        ids_asc = [r.id for r in results_asc]
+        assert ids_asc == [rel1.id, rel2.id, rel3.id]
+
+    def test_list_property_definitions_pagination(self, service):
+        """Test pagination of property definitions."""
+        service.create_property_definition(identifier="prop1", title="Property 1")
+        service.create_property_definition(identifier="prop2", title="Property 2")
+        service.create_property_definition(identifier="prop3", title="Property 3")
+
+        page1 = service.list_property_definitions(limit=2, offset=0)
+        assert len(page1) == 2
+
+        page2 = service.list_property_definitions(limit=2, offset=2)
+        assert len(page2) == 1
+
+    def test_list_property_definitions_sorting_by_title(self, service):
+        """Test sorting property definitions by title."""
+        service.create_property_definition(identifier="z_prop", title="Zebra")
+        service.create_property_definition(identifier="a_prop", title="Apple")
+        service.create_property_definition(identifier="m_prop", title="Mango")
+
+        results = service.list_property_definitions(
+            limit=None, sort_by="title", sort_order="asc"
+        )
+        titles = [p.title for p in results]
+        assert titles == ["Apple", "Mango", "Zebra"]
+
+    def test_list_property_definitions_text_search(self, service):
+        """Test text search on property definitions."""
+        service.create_property_definition(identifier="related", title="Related To")
+        service.create_property_definition(identifier="depends_on", title="Depends On")
+        service.create_property_definition(identifier="parent", title="Parent Class")
+
+        results = service.list_property_definitions(limit=None, query="parent")
+        assert len(results) == 1
+        assert results[0].title == "Parent Class"
+
+    def test_count_taxonomies_with_query(self, service):
+        """Test counting taxonomies with text search filter."""
+        service.create_taxonomy(title="Animals")
+        service.create_taxonomy(title="Animal Behavior")
+        service.create_taxonomy(title="Plants")
+
+        count = service.count_taxonomies(query="animal")
+        assert count == 2
+
+    def test_count_concept_schemes_with_taxonomy_filter(self, service):
+        """Test counting concept schemes filtered by taxonomy."""
+        tax1 = service.create_taxonomy(title="Taxonomy 1")
+        tax2 = service.create_taxonomy(title="Taxonomy 2")
+
+        service.create_scheme(tax1.id, title="Scheme 1.1")
+        service.create_scheme(tax1.id, title="Scheme 1.2")
+        service.create_scheme(tax2.id, title="Scheme 2.1")
+
+        count = service.count_concept_schemes(taxonomy_id=tax1.id)
+        assert count == 2
+
+    def test_count_relationships_with_filters(self, service):
+        """Test counting relationships with filters."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        class1 = service.create_class(scheme.id, title="Class 1")
+        class2 = service.create_class(scheme.id, title="Class 2")
+        class3 = service.create_class(scheme.id, title="Class 3")
+
+        prop = service.create_property_definition(
+            identifier="related_to", title="Related To"
+        )
+
+        service.create_relationship(class1.id, class2.id, prop.id)
+        service.create_relationship(class1.id, class3.id, prop.id)
+
+        count = service.count_relationships(source_id=class1.id)
+        assert count == 2
+
+    def test_count_property_definitions_with_query(self, service):
+        """Test counting property definitions with text search."""
+        service.create_property_definition(identifier="parent", title="Parent Class")
+        service.create_property_definition(identifier="child", title="Child Class")
+        service.create_property_definition(identifier="related", title="Related To")
+
+        count = service.count_property_definitions(query="class")
+        assert count == 2
+
+
+class TestPublishTaxonomy:
+    """Test taxonomy publish functionality."""
+
+    def test_publish_taxonomy_transitions_from_draft_to_published(self, service):
+        """Test that publishing a taxonomy transitions its status to published."""
+        tax = service.create_taxonomy(title="Test Taxonomy")
+        assert tax.status == "draft"
+
+        published = service.publish_taxonomy(tax.id)
+        assert published.status == "published"
+
+    def test_publish_taxonomy_is_idempotent(self, service):
+        """Test that publishing an already-published taxonomy doesn't error."""
+        tax = service.create_taxonomy(title="Test Taxonomy")
+        published1 = service.publish_taxonomy(tax.id)
+        assert published1.status == "published"
+
+        published2 = service.publish_taxonomy(tax.id)
+        assert published2.status == "published"
+
+    def test_publish_nonexistent_taxonomy_raises_error(self, service):
+        """Test that publishing a nonexistent taxonomy raises EntityNotFoundError."""
+        with pytest.raises(EntityNotFoundError):
+            service.publish_taxonomy("nonexistent-id")
+
+    def test_publish_taxonomy_emits_event(self, service):
+        """Test that publishing a taxonomy emits a TaxonomyUpdated event."""
+        tax = service.create_taxonomy(title="Test Taxonomy")
+        service.publish_taxonomy(tax.id)
+
+        update_events = service._event_publisher.get_events_of_type(TaxonomyUpdated)
+        assert len(update_events) >= 1

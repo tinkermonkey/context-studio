@@ -92,6 +92,18 @@ class OntologyRepository(Protocol):
         """
         ...
 
+    def count_taxonomies(self, query: str | None = None) -> int:
+        """
+        Count taxonomies, optionally filtered by text search.
+
+        Args:
+            query: Optional text query for LIKE search on title
+
+        Returns:
+            Total count of taxonomies
+        """
+        ...
+
     # ConceptScheme operations
     def get_concept_scheme(self, concept_scheme_id: str) -> ConceptScheme | None:
         """
@@ -151,6 +163,21 @@ class OntologyRepository(Protocol):
 
         Returns:
             True if the concept scheme was deleted, False if it did not exist
+        """
+        ...
+
+    def count_concept_schemes(
+        self, taxonomy_id: str | None = None, query: str | None = None
+    ) -> int:
+        """
+        Count concept schemes, optionally filtered by taxonomy and text search.
+
+        Args:
+            taxonomy_id: Optional taxonomy ID to filter by
+            query: Optional text query for LIKE search on title
+
+        Returns:
+            Total count of concept schemes
         """
         ...
 
@@ -302,6 +329,25 @@ class OntologyRepository(Protocol):
         """
         ...
 
+    def count_relationships(
+        self,
+        source_id: str | None = None,
+        target_id: str | None = None,
+        property_id: str | None = None,
+    ) -> int:
+        """
+        Count relationships, optionally filtered by source, target, or property.
+
+        Args:
+            source_id: Optional source entity ID to filter by
+            target_id: Optional target entity ID to filter by
+            property_id: Optional property definition ID to filter by (relationship type)
+
+        Returns:
+            Total count of relationships
+        """
+        ...
+
     # PropertyDefinition operations
     def get_property_definition(self, property_id: str) -> PropertyDefinition | None:
         """
@@ -375,6 +421,21 @@ class OntologyRepository(Protocol):
 
         Returns:
             True if the property definition was deleted, False if it did not exist
+        """
+        ...
+
+    def count_property_definitions(
+        self, is_relevant: bool | None = None, query: str | None = None
+    ) -> int:
+        """
+        Count property definitions, optionally filtered by relevance and text search.
+
+        Args:
+            is_relevant: Optional filter for relevant property definitions
+            query: Optional text query for LIKE search on title
+
+        Returns:
+            Total count of property definitions
         """
         ...
 

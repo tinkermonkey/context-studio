@@ -162,12 +162,10 @@ async def list_taxonomies(
             sort_order=sort_order,
             query=q,
         )
-        total = await run_sync_in_executor(
-            service.list_taxonomies, limit=None, query=q
-        )
+        total = await run_sync_in_executor(service.count_taxonomies, query=q)
         return ListResponse(
             items=[TaxonomyResponse.model_validate(t) for t in taxonomies],
-            total=len(total),
+            total=total,
             limit=limit,
             offset=offset,
         )
@@ -363,11 +361,11 @@ async def list_concept_schemes(
             query=q,
         )
         total = await run_sync_in_executor(
-            service.list_concept_schemes, taxonomy_id=taxonomy_id, limit=None, query=q
+            service.count_concept_schemes, taxonomy_id=taxonomy_id, query=q
         )
         return ListResponse(
             items=[ConceptSchemeResponse.model_validate(s) for s in schemes],
-            total=len(total),
+            total=total,
             limit=limit,
             offset=offset,
         )
@@ -746,15 +744,14 @@ async def list_relationships(
             query=q,
         )
         total = await run_sync_in_executor(
-            service.list_relationships,
+            service.count_relationships,
             source_id=source_id,
             target_id=target_id,
             property_id=property_id,
-            limit=None,
         )
         return ListResponse(
             items=[RelationshipResponse.model_validate(r) for r in relationships],
-            total=len(total),
+            total=total,
             limit=limit,
             offset=offset,
         )
@@ -890,9 +887,8 @@ async def list_property_definitions(
             query=q,
         )
         total = await run_sync_in_executor(
-            service.list_property_definitions,
+            service.count_property_definitions,
             is_relevant=is_relevant,
-            limit=None,
             query=q,
         )
         return ListResponse(

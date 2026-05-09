@@ -259,9 +259,6 @@ class RelationshipResponse(BaseModel):
         ..., description="Property definition ID (relationship type)"
     )
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
-    status: str = Field(
-        default="draft", description="Publication status (draft or published)"
-    )
 
 
 # ==================== PropertyDefinition Schemas ====================
