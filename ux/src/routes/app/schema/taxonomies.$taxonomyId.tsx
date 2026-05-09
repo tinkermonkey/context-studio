@@ -10,7 +10,7 @@ import { useToasts } from "@/components/ui/Toast";
 import { useAutosave } from "@/hooks/useAutosave";
 import { useUndoDelete } from "@/hooks/useUndoDelete";
 import { formatTimeAgo } from "@/utils/dateFormatting";
-import { useTaxonomy, useUpdateTaxonomy, useDeleteTaxonomy, usePublishTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
+import { useTaxonomy, useUpdateTaxonomy, useDeleteTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
 import { TaxonomyPublishDialog } from "@/components/ontology/TaxonomyPublishDialog";
 import { taxonomiesCopy } from "./taxonomies/-copy";
