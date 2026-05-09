@@ -49,10 +49,10 @@ export function ErrorBanner({
             transition: "background 0.15s",
           }}
           onMouseEnter={(e) => {
-            (e.target as HTMLButtonElement).style.background = "var(--rose-100, #ffe4e6)";
+            (e.currentTarget as HTMLButtonElement).style.background = "var(--rose-100, #ffe4e6)";
           }}
           onMouseLeave={(e) => {
-            (e.target as HTMLButtonElement).style.background = "transparent";
+            (e.currentTarget as HTMLButtonElement).style.background = "transparent";
           }}
         >
           <RefreshCw size={12} />
@@ -104,10 +104,10 @@ export function ErrorBanner({
           flexShrink: 0,
         }}
         onMouseEnter={(e) => {
-          (e.target as HTMLButtonElement).style.background = "var(--rose-700, #be123c)";
+          (e.currentTarget as HTMLButtonElement).style.background = "var(--rose-700, #be123c)";
         }}
         onMouseLeave={(e) => {
-          (e.target as HTMLButtonElement).style.background = "var(--rose-600, #e11d48)";
+          (e.currentTarget as HTMLButtonElement).style.background = "var(--rose-600, #e11d48)";
         }}
       >
         <RefreshCw size={14} />

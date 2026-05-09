@@ -54,12 +54,12 @@ function AppShell() {
   }, [registerActions, unregisterActions, navigate]);
 
   useEffect(() => {
-    const staticActions = createStaticPaletteActions(navigate);
+    const staticActions = createStaticPaletteActions();
     registerActions(staticActions);
     return () => {
       unregisterActions(staticActions.map((a) => a.id));
     };
-  }, [registerActions, unregisterActions, navigate]);
+  }, [registerActions, unregisterActions]);
 
   return (
     <div className="desktop-frame">

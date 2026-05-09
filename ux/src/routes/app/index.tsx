@@ -172,53 +172,6 @@ function Dashboard() {
     );
   }
 
-  if (taxonomiesError) {
-    return (
-      <div>
-        <div className="page-head">
-          <div>
-            <h1 style={{ fontSize: "var(--text-2xl)", fontWeight: 700, color: "var(--canvas-fg)", margin: 0 }}>
-              Dashboard
-            </h1>
-          </div>
-        </div>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "var(--space-4)",
-            padding: "var(--space-12, 48px)",
-            textAlign: "center",
-          }}
-        >
-          <p style={{ color: "var(--canvas-fg-3)", fontSize: "var(--text-sm)" }}>
-            Could not load dashboard data. Is the API server running?
-          </p>
-          <button
-            type="button"
-            onClick={() => refetchTaxonomies()}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "8px 16px",
-              borderRadius: "var(--radius-md, 6px)",
-              background: "var(--canvas-bd)",
-              border: "1px solid var(--canvas-bd-2)",
-              color: "var(--canvas-fg)",
-              fontSize: "var(--text-sm)",
-              cursor: "pointer",
-            }}
-          >
-            <RefreshCw size={13} />
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div>
       <div className="page-head">
@@ -233,7 +186,8 @@ function Dashboard() {
       </div>
 
       {/* Stat grid */}
-      <div className="stat-grid" style={{ marginBottom: "var(--space-6)" }}>
+      <ErrorBanner error={taxonomiesError} onRetry={refetchTaxonomies} message="Could not load taxonomies" compact />
+      <div className="stat-grid" style={{ marginBottom: "var(--space-6)", marginTop: taxonomiesError ? "var(--space-4)" : 0 }}>
         <StatTile
           label="Taxonomies"
           value={taxonomiesLoading ? <Skeleton width={40} height="1.5rem" /> : String(taxonomyCount)}
