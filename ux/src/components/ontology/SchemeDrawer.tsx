@@ -53,7 +53,7 @@ export function SchemeDrawer({ scheme, taxonomyName, onClose }: SchemeDrawerProp
     description,
   };
 
-  const { status, lastError } = useAutosave({
+  const { status } = useAutosave({
     data: updateData,
     mutationFn: async () => {
       if (!scheme || !isDirty) return;
@@ -66,13 +66,10 @@ export function SchemeDrawer({ scheme, taxonomyName, onClose }: SchemeDrawerProp
       });
       lastSavedAtRef.current = new Date();
     },
+    onError: (error) => {
+      toast("error", `Autosave failed: ${error.message}`);
+    },
   });
-
-  useEffect(() => {
-    if (lastError) {
-      toast("error", `Autosave failed: ${lastError.message}`);
-    }
-  }, [lastError, toast]);
 
   const revert = () => {
     if (scheme) {

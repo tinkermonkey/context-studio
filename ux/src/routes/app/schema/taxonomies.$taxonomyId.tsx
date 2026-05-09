@@ -67,6 +67,9 @@ function TaxonomyDetailContent({ taxonomy }: { taxonomy: TaxonomyResponse }) {
       });
       lastSavedAtRef.current = new Date();
     },
+    onError: (error) => {
+      toast("error", `Autosave failed: ${error.message}`);
+    },
   });
 
   const autosaveState: "saving" | "saved" | "error" | undefined = status === "idle" ? undefined : (status as "saving" | "saved" | "error");

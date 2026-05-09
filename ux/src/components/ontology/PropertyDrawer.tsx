@@ -37,7 +37,7 @@ export function PropertyDrawer({ property, onClose }: PropertyDrawerProps) {
     description: description || null,
   };
 
-  const { status, lastError } = useAutosave({
+  const { status } = useAutosave({
     data: updateData,
     mutationFn: async () => {
       if (!property || !isDirty) return;
@@ -50,13 +50,10 @@ export function PropertyDrawer({ property, onClose }: PropertyDrawerProps) {
       });
       lastSavedAtRef.current = new Date();
     },
+    onError: (error) => {
+      toast("error", `Autosave failed: ${error.message}`);
+    },
   });
-
-  useEffect(() => {
-    if (lastError) {
-      toast("error", `Autosave failed: ${lastError.message}`);
-    }
-  }, [lastError, toast]);
 
   const revert = () => {
     if (property) {
