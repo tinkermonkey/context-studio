@@ -25,7 +25,7 @@ These schemas handle serialization/deserialization between HTTP and domain model
 """
 
 from datetime import datetime
-from typing import Optional, Any, TypeVar, Generic
+from typing import Optional, Any, TypeVar, Generic, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -80,7 +80,7 @@ class TaxonomyResponse(BaseModel):
     version: int = Field(
         default=1, description="Version number for optimistic concurrency control"
     )
-    status: str = Field(
+    status: Literal["draft", "published"] = Field(
         default="draft", description="Publication status (draft or published)"
     )
 
@@ -120,7 +120,7 @@ class ConceptSchemeResponse(BaseModel):
     version: int = Field(
         default=1, description="Version number for optimistic concurrency control"
     )
-    status: str = Field(
+    status: Literal["draft", "published"] = Field(
         default="draft", description="Publication status (draft or published)"
     )
 
@@ -242,7 +242,7 @@ class ClassResponse(BaseModel):
     version: int = Field(
         default=1, description="Version number for optimistic concurrency control"
     )
-    status: str = Field(
+    status: Literal["draft", "published"] = Field(
         default="draft", description="Publication status (draft or published)"
     )
 
@@ -315,7 +315,7 @@ class PropertyDefinitionResponse(BaseModel):
     version: int = Field(
         default=1, description="Version number for optimistic concurrency control"
     )
-    status: str = Field(
+    status: Literal["draft", "published"] = Field(
         default="draft", description="Publication status (draft or published)"
     )
 
@@ -375,7 +375,7 @@ class IndividualResponse(BaseModel):
     version: int = Field(
         default=1, description="Version number for optimistic concurrency control"
     )
-    status: str = Field(
+    status: Literal["draft", "published"] = Field(
         default="draft", description="Publication status (draft or published)"
     )
 

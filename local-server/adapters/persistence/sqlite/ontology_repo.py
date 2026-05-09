@@ -12,7 +12,7 @@ Key responsibilities:
 - Hierarchical queries (parent-child relationships)
 """
 
-from typing import Optional, Any, cast
+from typing import Optional, Any, cast, Literal
 from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session, sessionmaker
@@ -28,7 +28,7 @@ from domain.ontology.entities import (
     Relationship,
     PropertyDefinition,
 )
-from domain.ontology.value_objects import SearchCriteria, NodeType
+from domain.ontology.value_objects import SearchCriteria, NodeType, Status
 
 from adapters.persistence.sqlite.models import (
     OntologyEntity,
@@ -119,7 +119,7 @@ class SQLiteOntologyRepository:
         limit: Optional[int] = 100,
         offset: int = 0,
         sort_by: Optional[str] = None,
-        sort_order: str = "asc",
+        sort_order: Literal["asc", "desc"] = "asc",
         query: Optional[str] = None,
     ) -> list[Taxonomy]:
         """
@@ -305,7 +305,7 @@ class SQLiteOntologyRepository:
         limit: Optional[int] = 100,
         offset: int = 0,
         sort_by: Optional[str] = None,
-        sort_order: str = "asc",
+        sort_order: Literal["asc", "desc"] = "asc",
         query: Optional[str] = None,
     ) -> list[ConceptScheme]:
         """
@@ -984,7 +984,7 @@ class SQLiteOntologyRepository:
         limit: Optional[int] = 100,
         offset: int = 0,
         sort_by: Optional[str] = None,
-        sort_order: str = "asc",
+        sort_order: Literal["asc", "desc"] = "asc",
         query: Optional[str] = None,
     ) -> list[PropertyDefinition]:
         """
@@ -1253,7 +1253,7 @@ class SQLiteOntologyRepository:
         limit: Optional[int] = 100,
         offset: int = 0,
         sort_by: Optional[str] = None,
-        sort_order: str = "asc",
+        sort_order: Literal["asc", "desc"] = "asc",
         query: Optional[str] = None,
     ) -> list[Relationship]:
         """
@@ -1482,6 +1482,7 @@ class SQLiteOntologyRepository:
             created_at=cast(datetime | None, orm_entity.created_at),
             last_modified=cast(datetime | None, orm_entity.last_modified),
             version=cast(int, orm_entity.version),
+            status=Status(cast(str, orm_entity.status)),
             data_properties=deserialize_data_properties(
                 cast(list[dict[str, Any]], orm_entity.data_properties) or []
             ),

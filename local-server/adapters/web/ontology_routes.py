@@ -135,7 +135,7 @@ async def list_taxonomies(
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     sort_by: Optional[str] = Query(
-        None, description="Field to sort by (title, created_at, last_modified)"
+        None, pattern="^(title|created_at|last_modified)$", description="Field to sort by (title, created_at, last_modified)"
     ),
     sort_order: str = Query("asc", pattern="^(asc|desc)$", description="Sort direction"),
     q: Optional[str] = Query(None, description="Text search query on title"),
@@ -361,7 +361,7 @@ async def list_concept_schemes(
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     sort_by: Optional[str] = Query(
-        None, description="Field to sort by (title, created_at, last_modified)"
+        None, pattern="^(title|created_at|last_modified)$", description="Field to sort by (title, created_at, last_modified)"
     ),
     sort_order: str = Query("asc", pattern="^(asc|desc)$", description="Sort direction"),
     q: Optional[str] = Query(None, description="Text search query on title"),
@@ -740,14 +740,13 @@ async def list_relationships(
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     sort_by: Optional[str] = Query(
-        None, description="Field to sort by (created_at)"
+        None, pattern="^created_at$", description="Field to sort by (created_at)"
     ),
     sort_order: str = Query("asc", pattern="^(asc|desc)$", description="Sort direction"),
-    q: Optional[str] = Query(None, description="Text search query (not used for relationships)"),
     service: OntologyService = Depends(get_ontology_service),
 ) -> ListResponse[RelationshipResponse]:
     """
-    Retrieve relationships with optional filtering, pagination, sorting, and text search.
+    Retrieve relationships with optional filtering, pagination, and sorting.
 
     Args:
         source_id: Optional source entity ID to filter by
@@ -757,7 +756,6 @@ async def list_relationships(
         offset: Number of results to skip (default 0)
         sort_by: Field to sort by (created_at)
         sort_order: Sort direction (asc or desc, default asc)
-        q: Text query (not used for relationships)
         service: OntologyService from dependency injection
 
     Returns:
@@ -773,7 +771,7 @@ async def list_relationships(
             offset=offset,
             sort_by=sort_by,
             sort_order=sort_order,
-            query=q,
+            query=None,
         )
         total = await run_sync_in_executor(
             service.count_relationships,
@@ -887,7 +885,7 @@ async def list_property_definitions(
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     sort_by: Optional[str] = Query(
-        None, description="Field to sort by (title, created_at, last_modified)"
+        None, pattern="^(title|created_at|last_modified)$", description="Field to sort by (title, created_at, last_modified)"
     ),
     sort_order: str = Query("asc", pattern="^(asc|desc)$", description="Sort direction"),
     q: Optional[str] = Query(None, description="Text search query on title"),

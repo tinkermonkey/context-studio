@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
+from typing import Literal
 from uuid import uuid4
 
 from domain.ports import EventPublisher
@@ -161,7 +162,7 @@ class OntologyService:
         limit: int | None = 100,
         offset: int = 0,
         sort_by: str | None = None,
-        sort_order: str = "asc",
+        sort_order: Literal["asc", "desc"] = "asc",
         query: str | None = None,
     ) -> list[Taxonomy]:
         """
@@ -561,7 +562,7 @@ class OntologyService:
         limit: int | None = 100,
         offset: int = 0,
         sort_by: str | None = None,
-        sort_order: str = "asc",
+        sort_order: Literal["asc", "desc"] = "asc",
         query: str | None = None,
     ) -> list[ConceptScheme]:
         """
@@ -1362,7 +1363,7 @@ class OntologyService:
         limit: int | None = 100,
         offset: int = 0,
         sort_by: str | None = None,
-        sort_order: str = "asc",
+        sort_order: Literal["asc", "desc"] = "asc",
         query: str | None = None,
     ) -> list[Relationship]:
         """
@@ -1654,7 +1655,7 @@ class OntologyService:
         limit: int | None = 100,
         offset: int = 0,
         sort_by: str | None = None,
-        sort_order: str = "asc",
+        sort_order: Literal["asc", "desc"] = "asc",
         query: str | None = None,
     ) -> list[PropertyDefinition]:
         """

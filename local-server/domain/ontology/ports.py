@@ -11,7 +11,7 @@ Implementations do not inherit from the protocol; they implement the interface s
 
 from __future__ import annotations
 
-from typing import Protocol, Sequence
+from typing import Protocol, Sequence, Literal
 
 from .entities import (
     Class,
@@ -50,7 +50,7 @@ class OntologyRepository(Protocol):
         limit: int | None = 100,
         offset: int = 0,
         sort_by: str | None = None,
-        sort_order: str = "asc",
+        sort_order: Literal["asc", "desc"] = "asc",
         query: str | None = None,
     ) -> list[Taxonomy]:
         """
@@ -123,7 +123,7 @@ class OntologyRepository(Protocol):
         limit: int | None = 100,
         offset: int = 0,
         sort_by: str | None = None,
-        sort_order: str = "asc",
+        sort_order: Literal["asc", "desc"] = "asc",
         query: str | None = None,
     ) -> list[ConceptScheme]:
         """
@@ -284,7 +284,7 @@ class OntologyRepository(Protocol):
         limit: int | None = 100,
         offset: int = 0,
         sort_by: str | None = None,
-        sort_order: str = "asc",
+        sort_order: Literal["asc", "desc"] = "asc",
         query: str | None = None,
     ) -> list[Relationship]:
         """
@@ -381,7 +381,7 @@ class OntologyRepository(Protocol):
         limit: int | None = 100,
         offset: int = 0,
         sort_by: str | None = None,
-        sort_order: str = "asc",
+        sort_order: Literal["asc", "desc"] = "asc",
         query: str | None = None,
     ) -> list[PropertyDefinition]:
         """

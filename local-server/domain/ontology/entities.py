@@ -17,6 +17,7 @@ from .value_objects import (
     ExternalReference,
     LexicalSense,
     OntologyMapping,
+    Status,
 )
 
 
@@ -41,7 +42,7 @@ class Taxonomy:
     created_at: datetime | None = None
     last_modified: datetime | None = None
     version: int = 1
-    status: str = "draft"
+    status: Status = Status.DRAFT
 
     def rename(self, new_title: str) -> None:
         """
@@ -82,7 +83,7 @@ class ConceptScheme:
     created_at: datetime | None = None
     last_modified: datetime | None = None
     version: int = 1
-    status: str = "draft"
+    status: Status = Status.DRAFT
 
     def rename(self, new_title: str) -> None:
         """
@@ -137,7 +138,7 @@ class Class:
     created_at: datetime | None = None
     last_modified: datetime | None = None
     version: int = 1
-    status: str = "draft"
+    status: Status = Status.DRAFT
 
     def rename(self, new_title: str) -> None:
         """
@@ -205,7 +206,7 @@ class Individual:
     created_at: datetime | None = None
     last_modified: datetime | None = None
     version: int = 1
-    status: str = "draft"
+    status: Status = Status.DRAFT
 
     def __post_init__(self) -> None:
         """Validate individual invariants."""
@@ -338,7 +339,7 @@ class PropertyDefinition:
     created_at: datetime | None = None
     last_modified: datetime | None = None
     version: int = 1
-    status: str = "draft"
+    status: Status = Status.DRAFT
 
     def rename(self, new_title: str) -> None:
         """
