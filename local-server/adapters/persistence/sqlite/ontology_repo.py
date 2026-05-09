@@ -226,6 +226,7 @@ class SQLiteOntologyRepository:
                 # Update existing
                 orm_entity.title = taxonomy.title  # type: ignore[assignment]
                 orm_entity.description = taxonomy.description  # type: ignore[assignment]
+                orm_entity.status = taxonomy.status.value  # type: ignore[assignment]
                 orm_entity.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
                 orm_entity.version = orm_entity.version + 1  # type: ignore[assignment]
 
@@ -428,6 +429,7 @@ class SQLiteOntologyRepository:
                 # Update existing
                 orm_entity.title = scheme.title  # type: ignore[assignment]
                 orm_entity.description = scheme.description  # type: ignore[assignment]
+                orm_entity.status = scheme.status.value  # type: ignore[assignment]
                 orm_entity.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
                 orm_entity.version = orm_entity.version + 1  # type: ignore[assignment]
 
@@ -657,6 +659,7 @@ class SQLiteOntologyRepository:
                 orm_entity.lexical_senses = mapped_orm.lexical_senses  # type: ignore[assignment]
                 orm_entity.data_properties = mapped_orm.data_properties  # type: ignore[assignment]
                 orm_entity.embedding = mapped_orm.embedding  # type: ignore[assignment]
+                orm_entity.status = cls.status.value  # type: ignore[assignment]
                 orm_entity.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
                 orm_entity.version = orm_entity.version + 1  # type: ignore[assignment]
 
@@ -883,6 +886,7 @@ class SQLiteOntologyRepository:
                 orm_entity.description = individual.description  # type: ignore[assignment]
                 orm_entity.data_properties = mapped_orm.data_properties  # type: ignore[assignment]
                 orm_entity.external_references = mapped_orm.external_references  # type: ignore[assignment]
+                orm_entity.status = individual.status.value  # type: ignore[assignment]
                 orm_entity.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
                 orm_entity.version = orm_entity.version + 1  # type: ignore[assignment]
 
@@ -1163,6 +1167,7 @@ class SQLiteOntologyRepository:
                 orm_entity.identifier = prop.identifier  # type: ignore[assignment]
                 orm_entity.ontology_mapping = mapped_orm.ontology_mapping  # type: ignore[assignment]
                 orm_entity.is_relevant = prop.is_relevant  # type: ignore[assignment]
+                orm_entity.status = prop.status.value  # type: ignore[assignment]
                 orm_entity.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
                 orm_entity.version = orm_entity.version + 1  # type: ignore[assignment]
 
