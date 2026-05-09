@@ -1,13 +1,222 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Network, Database, Cpu, GitBranch } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Network, Layers, GitBranch, Cpu, Plus, RefreshCw } from "lucide-react";
 import { StatTile } from "@/components/ui/StatTile";
 import { Panel } from "@/components/ui/Panel";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { PipelineCard } from "@/components/pipeline/PipelineCard";
+import { useHealth } from "@/api/hooks/admin";
+import { useTaxonomies } from "@/api/hooks/ontology";
+import { useClasses } from "@/api/hooks/ontology";
+import { useIndividuals } from "@/api/hooks/ontology";
+import { usePipelines } from "@/api/hooks/pipeline";
+import { useChanges } from "@/api/hooks/versioning";
 
 export const Route = createFileRoute("/app/")({
   component: Dashboard,
 });
 
+function formatRelativeTime(isoString: string): string {
+  const now = Date.now();
+  const ts = new Date(isoString).getTime();
+  const diffMs = now - ts;
+  const diffMin = Math.floor(diffMs / 60_000);
+  if (diffMin < 1) return "just now";
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffH = Math.floor(diffMin / 60);
+  if (diffH < 24) return `${diffH}h ago`;
+  return `${Math.floor(diffH / 24)}d ago`;
+}
+
+function changeOperationColor(op: string): string {
+  switch (op) {
+    case "create":
+      return "#22D3EE";
+    case "update":
+      return "#A78BFA";
+    case "delete":
+      return "#F87171";
+    default:
+      return "var(--canvas-fg-3)";
+  }
+}
+
+function EmptyState() {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "var(--space-12, 48px) var(--space-6)",
+        gap: "var(--space-6)",
+        textAlign: "center",
+      }}
+    >
+      <Network size={48} style={{ color: "var(--canvas-fg-3)" }} />
+      <div>
+        <h2
+          style={{
+            fontSize: "var(--text-xl)",
+            fontWeight: 600,
+            color: "var(--canvas-fg)",
+            margin: "0 0 8px",
+          }}
+        >
+          Welcome to Context Studio
+        </h2>
+        <p style={{ fontSize: "var(--text-sm)", color: "var(--canvas-fg-3)", margin: 0 }}>
+          Start building your knowledge graph
+        </p>
+      </div>
+      <div style={{ display: "flex", gap: "var(--space-3)", flexWrap: "wrap", justifyContent: "center" }}>
+        <Link to="/app/schema/taxonomies">
+          <button
+            type="button"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "10px 18px",
+              borderRadius: "var(--radius-lg, 10px)",
+              background: "var(--canvas-bd)",
+              border: "1px solid var(--canvas-bd-2)",
+              color: "var(--canvas-fg)",
+              fontSize: "var(--text-sm)",
+              fontWeight: 500,
+              cursor: "pointer",
+            }}
+          >
+            <Plus size={14} />
+            Create taxonomy
+          </button>
+        </Link>
+        <Link to="/app/pipelines">
+          <button
+            type="button"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "10px 18px",
+              borderRadius: "var(--radius-lg, 10px)",
+              background: "var(--canvas-bd)",
+              border: "1px solid var(--canvas-bd-2)",
+              color: "var(--canvas-fg)",
+              fontSize: "var(--text-sm)",
+              fontWeight: 500,
+              cursor: "pointer",
+            }}
+          >
+            <Cpu size={14} />
+            Run pipeline
+          </button>
+        </Link>
+        <Link to="/app/reference/sources">
+          <button
+            type="button"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "10px 18px",
+              borderRadius: "var(--radius-lg, 10px)",
+              background: "var(--canvas-bd)",
+              border: "1px solid var(--canvas-bd-2)",
+              color: "var(--canvas-fg)",
+              fontSize: "var(--text-sm)",
+              fontWeight: 500,
+              cursor: "pointer",
+            }}
+          >
+            <GitBranch size={14} />
+            Import data
+          </button>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 function Dashboard() {
+  const { data: health } = useHealth();
+  const { data: taxonomies, isLoading: taxonomiesLoading, error: taxonomiesError, refetch: refetchTaxonomies } = useTaxonomies();
+  const { data: classes, isLoading: classesLoading } = useClasses();
+  const { data: individuals, isLoading: individualsLoading } = useIndividuals();
+  const { data: pipelines, isLoading: pipelinesLoading } = usePipelines();
+  const { data: changesData, isLoading: changesLoading } = useChanges({ limit: 10 });
+
+  const taxonomyCount = taxonomies?.total ?? 0;
+  const classCount = classes?.total ?? 0;
+  const individualCount = individuals?.total ?? 0;
+  const pipelineCount = pipelines?.length ?? 0;
+  const isEmptyState = !taxonomiesLoading && !taxonomiesError && taxonomyCount === 0;
+
+  if (isEmptyState) {
+    return (
+      <div>
+        <div className="page-head">
+          <div>
+            <h1 style={{ fontSize: "var(--text-2xl)", fontWeight: 700, color: "var(--canvas-fg)", margin: 0 }}>
+              Dashboard
+            </h1>
+            <p style={{ fontSize: "var(--text-sm)", color: "var(--canvas-fg-3)", marginTop: 4 }}>
+              Knowledge graph overview
+            </p>
+          </div>
+        </div>
+        <EmptyState />
+      </div>
+    );
+  }
+
+  if (taxonomiesError) {
+    return (
+      <div>
+        <div className="page-head">
+          <div>
+            <h1 style={{ fontSize: "var(--text-2xl)", fontWeight: 700, color: "var(--canvas-fg)", margin: 0 }}>
+              Dashboard
+            </h1>
+          </div>
+        </div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "var(--space-4)",
+            padding: "var(--space-12, 48px)",
+            textAlign: "center",
+          }}
+        >
+          <p style={{ color: "var(--canvas-fg-3)", fontSize: "var(--text-sm)" }}>
+            Could not load dashboard data. Is the API server running?
+          </p>
+          <button
+            type="button"
+            onClick={() => refetchTaxonomies()}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 16px",
+              borderRadius: "var(--radius-md, 6px)",
+              background: "var(--canvas-bd)",
+              border: "1px solid var(--canvas-bd-2)",
+              color: "var(--canvas-fg)",
+              fontSize: "var(--text-sm)",
+              cursor: "pointer",
+            }}
+          >
+            <RefreshCw size={13} />
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="page-head">
@@ -21,50 +230,182 @@ function Dashboard() {
         </div>
       </div>
 
+      {/* Stat grid */}
       <div className="stat-grid" style={{ marginBottom: "var(--space-6)" }}>
-        <StatTile label="Classes" value="22" color="cyan" sub="across 4 taxonomies" />
-        <StatTile label="Individuals" value="267" color="violet" sub="indexed" />
-        <StatTile label="Relationships" value="1,204" color="amber" sub="typed edges" />
-        <StatTile label="Pipelines" value="11" color="emerald" sub="1 running" />
+        <StatTile
+          label="Taxonomies"
+          value={taxonomiesLoading ? <Skeleton width={40} height="1.5rem" /> : String(taxonomyCount)}
+          color="cyan"
+          sub="knowledge domains"
+        />
+        <StatTile
+          label="Classes"
+          value={classesLoading ? <Skeleton width={40} height="1.5rem" /> : String(classCount)}
+          color="violet"
+          sub="concept types"
+        />
+        <StatTile
+          label="Individuals"
+          value={individualsLoading ? <Skeleton width={40} height="1.5rem" /> : String(individualCount)}
+          color="amber"
+          sub="indexed instances"
+        />
+        <StatTile
+          label="Pipelines"
+          value={pipelinesLoading ? <Skeleton width={40} height="1.5rem" /> : String(pipelineCount)}
+          color="emerald"
+          sub={`${pipelines?.filter((p) => p.enabled).length ?? 0} enabled`}
+        />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-6)" }}>
+      {/* Two-column layout */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-6)", marginBottom: "var(--space-6)" }}>
+        {/* Recent Activity */}
         <Panel title="Recent Activity">
-          <div className="activity-list">
-            {[
-              { color: "#22D3EE", label: "New class added", sub: "PhotosyntheticOrganism · 2m ago" },
-              { color: "#10B981", label: "Pipeline completed", sub: "pubmed_genes · 12m ago" },
-              { color: "#A78BFA", label: "Relationship created", sub: "hasSubclass · 1h ago" },
-              { color: "#F59E0B", label: "Individual updated", sub: "Arabidopsis thaliana · 2h ago" },
-            ].map((item, i) => (
-              <div key={i} className="activity-item">
-                <span className="activity-dot" style={{ background: item.color }} />
-                <div>
-                  <div style={{ fontSize: "var(--text-sm)", color: "var(--canvas-fg)" }}>{item.label}</div>
-                  <div style={{ fontSize: "var(--text-xs)", color: "var(--canvas-fg-3)", fontFamily: "var(--mono)" }}>{item.sub}</div>
-                </div>
-              </div>
-            ))}
-          </div>
+          {changesLoading ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} height="36px" style={{ borderRadius: "var(--radius-md, 6px)" }} />
+              ))}
+            </div>
+          ) : !changesData?.events.length ? (
+            <p style={{ fontSize: "var(--text-sm)", color: "var(--canvas-fg-3)", margin: 0 }}>
+              No recent changes.
+            </p>
+          ) : (
+            <div className="activity-list">
+              {changesData.events.slice(0, 8).map((event) => {
+                const stateTitle =
+                  typeof event.new_state?.title === "string"
+                    ? event.new_state.title
+                    : event.entity_id;
+                return (
+                  <div key={event.id} className="activity-item">
+                    <span
+                      className="activity-dot"
+                      style={{ background: changeOperationColor(event.operation) }}
+                    />
+                    <div>
+                      <div style={{ fontSize: "var(--text-sm)", color: "var(--canvas-fg)" }}>
+                        {event.operation} {event.entity_type}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "var(--text-xs)",
+                          color: "var(--canvas-fg-3)",
+                          fontFamily: "var(--mono)",
+                        }}
+                      >
+                        {stateTitle} · {formatRelativeTime(event.timestamp)}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </Panel>
 
-        <Panel title="Graph Health">
-          <div className="kv" style={{ display: "grid", gridTemplateColumns: "120px 1fr", gap: "8px 16px" }}>
-            {[
-              ["Nodes", "289"],
-              ["Edges", "1,204"],
-              ["Orphans", "3"],
-              ["Max depth", "6"],
-              ["Avg degree", "4.2"],
-            ].map(([k, v]) => (
-              <>
-                <dt key={k + "-k"} style={{ fontFamily: "var(--mono)", fontSize: "11px", color: "var(--canvas-fg-3)", textTransform: "uppercase", letterSpacing: "0.07em" }}>{k}</dt>
-                <dd key={k + "-v"} style={{ margin: 0, fontFamily: "var(--mono)", fontSize: "13px", color: "var(--canvas-fg)" }}>{v}</dd>
-              </>
-            ))}
-          </div>
+        {/* Graph Health / Quick Stats */}
+        <Panel title="System Status">
+          {!health ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} height="20px" />
+              ))}
+            </div>
+          ) : (
+            <div
+              className="kv"
+              style={{
+                display: "grid",
+                gridTemplateColumns: "140px 1fr",
+                gap: "8px 16px",
+                alignItems: "center",
+              }}
+            >
+              {([
+                ["Status", health.status],
+                ["Database", health.database_connected ? "connected" : "unavailable"],
+                ["NLP pipeline", health.nlp_pipeline_ready ? "ready" : "not loaded"],
+                ["Embedding model", health.embedding_model_loaded ? "loaded" : "not loaded"],
+                ["LLM providers", (health.llm_providers_available ?? []).join(", ") || "none"],
+                ["Uptime", `${Math.floor(health.uptime_seconds / 60)}m`],
+              ] as [string, string][]).map(([k, v]) => (
+                <>
+                  <dt
+                    key={`${k}-k`}
+                    style={{
+                      fontFamily: "var(--mono)",
+                      fontSize: "11px",
+                      color: "var(--canvas-fg-3)",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.07em",
+                      margin: 0,
+                    }}
+                  >
+                    {k}
+                  </dt>
+                  <dd
+                    key={`${k}-v`}
+                    style={{
+                      margin: 0,
+                      fontFamily: "var(--mono)",
+                      fontSize: "13px",
+                      color:
+                        v === "connected" || v === "ready" || v === "loaded"
+                          ? "var(--accent-emerald, #10b981)"
+                          : v === "unavailable" || v === "not loaded"
+                            ? "var(--rose-400, #fb7185)"
+                            : "var(--canvas-fg)",
+                    }}
+                  >
+                    {v}
+                  </dd>
+                </>
+              ))}
+            </div>
+          )}
         </Panel>
       </div>
+
+      {/* Active Pipelines */}
+      {!pipelinesLoading && pipelines && pipelines.length > 0 && (
+        <div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "var(--space-2)",
+              marginBottom: "var(--space-4)",
+            }}
+          >
+            <Layers size={16} style={{ color: "var(--canvas-fg-3)" }} />
+            <span
+              style={{
+                fontSize: "var(--text-sm)",
+                fontWeight: 600,
+                color: "var(--canvas-fg)",
+              }}
+            >
+              Active Pipelines
+            </span>
+          </div>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+              gap: "var(--space-4)",
+            }}
+          >
+            {pipelines
+              .filter((p) => p.enabled)
+              .map((pipeline) => (
+                <PipelineCard key={pipeline.id} pipeline={pipeline} />
+              ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

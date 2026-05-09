@@ -820,4 +820,12 @@ body.dark-canvas .topbar { background: var(--shell-bg); }
   .status-pulse::after { animation: none; }
   .palette-backdrop { animation: none; }
   .palette { animation: none; }
+  .skeleton-shimmer { animation: none; }
+}
+
+/* ------------ Skeleton shimmer ------------ */
+@keyframes skeleton-shimmer {
+  0%   { opacity: 1; }
+  50%  { opacity: 0.5; }
+  100% { opacity: 1; }
 }
