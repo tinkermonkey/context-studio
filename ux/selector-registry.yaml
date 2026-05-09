@@ -287,6 +287,3 @@ selectors:
   - selector: taxonomy-detail-delete-confirm
     component: routes/app/schema/taxonomies.$taxonomyId.tsx
     description: Confirmation dialog for deleting taxonomy from detail page
-  - selector: taxonomy-detail-publish-dialog
-    component: routes/app/schema/taxonomies.$taxonomyId.tsx
-    description: Modal dialog for publishing taxonomy from detail page (now using TaxonomyPublishDialog)

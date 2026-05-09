@@ -30,7 +30,6 @@ function TaxonomyDetailContent({ taxonomy }: { taxonomy: TaxonomyResponse }) {
   const { toast } = useToasts();
   const updateMutation = useUpdateTaxonomy();
   const deleteMutation = useDeleteTaxonomy();
-  const publishMutation = usePublishTaxonomy();
   const { data: schemesResponse } = useSchemes(taxonomy.id);
   const schemes = schemesResponse?.items || [];
 
@@ -238,7 +237,6 @@ interface RouteParams {
 function TaxonomyDetailPage() {
   const { taxonomyId } = Route.useParams() as RouteParams;
   const { data: taxonomy, isLoading, error, refetch } = useTaxonomy(taxonomyId);
-  const { toasts, dismiss } = useToasts();
 
   if (isLoading) {
     return (
