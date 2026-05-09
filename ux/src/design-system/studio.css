@@ -423,7 +423,11 @@ a { color: inherit; text-decoration: none; }
 .stat .meta .delta-dn { color: var(--accent-rose); font-weight: 500; }
 
 /* ------------ Tables ------------ */
-.table-wrap { width: 100%; overflow: auto; }
+.table-wrap {
+  width: 100%; overflow: auto;
+  border: 1px solid var(--canvas-bd);
+  border-radius: 8px;
+}
 table.t {
   width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px;
 }

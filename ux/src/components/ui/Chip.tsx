@@ -10,5 +10,10 @@ interface ChipProps {
 
 export function Chip({ color, children, className = "" }: ChipProps) {
   const classes = ["chip", color, className].filter(Boolean).join(" ");
-  return <span className={classes}>{children}</span>;
+  return (
+    <span className={classes}>
+      {color && <span className="dot" />}
+      {children}
+    </span>
+  );
 }

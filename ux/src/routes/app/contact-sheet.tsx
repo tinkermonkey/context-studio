@@ -221,23 +221,23 @@ export default function ContactSheet() {
 
       {/* ── Hierarchy Tree ── */}
       <Section title="Hierarchy Tree (kg-tree)">
-        <div className="panel" style={{ maxWidth: 360 }}>
+        <div className="panel" style={{ maxWidth: 480 }}>
           <div className="kg-tree">
             {[
-              { label: "Life Sciences", kind: "TAX", depth: 0, domain: "life" },
-              { label: "PlantOntology", kind: "SCH", depth: 1, domain: "life" },
-              { label: "PhotosyntheticOrganism", kind: "CLS", depth: 2, domain: "life" },
-              { label: "VascularPlant", kind: "CLS", depth: 3, domain: "life" },
-              { label: "Climate Science", kind: "TAX", depth: 0, domain: "climate" },
-              { label: "AtmosphericCO2", kind: "CLS", depth: 1, domain: "climate" },
+              { label: "life.thing", badge: "root", depth: 0, domain: "life", desc: "All biological entities" },
+              { label: "life.organism", badge: "1,247", depth: 1, domain: "life", desc: "Any living organism" },
+              { label: "life.organism.mammal", badge: "312", depth: 2, domain: "life", desc: "Warm-blooded vertebrates", selected: true },
+              { label: "climate.station", badge: "89", depth: 0, domain: "climate", desc: "Weather monitoring stations" },
             ].map((node, i) => (
-              <div key={i} className="kg-row" data-depth={node.depth}>
-                <span className="kg-node" data-domain={node.domain}>
-                  <span className="kg-swatch" />
-                  {node.label}
-                </span>
-                <span className="kg-kind">{node.kind}</span>
-                <ChevronRight size={10} style={{ marginLeft: "auto", color: "var(--canvas-fg-4)" }} />
+              <div key={i} className="kg-row">
+                <div className="kg-cell kg-cell-l" data-depth={node.depth}>
+                  <span className={`kg-node${node.selected ? " selected" : ""}`} data-domain={node.domain}>
+                    <span className="swatch" />
+                    {node.label}
+                    <span className="badge-tiny">{node.badge}</span>
+                  </span>
+                </div>
+                <div className="kg-desc">{node.desc}</div>
               </div>
             ))}
           </div>
@@ -246,27 +246,38 @@ export default function ContactSheet() {
 
       {/* ── Pipeline Card ── */}
       <Section title="Pipeline Card">
-        <div style={{ maxWidth: 480 }}>
+        <div style={{ maxWidth: 560 }}>
           <div className="pipeline-card">
             <div className="pipeline-card-head">
-              <span style={{ fontWeight: 600, color: "var(--canvas-fg)" }}>pubmed_genes</span>
+              <div>
+                <div className="name">Ingest organisms · GBIF</div>
+                <div className="desc">Pull species records, normalize names, write to life.organism</div>
+              </div>
               <Chip color="amber">running</Chip>
             </div>
             <div className="pipeline-card-flow">
               {[
-                { label: "Fetch", kind: "fetch" },
-                { label: "Extract", kind: "extract" },
-                { label: "Embed", kind: "embed" },
-                { label: "Graph", kind: "graph" },
+                { label: "GBIF API", sub: "source", kind: "source" },
+                { label: "Extract", sub: "12 fields", kind: "extract" },
+                { label: "Resolve", sub: "match by name", kind: "resolve" },
+                { label: "Write", sub: "life.organism", kind: "write" },
               ].map((node, i, arr) => (
-                <span key={node.label} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                  <span className="flow-node" data-kind={node.kind}>{node.label}</span>
-                  {i < arr.length - 1 && <span className="flow-arrow">→</span>}
+                <span key={node.kind} style={{ display: "flex", alignItems: "center" }}>
+                  <div className="flow-node" data-kind={node.kind}>
+                    <div className="ic" />
+                    <div>
+                      <div className="name">{node.label}</div>
+                      <div className="sub">{node.sub}</div>
+                    </div>
+                  </div>
+                  {i < arr.length - 1 && <div className="flow-arrow" />}
                 </span>
               ))}
             </div>
-            <div style={{ fontSize: "var(--text-xs)", color: "var(--canvas-fg-3)", fontFamily: "var(--mono)", marginTop: "var(--space-2)" }}>
-              38% · ~4m remaining
+            <div className="pipeline-card-foot" style={{ display: "flex", gap: 18, padding: "10px 14px", borderTop: "1px solid var(--canvas-bd)", background: "var(--canvas-bg-2)", fontSize: 12 }}>
+              <div><div style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--canvas-fg-3)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Last run</div><div style={{ fontWeight: 600 }}>2m ago</div></div>
+              <div><div style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--canvas-fg-3)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Records</div><div style={{ fontWeight: 600 }}>12,480</div></div>
+              <div><div style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--canvas-fg-3)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Status</div><div style={{ fontWeight: 600, color: "var(--accent-emerald)" }}>38% running</div></div>
             </div>
           </div>
         </div>

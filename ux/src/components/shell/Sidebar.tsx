@@ -67,11 +67,12 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = location.pathname;
 
   function isParentActive(id: string) {
-    return pathname.includes(`/${id}`);
+    return pathname.startsWith(`/app/${id}`);
   }
 
   function isLeafActive(path: string) {
-    return pathname === path || pathname.startsWith(path + "/");
+    // Exact match only — prevents /app matching /app/schema etc.
+    return pathname === path;
   }
 
   return (

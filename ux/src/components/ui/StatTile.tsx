@@ -11,10 +11,10 @@ interface StatTileProps {
 
 export function StatTile({ label, value, color = "cyan", sub }: StatTileProps) {
   return (
-    <div className={`stat stat-${color}`}>
-      <div className="stat-label">{label}</div>
-      <div className="stat-value">{value}</div>
-      {sub && <div className="stat-sub">{sub}</div>}
+    <div className="stat" data-color={color}>
+      <div className="label">{label}</div>
+      <div className="num">{value}</div>
+      {sub && <div className="meta">{sub}</div>}
     </div>
   );
 }

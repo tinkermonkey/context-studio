@@ -33,11 +33,10 @@ export function CommandPalette() {
   return (
     <div className="palette-backdrop" onClick={closePalette}>
       <div className="palette" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal aria-label="Command palette">
-        <div className="palette-search">
-          <Search size={15} />
+        <div className="palette-input-row">
+          <Search size={18} />
           <input
             ref={inputRef}
-            className="palette-input"
             placeholder="Search or run command…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -58,15 +57,20 @@ export function CommandPalette() {
                   closePalette();
                 }}
               >
-                {action.icon && <span className="palette-item-icon">{action.icon}</span>}
-                <span className="palette-item-label">{action.label}</span>
+                {action.icon && <span className="palette-kind">{action.icon}</span>}
+                <span className="palette-label">{action.label}</span>
                 {action.description && (
-                  <span className="palette-item-desc">{action.description}</span>
+                  <span className="palette-hint">{action.description}</span>
                 )}
-                {action.shortcut && <kbd className="palette-item-kbd">{action.shortcut}</kbd>}
+                <span className="palette-arrow">↵</span>
               </button>
             ))
           )}
+        </div>
+        <div className="palette-foot">
+          <span>↑↓ navigate</span>
+          <span>↵ open</span>
+          <span>esc close</span>
         </div>
       </div>
     </div>

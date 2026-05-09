@@ -10,19 +10,18 @@ export function Titlebar({ workspaceName = "Context Studio" }: TitlebarProps) {
 
   return (
     <div className="titlebar">
-      <div className="titlebar-lights">
-        <span className="tl-dot tl-close" />
-        <span className="tl-dot tl-min" />
-        <span className="tl-dot tl-max" />
+      <div className="lights">
+        <span className="l-close" title="Close" />
+        <span className="l-min" title="Minimize" />
+        <span className="l-max" title="Zoom" />
       </div>
-      <button className="ws-btn" type="button">
-        <span className="ws-name">{workspaceName}</span>
-        <span className="ws-chevron">⌄</span>
+      <button className="titlebar-ws" type="button">
+        <span>{workspaceName}</span>
       </button>
-      <div className="titlebar-drag" />
-      <button className="cmd-chip" onClick={openPalette} type="button">
-        <Command size={10} strokeWidth={2} />
-        <span>K</span>
+      <div className="titlebar-spacer" />
+      <button className="titlebar-btn" onClick={openPalette} type="button" title="Command palette (⌘K)">
+        <Command size={12} strokeWidth={2} />
+        <span className="kbd-mini">⌘K</span>
       </button>
     </div>
   );
