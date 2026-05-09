@@ -6,10 +6,7 @@ interface WorkspaceSwitcherProps {
   isLoading?: boolean;
 }
 
-export function WorkspaceSwitcher({
-  onSelect,
-  isLoading = false,
-}: WorkspaceSwitcherProps) {
+export function WorkspaceSwitcher({ onSelect: _, isLoading = false }: WorkspaceSwitcherProps) {
   const [isSelectingFolder, setIsSelectingFolder] = useState(false);
 
   const handleOpenFolder = async () => {
@@ -91,20 +88,13 @@ interface TileProps {
   disabled?: boolean;
 }
 
-function Tile({
-  testId,
-  icon,
-  title,
-  description,
-  onClick,
-  disabled = false,
-}: TileProps) {
+function Tile({ testId, icon, title, description, onClick, disabled = false }: TileProps) {
   return (
     <button
       data-testid={testId}
       onClick={onClick}
       disabled={disabled}
-      className="flex flex-col items-center gap-4 rounded-lg border border-gray-700 bg-gray-800 px-6 py-6 transition-all hover:border-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
+      className="flex flex-col items-center gap-4 rounded-lg border border-gray-700 bg-gray-800 px-6 py-6 transition-all hover:border-cyan-500 disabled:cursor-not-allowed disabled:opacity-50"
     >
       <div className="text-gray-500">{icon}</div>
       <div className="text-center">
