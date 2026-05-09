@@ -23,6 +23,16 @@ local-server/reports/
 local-server/.benchmark-cache/
 local-server/configs/extraction-experimental.json
 
+# UX
+ux/.benchmark-cache
+ux/logs
+ux/node_modules
+ux/dist/
+ux/.vite/
+
+# Screenshots (Claude debugging/review artifacts)
+screenshots/
+
 # Build and runtime artifacts
 *.log
 __pycache__/
