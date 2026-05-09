@@ -114,19 +114,52 @@ class SQLiteOntologyRepository:
             if close_session:
                 session.close()
 
-    def list_taxonomies(self) -> list[Taxonomy]:
+    def list_taxonomies(
+        self,
+        limit: Optional[int] = 100,
+        offset: int = 0,
+        sort_by: Optional[str] = None,
+        sort_order: str = "asc",
+        query: Optional[str] = None,
+    ) -> list[Taxonomy]:
         """
-        Retrieve all taxonomies.
+        Retrieve taxonomies with optional pagination, sorting, and text search.
+
+        Args:
+            limit: Maximum number of results to return; None means no limit
+            offset: Number of results to skip
+            sort_by: Field to sort by (title, created_at, last_modified); None for default
+            sort_order: Sort direction (asc or desc)
+            query: Text query for LIKE search on title
 
         Returns:
             Sequence of Taxonomy entities
         """
         with self.session_factory() as session:
-            orm_entities = (
-                session.query(OntologyEntity)
-                .filter(OntologyEntity.node_type == NodeType.TAXONOMY)
-                .all()
+            q = session.query(OntologyEntity).filter(
+                OntologyEntity.node_type == NodeType.TAXONOMY
             )
+
+            if query:
+                q = q.filter(OntologyEntity.title.like(f"%{query}%"))
+
+            if sort_by == "title":
+                col = OntologyEntity.title
+            elif sort_by == "created_at":
+                col = OntologyEntity.created_at
+            elif sort_by == "last_modified":
+                col = OntologyEntity.last_modified
+            else:
+                col = OntologyEntity.created_at
+
+            if sort_order.lower() == "desc":
+                q = q.order_by(col.desc())
+            else:
+                q = q.order_by(col.asc())
+
+            if limit is not None:
+                q = q.limit(limit)
+            orm_entities = q.offset(offset).all()
             return [cast(Taxonomy, map_orm_to_domain(e)) for e in orm_entities]
 
     def save_taxonomy(self, taxonomy: Taxonomy) -> Taxonomy:
@@ -247,26 +280,56 @@ class SQLiteOntologyRepository:
                 session.close()
 
     def list_concept_schemes(
-        self, taxonomy_id: Optional[str] = None
+        self,
+        taxonomy_id: Optional[str] = None,
+        limit: Optional[int] = 100,
+        offset: int = 0,
+        sort_by: Optional[str] = None,
+        sort_order: str = "asc",
+        query: Optional[str] = None,
     ) -> list[ConceptScheme]:
         """
-        List concept schemes, optionally filtered by taxonomy.
+        List concept schemes with optional filtering, pagination, sorting, and text search.
 
         Args:
             taxonomy_id: Optional taxonomy ID to filter by
+            limit: Maximum number of results to return; None means no limit
+            offset: Number of results to skip
+            sort_by: Field to sort by (title, created_at, last_modified); None for default
+            sort_order: Sort direction (asc or desc)
+            query: Text query for LIKE search on title
 
         Returns:
             Sequence of ConceptScheme entities
         """
         with self.session_factory() as session:
-            query = session.query(OntologyEntity).filter(
+            q = session.query(OntologyEntity).filter(
                 OntologyEntity.node_type == NodeType.CONCEPT_SCHEME
             )
 
             if taxonomy_id is not None:
-                query = query.filter(OntologyEntity.taxonomy_id == taxonomy_id)
+                q = q.filter(OntologyEntity.taxonomy_id == taxonomy_id)
 
-            orm_entities = query.all()
+            if query:
+                q = q.filter(OntologyEntity.title.like(f"%{query}%"))
+
+            if sort_by == "title":
+                col = OntologyEntity.title
+            elif sort_by == "created_at":
+                col = OntologyEntity.created_at
+            elif sort_by == "last_modified":
+                col = OntologyEntity.last_modified
+            else:
+                col = OntologyEntity.created_at
+
+            if sort_order.lower() == "desc":
+                q = q.order_by(col.desc())
+            else:
+                q = q.order_by(col.asc())
+
+            if limit is not None:
+                q = q.limit(limit)
+            orm_entities = q.offset(offset).all()
             return [cast(ConceptScheme, map_orm_to_domain(e)) for e in orm_entities]
 
     def save_concept_scheme(self, scheme: ConceptScheme) -> ConceptScheme:
@@ -872,29 +935,54 @@ class SQLiteOntologyRepository:
     def list_property_definitions(
         self,
         is_relevant: Optional[bool] = None,
-        limit: int = 100,
+        limit: Optional[int] = 100,
         offset: int = 0,
+        sort_by: Optional[str] = None,
+        sort_order: str = "asc",
+        query: Optional[str] = None,
     ) -> list[PropertyDefinition]:
         """
-        Retrieve all property definitions with optional relevance filter.
+        Retrieve property definitions with optional filtering, pagination, sorting, and text search.
 
         Args:
             is_relevant: Optional filter by relevance status
-            limit: Maximum number of results to return (default 100)
-            offset: Number of results to skip (default 0)
+            limit: Maximum number of results to return; None means no limit
+            offset: Number of results to skip
+            sort_by: Field to sort by (title, created_at, last_modified); None for default
+            sort_order: Sort direction (asc or desc)
+            query: Text query for LIKE search on title
 
         Returns:
             Sequence of PropertyDefinition entities
         """
         with self.session_factory() as session:
-            query = session.query(OntologyEntity).filter(
+            q = session.query(OntologyEntity).filter(
                 OntologyEntity.node_type == NodeType.PROPERTY_DEFINITION
             )
 
             if is_relevant is not None:
-                query = query.filter(OntologyEntity.is_relevant == is_relevant)
+                q = q.filter(OntologyEntity.is_relevant == is_relevant)
 
-            orm_entities = query.limit(limit).offset(offset).all()
+            if query:
+                q = q.filter(OntologyEntity.title.like(f"%{query}%"))
+
+            if sort_by == "title":
+                col = OntologyEntity.title
+            elif sort_by == "created_at":
+                col = OntologyEntity.created_at
+            elif sort_by == "last_modified":
+                col = OntologyEntity.last_modified
+            else:
+                col = OntologyEntity.created_at
+
+            if sort_order.lower() == "desc":
+                q = q.order_by(col.desc())
+            else:
+                q = q.order_by(col.asc())
+
+            if limit is not None:
+                q = q.limit(limit)
+            orm_entities = q.offset(offset).all()
             return [
                 cast(PropertyDefinition, map_orm_to_domain(e)) for e in orm_entities
             ]
@@ -1090,37 +1178,53 @@ class SQLiteOntologyRepository:
         source_id: Optional[str] = None,
         target_id: Optional[str] = None,
         property_id: Optional[str] = None,
-        limit: int = 100,
+        limit: Optional[int] = 100,
         offset: int = 0,
+        sort_by: Optional[str] = None,
+        sort_order: str = "asc",
+        query: Optional[str] = None,
     ) -> list[Relationship]:
         """
-        List relationships, optionally filtered by source, target, or property definition.
+        List relationships with optional filtering, pagination, sorting, and text search.
 
         Args:
             source_id: Optional source entity ID to filter by
             target_id: Optional target entity ID to filter by
             property_id: Optional property definition ID to filter by
-            limit: Maximum number of results to return (default 100)
-            offset: Number of results to skip (default 0)
+            limit: Maximum number of results to return; None means no limit
+            offset: Number of results to skip
+            sort_by: Field to sort by (created_at); None for default
+            sort_order: Sort direction (asc or desc)
+            query: Text query (not used for relationships)
 
         Returns:
             Sequence of Relationship entities
         """
         with self.session_factory() as session:
-            query = session.query(RelationshipORM)
+            q = session.query(RelationshipORM)
 
             if source_id is not None:
-                query = query.filter(RelationshipORM.source_id == source_id)
+                q = q.filter(RelationshipORM.source_id == source_id)
 
             if target_id is not None:
-                query = query.filter(RelationshipORM.target_id == target_id)
+                q = q.filter(RelationshipORM.target_id == target_id)
 
             if property_id is not None:
-                query = query.filter(
-                    RelationshipORM.property_definition_id == property_id
-                )
+                q = q.filter(RelationshipORM.property_definition_id == property_id)
 
-            orm_rels = query.limit(limit).offset(offset).all()
+            if sort_by == "created_at":
+                col = RelationshipORM.created_at
+            else:
+                col = RelationshipORM.created_at
+
+            if sort_order.lower() == "desc":
+                q = q.order_by(col.desc())
+            else:
+                q = q.order_by(col.asc())
+
+            if limit is not None:
+                q = q.limit(limit)
+            orm_rels = q.offset(offset).all()
             return [map_relationship_orm_to_domain(r) for r in orm_rels]
 
     def save_relationship(self, rel: Relationship) -> Relationship:

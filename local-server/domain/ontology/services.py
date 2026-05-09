@@ -156,14 +156,30 @@ class OntologyService:
             raise EntityNotFoundError("Taxonomy", taxonomy_id)
         return taxonomy
 
-    def list_taxonomies(self) -> list[Taxonomy]:
+    def list_taxonomies(
+        self,
+        limit: int | None = 100,
+        offset: int = 0,
+        sort_by: str | None = None,
+        sort_order: str = "asc",
+        query: str | None = None,
+    ) -> list[Taxonomy]:
         """
-        Retrieve all taxonomies.
+        Retrieve taxonomies with optional pagination, sorting, and text search.
+
+        Args:
+            limit: Maximum number of results to return; None means no limit
+            offset: Number of results to skip
+            sort_by: Field to sort by (title, created_at, last_modified); None for default
+            sort_order: Sort direction (asc or desc)
+            query: Text query for LIKE search on title
 
         Returns:
-            List of all Taxonomy entities
+            List of Taxonomy entities
         """
-        return self._repository.list_taxonomies()
+        return self._repository.list_taxonomies(
+            limit=limit, offset=offset, sort_by=sort_by, sort_order=sort_order, query=query
+        )
 
     def update_taxonomy(
         self,
@@ -359,6 +375,49 @@ class OntologyService:
                 handler_names,
             )
 
+    def publish_taxonomy(self, taxonomy_id: str) -> Taxonomy:
+        """
+        Publish a taxonomy, transitioning status from draft to published.
+
+        Args:
+            taxonomy_id: The ID of the taxonomy to publish
+
+        Returns:
+            The updated Taxonomy with status=published
+
+        Raises:
+            EntityNotFoundError: If the taxonomy does not exist
+        """
+        taxonomy = self._repository.get_taxonomy(taxonomy_id)
+        if taxonomy is None:
+            raise EntityNotFoundError("Taxonomy", taxonomy_id)
+
+        if taxonomy.status == "published":
+            return taxonomy
+
+        taxonomy.status = "published"
+        taxonomy.last_modified = datetime.now(timezone.utc)
+        taxonomy = self._repository.save_taxonomy(taxonomy)
+
+        failures = self._event_publisher.publish(
+            TaxonomyUpdated(
+                taxonomy_id=taxonomy_id,
+                changed_fields=("status",),
+                old_values={"status": "draft"},
+                new_values={"status": "published"},
+            )
+        )
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for TaxonomyUpdated publish (taxonomy_id=%s): %s. "
+                "Taxonomy is published but audit trail may have gaps.",
+                taxonomy_id,
+                handler_names,
+            )
+
+        return taxonomy
+
     # ConceptScheme operations
 
     def create_scheme(
@@ -450,18 +509,36 @@ class OntologyService:
         return scheme
 
     def list_concept_schemes(
-        self, taxonomy_id: str | None = None
+        self,
+        taxonomy_id: str | None = None,
+        limit: int | None = 100,
+        offset: int = 0,
+        sort_by: str | None = None,
+        sort_order: str = "asc",
+        query: str | None = None,
     ) -> list[ConceptScheme]:
         """
-        Retrieve concept schemes, optionally filtered by taxonomy.
+        Retrieve concept schemes with optional filtering, pagination, sorting, and text search.
 
         Args:
             taxonomy_id: Optional ID to filter schemes to a specific taxonomy
+            limit: Maximum number of results to return; None means no limit
+            offset: Number of results to skip
+            sort_by: Field to sort by (title, created_at, last_modified); None for default
+            sort_order: Sort direction (asc or desc)
+            query: Text query for LIKE search on title
 
         Returns:
             List of ConceptScheme entities
         """
-        return self._repository.list_concept_schemes(taxonomy_id=taxonomy_id)
+        return self._repository.list_concept_schemes(
+            taxonomy_id=taxonomy_id,
+            limit=limit,
+            offset=offset,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            query=query,
+        )
 
     def rename_scheme(self, concept_scheme_id: str, new_title: str) -> ConceptScheme:
         """
@@ -1220,20 +1297,37 @@ class OntologyService:
         source_id: str | None = None,
         target_id: str | None = None,
         property_id: str | None = None,
+        limit: int | None = 100,
+        offset: int = 0,
+        sort_by: str | None = None,
+        sort_order: str = "asc",
+        query: str | None = None,
     ) -> list[Relationship]:
         """
-        Retrieve relationships with optional filtering.
+        Retrieve relationships with optional filtering, pagination, sorting, and text search.
 
         Args:
             source_id: Optional source entity ID to filter by
             target_id: Optional target entity ID to filter by
             property_id: Optional property definition ID to filter by (relationship type)
+            limit: Maximum number of results to return; None means no limit
+            offset: Number of results to skip
+            sort_by: Field to sort by (created_at); None for default
+            sort_order: Sort direction (asc or desc)
+            query: Text query (not used for relationships)
 
         Returns:
             List of Relationship entities
         """
         return self._repository.list_relationships(
-            source_id=source_id, target_id=target_id, property_id=property_id
+            source_id=source_id,
+            target_id=target_id,
+            property_id=property_id,
+            limit=limit,
+            offset=offset,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            query=query,
         )
 
     def delete_relationship(self, relationship_id: str) -> None:
@@ -1472,18 +1566,36 @@ class OntologyService:
         )
 
     def list_property_definitions(
-        self, is_relevant: bool | None = None
+        self,
+        is_relevant: bool | None = None,
+        limit: int | None = 100,
+        offset: int = 0,
+        sort_by: str | None = None,
+        sort_order: str = "asc",
+        query: str | None = None,
     ) -> list[PropertyDefinition]:
         """
-        Retrieve property definitions, optionally filtered by relevance.
+        Retrieve property definitions with optional filtering, pagination, sorting, and text search.
 
         Args:
             is_relevant: Optional filter for relevant property definitions
+            limit: Maximum number of results to return; None means no limit
+            offset: Number of results to skip
+            sort_by: Field to sort by (title, created_at, last_modified); None for default
+            sort_order: Sort direction (asc or desc)
+            query: Text query for LIKE search on title
 
         Returns:
             List of PropertyDefinition entities
         """
-        return self._repository.list_property_definitions(is_relevant=is_relevant)
+        return self._repository.list_property_definitions(
+            is_relevant=is_relevant,
+            limit=limit,
+            offset=offset,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            query=query,
+        )
 
     def update_property_definition(
         self,

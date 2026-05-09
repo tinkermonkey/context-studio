@@ -130,21 +130,46 @@ async def create_taxonomy(
 
 @router.get("/taxonomies", response_model=ListResponse[TaxonomyResponse])
 async def list_taxonomies(
+    limit: int = Query(100, ge=1, le=1000, description="Maximum number of results"),
+    offset: int = Query(0, ge=0, description="Number of results to skip"),
+    sort_by: Optional[str] = Query(
+        None, description="Field to sort by (title, created_at, last_modified)"
+    ),
+    sort_order: str = Query("asc", pattern="^(asc|desc)$", description="Sort direction"),
+    q: Optional[str] = Query(None, description="Text search query on title"),
     service: OntologyService = Depends(get_ontology_service),
 ) -> ListResponse[TaxonomyResponse]:
     """
-    Retrieve all taxonomies.
+    Retrieve taxonomies with optional pagination, sorting, and text search.
+
+    Args:
+        limit: Maximum number of results (1-1000, default 100)
+        offset: Number of results to skip (default 0)
+        sort_by: Field to sort by (title, created_at, last_modified)
+        sort_order: Sort direction (asc or desc, default asc)
+        q: Text query for LIKE search on title
+        service: OntologyService from dependency injection
 
     Returns:
-        ListResponse containing all taxonomies
+        ListResponse containing matching taxonomies
     """
     try:
-        taxonomies = await run_sync_in_executor(service.list_taxonomies)
+        taxonomies = await run_sync_in_executor(
+            service.list_taxonomies,
+            limit=limit,
+            offset=offset,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            query=q,
+        )
+        total = await run_sync_in_executor(
+            service.list_taxonomies, limit=None, query=q
+        )
         return ListResponse(
             items=[TaxonomyResponse.model_validate(t) for t in taxonomies],
-            total=len(taxonomies),
-            limit=100,
-            offset=0,
+            total=len(total),
+            limit=limit,
+            offset=offset,
         )
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
@@ -232,6 +257,32 @@ async def delete_taxonomy(
         raise HTTPException(status_code=status_code, detail=message)
 
 
+@router.post("/taxonomies/{taxonomy_id}/publish", response_model=TaxonomyResponse)
+async def publish_taxonomy(
+    taxonomy_id: str,
+    service: OntologyService = Depends(get_ontology_service),
+) -> TaxonomyResponse:
+    """
+    Publish a taxonomy, transitioning status from draft to published.
+
+    Args:
+        taxonomy_id: The taxonomy ID
+        service: OntologyService from dependency injection
+
+    Returns:
+        Updated TaxonomyResponse with status=published
+
+    Raises:
+        HTTPException: 404 if not found
+    """
+    try:
+        taxonomy = await run_sync_in_executor(service.publish_taxonomy, taxonomy_id)
+        return TaxonomyResponse.model_validate(taxonomy)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
 # ==================== ConceptScheme Endpoints ====================
 
 
@@ -277,25 +328,48 @@ async def list_concept_schemes(
     taxonomy_id: Optional[str] = Query(
         None, description="Optional taxonomy ID to filter by"
     ),
+    limit: int = Query(100, ge=1, le=1000, description="Maximum number of results"),
+    offset: int = Query(0, ge=0, description="Number of results to skip"),
+    sort_by: Optional[str] = Query(
+        None, description="Field to sort by (title, created_at, last_modified)"
+    ),
+    sort_order: str = Query("asc", pattern="^(asc|desc)$", description="Sort direction"),
+    q: Optional[str] = Query(None, description="Text search query on title"),
     service: OntologyService = Depends(get_ontology_service),
 ) -> ListResponse[ConceptSchemeResponse]:
     """
-    Retrieve concept schemes, optionally filtered by taxonomy.
+    Retrieve concept schemes with optional filtering, pagination, sorting, and text search.
 
     Args:
         taxonomy_id: Optional taxonomy ID to filter by
+        limit: Maximum number of results (1-1000, default 100)
+        offset: Number of results to skip (default 0)
+        sort_by: Field to sort by (title, created_at, last_modified)
+        sort_order: Sort direction (asc or desc, default asc)
+        q: Text query for LIKE search on title
         service: OntologyService from dependency injection
 
     Returns:
         ListResponse containing matching concept schemes
     """
     try:
-        schemes = await run_sync_in_executor(service.list_concept_schemes, taxonomy_id)
+        schemes = await run_sync_in_executor(
+            service.list_concept_schemes,
+            taxonomy_id=taxonomy_id,
+            limit=limit,
+            offset=offset,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            query=q,
+        )
+        total = await run_sync_in_executor(
+            service.list_concept_schemes, taxonomy_id=taxonomy_id, limit=None, query=q
+        )
         return ListResponse(
             items=[ConceptSchemeResponse.model_validate(s) for s in schemes],
-            total=len(schemes),
-            limit=100,
-            offset=0,
+            total=len(total),
+            limit=limit,
+            offset=offset,
         )
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
@@ -633,31 +707,56 @@ async def list_relationships(
     property_id: Optional[str] = Query(
         None, description="Optional property definition ID to filter by"
     ),
+    limit: int = Query(100, ge=1, le=1000, description="Maximum number of results"),
+    offset: int = Query(0, ge=0, description="Number of results to skip"),
+    sort_by: Optional[str] = Query(
+        None, description="Field to sort by (created_at)"
+    ),
+    sort_order: str = Query("asc", pattern="^(asc|desc)$", description="Sort direction"),
+    q: Optional[str] = Query(None, description="Text search query (not used for relationships)"),
     service: OntologyService = Depends(get_ontology_service),
 ) -> ListResponse[RelationshipResponse]:
     """
-    Retrieve relationships with optional filtering.
+    Retrieve relationships with optional filtering, pagination, sorting, and text search.
 
     Args:
         source_id: Optional source entity ID to filter by
         target_id: Optional target entity ID to filter by
         property_id: Optional property definition ID to filter by
+        limit: Maximum number of results (1-1000, default 100)
+        offset: Number of results to skip (default 0)
+        sort_by: Field to sort by (created_at)
+        sort_order: Sort direction (asc or desc, default asc)
+        q: Text query (not used for relationships)
         service: OntologyService from dependency injection
 
     Returns:
         ListResponse containing matching relationships
     """
     try:
-        relationships = service.list_relationships(
+        relationships = await run_sync_in_executor(
+            service.list_relationships,
             source_id=source_id,
             target_id=target_id,
             property_id=property_id,
+            limit=limit,
+            offset=offset,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            query=q,
+        )
+        total = await run_sync_in_executor(
+            service.list_relationships,
+            source_id=source_id,
+            target_id=target_id,
+            property_id=property_id,
+            limit=None,
         )
         return ListResponse(
             items=[RelationshipResponse.model_validate(r) for r in relationships],
-            total=len(relationships),
-            limit=100,
-            offset=0,
+            total=len(total),
+            limit=limit,
+            offset=offset,
         )
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
@@ -756,25 +855,51 @@ async def list_property_definitions(
     is_relevant: Optional[bool] = Query(
         None, description="Optional filter for relevant properties"
     ),
+    limit: int = Query(100, ge=1, le=1000, description="Maximum number of results"),
+    offset: int = Query(0, ge=0, description="Number of results to skip"),
+    sort_by: Optional[str] = Query(
+        None, description="Field to sort by (title, created_at, last_modified)"
+    ),
+    sort_order: str = Query("asc", pattern="^(asc|desc)$", description="Sort direction"),
+    q: Optional[str] = Query(None, description="Text search query on title"),
     service: OntologyService = Depends(get_ontology_service),
 ) -> ListResponse[PropertyDefinitionResponse]:
     """
-    Retrieve property definitions, optionally filtered by relevance.
+    Retrieve property definitions with optional filtering, pagination, sorting, and text search.
 
     Args:
         is_relevant: Optional filter for relevant properties
+        limit: Maximum number of results (1-1000, default 100)
+        offset: Number of results to skip (default 0)
+        sort_by: Field to sort by (title, created_at, last_modified)
+        sort_order: Sort direction (asc or desc, default asc)
+        q: Text query for LIKE search on title
         service: OntologyService from dependency injection
 
     Returns:
         ListResponse containing property definitions
     """
     try:
-        properties = service.list_property_definitions(is_relevant=is_relevant)
+        properties = await run_sync_in_executor(
+            service.list_property_definitions,
+            is_relevant=is_relevant,
+            limit=limit,
+            offset=offset,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            query=q,
+        )
+        total = await run_sync_in_executor(
+            service.list_property_definitions,
+            is_relevant=is_relevant,
+            limit=None,
+            query=q,
+        )
         return ListResponse(
             items=[PropertyDefinitionResponse.model_validate(p) for p in properties],
-            total=len(properties),
-            limit=100,
-            offset=0,
+            total=len(total),
+            limit=limit,
+            offset=offset,
         )
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)

@@ -58,6 +58,7 @@ class OntologyEntity(Base):  # type: ignore[misc,valid-type]
         created_at: Timestamp of creation (UTC, auto-set)
         last_modified: Timestamp of last modification (UTC, auto-set)
         version: Version number for optimistic concurrency control
+        status: Publication status (draft or published, default draft)
         taxonomy_id: Parent taxonomy ID (for concept_scheme, class, individual)
         concept_scheme_id: Parent concept scheme ID (for class, individual)
         class_id: Class being instantiated (for individual, rdf:type)
@@ -99,6 +100,13 @@ class OntologyEntity(Base):  # type: ignore[misc,valid-type]
         doc="UTC timestamp of last modification",
     )
     version = Column(Integer, nullable=False, default=1, doc="For optimistic locking")
+    status = Column(
+        String(20),
+        nullable=False,
+        default="draft",
+        index=True,
+        doc="Publication status: draft or published",
+    )
 
     # Hierarchy and containment relationships
     taxonomy_id = Column(

@@ -45,12 +45,26 @@ class OntologyRepository(Protocol):
         """
         ...
 
-    def list_taxonomies(self) -> list[Taxonomy]:
+    def list_taxonomies(
+        self,
+        limit: int | None = 100,
+        offset: int = 0,
+        sort_by: str | None = None,
+        sort_order: str = "asc",
+        query: str | None = None,
+    ) -> list[Taxonomy]:
         """
-        Retrieve all taxonomies.
+        Retrieve taxonomies with optional pagination, sorting, and text search.
+
+        Args:
+            limit: Maximum number of results to return; None means no limit
+            offset: Number of results to skip
+            sort_by: Field to sort by (title, created_at, last_modified); None for default
+            sort_order: Sort direction (asc or desc)
+            query: Text query for LIKE search on title
 
         Returns:
-            List of all Taxonomy entities
+            List of Taxonomy entities
         """
         ...
 
@@ -92,13 +106,24 @@ class OntologyRepository(Protocol):
         ...
 
     def list_concept_schemes(
-        self, taxonomy_id: str | None = None
+        self,
+        taxonomy_id: str | None = None,
+        limit: int | None = 100,
+        offset: int = 0,
+        sort_by: str | None = None,
+        sort_order: str = "asc",
+        query: str | None = None,
     ) -> list[ConceptScheme]:
         """
-        Retrieve concept schemes, optionally filtered by taxonomy.
+        Retrieve concept schemes with optional filtering, pagination, sorting, and text search.
 
         Args:
             taxonomy_id: Optional ID to filter schemes to a specific taxonomy
+            limit: Maximum number of results to return; None means no limit
+            offset: Number of results to skip
+            sort_by: Field to sort by (title, created_at, last_modified); None for default
+            sort_order: Sort direction (asc or desc)
+            query: Text query for LIKE search on title
 
         Returns:
             List of ConceptScheme entities
@@ -229,14 +254,24 @@ class OntologyRepository(Protocol):
         source_id: str | None = None,
         target_id: str | None = None,
         property_id: str | None = None,
+        limit: int | None = 100,
+        offset: int = 0,
+        sort_by: str | None = None,
+        sort_order: str = "asc",
+        query: str | None = None,
     ) -> list[Relationship]:
         """
-        Retrieve relationships with optional filtering.
+        Retrieve relationships with optional filtering, pagination, sorting, and text search.
 
         Args:
             source_id: Optional source entity ID to filter by
             target_id: Optional target entity ID to filter by
             property_id: Optional property definition ID to filter by (relationship type)
+            limit: Maximum number of results to return; None means no limit
+            offset: Number of results to skip
+            sort_by: Field to sort by (created_at); None for default
+            sort_order: Sort direction (asc or desc)
+            query: Text query (not applicable for relationships)
 
         Returns:
             List of Relationship entities
@@ -295,13 +330,24 @@ class OntologyRepository(Protocol):
         ...
 
     def list_property_definitions(
-        self, is_relevant: bool | None = None
+        self,
+        is_relevant: bool | None = None,
+        limit: int | None = 100,
+        offset: int = 0,
+        sort_by: str | None = None,
+        sort_order: str = "asc",
+        query: str | None = None,
     ) -> list[PropertyDefinition]:
         """
-        Retrieve property definitions, optionally filtered by relevance.
+        Retrieve property definitions with optional filtering, pagination, sorting, and text search.
 
         Args:
             is_relevant: Optional filter for relevant property definitions
+            limit: Maximum number of results to return; None means no limit
+            offset: Number of results to skip
+            sort_by: Field to sort by (title, created_at, last_modified); None for default
+            sort_order: Sort direction (asc or desc)
+            query: Text query for LIKE search on title
 
         Returns:
             List of PropertyDefinition entities

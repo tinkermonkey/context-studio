@@ -66,6 +66,9 @@ class TaxonomyResponse(BaseModel):
     version: int = Field(
         default=1, description="Version number for optimistic concurrency control"
     )
+    status: str = Field(
+        default="draft", description="Publication status (draft or published)"
+    )
 
 
 # ==================== ConceptScheme Schemas ====================
@@ -102,6 +105,9 @@ class ConceptSchemeResponse(BaseModel):
     )
     version: int = Field(
         default=1, description="Version number for optimistic concurrency control"
+    )
+    status: str = Field(
+        default="draft", description="Publication status (draft or published)"
     )
 
 
@@ -222,6 +228,9 @@ class ClassResponse(BaseModel):
     version: int = Field(
         default=1, description="Version number for optimistic concurrency control"
     )
+    status: str = Field(
+        default="draft", description="Publication status (draft or published)"
+    )
 
 
 # ==================== Relationship Schemas ====================
@@ -250,6 +259,9 @@ class RelationshipResponse(BaseModel):
         ..., description="Property definition ID (relationship type)"
     )
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
+    status: str = Field(
+        default="draft", description="Publication status (draft or published)"
+    )
 
 
 # ==================== PropertyDefinition Schemas ====================
@@ -291,6 +303,9 @@ class PropertyDefinitionResponse(BaseModel):
     )
     version: int = Field(
         default=1, description="Version number for optimistic concurrency control"
+    )
+    status: str = Field(
+        default="draft", description="Publication status (draft or published)"
     )
 
 
@@ -348,6 +363,9 @@ class IndividualResponse(BaseModel):
     )
     version: int = Field(
         default=1, description="Version number for optimistic concurrency control"
+    )
+    status: str = Field(
+        default="draft", description="Publication status (draft or published)"
     )
 
 

@@ -246,6 +246,7 @@ def map_orm_to_domain(
             created_at=entity_created_at,
             last_modified=entity_last_modified,
             version=entity_version,
+            status=cast(str, orm_entity.status),
         )
 
     elif orm_entity.node_type == NodeType.CONCEPT_SCHEME:
@@ -257,6 +258,7 @@ def map_orm_to_domain(
             last_modified=entity_last_modified,
             version=entity_version,
             taxonomy_id=cast(str, orm_entity.taxonomy_id),
+            status=cast(str, orm_entity.status),
         )
 
     elif orm_entity.node_type == NodeType.CLASS:
@@ -281,6 +283,7 @@ def map_orm_to_domain(
                 cast(list[dict[str, Any]], orm_entity.data_properties) or []
             ),
             embedding=_deserialize_embedding(cast(bytes | None, orm_entity.embedding)),
+            status=cast(str, orm_entity.status),
         )
 
     elif orm_entity.node_type == NodeType.INDIVIDUAL:
@@ -303,6 +306,7 @@ def map_orm_to_domain(
                 cast(dict[str, str] | None, orm_entity.ontology_mapping)
             ),
             is_relevant=cast(bool | None, orm_entity.is_relevant),
+            status=cast(str, orm_entity.status),
         )
 
     else:
@@ -331,6 +335,7 @@ def map_domain_to_orm(
         "created_at": entity.created_at,
         "last_modified": entity.last_modified,
         "version": entity.version,
+        "status": entity.status,
     }
 
     if isinstance(entity, Taxonomy):
