@@ -1,5 +1,5 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
-import { getWorkspacePath } from "@/hooks/useWorkspaceStorage";
+import { getWorkspacePath } from "@/lib/workspaceStorage";
 
 export const Route = createFileRoute("/")({
   component: IndexPage,

@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { WorkspaceSwitcher } from "@/components/workspace/WorkspaceSwitcher";
-import { setWorkspacePath } from "@/hooks/useWorkspaceStorage";
+import { setWorkspacePath } from "@/lib/workspaceStorage";
 
 export const Route = createFileRoute("/welcome")({
   component: WelcomePage,

@@ -5,7 +5,7 @@ import { Sidebar } from "@/components/shell/Sidebar";
 import { Topbar } from "@/components/shell/Topbar";
 import { Statusbar } from "@/components/shell/Statusbar";
 import { useCommandPaletteStore } from "@/stores/commandPalette";
-import { getWorkspacePath } from "@/hooks/useWorkspaceStorage";
+import { getWorkspacePath } from "@/lib/workspaceStorage";
 
 export const Route = createFileRoute("/app")({
   beforeLoad: () => {
