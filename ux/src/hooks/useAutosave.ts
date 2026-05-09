@@ -22,7 +22,7 @@ export function useAutosave<T>({
   const statusTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const statusRef = useRef<AutosaveStatus>("idle");
   const isFirstRenderRef = useRef(true);
-  const mutateRef = useRef<(data: T) => void | null>(null);
+  const mutateRef = useRef<((data: T) => void) | null>(null);
 
   const mutation = useMutation({
     mutationFn,
@@ -81,6 +81,7 @@ export function useAutosave<T>({
   return {
     status,
     lastSavedAt,
+    lastError: mutation.error,
     save: () => mutation.mutate(data),
     isLoading: mutation.isPending,
   };

@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/Input";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useDeleteRelationship } from "@/api/hooks/ontology/useRelationships";
 import { useToasts } from "@/components/ui/Toast";
+import { ApiError } from "@/api/client/interceptors";
 import { relationshipsCopy } from "@/routes/app/schema/relationships/-copy";
 import type { components } from "@/api/types";
 
@@ -34,8 +35,10 @@ export function RelationshipDrawer({
       await deleteMutation.mutateAsync(relationship.id);
       toast("success", relationshipsCopy.delete.successToast);
       onClose();
-    } catch {
-      toast("error", relationshipsCopy.delete.failureToast);
+    } catch (error) {
+      const message =
+        error instanceof ApiError ? error.detail : "Failed to delete relationship";
+      toast("error", message);
     }
   };
 

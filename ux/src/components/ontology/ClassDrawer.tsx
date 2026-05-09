@@ -64,7 +64,7 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
     description,
   };
 
-  const { status } = useAutosave({
+  const { status, lastError } = useAutosave({
     data: updateData,
     mutationFn: async () => {
       if (!classData || !isDirty) return;
@@ -78,6 +78,12 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
       lastSavedAtRef.current = new Date();
     },
   });
+
+  useEffect(() => {
+    if (lastError) {
+      toast("error", `Autosave failed: ${lastError.message}`);
+    }
+  }, [lastError, toast]);
 
   const revert = () => {
     if (classData) {

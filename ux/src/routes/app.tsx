@@ -4,6 +4,7 @@ import { Titlebar } from "@/components/shell/Titlebar";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { Topbar } from "@/components/shell/Topbar";
 import { Statusbar } from "@/components/shell/Statusbar";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { useCommandPaletteStore } from "@/stores/commandPalette";
 import { useCommandPaletteActions } from "@/hooks/useCommandPaletteActions";
 import { createStaticPaletteActions } from "@/config/staticPaletteActions";
@@ -126,7 +127,9 @@ function AppShell() {
           <div className="canvas-area">
             <div className="canvas-scroll">
               <div className="canvas-inner">
-                <Outlet />
+                <ErrorBoundary>
+                  <Outlet />
+                </ErrorBoundary>
               </div>
             </div>
           </div>

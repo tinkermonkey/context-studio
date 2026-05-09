@@ -4,6 +4,7 @@ import { Input, Textarea } from "@/components/ui/Input";
 import { useUpdateProperty, useDeleteProperty } from "@/api/hooks/ontology/useProperties";
 import { useAutosave } from "@/hooks/useAutosave";
 import { useToasts } from "@/components/ui/Toast";
+import { ApiError } from "@/api/client/interceptors";
 import { propertiesCopy } from "@/routes/app/schema/properties/-copy";
 import type { components } from "@/api/types";
 
@@ -36,7 +37,7 @@ export function PropertyDrawer({ property, onClose }: PropertyDrawerProps) {
     description: description || null,
   };
 
-  const { status } = useAutosave({
+  const { status, lastError } = useAutosave({
     data: updateData,
     mutationFn: async () => {
       if (!property || !isDirty) return;
@@ -51,6 +52,12 @@ export function PropertyDrawer({ property, onClose }: PropertyDrawerProps) {
     },
   });
 
+  useEffect(() => {
+    if (lastError) {
+      toast("error", `Autosave failed: ${lastError.message}`);
+    }
+  }, [lastError, toast]);
+
   const revert = () => {
     if (property) {
       setTitle(property.title);
@@ -64,8 +71,10 @@ export function PropertyDrawer({ property, onClose }: PropertyDrawerProps) {
       await deleteMutation.mutateAsync(property.id);
       toast("success", propertiesCopy.delete.successToast);
       onClose();
-    } catch {
-      toast("error", propertiesCopy.delete.failureToast);
+    } catch (error) {
+      const message =
+        error instanceof ApiError ? error.detail : "Failed to delete property";
+      toast("error", message);
     }
   };
 

@@ -49,7 +49,7 @@ export function TaxonomyDrawer({ taxonomy, onClose }: TaxonomyDrawerProps) {
     description,
   };
 
-  const { status } = useAutosave({
+  const { status, lastError } = useAutosave({
     data: updateData,
     mutationFn: async () => {
       if (!taxonomy || !isDirty) return;
@@ -63,6 +63,12 @@ export function TaxonomyDrawer({ taxonomy, onClose }: TaxonomyDrawerProps) {
       lastSavedAtRef.current = new Date();
     },
   });
+
+  useEffect(() => {
+    if (lastError) {
+      toast("error", `Autosave failed: ${lastError.message}`);
+    }
+  }, [lastError, toast]);
 
   const revert = () => {
     if (taxonomy) {
