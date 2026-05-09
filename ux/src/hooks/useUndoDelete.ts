@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 interface UseUndoDeleteOptions {
   onDelete: (id: string) => Promise<void>;
@@ -6,16 +6,29 @@ interface UseUndoDeleteOptions {
   undoWindowMs?: number;
 }
 
+// Module-level store for pending deletes that outlives component unmounting
+const pendingDeletes = new Map<
+  string,
+  {
+    timeoutId: NodeJS.Timeout;
+    onDelete: (id: string) => Promise<void>;
+    onDeleteError?: (id: string, error: Error) => void;
+  }
+>();
+
 export function useUndoDelete({ onDelete, onDeleteError, undoWindowMs = 8000 }: UseUndoDeleteOptions) {
   const [deletedId, setDeletedId] = useState<string | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const performDelete = useCallback(
     async (id: string) => {
       setDeletedId(id);
 
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      timeoutRef.current = setTimeout(async () => {
+      // Clear any existing pending delete for this ID
+      if (pendingDeletes.has(id)) {
+        clearTimeout(pendingDeletes.get(id)!.timeoutId);
+      }
+
+      const timeoutId = setTimeout(async () => {
         try {
           await onDelete(id);
           setDeletedId(null);
@@ -25,25 +38,30 @@ export function useUndoDelete({ onDelete, onDeleteError, undoWindowMs = 8000 }: 
             onDeleteError(id, deleteError);
           }
           setDeletedId(null);
+        } finally {
+          pendingDeletes.delete(id);
         }
       }, undoWindowMs);
+
+      pendingDeletes.set(id, { timeoutId, onDelete, onDeleteError });
     },
     [onDelete, onDeleteError, undoWindowMs],
   );
 
   const undo = useCallback(() => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
+    if (deletedId && pendingDeletes.has(deletedId)) {
+      const pending = pendingDeletes.get(deletedId)!;
+      clearTimeout(pending.timeoutId);
+      pendingDeletes.delete(deletedId);
       setDeletedId(null);
     }
-  }, []);
+  }, [deletedId]);
 
   useEffect(() => {
     return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+      // On component unmount, do NOT clear the timeout — it needs to persist
+      // Just remove from local state so UI doesn't show the "undo" toast
+      setDeletedId(null);
     };
   }, []);
 
