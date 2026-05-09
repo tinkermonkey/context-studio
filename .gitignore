@@ -19,6 +19,9 @@ local-server/datafiles/
 local-server/datasets.json
 local-server/downloads/
 local-server/logs/
+local-server/reports/
+local-server/.benchmark-cache/
+local-server/configs/extraction-experimental.json
 
 # Build and runtime artifacts
 *.log

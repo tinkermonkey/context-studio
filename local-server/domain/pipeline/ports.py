@@ -66,6 +66,7 @@ class LLMProvider(Protocol):
         max_tokens: int = 2000,
         response_format: Literal["json", "text"] | None = None,
         timeout: float | None = None,
+        seed: int | None = None,
     ) -> LLMResponse:
         """
         Request a completion from an LLM.
@@ -74,10 +75,11 @@ class LLMProvider(Protocol):
             system_prompt: System context for the model
             user_prompt: User message to respond to
             model: Model identifier
-            temperature: Sampling temperature (0.0–1.0)
+            temperature: Sampling temperature (0.0–2.0)
             max_tokens: Maximum tokens to generate
             response_format: Optional response format ("json" for JSON output, "text" for plain text)
             timeout: Request timeout in seconds (provider-specific behavior)
+            seed: Optional random seed for reproducible generation (passed to model if supported)
 
         Returns:
             LLMResponse with generated content and metadata

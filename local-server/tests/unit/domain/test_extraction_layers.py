@@ -122,6 +122,7 @@ class FakeLLMProvider:
         max_tokens: int = 2000,
         response_format=None,
         timeout: float | None = None,
+        seed: int | None = None,
     ) -> LLMResponse:
         """Return mock LLM response."""
         if self.should_fail:

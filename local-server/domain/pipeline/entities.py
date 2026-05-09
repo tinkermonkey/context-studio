@@ -33,6 +33,7 @@ class PipelineConfiguration:
         enabled: Whether this configuration is active
         created_at: Timestamp when this configuration was created
         last_updated: Timestamp of the most recent update
+        seed: Optional random seed for reproducible generation (passed to model if supported)
 
     Raises:
         ValueError: If provider is not "openai" or "anthropic", or if version < 1
@@ -50,6 +51,7 @@ class PipelineConfiguration:
     enabled: bool
     created_at: datetime
     last_updated: datetime
+    seed: int | None = None
 
     def __post_init__(self) -> None:
         """Validate pipeline configuration invariants."""
@@ -59,6 +61,8 @@ class PipelineConfiguration:
             )
         if self.version < 1:
             raise ValueError(f"version must be >= 1, got {self.version}")
+        if self.seed is not None and self.seed < 0:
+            raise ValueError(f"seed must be non-negative if provided, got {self.seed}")
 
 
 @dataclass

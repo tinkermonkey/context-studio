@@ -16,12 +16,14 @@ Design Notes:
 """
 
 from datetime import datetime, timezone
+from typing import Any, Dict, Tuple
 
 from sqlalchemy import (
     Column,
     String,
     Text,
     Integer,
+    Float,
     Boolean,
     DateTime,
     ForeignKey,
@@ -389,7 +391,7 @@ class ChangeEvent(Base):  # type: ignore[misc,valid-type]
         user_id: Optional ID of the user who made the change
         change_reason: Optional explanation of why the change was made
         changeset_id: Optional ID of a changeset this event belongs to
-        import_run_id: Optional ID of the import run that produced this change
+        batch_run_id: Optional ID of the batch run that produced this change (import or extraction)
     """
 
     __tablename__ = "change_events"
@@ -434,12 +436,12 @@ class ChangeEvent(Base):  # type: ignore[misc,valid-type]
         index=True,
         doc="Optional changeset this event belongs to",
     )
-    import_run_id = Column(
+    batch_run_id = Column(
         String(36),
-        ForeignKey("import_runs.id", ondelete="SET NULL"),
+        ForeignKey("batch_runs.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
-        doc="Optional import run that produced this change",
+        doc="Optional batch run (import or extraction) that produced this change",
     )
     processed = Column(
         Boolean,
@@ -451,7 +453,7 @@ class ChangeEvent(Base):  # type: ignore[misc,valid-type]
     __table_args__ = (
         Index("idx_entity_id_timestamp", "entity_id", "timestamp"),
         Index("idx_processed", "processed"),
-        Index("idx_import_run_id", "import_run_id"),
+        Index("idx_batch_run_id", "batch_run_id"),
     )
 
     def __repr__(self) -> str:
@@ -695,17 +697,83 @@ class ConflictResolution(Base):  # type: ignore[misc,valid-type]
         return f"<ConflictResolution(proposal_id={self.proposal_id}, entity_id={self.entity_id}, field_name={self.field_name})>"
 
 
-class ImportRun(Base):  # type: ignore[misc,valid-type]
+class BatchRun(Base):  # type: ignore[misc,valid-type]
+    """
+    Abstract base class for all batch run types using joined-table inheritance.
+
+    Batch runs (imports, extractions, etc.) share common fields and are
+    distinguished by the run_type discriminator column. Subclasses use
+    joined-table inheritance, with their own tables containing type-specific fields.
+
+    This class is abstract and should not be instantiated directly.
+    Use ImportRun or ExtractionRun instead.
+
+    Attributes:
+        id: UUID as string, primary key
+        created_at: UTC timestamp of run initiation
+        created_by: Optional ID of the user who initiated the run
+        status: Current status (pending, committed, failed, etc. depending on type)
+        affected_entity_ids: JSON list of entity IDs affected by this run
+        run_type: Discriminator column (import, extraction, etc.)
+    """
+
+    __tablename__ = "batch_runs"
+
+    id = Column(String(36), primary_key=True, nullable=False)
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        index=True,
+        doc="UTC timestamp of run initiation",
+    )
+    created_by = Column(
+        String(36), nullable=True, doc="Optional ID of user who initiated the run"
+    )
+    status = Column(
+        String(20),
+        nullable=False,
+        default="pending",
+        index=True,
+        doc="Current status (semantics depend on run_type)",
+    )
+    affected_entity_ids = Column(
+        JSON,
+        nullable=False,
+        default=list,
+        doc="JSON list of entity IDs affected by this run",
+    )
+    run_type = Column(
+        String(20),
+        nullable=False,
+        index=True,
+        doc="Discriminator: import, extraction, etc.",
+    )
+
+    __mapper_args__: Dict[str, Any] = {
+        "polymorphic_on": run_type,
+    }
+    __table_args__ = (
+        CheckConstraint(
+            "run_type IN ('import', 'extraction')", name="check_valid_run_type"
+        ),
+        Index("idx_run_type_status", "run_type", "status"),
+    )
+
+    def __repr__(self) -> str:
+        return f"<BatchRun(id={self.id}, type={self.run_type}, status={self.status})>"
+
+
+class ImportRun(BatchRun):  # type: ignore[misc,valid-type]
     """
     Record of an import operation.
 
     Tracks import runs from initiation through completion, correlating
     a batch of change_events with the operation that produced them.
+    Uses joined-table inheritance from BatchRun.
 
     Attributes:
-        id: UUID as string, primary key
-        created_at: UTC timestamp of import initiation
-        created_by: Optional ID of the user who initiated the import
+        id: UUID as string, primary key (FK to batch_runs.id)
         format: Format of imported file (skos, owl, graphml, etc.)
         source_uri: Optional URI or filename of the import source
         source_hash: SHA256 hash of the imported bytes
@@ -715,22 +783,15 @@ class ImportRun(Base):  # type: ignore[misc,valid-type]
         scope_include_descendants: For scheme scope, whether to include descendants
         scope_entity_ids: For entity_set scope, JSON list of entity IDs
         resolutions: JSON list of applied resolutions (match_kind, entity_id, resolution)
-        affected_entity_ids: JSON list of entity IDs affected by this import
-        status: Current status (pending, committed, failed, rolled_back)
     """
 
     __tablename__ = "import_runs"
 
-    id = Column(String(36), primary_key=True, nullable=False)
-    created_at = Column(
-        DateTime(timezone=True),
+    id = Column(
+        String(36),
+        ForeignKey("batch_runs.id", ondelete="CASCADE"),
+        primary_key=True,
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
-        index=True,
-        doc="UTC timestamp of import initiation",
-    )
-    created_by = Column(
-        String(36), nullable=True, doc="Optional ID of user who initiated the import"
     )
     format = Column(
         String(20),
@@ -769,21 +830,81 @@ class ImportRun(Base):  # type: ignore[misc,valid-type]
     resolutions = Column(
         JSON, nullable=False, default=list, doc="JSON list of applied resolutions"
     )
-    affected_entity_ids = Column(
-        JSON,
-        nullable=False,
-        default=list,
-        doc="JSON list of entity IDs affected by this import",
-    )
-    status = Column(
-        String(20),
-        nullable=False,
-        default="pending",
-        index=True,
-        doc="Current status (pending, committed, failed, rolled_back)",
-    )
 
-    __table_args__ = ()
+    __mapper_args__: Dict[str, Any] = {
+        "polymorphic_identity": "import",
+    }
 
     def __repr__(self) -> str:
         return f"<ImportRun(id={self.id}, format={self.format}, status={self.status})>"
+
+
+class ExtractionRun(BatchRun):  # type: ignore[misc,valid-type]
+    """
+    Record of an extraction operation.
+
+    Tracks extraction runs from initiation through completion, recording
+    pipeline configuration, LLM settings, resource metrics, and outcome counts.
+    Uses joined-table inheritance from BatchRun.
+
+    Attributes:
+        id: UUID as string, primary key (FK to batch_runs.id)
+        source_document_uri: Optional URI or filename of the source document
+        source_text_hash: SHA256 hash of the extracted-from text (audit only)
+        pipeline_config_ref: Pipeline configuration slug (e.g., "extraction-default")
+        model: LLM model name (e.g., "claude-opus-4-7")
+        temperature: Sampling temperature (0.0–2.0)
+        tokens_used: Total tokens consumed by the LLM call
+        duration_ms: Total wall-clock execution time (milliseconds)
+        triples_extracted: Count of triples returned by the LLM API
+        triples_committed: Count of triples persisted after review
+    """
+
+    __tablename__ = "extraction_runs"
+
+    id = Column(
+        String(36),
+        ForeignKey("batch_runs.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+    source_document_uri = Column(
+        Text, nullable=True, doc="Optional URI or filename of the source document"
+    )
+    source_text_hash = Column(
+        String(64), nullable=False, doc="SHA256 hash of source text (audit only)"
+    )
+    pipeline_config_ref = Column(
+        String(100),
+        nullable=False,
+        doc="Pipeline configuration slug (e.g., 'extraction-default')",
+    )
+    model = Column(String(100), nullable=False, doc="LLM model name")
+    temperature = Column(Float, nullable=False, doc="Sampling temperature (0.0–2.0)")
+    tokens_used = Column(Integer, nullable=False, doc="Total tokens consumed")
+    duration_ms = Column(Integer, nullable=False, doc="Total execution time (ms)")
+    triples_extracted = Column(
+        Integer, nullable=False, doc="Count of triples returned by API"
+    )
+    triples_committed = Column(
+        Integer, nullable=False, doc="Count of triples persisted after review"
+    )
+
+    __mapper_args__: Dict[str, Any] = {
+        "polymorphic_identity": "extraction",
+    }
+    __table_args__: Tuple[Any, ...] = (
+        CheckConstraint("temperature >= 0.0", name="check_temperature_min"),
+        CheckConstraint("temperature <= 2.0", name="check_temperature_max"),
+        CheckConstraint("tokens_used >= 0", name="check_tokens_non_negative"),
+        CheckConstraint("duration_ms >= 0", name="check_duration_non_negative"),
+        CheckConstraint("triples_extracted >= 0", name="check_triples_extracted_non_negative"),
+        CheckConstraint("triples_committed >= 0", name="check_triples_committed_non_negative"),
+        CheckConstraint(
+            "triples_committed <= triples_extracted",
+            name="check_triples_committed_le_extracted",
+        ),
+    )
+
+    def __repr__(self) -> str:
+        return f"<ExtractionRun(id={self.id}, model={self.model}, status={self.status})>"

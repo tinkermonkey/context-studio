@@ -66,12 +66,13 @@ class OntologyDeserializer(ABC):
         ...
 
 
-class ImportRunRepository(Protocol):
+class BatchRunRepository(Protocol):
     """
-    Port for persisting and querying import runs.
+    Port for persisting and querying batch runs (import and extraction).
 
     Implementations handle storage and retrieval of ImportRun entities
-    with support for filtering by status and pagination.
+    with support for filtering by status and pagination, as well as
+    querying change events for both import and extraction runs.
     """
 
     def create(self, import_run: ImportRun) -> ImportRun:
@@ -166,12 +167,12 @@ class ImportRunRepository(Protocol):
         """
         ...
 
-    def get_change_events_for_run(self, import_run_id: str) -> list[ChangeEvent]:
+    def get_change_events_for_run(self, batch_run_id: str) -> list[ChangeEvent]:
         """
-        Retrieve change events associated with an import run.
+        Retrieve change events associated with a batch run.
 
         Args:
-            import_run_id: The ID of the import run
+            batch_run_id: The ID of the batch run (import or extraction)
 
         Returns:
             List of ChangeEvent objects for the run

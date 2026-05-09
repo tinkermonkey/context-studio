@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol, Sequence
 
 if TYPE_CHECKING:
-    from domain.extraction.entities import ExtractionResult
+    from domain.extraction.entities import ExtractionResult, ExtractionRun
 
 
 # ============================================================================
@@ -315,5 +315,68 @@ class ExtractionRepository(Protocol):
 
         Returns:
             Sequence of ExtractionResult objects
+        """
+        ...
+
+
+class ExtractionRunRepository(Protocol):
+    """
+    Port for persistence of extraction runs.
+
+    Implementations store and retrieve extraction run records, which track
+    extraction operations from initiation through completion, including
+    pipeline configuration, LLM settings, and resource metrics.
+    """
+
+    def save_extraction_run(self, run: ExtractionRun) -> ExtractionRun:
+        """
+        Save an extraction run to persistent storage.
+
+        Args:
+            run: The ExtractionRun to save
+
+        Returns:
+            The saved ExtractionRun
+        """
+        ...
+
+    def get_extraction_run(self, run_id: str) -> ExtractionRun | None:
+        """
+        Retrieve an extraction run by ID.
+
+        Args:
+            run_id: The ID of the extraction run
+
+        Returns:
+            The ExtractionRun or None if not found
+        """
+        ...
+
+    def list_extraction_runs(
+        self,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> Sequence[ExtractionRun]:
+        """
+        List extraction runs with pagination.
+
+        Args:
+            limit: Maximum number of results to return
+            offset: Number of results to skip
+
+        Returns:
+            Sequence of ExtractionRun objects
+        """
+        ...
+
+    def update_extraction_run(self, run: ExtractionRun) -> ExtractionRun:
+        """
+        Update an existing extraction run.
+
+        Args:
+            run: The ExtractionRun with updated fields
+
+        Returns:
+            The updated ExtractionRun
         """
         ...

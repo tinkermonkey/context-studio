@@ -178,6 +178,7 @@ class SQLitePipelineRepository:
             enabled=cast(bool, row.enabled),
             created_at=cast(datetime, row.created_at),
             last_updated=cast(datetime, row.last_updated),
+            seed=cast(int | None, row.seed),
         )
 
     def _to_model_config(
@@ -206,6 +207,7 @@ class SQLitePipelineRepository:
             enabled=config.enabled,
             created_at=config.created_at,
             last_updated=config.last_updated,
+            seed=config.seed,
         )
 
     def _to_domain_execution(self, row: ExecutionModel) -> Execution:

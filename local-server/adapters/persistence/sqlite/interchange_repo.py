@@ -36,7 +36,7 @@ class SQLiteInterchangeRepository:
     """
     SQLAlchemy-based repository for interchange domain persistence.
 
-    Concrete adapter implementing the ImportRunRepository port.
+    Concrete adapter implementing the BatchRunRepository port.
 
     Implements persistence operations for ImportRun entities and their
     change event correlations using SQLite.
@@ -217,12 +217,12 @@ class SQLiteInterchangeRepository:
         except SQLAlchemyError as e:
             raise RuntimeError(f"Failed to update import run: {str(e)}") from e
 
-    def get_change_events_for_run(self, import_run_id: str) -> list[ChangeEvent]:
+    def get_change_events_for_run(self, batch_run_id: str) -> list[ChangeEvent]:
         """
-        Retrieve all change events associated with an import run.
+        Retrieve all change events associated with a batch run.
 
         Args:
-            import_run_id: The ID of the import run
+            batch_run_id: The ID of the batch run (import or extraction)
 
         Returns:
             List of ChangeEvent domain objects
@@ -231,7 +231,7 @@ class SQLiteInterchangeRepository:
             with self.session_factory() as session:
                 query = (
                     select(ChangeEventORM)
-                    .where(ChangeEventORM.import_run_id == import_run_id)
+                    .where(ChangeEventORM.batch_run_id == batch_run_id)
                     .order_by(ChangeEventORM.timestamp.asc())
                 )
                 orm_events = session.execute(query).scalars().all()
@@ -244,6 +244,7 @@ class SQLiteInterchangeRepository:
                         operation=ChangeOperation(e.operation),
                         new_state=e.new_state,
                         previous_state=e.previous_state,
+                        batch_run_id=e.batch_run_id,
                     )
                     for e in orm_events
                 ]

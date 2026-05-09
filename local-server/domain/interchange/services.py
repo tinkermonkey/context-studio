@@ -14,31 +14,51 @@ from typing import Optional
 
 from .entities import ImportRun, ResolutionRecord
 from .value_objects import SerializationScope, SerializationFormat
-from .ports import ImportRunRepository
+from .ports import BatchRunRepository
 
-# Context variable for tracking the current import run ID across async boundaries
-_import_run_context: ContextVar[Optional[str]] = ContextVar(
-    "import_run_id", default=None
+# Context variable for tracking the current batch run ID (import or extraction) across async boundaries
+_batch_run_context: ContextVar[Optional[str]] = ContextVar(
+    "batch_run_id", default=None
 )
+
+
+def get_current_batch_run_id() -> Optional[str]:
+    """
+    Get the current batch run ID from context.
+
+    Returns None if no batch operation is in progress. This supports
+    both import and extraction runs.
+    """
+    return _batch_run_context.get()
 
 
 def get_current_import_run_id() -> Optional[str]:
     """
-    Get the current import run ID from context.
+    Backward-compatible convenience method to get the current batch run ID.
 
-    Returns None if no import is in progress.
+    Returns None if no batch operation (import or extraction) is in progress.
     """
-    return _import_run_context.get()
+    return _batch_run_context.get()
+
+
+def set_batch_run_context(batch_run_id: Optional[str]) -> None:
+    """
+    Set the current batch run ID in context.
+
+    Args:
+        batch_run_id: The batch run ID (import or extraction), or None to clear context
+    """
+    _batch_run_context.set(batch_run_id)
 
 
 def set_import_run_context(import_run_id: Optional[str]) -> None:
     """
-    Set the current import run ID in context.
+    Backward-compatible convenience method to set the current import run ID in context.
 
     Args:
         import_run_id: The import run ID, or None to clear context
     """
-    _import_run_context.set(import_run_id)
+    _batch_run_context.set(import_run_id)
 
 
 class ImportRunService:
@@ -175,7 +195,7 @@ class ImportRunService:
         resolutions: Optional[list[ResolutionRecord]] = None,
         source_uri: Optional[str] = None,
         created_by: Optional[str] = None,
-        interchange_repo: Optional[ImportRunRepository] = None,
+        interchange_repo: Optional[BatchRunRepository] = None,
     ) -> ImportRun:
         """
         Create and persist an ImportRun with validated resolutions.

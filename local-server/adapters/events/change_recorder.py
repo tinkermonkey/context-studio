@@ -13,7 +13,7 @@ without modifying domain code.
 from typing import Optional
 
 from domain.ports import ChangeRecordPort
-from domain.interchange.services import get_current_import_run_id
+from domain.interchange.services import get_current_batch_run_id
 from domain.extraction.events import ExtractionCompleted
 from domain.pipeline.events import PipelineExecuted
 from domain.ontology.events import (
@@ -78,6 +78,7 @@ class ChangeEventRecorder:
             Any exception from the change repository is propagated to allow
             the event publisher to include it in the failures list.
         """
+        batch_run_id = get_current_batch_run_id()
         change_id = self.change_repo.record_change(
             entity_id=event.result_id,
             entity_type="extraction_result",
@@ -88,10 +89,12 @@ class ChangeEventRecorder:
                 "duration_ms": event.duration_ms,
             },
             change_reason="Extraction processing completed",
+            batch_run_id=batch_run_id,
         )
         logger.debug(
             f"Recorded extraction completion: result_id={event.result_id}, "
             f"change_event_id={change_id}"
+            + (f", batch_run_id={batch_run_id}" if batch_run_id else "")
         )
 
     def on_pipeline_executed(self, event: PipelineExecuted) -> None:
@@ -111,6 +114,7 @@ class ChangeEventRecorder:
             Any exception from the change repository is propagated to allow
             the event publisher to include it in the failures list.
         """
+        batch_run_id = get_current_batch_run_id()
         change_id = self.change_repo.record_change(
             entity_id=event.execution_id,
             entity_type="pipeline_execution",
@@ -121,11 +125,13 @@ class ChangeEventRecorder:
                 "status": event.status,
             },
             change_reason="Pipeline execution completed",
+            batch_run_id=batch_run_id,
         )
         logger.debug(
             f"Recorded pipeline execution: execution_id={event.execution_id}, "
             f"pipeline_id={event.pipeline_id}, status={event.status}, "
             f"change_event_id={change_id}"
+            + (f", batch_run_id={batch_run_id}" if batch_run_id else "")
         )
 
     # ==================== Ontology Event Handlers ====================
@@ -143,8 +149,8 @@ class ChangeEventRecorder:
         Helper method to record a change event.
 
         Reduces boilerplate for recording ontology mutations with consistent
-        logging and error propagation. Automatically includes import_run_id
-        from the correlation context if an import is in progress.
+        logging and error propagation. Automatically includes batch_run_id
+        from the correlation context if a batch operation (import or extraction) is in progress.
 
         Args:
             entity_id: ID of the entity that changed
@@ -161,11 +167,11 @@ class ChangeEventRecorder:
             Any exception from the change repository is propagated to allow
             the event publisher to include it in the failures list.
         """
-        # Get current import_run_id from correlation context if set
-        import_run_id = get_current_import_run_id()
+        # Get current batch_run_id from correlation context if set
+        batch_run_id = get_current_batch_run_id()
 
-        # For now, we update the change repository signature to accept import_run_id
-        # The actual persistence layer will handle storing it
+        # The correlation context holds either an import or extraction run ID
+        # The change repository will persist this as batch_run_id
         change_id = self.change_repo.record_change(
             entity_id=entity_id,
             entity_type=entity_type,
@@ -173,13 +179,13 @@ class ChangeEventRecorder:
             new_state=new_state or {},
             previous_state=previous_state,
             change_reason=change_reason,
-            import_run_id=import_run_id,
+            batch_run_id=batch_run_id,
         )
         logger.debug(
             f"Recorded ontology change: entity_id={entity_id}, "
             f"entity_type={entity_type}, operation={operation}, "
             f"change_event_id={change_id}"
-            + (f", import_run_id={import_run_id}" if import_run_id else "")
+            + (f", batch_run_id={batch_run_id}" if batch_run_id else "")
         )
         return change_id
 

@@ -51,6 +51,7 @@ class FakeLLMProvider:
         max_tokens: int = 2000,
         response_format: Literal["json", "text"] | None = None,
         timeout: float | None = None,
+        seed: int | None = None,
     ) -> LLMResponse:
         """
         Request a completion from the fake LLM.
@@ -63,6 +64,7 @@ class FakeLLMProvider:
             max_tokens: Maximum tokens
             response_format: Optional response format
             timeout: Request timeout in seconds
+            seed: Optional random seed
 
         Returns:
             LLMResponse with canned content and token counts
@@ -76,6 +78,7 @@ class FakeLLMProvider:
             "max_tokens": max_tokens,
             "response_format": response_format,
             "timeout": timeout,
+            "seed": seed,
         }
 
         if self.should_raise_error and self.error_to_raise:

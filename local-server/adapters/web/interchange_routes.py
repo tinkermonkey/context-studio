@@ -23,7 +23,7 @@ from fastapi.responses import StreamingResponse
 
 from domain.interchange.value_objects import SerializationScope, SerializationScopeType, SerializationFormat, ChangeEvent, ResolutionKind, MatchKind
 from domain.interchange.entities import ImportRunStatus, ResolutionRecord
-from domain.interchange.ports import ImportRunRepository
+from domain.interchange.ports import BatchRunRepository
 from domain.ontology.ports import OntologyRepository
 from utils.logger import get_logger
 from utils.async_executor import run_sync_in_executor
@@ -73,7 +73,7 @@ def _get_serializer(format: SerializationFormat, ontology_repo: OntologyReposito
 def _get_deserializer(
     format: SerializationFormat,
     ontology_repo: OntologyRepository,
-    interchange_repo: ImportRunRepository,
+    interchange_repo: BatchRunRepository,
 ):
     """Get the appropriate deserializer for the format."""
     if format == SerializationFormat.SKOS:
@@ -239,7 +239,7 @@ async def import_ontology(
     dry_run: str = Form("true", description="If 'true', returns plan without committing"),
     resolutions: Optional[str] = Form(None, description="JSON-encoded conflict resolutions to apply on commit"),
     ontology_repo: OntologyRepository = Depends(get_ontology_repo),
-    interchange_repo: ImportRunRepository = Depends(get_interchange_repo),
+    interchange_repo: BatchRunRepository = Depends(get_interchange_repo),
 ) -> Union[ImportPlanResponse, ImportRunResponse]:
     """
     Import ontology data from a file.
@@ -252,7 +252,7 @@ async def import_ontology(
         dry_run: "true" for dry-run (returns plan), "false" to commit
         resolutions: Optional JSON-encoded list of ResolutionRecord to apply when committing
         ontology_repo: Injected OntologyRepository
-        interchange_repo: Injected ImportRunRepository
+        interchange_repo: Injected BatchRunRepository
 
     Returns:
         ImportPlanResponse (dry-run) or ImportRunResponse (committed)
@@ -385,7 +385,7 @@ async def import_ontology(
 
 @router.get("/runs", response_model=ListResponse[ImportRunResponse])
 async def list_import_runs(
-    interchange_repo: ImportRunRepository = Depends(get_interchange_repo),
+    interchange_repo: BatchRunRepository = Depends(get_interchange_repo),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     limit: int = Query(100, ge=1, le=500, description="Maximum number of results"),
     status: Optional[str] = Query(None, description="Filter by status"),
@@ -452,7 +452,7 @@ async def list_import_runs(
 @router.get("/runs/{run_id}", response_model=ImportRunResponse)
 async def get_import_run(
     run_id: str,
-    interchange_repo: ImportRunRepository = Depends(get_interchange_repo),
+    interchange_repo: BatchRunRepository = Depends(get_interchange_repo),
 ) -> ImportRunResponse:
     """
     Get a specific import run by ID.
@@ -496,7 +496,7 @@ async def get_import_run(
 @router.get("/runs/{run_id}/change-events", response_model=ListResponse[InterchangeChangeEventResponse])
 async def get_run_change_events(
     run_id: str,
-    interchange_repo: ImportRunRepository = Depends(get_interchange_repo),
+    interchange_repo: BatchRunRepository = Depends(get_interchange_repo),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     limit: int = Query(100, ge=1, le=500, description="Maximum number of results"),
     entity_type: Optional[str] = Query(None, description="Filter by entity type"),

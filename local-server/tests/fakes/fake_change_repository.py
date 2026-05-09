@@ -48,6 +48,7 @@ class FakeChangeRepository:
         user_id: Optional[str] = None,
         change_reason: Optional[str] = None,
         changeset_id: Optional[str] = None,
+        batch_run_id: Optional[str] = None,
     ) -> str:
         """Record a change event and return its ID."""
         import uuid
@@ -64,6 +65,7 @@ class FakeChangeRepository:
             user_id=user_id,
             change_reason=change_reason,
             changeset_id=changeset_id,
+            batch_run_id=batch_run_id,
             processed=False,
         )
         self._change_events[event_id] = event

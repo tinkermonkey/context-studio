@@ -21,6 +21,8 @@ from .exceptions import PipelineNotFoundError
 
 _logger = logging.getLogger(__name__)
 
+_UNSET = object()
+
 
 class PipelineService:
     """
@@ -135,6 +137,7 @@ class PipelineService:
         system_prompt: str | None = None,
         user_prompt: str | None = None,
         enabled: bool | None = None,
+        seed: int | None = _UNSET,  # type: ignore
     ) -> PipelineConfiguration:
         """
         Update a pipeline configuration.
@@ -148,6 +151,7 @@ class PipelineService:
             system_prompt: Updated system prompt (optional)
             user_prompt: Updated user prompt (optional)
             enabled: Updated enabled status (optional)
+            seed: Updated random seed (optional); pass None to clear, omit to preserve existing
 
         Returns:
             The updated PipelineConfiguration
@@ -158,6 +162,13 @@ class PipelineService:
         existing = self._pipeline_repo.get_config(config_id)
         if existing is None:
             raise PipelineNotFoundError(f"Pipeline configuration {config_id} not found")
+
+        # Resolve seed: use existing value if not explicitly provided
+        resolved_seed: int | None
+        if seed is _UNSET:
+            resolved_seed = existing.seed
+        else:
+            resolved_seed = seed
 
         # Create updated config by copying and applying changes
         updated = PipelineConfiguration(
@@ -177,6 +188,7 @@ class PipelineService:
             enabled=enabled if enabled is not None else existing.enabled,
             created_at=existing.created_at,
             last_updated=datetime.now(timezone.utc),
+            seed=resolved_seed,
         )
         return self._pipeline_repo.save_config(updated)
 
@@ -257,6 +269,7 @@ class PipelineService:
                 max_tokens=config.config.get("max_tokens", 2000),
                 response_format=config.config.get("response_format"),
                 timeout=timeout,
+                seed=config.seed,
             )
 
             duration_ms = int((time.time() - start_time) * 1000)

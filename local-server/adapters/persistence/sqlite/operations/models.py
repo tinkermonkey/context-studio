@@ -31,6 +31,7 @@ class PipelineConfigurationModel(OperationsBase):  # type: ignore[misc,valid-typ
         enabled: Whether this configuration is active
         created_at: UTC timestamp of creation
         last_updated: UTC timestamp of most recent update
+        seed: Optional random seed for reproducible generation (passed to model if supported)
     """
 
     __tablename__ = "pipeline_configurations"
@@ -47,6 +48,7 @@ class PipelineConfigurationModel(OperationsBase):  # type: ignore[misc,valid-typ
     enabled = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime, nullable=False)
     last_updated = Column(DateTime, nullable=False)
+    seed = Column(Integer, nullable=True)
 
 
 class ExecutionModel(OperationsBase):  # type: ignore[misc,valid-type]

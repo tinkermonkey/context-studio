@@ -132,6 +132,34 @@ class FakeExtractionRepository:
         return self.saved_results[offset : offset + limit]
 
 
+class FakeExtractionRunRepository:
+    """Fake extraction run repository for testing."""
+
+    def __init__(self):
+        self.saved_runs = []
+
+    def save_extraction_run(self, run):
+        self.saved_runs.append(run)
+        return run
+
+    def get_extraction_run(self, run_id):
+        for run in self.saved_runs:
+            if run.id == run_id:
+                return run
+        return None
+
+    def list_extraction_runs(self, limit=100, offset=0):
+        return self.saved_runs[offset : offset + limit]
+
+    def update_extraction_run(self, run):
+        # Find and update the run
+        for i, existing_run in enumerate(self.saved_runs):
+            if existing_run.id == run.id:
+                self.saved_runs[i] = run
+                return run
+        raise ValueError(f"ExtractionRun with id {run.id} not found")
+
+
 class FakeEventPublisher:
     """Fake event publisher for testing."""
 
@@ -153,6 +181,7 @@ def service_with_fakes():
     reference_sources = [FakeReferenceSource()]
     event_publisher = FakeEventPublisher()
     extraction_repo = FakeExtractionRepository()
+    extraction_run_repo = FakeExtractionRunRepository()
 
     service = ExtractionService(
         ontology_repo=ontology_repo,
@@ -162,6 +191,7 @@ def service_with_fakes():
         reference_sources=reference_sources,
         event_publisher=event_publisher,
         extraction_repo=extraction_repo,
+        extraction_run_repo=extraction_run_repo,
         similarity_threshold=0.85,
     )
 
@@ -174,6 +204,7 @@ def service_with_fakes():
         "reference_sources": reference_sources,
         "event_publisher": event_publisher,
         "extraction_repo": extraction_repo,
+        "extraction_run_repo": extraction_run_repo,
     }
 
 
@@ -194,6 +225,7 @@ class TestExtractionServiceConfiguration:
         reference_sources = []
         event_publisher = FakeEventPublisher()
         extraction_repo = FakeExtractionRepository()
+        extraction_run_repo = FakeExtractionRunRepository()
 
         with pytest.raises(ValueError):
             ExtractionService(
@@ -204,6 +236,7 @@ class TestExtractionServiceConfiguration:
                 reference_sources=reference_sources,
                 event_publisher=event_publisher,
                 extraction_repo=extraction_repo,
+                extraction_run_repo=extraction_run_repo,
                 similarity_threshold=1.5,  # Invalid: > 1.0
             )
 
@@ -512,6 +545,7 @@ class TestExtractionServicePersistence:
         nlp = fakes["nlp"]
         reference_sources = fakes["reference_sources"]
         extraction_repo = fakes["extraction_repo"]
+        extraction_run_repo = fakes["extraction_run_repo"]
 
         class FailingEventPublisher:
             """Event publisher that simulates a handler failure."""
@@ -527,6 +561,7 @@ class TestExtractionServicePersistence:
             reference_sources=reference_sources,
             event_publisher=FailingEventPublisher(),
             extraction_repo=extraction_repo,
+            extraction_run_repo=extraction_run_repo,
             similarity_threshold=0.85,
         )
 

@@ -1737,6 +1737,7 @@ class TestSyncMethods:
                 user_id=None,
                 change_reason=None,
                 changeset_id=None,
+                batch_run_id=None,
             ):
                 raise RuntimeError("Database error")
 
@@ -1818,6 +1819,7 @@ class TestSyncMethods:
                 user_id=None,
                 change_reason=None,
                 changeset_id=None,
+                batch_run_id=None,
             ):
                 self.record_change_count += 1
                 if self.record_change_count > 1:
@@ -1832,6 +1834,7 @@ class TestSyncMethods:
                     user_id,
                     change_reason,
                     changeset_id,
+                    batch_run_id,
                 )
 
         failing_repo = PartialFailingRepository()

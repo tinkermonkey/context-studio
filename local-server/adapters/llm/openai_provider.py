@@ -55,6 +55,7 @@ class OpenAIProvider:
         max_tokens: int = 2000,
         response_format: Literal["json", "text"] | None = None,
         timeout: float | None = None,
+        seed: int | None = None,
     ) -> LLMResponse:
         """
         Request a completion from OpenAI.
@@ -63,10 +64,11 @@ class OpenAIProvider:
             system_prompt: System context for the model
             user_prompt: User message to respond to
             model: Model identifier (e.g., 'gpt-4o')
-            temperature: Sampling temperature (0.0–1.0)
+            temperature: Sampling temperature (0.0–2.0)
             max_tokens: Maximum tokens to generate
             response_format: Optional JSON schema for structured output
             timeout: Request timeout in seconds (passed to OpenAI client)
+            seed: Optional random seed for reproducible generation (passed to OpenAI API if supported)
 
         Returns:
             LLMResponse with generated content and metadata
@@ -99,6 +101,9 @@ class OpenAIProvider:
                 # OpenAI doesn't require special handling for text mode
                 pass
 
+            if seed is not None:
+                kwargs["seed"] = seed
+
             if timeout is not None:
                 kwargs["timeout"] = timeout
 
@@ -116,7 +121,10 @@ class OpenAIProvider:
                 model=model,
             )
         except Exception as e:
-            logger.error(f"OpenAI API error: {str(e)}")
+            logger.error(
+                f"OpenAI API error for model {model}: {type(e).__name__}: {e}",
+                exc_info=True,
+            )
             raise
 
     def is_model_available(self, model: str) -> bool:
@@ -149,6 +157,7 @@ class OpenAIProvider:
         max_tokens: int = 2000,
         response_format: Literal["json", "text"] | None = None,
         timeout: float | None = None,
+        seed: int | None = None,
     ) -> LLMResponse:
         """
         Request a completion from OpenAI (async version).
@@ -159,10 +168,11 @@ class OpenAIProvider:
             system_prompt: System context for the model
             user_prompt: User message to respond to
             model: Model identifier (e.g., 'gpt-4o')
-            temperature: Sampling temperature (0.0–1.0)
+            temperature: Sampling temperature (0.0–2.0)
             max_tokens: Maximum tokens to generate
             response_format: Optional JSON schema for structured output
             timeout: Request timeout in seconds (passed to OpenAI client)
+            seed: Optional random seed for reproducible generation (passed to OpenAI API if supported)
 
         Returns:
             LLMResponse with generated content and metadata
@@ -179,4 +189,5 @@ class OpenAIProvider:
             max_tokens,
             response_format,
             timeout,
+            seed,
         )

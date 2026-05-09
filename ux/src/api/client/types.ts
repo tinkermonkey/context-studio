@@ -1306,6 +1306,41 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/extraction/extract": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Extract Triples
+     * @description Extract RDF triples from text, scoped to a specific ontology.
+     *
+     *     This endpoint uses an LLM to extract subject-predicate-object triples
+     *     from the input text, linking them to classes and individuals from a
+     *     specific ontology. Each triple is returned with confidence and provenance
+     *     (character offsets into the source text).
+     *
+     *     Args:
+     *         request: ExtractTripleRequest with text, ontology_id, and extraction options
+     *         service: ExtractionService from dependency injection
+     *
+     *     Returns:
+     *         ExtractTripleResponse with extracted triples, warnings, and metadata
+     *
+     *     Raises:
+     *         HTTPException: 400 if input is invalid, 500 for internal errors
+     */
+    post: operations["extract_triples_api_extraction_extract_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/pipelines": {
     parameters: {
       query?: never;
@@ -2467,7 +2502,7 @@ export interface paths {
      *         dry_run: "true" for dry-run (returns plan), "false" to commit
      *         resolutions: Optional JSON-encoded list of ResolutionRecord to apply when committing
      *         ontology_repo: Injected OntologyRepository
-     *         interchange_repo: Injected ImportRunRepository
+     *         interchange_repo: Injected BatchRunRepository
      *
      *     Returns:
      *         ImportPlanResponse (dry-run) or ImportRunResponse (committed)
@@ -3389,6 +3424,64 @@ export interface components {
       text: string;
     };
     /**
+     * ExtractTripleOptions
+     * @description Options for triple extraction.
+     */
+    ExtractTripleOptions: {
+      /**
+       * Model
+       * @description Model identifier for extraction (e.g., 'gpt-4', 'claude-opus')
+       */
+      model: string;
+      /**
+       * Temperature
+       * @description Sampling temperature (0.0 = deterministic, up to 2.0)
+       * @default 0
+       */
+      temperature: number;
+      /**
+       * Max Tokens
+       * @description Maximum tokens in LLM response
+       */
+      max_tokens?: number | null;
+    };
+    /**
+     * ExtractTripleRequest
+     * @description Request to extract triples from text scoped to an ontology.
+     */
+    ExtractTripleRequest: {
+      /**
+       * Text
+       * @description Source text to extract triples from
+       */
+      text: string;
+      /**
+       * Ontology Id
+       * @description ID of the ontology scoping extraction to specific classes/individuals
+       */
+      ontology_id: string;
+      /** @description Extraction options (model, temperature, etc.) */
+      options: components["schemas"]["ExtractTripleOptions"];
+    };
+    /**
+     * ExtractTripleResponse
+     * @description Response containing extracted triples.
+     */
+    ExtractTripleResponse: {
+      /**
+       * Triples
+       * @description List of extracted triples
+       */
+      triples: components["schemas"]["ExtractedTriple"][];
+      /**
+       * Warnings
+       * @description Warnings (e.g., confidence out of range, invalid provenance)
+       */
+      warnings?: string[];
+      /** @description Metadata about the extraction operation */
+      metadata: components["schemas"]["ExtractionMetadata"];
+    };
+    /**
      * ExtractedEntitySchema
      * @description Response containing extracted entity data.
      */
@@ -3442,6 +3535,29 @@ export interface components {
       };
     };
     /**
+     * ExtractedTriple
+     * @description A single extracted triple with confidence and provenance.
+     */
+    ExtractedTriple: {
+      subject: components["schemas"]["SubjectNode"];
+      predicate: components["schemas"]["PredicateNode"];
+      /**
+       * Object
+       * @description Object node discriminated by 'kind' field
+       */
+      object:
+        | components["schemas"]["ObjectNodeIndividual"]
+        | components["schemas"]["ObjectNodeClass"]
+        | components["schemas"]["ObjectNodeLiteral"];
+      /**
+       * Confidence
+       * @description Confidence score (0.0–1.0)
+       */
+      confidence: number;
+      /** @description Provenance linking triple to source text */
+      provenance: components["schemas"]["TripleProvenance"];
+    };
+    /**
      * ExtractionLayerResultSchema
      * @description Response containing execution metadata for a single extraction layer.
      */
@@ -3476,6 +3592,27 @@ export interface components {
        * @description Error message if layer failed
        */
       error_message?: string | null;
+    };
+    /**
+     * ExtractionMetadata
+     * @description Metadata about a triple extraction operation.
+     */
+    ExtractionMetadata: {
+      /**
+       * Model
+       * @description Model used for extraction
+       */
+      model: string;
+      /**
+       * Tokens Used
+       * @description Total tokens consumed
+       */
+      tokens_used: number;
+      /**
+       * Duration Ms
+       * @description Extraction duration in milliseconds
+       */
+      duration_ms: number;
     };
     /**
      * ExtractionResultSchema
@@ -4174,6 +4311,69 @@ export interface components {
       outgoing: string[];
     };
     /**
+     * ObjectNodeClass
+     * @description Object node: class/concept.
+     */
+    ObjectNodeClass: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: "class";
+      /**
+       * Id
+       * @description Class ID in the ontology
+       */
+      id: string;
+      /**
+       * Label
+       * @description Human-readable label
+       */
+      label: string;
+    };
+    /**
+     * ObjectNodeIndividual
+     * @description Object node: individual instance.
+     */
+    ObjectNodeIndividual: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: "individual";
+      /**
+       * Id
+       * @description Individual ID in the ontology
+       */
+      id: string;
+      /**
+       * Label
+       * @description Human-readable label
+       */
+      label: string;
+    };
+    /**
+     * ObjectNodeLiteral
+     * @description Object node: literal value.
+     */
+    ObjectNodeLiteral: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: "literal";
+      /**
+       * Value
+       * @description Literal value (string, number, boolean, or null)
+       */
+      value: string | number | boolean | null;
+      /**
+       * Datatype
+       * @description XSD datatype (e.g., 'xsd:string', 'xsd:integer')
+       */
+      datatype?: string | null;
+    };
+    /**
      * PathResultResponse
      * @description Response containing a single path between two nodes.
      */
@@ -4376,6 +4576,22 @@ export interface components {
        * @description Input text to process
        */
       input_text: string;
+    };
+    /**
+     * PredicateNode
+     * @description Predicate node of a triple—a property definition.
+     */
+    PredicateNode: {
+      /**
+       * Property Definition Id
+       * @description ID of the property definition
+       */
+      property_definition_id: string;
+      /**
+       * Label
+       * @description Human-readable property name
+       */
+      label: string;
     };
     /**
      * PropertyDefinitionCreateRequest
@@ -4961,6 +5177,27 @@ export interface components {
       depth: number;
     };
     /**
+     * SubjectNode
+     * @description Subject node of a triple—individual or class.
+     */
+    SubjectNode: {
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: "individual" | "class";
+      /**
+       * Id
+       * @description Entity ID in the ontology
+       */
+      id: string;
+      /**
+       * Label
+       * @description Human-readable label
+       */
+      label: string;
+    };
+    /**
      * SyncResultResponse
      * @description Response with synchronization operation results
      */
@@ -5150,6 +5387,27 @@ export interface components {
        * @description Number of RDF triples in the graph
        */
       count: number;
+    };
+    /**
+     * TripleProvenance
+     * @description Provenance metadata for an extracted triple.
+     */
+    TripleProvenance: {
+      /**
+       * Text Offset Start
+       * @description Character offset where triple evidence begins
+       */
+      text_offset_start: number;
+      /**
+       * Text Offset End
+       * @description Character offset where triple evidence ends
+       */
+      text_offset_end: number;
+      /**
+       * Raw
+       * @description Exact text span supporting this triple
+       */
+      raw: string;
     };
     /**
      * TripleResponse
@@ -6881,6 +7139,39 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ExtractionResultSchema"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  extract_triples_api_extraction_extract_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ExtractTripleRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ExtractTripleResponse"];
         };
       };
       /** @description Validation Error */

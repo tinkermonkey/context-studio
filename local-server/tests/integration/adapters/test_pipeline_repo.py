@@ -210,6 +210,56 @@ class TestPipelineRepositoryConfigCRUD:
         assert enabled_configs[0].id == config1.id
         assert enabled_configs[0].enabled is True
 
+    def test_save_and_retrieve_config_with_seed(self, repo):
+        """Test that seed value is preserved in round-trip save/retrieve."""
+        config_id = str(uuid4())
+        config_with_seed = PipelineConfiguration(
+            id=config_id,
+            pipeline="test-pipeline",
+            title="Test Pipeline",
+            provider="openai",
+            model="gpt-4",
+            config={},
+            system_prompt="System",
+            user_prompt="User: {text}",
+            version=1,
+            enabled=True,
+            created_at=datetime.now(timezone.utc),
+            last_updated=datetime.now(timezone.utc),
+            seed=42,
+        )
+
+        repo.save_config(config_with_seed)
+        retrieved = repo.get_config(config_id)
+
+        assert retrieved is not None
+        assert retrieved.seed == 42
+
+    def test_save_and_retrieve_config_with_seed_none(self, repo):
+        """Test that seed=None is preserved in round-trip save/retrieve."""
+        config_id = str(uuid4())
+        config_with_no_seed = PipelineConfiguration(
+            id=config_id,
+            pipeline="test-pipeline",
+            title="Test Pipeline",
+            provider="openai",
+            model="gpt-4",
+            config={},
+            system_prompt="System",
+            user_prompt="User: {text}",
+            version=1,
+            enabled=True,
+            created_at=datetime.now(timezone.utc),
+            last_updated=datetime.now(timezone.utc),
+            seed=None,
+        )
+
+        repo.save_config(config_with_no_seed)
+        retrieved = repo.get_config(config_id)
+
+        assert retrieved is not None
+        assert retrieved.seed is None
+
 
 class TestPipelineRepositoryExecutionTracking:
     """Test execution recording and retrieval."""

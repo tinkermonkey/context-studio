@@ -173,6 +173,26 @@ class TestPipelineConfiguration:
         config = make_config(version=100)
         assert config.version == 100
 
+    def test_pipeline_configuration_seed_none_is_accepted(self, make_config):
+        """PipelineConfiguration accepts seed=None."""
+        config = make_config(seed=None)
+        assert config.seed is None
+
+    def test_pipeline_configuration_seed_zero_is_accepted(self, make_config):
+        """PipelineConfiguration accepts seed=0."""
+        config = make_config(seed=0)
+        assert config.seed == 0
+
+    def test_pipeline_configuration_seed_positive_is_accepted(self, make_config):
+        """PipelineConfiguration accepts positive seed values."""
+        config = make_config(seed=42)
+        assert config.seed == 42
+
+    def test_pipeline_configuration_seed_negative_is_rejected(self, make_config):
+        """PipelineConfiguration rejects negative seed values."""
+        with pytest.raises(ValueError, match="seed must be non-negative"):
+            make_config(seed=-1)
+
 
 class TestExecution:
     """Tests for Execution dataclass and validation."""

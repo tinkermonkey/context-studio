@@ -70,7 +70,7 @@ class SQLiteChangeRepository:
         user_id: Optional[str] = None,
         change_reason: Optional[str] = None,
         changeset_id: Optional[str] = None,
-        import_run_id: Optional[str] = None,
+        batch_run_id: Optional[str] = None,
     ) -> str:
         """
         Record a change event to the audit trail.
@@ -84,7 +84,7 @@ class SQLiteChangeRepository:
             user_id: Optional ID of user who made the change
             change_reason: Optional explanation of the change
             changeset_id: Optional ID of a changeset this event belongs to
-            import_run_id: Optional ID of the import run that produced this change
+            batch_run_id: Optional ID of the batch run (import or extraction) that produced this change
 
         Returns:
             The ID of the recorded change event
@@ -105,7 +105,7 @@ class SQLiteChangeRepository:
                     user_id=user_id,
                     change_reason=change_reason,
                     changeset_id=changeset_id,
-                    import_run_id=import_run_id,
+                    batch_run_id=batch_run_id,
                     processed=False,
                 )
 
@@ -769,7 +769,7 @@ class SQLiteChangeRepository:
             user_id=cast(Optional[str], orm_event.user_id),
             change_reason=cast(Optional[str], orm_event.change_reason),
             changeset_id=cast(Optional[str], orm_event.changeset_id),
-            import_run_id=cast(Optional[str], orm_event.import_run_id),
+            batch_run_id=cast(Optional[str], orm_event.batch_run_id),
             processed=cast(bool, orm_event.processed),
         )
 

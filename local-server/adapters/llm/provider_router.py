@@ -26,8 +26,8 @@ class LLMProviderRouter:
 
     Manages multiple LLM providers and routes completion requests to the correct
     provider based on which models are available. Initialization errors are logged
-    but do not prevent router initialization — the router will function with any
-    available providers.
+    and tolerated as long as at least one configured provider succeeds. A ValueError
+    is raised if all configured providers fail to initialize.
     """
 
     def __init__(self, openai_api_key: str = "", anthropic_api_key: str = "") -> None:
@@ -37,22 +37,47 @@ class LLMProviderRouter:
         Args:
             openai_api_key: OpenAI API key (optional)
             anthropic_api_key: Anthropic API key (optional)
+
+        Raises:
+            ValueError: If no API keys are provided or all configured providers fail to initialize
         """
         self._providers: dict[str, LLMProvider] = {}
+        init_errors: dict[str, Exception] = {}
+
+        if not openai_api_key and not anthropic_api_key:
+            raise ValueError(
+                "At least one LLM provider API key must be configured (openai_api_key or anthropic_api_key)"
+            )
 
         if openai_api_key:
             try:
                 self._providers["openai"] = OpenAIProvider(openai_api_key)
                 logger.info("OpenAI provider initialized")
             except Exception as e:
-                logger.error(f"Failed to initialize OpenAI provider: {str(e)}")
+                init_errors["openai"] = e
+                logger.error(
+                    f"Failed to initialize OpenAI provider: {type(e).__name__}: {e}",
+                    exc_info=True,
+                )
 
         if anthropic_api_key:
             try:
                 self._providers["anthropic"] = AnthropicProvider(anthropic_api_key)
                 logger.info("Anthropic provider initialized")
             except Exception as e:
-                logger.error(f"Failed to initialize Anthropic provider: {str(e)}")
+                init_errors["anthropic"] = e
+                logger.error(
+                    f"Failed to initialize Anthropic provider: {type(e).__name__}: {e}",
+                    exc_info=True,
+                )
+
+        if init_errors and not self._providers:
+            error_details = "; ".join(
+                f"{name}: {type(e).__name__}: {e}" for name, e in init_errors.items()
+            )
+            raise ValueError(
+                f"No LLM providers could be initialized. Errors: {error_details}"
+            )
 
     def complete(
         self,
@@ -63,6 +88,7 @@ class LLMProviderRouter:
         max_tokens: int = 2000,
         response_format: Literal["json", "text"] | None = None,
         timeout: float | None = None,
+        seed: int | None = None,
     ) -> LLMResponse:
         """
         Request a completion from an LLM provider.
@@ -73,10 +99,11 @@ class LLMProviderRouter:
             system_prompt: System context for the model
             user_prompt: The user's prompt
             model: Model identifier (e.g., 'gpt-4o', 'claude-opus-4-6')
-            temperature: Sampling temperature (0.0-1.0)
+            temperature: Sampling temperature (0.0-2.0)
             max_tokens: Maximum tokens in response
             response_format: Optional response format specification
             timeout: Request timeout in seconds (provider-specific behavior)
+            seed: Optional random seed for reproducible generation
 
         Returns:
             LLMResponse with the completion
@@ -93,6 +120,7 @@ class LLMProviderRouter:
             max_tokens=max_tokens,
             response_format=response_format,
             timeout=timeout,
+            seed=seed,
         )
 
     def _route_to_provider(self, model: str) -> LLMProvider:
@@ -157,6 +185,7 @@ class LLMProviderRouter:
         max_tokens: int = 2000,
         response_format: Literal["json", "text"] | None = None,
         timeout: float | None = None,
+        seed: int | None = None,
     ) -> LLMResponse:
         """
         Request a completion from an LLM provider (async version).
@@ -167,10 +196,11 @@ class LLMProviderRouter:
             system_prompt: System context for the model
             user_prompt: The user's prompt
             model: Model identifier (e.g., 'gpt-4o', 'claude-opus-4-6')
-            temperature: Sampling temperature (0.0-1.0)
+            temperature: Sampling temperature (0.0-2.0)
             max_tokens: Maximum tokens in response
             response_format: Optional response format specification
             timeout: Request timeout in seconds (provider-specific behavior)
+            seed: Optional random seed for reproducible generation
 
         Returns:
             LLMResponse with the completion
@@ -189,6 +219,7 @@ class LLMProviderRouter:
                 max_tokens=max_tokens,
                 response_format=response_format,
                 timeout=timeout,
+                seed=seed,
             )
         else:
             # Fallback for providers without async support — run sync method in executor
@@ -201,4 +232,5 @@ class LLMProviderRouter:
                 max_tokens=max_tokens,
                 response_format=response_format,
                 timeout=timeout,
+                seed=seed,
             )
