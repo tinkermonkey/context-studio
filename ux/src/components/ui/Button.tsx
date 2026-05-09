@@ -10,12 +10,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ variant = "ghost", size, className = "", children, ...props }, ref) => {
-    const classes = [
-      "btn",
-      `btn-${variant}`,
-      size === "sm" && "btn-sm",
-      className,
-    ]
+    const classes = ["btn", `btn-${variant}`, size === "sm" && "btn-sm", className]
       .filter(Boolean)
       .join(" ");
 
@@ -24,7 +19,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {children}
       </button>
     );
-  }
+  },
 );
 
 Button.displayName = "Button";

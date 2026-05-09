@@ -9,7 +9,7 @@ import type { components } from "@/api/types";
 // ============================================================================
 
 export function createSystemHealth(
-  overrides?: Partial<components["schemas"]["SystemHealthResponse"]>
+  overrides?: Partial<components["schemas"]["SystemHealthResponse"]>,
 ): components["schemas"]["SystemHealthResponse"] {
   return {
     status: "healthy",
@@ -23,7 +23,7 @@ export function createSystemHealth(
 }
 
 export function createDatabaseHealth(
-  overrides?: Partial<components["schemas"]["DatabaseHealthResponse"]>
+  overrides?: Partial<components["schemas"]["DatabaseHealthResponse"]>,
 ): components["schemas"]["DatabaseHealthResponse"] {
   return {
     connected: true,
@@ -32,7 +32,7 @@ export function createDatabaseHealth(
 }
 
 export function createServiceMetrics(
-  overrides?: Partial<components["schemas"]["ServiceMetricsResponse"]>
+  overrides?: Partial<components["schemas"]["ServiceMetricsResponse"]>,
 ): components["schemas"]["ServiceMetricsResponse"] {
   return {
     uptime_seconds: 1234,
@@ -41,7 +41,7 @@ export function createServiceMetrics(
 }
 
 export function createBackgroundTaskSummary(
-  overrides?: Partial<components["schemas"]["BackgroundTaskSummaryResponse"]>
+  overrides?: Partial<components["schemas"]["BackgroundTaskSummaryResponse"]>,
 ): components["schemas"]["BackgroundTaskSummaryResponse"] {
   return {
     total: 10,
@@ -59,7 +59,7 @@ export function createBackgroundTaskSummary(
 // ============================================================================
 
 export function createAppConfiguration(
-  overrides?: Partial<components["schemas"]["AppConfigurationResponse"]>
+  overrides?: Partial<components["schemas"]["AppConfigurationResponse"]>,
 ): components["schemas"]["AppConfigurationResponse"] {
   return {
     sections: {
@@ -82,7 +82,7 @@ export function createAppConfiguration(
 }
 
 export function createConfigSectionUpdateRequest(
-  overrides?: Partial<components["schemas"]["ConfigSectionUpdateRequest"]>
+  overrides?: Partial<components["schemas"]["ConfigSectionUpdateRequest"]>,
 ): components["schemas"]["ConfigSectionUpdateRequest"] {
   return {
     updates: {
@@ -97,7 +97,7 @@ export function createConfigSectionUpdateRequest(
 // ============================================================================
 
 export function createBackgroundTask(
-  overrides?: Partial<components["schemas"]["BackgroundTaskResponse"]>
+  overrides?: Partial<components["schemas"]["BackgroundTaskResponse"]>,
 ): components["schemas"]["BackgroundTaskResponse"] {
   return {
     id: "task-123",
@@ -112,14 +112,13 @@ export function createBackgroundTask(
 }
 
 export function createBackgroundTaskArray(
-  count: number = 3
+  count: number = 3,
 ): components["schemas"]["BackgroundTaskResponse"][] {
   return Array.from({ length: count }, (_, i) =>
     createBackgroundTask({
       id: `task-${i + 1}`,
-      name:
-        i % 2 === 0 ? "import_reference_data" : "sync_external_sources",
+      name: i % 2 === 0 ? "import_reference_data" : "sync_external_sources",
       status: i === 0 ? "running" : "completed",
-    })
+    }),
   );
 }

@@ -80,7 +80,10 @@ export function SchemaTable<T extends { id: string }>({
   }
 
   return (
-    <div data-testid="schema-table" style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+    <div
+      data-testid="schema-table"
+      style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}
+    >
       <div className="table-wrap">
         <table className="t">
           <thead>
@@ -108,7 +111,7 @@ export function SchemaTable<T extends { id: string }>({
                       )}
                     </div>
                   </th>
-                ))
+                )),
               )}
               <th style={{ width: 40 }} />
             </tr>

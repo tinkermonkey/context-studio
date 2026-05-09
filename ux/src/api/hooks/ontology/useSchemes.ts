@@ -3,10 +3,8 @@ import { QUERY_KEYS } from "@/api/config";
 import { ontologyService } from "@/api/services/ontology";
 import type { components } from "@/api/types";
 
-type ConceptSchemeCreateRequest =
-  components["schemas"]["ConceptSchemeCreateRequest"];
-type ConceptSchemeUpdateRequest =
-  components["schemas"]["ConceptSchemeUpdateRequest"];
+type ConceptSchemeCreateRequest = components["schemas"]["ConceptSchemeCreateRequest"];
+type ConceptSchemeUpdateRequest = components["schemas"]["ConceptSchemeUpdateRequest"];
 
 export function useSchemes(taxonomyId?: string) {
   return useQuery({
@@ -26,13 +24,8 @@ export function useScheme(id: string) {
 export function useCreateScheme() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      taxonomyId,
-      data,
-    }: {
-      taxonomyId: string;
-      data: ConceptSchemeCreateRequest;
-    }) => ontologyService.createScheme(taxonomyId, data),
+    mutationFn: ({ taxonomyId, data }: { taxonomyId: string; data: ConceptSchemeCreateRequest }) =>
+      ontologyService.createScheme(taxonomyId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.schemes() });
     },
@@ -42,13 +35,8 @@ export function useCreateScheme() {
 export function useUpdateScheme() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: ConceptSchemeUpdateRequest;
-    }) => ontologyService.updateScheme(id, data),
+    mutationFn: ({ id, data }: { id: string; data: ConceptSchemeUpdateRequest }) =>
+      ontologyService.updateScheme(id, data),
     onSuccess: (_result, { id }) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.schemes() });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.scheme(id) });

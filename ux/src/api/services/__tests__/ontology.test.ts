@@ -58,9 +58,7 @@ describe("OntologyService - Taxonomies", () => {
         createTaxonomy({ id: "tax-2", title: "Chemistry" }),
       ]);
 
-      server.use(
-        rest.get("*/api/taxonomies", (req, res, ctx) => res(ctx.json(mockTaxonomies)))
-      );
+      server.use(rest.get("*/api/taxonomies", (req, res, ctx) => res(ctx.json(mockTaxonomies))));
 
       const result = await ontologyService.listTaxonomies();
 
@@ -73,12 +71,12 @@ describe("OntologyService - Taxonomies", () => {
       server.use(
         rest.get("*/api/taxonomies", (req, res, ctx) =>
           res(
-        ctx.status(500),
-        ctx.json({
-          detail: "Internal server error",
-        })
-      )
-        )
+            ctx.status(500),
+            ctx.json({
+              detail: "Internal server error",
+            }),
+          ),
+        ),
       );
 
       await expect(ontologyService.listTaxonomies()).rejects.toMatchObject({
@@ -97,7 +95,7 @@ describe("OntologyService - Taxonomies", () => {
       });
 
       server.use(
-        rest.get("*/api/taxonomies/tax-123", (req, res, ctx) => res(ctx.json(mockTaxonomy)))
+        rest.get("*/api/taxonomies/tax-123", (req, res, ctx) => res(ctx.json(mockTaxonomy))),
       );
 
       const result = await ontologyService.getTaxonomy("tax-123");
@@ -111,17 +109,15 @@ describe("OntologyService - Taxonomies", () => {
       server.use(
         rest.get("*/api/taxonomies/not-found", (req, res, ctx) =>
           res(
-        ctx.status(404),
-        ctx.json({
-          detail: "Taxonomy not found",
-        })
-      )
-        )
+            ctx.status(404),
+            ctx.json({
+              detail: "Taxonomy not found",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        ontologyService.getTaxonomy("not-found")
-      ).rejects.toMatchObject({
+      await expect(ontologyService.getTaxonomy("not-found")).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
         detail: expect.stringContaining("Taxonomy not found"),
@@ -139,9 +135,7 @@ describe("OntologyService - Taxonomies", () => {
         title: "New Biology",
       });
 
-      server.use(
-        rest.post("*/api/taxonomies", (req, res, ctx) => res(ctx.json(mockResponse)))
-      );
+      server.use(rest.post("*/api/taxonomies", (req, res, ctx) => res(ctx.json(mockResponse))));
 
       const result = await ontologyService.createTaxonomy(createRequest);
 
@@ -156,17 +150,15 @@ describe("OntologyService - Taxonomies", () => {
       server.use(
         rest.post("*/api/taxonomies", (req, res, ctx) =>
           res(
-        ctx.status(400),
-        ctx.json({
-          detail: "Title cannot be empty",
-        })
-      )
-        )
+            ctx.status(400),
+            ctx.json({
+              detail: "Title cannot be empty",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        ontologyService.createTaxonomy(createRequest)
-      ).rejects.toMatchObject({
+      await expect(ontologyService.createTaxonomy(createRequest)).rejects.toMatchObject({
         name: "ApiError",
         status: 400,
         detail: expect.stringContaining("Title cannot be empty"),
@@ -181,17 +173,15 @@ describe("OntologyService - Taxonomies", () => {
       server.use(
         rest.post("*/api/taxonomies", (req, res, ctx) =>
           res(
-        ctx.status(409),
-        ctx.json({
-          detail: "Taxonomy with this title already exists",
-        })
-      )
-        )
+            ctx.status(409),
+            ctx.json({
+              detail: "Taxonomy with this title already exists",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        ontologyService.createTaxonomy(createRequest)
-      ).rejects.toMatchObject({
+      await expect(ontologyService.createTaxonomy(createRequest)).rejects.toMatchObject({
         name: "ApiError",
         status: 409,
         detail: expect.stringContaining("already exists"),
@@ -208,7 +198,7 @@ describe("OntologyService - Taxonomies", () => {
       });
 
       server.use(
-        rest.put("*/api/taxonomies/tax-123", (req, res, ctx) => res(ctx.json(mockResponse)))
+        rest.put("*/api/taxonomies/tax-123", (req, res, ctx) => res(ctx.json(mockResponse))),
       );
 
       const result = await ontologyService.updateTaxonomy("tax-123", updateRequest);
@@ -223,16 +213,16 @@ describe("OntologyService - Taxonomies", () => {
       server.use(
         rest.put("*/api/taxonomies/not-found", (req, res, ctx) =>
           res(
-        ctx.status(404),
-        ctx.json({
-          detail: "Taxonomy not found",
-        })
-      )
-        )
+            ctx.status(404),
+            ctx.json({
+              detail: "Taxonomy not found",
+            }),
+          ),
+        ),
       );
 
       await expect(
-        ontologyService.updateTaxonomy("not-found", updateRequest)
+        ontologyService.updateTaxonomy("not-found", updateRequest),
       ).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
@@ -242,30 +232,24 @@ describe("OntologyService - Taxonomies", () => {
 
   describe("deleteTaxonomy", () => {
     it("deletes taxonomy via DELETE /api/taxonomies/:id", async () => {
-      server.use(
-        rest.delete("*/api/taxonomies/tax-123", (req, res, ctx) => res(ctx.status(204)))
-      );
+      server.use(rest.delete("*/api/taxonomies/tax-123", (req, res, ctx) => res(ctx.status(204))));
 
-      await expect(
-        ontologyService.deleteTaxonomy("tax-123")
-      ).resolves.toBeDefined();
+      await expect(ontologyService.deleteTaxonomy("tax-123")).resolves.toBeDefined();
     });
 
     it("throws ApiError with 404 on deleteTaxonomy with non-existent ID", async () => {
       server.use(
         rest.delete("*/api/taxonomies/not-found", (req, res, ctx) =>
           res(
-        ctx.status(404),
-        ctx.json({
-          detail: "Taxonomy not found",
-        })
-      )
-        )
+            ctx.status(404),
+            ctx.json({
+              detail: "Taxonomy not found",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        ontologyService.deleteTaxonomy("not-found")
-      ).rejects.toMatchObject({
+      await expect(ontologyService.deleteTaxonomy("not-found")).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
       });
@@ -275,17 +259,15 @@ describe("OntologyService - Taxonomies", () => {
       server.use(
         rest.delete("*/api/taxonomies/tax-123", (req, res, ctx) =>
           res(
-        ctx.status(422),
-        ctx.json({
-          detail: "Cannot delete taxonomy with concept schemes",
-        })
-      )
-        )
+            ctx.status(422),
+            ctx.json({
+              detail: "Cannot delete taxonomy with concept schemes",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        ontologyService.deleteTaxonomy("tax-123")
-      ).rejects.toMatchObject({
+      await expect(ontologyService.deleteTaxonomy("tax-123")).rejects.toMatchObject({
         name: "ApiError",
         status: 422,
         detail: expect.stringContaining("concept schemes"),
@@ -306,9 +288,7 @@ describe("OntologyService - Concept Schemes", () => {
         createConceptScheme({ id: "scheme-2", title: "Plants" }),
       ]);
 
-      server.use(
-        rest.get("*/api/schemes", (req, res, ctx) => res(ctx.json(mockSchemes)))
-      );
+      server.use(rest.get("*/api/schemes", (req, res, ctx) => res(ctx.json(mockSchemes))));
 
       const result = await ontologyService.listSchemes();
 
@@ -328,7 +308,7 @@ describe("OntologyService - Concept Schemes", () => {
             return res(ctx.json(mockSchemes));
           }
           return res(ctx.json(createListSchemes([])));
-        })
+        }),
       );
 
       const result = await ontologyService.listSchemes("tax-123");
@@ -341,12 +321,12 @@ describe("OntologyService - Concept Schemes", () => {
       server.use(
         rest.get("*/api/schemes", (req, res, ctx) =>
           res(
-        ctx.status(500),
-        ctx.json({
-          detail: "Internal server error",
-        })
-      )
-        )
+            ctx.status(500),
+            ctx.json({
+              detail: "Internal server error",
+            }),
+          ),
+        ),
       );
 
       await expect(ontologyService.listSchemes()).rejects.toMatchObject({
@@ -364,7 +344,7 @@ describe("OntologyService - Concept Schemes", () => {
       });
 
       server.use(
-        rest.get("*/api/schemes/scheme-123", (req, res, ctx) => res(ctx.json(mockScheme)))
+        rest.get("*/api/schemes/scheme-123", (req, res, ctx) => res(ctx.json(mockScheme))),
       );
 
       const result = await ontologyService.getScheme("scheme-123");
@@ -376,17 +356,15 @@ describe("OntologyService - Concept Schemes", () => {
       server.use(
         rest.get("*/api/schemes/not-found", (req, res, ctx) =>
           res(
-        ctx.status(404),
-        ctx.json({
-          detail: "Concept scheme not found",
-        })
-      )
-        )
+            ctx.status(404),
+            ctx.json({
+              detail: "Concept scheme not found",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        ontologyService.getScheme("not-found")
-      ).rejects.toMatchObject({
+      await expect(ontologyService.getScheme("not-found")).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
       });
@@ -406,14 +384,11 @@ describe("OntologyService - Concept Schemes", () => {
 
       server.use(
         rest.post("*/api/taxonomies/tax-123/schemes", (req, res, ctx) =>
-          res(ctx.json(mockResponse))
-        )
+          res(ctx.json(mockResponse)),
+        ),
       );
 
-      const result = await ontologyService.createScheme(
-        "tax-123",
-        createRequest
-      );
+      const result = await ontologyService.createScheme("tax-123", createRequest);
 
       expect(result).toEqual(mockResponse);
       expect(result.taxonomy_id).toBe("tax-123");
@@ -425,17 +400,15 @@ describe("OntologyService - Concept Schemes", () => {
       server.use(
         rest.post("*/api/taxonomies/not-found/schemes", (req, res, ctx) =>
           res(
-        ctx.status(404),
-        ctx.json({
-          detail: "Taxonomy not found",
-        })
-      )
-        )
+            ctx.status(404),
+            ctx.json({
+              detail: "Taxonomy not found",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        ontologyService.createScheme("not-found", createRequest)
-      ).rejects.toMatchObject({
+      await expect(ontologyService.createScheme("not-found", createRequest)).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
       });
@@ -451,13 +424,10 @@ describe("OntologyService - Concept Schemes", () => {
       });
 
       server.use(
-        rest.put("*/api/schemes/scheme-123", (req, res, ctx) => res(ctx.json(mockResponse)))
+        rest.put("*/api/schemes/scheme-123", (req, res, ctx) => res(ctx.json(mockResponse))),
       );
 
-      const result = await ontologyService.updateScheme(
-        "scheme-123",
-        updateRequest
-      );
+      const result = await ontologyService.updateScheme("scheme-123", updateRequest);
 
       expect(result.title).toBe("Updated Scheme");
     });
@@ -465,15 +435,9 @@ describe("OntologyService - Concept Schemes", () => {
 
   describe("deleteScheme", () => {
     it("deletes scheme via DELETE /api/schemes/:id", async () => {
-      server.use(
-        rest.delete("*/api/schemes/scheme-123", (req, res, ctx) =>
-          res(ctx.status(204))
-        )
-      );
+      server.use(rest.delete("*/api/schemes/scheme-123", (req, res, ctx) => res(ctx.status(204))));
 
-      await expect(
-        ontologyService.deleteScheme("scheme-123")
-      ).resolves.toBeDefined();
+      await expect(ontologyService.deleteScheme("scheme-123")).resolves.toBeDefined();
     });
   });
 });
@@ -490,9 +454,7 @@ describe("OntologyService - Classes", () => {
         createClass({ id: "class-2", title: "Cat" }),
       ]);
 
-      server.use(
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses)))
-      );
+      server.use(rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))));
 
       const result = await ontologyService.listClasses();
 
@@ -518,7 +480,7 @@ describe("OntologyService - Classes", () => {
             return res(ctx.json(mockClasses));
           }
           return res(ctx.json(createListClasses([])));
-        })
+        }),
       );
 
       const result = await ontologyService.listClasses({
@@ -533,12 +495,12 @@ describe("OntologyService - Classes", () => {
       server.use(
         rest.get("*/api/classes", (req, res, ctx) =>
           res(
-        ctx.status(500),
-        ctx.json({
-          detail: "Internal server error",
-        })
-      )
-        )
+            ctx.status(500),
+            ctx.json({
+              detail: "Internal server error",
+            }),
+          ),
+        ),
       );
 
       await expect(ontologyService.listClasses()).rejects.toMatchObject({
@@ -555,9 +517,7 @@ describe("OntologyService - Classes", () => {
         title: "Dog",
       });
 
-      server.use(
-        rest.get("*/api/classes/class-123", (req, res, ctx) => res(ctx.json(mockClass)))
-      );
+      server.use(rest.get("*/api/classes/class-123", (req, res, ctx) => res(ctx.json(mockClass))));
 
       const result = await ontologyService.getClass("class-123");
 
@@ -568,17 +528,15 @@ describe("OntologyService - Classes", () => {
       server.use(
         rest.get("*/api/classes/not-found", (req, res, ctx) =>
           res(
-        ctx.status(404),
-        ctx.json({
-          detail: "Class not found",
-        })
-      )
-        )
+            ctx.status(404),
+            ctx.json({
+              detail: "Class not found",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        ontologyService.getClass("not-found")
-      ).rejects.toMatchObject({
+      await expect(ontologyService.getClass("not-found")).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
       });
@@ -596,14 +554,11 @@ describe("OntologyService - Classes", () => {
 
       server.use(
         rest.post("*/api/schemes/scheme-123/classes", (req, res, ctx) =>
-          res(ctx.json(mockResponse))
-        )
+          res(ctx.json(mockResponse)),
+        ),
       );
 
-      const result = await ontologyService.createClass(
-        "scheme-123",
-        createRequest
-      );
+      const result = await ontologyService.createClass("scheme-123", createRequest);
 
       expect(result.concept_scheme_id).toBe("scheme-123");
     });
@@ -618,13 +573,10 @@ describe("OntologyService - Classes", () => {
       });
 
       server.use(
-        rest.put("*/api/classes/class-123", (req, res, ctx) => res(ctx.json(mockResponse)))
+        rest.put("*/api/classes/class-123", (req, res, ctx) => res(ctx.json(mockResponse))),
       );
 
-      const result = await ontologyService.updateClass(
-        "class-123",
-        updateRequest
-      );
+      const result = await ontologyService.updateClass("class-123", updateRequest);
 
       expect(result.title).toBe("Updated Dog");
     });
@@ -639,9 +591,7 @@ describe("OntologyService - Classes", () => {
       });
 
       server.use(
-        rest.post("*/api/classes/class-123/move", (req, res, ctx) =>
-          res(ctx.json(mockResponse))
-        )
+        rest.post("*/api/classes/class-123/move", (req, res, ctx) => res(ctx.json(mockResponse))),
       );
 
       const result = await ontologyService.moveClass("class-123", moveRequest);
@@ -655,17 +605,15 @@ describe("OntologyService - Classes", () => {
       server.use(
         rest.post("*/api/classes/class-123/move", (req, res, ctx) =>
           res(
-        ctx.status(400),
-        ctx.json({
-          detail: "Target scheme not found",
-        })
-      )
-        )
+            ctx.status(400),
+            ctx.json({
+              detail: "Target scheme not found",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        ontologyService.moveClass("class-123", moveRequest)
-      ).rejects.toMatchObject({
+      await expect(ontologyService.moveClass("class-123", moveRequest)).rejects.toMatchObject({
         name: "ApiError",
         status: 400,
       });
@@ -674,15 +622,9 @@ describe("OntologyService - Classes", () => {
 
   describe("deleteClass", () => {
     it("deletes class via DELETE /api/classes/:id", async () => {
-      server.use(
-        rest.delete("*/api/classes/class-123", (req, res, ctx) =>
-          res(ctx.status(204))
-        )
-      );
+      server.use(rest.delete("*/api/classes/class-123", (req, res, ctx) => res(ctx.status(204))));
 
-      await expect(
-        ontologyService.deleteClass("class-123")
-      ).resolves.toBeDefined();
+      await expect(ontologyService.deleteClass("class-123")).resolves.toBeDefined();
     });
   });
 });
@@ -699,9 +641,7 @@ describe("OntologyService - Individuals", () => {
         createIndividual({ id: "ind-2", title: "Fluffy" }),
       ]);
 
-      server.use(
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals)))
-      );
+      server.use(rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))));
 
       const result = await ontologyService.listIndividuals();
 
@@ -723,7 +663,7 @@ describe("OntologyService - Individuals", () => {
             return res(ctx.json(mockIndividuals));
           }
           return res(ctx.json(createListIndividuals([])));
-        })
+        }),
       );
 
       const result = await ontologyService.listIndividuals({
@@ -737,12 +677,12 @@ describe("OntologyService - Individuals", () => {
       server.use(
         rest.get("*/api/individuals", (req, res, ctx) =>
           res(
-        ctx.status(500),
-        ctx.json({
-          detail: "Internal server error",
-        })
-      )
-        )
+            ctx.status(500),
+            ctx.json({
+              detail: "Internal server error",
+            }),
+          ),
+        ),
       );
 
       await expect(ontologyService.listIndividuals()).rejects.toMatchObject({
@@ -760,7 +700,7 @@ describe("OntologyService - Individuals", () => {
       });
 
       server.use(
-        rest.get("*/api/individuals/ind-123", (req, res, ctx) => res(ctx.json(mockIndividual)))
+        rest.get("*/api/individuals/ind-123", (req, res, ctx) => res(ctx.json(mockIndividual))),
       );
 
       const result = await ontologyService.getIndividual("ind-123");
@@ -772,17 +712,15 @@ describe("OntologyService - Individuals", () => {
       server.use(
         rest.get("*/api/individuals/not-found", (req, res, ctx) =>
           res(
-        ctx.status(404),
-        ctx.json({
-          detail: "Individual not found",
-        })
-      )
-        )
+            ctx.status(404),
+            ctx.json({
+              detail: "Individual not found",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        ontologyService.getIndividual("not-found")
-      ).rejects.toMatchObject({
+      await expect(ontologyService.getIndividual("not-found")).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
       });
@@ -801,9 +739,7 @@ describe("OntologyService - Individuals", () => {
         class_ids: ["class-dog"],
       });
 
-      server.use(
-        rest.post("*/api/individuals", (req, res, ctx) => res(ctx.json(mockResponse)))
-      );
+      server.use(rest.post("*/api/individuals", (req, res, ctx) => res(ctx.json(mockResponse))));
 
       const result = await ontologyService.createIndividual(createRequest);
 
@@ -819,17 +755,15 @@ describe("OntologyService - Individuals", () => {
       server.use(
         rest.post("*/api/individuals", (req, res, ctx) =>
           res(
-        ctx.status(400),
-        ctx.json({
-          detail: "One or more classes not found",
-        })
-      )
-        )
+            ctx.status(400),
+            ctx.json({
+              detail: "One or more classes not found",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        ontologyService.createIndividual(createRequest)
-      ).rejects.toMatchObject({
+      await expect(ontologyService.createIndividual(createRequest)).rejects.toMatchObject({
         name: "ApiError",
         status: 400,
       });
@@ -845,13 +779,10 @@ describe("OntologyService - Individuals", () => {
       });
 
       server.use(
-        rest.put("*/api/individuals/ind-123", (req, res, ctx) => res(ctx.json(mockResponse)))
+        rest.put("*/api/individuals/ind-123", (req, res, ctx) => res(ctx.json(mockResponse))),
       );
 
-      const result = await ontologyService.updateIndividual(
-        "ind-123",
-        updateRequest
-      );
+      const result = await ontologyService.updateIndividual("ind-123", updateRequest);
 
       expect(result.title).toBe("Updated Fido");
     });
@@ -859,15 +790,9 @@ describe("OntologyService - Individuals", () => {
 
   describe("deleteIndividual", () => {
     it("deletes individual via DELETE /api/individuals/:id", async () => {
-      server.use(
-        rest.delete("*/api/individuals/ind-123", (req, res, ctx) =>
-          res(ctx.status(204))
-        )
-      );
+      server.use(rest.delete("*/api/individuals/ind-123", (req, res, ctx) => res(ctx.status(204))));
 
-      await expect(
-        ontologyService.deleteIndividual("ind-123")
-      ).resolves.toBeDefined();
+      await expect(ontologyService.deleteIndividual("ind-123")).resolves.toBeDefined();
     });
   });
 
@@ -881,14 +806,11 @@ describe("OntologyService - Individuals", () => {
 
       server.use(
         rest.post("*/api/individuals/ind-123/classes", (req, res, ctx) =>
-          res(ctx.json(mockResponse))
-        )
+          res(ctx.json(mockResponse)),
+        ),
       );
 
-      const result = await ontologyService.addParentClass(
-        "ind-123",
-        classRequest
-      );
+      const result = await ontologyService.addParentClass("ind-123", classRequest);
 
       expect(result.class_ids).toContain("class-new");
     });
@@ -899,20 +821,20 @@ describe("OntologyService - Individuals", () => {
       server.use(
         rest.post("*/api/individuals/not-found/classes", (req, res, ctx) =>
           res(
-        ctx.status(404),
-        ctx.json({
-          detail: "Individual not found",
-        })
-      )
-        )
+            ctx.status(404),
+            ctx.json({
+              detail: "Individual not found",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        ontologyService.addParentClass("not-found", classRequest)
-      ).rejects.toMatchObject({
-        name: "ApiError",
-        status: 404,
-      });
+      await expect(ontologyService.addParentClass("not-found", classRequest)).rejects.toMatchObject(
+        {
+          name: "ApiError",
+          status: 404,
+        },
+      );
     });
   });
 
@@ -920,12 +842,12 @@ describe("OntologyService - Individuals", () => {
     it("removes parent class from individual via DELETE /api/individuals/:individualId/classes/:classId", async () => {
       server.use(
         rest.delete("*/api/individuals/ind-123/classes/class-old", (req, res, ctx) =>
-          res(ctx.status(204))
-        )
+          res(ctx.status(204)),
+        ),
       );
 
       await expect(
-        ontologyService.removeParentClass("ind-123", "class-old")
+        ontologyService.removeParentClass("ind-123", "class-old"),
       ).resolves.toBeDefined();
     });
   });
@@ -942,14 +864,11 @@ describe("OntologyService - Individuals", () => {
 
       server.use(
         rest.put("*/api/individuals/ind-123/classes", (req, res, ctx) =>
-          res(ctx.json(mockResponse))
-        )
+          res(ctx.json(mockResponse)),
+        ),
       );
 
-      const result = await ontologyService.reorderIndividualClasses(
-        "ind-123",
-        reorderRequest
-      );
+      const result = await ontologyService.reorderIndividualClasses("ind-123", reorderRequest);
 
       expect(result.class_ids).toEqual(["class-2", "class-1", "class-3"]);
     });
@@ -968,9 +887,7 @@ describe("OntologyService - Property Definitions", () => {
         createPropertyDefinition({ id: "prop-2", title: "Size" }),
       ]);
 
-      server.use(
-        rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(mockProperties)))
-      );
+      server.use(rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(mockProperties))));
 
       const result = await ontologyService.listProperties();
 
@@ -989,7 +906,7 @@ describe("OntologyService - Property Definitions", () => {
             return res(ctx.json(mockProperties));
           }
           return res(ctx.json(createListProperties([])));
-        })
+        }),
       );
 
       const result = await ontologyService.listProperties(true);
@@ -1001,12 +918,12 @@ describe("OntologyService - Property Definitions", () => {
       server.use(
         rest.get("*/api/properties", (req, res, ctx) =>
           res(
-        ctx.status(500),
-        ctx.json({
-          detail: "Internal server error",
-        })
-      )
-        )
+            ctx.status(500),
+            ctx.json({
+              detail: "Internal server error",
+            }),
+          ),
+        ),
       );
 
       await expect(ontologyService.listProperties()).rejects.toMatchObject({
@@ -1024,7 +941,7 @@ describe("OntologyService - Property Definitions", () => {
       });
 
       server.use(
-        rest.get("*/api/properties/prop-123", (req, res, ctx) => res(ctx.json(mockProperty)))
+        rest.get("*/api/properties/prop-123", (req, res, ctx) => res(ctx.json(mockProperty))),
       );
 
       const result = await ontologyService.getProperty("prop-123");
@@ -1036,17 +953,15 @@ describe("OntologyService - Property Definitions", () => {
       server.use(
         rest.get("*/api/properties/not-found", (req, res, ctx) =>
           res(
-        ctx.status(404),
-        ctx.json({
-          detail: "Property not found",
-        })
-      )
-        )
+            ctx.status(404),
+            ctx.json({
+              detail: "Property not found",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        ontologyService.getProperty("not-found")
-      ).rejects.toMatchObject({
+      await expect(ontologyService.getProperty("not-found")).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
       });
@@ -1063,9 +978,7 @@ describe("OntologyService - Property Definitions", () => {
         title: "Color",
       });
 
-      server.use(
-        rest.post("*/api/properties", (req, res, ctx) => res(ctx.json(mockResponse)))
-      );
+      server.use(rest.post("*/api/properties", (req, res, ctx) => res(ctx.json(mockResponse))));
 
       const result = await ontologyService.createProperty(createRequest);
 
@@ -1081,17 +994,15 @@ describe("OntologyService - Property Definitions", () => {
       server.use(
         rest.post("*/api/properties", (req, res, ctx) =>
           res(
-        ctx.status(400),
-        ctx.json({
-          detail: "Title cannot be empty",
-        })
-      )
-        )
+            ctx.status(400),
+            ctx.json({
+              detail: "Title cannot be empty",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        ontologyService.createProperty(createRequest)
-      ).rejects.toMatchObject({
+      await expect(ontologyService.createProperty(createRequest)).rejects.toMatchObject({
         name: "ApiError",
         status: 400,
       });
@@ -1107,13 +1018,10 @@ describe("OntologyService - Property Definitions", () => {
       });
 
       server.use(
-        rest.put("*/api/properties/prop-123", (req, res, ctx) => res(ctx.json(mockResponse)))
+        rest.put("*/api/properties/prop-123", (req, res, ctx) => res(ctx.json(mockResponse))),
       );
 
-      const result = await ontologyService.updateProperty(
-        "prop-123",
-        updateRequest
-      );
+      const result = await ontologyService.updateProperty("prop-123", updateRequest);
 
       expect(result.title).toBe("Updated Color");
     });
@@ -1121,32 +1029,24 @@ describe("OntologyService - Property Definitions", () => {
 
   describe("deleteProperty", () => {
     it("deletes property via DELETE /api/properties/:id", async () => {
-      server.use(
-        rest.delete("*/api/properties/prop-123", (req, res, ctx) =>
-          res(ctx.status(204))
-        )
-      );
+      server.use(rest.delete("*/api/properties/prop-123", (req, res, ctx) => res(ctx.status(204))));
 
-      await expect(
-        ontologyService.deleteProperty("prop-123")
-      ).resolves.toBeDefined();
+      await expect(ontologyService.deleteProperty("prop-123")).resolves.toBeDefined();
     });
 
     it("throws ApiError with 422 on deleteProperty with dependent relationships", async () => {
       server.use(
         rest.delete("*/api/properties/prop-123", (req, res, ctx) =>
           res(
-        ctx.status(422),
-        ctx.json({
-          detail: "Cannot delete property with existing relationships",
-        })
-      )
-        )
+            ctx.status(422),
+            ctx.json({
+              detail: "Cannot delete property with existing relationships",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        ontologyService.deleteProperty("prop-123")
-      ).rejects.toMatchObject({
+      await expect(ontologyService.deleteProperty("prop-123")).rejects.toMatchObject({
         name: "ApiError",
         status: 422,
         detail: expect.stringContaining("relationships"),
@@ -1168,7 +1068,7 @@ describe("OntologyService - Relationships", () => {
       ]);
 
       server.use(
-        rest.get("*/api/relationships", (req, res, ctx) => res(ctx.json(mockRelationships)))
+        rest.get("*/api/relationships", (req, res, ctx) => res(ctx.json(mockRelationships))),
       );
 
       const result = await ontologyService.listRelationships();
@@ -1197,7 +1097,7 @@ describe("OntologyService - Relationships", () => {
             return res(ctx.json(mockRelationships));
           }
           return res(ctx.json(createListRelationships([])));
-        })
+        }),
       );
 
       const result = await ontologyService.listRelationships({
@@ -1213,12 +1113,12 @@ describe("OntologyService - Relationships", () => {
       server.use(
         rest.get("*/api/relationships", (req, res, ctx) =>
           res(
-        ctx.status(500),
-        ctx.json({
-          detail: "Internal server error",
-        })
-      )
-        )
+            ctx.status(500),
+            ctx.json({
+              detail: "Internal server error",
+            }),
+          ),
+        ),
       );
 
       await expect(ontologyService.listRelationships()).rejects.toMatchObject({
@@ -1235,9 +1135,7 @@ describe("OntologyService - Relationships", () => {
       });
 
       server.use(
-        rest.get("*/api/relationships/rel-123", (req, res, ctx) =>
-          res(ctx.json(mockRelationship))
-        )
+        rest.get("*/api/relationships/rel-123", (req, res, ctx) => res(ctx.json(mockRelationship))),
       );
 
       const result = await ontologyService.getRelationship("rel-123");
@@ -1249,17 +1147,15 @@ describe("OntologyService - Relationships", () => {
       server.use(
         rest.get("*/api/relationships/not-found", (req, res, ctx) =>
           res(
-        ctx.status(404),
-        ctx.json({
-          detail: "Relationship not found",
-        })
-      )
-        )
+            ctx.status(404),
+            ctx.json({
+              detail: "Relationship not found",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        ontologyService.getRelationship("not-found")
-      ).rejects.toMatchObject({
+      await expect(ontologyService.getRelationship("not-found")).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
       });
@@ -1273,9 +1169,7 @@ describe("OntologyService - Relationships", () => {
         id: "rel-999",
       });
 
-      server.use(
-        rest.post("*/api/relationships", (req, res, ctx) => res(ctx.json(mockResponse)))
-      );
+      server.use(rest.post("*/api/relationships", (req, res, ctx) => res(ctx.json(mockResponse))));
 
       const result = await ontologyService.createRelationship(createRequest);
 
@@ -1290,17 +1184,15 @@ describe("OntologyService - Relationships", () => {
       server.use(
         rest.post("*/api/relationships", (req, res, ctx) =>
           res(
-        ctx.status(400),
-        ctx.json({
-          detail: "Source class not found",
-        })
-      )
-        )
+            ctx.status(400),
+            ctx.json({
+              detail: "Source class not found",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        ontologyService.createRelationship(createRequest)
-      ).rejects.toMatchObject({
+      await expect(ontologyService.createRelationship(createRequest)).rejects.toMatchObject({
         name: "ApiError",
         status: 400,
       });
@@ -1310,31 +1202,25 @@ describe("OntologyService - Relationships", () => {
   describe("deleteRelationship", () => {
     it("deletes relationship via DELETE /api/relationships/:id", async () => {
       server.use(
-        rest.delete("*/api/relationships/rel-123", (req, res, ctx) =>
-          res(ctx.status(204))
-        )
+        rest.delete("*/api/relationships/rel-123", (req, res, ctx) => res(ctx.status(204))),
       );
 
-      await expect(
-        ontologyService.deleteRelationship("rel-123")
-      ).resolves.toBeDefined();
+      await expect(ontologyService.deleteRelationship("rel-123")).resolves.toBeDefined();
     });
 
     it("throws ApiError with 404 on deleteRelationship with non-existent ID", async () => {
       server.use(
         rest.delete("*/api/relationships/not-found", (req, res, ctx) =>
           res(
-        ctx.status(404),
-        ctx.json({
-          detail: "Relationship not found",
-        })
-      )
-        )
+            ctx.status(404),
+            ctx.json({
+              detail: "Relationship not found",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        ontologyService.deleteRelationship("not-found")
-      ).rejects.toMatchObject({
+      await expect(ontologyService.deleteRelationship("not-found")).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
       });

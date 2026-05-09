@@ -5,10 +5,7 @@ interface UseUndoDeleteOptions {
   undoWindowMs?: number;
 }
 
-export function useUndoDelete({
-  onDelete,
-  undoWindowMs = 8000,
-}: UseUndoDeleteOptions) {
+export function useUndoDelete({ onDelete, undoWindowMs = 8000 }: UseUndoDeleteOptions) {
   const [deletedId, setDeletedId] = useState<string | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -26,7 +23,7 @@ export function useUndoDelete({
         }
       }, undoWindowMs);
     },
-    [onDelete, undoWindowMs]
+    [onDelete, undoWindowMs],
   );
 
   const undo = useCallback(() => {

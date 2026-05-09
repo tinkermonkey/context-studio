@@ -30,8 +30,7 @@ export function useIndividual(id: string) {
 export function useCreateIndividual() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: IndividualCreateRequest) =>
-      ontologyService.createIndividual(data),
+    mutationFn: (data: IndividualCreateRequest) => ontologyService.createIndividual(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.individuals() });
     },
@@ -41,13 +40,8 @@ export function useCreateIndividual() {
 export function useUpdateIndividual() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: IndividualUpdateRequest;
-    }) => ontologyService.updateIndividual(id, data),
+    mutationFn: ({ id, data }: { id: string; data: IndividualUpdateRequest }) =>
+      ontologyService.updateIndividual(id, data),
     onSuccess: (_result, { id }) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.individuals() });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.individual(id) });

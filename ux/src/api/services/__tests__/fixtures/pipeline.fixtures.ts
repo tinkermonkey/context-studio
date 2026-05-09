@@ -5,7 +5,7 @@
 import type { components } from "@/api/types";
 
 export function createPipelineConfiguration(
-  overrides?: Partial<components["schemas"]["PipelineConfigurationResponse"]>
+  overrides?: Partial<components["schemas"]["PipelineConfigurationResponse"]>,
 ): components["schemas"]["PipelineConfigurationResponse"] {
   return {
     id: "pipeline-1",
@@ -24,7 +24,7 @@ export function createPipelineConfiguration(
 }
 
 export function createPipelineConfigurationCreate(
-  overrides?: Partial<components["schemas"]["PipelineConfigurationCreate"]>
+  overrides?: Partial<components["schemas"]["PipelineConfigurationCreate"]>,
 ): components["schemas"]["PipelineConfigurationCreate"] {
   return {
     pipeline: "new_pipeline",
@@ -39,7 +39,7 @@ export function createPipelineConfigurationCreate(
 }
 
 export function createPipelineConfigurationUpdate(
-  overrides?: Partial<components["schemas"]["PipelineConfigurationUpdate"]>
+  overrides?: Partial<components["schemas"]["PipelineConfigurationUpdate"]>,
 ): components["schemas"]["PipelineConfigurationUpdate"] {
   return {
     title: "Updated Pipeline",
@@ -53,7 +53,7 @@ export function createPipelineConfigurationUpdate(
 }
 
 export function createExecution(
-  overrides?: Partial<components["schemas"]["ExecutionResponse"]>
+  overrides?: Partial<components["schemas"]["ExecutionResponse"]>,
 ): components["schemas"]["ExecutionResponse"] {
   return {
     id: "exec-1",
@@ -71,7 +71,7 @@ export function createExecution(
 }
 
 export function createPipelineExecuteRequest(
-  overrides?: Partial<components["schemas"]["PipelineExecuteRequest"]>
+  overrides?: Partial<components["schemas"]["PipelineExecuteRequest"]>,
 ): components["schemas"]["PipelineExecuteRequest"] {
   return {
     input_text: "Sample text to process",

@@ -44,9 +44,7 @@ describe("AdminService - Health & Metrics", () => {
         status: "healthy",
       });
 
-      server.use(
-        rest.get("*/api/v1/admin/health", (req, res, ctx) => res(ctx.json(mockHealth)))
-      );
+      server.use(rest.get("*/api/v1/admin/health", (req, res, ctx) => res(ctx.json(mockHealth))));
 
       const result = await adminService.getHealth();
 
@@ -59,9 +57,7 @@ describe("AdminService - Health & Metrics", () => {
         status: "degraded",
       });
 
-      server.use(
-        rest.get("*/api/v1/admin/health", (req, res, ctx) => res(ctx.json(mockHealth)))
-      );
+      server.use(rest.get("*/api/v1/admin/health", (req, res, ctx) => res(ctx.json(mockHealth))));
 
       const result = await adminService.getHealth();
 
@@ -72,12 +68,12 @@ describe("AdminService - Health & Metrics", () => {
       server.use(
         rest.get("*/api/v1/admin/health", (req, res, ctx) =>
           res(
-        ctx.status(500),
-        ctx.json({
-          detail: "Health check failed",
-        })
-      )
-        )
+            ctx.status(500),
+            ctx.json({
+              detail: "Health check failed",
+            }),
+          ),
+        ),
       );
 
       await expect(adminService.getHealth()).rejects.toMatchObject({
@@ -94,9 +90,7 @@ describe("AdminService - Health & Metrics", () => {
       });
 
       server.use(
-        rest.get("*/api/v1/admin/health/database", (req, res, ctx) =>
-          res(ctx.json(mockDbHealth))
-        )
+        rest.get("*/api/v1/admin/health/database", (req, res, ctx) => res(ctx.json(mockDbHealth))),
       );
 
       const result = await adminService.getDatabaseHealth();
@@ -112,9 +106,7 @@ describe("AdminService - Health & Metrics", () => {
       });
 
       server.use(
-        rest.get("*/api/v1/admin/health/database", (req, res, ctx) =>
-          res(ctx.json(mockDbHealth))
-        )
+        rest.get("*/api/v1/admin/health/database", (req, res, ctx) => res(ctx.json(mockDbHealth))),
       );
 
       const result = await adminService.getDatabaseHealth();
@@ -127,12 +119,12 @@ describe("AdminService - Health & Metrics", () => {
       server.use(
         rest.get("*/api/v1/admin/health/database", (req, res, ctx) =>
           res(
-        ctx.status(500),
-        ctx.json({
-          detail: "Database health check failed",
-        })
-      )
-        )
+            ctx.status(500),
+            ctx.json({
+              detail: "Database health check failed",
+            }),
+          ),
+        ),
       );
 
       await expect(adminService.getDatabaseHealth()).rejects.toMatchObject({
@@ -147,7 +139,7 @@ describe("AdminService - Health & Metrics", () => {
       const mockMetrics = createServiceMetrics();
 
       server.use(
-        rest.get("*/api/v1/admin/health/services", (req, res, ctx) => res(ctx.json(mockMetrics)))
+        rest.get("*/api/v1/admin/health/services", (req, res, ctx) => res(ctx.json(mockMetrics))),
       );
 
       const result = await adminService.getServiceMetrics();
@@ -162,7 +154,7 @@ describe("AdminService - Health & Metrics", () => {
       });
 
       server.use(
-        rest.get("*/api/v1/admin/health/services", (req, res, ctx) => res(ctx.json(mockMetrics)))
+        rest.get("*/api/v1/admin/health/services", (req, res, ctx) => res(ctx.json(mockMetrics))),
       );
 
       const result = await adminService.getServiceMetrics();
@@ -174,12 +166,12 @@ describe("AdminService - Health & Metrics", () => {
       server.use(
         rest.get("*/api/v1/admin/health/services", (req, res, ctx) =>
           res(
-        ctx.status(500),
-        ctx.json({
-          detail: "Could not retrieve service metrics",
-        })
-      )
-        )
+            ctx.status(500),
+            ctx.json({
+              detail: "Could not retrieve service metrics",
+            }),
+          ),
+        ),
       );
 
       await expect(adminService.getServiceMetrics()).rejects.toMatchObject({
@@ -201,7 +193,7 @@ describe("AdminService - Health & Metrics", () => {
       });
 
       server.use(
-        rest.get("*/api/v1/admin/health/tasks", (req, res, ctx) => res(ctx.json(mockSummary)))
+        rest.get("*/api/v1/admin/health/tasks", (req, res, ctx) => res(ctx.json(mockSummary))),
       );
 
       const result = await adminService.getTaskSummary();
@@ -215,12 +207,12 @@ describe("AdminService - Health & Metrics", () => {
       server.use(
         rest.get("*/api/v1/admin/health/tasks", (req, res, ctx) =>
           res(
-        ctx.status(500),
-        ctx.json({
-          detail: "Could not retrieve task summary",
-        })
-      )
-        )
+            ctx.status(500),
+            ctx.json({
+              detail: "Could not retrieve task summary",
+            }),
+          ),
+        ),
       );
 
       await expect(adminService.getTaskSummary()).rejects.toMatchObject({
@@ -241,7 +233,7 @@ describe("AdminService - Configuration Management", () => {
       const mockConfig = createAppConfiguration();
 
       server.use(
-        rest.get("*/api/v1/admin/configuration", (req, res, ctx) => res(ctx.json(mockConfig)))
+        rest.get("*/api/v1/admin/configuration", (req, res, ctx) => res(ctx.json(mockConfig))),
       );
 
       const result = await adminService.getConfig();
@@ -270,7 +262,7 @@ describe("AdminService - Configuration Management", () => {
       });
 
       server.use(
-        rest.get("*/api/v1/admin/configuration", (req, res, ctx) => res(ctx.json(mockConfig)))
+        rest.get("*/api/v1/admin/configuration", (req, res, ctx) => res(ctx.json(mockConfig))),
       );
 
       const result = await adminService.getConfig();
@@ -284,12 +276,12 @@ describe("AdminService - Configuration Management", () => {
       server.use(
         rest.get("*/api/v1/admin/configuration", (req, res, ctx) =>
           res(
-        ctx.status(500),
-        ctx.json({
-          detail: "Could not load configuration",
-        })
-      )
-        )
+            ctx.status(500),
+            ctx.json({
+              detail: "Could not load configuration",
+            }),
+          ),
+        ),
       );
 
       await expect(adminService.getConfig()).rejects.toMatchObject({
@@ -318,8 +310,8 @@ describe("AdminService - Configuration Management", () => {
 
       server.use(
         rest.patch("*/api/v1/admin/configuration/llm", (req, res, ctx) =>
-          res(ctx.json(mockResponse))
-        )
+          res(ctx.json(mockResponse)),
+        ),
       );
 
       const result = await adminService.updateConfigSection("llm", updateRequest);
@@ -337,17 +329,15 @@ describe("AdminService - Configuration Management", () => {
       server.use(
         rest.patch("*/api/v1/admin/configuration/llm", (req, res, ctx) =>
           res(
-        ctx.status(400),
-        ctx.json({
-          detail: "Invalid model specified",
-        })
-      )
-        )
+            ctx.status(400),
+            ctx.json({
+              detail: "Invalid model specified",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        adminService.updateConfigSection("llm", updateRequest)
-      ).rejects.toMatchObject({
+      await expect(adminService.updateConfigSection("llm", updateRequest)).rejects.toMatchObject({
         name: "ApiError",
         status: 400,
         detail: expect.stringContaining("Invalid model"),
@@ -360,19 +350,16 @@ describe("AdminService - Configuration Management", () => {
       server.use(
         rest.patch("*/api/v1/admin/configuration/non_existent_section", (req, res, ctx) =>
           res(
-        ctx.status(404),
-        ctx.json({
-          detail: "Configuration section not found",
-        })
-      )
-        )
+            ctx.status(404),
+            ctx.json({
+              detail: "Configuration section not found",
+            }),
+          ),
+        ),
       );
 
       await expect(
-        adminService.updateConfigSection(
-          "non_existent_section",
-          updateRequest
-        )
+        adminService.updateConfigSection("non_existent_section", updateRequest),
       ).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
@@ -398,8 +385,8 @@ describe("AdminService - Configuration Management", () => {
 
       server.use(
         rest.post("*/api/v1/admin/configuration/reset", (req, res, ctx) =>
-          res(ctx.json(mockConfig))
-        )
+          res(ctx.json(mockConfig)),
+        ),
       );
 
       const result = await adminService.resetConfig();
@@ -411,12 +398,12 @@ describe("AdminService - Configuration Management", () => {
       server.use(
         rest.post("*/api/v1/admin/configuration/reset", (req, res, ctx) =>
           res(
-        ctx.status(500),
-        ctx.json({
-          detail: "Failed to reset configuration",
-        })
-      )
-        )
+            ctx.status(500),
+            ctx.json({
+              detail: "Failed to reset configuration",
+            }),
+          ),
+        ),
       );
 
       await expect(adminService.resetConfig()).rejects.toMatchObject({
@@ -436,9 +423,7 @@ describe("AdminService - Background Tasks", () => {
     it("returns array of background tasks from GET /api/v1/admin/tasks", async () => {
       const mockTasks = createBackgroundTaskArray(3);
 
-      server.use(
-        rest.get("*/api/v1/admin/tasks", (req, res, ctx) => res(ctx.json(mockTasks)))
-      );
+      server.use(rest.get("*/api/v1/admin/tasks", (req, res, ctx) => res(ctx.json(mockTasks))));
 
       const result = await adminService.getBackgroundTasks();
 
@@ -448,9 +433,7 @@ describe("AdminService - Background Tasks", () => {
     });
 
     it("returns empty array when no tasks exist", async () => {
-      server.use(
-        rest.get("*/api/v1/admin/tasks", (req, res, ctx) => res(ctx.json([])))
-      );
+      server.use(rest.get("*/api/v1/admin/tasks", (req, res, ctx) => res(ctx.json([]))));
 
       const result = await adminService.getBackgroundTasks();
 
@@ -467,9 +450,7 @@ describe("AdminService - Background Tasks", () => {
         }),
       ];
 
-      server.use(
-        rest.get("*/api/v1/admin/tasks", (req, res, ctx) => res(ctx.json(mockTasks)))
-      );
+      server.use(rest.get("*/api/v1/admin/tasks", (req, res, ctx) => res(ctx.json(mockTasks))));
 
       const result = await adminService.getBackgroundTasks();
 
@@ -483,12 +464,12 @@ describe("AdminService - Background Tasks", () => {
       server.use(
         rest.get("*/api/v1/admin/tasks", (req, res, ctx) =>
           res(
-        ctx.status(500),
-        ctx.json({
-          detail: "Failed to retrieve tasks",
-        })
-      )
-        )
+            ctx.status(500),
+            ctx.json({
+              detail: "Failed to retrieve tasks",
+            }),
+          ),
+        ),
       );
 
       await expect(adminService.getBackgroundTasks()).rejects.toMatchObject({
@@ -506,7 +487,7 @@ describe("AdminService - Background Tasks", () => {
       });
 
       server.use(
-        rest.get("*/api/v1/admin/tasks/task-123", (req, res, ctx) => res(ctx.json(mockTask)))
+        rest.get("*/api/v1/admin/tasks/task-123", (req, res, ctx) => res(ctx.json(mockTask))),
       );
 
       const result = await adminService.getBackgroundTask("task-123");
@@ -523,7 +504,7 @@ describe("AdminService - Background Tasks", () => {
       });
 
       server.use(
-        rest.get("*/api/v1/admin/tasks/task-fail", (req, res, ctx) => res(ctx.json(mockTask)))
+        rest.get("*/api/v1/admin/tasks/task-fail", (req, res, ctx) => res(ctx.json(mockTask))),
       );
 
       const result = await adminService.getBackgroundTask("task-fail");
@@ -536,17 +517,15 @@ describe("AdminService - Background Tasks", () => {
       server.use(
         rest.get("*/api/v1/admin/tasks/not-found", (req, res, ctx) =>
           res(
-        ctx.status(404),
-        ctx.json({
-          detail: "Task not found",
-        })
-      )
-        )
+            ctx.status(404),
+            ctx.json({
+              detail: "Task not found",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        adminService.getBackgroundTask("not-found")
-      ).rejects.toMatchObject({
+      await expect(adminService.getBackgroundTask("not-found")).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
         detail: expect.stringContaining("Task not found"),
@@ -557,17 +536,15 @@ describe("AdminService - Background Tasks", () => {
       server.use(
         rest.get("*/api/v1/admin/tasks/task-123", (req, res, ctx) =>
           res(
-        ctx.status(500),
-        ctx.json({
-          detail: "Failed to retrieve task",
-        })
-      )
-        )
+            ctx.status(500),
+            ctx.json({
+              detail: "Failed to retrieve task",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        adminService.getBackgroundTask("task-123")
-      ).rejects.toMatchObject({
+      await expect(adminService.getBackgroundTask("task-123")).rejects.toMatchObject({
         name: "ApiError",
         status: 500,
       });

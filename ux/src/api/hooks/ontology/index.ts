@@ -14,13 +14,7 @@ export {
   useDeleteScheme,
 } from "./useSchemes";
 
-export {
-  useClasses,
-  useClass,
-  useCreateClass,
-  useUpdateClass,
-  useDeleteClass,
-} from "./useClasses";
+export { useClasses, useClass, useCreateClass, useUpdateClass, useDeleteClass } from "./useClasses";
 
 export {
   useIndividuals,
@@ -38,8 +32,4 @@ export {
   useDeleteProperty,
 } from "./useProperties";
 
-export {
-  useRelationships,
-  useCreateRelationship,
-  useDeleteRelationship,
-} from "./useRelationships";
+export { useRelationships, useCreateRelationship, useDeleteRelationship } from "./useRelationships";

@@ -10,7 +10,7 @@ import type { components } from "@/api/types";
 // ============================================================================
 
 export function createTaxonomy(
-  overrides?: Partial<components["schemas"]["TaxonomyResponse"]>
+  overrides?: Partial<components["schemas"]["TaxonomyResponse"]>,
 ): components["schemas"]["TaxonomyResponse"] {
   return {
     id: "tax-123",
@@ -25,7 +25,7 @@ export function createTaxonomy(
 }
 
 export function createListTaxonomies(
-  items?: components["schemas"]["TaxonomyResponse"][]
+  items?: components["schemas"]["TaxonomyResponse"][],
 ): components["schemas"]["ListResponse_TaxonomyResponse_"] {
   return {
     items: items || [createTaxonomy()],
@@ -36,7 +36,7 @@ export function createListTaxonomies(
 }
 
 export function createTaxonomyCreateRequest(
-  overrides?: Partial<components["schemas"]["TaxonomyCreateRequest"]>
+  overrides?: Partial<components["schemas"]["TaxonomyCreateRequest"]>,
 ): components["schemas"]["TaxonomyCreateRequest"] {
   return {
     title: "New Taxonomy",
@@ -50,7 +50,7 @@ export function createTaxonomyCreateRequest(
 // ============================================================================
 
 export function createConceptScheme(
-  overrides?: Partial<components["schemas"]["ConceptSchemeResponse"]>
+  overrides?: Partial<components["schemas"]["ConceptSchemeResponse"]>,
 ): components["schemas"]["ConceptSchemeResponse"] {
   return {
     id: "scheme-123",
@@ -66,7 +66,7 @@ export function createConceptScheme(
 }
 
 export function createListSchemes(
-  items?: components["schemas"]["ConceptSchemeResponse"][]
+  items?: components["schemas"]["ConceptSchemeResponse"][],
 ): components["schemas"]["ListResponse_ConceptSchemeResponse_"] {
   return {
     items: items || [createConceptScheme()],
@@ -77,7 +77,7 @@ export function createListSchemes(
 }
 
 export function createConceptSchemeCreateRequest(
-  overrides?: Partial<components["schemas"]["ConceptSchemeCreateRequest"]>
+  overrides?: Partial<components["schemas"]["ConceptSchemeCreateRequest"]>,
 ): components["schemas"]["ConceptSchemeCreateRequest"] {
   return {
     title: "New Scheme",
@@ -91,7 +91,7 @@ export function createConceptSchemeCreateRequest(
 // ============================================================================
 
 export function createClass(
-  overrides?: Partial<components["schemas"]["ClassResponse"]>
+  overrides?: Partial<components["schemas"]["ClassResponse"]>,
 ): components["schemas"]["ClassResponse"] {
   return {
     id: "class-123",
@@ -109,7 +109,7 @@ export function createClass(
 }
 
 export function createListClasses(
-  items?: components["schemas"]["ClassResponse"][]
+  items?: components["schemas"]["ClassResponse"][],
 ): components["schemas"]["ListResponse_ClassResponse_"] {
   return {
     items: items || [createClass()],
@@ -120,7 +120,7 @@ export function createListClasses(
 }
 
 export function createClassCreateRequest(
-  overrides?: Partial<components["schemas"]["ClassCreateRequest"]>
+  overrides?: Partial<components["schemas"]["ClassCreateRequest"]>,
 ): components["schemas"]["ClassCreateRequest"] {
   return {
     title: "New Class",
@@ -134,7 +134,7 @@ export function createClassCreateRequest(
 // ============================================================================
 
 export function createIndividual(
-  overrides?: Partial<components["schemas"]["IndividualResponse"]>
+  overrides?: Partial<components["schemas"]["IndividualResponse"]>,
 ): components["schemas"]["IndividualResponse"] {
   return {
     id: "ind-123",
@@ -148,7 +148,7 @@ export function createIndividual(
 }
 
 export function createListIndividuals(
-  items?: components["schemas"]["IndividualResponse"][]
+  items?: components["schemas"]["IndividualResponse"][],
 ): components["schemas"]["ListResponse_IndividualResponse_"] {
   return {
     items: items || [createIndividual()],
@@ -159,7 +159,7 @@ export function createListIndividuals(
 }
 
 export function createIndividualCreateRequest(
-  overrides?: Partial<components["schemas"]["IndividualCreateRequest"]>
+  overrides?: Partial<components["schemas"]["IndividualCreateRequest"]>,
 ): components["schemas"]["IndividualCreateRequest"] {
   return {
     title: "New Individual",
@@ -174,7 +174,7 @@ export function createIndividualCreateRequest(
 // ============================================================================
 
 export function createPropertyDefinition(
-  overrides?: Partial<components["schemas"]["PropertyDefinitionResponse"]>
+  overrides?: Partial<components["schemas"]["PropertyDefinitionResponse"]>,
 ): components["schemas"]["PropertyDefinitionResponse"] {
   return {
     id: "prop-123",
@@ -190,7 +190,7 @@ export function createPropertyDefinition(
 }
 
 export function createListProperties(
-  items?: components["schemas"]["PropertyDefinitionResponse"][]
+  items?: components["schemas"]["PropertyDefinitionResponse"][],
 ): components["schemas"]["ListResponse_PropertyDefinitionResponse_"] {
   return {
     items: items || [createPropertyDefinition()],
@@ -201,7 +201,7 @@ export function createListProperties(
 }
 
 export function createPropertyDefinitionCreateRequest(
-  overrides?: Partial<components["schemas"]["PropertyDefinitionCreateRequest"]>
+  overrides?: Partial<components["schemas"]["PropertyDefinitionCreateRequest"]>,
 ): components["schemas"]["PropertyDefinitionCreateRequest"] {
   return {
     identifier: "new_property",
@@ -216,7 +216,7 @@ export function createPropertyDefinitionCreateRequest(
 // ============================================================================
 
 export function createRelationship(
-  overrides?: Partial<components["schemas"]["RelationshipResponse"]>
+  overrides?: Partial<components["schemas"]["RelationshipResponse"]>,
 ): components["schemas"]["RelationshipResponse"] {
   return {
     id: "rel-123",
@@ -229,7 +229,7 @@ export function createRelationship(
 }
 
 export function createListRelationships(
-  items?: components["schemas"]["RelationshipResponse"][]
+  items?: components["schemas"]["RelationshipResponse"][],
 ): components["schemas"]["ListResponse_RelationshipResponse_"] {
   return {
     items: items || [createRelationship()],
@@ -240,7 +240,7 @@ export function createListRelationships(
 }
 
 export function createRelationshipCreateRequest(
-  overrides?: Partial<components["schemas"]["RelationshipCreateRequest"]>
+  overrides?: Partial<components["schemas"]["RelationshipCreateRequest"]>,
 ): components["schemas"]["RelationshipCreateRequest"] {
   return {
     source_id: "class-123",

@@ -47,9 +47,7 @@ describe("VersioningService", () => {
       });
 
       server.use(
-        rest.get("*/api/v1/versioning/changes", (req, res, ctx) =>
-          res(ctx.json(mockHistory))
-        )
+        rest.get("*/api/v1/versioning/changes", (req, res, ctx) => res(ctx.json(mockHistory))),
       );
 
       const result = await versioningService.getChanges();
@@ -75,9 +73,7 @@ describe("VersioningService", () => {
       });
 
       server.use(
-        rest.get("*/api/v1/versioning/changes", (req, res, ctx) =>
-          res(ctx.json(mockHistory))
-        )
+        rest.get("*/api/v1/versioning/changes", (req, res, ctx) => res(ctx.json(mockHistory))),
       );
 
       const result = await versioningService.getChanges({ limit: 10 });
@@ -89,12 +85,12 @@ describe("VersioningService", () => {
       server.use(
         rest.get("*/api/v1/versioning/changes", (req, res, ctx) =>
           res(
-        ctx.status(500),
-        ctx.json({
-          detail: "Failed to retrieve changes",
-        })
-      )
-        )
+            ctx.status(500),
+            ctx.json({
+              detail: "Failed to retrieve changes",
+            }),
+          ),
+        ),
       );
 
       await expect(versioningService.getChanges()).rejects.toMatchObject({
@@ -132,8 +128,8 @@ describe("VersioningService", () => {
 
       server.use(
         rest.get("*/api/v1/versioning/changes/entity-123", (req, res, ctx) =>
-          res(ctx.json(mockHistory))
-        )
+          res(ctx.json(mockHistory)),
+        ),
       );
 
       const result = await versioningService.getChangesByEntity("entity-123");
@@ -146,17 +142,15 @@ describe("VersioningService", () => {
       server.use(
         rest.get("*/api/v1/versioning/changes/not-found", (req, res, ctx) =>
           res(
-        ctx.status(404),
-        ctx.json({
-          detail: "Entity not found",
-        })
-      )
-        )
+            ctx.status(404),
+            ctx.json({
+              detail: "Entity not found",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        versioningService.getChangesByEntity("not-found")
-      ).rejects.toMatchObject({
+      await expect(versioningService.getChangesByEntity("not-found")).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
       });
@@ -175,9 +169,7 @@ describe("VersioningService", () => {
       });
 
       server.use(
-        rest.post("*/api/v1/versioning/changesets", (req, res, ctx) =>
-          res(ctx.json(mockResponse))
-        )
+        rest.post("*/api/v1/versioning/changesets", (req, res, ctx) => res(ctx.json(mockResponse))),
       );
 
       const result = await versioningService.createChangeset(createRequest);
@@ -191,16 +183,16 @@ describe("VersioningService", () => {
       server.use(
         rest.post("*/api/v1/versioning/changesets", (req, res, ctx) =>
           res(
-        ctx.status(400),
-        ctx.json({
-          detail: "Changeset name is required",
-        })
-      )
-        )
+            ctx.status(400),
+            ctx.json({
+              detail: "Changeset name is required",
+            }),
+          ),
+        ),
       );
 
       await expect(
-        versioningService.createChangeset({ name: "", description: "" })
+        versioningService.createChangeset({ name: "", description: "" }),
       ).rejects.toMatchObject({
         name: "ApiError",
         status: 400,
@@ -211,17 +203,15 @@ describe("VersioningService", () => {
       server.use(
         rest.post("*/api/v1/versioning/changesets", (req, res, ctx) =>
           res(
-        ctx.status(409),
-        ctx.json({
-          detail: "Changeset with this name already exists",
-        })
-      )
-        )
+            ctx.status(409),
+            ctx.json({
+              detail: "Changeset with this name already exists",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        versioningService.createChangeset({ name: "Existing" })
-      ).rejects.toMatchObject({
+      await expect(versioningService.createChangeset({ name: "Existing" })).rejects.toMatchObject({
         name: "ApiError",
         status: 409,
       });
@@ -237,8 +227,8 @@ describe("VersioningService", () => {
 
       server.use(
         rest.get("*/api/v1/versioning/changesets/changeset-123", (req, res, ctx) =>
-          res(ctx.json(mockChangeset))
-        )
+          res(ctx.json(mockChangeset)),
+        ),
       );
 
       const result = await versioningService.getChangeset("changeset-123");
@@ -251,17 +241,15 @@ describe("VersioningService", () => {
       server.use(
         rest.get("*/api/v1/versioning/changesets/not-found", (req, res, ctx) =>
           res(
-        ctx.status(404),
-        ctx.json({
-          detail: "Changeset not found",
-        })
-      )
-        )
+            ctx.status(404),
+            ctx.json({
+              detail: "Changeset not found",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        versioningService.getChangeset("not-found")
-      ).rejects.toMatchObject({
+      await expect(versioningService.getChangeset("not-found")).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
       });
@@ -277,9 +265,7 @@ describe("VersioningService", () => {
       });
 
       server.use(
-        rest.get("*/api/v1/versioning/sync/status", (req, res, ctx) =>
-          res(ctx.json(mockStatus))
-        )
+        rest.get("*/api/v1/versioning/sync/status", (req, res, ctx) => res(ctx.json(mockStatus))),
       );
 
       const result = await versioningService.getSyncStatus();
@@ -297,9 +283,7 @@ describe("VersioningService", () => {
       });
 
       server.use(
-        rest.get("*/api/v1/versioning/sync/status", (req, res, ctx) =>
-          res(ctx.json(mockStatus))
-        )
+        rest.get("*/api/v1/versioning/sync/status", (req, res, ctx) => res(ctx.json(mockStatus))),
       );
 
       const result = await versioningService.getSyncStatus();
@@ -312,12 +296,12 @@ describe("VersioningService", () => {
       server.use(
         rest.get("*/api/v1/versioning/sync/status", (req, res, ctx) =>
           res(
-        ctx.status(500),
-        ctx.json({
-          detail: "Failed to get sync status",
-        })
-      )
-        )
+            ctx.status(500),
+            ctx.json({
+              detail: "Failed to get sync status",
+            }),
+          ),
+        ),
       );
 
       await expect(versioningService.getSyncStatus()).rejects.toMatchObject({
@@ -335,9 +319,7 @@ describe("VersioningService", () => {
       });
 
       server.use(
-        rest.post("*/api/v1/versioning/sync/push", (req, res, ctx) =>
-          res(ctx.json(mockResult))
-        )
+        rest.post("*/api/v1/versioning/sync/push", (req, res, ctx) => res(ctx.json(mockResult))),
       );
 
       const result = await versioningService.pushSync();
@@ -350,12 +332,12 @@ describe("VersioningService", () => {
       server.use(
         rest.post("*/api/v1/versioning/sync/push", (req, res, ctx) =>
           res(
-        ctx.status(409),
-        ctx.json({
-          detail: "Sync conflict detected",
-        })
-      )
-        )
+            ctx.status(409),
+            ctx.json({
+              detail: "Sync conflict detected",
+            }),
+          ),
+        ),
       );
 
       await expect(versioningService.pushSync()).rejects.toMatchObject({
@@ -368,12 +350,12 @@ describe("VersioningService", () => {
       server.use(
         rest.post("*/api/v1/versioning/sync/push", (req, res, ctx) =>
           res(
-        ctx.status(503),
-        ctx.json({
-          detail: "Remote service unavailable",
-        })
-      )
-        )
+            ctx.status(503),
+            ctx.json({
+              detail: "Remote service unavailable",
+            }),
+          ),
+        ),
       );
 
       await expect(versioningService.pushSync()).rejects.toMatchObject({
@@ -391,9 +373,7 @@ describe("VersioningService", () => {
       });
 
       server.use(
-        rest.post("*/api/v1/versioning/sync/pull", (req, res, ctx) =>
-          res(ctx.json(mockResult))
-        )
+        rest.post("*/api/v1/versioning/sync/pull", (req, res, ctx) => res(ctx.json(mockResult))),
       );
 
       const result = await versioningService.pullSync();
@@ -406,12 +386,12 @@ describe("VersioningService", () => {
       server.use(
         rest.post("*/api/v1/versioning/sync/pull", (req, res, ctx) =>
           res(
-        ctx.status(400),
-        ctx.json({
-          detail: "Local changes must be pushed before pulling",
-        })
-      )
-        )
+            ctx.status(400),
+            ctx.json({
+              detail: "Local changes must be pushed before pulling",
+            }),
+          ),
+        ),
       );
 
       await expect(versioningService.pullSync()).rejects.toMatchObject({

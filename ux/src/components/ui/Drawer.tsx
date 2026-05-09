@@ -57,9 +57,7 @@ export function Drawer({
               {autosaveState === "saved" && lastSavedAt && (
                 <>
                   <CheckCircle size={14} className="autosave-icon-saved" />
-                  <span className="autosave-label">
-                    Saved {formatTimeAgo(lastSavedAt)}
-                  </span>
+                  <span className="autosave-label">Saved {formatTimeAgo(lastSavedAt)}</span>
                 </>
               )}
               {autosaveState === "error" && (
@@ -71,12 +69,7 @@ export function Drawer({
             </div>
           )}
           {isDirty && onRevert && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onRevert}
-              data-testid="drawer-revert-button"
-            >
+            <Button variant="ghost" size="sm" onClick={onRevert} data-testid="drawer-revert-button">
               Revert
             </Button>
           )}
@@ -90,12 +83,7 @@ export function Drawer({
               Delete
             </Button>
           )}
-          <button
-            className="modal-x"
-            onClick={onClose}
-            type="button"
-            aria-label="Close drawer"
-          >
+          <button className="modal-x" onClick={onClose} type="button" aria-label="Close drawer">
             <X size={14} />
           </button>
         </div>

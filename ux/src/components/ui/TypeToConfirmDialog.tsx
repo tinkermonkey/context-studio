@@ -75,20 +75,12 @@ export function TypeToConfirmDialog({
   );
 
   return (
-    <Modal
-      open={open}
-      onClose={handleClose}
-      title={title}
-      size="sm"
-      footer={footer}
-    >
+    <Modal open={open} onClose={handleClose} title={title} size="sm" footer={footer}>
       <div
         style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}
         data-testid="type-confirm-dialog"
       >
-        <div style={{ color: "var(--canvas-fg-2)", lineHeight: 1.5 }}>
-          {message}
-        </div>
+        <div style={{ color: "var(--canvas-fg-2)", lineHeight: 1.5 }}>{message}</div>
         <div
           style={{
             fontFamily: "var(--mono)",

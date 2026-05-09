@@ -15,33 +15,26 @@ class VersioningService extends BaseService {
   async getChanges(params?: ChangesParams): Promise<ChangeHistoryResponse> {
     return this.get<ChangeHistoryResponse>(
       "/api/v1/versioning/changes",
-      params as Record<string, unknown>
+      params as Record<string, unknown>,
     );
   }
 
   async getChangesByEntity(
     entityId: string,
-    params?: ChangesParams
+    params?: ChangesParams,
   ): Promise<ChangeHistoryResponse> {
     return this.get<ChangeHistoryResponse>(
       `/api/v1/versioning/changes/${entityId}`,
-      params as Record<string, unknown>
+      params as Record<string, unknown>,
     );
   }
 
-  async createChangeset(
-    data: ChangesetCreateRequest
-  ): Promise<ChangesetResponse> {
-    return this.post<ChangesetResponse>(
-      "/api/v1/versioning/changesets",
-      data
-    );
+  async createChangeset(data: ChangesetCreateRequest): Promise<ChangesetResponse> {
+    return this.post<ChangesetResponse>("/api/v1/versioning/changesets", data);
   }
 
   async getChangeset(id: string): Promise<ChangesetResponse> {
-    return this.get<ChangesetResponse>(
-      `/api/v1/versioning/changesets/${id}`
-    );
+    return this.get<ChangesetResponse>(`/api/v1/versioning/changesets/${id}`);
   }
 
   async getSyncStatus(): Promise<SyncStatusResponse> {

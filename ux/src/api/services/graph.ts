@@ -15,14 +15,11 @@ class GraphService extends BaseService {
   async getMetrics(algorithm?: string): Promise<GraphMetricsResponse> {
     return this.get<GraphMetricsResponse>(
       "/api/graph/metrics",
-      algorithm ? { algorithm } : undefined
+      algorithm ? { algorithm } : undefined,
     );
   }
 
-  async getShortestPath(
-    sourceId: string,
-    targetId: string
-  ): Promise<PathResultResponse> {
+  async getShortestPath(sourceId: string, targetId: string): Promise<PathResultResponse> {
     return this.get<PathResultResponse>("/api/graph/paths/shortest", {
       source_id: sourceId,
       target_id: targetId,

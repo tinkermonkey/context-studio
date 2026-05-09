@@ -35,7 +35,9 @@ Object.defineProperty(window, "matchMedia", {
   observe(_target: Element): void {}
   unobserve(_target: Element): void {}
   disconnect(): void {}
-  takeRecords(): IntersectionObserverEntry[] { return []; }
+  takeRecords(): IntersectionObserverEntry[] {
+    return [];
+  }
 };
 
 global.ResizeObserver = class ResizeObserver {

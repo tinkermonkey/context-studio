@@ -3,8 +3,7 @@ import { QUERY_KEYS } from "@/api/config";
 import { ontologyService } from "@/api/services/ontology";
 import type { components } from "@/api/types";
 
-type RelationshipCreateRequest =
-  components["schemas"]["RelationshipCreateRequest"];
+type RelationshipCreateRequest = components["schemas"]["RelationshipCreateRequest"];
 
 interface RelationshipListParams {
   source_id?: string;
@@ -22,8 +21,7 @@ export function useRelationships(params?: RelationshipListParams) {
 export function useCreateRelationship() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: RelationshipCreateRequest) =>
-      ontologyService.createRelationship(data),
+    mutationFn: (data: RelationshipCreateRequest) => ontologyService.createRelationship(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.relationships() });
     },

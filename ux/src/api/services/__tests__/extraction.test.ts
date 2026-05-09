@@ -41,9 +41,7 @@ describe("ExtractionService", () => {
         ],
       });
 
-      server.use(
-        rest.post("*/api/extract", (req, res, ctx) => res(ctx.json(mockResult)))
-      );
+      server.use(rest.post("*/api/extract", (req, res, ctx) => res(ctx.json(mockResult))));
 
       const result = await extractionService.extract("John works at Google");
 
@@ -57,12 +55,12 @@ describe("ExtractionService", () => {
       server.use(
         rest.post("*/api/extract", (req, res, ctx) =>
           res(
-        ctx.status(400),
-        ctx.json({
-          detail: "Text cannot be empty",
-        })
-      )
-        )
+            ctx.status(400),
+            ctx.json({
+              detail: "Text cannot be empty",
+            }),
+          ),
+        ),
       );
 
       await expect(extractionService.extract("")).rejects.toMatchObject({
@@ -75,17 +73,15 @@ describe("ExtractionService", () => {
       server.use(
         rest.post("*/api/extract", (req, res, ctx) =>
           res(
-        ctx.status(500),
-        ctx.json({
-          detail: "Extraction service error",
-        })
-      )
-        )
+            ctx.status(500),
+            ctx.json({
+              detail: "Extraction service error",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        extractionService.extract("Some text")
-      ).rejects.toMatchObject({
+      await expect(extractionService.extract("Some text")).rejects.toMatchObject({
         name: "ApiError",
         status: 500,
       });
@@ -98,11 +94,7 @@ describe("ExtractionService", () => {
         total_duration_ms: 320,
       });
 
-      server.use(
-        rest.post("*/api/analyze_text", (req, res, ctx) =>
-          res(ctx.json(mockResult))
-        )
-      );
+      server.use(rest.post("*/api/analyze_text", (req, res, ctx) => res(ctx.json(mockResult))));
 
       const result = await extractionService.analyzeText("Sample text");
 
@@ -114,17 +106,15 @@ describe("ExtractionService", () => {
       server.use(
         rest.post("*/api/analyze_text", (req, res, ctx) =>
           res(
-        ctx.status(413),
-        ctx.json({
-          detail: "Text exceeds maximum length",
-        })
-      )
-        )
+            ctx.status(413),
+            ctx.json({
+              detail: "Text exceeds maximum length",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        extractionService.analyzeText("x".repeat(100000))
-      ).rejects.toMatchObject({
+      await expect(extractionService.analyzeText("x".repeat(100000))).rejects.toMatchObject({
         name: "ApiError",
         status: 413,
       });
@@ -134,12 +124,12 @@ describe("ExtractionService", () => {
       server.use(
         rest.post("*/api/analyze_text", (req, res, ctx) =>
           res(
-        ctx.status(500),
-        ctx.json({
-          detail: "Analysis failed",
-        })
-      )
-        )
+            ctx.status(500),
+            ctx.json({
+              detail: "Analysis failed",
+            }),
+          ),
+        ),
       );
 
       await expect(extractionService.analyzeText("Text")).rejects.toMatchObject({
@@ -189,9 +179,7 @@ describe("ExtractionService", () => {
       });
 
       server.use(
-        rest.post("*/api/enrich_from_references", (req, res, ctx) =>
-          res(ctx.json(mockResult))
-        )
+        rest.post("*/api/enrich_from_references", (req, res, ctx) => res(ctx.json(mockResult))),
       );
 
       const result = await extractionService.enrichFromReferences(request);
@@ -204,19 +192,19 @@ describe("ExtractionService", () => {
       server.use(
         rest.post("*/api/enrich_from_references", (req, res, ctx) =>
           res(
-        ctx.status(400),
-        ctx.json({
-          detail: "Entity names list cannot be empty",
-        })
-      )
-        )
+            ctx.status(400),
+            ctx.json({
+              detail: "Entity names list cannot be empty",
+            }),
+          ),
+        ),
       );
 
       await expect(
         extractionService.enrichFromReferences({
           text: "Sample",
           extracted_entities: [],
-        })
+        }),
       ).rejects.toMatchObject({
         name: "ApiError",
         status: 400,
@@ -227,12 +215,12 @@ describe("ExtractionService", () => {
       server.use(
         rest.post("*/api/enrich_from_references", (req, res, ctx) =>
           res(
-        ctx.status(503),
-        ctx.json({
-          detail: "Reference service temporarily unavailable",
-        })
-      )
-        )
+            ctx.status(503),
+            ctx.json({
+              detail: "Reference service temporarily unavailable",
+            }),
+          ),
+        ),
       );
 
       await expect(
@@ -247,7 +235,7 @@ describe("ExtractionService", () => {
               confidence: 0.5,
             },
           ],
-        })
+        }),
       ).rejects.toMatchObject({
         name: "ApiError",
         status: 503,

@@ -1,8 +1,7 @@
 import type { components } from "@/api/types";
 import { Cpu, Play } from "lucide-react";
 
-type PipelineConfigurationResponse =
-  components["schemas"]["PipelineConfigurationResponse"];
+type PipelineConfigurationResponse = components["schemas"]["PipelineConfigurationResponse"];
 
 interface PipelineCardProps {
   pipeline: PipelineConfigurationResponse;
@@ -53,7 +52,14 @@ export function PipelineCard({ pipeline, onExecute }: PipelineCardProps) {
         <span>{pipeline.model}</span>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "var(--space-1)" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginTop: "var(--space-1)",
+        }}
+      >
         <span
           style={{
             fontSize: "var(--text-xs)",

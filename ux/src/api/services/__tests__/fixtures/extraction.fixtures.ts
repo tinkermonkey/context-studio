@@ -5,7 +5,7 @@
 import type { components } from "@/api/types";
 
 export function createExtractionResult(
-  overrides?: Partial<components["schemas"]["ExtractionResultSchema"]>
+  overrides?: Partial<components["schemas"]["ExtractionResultSchema"]>,
 ): components["schemas"]["ExtractionResultSchema"] {
   return {
     id: "extraction-123",
@@ -26,7 +26,7 @@ export function createExtractionResult(
 }
 
 export function createEnrichFromReferencesRequest(
-  overrides?: Partial<components["schemas"]["EnrichFromReferencesRequest"]>
+  overrides?: Partial<components["schemas"]["EnrichFromReferencesRequest"]>,
 ): components["schemas"]["EnrichFromReferencesRequest"] {
   return {
     text: "Sample text with entities",

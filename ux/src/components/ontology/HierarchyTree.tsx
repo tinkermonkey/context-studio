@@ -99,14 +99,8 @@ function TreeNodeRenderer({
             }}
           >
             <div className="swatch" />
-            <span style={{ flexGrow: 1 }}>
-              {node.class.title}
-            </span>
-            {hasChildren && (
-              <span className="badge-tiny">
-                {node.children.length}
-              </span>
-            )}
+            <span style={{ flexGrow: 1 }}>{node.class.title}</span>
+            {hasChildren && <span className="badge-tiny">{node.children.length}</span>}
           </div>
         </div>
       </div>

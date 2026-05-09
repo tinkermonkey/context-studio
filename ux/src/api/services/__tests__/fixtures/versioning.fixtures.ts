@@ -5,7 +5,7 @@
 import type { components } from "@/api/types";
 
 export function createChangeHistory(
-  overrides?: Partial<components["schemas"]["ChangeHistoryResponse"]>
+  overrides?: Partial<components["schemas"]["ChangeHistoryResponse"]>,
 ): components["schemas"]["ChangeHistoryResponse"] {
   return {
     events: [
@@ -25,7 +25,7 @@ export function createChangeHistory(
 }
 
 export function createChangeset(
-  overrides?: Partial<components["schemas"]["ChangesetResponse"]>
+  overrides?: Partial<components["schemas"]["ChangesetResponse"]>,
 ): components["schemas"]["ChangesetResponse"] {
   return {
     id: "changeset-1",
@@ -39,7 +39,7 @@ export function createChangeset(
 }
 
 export function createChangesetCreateRequest(
-  overrides?: Partial<components["schemas"]["ChangesetCreateRequest"]>
+  overrides?: Partial<components["schemas"]["ChangesetCreateRequest"]>,
 ): components["schemas"]["ChangesetCreateRequest"] {
   return {
     name: "New changeset",
@@ -49,7 +49,7 @@ export function createChangesetCreateRequest(
 }
 
 export function createSyncStatus(
-  overrides?: Partial<components["schemas"]["SyncStatusResponse"]>
+  overrides?: Partial<components["schemas"]["SyncStatusResponse"]>,
 ): components["schemas"]["SyncStatusResponse"] {
   return {
     unprocessed_count: 0,
@@ -60,7 +60,7 @@ export function createSyncStatus(
 }
 
 export function createSyncResult(
-  overrides?: Partial<components["schemas"]["SyncResultResponse"]>
+  overrides?: Partial<components["schemas"]["SyncResultResponse"]>,
 ): components["schemas"]["SyncResultResponse"] {
   return {
     pushed: 10,

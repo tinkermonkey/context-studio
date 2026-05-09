@@ -80,13 +80,18 @@ export function useToasts() {
   }, []);
 
   const toast = useCallback(
-    (type: ToastType, title: string, sub?: string, options?: { action?: ToastItem["action"]; autoDismissMs?: number }) => {
+    (
+      type: ToastType,
+      title: string,
+      sub?: string,
+      options?: { action?: ToastItem["action"]; autoDismissMs?: number },
+    ) => {
       const id = crypto.randomUUID();
       setToasts((prev) => [...prev, { id, type, title, sub, action: options?.action }]);
       const dismissDelay = options?.autoDismissMs ?? 8000;
       setTimeout(() => dismiss(id), dismissDelay);
     },
-    [dismiss]
+    [dismiss],
   );
 
   return { toasts, dismiss, toast };

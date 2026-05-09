@@ -36,9 +36,7 @@ describe("PipelineService", () => {
         createPipelineConfiguration({ id: "p-2", title: "Pipeline 2", pipeline: "pipeline_2" }),
       ];
 
-      server.use(
-        rest.get("*/api/pipelines", (req, res, ctx) => res(ctx.json(mockPipelines)))
-      );
+      server.use(rest.get("*/api/pipelines", (req, res, ctx) => res(ctx.json(mockPipelines))));
 
       const result = await pipelineService.listPipelines();
 
@@ -49,8 +47,8 @@ describe("PipelineService", () => {
     it("throws ApiError on 500 from listPipelines", async () => {
       server.use(
         rest.get("*/api/pipelines", (req, res, ctx) =>
-          res(ctx.status(500), ctx.json({ detail: "Failed to list pipelines" }))
-        )
+          res(ctx.status(500), ctx.json({ detail: "Failed to list pipelines" })),
+        ),
       );
 
       await expect(pipelineService.listPipelines()).rejects.toMatchObject({
@@ -62,13 +60,13 @@ describe("PipelineService", () => {
 
   describe("getPipeline", () => {
     it("returns pipeline by ID", async () => {
-      const mockPipeline = createPipelineConfiguration({ id: "p-123", title: "Pipeline", pipeline: "pipe" });
+      const mockPipeline = createPipelineConfiguration({
+        id: "p-123",
+        title: "Pipeline",
+        pipeline: "pipe",
+      });
 
-      server.use(
-        rest.get("*/api/pipelines/p-123", (req, res, ctx) =>
-          res(ctx.json(mockPipeline))
-        )
-      );
+      server.use(rest.get("*/api/pipelines/p-123", (req, res, ctx) => res(ctx.json(mockPipeline))));
 
       const result = await pipelineService.getPipeline("p-123");
 
@@ -78,13 +76,11 @@ describe("PipelineService", () => {
     it("throws ApiError on 404 for non-existent pipeline", async () => {
       server.use(
         rest.get("*/api/pipelines/not-found", (req, res, ctx) =>
-          res(ctx.status(404), ctx.json({ detail: "Pipeline not found" }))
-        )
+          res(ctx.status(404), ctx.json({ detail: "Pipeline not found" })),
+        ),
       );
 
-      await expect(
-        pipelineService.getPipeline("not-found")
-      ).rejects.toMatchObject({
+      await expect(pipelineService.getPipeline("not-found")).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
       });
@@ -93,13 +89,13 @@ describe("PipelineService", () => {
 
   describe("createPipeline", () => {
     it("creates and returns new pipeline", async () => {
-      const mockPipeline = createPipelineConfiguration({ id: "p-999", title: "New", pipeline: "new" });
+      const mockPipeline = createPipelineConfiguration({
+        id: "p-999",
+        title: "New",
+        pipeline: "new",
+      });
 
-      server.use(
-        rest.post("*/api/pipelines", (req, res, ctx) =>
-          res(ctx.json(mockPipeline))
-        )
-      );
+      server.use(rest.post("*/api/pipelines", (req, res, ctx) => res(ctx.json(mockPipeline))));
 
       const createRequest = createPipelineConfigurationCreate({ title: "New", pipeline: "new" });
       const result = await pipelineService.createPipeline(createRequest);
@@ -110,14 +106,12 @@ describe("PipelineService", () => {
     it("throws ApiError on 400 for invalid pipeline data", async () => {
       server.use(
         rest.post("*/api/pipelines", (req, res, ctx) =>
-          res(ctx.status(400), ctx.json({ detail: "Invalid data" }))
-        )
+          res(ctx.status(400), ctx.json({ detail: "Invalid data" })),
+        ),
       );
 
       const createRequest = createPipelineConfigurationCreate();
-      await expect(
-        pipelineService.createPipeline(createRequest)
-      ).rejects.toMatchObject({
+      await expect(pipelineService.createPipeline(createRequest)).rejects.toMatchObject({
         name: "ApiError",
         status: 400,
       });
@@ -126,13 +120,13 @@ describe("PipelineService", () => {
 
   describe("updatePipeline", () => {
     it("updates and returns pipeline", async () => {
-      const mockPipeline = createPipelineConfiguration({ id: "p-123", title: "Updated", pipeline: "pipe" });
+      const mockPipeline = createPipelineConfiguration({
+        id: "p-123",
+        title: "Updated",
+        pipeline: "pipe",
+      });
 
-      server.use(
-        rest.put("*/api/pipelines/p-123", (req, res, ctx) =>
-          res(ctx.json(mockPipeline))
-        )
-      );
+      server.use(rest.put("*/api/pipelines/p-123", (req, res, ctx) => res(ctx.json(mockPipeline))));
 
       const updateRequest = createPipelineConfigurationUpdate({ title: "Updated" });
       const result = await pipelineService.updatePipeline("p-123", updateRequest);
@@ -143,13 +137,13 @@ describe("PipelineService", () => {
     it("throws ApiError on 404 when updating non-existent pipeline", async () => {
       server.use(
         rest.put("*/api/pipelines/not-found", (req, res, ctx) =>
-          res(ctx.status(404), ctx.json({ detail: "Not found" }))
-        )
+          res(ctx.status(404), ctx.json({ detail: "Not found" })),
+        ),
       );
 
       const updateRequest = createPipelineConfigurationUpdate();
       await expect(
-        pipelineService.updatePipeline("not-found", updateRequest)
+        pipelineService.updatePipeline("not-found", updateRequest),
       ).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
@@ -159,27 +153,19 @@ describe("PipelineService", () => {
 
   describe("deletePipeline", () => {
     it("deletes pipeline successfully", async () => {
-      server.use(
-        rest.delete("*/api/pipelines/p-123", (req, res, ctx) =>
-          res(ctx.status(204))
-        )
-      );
+      server.use(rest.delete("*/api/pipelines/p-123", (req, res, ctx) => res(ctx.status(204))));
 
-      await expect(
-        pipelineService.deletePipeline("p-123")
-      ).resolves.toBeDefined();
+      await expect(pipelineService.deletePipeline("p-123")).resolves.toBeDefined();
     });
 
     it("throws ApiError on 404 when deleting non-existent pipeline", async () => {
       server.use(
         rest.delete("*/api/pipelines/not-found", (req, res, ctx) =>
-          res(ctx.status(404), ctx.json({ detail: "Not found" }))
-        )
+          res(ctx.status(404), ctx.json({ detail: "Not found" })),
+        ),
       );
 
-      await expect(
-        pipelineService.deletePipeline("not-found")
-      ).rejects.toMatchObject({
+      await expect(pipelineService.deletePipeline("not-found")).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
       });
@@ -191,9 +177,7 @@ describe("PipelineService", () => {
       const mockExecution = createExecution({ pipeline_config_id: "p-123", status: "success" });
 
       server.use(
-        rest.post("*/api/pipelines/p-123/execute", (req, res, ctx) =>
-          res(ctx.json(mockExecution))
-        )
+        rest.post("*/api/pipelines/p-123/execute", (req, res, ctx) => res(ctx.json(mockExecution))),
       );
 
       const result = await pipelineService.executePipeline("p-123", "input");
@@ -204,13 +188,11 @@ describe("PipelineService", () => {
     it("throws ApiError on 400 for empty input text", async () => {
       server.use(
         rest.post("*/api/pipelines/p-123/execute", (req, res, ctx) =>
-          res(ctx.status(400), ctx.json({ detail: "Empty input" }))
-        )
+          res(ctx.status(400), ctx.json({ detail: "Empty input" })),
+        ),
       );
 
-      await expect(
-        pipelineService.executePipeline("p-123", "")
-      ).rejects.toMatchObject({
+      await expect(pipelineService.executePipeline("p-123", "")).rejects.toMatchObject({
         name: "ApiError",
         status: 400,
       });
@@ -219,13 +201,11 @@ describe("PipelineService", () => {
     it("throws ApiError on 504 for pipeline timeout", async () => {
       server.use(
         rest.post("*/api/pipelines/p-123/execute", (req, res, ctx) =>
-          res(ctx.status(504), ctx.json({ detail: "Timeout" }))
-        )
+          res(ctx.status(504), ctx.json({ detail: "Timeout" })),
+        ),
       );
 
-      await expect(
-        pipelineService.executePipeline("p-123", "text")
-      ).rejects.toMatchObject({
+      await expect(pipelineService.executePipeline("p-123", "text")).rejects.toMatchObject({
         name: "ApiError",
         status: 504,
       });
@@ -241,8 +221,8 @@ describe("PipelineService", () => {
 
       server.use(
         rest.get("*/api/pipelines/p-123/executions", (req, res, ctx) =>
-          res(ctx.json(mockExecutions))
-        )
+          res(ctx.json(mockExecutions)),
+        ),
       );
 
       const result = await pipelineService.getPipelineExecutions("p-123");
@@ -253,13 +233,11 @@ describe("PipelineService", () => {
     it("throws ApiError on 404 for non-existent pipeline", async () => {
       server.use(
         rest.get("*/api/pipelines/not-found/executions", (req, res, ctx) =>
-          res(ctx.status(404), ctx.json({ detail: "Not found" }))
-        )
+          res(ctx.status(404), ctx.json({ detail: "Not found" })),
+        ),
       );
 
-      await expect(
-        pipelineService.getPipelineExecutions("not-found")
-      ).rejects.toMatchObject({
+      await expect(pipelineService.getPipelineExecutions("not-found")).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
       });

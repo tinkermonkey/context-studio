@@ -43,9 +43,7 @@ describe("ReferenceService", () => {
       });
 
       server.use(
-        rest.post("*/api/reference/search", (req, res, ctx) =>
-          res(ctx.json(mockResponse))
-        )
+        rest.post("*/api/reference/search", (req, res, ctx) => res(ctx.json(mockResponse))),
       );
 
       const result = await referenceService.search("machine learning");
@@ -68,9 +66,7 @@ describe("ReferenceService", () => {
       });
 
       server.use(
-        rest.post("*/api/reference/search", (req, res, ctx) =>
-          res(ctx.json(mockResponse))
-        )
+        rest.post("*/api/reference/search", (req, res, ctx) => res(ctx.json(mockResponse))),
       );
 
       const result = await referenceService.search("test", { limit: 5 });
@@ -93,9 +89,7 @@ describe("ReferenceService", () => {
       });
 
       server.use(
-        rest.post("*/api/reference/search", (req, res, ctx) =>
-          res(ctx.json(mockResponse))
-        )
+        rest.post("*/api/reference/search", (req, res, ctx) => res(ctx.json(mockResponse))),
       );
 
       const result = await referenceService.search("knowledge", {
@@ -109,12 +103,12 @@ describe("ReferenceService", () => {
       server.use(
         rest.post("*/api/reference/search", (req, res, ctx) =>
           res(
-        ctx.status(400),
-        ctx.json({
-          detail: "Search term cannot be empty",
-        })
-      )
-        )
+            ctx.status(400),
+            ctx.json({
+              detail: "Search term cannot be empty",
+            }),
+          ),
+        ),
       );
 
       await expect(referenceService.search("")).rejects.toMatchObject({
@@ -127,17 +121,15 @@ describe("ReferenceService", () => {
       server.use(
         rest.post("*/api/reference/search", (req, res, ctx) =>
           res(
-        ctx.status(404),
-        ctx.json({
-          detail: "No results found for search term",
-        })
-      )
-        )
+            ctx.status(404),
+            ctx.json({
+              detail: "No results found for search term",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        referenceService.search("nonexistent_term_xyz")
-      ).rejects.toMatchObject({
+      await expect(referenceService.search("nonexistent_term_xyz")).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
       });
@@ -147,12 +139,12 @@ describe("ReferenceService", () => {
       server.use(
         rest.post("*/api/reference/search", (req, res, ctx) =>
           res(
-        ctx.status(503),
-        ctx.json({
-          detail: "Reference service temporarily unavailable",
-        })
-      )
-        )
+            ctx.status(503),
+            ctx.json({
+              detail: "Reference service temporarily unavailable",
+            }),
+          ),
+        ),
       );
 
       await expect(referenceService.search("test")).rejects.toMatchObject({
@@ -168,11 +160,7 @@ describe("ReferenceService", () => {
         sources_available: 2,
       });
 
-      server.use(
-        rest.get("*/api/reference/status", (req, res, ctx) =>
-          res(ctx.json(mockStatus))
-        )
-      );
+      server.use(rest.get("*/api/reference/status", (req, res, ctx) => res(ctx.json(mockStatus))));
 
       const result = await referenceService.getStatus();
 
@@ -185,11 +173,7 @@ describe("ReferenceService", () => {
         sources_available: 1,
       });
 
-      server.use(
-        rest.get("*/api/reference/status", (req, res, ctx) =>
-          res(ctx.json(mockStatus))
-        )
-      );
+      server.use(rest.get("*/api/reference/status", (req, res, ctx) => res(ctx.json(mockStatus))));
 
       const result = await referenceService.getStatus();
 
@@ -205,11 +189,7 @@ describe("ReferenceService", () => {
         sources_available: 1,
       });
 
-      server.use(
-        rest.get("*/api/reference/status", (req, res, ctx) =>
-          res(ctx.json(mockStatus))
-        )
-      );
+      server.use(rest.get("*/api/reference/status", (req, res, ctx) => res(ctx.json(mockStatus))));
 
       const result = await referenceService.getStatus();
 
@@ -221,12 +201,12 @@ describe("ReferenceService", () => {
       server.use(
         rest.get("*/api/reference/status", (req, res, ctx) =>
           res(
-        ctx.status(500),
-        ctx.json({
-          detail: "Failed to retrieve reference service status",
-        })
-      )
-        )
+            ctx.status(500),
+            ctx.json({
+              detail: "Failed to retrieve reference service status",
+            }),
+          ),
+        ),
       );
 
       await expect(referenceService.getStatus()).rejects.toMatchObject({
@@ -239,12 +219,12 @@ describe("ReferenceService", () => {
       server.use(
         rest.get("*/api/reference/status", (req, res, ctx) =>
           res(
-        ctx.status(503),
-        ctx.json({
-          detail: "Reference service is down",
-        })
-      )
-        )
+            ctx.status(503),
+            ctx.json({
+              detail: "Reference service is down",
+            }),
+          ),
+        ),
       );
 
       await expect(referenceService.getStatus()).rejects.toMatchObject({

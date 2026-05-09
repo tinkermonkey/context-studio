@@ -76,11 +76,24 @@ export function ErrorBanner({
     >
       <AlertCircle size={18} style={{ color: "var(--rose-600, #e11d48)", flexShrink: 0 }} />
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: "var(--text-sm)", fontWeight: 500, color: "var(--rose-900, #4c0519)", marginBottom: 4 }}>
+        <div
+          style={{
+            fontSize: "var(--text-sm)",
+            fontWeight: 500,
+            color: "var(--rose-900, #4c0519)",
+            marginBottom: 4,
+          }}
+        >
           {message}
         </div>
         {error.message && (
-          <div style={{ fontSize: "var(--text-xs)", color: "var(--rose-700, #be123c)", fontFamily: "var(--mono)" }}>
+          <div
+            style={{
+              fontSize: "var(--text-xs)",
+              color: "var(--rose-700, #be123c)",
+              fontFamily: "var(--mono)",
+            }}
+          >
             {error.message}
           </div>
         )}

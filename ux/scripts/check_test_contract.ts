@@ -60,7 +60,9 @@ function main() {
     process.exit(1);
   }
 
-  console.log(`✅ Selector contract valid (${registered.size} registered, ${allUsages.size} in use)`);
+  console.log(
+    `✅ Selector contract valid (${registered.size} registered, ${allUsages.size} in use)`,
+  );
 }
 
 main();

@@ -16,7 +16,7 @@ export function applyInterceptors(instance: AxiosInstance): void {
   // Request interceptor — placeholder for future auth token injection
   instance.interceptors.request.use(
     (config) => config,
-    (error) => Promise.reject(error)
+    (error) => Promise.reject(error),
   );
 
   // Response interceptor — normalize FastAPI error bodies into ApiError
@@ -28,8 +28,8 @@ export function applyInterceptors(instance: AxiosInstance): void {
       const detail =
         typeof data?.detail === "string"
           ? data.detail
-          : error.message ?? "An unexpected error occurred";
+          : (error.message ?? "An unexpected error occurred");
       return Promise.reject(new ApiError(detail, status, detail));
-    }
+    },
   );
 }

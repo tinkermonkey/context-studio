@@ -7,12 +7,7 @@ interface SkeletonProps {
   className?: string;
 }
 
-export function Skeleton({
-  width,
-  height = "1em",
-  style,
-  className,
-}: SkeletonProps) {
+export function Skeleton({ width, height = "1em", style, className }: SkeletonProps) {
   return (
     <div
       className={className}

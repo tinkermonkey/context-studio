@@ -76,7 +76,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   }
 
   return (
-    <aside className={`shell-rail${collapsed ? " collapsed" : ""}`}>
+    <aside className={`shell-rail${collapsed ? "collapsed" : ""}`}>
       <div className="brand-row">
         <div className="brand-mark" aria-hidden="true" />
         {!collapsed && (
@@ -84,7 +84,12 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             Context Studio<span>v0.1.0 · local</span>
           </div>
         )}
-        <button className="rail-collapse" onClick={onToggle} aria-label="Toggle sidebar" type="button">
+        <button
+          className="rail-collapse"
+          onClick={onToggle}
+          aria-label="Toggle sidebar"
+          type="button"
+        >
           {collapsed ? <ChevronRight size={11} /> : <ChevronLeft size={11} />}
         </button>
       </div>
@@ -99,7 +104,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           return (
             <div key={item.id}>
               <div
-                className={`nav-item${parentActive ? " active-parent" : ""}${leafActive ? " active" : ""}`}
+                className={`nav-item${parentActive ? "active-parent" : ""}${leafActive ? "active" : ""}`}
                 onClick={() => {
                   if (!hasChildren) {
                     navigate({ to: item.path });
@@ -114,9 +119,13 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               >
                 <Icon size={16} />
                 {!collapsed && <span className="nav-label">{item.label}</span>}
-                {hasChildren && !collapsed && (
-                  parentActive ? <ChevronDown size={12} className="ml-auto" /> : <ChevronRight size={12} className="ml-auto" />
-                )}
+                {hasChildren &&
+                  !collapsed &&
+                  (parentActive ? (
+                    <ChevronDown size={12} className="ml-auto" />
+                  ) : (
+                    <ChevronRight size={12} className="ml-auto" />
+                  ))}
               </div>
 
               {hasChildren && parentActive && !collapsed && (
@@ -124,7 +133,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   {item.children.map((child) => (
                     <div
                       key={child.id}
-                      className={`nav-item${isLeafActive(child.path) ? " active" : ""}`}
+                      className={`nav-item${isLeafActive(child.path) ? "active" : ""}`}
                       onClick={() => navigate({ to: child.path })}
                       role="button"
                       tabIndex={0}

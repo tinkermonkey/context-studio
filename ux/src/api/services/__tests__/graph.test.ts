@@ -37,9 +37,7 @@ describe("GraphService", () => {
         edge_count: 300,
       });
 
-      server.use(
-        rest.post("*/api/graph/build", (req, res, ctx) => res(ctx.json(mockGraph)))
-      );
+      server.use(rest.post("*/api/graph/build", (req, res, ctx) => res(ctx.json(mockGraph))));
 
       const result = await graphService.buildGraph();
 
@@ -52,12 +50,12 @@ describe("GraphService", () => {
       server.use(
         rest.post("*/api/graph/build", (req, res, ctx) =>
           res(
-        ctx.status(500),
-        ctx.json({
-          detail: "Graph build failed",
-        })
-      )
-        )
+            ctx.status(500),
+            ctx.json({
+              detail: "Graph build failed",
+            }),
+          ),
+        ),
       );
 
       await expect(graphService.buildGraph()).rejects.toMatchObject({
@@ -71,9 +69,7 @@ describe("GraphService", () => {
     it("returns graph metrics without algorithm parameter", async () => {
       const mockMetrics = createGraphMetrics();
 
-      server.use(
-        rest.get("*/api/graph/metrics", (req, res, ctx) => res(ctx.json(mockMetrics)))
-      );
+      server.use(rest.get("*/api/graph/metrics", (req, res, ctx) => res(ctx.json(mockMetrics))));
 
       const result = await graphService.getMetrics();
 
@@ -87,9 +83,7 @@ describe("GraphService", () => {
         algorithm: "betweenness_centrality",
       });
 
-      server.use(
-        rest.get("*/api/graph/metrics", (req, res, ctx) => res(ctx.json(mockMetrics)))
-      );
+      server.use(rest.get("*/api/graph/metrics", (req, res, ctx) => res(ctx.json(mockMetrics))));
 
       const result = await graphService.getMetrics("betweenness_centrality");
 
@@ -100,12 +94,12 @@ describe("GraphService", () => {
       server.use(
         rest.get("*/api/graph/metrics", (req, res, ctx) =>
           res(
-        ctx.status(400),
-        ctx.json({
-          detail: "Invalid algorithm",
-        })
-      )
-        )
+            ctx.status(400),
+            ctx.json({
+              detail: "Invalid algorithm",
+            }),
+          ),
+        ),
       );
 
       await expect(graphService.getMetrics("invalid")).rejects.toMatchObject({
@@ -124,9 +118,7 @@ describe("GraphService", () => {
       });
 
       server.use(
-        rest.get("*/api/graph/paths/shortest", (req, res, ctx) =>
-          res(ctx.json(mockPath))
-        )
+        rest.get("*/api/graph/paths/shortest", (req, res, ctx) => res(ctx.json(mockPath))),
       );
 
       const result = await graphService.getShortestPath("node-1", "node-10");
@@ -140,17 +132,15 @@ describe("GraphService", () => {
       server.use(
         rest.get("*/api/graph/paths/shortest", (req, res, ctx) =>
           res(
-        ctx.status(404),
-        ctx.json({
-          detail: "No path found between nodes",
-        })
-      )
-        )
+            ctx.status(404),
+            ctx.json({
+              detail: "No path found between nodes",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        graphService.getShortestPath("node-1", "node-999")
-      ).rejects.toMatchObject({
+      await expect(graphService.getShortestPath("node-1", "node-999")).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
       });
@@ -164,11 +154,7 @@ describe("GraphService", () => {
         results: [{ x: "node-1" }, { x: "node-2" }, { x: "node-3" }],
       });
 
-      server.use(
-        rest.post("*/api/graph/sparql", (req, res, ctx) =>
-          res(ctx.json(mockResults))
-        )
-      );
+      server.use(rest.post("*/api/graph/sparql", (req, res, ctx) => res(ctx.json(mockResults))));
 
       const result = await graphService.sparqlQuery(sparqlRequest.query);
 
@@ -181,17 +167,15 @@ describe("GraphService", () => {
       server.use(
         rest.post("*/api/graph/sparql", (req, res, ctx) =>
           res(
-        ctx.status(400),
-        ctx.json({
-          detail: "Invalid SPARQL query syntax",
-        })
-      )
-        )
+            ctx.status(400),
+            ctx.json({
+              detail: "Invalid SPARQL query syntax",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        graphService.sparqlQuery("INVALID QUERY")
-      ).rejects.toMatchObject({
+      await expect(graphService.sparqlQuery("INVALID QUERY")).rejects.toMatchObject({
         name: "ApiError",
         status: 400,
         detail: expect.stringContaining("Invalid"),
@@ -202,17 +186,15 @@ describe("GraphService", () => {
       server.use(
         rest.post("*/api/graph/sparql", (req, res, ctx) =>
           res(
-        ctx.status(500),
-        ctx.json({
-          detail: "Query execution timeout",
-        })
-      )
-        )
+            ctx.status(500),
+            ctx.json({
+              detail: "Query execution timeout",
+            }),
+          ),
+        ),
       );
 
-      await expect(
-        graphService.sparqlQuery("SELECT * WHERE { ?s ?p ?o }")
-      ).rejects.toMatchObject({
+      await expect(graphService.sparqlQuery("SELECT * WHERE { ?s ?p ?o }")).rejects.toMatchObject({
         name: "ApiError",
         status: 500,
       });

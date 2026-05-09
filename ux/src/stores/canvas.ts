@@ -28,6 +28,6 @@ export const useCanvasStore = create<CanvasState>()(
           document.body.classList.add("dark-canvas");
         }
       },
-    }
-  )
+    },
+  ),
 );

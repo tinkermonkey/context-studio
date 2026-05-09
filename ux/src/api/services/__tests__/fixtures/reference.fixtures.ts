@@ -5,7 +5,7 @@
 import type { components } from "@/api/types";
 
 export function createReferenceSearchRequest(
-  overrides?: Partial<components["schemas"]["ReferenceSearchRequest"]>
+  overrides?: Partial<components["schemas"]["ReferenceSearchRequest"]>,
 ): components["schemas"]["ReferenceSearchRequest"] {
   return {
     term: "artificial intelligence",
@@ -16,7 +16,7 @@ export function createReferenceSearchRequest(
 }
 
 export function createReferenceSearchResponse(
-  overrides?: Partial<components["schemas"]["ReferenceSearchResponseSchema"]>
+  overrides?: Partial<components["schemas"]["ReferenceSearchResponseSchema"]>,
 ): components["schemas"]["ReferenceSearchResponseSchema"] {
   return {
     term: "artificial intelligence",
@@ -36,7 +36,7 @@ export function createReferenceSearchResponse(
 }
 
 export function createReferenceStatusResponse(
-  overrides?: Partial<components["schemas"]["ReferenceStatusResponseSchema"]>
+  overrides?: Partial<components["schemas"]["ReferenceStatusResponseSchema"]>,
 ): components["schemas"]["ReferenceStatusResponseSchema"] {
   return {
     sources: [

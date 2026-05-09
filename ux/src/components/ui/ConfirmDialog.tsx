@@ -58,13 +58,7 @@ export function ConfirmDialog({
   );
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title={title}
-      size="sm"
-      footer={footer}
-    >
+    <Modal open={open} onClose={onClose} title={title} size="sm" footer={footer}>
       <div style={{ color: "var(--canvas-fg-2)", lineHeight: 1.5 }} data-testid="confirm-dialog">
         {message}
       </div>

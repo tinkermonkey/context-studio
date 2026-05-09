@@ -31,7 +31,7 @@ describe("Simple MSW Test", () => {
     server.use(
       rest.get("*/api/taxonomies", (req, res, ctx) => {
         return res(ctx.json({ items: [], total: 0, offset: 0 }));
-      })
+      }),
     );
 
     const result = await ontologyService.listTaxonomies();

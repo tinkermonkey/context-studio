@@ -13,15 +13,15 @@ A graph-native knowledge studio. Dark IDE-style chrome wraps a light "canvas" wo
 
 ## Index
 
-| File | Purpose |
-|---|---|
-| `README.md` | This document |
-| `SKILL.md` | Skill manifest (cross-compatible with Claude Code skills) |
-| `styles/tokens.css` | Foundation tokens — colors, type, spacing, radius, shadow |
-| `styles/studio.css` | Shell, canvas, components |
-| `styles/crud.css` | Modals, forms, toasts |
-| `components/icons.jsx` | Icon set (Lucide-style outline, 1.75 stroke) |
-| `preview/` | Design-system preview cards (registered in the Design System tab) |
+| File                   | Purpose                                                           |
+| ---------------------- | ----------------------------------------------------------------- |
+| `README.md`            | This document                                                     |
+| `SKILL.md`             | Skill manifest (cross-compatible with Claude Code skills)         |
+| `styles/tokens.css`    | Foundation tokens — colors, type, spacing, radius, shadow         |
+| `styles/studio.css`    | Shell, canvas, components                                         |
+| `styles/crud.css`      | Modals, forms, toasts                                             |
+| `components/icons.jsx` | Icon set (Lucide-style outline, 1.75 stroke)                      |
+| `preview/`             | Design-system preview cards (registered in the Design System tab) |
 
 ---
 
@@ -30,6 +30,7 @@ A graph-native knowledge studio. Dark IDE-style chrome wraps a light "canvas" wo
 **Voice.** Calm, technical, terse. Reads like a CLI man page, not marketing copy. Short labels, no exclamation, no hand-holding. The product trusts the user to know what a "schema", "individual", or "pipeline" is.
 
 **Casing.**
+
 - Sentence case for headings ("Knowledge graph", not "Knowledge Graph"), with a few proper-noun exceptions (REST, JSON, ID).
 - UPPER + monospace for section labels (`SCHEMA`, `LAST RUN`, `WORKSPACE`) — used as eyebrows above values.
 - Identifiers always in monospace, lowercase, snake_case (`life.organism`, `cls_4f3a`, `pipeline.run.completed`).
@@ -39,10 +40,11 @@ A graph-native knowledge studio. Dark IDE-style chrome wraps a light "canvas" wo
 **Numbers and counters.** Tabular numerals, monospace, right-aligned in tables. Counters like `12 / 480` or `+3 today`.
 
 **Tone examples.**
-- Empty state: *"No individuals match these filters."* (not *"Looks like there's nothing here yet — try adjusting your filters!"*)
-- Error toast: *"`pipeline.run` failed — connection refused at step 2"* (mono code, no apology)
-- Success toast: *"Saved"* / *"Class created"* — one or two words.
-- Confirmation: *"Delete `cls_organism`? 47 individuals will be unlinked."* (states the consequence, doesn't ask "Are you sure?")
+
+- Empty state: _"No individuals match these filters."_ (not _"Looks like there's nothing here yet — try adjusting your filters!"_)
+- Error toast: _"`pipeline.run` failed — connection refused at step 2"_ (mono code, no apology)
+- Success toast: _"Saved"_ / _"Class created"_ — one or two words.
+- Confirmation: _"Delete `cls_organism`? 47 individuals will be unlinked."_ (states the consequence, doesn't ask "Are you sure?")
 
 **Emoji.** Never. The visual language is line-icon and monospace.
 
@@ -54,12 +56,12 @@ A graph-native knowledge studio. Dark IDE-style chrome wraps a light "canvas" wo
 
 The defining structural choice. The **shell** (sidebar, topbar, statusbar, titlebar) is a deep slate dark. The **canvas** (main work surface) is white in light mode, slate in dark mode. The canvas attaches to the shell with a single 8px top-left radius — a visual seam that says "this is the document, that is the IDE".
 
-| Surface | Light | Dark |
-|---|---|---|
-| Shell bg | `#0B0F14` | `#0B0F14` |
+| Surface       | Light     | Dark      |
+| ------------- | --------- | --------- |
+| Shell bg      | `#0B0F14` | `#0B0F14` |
 | Shell surface | `#131A23` | `#131A23` |
-| Canvas bg | `#FFFFFF` | `#14191F` |
-| Canvas card | `#FFFFFF` | `#1B222A` |
+| Canvas bg     | `#FFFFFF` | `#14191F` |
+| Canvas card   | `#FFFFFF` | `#1B222A` |
 | Canvas border | `#E5E9EE` | `#2A323C` |
 
 ### Color
@@ -87,6 +89,7 @@ The defining structural choice. The **shell** (sidebar, topbar, statusbar, title
 ### Spacing
 
 Tailwind 4px scale. UI density ranges:
+
 - Compact (table rows, nav items): 8–10px vertical padding.
 - Standard (panel headers, buttons): 12–14px.
 - Generous (modal heads, page heads): 18–20px.

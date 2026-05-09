@@ -22,7 +22,10 @@ export function FilterBar({
   placeholder = "Search by title or description…",
 }: FilterBarProps) {
   return (
-    <div data-testid="schema-filter-bar" style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+    <div
+      data-testid="schema-filter-bar"
+      style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}
+    >
       <Input
         type="text"
         placeholder={placeholder}

@@ -17,13 +17,9 @@ export function SchemaPageLayout<T extends { id: string }>({
 
   return (
     <div className="split-2" data-testid="schema-page-layout">
-      <div>
-        {children}
-      </div>
+      <div>{children}</div>
       {selectedEntity && renderDrawerContent && (
-        <div data-testid="schema-drawer-container">
-          {renderDrawerContent(selectedEntity)}
-        </div>
+        <div data-testid="schema-drawer-container">{renderDrawerContent(selectedEntity)}</div>
       )}
     </div>
   );

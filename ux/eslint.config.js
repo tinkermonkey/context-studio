@@ -5,7 +5,15 @@ import globals from "globals";
 
 export default [
   {
-    ignores: ["dist", "node_modules", "coverage", "build", "src/routeTree.gen.ts", "design", "prettier.config.cjs"],
+    ignores: [
+      "dist",
+      "node_modules",
+      "coverage",
+      "build",
+      "src/routeTree.gen.ts",
+      "design",
+      "prettier.config.cjs",
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

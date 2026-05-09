@@ -11,7 +11,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       className={["input", mono && "mono", className].filter(Boolean).join(" ")}
       {...props}
     />
-  )
+  ),
 );
 Input.displayName = "Input";
 
@@ -26,7 +26,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       className={["input textarea", mono && "mono", className].filter(Boolean).join(" ")}
       {...props}
     />
-  )
+  ),
 );
 Textarea.displayName = "Textarea";
 
@@ -43,6 +43,6 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     >
       {children}
     </select>
-  )
+  ),
 );
 Select.displayName = "Select";
