@@ -15,6 +15,7 @@ interface DrawerProps {
   onRevert?: () => void;
   onDelete?: () => void;
   lastSavedAt?: Date;
+  headerAction?: ReactNode;
 }
 
 function formatTimeAgo(date: Date): string {
@@ -36,6 +37,7 @@ export function Drawer({
   onRevert,
   onDelete,
   lastSavedAt,
+  headerAction,
 }: DrawerProps) {
   useKeyboardShortcut({ key: "Escape", onKeydown: onClose, enabled: open });
 
@@ -46,6 +48,7 @@ export function Drawer({
       <div className="drawer-head">
         <span className="title">{title}</span>
         <div className="drawer-actions">
+          {headerAction}
           {autosaveState && autosaveState !== "idle" && (
             <div className="drawer-autosave-status" data-testid="drawer-autosave-status">
               {autosaveState === "saving" && (

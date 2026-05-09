@@ -199,3 +199,94 @@ selectors:
   - selector: relationship-target-class-filter
     component: routes/app/schema/relationships.tsx
     description: Dropdown select for filtering relationships by target class
+
+  # Taxonomy Form
+  - selector: taxonomy-form
+    component: components/schema/TaxonomyForm.tsx
+    description: Form for creating new taxonomy
+  - selector: taxonomy-title-input
+    component: components/schema/TaxonomyForm.tsx
+    description: Title input field in taxonomy form
+  - selector: taxonomy-description-input
+    component: components/schema/TaxonomyForm.tsx
+    description: Description textarea in taxonomy form
+  - selector: taxonomy-submit-button
+    component: components/schema/TaxonomyForm.tsx
+    description: Submit button for taxonomy form
+
+  # Taxonomy Drawer
+  - selector: taxonomy-drawer
+    component: components/ontology/TaxonomyDrawer.tsx
+    description: Drawer for editing taxonomy details
+  - selector: taxonomy-drawer-id
+    component: components/ontology/TaxonomyDrawer.tsx
+    description: Read-only ID field in taxonomy drawer
+  - selector: taxonomy-drawer-title-input
+    component: components/ontology/TaxonomyDrawer.tsx
+    description: Editable title field in taxonomy drawer
+  - selector: taxonomy-drawer-description-input
+    component: components/ontology/TaxonomyDrawer.tsx
+    description: Editable description field in taxonomy drawer
+  - selector: taxonomy-drawer-publish-button
+    component: components/ontology/TaxonomyDrawer.tsx
+    description: Publish button in taxonomy drawer (only visible for draft taxonomies)
+  - selector: taxonomy-delete-confirm
+    component: components/ontology/TaxonomyDrawer.tsx
+    description: Confirmation dialog for taxonomy deletion
+
+  # Taxonomy Publish Dialog
+  - selector: taxonomy-publish-dialog
+    component: components/ontology/TaxonomyPublishDialog.tsx
+    description: Modal dialog for publishing a taxonomy
+  - selector: taxonomy-publish-message-input
+    component: components/ontology/TaxonomyPublishDialog.tsx
+    description: Publication message textarea in publish dialog
+  - selector: taxonomy-publish-cancel-button
+    component: components/ontology/TaxonomyPublishDialog.tsx
+    description: Cancel button in publish dialog
+  - selector: taxonomy-publish-confirm-button
+    component: components/ontology/TaxonomyPublishDialog.tsx
+    description: Confirm/publish button in publish dialog
+
+  # Taxonomies Page
+  - selector: taxonomy-add-button
+    component: routes/app/schema/taxonomies.tsx
+    description: Button to open create taxonomy modal
+  - selector: taxonomy-create-modal
+    component: routes/app/schema/taxonomies.tsx
+    description: Modal for creating new taxonomy
+  - selector: taxonomies-page
+    component: routes/app/schema/taxonomies.tsx
+    description: Main taxonomies page container
+  - selector: taxonomies-content
+    component: routes/app/schema/taxonomies.tsx
+    description: Main content area of taxonomies page
+  - selector: taxonomy-row-actions-*
+    component: routes/app/schema/taxonomies.tsx
+    description: Actions menu button for taxonomy row
+
+  # Taxonomy Detail Page
+  - selector: taxonomy-detail-id
+    component: routes/app/schema/taxonomies.$taxonomyId.tsx
+    description: Read-only ID field in taxonomy detail page
+  - selector: taxonomy-detail-title-input
+    component: routes/app/schema/taxonomies.$taxonomyId.tsx
+    description: Editable title field in taxonomy detail page
+  - selector: taxonomy-detail-description-input
+    component: routes/app/schema/taxonomies.$taxonomyId.tsx
+    description: Editable description field in taxonomy detail page
+  - selector: taxonomy-detail-publish-button
+    component: routes/app/schema/taxonomies.$taxonomyId.tsx
+    description: Publish button in taxonomy detail page (only visible for draft taxonomies)
+  - selector: taxonomy-detail-delete-button
+    component: routes/app/schema/taxonomies.$taxonomyId.tsx
+    description: Delete button in taxonomy detail page
+  - selector: taxonomy-detail-publish-dialog
+    component: routes/app/schema/taxonomies.$taxonomyId.tsx
+    description: Modal dialog for publishing taxonomy from detail page
+  - selector: taxonomy-detail-publish-dialog-cancel
+    component: routes/app/schema/taxonomies.$taxonomyId.tsx
+    description: Cancel button in taxonomy detail publish dialog
+  - selector: taxonomy-detail-publish-dialog-confirm
+    component: routes/app/schema/taxonomies.$taxonomyId.tsx
+    description: Confirm button in taxonomy detail publish dialog

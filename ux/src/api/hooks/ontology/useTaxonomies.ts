@@ -52,3 +52,14 @@ export function useDeleteTaxonomy() {
     },
   });
 }
+
+export function usePublishTaxonomy() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => ontologyService.publishTaxonomy(id),
+    onSuccess: (_result, id) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.taxonomies });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.taxonomy(id) });
+    },
+  });
+}
