@@ -14,7 +14,6 @@ import { classesCopy } from "@/routes/app/schema/classes/-copy";
 import type { components } from "@/api/types";
 
 type ClassResponse = components["schemas"]["ClassResponse"];
-type ClassUpdateRequest = components["schemas"]["ClassUpdateRequest"];
 
 interface ClassDrawerProps {
   classData: ClassResponse | null;
@@ -25,9 +24,7 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
   const [title, setTitle] = useState(classData?.title ?? "");
   const [description, setDescription] = useState(classData?.description ?? "");
   const [domainId, setDomainId] = useState(classData?.concept_scheme_id ?? "");
-  const [parentClassId, setParentClassId] = useState(
-    classData?.parent_class_id ?? ""
-  );
+  const [parentClassId, setParentClassId] = useState(classData?.parent_class_id ?? "");
   const [searchParent, setSearchParent] = useState("");
   const [showParentOptions, setShowParentOptions] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -59,9 +56,7 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
     lastSavedAtRef.current = null;
   }, [classData]);
 
-  const isDirty =
-    title !== classData?.title ||
-    description !== classData?.description;
+  const isDirty = title !== classData?.title || description !== classData?.description;
 
   const updateData = {
     title,
@@ -126,19 +121,17 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
     .filter(
       (cls) =>
         cls.title.toLowerCase().includes(searchParent.toLowerCase()) ||
-        cls.id.toLowerCase().includes(searchParent.toLowerCase())
+        cls.id.toLowerCase().includes(searchParent.toLowerCase()),
     );
 
-  const autosaveState =
-    status === "idle" ? undefined : (status as "saving" | "saved" | "error");
+  const autosaveState = status === "idle" ? undefined : (status as "saving" | "saved" | "error");
 
   const propertyCount = classData.data_properties?.length ?? 0;
   const individualCount = individualsResponse?.total ?? 0;
 
   const allRelationships = relationshipsResponse?.items || [];
   const relationshipsForClass = allRelationships.filter(
-    (rel: any) =>
-      rel.source_id === classData.id || rel.target_id === classData.id
+    (rel: any) => rel.source_id === classData.id || rel.target_id === classData.id,
   );
   const relationshipCount = relationshipsForClass.length;
 
@@ -160,13 +153,7 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
             <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
               ID
             </label>
-            <Input
-              type="text"
-              value={classData.id}
-              disabled
-              mono
-              data-testid="class-drawer-id"
-            />
+            <Input type="text" value={classData.id} disabled mono data-testid="class-drawer-id" />
           </div>
 
           <div>
@@ -197,11 +184,7 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
             <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
               Domain
             </label>
-            <Select
-              value={domainId}
-              disabled
-              data-testid="class-drawer-domain-select"
-            >
+            <Select value={domainId} disabled data-testid="class-drawer-domain-select">
               <option value="">Select a domain</option>
               {schemes.map((scheme) => (
                 <option key={scheme.id} value={scheme.id}>

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
@@ -17,11 +16,26 @@ interface ClassDetailContentProps {
 }
 
 function ClassDetailContent({ classId }: ClassDetailContentProps) {
-  const { data: classData, isLoading: classLoading, error: classError, refetch: refetchClass } = useClass(classId);
-  const { data: classesResponse, isLoading: classesLoading, error: classesError, refetch: refetchClasses } = useClasses();
+  const {
+    data: classData,
+    isLoading: classLoading,
+    error: classError,
+    refetch: refetchClass,
+  } = useClass(classId);
+  const {
+    data: classesResponse,
+    isLoading: classesLoading,
+    error: classesError,
+    refetch: refetchClasses,
+  } = useClasses();
   const classes = classesResponse?.items || [];
 
-  const { data: relationshipsResponse, isLoading: relLoading, error: relError, refetch: refetchRel } = useRelationships();
+  const {
+    data: relationshipsResponse,
+    isLoading: relLoading,
+    error: relError,
+    refetch: refetchRel,
+  } = useRelationships();
   const allRelationships = relationshipsResponse?.items || [];
 
   const isLoading = classLoading || classesLoading || relLoading;
@@ -66,8 +80,7 @@ function ClassDetailContent({ classId }: ClassDetailContentProps) {
 
   const propertyCount = classData.data_properties?.length ?? 0;
   const relationshipsForClass = allRelationships.filter(
-    (rel: RelationshipResponse) =>
-      rel.source_id === classId || rel.target_id === classId
+    (rel: RelationshipResponse) => rel.source_id === classId || rel.target_id === classId,
   );
 
   const descendantIds = new Set<string>();
@@ -98,7 +111,7 @@ function ClassDetailContent({ classId }: ClassDetailContentProps) {
       cls.id === classId ||
       descendantIds.has(cls.id) ||
       ancestorIds.has(cls.id) ||
-      cls.parent_class_id === classId
+      cls.parent_class_id === classId,
   );
 
   return (
@@ -130,10 +143,7 @@ function ClassDetailContent({ classId }: ClassDetailContentProps) {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
         <Panel title="Hierarchy">
           {hierarchyClasses.length > 0 ? (
-            <HierarchyTree
-              classes={hierarchyClasses}
-              maxDepth={5}
-            />
+            <HierarchyTree classes={hierarchyClasses} maxDepth={5} />
           ) : (
             <div
               style={{
@@ -151,7 +161,13 @@ function ClassDetailContent({ classId }: ClassDetailContentProps) {
         <Panel title="Properties & Relationships">
           <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
             <div>
-              <div style={{ fontSize: "var(--text-xs)", color: "var(--canvas-fg-3)", marginBottom: "var(--space-2)" }}>
+              <div
+                style={{
+                  fontSize: "var(--text-xs)",
+                  color: "var(--canvas-fg-3)",
+                  marginBottom: "var(--space-2)",
+                }}
+              >
                 Properties
               </div>
               {propertyCount > 0 ? (
@@ -166,12 +182,20 @@ function ClassDetailContent({ classId }: ClassDetailContentProps) {
             </div>
 
             <div style={{ borderTop: "1px solid var(--canvas-fg-4)" }}>
-              <div style={{ fontSize: "var(--text-xs)", color: "var(--canvas-fg-3)", marginBottom: "var(--space-2)", marginTop: "var(--space-3)" }}>
+              <div
+                style={{
+                  fontSize: "var(--text-xs)",
+                  color: "var(--canvas-fg-3)",
+                  marginBottom: "var(--space-2)",
+                  marginTop: "var(--space-3)",
+                }}
+              >
                 Relationships
               </div>
               {relationshipsForClass.length > 0 ? (
                 <div style={{ fontSize: "var(--text-sm)" }}>
-                  {relationshipsForClass.length} relationship{relationshipsForClass.length === 1 ? "" : "s"}
+                  {relationshipsForClass.length} relationship
+                  {relationshipsForClass.length === 1 ? "" : "s"}
                 </div>
               ) : (
                 <div style={{ color: "var(--canvas-fg-3)", fontSize: "var(--text-sm)" }}>

@@ -41,7 +41,7 @@ function ClassesPageContent({ onCreateClick }: ClassesPageContentProps) {
     (cls: ClassResponse) =>
       cls.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
       cls.description?.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      cls.id.toLowerCase().includes(searchFilter.toLowerCase())
+      cls.id.toLowerCase().includes(searchFilter.toLowerCase()),
   );
 
   const classColumns: ColumnDef<ClassResponse>[] = [
@@ -163,11 +163,7 @@ function ClassesPageContent({ onCreateClick }: ClassesPageContentProps) {
   if (error) {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
-        <ErrorBanner
-          error={error}
-          onRetry={() => refetch()}
-          message="Failed to load classes"
-        />
+        <ErrorBanner error={error} onRetry={() => refetch()} message="Failed to load classes" />
       </div>
     );
   }
@@ -186,15 +182,11 @@ function ClassesPageContent({ onCreateClick }: ClassesPageContentProps) {
   }
 
   const hasFilters = !!searchFilter;
-  const showFilteredEmpty =
-    classes.length > 0 && filteredData.length === 0 && hasFilters;
+  const showFilteredEmpty = classes.length > 0 && filteredData.length === 0 && hasFilters;
 
   return (
     <div data-testid="classes-page">
-      <FilterBar
-        searchValue={searchFilter}
-        onSearchChange={setSearchFilter}
-      />
+      <FilterBar searchValue={searchFilter} onSearchChange={setSearchFilter} />
 
       {showFilteredEmpty ? (
         <div style={{ marginTop: "var(--space-6)" }}>
@@ -208,11 +200,7 @@ function ClassesPageContent({ onCreateClick }: ClassesPageContentProps) {
           data={filteredData}
           selectedId={selectedId}
           renderDrawerContent={(cls) => (
-            <ClassDrawer
-              key={cls.id}
-              classData={cls}
-              onClose={() => setSelectedId(undefined)}
-            />
+            <ClassDrawer key={cls.id} classData={cls} onClose={() => setSelectedId(undefined)} />
           )}
         >
           <SchemaTable
@@ -235,7 +223,7 @@ function ClassesPageWrapper() {
 
   const handleCreateSubmit = async (
     data: { title: string; description?: string | null; parent_class_id?: string | null },
-    schemeId?: string
+    schemeId?: string,
   ) => {
     setCreateError(null);
     try {
@@ -243,7 +231,7 @@ function ClassesPageWrapper() {
         setCreateError("Please select a domain");
         return;
       }
-      const result = await createMutation.mutateAsync({
+      await createMutation.mutateAsync({
         schemeId,
         data: {
           title: data.title,
@@ -295,10 +283,7 @@ function ClassesPageWrapper() {
             />
           </div>
         )}
-        <ClassEditor
-          onSubmit={handleCreateSubmit}
-          isLoading={createMutation.isPending}
-        />
+        <ClassEditor onSubmit={handleCreateSubmit} isLoading={createMutation.isPending} />
       </Modal>
     </div>
   );
