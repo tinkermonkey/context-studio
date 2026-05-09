@@ -112,8 +112,8 @@ describe("ReferenceService", () => {
           res(
         ctx.status(400),
         ctx.json({
-              detail: "Search term cannot be empty",
-            })
+          detail: "Search term cannot be empty",
+        })
       )
         )
       );
@@ -130,8 +130,8 @@ describe("ReferenceService", () => {
           res(
         ctx.status(404),
         ctx.json({
-              detail: "No results found for search term",
-            })
+          detail: "No results found for search term",
+        })
       )
         )
       );
@@ -150,8 +150,8 @@ describe("ReferenceService", () => {
           res(
         ctx.status(503),
         ctx.json({
-              detail: "Reference service temporarily unavailable",
-            })
+          detail: "Reference service temporarily unavailable",
+        })
       )
         )
       );
@@ -224,8 +224,8 @@ describe("ReferenceService", () => {
           res(
         ctx.status(500),
         ctx.json({
-              detail: "Failed to retrieve reference service status",
-            })
+          detail: "Failed to retrieve reference service status",
+        })
       )
         )
       );
@@ -242,8 +242,8 @@ describe("ReferenceService", () => {
           res(
         ctx.status(503),
         ctx.json({
-              detail: "Reference service is down",
-            })
+          detail: "Reference service is down",
+        })
       )
         )
       );

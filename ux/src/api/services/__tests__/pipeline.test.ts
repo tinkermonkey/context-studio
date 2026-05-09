@@ -7,6 +7,12 @@ import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { rest } from "msw";
 import { setupServer } from "msw/node";
 import { pipelineService } from "../pipeline";
+import {
+  createPipelineConfiguration,
+  createPipelineConfigurationCreate,
+  createPipelineConfigurationUpdate,
+  createExecution,
+} from "./fixtures/pipeline.fixtures";
 
 const server = setupServer();
 
@@ -25,9 +31,9 @@ afterAll(() => {
 describe("PipelineService", () => {
   describe("listPipelines", () => {
     it("returns list of pipeline configurations", async () => {
-      const mockPipelines: any = [
-        { id: "p-1", title: "Pipeline 1", pipeline: "pipeline_1", provider: "openai", model: "gpt-4", system_prompt: "You are helpful", user_prompt: "Analyze", version: 1, enabled: true, created_at: "2025-05-09T12:00:00Z", last_updated: "2025-05-09T12:00:00Z" },
-        { id: "p-2", title: "Pipeline 2", pipeline: "pipeline_2", provider: "openai", model: "gpt-4", system_prompt: "You are helpful", user_prompt: "Analyze", version: 1, enabled: true, created_at: "2025-05-09T12:00:00Z", last_updated: "2025-05-09T12:00:00Z" },
+      const mockPipelines = [
+        createPipelineConfiguration({ id: "p-1", title: "Pipeline 1", pipeline: "pipeline_1" }),
+        createPipelineConfiguration({ id: "p-2", title: "Pipeline 2", pipeline: "pipeline_2" }),
       ];
 
       server.use(
@@ -56,7 +62,7 @@ describe("PipelineService", () => {
 
   describe("getPipeline", () => {
     it("returns pipeline by ID", async () => {
-      const mockPipeline: any = { id: "p-123", title: "Pipeline", pipeline: "pipe", provider: "openai", model: "gpt-4", system_prompt: "You are helpful", user_prompt: "Analyze", version: 1, enabled: true, created_at: "2025-05-09T12:00:00Z", last_updated: "2025-05-09T12:00:00Z" };
+      const mockPipeline = createPipelineConfiguration({ id: "p-123", title: "Pipeline", pipeline: "pipe" });
 
       server.use(
         rest.get("*/api/pipelines/p-123", (req, res, ctx) =>
@@ -87,7 +93,7 @@ describe("PipelineService", () => {
 
   describe("createPipeline", () => {
     it("creates and returns new pipeline", async () => {
-      const mockPipeline: any = { id: "p-999", title: "New", pipeline: "new", provider: "openai", model: "gpt-4", system_prompt: "help", user_prompt: "analyze", version: 1, enabled: true, created_at: "2025-05-09T12:00:00Z", last_updated: "2025-05-09T12:00:00Z" };
+      const mockPipeline = createPipelineConfiguration({ id: "p-999", title: "New", pipeline: "new" });
 
       server.use(
         rest.post("*/api/pipelines", (req, res, ctx) =>
@@ -95,15 +101,8 @@ describe("PipelineService", () => {
         )
       );
 
-      const result = await pipelineService.createPipeline({
-        pipeline: "new",
-        title: "New",
-        provider: "openai",
-        model: "gpt-4",
-        system_prompt: "help",
-        user_prompt: "analyze",
-        enabled: true,
-      } as any);
+      const createRequest = createPipelineConfigurationCreate({ title: "New", pipeline: "new" });
+      const result = await pipelineService.createPipeline(createRequest);
 
       expect(result.id).toBe("p-999");
     });
@@ -115,8 +114,9 @@ describe("PipelineService", () => {
         )
       );
 
+      const createRequest = createPipelineConfigurationCreate();
       await expect(
-        pipelineService.createPipeline({} as any)
+        pipelineService.createPipeline(createRequest)
       ).rejects.toMatchObject({
         name: "ApiError",
         status: 400,
@@ -126,7 +126,7 @@ describe("PipelineService", () => {
 
   describe("updatePipeline", () => {
     it("updates and returns pipeline", async () => {
-      const mockPipeline: any = { id: "p-123", title: "Updated", pipeline: "pipe", provider: "openai", model: "gpt-4", system_prompt: "help", user_prompt: "analyze", version: 1, enabled: true, created_at: "2025-05-09T12:00:00Z", last_updated: "2025-05-09T12:00:00Z" };
+      const mockPipeline = createPipelineConfiguration({ id: "p-123", title: "Updated", pipeline: "pipe" });
 
       server.use(
         rest.put("*/api/pipelines/p-123", (req, res, ctx) =>
@@ -134,7 +134,8 @@ describe("PipelineService", () => {
         )
       );
 
-      const result = await pipelineService.updatePipeline("p-123", {} as any);
+      const updateRequest = createPipelineConfigurationUpdate({ title: "Updated" });
+      const result = await pipelineService.updatePipeline("p-123", updateRequest);
 
       expect(result.id).toBe("p-123");
     });
@@ -146,8 +147,9 @@ describe("PipelineService", () => {
         )
       );
 
+      const updateRequest = createPipelineConfigurationUpdate();
       await expect(
-        pipelineService.updatePipeline("not-found", {} as any)
+        pipelineService.updatePipeline("not-found", updateRequest)
       ).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
@@ -186,7 +188,7 @@ describe("PipelineService", () => {
 
   describe("executePipeline", () => {
     it("executes pipeline and returns execution result", async () => {
-      const mockExecution: any = { id: "exec-1", pipeline_config_id: "p-123", output_text: "result", provider: "openai", model: "gpt-4", tokens_in: 100, tokens_out: 50, duration_ms: 500, status: "success", timestamp: "2025-05-09T12:00:00Z" };
+      const mockExecution = createExecution({ pipeline_config_id: "p-123", status: "success" });
 
       server.use(
         rest.post("*/api/pipelines/p-123/execute", (req, res, ctx) =>
@@ -232,9 +234,9 @@ describe("PipelineService", () => {
 
   describe("getPipelineExecutions", () => {
     it("returns list of pipeline executions", async () => {
-      const mockExecutions: any = [
-        { id: "e1", pipeline_config_id: "p-123", output_text: "r", provider: "openai", model: "gpt-4", tokens_in: 100, tokens_out: 50, duration_ms: 500, status: "success", timestamp: "2025-05-09T12:00:00Z" },
-        { id: "e2", pipeline_config_id: "p-123", output_text: "r", provider: "openai", model: "gpt-4", tokens_in: 100, tokens_out: 50, duration_ms: 500, status: "success", timestamp: "2025-05-09T12:00:00Z" },
+      const mockExecutions = [
+        createExecution({ id: "e1", pipeline_config_id: "p-123" }),
+        createExecution({ id: "e2", pipeline_config_id: "p-123" }),
       ];
 
       server.use(

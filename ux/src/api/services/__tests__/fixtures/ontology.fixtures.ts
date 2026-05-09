@@ -28,6 +28,7 @@ export function createListTaxonomies(
   return {
     items: items || [createTaxonomy()],
     total: items?.length ?? 1,
+    limit: 10,
     offset: 0,
   };
 }
@@ -66,6 +67,7 @@ export function createListSchemes(
   return {
     items: items || [createConceptScheme()],
     total: items?.length ?? 1,
+    limit: 10,
     offset: 0,
   };
 }
@@ -105,6 +107,7 @@ export function createListClasses(
   return {
     items: items || [createClass()],
     total: items?.length ?? 1,
+    limit: 10,
     offset: 0,
   };
 }
@@ -131,9 +134,10 @@ export function createIndividual(
     title: "Test Individual",
     description: "A test individual",
     class_ids: ["class-123"],
+    version: 1,
     status: "active",
     ...overrides,
-  } as any;
+  };
 }
 
 export function createListIndividuals(
@@ -142,6 +146,7 @@ export function createListIndividuals(
   return {
     items: items || [createIndividual()],
     total: items?.length ?? 1,
+    limit: 10,
     offset: 0,
   };
 }
@@ -152,7 +157,7 @@ export function createIndividualCreateRequest(
   return {
     title: "New Individual",
     description: "A new test individual",
-    classes: ["class-123"],
+    class_ids: ["class-123"],
     ...overrides,
   };
 }
@@ -166,10 +171,13 @@ export function createPropertyDefinition(
 ): components["schemas"]["PropertyDefinitionResponse"] {
   return {
     id: "prop-123",
+    identifier: "test_property",
     title: "Test Property",
     description: "A test property definition",
     created_at: new Date().toISOString(),
     last_modified: new Date().toISOString(),
+    version: 1,
+    status: "draft",
     ...overrides,
   };
 }
@@ -180,6 +188,7 @@ export function createListProperties(
   return {
     items: items || [createPropertyDefinition()],
     total: items?.length ?? 1,
+    limit: 10,
     offset: 0,
   };
 }
@@ -188,6 +197,7 @@ export function createPropertyDefinitionCreateRequest(
   overrides?: Partial<components["schemas"]["PropertyDefinitionCreateRequest"]>
 ): components["schemas"]["PropertyDefinitionCreateRequest"] {
   return {
+    identifier: "new_property",
     title: "New Property",
     description: "A new test property",
     ...overrides,
@@ -208,7 +218,7 @@ export function createRelationship(
     property_definition_id: "prop-123",
     status: "active",
     ...overrides,
-  } as any;
+  };
 }
 
 export function createListRelationships(
@@ -217,6 +227,7 @@ export function createListRelationships(
   return {
     items: items || [createRelationship()],
     total: items?.length ?? 1,
+    limit: 10,
     offset: 0,
   };
 }
@@ -227,7 +238,7 @@ export function createRelationshipCreateRequest(
   return {
     source_id: "class-123",
     target_id: "class-456",
-    property_id: "prop-123",
+    relationship_type: "related_to",
     ...overrides,
   };
 }

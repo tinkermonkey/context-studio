@@ -8,9 +8,10 @@ export function createKnowledgeGraph(
   overrides?: Partial<components["schemas"]["KnowledgeGraphResponse"]>
 ): components["schemas"]["KnowledgeGraphResponse"] {
   return {
-    nodes_count: 100,
-    edges_count: 250,
-    build_time_ms: 1500,
+    node_count: 100,
+    edge_count: 250,
+    is_directed: true,
+    timestamp: new Date().toISOString(),
     ...overrides,
   };
 }
@@ -21,9 +22,12 @@ export function createGraphMetrics(
   return {
     algorithm: "pagerank",
     density: 0.25,
-    clustering_coefficient: 0.45,
     average_degree: 5.0,
-    diameter: 8,
+    connected_components: 1,
+    degree_distribution: { "0": 10, "1": 20, "2": 15 },
+    centrality: { "node-1": 0.85, "node-2": 0.75 },
+    communities: [["node-1", "node-2"], ["node-3", "node-4"]],
+    computed_at: new Date().toISOString(),
     ...overrides,
   };
 }
@@ -34,8 +38,9 @@ export function createPathResult(
   return {
     source_id: "node-1",
     target_id: "node-5",
-    path: ["node-1", "node-2", "node-3", "node-5"],
+    nodes: ["node-1", "node-2", "node-3", "node-5"],
     distance: 3,
+    relationships: ["connects_to", "connects_to", "connects_to"],
     ...overrides,
   };
 }
@@ -54,7 +59,7 @@ export function createSPARQLResponse(
 ): components["schemas"]["SPARQLResponse"] {
   return {
     results: [{ x: "node-1" }, { x: "node-2" }],
-    execution_time_ms: 250,
+    triple_count: 1000,
     ...overrides,
   };
 }

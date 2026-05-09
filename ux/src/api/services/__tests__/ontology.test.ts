@@ -75,8 +75,8 @@ describe("OntologyService - Taxonomies", () => {
           res(
         ctx.status(500),
         ctx.json({
-              detail: "Internal server error",
-            })
+          detail: "Internal server error",
+        })
       )
         )
       );
@@ -113,8 +113,8 @@ describe("OntologyService - Taxonomies", () => {
           res(
         ctx.status(404),
         ctx.json({
-              detail: "Taxonomy not found",
-            })
+          detail: "Taxonomy not found",
+        })
       )
         )
       );
@@ -158,8 +158,8 @@ describe("OntologyService - Taxonomies", () => {
           res(
         ctx.status(400),
         ctx.json({
-              detail: "Title cannot be empty",
-            })
+          detail: "Title cannot be empty",
+        })
       )
         )
       );
@@ -183,8 +183,8 @@ describe("OntologyService - Taxonomies", () => {
           res(
         ctx.status(409),
         ctx.json({
-              detail: "Taxonomy with this title already exists",
-            })
+          detail: "Taxonomy with this title already exists",
+        })
       )
         )
       );
@@ -225,8 +225,8 @@ describe("OntologyService - Taxonomies", () => {
           res(
         ctx.status(404),
         ctx.json({
-              detail: "Taxonomy not found",
-            })
+          detail: "Taxonomy not found",
+        })
       )
         )
       );
@@ -257,8 +257,8 @@ describe("OntologyService - Taxonomies", () => {
           res(
         ctx.status(404),
         ctx.json({
-              detail: "Taxonomy not found",
-            })
+          detail: "Taxonomy not found",
+        })
       )
         )
       );
@@ -277,8 +277,8 @@ describe("OntologyService - Taxonomies", () => {
           res(
         ctx.status(422),
         ctx.json({
-              detail: "Cannot delete taxonomy with concept schemes",
-            })
+          detail: "Cannot delete taxonomy with concept schemes",
+        })
       )
         )
       );
@@ -343,8 +343,8 @@ describe("OntologyService - Concept Schemes", () => {
           res(
         ctx.status(500),
         ctx.json({
-              detail: "Internal server error",
-            })
+          detail: "Internal server error",
+        })
       )
         )
       );
@@ -378,8 +378,8 @@ describe("OntologyService - Concept Schemes", () => {
           res(
         ctx.status(404),
         ctx.json({
-              detail: "Concept scheme not found",
-            })
+          detail: "Concept scheme not found",
+        })
       )
         )
       );
@@ -427,8 +427,8 @@ describe("OntologyService - Concept Schemes", () => {
           res(
         ctx.status(404),
         ctx.json({
-              detail: "Taxonomy not found",
-            })
+          detail: "Taxonomy not found",
+        })
       )
         )
       );
@@ -535,8 +535,8 @@ describe("OntologyService - Classes", () => {
           res(
         ctx.status(500),
         ctx.json({
-              detail: "Internal server error",
-            })
+          detail: "Internal server error",
+        })
       )
         )
       );
@@ -570,8 +570,8 @@ describe("OntologyService - Classes", () => {
           res(
         ctx.status(404),
         ctx.json({
-              detail: "Class not found",
-            })
+          detail: "Class not found",
+        })
       )
         )
       );
@@ -657,8 +657,8 @@ describe("OntologyService - Classes", () => {
           res(
         ctx.status(400),
         ctx.json({
-              detail: "Target scheme not found",
-            })
+          detail: "Target scheme not found",
+        })
       )
         )
       );
@@ -739,8 +739,8 @@ describe("OntologyService - Individuals", () => {
           res(
         ctx.status(500),
         ctx.json({
-              detail: "Internal server error",
-            })
+          detail: "Internal server error",
+        })
       )
         )
       );
@@ -774,8 +774,8 @@ describe("OntologyService - Individuals", () => {
           res(
         ctx.status(404),
         ctx.json({
-              detail: "Individual not found",
-            })
+          detail: "Individual not found",
+        })
       )
         )
       );
@@ -821,8 +821,8 @@ describe("OntologyService - Individuals", () => {
           res(
         ctx.status(400),
         ctx.json({
-              detail: "One or more classes not found",
-            })
+          detail: "One or more classes not found",
+        })
       )
         )
       );
@@ -901,8 +901,8 @@ describe("OntologyService - Individuals", () => {
           res(
         ctx.status(404),
         ctx.json({
-              detail: "Individual not found",
-            })
+          detail: "Individual not found",
+        })
       )
         )
       );
@@ -1003,8 +1003,8 @@ describe("OntologyService - Property Definitions", () => {
           res(
         ctx.status(500),
         ctx.json({
-              detail: "Internal server error",
-            })
+          detail: "Internal server error",
+        })
       )
         )
       );
@@ -1038,8 +1038,8 @@ describe("OntologyService - Property Definitions", () => {
           res(
         ctx.status(404),
         ctx.json({
-              detail: "Property not found",
-            })
+          detail: "Property not found",
+        })
       )
         )
       );
@@ -1083,8 +1083,8 @@ describe("OntologyService - Property Definitions", () => {
           res(
         ctx.status(400),
         ctx.json({
-              detail: "Title cannot be empty",
-            })
+          detail: "Title cannot be empty",
+        })
       )
         )
       );
@@ -1138,8 +1138,8 @@ describe("OntologyService - Property Definitions", () => {
           res(
         ctx.status(422),
         ctx.json({
-              detail: "Cannot delete property with existing relationships",
-            })
+          detail: "Cannot delete property with existing relationships",
+        })
       )
         )
       );
@@ -1215,8 +1215,8 @@ describe("OntologyService - Relationships", () => {
           res(
         ctx.status(500),
         ctx.json({
-              detail: "Internal server error",
-            })
+          detail: "Internal server error",
+        })
       )
         )
       );
@@ -1251,8 +1251,8 @@ describe("OntologyService - Relationships", () => {
           res(
         ctx.status(404),
         ctx.json({
-              detail: "Relationship not found",
-            })
+          detail: "Relationship not found",
+        })
       )
         )
       );
@@ -1292,8 +1292,8 @@ describe("OntologyService - Relationships", () => {
           res(
         ctx.status(400),
         ctx.json({
-              detail: "Source class not found",
-            })
+          detail: "Source class not found",
+        })
       )
         )
       );
@@ -1326,8 +1326,8 @@ describe("OntologyService - Relationships", () => {
           res(
         ctx.status(404),
         ctx.json({
-              detail: "Relationship not found",
-            })
+          detail: "Relationship not found",
+        })
       )
         )
       );

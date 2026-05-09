@@ -44,8 +44,8 @@ describe("GraphService", () => {
       const result = await graphService.buildGraph();
 
       expect(result).toEqual(mockGraph);
-      expect(result.nodes_count).toBe(150);
-      expect(result.edges_count).toBe(300);
+      expect(result.node_count).toBe(150);
+      expect(result.edge_count).toBe(300);
     });
 
     it("throws ApiError on 500 from buildGraph", async () => {
@@ -54,8 +54,8 @@ describe("GraphService", () => {
           res(
         ctx.status(500),
         ctx.json({
-              detail: "Graph build failed",
-            })
+          detail: "Graph build failed",
+        })
       )
         )
       );
@@ -102,8 +102,8 @@ describe("GraphService", () => {
           res(
         ctx.status(400),
         ctx.json({
-              detail: "Invalid algorithm",
-            })
+          detail: "Invalid algorithm",
+        })
       )
         )
       );
@@ -133,7 +133,7 @@ describe("GraphService", () => {
 
       expect(result).toEqual(mockPath);
       expect(result.distance).toBe(4);
-      expect(result.path).toHaveLength(4);
+      expect(result.nodes).toHaveLength(4);
     });
 
     it("throws ApiError on 404 when path not found", async () => {
@@ -142,8 +142,8 @@ describe("GraphService", () => {
           res(
         ctx.status(404),
         ctx.json({
-              detail: "No path found between nodes",
-            })
+          detail: "No path found between nodes",
+        })
       )
         )
       );
@@ -174,7 +174,7 @@ describe("GraphService", () => {
 
       expect(result).toEqual(mockResults);
       expect(result.results).toHaveLength(3);
-      expect(result.execution_time_ms).toBe(250);
+      expect(result.triple_count).toBe(1000);
     });
 
     it("throws ApiError on 400 for invalid SPARQL query", async () => {
@@ -183,8 +183,8 @@ describe("GraphService", () => {
           res(
         ctx.status(400),
         ctx.json({
-              detail: "Invalid SPARQL query syntax",
-            })
+          detail: "Invalid SPARQL query syntax",
+        })
       )
         )
       );
@@ -204,8 +204,8 @@ describe("GraphService", () => {
           res(
         ctx.status(500),
         ctx.json({
-              detail: "Query execution timeout",
-            })
+          detail: "Query execution timeout",
+        })
       )
         )
       );

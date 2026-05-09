@@ -91,8 +91,8 @@ describe("VersioningService", () => {
           res(
         ctx.status(500),
         ctx.json({
-              detail: "Failed to retrieve changes",
-            })
+          detail: "Failed to retrieve changes",
+        })
       )
         )
       );
@@ -148,8 +148,8 @@ describe("VersioningService", () => {
           res(
         ctx.status(404),
         ctx.json({
-              detail: "Entity not found",
-            })
+          detail: "Entity not found",
+        })
       )
         )
       );
@@ -193,8 +193,8 @@ describe("VersioningService", () => {
           res(
         ctx.status(400),
         ctx.json({
-              detail: "Changeset name is required",
-            })
+          detail: "Changeset name is required",
+        })
       )
         )
       );
@@ -213,8 +213,8 @@ describe("VersioningService", () => {
           res(
         ctx.status(409),
         ctx.json({
-              detail: "Changeset with this name already exists",
-            })
+          detail: "Changeset with this name already exists",
+        })
       )
         )
       );
@@ -253,8 +253,8 @@ describe("VersioningService", () => {
           res(
         ctx.status(404),
         ctx.json({
-              detail: "Changeset not found",
-            })
+          detail: "Changeset not found",
+        })
       )
         )
       );
@@ -314,8 +314,8 @@ describe("VersioningService", () => {
           res(
         ctx.status(500),
         ctx.json({
-              detail: "Failed to get sync status",
-            })
+          detail: "Failed to get sync status",
+        })
       )
         )
       );
@@ -352,8 +352,8 @@ describe("VersioningService", () => {
           res(
         ctx.status(409),
         ctx.json({
-              detail: "Sync conflict detected",
-            })
+          detail: "Sync conflict detected",
+        })
       )
         )
       );
@@ -370,8 +370,8 @@ describe("VersioningService", () => {
           res(
         ctx.status(503),
         ctx.json({
-              detail: "Remote service unavailable",
-            })
+          detail: "Remote service unavailable",
+        })
       )
         )
       );
@@ -408,8 +408,8 @@ describe("VersioningService", () => {
           res(
         ctx.status(400),
         ctx.json({
-              detail: "Local changes must be pushed before pulling",
-            })
+          detail: "Local changes must be pushed before pulling",
+        })
       )
         )
       );

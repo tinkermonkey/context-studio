@@ -60,8 +60,8 @@ describe("ExtractionService", () => {
           res(
         ctx.status(400),
         ctx.json({
-              detail: "Text cannot be empty",
-            })
+          detail: "Text cannot be empty",
+        })
       )
         )
       );
@@ -78,8 +78,8 @@ describe("ExtractionService", () => {
           res(
         ctx.status(500),
         ctx.json({
-              detail: "Extraction service error",
-            })
+          detail: "Extraction service error",
+        })
       )
         )
       );
@@ -117,8 +117,8 @@ describe("ExtractionService", () => {
           res(
         ctx.status(413),
         ctx.json({
-              detail: "Text exceeds maximum length",
-            })
+          detail: "Text exceeds maximum length",
+        })
       )
         )
       );
@@ -137,8 +137,8 @@ describe("ExtractionService", () => {
           res(
         ctx.status(500),
         ctx.json({
-              detail: "Analysis failed",
-            })
+          detail: "Analysis failed",
+        })
       )
         )
       );
@@ -192,8 +192,8 @@ describe("ExtractionService", () => {
           res(
         ctx.status(400),
         ctx.json({
-              detail: "Entity names list cannot be empty",
-            })
+          detail: "Entity names list cannot be empty",
+        })
       )
         )
       );
@@ -212,8 +212,8 @@ describe("ExtractionService", () => {
           res(
         ctx.status(503),
         ctx.json({
-              detail: "Reference service temporarily unavailable",
-            })
+          detail: "Reference service temporarily unavailable",
+        })
       )
         )
       );

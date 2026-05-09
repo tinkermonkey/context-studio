@@ -74,8 +74,8 @@ describe("AdminService - Health & Metrics", () => {
           res(
         ctx.status(500),
         ctx.json({
-              detail: "Health check failed",
-            })
+          detail: "Health check failed",
+        })
       )
         )
       );
@@ -129,8 +129,8 @@ describe("AdminService - Health & Metrics", () => {
           res(
         ctx.status(500),
         ctx.json({
-              detail: "Database health check failed",
-            })
+          detail: "Database health check failed",
+        })
       )
         )
       );
@@ -190,8 +190,8 @@ describe("AdminService - Health & Metrics", () => {
           res(
         ctx.status(500),
         ctx.json({
-              detail: "Could not retrieve service metrics",
-            })
+          detail: "Could not retrieve service metrics",
+        })
       )
         )
       );
@@ -228,8 +228,8 @@ describe("AdminService - Health & Metrics", () => {
           res(
         ctx.status(500),
         ctx.json({
-              detail: "Could not retrieve task summary",
-            })
+          detail: "Could not retrieve task summary",
+        })
       )
         )
       );
@@ -296,8 +296,8 @@ describe("AdminService - Configuration Management", () => {
           res(
         ctx.status(500),
         ctx.json({
-              detail: "Could not load configuration",
-            })
+          detail: "Could not load configuration",
+        })
       )
         )
       );
@@ -349,8 +349,8 @@ describe("AdminService - Configuration Management", () => {
           res(
         ctx.status(400),
         ctx.json({
-              detail: "Invalid model specified",
-            })
+          detail: "Invalid model specified",
+        })
       )
         )
       );
@@ -374,8 +374,8 @@ describe("AdminService - Configuration Management", () => {
           res(
         ctx.status(404),
         ctx.json({
-              detail: "Configuration section not found",
-            })
+          detail: "Configuration section not found",
+        })
       )
         )
       );
@@ -423,8 +423,8 @@ describe("AdminService - Configuration Management", () => {
           res(
         ctx.status(500),
         ctx.json({
-              detail: "Failed to reset configuration",
-            })
+          detail: "Failed to reset configuration",
+        })
       )
         )
       );
@@ -495,8 +495,8 @@ describe("AdminService - Background Tasks", () => {
           res(
         ctx.status(500),
         ctx.json({
-              detail: "Failed to retrieve tasks",
-            })
+          detail: "Failed to retrieve tasks",
+        })
       )
         )
       );
@@ -548,8 +548,8 @@ describe("AdminService - Background Tasks", () => {
           res(
         ctx.status(404),
         ctx.json({
-              detail: "Task not found",
-            })
+          detail: "Task not found",
+        })
       )
         )
       );
@@ -569,8 +569,8 @@ describe("AdminService - Background Tasks", () => {
           res(
         ctx.status(500),
         ctx.json({
-              detail: "Failed to retrieve task",
-            })
+          detail: "Failed to retrieve task",
+        })
       )
         )
       );

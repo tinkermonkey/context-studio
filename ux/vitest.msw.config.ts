@@ -6,6 +6,7 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: "./vitest.msw.setup.ts",
     globals: true,
+    include: ["src/api/services/__tests__/**/*.test.ts"],
     coverage: {
       provider: "istanbul",
     },

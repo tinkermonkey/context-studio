@@ -22,10 +22,11 @@ export function createReferenceSearchResponse(
     term: "artificial intelligence",
     results: [
       {
+        uri: "https://en.wikipedia.org/wiki/Artificial_intelligence",
+        label: "Artificial Intelligence",
+        description: "The simulation of human intelligence",
+        confidence: 1.0,
         source: "wikipedia",
-        title: "Artificial Intelligence",
-        url: "https://en.wikipedia.org/wiki/Artificial_intelligence",
-        snippet: "The simulation of human intelligence",
       },
     ],
     sources_searched: ["wikipedia", "dbpedia"],

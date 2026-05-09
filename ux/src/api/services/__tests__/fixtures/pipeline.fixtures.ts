@@ -20,7 +20,7 @@ export function createPipelineConfiguration(
     created_at: new Date().toISOString(),
     last_updated: new Date().toISOString(),
     ...overrides,
-  } as any;
+  };
 }
 
 export function createPipelineConfigurationCreate(
@@ -35,7 +35,7 @@ export function createPipelineConfigurationCreate(
     user_prompt: "Analyze the following text",
     enabled: true,
     ...overrides,
-  } as any;
+  };
 }
 
 export function createPipelineConfigurationUpdate(
@@ -49,7 +49,7 @@ export function createPipelineConfigurationUpdate(
     user_prompt: "Updated user prompt",
     enabled: true,
     ...overrides,
-  } as any;
+  };
 }
 
 export function createExecution(
@@ -67,7 +67,7 @@ export function createExecution(
     status: "success",
     timestamp: new Date().toISOString(),
     ...overrides,
-  } as any;
+  };
 }
 
 export function createPipelineExecuteRequest(
