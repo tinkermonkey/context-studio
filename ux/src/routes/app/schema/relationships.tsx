@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { FilterBar, type FilterChip } from "@/components/schema/FilterBar";
 import { SchemaTable } from "@/components/schema/SchemaTable";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
@@ -182,24 +181,6 @@ function RelationshipsPageContent({
   const hasFilters = !!searchFilter || !!sourceClassFilter || !!targetClassFilter;
   const showFilteredEmpty = relationships.length > 0 && filteredData.length === 0 && hasFilters;
 
-  if (showFilteredEmpty) {
-    return (
-      <div data-testid="relationships-page">
-        <FilterBar
-          searchValue={searchFilter}
-          onSearchChange={setSearchFilter}
-          filterChips={filterChips}
-        />
-        <div style={{ marginTop: "var(--space-6)" }}>
-          <EmptyState
-            title={relationshipsCopy.filteredEmpty.title}
-            description={relationshipsCopy.filteredEmpty.description}
-          />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div data-testid="relationships-page">
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
@@ -284,27 +265,36 @@ function RelationshipsPageContent({
         />
       </div>
 
-      <SchemaPageLayout
-        data={filteredData}
-        selectedId={selectedId}
-        renderDrawerContent={(rel) => (
-          <RelationshipDrawer
-            key={rel.id}
-            relationship={rel}
-            sourceName={classesById.get(rel.source_id) || "—"}
-            targetName={classesById.get(rel.target_id) || "—"}
-            propertyName={propertiesById.get(rel.property_definition_id) || "—"}
-            onClose={() => setSelectedId(undefined)}
+      {showFilteredEmpty ? (
+        <div style={{ marginTop: "var(--space-6)" }}>
+          <EmptyState
+            title={relationshipsCopy.filteredEmpty.title}
+            description={relationshipsCopy.filteredEmpty.description}
           />
-        )}
-      >
-        <SchemaTable
-          columns={relationshipColumns}
+        </div>
+      ) : (
+        <SchemaPageLayout
           data={filteredData}
-          onRowSelect={setSelectedId}
           selectedId={selectedId}
-        />
-      </SchemaPageLayout>
+          renderDrawerContent={(rel) => (
+            <RelationshipDrawer
+              key={rel.id}
+              relationship={rel}
+              sourceName={classesById.get(rel.source_id) || "—"}
+              targetName={classesById.get(rel.target_id) || "—"}
+              propertyName={propertiesById.get(rel.property_definition_id) || "—"}
+              onClose={() => setSelectedId(undefined)}
+            />
+          )}
+        >
+          <SchemaTable
+            columns={relationshipColumns}
+            data={filteredData}
+            onRowSelect={setSelectedId}
+            selectedId={selectedId}
+          />
+        </SchemaPageLayout>
+      )}
     </div>
   );
 }
