@@ -12,10 +12,8 @@ import { StatTile } from "@/components/ui/StatTile";
 import { Panel } from "@/components/ui/Panel";
 import { ToastViewport, useToasts } from "@/components/ui/Toast";
 import { useCanvasStore } from "@/stores/canvas";
-import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import { SchemaTable } from "@/components/schema/SchemaTable";
 import { FilterBar } from "@/components/schema/FilterBar";
-import { EmptyState } from "@/components/ui/EmptyState";
 
 export const Route = createFileRoute("/app/contact-sheet")({
   component: ContactSheet,
@@ -76,7 +74,6 @@ interface MockEntity {
 export default function ContactSheet() {
   const [modalOpen, setModalOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [schemaDrawerOpen, setSchemaDrawerOpen] = useState(false);
   const [selectedSchemaId, setSelectedSchemaId] = useState<string | undefined>();
   const [searchFilter, setSearchFilter] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
