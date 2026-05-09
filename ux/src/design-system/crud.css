@@ -464,6 +464,8 @@
 }
 .toast-success .toast-mark { background: rgba(16, 185, 129, 0.16); color: var(--accent-emerald); }
 .toast-error .toast-mark { background: rgba(244, 63, 94, 0.16); color: var(--accent-rose, #f43f5e); }
+.toast-warning .toast-mark { background: rgba(217, 119, 6, 0.16); color: var(--accent-amber); }
+.toast-info .toast-mark { background: rgba(6, 182, 212, 0.16); color: var(--accent-cyan); }
 .toast-body { flex: 1; min-width: 0; }
 .toast-title { font-size: 12.5px; font-weight: 500; color: var(--canvas-fg); }
 .toast-error .toast-title { font-family: var(--mono); font-size: 11.5px; }

@@ -1,13 +1,18 @@
 import { useState, useCallback } from "react";
-import { CheckCircle, AlertCircle, X } from "lucide-react";
+import { CheckCircle, AlertCircle, AlertTriangle, Info, X } from "lucide-react";
+import { Button } from "./Button";
 
-type ToastType = "success" | "error";
+type ToastType = "success" | "error" | "warning" | "info";
 
 interface ToastItem {
   id: string;
   type: ToastType;
   title: string;
   sub?: string;
+  action?: {
+    label: string;
+    onAction: () => void;
+  };
 }
 
 interface ToastProps {
@@ -16,16 +21,36 @@ interface ToastProps {
 }
 
 function Toast({ item, onDismiss }: ToastProps) {
+  const iconMap = {
+    success: <CheckCircle size={13} />,
+    error: <AlertCircle size={13} />,
+    warning: <AlertTriangle size={13} />,
+    info: <Info size={13} />,
+  };
+
   return (
     <div className={`toast toast-${item.type}`}>
-      <div className="toast-mark">
-        {item.type === "success" ? <CheckCircle size={13} /> : <AlertCircle size={13} />}
-      </div>
+      <div className="toast-mark">{iconMap[item.type]}</div>
       <div className="toast-body">
         <div className="toast-title">{item.title}</div>
         {item.sub && <div className="toast-sub">{item.sub}</div>}
       </div>
-      <button className="toast-x" onClick={() => onDismiss(item.id)} type="button" aria-label="Dismiss">
+      {item.action && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={item.action.onAction}
+          data-testid={`toast-action-${item.id}`}
+        >
+          {item.action.label}
+        </Button>
+      )}
+      <button
+        className="toast-x"
+        onClick={() => onDismiss(item.id)}
+        type="button"
+        aria-label="Dismiss"
+      >
         <X size={12} />
       </button>
     </div>
@@ -55,10 +80,11 @@ export function useToasts() {
   }, []);
 
   const toast = useCallback(
-    (type: ToastType, title: string, sub?: string) => {
+    (type: ToastType, title: string, sub?: string, options?: { action?: ToastItem["action"]; autoDismissMs?: number }) => {
       const id = crypto.randomUUID();
-      setToasts((prev) => [...prev, { id, type, title, sub }]);
-      setTimeout(() => dismiss(id), 4000);
+      setToasts((prev) => [...prev, { id, type, title, sub, action: options?.action }]);
+      const dismissDelay = options?.autoDismissMs ?? 8000;
+      setTimeout(() => dismiss(id), dismissDelay);
     },
     [dismiss]
   );

@@ -521,6 +521,25 @@ select.input {
   display: flex; justify-content: space-between; align-items: center; gap: 10px;
 }
 .drawer-head .title { font-weight: 600; font-size: 14px; color: var(--canvas-fg-1); }
+.drawer-actions {
+  display: flex; align-items: center; gap: 8px;
+  margin-left: auto;
+}
+.drawer-autosave-status {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11.5px; color: var(--canvas-fg-3);
+  font-family: var(--mono);
+}
+.drawer-autosave-status .autosave-icon-saved {
+  color: var(--accent-emerald);
+}
+.drawer-autosave-status .autosave-icon-error {
+  color: var(--accent-rose);
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin {
+  animation: spin 1s linear infinite;
+}
 .drawer-body { padding: 14px 16px; }
 .drawer-body .kv { display: grid; grid-template-columns: 100px 1fr; gap: 6px 12px; align-items: baseline; font-size: 13px; }
 .drawer-body .kv dt { color: var(--canvas-fg-3); font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; align-self: center; }

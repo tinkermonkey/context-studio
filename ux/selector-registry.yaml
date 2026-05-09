@@ -7,4 +7,60 @@
 #   component: source component file
 #   description: what this element represents
 
-selectors: []
+selectors:
+  # Workspace Switcher
+  - selector: workspace-switcher-overlay
+    component: components/layout/WorkspaceSwitcher.tsx
+    description: Workspace switcher overlay backdrop
+  - selector: workspace-switcher-modal
+    component: components/layout/WorkspaceSwitcher.tsx
+    description: Workspace switcher modal
+
+  # Toast
+  - selector: toast-action-*
+    component: components/ui/Toast.tsx
+    description: Action button in toast with undo callback
+
+  # Drawer
+  - selector: drawer-autosave-status
+    component: components/ui/Drawer.tsx
+    description: Autosave status indicator showing save state
+  - selector: drawer-revert-button
+    component: components/ui/Drawer.tsx
+    description: Revert button visible when content is dirty
+  - selector: drawer-delete-button
+    component: components/ui/Drawer.tsx
+    description: Delete action button in drawer
+
+  # EmptyState
+  - selector: empty-state
+    component: components/ui/EmptyState.tsx
+    description: Empty state container with icon, title, and action
+  - selector: empty-state-action
+    component: components/ui/EmptyState.tsx
+    description: Call-to-action button in empty state
+
+  # ConfirmDialog
+  - selector: confirm-dialog
+    component: components/ui/ConfirmDialog.tsx
+    description: Confirmation dialog body
+  - selector: confirm-dialog-cancel
+    component: components/ui/ConfirmDialog.tsx
+    description: Cancel button in confirmation dialog
+  - selector: confirm-dialog-confirm
+    component: components/ui/ConfirmDialog.tsx
+    description: Confirm/affirmative button in confirmation dialog
+
+  # TypeToConfirmDialog
+  - selector: type-confirm-dialog
+    component: components/ui/TypeToConfirmDialog.tsx
+    description: Type-to-confirm dialog body
+  - selector: type-confirm-input
+    component: components/ui/TypeToConfirmDialog.tsx
+    description: Text input for confirming destructive action
+  - selector: type-confirm-button
+    component: components/ui/TypeToConfirmDialog.tsx
+    description: Destructive action button in type-confirm dialog
+  - selector: type-confirm-cancel
+    component: components/ui/TypeToConfirmDialog.tsx
+    description: Cancel button in type-confirm dialog
