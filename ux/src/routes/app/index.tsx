@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Network, Layers, GitBranch, Cpu, Plus, RefreshCw } from "lucide-react";
+import { Network, Layers, GitBranch, Cpu, Plus } from "lucide-react";
 import { StatTile } from "@/components/ui/StatTile";
 import { Panel } from "@/components/ui/Panel";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -71,7 +71,14 @@ function EmptyState() {
           Start building your knowledge graph
         </p>
       </div>
-      <div style={{ display: "flex", gap: "var(--space-3)", flexWrap: "wrap", justifyContent: "center" }}>
+      <div
+        style={{
+          display: "flex",
+          gap: "var(--space-3)",
+          flexWrap: "wrap",
+          justifyContent: "center",
+        }}
+      >
         <Link to="/app/schema/taxonomies">
           <button
             type="button"
@@ -142,11 +149,36 @@ function EmptyState() {
 
 function Dashboard() {
   const { data: health } = useHealth();
-  const { data: taxonomies, isLoading: taxonomiesLoading, error: taxonomiesError, refetch: refetchTaxonomies } = useTaxonomies();
-  const { data: classes, isLoading: classesLoading, error: classesError, refetch: refetchClasses } = useClasses();
-  const { data: individuals, isLoading: individualsLoading, error: individualsError, refetch: refetchIndividuals } = useIndividuals();
-  const { data: pipelines, isLoading: pipelinesLoading, error: pipelinesError, refetch: refetchPipelines } = usePipelines();
-  const { data: changesData, isLoading: changesLoading, error: changesError, refetch: refetchChanges } = useChanges({ limit: 10 });
+  const {
+    data: taxonomies,
+    isLoading: taxonomiesLoading,
+    error: taxonomiesError,
+    refetch: refetchTaxonomies,
+  } = useTaxonomies();
+  const {
+    data: classes,
+    isLoading: classesLoading,
+    error: classesError,
+    refetch: refetchClasses,
+  } = useClasses();
+  const {
+    data: individuals,
+    isLoading: individualsLoading,
+    error: individualsError,
+    refetch: refetchIndividuals,
+  } = useIndividuals();
+  const {
+    data: pipelines,
+    isLoading: pipelinesLoading,
+    error: pipelinesError,
+    refetch: refetchPipelines,
+  } = usePipelines();
+  const {
+    data: changesData,
+    isLoading: changesLoading,
+    error: changesError,
+    refetch: refetchChanges,
+  } = useChanges({ limit: 10 });
 
   const taxonomyCount = taxonomies?.total ?? 0;
   const classCount = classes?.total ?? 0;
@@ -159,7 +191,14 @@ function Dashboard() {
       <div>
         <div className="page-head">
           <div>
-            <h1 style={{ fontSize: "var(--text-2xl)", fontWeight: 700, color: "var(--canvas-fg)", margin: 0 }}>
+            <h1
+              style={{
+                fontSize: "var(--text-2xl)",
+                fontWeight: 700,
+                color: "var(--canvas-fg)",
+                margin: 0,
+              }}
+            >
               Dashboard
             </h1>
             <p style={{ fontSize: "var(--text-sm)", color: "var(--canvas-fg-3)", marginTop: 4 }}>
@@ -176,7 +215,14 @@ function Dashboard() {
     <div>
       <div className="page-head">
         <div>
-          <h1 style={{ fontSize: "var(--text-2xl)", fontWeight: 700, color: "var(--canvas-fg)", margin: 0 }}>
+          <h1
+            style={{
+              fontSize: "var(--text-2xl)",
+              fontWeight: 700,
+              color: "var(--canvas-fg)",
+              margin: 0,
+            }}
+          >
             Dashboard
           </h1>
           <p style={{ fontSize: "var(--text-sm)", color: "var(--canvas-fg-3)", marginTop: 4 }}>
@@ -186,11 +232,24 @@ function Dashboard() {
       </div>
 
       {/* Stat grid */}
-      <ErrorBanner error={taxonomiesError} onRetry={refetchTaxonomies} message="Could not load taxonomies" compact />
-      <div className="stat-grid" style={{ marginBottom: "var(--space-6)", marginTop: taxonomiesError ? "var(--space-4)" : 0 }}>
+      <ErrorBanner
+        error={taxonomiesError}
+        onRetry={refetchTaxonomies}
+        message="Could not load taxonomies"
+        compact
+      />
+      <div
+        className="stat-grid"
+        style={{
+          marginBottom: "var(--space-6)",
+          marginTop: taxonomiesError ? "var(--space-4)" : 0,
+        }}
+      >
         <StatTile
           label="Taxonomies"
-          value={taxonomiesLoading ? <Skeleton width={40} height="1.5rem" /> : String(taxonomyCount)}
+          value={
+            taxonomiesLoading ? <Skeleton width={40} height="1.5rem" /> : String(taxonomyCount)
+          }
           color="cyan"
           sub="knowledge domains"
         />
@@ -202,7 +261,9 @@ function Dashboard() {
         />
         <StatTile
           label="Individuals"
-          value={individualsLoading ? <Skeleton width={40} height="1.5rem" /> : String(individualCount)}
+          value={
+            individualsLoading ? <Skeleton width={40} height="1.5rem" /> : String(individualCount)
+          }
           color="amber"
           sub="indexed instances"
         />
@@ -215,16 +276,32 @@ function Dashboard() {
       </div>
 
       {/* Two-column layout */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-6)", marginBottom: "var(--space-6)" }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "var(--space-6)",
+          marginBottom: "var(--space-6)",
+        }}
+      >
         {/* Recent Activity */}
         <Panel title="Recent Activity">
-          <ErrorBanner error={changesError} onRetry={refetchChanges} message="Could not load recent changes" compact />
+          <ErrorBanner
+            error={changesError}
+            onRetry={refetchChanges}
+            message="Could not load recent changes"
+            compact
+          />
           {!changesError && (
             <>
               {changesLoading ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
                   {Array.from({ length: 4 }).map((_, i) => (
-                    <Skeleton key={i} height="36px" style={{ borderRadius: "var(--radius-md, 6px)" }} />
+                    <Skeleton
+                      key={i}
+                      height="36px"
+                      style={{ borderRadius: "var(--radius-md, 6px)" }}
+                    />
                   ))}
                 </div>
               ) : !changesData?.events.length ? (
@@ -285,14 +362,16 @@ function Dashboard() {
                 alignItems: "center",
               }}
             >
-              {([
-                ["Status", health.status],
-                ["Database", health.database_connected ? "connected" : "unavailable"],
-                ["NLP pipeline", health.nlp_pipeline_ready ? "ready" : "not loaded"],
-                ["Embedding model", health.embedding_model_loaded ? "loaded" : "not loaded"],
-                ["LLM providers", (health.llm_providers_available ?? []).join(", ") || "none"],
-                ["Uptime", `${Math.floor(health.uptime_seconds / 60)}m`],
-              ] as [string, string][]).map(([k, v]) => (
+              {(
+                [
+                  ["Status", health.status],
+                  ["Database", health.database_connected ? "connected" : "unavailable"],
+                  ["NLP pipeline", health.nlp_pipeline_ready ? "ready" : "not loaded"],
+                  ["Embedding model", health.embedding_model_loaded ? "loaded" : "not loaded"],
+                  ["LLM providers", (health.llm_providers_available ?? []).join(", ") || "none"],
+                  ["Uptime", `${Math.floor(health.uptime_seconds / 60)}m`],
+                ] as [string, string][]
+              ).map(([k, v]) => (
                 <>
                   <dt
                     key={`${k}-k`}
@@ -340,18 +419,24 @@ function Dashboard() {
         }}
       >
         <Panel title="Knowledge Graph Structure">
-          <ErrorBanner error={classesError} onRetry={refetchClasses} message="Could not load class hierarchy" compact />
+          <ErrorBanner
+            error={classesError}
+            onRetry={refetchClasses}
+            message="Could not load class hierarchy"
+            compact
+          />
           {!classesError && (
-            <HierarchyTree
-              classes={classes?.items}
-              loading={classesLoading}
-              error={classesError}
-            />
+            <HierarchyTree classes={classes?.items} loading={classesLoading} error={classesError} />
           )}
         </Panel>
 
         <Panel title="Individuals by Class">
-          <ErrorBanner error={individualsError} onRetry={refetchIndividuals} message="Could not load individuals" compact />
+          <ErrorBanner
+            error={individualsError}
+            onRetry={refetchIndividuals}
+            message="Could not load individuals"
+            compact
+          />
           {!individualsError && individualsLoading && (
             <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
               {Array.from({ length: 5 }).map((_, i) => (
@@ -364,17 +449,25 @@ function Dashboard() {
               No individuals yet.
             </p>
           )}
-          {!individualsError && !individualsLoading && individuals && individuals.items.length > 0 && (
-            <div style={{ fontSize: "var(--text-xs)", color: "var(--canvas-fg-3)" }}>
-              Showing {Math.min(individuals.items.length, 10)} of {individuals.total} individuals
-            </div>
-          )}
+          {!individualsError &&
+            !individualsLoading &&
+            individuals &&
+            individuals.items.length > 0 && (
+              <div style={{ fontSize: "var(--text-xs)", color: "var(--canvas-fg-3)" }}>
+                Showing {Math.min(individuals.items.length, 10)} of {individuals.total} individuals
+              </div>
+            )}
         </Panel>
       </div>
 
       {/* Active Pipelines */}
       <div>
-        <ErrorBanner error={pipelinesError} onRetry={refetchPipelines} message="Could not load pipelines" compact />
+        <ErrorBanner
+          error={pipelinesError}
+          onRetry={refetchPipelines}
+          message="Could not load pipelines"
+          compact
+        />
         {!pipelinesError && !pipelinesLoading && pipelines && pipelines.length > 0 && (
           <div>
             <div
