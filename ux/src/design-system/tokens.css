@@ -17,13 +17,13 @@
   --primary-800: #0A5872;
   --primary-900: #084C62;
 
-  /* ---- Shell (always-dark chrome) --------------------------------------- */
-  --shell-bg:       #0B0F14;
-  --shell-bg-2:     #0F141B;
-  --shell-surface:  #131A23;
-  --shell-surface-2:#1A2230;
-  --shell-border:   #1E2733;
-  --shell-border-2: #2A3645;
+  /* ---- Shell (always-dark chrome — navy/slate tone) --------------------- */
+  --shell-bg:       #0F1729;
+  --shell-bg-2:     #13203A;
+  --shell-surface:  #1B2949;
+  --shell-surface-2:#1F3155;
+  --shell-border:   #1E3255;
+  --shell-border-2: #2B4268;
   --shell-fg-1:     #E6EDF3;
   --shell-fg-2:     #A6B1BD;
   --shell-fg-3:     #6E7A87;
@@ -41,10 +41,10 @@
   --canvas-fg-3: #64748B;
   --canvas-fg-4: #94A3B8;
 
-  /* ---- Accents ---------------------------------------------------------- */
-  --accent-cyan:       #22D3EE;
-  --accent-cyan-2:     #06B6D4;
-  --accent-cyan-deep:  #0E7EA3;
+  /* ---- Accents (primary interactive = amber/orange) --------------------- */
+  --accent-cyan:       #FBBF24;
+  --accent-cyan-2:     #F59E0B;
+  --accent-cyan-deep:  #B45309;
   --accent-amber:      #F59E0B;
   --accent-violet:     #A78BFA;
   --accent-emerald:    #10B981;
@@ -54,7 +54,7 @@
   --dom-life:     #34D399;
   --dom-climate:  #FBBF24;
   --dom-software: #818CF8;
-  --dom-default:  #22D3EE;
+  --dom-default:  #06B6D4;
 
   /* ---- Semantic intents ------------------------------------------------- */
   --intent-success-fg: #065F46;
