@@ -25,8 +25,16 @@ export function useCreateTaxonomy() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: TaxonomyCreateRequest) => ontologyService.createTaxonomy(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.taxonomies });
+    onSuccess: (result) => {
+      const currentData = queryClient.getQueryData<{ items: components["schemas"]["TaxonomyResponse"][] }>(QUERY_KEYS.taxonomies);
+      if (currentData) {
+        queryClient.setQueryData(QUERY_KEYS.taxonomies, {
+          ...currentData,
+          items: [result, ...currentData.items],
+        });
+      } else {
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.taxonomies });
+      }
     },
   });
 }

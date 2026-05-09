@@ -220,7 +220,6 @@ function TaxonomiesPageWrapper() {
   const [createError, setCreateError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | undefined>();
   const createMutation = useCreateTaxonomy();
-  const { refetch } = useTaxonomies();
   const { toast } = useToasts();
 
   const handleCreateSubmit = async (data: TaxonomyCreateRequest) => {
@@ -228,7 +227,6 @@ function TaxonomiesPageWrapper() {
     try {
       const result = await createMutation.mutateAsync(data);
       setShowCreateModal(false);
-      await refetch();
       setSelectedId(result.id);
       toast("success", taxonomiesCopy.create.successToast(result.id));
     } catch (error) {
