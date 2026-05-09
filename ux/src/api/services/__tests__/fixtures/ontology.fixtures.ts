@@ -1,0 +1,233 @@
+/**
+ * Test fixtures for OntologyService using OpenAPI-generated types.
+ * All fixtures are typed against components["schemas"] from ux/src/api/types/index.ts
+ */
+
+import type { components } from "@/api/types";
+
+// ============================================================================
+// Taxonomy Fixtures
+// ============================================================================
+
+export function createTaxonomy(
+  overrides?: Partial<components["schemas"]["TaxonomyResponse"]>
+): components["schemas"]["TaxonomyResponse"] {
+  return {
+    id: "tax-123",
+    title: "Test Taxonomy",
+    description: "A test taxonomy for unit testing",
+    created_at: new Date().toISOString(),
+    last_modified: new Date().toISOString(),
+    ...overrides,
+  };
+}
+
+export function createListTaxonomies(
+  items?: components["schemas"]["TaxonomyResponse"][]
+): components["schemas"]["ListResponse_TaxonomyResponse_"] {
+  return {
+    items: items || [createTaxonomy()],
+    total: items?.length ?? 1,
+    offset: 0,
+  };
+}
+
+export function createTaxonomyCreateRequest(
+  overrides?: Partial<components["schemas"]["TaxonomyCreateRequest"]>
+): components["schemas"]["TaxonomyCreateRequest"] {
+  return {
+    title: "New Taxonomy",
+    description: "A new test taxonomy",
+    ...overrides,
+  };
+}
+
+// ============================================================================
+// Concept Scheme Fixtures
+// ============================================================================
+
+export function createConceptScheme(
+  overrides?: Partial<components["schemas"]["ConceptSchemeResponse"]>
+): components["schemas"]["ConceptSchemeResponse"] {
+  return {
+    id: "scheme-123",
+    title: "Test Scheme",
+    description: "A test concept scheme",
+    taxonomy_id: "tax-123",
+    created_at: new Date().toISOString(),
+    last_modified: new Date().toISOString(),
+    ...overrides,
+  };
+}
+
+export function createListSchemes(
+  items?: components["schemas"]["ConceptSchemeResponse"][]
+): components["schemas"]["ListResponse_ConceptSchemeResponse_"] {
+  return {
+    items: items || [createConceptScheme()],
+    total: items?.length ?? 1,
+    offset: 0,
+  };
+}
+
+export function createConceptSchemeCreateRequest(
+  overrides?: Partial<components["schemas"]["ConceptSchemeCreateRequest"]>
+): components["schemas"]["ConceptSchemeCreateRequest"] {
+  return {
+    title: "New Scheme",
+    description: "A new test scheme",
+    ...overrides,
+  };
+}
+
+// ============================================================================
+// Class Fixtures
+// ============================================================================
+
+export function createClass(
+  overrides?: Partial<components["schemas"]["ClassResponse"]>
+): components["schemas"]["ClassResponse"] {
+  return {
+    id: "class-123",
+    title: "Test Class",
+    description: "A test class",
+    concept_scheme_id: "scheme-123",
+    parent_class_id: null,
+    created_at: new Date().toISOString(),
+    last_modified: new Date().toISOString(),
+    ...overrides,
+  };
+}
+
+export function createListClasses(
+  items?: components["schemas"]["ClassResponse"][]
+): components["schemas"]["ListResponse_ClassResponse_"] {
+  return {
+    items: items || [createClass()],
+    total: items?.length ?? 1,
+    offset: 0,
+  };
+}
+
+export function createClassCreateRequest(
+  overrides?: Partial<components["schemas"]["ClassCreateRequest"]>
+): components["schemas"]["ClassCreateRequest"] {
+  return {
+    title: "New Class",
+    description: "A new test class",
+    ...overrides,
+  };
+}
+
+// ============================================================================
+// Individual Fixtures
+// ============================================================================
+
+export function createIndividual(
+  overrides?: Partial<components["schemas"]["IndividualResponse"]>
+): components["schemas"]["IndividualResponse"] {
+  return {
+    id: "ind-123",
+    title: "Test Individual",
+    description: "A test individual",
+    class_ids: ["class-123"],
+    status: "active",
+    ...overrides,
+  } as any;
+}
+
+export function createListIndividuals(
+  items?: components["schemas"]["IndividualResponse"][]
+): components["schemas"]["ListResponse_IndividualResponse_"] {
+  return {
+    items: items || [createIndividual()],
+    total: items?.length ?? 1,
+    offset: 0,
+  };
+}
+
+export function createIndividualCreateRequest(
+  overrides?: Partial<components["schemas"]["IndividualCreateRequest"]>
+): components["schemas"]["IndividualCreateRequest"] {
+  return {
+    title: "New Individual",
+    description: "A new test individual",
+    classes: ["class-123"],
+    ...overrides,
+  };
+}
+
+// ============================================================================
+// Property Definition Fixtures
+// ============================================================================
+
+export function createPropertyDefinition(
+  overrides?: Partial<components["schemas"]["PropertyDefinitionResponse"]>
+): components["schemas"]["PropertyDefinitionResponse"] {
+  return {
+    id: "prop-123",
+    title: "Test Property",
+    description: "A test property definition",
+    created_at: new Date().toISOString(),
+    last_modified: new Date().toISOString(),
+    ...overrides,
+  };
+}
+
+export function createListProperties(
+  items?: components["schemas"]["PropertyDefinitionResponse"][]
+): components["schemas"]["ListResponse_PropertyDefinitionResponse_"] {
+  return {
+    items: items || [createPropertyDefinition()],
+    total: items?.length ?? 1,
+    offset: 0,
+  };
+}
+
+export function createPropertyDefinitionCreateRequest(
+  overrides?: Partial<components["schemas"]["PropertyDefinitionCreateRequest"]>
+): components["schemas"]["PropertyDefinitionCreateRequest"] {
+  return {
+    title: "New Property",
+    description: "A new test property",
+    ...overrides,
+  };
+}
+
+// ============================================================================
+// Relationship Fixtures
+// ============================================================================
+
+export function createRelationship(
+  overrides?: Partial<components["schemas"]["RelationshipResponse"]>
+): components["schemas"]["RelationshipResponse"] {
+  return {
+    id: "rel-123",
+    source_id: "class-123",
+    target_id: "class-456",
+    property_definition_id: "prop-123",
+    status: "active",
+    ...overrides,
+  } as any;
+}
+
+export function createListRelationships(
+  items?: components["schemas"]["RelationshipResponse"][]
+): components["schemas"]["ListResponse_RelationshipResponse_"] {
+  return {
+    items: items || [createRelationship()],
+    total: items?.length ?? 1,
+    offset: 0,
+  };
+}
+
+export function createRelationshipCreateRequest(
+  overrides?: Partial<components["schemas"]["RelationshipCreateRequest"]>
+): components["schemas"]["RelationshipCreateRequest"] {
+  return {
+    source_id: "class-123",
+    target_id: "class-456",
+    property_id: "prop-123",
+    ...overrides,
+  };
+}
