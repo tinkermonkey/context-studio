@@ -1,0 +1,10 @@
+# Context Studio — Selector Registry
+# All data-testid attributes used in E2E tests must be registered here.
+# Run `npm run validate-selectors` to verify contract integrity.
+#
+# Format:
+#   selector: data-testid value
+#   component: source component file
+#   description: what this element represents
+
+selectors: []
