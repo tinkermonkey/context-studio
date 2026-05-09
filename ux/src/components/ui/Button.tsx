@@ -12,7 +12,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ variant = "ghost", size, className = "", children, ...props }, ref) => {
     const classes = [
       "btn",
-      variant !== "ghost" && `btn-${variant}`,
+      `btn-${variant}`,
       size === "sm" && "btn-sm",
       className,
     ]

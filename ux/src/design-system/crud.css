@@ -63,7 +63,7 @@
   display: flex; align-items: center; gap: 8px;
   padding: 12px 18px;
   border-top: 1px solid var(--canvas-bd);
-  background: var(--canvas-bg-1, var(--canvas-bg));
+  background: var(--canvas-bg);
 }
 .modal-foot-hint {
   font-size: 10.5px; color: var(--canvas-fg-3); letter-spacing: 0.02em;
@@ -89,9 +89,9 @@
 
 .version-pill {
   font-family: var(--mono); font-size: 10.5px;
-  background: rgba(34, 211, 238, 0.08);
+  background: color-mix(in oklab, var(--accent-cyan) 8%, transparent);
   color: var(--accent-cyan-deep);
-  border: 1px solid rgba(34, 211, 238, 0.18);
+  border: 1px solid color-mix(in oklab, var(--accent-cyan) 18%, transparent);
   padding: 1px 7px; border-radius: 999px;
   letter-spacing: 0.02em;
 }
@@ -110,32 +110,6 @@
 .field-control.mono input { font-family: var(--mono); }
 .field-error { font-size: 11px; color: var(--accent-rose, #f43f5e); margin-top: 4px; }
 
-.input {
-  display: block; width: 100%;
-  background: var(--canvas-bg-2);
-  border: 1px solid var(--canvas-bd);
-  border-radius: 5px;
-  padding: 7px 10px;
-  font: inherit; font-size: 13px;
-  color: var(--canvas-fg);
-  transition: border-color .12s, box-shadow .12s;
-  box-sizing: border-box;
-}
-.input.mono { font-family: var(--mono); font-size: 12px; }
-.input:focus {
-  outline: 0;
-  border-color: var(--accent-cyan);
-  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.13);
-}
-.input::placeholder { color: var(--canvas-fg-3); }
-.input.textarea { resize: vertical; min-height: 64px; line-height: 1.45; }
-select.input {
-  appearance: none;
-  background-image: linear-gradient(45deg, transparent 50%, var(--canvas-fg-3) 50%),
-                    linear-gradient(135deg, var(--canvas-fg-3) 50%, transparent 50%);
-  background-position: calc(100% - 14px) 14px, calc(100% - 9px) 14px;
-  background-size: 5px 5px; background-repeat: no-repeat; padding-right: 26px;
-}
 
 .readonly-display {
   background: var(--canvas-bg-2);
@@ -149,8 +123,8 @@ select.input {
 
 .form-callout {
   display: flex; gap: 10px; align-items: flex-start;
-  background: rgba(34, 211, 238, 0.04);
-  border: 1px solid rgba(34, 211, 238, 0.16);
+  background: color-mix(in oklab, var(--accent-cyan) 4%, transparent);
+  border: 1px solid color-mix(in oklab, var(--accent-cyan) 16%, transparent);
   border-radius: 6px;
   padding: 10px 12px;
   margin-bottom: 14px;
@@ -229,10 +203,7 @@ select.input {
 .kvle-row.reflist { grid-template-columns: 130px 1fr 1.4fr auto; }
 .kvle-row.lexlist { grid-template-columns: 1fr 80px 130px auto; }
 
-.btn-icon {
-  width: 26px; height: 26px; padding: 0 !important;
-  display: inline-flex; align-items: center; justify-content: center;
-}
+
 .rotate-180 { transform: rotate(180deg); }
 
 /* ============= Ordered class list ============= */
@@ -257,7 +228,7 @@ select.input {
   font-size: 11px; color: var(--canvas-fg-2); font-weight: 600;
   display: flex; align-items: center; justify-content: center;
 }
-.ord-row:first-child .ord-rank { background: rgba(34, 211, 238, 0.14); color: var(--accent-cyan); }
+.ord-row:first-child .ord-rank { background: color-mix(in oklab, var(--accent-cyan) 14%, transparent); color: var(--accent-cyan); }
 .ord-help {
   font-size: 10.5px; color: var(--canvas-fg-3);
   padding: 2px 4px; letter-spacing: 0.01em;
@@ -271,7 +242,7 @@ select.input {
   padding: 0 4px;
   font-size: 9.5px; font-weight: 700;
   color: var(--accent-cyan-deep);
-  background: rgba(34, 211, 238, 0.18);
+  background: color-mix(in oklab, var(--accent-cyan) 18%, transparent);
   border-radius: 7px;
   vertical-align: 1px;
 }
@@ -289,7 +260,7 @@ select.input {
 }
 .scheme-radio:hover { background: var(--canvas-bg); border-color: var(--canvas-fg-3); }
 .scheme-radio input { accent-color: var(--accent-cyan); }
-.scheme-radio.selected { border-color: var(--accent-cyan); background: rgba(34,211,238, 0.04); }
+.scheme-radio.selected { border-color: var(--accent-cyan); background: color-mix(in oklab, var(--accent-cyan) 4%, transparent); }
 .scheme-radio-main { flex: 1; min-width: 0; }
 .scheme-radio-title { font-size: 13px; font-weight: 500; color: var(--canvas-fg); }
 .scheme-radio-sub { font-size: 11.5px; color: var(--canvas-fg-3); margin-top: 1px; }
@@ -360,8 +331,8 @@ select.input {
   color: var(--canvas-fg);
 }
 .val-row.hint {
-  background: rgba(34, 211, 238, 0.04);
-  border: 1px solid rgba(34, 211, 238, 0.18);
+  background: color-mix(in oklab, var(--accent-cyan) 4%, transparent);
+  border: 1px solid color-mix(in oklab, var(--accent-cyan) 18%, transparent);
   color: var(--canvas-fg-2);
 }
 .val-code {
@@ -369,7 +340,7 @@ select.input {
   background: var(--canvas-bg-2); color: var(--canvas-fg-3); letter-spacing: 0.02em;
 }
 .val-row.err .val-code { background: rgba(244, 63, 94, 0.16); color: var(--accent-rose, #f43f5e); }
-.val-row.hint .val-code { background: rgba(34, 211, 238, 0.18); color: var(--accent-cyan-deep); }
+.val-row.hint .val-code { background: color-mix(in oklab, var(--accent-cyan) 18%, transparent); color: var(--accent-cyan-deep); }
 
 /* ============= Buttons ============= */
 .btn-danger {
@@ -506,14 +477,6 @@ select.input {
 .toast-x:hover { background: var(--canvas-bg-2); color: var(--canvas-fg); }
 
 /* ============= Misc additions ============= */
-.chip.rose { background: rgba(244, 63, 94, 0.14); color: var(--accent-rose, #f43f5e); }
-.chip.emerald { background: rgba(16, 185, 129, 0.14); color: var(--accent-emerald); }
-.chip.gray { background: rgba(148, 163, 184, 0.14); color: var(--canvas-fg-2); }
-.chip.cyan { background: rgba(34, 211, 238, 0.14); color: var(--accent-cyan-deep); }
-
-.t tr.selected { background: rgba(34, 211, 238, 0.05); }
-.t tr.selected td { border-color: rgba(34, 211, 238, 0.16); }
-
 code {
   background: var(--canvas-bg-2); padding: 1px 6px; border-radius: 3px;
   font-family: var(--mono); font-size: 11px; color: var(--accent-cyan-deep);

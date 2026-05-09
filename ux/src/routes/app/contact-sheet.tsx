@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Trash2, Edit2, ExternalLink, ChevronRight } from "lucide-react";
+import { Plus, Trash2, Edit2, ExternalLink, ChevronRight, Globe, Cpu, GitMerge, Database } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { Input, Textarea, Select } from "@/components/ui/Input";
@@ -257,14 +257,14 @@ export default function ContactSheet() {
             </div>
             <div className="pipeline-card-flow">
               {[
-                { label: "GBIF API", sub: "source", kind: "source" },
-                { label: "Extract", sub: "12 fields", kind: "extract" },
-                { label: "Resolve", sub: "match by name", kind: "resolve" },
-                { label: "Write", sub: "life.organism", kind: "write" },
+                { label: "GBIF API", sub: "source", kind: "source", icon: <Globe size={11} /> },
+                { label: "Extract", sub: "12 fields", kind: "extract", icon: <Cpu size={11} /> },
+                { label: "Resolve", sub: "match by name", kind: "resolve", icon: <GitMerge size={11} /> },
+                { label: "Write", sub: "life.organism", kind: "write", icon: <Database size={11} /> },
               ].map((node, i, arr) => (
                 <span key={node.kind} style={{ display: "flex", alignItems: "center" }}>
                   <div className="flow-node" data-kind={node.kind}>
-                    <div className="ic" />
+                    <div className="ic">{node.icon}</div>
                     <div>
                       <div className="name">{node.label}</div>
                       <div className="sub">{node.sub}</div>
@@ -274,10 +274,10 @@ export default function ContactSheet() {
                 </span>
               ))}
             </div>
-            <div className="pipeline-card-foot" style={{ display: "flex", gap: 18, padding: "10px 14px", borderTop: "1px solid var(--canvas-bd)", background: "var(--canvas-bg-2)", fontSize: 12 }}>
-              <div><div style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--canvas-fg-3)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Last run</div><div style={{ fontWeight: 600 }}>2m ago</div></div>
-              <div><div style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--canvas-fg-3)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Records</div><div style={{ fontWeight: 600 }}>12,480</div></div>
-              <div><div style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--canvas-fg-3)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Status</div><div style={{ fontWeight: 600, color: "var(--accent-emerald)" }}>38% running</div></div>
+            <div className="pipeline-card-foot">
+              <div className="stat-item"><div className="l">Last run</div><div className="v">2m ago</div></div>
+              <div className="stat-item"><div className="l">Records</div><div className="v">12,480</div></div>
+              <div className="stat-item"><div className="l">Status</div><div className="v" style={{ color: "var(--accent-emerald)" }}>38% running</div></div>
             </div>
           </div>
         </div>
