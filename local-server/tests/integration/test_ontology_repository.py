@@ -32,6 +32,7 @@ from domain.ontology.value_objects import (
     ExternalReference,
     DataPropertyValue,
     SearchCriteria,
+    Status,
 )
 
 from adapters.persistence.sqlite.models import Base
@@ -703,8 +704,6 @@ class TestStatusPersistence:
 
     def test_taxonomy_status_persisted_on_update(self, repo):
         """Test that taxonomy status is persisted when updating."""
-        from domain.ontology.value_objects import Status
-
         # Create taxonomy with default draft status
         taxonomy = Taxonomy(id="tax-status-1", title="Test Taxonomy")
         saved = repo.save_taxonomy(taxonomy)
@@ -722,8 +721,6 @@ class TestStatusPersistence:
 
     def test_concept_scheme_status_persisted_on_update(self, repo, sample_taxonomy):
         """Test that concept scheme status is persisted when updating."""
-        from domain.ontology.value_objects import Status
-
         # Create concept scheme with default draft status
         scheme = ConceptScheme(
             id="scheme-status-1",
@@ -745,8 +742,6 @@ class TestStatusPersistence:
 
     def test_class_status_persisted_on_update(self, repo, sample_concept_scheme, sample_taxonomy):
         """Test that class status is persisted when updating."""
-        from domain.ontology.value_objects import Status
-
         # Create class with default draft status
         cls = Class(
             id="class-status-1",
@@ -769,8 +764,6 @@ class TestStatusPersistence:
 
     def test_individual_status_persisted_on_update(self, repo, sample_class):
         """Test that individual status is persisted when updating."""
-        from domain.ontology.value_objects import Status
-
         # Create individual with default draft status
         individual = Individual(
             id="ind-status-1",
@@ -792,8 +785,6 @@ class TestStatusPersistence:
 
     def test_property_definition_status_persisted_on_update(self, repo):
         """Test that property definition status is persisted when updating."""
-        from domain.ontology.value_objects import Status
-
         # Create property definition with default draft status
         prop = PropertyDefinition(
             id="prop-status-1",
