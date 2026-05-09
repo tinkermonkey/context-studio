@@ -22,7 +22,7 @@ export function FilterBar({
   placeholder = "Search by title or description…",
 }: FilterBarProps) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+    <div data-testid="schema-filter-bar" style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
       <Input
         type="text"
         placeholder={placeholder}
@@ -33,36 +33,25 @@ export function FilterBar({
       {filterChips.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2)" }}>
           {filterChips.map((chip) => (
-            <div
-              key={chip.value}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 4,
-                padding: "4px 8px",
-                borderRadius: "4px",
-                background: "var(--canvas-bg-2)",
-                border: "1px solid var(--canvas-bd)",
-                fontSize: "var(--text-xs)",
-                color: "var(--canvas-fg-2)",
-              }}
-            >
-              <span>{chip.label}</span>
-              <button
-                onClick={chip.onRemove}
-                style={{
-                  background: "none",
-                  border: "none",
-                  padding: 0,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  color: "var(--canvas-fg-3)",
-                }}
-                aria-label={`Remove ${chip.label}`}
-              >
-                <X size={12} />
-              </button>
+            <div key={chip.value} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+              <Chip className="flex items-center gap-1">
+                {chip.label}
+                <button
+                  onClick={chip.onRemove}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    marginLeft: 2,
+                  }}
+                  aria-label={`Remove ${chip.label}`}
+                >
+                  <X size={12} />
+                </button>
+              </Chip>
             </div>
           ))}
         </div>

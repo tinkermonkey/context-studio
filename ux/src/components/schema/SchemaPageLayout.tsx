@@ -1,23 +1,14 @@
-import { ReactNode, useState } from "react";
-import { ColumnDef } from "@tanstack/react-table";
+import { ReactNode } from "react";
 
 interface SchemaPageLayoutProps<T extends { id: string }> {
-  columns: ColumnDef<T>[];
   data: T[];
-  isLoading?: boolean;
-  onSelectEntity: (id: string) => void;
-  onCloseDrawer: () => void;
   selectedId?: string;
   renderDrawerContent?: (entity: T) => ReactNode;
   children?: ReactNode;
 }
 
 export function SchemaPageLayout<T extends { id: string }>({
-  columns,
   data,
-  isLoading,
-  onSelectEntity,
-  onCloseDrawer,
   selectedId,
   renderDrawerContent,
   children,
@@ -26,7 +17,7 @@ export function SchemaPageLayout<T extends { id: string }>({
 
   return (
     <div className="split-2" data-testid="schema-page-layout">
-      <div className="table-area">
+      <div>
         {children}
       </div>
       {selectedEntity && renderDrawerContent && (

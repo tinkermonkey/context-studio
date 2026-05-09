@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -10,7 +10,7 @@ import {
   PaginationState,
   flexRender,
 } from "@tanstack/react-table";
-import { ChevronLeft, ChevronRight, MoreVertical } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 
@@ -80,7 +80,7 @@ export function SchemaTable<T extends { id: string }>({
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+    <div data-testid="schema-table" style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
       <div className="table-wrap">
         <table className="t">
           <thead>

@@ -15,7 +15,6 @@ import { useCanvasStore } from "@/stores/canvas";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import { SchemaTable } from "@/components/schema/SchemaTable";
 import { FilterBar } from "@/components/schema/FilterBar";
-import { SchemaDrawer } from "@/components/schema/SchemaDrawer";
 import { EmptyState } from "@/components/ui/EmptyState";
 
 export const Route = createFileRoute("/app/contact-sheet")({
@@ -409,7 +408,6 @@ export default function ContactSheet() {
               searchValue={searchFilter}
               onSearchChange={setSearchFilter}
               placeholder="Search by title or description…"
-              data-testid="schema-filter-bar"
             />
             <div style={{ marginTop: "var(--space-4)" }}>
               <SchemaTable
@@ -417,7 +415,6 @@ export default function ContactSheet() {
                 data={filteredSchemaData}
                 onRowSelect={(id) => setSelectedSchemaId(id)}
                 selectedId={selectedSchemaId}
-                data-testid="schema-table"
               />
             </div>
           </div>
@@ -427,7 +424,7 @@ export default function ContactSheet() {
             <h4 style={{ fontSize: "var(--text-sm)", fontWeight: 600, marginBottom: "var(--space-2)" }}>
               SchemaDrawer (selected: {selectedEntity.title})
             </h4>
-            <SchemaDrawer
+            <Drawer
               open={!!selectedEntity}
               onClose={() => setSelectedSchemaId(undefined)}
               title={selectedEntity.title}
@@ -442,7 +439,7 @@ export default function ContactSheet() {
                 <dt>Description</dt>
                 <dd>{selectedEntity.description}</dd>
               </dl>
-            </SchemaDrawer>
+            </Drawer>
           </div>
         )}
       </Section>
