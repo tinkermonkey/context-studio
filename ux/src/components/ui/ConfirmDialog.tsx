@@ -1,4 +1,3 @@
-import { ReactNode } from "react";
 import { Modal } from "./Modal";
 import { Button } from "./Button";
 
@@ -26,8 +25,12 @@ export function ConfirmDialog({
   isLoading = false,
 }: ConfirmDialogProps) {
   const handleConfirm = async () => {
-    await onConfirm();
-    onClose();
+    try {
+      await onConfirm();
+      onClose();
+    } catch {
+      // Error is handled by the consumer's error handling
+    }
   };
 
   const footer = (

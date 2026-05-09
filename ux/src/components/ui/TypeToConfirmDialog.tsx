@@ -29,9 +29,13 @@ export function TypeToConfirmDialog({
 
   const handleConfirm = async () => {
     if (isConfirmed) {
-      await onConfirm();
-      setInput("");
-      onClose();
+      try {
+        await onConfirm();
+        setInput("");
+        onClose();
+      } catch {
+        // Error is handled by the consumer's error handling
+      }
     }
   };
 

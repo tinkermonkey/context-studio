@@ -667,6 +667,39 @@ select.input {
 .empty {
   padding: 40px; text-align: center; color: var(--canvas-fg-3); font-size: 13px;
 }
+.empty-state {
+  padding: var(--space-12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  min-height: 200px;
+}
+.empty-state.compact {
+  padding: var(--space-8);
+}
+.empty-state-icon {
+  color: var(--canvas-fg-3);
+  display: flex;
+}
+.empty-state-content {
+  text-align: center;
+}
+.empty-state-title {
+  font-weight: 500;
+  color: var(--canvas-fg);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-2);
+}
+.empty-state-description {
+  font-size: var(--text-xs);
+  color: var(--canvas-fg-3);
+  line-height: 1.5;
+}
+.empty-state-action {
+  margin-top: var(--space-2);
+}
 
 /* ------------ Filter bar ------------ */
 .filterbar {

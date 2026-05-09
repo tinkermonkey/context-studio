@@ -20,38 +20,55 @@ export function useAutosave<T>({
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const statusTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const statusRef = useRef<AutosaveStatus>("idle");
+  const isFirstRenderRef = useRef(true);
+  const mutateRef = useRef<(data: T) => void | null>(null);
 
   const mutation = useMutation({
     mutationFn,
     onSuccess: () => {
       setStatus("saved");
+      statusRef.current = "saved";
       setLastSavedAt(new Date());
       if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current);
-      statusTimeoutRef.current = setTimeout(() => setStatus("idle"), 1500);
+      statusTimeoutRef.current = setTimeout(() => {
+        setStatus("idle");
+        statusRef.current = "idle";
+      }, 1500);
     },
     onError: (err) => {
       setStatus("error");
+      statusRef.current = "error";
       onError?.(err as Error);
     },
   });
 
+  mutateRef.current = mutation.mutate;
+
   useEffect(() => {
+    if (isFirstRenderRef.current) {
+      isFirstRenderRef.current = false;
+      return;
+    }
+
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     debounceRef.current = setTimeout(() => {
-      if (status === "idle" || status === "saved") {
-        mutation.mutate(data);
+      if ((statusRef.current === "idle" || statusRef.current === "saved") && mutateRef.current) {
+        mutateRef.current(data);
       }
     }, debounceMs);
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [data, debounceMs, status, mutation]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, debounceMs]);
 
   useEffect(() => {
     if (mutation.isPending) {
       setStatus("saving");
+      statusRef.current = "saving";
     }
   }, [mutation.isPending]);
 
