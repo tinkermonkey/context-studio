@@ -2,14 +2,9 @@ import { describe, it, expect, afterEach, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useUndoDelete } from "../useUndoDelete";
 
-// Access module-level state for cleanup between tests
-let pendingDeletes: Map<string, { timeout: NodeJS.Timeout; callback: () => Promise<void> }>;
-
 describe("useUndoDelete", () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    // Clear the module-level pendingDeletes Map before each test
-    // We access it by importing and clearing in the useUndoDelete module scope
     vi.clearAllMocks();
   });
 
