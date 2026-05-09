@@ -30,6 +30,7 @@ export function createReferenceSearchResponse(
       },
     ],
     sources_searched: ["wikipedia", "dbpedia"],
+    total_results: 1,
     ...overrides,
   };
 }

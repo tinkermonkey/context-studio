@@ -90,7 +90,7 @@ describe("AdminService - Health & Metrics", () => {
   describe("getDatabaseHealth", () => {
     it("returns database health from GET /api/v1/admin/health/database", async () => {
       const mockDbHealth = createDatabaseHealth({
-        status: "healthy",
+        connected: true,
       });
 
       server.use(
@@ -102,13 +102,13 @@ describe("AdminService - Health & Metrics", () => {
       const result = await adminService.getDatabaseHealth();
 
       expect(result).toEqual(mockDbHealth);
-      expect(result.status).toBe("healthy");
+      expect(result.connected).toBe(true);
     });
 
-    it("returns degraded status when database is slow", async () => {
+    it("returns database disconnected when connection fails", async () => {
       const mockDbHealth = createDatabaseHealth({
-        status: "degraded",
-        connection_time_ms: 2500,
+        connected: false,
+        issues: ["Connection timeout"],
       });
 
       server.use(
@@ -119,8 +119,8 @@ describe("AdminService - Health & Metrics", () => {
 
       const result = await adminService.getDatabaseHealth();
 
-      expect(result.status).toBe("degraded");
-      expect(result.connection_time_ms).toBeGreaterThan(2000);
+      expect(result.connected).toBe(false);
+      expect(result.issues).toBeDefined();
     });
 
     it("throws ApiError on 500 from getDatabaseHealth", async () => {
@@ -153,26 +153,12 @@ describe("AdminService - Health & Metrics", () => {
       const result = await adminService.getServiceMetrics();
 
       expect(result).toEqual(mockMetrics);
-      expect(result.services).toBeDefined();
-      expect(result.services.ontology.status).toBe("healthy");
+      expect(result.uptime_seconds).toBeGreaterThan(0);
     });
 
-    it("includes response time metrics for each service", async () => {
+    it("includes available LLM providers", async () => {
       const mockMetrics = createServiceMetrics({
-        services: {
-          ontology: {
-            status: "healthy",
-            response_time_ms: 120,
-          },
-          graph: {
-            status: "degraded",
-            response_time_ms: 850,
-          },
-          extraction: {
-            status: "healthy",
-            response_time_ms: 200,
-          },
-        },
+        llm_providers_available: ["openai", "anthropic"],
       });
 
       server.use(
@@ -181,7 +167,7 @@ describe("AdminService - Health & Metrics", () => {
 
       const result = await adminService.getServiceMetrics();
 
-      expect(result.services.graph.response_time_ms).toBeGreaterThan(800);
+      expect(result.llm_providers_available).toBeDefined();
     });
 
     it("throws ApiError on 500 from getServiceMetrics", async () => {
@@ -206,9 +192,12 @@ describe("AdminService - Health & Metrics", () => {
   describe("getTaskSummary", () => {
     it("returns background task summary from GET /api/v1/admin/health/tasks", async () => {
       const mockSummary = createBackgroundTaskSummary({
-        total_tasks: 15,
-        running_tasks: 3,
-        completed_tasks: 12,
+        total: 15,
+        by_status: {
+          running: 3,
+          completed: 12,
+          failed: 0,
+        },
       });
 
       server.use(
@@ -218,8 +207,8 @@ describe("AdminService - Health & Metrics", () => {
       const result = await adminService.getTaskSummary();
 
       expect(result).toEqual(mockSummary);
-      expect(result.total_tasks).toBe(15);
-      expect(result.running_tasks).toBe(3);
+      expect(result.total).toBe(15);
+      expect(result.by_status?.running).toBe(3);
     });
 
     it("throws ApiError on 500 from getTaskSummary", async () => {
@@ -258,24 +247,25 @@ describe("AdminService - Configuration Management", () => {
       const result = await adminService.getConfig();
 
       expect(result).toEqual(mockConfig);
-      expect(result.embeddings).toBeDefined();
-      expect(result.llm).toBeDefined();
+      expect(result.sections).toBeDefined();
     });
 
     it("includes all configuration sections", async () => {
       const mockConfig = createAppConfiguration({
-        embeddings: {
-          model: "sentence-transformers/all-MiniLM-L6-v2",
-          dim: 384,
-        },
-        llm: {
-          provider: "anthropic",
-          model: "claude-3-sonnet",
-          max_tokens: 4096,
-        },
-        vector_store: {
-          type: "sqlite",
-          path: "local.db",
+        sections: {
+          embeddings: {
+            model: "sentence-transformers/all-MiniLM-L6-v2",
+            dim: 384,
+          },
+          llm: {
+            provider: "anthropic",
+            model: "claude-3-sonnet",
+            max_tokens: 4096,
+          },
+          vector_store: {
+            type: "sqlite",
+            path: "local.db",
+          },
         },
       });
 
@@ -285,9 +275,9 @@ describe("AdminService - Configuration Management", () => {
 
       const result = await adminService.getConfig();
 
-      expect(result.embeddings.model).toContain("MiniLM");
-      expect(result.llm.provider).toBe("anthropic");
-      expect(result.llm.max_tokens).toBe(4096);
+      expect(result.sections?.embeddings?.model).toContain("MiniLM");
+      expect(result.sections?.llm?.provider).toBe("anthropic");
+      expect(result.sections?.llm?.max_tokens).toBe(4096);
     });
 
     it("throws ApiError on 500 from getConfig", async () => {
@@ -312,16 +302,17 @@ describe("AdminService - Configuration Management", () => {
   describe("updateConfigSection", () => {
     it("updates configuration section from PATCH /api/v1/admin/configuration/:section", async () => {
       const updateRequest = createConfigSectionUpdateRequest({
-        section: "llm",
-        config: {
+        updates: {
           model: "gpt-4-turbo",
         },
       });
       const mockResponse = createAppConfiguration({
-        llm: {
-          provider: "openai",
-          model: "gpt-4-turbo",
-          max_tokens: 4096,
+        sections: {
+          llm: {
+            provider: "openai",
+            model: "gpt-4-turbo",
+            max_tokens: 4096,
+          },
         },
       });
 
@@ -333,13 +324,12 @@ describe("AdminService - Configuration Management", () => {
 
       const result = await adminService.updateConfigSection("llm", updateRequest);
 
-      expect(result.llm.model).toBe("gpt-4-turbo");
+      expect(result.sections?.llm?.model).toBe("gpt-4-turbo");
     });
 
     it("throws ApiError with 400 on updateConfigSection with invalid config", async () => {
       const updateRequest = createConfigSectionUpdateRequest({
-        section: "llm",
-        config: {
+        updates: {
           model: "invalid-model-that-does-not-exist",
         },
       });
@@ -365,9 +355,7 @@ describe("AdminService - Configuration Management", () => {
     });
 
     it("throws ApiError with 404 on updateConfigSection with non-existent section", async () => {
-      const updateRequest = createConfigSectionUpdateRequest({
-        section: "non_existent_section",
-      });
+      const updateRequest = createConfigSectionUpdateRequest();
 
       server.use(
         rest.patch("*/api/v1/admin/configuration/non_existent_section", (req, res, ctx) =>
@@ -395,14 +383,16 @@ describe("AdminService - Configuration Management", () => {
   describe("resetConfig", () => {
     it("resets configuration to defaults from POST /api/v1/admin/configuration/reset", async () => {
       const mockConfig = createAppConfiguration({
-        embeddings: {
-          model: "sentence-transformers/all-MiniLM-L6-v2",
-          dim: 384,
-        },
-        llm: {
-          provider: "openai",
-          model: "gpt-4",
-          max_tokens: 2048,
+        sections: {
+          embeddings: {
+            model: "sentence-transformers/all-MiniLM-L6-v2",
+            dim: 384,
+          },
+          llm: {
+            provider: "openai",
+            model: "gpt-4",
+            max_tokens: 2048,
+          },
         },
       });
 
@@ -467,13 +457,13 @@ describe("AdminService - Background Tasks", () => {
       expect(result).toHaveLength(0);
     });
 
-    it("includes task details: id, name, status, progress", async () => {
+    it("includes task details: id, name, status, timestamps", async () => {
       const mockTasks = [
         createBackgroundTask({
           id: "task-123",
           name: "import_reference_data",
           status: "running",
-          progress: 65,
+          started_at: new Date().toISOString(),
         }),
       ];
 
@@ -486,7 +476,7 @@ describe("AdminService - Background Tasks", () => {
       expect(result[0].id).toBe("task-123");
       expect(result[0].name).toBe("import_reference_data");
       expect(result[0].status).toBe("running");
-      expect(result[0].progress).toBe(65);
+      expect(result[0].started_at).toBeDefined();
     });
 
     it("throws ApiError on 500 from getBackgroundTasks", async () => {
@@ -529,7 +519,7 @@ describe("AdminService - Background Tasks", () => {
       const mockTask = createBackgroundTask({
         id: "task-fail",
         status: "failed",
-        error_message: "Connection timeout",
+        error: "Connection timeout",
       });
 
       server.use(
@@ -539,7 +529,7 @@ describe("AdminService - Background Tasks", () => {
       const result = await adminService.getBackgroundTask("task-fail");
 
       expect(result.status).toBe("failed");
-      expect(result.error_message).toBe("Connection timeout");
+      expect(result.error).toBe("Connection timeout");
     });
 
     it("throws ApiError with 404 on getBackgroundTask with non-existent ID", async () => {

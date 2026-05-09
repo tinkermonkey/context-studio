@@ -8,7 +8,6 @@ import { rest } from "msw";
 import { setupServer } from "msw/node";
 import { referenceService } from "../reference";
 import {
-  createReferenceSearchRequest,
   createReferenceSearchResponse,
   createReferenceStatusResponse,
 } from "./fixtures/reference.fixtures";

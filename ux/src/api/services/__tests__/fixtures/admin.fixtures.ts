@@ -13,8 +13,11 @@ export function createSystemHealth(
 ): components["schemas"]["SystemHealthResponse"] {
   return {
     status: "healthy",
-    timestamp: new Date().toISOString(),
-    version: "0.1.0",
+    database_connected: true,
+    nlp_pipeline_ready: true,
+    embedding_model_loaded: true,
+    uptime_seconds: 1234,
+    checked_at: new Date().toISOString(),
     ...overrides,
   };
 }
@@ -23,9 +26,7 @@ export function createDatabaseHealth(
   overrides?: Partial<components["schemas"]["DatabaseHealthResponse"]>
 ): components["schemas"]["DatabaseHealthResponse"] {
   return {
-    status: "healthy",
-    database: "local.db",
-    connection_time_ms: 15,
+    connected: true,
     ...overrides,
   };
 }
@@ -34,20 +35,7 @@ export function createServiceMetrics(
   overrides?: Partial<components["schemas"]["ServiceMetricsResponse"]>
 ): components["schemas"]["ServiceMetricsResponse"] {
   return {
-    services: {
-      ontology: {
-        status: "healthy",
-        response_time_ms: 45,
-      },
-      graph: {
-        status: "healthy",
-        response_time_ms: 52,
-      },
-      extraction: {
-        status: "healthy",
-        response_time_ms: 38,
-      },
-    },
+    uptime_seconds: 1234,
     ...overrides,
   };
 }
@@ -56,10 +44,12 @@ export function createBackgroundTaskSummary(
   overrides?: Partial<components["schemas"]["BackgroundTaskSummaryResponse"]>
 ): components["schemas"]["BackgroundTaskSummaryResponse"] {
   return {
-    total_tasks: 10,
-    running_tasks: 2,
-    completed_tasks: 8,
-    failed_tasks: 0,
+    total: 10,
+    by_status: {
+      running: 2,
+      completed: 8,
+      failed: 0,
+    },
     ...overrides,
   };
 }
@@ -72,18 +62,20 @@ export function createAppConfiguration(
   overrides?: Partial<components["schemas"]["AppConfigurationResponse"]>
 ): components["schemas"]["AppConfigurationResponse"] {
   return {
-    embeddings: {
-      model: "sentence-transformers/all-MiniLM-L6-v2",
-      dim: 384,
-    },
-    llm: {
-      provider: "openai",
-      model: "gpt-4",
-      max_tokens: 2048,
-    },
-    vector_store: {
-      type: "sqlite",
-      path: "local.db",
+    sections: {
+      embeddings: {
+        model: "sentence-transformers/all-MiniLM-L6-v2",
+        dim: 384,
+      },
+      llm: {
+        provider: "openai",
+        model: "gpt-4",
+        max_tokens: 2048,
+      },
+      vector_store: {
+        type: "sqlite",
+        path: "local.db",
+      },
     },
     ...overrides,
   };
@@ -93,8 +85,7 @@ export function createConfigSectionUpdateRequest(
   overrides?: Partial<components["schemas"]["ConfigSectionUpdateRequest"]>
 ): components["schemas"]["ConfigSectionUpdateRequest"] {
   return {
-    section: "embeddings",
-    config: {
+    updates: {
       model: "sentence-transformers/all-mpnet-base-v2",
     },
     ...overrides,
@@ -112,11 +103,10 @@ export function createBackgroundTask(
     id: "task-123",
     name: "import_reference_data",
     status: "running",
-    progress: 45,
     created_at: new Date().toISOString(),
     started_at: new Date().toISOString(),
     completed_at: null,
-    error_message: null,
+    error: null,
     ...overrides,
   };
 }
@@ -130,7 +120,6 @@ export function createBackgroundTaskArray(
       name:
         i % 2 === 0 ? "import_reference_data" : "sync_external_sources",
       status: i === 0 ? "running" : "completed",
-      progress: i === 0 ? 60 : 100,
     })
   );
 }

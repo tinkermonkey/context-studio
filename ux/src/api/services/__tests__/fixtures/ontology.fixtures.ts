@@ -18,6 +18,8 @@ export function createTaxonomy(
     description: "A test taxonomy for unit testing",
     created_at: new Date().toISOString(),
     last_modified: new Date().toISOString(),
+    version: 1,
+    status: "draft",
     ...overrides,
   };
 }
@@ -57,6 +59,8 @@ export function createConceptScheme(
     taxonomy_id: "tax-123",
     created_at: new Date().toISOString(),
     last_modified: new Date().toISOString(),
+    version: 1,
+    status: "draft",
     ...overrides,
   };
 }
@@ -94,9 +98,12 @@ export function createClass(
     title: "Test Class",
     description: "A test class",
     concept_scheme_id: "scheme-123",
+    taxonomy_id: "tax-123",
     parent_class_id: null,
     created_at: new Date().toISOString(),
     last_modified: new Date().toISOString(),
+    version: 1,
+    status: "draft",
     ...overrides,
   };
 }

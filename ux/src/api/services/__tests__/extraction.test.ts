@@ -9,8 +9,6 @@ import { setupServer } from "msw/node";
 import { extractionService } from "../extraction";
 import {
   createExtractionResult,
-  createExtractRequest,
-  createAnalyzeTextRequest,
   createEnrichFromReferencesRequest,
 } from "./fixtures/extraction.fixtures";
 
@@ -32,13 +30,13 @@ describe("ExtractionService", () => {
   describe("extract", () => {
     it("extracts entities and relationships from text", async () => {
       const mockResult = createExtractionResult({
-        entities: [
+        extracted_entities: [
           {
-            text: "John",
-            type: "PERSON",
+            id: "entity-1",
+            label: "John",
+            entity_type: "PERSON",
+            source_layer: 1,
             confidence: 0.92,
-            start_char: 0,
-            end_char: 4,
           },
         ],
       });
@@ -50,8 +48,9 @@ describe("ExtractionService", () => {
       const result = await extractionService.extract("John works at Google");
 
       expect(result).toEqual(mockResult);
-      expect(result.entities).toHaveLength(1);
-      expect(result.entities[0].type).toBe("PERSON");
+      expect(result.extracted_entities).toBeDefined();
+      expect(result.extracted_entities).toHaveLength(1);
+      expect(result.extracted_entities?.[0].entity_type).toBe("PERSON");
     });
 
     it("throws ApiError on 400 for empty text", async () => {
@@ -96,7 +95,7 @@ describe("ExtractionService", () => {
   describe("analyzeText", () => {
     it("analyzes text and returns entities and relationships", async () => {
       const mockResult = createExtractionResult({
-        extraction_time_ms: 320,
+        total_duration_ms: 320,
       });
 
       server.use(
@@ -108,7 +107,7 @@ describe("ExtractionService", () => {
       const result = await extractionService.analyzeText("Sample text");
 
       expect(result).toEqual(mockResult);
-      expect(result.extraction_time_ms).toBe(320);
+      expect(result.total_duration_ms).toBe(320);
     });
 
     it("throws ApiError on 413 for text too long", async () => {
@@ -153,23 +152,38 @@ describe("ExtractionService", () => {
   describe("enrichFromReferences", () => {
     it("enriches entities using reference databases", async () => {
       const request = createEnrichFromReferencesRequest({
-        entity_names: ["Apple", "Steve Jobs"],
-      });
-      const mockResult = createExtractionResult({
-        entities: [
+        extracted_entities: [
           {
-            text: "Apple",
-            type: "ORGANIZATION",
+            id: "entity-1",
+            label: "Apple",
+            entity_type: "ORGANIZATION",
+            source_layer: 1,
             confidence: 0.98,
-            start_char: 0,
-            end_char: 5,
           },
           {
-            text: "Steve Jobs",
-            type: "PERSON",
+            id: "entity-2",
+            label: "Steve Jobs",
+            entity_type: "PERSON",
+            source_layer: 1,
             confidence: 0.97,
-            start_char: 7,
-            end_char: 17,
+          },
+        ],
+      });
+      const mockResult = createExtractionResult({
+        extracted_entities: [
+          {
+            id: "entity-1",
+            label: "Apple",
+            entity_type: "ORGANIZATION",
+            source_layer: 1,
+            confidence: 0.98,
+          },
+          {
+            id: "entity-2",
+            label: "Steve Jobs",
+            entity_type: "PERSON",
+            source_layer: 1,
+            confidence: 0.97,
           },
         ],
       });
@@ -183,7 +197,7 @@ describe("ExtractionService", () => {
       const result = await extractionService.enrichFromReferences(request);
 
       expect(result).toEqual(mockResult);
-      expect(result.entities).toHaveLength(2);
+      expect(result.extracted_entities).toHaveLength(2);
     });
 
     it("throws ApiError on 400 for invalid entity names", async () => {
@@ -199,7 +213,10 @@ describe("ExtractionService", () => {
       );
 
       await expect(
-        extractionService.enrichFromReferences({ entity_names: [] })
+        extractionService.enrichFromReferences({
+          text: "Sample",
+          extracted_entities: [],
+        })
       ).rejects.toMatchObject({
         name: "ApiError",
         status: 400,
@@ -220,7 +237,16 @@ describe("ExtractionService", () => {
 
       await expect(
         extractionService.enrichFromReferences({
-          entity_names: ["test"],
+          text: "test",
+          extracted_entities: [
+            {
+              id: "e1",
+              label: "test",
+              entity_type: "OTHER",
+              source_layer: 1,
+              confidence: 0.5,
+            },
+          ],
         })
       ).rejects.toMatchObject({
         name: "ApiError",
