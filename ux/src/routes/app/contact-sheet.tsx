@@ -612,7 +612,6 @@ export default function ContactSheet() {
           ))}
         </div>
       </Section>
-
     </div>
   );
 }

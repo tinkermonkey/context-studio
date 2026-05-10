@@ -51,7 +51,7 @@ describe("ErrorBanner", () => {
     return render(
       <ToastProvider>
         <ToastTestWrapper>{component}</ToastTestWrapper>
-      </ToastProvider>
+      </ToastProvider>,
     );
   };
 
@@ -61,12 +61,7 @@ describe("ErrorBanner", () => {
       const mockRetry = vi.fn();
 
       render(
-        <ErrorBanner
-          error={mockError}
-          onRetry={mockRetry}
-          message="Failed to load data"
-          compact
-        />
+        <ErrorBanner error={mockError} onRetry={mockRetry} message="Failed to load data" compact />,
       );
 
       expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
@@ -77,12 +72,7 @@ describe("ErrorBanner", () => {
       const mockRetry = vi.fn();
 
       render(
-        <ErrorBanner
-          error={mockError}
-          onRetry={mockRetry}
-          message="Failed to load data"
-          compact
-        />
+        <ErrorBanner error={mockError} onRetry={mockRetry} message="Failed to load data" compact />,
       );
 
       expect(screen.getByRole("button", { name: /logs/i })).toBeInTheDocument();
@@ -93,12 +83,7 @@ describe("ErrorBanner", () => {
       const mockRetry = vi.fn();
 
       render(
-        <ErrorBanner
-          error={mockError}
-          onRetry={mockRetry}
-          message="Failed to load data"
-          compact
-        />
+        <ErrorBanner error={mockError} onRetry={mockRetry} message="Failed to load data" compact />,
       );
 
       const buttons = screen.getAllByRole("button");
@@ -112,12 +97,7 @@ describe("ErrorBanner", () => {
       const mockRetry = vi.fn();
 
       render(
-        <ErrorBanner
-          error={mockError}
-          onRetry={mockRetry}
-          message="Failed to load data"
-          compact
-        />
+        <ErrorBanner error={mockError} onRetry={mockRetry} message="Failed to load data" compact />,
       );
 
       const buttons = screen.getAllByRole("button");
@@ -133,13 +113,7 @@ describe("ErrorBanner", () => {
       const mockError = new Error("Test error");
       const mockRetry = vi.fn();
 
-      render(
-        <ErrorBanner
-          error={mockError}
-          onRetry={mockRetry}
-          message="Failed to load data"
-        />
-      );
+      render(<ErrorBanner error={mockError} onRetry={mockRetry} message="Failed to load data" />);
 
       expect(screen.getByText("Failed to load data")).toBeInTheDocument();
       expect(screen.getByText("Test error")).toBeInTheDocument();
@@ -149,13 +123,7 @@ describe("ErrorBanner", () => {
       const mockError = new Error("Test error");
       const mockRetry = vi.fn();
 
-      render(
-        <ErrorBanner
-          error={mockError}
-          onRetry={mockRetry}
-          message="Failed to load data"
-        />
-      );
+      render(<ErrorBanner error={mockError} onRetry={mockRetry} message="Failed to load data" />);
 
       const buttons = screen.getAllByRole("button");
       expect(buttons).toHaveLength(2);
@@ -167,13 +135,7 @@ describe("ErrorBanner", () => {
       const mockError = new Error("Test error");
       const mockRetry = vi.fn();
 
-      render(
-        <ErrorBanner
-          error={mockError}
-          onRetry={mockRetry}
-          message="Failed to load data"
-        />
-      );
+      render(<ErrorBanner error={mockError} onRetry={mockRetry} message="Failed to load data" />);
 
       const buttons = screen.getAllByRole("button");
       const logsButton = screen.getByRole("button", { name: /logs/i });
@@ -187,13 +149,7 @@ describe("ErrorBanner", () => {
     it("does not render when error is null", () => {
       const mockRetry = vi.fn();
 
-      render(
-        <ErrorBanner
-          error={null}
-          onRetry={mockRetry}
-          message="Failed to load data"
-        />
-      );
+      render(<ErrorBanner error={null} onRetry={mockRetry} message="Failed to load data" />);
 
       expect(screen.queryByRole("button", { name: /retry/i })).not.toBeInTheDocument();
       expect(screen.queryByRole("button", { name: /logs/i })).not.toBeInTheDocument();
@@ -206,12 +162,7 @@ describe("ErrorBanner", () => {
       const mockRetry = vi.fn();
 
       render(
-        <ErrorBanner
-          error={mockError}
-          onRetry={mockRetry}
-          message="Failed to load data"
-          compact
-        />
+        <ErrorBanner error={mockError} onRetry={mockRetry} message="Failed to load data" compact />,
       );
 
       expect(screen.getByRole("button", { name: /logs/i })).toBeInTheDocument();
@@ -229,7 +180,7 @@ describe("ErrorBanner", () => {
           message="Failed to load data"
           compact
           daemonLogPath={customPath}
-        />
+        />,
       );
 
       expect(screen.getByRole("button", { name: /logs/i })).toBeInTheDocument();
@@ -242,12 +193,7 @@ describe("ErrorBanner", () => {
       const mockRetry = vi.fn();
 
       render(
-        <ErrorBanner
-          error={mockError}
-          onRetry={mockRetry}
-          message="Failed to load data"
-          compact
-        />
+        <ErrorBanner error={mockError} onRetry={mockRetry} message="Failed to load data" compact />,
       );
 
       const logsButton = screen.getByRole("button", { name: /logs/i });
@@ -259,13 +205,7 @@ describe("ErrorBanner", () => {
       const mockError = new Error("Test error");
       const mockRetry = vi.fn();
 
-      render(
-        <ErrorBanner
-          error={mockError}
-          onRetry={mockRetry}
-          message="Failed to load data"
-        />
-      );
+      render(<ErrorBanner error={mockError} onRetry={mockRetry} message="Failed to load data" />);
 
       const logsButton = screen.getByRole("button", { name: /logs/i });
       expect(logsButton).toBeInTheDocument();
@@ -278,12 +218,7 @@ describe("ErrorBanner", () => {
       const user = userEvent.setup();
 
       renderWithToasts(
-        <ErrorBanner
-          error={mockError}
-          onRetry={mockRetry}
-          message="Failed to load data"
-          compact
-        />
+        <ErrorBanner error={mockError} onRetry={mockRetry} message="Failed to load data" compact />,
       );
 
       const logsButton = screen.getByRole("button", { name: /logs/i });
@@ -300,11 +235,7 @@ describe("ErrorBanner", () => {
       const user = userEvent.setup();
 
       renderWithToasts(
-        <ErrorBanner
-          error={mockError}
-          onRetry={mockRetry}
-          message="Failed to load data"
-        />
+        <ErrorBanner error={mockError} onRetry={mockRetry} message="Failed to load data" />,
       );
 
       const logsButton = screen.getByRole("button", { name: /logs/i });
@@ -316,21 +247,14 @@ describe("ErrorBanner", () => {
     });
 
     it("shows error toast when clipboard write fails", async () => {
-      mockClipboardWriteText.mockRejectedValueOnce(
-        new Error("Clipboard write failed")
-      );
+      mockClipboardWriteText.mockRejectedValueOnce(new Error("Clipboard write failed"));
 
       const mockError = new Error("Test error");
       const mockRetry = vi.fn();
       const user = userEvent.setup();
 
       renderWithToasts(
-        <ErrorBanner
-          error={mockError}
-          onRetry={mockRetry}
-          message="Failed to load data"
-          compact
-        />
+        <ErrorBanner error={mockError} onRetry={mockRetry} message="Failed to load data" compact />,
       );
 
       const logsButton = screen.getByRole("button", { name: /logs/i });
@@ -340,6 +264,5 @@ describe("ErrorBanner", () => {
         expect(screen.getByText("Failed to copy log path")).toBeInTheDocument();
       });
     });
-
   });
 });

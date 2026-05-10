@@ -100,8 +100,11 @@ export function SchemeDrawer({ scheme, taxonomyName, onClose }: SchemeDrawerProp
   const autosaveState = status === "idle" ? undefined : (status as "saving" | "saved" | "error");
 
   const classCountText =
-    classes.length === 1 ? "This will delete 1 class" : `This will delete ${classes.length} classes`;
-  const deleteMessage = classes.length > 0 ? classCountText + " and cannot be undone." : "This cannot be undone.";
+    classes.length === 1
+      ? "This will delete 1 class"
+      : `This will delete ${classes.length} classes`;
+  const deleteMessage =
+    classes.length > 0 ? classCountText + " and cannot be undone." : "This cannot be undone.";
 
   return (
     <>

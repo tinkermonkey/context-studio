@@ -4,7 +4,10 @@ import userEvent from "@testing-library/user-event";
 import { rest } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
-import { createListTaxonomies, createTaxonomy } from "@/api/services/__tests__/fixtures/ontology.fixtures";
+import {
+  createListTaxonomies,
+  createTaxonomy,
+} from "@/api/services/__tests__/fixtures/ontology.fixtures";
 import { TaxonomiesPage } from "../taxonomies";
 
 const server = setupServer();
@@ -38,7 +41,7 @@ describe("Taxonomies Schema Page", () => {
 
       // Verify skeleton rows are rendered before data arrives
       const skeletonElements = container.querySelectorAll(
-        "div[style*='animation: skeleton-shimmer']"
+        "div[style*='animation: skeleton-shimmer']",
       );
       expect(skeletonElements.length).toBeGreaterThanOrEqual(5);
     });
@@ -71,9 +74,7 @@ describe("Taxonomies Schema Page", () => {
   describe("empty state", () => {
     it("displays empty state copy when no taxonomies exist", async () => {
       server.use(
-        rest.get("*/api/taxonomies", (req, res, ctx) =>
-          res(ctx.json(createListTaxonomies([]))),
-        ),
+        rest.get("*/api/taxonomies", (req, res, ctx) => res(ctx.json(createListTaxonomies([])))),
       );
 
       render(<TaxonomiesPage />);
@@ -81,7 +82,9 @@ describe("Taxonomies Schema Page", () => {
       await waitFor(() => {
         expect(screen.getByText("No taxonomies yet")).toBeInTheDocument();
         expect(
-          screen.getByText("A taxonomy groups related classes. Most workspaces start with one or two."),
+          screen.getByText(
+            "A taxonomy groups related classes. Most workspaces start with one or two.",
+          ),
         ).toBeInTheDocument();
       });
     });
@@ -105,11 +108,7 @@ describe("Taxonomies Schema Page", () => {
         }),
       ]);
 
-      server.use(
-        rest.get("*/api/taxonomies", (req, res, ctx) =>
-          res(ctx.json(mockTaxonomies)),
-        ),
-      );
+      server.use(rest.get("*/api/taxonomies", (req, res, ctx) => res(ctx.json(mockTaxonomies))));
 
       render(<TaxonomiesPage />);
 
@@ -127,11 +126,7 @@ describe("Taxonomies Schema Page", () => {
         }),
       ]);
 
-      server.use(
-        rest.get("*/api/taxonomies", (req, res, ctx) =>
-          res(ctx.json(mockTaxonomies)),
-        ),
-      );
+      server.use(rest.get("*/api/taxonomies", (req, res, ctx) => res(ctx.json(mockTaxonomies))));
 
       render(<TaxonomiesPage />);
 
@@ -152,11 +147,7 @@ describe("Taxonomies Schema Page", () => {
         }),
       ]);
 
-      server.use(
-        rest.get("*/api/taxonomies", (req, res, ctx) =>
-          res(ctx.json(mockTaxonomies)),
-        ),
-      );
+      server.use(rest.get("*/api/taxonomies", (req, res, ctx) => res(ctx.json(mockTaxonomies))));
 
       render(<TaxonomiesPage />);
 
@@ -189,11 +180,7 @@ describe("Taxonomies Schema Page", () => {
         }),
       ]);
 
-      server.use(
-        rest.get("*/api/taxonomies", (req, res, ctx) =>
-          res(ctx.json(mockTaxonomies)),
-        ),
-      );
+      server.use(rest.get("*/api/taxonomies", (req, res, ctx) => res(ctx.json(mockTaxonomies))));
 
       render(<TaxonomiesPage />);
 
@@ -223,11 +210,7 @@ describe("Taxonomies Schema Page", () => {
         }),
       ]);
 
-      server.use(
-        rest.get("*/api/taxonomies", (req, res, ctx) =>
-          res(ctx.json(mockTaxonomies)),
-        ),
-      );
+      server.use(rest.get("*/api/taxonomies", (req, res, ctx) => res(ctx.json(mockTaxonomies))));
 
       render(<TaxonomiesPage />);
 

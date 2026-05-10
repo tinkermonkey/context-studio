@@ -46,7 +46,7 @@ describe("useAutosave", () => {
         }),
       );
 
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 300));
       expect(mockMutationFn).not.toHaveBeenCalled();
     });
 
@@ -66,7 +66,7 @@ describe("useAutosave", () => {
       dataValue = { title: "updated" };
       rerender();
 
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
       expect(mockMutationFn).toHaveBeenCalled();
     });
@@ -85,17 +85,17 @@ describe("useAutosave", () => {
       dataValue = { title: "v2" };
       rerender();
 
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       dataValue = { title: "v3" };
       rerender();
 
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       dataValue = { title: "v4" };
       rerender();
 
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
       expect(mockMutationFn).toHaveBeenCalledOnce();
     });
@@ -115,10 +115,10 @@ describe("useAutosave", () => {
       dataValue = { title: "v2" };
       rerender();
 
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 300));
       expect(mockMutationFn).not.toHaveBeenCalled();
 
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 300));
       expect(mockMutationFn).toHaveBeenCalled();
     });
   });
@@ -154,7 +154,7 @@ describe("useAutosave", () => {
         { timeout: 500 },
       );
 
-      await new Promise(resolve => setTimeout(resolve, 1600));
+      await new Promise((resolve) => setTimeout(resolve, 1600));
 
       expect(result.current.status).toBe("idle");
     });
@@ -208,7 +208,7 @@ describe("useAutosave", () => {
 
       const firstSavedAt = result.current.lastSavedAt;
 
-      await new Promise(resolve => setTimeout(resolve, 1600));
+      await new Promise((resolve) => setTimeout(resolve, 1600));
 
       expect(result.current.status).toBe("idle");
 
@@ -279,7 +279,8 @@ describe("useAutosave", () => {
 
     it("resets error status after timeout and allows retries", async () => {
       const testError = new Error("Save failed");
-      const mockMutationFn = vi.fn()
+      const mockMutationFn = vi
+        .fn()
         .mockRejectedValueOnce(testError)
         .mockResolvedValueOnce(undefined);
 
@@ -304,7 +305,7 @@ describe("useAutosave", () => {
 
       const callCountAfterError = mockMutationFn.mock.calls.length;
 
-      await new Promise(resolve => setTimeout(resolve, 1600));
+      await new Promise((resolve) => setTimeout(resolve, 1600));
 
       expect(result.current.status).toBe("idle");
 
@@ -382,7 +383,7 @@ describe("useAutosave", () => {
       rerender();
       unmount();
 
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 300));
       expect(mockMutationFn).not.toHaveBeenCalled();
     });
   });
@@ -417,7 +418,7 @@ describe("useAutosave", () => {
         { timeout: 500 },
       );
 
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await new Promise((resolve) => setTimeout(resolve, 150));
 
       expect(result.current.isLoading).toBe(false);
     });

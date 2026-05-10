@@ -22,10 +22,7 @@ export async function apiRequest<T>(
     fetchOptions.data = options.body;
   }
 
-  const response = await page.request.fetch(
-    `http://localhost:8888${endpoint}`,
-    fetchOptions,
-  );
+  const response = await page.request.fetch(`http://localhost:8888${endpoint}`, fetchOptions);
 
   if (!response.ok()) {
     const error = await response.text();

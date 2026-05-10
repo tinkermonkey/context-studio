@@ -109,12 +109,7 @@ test.describe("Ontology Management Full CRUD Chain", () => {
     await expect(page.getByTestId("property-drawer-description-input")).toBeVisible();
 
     // Test Case 5: Create a Relationship Between Classes
-    const relationship = await createRelationship(
-      page,
-      class1.id,
-      class2.id,
-      property.id,
-    );
+    const relationship = await createRelationship(page, class1.id, class2.id, property.id);
 
     expect(relationship.id).toBeDefined();
     expect(relationship.source_id).toBe(class1.id);
@@ -189,9 +184,7 @@ test.describe("Ontology Management Full CRUD Chain", () => {
     await expect(table).toContainText("Parent Class", { timeout: 5000 });
 
     // Verify the restored class row exists
-    const restoredClassRows = page.locator(
-      '[data-testid^="schema-row-"]',
-    );
+    const restoredClassRows = page.locator('[data-testid^="schema-row-"]');
     const rowCount = await restoredClassRows.count();
     expect(rowCount).toBeGreaterThan(0);
 

@@ -79,9 +79,7 @@ describe("Toast", () => {
         title: "Test",
       };
 
-      const { container } = render(
-        <ToastViewport toasts={[toast]} onDismiss={vi.fn()} />,
-      );
+      const { container } = render(<ToastViewport toasts={[toast]} onDismiss={vi.fn()} />);
 
       const closeButton = container.querySelector(".toast-x");
       expect(closeButton).toBeInTheDocument();
@@ -174,9 +172,7 @@ describe("Toast", () => {
         title: "Test",
       };
 
-      const { container } = render(
-        <ToastViewport toasts={[toast]} onDismiss={onDismiss} />,
-      );
+      const { container } = render(<ToastViewport toasts={[toast]} onDismiss={onDismiss} />);
 
       const closeButton = container.querySelector(".toast-x") as HTMLElement;
       await userEvent.click(closeButton);
@@ -262,9 +258,7 @@ describe("Toast", () => {
         { id: "toast-2", type: "error", title: "Second" },
       ];
 
-      const { container } = render(
-        <ToastViewport toasts={toasts} onDismiss={onDismiss} />,
-      );
+      const { container } = render(<ToastViewport toasts={toasts} onDismiss={onDismiss} />);
 
       const closeButtons = container.querySelectorAll(".toast-x");
       await userEvent.click(closeButtons[0]);

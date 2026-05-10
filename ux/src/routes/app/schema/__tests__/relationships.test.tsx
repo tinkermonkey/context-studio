@@ -39,19 +39,15 @@ describe("Relationships Schema Page", () => {
           await new Promise((resolve) => setTimeout(resolve, 100));
           return res(ctx.json(createListRelationships([])));
         }),
-        rest.get("*/api/classes", (req, res, ctx) =>
-          res(ctx.json(createListClasses([]))),
-        ),
-        rest.get("*/api/properties", (req, res, ctx) =>
-          res(ctx.json(createListProperties([]))),
-        ),
+        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([])))),
+        rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(createListProperties([])))),
       );
 
       const { container } = render(<RelationshipsPage />);
 
       // Verify skeleton rows are rendered before data arrives
       const skeletonElements = container.querySelectorAll(
-        "div[style*='animation: skeleton-shimmer']"
+        "div[style*='animation: skeleton-shimmer']",
       );
       expect(skeletonElements.length).toBeGreaterThanOrEqual(5);
     });
@@ -66,12 +62,8 @@ describe("Relationships Schema Page", () => {
         rest.get("*/api/relationships", (req, res, ctx) =>
           res(ctx.status(500), ctx.json({ detail: "Internal server error" })),
         ),
-        rest.get("*/api/classes", (req, res, ctx) =>
-          res(ctx.json(createListClasses([]))),
-        ),
-        rest.get("*/api/properties", (req, res, ctx) =>
-          res(ctx.json(createListProperties([]))),
-        ),
+        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([])))),
+        rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(createListProperties([])))),
       );
 
       render(<RelationshipsPage />);
@@ -93,19 +85,17 @@ describe("Relationships Schema Page", () => {
         rest.get("*/api/relationships", (req, res, ctx) =>
           res(ctx.json(createListRelationships([]))),
         ),
-        rest.get("*/api/classes", (req, res, ctx) =>
-          res(ctx.json(createListClasses([]))),
-        ),
-        rest.get("*/api/properties", (req, res, ctx) =>
-          res(ctx.json(createListProperties([]))),
-        ),
+        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([])))),
+        rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(createListProperties([])))),
       );
 
       render(<RelationshipsPage />);
 
       await waitFor(() => {
         expect(screen.getByText("No relationships defined")).toBeInTheDocument();
-        expect(screen.getByText("Relationships are typed edges between classes.")).toBeInTheDocument();
+        expect(
+          screen.getByText("Relationships are typed edges between classes."),
+        ).toBeInTheDocument();
       });
     });
   });
@@ -134,15 +124,9 @@ describe("Relationships Schema Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/relationships", (req, res, ctx) =>
-          res(ctx.json(mockRelationships)),
-        ),
-        rest.get("*/api/classes", (req, res, ctx) =>
-          res(ctx.json(mockClasses)),
-        ),
-        rest.get("*/api/properties", (req, res, ctx) =>
-          res(ctx.json(mockProperties)),
-        ),
+        rest.get("*/api/relationships", (req, res, ctx) => res(ctx.json(mockRelationships))),
+        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
+        rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(mockProperties))),
       );
 
       render(<RelationshipsPage />);
@@ -168,15 +152,9 @@ describe("Relationships Schema Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/relationships", (req, res, ctx) =>
-          res(ctx.json(mockRelationships)),
-        ),
-        rest.get("*/api/classes", (req, res, ctx) =>
-          res(ctx.json(mockClasses)),
-        ),
-        rest.get("*/api/properties", (req, res, ctx) =>
-          res(ctx.json(mockProperties)),
-        ),
+        rest.get("*/api/relationships", (req, res, ctx) => res(ctx.json(mockRelationships))),
+        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
+        rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(mockProperties))),
       );
 
       render(<RelationshipsPage />);
@@ -210,15 +188,11 @@ describe("Relationships Schema Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/relationships", (req, res, ctx) =>
-          res(ctx.json(mockRelationships)),
-        ),
+        rest.get("*/api/relationships", (req, res, ctx) => res(ctx.json(mockRelationships))),
         rest.get("*/api/classes", (req, res, ctx) =>
           res(ctx.status(500), ctx.json({ detail: "Classes API error" })),
         ),
-        rest.get("*/api/properties", (req, res, ctx) =>
-          res(ctx.json(mockProperties)),
-        ),
+        rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(mockProperties))),
       );
 
       render(<RelationshipsPage />);
@@ -263,15 +237,9 @@ describe("Relationships Schema Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/relationships", (req, res, ctx) =>
-          res(ctx.json(mockRelationships)),
-        ),
-        rest.get("*/api/classes", (req, res, ctx) =>
-          res(ctx.json(mockClasses)),
-        ),
-        rest.get("*/api/properties", (req, res, ctx) =>
-          res(ctx.json(mockProperties)),
-        ),
+        rest.get("*/api/relationships", (req, res, ctx) => res(ctx.json(mockRelationships))),
+        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
+        rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(mockProperties))),
       );
 
       render(<RelationshipsPage />);
@@ -289,9 +257,7 @@ describe("Relationships Schema Page", () => {
     });
 
     it("shows filtered empty state when filters match no results", async () => {
-      const mockClasses = createListClasses([
-        createClass({ id: "class-1", title: "Person" }),
-      ]);
+      const mockClasses = createListClasses([createClass({ id: "class-1", title: "Person" })]);
 
       const mockProperties = createListProperties([
         createPropertyDefinition({ id: "prop-1", title: "works_for" }),
@@ -307,15 +273,9 @@ describe("Relationships Schema Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/relationships", (req, res, ctx) =>
-          res(ctx.json(mockRelationships)),
-        ),
-        rest.get("*/api/classes", (req, res, ctx) =>
-          res(ctx.json(mockClasses)),
-        ),
-        rest.get("*/api/properties", (req, res, ctx) =>
-          res(ctx.json(mockProperties)),
-        ),
+        rest.get("*/api/relationships", (req, res, ctx) => res(ctx.json(mockRelationships))),
+        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
+        rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(mockProperties))),
       );
 
       render(<RelationshipsPage />);

@@ -105,50 +105,50 @@ export function PropertyDrawer({ property, onClose }: PropertyDrawerProps) {
         onDelete={handleDeleteClick}
         data-testid="property-drawer"
       >
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
-        <div>
-          <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
-            Identifier
-          </label>
-          <Input
-            type="text"
-            value={property.identifier}
-            disabled
-            mono
-            data-testid="property-drawer-identifier"
-          />
-        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+          <div>
+            <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
+              Identifier
+            </label>
+            <Input
+              type="text"
+              value={property.identifier}
+              disabled
+              mono
+              data-testid="property-drawer-identifier"
+            />
+          </div>
 
-        <div>
-          <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
-            Title
-          </label>
-          <Input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            data-testid="property-drawer-title-input"
-          />
-        </div>
+          <div>
+            <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
+              Title
+            </label>
+            <Input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              data-testid="property-drawer-title-input"
+            />
+          </div>
 
-        <div>
-          <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
-            Description
-          </label>
-          <Textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            data-testid="property-drawer-description-input"
-            rows={4}
-          />
-        </div>
+          <div>
+            <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
+              Description
+            </label>
+            <Textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              data-testid="property-drawer-description-input"
+              rows={4}
+            />
+          </div>
 
-        <div style={{ display: "flex", gap: "var(--space-2)", fontSize: "var(--text-xs)" }}>
-          <span style={{ color: "var(--canvas-fg-3)" }}>
-            Created: {new Date(property.created_at ?? "").toLocaleDateString()}
-          </span>
+          <div style={{ display: "flex", gap: "var(--space-2)", fontSize: "var(--text-xs)" }}>
+            <span style={{ color: "var(--canvas-fg-3)" }}>
+              Created: {new Date(property.created_at ?? "").toLocaleDateString()}
+            </span>
+          </div>
         </div>
-      </div>
       </Drawer>
 
       <ConfirmDialog

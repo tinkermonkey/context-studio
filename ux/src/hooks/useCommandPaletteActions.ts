@@ -94,5 +94,14 @@ export function useCommandPaletteActions() {
         unregisterActions(dynamicActions.map((a) => a.id));
       }
     };
-  }, [taxonomies, classes, individuals, schemes, pipelines, registerActions, unregisterActions, navigate]);
+  }, [
+    taxonomies,
+    classes,
+    individuals,
+    schemes,
+    pipelines,
+    registerActions,
+    unregisterActions,
+    navigate,
+  ]);
 }

@@ -32,10 +32,11 @@ function PropertiesPageContent({ onCreateClick }: PropertiesPageContentProps) {
   const { data: listResponse, isLoading, error, refetch } = useProperties();
   const properties = listResponse?.items || [];
 
-  const filteredData = properties.filter((prop: PropertyDefinitionResponse) =>
-    prop.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
-    prop.description?.toLowerCase().includes(searchFilter.toLowerCase()) ||
-    prop.identifier.toLowerCase().includes(searchFilter.toLowerCase())
+  const filteredData = properties.filter(
+    (prop: PropertyDefinitionResponse) =>
+      prop.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
+      prop.description?.toLowerCase().includes(searchFilter.toLowerCase()) ||
+      prop.identifier.toLowerCase().includes(searchFilter.toLowerCase()),
   );
 
   const propertyColumns: ColumnDef<PropertyDefinitionResponse>[] = [
@@ -68,9 +69,7 @@ function PropertiesPageContent({ onCreateClick }: PropertiesPageContentProps) {
       accessorKey: "description",
       header: "Description",
       cell: (info) => (
-        <span style={{ color: "var(--canvas-fg-2)" }}>
-          {(info.getValue() as string) || "—"}
-        </span>
+        <span style={{ color: "var(--canvas-fg-2)" }}>{(info.getValue() as string) || "—"}</span>
       ),
     },
     {
@@ -119,11 +118,7 @@ function PropertiesPageContent({ onCreateClick }: PropertiesPageContentProps) {
   if (error) {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
-        <ErrorBanner
-          error={error}
-          onRetry={() => refetch()}
-          message="Failed to load properties"
-        />
+        <ErrorBanner error={error} onRetry={() => refetch()} message="Failed to load properties" />
       </div>
     );
   }
@@ -143,19 +138,12 @@ function PropertiesPageContent({ onCreateClick }: PropertiesPageContentProps) {
 
   return (
     <div data-testid="properties-page">
-      <FilterBar
-        searchValue={searchFilter}
-        onSearchChange={setSearchFilter}
-      />
+      <FilterBar searchValue={searchFilter} onSearchChange={setSearchFilter} />
       <SchemaPageLayout
         data={filteredData}
         selectedId={selectedId}
         renderDrawerContent={(prop) => (
-          <PropertyDrawer
-            key={prop.id}
-            property={prop}
-            onClose={() => setSelectedId(undefined)}
-          />
+          <PropertyDrawer key={prop.id} property={prop} onClose={() => setSelectedId(undefined)} />
         )}
       >
         <SchemaTable
@@ -174,7 +162,9 @@ function PropertiesPageWrapper() {
   const createMutation = useCreateProperty();
   const { toast } = useToasts();
 
-  const handleCreateSubmit = async (data: PropertyDefinitionCreateRequest | PropertyDefinitionUpdateRequest) => {
+  const handleCreateSubmit = async (
+    data: PropertyDefinitionCreateRequest | PropertyDefinitionUpdateRequest,
+  ) => {
     try {
       if ("identifier" in data) {
         await createMutation.mutateAsync(data as PropertyDefinitionCreateRequest);

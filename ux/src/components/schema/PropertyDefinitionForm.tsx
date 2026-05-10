@@ -9,7 +9,9 @@ type PropertyDefinitionResponse = components["schemas"]["PropertyDefinitionRespo
 
 interface PropertyDefinitionFormProps {
   initialData?: PropertyDefinitionResponse;
-  onSubmit: (data: PropertyDefinitionCreateRequest | PropertyDefinitionUpdateRequest) => Promise<void>;
+  onSubmit: (
+    data: PropertyDefinitionCreateRequest | PropertyDefinitionUpdateRequest,
+  ) => Promise<void>;
   isLoading?: boolean;
 }
 

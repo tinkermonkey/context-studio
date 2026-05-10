@@ -1,7 +1,6 @@
 import { QueryClient } from "@tanstack/react-query";
 
-let toastFn: ((type: "error" | "success" | "info", message: string) => void) | null =
-  null;
+let toastFn: ((type: "error" | "success" | "info", message: string) => void) | null = null;
 
 export function setGlobalErrorHandler(
   toast: (type: "error" | "success" | "info", message: string) => void,
@@ -20,8 +19,7 @@ export const queryClient = new QueryClient({
     mutations: {
       onError: (error: unknown) => {
         if (toastFn) {
-          const message =
-            error instanceof Error ? error.message : "An error occurred";
+          const message = error instanceof Error ? error.message : "An error occurred";
           toastFn("error", message);
         }
       },

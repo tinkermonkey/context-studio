@@ -30,16 +30,21 @@ interface TaxonomiesPageContentProps {
   onSelectedIdChange: (id: string | undefined) => void;
 }
 
-function TaxonomiesPageContent({ onCreateClick, selectedId, onSelectedIdChange }: TaxonomiesPageContentProps) {
+function TaxonomiesPageContent({
+  onCreateClick,
+  selectedId,
+  onSelectedIdChange,
+}: TaxonomiesPageContentProps) {
   const [searchFilter, setSearchFilter] = useState("");
 
   const { data: listResponse, isLoading, error, refetch } = useTaxonomies();
   const taxonomies = listResponse?.items || [];
 
-  const filteredData = taxonomies.filter((tax: TaxonomyResponse) =>
-    tax.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
-    tax.description?.toLowerCase().includes(searchFilter.toLowerCase()) ||
-    tax.id.toLowerCase().includes(searchFilter.toLowerCase())
+  const filteredData = taxonomies.filter(
+    (tax: TaxonomyResponse) =>
+      tax.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
+      tax.description?.toLowerCase().includes(searchFilter.toLowerCase()) ||
+      tax.id.toLowerCase().includes(searchFilter.toLowerCase()),
   );
 
   const taxonomyColumns: ColumnDef<TaxonomyResponse>[] = [
@@ -77,9 +82,7 @@ function TaxonomiesPageContent({ onCreateClick, selectedId, onSelectedIdChange }
       accessorKey: "description",
       header: "Description",
       cell: (info) => (
-        <span style={{ color: "var(--canvas-fg-2)" }}>
-          {(info.getValue() as string) || "—"}
-        </span>
+        <span style={{ color: "var(--canvas-fg-2)" }}>{(info.getValue() as string) || "—"}</span>
       ),
     },
     {
@@ -87,8 +90,10 @@ function TaxonomiesPageContent({ onCreateClick, selectedId, onSelectedIdChange }
       header: "Status",
       cell: (info) => {
         const status = info.getValue() as string;
-        const bgColor = status === "draft" ? "var(--amber-100, #fef3c7)" : "var(--green-100, #dcfce7)";
-        const textColor = status === "draft" ? "var(--amber-800, #78350f)" : "var(--green-800, #166534)";
+        const bgColor =
+          status === "draft" ? "var(--amber-100, #fef3c7)" : "var(--green-100, #dcfce7)";
+        const textColor =
+          status === "draft" ? "var(--amber-800, #78350f)" : "var(--green-800, #166534)";
         return (
           <span
             style={{
@@ -109,11 +114,7 @@ function TaxonomiesPageContent({ onCreateClick, selectedId, onSelectedIdChange }
     {
       id: "stats",
       header: "Classes",
-      cell: () => (
-        <span style={{ color: "var(--canvas-fg-2)" }}>
-          —
-        </span>
-      ),
+      cell: () => <span style={{ color: "var(--canvas-fg-2)" }}>—</span>,
     },
     {
       accessorKey: "last_modified",
@@ -161,11 +162,7 @@ function TaxonomiesPageContent({ onCreateClick, selectedId, onSelectedIdChange }
   if (error) {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
-        <ErrorBanner
-          error={error}
-          onRetry={() => refetch()}
-          message="Failed to load taxonomies"
-        />
+        <ErrorBanner error={error} onRetry={() => refetch()} message="Failed to load taxonomies" />
       </div>
     );
   }
@@ -188,10 +185,7 @@ function TaxonomiesPageContent({ onCreateClick, selectedId, onSelectedIdChange }
 
   return (
     <div data-testid="taxonomies-page">
-      <FilterBar
-        searchValue={searchFilter}
-        onSearchChange={setSearchFilter}
-      />
+      <FilterBar searchValue={searchFilter} onSearchChange={setSearchFilter} />
 
       {showFilteredEmpty ? (
         <div style={{ marginTop: "var(--space-6)" }}>
@@ -258,11 +252,7 @@ function TaxonomiesPageWrapper() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>Taxonomies</h1>
         <div style={{ display: "flex", gap: "var(--space-2)" }}>
-          <Button
-            variant="ghost"
-            onClick={() => {}}
-            data-testid="taxonomy-import-button"
-          >
+          <Button variant="ghost" onClick={() => {}} data-testid="taxonomy-import-button">
             Import
           </Button>
           <Button
@@ -301,10 +291,7 @@ function TaxonomiesPageWrapper() {
             />
           </div>
         )}
-        <TaxonomyForm
-          onSubmit={handleCreateSubmit}
-          isLoading={createMutation.isPending}
-        />
+        <TaxonomyForm onSubmit={handleCreateSubmit} isLoading={createMutation.isPending} />
       </Modal>
     </div>
   );
@@ -317,6 +304,6 @@ export function TaxonomiesPage() {
 export const Route = createFileRoute("/app/schema/taxonomies")({
   component: TaxonomiesPage,
   validateSearch: (search: Record<string, unknown>): TaxonomiesSearchParams => ({
-    selected: typeof search.selected === 'string' ? search.selected : undefined,
+    selected: typeof search.selected === "string" ? search.selected : undefined,
   }),
 });

@@ -30,7 +30,11 @@ interface ClassesPageContentProps {
   onSelectedIdChange: (id?: string) => void;
 }
 
-function ClassesPageContent({ onCreateClick, selectedId, onSelectedIdChange }: ClassesPageContentProps) {
+function ClassesPageContent({
+  onCreateClick,
+  selectedId,
+  onSelectedIdChange,
+}: ClassesPageContentProps) {
   const [searchFilter, setSearchFilter] = useState("");
 
   const { data: listResponse, isLoading, error, refetch } = useClasses();
@@ -172,7 +176,12 @@ function ClassesPageContent({ onCreateClick, selectedId, onSelectedIdChange }: C
   if (error) {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
-        <ErrorBanner error={error} onRetry={() => refetch()} message="Failed to load classes" daemonLogPath="/local-server/logs/context_studio.log" />
+        <ErrorBanner
+          error={error}
+          onRetry={() => refetch()}
+          message="Failed to load classes"
+          daemonLogPath="/local-server/logs/context_studio.log"
+        />
       </div>
     );
   }
@@ -221,7 +230,11 @@ function ClassesPageContent({ onCreateClick, selectedId, onSelectedIdChange }: C
           data={filteredData}
           selectedId={selectedId}
           renderDrawerContent={(cls) => (
-            <ClassDrawer key={cls.id} classData={cls} onClose={() => onSelectedIdChange(undefined)} />
+            <ClassDrawer
+              key={cls.id}
+              classData={cls}
+              onClose={() => onSelectedIdChange(undefined)}
+            />
           )}
         >
           <SchemaTable
@@ -333,6 +346,6 @@ export function ClassesPage() {
 export const Route = createFileRoute("/app/schema/classes")({
   component: ClassesPage,
   validateSearch: (search: Record<string, unknown>): ClassesSearchParams => ({
-    selected: typeof search.selected === 'string' ? search.selected : undefined,
+    selected: typeof search.selected === "string" ? search.selected : undefined,
   }),
 });

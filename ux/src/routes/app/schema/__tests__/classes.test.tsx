@@ -4,7 +4,12 @@ import userEvent from "@testing-library/user-event";
 import { rest } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
-import { createListClasses, createClass, createListSchemes, createConceptScheme } from "@/api/services/__tests__/fixtures/ontology.fixtures";
+import {
+  createListClasses,
+  createClass,
+  createListSchemes,
+  createConceptScheme,
+} from "@/api/services/__tests__/fixtures/ontology.fixtures";
 import { ClassesPage } from "../classes";
 
 const server = setupServer();
@@ -32,16 +37,14 @@ describe("Classes Schema Page", () => {
           await new Promise((resolve) => setTimeout(resolve, 100));
           return res(ctx.json(createListClasses([])));
         }),
-        rest.get("*/api/schemes", (req, res, ctx) =>
-          res(ctx.json(createListSchemes([]))),
-        ),
+        rest.get("*/api/schemes", (req, res, ctx) => res(ctx.json(createListSchemes([])))),
       );
 
       const { container } = render(<ClassesPage />);
 
       // Verify skeleton rows are rendered before data arrives
       const skeletonElements = container.querySelectorAll(
-        "div[style*='animation: skeleton-shimmer']"
+        "div[style*='animation: skeleton-shimmer']",
       );
       expect(skeletonElements.length).toBeGreaterThanOrEqual(5);
     });
@@ -74,9 +77,7 @@ describe("Classes Schema Page", () => {
   describe("empty state", () => {
     it("displays empty state copy when no classes exist", async () => {
       server.use(
-        rest.get("*/api/classes", (req, res, ctx) =>
-          res(ctx.json(createListClasses([]))),
-        ),
+        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([])))),
       );
 
       render(<ClassesPage />);
@@ -108,11 +109,7 @@ describe("Classes Schema Page", () => {
         }),
       ]);
 
-      server.use(
-        rest.get("*/api/classes", (req, res, ctx) =>
-          res(ctx.json(mockClasses)),
-        ),
-      );
+      server.use(rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))));
 
       render(<ClassesPage />);
 
@@ -130,11 +127,7 @@ describe("Classes Schema Page", () => {
         }),
       ]);
 
-      server.use(
-        rest.get("*/api/classes", (req, res, ctx) =>
-          res(ctx.json(mockClasses)),
-        ),
-      );
+      server.use(rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))));
 
       render(<ClassesPage />);
 
@@ -155,11 +148,7 @@ describe("Classes Schema Page", () => {
         }),
       ]);
 
-      server.use(
-        rest.get("*/api/classes", (req, res, ctx) =>
-          res(ctx.json(mockClasses)),
-        ),
-      );
+      server.use(rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))));
 
       render(<ClassesPage />);
 
@@ -192,11 +181,7 @@ describe("Classes Schema Page", () => {
         }),
       ]);
 
-      server.use(
-        rest.get("*/api/classes", (req, res, ctx) =>
-          res(ctx.json(mockClasses)),
-        ),
-      );
+      server.use(rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))));
 
       render(<ClassesPage />);
 
@@ -226,11 +211,7 @@ describe("Classes Schema Page", () => {
         }),
       ]);
 
-      server.use(
-        rest.get("*/api/classes", (req, res, ctx) =>
-          res(ctx.json(mockClasses)),
-        ),
-      );
+      server.use(rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))));
 
       render(<ClassesPage />);
 
@@ -269,9 +250,7 @@ describe("Classes Schema Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/classes", (req, res, ctx) =>
-          res(ctx.json(mockClasses)),
-        ),
+        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
         rest.get("*/api/schemes", (req, res, ctx) =>
           res(ctx.status(500), ctx.json({ detail: "Failed to load schemes" })),
         ),
@@ -308,9 +287,7 @@ describe("Classes Schema Page", () => {
       let schemesCallCount = 0;
 
       server.use(
-        rest.get("*/api/classes", (req, res, ctx) =>
-          res(ctx.json(mockClasses)),
-        ),
+        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
         rest.get("*/api/schemes", (req, res, ctx) => {
           schemesCallCount++;
           if (schemesCallCount === 1) {

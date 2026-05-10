@@ -125,13 +125,7 @@ export function TaxonomyDrawer({ taxonomy, onClose }: TaxonomyDrawerProps) {
             <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
               ID
             </label>
-            <Input
-              type="text"
-              value={taxonomy.id}
-              disabled
-              mono
-              data-testid="taxonomy-drawer-id"
-            />
+            <Input type="text" value={taxonomy.id} disabled mono data-testid="taxonomy-drawer-id" />
           </div>
 
           <div>
@@ -177,7 +171,10 @@ export function TaxonomyDrawer({ taxonomy, onClose }: TaxonomyDrawerProps) {
         onClose={() => setShowPublishDialog(false)}
         taxonomy={taxonomy}
         onPublish={() => {
-          toast("success", taxonomiesCopy.publish.successToast(taxonomy.title, taxonomy.version + 1));
+          toast(
+            "success",
+            taxonomiesCopy.publish.successToast(taxonomy.title, taxonomy.version + 1),
+          );
           setShowPublishDialog(false);
         }}
       />

@@ -16,31 +16,17 @@ interface ClassEditorSubmitData {
 interface ClassEditorProps {
   schemeId?: string;
   initialData?: ClassResponse;
-  onSubmit: (
-    data: ClassEditorSubmitData,
-    schemeId?: string
-  ) => Promise<void>;
+  onSubmit: (data: ClassEditorSubmitData, schemeId?: string) => Promise<void>;
   isLoading?: boolean;
 }
 
 const snakeCasePattern = /^[a-z][a-z0-9_]*$/;
 
-export function ClassEditor({
-  schemeId,
-  initialData,
-  onSubmit,
-  isLoading,
-}: ClassEditorProps) {
+export function ClassEditor({ schemeId, initialData, onSubmit, isLoading }: ClassEditorProps) {
   const [name, setName] = useState(initialData?.title || "");
-  const [description, setDescription] = useState(
-    initialData?.description || ""
-  );
-  const [domain, setDomain] = useState(
-    initialData?.concept_scheme_id || schemeId || ""
-  );
-  const [parentClassId, setParentClassId] = useState(
-    initialData?.parent_class_id || ""
-  );
+  const [description, setDescription] = useState(initialData?.description || "");
+  const [domain, setDomain] = useState(initialData?.concept_scheme_id || schemeId || "");
+  const [parentClassId, setParentClassId] = useState(initialData?.parent_class_id || "");
   const [nameError, setNameError] = useState<string>();
   const [searchParent, setSearchParent] = useState("");
   const [showParentOptions, setShowParentOptions] = useState(false);
@@ -57,12 +43,10 @@ export function ClassEditor({
     .filter(
       (cls) =>
         cls.title.toLowerCase().includes(searchParent.toLowerCase()) ||
-        cls.id.toLowerCase().includes(searchParent.toLowerCase())
+        cls.id.toLowerCase().includes(searchParent.toLowerCase()),
     );
 
-  const selectedParent = parentClassId
-    ? allClasses.find((c) => c.id === parentClassId)
-    : null;
+  const selectedParent = parentClassId ? allClasses.find((c) => c.id === parentClassId) : null;
 
   const validateName = (value: string): boolean => {
     if (!value.trim()) {
@@ -71,7 +55,7 @@ export function ClassEditor({
     }
     if (!snakeCasePattern.test(value)) {
       setNameError(
-        "Name must start with lowercase letter and contain only lowercase letters, numbers, and underscores"
+        "Name must start with lowercase letter and contain only lowercase letters, numbers, and underscores",
       );
       return false;
     }
@@ -96,7 +80,7 @@ export function ClassEditor({
         description: description || null,
         parent_class_id: parentClassId || null,
       },
-      domain
+      domain,
     );
   };
 
@@ -247,7 +231,10 @@ export function ClassEditor({
                         }}
                         data-testid={`class-editor-parent-option-${cls.id}`}
                       >
-                        <span className="mono" style={{ fontSize: "var(--text-xs)", color: "var(--canvas-fg-3)" }}>
+                        <span
+                          className="mono"
+                          style={{ fontSize: "var(--text-xs)", color: "var(--canvas-fg-3)" }}
+                        >
                           {cls.id.slice(0, 8)}
                         </span>
                         <span>{cls.title}</span>

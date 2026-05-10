@@ -28,6 +28,7 @@ This test validates the complete end-to-end CRUD chain for the ontology manageme
 **Preconditions**: User is logged in and navigated to `/app/taxonomies`
 
 **Steps**:
+
 1. Click "Add Taxonomy" button with selector `taxonomy-add-button`
 2. Modal opens with selector `taxonomy-create-modal`
 3. Locate form with selector `taxonomy-form`
@@ -37,6 +38,7 @@ This test validates the complete end-to-end CRUD chain for the ontology manageme
 7. Modal closes automatically
 
 **Expected Result**:
+
 - Taxonomy appears in the list on `/app/taxonomies`
 - Taxonomy has `id`, `title`, `description`, and `version=1`
 - Taxonomy is visible in the table and searchable
@@ -44,6 +46,7 @@ This test validates the complete end-to-end CRUD chain for the ontology manageme
 **Selectors Used**: `taxonomy-add-button`, `taxonomy-create-modal`, `taxonomy-form`, `taxonomy-title-input`, `taxonomy-description-input`, `taxonomy-submit-button`
 
 **Invariants Verified**:
+
 - Taxonomy `title` is required and non-empty
 - Taxonomy `version` starts at 1
 - Timestamps (`created_at`, `last_modified`) are set correctly
@@ -53,10 +56,12 @@ This test validates the complete end-to-end CRUD chain for the ontology manageme
 ### Test Case 2: Create a Concept Scheme Under the Taxonomy
 
 **Preconditions**:
+
 - Taxonomy created in Test Case 1 (factory-created `taxonomy_id`)
 - User is on `/app/schemes`
 
 **Steps**:
+
 1. Click "Add Scheme" button with selector `scheme-add-button`
 2. Modal opens with selector `scheme-create-modal`
 3. Locate form with selector `scheme-form`
@@ -67,6 +72,7 @@ This test validates the complete end-to-end CRUD chain for the ontology manageme
 8. Modal closes
 
 **Expected Result**:
+
 - ConceptScheme appears in the list on `/app/schemes`
 - ConceptScheme is linked to the parent Taxonomy via `taxonomy_id`
 - ConceptScheme is visible in the table
@@ -74,6 +80,7 @@ This test validates the complete end-to-end CRUD chain for the ontology manageme
 **Selectors Used**: `scheme-add-button`, `scheme-create-modal`, `scheme-form`, `scheme-title-input`, `scheme-description-input`, `scheme-submit-button`
 
 **Invariants Verified**:
+
 - ConceptScheme `title` is required
 - ConceptScheme has a non-null `taxonomy_id`
 - ConceptScheme `version` starts at 1
@@ -83,10 +90,12 @@ This test validates the complete end-to-end CRUD chain for the ontology manageme
 ### Test Case 3: Create a Class in the Concept Scheme
 
 **Preconditions**:
+
 - ConceptScheme created in Test Case 2 (factory-created `scheme_id`)
 - User navigates to `/app/schemes/{scheme_id}` (detail page for the scheme)
 
 **Steps**:
+
 1. Verify scheme detail page loads with classes table
 2. Click "Add Class" button with selector `scheme-detail-add-class-button`
 3. Modal opens with class create form
@@ -98,14 +107,16 @@ This test validates the complete end-to-end CRUD chain for the ontology manageme
 9. Modal closes and new class appears in the classes table
 
 **Expected Result**:
+
 - Class appears in the classes table on the scheme detail page
 - Class has `id`, `title`, `description`, `concept_scheme_id`, `taxonomy_id`, and `version=1`
 - Class `concept_scheme_id` matches the current scheme
-- Class is visible in the table with schema-row-* selector pattern: `schema-row-{classId}`
+- Class is visible in the table with schema-row-\* selector pattern: `schema-row-{classId}`
 
 **Selectors Used**: `scheme-detail-add-class-button`, class form fields (from class-editor-form or similar)
 
 **Invariants Verified**:
+
 - Class `title` is required
 - Class `concept_scheme_id` is set to the parent scheme
 - Class `parent_class_id` is null for root classes
@@ -116,12 +127,14 @@ This test validates the complete end-to-end CRUD chain for the ontology manageme
 ### Test Case 4: Create a Second Class and Add a Property to the First Class
 
 **Preconditions**:
+
 - First class created in Test Case 3 (factory-created `class_id_1`)
 - User is on `/app/schemes/{scheme_id}` detail page
 
 **Steps**:
 
 **Part A: Create second class**:
+
 1. Click "Add Class" button again
 2. Fill in name with "Child Class"
 3. Fill in description with "A child class for testing relationships"
@@ -130,6 +143,7 @@ This test validates the complete end-to-end CRUD chain for the ontology manageme
 6. Second class now appears in the table
 
 **Part B: Create a PropertyDefinition**:
+
 1. Navigate to `/app/properties`
 2. Click "Add Property" button with selector `property-add-button`
 3. Modal opens with selector `property-create-modal`
@@ -141,6 +155,7 @@ This test validates the complete end-to-end CRUD chain for the ontology manageme
 9. Modal closes
 
 **Part C: Verify property appears in drawer**:
+
 1. On `/app/properties` page, find the newly created property in the list
 2. Click on the property row to open the property drawer
 3. Verify drawer appears with selector `property-drawer`
@@ -149,16 +164,19 @@ This test validates the complete end-to-end CRUD chain for the ontology manageme
 6. Verify editable description field with selector `property-drawer-description-input`
 
 **Expected Result**:
+
 - Second class appears in the scheme detail page
 - PropertyDefinition is created with `id`, `identifier`, `title`, `description`, `version=1`
 - PropertyDefinition is visible in the properties list
 - Property drawer displays all expected fields
 
 **Selectors Used**:
+
 - `property-add-button`, `property-create-modal`, `property-create-form`, `property-definition-identifier-input`, `property-definition-title-input`, `property-definition-description-input`, `property-definition-submit-button`
 - `property-drawer`, `property-drawer-identifier`, `property-drawer-title-input`, `property-drawer-description-input`
 
 **Invariants Verified**:
+
 - PropertyDefinition `identifier` is required and globally unique
 - PropertyDefinition `title` is required
 - PropertyDefinition `version` starts at 1
@@ -168,11 +186,13 @@ This test validates the complete end-to-end CRUD chain for the ontology manageme
 ### Test Case 5: Create a Relationship Between Classes
 
 **Preconditions**:
+
 - Two classes created in Test Cases 3 and 4 (factory-created `class_id_1`, `class_id_2`)
 - PropertyDefinition created in Test Case 4 (factory-created `property_id`)
 - User navigates to `/app/relationships`
 
 **Steps**:
+
 1. Click "Add Relationship" button with selector `relationship-add-button`
 2. Dialog or modal opens
 3. Select source class dropdown (selector `relationship-source-class-filter`) and choose the first class
@@ -182,6 +202,7 @@ This test validates the complete end-to-end CRUD chain for the ontology manageme
 7. Dialog closes
 
 **Expected Result**:
+
 - Relationship appears in the relationships list
 - Relationship has `id`, `source_id` (first class), `target_id` (second class), `property_definition_id` (the property)
 - Relationship is visible in the table and can be found via the source/target filters
@@ -189,6 +210,7 @@ This test validates the complete end-to-end CRUD chain for the ontology manageme
 **Selectors Used**: `relationship-add-button`, `relationship-source-class-filter`, `relationship-target-class-filter`
 
 **Invariants Verified**:
+
 - Relationship `source_id` and `target_id` must reference existing, non-deleted Classes
 - Relationship `property_definition_id` must reference an existing PropertyDefinition
 - Relationship has only `created_at` (no version field)
@@ -198,10 +220,12 @@ This test validates the complete end-to-end CRUD chain for the ontology manageme
 ### Test Case 6: Delete the First Class with Type-to-Confirm
 
 **Preconditions**:
+
 - First class created in Test Case 3 (factory-created `class_id_1`)
 - User navigates to the scheme detail page and finds the class in the table
 
 **Steps**:
+
 1. Locate the class row using the factory-created ID
 2. Click the actions button for that row (selector `class-row-actions-{classId}` where `{classId}` is the factory ID)
 3. A context menu or dropdown appears (may not have explicit selector, use semantic locator for "Delete")
@@ -213,6 +237,7 @@ This test validates the complete end-to-end CRUD chain for the ontology manageme
 9. Dialog closes and class is removed from the visible list
 
 **Expected Result**:
+
 - Class is soft-deleted (marked as deleted in the database)
 - Class no longer appears in the classes table on the scheme detail page
 - Toast notification appears with an undo action
@@ -220,6 +245,7 @@ This test validates the complete end-to-end CRUD chain for the ontology manageme
 **Selectors Used**: `class-row-actions-*`, `type-confirm-dialog`, `type-confirm-input`, `type-confirm-button`
 
 **Invariants Verified**:
+
 - Soft delete behavior (entity is not removed from database, just marked as deleted)
 - Type-to-confirm dialog requires exact phrase match before deletion
 - Toast with undo action appears immediately after deletion
@@ -229,11 +255,13 @@ This test validates the complete end-to-end CRUD chain for the ontology manageme
 ### Test Case 7: Undo the Deletion Within 8 Seconds
 
 **Preconditions**:
+
 - Class was just soft-deleted in Test Case 6
 - Toast with undo action is visible
 - User has up to 8 seconds to click undo
 
 **Steps**:
+
 1. Locate the toast notification on the screen
 2. Find the undo action button in the toast with selector pattern `toast-action-*`
 3. Click the undo action button immediately (within 8 seconds of deletion)
@@ -241,6 +269,7 @@ This test validates the complete end-to-end CRUD chain for the ontology manageme
 5. Wait for the page to refresh or the table to update
 
 **Expected Result**:
+
 - Toast disappears
 - Undo operation is sent to the back-end
 - Deletion is reversed
@@ -250,6 +279,7 @@ This test validates the complete end-to-end CRUD chain for the ontology manageme
 **Selectors Used**: `toast-action-*`
 
 **Invariants Verified**:
+
 - Undo must complete within 8-second window
 - Restored entity receives a new UUID (not the same as the deleted entity)
 - Restored class is visible in the table again
@@ -260,16 +290,19 @@ This test validates the complete end-to-end CRUD chain for the ontology manageme
 ### Test Case 8: Verify the Restored Class Appears in the Table
 
 **Preconditions**:
+
 - Undo action completed in Test Case 7
 - User is on the scheme detail page
 
 **Steps**:
+
 1. Locate the schema table with selector `schema-table`
 2. Search or filter to find the class by title (use schema-search-input if needed)
 3. Verify the class appears as a new row in the table
 4. Verify the row uses the pattern `schema-row-{classId}` where the ID is different from the original (because it's a new UUID from undo)
 
 **Expected Result**:
+
 - Class appears in the classes table
 - Row is visible and interactive
 - The class title matches the original class title ("Parent Class")
@@ -279,6 +312,7 @@ This test validates the complete end-to-end CRUD chain for the ontology manageme
 **Selectors Used**: `schema-table`, `schema-search-input`, `schema-row-*`
 
 **Invariants Verified**:
+
 - Restored entity has a new UUID
 - All fields except ID and created_at are preserved from the original
 - Class is once again linked to its parent scheme and taxonomy
@@ -336,6 +370,7 @@ None. All required selectors are documented in `ux/selector-registry.yaml`:
 This plan uses factory patterns for setup and teardown:
 
 - **Setup**: Create test data via factories (faster than UI):
+
   ```typescript
   const taxonomy = await createTaxonomy(page, {
     title: "Test Taxonomy: Full CRUD Chain",

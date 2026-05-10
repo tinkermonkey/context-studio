@@ -13,7 +13,12 @@ interface RelationshipFormProps {
   properties: PropertyDefinitionResponse[];
 }
 
-export function RelationshipForm({ onSubmit, isLoading, classes, properties }: RelationshipFormProps) {
+export function RelationshipForm({
+  onSubmit,
+  isLoading,
+  classes,
+  properties,
+}: RelationshipFormProps) {
   const [sourceId, setSourceId] = useState("");
   const [targetId, setTargetId] = useState("");
   const [relationshipType, setRelationshipType] = useState("");

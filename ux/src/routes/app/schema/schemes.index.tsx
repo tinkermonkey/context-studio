@@ -34,16 +34,24 @@ interface SchemesPageContentProps {
   onRetryTaxonomies?: () => void;
 }
 
-function SchemesPageContent({ onCreateClick, selectedId, onSelectedIdChange, taxonomiesById, taxonomiesError, onRetryTaxonomies }: SchemesPageContentProps) {
+function SchemesPageContent({
+  onCreateClick,
+  selectedId,
+  onSelectedIdChange,
+  taxonomiesById,
+  taxonomiesError,
+  onRetryTaxonomies,
+}: SchemesPageContentProps) {
   const [searchFilter, setSearchFilter] = useState("");
 
   const { data: listResponse, isLoading, error, refetch } = useSchemes();
   const schemes = listResponse?.items || [];
 
-  const filteredData = schemes.filter((scheme: ConceptSchemeResponse) =>
-    scheme.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
-    scheme.description?.toLowerCase().includes(searchFilter.toLowerCase()) ||
-    scheme.id.toLowerCase().includes(searchFilter.toLowerCase())
+  const filteredData = schemes.filter(
+    (scheme: ConceptSchemeResponse) =>
+      scheme.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
+      scheme.description?.toLowerCase().includes(searchFilter.toLowerCase()) ||
+      scheme.id.toLowerCase().includes(searchFilter.toLowerCase()),
   );
 
   const schemeColumns: ColumnDef<ConceptSchemeResponse>[] = [
@@ -81,9 +89,7 @@ function SchemesPageContent({ onCreateClick, selectedId, onSelectedIdChange, tax
       accessorKey: "description",
       header: "Description",
       cell: (info) => (
-        <span style={{ color: "var(--canvas-fg-2)" }}>
-          {(info.getValue() as string) || "—"}
-        </span>
+        <span style={{ color: "var(--canvas-fg-2)" }}>{(info.getValue() as string) || "—"}</span>
       ),
     },
     {
@@ -111,11 +117,7 @@ function SchemesPageContent({ onCreateClick, selectedId, onSelectedIdChange, tax
     {
       id: "classCount",
       header: "Classes",
-      cell: () => (
-        <span style={{ color: "var(--canvas-fg-2)" }}>
-          —
-        </span>
-      ),
+      cell: () => <span style={{ color: "var(--canvas-fg-2)" }}>—</span>,
     },
     {
       accessorKey: "last_modified",
@@ -190,10 +192,7 @@ function SchemesPageContent({ onCreateClick, selectedId, onSelectedIdChange, tax
 
   return (
     <div data-testid="schemes-page">
-      <FilterBar
-        searchValue={searchFilter}
-        onSearchChange={setSearchFilter}
-      />
+      <FilterBar searchValue={searchFilter} onSearchChange={setSearchFilter} />
 
       {taxonomiesError && onRetryTaxonomies && (
         <div style={{ marginBottom: "var(--space-3)" }}>
@@ -202,7 +201,7 @@ function SchemesPageContent({ onCreateClick, selectedId, onSelectedIdChange, tax
             onRetry={onRetryTaxonomies}
             message="Failed to load parent taxonomies"
             compact
-          daemonLogPath="/local-server/logs/context_studio.log"
+            daemonLogPath="/local-server/logs/context_studio.log"
           />
         </div>
       )}
@@ -247,7 +246,11 @@ export function SchemesIndexPage() {
   const selectedId = searchParams.selected;
   const createMutation = useCreateScheme();
   const { toast } = useToasts();
-  const { data: taxonomiesResponse, error: taxonomiesError, refetch: refetchTaxonomies } = useTaxonomies();
+  const {
+    data: taxonomiesResponse,
+    error: taxonomiesError,
+    refetch: refetchTaxonomies,
+  } = useTaxonomies();
   const taxonomies = taxonomiesResponse?.items || [];
 
   const taxonomiesById = new Map(taxonomies.map((t) => [t.id, t.title]));
@@ -321,14 +324,11 @@ export function SchemesIndexPage() {
                 error={new Error(createError)}
                 onRetry={() => setCreateError(null)}
                 message="Failed to create scheme"
-              daemonLogPath="/local-server/logs/context_studio.log"
-          />
+                daemonLogPath="/local-server/logs/context_studio.log"
+              />
             </div>
           )}
-          <SchemeForm
-            onSubmit={handleCreateSubmit}
-            isLoading={createMutation.isPending}
-          />
+          <SchemeForm onSubmit={handleCreateSubmit} isLoading={createMutation.isPending} />
         </Modal>
       </div>
     </>
@@ -338,6 +338,6 @@ export function SchemesIndexPage() {
 export const Route = createFileRoute("/app/schema/schemes/")({
   component: SchemesIndexPage,
   validateSearch: (search: Record<string, unknown>): SchemesSearchParams => ({
-    selected: typeof search.selected === 'string' ? search.selected : undefined,
+    selected: typeof search.selected === "string" ? search.selected : undefined,
   }),
 });

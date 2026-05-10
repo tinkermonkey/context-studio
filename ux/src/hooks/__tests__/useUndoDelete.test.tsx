@@ -17,9 +17,7 @@ describe("useUndoDelete", () => {
   describe("initialization", () => {
     it("starts with null deletedId and exposes performDelete and undo", () => {
       const onDelete = vi.fn();
-      const { result } = renderHook(() =>
-        useUndoDelete({ onDelete }),
-      );
+      const { result } = renderHook(() => useUndoDelete({ onDelete }));
 
       expect(result.current.deletedId).toBeNull();
       expect(typeof result.current.performDelete).toBe("function");
@@ -30,9 +28,7 @@ describe("useUndoDelete", () => {
   describe("performDelete scheduling", () => {
     it("schedules onDelete callback with correct delay", async () => {
       const onDelete = vi.fn().mockResolvedValue(undefined);
-      const { result } = renderHook(() =>
-        useUndoDelete({ onDelete, undoWindowMs: 1000 }),
-      );
+      const { result } = renderHook(() => useUndoDelete({ onDelete, undoWindowMs: 1000 }));
 
       await act(async () => {
         result.current.performDelete("test-id");
@@ -49,9 +45,7 @@ describe("useUndoDelete", () => {
 
     it("respects custom undoWindowMs", async () => {
       const onDelete = vi.fn().mockResolvedValue(undefined);
-      const { result } = renderHook(() =>
-        useUndoDelete({ onDelete, undoWindowMs: 5000 }),
-      );
+      const { result } = renderHook(() => useUndoDelete({ onDelete, undoWindowMs: 5000 }));
 
       await act(async () => {
         result.current.performDelete("test-id");
@@ -66,9 +60,7 @@ describe("useUndoDelete", () => {
 
     it("uses 8000ms default when undoWindowMs not specified", async () => {
       const onDelete = vi.fn().mockResolvedValue(undefined);
-      const { result } = renderHook(() =>
-        useUndoDelete({ onDelete }),
-      );
+      const { result } = renderHook(() => useUndoDelete({ onDelete }));
 
       await act(async () => {
         result.current.performDelete("test-id");
@@ -83,9 +75,7 @@ describe("useUndoDelete", () => {
 
     it("replaces pending timeout for same ID", async () => {
       const onDelete = vi.fn().mockResolvedValue(undefined);
-      const { result } = renderHook(() =>
-        useUndoDelete({ onDelete, undoWindowMs: 1000 }),
-      );
+      const { result } = renderHook(() => useUndoDelete({ onDelete, undoWindowMs: 1000 }));
 
       await act(async () => {
         result.current.performDelete("test-id");
@@ -110,9 +100,7 @@ describe("useUndoDelete", () => {
   describe("undo prevents deletion", () => {
     it("prevents deletion when undo called before timeout", async () => {
       const onDelete = vi.fn().mockResolvedValue(undefined);
-      const { result } = renderHook(() =>
-        useUndoDelete({ onDelete, undoWindowMs: 1000 }),
-      );
+      const { result } = renderHook(() => useUndoDelete({ onDelete, undoWindowMs: 1000 }));
 
       await act(async () => {
         result.current.performDelete("test-id");
@@ -135,9 +123,7 @@ describe("useUndoDelete", () => {
 
     it("is idempotent when called without pending delete", async () => {
       const onDelete = vi.fn().mockResolvedValue(undefined);
-      const { result } = renderHook(() =>
-        useUndoDelete({ onDelete }),
-      );
+      const { result } = renderHook(() => useUndoDelete({ onDelete }));
 
       await act(async () => {
         result.current.undo();
@@ -151,9 +137,7 @@ describe("useUndoDelete", () => {
   describe("module-level persistence", () => {
     it("deletion executes even after component unmounts", async () => {
       const onDelete = vi.fn().mockResolvedValue(undefined);
-      const { result, unmount } = renderHook(() =>
-        useUndoDelete({ onDelete, undoWindowMs: 1000 }),
-      );
+      const { result, unmount } = renderHook(() => useUndoDelete({ onDelete, undoWindowMs: 1000 }));
 
       await act(async () => {
         result.current.performDelete("test-id");
@@ -240,9 +224,7 @@ describe("useUndoDelete", () => {
   describe("edge cases", () => {
     it("handles empty string ID", async () => {
       const onDelete = vi.fn().mockResolvedValue(undefined);
-      const { result } = renderHook(() =>
-        useUndoDelete({ onDelete, undoWindowMs: 100 }),
-      );
+      const { result } = renderHook(() => useUndoDelete({ onDelete, undoWindowMs: 100 }));
 
       await act(async () => {
         result.current.performDelete("");
@@ -257,9 +239,7 @@ describe("useUndoDelete", () => {
 
     it("handles rapid sequential deletes", async () => {
       const onDelete = vi.fn().mockResolvedValue(undefined);
-      const { result } = renderHook(() =>
-        useUndoDelete({ onDelete, undoWindowMs: 100 }),
-      );
+      const { result } = renderHook(() => useUndoDelete({ onDelete, undoWindowMs: 100 }));
 
       await act(async () => {
         result.current.performDelete("id-1");
@@ -281,8 +261,7 @@ describe("useUndoDelete", () => {
       const onDelete2 = vi.fn().mockResolvedValue(undefined);
 
       const { result, rerender } = renderHook(
-        ({ onDelete: fn }: any) =>
-          useUndoDelete({ onDelete: fn, undoWindowMs: 100 }),
+        ({ onDelete: fn }: any) => useUndoDelete({ onDelete: fn, undoWindowMs: 100 }),
         { initialProps: { onDelete: onDelete1 } },
       );
 

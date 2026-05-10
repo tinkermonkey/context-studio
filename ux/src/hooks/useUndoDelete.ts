@@ -16,7 +16,11 @@ const pendingDeletes = new Map<
   }
 >();
 
-export function useUndoDelete({ onDelete, onDeleteError, undoWindowMs = 8000 }: UseUndoDeleteOptions) {
+export function useUndoDelete({
+  onDelete,
+  onDeleteError,
+  undoWindowMs = 8000,
+}: UseUndoDeleteOptions) {
   const [deletedId, setDeletedId] = useState<string | null>(null);
 
   const performDelete = useCallback(

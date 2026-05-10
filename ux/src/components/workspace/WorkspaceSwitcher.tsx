@@ -132,9 +132,7 @@ export function WorkspaceSwitcher({ onSelect, isLoading = false }: WorkspaceSwit
         }
       >
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
-          <label style={{ display: "block", fontSize: "var(--text-sm)" }}>
-            Folder name
-          </label>
+          <label style={{ display: "block", fontSize: "var(--text-sm)" }}>Folder name</label>
           <Input
             type="text"
             placeholder="my-workspace"
@@ -171,20 +169,14 @@ export function WorkspaceSwitcher({ onSelect, isLoading = false }: WorkspaceSwit
             >
               Cancel
             </Button>
-            <Button
-              variant="primary"
-              onClick={handleCloneSubmit}
-              disabled={!gitUrl.trim()}
-            >
+            <Button variant="primary" onClick={handleCloneSubmit} disabled={!gitUrl.trim()}>
               Clone
             </Button>
           </div>
         }
       >
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
-          <label style={{ display: "block", fontSize: "var(--text-sm)" }}>
-            Git repository URL
-          </label>
+          <label style={{ display: "block", fontSize: "var(--text-sm)" }}>Git repository URL</label>
           <Input
             type="text"
             placeholder="https://github.com/user/repo.git"

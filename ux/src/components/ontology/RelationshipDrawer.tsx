@@ -50,8 +50,7 @@ export function RelationshipDrawer({
       });
       onClose();
     } catch (error) {
-      const message =
-        error instanceof ApiError ? error.detail : "Failed to delete relationship";
+      const message = error instanceof ApiError ? error.detail : "Failed to delete relationship";
       toast("error", message);
     }
   };
@@ -72,62 +71,62 @@ export function RelationshipDrawer({
         onDelete={handleDeleteClick}
         data-testid="relationship-drawer"
       >
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
-        <div>
-          <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
-            ID
-          </label>
-          <Input
-            type="text"
-            value={relationship.id}
-            disabled
-            mono
-            data-testid="relationship-drawer-id"
-          />
-        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+          <div>
+            <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
+              ID
+            </label>
+            <Input
+              type="text"
+              value={relationship.id}
+              disabled
+              mono
+              data-testid="relationship-drawer-id"
+            />
+          </div>
 
-        <div>
-          <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
-            Source Class
-          </label>
-          <Input
-            type="text"
-            value={sourceName}
-            disabled
-            data-testid="relationship-drawer-source-class"
-          />
-        </div>
+          <div>
+            <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
+              Source Class
+            </label>
+            <Input
+              type="text"
+              value={sourceName}
+              disabled
+              data-testid="relationship-drawer-source-class"
+            />
+          </div>
 
-        <div>
-          <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
-            Target Class
-          </label>
-          <Input
-            type="text"
-            value={targetName}
-            disabled
-            data-testid="relationship-drawer-target-class"
-          />
-        </div>
+          <div>
+            <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
+              Target Class
+            </label>
+            <Input
+              type="text"
+              value={targetName}
+              disabled
+              data-testid="relationship-drawer-target-class"
+            />
+          </div>
 
-        <div>
-          <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
-            Relationship Type
-          </label>
-          <Input
-            type="text"
-            value={propertyName}
-            disabled
-            data-testid="relationship-drawer-property-type"
-          />
-        </div>
+          <div>
+            <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
+              Relationship Type
+            </label>
+            <Input
+              type="text"
+              value={propertyName}
+              disabled
+              data-testid="relationship-drawer-property-type"
+            />
+          </div>
 
-        <div style={{ display: "flex", gap: "var(--space-2)", fontSize: "var(--text-xs)" }}>
-          <span style={{ color: "var(--canvas-fg-3)" }}>
-            Created: {new Date(relationship.created_at ?? "").toLocaleDateString()}
-          </span>
+          <div style={{ display: "flex", gap: "var(--space-2)", fontSize: "var(--text-xs)" }}>
+            <span style={{ color: "var(--canvas-fg-3)" }}>
+              Created: {new Date(relationship.created_at ?? "").toLocaleDateString()}
+            </span>
+          </div>
         </div>
-      </div>
       </Drawer>
 
       <ConfirmDialog

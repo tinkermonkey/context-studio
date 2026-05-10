@@ -75,11 +75,15 @@ class OntologyService extends BaseService {
   }
 
   async getPublishDiffStats(id: string): Promise<components["schemas"]["PublishDiffStats"]> {
-    return this.get<components["schemas"]["PublishDiffStats"]>(`/api/taxonomies/${id}/publish-diff`);
+    return this.get<components["schemas"]["PublishDiffStats"]>(
+      `/api/taxonomies/${id}/publish-diff`,
+    );
   }
 
   async publishTaxonomy(id: string, commitMessage: string): Promise<TaxonomyResponse> {
-    return this.post<TaxonomyResponse>(`/api/taxonomies/${id}/publish`, { commit_message: commitMessage });
+    return this.post<TaxonomyResponse>(`/api/taxonomies/${id}/publish`, {
+      commit_message: commitMessage,
+    });
   }
 
   // Concept Schemes

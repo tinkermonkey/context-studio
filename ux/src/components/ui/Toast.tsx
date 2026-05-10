@@ -55,9 +55,7 @@ export function ToastProvider({ children }: ToastProviderProps) {
   );
 
   return (
-    <ToastContext.Provider value={{ toasts, dismiss, toast }}>
-      {children}
-    </ToastContext.Provider>
+    <ToastContext.Provider value={{ toasts, dismiss, toast }}>{children}</ToastContext.Provider>
   );
 }
 

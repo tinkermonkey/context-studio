@@ -4,7 +4,10 @@ import userEvent from "@testing-library/user-event";
 import { rest } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
-import { createListSchemes, createConceptScheme } from "@/api/services/__tests__/fixtures/ontology.fixtures";
+import {
+  createListSchemes,
+  createConceptScheme,
+} from "@/api/services/__tests__/fixtures/ontology.fixtures";
 import { SchemesIndexPage } from "../schemes.index";
 
 const server = setupServer();
@@ -41,7 +44,7 @@ describe("Schemes Schema Page", () => {
 
       // Verify skeleton rows are rendered before data arrives
       const skeletonElements = container.querySelectorAll(
-        "div[style*='animation: skeleton-shimmer']"
+        "div[style*='animation: skeleton-shimmer']",
       );
       expect(skeletonElements.length).toBeGreaterThanOrEqual(5);
     });
@@ -74,9 +77,7 @@ describe("Schemes Schema Page", () => {
   describe("empty state", () => {
     it("displays empty state copy when no concept schemes exist", async () => {
       server.use(
-        rest.get("*/api/schemes", (req, res, ctx) =>
-          res(ctx.json(createListSchemes([]))),
-        ),
+        rest.get("*/api/schemes", (req, res, ctx) => res(ctx.json(createListSchemes([])))),
       );
 
       render(<SchemesIndexPage />);
@@ -108,11 +109,7 @@ describe("Schemes Schema Page", () => {
         }),
       ]);
 
-      server.use(
-        rest.get("*/api/schemes", (req, res, ctx) =>
-          res(ctx.json(mockSchemes)),
-        ),
-      );
+      server.use(rest.get("*/api/schemes", (req, res, ctx) => res(ctx.json(mockSchemes))));
 
       render(<SchemesIndexPage />);
 
@@ -130,11 +127,7 @@ describe("Schemes Schema Page", () => {
         }),
       ]);
 
-      server.use(
-        rest.get("*/api/schemes", (req, res, ctx) =>
-          res(ctx.json(mockSchemes)),
-        ),
-      );
+      server.use(rest.get("*/api/schemes", (req, res, ctx) => res(ctx.json(mockSchemes))));
 
       render(<SchemesIndexPage />);
 
@@ -155,11 +148,7 @@ describe("Schemes Schema Page", () => {
         }),
       ]);
 
-      server.use(
-        rest.get("*/api/schemes", (req, res, ctx) =>
-          res(ctx.json(mockSchemes)),
-        ),
-      );
+      server.use(rest.get("*/api/schemes", (req, res, ctx) => res(ctx.json(mockSchemes))));
 
       render(<SchemesIndexPage />);
 
@@ -192,11 +181,7 @@ describe("Schemes Schema Page", () => {
         }),
       ]);
 
-      server.use(
-        rest.get("*/api/schemes", (req, res, ctx) =>
-          res(ctx.json(mockSchemes)),
-        ),
-      );
+      server.use(rest.get("*/api/schemes", (req, res, ctx) => res(ctx.json(mockSchemes))));
 
       render(<SchemesIndexPage />);
 
@@ -226,11 +211,7 @@ describe("Schemes Schema Page", () => {
         }),
       ]);
 
-      server.use(
-        rest.get("*/api/schemes", (req, res, ctx) =>
-          res(ctx.json(mockSchemes)),
-        ),
-      );
+      server.use(rest.get("*/api/schemes", (req, res, ctx) => res(ctx.json(mockSchemes))));
 
       render(<SchemesIndexPage />);
 

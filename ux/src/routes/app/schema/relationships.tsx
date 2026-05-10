@@ -55,7 +55,9 @@ function RelationshipsPageContent({
     const search = searchFilter.toLowerCase();
 
     const matchesSearch =
-      sourceClassName.includes(search) || targetClassName.includes(search) || propertyName.includes(search);
+      sourceClassName.includes(search) ||
+      targetClassName.includes(search) ||
+      propertyName.includes(search);
 
     const matchesSourceFilter = !sourceClassFilter || rel.source_id === sourceClassFilter;
     const matchesTargetFilter = !targetClassFilter || rel.target_id === targetClassFilter;
@@ -196,7 +198,9 @@ function RelationshipsPageContent({
   return (
     <div data-testid="relationships-page">
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
-        <div style={{ display: "flex", gap: "var(--space-2)", alignItems: "center", flexWrap: "wrap" }}>
+        <div
+          style={{ display: "flex", gap: "var(--space-2)", alignItems: "center", flexWrap: "wrap" }}
+        >
           <div style={{ position: "relative" }}>
             <select
               value={sourceClassFilter || ""}
@@ -337,7 +341,11 @@ function RelationshipsPageWrapper() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const { data: classesResponse, error: classesError, refetch: refetchClasses } = useClasses();
-  const { data: propertiesResponse, error: propertiesError, refetch: refetchProperties } = useProperties();
+  const {
+    data: propertiesResponse,
+    error: propertiesError,
+    refetch: refetchProperties,
+  } = useProperties();
   const createMutation = useCreateRelationship();
   const { toast } = useToasts();
 

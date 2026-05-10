@@ -53,12 +53,26 @@ export function TaxonomyPublishDialog({
     >
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
         <div>
-          <p style={{ fontSize: "var(--text-sm)", color: "var(--canvas-fg-2)", marginBottom: "var(--space-2)" }}>
+          <p
+            style={{
+              fontSize: "var(--text-sm)",
+              color: "var(--canvas-fg-2)",
+              marginBottom: "var(--space-2)",
+            }}
+          >
             Publishing will transition this taxonomy from draft to published status.
           </p>
         </div>
 
-        <div style={{ padding: "var(--space-2)", backgroundColor: "var(--canvas-fg-4)", borderRadius: "4px", fontSize: "var(--text-xs)", color: "var(--canvas-fg-3)" }}>
+        <div
+          style={{
+            padding: "var(--space-2)",
+            backgroundColor: "var(--canvas-fg-4)",
+            borderRadius: "4px",
+            fontSize: "var(--text-xs)",
+            color: "var(--canvas-fg-3)",
+          }}
+        >
           {diffStatsQuery.isLoading ? (
             <span>Loading diff summary…</span>
           ) : diffStatsQuery.data ? (
@@ -66,7 +80,9 @@ export function TaxonomyPublishDialog({
               {(() => {
                 const parts = [];
                 if (diffStatsQuery.data.added > 0) {
-                  parts.push(`${diffStatsQuery.data.added} class${diffStatsQuery.data.added !== 1 ? "es" : ""} added`);
+                  parts.push(
+                    `${diffStatsQuery.data.added} class${diffStatsQuery.data.added !== 1 ? "es" : ""} added`,
+                  );
                 }
                 if (diffStatsQuery.data.modified > 0) {
                   parts.push(`${diffStatsQuery.data.modified} modified`);

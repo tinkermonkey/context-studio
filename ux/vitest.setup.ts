@@ -11,7 +11,7 @@ vi.mock("@tanstack/react-router", async (importOriginal) => {
       try {
         // Try to use the real useSearch
         return actual.useSearch?.(_options as any) ?? {};
-      } catch (e) {
+      } catch {
         // If it fails (no active match), return empty search params
         // This allows components to work in tests without a fully configured router
         return {};

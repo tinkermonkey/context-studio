@@ -4,7 +4,10 @@ import userEvent from "@testing-library/user-event";
 import { rest } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
-import { createListProperties, createPropertyDefinition } from "@/api/services/__tests__/fixtures/ontology.fixtures";
+import {
+  createListProperties,
+  createPropertyDefinition,
+} from "@/api/services/__tests__/fixtures/ontology.fixtures";
 import { PropertiesPage } from "../properties";
 
 const server = setupServer();
@@ -39,7 +42,7 @@ describe("Properties Schema Page", () => {
 
       // Verify skeleton rows are rendered before data arrives
       const skeletonElements = container.querySelectorAll(
-        "div[style*='animation: skeleton-shimmer']"
+        "div[style*='animation: skeleton-shimmer']",
       );
       expect(skeletonElements.length).toBeGreaterThanOrEqual(5);
     });
@@ -101,24 +104,22 @@ describe("Properties Schema Page", () => {
   describe("empty state", () => {
     it("displays empty state copy when no properties exist", async () => {
       server.use(
-        rest.get("*/api/properties", (req, res, ctx) =>
-          res(ctx.json(createListProperties([]))),
-        ),
+        rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(createListProperties([])))),
       );
 
       render(<PropertiesPage />);
 
       await waitFor(() => {
         expect(screen.getByText("No properties on this class")).toBeInTheDocument();
-        expect(screen.getByText("Properties are typed attributes — name, latitude, accuracy, etc.")).toBeInTheDocument();
+        expect(
+          screen.getByText("Properties are typed attributes — name, latitude, accuracy, etc."),
+        ).toBeInTheDocument();
       });
     });
 
     it("empty state displays action label button", async () => {
       server.use(
-        rest.get("*/api/properties", (req, res, ctx) =>
-          res(ctx.json(createListProperties([]))),
-        ),
+        rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(createListProperties([])))),
       );
 
       render(<PropertiesPage />);
@@ -149,11 +150,7 @@ describe("Properties Schema Page", () => {
         }),
       ]);
 
-      server.use(
-        rest.get("*/api/properties", (req, res, ctx) =>
-          res(ctx.json(mockProperties)),
-        ),
-      );
+      server.use(rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(mockProperties))));
 
       render(<PropertiesPage />);
 
@@ -172,11 +169,7 @@ describe("Properties Schema Page", () => {
         }),
       ]);
 
-      server.use(
-        rest.get("*/api/properties", (req, res, ctx) =>
-          res(ctx.json(mockProperties)),
-        ),
-      );
+      server.use(rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(mockProperties))));
 
       render(<PropertiesPage />);
 
@@ -198,11 +191,7 @@ describe("Properties Schema Page", () => {
         }),
       ]);
 
-      server.use(
-        rest.get("*/api/properties", (req, res, ctx) =>
-          res(ctx.json(mockProperties)),
-        ),
-      );
+      server.use(rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(mockProperties))));
 
       render(<PropertiesPage />);
 
@@ -238,11 +227,7 @@ describe("Properties Schema Page", () => {
         }),
       ]);
 
-      server.use(
-        rest.get("*/api/properties", (req, res, ctx) =>
-          res(ctx.json(mockProperties)),
-        ),
-      );
+      server.use(rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(mockProperties))));
 
       render(<PropertiesPage />);
 
@@ -274,11 +259,7 @@ describe("Properties Schema Page", () => {
         }),
       ]);
 
-      server.use(
-        rest.get("*/api/properties", (req, res, ctx) =>
-          res(ctx.json(mockProperties)),
-        ),
-      );
+      server.use(rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(mockProperties))));
 
       render(<PropertiesPage />);
 
