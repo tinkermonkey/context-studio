@@ -116,3 +116,17 @@
   --duration-fast: 120ms;
   --duration-base: 160ms;
 }
+
+/* Dark canvas mode — inverts only the work surface; shell chrome stays dark */
+body.dark-canvas {
+  --canvas-bg: #14191f;
+  --canvas-bg-2: #1b222a;
+  --canvas-card: #1b222a;
+  --canvas-bd: #2a323c;
+  --canvas-bd-2: #3a4452;
+  --canvas-fg: #e6edf3;
+  --canvas-fg-1: #e6edf3;
+  --canvas-fg-2: #b0bac5;
+  --canvas-fg-3: #7e8a98;
+  --canvas-fg-4: #5a6573;
+}
