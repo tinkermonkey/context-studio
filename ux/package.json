@@ -14,6 +14,7 @@
     "test:run": "vitest run --no-coverage",
     "test:ci": "vitest run --reporter verbose --coverage",
     "test:coverage": "vitest run --coverage",
+    "test:coverage:c8": "c8 --reporter=text --reporter=lcov npm run test:run",
     "test:msw": "vitest run --config vitest.msw.config.ts",
     "test:e2e": "tsx scripts/check_test_contract.ts && playwright test",
     "test:e2e:ui": "tsx scripts/check_test_contract.ts && playwright test --ui",
