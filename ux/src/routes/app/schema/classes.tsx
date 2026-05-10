@@ -240,7 +240,7 @@ function ClassesPageWrapper() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const searchParams = useSearch({ from: "/app/schema/classes" }) as ClassesSearchParams;
+  const searchParams = useSearch({ from: "/app/schema/classes" });
   const selectedId = searchParams.selected;
   const createMutation = useCreateClass();
   const { toast } = useToasts();
@@ -249,6 +249,7 @@ function ClassesPageWrapper() {
     navigate({
       to: "/app/schema/classes",
       search: id ? { selected: id } : {},
+      replace: true,
     });
   };
 

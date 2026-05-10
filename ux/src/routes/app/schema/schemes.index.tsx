@@ -243,7 +243,7 @@ export function SchemesIndexPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const searchParams = useSearch({ from: "/app/schema/schemes" }) as SchemesSearchParams;
+  const searchParams = useSearch({ from: "/app/schema/schemes/" });
   const selectedId = searchParams.selected;
   const createMutation = useCreateScheme();
   const { toast } = useToasts();
@@ -256,6 +256,7 @@ export function SchemesIndexPage() {
     navigate({
       to: "/app/schema/schemes",
       search: id ? { selected: id } : {},
+      replace: true,
     });
   };
 

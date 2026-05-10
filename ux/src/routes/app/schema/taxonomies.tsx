@@ -228,7 +228,7 @@ function TaxonomiesPageWrapper() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const searchParams = useSearch({ from: "/app/schema/taxonomies" }) as TaxonomiesSearchParams;
+  const searchParams = useSearch({ from: "/app/schema/taxonomies" });
   const selectedId = searchParams.selected;
   const createMutation = useCreateTaxonomy();
   const { toast } = useToasts();
@@ -237,6 +237,7 @@ function TaxonomiesPageWrapper() {
     navigate({
       to: "/app/schema/taxonomies",
       search: id ? { selected: id } : {},
+      replace: true,
     });
   };
 
