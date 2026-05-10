@@ -960,6 +960,7 @@
 .form-group-label {
   display: block;
   font-size: var(--text-sm);
+  margin-bottom: 4px;
 }
 
 .form-actions {

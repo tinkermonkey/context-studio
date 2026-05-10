@@ -105,9 +105,9 @@ export function PropertyDrawer({ property, onClose }: PropertyDrawerProps) {
         onDelete={handleDeleteClick}
         data-testid="property-drawer"
       >
-        <div className="stack-lg">
+        <div className="stack">
           <div>
-            <label className="form-group-label" style={{ marginBottom: "4px" }}>
+            <label className="form-group-label">
               Identifier
             </label>
             <Input
@@ -120,7 +120,7 @@ export function PropertyDrawer({ property, onClose }: PropertyDrawerProps) {
           </div>
 
           <div>
-            <label className="form-group-label" style={{ marginBottom: "4px" }}>
+            <label className="form-group-label">
               Title
             </label>
             <Input
@@ -132,7 +132,7 @@ export function PropertyDrawer({ property, onClose }: PropertyDrawerProps) {
           </div>
 
           <div>
-            <label className="form-group-label" style={{ marginBottom: "4px" }}>
+            <label className="form-group-label">
               Description
             </label>
             <Textarea

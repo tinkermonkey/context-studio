@@ -45,11 +45,9 @@ function changeOperationColor(op: string): string {
 function EmptyState() {
   return (
     <div
-      className="flex flex-col items-center justify-center"
+      className="empty-state"
       style={{
         padding: "var(--space-12, 48px) var(--space-6)",
-        gap: "var(--space-6)",
-        textAlign: "center",
       }}
     >
       <Network size={48} style={{ color: "var(--canvas-fg-3)" }} />

@@ -71,9 +71,9 @@ export function RelationshipDrawer({
         onDelete={handleDeleteClick}
         data-testid="relationship-drawer"
       >
-        <div className="stack-lg">
+        <div className="stack">
           <div>
-            <label className="form-group-label" style={{ marginBottom: "4px" }}>
+            <label className="form-group-label">
               ID
             </label>
             <Input
@@ -86,7 +86,7 @@ export function RelationshipDrawer({
           </div>
 
           <div>
-            <label className="form-group-label" style={{ marginBottom: "4px" }}>
+            <label className="form-group-label">
               Source Class
             </label>
             <Input
@@ -98,7 +98,7 @@ export function RelationshipDrawer({
           </div>
 
           <div>
-            <label className="form-group-label" style={{ marginBottom: "4px" }}>
+            <label className="form-group-label">
               Target Class
             </label>
             <Input
@@ -110,7 +110,7 @@ export function RelationshipDrawer({
           </div>
 
           <div>
-            <label className="form-group-label" style={{ marginBottom: "4px" }}>
+            <label className="form-group-label">
               Relationship Type
             </label>
             <Input

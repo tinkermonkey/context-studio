@@ -119,16 +119,16 @@ export function SchemeDrawer({ scheme, taxonomyName, onClose }: SchemeDrawerProp
         onDelete={handleDeleteClick}
         data-testid="scheme-drawer"
       >
-        <div className="stack-lg">
+        <div className="stack">
           <div>
-            <label className="form-group-label" style={{ marginBottom: "4px" }}>
+            <label className="form-group-label">
               ID
             </label>
             <Input type="text" value={scheme.id} disabled mono data-testid="scheme-drawer-id" />
           </div>
 
           <div>
-            <label className="form-group-label" style={{ marginBottom: "4px" }}>
+            <label className="form-group-label">
               Title
             </label>
             <Input
@@ -140,7 +140,7 @@ export function SchemeDrawer({ scheme, taxonomyName, onClose }: SchemeDrawerProp
           </div>
 
           <div>
-            <label className="form-group-label" style={{ marginBottom: "4px" }}>
+            <label className="form-group-label">
               Description
             </label>
             <Textarea
@@ -152,7 +152,7 @@ export function SchemeDrawer({ scheme, taxonomyName, onClose }: SchemeDrawerProp
           </div>
 
           <div>
-            <label className="form-group-label" style={{ marginBottom: "4px" }}>
+            <label className="form-group-label">
               Parent Taxonomy
             </label>
             <Input

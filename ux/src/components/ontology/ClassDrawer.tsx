@@ -166,7 +166,7 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
         onDelete={handleDeleteClick}
         data-testid="class-drawer"
       >
-        <div className="stack-lg">
+        <div className="stack">
           {individualsError && (
             <ErrorBanner
               error={individualsError as Error}
@@ -184,14 +184,14 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
             />
           )}
           <div>
-            <label className="form-group-label" style={{ marginBottom: "4px" }}>
+            <label className="form-group-label">
               ID
             </label>
             <Input type="text" value={classData.id} disabled mono data-testid="class-drawer-id" />
           </div>
 
           <div>
-            <label className="form-group-label" style={{ marginBottom: "4px" }}>
+            <label className="form-group-label">
               Name
             </label>
             <Input
@@ -203,7 +203,7 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
           </div>
 
           <div>
-            <label className="form-group-label" style={{ marginBottom: "4px" }}>
+            <label className="form-group-label">
               Description
             </label>
             <Textarea
@@ -215,7 +215,7 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
           </div>
 
           <div>
-            <label className="form-group-label" style={{ marginBottom: "4px" }}>
+            <label className="form-group-label">
               Domain
             </label>
             <Select
@@ -234,7 +234,7 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
           </div>
 
           <div>
-            <label className="form-group-label" style={{ marginBottom: "4px" }}>
+            <label className="form-group-label">
               Parent Class
             </label>
             {selectedParent ? (

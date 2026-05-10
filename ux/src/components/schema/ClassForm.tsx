@@ -43,9 +43,9 @@ export function ClassForm({ onSubmit, isLoading }: ClassFormProps) {
 
   return (
     <form onSubmit={handleSubmit} data-testid="class-form">
-      <div className="stack-lg">
+      <div className="stack">
         <div>
-          <label className="form-group-label" style={{ marginBottom: "4px" }}>
+          <label className="form-group-label">
             Title
           </label>
           <Input
@@ -64,7 +64,7 @@ export function ClassForm({ onSubmit, isLoading }: ClassFormProps) {
         </div>
 
         <div>
-          <label className="form-group-label" style={{ marginBottom: "4px" }}>
+          <label className="form-group-label">
             Description (optional)
           </label>
           <Textarea

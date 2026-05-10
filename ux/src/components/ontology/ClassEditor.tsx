@@ -93,9 +93,9 @@ export function ClassEditor({ schemeId, initialData, onSubmit, isLoading }: Clas
 
   return (
     <form onSubmit={handleSubmit} data-testid="class-editor-form">
-      <div className="stack-lg">
+      <div className="stack">
         <div>
-          <label className="form-group-label" style={{ marginBottom: "4px" }}>
+          <label className="form-group-label">
             Name
           </label>
           <Input
@@ -118,7 +118,7 @@ export function ClassEditor({ schemeId, initialData, onSubmit, isLoading }: Clas
 
         {!initialData && (
           <div>
-            <label className="form-group-label" style={{ marginBottom: "4px" }}>
+            <label className="form-group-label">
               Domain
             </label>
             <Select
@@ -138,7 +138,7 @@ export function ClassEditor({ schemeId, initialData, onSubmit, isLoading }: Clas
         )}
 
         <div>
-          <label className="form-group-label" style={{ marginBottom: "4px" }}>
+          <label className="form-group-label">
             Parent Class (optional)
           </label>
           <div style={{ position: "relative" }}>
@@ -246,7 +246,7 @@ export function ClassEditor({ schemeId, initialData, onSubmit, isLoading }: Clas
         </div>
 
         <div>
-          <label className="form-group-label" style={{ marginBottom: "4px" }}>
+          <label className="form-group-label">
             Description (optional)
           </label>
           <Textarea
