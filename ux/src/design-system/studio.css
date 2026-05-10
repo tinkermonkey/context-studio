@@ -36,12 +36,15 @@ a {
 }
 
 /* Scrollbar */
-.scroll,
-.canvas-scroll,
 .shell-rail,
 .shell-context {
   scrollbar-width: thin;
   scrollbar-color: var(--shell-border-2) transparent;
+}
+.scroll,
+.canvas-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--canvas-bd-2) transparent;
 }
 .canvas-scroll::-webkit-scrollbar,
 .scroll::-webkit-scrollbar {

@@ -24,7 +24,7 @@ There are 166 inline `style={{}}` usages across components and 121 in route page
 2. Port missing `studio.css` sections — 8 dark-mode rules, scrollbar polish, additional shell chrome classes.
 3. Port missing `crud.css` sections — the design has ~69 more lines; audit and port any that correspond to real app components.
 4. Decide on `individuals.css` and `settings.css` — either port them or park them in `design/` with a clear note they're not yet active.
-5. Fix the `.canvas-scroll` vs `.scroll`/`.canvas-area` class name mismatch — resolve which name is canonical and update both CSS and JSX.
+5. Resolve `.canvas-scroll` as the canonical class (matching JSX usage). Expand CSS selectors to also accept `.scroll` for forward compatibility. The design reference's `.canvas-area` name is not adopted.
 
 ---
 

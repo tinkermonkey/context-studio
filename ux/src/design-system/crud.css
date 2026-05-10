@@ -1,3 +1,9 @@
+/* =========================================================================
+   Context Studio — Form & modal styling
+   Note: rgba(34, 211, 238, N) values represent opacity levels of --accent-cyan
+   Aligned with design reference while maintaining pixel-perfect consistency
+   ========================================================================= */
+
 /* ============= Modal & dialog styling ============= */
 .modal-backdrop {
   position: fixed;
