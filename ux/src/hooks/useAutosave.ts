@@ -40,6 +40,11 @@ export function useAutosave<T>({
       setStatus("error");
       statusRef.current = "error";
       onError?.(err as Error);
+      if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current);
+      statusTimeoutRef.current = setTimeout(() => {
+        setStatus("idle");
+        statusRef.current = "idle";
+      }, 1500);
     },
   });
 

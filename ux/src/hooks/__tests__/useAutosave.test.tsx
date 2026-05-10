@@ -277,7 +277,7 @@ describe("useAutosave", () => {
       expect(onError).toHaveBeenCalledWith(testError);
     });
 
-    it("blocks save attempts when in error state", async () => {
+    it("resets error status after timeout and allows retries", async () => {
       const testError = new Error("Save failed");
       const mockMutationFn = vi.fn()
         .mockRejectedValueOnce(testError)
@@ -302,15 +302,23 @@ describe("useAutosave", () => {
         { timeout: 500 },
       );
 
-      const initialCallCount = mockMutationFn.mock.calls.length;
+      const callCountAfterError = mockMutationFn.mock.calls.length;
+
+      await new Promise(resolve => setTimeout(resolve, 1600));
+
+      expect(result.current.status).toBe("idle");
 
       dataValue = { title: "v3" };
       rerender();
 
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await waitFor(
+        () => {
+          expect(mockMutationFn).toHaveBeenCalledTimes(callCountAfterError + 1);
+        },
+        { timeout: 500 },
+      );
 
-      expect(mockMutationFn).toHaveBeenCalledTimes(initialCallCount);
-      expect(result.current.status).toBe("error");
+      expect(result.current.status).toBe("saved");
     });
   });
 
