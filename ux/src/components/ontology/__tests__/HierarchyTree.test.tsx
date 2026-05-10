@@ -252,20 +252,29 @@ describe("HierarchyTree", () => {
   describe("max depth", () => {
     it("limits expansion to maxDepth", async () => {
       const user = userEvent.setup();
-      render(
+      const { container } = render(
         <HierarchyTree classes={mockHierarchy} maxDepth={2} />,
       );
 
-      // Expand root
-      let expandButtons = screen.getAllByLabelText("Expand");
-      await user.click(expandButtons[0]);
+      // Expand root (depth 0) - should have expand button
+      expect(screen.getAllByLabelText("Expand")).toHaveLength(1);
+      await user.click(screen.getAllByLabelText("Expand")[0]);
 
-      // Try to expand child (should not be possible with maxDepth=2 starting at depth 0)
-      const childNode = screen.getByTestId("hierarchy-node-child-1");
-      const childExpandBtn = childNode.parentElement?.querySelector("button");
-      if (childExpandBtn) {
-        await user.click(childExpandBtn);
-      }
+      // After expanding root, child-1 should be visible and have an expand button
+      expect(screen.getByText("Child 1")).toBeInTheDocument();
+      expect(screen.getAllByLabelText("Expand")).toHaveLength(1); // Just child-1's expand button
+
+      // Expand child-1 (depth 1)
+      await user.click(screen.getByText("Child 1").closest(".kg-row")?.querySelector("button") as HTMLButtonElement);
+
+      // Grandchild should be visible
+      expect(screen.getByText("Grandchild")).toBeInTheDocument();
+
+      // Grandchild should NOT have an expand button (depth 2 >= maxDepth 2)
+      const grandchildNode = screen.getByTestId("hierarchy-node-grandchild-1");
+      const grandchildRow = grandchildNode.closest(".kg-row");
+      const expandButtons = grandchildRow?.querySelectorAll("button[aria-label]");
+      expect(expandButtons?.length || 0).toBe(0);
     });
   });
 
@@ -285,7 +294,6 @@ describe("HierarchyTree", () => {
 
   describe("complete structure", () => {
     it("renders full tree with root and children", () => {
-      const user = userEvent.setup();
       render(
         <HierarchyTree classes={mockHierarchy} />,
       );

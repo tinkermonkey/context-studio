@@ -87,7 +87,9 @@ describe("SchemaTable", () => {
       );
       expect(screen.getByText("No items")).toBeInTheDocument();
     });
+  });
 
+  describe("row selection styling", () => {
     it("shows selected class for selected row", () => {
       const { container } = render(
         <SchemaTable columns={mockColumns} data={mockData} selectedId="1" />,
