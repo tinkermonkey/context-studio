@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreVertical, ChevronDown } from "lucide-react";
-import { ToastViewport, useToasts } from "@/components/ui/Toast";
+import { useToasts } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
@@ -341,33 +341,30 @@ function RelationshipsPageWrapper() {
   const propertiesById = new Map(properties.map((p) => [p.id, p.title]));
 
   return (
-    <>
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>Relationships</h1>
-          <Button
-            variant="primary"
-            onClick={() => {
-              // TODO: Open create relationship dialog
-            }}
-            data-testid="relationship-add-button"
-          >
-            + Add relationship
-          </Button>
-        </div>
-        <div data-testid="relationships-content">
-          <RelationshipsPageContent
-            classesById={classesById}
-            propertiesById={propertiesById}
-            classesError={classesError}
-            onRetryClasses={() => refetchClasses()}
-            propertiesError={propertiesError}
-            onRetryProperties={() => refetchProperties()}
-          />
-        </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>Relationships</h1>
+        <Button
+          variant="primary"
+          onClick={() => {
+            // TODO: Open create relationship dialog
+          }}
+          data-testid="relationship-add-button"
+        >
+          + Add relationship
+        </Button>
       </div>
-      <ToastViewport toasts={toasts} onDismiss={dismiss} />
-    </>
+      <div data-testid="relationships-content">
+        <RelationshipsPageContent
+          classesById={classesById}
+          propertiesById={propertiesById}
+          classesError={classesError}
+          onRetryClasses={() => refetchClasses()}
+          propertiesError={propertiesError}
+          onRetryProperties={() => refetchProperties()}
+        />
+      </div>
+    </div>
   );
 }
 

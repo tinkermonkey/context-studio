@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreVertical } from "lucide-react";
-import { ToastViewport, useToasts } from "@/components/ui/Toast";
+import { useToasts } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -188,37 +188,34 @@ function PropertiesPageWrapper() {
   };
 
   return (
-    <>
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>Property Definitions</h1>
-          <Button
-            variant="primary"
-            onClick={() => setShowCreateModal(true)}
-            data-testid="property-add-button"
-          >
-            + Add property
-          </Button>
-        </div>
-        <div data-testid="properties-content">
-          <PropertiesPageContent onCreateClick={() => setShowCreateModal(true)} />
-        </div>
-
-        <Modal
-          open={showCreateModal}
-          onClose={() => setShowCreateModal(false)}
-          title="Create Property"
-          size="sm"
-          data-testid="property-create-modal"
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>Property Definitions</h1>
+        <Button
+          variant="primary"
+          onClick={() => setShowCreateModal(true)}
+          data-testid="property-add-button"
         >
-          <PropertyDefinitionForm
-            onSubmit={handleCreateSubmit}
-            isLoading={createMutation.isPending}
-          />
-        </Modal>
+          + Add property
+        </Button>
       </div>
-      <ToastViewport toasts={toasts} onDismiss={dismiss} />
-    </>
+      <div data-testid="properties-content">
+        <PropertiesPageContent onCreateClick={() => setShowCreateModal(true)} />
+      </div>
+
+      <Modal
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        title="Create Property"
+        size="sm"
+        data-testid="property-create-modal"
+      >
+        <PropertyDefinitionForm
+          onSubmit={handleCreateSubmit}
+          isLoading={createMutation.isPending}
+        />
+      </Modal>
+    </div>
   );
 }
 

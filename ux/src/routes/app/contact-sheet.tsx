@@ -10,7 +10,7 @@ import { Drawer } from "@/components/ui/Drawer";
 import { Tabs } from "@/components/ui/Tabs";
 import { StatTile } from "@/components/ui/StatTile";
 import { Panel } from "@/components/ui/Panel";
-import { ToastViewport, useToasts } from "@/components/ui/Toast";
+import { useToasts } from "@/components/ui/Toast";
 import { useCanvasStore } from "@/stores/canvas";
 import { SchemaTable } from "@/components/schema/SchemaTable";
 import { FilterBar } from "@/components/schema/FilterBar";
@@ -613,7 +613,6 @@ export default function ContactSheet() {
         </div>
       </Section>
 
-      <ToastViewport toasts={toasts} onDismiss={dismiss} />
     </div>
   );
 }
