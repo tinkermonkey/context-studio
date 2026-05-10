@@ -2,6 +2,17 @@ import "@testing-library/jest-dom";
 import { afterEach, beforeEach, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
 
+// Set up a mock clipboard API for testing - create it at global scope
+const mockClipboardWriteText = vi.fn().mockResolvedValue(undefined);
+Object.defineProperty(navigator, "clipboard", {
+  value: {
+    writeText: mockClipboardWriteText,
+  },
+  configurable: true,
+  writable: true,
+});
+(globalThis as any).__mockClipboardWriteText = mockClipboardWriteText;
+
 afterEach(() => {
   cleanup();
 });

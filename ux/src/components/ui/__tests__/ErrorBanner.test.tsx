@@ -18,19 +18,33 @@ function ToastTestWrapper({ children }: { children: ReactNode }) {
 
 describe("ErrorBanner", () => {
   let mockClipboardWriteText: ReturnType<typeof vi.fn>;
+  let originalWriteText: any;
 
   beforeEach(() => {
+    // Create a fresh mock for each test
     mockClipboardWriteText = vi.fn().mockResolvedValue(undefined);
-    vi.stubGlobal("navigator", {
-      ...navigator,
-      clipboard: {
-        writeText: mockClipboardWriteText,
-      },
-    });
+    originalWriteText = navigator.clipboard?.writeText;
+
+    // Replace writeText on the existing clipboard object
+    if (navigator.clipboard) {
+      Object.defineProperty(navigator.clipboard, "writeText", {
+        value: mockClipboardWriteText,
+        writable: true,
+        configurable: true,
+      });
+    }
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    // Restore original writeText
+    if (originalWriteText && navigator.clipboard) {
+      Object.defineProperty(navigator.clipboard, "writeText", {
+        value: originalWriteText,
+        writable: true,
+        configurable: true,
+      });
+    }
+    vi.clearAllMocks();
   });
 
   const renderWithToasts = (component: ReactNode) => {
@@ -258,7 +272,7 @@ describe("ErrorBanner", () => {
       expect(logsButton.title).toBe("Copy daemon log path");
     });
 
-    it("shows success toast when logs button is clicked", async () => {
+    it("shows success toast when logs button is clicked in compact mode", async () => {
       const mockError = new Error("Test error");
       const mockRetry = vi.fn();
       const user = userEvent.setup();
@@ -280,7 +294,7 @@ describe("ErrorBanner", () => {
       });
     });
 
-    it("shows success toast when logs button clicked in full mode", async () => {
+    it("shows success toast when logs button is clicked in full mode", async () => {
       const mockError = new Error("Test error");
       const mockRetry = vi.fn();
       const user = userEvent.setup();
@@ -298,6 +312,32 @@ describe("ErrorBanner", () => {
 
       await waitFor(() => {
         expect(screen.getByText("Log path copied to clipboard")).toBeInTheDocument();
+      });
+    });
+
+    it("shows error toast when clipboard write fails", async () => {
+      mockClipboardWriteText.mockRejectedValueOnce(
+        new Error("Clipboard write failed")
+      );
+
+      const mockError = new Error("Test error");
+      const mockRetry = vi.fn();
+      const user = userEvent.setup();
+
+      renderWithToasts(
+        <ErrorBanner
+          error={mockError}
+          onRetry={mockRetry}
+          message="Failed to load data"
+          compact
+        />
+      );
+
+      const logsButton = screen.getByRole("button", { name: /logs/i });
+      await user.click(logsButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("Failed to copy log path")).toBeInTheDocument();
       });
     });
 
