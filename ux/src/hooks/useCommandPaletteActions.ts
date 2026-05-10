@@ -4,6 +4,7 @@ import { useCommandPaletteStore, type PaletteAction } from "@/stores/commandPale
 import { useTaxonomies } from "@/api/hooks/ontology";
 import { useClasses } from "@/api/hooks/ontology";
 import { useIndividuals } from "@/api/hooks/ontology";
+import { useSchemes } from "@/api/hooks/ontology";
 import { usePipelines } from "@/api/hooks/pipeline";
 
 export function useCommandPaletteActions() {
@@ -13,6 +14,7 @@ export function useCommandPaletteActions() {
   const { data: taxonomies } = useTaxonomies();
   const { data: classes } = useClasses();
   const { data: individuals } = useIndividuals();
+  const { data: schemes } = useSchemes();
   const { data: pipelines } = usePipelines();
 
   useEffect(() => {
@@ -57,6 +59,19 @@ export function useCommandPaletteActions() {
       });
     }
 
+    if (schemes && schemes.items && schemes.items.length > 0) {
+      schemes.items.slice(0, 5).forEach((scheme) => {
+        dynamicActions.push({
+          id: `scheme-${scheme.id}`,
+          label: `Go to scheme · ${scheme.title}`,
+          description: scheme.description || "Scheme",
+          onSelect: () => {
+            navigate({ to: `/app/schema/schemes/${scheme.id}` }).catch(() => {});
+          },
+        });
+      });
+    }
+
     if (pipelines && pipelines.length > 0) {
       pipelines.slice(0, 5).forEach((pipeline) => {
         dynamicActions.push({
@@ -79,5 +94,5 @@ export function useCommandPaletteActions() {
         unregisterActions(dynamicActions.map((a) => a.id));
       }
     };
-  }, [taxonomies, classes, individuals, pipelines, registerActions, unregisterActions, navigate]);
+  }, [taxonomies, classes, individuals, schemes, pipelines, registerActions, unregisterActions, navigate]);
 }
