@@ -19,9 +19,17 @@ export const Route = createFileRoute("/app/contact-sheet")({
   component: ContactSheet,
 });
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  testid,
+  children,
+}: {
+  title: string;
+  testid?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <section style={{ marginBottom: "var(--space-12)" }}>
+    <section style={{ marginBottom: "var(--space-12)" }} data-testid={testid}>
       <h2
         style={{
           fontFamily: "var(--mono)",
@@ -134,14 +142,18 @@ export default function ContactSheet() {
           </p>
         </div>
         <div className="page-actions">
-          <Button variant="ghost" onClick={toggleDarkCanvas}>
+          <Button
+            variant="ghost"
+            onClick={toggleDarkCanvas}
+            data-testid="contact-sheet-canvas-toggle"
+          >
             {darkCanvas ? "Light canvas" : "Dark canvas"}
           </Button>
         </div>
       </div>
 
       {/* ── Buttons ── */}
-      <Section title="Buttons">
+      <Section title="Buttons" testid="contact-sheet-buttons">
         <Row>
           <Button variant="primary">Primary</Button>
           <Button variant="accent">Accent</Button>
@@ -180,7 +192,7 @@ export default function ContactSheet() {
       </Section>
 
       {/* ── Chips ── */}
-      <Section title="Chips">
+      <Section title="Chips" testid="contact-sheet-chips">
         <Row wrap>
           <Chip color="cyan">cyan</Chip>
           <Chip color="amber">amber</Chip>
@@ -193,7 +205,7 @@ export default function ContactSheet() {
       </Section>
 
       {/* ── Stat Grid ── */}
-      <Section title="Stat Tiles">
+      <Section title="Stat Tiles" testid="contact-sheet-stat-tiles">
         <div className="stat-grid">
           <StatTile label="Classes" value="22" color="cyan" sub="4 taxonomies" />
           <StatTile label="Individuals" value="267" color="violet" sub="indexed" />
@@ -203,7 +215,7 @@ export default function ContactSheet() {
       </Section>
 
       {/* ── Tabs ── */}
-      <Section title="Tabs">
+      <Section title="Tabs" testid="contact-sheet-tabs">
         <Tabs
           tabs={[
             { id: "overview", label: "Overview" },
@@ -226,7 +238,7 @@ export default function ContactSheet() {
       </Section>
 
       {/* ── Inputs ── */}
-      <Section title="Form Inputs">
+      <Section title="Form Inputs" testid="contact-sheet-form-inputs">
         <div
           style={{ maxWidth: 480, display: "flex", flexDirection: "column", gap: "var(--space-4)" }}
         >
@@ -262,7 +274,7 @@ export default function ContactSheet() {
       </Section>
 
       {/* ── Panel ── */}
-      <Section title="Panel">
+      <Section title="Panel" testid="contact-sheet-panel">
         <div style={{ maxWidth: 480 }}>
           <Panel
             title="Panel Title"
@@ -280,7 +292,7 @@ export default function ContactSheet() {
       </Section>
 
       {/* ── Table ── */}
-      <Section title="Table">
+      <Section title="Table" testid="contact-sheet-table">
         <div className="table-wrap">
           <table className="t">
             <thead>
@@ -332,7 +344,7 @@ export default function ContactSheet() {
       </Section>
 
       {/* ── Hierarchy Tree ── */}
-      <Section title="Hierarchy Tree (kg-tree)">
+      <Section title="Hierarchy Tree (kg-tree)" testid="contact-sheet-hierarchy-tree">
         <div className="panel" style={{ maxWidth: 480 }}>
           <div className="kg-tree">
             {[
@@ -385,7 +397,7 @@ export default function ContactSheet() {
       </Section>
 
       {/* ── Pipeline Card ── */}
-      <Section title="Pipeline Card">
+      <Section title="Pipeline Card" testid="contact-sheet-pipeline-card">
         <div style={{ maxWidth: 560 }}>
           <div className="pipeline-card">
             <div className="pipeline-card-head">
@@ -447,7 +459,7 @@ export default function ContactSheet() {
       </Section>
 
       {/* ── Toasts ── */}
-      <Section title="Toasts">
+      <Section title="Toasts" testid="contact-sheet-toasts">
         <Row>
           <Button
             variant="ghost"
@@ -467,7 +479,7 @@ export default function ContactSheet() {
       </Section>
 
       {/* ── Modal ── */}
-      <Section title="Modal">
+      <Section title="Modal" testid="contact-sheet-modal">
         <Row>
           <Button variant="ghost" onClick={() => setModalOpen(true)}>
             Open modal
@@ -503,7 +515,7 @@ export default function ContactSheet() {
       </Section>
 
       {/* ── Drawer ── */}
-      <Section title="Drawer">
+      <Section title="Drawer" testid="contact-sheet-drawer">
         <Row>
           <Button variant="ghost" onClick={() => setDrawerOpen(true)}>
             Open drawer
@@ -526,7 +538,7 @@ export default function ContactSheet() {
       </Section>
 
       {/* ── Schema Components ── */}
-      <Section title="Schema Components">
+      <Section title="Schema Components" testid="contact-sheet-schema-components">
         <div style={{ marginBottom: "var(--space-6)" }}>
           <h3
             style={{ fontSize: "var(--text-sm)", fontWeight: 600, marginBottom: "var(--space-3)" }}
@@ -588,7 +600,7 @@ export default function ContactSheet() {
       </Section>
 
       {/* ── Intent banners ── */}
-      <Section title="Intent States">
+      <Section title="Intent States" testid="contact-sheet-intent-states">
         <div
           style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", maxWidth: 480 }}
         >

@@ -492,6 +492,64 @@ selectors:
     component: components/ontology/HierarchyTree.tsx
     description: Hierarchy tree node with dynamic ID suffix
 
+  # Contact Sheet
+  - selector: contact-sheet-buttons
+    component: routes/app/contact-sheet.tsx
+    description: Buttons section on contact sheet
+  - selector: contact-sheet-chips
+    component: routes/app/contact-sheet.tsx
+    description: Chips section on contact sheet
+  - selector: contact-sheet-stat-tiles
+    component: routes/app/contact-sheet.tsx
+    description: Stat tiles section on contact sheet
+  - selector: contact-sheet-tabs
+    component: routes/app/contact-sheet.tsx
+    description: Tabs section on contact sheet
+  - selector: contact-sheet-form-inputs
+    component: routes/app/contact-sheet.tsx
+    description: Form inputs section on contact sheet
+  - selector: contact-sheet-panel
+    component: routes/app/contact-sheet.tsx
+    description: Panel section on contact sheet
+  - selector: contact-sheet-table
+    component: routes/app/contact-sheet.tsx
+    description: Table section on contact sheet
+  - selector: contact-sheet-hierarchy-tree
+    component: routes/app/contact-sheet.tsx
+    description: Hierarchy tree section on contact sheet
+  - selector: contact-sheet-pipeline-card
+    component: routes/app/contact-sheet.tsx
+    description: Pipeline card section on contact sheet
+  - selector: contact-sheet-toasts
+    component: routes/app/contact-sheet.tsx
+    description: Toasts section on contact sheet
+  - selector: contact-sheet-modal
+    component: routes/app/contact-sheet.tsx
+    description: Modal section on contact sheet
+  - selector: contact-sheet-drawer
+    component: routes/app/contact-sheet.tsx
+    description: Drawer section on contact sheet
+  - selector: contact-sheet-schema-components
+    component: routes/app/contact-sheet.tsx
+    description: Schema components section on contact sheet
+  - selector: contact-sheet-intent-states
+    component: routes/app/contact-sheet.tsx
+    description: Intent states section on contact sheet
+  - selector: contact-sheet-canvas-toggle
+    component: routes/app/contact-sheet.tsx
+    description: Toggle button for light/dark canvas mode on contact sheet
+
+  # Unit Test Fixtures
+  - selector: action
+    component: components/ui/__tests__/Panel.test.tsx
+    description: Action element in Panel test fixture
+  - selector: action-1
+    component: components/schema/__tests__/SchemaTable.test.tsx
+    description: Action element in SchemaTable test fixture
+  - selector: action-2
+    component: components/schema/__tests__/SchemaTable.test.tsx
+    description: Action element in SchemaTable test fixture
+
   # Miscellaneous
   - selector: create-toast-btn
     component: routes/app/contact-sheet.tsx
