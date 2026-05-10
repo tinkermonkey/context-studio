@@ -142,7 +142,7 @@ export function createIndividual(
     description: "A test individual",
     class_ids: ["class-123"],
     version: 1,
-    status: "active",
+    status: "draft",
     ...overrides,
   };
 }
