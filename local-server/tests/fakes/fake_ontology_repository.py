@@ -343,11 +343,15 @@ class FakeOntologyRepository:
         """
         return self._individuals.get(individual_id)
 
-    def list_individuals(self, class_id: str | None = None) -> list[Individual]:
+    def list_individuals(
+        self, class_id: str | None = None, limit: int | None = 100, offset: int = 0
+    ) -> list[Individual]:
         """Retrieve all individuals, optionally filtered by class ID.
 
         Args:
             class_id: Optional class ID to filter by (matches any parent class)
+            limit: Maximum number of results to return; None means no limit
+            offset: Number of results to skip
 
         Returns:
             List of individuals matching the filter
@@ -355,7 +359,8 @@ class FakeOntologyRepository:
         results = list(self._individuals.values())
         if class_id is not None:
             results = [ind for ind in results if class_id in ind.class_ids]
-        return results
+        end = None if limit is None else offset + limit
+        return results[offset:end]
 
     def save_individual(self, individual: Individual) -> Individual:
         """Save an individual (insert or update).

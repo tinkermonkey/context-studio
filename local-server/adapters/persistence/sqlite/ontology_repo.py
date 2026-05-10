@@ -792,12 +792,19 @@ class SQLiteOntologyRepository:
             if close_session:
                 session.close()
 
-    def list_individuals(self, class_id: Optional[str] = None) -> list[Individual]:
+    def list_individuals(
+        self,
+        class_id: Optional[str] = None,
+        limit: int | None = 100,
+        offset: int = 0,
+    ) -> list[Individual]:
         """
         List individuals, optionally filtered by class.
 
         Args:
             class_id: Optional class ID to filter by (rdf:type) - matches any parent class
+            limit: Maximum number of results to return; None means no limit
+            offset: Number of results to skip
 
         Returns:
             Sequence of Individual entities
@@ -815,6 +822,10 @@ class SQLiteOntologyRepository:
                     .distinct()
                 )
                 query = query.filter(OntologyEntity.id.in_(subquery))
+
+            query = query.offset(offset)
+            if limit is not None:
+                query = query.limit(limit)
 
             orm_entities = query.all()
 
@@ -1737,18 +1748,23 @@ class SQLiteOntologyRepository:
         return await run_sync_in_executor(self.get_individual, individual_id)
 
     async def list_individuals_async(
-        self, class_id: Optional[str] = None
+        self,
+        class_id: Optional[str] = None,
+        limit: int | None = 100,
+        offset: int = 0,
     ) -> list[Individual]:
         """
         List individuals (async version).
 
         Args:
             class_id: Optional class ID to filter by
+            limit: Maximum number of results to return; None means no limit
+            offset: Number of results to skip
 
         Returns:
             Sequence of Individual entities
         """
-        return await run_sync_in_executor(self.list_individuals, class_id)
+        return await run_sync_in_executor(self.list_individuals, class_id, limit, offset)
 
     async def save_individual_async(self, individual: Individual) -> Individual:
         """
