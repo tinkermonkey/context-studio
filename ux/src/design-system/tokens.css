@@ -5,31 +5,19 @@
    ========================================================================= */
 
 :root {
-  /* ---- Primary scale (cyan-based) --------------------------------------- */
-  --primary-50: #e7f2f6;
-  --primary-100: #cfe5ed;
-  --primary-200: #b7d8e3;
-  --primary-300: #9fcbda;
-  --primary-400: #87bfd1;
-  --primary-500: #3e98b5;
-  --primary-600: #268bac;
-  --primary-700: #0e7ea3;
-  --primary-800: #0a5872;
-  --primary-900: #084c62;
-
-  /* ---- Shell (always-dark chrome — navy/slate tone) --------------------- */
-  --shell-bg: #0f1729;
-  --shell-bg-2: #13203a;
-  --shell-surface: #1b2949;
-  --shell-surface-2: #1f3155;
-  --shell-border: #1e3255;
-  --shell-border-2: #2b4268;
+  /* Studio dark shell tokens */
+  --shell-bg: #0b0f14;
+  --shell-bg-2: #0f141b;
+  --shell-surface: #131a23;
+  --shell-surface-2: #1a2230;
+  --shell-border: #1e2733;
+  --shell-border-2: #2a3645;
   --shell-fg-1: #e6edf3;
   --shell-fg-2: #a6b1bd;
   --shell-fg-3: #6e7a87;
   --shell-fg-4: #4a5563;
 
-  /* ---- Canvas (work surface — light default) ----------------------------- */
+  /* Studio canvas (work surface inside the shell) */
   --canvas-bg: #ffffff;
   --canvas-bg-2: #f7f9fb;
   --canvas-card: #ffffff;
@@ -41,80 +29,26 @@
   --canvas-fg-3: #64748b;
   --canvas-fg-4: #94a3b8;
 
-  /* ---- Accents (primary interactive = amber/orange) --------------------- */
-  --accent-cyan: #fbbf24;
-  --accent-cyan-2: #d97706;
-  --accent-cyan-deep: #b45309;
+  /* Accents */
+  --accent-cyan: #22d3ee;
+  --accent-cyan-2: #06b6d4;
+  --accent-cyan-deep: #0e7ea3;
   --accent-amber: #f59e0b;
   --accent-violet: #a78bfa;
   --accent-emerald: #10b981;
   --accent-rose: #f43f5e;
 
-  /* ---- Domain colors (used for taxonomy / class swatches) --------------- */
+  /* Domain colors (used for taxonomies / classes / pipelines) */
   --dom-life: #34d399;
   --dom-climate: #fbbf24;
   --dom-software: #818cf8;
-  --dom-default: #06b6d4;
+  --dom-default: #22d3ee;
 
-  /* ---- Semantic intents ------------------------------------------------- */
-  --intent-success-fg: #065f46;
-  --intent-success-bg: #ecfdf5;
-  --intent-success-bd: #a7f3d0;
-  --intent-warning-fg: #92400e;
-  --intent-warning-bg: #fffbeb;
-  --intent-warning-bd: #fde68a;
-  --intent-failure-fg: #9f1239;
-  --intent-failure-bg: #fff1f2;
-  --intent-failure-bd: #fecdd3;
-  --intent-info-fg: #0e7490;
-  --intent-info-bg: #ecfeff;
-  --intent-info-bd: #a5f3fc;
-
-  /* ---- Type families ---------------------------------------------------- */
+  /* Type families */
   --font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono:
     "JetBrains Mono Variable", "JetBrains Mono", Menlo, ui-monospace, SFMono-Regular, monospace;
   --mono: var(--font-mono);
-
-  /* ---- Type scale ------------------------------------------------------- */
-  --text-xs: 0.75rem; /* 12 */
-  --text-sm: 0.875rem; /* 14 — default UI */
-  --text-base: 1rem; /* 16 */
-  --text-lg: 1.125rem; /* 18 */
-  --text-xl: 1.25rem; /* 20 — modal title */
-  --text-2xl: 1.5rem; /* 24 — page title */
-  --text-3xl: 1.875rem; /* 30 */
-  --text-4xl: 2.25rem; /* 36 */
-  --text-5xl: 3rem; /* 48 */
-  --text-6xl: 3.75rem; /* 60 */
-
-  /* ---- Spacing (4px scale) ---------------------------------------------- */
-  --space-1: 0.25rem; /* 4  */
-  --space-2: 0.5rem; /* 8  */
-  --space-3: 0.75rem; /* 12 */
-  --space-4: 1rem; /* 16 */
-  --space-5: 1.25rem; /* 20 */
-  --space-6: 1.5rem; /* 24 — card padding */
-  --space-8: 2rem; /* 32 */
-  --space-10: 2.5rem; /* 40 */
-  --space-12: 3rem; /* 48 */
-  --space-16: 4rem; /* 64 */
-
-  /* ---- Radius ----------------------------------------------------------- */
-  --radius-sm: 2px;
-  --radius-md: 6px; /* buttons, inputs, nav items */
-  --radius-lg: 8px; /* panels, cards, drawers */
-  --radius-xl: 12px; /* modals, command palette */
-  --radius-full: 9999px; /* pills, dots */
-
-  /* ---- Shadows ---------------------------------------------------------- */
-  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-
-  /* ---- Animation -------------------------------------------------------- */
-  --ease-default: ease;
-  --duration-fast: 120ms;
-  --duration-base: 160ms;
 }
 
 /* Dark canvas mode — inverts only the work surface; shell chrome stays dark */

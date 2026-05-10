@@ -161,9 +161,9 @@
 .version-pill {
   font-family: var(--mono);
   font-size: 10.5px;
-  background: color-mix(in oklab, var(--accent-cyan) 8%, transparent);
+  background: rgba(34, 211, 238, 0.08);
   color: var(--accent-cyan-deep);
-  border: 1px solid color-mix(in oklab, var(--accent-cyan) 18%, transparent);
+  border: 1px solid rgba(34, 211, 238, 0.18);
   padding: 1px 7px;
   border-radius: 999px;
   letter-spacing: 0.02em;
@@ -228,8 +228,8 @@
   display: flex;
   gap: 10px;
   align-items: flex-start;
-  background: color-mix(in oklab, var(--accent-cyan) 4%, transparent);
-  border: 1px solid color-mix(in oklab, var(--accent-cyan) 16%, transparent);
+  background: rgba(34, 211, 238, 0.04);
+  border: 1px solid rgba(34, 211, 238, 0.16);
   border-radius: 6px;
   padding: 10px 12px;
   margin-bottom: 14px;
@@ -395,6 +395,15 @@
   grid-template-columns: 1fr 80px 130px auto;
 }
 
+.btn-icon {
+  width: 26px;
+  height: 26px;
+  padding: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .rotate-180 {
   transform: rotate(180deg);
 }
@@ -431,7 +440,7 @@
   justify-content: center;
 }
 .ord-row:first-child .ord-rank {
-  background: color-mix(in oklab, var(--accent-cyan) 14%, transparent);
+  background: rgba(34, 211, 238, 0.14);
   color: var(--accent-cyan);
 }
 .ord-help {
@@ -456,7 +465,7 @@
   font-size: 9.5px;
   font-weight: 700;
   color: var(--accent-cyan-deep);
-  background: color-mix(in oklab, var(--accent-cyan) 18%, transparent);
+  background: rgba(34, 211, 238, 0.18);
   border-radius: 7px;
   vertical-align: 1px;
 }
@@ -489,7 +498,7 @@
 }
 .scheme-radio.selected {
   border-color: var(--accent-cyan);
-  background: color-mix(in oklab, var(--accent-cyan) 4%, transparent);
+  background: rgba(34, 211, 238, 0.04);
 }
 .scheme-radio-main {
   flex: 1;
@@ -639,8 +648,8 @@
   color: var(--canvas-fg);
 }
 .val-row.hint {
-  background: color-mix(in oklab, var(--accent-cyan) 4%, transparent);
-  border: 1px solid color-mix(in oklab, var(--accent-cyan) 18%, transparent);
+  background: rgba(34, 211, 238, 0.04);
+  border: 1px solid rgba(34, 211, 238, 0.18);
   color: var(--canvas-fg-2);
 }
 .val-code {
@@ -656,7 +665,7 @@
   color: var(--accent-rose, #f43f5e);
 }
 .val-row.hint .val-code {
-  background: color-mix(in oklab, var(--accent-cyan) 18%, transparent);
+  background: rgba(34, 211, 238, 0.18);
   color: var(--accent-cyan-deep);
 }
 
