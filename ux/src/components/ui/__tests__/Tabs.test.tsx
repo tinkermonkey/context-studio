@@ -65,18 +65,69 @@ describe("Tabs", () => {
   });
 
   describe("accessibility", () => {
-    it("renders tabs as buttons", () => {
+    it("renders tablist role on container", () => {
       render(<Tabs tabs={mockTabs} active="tab-1" onChange={vi.fn()} />);
-      const buttons = screen.getAllByRole("button");
-      expect(buttons.length).toBe(3);
+      expect(screen.getByRole("tablist")).toBeInTheDocument();
+    });
+
+    it("renders tabs with tab role", () => {
+      render(<Tabs tabs={mockTabs} active="tab-1" onChange={vi.fn()} />);
+      const tabs = screen.getAllByRole("tab");
+      expect(tabs.length).toBe(3);
     });
 
     it("buttons have button type", () => {
       render(<Tabs tabs={mockTabs} active="tab-1" onChange={vi.fn()} />);
-      const buttons = screen.getAllByRole("button");
-      buttons.forEach((btn) => {
-        expect(btn).toHaveAttribute("type", "button");
+      const tabs = screen.getAllByRole("tab");
+      tabs.forEach((tab) => {
+        expect(tab).toHaveAttribute("type", "button");
       });
+    });
+
+    it("active tab has aria-selected true", () => {
+      render(<Tabs tabs={mockTabs} active="tab-1" onChange={vi.fn()} />);
+      const tabs = screen.getAllByRole("tab");
+      expect(tabs[0]).toHaveAttribute("aria-selected", "true");
+      expect(tabs[1]).toHaveAttribute("aria-selected", "false");
+      expect(tabs[2]).toHaveAttribute("aria-selected", "false");
+    });
+
+    it("inactive tabs have aria-selected false", () => {
+      render(<Tabs tabs={mockTabs} active="tab-2" onChange={vi.fn()} />);
+      const tabs = screen.getAllByRole("tab");
+      expect(tabs[0]).toHaveAttribute("aria-selected", "false");
+      expect(tabs[1]).toHaveAttribute("aria-selected", "true");
+      expect(tabs[2]).toHaveAttribute("aria-selected", "false");
+    });
+
+    it("tabs have aria-controls attribute", () => {
+      render(<Tabs tabs={mockTabs} active="tab-1" onChange={vi.fn()} />);
+      const tabs = screen.getAllByRole("tab");
+      expect(tabs[0]).toHaveAttribute("aria-controls", "panel-tab-1");
+      expect(tabs[1]).toHaveAttribute("aria-controls", "panel-tab-2");
+      expect(tabs[2]).toHaveAttribute("aria-controls", "panel-tab-3");
+    });
+
+    it("tabs have id attribute for aria-labelledby reference", () => {
+      render(<Tabs tabs={mockTabs} active="tab-1" onChange={vi.fn()} />);
+      const tabs = screen.getAllByRole("tab");
+      expect(tabs[0]).toHaveAttribute("id", "tab-tab-1");
+      expect(tabs[1]).toHaveAttribute("id", "tab-tab-2");
+      expect(tabs[2]).toHaveAttribute("id", "tab-tab-3");
+    });
+
+    it("aria-selected updates when active tab changes", () => {
+      const { rerender } = render(
+        <Tabs tabs={mockTabs} active="tab-1" onChange={vi.fn()} />,
+      );
+      const tabs = screen.getAllByRole("tab");
+      expect(tabs[0]).toHaveAttribute("aria-selected", "true");
+      expect(tabs[1]).toHaveAttribute("aria-selected", "false");
+
+      rerender(<Tabs tabs={mockTabs} active="tab-2" onChange={vi.fn()} />);
+      const updatedTabs = screen.getAllByRole("tab");
+      expect(updatedTabs[0]).toHaveAttribute("aria-selected", "false");
+      expect(updatedTabs[1]).toHaveAttribute("aria-selected", "true");
     });
   });
 
