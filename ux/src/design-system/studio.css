@@ -2120,6 +2120,9 @@ body.dark-canvas .btn-primary:hover {
   background: var(--accent-cyan-2);
   color: #0b0f14;
 }
+body.dark-canvas .btn-primary svg {
+  color: #0b0f14;
+}
 body.dark-canvas .row-link {
   color: var(--accent-cyan);
 }
@@ -2157,6 +2160,9 @@ body.dark-canvas .chip.rose {
   background: rgba(244, 63, 94, 0.1);
   border-color: rgba(244, 63, 94, 0.25);
 }
+body.dark-canvas .chip.gray {
+  color: var(--canvas-fg-2);
+}
 body.dark-canvas .flow-node[data-kind="source"] .ic {
   background: rgba(6, 182, 212, 0.18);
   color: #67e8f9;
@@ -2183,6 +2189,15 @@ body.dark-canvas .pipeline-card-flow {
     var(--canvas-card) 100%
   );
 }
+body.dark-canvas .delta-up {
+  color: #6ee7b7;
+}
+body.dark-canvas .delta-down {
+  color: #fda4af;
+}
+body.dark-canvas .muted {
+  color: var(--canvas-fg-3);
+}
 body.dark-canvas .kg-node.selected {
   border-color: var(--accent-cyan);
   box-shadow: 0 0 0 1px var(--accent-cyan);
@@ -2195,8 +2210,14 @@ body.dark-canvas .input:focus {
   border-color: var(--accent-cyan);
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent-cyan) 15%, transparent);
 }
+body.dark-canvas .canvas-area::-webkit-scrollbar-thumb {
+  background: var(--canvas-bd-2);
+}
 body.dark-canvas .topbar {
   background: var(--shell-bg);
+}
+body.dark-canvas .topbar-ico:hover {
+  background: var(--shell-surface);
 }
 
 @media (prefers-reduced-motion: reduce) {
