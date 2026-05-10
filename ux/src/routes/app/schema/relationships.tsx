@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreVertical, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -10,9 +11,11 @@ import { FilterBar, type FilterChip } from "@/components/schema/FilterBar";
 import { SchemaTable } from "@/components/schema/SchemaTable";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import { RelationshipDrawer } from "@/components/ontology/RelationshipDrawer";
-import { useRelationships } from "@/api/hooks/ontology/useRelationships";
+import { RelationshipForm } from "@/components/schema/RelationshipForm";
+import { useRelationships, useCreateRelationship } from "@/api/hooks/ontology/useRelationships";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { useProperties } from "@/api/hooks/ontology/useProperties";
+import { useToasts } from "@/components/ui/Toast";
 import { relationshipsCopy } from "./relationships/-copy";
 import type { components } from "@/api/types";
 
@@ -25,6 +28,7 @@ interface RelationshipsPageContentProps {
   onRetryClasses?: () => void;
   propertiesError?: Error | null;
   onRetryProperties?: () => void;
+  onCreateClick?: () => void;
 }
 
 function RelationshipsPageContent({
@@ -34,6 +38,7 @@ function RelationshipsPageContent({
   onRetryClasses,
   propertiesError,
   onRetryProperties,
+  onCreateClick,
 }: RelationshipsPageContentProps) {
   const [selectedId, setSelectedId] = useState<string>();
   const [searchFilter, setSearchFilter] = useState("");
@@ -178,7 +183,7 @@ function RelationshipsPageContent({
         action={{
           label: relationshipsCopy.emptyState.actionLabel,
           onClick: () => {
-            // TODO: Open create relationship dialog
+            onCreateClick?.();
           },
         }}
       />
@@ -329,8 +334,12 @@ function RelationshipsPageContent({
 }
 
 function RelationshipsPageWrapper() {
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
   const { data: classesResponse, error: classesError, refetch: refetchClasses } = useClasses();
   const { data: propertiesResponse, error: propertiesError, refetch: refetchProperties } = useProperties();
+  const createMutation = useCreateRelationship();
+  const { toast } = useToasts();
 
   const classes = classesResponse?.items || [];
   const properties = propertiesResponse?.items || [];
@@ -338,15 +347,24 @@ function RelationshipsPageWrapper() {
   const classesById = new Map(classes.map((c) => [c.id, c.title]));
   const propertiesById = new Map(properties.map((p) => [p.id, p.title]));
 
+  const handleCreateSubmit = async (data: components["schemas"]["RelationshipCreateRequest"]) => {
+    setCreateError(null);
+    try {
+      await createMutation.mutateAsync(data);
+      setShowCreateModal(false);
+      toast("success", "Relationship created successfully");
+    } catch (error) {
+      setCreateError(error instanceof Error ? error.message : "Failed to create relationship");
+    }
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>Relationships</h1>
         <Button
           variant="primary"
-          onClick={() => {
-            // TODO: Open create relationship dialog
-          }}
+          onClick={() => setShowCreateModal(true)}
           data-testid="relationship-add-button"
         >
           + Add relationship
@@ -360,8 +378,36 @@ function RelationshipsPageWrapper() {
           onRetryClasses={() => refetchClasses()}
           propertiesError={propertiesError}
           onRetryProperties={() => refetchProperties()}
+          onCreateClick={() => setShowCreateModal(true)}
         />
       </div>
+
+      <Modal
+        open={showCreateModal}
+        onClose={() => {
+          setShowCreateModal(false);
+          setCreateError(null);
+        }}
+        title="Create Relationship"
+        size="sm"
+        data-testid="relationship-create-modal"
+      >
+        {createError && (
+          <div style={{ marginBottom: "var(--space-3)" }}>
+            <ErrorBanner
+              error={new Error(createError)}
+              onRetry={() => setCreateError(null)}
+              message="Failed to create relationship"
+            />
+          </div>
+        )}
+        <RelationshipForm
+          onSubmit={handleCreateSubmit}
+          isLoading={createMutation.isPending}
+          classes={classes}
+          properties={properties}
+        />
+      </Modal>
     </div>
   );
 }

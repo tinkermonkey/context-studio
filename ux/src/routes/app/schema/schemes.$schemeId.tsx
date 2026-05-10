@@ -3,23 +3,27 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FilterBar } from "@/components/schema/FilterBar";
 import { SchemaTable } from "@/components/schema/SchemaTable";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
+import { ClassForm } from "@/components/schema/ClassForm";
 import { useScheme } from "@/api/hooks/ontology/useSchemes";
-import { useClasses } from "@/api/hooks/ontology/useClasses";
+import { useClasses, useCreateClass } from "@/api/hooks/ontology/useClasses";
+import { useToasts } from "@/components/ui/Toast";
 import type { components } from "@/api/types";
 
 type ClassResponse = components["schemas"]["ClassResponse"];
 
 interface SchemeDetailContentProps {
   schemeId: string;
+  onCreateClick?: () => void;
 }
 
-function SchemeDetailContent({ schemeId }: SchemeDetailContentProps) {
+function SchemeDetailContent({ schemeId, onCreateClick }: SchemeDetailContentProps) {
   const [selectedId, setSelectedId] = useState<string>();
   const [searchFilter, setSearchFilter] = useState("");
 
@@ -152,7 +156,7 @@ function SchemeDetailContent({ schemeId }: SchemeDetailContentProps) {
             action={{
               label: "+ New class",
               onClick: () => {
-                // TODO: Open create class dialog
+                onCreateClick?.();
               },
             }}
           />
@@ -172,7 +176,7 @@ function SchemeDetailContent({ schemeId }: SchemeDetailContentProps) {
           <Button
             variant="primary"
             onClick={() => {
-              // TODO: Open create class dialog
+              onCreateClick?.();
             }}
             data-testid="scheme-detail-add-class-button"
           >
@@ -215,10 +219,61 @@ interface RouteParams {
   schemeId: string;
 }
 
-function SchemeDetailPage() {
+function SchemeDetailPageWrapper() {
   const { schemeId } = Route.useParams() as RouteParams;
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const createMutation = useCreateClass();
+  const { toast } = useToasts();
 
-  return <SchemeDetailContent schemeId={schemeId} />;
+  const handleCreateSubmit = async (data: components["schemas"]["ClassCreateRequest"]) => {
+    setCreateError(null);
+    try {
+      await createMutation.mutateAsync({ schemeId, data });
+      setShowCreateModal(false);
+      toast("success", "Class created successfully");
+    } catch (error) {
+      setCreateError(error instanceof Error ? error.message : "Failed to create class");
+    }
+  };
+
+  return (
+    <div>
+      <SchemeDetailContent
+        schemeId={schemeId}
+        onCreateClick={() => setShowCreateModal(true)}
+      />
+
+      <Modal
+        open={showCreateModal}
+        onClose={() => {
+          setShowCreateModal(false);
+          setCreateError(null);
+        }}
+        title="Create Class"
+        size="sm"
+        data-testid="scheme-class-create-modal"
+      >
+        {createError && (
+          <div style={{ marginBottom: "var(--space-3)" }}>
+            <ErrorBanner
+              error={new Error(createError)}
+              onRetry={() => setCreateError(null)}
+              message="Failed to create class"
+            />
+          </div>
+        )}
+        <ClassForm
+          onSubmit={handleCreateSubmit}
+          isLoading={createMutation.isPending}
+        />
+      </Modal>
+    </div>
+  );
+}
+
+function SchemeDetailPage() {
+  return <SchemeDetailPageWrapper />;
 }
 
 export const Route = createFileRoute("/app/schema/schemes/$schemeId")({
