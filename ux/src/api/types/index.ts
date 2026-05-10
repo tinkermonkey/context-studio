@@ -442,7 +442,7 @@ export interface paths {
     };
     /**
      * List Relationships
-     * @description Retrieve relationships with optional filtering, pagination, sorting, and text search.
+     * @description Retrieve relationships with optional filtering, pagination, and sorting.
      *
      *     Args:
      *         source_id: Optional source entity ID to filter by
@@ -452,7 +452,6 @@ export interface paths {
      *         offset: Number of results to skip (default 0)
      *         sort_by: Field to sort by (created_at)
      *         sort_order: Sort direction (asc or desc, default asc)
-     *         q: Text query (not used for relationships)
      *         service: OntologyService from dependency injection
      *
      *     Returns:
@@ -3044,8 +3043,9 @@ export interface components {
        * Status
        * @description Publication status (draft or published)
        * @default draft
+       * @enum {string}
        */
-      status: string;
+      status: "draft" | "published";
     };
     /**
      * ClassUpdateRequest
@@ -3157,8 +3157,9 @@ export interface components {
        * Status
        * @description Publication status (draft or published)
        * @default draft
+       * @enum {string}
        */
-      status: string;
+      status: "draft" | "published";
     };
     /**
      * ConceptSchemeUpdateRequest
@@ -4022,8 +4023,9 @@ export interface components {
        * Status
        * @description Publication status (draft or published)
        * @default draft
+       * @enum {string}
        */
-      status: string;
+      status: "draft" | "published";
     };
     /**
      * IndividualUpdateRequest
@@ -4758,8 +4760,9 @@ export interface components {
        * Status
        * @description Publication status (draft or published)
        * @default draft
+       * @enum {string}
        */
-      status: string;
+      status: "draft" | "published";
     };
     /**
      * PropertyDefinitionUpdateRequest
@@ -5496,8 +5499,9 @@ export interface components {
        * Status
        * @description Publication status (draft or published)
        * @default draft
+       * @enum {string}
        */
-      status: string;
+      status: "draft" | "published";
     };
     /**
      * TaxonomyUpdateRequest
@@ -6290,8 +6294,6 @@ export interface operations {
         sort_by?: string | null;
         /** @description Sort direction */
         sort_order?: string;
-        /** @description Text search query (not used for relationships) */
-        q?: string | null;
       };
       header?: never;
       path?: never;

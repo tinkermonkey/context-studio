@@ -88,7 +88,8 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "string"
+                  "type": "string",
+                  "pattern": "^(title|created_at|last_modified)$"
                 },
                 {
                   "type": "null"
@@ -493,7 +494,8 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "string"
+                  "type": "string",
+                  "pattern": "^(title|created_at|last_modified)$"
                 },
                 {
                   "type": "null"
@@ -1065,7 +1067,7 @@
           "ontology"
         ],
         "summary": "List Relationships",
-        "description": "Retrieve relationships with optional filtering, pagination, sorting, and text search.\n\nArgs:\n    source_id: Optional source entity ID to filter by\n    target_id: Optional target entity ID to filter by\n    property_id: Optional property definition ID to filter by\n    limit: Maximum number of results (1-1000, default 100)\n    offset: Number of results to skip (default 0)\n    sort_by: Field to sort by (created_at)\n    sort_order: Sort direction (asc or desc, default asc)\n    q: Text query (not used for relationships)\n    service: OntologyService from dependency injection\n\nReturns:\n    ListResponse containing matching relationships",
+        "description": "Retrieve relationships with optional filtering, pagination, and sorting.\n\nArgs:\n    source_id: Optional source entity ID to filter by\n    target_id: Optional target entity ID to filter by\n    property_id: Optional property definition ID to filter by\n    limit: Maximum number of results (1-1000, default 100)\n    offset: Number of results to skip (default 0)\n    sort_by: Field to sort by (created_at)\n    sort_order: Sort direction (asc or desc, default asc)\n    service: OntologyService from dependency injection\n\nReturns:\n    ListResponse containing matching relationships",
         "operationId": "list_relationships_api_relationships_get",
         "parameters": [
           {
@@ -1156,7 +1158,8 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "string"
+                  "type": "string",
+                  "pattern": "^created_at$"
                 },
                 {
                   "type": "null"
@@ -1179,24 +1182,6 @@
               "title": "Sort Order"
             },
             "description": "Sort direction"
-          },
-          {
-            "name": "q",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Text search query (not used for relationships)",
-              "title": "Q"
-            },
-            "description": "Text search query (not used for relationships)"
           }
         ],
         "responses": {
@@ -1401,7 +1386,8 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "string"
+                  "type": "string",
+                  "pattern": "^(title|created_at|last_modified)$"
                 },
                 {
                   "type": "null"
@@ -5167,6 +5153,10 @@
           },
           "status": {
             "type": "string",
+            "enum": [
+              "draft",
+              "published"
+            ],
             "title": "Status",
             "description": "Publication status (draft or published)",
             "default": "draft"
@@ -5353,6 +5343,10 @@
           },
           "status": {
             "type": "string",
+            "enum": [
+              "draft",
+              "published"
+            ],
             "title": "Status",
             "description": "Publication status (draft or published)",
             "default": "draft"
@@ -6752,6 +6746,10 @@
           },
           "status": {
             "type": "string",
+            "enum": [
+              "draft",
+              "published"
+            ],
             "title": "Status",
             "description": "Publication status (draft or published)",
             "default": "draft"
@@ -7871,6 +7869,10 @@
           },
           "status": {
             "type": "string",
+            "enum": [
+              "draft",
+              "published"
+            ],
             "title": "Status",
             "description": "Publication status (draft or published)",
             "default": "draft"
@@ -9055,6 +9057,10 @@
           },
           "status": {
             "type": "string",
+            "enum": [
+              "draft",
+              "published"
+            ],
             "title": "Status",
             "description": "Publication status (draft or published)",
             "default": "draft"

@@ -15,6 +15,21 @@ selectors:
   - selector: workspace-switcher-modal
     component: components/layout/WorkspaceSwitcher.tsx
     description: Workspace switcher modal
+  - selector: workspace-folder-input
+    component: components/workspace/WorkspaceSwitcher.tsx
+    description: Folder path input for selecting a local workspace directory
+  - selector: new-workspace-modal
+    component: components/workspace/WorkspaceSwitcher.tsx
+    description: Modal for creating a new workspace
+  - selector: new-workspace-name-input
+    component: components/workspace/WorkspaceSwitcher.tsx
+    description: Name input field in the new workspace modal
+  - selector: clone-git-modal
+    component: components/workspace/WorkspaceSwitcher.tsx
+    description: Modal for cloning a workspace from a git repository
+  - selector: clone-git-url-input
+    component: components/workspace/WorkspaceSwitcher.tsx
+    description: Git URL input field in the clone workspace modal
 
   # Toast
   - selector: toast-action-*
@@ -199,6 +214,9 @@ selectors:
   - selector: relationship-target-class-filter
     component: routes/app/schema/relationships.tsx
     description: Dropdown select for filtering relationships by target class
+  - selector: relationship-create-modal
+    component: routes/app/schema/relationships.tsx
+    description: Modal for creating a new relationship
 
   # Taxonomy Form
   - selector: taxonomy-form
@@ -213,6 +231,37 @@ selectors:
   - selector: taxonomy-submit-button
     component: components/schema/TaxonomyForm.tsx
     description: Submit button for taxonomy form
+
+  # Class Form
+  - selector: class-form
+    component: components/schema/ClassForm.tsx
+    description: Form for creating a new class
+  - selector: class-title-input
+    component: components/schema/ClassForm.tsx
+    description: Title input field in class creation form
+  - selector: class-description-input
+    component: components/schema/ClassForm.tsx
+    description: Description textarea in class creation form
+  - selector: class-submit-button
+    component: components/schema/ClassForm.tsx
+    description: Submit button for class creation form
+
+  # Relationship Form
+  - selector: relationship-form
+    component: components/schema/RelationshipForm.tsx
+    description: Form for creating a new relationship
+  - selector: relationship-source-select
+    component: components/schema/RelationshipForm.tsx
+    description: Source class selector in relationship creation form
+  - selector: relationship-target-select
+    component: components/schema/RelationshipForm.tsx
+    description: Target class selector in relationship creation form
+  - selector: relationship-type-select
+    component: components/schema/RelationshipForm.tsx
+    description: Relationship type (property) selector in relationship creation form
+  - selector: relationship-submit-button
+    component: components/schema/RelationshipForm.tsx
+    description: Submit button for relationship creation form
 
   # Taxonomy Drawer
   - selector: taxonomy-drawer
