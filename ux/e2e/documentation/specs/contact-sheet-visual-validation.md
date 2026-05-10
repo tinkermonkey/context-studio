@@ -39,7 +39,7 @@ This test validates the visual rendering of the Contact Sheet component gallery 
 
 ---
 
-### Test Case 2: Verify All 13 Named Sections Render in Light Mode
+### Test Case 2: Verify All 14 Named Sections Render in Light Mode
 
 **Preconditions**: User is on `/app/contact-sheet` in light mode
 
