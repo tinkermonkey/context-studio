@@ -21,7 +21,7 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div
-      className={`empty-state ${variant === "compact" ? "compact" : ""}`}
+      className={variant === "compact" ? "empty-state compact" : "empty-state"}
       data-testid="empty-state"
     >
       {icon && <div className="empty-state-icon">{icon}</div>}
