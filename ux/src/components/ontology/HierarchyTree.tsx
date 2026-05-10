@@ -62,7 +62,7 @@ function TreeNodeRenderer({
   const canExpand = hasChildren && depth < maxDepth;
 
   return (
-    <div key={node.class.id} className="stack" style={{ gap: 0 }}>
+    <div key={node.class.id} className="flex flex-col">
       <div className="kg-row">
         <div className="kg-cell kg-cell-l" data-depth={depth + 1}>
           {canExpand && (
