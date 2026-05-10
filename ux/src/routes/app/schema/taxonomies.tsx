@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreVertical } from "lucide-react";
 import { useToasts } from "@/components/ui/Toast";
@@ -19,6 +19,10 @@ import type { components } from "@/api/types";
 
 type TaxonomyResponse = components["schemas"]["TaxonomyResponse"];
 type TaxonomyCreateRequest = components["schemas"]["TaxonomyCreateRequest"];
+
+interface TaxonomiesSearchParams {
+  selected?: string;
+}
 
 interface TaxonomiesPageContentProps {
   onCreateClick: () => void;
@@ -52,17 +56,22 @@ function TaxonomiesPageContent({ onCreateClick, selectedId, onSelectedIdChange }
     {
       accessorKey: "title",
       header: "Name",
-      cell: (info) => (
-        <span
-          style={{
-            color: "var(--cyan-600, #0891b2)",
-            fontWeight: 500,
-            cursor: "pointer",
-          }}
-        >
-          {info.getValue() as string}
-        </span>
-      ),
+      cell: (info) => {
+        const taxonomyId = info.row.original.id;
+        return (
+          <span
+            style={{
+              color: "var(--cyan-600, #0891b2)",
+              fontWeight: 500,
+              cursor: "pointer",
+            }}
+            onClick={() => onSelectedIdChange(taxonomyId)}
+            data-testid={`taxonomy-name-${taxonomyId}`}
+          >
+            {info.getValue() as string}
+          </span>
+        );
+      },
     },
     {
       accessorKey: "description",
@@ -218,16 +227,25 @@ function TaxonomiesPageContent({ onCreateClick, selectedId, onSelectedIdChange }
 function TaxonomiesPageWrapper() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useState<string | undefined>();
+  const navigate = useNavigate();
+  const searchParams = useSearch({ from: "/app/schema/taxonomies" }) as TaxonomiesSearchParams;
+  const selectedId = searchParams.selected;
   const createMutation = useCreateTaxonomy();
   const { toast } = useToasts();
+
+  const handleSelectedIdChange = (id: string | undefined) => {
+    navigate({
+      to: "/app/schema/taxonomies",
+      search: id ? { selected: id } : {},
+    });
+  };
 
   const handleCreateSubmit = async (data: TaxonomyCreateRequest) => {
     setCreateError(null);
     try {
       const result = await createMutation.mutateAsync(data);
       setShowCreateModal(false);
-      setSelectedId(result.id);
+      handleSelectedIdChange(result.id);
       toast("success", taxonomiesCopy.create.successToast(result.id));
     } catch (error) {
       setCreateError(error instanceof Error ? error.message : "Failed to create taxonomy");
@@ -259,7 +277,7 @@ function TaxonomiesPageWrapper() {
         <TaxonomiesPageContent
           onCreateClick={() => setShowCreateModal(true)}
           selectedId={selectedId}
-          onSelectedIdChange={setSelectedId}
+          onSelectedIdChange={handleSelectedIdChange}
         />
       </div>
 
@@ -297,4 +315,7 @@ export function TaxonomiesPage() {
 
 export const Route = createFileRoute("/app/schema/taxonomies")({
   component: TaxonomiesPage,
+  validateSearch: (search: Record<string, unknown>): TaxonomiesSearchParams => ({
+    selected: typeof search.selected === 'string' ? search.selected : undefined,
+  }),
 });

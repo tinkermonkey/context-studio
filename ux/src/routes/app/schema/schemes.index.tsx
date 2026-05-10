@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreVertical } from "lucide-react";
 import { useToasts } from "@/components/ui/Toast";
@@ -21,15 +21,20 @@ import type { components } from "@/api/types";
 type ConceptSchemeResponse = components["schemas"]["ConceptSchemeResponse"];
 type ConceptSchemeCreateRequest = components["schemas"]["ConceptSchemeCreateRequest"];
 
+interface SchemesSearchParams {
+  selected?: string;
+}
+
 interface SchemesPageContentProps {
   onCreateClick: () => void;
+  selectedId?: string;
+  onSelectedIdChange: (id?: string) => void;
   taxonomiesById: Map<string, string>;
   taxonomiesError?: Error | null;
   onRetryTaxonomies?: () => void;
 }
 
-function SchemesPageContent({ onCreateClick, taxonomiesById, taxonomiesError, onRetryTaxonomies }: SchemesPageContentProps) {
-  const [selectedId, setSelectedId] = useState<string>();
+function SchemesPageContent({ onCreateClick, selectedId, onSelectedIdChange, taxonomiesById, taxonomiesError, onRetryTaxonomies }: SchemesPageContentProps) {
   const [searchFilter, setSearchFilter] = useState("");
 
   const { data: listResponse, isLoading, error, refetch } = useSchemes();
@@ -55,21 +60,22 @@ function SchemesPageContent({ onCreateClick, taxonomiesById, taxonomiesError, on
     {
       accessorKey: "title",
       header: "Name",
-      cell: (info) => (
-        <Link
-          to="/app/schema/schemes/$schemeId"
-          params={{ schemeId: info.row.original.id }}
-          style={{
-            color: "var(--cyan-600, #0891b2)",
-            fontWeight: 500,
-            cursor: "pointer",
-            textDecoration: "none",
-          }}
-          data-testid={`scheme-name-link-${info.row.original.id}`}
-        >
-          {info.getValue() as string}
-        </Link>
-      ),
+      cell: (info) => {
+        const schemeId = info.row.original.id;
+        return (
+          <span
+            style={{
+              color: "var(--cyan-600, #0891b2)",
+              fontWeight: 500,
+              cursor: "pointer",
+            }}
+            onClick={() => onSelectedIdChange(schemeId)}
+            data-testid={`scheme-name-${schemeId}`}
+          >
+            {info.getValue() as string}
+          </span>
+        );
+      },
     },
     {
       accessorKey: "description",
@@ -217,14 +223,14 @@ function SchemesPageContent({ onCreateClick, taxonomiesById, taxonomiesError, on
               key={scheme.id}
               scheme={scheme}
               taxonomyName={taxonomiesById.get(scheme.taxonomy_id) || "—"}
-              onClose={() => setSelectedId(undefined)}
+              onClose={() => onSelectedIdChange(undefined)}
             />
           )}
         >
           <SchemaTable
             columns={schemeColumns}
             data={filteredData}
-            onRowSelect={setSelectedId}
+            onRowSelect={onSelectedIdChange}
             selectedId={selectedId}
           />
         </SchemaPageLayout>
@@ -236,12 +242,22 @@ function SchemesPageContent({ onCreateClick, taxonomiesById, taxonomiesError, on
 export function SchemesIndexPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const searchParams = useSearch({ from: "/app/schema/schemes" }) as SchemesSearchParams;
+  const selectedId = searchParams.selected;
   const createMutation = useCreateScheme();
   const { toast } = useToasts();
   const { data: taxonomiesResponse, error: taxonomiesError, refetch: refetchTaxonomies } = useTaxonomies();
   const taxonomies = taxonomiesResponse?.items || [];
 
   const taxonomiesById = new Map(taxonomies.map((t) => [t.id, t.title]));
+
+  const handleSelectedIdChange = (id?: string) => {
+    navigate({
+      to: "/app/schema/schemes",
+      search: id ? { selected: id } : {},
+    });
+  };
 
   const handleCreateSubmit = async (data: ConceptSchemeCreateRequest) => {
     setCreateError(null);
@@ -280,6 +296,8 @@ export function SchemesIndexPage() {
         <div data-testid="schemes-content">
           <SchemesPageContent
             onCreateClick={() => setShowCreateModal(true)}
+            selectedId={selectedId}
+            onSelectedIdChange={handleSelectedIdChange}
             taxonomiesById={taxonomiesById}
             taxonomiesError={taxonomiesError}
             onRetryTaxonomies={() => refetchTaxonomies()}
@@ -318,4 +336,7 @@ export function SchemesIndexPage() {
 
 export const Route = createFileRoute("/app/schema/schemes/")({
   component: SchemesIndexPage,
+  validateSearch: (search: Record<string, unknown>): SchemesSearchParams => ({
+    selected: typeof search.selected === 'string' ? search.selected : undefined,
+  }),
 });

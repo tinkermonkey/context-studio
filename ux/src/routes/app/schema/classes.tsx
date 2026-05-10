@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreVertical } from "lucide-react";
 import { useToasts } from "@/components/ui/Toast";
@@ -20,12 +20,17 @@ import type { components } from "@/api/types";
 
 type ClassResponse = components["schemas"]["ClassResponse"];
 
-interface ClassesPageContentProps {
-  onCreateClick: () => void;
+interface ClassesSearchParams {
+  selected?: string;
 }
 
-function ClassesPageContent({ onCreateClick }: ClassesPageContentProps) {
-  const [selectedId, setSelectedId] = useState<string>();
+interface ClassesPageContentProps {
+  onCreateClick: () => void;
+  selectedId?: string;
+  onSelectedIdChange: (id?: string) => void;
+}
+
+function ClassesPageContent({ onCreateClick, selectedId, onSelectedIdChange }: ClassesPageContentProps) {
   const [searchFilter, setSearchFilter] = useState("");
 
   const { data: listResponse, isLoading, error, refetch } = useClasses();
@@ -58,18 +63,22 @@ function ClassesPageContent({ onCreateClick }: ClassesPageContentProps) {
     {
       accessorKey: "title",
       header: "Name",
-      cell: (info) => (
-        <span
-          style={{
-            color: "var(--cyan-600, #0891b2)",
-            fontWeight: 500,
-            cursor: "pointer",
-          }}
-          data-testid={`class-name-${info.row.original.id}`}
-        >
-          {info.getValue() as string}
-        </span>
-      ),
+      cell: (info) => {
+        const classId = info.row.original.id;
+        return (
+          <span
+            style={{
+              color: "var(--cyan-600, #0891b2)",
+              fontWeight: 500,
+              cursor: "pointer",
+            }}
+            data-testid={`class-name-${classId}`}
+            onClick={() => onSelectedIdChange(classId)}
+          >
+            {info.getValue() as string}
+          </span>
+        );
+      },
     },
     {
       accessorKey: "concept_scheme_id",
@@ -212,13 +221,13 @@ function ClassesPageContent({ onCreateClick }: ClassesPageContentProps) {
           data={filteredData}
           selectedId={selectedId}
           renderDrawerContent={(cls) => (
-            <ClassDrawer key={cls.id} classData={cls} onClose={() => setSelectedId(undefined)} />
+            <ClassDrawer key={cls.id} classData={cls} onClose={() => onSelectedIdChange(undefined)} />
           )}
         >
           <SchemaTable
             columns={classColumns}
             data={filteredData}
-            onRowSelect={setSelectedId}
+            onRowSelect={onSelectedIdChange}
             selectedId={selectedId}
           />
         </SchemaPageLayout>
@@ -230,8 +239,18 @@ function ClassesPageContent({ onCreateClick }: ClassesPageContentProps) {
 function ClassesPageWrapper() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const searchParams = useSearch({ from: "/app/schema/classes" }) as ClassesSearchParams;
+  const selectedId = searchParams.selected;
   const createMutation = useCreateClass();
   const { toast } = useToasts();
+
+  const handleSelectedIdChange = (id?: string) => {
+    navigate({
+      to: "/app/schema/classes",
+      search: id ? { selected: id } : {},
+    });
+  };
 
   const handleCreateSubmit = async (
     data: { title: string; description?: string | null; parent_class_id?: string | null },
@@ -273,7 +292,11 @@ function ClassesPageWrapper() {
         </div>
       </div>
       <div data-testid="classes-content">
-        <ClassesPageContent onCreateClick={() => setShowCreateModal(true)} />
+        <ClassesPageContent
+          onCreateClick={() => setShowCreateModal(true)}
+          selectedId={selectedId}
+          onSelectedIdChange={handleSelectedIdChange}
+        />
       </div>
 
       <Modal
@@ -308,4 +331,7 @@ export function ClassesPage() {
 
 export const Route = createFileRoute("/app/schema/classes")({
   component: ClassesPage,
+  validateSearch: (search: Record<string, unknown>): ClassesSearchParams => ({
+    selected: typeof search.selected === 'string' ? search.selected : undefined,
+  }),
 });
