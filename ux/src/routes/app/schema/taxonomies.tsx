@@ -82,7 +82,7 @@ function TaxonomiesPageContent({
       accessorKey: "description",
       header: "Description",
       cell: (info) => (
-        <span style={{ color: "var(--canvas-fg-2)" }}>{(info.getValue() as string) || "—"}</span>
+        <span className="muted-text">{(info.getValue() as string) || "—"}</span>
       ),
     },
     {
@@ -114,7 +114,7 @@ function TaxonomiesPageContent({
     {
       id: "stats",
       header: "Classes",
-      cell: () => <span style={{ color: "var(--canvas-fg-2)" }}>—</span>,
+      cell: () => <span className="muted-text">—</span>,
     },
     {
       accessorKey: "last_modified",
@@ -243,7 +243,7 @@ function TaxonomiesPageWrapper() {
     <div className="stack">
       <div className="flex-between">
         <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>Taxonomies</h1>
-        <div style={{ display: "flex", gap: "var(--space-2)" }}>
+        <div className="row">
           <Button variant="ghost" onClick={() => {}} data-testid="taxonomy-import-button">
             Import
           </Button>

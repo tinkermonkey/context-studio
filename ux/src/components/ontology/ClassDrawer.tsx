@@ -268,7 +268,7 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
             )}
           </div>
 
-          <div style={{ display: "flex", gap: "var(--space-2)", fontSize: "var(--text-xs)" }}>
+          <div className="row" style={{ fontSize: "var(--text-xs)" }}>
             <span style={{ color: "var(--canvas-fg-3)" }}>
               Properties: <span style={{ fontWeight: 500 }}>{propertyCount}</span>
             </span>
@@ -277,13 +277,13 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
             </span>
           </div>
 
-          <div style={{ display: "flex", gap: "var(--space-2)", fontSize: "var(--text-xs)" }}>
+          <div className="row" style={{ fontSize: "var(--text-xs)" }}>
             <span style={{ color: "var(--canvas-fg-3)" }}>
               Individuals: <span style={{ fontWeight: 500 }}>{individualCount}</span>
             </span>
           </div>
 
-          <div style={{ display: "flex", gap: "var(--space-2)", fontSize: "var(--text-xs)" }}>
+          <div className="row" style={{ fontSize: "var(--text-xs)" }}>
             <span style={{ color: "var(--canvas-fg-3)" }}>
               Created: {new Date(classData.created_at ?? "").toLocaleDateString()}
             </span>

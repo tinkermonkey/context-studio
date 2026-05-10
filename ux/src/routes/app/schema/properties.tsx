@@ -69,7 +69,7 @@ function PropertiesPageContent({ onCreateClick }: PropertiesPageContentProps) {
       accessorKey: "description",
       header: "Description",
       cell: (info) => (
-        <span style={{ color: "var(--canvas-fg-2)" }}>{(info.getValue() as string) || "—"}</span>
+        <span className="muted-text">{(info.getValue() as string) || "—"}</span>
       ),
     },
     {

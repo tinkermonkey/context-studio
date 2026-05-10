@@ -50,7 +50,7 @@ function EmptyState() {
         <div className="empty-state-title">Welcome to Context Studio</div>
         <div className="empty-state-description">Start building your knowledge graph</div>
       </div>
-      <div style={{ display: "flex", gap: "var(--space-3)", flexWrap: "wrap", justifyContent: "center" }}>
+      <div className="row" style={{ gap: "var(--space-3)", flexWrap: "wrap", justifyContent: "center" }}>
         <Link to="/app/schema/taxonomies">
           <button className="btn btn-ghost">
             <Plus size={14} />

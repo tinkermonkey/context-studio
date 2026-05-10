@@ -116,7 +116,7 @@ function RelationshipsPageContent({
       accessorKey: "source_id",
       header: "Source Class",
       cell: (info) => (
-        <span style={{ color: "var(--canvas-fg-2)" }}>
+        <span className="muted-text">
           {classesById.get(info.getValue() as string) || "—"}
         </span>
       ),
@@ -125,7 +125,7 @@ function RelationshipsPageContent({
       accessorKey: "target_id",
       header: "Target Class",
       cell: (info) => (
-        <span style={{ color: "var(--canvas-fg-2)" }}>
+        <span className="muted-text">
           {classesById.get(info.getValue() as string) || "—"}
         </span>
       ),
@@ -190,9 +190,7 @@ function RelationshipsPageContent({
   return (
     <div data-testid="relationships-page">
       <div className="stack">
-        <div
-          style={{ display: "flex", gap: "var(--space-2)", alignItems: "center", flexWrap: "wrap" }}
-        >
+        <div className="row" style={{ flexWrap: "wrap" }}>
           <div style={{ position: "relative" }}>
             <select
               value={sourceClassFilter || ""}

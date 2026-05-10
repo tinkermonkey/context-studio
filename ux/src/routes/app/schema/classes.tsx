@@ -125,7 +125,7 @@ function ClassesPageContent({
       id: "propertyCount",
       header: "Properties",
       cell: ({ row }) => (
-        <span style={{ color: "var(--canvas-fg-2)" }}>
+        <span className="muted-text">
           {row.original.data_properties?.length ?? 0}
         </span>
       ),
@@ -287,7 +287,7 @@ function ClassesPageWrapper() {
     <div className="stack">
       <div className="flex-between">
         <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>Classes</h1>
-        <div style={{ display: "flex", gap: "var(--space-2)" }}>
+        <div className="row">
           <Button
             variant="primary"
             onClick={() => setShowCreateModal(true)}

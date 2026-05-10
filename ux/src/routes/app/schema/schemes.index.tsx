@@ -89,7 +89,7 @@ function SchemesPageContent({
       accessorKey: "description",
       header: "Description",
       cell: (info) => (
-        <span style={{ color: "var(--canvas-fg-2)" }}>{(info.getValue() as string) || "—"}</span>
+        <span className="muted-text">{(info.getValue() as string) || "—"}</span>
       ),
     },
     {
@@ -117,7 +117,7 @@ function SchemesPageContent({
     {
       id: "classCount",
       header: "Classes",
-      cell: () => <span style={{ color: "var(--canvas-fg-2)" }}>—</span>,
+      cell: () => <span className="muted-text">—</span>,
     },
     {
       accessorKey: "last_modified",

@@ -969,6 +969,11 @@
   justify-content: flex-end;
 }
 
+/* ============= Utility classes ============= */
+.muted-text {
+  color: var(--canvas-fg-2);
+}
+
 /* ============= Misc additions ============= */
 code {
   background: var(--canvas-bg-2);
