@@ -182,13 +182,13 @@ test.describe("Ontology Management Full CRUD Chain", () => {
     await expect(toastAction).not.toBeVisible();
 
     // Test Case 8: Verify the Restored Class Appears in the Table
-    // The restored class should have a new ID (UUID) but the same title and description
+    // useUndoDelete cancels the pending delete timeout, so the class retains its original ID
     const table = page.getByTestId("schema-table");
 
     // Wait for the table to update with the restored class
     await expect(table).toContainText("Parent Class", { timeout: 5000 });
 
-    // Verify the restored class row exists (but with a potentially different ID)
+    // Verify the restored class row exists
     const restoredClassRows = page.locator(
       '[data-testid^="schema-row-"]',
     );
@@ -198,8 +198,8 @@ test.describe("Ontology Management Full CRUD Chain", () => {
     // Verify description is preserved
     await expect(table).toContainText("A parent class for testing hierarchy");
 
-    // The restored class should have a different ID than the original
-    // (we can verify this by checking that the new row ID is different)
+    // The restored class should have the same ID as the original
+    // because the delete was never executed (canceled by undo)
     const newClassRow = page
       .locator('[data-testid^="schema-row-"]')
       .filter({ hasText: "Parent Class" })
@@ -209,9 +209,9 @@ test.describe("Ontology Management Full CRUD Chain", () => {
     // Extract ID from testid (format: schema-row-{id})
     const newId = newClassId?.replace("schema-row-", "");
 
-    // Verify the new ID is not the same as the original
+    // Verify the ID matches the original (delete was never executed)
     expect(newId).toBeDefined();
-    expect(newId).not.toBe(class1.id);
+    expect(newId).toBe(class1.id);
 
     // Verify no error messages appear
     const errorElements = page.locator('[role="alert"]');
