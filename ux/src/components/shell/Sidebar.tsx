@@ -76,7 +76,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   }
 
   return (
-    <aside className={`shell-rail${collapsed ? "collapsed" : ""}`}>
+    <aside data-testid="sidebar" className={`shell-rail${collapsed ? " collapsed" : ""}`}>
       <div className="brand-row">
         <div className="brand-mark" aria-hidden="true" />
         {!collapsed && (
@@ -86,6 +86,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         )}
         <button
           className="rail-collapse"
+          data-testid="sidebar-toggle"
           onClick={onToggle}
           aria-label="Toggle sidebar"
           type="button"

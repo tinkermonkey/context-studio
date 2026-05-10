@@ -34,6 +34,14 @@ selectors:
     component: components/workspace/WorkspaceSwitcher.tsx
     description: Git URL input field in the clone workspace modal
 
+  # Sidebar
+  - selector: sidebar
+    component: components/shell/Sidebar.tsx
+    description: Main navigation sidebar rail
+  - selector: sidebar-toggle
+    component: components/shell/Sidebar.tsx
+    description: Button that collapses or expands the sidebar
+
   # Toast
   - selector: toast-action-*
     component: components/ui/Toast.tsx

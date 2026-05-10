@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { createFileRoute, Outlet, useNavigate, redirect } from "@tanstack/react-router";
-import { Titlebar } from "@/components/shell/Titlebar";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { Topbar } from "@/components/shell/Topbar";
 import { Statusbar } from "@/components/shell/Statusbar";
@@ -119,8 +118,7 @@ function AppShell() {
 
   return (
     <div className="desktop-frame">
-      <Titlebar />
-      <div className={`app-shell${collapsed ? "collapsed" : ""}`}>
+      <div className={`app-shell${collapsed ? " collapsed" : ""}`}>
         <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((v) => !v)} />
         <div className="workspace">
           <Topbar />
