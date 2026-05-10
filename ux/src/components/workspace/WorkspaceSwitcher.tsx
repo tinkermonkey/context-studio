@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { FolderOpen, Plus, GitBranch } from "lucide-react";
+import { Database, FolderOpen, Plus, GitBranch } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { useConfig } from "@/api/hooks/admin/useConfig";
 
 interface WorkspaceSwitcherProps {
   onSelect: (path: string) => void;
@@ -16,6 +17,9 @@ export function WorkspaceSwitcher({ onSelect, isLoading = false }: WorkspaceSwit
   const [openPath, setOpenPath] = useState("");
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
   const [gitUrl, setGitUrl] = useState("");
+
+  const { data: config } = useConfig();
+  const defaultDbPath = config?.sections?.database?.local_db_path as string | undefined;
 
   const handleOpenSubmit = () => {
     if (openPath.trim()) {
@@ -61,6 +65,17 @@ export function WorkspaceSwitcher({ onSelect, isLoading = false }: WorkspaceSwit
           </div>
 
           <div className="grid grid-cols-1 gap-4 p-8">
+            {defaultDbPath && (
+              <Tile
+                testId="workspace-use-default-tile"
+                icon={<Database size={32} />}
+                title="Use configured workspace"
+                description={defaultDbPath}
+                onClick={() => onSelect(defaultDbPath)}
+                disabled={isDisabled}
+                highlight
+              />
+            )}
             <Tile
               testId="workspace-open-folder-tile"
               icon={<FolderOpen size={32} />}
@@ -108,11 +123,7 @@ export function WorkspaceSwitcher({ onSelect, isLoading = false }: WorkspaceSwit
             >
               Cancel
             </Button>
-            <Button
-              variant="primary"
-              onClick={handleOpenSubmit}
-              disabled={!openPath.trim()}
-            >
+            <Button variant="primary" onClick={handleOpenSubmit} disabled={!openPath.trim()}>
               Open
             </Button>
           </div>
@@ -172,9 +183,7 @@ export function WorkspaceSwitcher({ onSelect, isLoading = false }: WorkspaceSwit
             value={newWorkspaceName}
             onChange={(e) => setNewWorkspaceName(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleNewWorkspaceSubmit();
-              }
+              if (e.key === "Enter") handleNewWorkspaceSubmit();
             }}
             data-testid="new-workspace-name-input"
             autoFocus
@@ -216,9 +225,7 @@ export function WorkspaceSwitcher({ onSelect, isLoading = false }: WorkspaceSwit
             value={gitUrl}
             onChange={(e) => setGitUrl(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleCloneSubmit();
-              }
+              if (e.key === "Enter") handleCloneSubmit();
             }}
             data-testid="clone-git-url-input"
             autoFocus
@@ -236,17 +243,23 @@ interface TileProps {
   description: string;
   onClick: () => void;
   disabled?: boolean;
+  highlight?: boolean;
 }
 
-function Tile({ testId, icon, title, description, onClick, disabled = false }: TileProps) {
+function Tile({ testId, icon, title, description, onClick, disabled = false, highlight = false }: TileProps) {
   return (
     <button
       data-testid={testId}
       onClick={onClick}
       disabled={disabled}
-      className="flex flex-col items-center gap-4 rounded-lg border border-gray-700 bg-gray-800 px-6 py-6 transition-all hover:border-cyan-500 disabled:cursor-not-allowed disabled:opacity-50"
+      className={[
+        "flex flex-col items-center gap-4 rounded-lg border px-6 py-6 transition-all disabled:cursor-not-allowed disabled:opacity-50",
+        highlight
+          ? "border-cyan-600 bg-cyan-950 hover:border-cyan-400"
+          : "border-gray-700 bg-gray-800 hover:border-cyan-500",
+      ].join(" ")}
     >
-      <div className="text-gray-500">{icon}</div>
+      <div className={highlight ? "text-cyan-400" : "text-gray-500"}>{icon}</div>
       <div className="text-center">
         <div className="mb-1 font-semibold text-gray-100">{title}</div>
         <div className="text-sm text-gray-400">{description}</div>

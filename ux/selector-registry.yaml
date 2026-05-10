@@ -9,6 +9,9 @@
 
 selectors:
   # Workspace Switcher
+  - selector: workspace-use-default-tile
+    component: components/workspace/WorkspaceSwitcher.tsx
+    description: Tile that opens the backend-configured default workspace without prompting
   - selector: workspace-switcher-overlay
     component: components/layout/WorkspaceSwitcher.tsx
     description: Workspace switcher overlay backdrop
