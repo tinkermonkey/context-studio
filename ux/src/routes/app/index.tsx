@@ -283,7 +283,7 @@ function Dashboard() {
           {!changesError && (
             <>
               {changesLoading ? (
-                <div className="stack">
+                <div className="stack-lg">
                   {Array.from({ length: 4 }).map((_, i) => (
                     <Skeleton
                       key={i}
@@ -335,7 +335,7 @@ function Dashboard() {
         {/* Graph Health / Quick Stats */}
         <Panel title="System Status">
           {!health ? (
-            <div className="stack">
+            <div className="stack-lg">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Skeleton key={i} height="20px" />
               ))}
@@ -419,7 +419,7 @@ function Dashboard() {
             compact
           />
           {!individualsError && individualsLoading && (
-            <div className="stack">
+            <div className="stack-lg">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Skeleton key={i} height="28px" style={{ borderRadius: "var(--radius-md, 6px)" }} />
               ))}

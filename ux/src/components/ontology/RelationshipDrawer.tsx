@@ -71,7 +71,7 @@ export function RelationshipDrawer({
         onDelete={handleDeleteClick}
         data-testid="relationship-drawer"
       >
-        <div className="stack">
+        <div className="stack-lg">
           <div>
             <label className="form-group-label">
               ID

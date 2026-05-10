@@ -105,7 +105,7 @@ export function PropertyDrawer({ property, onClose }: PropertyDrawerProps) {
         onDelete={handleDeleteClick}
         data-testid="property-drawer"
       >
-        <div className="stack">
+        <div className="stack-lg">
           <div>
             <label className="form-group-label">
               Identifier

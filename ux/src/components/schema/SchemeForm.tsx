@@ -43,7 +43,7 @@ export function SchemeForm({ onSubmit, isLoading }: SchemeFormProps) {
 
   return (
     <form onSubmit={handleSubmit} data-testid="scheme-form">
-      <div className="stack">
+      <div className="stack-lg">
         <div>
           <label className="form-group-label">
             Title

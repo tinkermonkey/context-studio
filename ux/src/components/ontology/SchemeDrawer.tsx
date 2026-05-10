@@ -119,7 +119,7 @@ export function SchemeDrawer({ scheme, taxonomyName, onClose }: SchemeDrawerProp
         onDelete={handleDeleteClick}
         data-testid="scheme-drawer"
       >
-        <div className="stack">
+        <div className="stack-lg">
           <div>
             <label className="form-group-label">
               ID

@@ -43,7 +43,7 @@ export function TaxonomyForm({ onSubmit, isLoading }: TaxonomyFormProps) {
 
   return (
     <form onSubmit={handleSubmit} data-testid="taxonomy-form">
-      <div className="stack">
+      <div className="stack-lg">
         <div>
           <label className="form-group-label">
             Title

@@ -43,7 +43,7 @@ export function ClassForm({ onSubmit, isLoading }: ClassFormProps) {
 
   return (
     <form onSubmit={handleSubmit} data-testid="class-form">
-      <div className="stack">
+      <div className="stack-lg">
         <div>
           <label className="form-group-label">
             Title

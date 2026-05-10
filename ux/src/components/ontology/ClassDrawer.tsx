@@ -166,7 +166,7 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
         onDelete={handleDeleteClick}
         data-testid="class-drawer"
       >
-        <div className="stack">
+        <div className="stack-lg">
           {individualsError && (
             <ErrorBanner
               error={individualsError as Error}

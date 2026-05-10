@@ -2057,8 +2057,11 @@ select.input {
   flex-direction: column;
   gap: var(--space-3);
 }
-
-
+.stack-lg {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
 
 .flex-between {
   display: flex;

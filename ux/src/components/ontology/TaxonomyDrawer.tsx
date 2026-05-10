@@ -120,7 +120,7 @@ export function TaxonomyDrawer({ taxonomy, onClose }: TaxonomyDrawerProps) {
         }
         data-testid="taxonomy-drawer"
       >
-        <div className="stack">
+        <div className="stack-lg">
           <div>
             <label className="form-group-label">
               ID

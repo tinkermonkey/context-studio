@@ -93,7 +93,7 @@ export function ClassEditor({ schemeId, initialData, onSubmit, isLoading }: Clas
 
   return (
     <form onSubmit={handleSubmit} data-testid="class-editor-form">
-      <div className="stack">
+      <div className="stack-lg">
         <div>
           <label className="form-group-label">
             Name
