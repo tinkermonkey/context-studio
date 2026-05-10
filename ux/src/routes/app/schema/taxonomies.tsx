@@ -156,7 +156,6 @@ function TaxonomiesPageContent({ onCreateClick, selectedId, onSelectedIdChange }
           error={error}
           onRetry={() => refetch()}
           message="Failed to load taxonomies"
-          daemonLogPath="/local-server/logs/context_studio.log"
         />
       </div>
     );
@@ -280,7 +279,6 @@ function TaxonomiesPageWrapper() {
               error={new Error(createError)}
               onRetry={() => setCreateError(null)}
               message="Failed to create taxonomy"
-              daemonLogPath="/local-server/logs/context_studio.log"
             />
           </div>
         )}

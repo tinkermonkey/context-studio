@@ -161,8 +161,7 @@ function SchemesPageContent({ onCreateClick, taxonomiesById, taxonomiesError, on
           error={error}
           onRetry={() => refetch()}
           message="Failed to load concept schemes"
-        daemonLogPath="/local-server/logs/context_studio.log"
-          />
+        />
       </div>
     );
   }

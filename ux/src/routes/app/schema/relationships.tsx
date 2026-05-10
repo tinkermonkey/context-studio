@@ -170,7 +170,6 @@ function RelationshipsPageContent({
           error={error}
           onRetry={() => refetch()}
           message="Failed to load relationships"
-          daemonLogPath="/local-server/logs/context_studio.log"
         />
       </div>
     );
@@ -285,7 +284,6 @@ function RelationshipsPageContent({
             onRetry={onRetryClasses}
             message="Failed to load classes"
             compact
-            daemonLogPath="/local-server/logs/context_studio.log"
           />
         </div>
       )}
@@ -297,7 +295,6 @@ function RelationshipsPageContent({
             onRetry={onRetryProperties}
             message="Failed to load properties"
             compact
-            daemonLogPath="/local-server/logs/context_studio.log"
           />
         </div>
       )}
@@ -401,7 +398,6 @@ function RelationshipsPageWrapper() {
               error={new Error(createError)}
               onRetry={() => setCreateError(null)}
               message="Failed to create relationship"
-              daemonLogPath="/local-server/logs/context_studio.log"
             />
           </div>
         )}

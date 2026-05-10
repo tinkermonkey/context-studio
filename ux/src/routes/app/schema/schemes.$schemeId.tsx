@@ -131,8 +131,7 @@ function SchemeDetailContent({ schemeId, onCreateClick }: SchemeDetailContentPro
             refetchClasses();
           }}
           message="Failed to load scheme"
-        daemonLogPath="/local-server/logs/context_studio.log"
-          />
+        />
       </div>
     );
   }

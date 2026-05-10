@@ -260,8 +260,7 @@ function TaxonomyDetailPage() {
           error={error}
           onRetry={() => refetch()}
           message="Failed to load taxonomy"
-        daemonLogPath="/local-server/logs/context_studio.log"
-          />
+        />
       </div>
     );
   }

@@ -49,33 +49,6 @@ export function ErrorBanner({
         <div style={{ display: "flex", gap: "4px" }}>
           <button
             type="button"
-            onClick={onRetry}
-            title="Retry loading"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-              padding: "4px 8px",
-              borderRadius: "4px",
-              background: "transparent",
-              border: "1px solid var(--rose-300, #fda4af)",
-              color: "var(--rose-700, #be123c)",
-              fontSize: "var(--text-xs)",
-              cursor: "pointer",
-              transition: "background 0.15s",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "var(--rose-100, #ffe4e6)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-            }}
-          >
-            <RefreshCw size={12} />
-            Retry
-          </button>
-          <button
-            type="button"
             onClick={handleCopyLogPath}
             title="Copy daemon log path"
             style={{
@@ -100,6 +73,33 @@ export function ErrorBanner({
           >
             <FileText size={12} />
             Logs
+          </button>
+          <button
+            type="button"
+            onClick={onRetry}
+            title="Retry loading"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              padding: "4px 8px",
+              borderRadius: "4px",
+              background: "transparent",
+              border: "1px solid var(--rose-300, #fda4af)",
+              color: "var(--rose-700, #be123c)",
+              fontSize: "var(--text-xs)",
+              cursor: "pointer",
+              transition: "background 0.15s",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "var(--rose-100, #ffe4e6)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+            }}
+          >
+            <RefreshCw size={12} />
+            Retry
           </button>
         </div>
       </div>

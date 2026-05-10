@@ -123,8 +123,7 @@ function PropertiesPageContent({ onCreateClick }: PropertiesPageContentProps) {
           error={error}
           onRetry={() => refetch()}
           message="Failed to load properties"
-        daemonLogPath="/local-server/logs/context_studio.log"
-          />
+        />
       </div>
     );
   }
