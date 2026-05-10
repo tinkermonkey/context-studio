@@ -1,3 +1,11 @@
+/**
+ * Contact Sheet: Visual Regression Reference
+ *
+ * This component is the canonical visual reference for the design system.
+ * All component variants and states must be represented here.
+ * Changes to component styling should be validated against this sheet first.
+ */
+
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus, Trash2, Edit2, ExternalLink, Globe, Cpu, GitMerge, Database } from "lucide-react";
@@ -14,6 +22,7 @@ import { useToasts } from "@/components/ui/Toast";
 import { useCanvasStore } from "@/stores/canvas";
 import { SchemaTable } from "@/components/schema/SchemaTable";
 import { FilterBar } from "@/components/schema/FilterBar";
+import "./contact-sheet.css";
 
 export const Route = createFileRoute("/app/contact-sheet")({
   component: ContactSheet,
@@ -29,21 +38,8 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section style={{ marginBottom: "var(--space-12)" }} data-testid={testid}>
-      <h2
-        style={{
-          fontFamily: "var(--mono)",
-          fontSize: "var(--text-xs)",
-          letterSpacing: "0.14em",
-          textTransform: "uppercase",
-          color: "var(--canvas-fg-3)",
-          marginBottom: "var(--space-4)",
-          paddingBottom: "var(--space-2)",
-          borderBottom: "1px solid var(--canvas-bd)",
-        }}
-      >
-        {title}
-      </h2>
+    <section className="contact-sheet-section" data-testid={testid}>
+      <h2>{title}</h2>
       {children}
     </section>
   );
@@ -58,16 +54,10 @@ function Row({
   wrap?: boolean;
   children: React.ReactNode;
 }) {
+  const className = `contact-sheet-row${wrap ? " wrap" : ""}`;
+  const style = gap !== 8 ? { gap } : undefined;
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "flex-start",
-        gap,
-        flexWrap: wrap ? "wrap" : undefined,
-        marginBottom: "var(--space-4)",
-      }}
-    >
+    <div className={className} style={style}>
       {children}
     </div>
   );
@@ -110,7 +100,7 @@ export default function ContactSheet() {
       accessorKey: "description",
       header: "Description",
       cell: (info) => (
-        <span style={{ color: "var(--canvas-fg-2)" }}>{info.getValue() as string}</span>
+        <span className="contact-sheet-description-text">{info.getValue() as string}</span>
       ),
     },
   ];
@@ -125,21 +115,10 @@ export default function ContactSheet() {
 
   return (
     <div>
-      <div className="page-head" style={{ marginBottom: "var(--space-8)" }}>
+      <div className="page-head contact-sheet-page-head">
         <div>
-          <h1
-            style={{
-              fontSize: "var(--text-2xl)",
-              fontWeight: 700,
-              color: "var(--canvas-fg)",
-              margin: 0,
-            }}
-          >
-            Contact Sheet
-          </h1>
-          <p style={{ fontSize: "var(--text-sm)", color: "var(--canvas-fg-3)", marginTop: 4 }}>
-            Design system component gallery — for visual validation only
-          </p>
+          <h1>Contact Sheet</h1>
+          <p>Design system component gallery — for visual validation only</p>
         </div>
         <div className="page-actions">
           <Button
@@ -179,7 +158,7 @@ export default function ContactSheet() {
             Disabled
           </Button>
           <Button variant="ghost" size="sm">
-            <Plus size={13} style={{ marginRight: 4 }} />
+            <Plus size={13} className="contact-sheet-icon-spacing" />
             With icon
           </Button>
           <Button variant="icon" size="sm" title="Edit">
@@ -226,22 +205,14 @@ export default function ContactSheet() {
           active={activeTab}
           onChange={setActiveTab}
         />
-        <div
-          style={{
-            padding: "var(--space-4) 0",
-            color: "var(--canvas-fg-2)",
-            fontSize: "var(--text-sm)",
-          }}
-        >
+        <div className="contact-sheet-tab-content">
           Active tab: <strong>{activeTab}</strong>
         </div>
       </Section>
 
       {/* ── Inputs ── */}
       <Section title="Form Inputs" testid="contact-sheet-form-inputs">
-        <div
-          style={{ maxWidth: 480, display: "flex", flexDirection: "column", gap: "var(--space-4)" }}
-        >
+        <div className="contact-sheet-form-container">
           <div className="field">
             <div className="field-label">
               Label <span className="req">*</span>
@@ -267,7 +238,7 @@ export default function ContactSheet() {
           </div>
           <div className="field">
             <div className="field-label">With error</div>
-            <Input placeholder="Invalid value" style={{ borderColor: "var(--accent-rose)" }} />
+            <Input placeholder="Invalid value" className="contact-sheet-input-error" />
             <div className="field-error">This field is required.</div>
           </div>
         </div>
@@ -275,7 +246,7 @@ export default function ContactSheet() {
 
       {/* ── Panel ── */}
       <Section title="Panel" testid="contact-sheet-panel">
-        <div style={{ maxWidth: 480 }}>
+        <div className="contact-sheet-panel-container">
           <Panel
             title="Panel Title"
             actions={
@@ -284,7 +255,7 @@ export default function ContactSheet() {
               </Button>
             }
           >
-            <p style={{ fontSize: "var(--text-sm)", color: "var(--canvas-fg-2)" }}>
+            <p className="contact-sheet-description-text">
               Panel content. This card has a header with an action button and body padding.
             </p>
           </Panel>
@@ -311,7 +282,7 @@ export default function ContactSheet() {
                 { name: "hasSubclass", type: "Relation", status: "draft", count: "18" },
               ].map((row) => (
                 <tr key={row.name} className="row-link">
-                  <td style={{ fontFamily: "var(--mono)", fontSize: "var(--text-xs)" }}>
+                  <td className="contact-sheet-table-mono">
                     {row.name}
                   </td>
                   <td>
@@ -330,7 +301,7 @@ export default function ContactSheet() {
                   <td>
                     <Chip color={row.status === "active" ? "emerald" : "gray"}>{row.status}</Chip>
                   </td>
-                  <td style={{ fontFamily: "var(--mono)" }}>{row.count}</td>
+                  <td className="contact-sheet-table-mono-col">{row.count}</td>
                   <td>
                     <Button variant="icon" size="sm" title="Open">
                       <ExternalLink size={12} />
@@ -345,7 +316,7 @@ export default function ContactSheet() {
 
       {/* ── Hierarchy Tree ── */}
       <Section title="Hierarchy Tree (kg-tree)" testid="contact-sheet-hierarchy-tree">
-        <div className="panel" style={{ maxWidth: 480 }}>
+        <div className="panel contact-sheet-hierarchy-container">
           <div className="kg-tree">
             {[
               {
@@ -398,7 +369,7 @@ export default function ContactSheet() {
 
       {/* ── Pipeline Card ── */}
       <Section title="Pipeline Card" testid="contact-sheet-pipeline-card">
-        <div style={{ maxWidth: 560 }}>
+        <div className="contact-sheet-pipeline-container">
           <div className="pipeline-card">
             <div className="pipeline-card-head">
               <div>
@@ -426,7 +397,7 @@ export default function ContactSheet() {
                   icon: <Database size={11} />,
                 },
               ].map((node, i, arr) => (
-                <span key={node.kind} style={{ display: "flex", alignItems: "center" }}>
+                <span key={node.kind} className="contact-sheet-pipeline-flow-wrapper">
                   <div className="flow-node" data-kind={node.kind}>
                     <div className="ic">{node.icon}</div>
                     <div>
@@ -449,7 +420,7 @@ export default function ContactSheet() {
               </div>
               <div className="stat-item">
                 <div className="l">Status</div>
-                <div className="v" style={{ color: "var(--accent-emerald)" }}>
+                <div className="v contact-sheet-pipeline-status">
                   38% running
                 </div>
               </div>
@@ -492,8 +463,8 @@ export default function ContactSheet() {
           subtitle="Define a new ontology class"
           footer={
             <>
-              <span className="modal-foot-hint">⏎ to save · esc to cancel</span>
-              <span style={{ flex: 1 }} />
+              <span className="contact-sheet-modal-footer-hint">⏎ to save · esc to cancel</span>
+              <span className="contact-sheet-spacer" />
               <Button variant="ghost" onClick={() => setModalOpen(false)}>
                 Cancel
               </Button>
@@ -522,36 +493,34 @@ export default function ContactSheet() {
           </Button>
         </Row>
         <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title="Arabidopsis thaliana">
-          <dl className="kv">
-            <dt>Type</dt>
-            <dd>
+          <dl className="kv contact-sheet-kv-list">
+            <dt className="contact-sheet-kv-label">Type</dt>
+            <dd className="contact-sheet-kv-value">
               <Chip color="violet">Individual</Chip>
             </dd>
-            <dt>ID</dt>
-            <dd style={{ fontFamily: "var(--mono)", fontSize: "11px" }}>ind_0042</dd>
-            <dt>Class</dt>
-            <dd>VascularPlant</dd>
-            <dt>Taxonomy</dt>
-            <dd>PlantOntology</dd>
+            <dt className="contact-sheet-kv-label">ID</dt>
+            <dd className="contact-sheet-kv-value contact-sheet-kv-value-mono">ind_0042</dd>
+            <dt className="contact-sheet-kv-label">Class</dt>
+            <dd className="contact-sheet-kv-value">VascularPlant</dd>
+            <dt className="contact-sheet-kv-label">Taxonomy</dt>
+            <dd className="contact-sheet-kv-value">PlantOntology</dd>
           </dl>
         </Drawer>
       </Section>
 
       {/* ── Schema Components ── */}
       <Section title="Schema Components" testid="contact-sheet-schema-components">
-        <div style={{ marginBottom: "var(--space-6)" }}>
-          <h3
-            style={{ fontSize: "var(--text-sm)", fontWeight: 600, marginBottom: "var(--space-3)" }}
-          >
+        <div className="contact-sheet-schema-intro">
+          <h3>
             Filter Bar + Table + Drawer Layout
           </h3>
-          <div style={{ maxWidth: 800 }}>
+          <div className="contact-sheet-schema-table-container">
             <FilterBar
               searchValue={searchFilter}
               onSearchChange={setSearchFilter}
               placeholder="Search by title or description…"
             />
-            <div style={{ marginTop: "var(--space-4)" }}>
+            <div className="contact-sheet-schema-table-wrapper">
               <SchemaTable
                 columns={schemaColumns}
                 data={filteredSchemaData}
@@ -562,21 +531,8 @@ export default function ContactSheet() {
           </div>
         </div>
         {selectedEntity && (
-          <div
-            style={{
-              marginTop: "var(--space-6)",
-              padding: "var(--space-4)",
-              border: "1px dashed var(--canvas-bd)",
-              borderRadius: "8px",
-            }}
-          >
-            <h4
-              style={{
-                fontSize: "var(--text-sm)",
-                fontWeight: 600,
-                marginBottom: "var(--space-2)",
-              }}
-            >
+          <div className="contact-sheet-schema-drawer-demo">
+            <h4>
               SchemaDrawer (selected: {selectedEntity.title})
             </h4>
             <Drawer
@@ -586,13 +542,13 @@ export default function ContactSheet() {
               autosaveState="idle"
               isDirty={false}
             >
-              <dl className="kv">
-                <dt>Title</dt>
-                <dd>{selectedEntity.title}</dd>
-                <dt>ID</dt>
-                <dd style={{ fontFamily: "var(--mono)", fontSize: "11px" }}>{selectedEntity.id}</dd>
-                <dt>Description</dt>
-                <dd>{selectedEntity.description}</dd>
+              <dl className="kv contact-sheet-kv-list">
+                <dt className="contact-sheet-kv-label">Title</dt>
+                <dd className="contact-sheet-kv-value">{selectedEntity.title}</dd>
+                <dt className="contact-sheet-kv-label">ID</dt>
+                <dd className="contact-sheet-kv-value contact-sheet-kv-value-mono">{selectedEntity.id}</dd>
+                <dt className="contact-sheet-kv-label">Description</dt>
+                <dd className="contact-sheet-kv-value">{selectedEntity.description}</dd>
               </dl>
             </Drawer>
           </div>
@@ -601,25 +557,18 @@ export default function ContactSheet() {
 
       {/* ── Intent banners ── */}
       <Section title="Intent States" testid="contact-sheet-intent-states">
-        <div
-          style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", maxWidth: 480 }}
-        >
+        <div className="contact-sheet-intent-states-container">
           {(["success", "warning", "failure", "info"] as const).map((intent) => (
             <div
               key={intent}
+              className="contact-sheet-intent-state-item"
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-3)",
-                padding: "10px 14px",
-                borderRadius: "var(--radius-md)",
                 background: `var(--intent-${intent}-bg)`,
                 border: `1px solid var(--intent-${intent}-bd)`,
                 color: `var(--intent-${intent}-fg)`,
-                fontSize: "var(--text-sm)",
               }}
             >
-              <strong style={{ textTransform: "capitalize" }}>{intent}</strong>— intent state banner
+              <strong>{intent}</strong>— intent state banner
             </div>
           ))}
         </div>
