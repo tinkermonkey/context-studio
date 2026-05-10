@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { FolderOpen, Plus, GitBranch } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
@@ -10,22 +10,18 @@ interface WorkspaceSwitcherProps {
 }
 
 export function WorkspaceSwitcher({ onSelect, isLoading = false }: WorkspaceSwitcherProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showOpenModal, setShowOpenModal] = useState(false);
   const [showNewWorkspaceModal, setShowNewWorkspaceModal] = useState(false);
   const [showCloneModal, setShowCloneModal] = useState(false);
+  const [openPath, setOpenPath] = useState("");
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
   const [gitUrl, setGitUrl] = useState("");
 
-  const handleOpenFolder = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.currentTarget.files;
-    if (files && files.length > 0) {
-      const file = files[0];
-      const path = file.webkitRelativePath || file.name;
-      onSelect(path);
+  const handleOpenSubmit = () => {
+    if (openPath.trim()) {
+      onSelect(openPath.trim());
+      setOpenPath("");
+      setShowOpenModal(false);
     }
   };
 
@@ -53,14 +49,6 @@ export function WorkspaceSwitcher({ onSelect, isLoading = false }: WorkspaceSwit
         data-testid="workspace-switcher-overlay"
         className="fixed inset-0 flex items-center justify-center bg-black/50"
       >
-        <input
-          ref={fileInputRef}
-          type="file"
-          style={{ display: "none" }}
-          onChange={handleFileInputChange}
-          data-testid="workspace-folder-input"
-          {...({ webkitdirectory: "" } as any)}
-        />
         <div
           data-testid="workspace-switcher-modal"
           className="w-[700px] rounded-lg border border-gray-700 bg-gray-900 shadow-lg"
@@ -78,7 +66,7 @@ export function WorkspaceSwitcher({ onSelect, isLoading = false }: WorkspaceSwit
               icon={<FolderOpen size={32} />}
               title="Open folder…"
               description="Use an existing folder as your workspace"
-              onClick={handleOpenFolder}
+              onClick={() => setShowOpenModal(true)}
               disabled={isDisabled}
             />
             <Tile
@@ -100,6 +88,51 @@ export function WorkspaceSwitcher({ onSelect, isLoading = false }: WorkspaceSwit
           </div>
         </div>
       </div>
+
+      <Modal
+        open={showOpenModal}
+        onClose={() => {
+          setShowOpenModal(false);
+          setOpenPath("");
+        }}
+        title="Open Folder"
+        size="sm"
+        footer={
+          <div style={{ display: "flex", gap: "var(--space-2)", justifyContent: "flex-end" }}>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setShowOpenModal(false);
+                setOpenPath("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleOpenSubmit}
+              disabled={!openPath.trim()}
+            >
+              Open
+            </Button>
+          </div>
+        }
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+          <label style={{ display: "block", fontSize: "var(--text-sm)" }}>Folder path</label>
+          <Input
+            type="text"
+            placeholder="/path/to/workspace"
+            value={openPath}
+            onChange={(e) => setOpenPath(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleOpenSubmit();
+            }}
+            data-testid="workspace-folder-input"
+            autoFocus
+          />
+        </div>
+      </Modal>
 
       <Modal
         open={showNewWorkspaceModal}
