@@ -252,7 +252,7 @@ describe("HierarchyTree", () => {
   describe("max depth", () => {
     it("limits expansion to maxDepth", async () => {
       const user = userEvent.setup();
-      const { container } = render(
+      render(
         <HierarchyTree classes={mockHierarchy} maxDepth={2} />,
       );
 

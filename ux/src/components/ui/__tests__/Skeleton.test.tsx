@@ -140,43 +140,12 @@ describe("Skeleton", () => {
   });
 
   describe("dark mode token tests", () => {
-    it("applies dark-canvas class to body in dark mode", () => {
-      const { container } = render(<Skeleton />);
-      document.body.classList.add("dark-canvas");
-      expect(document.body).toHaveClass("dark-canvas");
-      document.body.classList.remove("dark-canvas");
-    });
-
-    it("uses canvas-bd token that changes in dark mode", () => {
-      const { container } = render(<Skeleton />);
-      const skeleton = container.firstChild as HTMLDivElement;
-      expect(skeleton.style.background).toBe("var(--canvas-bd)");
-    });
-
-    it("verifies computed style reflects canvas-bd token", () => {
-      const { container } = render(<Skeleton />);
-      const skeleton = container.firstChild as HTMLDivElement;
-      const computedStyle = window.getComputedStyle(skeleton);
-      expect(computedStyle.background).toBeDefined();
-    });
-
-    it("maintains canvas-bd token reference in dark mode", () => {
+    it("maintains canvas-bd token reference with dark-canvas class", () => {
       document.body.classList.add("dark-canvas");
       const { container } = render(<Skeleton />);
       const skeleton = container.firstChild as HTMLDivElement;
       expect(skeleton.style.background).toBe("var(--canvas-bd)");
       document.body.classList.remove("dark-canvas");
-    });
-
-    it("responsive to dark mode class toggle", () => {
-      const { container } = render(<Skeleton />);
-      const skeleton = container.firstChild as HTMLDivElement;
-
-      document.body.classList.add("dark-canvas");
-      expect(document.body).toHaveClass("dark-canvas");
-
-      document.body.classList.remove("dark-canvas");
-      expect(document.body).not.toHaveClass("dark-canvas");
     });
   });
 });
