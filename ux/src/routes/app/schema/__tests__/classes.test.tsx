@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { rest } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
-import { createListClasses, createClass, createListSchemes } from "@/api/services/__tests__/fixtures/ontology.fixtures";
+import { createListClasses, createClass, createListSchemes, createConceptScheme } from "@/api/services/__tests__/fixtures/ontology.fixtures";
 import { ClassesPage } from "../classes";
 
 const server = setupServer();
@@ -302,7 +302,7 @@ describe("Classes Schema Page", () => {
       ]);
 
       const mockSchemes = createListSchemes([
-        { id: "scheme-1", title: "People Domain" },
+        createConceptScheme({ id: "scheme-1", title: "People Domain" }),
       ]);
 
       let schemesCallCount = 0;
