@@ -14,6 +14,7 @@ import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import { PropertyDefinitionForm } from "@/components/schema/PropertyDefinitionForm";
 import { PropertyDrawer } from "@/components/ontology/PropertyDrawer";
 import { useProperties, useCreateProperty } from "@/api/hooks/ontology/useProperties";
+import { ApiError } from "@/api/client/interceptors";
 import { propertiesCopy } from "./properties/-copy";
 import type { components } from "@/api/types";
 
@@ -180,8 +181,9 @@ function PropertiesPageWrapper() {
       }
       setShowCreateModal(false);
       toast("success", propertiesCopy.create.successToast);
-    } catch {
-      toast("error", "Failed to create property");
+    } catch (error) {
+      const message = error instanceof ApiError ? error.detail : "Failed to create property";
+      toast("error", message);
     }
   };
 

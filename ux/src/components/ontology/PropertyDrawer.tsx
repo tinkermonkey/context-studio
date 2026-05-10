@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { Drawer } from "@/components/ui/Drawer";
 import { Input, Textarea } from "@/components/ui/Input";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useUpdateProperty, useDeleteProperty } from "@/api/hooks/ontology/useProperties";
 import { useAutosave } from "@/hooks/useAutosave";
 import { useToasts } from "@/components/ui/Toast";
+import { useUndoDelete } from "@/hooks/useUndoDelete";
 import { ApiError } from "@/api/client/interceptors";
 import { propertiesCopy } from "@/routes/app/schema/properties/-copy";
 import type { components } from "@/api/types";
@@ -18,11 +20,19 @@ interface PropertyDrawerProps {
 export function PropertyDrawer({ property, onClose }: PropertyDrawerProps) {
   const [title, setTitle] = useState(property?.title ?? "");
   const [description, setDescription] = useState(property?.description ?? "");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const lastSavedAtRef = useRef<Date | null>(null);
 
   const { toast } = useToasts();
   const updateMutation = useUpdateProperty();
   const deleteMutation = useDeleteProperty();
+  const { performDelete, undo } = useUndoDelete({
+    onDelete: (id: string) => deleteMutation.mutateAsync(id),
+    onDeleteError: (id: string, error: Error) => {
+      toast("error", `Failed to delete property: ${error.message}`);
+    },
+    undoWindowMs: 8000,
+  });
 
   useEffect(() => {
     setTitle(property?.title ?? "");
@@ -64,15 +74,19 @@ export function PropertyDrawer({ property, onClose }: PropertyDrawerProps) {
 
   const handleDelete = async () => {
     if (!property) return;
-    try {
-      await deleteMutation.mutateAsync(property.id);
-      toast("success", propertiesCopy.delete.successToast);
-      onClose();
-    } catch (error) {
-      const message =
-        error instanceof ApiError ? error.detail : "Failed to delete property";
-      toast("error", message);
-    }
+    await performDelete(property.id);
+    toast("success", propertiesCopy.delete.successToast, "Undo", {
+      action: {
+        label: "Undo",
+        onAction: undo,
+      },
+      autoDismissMs: 8000,
+    });
+    onClose();
+  };
+
+  const handleDeleteClick = () => {
+    setShowDeleteConfirm(true);
   };
 
   if (!property) return null;
@@ -80,17 +94,18 @@ export function PropertyDrawer({ property, onClose }: PropertyDrawerProps) {
   const autosaveState = status === "idle" ? undefined : (status as "saving" | "saved" | "error");
 
   return (
-    <Drawer
-      open={!!property}
-      onClose={onClose}
-      title={property.title}
-      autosaveState={autosaveState}
-      isDirty={isDirty}
-      lastSavedAt={lastSavedAtRef.current || undefined}
-      onRevert={revert}
-      onDelete={handleDelete}
-      data-testid="property-drawer"
-    >
+    <>
+      <Drawer
+        open={!!property}
+        onClose={onClose}
+        title={property.title}
+        autosaveState={autosaveState}
+        isDirty={isDirty}
+        lastSavedAt={lastSavedAtRef.current || undefined}
+        onRevert={revert}
+        onDelete={handleDeleteClick}
+        data-testid="property-drawer"
+      >
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
         <div>
           <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
@@ -135,6 +150,19 @@ export function PropertyDrawer({ property, onClose }: PropertyDrawerProps) {
           </span>
         </div>
       </div>
-    </Drawer>
+      </Drawer>
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        title={propertiesCopy.delete.confirmTitle}
+        message="This property will be permanently deleted."
+        confirmLabel={propertiesCopy.delete.confirmButton}
+        onConfirm={handleDelete}
+        danger
+        isLoading={deleteMutation.isPending}
+        data-testid="property-delete-confirm"
+      />
+    </>
   );
 }
