@@ -6,7 +6,6 @@ import { useUpdateProperty, useDeleteProperty } from "@/api/hooks/ontology/usePr
 import { useAutosave } from "@/hooks/useAutosave";
 import { useToasts } from "@/components/ui/Toast";
 import { useUndoDelete } from "@/hooks/useUndoDelete";
-import { ApiError } from "@/api/client/interceptors";
 import { propertiesCopy } from "@/routes/app/schema/properties/-copy";
 import type { components } from "@/api/types";
 
