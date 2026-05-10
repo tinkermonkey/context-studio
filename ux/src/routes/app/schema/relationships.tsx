@@ -137,15 +137,7 @@ function RelationshipsPageContent({
       cell: ({ row }) => (
         <button
           data-testid={`relationship-row-actions-${row.original.id}`}
-          style={{
-            background: "none",
-            border: "none",
-            padding: 0,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className="btn btn-icon"
         >
           <MoreVertical size={16} style={{ color: "var(--canvas-fg-3)" }} />
         </button>
@@ -197,7 +189,7 @@ function RelationshipsPageContent({
 
   return (
     <div data-testid="relationships-page">
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+      <div className="stack">
         <div
           style={{ display: "flex", gap: "var(--space-2)", alignItems: "center", flexWrap: "wrap" }}
         >

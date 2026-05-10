@@ -131,15 +131,7 @@ function TaxonomiesPageContent({
       cell: ({ row }) => (
         <button
           data-testid={`taxonomy-row-actions-${row.original.id}`}
-          style={{
-            background: "none",
-            border: "none",
-            padding: 0,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className="btn btn-icon"
         >
           <MoreVertical size={16} style={{ color: "var(--canvas-fg-3)" }} />
         </button>

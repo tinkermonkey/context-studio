@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { EmptyState } from "@/components/ui/EmptyState";
 import type { components } from "@/api/types";
 
 type ClassResponse = components["schemas"]["ClassResponse"];
@@ -61,7 +62,7 @@ function TreeNodeRenderer({
   const canExpand = hasChildren && depth < maxDepth;
 
   return (
-    <div key={node.class.id} style={{ display: "flex", flexDirection: "column" }}>
+    <div key={node.class.id} className="stack" style={{ gap: 0 }}>
       <div className="kg-row">
         <div className="kg-cell kg-cell-l" data-depth={depth + 1}>
           {canExpand && (
@@ -152,24 +153,12 @@ export function HierarchyTree({
   };
 
   if (error) {
-    return (
-      <div
-        style={{
-          padding: "var(--space-4)",
-          borderRadius: "var(--radius-md, 6px)",
-          background: "var(--canvas-bg-2)",
-          color: "var(--rose-600, #e11d48)",
-          fontSize: "var(--text-sm)",
-        }}
-      >
-        {error.message || "Failed to load class hierarchy"}
-      </div>
-    );
+    return <EmptyState title="Error" description={error.message || "Failed to load class hierarchy"} variant="compact" />;
   }
 
   if (loading) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+      <div className="stack">
         {Array.from({ length: 5 }).map((_, i) => (
           <Skeleton
             key={i}
@@ -185,19 +174,7 @@ export function HierarchyTree({
   }
 
   if (!classes || classes.length === 0) {
-    return (
-      <div
-        style={{
-          padding: "var(--space-4)",
-          borderRadius: "var(--radius-md, 6px)",
-          background: "var(--canvas-bg-2)",
-          color: "var(--canvas-fg-3)",
-          fontSize: "var(--text-sm)",
-        }}
-      >
-        No classes found
-      </div>
-    );
+    return <EmptyState title="No classes found" variant="compact" />;
   }
 
   return (

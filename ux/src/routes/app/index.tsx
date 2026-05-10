@@ -44,95 +44,27 @@ function changeOperationColor(op: string): string {
 
 function EmptyState() {
   return (
-    <div
-      className="empty-state"
-      style={{
-        padding: "var(--space-12, 48px) var(--space-6)",
-      }}
-    >
+    <div className="empty-state">
       <Network size={48} style={{ color: "var(--canvas-fg-3)" }} />
-      <div>
-        <h2
-          style={{
-            fontSize: "var(--text-xl)",
-            fontWeight: 600,
-            color: "var(--canvas-fg)",
-            margin: "0 0 8px",
-          }}
-        >
-          Welcome to Context Studio
-        </h2>
-        <p style={{ fontSize: "var(--text-sm)", color: "var(--canvas-fg-3)", margin: 0 }}>
-          Start building your knowledge graph
-        </p>
+      <div className="empty-state-content">
+        <div className="empty-state-title">Welcome to Context Studio</div>
+        <div className="empty-state-description">Start building your knowledge graph</div>
       </div>
-      <div
-        style={{
-          display: "flex",
-          gap: "var(--space-3)",
-          flexWrap: "wrap",
-          justifyContent: "center",
-        }}
-      >
+      <div style={{ display: "flex", gap: "var(--space-3)", flexWrap: "wrap", justifyContent: "center" }}>
         <Link to="/app/schema/taxonomies">
-          <button
-            type="button"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "10px 18px",
-              borderRadius: "var(--radius-lg, 10px)",
-              background: "var(--canvas-bd)",
-              border: "1px solid var(--canvas-bd-2)",
-              color: "var(--canvas-fg)",
-              fontSize: "var(--text-sm)",
-              fontWeight: 500,
-              cursor: "pointer",
-            }}
-          >
+          <button className="btn btn-ghost">
             <Plus size={14} />
             Create taxonomy
           </button>
         </Link>
         <Link to="/app/pipelines">
-          <button
-            type="button"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "10px 18px",
-              borderRadius: "var(--radius-lg, 10px)",
-              background: "var(--canvas-bd)",
-              border: "1px solid var(--canvas-bd-2)",
-              color: "var(--canvas-fg)",
-              fontSize: "var(--text-sm)",
-              fontWeight: 500,
-              cursor: "pointer",
-            }}
-          >
+          <button className="btn btn-ghost">
             <Cpu size={14} />
             Run pipeline
           </button>
         </Link>
         <Link to="/app/reference/sources">
-          <button
-            type="button"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "10px 18px",
-              borderRadius: "var(--radius-lg, 10px)",
-              background: "var(--canvas-bd)",
-              border: "1px solid var(--canvas-bd-2)",
-              color: "var(--canvas-fg)",
-              fontSize: "var(--text-sm)",
-              fontWeight: 500,
-              cursor: "pointer",
-            }}
-          >
+          <button className="btn btn-ghost">
             <GitBranch size={14} />
             Import data
           </button>
@@ -186,19 +118,8 @@ function Dashboard() {
       <div>
         <div className="page-head">
           <div>
-            <h1
-              style={{
-                fontSize: "var(--text-2xl)",
-                fontWeight: 700,
-                color: "var(--canvas-fg)",
-                margin: 0,
-              }}
-            >
-              Dashboard
-            </h1>
-            <p style={{ fontSize: "var(--text-sm)", color: "var(--canvas-fg-3)", marginTop: 4 }}>
-              Knowledge graph overview
-            </p>
+            <h1>Dashboard</h1>
+            <p className="subtitle">Knowledge graph overview</p>
           </div>
         </div>
         <EmptyState />
@@ -210,19 +131,8 @@ function Dashboard() {
     <div>
       <div className="page-head">
         <div>
-          <h1
-            style={{
-              fontSize: "var(--text-2xl)",
-              fontWeight: 700,
-              color: "var(--canvas-fg)",
-              margin: 0,
-            }}
-          >
-            Dashboard
-          </h1>
-          <p style={{ fontSize: "var(--text-sm)", color: "var(--canvas-fg-3)", marginTop: 4 }}>
-            Knowledge graph overview
-          </p>
+          <h1>Dashboard</h1>
+          <p className="subtitle">Knowledge graph overview</p>
         </div>
       </div>
 

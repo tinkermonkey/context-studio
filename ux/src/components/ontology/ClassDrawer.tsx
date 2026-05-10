@@ -254,9 +254,8 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
               </div>
             ) : (
               <div
+                className="flex-row-center"
                 style={{
-                  display: "flex",
-                  alignItems: "center",
                   padding: "var(--space-2) var(--space-3)",
                   background: "var(--canvas-bg-2)",
                   borderRadius: "var(--radius-sm)",
