@@ -455,12 +455,19 @@ class OntologyRepository(Protocol):
         """
         ...
 
-    def list_individuals(self, class_id: str | None = None) -> list[Individual]:
+    def list_individuals(
+        self,
+        class_id: str | None = None,
+        limit: int | None = 100,
+        offset: int = 0,
+    ) -> list[Individual]:
         """
         Retrieve individuals, optionally filtered by class.
 
         Args:
             class_id: Optional class ID to filter by
+            limit: Maximum number of results (None for unlimited)
+            offset: Number of results to skip
 
         Returns:
             List of Individual entities
