@@ -2,6 +2,24 @@ import "@testing-library/jest-dom";
 import { afterEach, beforeEach, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
 
+// Mock @tanstack/react-router to handle useSearch gracefully in tests
+vi.mock("@tanstack/react-router", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@tanstack/react-router")>();
+  return {
+    ...actual,
+    useSearch: ({ from }: { from?: string } = {}) => {
+      try {
+        // Try to use the real useSearch
+        return actual.useSearch({ from });
+      } catch (e) {
+        // If it fails (no active match), return empty search params
+        // This allows components to work in tests without a fully configured router
+        return {};
+      }
+    },
+  };
+});
+
 // Set up a mock clipboard API for testing - create it at global scope
 const mockClipboardWriteText = vi.fn().mockResolvedValue(undefined);
 Object.defineProperty(navigator, "clipboard", {

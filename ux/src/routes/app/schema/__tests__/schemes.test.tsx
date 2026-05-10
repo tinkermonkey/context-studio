@@ -34,7 +34,7 @@ describe("Schemes Schema Page", () => {
         }),
       );
 
-      const { container } = render(<SchemesIndexPage />, { includeRouter: true });
+      const { container } = render(<SchemesIndexPage />);
 
       // Wait a bit for the component to render
       await new Promise((resolve) => setTimeout(resolve, 50));
@@ -58,7 +58,7 @@ describe("Schemes Schema Page", () => {
         ),
       );
 
-      render(<SchemesIndexPage />, { includeRouter: true });
+      render(<SchemesIndexPage />);
 
       await waitFor(() => {
         expect(screen.getByText(/Failed to load concept schemes/i)).toBeInTheDocument();
@@ -79,7 +79,7 @@ describe("Schemes Schema Page", () => {
         ),
       );
 
-      render(<SchemesIndexPage />, { includeRouter: true });
+      render(<SchemesIndexPage />);
 
       await waitFor(() => {
         expect(screen.getByText("No concept schemes yet")).toBeInTheDocument();
@@ -114,7 +114,7 @@ describe("Schemes Schema Page", () => {
         ),
       );
 
-      render(<SchemesIndexPage />, { includeRouter: true });
+      render(<SchemesIndexPage />);
 
       await waitFor(() => {
         expect(screen.getByText("Biological Classification")).toBeInTheDocument();
@@ -136,7 +136,7 @@ describe("Schemes Schema Page", () => {
         ),
       );
 
-      render(<SchemesIndexPage />, { includeRouter: true });
+      render(<SchemesIndexPage />);
 
       await waitFor(() => {
         expect(screen.getByText("TestScheme")).toBeInTheDocument();
@@ -161,7 +161,7 @@ describe("Schemes Schema Page", () => {
         ),
       );
 
-      render(<SchemesIndexPage />, { includeRouter: true });
+      render(<SchemesIndexPage />);
 
       await waitFor(() => {
         expect(screen.getByText("TestScheme")).toBeInTheDocument();
@@ -198,7 +198,7 @@ describe("Schemes Schema Page", () => {
         ),
       );
 
-      render(<SchemesIndexPage />, { includeRouter: true });
+      render(<SchemesIndexPage />);
 
       await waitFor(() => {
         expect(screen.getByText("Biology")).toBeInTheDocument();
@@ -232,7 +232,7 @@ describe("Schemes Schema Page", () => {
         ),
       );
 
-      render(<SchemesIndexPage />, { includeRouter: true });
+      render(<SchemesIndexPage />);
 
       await waitFor(() => {
         expect(screen.getByText("Biology")).toBeInTheDocument();
