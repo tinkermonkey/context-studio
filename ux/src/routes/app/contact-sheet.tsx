@@ -46,18 +46,15 @@ function Section({
 }
 
 function Row({
-  gap = 8,
   wrap = false,
   children,
 }: {
-  gap?: number;
   wrap?: boolean;
   children: React.ReactNode;
 }) {
   const className = `contact-sheet-row${wrap ? " wrap" : ""}`;
-  const style = gap !== 8 ? { gap } : undefined;
   return (
-    <div className={className} style={style}>
+    <div className={className}>
       {children}
     </div>
   );
@@ -463,8 +460,8 @@ export default function ContactSheet() {
           subtitle="Define a new ontology class"
           footer={
             <>
-              <span className="contact-sheet-modal-footer-hint">⏎ to save · esc to cancel</span>
-              <span className="contact-sheet-spacer" />
+              <span className="modal-foot-hint">⏎ to save · esc to cancel</span>
+              <span className="grow" />
               <Button variant="ghost" onClick={() => setModalOpen(false)}>
                 Cancel
               </Button>
@@ -561,12 +558,7 @@ export default function ContactSheet() {
           {(["success", "warning", "failure", "info"] as const).map((intent) => (
             <div
               key={intent}
-              className="contact-sheet-intent-state-item"
-              style={{
-                background: `var(--intent-${intent}-bg)`,
-                border: `1px solid var(--intent-${intent}-bd)`,
-                color: `var(--intent-${intent}-fg)`,
-              }}
+              className={`contact-sheet-intent-state-item contact-sheet-intent-${intent}`}
             >
               <strong>{intent}</strong>— intent state banner
             </div>

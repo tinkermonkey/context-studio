@@ -101,6 +101,30 @@
   text-transform: capitalize;
 }
 
+.contact-sheet-intent-success {
+  background: var(--intent-success-bg);
+  border: 1px solid var(--intent-success-bd);
+  color: var(--intent-success-fg);
+}
+
+.contact-sheet-intent-warning {
+  background: var(--intent-warning-bg);
+  border: 1px solid var(--intent-warning-bd);
+  color: var(--intent-warning-fg);
+}
+
+.contact-sheet-intent-failure {
+  background: var(--intent-failure-bg);
+  border: 1px solid var(--intent-failure-bd);
+  color: var(--intent-failure-fg);
+}
+
+.contact-sheet-intent-info {
+  background: var(--intent-info-bg);
+  border: 1px solid var(--intent-info-bd);
+  color: var(--intent-info-fg);
+}
+
 /* ------------ Schema section ------------ */
 .contact-sheet-schema-intro {
   margin-bottom: var(--space-6);
@@ -148,23 +172,6 @@
   color: var(--canvas-fg-2);
 }
 
-/* ------------ Modal footer hint ------------ */
-.contact-sheet-modal-footer {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.contact-sheet-modal-footer-hint {
-  font-size: var(--text-xs);
-  color: var(--canvas-fg-3);
-  letter-spacing: 0.02em;
-}
-
-/* ------------ Spacer utility ------------ */
-.contact-sheet-spacer {
-  flex: 1;
-}
 
 /* ------------ Drawer key-value list ------------ */
 .contact-sheet-kv-list {
