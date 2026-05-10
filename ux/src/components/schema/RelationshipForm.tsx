@@ -149,7 +149,7 @@ export function RelationshipForm({ onSubmit, isLoading, classes, properties }: R
           >
             <option value="">Select a relationship type</option>
             {properties.map((prop) => (
-              <option key={prop.id} value={prop.id}>
+              <option key={prop.id} value={prop.identifier}>
                 {prop.title}
               </option>
             ))}
