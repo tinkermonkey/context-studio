@@ -3,7 +3,7 @@ schema: documentation-robotics-v1
 cli_version: 0.1.3
 spec_version: 0.8.4
 created: 2026-03-23T12:18:08.630Z
-updated: 2026-05-08T12:53:37.490Z
+updated: 2026-05-10T10:17:36.892Z
 project:
   name: Context Studio
   description: Local-first knowledge graph application for RAG and communication
@@ -74,7 +74,7 @@ layers:
     elements:
       info: 1
       openapidocument: 1
-      operation: 94
+      operation: 98
       ratelimit: 1
       requestbody: 34
       response: 55
@@ -87,7 +87,7 @@ layers:
     elements:
       arrayschema: 1
       numericschema: 1
-      objectschema: 14
+      objectschema: 43
       stringschema: 2
   data-store:
     order: 8
@@ -142,3 +142,7 @@ layers:
       inputspacepartition: 1
       outcomecategory: 2
       testcoveragetarget: 11
+changeset_history:
+  - name: fix-model-attributes-snake-case
+    committed_at: 2026-05-10T10:17:36.892Z
+    action: committed

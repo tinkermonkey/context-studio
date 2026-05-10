@@ -289,6 +289,12 @@ Administrative view for system health monitoring, background task management, an
 
 Browse and manage ontology classes
 
+#### Attributes
+
+| Name | Value |
+| ---- | ----- |
+| type | page  |
+
 #### Relationships
 
 | Type        | Related Element                                   | Predicate | Direction |
@@ -303,6 +309,12 @@ Browse and manage ontology classes
 **Type**: `view`
 
 Browse and manage concept schemes within taxonomies
+
+#### Attributes
+
+| Name | Value |
+| ---- | ----- |
+| type | page  |
 
 #### Relationships
 
@@ -371,6 +383,12 @@ Page view for dataset workspace management — list, create, activate, and switc
 
 Browse and manage individual instances of classes
 
+#### Attributes
+
+| Name | Value |
+| ---- | ----- |
+| type | page  |
+
 #### Relationships
 
 | Type        | Related Element                                   | Predicate | Direction |
@@ -386,6 +404,12 @@ Browse and manage individual instances of classes
 
 Import and export ontology in SKOS, OWL, and GraphML formats
 
+#### Attributes
+
+| Name | Value |
+| ---- | ----- |
+| type | page  |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate | Direction |
@@ -400,6 +424,12 @@ Import and export ontology in SKOS, OWL, and GraphML formats
 **Type**: `view`
 
 Browse and manage object property definitions
+
+#### Attributes
+
+| Name | Value |
+| ---- | ----- |
+| type | page  |
 
 #### Relationships
 
@@ -447,6 +477,12 @@ View for managing RAG test paragraphs, running experiments, and comparing pipeli
 
 Browse and manage typed relationships between entities
 
+#### Attributes
+
+| Name | Value |
+| ---- | ----- |
+| type | page  |
+
 #### Relationships
 
 | Type        | Related Element                                   | Predicate | Direction |
@@ -462,6 +498,12 @@ Browse and manage typed relationships between entities
 
 Browse and manage taxonomy containers
 
+#### Attributes
+
+| Name | Value |
+| ---- | ----- |
+| type | page  |
+
 #### Relationships
 
 | Type        | Related Element                                   | Predicate | Direction |
@@ -471,4 +513,4 @@ Browse and manage taxonomy containers
 
 ---
 
-Generated: 2026-05-08T12:53:37.492Z | Model Version: 0.1.0
+Generated: 2026-05-10T10:17:36.894Z | Model Version: 0.1.0

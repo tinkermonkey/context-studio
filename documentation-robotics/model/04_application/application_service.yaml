@@ -9,6 +9,8 @@ application.applicationservice.ontology-service:
     create/read/update/delete for taxonomies, concept schemes, classes,
     individuals, and property definitions; generates embeddings and publishes
     domain events
+  attributes:
+    serviceType: synchronous
   source_reference:
     provenance: extracted
     locations:
@@ -29,6 +31,8 @@ application.applicationservice.graph-analysis-service:
     in-memory NetworkX and RDFLib graphs with lazy stale-flag invalidation;
     supports shortest path, centrality, community detection, subgraph
     extraction, and SPARQL queries
+  attributes:
+    serviceType: synchronous
   source_reference:
     provenance: extracted
     locations:
@@ -49,6 +53,8 @@ application.applicationservice.extraction-service:
     pipeline (KG context, LLM, NLP, reference enrichment) — coordinates layer
     execution, recovers from failures, deduplicates entities by label
     similarity, and persists results
+  attributes:
+    serviceType: synchronous
   source_reference:
     provenance: extracted
     locations:
@@ -69,6 +75,8 @@ application.applicationservice.pipeline-service:
     execution — creates/updates/deletes configurations, executes pipelines with
     timeout handling and full token/duration instrumentation, publishes
     PipelineExecuted events
+  attributes:
+    serviceType: synchronous
   source_reference:
     provenance: extracted
     locations:
@@ -88,6 +96,8 @@ application.applicationservice.versioning-service:
   description: Unified domain service for change history, changeset lifecycle
     (WORKING→STAGED→PROPOSED→APPROVED→MERGED), conflict detection and
     resolution, proposal workflow, and remote sync push/pull
+  attributes:
+    serviceType: synchronous
   source_reference:
     provenance: extracted
     locations:
@@ -107,6 +117,8 @@ application.applicationservice.admin-service:
   description: Domain service for system administration — aggregates health checks
     from metrics, embedding, NLP, and LLM components; manages application
     configuration sections; tracks background task lifecycle
+  attributes:
+    serviceType: synchronous
   source_reference:
     provenance: extracted
     locations:
@@ -127,6 +139,8 @@ application.applicationservice.import-run-service:
     interchange — creates runs in PENDING state, transitions them to
     COMMITTED/FAILED/ROLLED_BACK, and manages correlation context for change
     event linkage
+  attributes:
+    serviceType: synchronous
   source_reference:
     provenance: extracted
     locations:

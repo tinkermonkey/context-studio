@@ -14,11 +14,11 @@ REST APIs, operations, endpoints, and API integrations.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 187   |
+| Elements                  | 191   |
 | Intra-Layer Relationships | 137   |
-| Inter-Layer Relationships | 107   |
-| Inbound Relationships     | 11    |
-| Outbound Relationships    | 96    |
+| Inter-Layer Relationships | 139   |
+| Inbound Relationships     | 39    |
+| Outbound Relationships    | 100   |
 
 **Cross-Layer References**:
 
@@ -33,10 +33,12 @@ REST APIs, operations, endpoints, and API integrations.
 | ---------------------------------------------------- | ----------------- | ------------- |
 | `api.info.context-studio-api`                        | `info`            | 1             |
 | `api.openapidocument.context-studio-open-api-spec`   | `openapidocument` | 1             |
+| `api.operation.add-class-to-scheme`                  | `operation`       | 0             |
 | `api.operation.add-parent-class-to-individual`       | `operation`       | 2             |
 | `api.operation.analyze-text`                         | `operation`       | 2             |
 | `api.operation.approve-proposal`                     | `operation`       | 1             |
 | `api.operation.auto-resolve-conflicts`               | `operation`       | 2             |
+| `api.operation.build-graph`                          | `operation`       | 0             |
 | `api.operation.build-knowledge-graph`                | `operation`       | 1             |
 | `api.operation.check-cycle`                          | `operation`       | 2             |
 | `api.operation.create-changeset`                     | `operation`       | 2             |
@@ -91,11 +93,13 @@ REST APIs, operations, endpoints, and API integrations.
 | `api.operation.get-relationship`                     | `operation`       | 1             |
 | `api.operation.get-run-change-events`                | `operation`       | 1             |
 | `api.operation.get-service-metrics`                  | `operation`       | 1             |
+| `api.operation.get-services-health`                  | `operation`       | 0             |
 | `api.operation.get-shortest-path`                    | `operation`       | 1             |
 | `api.operation.get-subgraph`                         | `operation`       | 1             |
 | `api.operation.get-subgraph-by-depth`                | `operation`       | 1             |
 | `api.operation.get-sync-status`                      | `operation`       | 1             |
 | `api.operation.get-system-health`                    | `operation`       | 1             |
+| `api.operation.get-tasks-health`                     | `operation`       | 0             |
 | `api.operation.get-taxonomy`                         | `operation`       | 1             |
 | `api.operation.import-ontology`                      | `operation`       | 3             |
 | `api.operation.list-background-tasks`                | `operation`       | 1             |
@@ -247,115 +251,147 @@ flowchart TB
 
 ## Inter-Layer Relationships Table
 
-| Relationship ID                                           | Source Node                                         | Dest Node                                                     | Dest Layer    | Predicate    | Cardinality  | Strength |
-| --------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------- | ------------- | ------------ | ------------ | -------- |
-| `api.operation.references.application.applicationservice` | `api.operation.add-parent-class-to-individual`      | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.analyze-text`                        | `application.applicationservice.extraction-service`           | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.approve-proposal`                    | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.auto-resolve-conflicts`              | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.build-knowledge-graph`               | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.check-cycle`                         | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.create-changeset`                    | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.create-class`                        | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.create-concept-scheme`               | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.create-individual`                   | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.create-pipeline-configuration`       | `application.applicationservice.pipeline-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.create-property-definition`          | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.create-relationship`                 | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.create-taxonomy`                     | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.delete-class`                        | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.delete-concept-scheme`               | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.delete-individual`                   | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.delete-pipeline-configuration`       | `application.applicationservice.pipeline-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.delete-property-definition`          | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.delete-relationship`                 | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.delete-taxonomy`                     | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.detect-conflicts`                    | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.enrich-from-references`              | `application.applicationservice.extraction-service`           | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.execute-pipeline`                    | `application.applicationservice.pipeline-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.execute-sparql`                      | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.export-ontology`                     | `application.applicationservice.import-run-service`           | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.extract-entities`                    | `application.applicationservice.extraction-service`           | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-all-paths`                       | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-background-task`                 | `application.applicationservice.admin-service`                | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-background-tasks-summary`        | `application.applicationservice.admin-service`                | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-centrality`                      | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-change-history-all`              | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-change-history-by-entity`        | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-changeset`                       | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-class`                           | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-communities`                     | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-concept-scheme`                  | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-configuration`                   | `application.applicationservice.admin-service`                | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-database-health`                 | `application.applicationservice.admin-service`                | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-degree-distribution`             | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-embedding-health`                | `application.applicationservice.admin-service`                | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-entity-version`                  | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-graph-metrics`                   | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-import-run`                      | `application.applicationservice.import-run-service`           | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-individual-inherited-properties` | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-individual`                      | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-neighbors`                       | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-nlp-health`                      | `application.applicationservice.admin-service`                | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-pipeline-configuration`          | `application.applicationservice.pipeline-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-pipeline-executions`             | `application.applicationservice.pipeline-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-property-definition`             | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-rdf-triple-count`                | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-rdf-triples`                     | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-reference-relations`             | `application.applicationservice.extraction-service`           | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-reference-status`                | `application.applicationservice.extraction-service`           | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-relationship`                    | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-run-change-events`               | `application.applicationservice.import-run-service`           | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-service-metrics`                 | `application.applicationservice.admin-service`                | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-shortest-path`                   | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-subgraph-by-depth`               | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-subgraph`                        | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-sync-status`                     | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-system-health`                   | `application.applicationservice.admin-service`                | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.get-taxonomy`                        | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.import-ontology`                     | `application.applicationservice.import-run-service`           | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.list-background-tasks`               | `application.applicationservice.admin-service`                | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.list-classes`                        | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.list-concept-schemes`                | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.list-entity-versions`                | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.list-import-runs`                    | `application.applicationservice.import-run-service`           | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.list-individuals`                    | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.list-pipeline-configurations`        | `application.applicationservice.pipeline-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.list-property-definitions`           | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.list-relationships`                  | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.list-taxonomies`                     | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.merge-proposal`                      | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.move-class`                          | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.pull-changes`                        | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.push-changes`                        | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.reject-proposal`                     | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.remove-parent-class-from-individual` | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.reorder-individual-classes`          | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.reset-configuration`                 | `application.applicationservice.admin-service`                | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.resolve-conflicts`                   | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.search-references`                   | `application.applicationservice.extraction-service`           | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.stage-changeset`                     | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.submit-proposal`                     | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.update-class`                        | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.update-concept-scheme`               | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.update-configuration-section`        | `application.applicationservice.admin-service`                | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.update-individual`                   | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.update-pipeline-configuration`       | `application.applicationservice.pipeline-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.update-property-definition`          | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice` | `api.operation.update-taxonomy`                     | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
-| `api.ratelimit.implements.security.countermeasure`        | `api.ratelimit.external-reference-api-rate-limit`   | `security.countermeasure.parameterized-queries-via-orm`       | `security`    | `implements` | many-to-many | medium   |
-| `api.ratelimit.satisfies.motivation.constraint`           | `api.ratelimit.external-reference-api-rate-limit`   | `motivation.constraint.external-reference-source-rate-limits` | `motivation`  | `satisfies`  | many-to-many | medium   |
-| `apm.alert.monitors.api.ratelimit`                        | `apm.alert.rate-limit-breach-alert`                 | `api.ratelimit.external-reference-api-rate-limit`             | `api`         | `monitors`   | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.entity-version`            | `api.response.entity-version-response`                        | `api`         | `maps-to`    | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.extraction-result`         | `api.response.extraction-result-schema`                       | `api`         | `maps-to`    | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.requestbody`         | `data-model.objectschema.individual-class`          | `api.requestbody.individual-class-list-request`               | `api`         | `maps-to`    | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.requestbody`         | `data-model.objectschema.individual-class`          | `api.requestbody.individual-class-request`                    | `api`         | `maps-to`    | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.requestbody`         | `data-model.objectschema.property-definition`       | `api.requestbody.property-definition-create-request`          | `api`         | `maps-to`    | many-to-many | medium   |
-| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.property-definition`       | `api.response.property-definition-response`                   | `api`         | `maps-to`    | many-to-many | medium   |
-| `ux.view.uses.api.securityscheme`                         | `ux.view.admin-view`                                | `api.securityscheme.api-key`                                  | `api`         | `uses`       | many-to-many | medium   |
-| `ux.view.uses.api.securityscheme`                         | `ux.view.configuration-view`                        | `api.securityscheme.api-key`                                  | `api`         | `uses`       | many-to-many | medium   |
-| `ux.view.uses.api.securityscheme`                         | `ux.view.datasets-view`                             | `api.securityscheme.api-key`                                  | `api`         | `uses`       | many-to-many | medium   |
-| `ux.view.uses.api.securityscheme`                         | `ux.view.rag-experiments-view`                      | `api.securityscheme.api-key`                                  | `api`         | `uses`       | many-to-many | medium   |
+| Relationship ID                                           | Source Node                                             | Dest Node                                                     | Dest Layer    | Predicate    | Cardinality  | Strength |
+| --------------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------- | ------------- | ------------ | ------------ | -------- |
+| `api.operation.references.application.applicationservice` | `api.operation.add-class-to-scheme`                     | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.add-parent-class-to-individual`          | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.analyze-text`                            | `application.applicationservice.extraction-service`           | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.approve-proposal`                        | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.auto-resolve-conflicts`                  | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.build-graph`                             | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.build-knowledge-graph`                   | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.check-cycle`                             | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.create-changeset`                        | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.create-class`                            | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.create-concept-scheme`                   | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.create-individual`                       | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.create-pipeline-configuration`           | `application.applicationservice.pipeline-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.create-property-definition`              | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.create-relationship`                     | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.create-taxonomy`                         | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.delete-class`                            | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.delete-concept-scheme`                   | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.delete-individual`                       | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.delete-pipeline-configuration`           | `application.applicationservice.pipeline-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.delete-property-definition`              | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.delete-relationship`                     | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.delete-taxonomy`                         | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.detect-conflicts`                        | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.enrich-from-references`                  | `application.applicationservice.extraction-service`           | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.execute-pipeline`                        | `application.applicationservice.pipeline-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.execute-sparql`                          | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.export-ontology`                         | `application.applicationservice.import-run-service`           | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.extract-entities`                        | `application.applicationservice.extraction-service`           | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-all-paths`                           | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-background-task`                     | `application.applicationservice.admin-service`                | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-background-tasks-summary`            | `application.applicationservice.admin-service`                | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-centrality`                          | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-change-history-all`                  | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-change-history-by-entity`            | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-changeset`                           | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-class`                               | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-communities`                         | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-concept-scheme`                      | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-configuration`                       | `application.applicationservice.admin-service`                | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-database-health`                     | `application.applicationservice.admin-service`                | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-degree-distribution`                 | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-embedding-health`                    | `application.applicationservice.admin-service`                | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-entity-version`                      | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-graph-metrics`                       | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-import-run`                          | `application.applicationservice.import-run-service`           | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-individual-inherited-properties`     | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-individual`                          | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-neighbors`                           | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-nlp-health`                          | `application.applicationservice.admin-service`                | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-pipeline-configuration`              | `application.applicationservice.pipeline-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-pipeline-executions`                 | `application.applicationservice.pipeline-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-property-definition`                 | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-rdf-triple-count`                    | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-rdf-triples`                         | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-reference-relations`                 | `application.applicationservice.extraction-service`           | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-reference-status`                    | `application.applicationservice.extraction-service`           | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-relationship`                        | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-run-change-events`                   | `application.applicationservice.import-run-service`           | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-service-metrics`                     | `application.applicationservice.admin-service`                | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-services-health`                     | `application.applicationservice.admin-service`                | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-shortest-path`                       | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-subgraph-by-depth`                   | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-subgraph`                            | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-sync-status`                         | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-system-health`                       | `application.applicationservice.admin-service`                | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-tasks-health`                        | `application.applicationservice.admin-service`                | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-taxonomy`                            | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.import-ontology`                         | `application.applicationservice.import-run-service`           | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.list-background-tasks`                   | `application.applicationservice.admin-service`                | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.list-classes`                            | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.list-concept-schemes`                    | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.list-entity-versions`                    | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.list-import-runs`                        | `application.applicationservice.import-run-service`           | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.list-individuals`                        | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.list-pipeline-configurations`            | `application.applicationservice.pipeline-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.list-property-definitions`               | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.list-relationships`                      | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.list-taxonomies`                         | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.merge-proposal`                          | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.move-class`                              | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.pull-changes`                            | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.push-changes`                            | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.reject-proposal`                         | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.remove-parent-class-from-individual`     | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.reorder-individual-classes`              | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.reset-configuration`                     | `application.applicationservice.admin-service`                | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.resolve-conflicts`                       | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.search-references`                       | `application.applicationservice.extraction-service`           | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.stage-changeset`                         | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.submit-proposal`                         | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.update-class`                            | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.update-concept-scheme`                   | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.update-configuration-section`            | `application.applicationservice.admin-service`                | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.update-individual`                       | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.update-pipeline-configuration`           | `application.applicationservice.pipeline-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.update-property-definition`              | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.update-taxonomy`                         | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.ratelimit.implements.security.countermeasure`        | `api.ratelimit.external-reference-api-rate-limit`       | `security.countermeasure.parameterized-queries-via-orm`       | `security`    | `implements` | many-to-many | medium   |
+| `api.ratelimit.satisfies.motivation.constraint`           | `api.ratelimit.external-reference-api-rate-limit`       | `motivation.constraint.external-reference-source-rate-limits` | `motivation`  | `satisfies`  | many-to-many | medium   |
+| `apm.alert.monitors.api.ratelimit`                        | `apm.alert.rate-limit-breach-alert`                     | `api.ratelimit.external-reference-api-rate-limit`             | `api`         | `monitors`   | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.app-configuration`             | `api.response.app-configuration-response`                     | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.background-task`               | `api.response.background-task-response`                       | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.change-event-entity`           | `api.response.change-history-response`                        | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.changeset-entity`              | `api.response.changeset-response`                             | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.concept-scheme-entity`         | `api.response.concept-scheme-response`                        | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.conflict-entity`               | `api.response.conflict-response`                              | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.conflict-report`               | `api.response.conflict-report-response`                       | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.entity-version-entity`         | `api.response.entity-version-response`                        | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.entity-version`                | `api.response.entity-version-response`                        | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.execution-entity`              | `api.response.execution-response`                             | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.extracted-entity`              | `api.response.extraction-result-schema`                       | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.extraction-result`             | `api.response.extraction-result-schema`                       | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.extraction-run`                | `api.response.extraction-result-schema`                       | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.graph-metrics`                 | `api.response.graph-metrics-response`                         | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.import-run-entity`             | `api.response.import-run-response`                            | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.requestbody`         | `data-model.objectschema.individual-class`              | `api.requestbody.individual-class-list-request`               | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.requestbody`         | `data-model.objectschema.individual-class`              | `api.requestbody.individual-class-request`                    | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.individual-entity`             | `api.response.individual-response`                            | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.knowledge-graph`               | `api.response.knowledge-graph-response`                       | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.merge-result`                  | `api.response.merge-result-response`                          | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.ontology-class-entity`         | `api.response.class-response`                                 | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.path-result`                   | `api.response.path-result-response`                           | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.requestbody`         | `data-model.objectschema.pipeline-configuration-entity` | `api.requestbody.pipeline-configuration-create`               | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.processing-metrics`            | `api.response.service-metrics-response`                       | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.requestbody`         | `data-model.objectschema.property-definition-entity`    | `api.requestbody.property-definition-create-request`          | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.requestbody`         | `data-model.objectschema.property-definition`           | `api.requestbody.property-definition-create-request`          | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.property-definition`           | `api.response.property-definition-response`                   | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.relationship-entity`           | `api.response.relationship-response`                          | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.resolution-record`             | `api.response.resolution-record-response`                     | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.subgraph`                      | `api.response.subgraph-data-response`                         | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.subgraph-result`               | `api.response.subgraph-result-response`                       | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.system-health`                 | `api.response.database-health-response`                       | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.taxonomy-entity`               | `api.response.taxonomy-response`                              | `api`         | `maps-to`    | many-to-many | medium   |
+| `data-model.objectschema.maps-to.api.response`            | `data-model.objectschema.triple-extraction-result`      | `api.response.triples-response`                               | `api`         | `maps-to`    | many-to-many | medium   |
+| `ux.view.uses.api.securityscheme`                         | `ux.view.admin-view`                                    | `api.securityscheme.api-key`                                  | `api`         | `uses`       | many-to-many | medium   |
+| `ux.view.uses.api.securityscheme`                         | `ux.view.configuration-view`                            | `api.securityscheme.api-key`                                  | `api`         | `uses`       | many-to-many | medium   |
+| `ux.view.uses.api.securityscheme`                         | `ux.view.datasets-view`                                 | `api.securityscheme.api-key`                                  | `api`         | `uses`       | many-to-many | medium   |
+| `ux.view.uses.api.securityscheme`                         | `ux.view.rag-experiments-view`                          | `api.securityscheme.api-key`                                  | `api`         | `uses`       | many-to-many | medium   |
 
 ## Element Reference
 
@@ -403,6 +439,30 @@ The generated OpenAPI 3.0.3 specification document for the Context Studio local 
 | ----------- | ----------------------------- | ----------------- | --------- |
 | intra-layer | `api.info.context-studio-api` | `associated-with` | inbound   |
 
+### Add Class To Scheme {#add-class-to-scheme}
+
+**ID**: `api.operation.add-class-to-scheme`
+
+**Type**: `operation`
+
+Add an existing class to a concept scheme
+
+#### Attributes
+
+| Name        | Value                                           |
+| ----------- | ----------------------------------------------- |
+| http_method | POST                                            |
+| http_path   | /api/schemes/\{scheme_id\}/classes/\{class_id\} |
+| operationId | addClassToScheme                                |
+| summary     | Add Class To Scheme                             |
+| tags        | schemes                                         |
+
+#### Relationships
+
+| Type        | Related Element                                   | Predicate    | Direction |
+| ----------- | ------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationservice.ontology-service` | `references` | outbound  |
+
 ### Add Parent Class To Individual {#add-parent-class-to-individual}
 
 **ID**: `api.operation.add-parent-class-to-individual`
@@ -410,6 +470,16 @@ The generated OpenAPI 3.0.3 specification document for the Context Studio local 
 **Type**: `operation`
 
 POST /api/individuals/\{individual_id\}/classes — add a parent class assignment to an individual
+
+#### Attributes
+
+| Name        | Value                                      |
+| ----------- | ------------------------------------------ |
+| http_method | POST                                       |
+| http_path   | /api/individuals/\{individual_id\}/classes |
+| operationId | addParentClassToIndividual                 |
+| summary     | Add Parent Class To Individual             |
+| tags        | individuals                                |
 
 #### Relationships
 
@@ -427,6 +497,16 @@ POST /api/individuals/\{individual_id\}/classes — add a parent class assignmen
 
 POST /api/analyze_text — analyze text for entities, concepts, and relationships without persisting
 
+#### Attributes
+
+| Name        | Value             |
+| ----------- | ----------------- |
+| http_method | POST              |
+| http_path   | /api/analyze_text |
+| operationId | analyzeText       |
+| summary     | Analyze Text      |
+| tags        | analyze_text      |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate    | Direction |
@@ -443,6 +523,16 @@ POST /api/analyze_text — analyze text for entities, concepts, and relationship
 
 POST /api/v1/versioning/proposals/\{proposal_id\}/approve — approve a merge proposal
 
+#### Attributes
+
+| Name        | Value                                                |
+| ----------- | ---------------------------------------------------- |
+| http_method | POST                                                 |
+| http_path   | /api/v1/versioning/proposals/\{proposal_id\}/approve |
+| operationId | approveProposal                                      |
+| summary     | Approve Proposal                                     |
+| tags        | versioning                                           |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate    | Direction |
@@ -458,6 +548,16 @@ POST /api/v1/versioning/proposals/\{proposal_id\}/approve — approve a merge pr
 
 POST /api/v1/versioning/proposals/\{proposal_id\}/auto-resolve — automatically resolve merge conflicts using default strategies
 
+#### Attributes
+
+| Name        | Value                                                     |
+| ----------- | --------------------------------------------------------- |
+| http_method | POST                                                      |
+| http_path   | /api/v1/versioning/proposals/\{proposal_id\}/auto-resolve |
+| operationId | autoResolveConflicts                                      |
+| summary     | Auto Resolve Conflicts                                    |
+| tags        | versioning                                                |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate    | Direction |
@@ -466,6 +566,30 @@ POST /api/v1/versioning/proposals/\{proposal_id\}/auto-resolve — automatically
 | intra-layer | `api.requestbody.auto-resolve-conflicts-request`    | `aggregates` | outbound  |
 | intra-layer | `api.response.conflict-response`                    | `delivers`   | outbound  |
 
+### Build Graph {#build-graph}
+
+**ID**: `api.operation.build-graph`
+
+**Type**: `operation`
+
+Explicitly build the in-memory graph from current ontology data; allows on-demand graph refresh and validates that construction succeeds without errors
+
+#### Attributes
+
+| Name        | Value            |
+| ----------- | ---------------- |
+| http_method | POST             |
+| http_path   | /api/graph/build |
+| operationId | buildGraph       |
+| summary     | Build Graph      |
+| tags        | graph            |
+
+#### Relationships
+
+| Type        | Related Element                                         | Predicate    | Direction |
+| ----------- | ------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationservice.graph-analysis-service` | `references` | outbound  |
+
 ### Build Knowledge Graph {#build-knowledge-graph}
 
 **ID**: `api.operation.build-knowledge-graph`
@@ -473,6 +597,16 @@ POST /api/v1/versioning/proposals/\{proposal_id\}/auto-resolve — automatically
 **Type**: `operation`
 
 POST /api/graph/build — build an in-memory knowledge graph from persisted ontology entities and relationships
+
+#### Attributes
+
+| Name        | Value                 |
+| ----------- | --------------------- |
+| http_method | POST                  |
+| http_path   | /api/graph/build      |
+| operationId | buildKnowledgeGraph   |
+| summary     | Build Knowledge Graph |
+| tags        | graph                 |
 
 #### Relationships
 
@@ -488,6 +622,16 @@ POST /api/graph/build — build an in-memory knowledge graph from persisted onto
 **Type**: `operation`
 
 POST /api/graph/cycle-check — detect if adding a directed edge would create a cycle
+
+#### Attributes
+
+| Name        | Value                  |
+| ----------- | ---------------------- |
+| http_method | POST                   |
+| http_path   | /api/graph/cycle-check |
+| operationId | checkCycle             |
+| summary     | Check Cycle            |
+| tags        | graph                  |
 
 #### Relationships
 
@@ -505,6 +649,16 @@ POST /api/graph/cycle-check — detect if adding a directed edge would create a 
 
 POST /api/v1/versioning/changesets — create a new versioning changeset for grouping changes
 
+#### Attributes
+
+| Name        | Value                         |
+| ----------- | ----------------------------- |
+| http_method | POST                          |
+| http_path   | /api/v1/versioning/changesets |
+| operationId | createChangeset               |
+| summary     | Create Changeset              |
+| tags        | versioning                    |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate    | Direction |
@@ -520,6 +674,16 @@ POST /api/v1/versioning/changesets — create a new versioning changeset for gro
 **Type**: `operation`
 
 POST /api/schemes/\{scheme_id\}/classes — create a class within a concept scheme
+
+#### Attributes
+
+| Name        | Value                              |
+| ----------- | ---------------------------------- |
+| http_method | POST                               |
+| http_path   | /api/schemes/\{scheme_id\}/classes |
+| operationId | createClass                        |
+| summary     | Create Class                       |
+| tags        | schemes                            |
 
 #### Relationships
 
@@ -537,6 +701,16 @@ POST /api/schemes/\{scheme_id\}/classes — create a class within a concept sche
 
 POST /api/taxonomies/\{taxonomy_id\}/schemes — create a concept scheme within a taxonomy
 
+#### Attributes
+
+| Name        | Value                                   |
+| ----------- | --------------------------------------- |
+| http_method | POST                                    |
+| http_path   | /api/taxonomies/\{taxonomy_id\}/schemes |
+| operationId | createConceptScheme                     |
+| summary     | Create Concept Scheme                   |
+| tags        | taxonomies                              |
+
 #### Relationships
 
 | Type        | Related Element                                   | Predicate    | Direction |
@@ -552,6 +726,16 @@ POST /api/taxonomies/\{taxonomy_id\}/schemes — create a concept scheme within 
 **Type**: `operation`
 
 POST /api/individuals — create an individual (named instance) of one or more classes
+
+#### Attributes
+
+| Name        | Value             |
+| ----------- | ----------------- |
+| http_method | POST              |
+| http_path   | /api/individuals  |
+| operationId | createIndividual  |
+| summary     | Create Individual |
+| tags        | individuals       |
 
 #### Relationships
 
@@ -571,6 +755,16 @@ POST /api/individuals — create an individual (named instance) of one or more c
 
 POST /api/pipelines — create a new LLM pipeline configuration
 
+#### Attributes
+
+| Name        | Value                         |
+| ----------- | ----------------------------- |
+| http_method | POST                          |
+| http_path   | /api/pipelines                |
+| operationId | createPipelineConfiguration   |
+| summary     | Create Pipeline Configuration |
+| tags        | pipelines                     |
+
 #### Relationships
 
 | Type        | Related Element                                   | Predicate    | Direction |
@@ -586,6 +780,16 @@ POST /api/pipelines — create a new LLM pipeline configuration
 **Type**: `operation`
 
 POST /api/properties — define a new relationship type (object property) in the ontology
+
+#### Attributes
+
+| Name        | Value                      |
+| ----------- | -------------------------- |
+| http_method | POST                       |
+| http_path   | /api/properties            |
+| operationId | createPropertyDefinition   |
+| summary     | Create Property Definition |
+| tags        | properties                 |
 
 #### Relationships
 
@@ -603,6 +807,16 @@ POST /api/properties — define a new relationship type (object property) in the
 
 POST /api/relationships — create a typed directed relationship between two ontology entities
 
+#### Attributes
+
+| Name        | Value               |
+| ----------- | ------------------- |
+| http_method | POST                |
+| http_path   | /api/relationships  |
+| operationId | createRelationship  |
+| summary     | Create Relationship |
+| tags        | relationships       |
+
 #### Relationships
 
 | Type        | Related Element                                   | Predicate    | Direction |
@@ -618,6 +832,16 @@ POST /api/relationships — create a typed directed relationship between two ont
 **Type**: `operation`
 
 POST /api/taxonomies — create a new taxonomy in the ontology management context
+
+#### Attributes
+
+| Name        | Value           |
+| ----------- | --------------- |
+| http_method | POST            |
+| http_path   | /api/taxonomies |
+| operationId | createTaxonomy  |
+| summary     | Create Taxonomy |
+| tags        | taxonomies      |
 
 #### Relationships
 
@@ -635,6 +859,16 @@ POST /api/taxonomies — create a new taxonomy in the ontology management contex
 
 DELETE /api/classes/\{class_id\} — delete a class and cascade to subclasses
 
+#### Attributes
+
+| Name        | Value                     |
+| ----------- | ------------------------- |
+| http_method | DELETE                    |
+| http_path   | /api/classes/\{class_id\} |
+| operationId | deleteClass               |
+| summary     | Delete Class              |
+| tags        | classes                   |
+
 #### Relationships
 
 | Type        | Related Element                                   | Predicate    | Direction |
@@ -649,6 +883,16 @@ DELETE /api/classes/\{class_id\} — delete a class and cascade to subclasses
 **Type**: `operation`
 
 DELETE /api/schemes/\{scheme_id\} — delete a concept scheme and its classes
+
+#### Attributes
+
+| Name        | Value                      |
+| ----------- | -------------------------- |
+| http_method | DELETE                     |
+| http_path   | /api/schemes/\{scheme_id\} |
+| operationId | deleteConceptScheme        |
+| summary     | Delete Concept Scheme      |
+| tags        | schemes                    |
 
 #### Relationships
 
@@ -665,6 +909,16 @@ DELETE /api/schemes/\{scheme_id\} — delete a concept scheme and its classes
 
 DELETE /api/individuals/\{individual_id\} — delete an individual
 
+#### Attributes
+
+| Name        | Value                              |
+| ----------- | ---------------------------------- |
+| http_method | DELETE                             |
+| http_path   | /api/individuals/\{individual_id\} |
+| operationId | deleteIndividual                   |
+| summary     | Delete Individual                  |
+| tags        | individuals                        |
+
 #### Relationships
 
 | Type        | Related Element                                   | Predicate    | Direction |
@@ -679,6 +933,16 @@ DELETE /api/individuals/\{individual_id\} — delete an individual
 **Type**: `operation`
 
 DELETE /api/pipelines/\{pipeline_id\} — delete a pipeline configuration
+
+#### Attributes
+
+| Name        | Value                          |
+| ----------- | ------------------------------ |
+| http_method | DELETE                         |
+| http_path   | /api/pipelines/\{pipeline_id\} |
+| operationId | deletePipelineConfiguration    |
+| summary     | Delete Pipeline Configuration  |
+| tags        | pipelines                      |
 
 #### Relationships
 
@@ -695,6 +959,16 @@ DELETE /api/pipelines/\{pipeline_id\} — delete a pipeline configuration
 
 DELETE /api/properties/\{property_id\} — delete a property definition
 
+#### Attributes
+
+| Name        | Value                           |
+| ----------- | ------------------------------- |
+| http_method | DELETE                          |
+| http_path   | /api/properties/\{property_id\} |
+| operationId | deletePropertyDefinition        |
+| summary     | Delete Property Definition      |
+| tags        | properties                      |
+
 #### Relationships
 
 | Type        | Related Element                                   | Predicate    | Direction |
@@ -709,6 +983,16 @@ DELETE /api/properties/\{property_id\} — delete a property definition
 **Type**: `operation`
 
 DELETE /api/relationships/\{relationship_id\} — remove a typed relationship between ontology entities
+
+#### Attributes
+
+| Name        | Value                                  |
+| ----------- | -------------------------------------- |
+| http_method | DELETE                                 |
+| http_path   | /api/relationships/\{relationship_id\} |
+| operationId | deleteRelationship                     |
+| summary     | Delete Relationship                    |
+| tags        | relationships                          |
 
 #### Relationships
 
@@ -725,6 +1009,16 @@ DELETE /api/relationships/\{relationship_id\} — remove a typed relationship be
 
 DELETE /api/taxonomies/\{taxonomy_id\} — delete a taxonomy and cascade to child entities
 
+#### Attributes
+
+| Name        | Value                           |
+| ----------- | ------------------------------- |
+| http_method | DELETE                          |
+| http_path   | /api/taxonomies/\{taxonomy_id\} |
+| operationId | deleteTaxonomy                  |
+| summary     | Delete Taxonomy                 |
+| tags        | taxonomies                      |
+
 #### Relationships
 
 | Type        | Related Element                                   | Predicate    | Direction |
@@ -740,6 +1034,16 @@ DELETE /api/taxonomies/\{taxonomy_id\} — delete a taxonomy and cascade to chil
 
 GET /api/v1/versioning/proposals/\{proposal_id\}/conflicts — detect merge conflicts in a proposal
 
+#### Attributes
+
+| Name        | Value                                                  |
+| ----------- | ------------------------------------------------------ |
+| http_method | GET                                                    |
+| http_path   | /api/v1/versioning/proposals/\{proposal_id\}/conflicts |
+| operationId | detectConflicts                                        |
+| summary     | Detect Conflicts                                       |
+| tags        | versioning                                             |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate    | Direction |
@@ -754,6 +1058,16 @@ GET /api/v1/versioning/proposals/\{proposal_id\}/conflicts — detect merge conf
 **Type**: `operation`
 
 POST /api/enrich_from_references — enrich existing ontology entities with data from external reference sources
+
+#### Attributes
+
+| Name        | Value                       |
+| ----------- | --------------------------- |
+| http_method | POST                        |
+| http_path   | /api/enrich_from_references |
+| operationId | enrichFromReferences        |
+| summary     | Enrich From References      |
+| tags        | enrich_from_references      |
 
 #### Relationships
 
@@ -771,6 +1085,16 @@ POST /api/enrich_from_references — enrich existing ontology entities with data
 
 POST /api/pipelines/\{pipeline_id\}/execute — execute a pipeline configuration with optional input overrides
 
+#### Attributes
+
+| Name        | Value                                  |
+| ----------- | -------------------------------------- |
+| http_method | POST                                   |
+| http_path   | /api/pipelines/\{pipeline_id\}/execute |
+| operationId | executePipeline                        |
+| summary     | Execute Pipeline                       |
+| tags        | pipelines                              |
+
 #### Relationships
 
 | Type        | Related Element                                   | Predicate    | Direction |
@@ -786,6 +1110,16 @@ POST /api/pipelines/\{pipeline_id\}/execute — execute a pipeline configuration
 **Type**: `operation`
 
 POST /api/graph/sparql — execute a SPARQL SELECT query over the in-memory RDF graph
+
+#### Attributes
+
+| Name        | Value             |
+| ----------- | ----------------- |
+| http_method | POST              |
+| http_path   | /api/graph/sparql |
+| operationId | executeSparql     |
+| summary     | Execute SPARQL    |
+| tags        | graph             |
 
 #### Relationships
 
@@ -803,6 +1137,16 @@ POST /api/graph/sparql — execute a SPARQL SELECT query over the in-memory RDF 
 
 POST /api/v1/interchange/export — export ontology in SKOS, OWL, or GraphML format as streaming response
 
+#### Attributes
+
+| Name        | Value                      |
+| ----------- | -------------------------- |
+| http_method | POST                       |
+| http_path   | /api/v1/interchange/export |
+| operationId | exportOntology             |
+| summary     | Export Ontology            |
+| tags        | interchange                |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate    | Direction |
@@ -818,6 +1162,16 @@ POST /api/v1/interchange/export — export ontology in SKOS, OWL, or GraphML for
 **Type**: `operation`
 
 POST /api/extract — extract ontology entities from a text corpus using NLP and LLM pipelines
+
+#### Attributes
+
+| Name        | Value            |
+| ----------- | ---------------- |
+| http_method | POST             |
+| http_path   | /api/extract     |
+| operationId | extractEntities  |
+| summary     | Extract Entities |
+| tags        | extract          |
 
 #### Relationships
 
@@ -835,6 +1189,16 @@ POST /api/extract — extract ontology entities from a text corpus using NLP and
 
 GET /api/graph/paths/all — find all paths between two graph nodes up to a maximum depth
 
+#### Attributes
+
+| Name        | Value                |
+| ----------- | -------------------- |
+| http_method | GET                  |
+| http_path   | /api/graph/paths/all |
+| operationId | getAllPaths          |
+| summary     | Get All Paths        |
+| tags        | graph                |
+
 #### Relationships
 
 | Type        | Related Element                                         | Predicate    | Direction |
@@ -849,6 +1213,16 @@ GET /api/graph/paths/all — find all paths between two graph nodes up to a maxi
 **Type**: `operation`
 
 GET /api/v1/admin/tasks/\{task_id\} — retrieve a single background task by ID
+
+#### Attributes
+
+| Name        | Value                           |
+| ----------- | ------------------------------- |
+| http_method | GET                             |
+| http_path   | /api/v1/admin/tasks/\{task_id\} |
+| operationId | getBackgroundTask               |
+| summary     | Get Background Task             |
+| tags        | admin                           |
 
 #### Relationships
 
@@ -865,6 +1239,16 @@ GET /api/v1/admin/tasks/\{task_id\} — retrieve a single background task by ID
 
 GET /api/v1/admin/health/tasks — retrieve background task queue summary and counts
 
+#### Attributes
+
+| Name        | Value                        |
+| ----------- | ---------------------------- |
+| http_method | GET                          |
+| http_path   | /api/v1/admin/health/tasks   |
+| operationId | getBackgroundTasksSummary    |
+| summary     | Get Background Tasks Summary |
+| tags        | admin                        |
+
 #### Relationships
 
 | Type        | Related Element                                 | Predicate    | Direction |
@@ -880,6 +1264,16 @@ GET /api/v1/admin/health/tasks — retrieve background task queue summary and co
 
 GET /api/graph/centrality — compute node centrality scores (betweenness, pagerank, closeness, degree)
 
+#### Attributes
+
+| Name        | Value                 |
+| ----------- | --------------------- |
+| http_method | GET                   |
+| http_path   | /api/graph/centrality |
+| operationId | getCentrality         |
+| summary     | Get Centrality        |
+| tags        | graph                 |
+
 #### Relationships
 
 | Type        | Related Element                                         | Predicate    | Direction |
@@ -894,6 +1288,16 @@ GET /api/graph/centrality — compute node centrality scores (betweenness, pager
 **Type**: `operation`
 
 GET /api/v1/versioning/changes — retrieve full change history for all entities
+
+#### Attributes
+
+| Name        | Value                      |
+| ----------- | -------------------------- |
+| http_method | GET                        |
+| http_path   | /api/v1/versioning/changes |
+| operationId | getChangeHistoryAll        |
+| summary     | Get Change History All     |
+| tags        | versioning                 |
 
 #### Relationships
 
@@ -911,6 +1315,16 @@ GET /api/v1/versioning/changes — retrieve full change history for all entities
 
 GET /api/v1/versioning/changes/\{entity_id\} — retrieve change history for a specific entity
 
+#### Attributes
+
+| Name        | Value                                    |
+| ----------- | ---------------------------------------- |
+| http_method | GET                                      |
+| http_path   | /api/v1/versioning/changes/\{entity_id\} |
+| operationId | getChangeHistoryByEntity                 |
+| summary     | Get Change History By Entity             |
+| tags        | versioning                               |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate    | Direction |
@@ -925,6 +1339,16 @@ GET /api/v1/versioning/changes/\{entity_id\} — retrieve change history for a s
 **Type**: `operation`
 
 GET /api/v1/versioning/changesets/\{changeset_id\} — retrieve a versioning changeset by ID
+
+#### Attributes
+
+| Name        | Value                                          |
+| ----------- | ---------------------------------------------- |
+| http_method | GET                                            |
+| http_path   | /api/v1/versioning/changesets/\{changeset_id\} |
+| operationId | getChangeset                                   |
+| summary     | Get Changeset                                  |
+| tags        | versioning                                     |
 
 #### Relationships
 
@@ -941,6 +1365,16 @@ GET /api/v1/versioning/changesets/\{changeset_id\} — retrieve a versioning cha
 
 GET /api/classes/\{class_id\} — retrieve a single ontology class by ID
 
+#### Attributes
+
+| Name        | Value                     |
+| ----------- | ------------------------- |
+| http_method | GET                       |
+| http_path   | /api/classes/\{class_id\} |
+| operationId | getClass                  |
+| summary     | Get Class                 |
+| tags        | classes                   |
+
 #### Relationships
 
 | Type        | Related Element                                   | Predicate    | Direction |
@@ -955,6 +1389,16 @@ GET /api/classes/\{class_id\} — retrieve a single ontology class by ID
 **Type**: `operation`
 
 GET /api/graph/communities — detect communities/clusters in the knowledge graph
+
+#### Attributes
+
+| Name        | Value                  |
+| ----------- | ---------------------- |
+| http_method | GET                    |
+| http_path   | /api/graph/communities |
+| operationId | getCommunities         |
+| summary     | Get Communities        |
+| tags        | graph                  |
 
 #### Relationships
 
@@ -971,6 +1415,16 @@ GET /api/graph/communities — detect communities/clusters in the knowledge grap
 
 GET /api/schemes/\{scheme_id\} — retrieve a single concept scheme by ID
 
+#### Attributes
+
+| Name        | Value                      |
+| ----------- | -------------------------- |
+| http_method | GET                        |
+| http_path   | /api/schemes/\{scheme_id\} |
+| operationId | getConceptScheme           |
+| summary     | Get Concept Scheme         |
+| tags        | schemes                    |
+
 #### Relationships
 
 | Type        | Related Element                                   | Predicate    | Direction |
@@ -985,6 +1439,16 @@ GET /api/schemes/\{scheme_id\} — retrieve a single concept scheme by ID
 **Type**: `operation`
 
 GET /api/v1/admin/configuration — retrieve current application configuration
+
+#### Attributes
+
+| Name        | Value                       |
+| ----------- | --------------------------- |
+| http_method | GET                         |
+| http_path   | /api/v1/admin/configuration |
+| operationId | getConfiguration            |
+| summary     | Get Configuration           |
+| tags        | admin                       |
 
 #### Relationships
 
@@ -1001,6 +1465,16 @@ GET /api/v1/admin/configuration — retrieve current application configuration
 
 GET /api/v1/admin/health/database — check database connectivity and integrity for local.db and operations.db
 
+#### Attributes
+
+| Name        | Value                         |
+| ----------- | ----------------------------- |
+| http_method | GET                           |
+| http_path   | /api/v1/admin/health/database |
+| operationId | getDatabaseHealth             |
+| summary     | Get Database Health           |
+| tags        | admin                         |
+
 #### Relationships
 
 | Type        | Related Element                                | Predicate    | Direction |
@@ -1015,6 +1489,16 @@ GET /api/v1/admin/health/database — check database connectivity and integrity 
 **Type**: `operation`
 
 GET /api/graph/degree-distribution — retrieve node degree distribution histogram
+
+#### Attributes
+
+| Name        | Value                          |
+| ----------- | ------------------------------ |
+| http_method | GET                            |
+| http_path   | /api/graph/degree-distribution |
+| operationId | getDegreeDistribution          |
+| summary     | Get Degree Distribution        |
+| tags        | graph                          |
 
 #### Relationships
 
@@ -1031,6 +1515,16 @@ GET /api/graph/degree-distribution — retrieve node degree distribution histogr
 
 GET /api/v1/admin/health/embedding — check embedding model availability and readiness
 
+#### Attributes
+
+| Name        | Value                          |
+| ----------- | ------------------------------ |
+| http_method | GET                            |
+| http_path   | /api/v1/admin/health/embedding |
+| operationId | getEmbeddingHealth             |
+| summary     | Get Embedding Health           |
+| tags        | admin                          |
+
 #### Relationships
 
 | Type        | Related Element                                | Predicate    | Direction |
@@ -1045,6 +1539,16 @@ GET /api/v1/admin/health/embedding — check embedding model availability and re
 **Type**: `operation`
 
 GET /api/v1/versioning/versions/\{entity_id\}/\{version\} — retrieve a specific historical version of an entity
+
+#### Attributes
+
+| Name        | Value                                                 |
+| ----------- | ----------------------------------------------------- |
+| http_method | GET                                                   |
+| http_path   | /api/v1/versioning/versions/\{entity_id\}/\{version\} |
+| operationId | getEntityVersion                                      |
+| summary     | Get Entity Version                                    |
+| tags        | versioning                                            |
 
 #### Relationships
 
@@ -1061,6 +1565,16 @@ GET /api/v1/versioning/versions/\{entity_id\}/\{version\} — retrieve a specifi
 
 GET /api/graph/metrics — retrieve global graph statistics (node count, edge count, density, diameter)
 
+#### Attributes
+
+| Name        | Value              |
+| ----------- | ------------------ |
+| http_method | GET                |
+| http_path   | /api/graph/metrics |
+| operationId | getGraphMetrics    |
+| summary     | Get Graph Metrics  |
+| tags        | graph              |
+
 #### Relationships
 
 | Type        | Related Element                                         | Predicate    | Direction |
@@ -1076,6 +1590,16 @@ GET /api/graph/metrics — retrieve global graph statistics (node count, edge co
 
 GET /api/v1/interchange/runs/\{run_id\} — retrieve a single import run record by ID
 
+#### Attributes
+
+| Name        | Value                               |
+| ----------- | ----------------------------------- |
+| http_method | GET                                 |
+| http_path   | /api/v1/interchange/runs/\{run_id\} |
+| operationId | getImportRun                        |
+| summary     | Get Import Run                      |
+| tags        | interchange                         |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate    | Direction |
@@ -1090,6 +1614,16 @@ GET /api/v1/interchange/runs/\{run_id\} — retrieve a single import run record 
 **Type**: `operation`
 
 GET /api/individuals/\{individual_id\} — retrieve a single individual by ID
+
+#### Attributes
+
+| Name        | Value                              |
+| ----------- | ---------------------------------- |
+| http_method | GET                                |
+| http_path   | /api/individuals/\{individual_id\} |
+| operationId | getIndividual                      |
+| summary     | Get Individual                     |
+| tags        | individuals                        |
 
 #### Relationships
 
@@ -1108,6 +1642,16 @@ GET /api/individuals/\{individual_id\} — retrieve a single individual by ID
 
 GET /api/individuals/\{individual_id\}/inherited-properties — retrieve data properties inherited from parent classes
 
+#### Attributes
+
+| Name        | Value                                                   |
+| ----------- | ------------------------------------------------------- |
+| http_method | GET                                                     |
+| http_path   | /api/individuals/\{individual_id\}/inherited-properties |
+| operationId | getIndividualInheritedProperties                        |
+| summary     | Get Individual Inherited Properties                     |
+| tags        | individuals                                             |
+
 #### Relationships
 
 | Type        | Related Element                                   | Predicate    | Direction |
@@ -1122,6 +1666,16 @@ GET /api/individuals/\{individual_id\}/inherited-properties — retrieve data pr
 **Type**: `operation`
 
 GET /api/graph/nodes/\{node_id\}/neighbors — retrieve immediate neighbors of a graph node
+
+#### Attributes
+
+| Name        | Value                                  |
+| ----------- | -------------------------------------- |
+| http_method | GET                                    |
+| http_path   | /api/graph/nodes/\{node_id\}/neighbors |
+| operationId | getNeighbors                           |
+| summary     | Get Neighbors                          |
+| tags        | graph                                  |
 
 #### Relationships
 
@@ -1138,6 +1692,16 @@ GET /api/graph/nodes/\{node_id\}/neighbors — retrieve immediate neighbors of a
 
 GET /api/v1/admin/health/nlp — check spaCy NLP processor availability and readiness
 
+#### Attributes
+
+| Name        | Value                    |
+| ----------- | ------------------------ |
+| http_method | GET                      |
+| http_path   | /api/v1/admin/health/nlp |
+| operationId | getNlpHealth             |
+| summary     | Get NLP Health           |
+| tags        | admin                    |
+
 #### Relationships
 
 | Type        | Related Element                                | Predicate    | Direction |
@@ -1152,6 +1716,16 @@ GET /api/v1/admin/health/nlp — check spaCy NLP processor availability and read
 **Type**: `operation`
 
 GET /api/pipelines/\{pipeline_id\} — retrieve a single pipeline configuration by ID
+
+#### Attributes
+
+| Name        | Value                          |
+| ----------- | ------------------------------ |
+| http_method | GET                            |
+| http_path   | /api/pipelines/\{pipeline_id\} |
+| operationId | getPipelineConfiguration       |
+| summary     | Get Pipeline Configuration     |
+| tags        | pipelines                      |
 
 #### Relationships
 
@@ -1168,6 +1742,16 @@ GET /api/pipelines/\{pipeline_id\} — retrieve a single pipeline configuration 
 
 GET /api/pipelines/\{pipeline_id\}/executions — list all execution records for a pipeline
 
+#### Attributes
+
+| Name        | Value                                     |
+| ----------- | ----------------------------------------- |
+| http_method | GET                                       |
+| http_path   | /api/pipelines/\{pipeline_id\}/executions |
+| operationId | getPipelineExecutions                     |
+| summary     | Get Pipeline Executions                   |
+| tags        | pipelines                                 |
+
 #### Relationships
 
 | Type        | Related Element                                   | Predicate    | Direction |
@@ -1182,6 +1766,16 @@ GET /api/pipelines/\{pipeline_id\}/executions — list all execution records for
 **Type**: `operation`
 
 GET /api/properties/\{property_id\} — retrieve a single property definition by ID
+
+#### Attributes
+
+| Name        | Value                           |
+| ----------- | ------------------------------- |
+| http_method | GET                             |
+| http_path   | /api/properties/\{property_id\} |
+| operationId | getPropertyDefinition           |
+| summary     | Get Property Definition         |
+| tags        | properties                      |
 
 #### Relationships
 
@@ -1198,6 +1792,16 @@ GET /api/properties/\{property_id\} — retrieve a single property definition by
 
 GET /api/graph/rdf/count — get the count of RDF triples in the knowledge graph
 
+#### Attributes
+
+| Name        | Value                |
+| ----------- | -------------------- |
+| http_method | GET                  |
+| http_path   | /api/graph/rdf/count |
+| operationId | getRdfTripleCount    |
+| summary     | Get RDF Triple Count |
+| tags        | graph                |
+
 #### Relationships
 
 | Type        | Related Element                                         | Predicate    | Direction |
@@ -1212,6 +1816,16 @@ GET /api/graph/rdf/count — get the count of RDF triples in the knowledge graph
 **Type**: `operation`
 
 GET /api/graph/rdf/triples — retrieve all RDF triples from the knowledge graph
+
+#### Attributes
+
+| Name        | Value                  |
+| ----------- | ---------------------- |
+| http_method | GET                    |
+| http_path   | /api/graph/rdf/triples |
+| operationId | getRdfTriples          |
+| summary     | Get RDF Triples        |
+| tags        | graph                  |
 
 #### Relationships
 
@@ -1228,6 +1842,16 @@ GET /api/graph/rdf/triples — retrieve all RDF triples from the knowledge graph
 **Type**: `operation`
 
 POST /api/reference/relations — retrieve semantic relations for a concept from external reference sources
+
+#### Attributes
+
+| Name        | Value                    |
+| ----------- | ------------------------ |
+| http_method | POST                     |
+| http_path   | /api/reference/relations |
+| operationId | getReferenceRelations    |
+| summary     | Get Reference Relations  |
+| tags        | reference                |
 
 #### Relationships
 
@@ -1246,6 +1870,16 @@ POST /api/reference/relations — retrieve semantic relations for a concept from
 
 GET /api/reference/status — check availability and status of external reference sources (ConceptNet, DBpedia, Wikidata, schema.org)
 
+#### Attributes
+
+| Name        | Value                 |
+| ----------- | --------------------- |
+| http_method | GET                   |
+| http_path   | /api/reference/status |
+| operationId | getReferenceStatus    |
+| summary     | Get Reference Status  |
+| tags        | reference             |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate    | Direction |
@@ -1262,6 +1896,16 @@ GET /api/reference/status — check availability and status of external referenc
 
 GET /api/relationships/\{relationship_id\} — retrieve a single relationship by ID
 
+#### Attributes
+
+| Name        | Value                                  |
+| ----------- | -------------------------------------- |
+| http_method | GET                                    |
+| http_path   | /api/relationships/\{relationship_id\} |
+| operationId | getRelationship                        |
+| summary     | Get Relationship                       |
+| tags        | relationships                          |
+
 #### Relationships
 
 | Type        | Related Element                                   | Predicate    | Direction |
@@ -1276,6 +1920,16 @@ GET /api/relationships/\{relationship_id\} — retrieve a single relationship by
 **Type**: `operation`
 
 GET /api/v1/interchange/runs/\{run_id\}/change-events — retrieve all change events generated by an import run
+
+#### Attributes
+
+| Name        | Value                                             |
+| ----------- | ------------------------------------------------- |
+| http_method | GET                                               |
+| http_path   | /api/v1/interchange/runs/\{run_id\}/change-events |
+| operationId | getRunChangeEvents                                |
+| summary     | Get Run Change Events                             |
+| tags        | interchange                                       |
 
 #### Relationships
 
@@ -1292,12 +1946,46 @@ GET /api/v1/interchange/runs/\{run_id\}/change-events — retrieve all change ev
 
 GET /api/v1/admin/health/services — retrieve per-service metrics and uptime statistics
 
+#### Attributes
+
+| Name        | Value                         |
+| ----------- | ----------------------------- |
+| http_method | GET                           |
+| http_path   | /api/v1/admin/health/services |
+| operationId | getServiceMetrics             |
+| summary     | Get Service Metrics           |
+| tags        | admin                         |
+
 #### Relationships
 
 | Type        | Related Element                                | Predicate    | Direction |
 | ----------- | ---------------------------------------------- | ------------ | --------- |
 | inter-layer | `application.applicationservice.admin-service` | `references` | outbound  |
 | intra-layer | `api.response.service-metrics-response`        | `delivers`   | outbound  |
+
+### Get Services Health {#get-services-health}
+
+**ID**: `api.operation.get-services-health`
+
+**Type**: `operation`
+
+Get service-level metrics including system uptime and list of available LLM providers
+
+#### Attributes
+
+| Name        | Value                         |
+| ----------- | ----------------------------- |
+| http_method | GET                           |
+| http_path   | /api/v1/admin/health/services |
+| operationId | getServicesHealth             |
+| summary     | Get Services Health           |
+| tags        | admin                         |
+
+#### Relationships
+
+| Type        | Related Element                                | Predicate    | Direction |
+| ----------- | ---------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationservice.admin-service` | `references` | outbound  |
 
 ### Get Shortest Path {#get-shortest-path}
 
@@ -1306,6 +1994,16 @@ GET /api/v1/admin/health/services — retrieve per-service metrics and uptime st
 **Type**: `operation`
 
 GET /api/graph/paths/shortest — find shortest path between two graph nodes
+
+#### Attributes
+
+| Name        | Value                     |
+| ----------- | ------------------------- |
+| http_method | GET                       |
+| http_path   | /api/graph/paths/shortest |
+| operationId | getShortestPath           |
+| summary     | Get Shortest Path         |
+| tags        | graph                     |
 
 #### Relationships
 
@@ -1322,6 +2020,16 @@ GET /api/graph/paths/shortest — find shortest path between two graph nodes
 
 GET /api/graph/subgraph — extract a subgraph for a set of root node IDs
 
+#### Attributes
+
+| Name        | Value               |
+| ----------- | ------------------- |
+| http_method | GET                 |
+| http_path   | /api/graph/subgraph |
+| operationId | getSubgraph         |
+| summary     | Get Subgraph        |
+| tags        | graph               |
+
 #### Relationships
 
 | Type        | Related Element                                         | Predicate    | Direction |
@@ -1336,6 +2044,16 @@ GET /api/graph/subgraph — extract a subgraph for a set of root node IDs
 **Type**: `operation`
 
 GET /api/graph/nodes/\{node_id\}/subgraph — extract a depth-bounded subgraph rooted at a node
+
+#### Attributes
+
+| Name        | Value                                 |
+| ----------- | ------------------------------------- |
+| http_method | GET                                   |
+| http_path   | /api/graph/nodes/\{node_id\}/subgraph |
+| operationId | getSubgraphByDepth                    |
+| summary     | Get Subgraph By Depth                 |
+| tags        | graph                                 |
 
 #### Relationships
 
@@ -1352,6 +2070,16 @@ GET /api/graph/nodes/\{node_id\}/subgraph — extract a depth-bounded subgraph r
 
 GET /api/v1/versioning/sync/status — retrieve current remote sync status and last sync timestamps
 
+#### Attributes
+
+| Name        | Value                          |
+| ----------- | ------------------------------ |
+| http_method | GET                            |
+| http_path   | /api/v1/versioning/sync/status |
+| operationId | getSyncStatus                  |
+| summary     | Get Sync Status                |
+| tags        | versioning                     |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate    | Direction |
@@ -1367,12 +2095,46 @@ GET /api/v1/versioning/sync/status — retrieve current remote sync status and l
 
 GET /api/v1/admin/health — retrieve overall system health status across all services
 
+#### Attributes
+
+| Name        | Value                |
+| ----------- | -------------------- |
+| http_method | GET                  |
+| http_path   | /api/v1/admin/health |
+| operationId | getSystemHealth      |
+| summary     | Get System Health    |
+| tags        | admin                |
+
 #### Relationships
 
 | Type        | Related Element                                | Predicate    | Direction |
 | ----------- | ---------------------------------------------- | ------------ | --------- |
 | inter-layer | `application.applicationservice.admin-service` | `references` | outbound  |
 | intra-layer | `api.response.system-health-response`          | `delivers`   | outbound  |
+
+### Get Tasks Health {#get-tasks-health}
+
+**ID**: `api.operation.get-tasks-health`
+
+**Type**: `operation`
+
+Get summary of background task execution status with counts grouped by status (pending, running, completed, failed)
+
+#### Attributes
+
+| Name        | Value                      |
+| ----------- | -------------------------- |
+| http_method | GET                        |
+| http_path   | /api/v1/admin/health/tasks |
+| operationId | getTasksHealth             |
+| summary     | Get Tasks Health           |
+| tags        | admin                      |
+
+#### Relationships
+
+| Type        | Related Element                                | Predicate    | Direction |
+| ----------- | ---------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationservice.admin-service` | `references` | outbound  |
 
 ### Get Taxonomy {#get-taxonomy}
 
@@ -1381,6 +2143,16 @@ GET /api/v1/admin/health — retrieve overall system health status across all se
 **Type**: `operation`
 
 GET /api/taxonomies/\{taxonomy_id\} — retrieve a single taxonomy by ID
+
+#### Attributes
+
+| Name        | Value                           |
+| ----------- | ------------------------------- |
+| http_method | GET                             |
+| http_path   | /api/taxonomies/\{taxonomy_id\} |
+| operationId | getTaxonomy                     |
+| summary     | Get Taxonomy                    |
+| tags        | taxonomies                      |
 
 #### Relationships
 
@@ -1396,6 +2168,16 @@ GET /api/taxonomies/\{taxonomy_id\} — retrieve a single taxonomy by ID
 **Type**: `operation`
 
 POST /api/v1/interchange/import — import ontology from SKOS, OWL, or GraphML file; creates ImportRun record
+
+#### Attributes
+
+| Name        | Value                      |
+| ----------- | -------------------------- |
+| http_method | POST                       |
+| http_path   | /api/v1/interchange/import |
+| operationId | importOntology             |
+| summary     | Import Ontology            |
+| tags        | interchange                |
 
 #### Relationships
 
@@ -1414,6 +2196,16 @@ POST /api/v1/interchange/import — import ontology from SKOS, OWL, or GraphML f
 
 GET /api/v1/admin/tasks — list all background tasks with status
 
+#### Attributes
+
+| Name        | Value                 |
+| ----------- | --------------------- |
+| http_method | GET                   |
+| http_path   | /api/v1/admin/tasks   |
+| operationId | listBackgroundTasks   |
+| summary     | List Background Tasks |
+| tags        | admin                 |
+
 #### Relationships
 
 | Type        | Related Element                                | Predicate    | Direction |
@@ -1428,6 +2220,16 @@ GET /api/v1/admin/tasks — list all background tasks with status
 **Type**: `operation`
 
 GET /api/classes — list all classes with optional filtering by scheme, parent, search
+
+#### Attributes
+
+| Name        | Value        |
+| ----------- | ------------ |
+| http_method | GET          |
+| http_path   | /api/classes |
+| operationId | listClasses  |
+| summary     | List Classes |
+| tags        | classes      |
 
 #### Relationships
 
@@ -1444,6 +2246,16 @@ GET /api/classes — list all classes with optional filtering by scheme, parent,
 
 GET /api/schemes — list all concept schemes with optional taxonomy filter
 
+#### Attributes
+
+| Name        | Value                |
+| ----------- | -------------------- |
+| http_method | GET                  |
+| http_path   | /api/schemes         |
+| operationId | listConceptSchemes   |
+| summary     | List Concept Schemes |
+| tags        | schemes              |
+
 #### Relationships
 
 | Type        | Related Element                                   | Predicate    | Direction |
@@ -1458,6 +2270,16 @@ GET /api/schemes — list all concept schemes with optional taxonomy filter
 **Type**: `operation`
 
 GET /api/v1/versioning/versions/\{entity_id\} — list all stored versions of an entity
+
+#### Attributes
+
+| Name        | Value                                     |
+| ----------- | ----------------------------------------- |
+| http_method | GET                                       |
+| http_path   | /api/v1/versioning/versions/\{entity_id\} |
+| operationId | listEntityVersions                        |
+| summary     | List Entity Versions                      |
+| tags        | versioning                                |
 
 #### Relationships
 
@@ -1474,6 +2296,16 @@ GET /api/v1/versioning/versions/\{entity_id\} — list all stored versions of an
 
 GET /api/v1/interchange/runs — list all import run records with status and metadata
 
+#### Attributes
+
+| Name        | Value                    |
+| ----------- | ------------------------ |
+| http_method | GET                      |
+| http_path   | /api/v1/interchange/runs |
+| operationId | listImportRuns           |
+| summary     | List Import Runs         |
+| tags        | interchange              |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate    | Direction |
@@ -1488,6 +2320,16 @@ GET /api/v1/interchange/runs — list all import run records with status and met
 **Type**: `operation`
 
 GET /api/individuals — list all individuals with optional class/scheme filtering
+
+#### Attributes
+
+| Name        | Value            |
+| ----------- | ---------------- |
+| http_method | GET              |
+| http_path   | /api/individuals |
+| operationId | listIndividuals  |
+| summary     | List Individuals |
+| tags        | individuals      |
 
 #### Relationships
 
@@ -1504,6 +2346,16 @@ GET /api/individuals — list all individuals with optional class/scheme filteri
 
 GET /api/pipelines — list all LLM pipeline configurations
 
+#### Attributes
+
+| Name        | Value                        |
+| ----------- | ---------------------------- |
+| http_method | GET                          |
+| http_path   | /api/pipelines               |
+| operationId | listPipelineConfigurations   |
+| summary     | List Pipeline Configurations |
+| tags        | pipelines                    |
+
 #### Relationships
 
 | Type        | Related Element                                   | Predicate    | Direction |
@@ -1518,6 +2370,16 @@ GET /api/pipelines — list all LLM pipeline configurations
 **Type**: `operation`
 
 GET /api/properties — list all property definitions (relationship types)
+
+#### Attributes
+
+| Name        | Value                     |
+| ----------- | ------------------------- |
+| http_method | GET                       |
+| http_path   | /api/properties           |
+| operationId | listPropertyDefinitions   |
+| summary     | List Property Definitions |
+| tags        | properties                |
 
 #### Relationships
 
@@ -1534,6 +2396,16 @@ GET /api/properties — list all property definitions (relationship types)
 
 GET /api/relationships — list relationships with optional source/target/type filtering
 
+#### Attributes
+
+| Name        | Value              |
+| ----------- | ------------------ |
+| http_method | GET                |
+| http_path   | /api/relationships |
+| operationId | listRelationships  |
+| summary     | List Relationships |
+| tags        | relationships      |
+
 #### Relationships
 
 | Type        | Related Element                                   | Predicate    | Direction |
@@ -1548,6 +2420,16 @@ GET /api/relationships — list relationships with optional source/target/type f
 **Type**: `operation`
 
 GET /api/taxonomies — list all taxonomies with optional filtering
+
+#### Attributes
+
+| Name        | Value           |
+| ----------- | --------------- |
+| http_method | GET             |
+| http_path   | /api/taxonomies |
+| operationId | listTaxonomies  |
+| summary     | List Taxonomies |
+| tags        | taxonomies      |
 
 #### Relationships
 
@@ -1564,6 +2446,16 @@ GET /api/taxonomies — list all taxonomies with optional filtering
 
 POST /api/v1/versioning/proposals/\{proposal_id\}/merge — merge an approved proposal into the main ontology
 
+#### Attributes
+
+| Name        | Value                                              |
+| ----------- | -------------------------------------------------- |
+| http_method | POST                                               |
+| http_path   | /api/v1/versioning/proposals/\{proposal_id\}/merge |
+| operationId | mergeProposal                                      |
+| summary     | Merge Proposal                                     |
+| tags        | versioning                                         |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate    | Direction |
@@ -1578,6 +2470,16 @@ POST /api/v1/versioning/proposals/\{proposal_id\}/merge — merge an approved pr
 **Type**: `operation`
 
 POST /api/classes/\{class_id\}/move — move a class to a different parent within the hierarchy
+
+#### Attributes
+
+| Name        | Value                          |
+| ----------- | ------------------------------ |
+| http_method | POST                           |
+| http_path   | /api/classes/\{class_id\}/move |
+| operationId | moveClass                      |
+| summary     | Move Class                     |
+| tags        | classes                        |
 
 #### Relationships
 
@@ -1595,6 +2497,16 @@ POST /api/classes/\{class_id\}/move — move a class to a different parent withi
 
 POST /api/v1/versioning/sync/pull — pull remote changes from sync target into local ontology
 
+#### Attributes
+
+| Name        | Value                        |
+| ----------- | ---------------------------- |
+| http_method | POST                         |
+| http_path   | /api/v1/versioning/sync/pull |
+| operationId | pullChanges                  |
+| summary     | Pull Changes                 |
+| tags        | versioning                   |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate    | Direction |
@@ -1610,6 +2522,16 @@ POST /api/v1/versioning/sync/pull — pull remote changes from sync target into 
 
 POST /api/v1/versioning/sync/push — push local changes to remote sync target (S3/DuckDB)
 
+#### Attributes
+
+| Name        | Value                        |
+| ----------- | ---------------------------- |
+| http_method | POST                         |
+| http_path   | /api/v1/versioning/sync/push |
+| operationId | pushChanges                  |
+| summary     | Push Changes                 |
+| tags        | versioning                   |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate    | Direction |
@@ -1624,6 +2546,16 @@ POST /api/v1/versioning/sync/push — push local changes to remote sync target (
 **Type**: `operation`
 
 POST /api/v1/versioning/proposals/\{proposal_id\}/reject — reject a merge proposal
+
+#### Attributes
+
+| Name        | Value                                               |
+| ----------- | --------------------------------------------------- |
+| http_method | POST                                                |
+| http_path   | /api/v1/versioning/proposals/\{proposal_id\}/reject |
+| operationId | rejectProposal                                      |
+| summary     | Reject Proposal                                     |
+| tags        | versioning                                          |
 
 #### Relationships
 
@@ -1641,6 +2573,16 @@ POST /api/v1/versioning/proposals/\{proposal_id\}/reject — reject a merge prop
 
 DELETE /api/individuals/\{individual_id\}/classes/\{class_id\} — remove a class assignment from an individual
 
+#### Attributes
+
+| Name        | Value                                                   |
+| ----------- | ------------------------------------------------------- |
+| http_method | DELETE                                                  |
+| http_path   | /api/individuals/\{individual_id\}/classes/\{class_id\} |
+| operationId | removeParentClassFromIndividual                         |
+| summary     | Remove Parent Class From Individual                     |
+| tags        | individuals                                             |
+
 #### Relationships
 
 | Type        | Related Element                                   | Predicate    | Direction |
@@ -1655,6 +2597,16 @@ DELETE /api/individuals/\{individual_id\}/classes/\{class_id\} — remove a clas
 **Type**: `operation`
 
 PUT /api/individuals/\{individual_id\}/classes — reorder the class assignments on an individual
+
+#### Attributes
+
+| Name        | Value                                      |
+| ----------- | ------------------------------------------ |
+| http_method | PUT                                        |
+| http_path   | /api/individuals/\{individual_id\}/classes |
+| operationId | reorderIndividualClasses                   |
+| summary     | Reorder Individual Classes                 |
+| tags        | individuals                                |
 
 #### Relationships
 
@@ -1672,6 +2624,16 @@ PUT /api/individuals/\{individual_id\}/classes — reorder the class assignments
 
 POST /api/v1/admin/configuration/reset — reset configuration to defaults from config.json
 
+#### Attributes
+
+| Name        | Value                             |
+| ----------- | --------------------------------- |
+| http_method | POST                              |
+| http_path   | /api/v1/admin/configuration/reset |
+| operationId | resetConfiguration                |
+| summary     | Reset Configuration               |
+| tags        | admin                             |
+
 #### Relationships
 
 | Type        | Related Element                                | Predicate    | Direction |
@@ -1686,6 +2648,16 @@ POST /api/v1/admin/configuration/reset — reset configuration to defaults from 
 **Type**: `operation`
 
 POST /api/v1/versioning/proposals/\{proposal_id\}/resolve — manually resolve merge conflicts with explicit resolutions
+
+#### Attributes
+
+| Name        | Value                                                |
+| ----------- | ---------------------------------------------------- |
+| http_method | POST                                                 |
+| http_path   | /api/v1/versioning/proposals/\{proposal_id\}/resolve |
+| operationId | resolveConflicts                                     |
+| summary     | Resolve Conflicts                                    |
+| tags        | versioning                                           |
 
 #### Relationships
 
@@ -1702,6 +2674,16 @@ POST /api/v1/versioning/proposals/\{proposal_id\}/resolve — manually resolve m
 **Type**: `operation`
 
 POST /api/reference/search — search external reference sources for concepts matching a query
+
+#### Attributes
+
+| Name        | Value                 |
+| ----------- | --------------------- |
+| http_method | POST                  |
+| http_path   | /api/reference/search |
+| operationId | searchReferences      |
+| summary     | Search References     |
+| tags        | reference             |
 
 #### Relationships
 
@@ -1720,6 +2702,16 @@ POST /api/reference/search — search external reference sources for concepts ma
 
 POST /api/v1/versioning/changesets/\{changeset_id\}/stage — mark a changeset as staged for review
 
+#### Attributes
+
+| Name        | Value                                                |
+| ----------- | ---------------------------------------------------- |
+| http_method | POST                                                 |
+| http_path   | /api/v1/versioning/changesets/\{changeset_id\}/stage |
+| operationId | stageChangeset                                       |
+| summary     | Stage Changeset                                      |
+| tags        | versioning                                           |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate    | Direction |
@@ -1735,6 +2727,16 @@ POST /api/v1/versioning/changesets/\{changeset_id\}/stage — mark a changeset a
 
 POST /api/v1/versioning/changesets/\{changeset_id\}/submit — submit a changeset as a merge proposal
 
+#### Attributes
+
+| Name        | Value                                                 |
+| ----------- | ----------------------------------------------------- |
+| http_method | POST                                                  |
+| http_path   | /api/v1/versioning/changesets/\{changeset_id\}/submit |
+| operationId | submitProposal                                        |
+| summary     | Submit Proposal                                       |
+| tags        | versioning                                            |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate    | Direction |
@@ -1749,6 +2751,16 @@ POST /api/v1/versioning/changesets/\{changeset_id\}/submit — submit a changese
 **Type**: `operation`
 
 PUT /api/classes/\{class_id\} — update an existing ontology class
+
+#### Attributes
+
+| Name        | Value                     |
+| ----------- | ------------------------- |
+| http_method | PUT                       |
+| http_path   | /api/classes/\{class_id\} |
+| operationId | updateClass               |
+| summary     | Update Class              |
+| tags        | classes                   |
 
 #### Relationships
 
@@ -1766,6 +2778,16 @@ PUT /api/classes/\{class_id\} — update an existing ontology class
 
 PUT /api/schemes/\{scheme_id\} — update an existing concept scheme
 
+#### Attributes
+
+| Name        | Value                      |
+| ----------- | -------------------------- |
+| http_method | PUT                        |
+| http_path   | /api/schemes/\{scheme_id\} |
+| operationId | updateConceptScheme        |
+| summary     | Update Concept Scheme      |
+| tags        | schemes                    |
+
 #### Relationships
 
 | Type        | Related Element                                   | Predicate    | Direction |
@@ -1781,6 +2803,16 @@ PUT /api/schemes/\{scheme_id\} — update an existing concept scheme
 **Type**: `operation`
 
 PATCH /api/v1/admin/configuration — update a section of the application configuration
+
+#### Attributes
+
+| Name        | Value                        |
+| ----------- | ---------------------------- |
+| http_method | PATCH                        |
+| http_path   | /api/v1/admin/configuration  |
+| operationId | updateConfigurationSection   |
+| summary     | Update Configuration Section |
+| tags        | admin                        |
 
 #### Relationships
 
@@ -1798,6 +2830,16 @@ PATCH /api/v1/admin/configuration — update a section of the application config
 
 PUT /api/individuals/\{individual_id\} — update an existing individual
 
+#### Attributes
+
+| Name        | Value                              |
+| ----------- | ---------------------------------- |
+| http_method | PUT                                |
+| http_path   | /api/individuals/\{individual_id\} |
+| operationId | updateIndividual                   |
+| summary     | Update Individual                  |
+| tags        | individuals                        |
+
 #### Relationships
 
 | Type        | Related Element                                   | Predicate    | Direction |
@@ -1813,6 +2855,16 @@ PUT /api/individuals/\{individual_id\} — update an existing individual
 **Type**: `operation`
 
 PUT /api/pipelines/\{pipeline_id\} — update an existing pipeline configuration
+
+#### Attributes
+
+| Name        | Value                          |
+| ----------- | ------------------------------ |
+| http_method | PUT                            |
+| http_path   | /api/pipelines/\{pipeline_id\} |
+| operationId | updatePipelineConfiguration    |
+| summary     | Update Pipeline Configuration  |
+| tags        | pipelines                      |
 
 #### Relationships
 
@@ -1830,6 +2882,16 @@ PUT /api/pipelines/\{pipeline_id\} — update an existing pipeline configuration
 
 PUT /api/properties/\{property_id\} — update an existing property definition
 
+#### Attributes
+
+| Name        | Value                           |
+| ----------- | ------------------------------- |
+| http_method | PUT                             |
+| http_path   | /api/properties/\{property_id\} |
+| operationId | updatePropertyDefinition        |
+| summary     | Update Property Definition      |
+| tags        | properties                      |
+
 #### Relationships
 
 | Type        | Related Element                                      | Predicate    | Direction |
@@ -1845,6 +2907,16 @@ PUT /api/properties/\{property_id\} — update an existing property definition
 **Type**: `operation`
 
 PUT /api/taxonomies/\{taxonomy_id\} — update an existing taxonomy
+
+#### Attributes
+
+| Name        | Value                           |
+| ----------- | ------------------------------- |
+| http_method | PUT                             |
+| http_path   | /api/taxonomies/\{taxonomy_id\} |
+| operationId | updateTaxonomy                  |
+| summary     | Update Taxonomy                 |
+| tags        | taxonomies                      |
 
 #### Relationships
 
@@ -2173,9 +3245,10 @@ Request body to create a new LLM pipeline configuration with provider, model, an
 
 #### Relationships
 
-| Type        | Related Element                               | Predicate    | Direction |
-| ----------- | --------------------------------------------- | ------------ | --------- |
-| intra-layer | `api.operation.create-pipeline-configuration` | `aggregates` | inbound   |
+| Type        | Related Element                                         | Predicate    | Direction |
+| ----------- | ------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `data-model.objectschema.pipeline-configuration-entity` | `maps-to`    | inbound   |
+| intra-layer | `api.operation.create-pipeline-configuration`           | `aggregates` | inbound   |
 
 ### PipelineConfigurationUpdate {#pipelineconfigurationupdate}
 
@@ -2215,10 +3288,11 @@ Request body to create a new property definition (object property) for ontology 
 
 #### Relationships
 
-| Type        | Related Element                               | Predicate    | Direction |
-| ----------- | --------------------------------------------- | ------------ | --------- |
-| inter-layer | `data-model.objectschema.property-definition` | `maps-to`    | inbound   |
-| intra-layer | `api.operation.create-property-definition`    | `aggregates` | inbound   |
+| Type        | Related Element                                      | Predicate    | Direction |
+| ----------- | ---------------------------------------------------- | ------------ | --------- |
+| inter-layer | `data-model.objectschema.property-definition-entity` | `maps-to`    | inbound   |
+| inter-layer | `data-model.objectschema.property-definition`        | `maps-to`    | inbound   |
+| intra-layer | `api.operation.create-property-definition`           | `aggregates` | inbound   |
 
 ### PropertyDefinitionUpdateRequest {#propertydefinitionupdaterequest}
 
@@ -2368,10 +3442,17 @@ Request body to update an existing taxonomy's title or description
 
 Response containing the full application configuration with all sections and current values
 
+#### Attributes
+
+| Name        | Value                                                |
+| ----------- | ---------------------------------------------------- |
+| description | API response schema for app  configuration  response |
+
 #### Relationships
 
 | Type        | Related Element                              | Predicate  | Direction |
 | ----------- | -------------------------------------------- | ---------- | --------- |
+| inter-layer | `data-model.objectschema.app-configuration`  | `maps-to`  | inbound   |
 | intra-layer | `api.operation.get-configuration`            | `delivers` | inbound   |
 | intra-layer | `api.operation.reset-configuration`          | `delivers` | inbound   |
 | intra-layer | `api.operation.update-configuration-section` | `delivers` | inbound   |
@@ -2384,12 +3465,19 @@ Response containing the full application configuration with all sections and cur
 
 Response containing a background task's ID, status, progress percentage, and result or error details
 
+#### Attributes
+
+| Name        | Value                                              |
+| ----------- | -------------------------------------------------- |
+| description | API response schema for background  task  response |
+
 #### Relationships
 
-| Type        | Related Element                       | Predicate  | Direction |
-| ----------- | ------------------------------------- | ---------- | --------- |
-| intra-layer | `api.operation.get-background-task`   | `delivers` | inbound   |
-| intra-layer | `api.operation.list-background-tasks` | `delivers` | inbound   |
+| Type        | Related Element                           | Predicate  | Direction |
+| ----------- | ----------------------------------------- | ---------- | --------- |
+| inter-layer | `data-model.objectschema.background-task` | `maps-to`  | inbound   |
+| intra-layer | `api.operation.get-background-task`       | `delivers` | inbound   |
+| intra-layer | `api.operation.list-background-tasks`     | `delivers` | inbound   |
 
 ### BackgroundTaskSummaryResponse {#backgroundtasksummaryresponse}
 
@@ -2398,6 +3486,12 @@ Response containing a background task's ID, status, progress percentage, and res
 **Type**: `response`
 
 Response containing a summary of background task statuses with counts by state
+
+#### Attributes
+
+| Name        | Value                                                       |
+| ----------- | ----------------------------------------------------------- |
+| description | API response schema for background  task  summary  response |
 
 #### Relationships
 
@@ -2413,6 +3507,12 @@ Response containing a summary of background task statuses with counts by state
 
 Response containing node centrality scores (degree, betweenness, pagerank) for knowledge graph nodes
 
+#### Attributes
+
+| Name        | Value                                        |
+| ----------- | -------------------------------------------- |
+| description | API response schema for centrality  response |
+
 #### Relationships
 
 | Type        | Related Element                | Predicate  | Direction |
@@ -2427,12 +3527,19 @@ Response containing node centrality scores (degree, betweenness, pagerank) for k
 
 Response containing paginated change history for an entity with ordered change events
 
+#### Attributes
+
+| Name        | Value                                             |
+| ----------- | ------------------------------------------------- |
+| description | API response schema for change  history  response |
+
 #### Relationships
 
-| Type        | Related Element                              | Predicate  | Direction |
-| ----------- | -------------------------------------------- | ---------- | --------- |
-| intra-layer | `api.operation.get-change-history-all`       | `delivers` | inbound   |
-| intra-layer | `api.operation.get-change-history-by-entity` | `delivers` | inbound   |
+| Type        | Related Element                               | Predicate  | Direction |
+| ----------- | --------------------------------------------- | ---------- | --------- |
+| inter-layer | `data-model.objectschema.change-event-entity` | `maps-to`  | inbound   |
+| intra-layer | `api.operation.get-change-history-all`        | `delivers` | inbound   |
+| intra-layer | `api.operation.get-change-history-by-entity`  | `delivers` | inbound   |
 
 ### ChangesetResponse {#changesetresponse}
 
@@ -2442,13 +3549,20 @@ Response containing paginated change history for an entity with ordered change e
 
 Response containing a changeset with ID, title, status, change count, and creation metadata
 
+#### Attributes
+
+| Name        | Value                                       |
+| ----------- | ------------------------------------------- |
+| description | API response schema for changeset  response |
+
 #### Relationships
 
-| Type        | Related Element                  | Predicate  | Direction |
-| ----------- | -------------------------------- | ---------- | --------- |
-| intra-layer | `api.operation.create-changeset` | `delivers` | inbound   |
-| intra-layer | `api.operation.get-changeset`    | `delivers` | inbound   |
-| intra-layer | `api.operation.stage-changeset`  | `delivers` | inbound   |
+| Type        | Related Element                            | Predicate  | Direction |
+| ----------- | ------------------------------------------ | ---------- | --------- |
+| inter-layer | `data-model.objectschema.changeset-entity` | `maps-to`  | inbound   |
+| intra-layer | `api.operation.create-changeset`           | `delivers` | inbound   |
+| intra-layer | `api.operation.get-changeset`              | `delivers` | inbound   |
+| intra-layer | `api.operation.stage-changeset`            | `delivers` | inbound   |
 
 ### ClassResponse {#classresponse}
 
@@ -2458,16 +3572,23 @@ Response containing a changeset with ID, title, status, change count, and creati
 
 Response containing an ontology class with ID, label, definition, parent hierarchy, and child count
 
+#### Attributes
+
+| Name        | Value                                   |
+| ----------- | --------------------------------------- |
+| description | API response schema for class  response |
+
 #### Relationships
 
-| Type        | Related Element              | Predicate  | Direction |
-| ----------- | ---------------------------- | ---------- | --------- |
-| intra-layer | `api.operation.create-class` | `delivers` | inbound   |
-| intra-layer | `api.operation.delete-class` | `delivers` | inbound   |
-| intra-layer | `api.operation.get-class`    | `delivers` | inbound   |
-| intra-layer | `api.operation.list-classes` | `delivers` | inbound   |
-| intra-layer | `api.operation.move-class`   | `delivers` | inbound   |
-| intra-layer | `api.operation.update-class` | `delivers` | inbound   |
+| Type        | Related Element                                 | Predicate  | Direction |
+| ----------- | ----------------------------------------------- | ---------- | --------- |
+| inter-layer | `data-model.objectschema.ontology-class-entity` | `maps-to`  | inbound   |
+| intra-layer | `api.operation.create-class`                    | `delivers` | inbound   |
+| intra-layer | `api.operation.delete-class`                    | `delivers` | inbound   |
+| intra-layer | `api.operation.get-class`                       | `delivers` | inbound   |
+| intra-layer | `api.operation.list-classes`                    | `delivers` | inbound   |
+| intra-layer | `api.operation.move-class`                      | `delivers` | inbound   |
+| intra-layer | `api.operation.update-class`                    | `delivers` | inbound   |
 
 ### CommunitiesResponse {#communitiesresponse}
 
@@ -2476,6 +3597,12 @@ Response containing an ontology class with ID, label, definition, parent hierarc
 **Type**: `response`
 
 Response containing detected graph communities with member node IDs and community metadata
+
+#### Attributes
+
+| Name        | Value                                         |
+| ----------- | --------------------------------------------- |
+| description | API response schema for communities  response |
 
 #### Relationships
 
@@ -2490,6 +3617,12 @@ Response containing detected graph communities with member node IDs and communit
 **Type**: `response`
 
 Response containing the operational status of a named system component with details
+
+#### Attributes
+
+| Name        | Value                                               |
+| ----------- | --------------------------------------------------- |
+| description | API response schema for component  status  response |
 
 #### Relationships
 
@@ -2506,15 +3639,22 @@ Response containing the operational status of a named system component with deta
 
 Response containing a concept scheme's ID, title, description, and root concept count
 
+#### Attributes
+
+| Name        | Value                                             |
+| ----------- | ------------------------------------------------- |
+| description | API response schema for concept  scheme  response |
+
 #### Relationships
 
-| Type        | Related Element                       | Predicate  | Direction |
-| ----------- | ------------------------------------- | ---------- | --------- |
-| intra-layer | `api.operation.create-concept-scheme` | `delivers` | inbound   |
-| intra-layer | `api.operation.delete-concept-scheme` | `delivers` | inbound   |
-| intra-layer | `api.operation.get-concept-scheme`    | `delivers` | inbound   |
-| intra-layer | `api.operation.list-concept-schemes`  | `delivers` | inbound   |
-| intra-layer | `api.operation.update-concept-scheme` | `delivers` | inbound   |
+| Type        | Related Element                                 | Predicate  | Direction |
+| ----------- | ----------------------------------------------- | ---------- | --------- |
+| inter-layer | `data-model.objectschema.concept-scheme-entity` | `maps-to`  | inbound   |
+| intra-layer | `api.operation.create-concept-scheme`           | `delivers` | inbound   |
+| intra-layer | `api.operation.delete-concept-scheme`           | `delivers` | inbound   |
+| intra-layer | `api.operation.get-concept-scheme`              | `delivers` | inbound   |
+| intra-layer | `api.operation.list-concept-schemes`            | `delivers` | inbound   |
+| intra-layer | `api.operation.update-concept-scheme`           | `delivers` | inbound   |
 
 ### ConflictReportResponse {#conflictreportresponse}
 
@@ -2524,11 +3664,18 @@ Response containing a concept scheme's ID, title, description, and root concept 
 
 Response containing a summary report of all conflicts in a merge proposal with counts by type
 
+#### Attributes
+
+| Name        | Value                                              |
+| ----------- | -------------------------------------------------- |
+| description | API response schema for conflict  report  response |
+
 #### Relationships
 
-| Type        | Related Element                  | Predicate  | Direction |
-| ----------- | -------------------------------- | ---------- | --------- |
-| intra-layer | `api.operation.detect-conflicts` | `delivers` | inbound   |
+| Type        | Related Element                           | Predicate  | Direction |
+| ----------- | ----------------------------------------- | ---------- | --------- |
+| inter-layer | `data-model.objectschema.conflict-report` | `maps-to`  | inbound   |
+| intra-layer | `api.operation.detect-conflicts`          | `delivers` | inbound   |
 
 ### ConflictResponse {#conflictresponse}
 
@@ -2538,11 +3685,18 @@ Response containing a summary report of all conflicts in a merge proposal with c
 
 Response containing a merge conflict with conflicting entity state, conflict type, and resolution options
 
+#### Attributes
+
+| Name        | Value                                      |
+| ----------- | ------------------------------------------ |
+| description | API response schema for conflict  response |
+
 #### Relationships
 
-| Type        | Related Element                        | Predicate  | Direction |
-| ----------- | -------------------------------------- | ---------- | --------- |
-| intra-layer | `api.operation.auto-resolve-conflicts` | `delivers` | inbound   |
+| Type        | Related Element                           | Predicate  | Direction |
+| ----------- | ----------------------------------------- | ---------- | --------- |
+| inter-layer | `data-model.objectschema.conflict-entity` | `maps-to`  | inbound   |
+| intra-layer | `api.operation.auto-resolve-conflicts`    | `delivers` | inbound   |
 
 ### CycleCheckResponse {#cyclecheckresponse}
 
@@ -2551,6 +3705,12 @@ Response containing a merge conflict with conflicting entity state, conflict typ
 **Type**: `response`
 
 Response indicating whether directed cycles exist from a starting node with cycle path details
+
+#### Attributes
+
+| Name        | Value                                          |
+| ----------- | ---------------------------------------------- |
+| description | API response schema for cycle  check  response |
 
 #### Relationships
 
@@ -2566,6 +3726,12 @@ Response indicating whether directed cycles exist from a starting node with cycl
 
 Response containing a data property value with property ID, typed value, and unit
 
+#### Attributes
+
+| Name        | Value                                                   |
+| ----------- | ------------------------------------------------------- |
+| description | API response schema for data  property  value  response |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate  | Direction |
@@ -2580,11 +3746,18 @@ Response containing a data property value with property ID, typed value, and uni
 
 Response containing database health details including connection status, size, and migration version
 
+#### Attributes
+
+| Name        | Value                                              |
+| ----------- | -------------------------------------------------- |
+| description | API response schema for database  health  response |
+
 #### Relationships
 
-| Type        | Related Element                     | Predicate  | Direction |
-| ----------- | ----------------------------------- | ---------- | --------- |
-| intra-layer | `api.operation.get-database-health` | `delivers` | inbound   |
+| Type        | Related Element                         | Predicate  | Direction |
+| ----------- | --------------------------------------- | ---------- | --------- |
+| inter-layer | `data-model.objectschema.system-health` | `maps-to`  | inbound   |
+| intra-layer | `api.operation.get-database-health`     | `delivers` | inbound   |
 
 ### DegreeDistributionResponse {#degreedistributionresponse}
 
@@ -2593,6 +3766,12 @@ Response containing database health details including connection status, size, a
 **Type**: `response`
 
 Response containing the degree distribution histogram of the knowledge graph
+
+#### Attributes
+
+| Name        | Value                                                  |
+| ----------- | ------------------------------------------------------ |
+| description | API response schema for degree  distribution  response |
 
 #### Relationships
 
@@ -2608,13 +3787,20 @@ Response containing the degree distribution histogram of the knowledge graph
 
 Response containing a point-in-time snapshot of an entity version with changeset reference and full state
 
+#### Attributes
+
+| Name        | Value                                             |
+| ----------- | ------------------------------------------------- |
+| description | API response schema for entity  version  response |
+
 #### Relationships
 
-| Type        | Related Element                          | Predicate  | Direction |
-| ----------- | ---------------------------------------- | ---------- | --------- |
-| inter-layer | `data-model.objectschema.entity-version` | `maps-to`  | inbound   |
-| intra-layer | `api.operation.get-entity-version`       | `delivers` | inbound   |
-| intra-layer | `api.operation.list-entity-versions`     | `delivers` | inbound   |
+| Type        | Related Element                                 | Predicate  | Direction |
+| ----------- | ----------------------------------------------- | ---------- | --------- |
+| inter-layer | `data-model.objectschema.entity-version-entity` | `maps-to`  | inbound   |
+| inter-layer | `data-model.objectschema.entity-version`        | `maps-to`  | inbound   |
+| intra-layer | `api.operation.get-entity-version`              | `delivers` | inbound   |
+| intra-layer | `api.operation.list-entity-versions`            | `delivers` | inbound   |
 
 ### ExecutionResponse {#executionresponse}
 
@@ -2624,12 +3810,19 @@ Response containing a point-in-time snapshot of an entity version with changeset
 
 Response containing a pipeline execution record with input, output, token usage, and duration
 
+#### Attributes
+
+| Name        | Value                                       |
+| ----------- | ------------------------------------------- |
+| description | API response schema for execution  response |
+
 #### Relationships
 
-| Type        | Related Element                         | Predicate  | Direction |
-| ----------- | --------------------------------------- | ---------- | --------- |
-| intra-layer | `api.operation.execute-pipeline`        | `delivers` | inbound   |
-| intra-layer | `api.operation.get-pipeline-executions` | `delivers` | inbound   |
+| Type        | Related Element                            | Predicate  | Direction |
+| ----------- | ------------------------------------------ | ---------- | --------- |
+| inter-layer | `data-model.objectschema.execution-entity` | `maps-to`  | inbound   |
+| intra-layer | `api.operation.execute-pipeline`           | `delivers` | inbound   |
+| intra-layer | `api.operation.get-pipeline-executions`    | `delivers` | inbound   |
 
 ### ExternalReferenceResponse {#externalreferenceresponse}
 
@@ -2638,6 +3831,12 @@ Response containing a pipeline execution record with input, output, token usage,
 **Type**: `response`
 
 Response containing an external reference with source URI, label, and relation type
+
+#### Attributes
+
+| Name        | Value                                                 |
+| ----------- | ----------------------------------------------------- |
+| description | API response schema for external  reference  response |
 
 #### Relationships
 
@@ -2653,11 +3852,19 @@ Response containing an external reference with source URI, label, and relation t
 
 Response containing extraction results organized by layer with extracted entities and confidence scores
 
+#### Attributes
+
+| Name        | Value                                      |
+| ----------- | ------------------------------------------ |
+| description | API response schema for extraction  result |
+
 #### Relationships
 
 | Type        | Related Element                             | Predicate  | Direction |
 | ----------- | ------------------------------------------- | ---------- | --------- |
+| inter-layer | `data-model.objectschema.extracted-entity`  | `maps-to`  | inbound   |
 | inter-layer | `data-model.objectschema.extraction-result` | `maps-to`  | inbound   |
+| inter-layer | `data-model.objectschema.extraction-run`    | `maps-to`  | inbound   |
 | intra-layer | `api.operation.analyze-text`                | `delivers` | inbound   |
 | intra-layer | `api.operation.extract-entities`            | `delivers` | inbound   |
 
@@ -2669,11 +3876,18 @@ Response containing extraction results organized by layer with extracted entitie
 
 Response containing computed graph metrics including node count, edge count, density, diameter, and clustering coefficient
 
+#### Attributes
+
+| Name        | Value                                            |
+| ----------- | ------------------------------------------------ |
+| description | API response schema for graph  metrics  response |
+
 #### Relationships
 
-| Type        | Related Element                   | Predicate  | Direction |
-| ----------- | --------------------------------- | ---------- | --------- |
-| intra-layer | `api.operation.get-graph-metrics` | `delivers` | inbound   |
+| Type        | Related Element                         | Predicate  | Direction |
+| ----------- | --------------------------------------- | ---------- | --------- |
+| inter-layer | `data-model.objectschema.graph-metrics` | `maps-to`  | inbound   |
+| intra-layer | `api.operation.get-graph-metrics`       | `delivers` | inbound   |
 
 ### ImportConflictResponse {#importconflictresponse}
 
@@ -2682,6 +3896,12 @@ Response containing computed graph metrics including node count, edge count, den
 **Type**: `response`
 
 Response describing a conflict detected during an import operation with existing and incoming values
+
+#### Attributes
+
+| Name        | Value                                              |
+| ----------- | -------------------------------------------------- |
+| description | API response schema for import  conflict  response |
 
 #### Relationships
 
@@ -2697,6 +3917,12 @@ Response describing a conflict detected during an import operation with existing
 
 Response containing a preview import plan with entity counts, conflicts, and resolution recommendations
 
+#### Attributes
+
+| Name        | Value                                          |
+| ----------- | ---------------------------------------------- |
+| description | API response schema for import  plan  response |
+
 #### Relationships
 
 | Type        | Related Element                 | Predicate  | Direction |
@@ -2711,12 +3937,19 @@ Response containing a preview import plan with entity counts, conflicts, and res
 
 Response containing the result of an executed import with imported, skipped, and conflicted entity counts
 
+#### Attributes
+
+| Name        | Value                                         |
+| ----------- | --------------------------------------------- |
+| description | API response schema for import  run  response |
+
 #### Relationships
 
-| Type        | Related Element                  | Predicate  | Direction |
-| ----------- | -------------------------------- | ---------- | --------- |
-| intra-layer | `api.operation.get-import-run`   | `delivers` | inbound   |
-| intra-layer | `api.operation.list-import-runs` | `delivers` | inbound   |
+| Type        | Related Element                             | Predicate  | Direction |
+| ----------- | ------------------------------------------- | ---------- | --------- |
+| inter-layer | `data-model.objectschema.import-run-entity` | `maps-to`  | inbound   |
+| intra-layer | `api.operation.get-import-run`              | `delivers` | inbound   |
+| intra-layer | `api.operation.list-import-runs`            | `delivers` | inbound   |
 
 ### IndividualResponse {#individualresponse}
 
@@ -2726,10 +3959,17 @@ Response containing the result of an executed import with imported, skipped, and
 
 Response containing a named ontology individual with class memberships, lexical senses, and property values
 
+#### Attributes
+
+| Name        | Value                                        |
+| ----------- | -------------------------------------------- |
+| description | API response schema for individual  response |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate  | Direction |
 | ----------- | --------------------------------------------------- | ---------- | --------- |
+| inter-layer | `data-model.objectschema.individual-entity`         | `maps-to`  | inbound   |
 | intra-layer | `api.operation.add-parent-class-to-individual`      | `delivers` | inbound   |
 | intra-layer | `api.operation.create-individual`                   | `delivers` | inbound   |
 | intra-layer | `api.operation.delete-individual`                   | `delivers` | inbound   |
@@ -2747,6 +3987,12 @@ Response containing a named ontology individual with class memberships, lexical 
 
 Response containing a change event generated during an interchange import or export operation
 
+#### Attributes
+
+| Name        | Value                                                        |
+| ----------- | ------------------------------------------------------------ |
+| description | API response schema for interchange  change  event  response |
+
 #### Relationships
 
 | Type        | Related Element                       | Predicate  | Direction |
@@ -2761,11 +4007,18 @@ Response containing a change event generated during an interchange import or exp
 
 Response containing the full in-memory knowledge graph with nodes, edges, and metadata
 
+#### Attributes
+
+| Name        | Value                                              |
+| ----------- | -------------------------------------------------- |
+| description | API response schema for knowledge  graph  response |
+
 #### Relationships
 
-| Type        | Related Element                       | Predicate  | Direction |
-| ----------- | ------------------------------------- | ---------- | --------- |
-| intra-layer | `api.operation.build-knowledge-graph` | `delivers` | inbound   |
+| Type        | Related Element                           | Predicate  | Direction |
+| ----------- | ----------------------------------------- | ---------- | --------- |
+| inter-layer | `data-model.objectschema.knowledge-graph` | `maps-to`  | inbound   |
+| intra-layer | `api.operation.build-knowledge-graph`     | `delivers` | inbound   |
 
 ### LexicalSenseResponse {#lexicalsenseresponse}
 
@@ -2774,6 +4027,12 @@ Response containing the full in-memory knowledge graph with nodes, edges, and me
 **Type**: `response`
 
 Response containing a lexical sense with label, language, and optional definition
+
+#### Attributes
+
+| Name        | Value                                            |
+| ----------- | ------------------------------------------------ |
+| description | API response schema for lexical  sense  response |
 
 #### Relationships
 
@@ -2789,11 +4048,18 @@ Response containing a lexical sense with label, language, and optional definitio
 
 Response containing the outcome of a merge operation with resolved/unresolved conflict counts
 
+#### Attributes
+
+| Name        | Value                                           |
+| ----------- | ----------------------------------------------- |
+| description | API response schema for merge  result  response |
+
 #### Relationships
 
-| Type        | Related Element                | Predicate  | Direction |
-| ----------- | ------------------------------ | ---------- | --------- |
-| intra-layer | `api.operation.merge-proposal` | `delivers` | inbound   |
+| Type        | Related Element                        | Predicate  | Direction |
+| ----------- | -------------------------------------- | ---------- | --------- |
+| inter-layer | `data-model.objectschema.merge-result` | `maps-to`  | inbound   |
+| intra-layer | `api.operation.merge-proposal`         | `delivers` | inbound   |
 
 ### NeighborsResponse {#neighborsresponse}
 
@@ -2802,6 +4068,12 @@ Response containing the outcome of a merge operation with resolved/unresolved co
 **Type**: `response`
 
 Response containing direct neighbors of a node with relationship type and direction
+
+#### Attributes
+
+| Name        | Value                                       |
+| ----------- | ------------------------------------------- |
+| description | API response schema for neighbors  response |
 
 #### Relationships
 
@@ -2817,12 +4089,19 @@ Response containing direct neighbors of a node with relationship type and direct
 
 Response containing shortest path results between two nodes with node sequence and path length
 
+#### Attributes
+
+| Name        | Value                                          |
+| ----------- | ---------------------------------------------- |
+| description | API response schema for path  result  response |
+
 #### Relationships
 
-| Type        | Related Element                   | Predicate  | Direction |
-| ----------- | --------------------------------- | ---------- | --------- |
-| intra-layer | `api.operation.get-all-paths`     | `delivers` | inbound   |
-| intra-layer | `api.operation.get-shortest-path` | `delivers` | inbound   |
+| Type        | Related Element                       | Predicate  | Direction |
+| ----------- | ------------------------------------- | ---------- | --------- |
+| inter-layer | `data-model.objectschema.path-result` | `maps-to`  | inbound   |
+| intra-layer | `api.operation.get-all-paths`         | `delivers` | inbound   |
+| intra-layer | `api.operation.get-shortest-path`     | `delivers` | inbound   |
 
 ### PipelineConfigurationResponse {#pipelineconfigurationresponse}
 
@@ -2831,6 +4110,12 @@ Response containing shortest path results between two nodes with node sequence a
 **Type**: `response`
 
 Response containing a pipeline configuration with ID, name, provider, model, and parameter settings
+
+#### Attributes
+
+| Name        | Value                                                     |
+| ----------- | --------------------------------------------------------- |
+| description | API response schema for pipeline  configuration  response |
 
 #### Relationships
 
@@ -2849,6 +4134,12 @@ Response containing a pipeline configuration with ID, name, provider, model, and
 **Type**: `response`
 
 Response containing a property definition with ID, label, domain/range constraints, and symmetry metadata
+
+#### Attributes
+
+| Name        | Value                                                  |
+| ----------- | ------------------------------------------------------ |
+| description | API response schema for property  definition  response |
 
 #### Relationships
 
@@ -2869,6 +4160,12 @@ Response containing a property definition with ID, label, domain/range constrain
 
 Response containing a merge proposal with source/target changeset references, status, and conflict summary
 
+#### Attributes
+
+| Name        | Value                                      |
+| ----------- | ------------------------------------------ |
+| description | API response schema for proposal  response |
+
 #### Relationships
 
 | Type        | Related Element                  | Predicate  | Direction |
@@ -2885,6 +4182,12 @@ Response containing a merge proposal with source/target changeset references, st
 
 Response containing a typed relation between two concepts from an external knowledge source
 
+#### Attributes
+
+| Name        | Value                                       |
+| ----------- | ------------------------------------------- |
+| description | API response schema for reference  relation |
+
 #### Relationships
 
 | Type        | Related Element                         | Predicate  | Direction |
@@ -2898,6 +4201,12 @@ Response containing a typed relation between two concepts from an external knowl
 **Type**: `response`
 
 Response containing typed relations for a concept from external knowledge sources
+
+#### Attributes
+
+| Name        | Value                                                  |
+| ----------- | ------------------------------------------------------ |
+| description | API response schema for reference  relations  response |
 
 #### Relationships
 
@@ -2913,6 +4222,12 @@ Response containing typed relations for a concept from external knowledge source
 
 Response containing a single external reference result with URI, label, definition, and source metadata
 
+#### Attributes
+
+| Name        | Value                                     |
+| ----------- | ----------------------------------------- |
+| description | API response schema for reference  result |
+
 #### Relationships
 
 | Type        | Related Element                   | Predicate  | Direction |
@@ -2926,6 +4241,12 @@ Response containing a single external reference result with URI, label, definiti
 **Type**: `response`
 
 Response containing paginated external reference search results with total count
+
+#### Attributes
+
+| Name        | Value                                               |
+| ----------- | --------------------------------------------------- |
+| description | API response schema for reference  search  response |
 
 #### Relationships
 
@@ -2941,6 +4262,12 @@ Response containing paginated external reference search results with total count
 
 Response containing the availability status of a single external reference source
 
+#### Attributes
+
+| Name        | Value                                             |
+| ----------- | ------------------------------------------------- |
+| description | API response schema for reference  source  status |
+
 #### Relationships
 
 | Type        | Related Element                      | Predicate  | Direction |
@@ -2954,6 +4281,12 @@ Response containing the availability status of a single external reference sourc
 **Type**: `response`
 
 Response containing the status of all configured external reference sources
+
+#### Attributes
+
+| Name        | Value                                               |
+| ----------- | --------------------------------------------------- |
+| description | API response schema for reference  status  response |
 
 #### Relationships
 
@@ -2969,14 +4302,21 @@ Response containing the status of all configured external reference sources
 
 Response containing a typed directed relationship between two ontology entities with property definition details
 
+#### Attributes
+
+| Name        | Value                                          |
+| ----------- | ---------------------------------------------- |
+| description | API response schema for relationship  response |
+
 #### Relationships
 
-| Type        | Related Element                     | Predicate  | Direction |
-| ----------- | ----------------------------------- | ---------- | --------- |
-| intra-layer | `api.operation.create-relationship` | `delivers` | inbound   |
-| intra-layer | `api.operation.delete-relationship` | `delivers` | inbound   |
-| intra-layer | `api.operation.get-relationship`    | `delivers` | inbound   |
-| intra-layer | `api.operation.list-relationships`  | `delivers` | inbound   |
+| Type        | Related Element                               | Predicate  | Direction |
+| ----------- | --------------------------------------------- | ---------- | --------- |
+| inter-layer | `data-model.objectschema.relationship-entity` | `maps-to`  | inbound   |
+| intra-layer | `api.operation.create-relationship`           | `delivers` | inbound   |
+| intra-layer | `api.operation.delete-relationship`           | `delivers` | inbound   |
+| intra-layer | `api.operation.get-relationship`              | `delivers` | inbound   |
+| intra-layer | `api.operation.list-relationships`            | `delivers` | inbound   |
 
 ### ResolutionRecordResponse {#resolutionrecordresponse}
 
@@ -2986,11 +4326,18 @@ Response containing a typed directed relationship between two ontology entities 
 
 Response recording the resolution applied to an import conflict with resolution strategy
 
+#### Attributes
+
+| Name        | Value                                                |
+| ----------- | ---------------------------------------------------- |
+| description | API response schema for resolution  record  response |
+
 #### Relationships
 
-| Type        | Related Element                   | Predicate  | Direction |
-| ----------- | --------------------------------- | ---------- | --------- |
-| intra-layer | `api.operation.resolve-conflicts` | `delivers` | inbound   |
+| Type        | Related Element                             | Predicate  | Direction |
+| ----------- | ------------------------------------------- | ---------- | --------- |
+| inter-layer | `data-model.objectschema.resolution-record` | `maps-to`  | inbound   |
+| intra-layer | `api.operation.resolve-conflicts`           | `delivers` | inbound   |
 
 ### SerializationScopeResponse {#serializationscoperesponse}
 
@@ -2999,6 +4346,12 @@ Response recording the resolution applied to an import conflict with resolution 
 **Type**: `response`
 
 Response confirming the resolved scope for a serialization operation with entity counts
+
+#### Attributes
+
+| Name        | Value                                                  |
+| ----------- | ------------------------------------------------------ |
+| description | API response schema for serialization  scope  response |
 
 #### Relationships
 
@@ -3014,11 +4367,18 @@ Response confirming the resolved scope for a serialization operation with entity
 
 Response containing service-level metrics including request counts, error rates, and latency percentiles
 
+#### Attributes
+
+| Name        | Value                                              |
+| ----------- | -------------------------------------------------- |
+| description | API response schema for service  metrics  response |
+
 #### Relationships
 
-| Type        | Related Element                     | Predicate  | Direction |
-| ----------- | ----------------------------------- | ---------- | --------- |
-| intra-layer | `api.operation.get-service-metrics` | `delivers` | inbound   |
+| Type        | Related Element                              | Predicate  | Direction |
+| ----------- | -------------------------------------------- | ---------- | --------- |
+| inter-layer | `data-model.objectschema.processing-metrics` | `maps-to`  | inbound   |
+| intra-layer | `api.operation.get-service-metrics`          | `delivers` | inbound   |
 
 ### SPARQLResponse {#sparqlresponse}
 
@@ -3027,6 +4387,12 @@ Response containing service-level metrics including request counts, error rates,
 **Type**: `response`
 
 Response containing SPARQL query results as variable bindings with row count
+
+#### Attributes
+
+| Name        | Value                                  |
+| ----------- | -------------------------------------- |
+| description | API response schema for sparqlresponse |
 
 #### Relationships
 
@@ -3042,10 +4408,17 @@ Response containing SPARQL query results as variable bindings with row count
 
 Response containing subgraph node and edge data for a given node set and depth
 
+#### Attributes
+
+| Name        | Value                                            |
+| ----------- | ------------------------------------------------ |
+| description | API response schema for subgraph  data  response |
+
 #### Relationships
 
 | Type        | Related Element                       | Predicate  | Direction |
 | ----------- | ------------------------------------- | ---------- | --------- |
+| inter-layer | `data-model.objectschema.subgraph`    | `maps-to`  | inbound   |
 | intra-layer | `api.operation.get-subgraph-by-depth` | `delivers` | inbound   |
 
 ### SubgraphResultResponse {#subgraphresultresponse}
@@ -3056,11 +4429,18 @@ Response containing subgraph node and edge data for a given node set and depth
 
 Response containing the result of a subgraph extraction with node/edge counts and data
 
+#### Attributes
+
+| Name        | Value                                              |
+| ----------- | -------------------------------------------------- |
+| description | API response schema for subgraph  result  response |
+
 #### Relationships
 
-| Type        | Related Element              | Predicate  | Direction |
-| ----------- | ---------------------------- | ---------- | --------- |
-| intra-layer | `api.operation.get-subgraph` | `delivers` | inbound   |
+| Type        | Related Element                           | Predicate  | Direction |
+| ----------- | ----------------------------------------- | ---------- | --------- |
+| inter-layer | `data-model.objectschema.subgraph-result` | `maps-to`  | inbound   |
+| intra-layer | `api.operation.get-subgraph`              | `delivers` | inbound   |
 
 ### SyncResultResponse {#syncresultresponse}
 
@@ -3069,6 +4449,12 @@ Response containing the result of a subgraph extraction with node/edge counts an
 **Type**: `response`
 
 Response containing the result of a sync operation with pushed/pulled entity counts and conflict summary
+
+#### Attributes
+
+| Name        | Value                                          |
+| ----------- | ---------------------------------------------- |
+| description | API response schema for sync  result  response |
 
 #### Relationships
 
@@ -3085,6 +4471,12 @@ Response containing the result of a sync operation with pushed/pulled entity cou
 
 Response containing current sync status with remote, including last sync time and pending change count
 
+#### Attributes
+
+| Name        | Value                                          |
+| ----------- | ---------------------------------------------- |
+| description | API response schema for sync  status  response |
+
 #### Relationships
 
 | Type        | Related Element                 | Predicate  | Direction |
@@ -3098,6 +4490,12 @@ Response containing current sync status with remote, including last sync time an
 **Type**: `response`
 
 Response containing overall system health status with per-service health checks and uptime
+
+#### Attributes
+
+| Name        | Value                                            |
+| ----------- | ------------------------------------------------ |
+| description | API response schema for system  health  response |
 
 #### Relationships
 
@@ -3113,15 +4511,22 @@ Response containing overall system health status with per-service health checks 
 
 Response containing a taxonomy's ID, title, description, and associated concept schemes
 
+#### Attributes
+
+| Name        | Value                                      |
+| ----------- | ------------------------------------------ |
+| description | API response schema for taxonomy  response |
+
 #### Relationships
 
-| Type        | Related Element                 | Predicate  | Direction |
-| ----------- | ------------------------------- | ---------- | --------- |
-| intra-layer | `api.operation.create-taxonomy` | `delivers` | inbound   |
-| intra-layer | `api.operation.delete-taxonomy` | `delivers` | inbound   |
-| intra-layer | `api.operation.get-taxonomy`    | `delivers` | inbound   |
-| intra-layer | `api.operation.list-taxonomies` | `delivers` | inbound   |
-| intra-layer | `api.operation.update-taxonomy` | `delivers` | inbound   |
+| Type        | Related Element                           | Predicate  | Direction |
+| ----------- | ----------------------------------------- | ---------- | --------- |
+| inter-layer | `data-model.objectschema.taxonomy-entity` | `maps-to`  | inbound   |
+| intra-layer | `api.operation.create-taxonomy`           | `delivers` | inbound   |
+| intra-layer | `api.operation.delete-taxonomy`           | `delivers` | inbound   |
+| intra-layer | `api.operation.get-taxonomy`              | `delivers` | inbound   |
+| intra-layer | `api.operation.list-taxonomies`           | `delivers` | inbound   |
+| intra-layer | `api.operation.update-taxonomy`           | `delivers` | inbound   |
 
 ### TripleCountResponse {#triplecountresponse}
 
@@ -3130,6 +4535,12 @@ Response containing a taxonomy's ID, title, description, and associated concept 
 **Type**: `response`
 
 Response containing the total count of RDF triples in the knowledge graph
+
+#### Attributes
+
+| Name        | Value                                           |
+| ----------- | ----------------------------------------------- |
+| description | API response schema for triple  count  response |
 
 #### Relationships
 
@@ -3145,6 +4556,12 @@ Response containing the total count of RDF triples in the knowledge graph
 
 Response containing a single RDF triple with subject, predicate, and object
 
+#### Attributes
+
+| Name        | Value                                    |
+| ----------- | ---------------------------------------- |
+| description | API response schema for triple  response |
+
 #### Relationships
 
 | Type        | Related Element                 | Predicate  | Direction |
@@ -3159,11 +4576,18 @@ Response containing a single RDF triple with subject, predicate, and object
 
 Response containing a collection of RDF triples extracted from the knowledge graph
 
+#### Attributes
+
+| Name        | Value                                     |
+| ----------- | ----------------------------------------- |
+| description | API response schema for triples  response |
+
 #### Relationships
 
-| Type        | Related Element                 | Predicate  | Direction |
-| ----------- | ------------------------------- | ---------- | --------- |
-| intra-layer | `api.operation.get-rdf-triples` | `delivers` | inbound   |
+| Type        | Related Element                                    | Predicate  | Direction |
+| ----------- | -------------------------------------------------- | ---------- | --------- |
+| inter-layer | `data-model.objectschema.triple-extraction-result` | `maps-to`  | inbound   |
+| intra-layer | `api.operation.get-rdf-triples`                    | `delivers` | inbound   |
 
 ### VersioningChangeEventResponse {#versioningchangeeventresponse}
 
@@ -3172,6 +4596,12 @@ Response containing a collection of RDF triples extracted from the knowledge gra
 **Type**: `response`
 
 Response containing a versioning change event with operation type, entity reference, before/after state, and author
+
+#### Attributes
+
+| Name        | Value                                                       |
+| ----------- | ----------------------------------------------------------- |
+| description | API response schema for versioning  change  event  response |
 
 #### Relationships
 
@@ -3207,4 +4637,4 @@ X-API-Key header authentication scheme — optional, enabled when require_secure
 
 ---
 
-Generated: 2026-05-08T12:53:37.492Z | Model Version: 0.1.0
+Generated: 2026-05-10T10:17:36.894Z | Model Version: 0.1.0

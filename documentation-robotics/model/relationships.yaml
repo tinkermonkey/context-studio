@@ -1,6 +1,6 @@
 # Intra-layer relationships
 # Format: source_id -> predicate -> target_id
-# Last updated: 2026-05-08T12:53:37.461Z
+# Last updated: 2026-05-09T10:48:19.084Z
 
 - source: motivation.assessment.security-posture-assessment
   target: motivation.outcome.curated-domain-ontology
@@ -3377,3 +3377,386 @@
     source_provenance: inferred
     confidence: high
     basis: repository-table ownership
+- source: api.operation.add-class-to-scheme
+  target: application.applicationservice.ontology-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: api.operation.build-graph
+  target: application.applicationservice.graph-analysis-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: api.operation.get-services-health
+  target: application.applicationservice.admin-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: api.operation.get-tasks-health
+  target: application.applicationservice.admin-service
+  predicate: references
+  layer: api
+  targetLayer: application
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: data-model.objectschema.app-configuration
+  target: api.response.app-configuration-response
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: data-model.objectschema.background-task
+  target: api.response.background-task-response
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: data-model.objectschema.change-event-entity
+  target: api.response.change-history-response
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: data-model.objectschema.changeset-entity
+  target: api.response.changeset-response
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: data-model.objectschema.ontology-class-entity
+  target: api.response.class-response
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: data-model.objectschema.concept-scheme-entity
+  target: api.response.concept-scheme-response
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: data-model.objectschema.conflict-report
+  target: api.response.conflict-report-response
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: data-model.objectschema.conflict-entity
+  target: api.response.conflict-response
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: data-model.objectschema.system-health
+  target: api.response.database-health-response
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: medium
+    basis: domain pattern
+- source: data-model.objectschema.entity-version-entity
+  target: api.response.entity-version-response
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: data-model.objectschema.execution-entity
+  target: api.response.execution-response
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: data-model.objectschema.extraction-run
+  target: api.response.extraction-result-schema
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: medium
+    basis: domain pattern
+- source: data-model.objectschema.graph-metrics
+  target: api.response.graph-metrics-response
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: data-model.objectschema.import-run-entity
+  target: api.response.import-run-response
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: data-model.objectschema.individual-entity
+  target: api.response.individual-response
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: data-model.objectschema.pipeline-configuration-entity
+  target: api.requestbody.pipeline-configuration-create
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: data-model.objectschema.property-definition-entity
+  target: api.requestbody.property-definition-create-request
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: data-model.objectschema.changeset-entity
+  target: data-model.objectschema.changeset
+  predicate: extends
+  layer: data-model
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: medium
+    basis: domain pattern
+- source: data-model.objectschema.change-event-entity
+  target: data-model.objectschema.change-event
+  predicate: extends
+  layer: data-model
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: medium
+    basis: domain pattern
+- source: data-model.objectschema.entity-version-entity
+  target: data-model.objectschema.entity-version
+  predicate: extends
+  layer: data-model
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: medium
+    basis: domain pattern
+- source: data-model.objectschema.import-run-entity
+  target: data-model.objectschema.import-run
+  predicate: extends
+  layer: data-model
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: medium
+    basis: domain pattern
+- source: data-model.objectschema.pipeline-configuration-entity
+  target: data-model.objectschema.pipeline-configuration
+  predicate: extends
+  layer: data-model
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: medium
+    basis: domain pattern
+- source: data-model.objectschema.pipeline-configuration-entity
+  target: data-model.objectschema.pipeline-execution
+  predicate: extends
+  layer: data-model
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: medium
+    basis: domain pattern
+- source: data-model.objectschema.proposal-entity
+  target: data-model.objectschema.proposal
+  predicate: extends
+  layer: data-model
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: medium
+    basis: domain pattern
+- source: data-model.objectschema.extracted-entity
+  target: api.response.extraction-result-schema
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: medium
+    basis: domain pattern
+- source: data-model.objectschema.knowledge-graph
+  target: api.response.knowledge-graph-response
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: data-model.objectschema.merge-result
+  target: api.response.merge-result-response
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: data-model.objectschema.path-result
+  target: api.response.path-result-response
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: data-model.objectschema.processing-metrics
+  target: api.response.service-metrics-response
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: medium
+    basis: domain pattern
+- source: data-model.objectschema.relationship-entity
+  target: api.response.relationship-response
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: data-model.objectschema.resolution-record
+  target: api.response.resolution-record-response
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: data-model.objectschema.subgraph
+  target: api.response.subgraph-data-response
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: medium
+    basis: domain pattern
+- source: data-model.objectschema.subgraph-result
+  target: api.response.subgraph-result-response
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: data-model.objectschema.taxonomy-entity
+  target: api.response.taxonomy-response
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: high
+    basis: naming convention
+- source: data-model.objectschema.triple-extraction-result
+  target: api.response.triples-response
+  predicate: maps-to
+  layer: data-model
+  targetLayer: api
+  category: structural
+  properties:
+    source_provenance: inferred
+    confidence: medium
+    basis: domain pattern

@@ -89,6 +89,8 @@ ux.view.taxonomies-view:
   layer_id: ux
   name: Taxonomies View
   description: Browse and manage taxonomy containers
+  attributes:
+    type: page
   source_reference:
     provenance: extracted
     locations:
@@ -106,6 +108,8 @@ ux.view.concept-schemes-view:
   layer_id: ux
   name: Concept Schemes View
   description: Browse and manage concept schemes within taxonomies
+  attributes:
+    type: page
   source_reference:
     provenance: extracted
     locations:
@@ -123,6 +127,8 @@ ux.view.classes-view:
   layer_id: ux
   name: Classes View
   description: Browse and manage ontology classes
+  attributes:
+    type: page
   source_reference:
     provenance: extracted
     locations:
@@ -140,6 +146,8 @@ ux.view.individuals-view:
   layer_id: ux
   name: Individuals View
   description: Browse and manage individual instances of classes
+  attributes:
+    type: page
   source_reference:
     provenance: extracted
     locations:
@@ -157,6 +165,8 @@ ux.view.properties-view:
   layer_id: ux
   name: Properties View
   description: Browse and manage object property definitions
+  attributes:
+    type: page
   source_reference:
     provenance: extracted
     locations:
@@ -174,6 +184,8 @@ ux.view.relationships-view:
   layer_id: ux
   name: Relationships View
   description: Browse and manage typed relationships between entities
+  attributes:
+    type: page
   source_reference:
     provenance: extracted
     locations:
@@ -191,6 +203,8 @@ ux.view.interchange-view:
   layer_id: ux
   name: Interchange View
   description: Import and export ontology in SKOS, OWL, and GraphML formats
+  attributes:
+    type: page
   source_reference:
     provenance: extracted
     locations:

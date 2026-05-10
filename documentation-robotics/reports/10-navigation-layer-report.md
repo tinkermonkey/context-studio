@@ -169,6 +169,12 @@ Root application layout route — renders the navigation shell, sidebar, and mai
 
 Route for /app/classes — renders Classes View
 
+#### Attributes
+
+| Name | Value     |
+| ---- | --------- |
+| type | protected |
+
 #### Relationships
 
 | Type        | Related Element        | Predicate | Direction |
@@ -182,6 +188,12 @@ Route for /app/classes — renders Classes View
 **Type**: `route`
 
 Route for /app/concept-schemes — renders Concept Schemes View
+
+#### Attributes
+
+| Name | Value     |
+| ---- | --------- |
+| type | protected |
 
 #### Relationships
 
@@ -241,6 +253,12 @@ Route for the dataset workspace management page — /app/datasets
 
 Route for /app/individuals — renders Individuals View
 
+#### Attributes
+
+| Name | Value     |
+| ---- | --------- |
+| type | protected |
+
 #### Relationships
 
 | Type        | Related Element            | Predicate | Direction |
@@ -255,6 +273,12 @@ Route for /app/individuals — renders Individuals View
 
 Route for /app/interchange — renders Interchange View
 
+#### Attributes
+
+| Name | Value     |
+| ---- | --------- |
+| type | protected |
+
 #### Relationships
 
 | Type        | Related Element            | Predicate | Direction |
@@ -268,6 +292,12 @@ Route for /app/interchange — renders Interchange View
 **Type**: `route`
 
 Route for /app/properties — renders Properties View
+
+#### Attributes
+
+| Name | Value     |
+| ---- | --------- |
+| type | protected |
 
 #### Relationships
 
@@ -307,6 +337,12 @@ Route serving the RAG experiments and pipeline testing view
 
 Route for /app/relationships — renders Relationships View
 
+#### Attributes
+
+| Name | Value     |
+| ---- | --------- |
+| type | protected |
+
 #### Relationships
 
 | Type        | Related Element              | Predicate | Direction |
@@ -321,6 +357,12 @@ Route for /app/relationships — renders Relationships View
 
 Route for /app/taxonomies — renders Taxonomies View
 
+#### Attributes
+
+| Name | Value     |
+| ---- | --------- |
+| type | protected |
+
 #### Relationships
 
 | Type        | Related Element           | Predicate | Direction |
@@ -329,4 +371,4 @@ Route for /app/taxonomies — renders Taxonomies View
 
 ---
 
-Generated: 2026-05-08T11:23:07.657Z | Model Version: 0.1.0
+Generated: 2026-05-10T10:17:36.894Z | Model Version: 0.1.0

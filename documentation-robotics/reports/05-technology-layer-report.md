@@ -162,6 +162,12 @@ The local loopback network over which the React SPA communicates with the FastAP
 
 Database schema migration tool for SQLite — autogenerates migration scripts from SQLAlchemy ORM models for local.db and operations.db
 
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
+
 #### Relationships
 
 | Type        | Related Element                                               | Predicate    | Direction |
@@ -178,6 +184,12 @@ Database schema migration tool for SQLite — autogenerates migration scripts fr
 
 In-process analytical SQL engine used by DuckDBSyncAdapter for serializing the local knowledge graph to Parquet format for remote sync
 
+#### Attributes
+
+| Name         | Value |
+| ------------ | ----- |
+| softwareType | dbms  |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate    | Direction |
@@ -192,6 +204,12 @@ In-process analytical SQL engine used by DuckDBSyncAdapter for serializing the l
 **Type**: `systemsoftware`
 
 Python HTTP API framework — provides route declarations, dependency injection, and automatic OpenAPI spec generation for the backend
+
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
 
 #### Relationships
 
@@ -211,6 +229,12 @@ Python HTTP API framework — provides route declarations, dependency injection,
 
 Component library (v0.11) built on Tailwind CSS used for UX interface elements — buttons, modals, tables, and form controls
 
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
+
 #### Relationships
 
 | Type        | Related Element                   | Predicate    | Direction |
@@ -224,6 +248,12 @@ Component library (v0.11) built on Tailwind CSS used for UX interface elements �
 **Type**: `systemsoftware`
 
 Python graph library (v3.1+) used by NetworkXGraphEngine adapter — provides directed graph construction, shortest path, centrality, and community detection algorithms
+
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
 
 #### Relationships
 
@@ -240,6 +270,12 @@ Python graph library (v3.1+) used by NetworkXGraphEngine adapter — provides di
 
 Data validation library used exclusively in the adapter/web layer — Pydantic schemas define request and response shapes for all FastAPI routes
 
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
+
 #### Relationships
 
 | Type        | Related Element                                   | Predicate    | Direction |
@@ -254,6 +290,12 @@ Data validation library used exclusively in the adapter/web layer — Pydantic s
 **Type**: `systemsoftware`
 
 Primary backend runtime for local-server — all domain services, adapters, and API routes are implemented in Python 3.x
+
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
 
 #### Relationships
 
@@ -281,6 +323,12 @@ Primary backend runtime for local-server — all domain services, adapters, and 
 
 Python RDF library used by the graph adapter for RDF graph construction, SPARQL query execution, and ontology triple management
 
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
+
 #### Relationships
 
 | Type        | Related Element                                         | Predicate    | Direction |
@@ -295,6 +343,12 @@ Python RDF library used by the graph adapter for RDF graph construction, SPARQL 
 **Type**: `systemsoftware`
 
 JavaScript UI library (v19.1) powering the Context Studio front-end — all UX components are React functional components with hooks
+
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
 
 #### Relationships
 
@@ -314,6 +368,12 @@ JavaScript UI library (v19.1) powering the Context Studio front-end — all UX c
 
 Python library providing pre-trained SentenceTransformer models — used by SentenceTransformerEmbedding adapter to generate semantic vector embeddings (default: all-MiniLM-L12-v2)
 
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
+
 #### Relationships
 
 | Type        | Related Element                                                           | Predicate    | Direction |
@@ -330,6 +390,12 @@ Python library providing pre-trained SentenceTransformer models — used by Sent
 
 Industrial-strength NLP library used by SpacyProcessor adapter for tokenization, named entity recognition, and linguistic feature extraction
 
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
+
 #### Relationships
 
 | Type        | Related Element                                                           | Predicate    | Direction |
@@ -345,6 +411,12 @@ Industrial-strength NLP library used by SpacyProcessor adapter for tokenization,
 **Type**: `systemsoftware`
 
 Python ORM and SQL toolkit (v2.0+) used for all SQLite persistence — models, repositories, and connection management in local-server
+
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
 
 #### Relationships
 
@@ -368,6 +440,12 @@ Python ORM and SQL toolkit (v2.0+) used for all SQLite persistence — models, r
 
 Utility-first CSS framework (v4.1) used for all frontend styling in the React UX
 
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
+
 #### Relationships
 
 | Type        | Related Element                  | Predicate    | Direction |
@@ -381,6 +459,12 @@ Utility-first CSS framework (v4.1) used for all frontend styling in the React UX
 **Type**: `systemsoftware`
 
 Server-state management library (v5.83) for the React UX — handles API data fetching, caching, and synchronization
+
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
 
 #### Relationships
 
@@ -397,6 +481,12 @@ Server-state management library (v5.83) for the React UX — handles API data fe
 
 Type-safe file-based router (v1.116) for the React UX — manages all client-side navigation routes
 
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
+
 #### Relationships
 
 | Type        | Related Element                                | Predicate    | Direction |
@@ -411,6 +501,12 @@ Type-safe file-based router (v1.116) for the React UX — manages all client-sid
 **Type**: `systemsoftware`
 
 Frontend build tool (v6.2) for the React UX — handles TypeScript compilation, hot module replacement, and production bundling
+
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
 
 #### Relationships
 
@@ -480,4 +576,4 @@ Technology interaction in which the sync adapter serializes the local knowledge 
 
 ---
 
-Generated: 2026-05-08T12:53:37.492Z | Model Version: 0.1.0
+Generated: 2026-05-10T10:17:36.894Z | Model Version: 0.1.0

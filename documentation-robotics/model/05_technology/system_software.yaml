@@ -7,6 +7,8 @@ technology.systemsoftware.python:
   name: Python
   description: Primary backend runtime for local-server — all domain services,
     adapters, and API routes are implemented in Python 3.x
+  attributes:
+    softwareType: middleware
   source_reference:
     provenance: extracted
     locations:
@@ -24,6 +26,8 @@ technology.systemsoftware.fast-api:
   name: FastAPI
   description: Python HTTP API framework — provides route declarations, dependency
     injection, and automatic OpenAPI spec generation for the backend
+  attributes:
+    softwareType: middleware
   source_reference:
     provenance: extracted
     locations:
@@ -41,6 +45,8 @@ technology.systemsoftware.sqlalchemy:
   name: SQLAlchemy
   description: Python ORM and SQL toolkit (v2.0+) used for all SQLite persistence
     — models, repositories, and connection management in local-server
+  attributes:
+    softwareType: middleware
   source_reference:
     provenance: extracted
     locations:
@@ -58,6 +64,8 @@ technology.systemsoftware.alembic:
   name: Alembic
   description: Database schema migration tool for SQLite — autogenerates migration
     scripts from SQLAlchemy ORM models for local.db and operations.db
+  attributes:
+    softwareType: middleware
   source_reference:
     provenance: extracted
     locations:
@@ -75,6 +83,8 @@ technology.systemsoftware.pydantic:
   name: Pydantic
   description: Data validation library used exclusively in the adapter/web layer —
     Pydantic schemas define request and response shapes for all FastAPI routes
+  attributes:
+    softwareType: middleware
   source_reference:
     provenance: extracted
     locations:
@@ -93,6 +103,8 @@ technology.systemsoftware.sentence-transformers:
   description: "Python library providing pre-trained SentenceTransformer models —
     used by SentenceTransformerEmbedding adapter to generate semantic vector
     embeddings (default: all-MiniLM-L12-v2)"
+  attributes:
+    softwareType: middleware
   source_reference:
     provenance: extracted
     locations:
@@ -110,6 +122,8 @@ technology.systemsoftware.spa-cy:
   name: spaCy
   description: Industrial-strength NLP library used by SpacyProcessor adapter for
     tokenization, named entity recognition, and linguistic feature extraction
+  attributes:
+    softwareType: middleware
   source_reference:
     provenance: extracted
     locations:
@@ -128,6 +142,8 @@ technology.systemsoftware.network-x:
   description: Python graph library (v3.1+) used by NetworkXGraphEngine adapter —
     provides directed graph construction, shortest path, centrality, and
     community detection algorithms
+  attributes:
+    softwareType: middleware
   source_reference:
     provenance: extracted
     locations:
@@ -145,6 +161,8 @@ technology.systemsoftware.rdflib:
   name: RDFLib
   description: Python RDF library used by the graph adapter for RDF graph
     construction, SPARQL query execution, and ontology triple management
+  attributes:
+    softwareType: middleware
   source_reference:
     provenance: extracted
     locations:
@@ -162,6 +180,8 @@ technology.systemsoftware.duck-db:
   name: DuckDB
   description: In-process analytical SQL engine used by DuckDBSyncAdapter for
     serializing the local knowledge graph to Parquet format for remote sync
+  attributes:
+    softwareType: dbms
   source_reference:
     provenance: extracted
     locations:
@@ -179,6 +199,8 @@ technology.systemsoftware.react:
   name: React
   description: JavaScript UI library (v19.1) powering the Context Studio front-end
     — all UX components are React functional components with hooks
+  attributes:
+    softwareType: middleware
   source_reference:
     provenance: extracted
     locations:
@@ -196,6 +218,8 @@ technology.systemsoftware.vite:
   name: Vite
   description: Frontend build tool (v6.2) for the React UX — handles TypeScript
     compilation, hot module replacement, and production bundling
+  attributes:
+    softwareType: middleware
   source_reference:
     provenance: extracted
     locations:
@@ -213,6 +237,8 @@ technology.systemsoftware.tan-stack-router:
   name: TanStack Router
   description: Type-safe file-based router (v1.116) for the React UX — manages all
     client-side navigation routes
+  attributes:
+    softwareType: middleware
   source_reference:
     provenance: extracted
     locations:
@@ -230,6 +256,8 @@ technology.systemsoftware.tan-stack-query:
   name: TanStack Query
   description: Server-state management library (v5.83) for the React UX — handles
     API data fetching, caching, and synchronization
+  attributes:
+    softwareType: middleware
   source_reference:
     provenance: extracted
     locations:
@@ -247,6 +275,8 @@ technology.systemsoftware.flowbite-react:
   name: Flowbite React
   description: Component library (v0.11) built on Tailwind CSS used for UX
     interface elements — buttons, modals, tables, and form controls
+  attributes:
+    softwareType: middleware
   source_reference:
     provenance: extracted
     locations:
@@ -264,6 +294,8 @@ technology.systemsoftware.tailwind-css:
   name: Tailwind CSS
   description: Utility-first CSS framework (v4.1) used for all frontend styling in
     the React UX
+  attributes:
+    softwareType: middleware
   source_reference:
     provenance: extracted
     locations:

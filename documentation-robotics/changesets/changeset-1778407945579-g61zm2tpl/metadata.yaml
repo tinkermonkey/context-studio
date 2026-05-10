@@ -1,0 +1,10 @@
+id: changeset-1778407945579-g61zm2tpl
+name: fix-model-attributes-snake-case
+created: 2026-05-10T10:12:25.590Z
+modified: 2026-05-10T10:17:36.788Z
+status: committed
+baseSnapshot: sha256:250d2d6c44624e29d730bae1c963ee9c31c0c25499174bac00d325297fdeb006
+stats:
+  additions: 0
+  modifications: 262
+  deletions: 0

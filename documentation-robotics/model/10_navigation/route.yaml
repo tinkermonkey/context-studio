@@ -102,6 +102,8 @@ navigation.route.taxonomies-route:
   layer_id: navigation
   name: Taxonomies Route
   description: Route for /app/taxonomies — renders Taxonomies View
+  attributes:
+    type: protected
   source_reference:
     provenance: extracted
     locations:
@@ -118,6 +120,8 @@ navigation.route.concept-schemes-route:
   layer_id: navigation
   name: Concept Schemes Route
   description: Route for /app/concept-schemes — renders Concept Schemes View
+  attributes:
+    type: protected
   source_reference:
     provenance: extracted
     locations:
@@ -134,6 +138,8 @@ navigation.route.classes-route:
   layer_id: navigation
   name: Classes Route
   description: Route for /app/classes — renders Classes View
+  attributes:
+    type: protected
   source_reference:
     provenance: extracted
     locations:
@@ -150,6 +156,8 @@ navigation.route.individuals-route:
   layer_id: navigation
   name: Individuals Route
   description: Route for /app/individuals — renders Individuals View
+  attributes:
+    type: protected
   source_reference:
     provenance: extracted
     locations:
@@ -166,6 +174,8 @@ navigation.route.properties-route:
   layer_id: navigation
   name: Properties Route
   description: Route for /app/properties — renders Properties View
+  attributes:
+    type: protected
   source_reference:
     provenance: extracted
     locations:
@@ -182,6 +192,8 @@ navigation.route.relationships-route:
   layer_id: navigation
   name: Relationships Route
   description: Route for /app/relationships — renders Relationships View
+  attributes:
+    type: protected
   source_reference:
     provenance: extracted
     locations:
@@ -198,6 +210,8 @@ navigation.route.interchange-route:
   layer_id: navigation
   name: Interchange Route
   description: Route for /app/interchange — renders Interchange View
+  attributes:
+    type: protected
   source_reference:
     provenance: extracted
     locations:

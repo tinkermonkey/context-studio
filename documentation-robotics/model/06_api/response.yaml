@@ -7,6 +7,8 @@ api.response.taxonomy-response:
   name: TaxonomyResponse
   description: Response containing a taxonomy's ID, title, description, and
     associated concept schemes
+  attributes:
+    description: API response schema for taxonomy  response
   source_reference:
     provenance: extracted
     locations:
@@ -25,6 +27,8 @@ api.response.concept-scheme-response:
   name: ConceptSchemeResponse
   description: Response containing a concept scheme's ID, title, description, and
     root concept count
+  attributes:
+    description: API response schema for concept  scheme  response
   source_reference:
     provenance: extracted
     locations:
@@ -43,6 +47,8 @@ api.response.external-reference-response:
   name: ExternalReferenceResponse
   description: Response containing an external reference with source URI, label,
     and relation type
+  attributes:
+    description: API response schema for external  reference  response
   source_reference:
     provenance: extracted
     locations:
@@ -61,6 +67,8 @@ api.response.lexical-sense-response:
   name: LexicalSenseResponse
   description: Response containing a lexical sense with label, language, and
     optional definition
+  attributes:
+    description: API response schema for lexical  sense  response
   source_reference:
     provenance: extracted
     locations:
@@ -79,6 +87,8 @@ api.response.data-property-value-response:
   name: DataPropertyValueResponse
   description: Response containing a data property value with property ID, typed
     value, and unit
+  attributes:
+    description: API response schema for data  property  value  response
   source_reference:
     provenance: extracted
     locations:
@@ -97,6 +107,8 @@ api.response.class-response:
   name: ClassResponse
   description: Response containing an ontology class with ID, label, definition,
     parent hierarchy, and child count
+  attributes:
+    description: API response schema for class  response
   source_reference:
     provenance: extracted
     locations:
@@ -115,6 +127,8 @@ api.response.relationship-response:
   name: RelationshipResponse
   description: Response containing a typed directed relationship between two
     ontology entities with property definition details
+  attributes:
+    description: API response schema for relationship  response
   source_reference:
     provenance: extracted
     locations:
@@ -133,6 +147,8 @@ api.response.property-definition-response:
   name: PropertyDefinitionResponse
   description: Response containing a property definition with ID, label,
     domain/range constraints, and symmetry metadata
+  attributes:
+    description: API response schema for property  definition  response
   source_reference:
     provenance: extracted
     locations:
@@ -151,6 +167,8 @@ api.response.individual-response:
   name: IndividualResponse
   description: Response containing a named ontology individual with class
     memberships, lexical senses, and property values
+  attributes:
+    description: API response schema for individual  response
   source_reference:
     provenance: extracted
     locations:
@@ -169,6 +187,8 @@ api.response.versioning-change-event-response:
   name: VersioningChangeEventResponse
   description: Response containing a versioning change event with operation type,
     entity reference, before/after state, and author
+  attributes:
+    description: API response schema for versioning  change  event  response
   source_reference:
     provenance: extracted
     locations:
@@ -187,6 +207,8 @@ api.response.entity-version-response:
   name: EntityVersionResponse
   description: Response containing a point-in-time snapshot of an entity version
     with changeset reference and full state
+  attributes:
+    description: API response schema for entity  version  response
   source_reference:
     provenance: extracted
     locations:
@@ -205,6 +227,8 @@ api.response.change-history-response:
   name: ChangeHistoryResponse
   description: Response containing paginated change history for an entity with
     ordered change events
+  attributes:
+    description: API response schema for change  history  response
   source_reference:
     provenance: extracted
     locations:
@@ -223,6 +247,8 @@ api.response.changeset-response:
   name: ChangesetResponse
   description: Response containing a changeset with ID, title, status, change
     count, and creation metadata
+  attributes:
+    description: API response schema for changeset  response
   source_reference:
     provenance: extracted
     locations:
@@ -241,6 +267,8 @@ api.response.proposal-response:
   name: ProposalResponse
   description: Response containing a merge proposal with source/target changeset
     references, status, and conflict summary
+  attributes:
+    description: API response schema for proposal  response
   source_reference:
     provenance: extracted
     locations:
@@ -259,6 +287,8 @@ api.response.conflict-response:
   name: ConflictResponse
   description: Response containing a merge conflict with conflicting entity state,
     conflict type, and resolution options
+  attributes:
+    description: API response schema for conflict  response
   source_reference:
     provenance: extracted
     locations:
@@ -277,6 +307,8 @@ api.response.conflict-report-response:
   name: ConflictReportResponse
   description: Response containing a summary report of all conflicts in a merge
     proposal with counts by type
+  attributes:
+    description: API response schema for conflict  report  response
   source_reference:
     provenance: extracted
     locations:
@@ -295,6 +327,8 @@ api.response.merge-result-response:
   name: MergeResultResponse
   description: Response containing the outcome of a merge operation with
     resolved/unresolved conflict counts
+  attributes:
+    description: API response schema for merge  result  response
   source_reference:
     provenance: extracted
     locations:
@@ -313,6 +347,8 @@ api.response.sync-status-response:
   name: SyncStatusResponse
   description: Response containing current sync status with remote, including last
     sync time and pending change count
+  attributes:
+    description: API response schema for sync  status  response
   source_reference:
     provenance: extracted
     locations:
@@ -331,6 +367,8 @@ api.response.sync-result-response:
   name: SyncResultResponse
   description: Response containing the result of a sync operation with
     pushed/pulled entity counts and conflict summary
+  attributes:
+    description: API response schema for sync  result  response
   source_reference:
     provenance: extracted
     locations:
@@ -349,6 +387,8 @@ api.response.knowledge-graph-response:
   name: KnowledgeGraphResponse
   description: Response containing the full in-memory knowledge graph with nodes,
     edges, and metadata
+  attributes:
+    description: API response schema for knowledge  graph  response
   source_reference:
     provenance: extracted
     locations:
@@ -367,6 +407,8 @@ api.response.graph-metrics-response:
   name: GraphMetricsResponse
   description: Response containing computed graph metrics including node count,
     edge count, density, diameter, and clustering coefficient
+  attributes:
+    description: API response schema for graph  metrics  response
   source_reference:
     provenance: extracted
     locations:
@@ -385,6 +427,8 @@ api.response.path-result-response:
   name: PathResultResponse
   description: Response containing shortest path results between two nodes with
     node sequence and path length
+  attributes:
+    description: API response schema for path  result  response
   source_reference:
     provenance: extracted
     locations:
@@ -403,6 +447,8 @@ api.response.centrality-response:
   name: CentralityResponse
   description: Response containing node centrality scores (degree, betweenness,
     pagerank) for knowledge graph nodes
+  attributes:
+    description: API response schema for centrality  response
   source_reference:
     provenance: extracted
     locations:
@@ -421,6 +467,8 @@ api.response.communities-response:
   name: CommunitiesResponse
   description: Response containing detected graph communities with member node IDs
     and community metadata
+  attributes:
+    description: API response schema for communities  response
   source_reference:
     provenance: extracted
     locations:
@@ -439,6 +487,8 @@ api.response.neighbors-response:
   name: NeighborsResponse
   description: Response containing direct neighbors of a node with relationship
     type and direction
+  attributes:
+    description: API response schema for neighbors  response
   source_reference:
     provenance: extracted
     locations:
@@ -457,6 +507,8 @@ api.response.cycle-check-response:
   name: CycleCheckResponse
   description: Response indicating whether directed cycles exist from a starting
     node with cycle path details
+  attributes:
+    description: API response schema for cycle  check  response
   source_reference:
     provenance: extracted
     locations:
@@ -474,6 +526,8 @@ api.response.sparqlresponse:
   layer_id: api
   name: SPARQLResponse
   description: Response containing SPARQL query results as variable bindings with row count
+  attributes:
+    description: API response schema for sparqlresponse
   source_reference:
     provenance: extracted
     locations:
@@ -491,6 +545,8 @@ api.response.triple-response:
   layer_id: api
   name: TripleResponse
   description: Response containing a single RDF triple with subject, predicate, and object
+  attributes:
+    description: API response schema for triple  response
   source_reference:
     provenance: extracted
     locations:
@@ -509,6 +565,8 @@ api.response.triples-response:
   name: TriplesResponse
   description: Response containing a collection of RDF triples extracted from the
     knowledge graph
+  attributes:
+    description: API response schema for triples  response
   source_reference:
     provenance: extracted
     locations:
@@ -526,6 +584,8 @@ api.response.triple-count-response:
   layer_id: api
   name: TripleCountResponse
   description: Response containing the total count of RDF triples in the knowledge graph
+  attributes:
+    description: API response schema for triple  count  response
   source_reference:
     provenance: extracted
     locations:
@@ -543,6 +603,8 @@ api.response.degree-distribution-response:
   layer_id: api
   name: DegreeDistributionResponse
   description: Response containing the degree distribution histogram of the knowledge graph
+  attributes:
+    description: API response schema for degree  distribution  response
   source_reference:
     provenance: extracted
     locations:
@@ -561,6 +623,8 @@ api.response.subgraph-data-response:
   name: SubgraphDataResponse
   description: Response containing subgraph node and edge data for a given node
     set and depth
+  attributes:
+    description: API response schema for subgraph  data  response
   source_reference:
     provenance: extracted
     locations:
@@ -579,6 +643,8 @@ api.response.subgraph-result-response:
   name: SubgraphResultResponse
   description: Response containing the result of a subgraph extraction with
     node/edge counts and data
+  attributes:
+    description: API response schema for subgraph  result  response
   source_reference:
     provenance: extracted
     locations:
@@ -597,6 +663,8 @@ api.response.serialization-scope-response:
   name: SerializationScopeResponse
   description: Response confirming the resolved scope for a serialization
     operation with entity counts
+  attributes:
+    description: API response schema for serialization  scope  response
   source_reference:
     provenance: extracted
     locations:
@@ -615,6 +683,8 @@ api.response.import-conflict-response:
   name: ImportConflictResponse
   description: Response describing a conflict detected during an import operation
     with existing and incoming values
+  attributes:
+    description: API response schema for import  conflict  response
   source_reference:
     provenance: extracted
     locations:
@@ -633,6 +703,8 @@ api.response.resolution-record-response:
   name: ResolutionRecordResponse
   description: Response recording the resolution applied to an import conflict
     with resolution strategy
+  attributes:
+    description: API response schema for resolution  record  response
   source_reference:
     provenance: extracted
     locations:
@@ -651,6 +723,8 @@ api.response.import-plan-response:
   name: ImportPlanResponse
   description: Response containing a preview import plan with entity counts,
     conflicts, and resolution recommendations
+  attributes:
+    description: API response schema for import  plan  response
   source_reference:
     provenance: extracted
     locations:
@@ -669,6 +743,8 @@ api.response.import-run-response:
   name: ImportRunResponse
   description: Response containing the result of an executed import with imported,
     skipped, and conflicted entity counts
+  attributes:
+    description: API response schema for import  run  response
   source_reference:
     provenance: extracted
     locations:
@@ -687,6 +763,8 @@ api.response.interchange-change-event-response:
   name: InterchangeChangeEventResponse
   description: Response containing a change event generated during an interchange
     import or export operation
+  attributes:
+    description: API response schema for interchange  change  event  response
   source_reference:
     provenance: extracted
     locations:
@@ -705,6 +783,8 @@ api.response.reference-result-schema:
   name: ReferenceResultSchema
   description: Response containing a single external reference result with URI,
     label, definition, and source metadata
+  attributes:
+    description: API response schema for reference  result
   source_reference:
     provenance: extracted
     locations:
@@ -723,6 +803,8 @@ api.response.reference-relation-schema:
   name: ReferenceRelationSchema
   description: Response containing a typed relation between two concepts from an
     external knowledge source
+  attributes:
+    description: API response schema for reference  relation
   source_reference:
     provenance: extracted
     locations:
@@ -741,6 +823,8 @@ api.response.reference-search-response-schema:
   name: ReferenceSearchResponseSchema
   description: Response containing paginated external reference search results
     with total count
+  attributes:
+    description: API response schema for reference  search  response
   source_reference:
     provenance: extracted
     locations:
@@ -759,6 +843,8 @@ api.response.reference-relations-response-schema:
   name: ReferenceRelationsResponseSchema
   description: Response containing typed relations for a concept from external
     knowledge sources
+  attributes:
+    description: API response schema for reference  relations  response
   source_reference:
     provenance: extracted
     locations:
@@ -777,6 +863,8 @@ api.response.reference-source-status-schema:
   name: ReferenceSourceStatusSchema
   description: Response containing the availability status of a single external
     reference source
+  attributes:
+    description: API response schema for reference  source  status
   source_reference:
     provenance: extracted
     locations:
@@ -794,6 +882,8 @@ api.response.reference-status-response-schema:
   layer_id: api
   name: ReferenceStatusResponseSchema
   description: Response containing the status of all configured external reference sources
+  attributes:
+    description: API response schema for reference  status  response
   source_reference:
     provenance: extracted
     locations:
@@ -812,6 +902,8 @@ api.response.extraction-result-schema:
   name: ExtractionResultSchema
   description: Response containing extraction results organized by layer with
     extracted entities and confidence scores
+  attributes:
+    description: API response schema for extraction  result
   source_reference:
     provenance: extracted
     locations:
@@ -830,6 +922,8 @@ api.response.system-health-response:
   name: SystemHealthResponse
   description: Response containing overall system health status with per-service
     health checks and uptime
+  attributes:
+    description: API response schema for system  health  response
   source_reference:
     provenance: extracted
     locations:
@@ -848,6 +942,8 @@ api.response.database-health-response:
   name: DatabaseHealthResponse
   description: Response containing database health details including connection
     status, size, and migration version
+  attributes:
+    description: API response schema for database  health  response
   source_reference:
     provenance: extracted
     locations:
@@ -866,6 +962,8 @@ api.response.service-metrics-response:
   name: ServiceMetricsResponse
   description: Response containing service-level metrics including request counts,
     error rates, and latency percentiles
+  attributes:
+    description: API response schema for service  metrics  response
   source_reference:
     provenance: extracted
     locations:
@@ -884,6 +982,8 @@ api.response.component-status-response:
   name: ComponentStatusResponse
   description: Response containing the operational status of a named system
     component with details
+  attributes:
+    description: API response schema for component  status  response
   source_reference:
     provenance: extracted
     locations:
@@ -902,6 +1002,8 @@ api.response.background-task-summary-response:
   name: BackgroundTaskSummaryResponse
   description: Response containing a summary of background task statuses with
     counts by state
+  attributes:
+    description: API response schema for background  task  summary  response
   source_reference:
     provenance: extracted
     locations:
@@ -920,6 +1022,8 @@ api.response.app-configuration-response:
   name: AppConfigurationResponse
   description: Response containing the full application configuration with all
     sections and current values
+  attributes:
+    description: API response schema for app  configuration  response
   source_reference:
     provenance: extracted
     locations:
@@ -938,6 +1042,8 @@ api.response.background-task-response:
   name: BackgroundTaskResponse
   description: Response containing a background task's ID, status, progress
     percentage, and result or error details
+  attributes:
+    description: API response schema for background  task  response
   source_reference:
     provenance: extracted
     locations:
@@ -956,6 +1062,8 @@ api.response.pipeline-configuration-response:
   name: PipelineConfigurationResponse
   description: Response containing a pipeline configuration with ID, name,
     provider, model, and parameter settings
+  attributes:
+    description: API response schema for pipeline  configuration  response
   source_reference:
     provenance: extracted
     locations:
@@ -974,6 +1082,8 @@ api.response.execution-response:
   name: ExecutionResponse
   description: Response containing a pipeline execution record with input, output,
     token usage, and duration
+  attributes:
+    description: API response schema for execution  response
   source_reference:
     provenance: extracted
     locations:

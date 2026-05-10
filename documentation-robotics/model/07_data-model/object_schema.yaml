@@ -10,6 +10,8 @@ data-model.objectschema.ontology-entity:
     title, description, hierarchy FKs, JSON value objects (external_references,
     lexical_senses, data_properties), binary embedding, and optimistic-locking
     version
+  attributes:
+    type: object
   source_reference:
     provenance: extracted
     locations:
@@ -30,6 +32,8 @@ data-model.objectschema.relationship:
     stores source_id, target_id, optional property_definition_id FK, float
     weight (0–1), and JSON metadata; used by GraphAnalysisService for graph
     construction
+  attributes:
+    type: object
   source_reference:
     provenance: extracted
     locations:
@@ -50,6 +54,8 @@ data-model.objectschema.change-event:
     entity_id, entity_type, operation (CREATE/UPDATE/DELETE), new_state and
     previous_state JSON snapshots, user_id, change_reason, and optional
     import_run_id correlation
+  attributes:
+    type: object
   source_reference:
     provenance: extracted
     locations:
@@ -69,6 +75,8 @@ data-model.objectschema.changeset:
   description: ORM schema for named collections of change events progressing
     through version control states (WORKING→STAGED→PROPOSED→APPROVED→MERGED) —
     stores name, description, state, and a JSON array of event_ids
+  attributes:
+    type: object
   source_reference:
     provenance: extracted
     locations:
@@ -88,6 +96,8 @@ data-model.objectschema.pipeline-configuration:
   description: ORM schema for LLM pipeline configurations in operations.db —
     stores pipeline slug, title, provider, model, config JSON, system_prompt,
     user_prompt template, enabled flag, and version counter
+  attributes:
+    type: object
   source_reference:
     provenance: extracted
     locations:
@@ -108,6 +118,8 @@ data-model.objectschema.import-run:
     (SKOS/OWL/GraphML) — stores format, source_hash, source_uri, scope, status
     (PENDING/COMMITTED/FAILED/ROLLED_BACK), resolution records, and created_by
     for auditability
+  attributes:
+    type: object
   source_reference:
     provenance: extracted
     locations:
@@ -127,6 +139,8 @@ data-model.objectschema.individual-class:
   description: Association table ORM schema linking individual instances to their
     parent classes — stores individual_id, class_id FK pair with ordering index
     for class priority
+  attributes:
+    type: object
   source_reference:
     provenance: extracted
     locations:
@@ -146,6 +160,8 @@ data-model.objectschema.property-definition:
   description: ORM schema for property definitions (relationship types/object
     properties) — stores name, description, domain_id and range_id class FKs,
     and optional inverse property ID
+  attributes:
+    type: object
   source_reference:
     provenance: extracted
     locations:
@@ -165,6 +181,8 @@ data-model.objectschema.extraction-result:
   description: ORM schema for persisted extraction results — stores source text,
     NLP/LLM pipeline output (JSON), extracted entity IDs, processing metrics,
     and run timestamps
+  attributes:
+    type: object
   source_reference:
     provenance: extracted
     locations:
@@ -184,6 +202,8 @@ data-model.objectschema.entity-version:
   description: ORM schema for entity version snapshots — stores entity_id FK,
     version number, full JSON snapshot, and the change event that triggered the
     version
+  attributes:
+    type: object
   source_reference:
     provenance: extracted
     locations:
@@ -203,6 +223,8 @@ data-model.objectschema.changeset-event:
   description: ORM schema for individual change events within a versioning
     changeset — stores changeset_id FK, entity_id, operation
     (create/update/delete), before/after JSON snapshots
+  attributes:
+    type: object
   source_reference:
     provenance: extracted
     locations:
@@ -222,6 +244,8 @@ data-model.objectschema.proposal:
   description: ORM schema for merge proposals — stores changeset_id FK, submitter,
     status (pending/approved/rejected/merged), review metadata, and conflict
     resolution references
+  attributes:
+    type: object
   source_reference:
     provenance: extracted
     locations:
@@ -241,6 +265,8 @@ data-model.objectschema.conflict-resolution:
   description: ORM schema for manual conflict resolution records — stores
     proposal_id FK, entity_id, conflict type, chosen resolution strategy, and
     resolved snapshot
+  attributes:
+    type: object
   source_reference:
     provenance: extracted
     locations:
@@ -260,6 +286,8 @@ data-model.objectschema.pipeline-execution:
   description: ORM schema for pipeline execution records in operations.db — stores
     pipeline_id FK, trigger, status, input/output JSON, LLM traceability log,
     and timing metadata
+  attributes:
+    type: object
   source_reference:
     provenance: extracted
     locations:
@@ -268,4 +296,617 @@ data-model.objectschema.pipeline-execution:
   metadata:
     created_at: 2026-05-08T09:47:21.641Z
     updated_at: 2026-05-08T09:47:21.641Z
+    version: 1
+data-model.objectschema.system-health:
+  id: 702b8f46-089c-4fda-9550-b47bd9ece48f
+  path: data-model.objectschema.system-health
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: System Health
+  description: Domain entity representing overall system health status; includes
+    database connectivity, NLP pipeline readiness, embedding model load status,
+    available LLM providers, uptime, and any identified issues
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/admin/entities.py
+        symbol: SystemHealth
+  metadata:
+    created_at: 2026-05-09T10:23:50.098Z
+    updated_at: 2026-05-09T10:23:50.098Z
+    version: 1
+data-model.objectschema.background-task:
+  id: dd1214df-d887-453d-9e06-21ef1ac760cf
+  path: data-model.objectschema.background-task
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Background Task
+  description: Domain entity representing a long-running background task with id,
+    name, status (pending/running/completed/failed), timestamps, and optional
+    error/result; enforces valid state transitions via transition_to()
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/admin/entities.py
+        symbol: BackgroundTask
+  metadata:
+    created_at: 2026-05-09T10:23:50.549Z
+    updated_at: 2026-05-09T10:23:50.549Z
+    version: 1
+data-model.objectschema.app-configuration:
+  id: 9d7379c4-6e0b-4ecb-9463-2c0e31293c82
+  path: data-model.objectschema.app-configuration
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: App Configuration
+  description: "Domain entity representing application configuration organized
+    into sections: server, database, llm, nlp, embedding, reference_sources,
+    logging, and optional sync; API key values are unmasked at domain layer"
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/admin/entities.py
+        symbol: AppConfiguration
+  metadata:
+    created_at: 2026-05-09T10:23:51.015Z
+    updated_at: 2026-05-09T10:23:51.015Z
+    version: 1
+data-model.objectschema.extracted-entity:
+  id: f77ef704-352f-4d42-859f-af92a80499b6
+  path: data-model.objectschema.extracted-entity
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Extracted Entity
+  description: Domain entity for an entity extracted from text through one or more
+    extraction layers; carries label, entity_type, source_layer (0=KG, 1=LLM,
+    2=NLP, 3=reference), confidence, optional class match and URI
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/extraction/entities.py
+        symbol: ExtractedEntity
+  metadata:
+    created_at: 2026-05-09T10:24:01.639Z
+    updated_at: 2026-05-09T10:24:01.639Z
+    version: 1
+data-model.objectschema.processing-metrics:
+  id: 5e716be8-cd35-4503-a185-58475d33026d
+  path: data-model.objectschema.processing-metrics
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Processing Metrics
+  description: "Frozen dataclass capturing metrics for a single extraction layer
+    run: layer_name, duration_ms, tokens_processed, entities_found,
+    relationships_found, error_count, and skipped_count"
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/extraction/entities.py
+        symbol: ProcessingMetrics
+  metadata:
+    created_at: 2026-05-09T10:24:02.262Z
+    updated_at: 2026-05-09T10:24:02.263Z
+    version: 1
+data-model.objectschema.extraction-run:
+  id: 19b3bad5-8302-44b0-80a9-2b78edb66b8b
+  path: data-model.objectschema.extraction-run
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Extraction Run
+  description: First-class domain entity (audit record) tracking an extraction
+    operation; records pipeline config ref, LLM model, temperature, tokens used,
+    duration, triples extracted vs committed, and status; immutable once
+    constructed
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/extraction/entities.py
+        symbol: ExtractionRun
+  metadata:
+    created_at: 2026-05-09T10:24:07.810Z
+    updated_at: 2026-05-09T10:24:07.810Z
+    version: 1
+data-model.objectschema.triple-extraction-result:
+  id: 3e1e364d-2ab1-433f-97c3-465a6ca74971
+  path: data-model.objectschema.triple-extraction-result
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Triple Extraction Result
+  description: Result of triple extraction from text; contains the list of
+    extracted triple dicts, warnings, and metadata (model, tokens_used,
+    duration_ms)
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/extraction/entities.py
+        symbol: TripleExtractionResult
+  metadata:
+    created_at: 2026-05-09T10:24:08.265Z
+    updated_at: 2026-05-09T10:24:08.265Z
+    version: 1
+data-model.objectschema.knowledge-graph:
+  id: 8c4193b9-14b8-4ed7-b259-23bceac87ab5
+  path: data-model.objectschema.knowledge-graph
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Knowledge Graph
+  description: Lightweight snapshot descriptor of the in-memory knowledge graph
+    state; carries node_count, edge_count, is_directed, and last_built
+    timestamp; not a persistent entity
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/graph/entities.py
+        symbol: KnowledgeGraph
+  metadata:
+    created_at: 2026-05-09T10:24:17.391Z
+    updated_at: 2026-05-09T10:24:17.391Z
+    version: 1
+data-model.objectschema.graph-metrics:
+  id: 2e5580c3-6c3e-4dd8-ac0a-f033e7164198
+  path: data-model.objectschema.graph-metrics
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Graph Metrics
+  description: "Computed structural metrics for a knowledge graph: density,
+    average_degree, connected_components, degree_distribution, centrality
+    scores, community sets, algorithm name, and computed_at timestamp"
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/graph/entities.py
+        symbol: GraphMetrics
+  metadata:
+    created_at: 2026-05-09T10:24:17.848Z
+    updated_at: 2026-05-09T10:24:17.849Z
+    version: 1
+data-model.objectschema.path-result:
+  id: f0e27624-20e1-406b-859e-44dbd7b1fa20
+  path: data-model.objectschema.path-result
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Path Result
+  description: An ordered path traversal between two nodes in the knowledge graph;
+    contains source_id, target_id, ordered path node list, edge count (length),
+    and relationship labels traversed
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/graph/entities.py
+        symbol: PathResult
+  metadata:
+    created_at: 2026-05-09T10:24:18.312Z
+    updated_at: 2026-05-09T10:24:18.312Z
+    version: 1
+data-model.objectschema.subgraph:
+  id: 9ac25f2d-abfd-4ce6-9d64-df97dc3112ae
+  path: data-model.objectschema.subgraph
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Subgraph
+  description: A subgraph containing a specified set of nodes and edges; carries
+    node_ids, edge_ids (source/target tuples), node_count, and edge_count
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/graph/entities.py
+        symbol: Subgraph
+  metadata:
+    created_at: 2026-05-09T10:24:18.768Z
+    updated_at: 2026-05-09T10:24:18.769Z
+    version: 1
+data-model.objectschema.subgraph-result:
+  id: 47bde4db-cee0-42cf-8237-cd385fa4a9bf
+  path: data-model.objectschema.subgraph-result
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Subgraph Result
+  description: Result of depth-based subgraph extraction around a center node;
+    contains center_node_id, node_ids, edge_ids, node_count, edge_count, depth,
+    and extracted_at timestamp
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/graph/entities.py
+        symbol: SubgraphResult
+  metadata:
+    created_at: 2026-05-09T10:24:19.233Z
+    updated_at: 2026-05-09T10:24:19.233Z
+    version: 1
+data-model.objectschema.resolution-record:
+  id: f2f4abe3-3842-45ab-9b13-310112ea7438
+  path: data-model.objectschema.resolution-record
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Resolution Record
+  description: A recorded resolution for a specific conflict in an import run;
+    captures match_kind, entity_id, and the resolution_chosen strategy applied
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/interchange/entities.py
+        symbol: ResolutionRecord
+  metadata:
+    created_at: 2026-05-09T10:24:25.317Z
+    updated_at: 2026-05-09T10:24:25.317Z
+    version: 1
+data-model.objectschema.import-run-entity:
+  id: a7dbfadd-c5f8-4f05-a625-87607cd0942c
+  path: data-model.objectschema.import-run-entity
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Import Run Entity
+  description: Domain entity tracking an import operation from inception through
+    completion; records format, source URI/hash, scope, applied conflict
+    resolutions, affected entity IDs, and status
+    (pending/committed/failed/rolled_back)
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/interchange/entities.py
+        symbol: ImportRun
+  metadata:
+    created_at: 2026-05-09T10:24:25.785Z
+    updated_at: 2026-05-09T10:24:25.785Z
+    version: 1
+data-model.objectschema.taxonomy-entity:
+  id: 4114a4f4-732a-4258-bcdc-156be4aed7f4
+  path: data-model.objectschema.taxonomy-entity
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Taxonomy Entity
+  description: Domain entity for a taxonomy that organizes concepts at the top
+    level; has id, title, optional description, timestamps, and version for
+    optimistic concurrency control
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/ontology/entities.py
+        symbol: Taxonomy
+  metadata:
+    created_at: 2026-05-09T10:24:36.380Z
+    updated_at: 2026-05-09T10:24:36.381Z
+    version: 1
+data-model.objectschema.concept-scheme-entity:
+  id: 558beecf-cf45-460e-bbc6-33fc05ed5147
+  path: data-model.objectschema.concept-scheme-entity
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Concept Scheme Entity
+  description: Domain entity for a concept scheme that groups classes within a
+    taxonomy; has id, taxonomy_id, title, optional description, timestamps, and
+    version
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/ontology/entities.py
+        symbol: ConceptScheme
+  metadata:
+    created_at: 2026-05-09T10:24:36.856Z
+    updated_at: 2026-05-09T10:24:36.856Z
+    version: 1
+data-model.objectschema.ontology-class-entity:
+  id: 282f4408-1956-4e5c-963b-3b1542b1fc3c
+  path: data-model.objectschema.ontology-class-entity
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Ontology Class Entity
+  description: Domain entity representing a concept (OntologyClass) in the
+    ontology hierarchy; has concept_scheme_id, taxonomy_id, title, optional
+    parent_class_id, structural property, external references, lexical senses,
+    data properties, and embedding
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/ontology/entities.py
+        symbol: Class
+  metadata:
+    created_at: 2026-05-09T10:24:37.342Z
+    updated_at: 2026-05-09T10:24:37.342Z
+    version: 1
+data-model.objectschema.individual-entity:
+  id: ee58253d-e0a5-4406-a498-03a618164980
+  path: data-model.objectschema.individual-entity
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Individual Entity
+  description: Domain entity representing an instance of one or more classes;
+    maintains an ordered class_ids list where order determines property
+    inheritance priority; holds data properties and external references
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/ontology/entities.py
+        symbol: Individual
+  metadata:
+    created_at: 2026-05-09T10:24:37.809Z
+    updated_at: 2026-05-09T10:24:37.809Z
+    version: 1
+data-model.objectschema.relationship-entity:
+  id: 054d8c9f-c467-4fde-95a9-cbdee2f22813
+  path: data-model.objectschema.relationship-entity
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Relationship Entity
+  description: Domain entity for a typed relationship between two ontology
+    entities; carries source_id, target_id, and property_definition_id;
+    validates source != target
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/ontology/entities.py
+        symbol: Relationship
+  metadata:
+    created_at: 2026-05-09T10:24:38.286Z
+    updated_at: 2026-05-09T10:24:38.286Z
+    version: 1
+data-model.objectschema.property-definition-entity:
+  id: 62c7047b-c2c6-4af6-af6b-051f6758e904
+  path: data-model.objectschema.property-definition-entity
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Property Definition Entity
+  description: Domain entity defining a property (relationship type) with
+    identifier, title, optional description, ontology_mapping, relevance flag,
+    timestamps, and version
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/ontology/entities.py
+        symbol: PropertyDefinition
+  metadata:
+    created_at: 2026-05-09T10:24:38.882Z
+    updated_at: 2026-05-09T10:24:38.882Z
+    version: 1
+data-model.objectschema.pipeline-configuration-entity:
+  id: 3161cf90-427b-437a-a8c4-e1af55a78158
+  path: data-model.objectschema.pipeline-configuration-entity
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Pipeline Configuration Entity
+  description: Domain entity for an LLM pipeline configuration; defines provider
+    (openai/anthropic), model, prompts (system and user), runtime config,
+    version, enabled flag, and optional seed; validates provider and version >=
+    1
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipeline/entities.py
+        symbol: PipelineConfiguration
+  metadata:
+    created_at: 2026-05-09T10:24:45.286Z
+    updated_at: 2026-05-09T10:24:45.286Z
+    version: 1
+data-model.objectschema.execution-entity:
+  id: 1c94eb79-f327-4d62-a153-15cbf09a004d
+  path: data-model.objectschema.execution-entity
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Execution Entity
+  description: Domain entity recording a single LLM pipeline execution; captures
+    input/output text, provider, model, tokens_in, tokens_out, duration_ms,
+    status (success/error/timeout), optional error message, and timestamp
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipeline/entities.py
+        symbol: Execution
+  metadata:
+    created_at: 2026-05-09T10:24:45.764Z
+    updated_at: 2026-05-09T10:24:45.764Z
+    version: 1
+data-model.objectschema.change-event-entity:
+  id: 7598778d-b0c9-4ac2-8ac9-1a15ff5534a3
+  path: data-model.objectschema.change-event-entity
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Change Event Entity
+  description: Domain entity recording a single change to an entity; carries
+    entity_id, entity_type, operation, new_state snapshot, timestamp, optional
+    previous_state, user_id, change_reason, changeset_id, batch_run_id, and
+    processed flag
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/entities.py
+        symbol: ChangeEvent
+  metadata:
+    created_at: 2026-05-09T10:24:58.754Z
+    updated_at: 2026-05-09T10:24:58.754Z
+    version: 1
+data-model.objectschema.entity-version-entity:
+  id: 87f41b0a-59dd-4e37-9b69-ffd036f02162
+  path: data-model.objectschema.entity-version-entity
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Entity Version Entity
+  description: Domain entity representing a snapshot of an entity at a specific
+    version; carries entity_id, version number, state enum, snapshot dict,
+    created_at, and optional parent_version
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/entities.py
+        symbol: EntityVersion
+  metadata:
+    created_at: 2026-05-09T10:24:59.236Z
+    updated_at: 2026-05-09T10:24:59.236Z
+    version: 1
+data-model.objectschema.changeset-entity:
+  id: f6ecf480-c1fd-4d76-b5bc-c56aa37c635b
+  path: data-model.objectschema.changeset-entity
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Changeset Entity
+  description: Domain entity for a named collection of change events proposed as a
+    unit; enforces state machine transitions
+    (WORKING→STAGED→PROPOSED→APPROVED→MERGED) via transition_to(); prevents
+    direct state assignment
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/entities.py
+        symbol: Changeset
+  metadata:
+    created_at: 2026-05-09T10:24:59.713Z
+    updated_at: 2026-05-09T10:24:59.713Z
+    version: 1
+data-model.objectschema.proposal-entity:
+  id: 2ff8aa70-673e-4390-97c0-5ebca5cea559
+  path: data-model.objectschema.proposal-entity
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Proposal Entity
+  description: Domain entity for a formal proposal to merge a changeset;
+    references changeset_id, enforces state transitions (OPEN→APPROVED/REJECTED,
+    APPROVED→MERGED), stores reviewed_at and reviewer_notes
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/entities.py
+        symbol: Proposal
+  metadata:
+    created_at: 2026-05-09T10:25:00.196Z
+    updated_at: 2026-05-09T10:25:00.196Z
+    version: 1
+data-model.objectschema.conflict-entity:
+  id: 9415f1bc-6636-463e-be95-21cc351bd236
+  path: data-model.objectschema.conflict-entity
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Conflict Entity
+  description: Domain entity representing a merge conflict on a single field;
+    carries entity_id, entity_type, field_name, base_value, incoming_value, and
+    resolved_value/strategy; resolved atomically via resolve()
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/entities.py
+        symbol: Conflict
+  metadata:
+    created_at: 2026-05-09T10:25:00.659Z
+    updated_at: 2026-05-09T10:25:00.659Z
+    version: 1
+data-model.objectschema.conflict-report:
+  id: b9227bff-7418-477e-b76b-daf7c59f6371
+  path: data-model.objectschema.conflict-report
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Conflict Report
+  description: Report of conflicts in a merge proposal; holds proposal_id and a
+    list of Conflict entities; provides has_conflicts and all_resolved
+    properties
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/entities.py
+        symbol: ConflictReport
+  metadata:
+    created_at: 2026-05-09T10:25:01.127Z
+    updated_at: 2026-05-09T10:25:01.127Z
+    version: 1
+data-model.objectschema.merge-result:
+  id: d1710a23-4a42-4378-ae37-0190abeaf44c
+  path: data-model.objectschema.merge-result
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Merge Result
+  description: Result of a successful merge operation; carries proposal_id,
+    changeset_id, merged_at timestamp, events_applied count, and
+    conflicts_resolved count
+  attributes:
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/entities.py
+        symbol: MergeResult
+  metadata:
+    created_at: 2026-05-09T10:25:01.598Z
+    updated_at: 2026-05-09T10:25:01.598Z
     version: 1

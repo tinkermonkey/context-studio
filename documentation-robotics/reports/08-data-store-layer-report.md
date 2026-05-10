@@ -16,9 +16,9 @@ Databases, data stores, and persistence mechanisms.
 | ------------------------- | ----- |
 | Elements                  | 23    |
 | Intra-Layer Relationships | 6     |
-| Inter-Layer Relationships | 37    |
+| Inter-Layer Relationships | 26    |
 | Inbound Relationships     | 4     |
-| Outbound Relationships    | 33    |
+| Outbound Relationships    | 22    |
 
 **Cross-Layer References**:
 
@@ -109,17 +109,6 @@ flowchart TB
 | `data-store.database.serves.application.applicationcomponent`       | `data-store.database.reference-api-cachedb`              | `application.applicationcomponent.cached-reference-source`       | `application` | `serves`     | many-to-many | medium   |
 | `data-store.database.serves.application.applicationcomponent`       | `data-store.database.referencedb`                        | `application.applicationcomponent.local-reference-repository`    | `application` | `serves`     | many-to-many | medium   |
 | `data-store.retentionpolicy.satisfies.motivation.constraint`        | `data-store.retentionpolicy.reference-api-cache-cleanup` | `motivation.constraint.external-reference-source-rate-limits`    | `motivation`  | `satisfies`  | many-to-many | medium   |
-| `data-store.storedlogic.serves.application.applicationservice`      | `data-store.storedlogic.changeset-events-table`          | `application.applicationservice.versioning-service`              | `application` | `serves`     | many-to-many | medium   |
-| `data-store.storedlogic.serves.application.applicationservice`      | `data-store.storedlogic.changesets-table`                | `application.applicationservice.versioning-service`              | `application` | `serves`     | many-to-many | medium   |
-| `data-store.storedlogic.serves.application.applicationservice`      | `data-store.storedlogic.conflict-resolutions-table`      | `application.applicationservice.versioning-service`              | `application` | `serves`     | many-to-many | medium   |
-| `data-store.storedlogic.serves.application.applicationservice`      | `data-store.storedlogic.entity-versions-table`           | `application.applicationservice.versioning-service`              | `application` | `serves`     | many-to-many | medium   |
-| `data-store.storedlogic.serves.application.applicationservice`      | `data-store.storedlogic.extraction-results-table`        | `application.applicationservice.extraction-service`              | `application` | `serves`     | many-to-many | medium   |
-| `data-store.storedlogic.serves.application.applicationservice`      | `data-store.storedlogic.import-runs-table`               | `application.applicationservice.import-run-service`              | `application` | `serves`     | many-to-many | medium   |
-| `data-store.storedlogic.serves.application.applicationservice`      | `data-store.storedlogic.individual-classes-table`        | `application.applicationservice.ontology-service`                | `application` | `serves`     | many-to-many | medium   |
-| `data-store.storedlogic.serves.application.applicationservice`      | `data-store.storedlogic.pipeline-configurations-table`   | `application.applicationservice.pipeline-service`                | `application` | `serves`     | many-to-many | medium   |
-| `data-store.storedlogic.serves.application.applicationservice`      | `data-store.storedlogic.pipeline-executions-table`       | `application.applicationservice.pipeline-service`                | `application` | `serves`     | many-to-many | medium   |
-| `data-store.storedlogic.serves.application.applicationservice`      | `data-store.storedlogic.property-definitions-table`      | `application.applicationservice.ontology-service`                | `application` | `serves`     | many-to-many | medium   |
-| `data-store.storedlogic.serves.application.applicationservice`      | `data-store.storedlogic.proposals-table`                 | `application.applicationservice.versioning-service`              | `application` | `serves`     | many-to-many | medium   |
 | `data-store.storedlogic.implements.application.applicationfunction` | `data-store.storedlogic.sqlite-vec-cosine-similarity`    | `application.applicationfunction.embedding-generation`           | `application` | `implements` | many-to-many | medium   |
 | `data-store.storedlogic.realizes.business.businessfunction`         | `data-store.storedlogic.sqlite-vec-cosine-similarity`    | `business.businessfunction.semantic-search`                      | `business`    | `realizes`   | many-to-many | medium   |
 | `data-store.storedlogic.serves.application.applicationservice`      | `data-store.storedlogic.sqlite-vec-cosine-similarity`    | `application.applicationservice.extraction-service`              | `application` | `serves`     | many-to-many | medium   |
@@ -632,4 +621,4 @@ Foreign key cascade delete rule on parent_entity_id in ontology_entities — del
 
 ---
 
-Generated: 2026-05-08T12:53:37.492Z | Model Version: 0.1.0
+Generated: 2026-05-10T10:17:36.894Z | Model Version: 0.1.0

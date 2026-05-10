@@ -1,0 +1,10 @@
+id: changeset-1778328703495-9uf1orgfa
+name: fix-issue-027-operation-attributes
+created: 2026-05-09T12:11:43.506Z
+modified: 2026-05-09T12:31:17.032Z
+status: committed
+baseSnapshot: sha256:da87a3580fcf490eb865a15f0858c5fb2f4252363b8217df1f3066a9c383a540
+stats:
+  additions: 0
+  modifications: 262
+  deletions: 0

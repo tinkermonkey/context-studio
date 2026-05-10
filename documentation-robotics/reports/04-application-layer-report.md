@@ -16,8 +16,8 @@ Application components, services, and interactions.
 | ------------------------- | ----- |
 | Elements                  | 40    |
 | Intra-Layer Relationships | 55    |
-| Inter-Layer Relationships | 162   |
-| Inbound Relationships     | 158   |
+| Inter-Layer Relationships | 155   |
+| Inbound Relationships     | 151   |
 | Outbound Relationships    | 4     |
 
 **Cross-Layer References**:
@@ -102,10 +102,12 @@ flowchart TB
 
 | Relationship ID                                                      | Source Node                                                | Dest Node                                                                 | Dest Layer    | Predicate    | Cardinality  | Strength |
 | -------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------- | ------------- | ------------ | ------------ | -------- |
+| `api.operation.references.application.applicationservice`            | `api.operation.add-class-to-scheme`                        | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice`            | `api.operation.add-parent-class-to-individual`             | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice`            | `api.operation.analyze-text`                               | `application.applicationservice.extraction-service`                       | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice`            | `api.operation.approve-proposal`                           | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice`            | `api.operation.auto-resolve-conflicts`                     | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.build-graph`                                | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice`            | `api.operation.build-knowledge-graph`                      | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice`            | `api.operation.check-cycle`                                | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice`            | `api.operation.create-changeset`                           | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
@@ -160,11 +162,13 @@ flowchart TB
 | `api.operation.references.application.applicationservice`            | `api.operation.get-relationship`                           | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice`            | `api.operation.get-run-change-events`                      | `application.applicationservice.import-run-service`                       | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice`            | `api.operation.get-service-metrics`                        | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-services-health`                        | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice`            | `api.operation.get-shortest-path`                          | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice`            | `api.operation.get-subgraph-by-depth`                      | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice`            | `api.operation.get-subgraph`                               | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice`            | `api.operation.get-sync-status`                            | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice`            | `api.operation.get-system-health`                          | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-tasks-health`                           | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice`            | `api.operation.get-taxonomy`                               | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice`            | `api.operation.import-ontology`                            | `application.applicationservice.import-run-service`                       | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice`            | `api.operation.list-background-tasks`                      | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
@@ -218,17 +222,6 @@ flowchart TB
 | `data-store.database.serves.application.applicationcomponent`        | `data-store.database.operationsdb`                         | `application.applicationcomponent.sqlite-pipeline-repository`             | `application` | `serves`     | many-to-many | medium   |
 | `data-store.database.serves.application.applicationcomponent`        | `data-store.database.reference-api-cachedb`                | `application.applicationcomponent.cached-reference-source`                | `application` | `serves`     | many-to-many | medium   |
 | `data-store.database.serves.application.applicationcomponent`        | `data-store.database.referencedb`                          | `application.applicationcomponent.local-reference-repository`             | `application` | `serves`     | many-to-many | medium   |
-| `data-store.storedlogic.serves.application.applicationservice`       | `data-store.storedlogic.changeset-events-table`            | `application.applicationservice.versioning-service`                       | `application` | `serves`     | many-to-many | medium   |
-| `data-store.storedlogic.serves.application.applicationservice`       | `data-store.storedlogic.changesets-table`                  | `application.applicationservice.versioning-service`                       | `application` | `serves`     | many-to-many | medium   |
-| `data-store.storedlogic.serves.application.applicationservice`       | `data-store.storedlogic.conflict-resolutions-table`        | `application.applicationservice.versioning-service`                       | `application` | `serves`     | many-to-many | medium   |
-| `data-store.storedlogic.serves.application.applicationservice`       | `data-store.storedlogic.entity-versions-table`             | `application.applicationservice.versioning-service`                       | `application` | `serves`     | many-to-many | medium   |
-| `data-store.storedlogic.serves.application.applicationservice`       | `data-store.storedlogic.extraction-results-table`          | `application.applicationservice.extraction-service`                       | `application` | `serves`     | many-to-many | medium   |
-| `data-store.storedlogic.serves.application.applicationservice`       | `data-store.storedlogic.import-runs-table`                 | `application.applicationservice.import-run-service`                       | `application` | `serves`     | many-to-many | medium   |
-| `data-store.storedlogic.serves.application.applicationservice`       | `data-store.storedlogic.individual-classes-table`          | `application.applicationservice.ontology-service`                         | `application` | `serves`     | many-to-many | medium   |
-| `data-store.storedlogic.serves.application.applicationservice`       | `data-store.storedlogic.pipeline-configurations-table`     | `application.applicationservice.pipeline-service`                         | `application` | `serves`     | many-to-many | medium   |
-| `data-store.storedlogic.serves.application.applicationservice`       | `data-store.storedlogic.pipeline-executions-table`         | `application.applicationservice.pipeline-service`                         | `application` | `serves`     | many-to-many | medium   |
-| `data-store.storedlogic.serves.application.applicationservice`       | `data-store.storedlogic.property-definitions-table`        | `application.applicationservice.ontology-service`                         | `application` | `serves`     | many-to-many | medium   |
-| `data-store.storedlogic.serves.application.applicationservice`       | `data-store.storedlogic.proposals-table`                   | `application.applicationservice.versioning-service`                       | `application` | `serves`     | many-to-many | medium   |
 | `data-store.storedlogic.implements.application.applicationfunction`  | `data-store.storedlogic.sqlite-vec-cosine-similarity`      | `application.applicationfunction.embedding-generation`                    | `application` | `implements` | many-to-many | medium   |
 | `data-store.storedlogic.serves.application.applicationservice`       | `data-store.storedlogic.sqlite-vec-cosine-similarity`      | `application.applicationservice.extraction-service`                       | `application` | `serves`     | many-to-many | medium   |
 | `technology.systemsoftware.serves.application.applicationcomponent`  | `technology.systemsoftware.alembic`                        | `application.applicationcomponent.sqlite-persistence-adapter`             | `application` | `serves`     | many-to-many | medium   |
@@ -275,6 +268,12 @@ flowchart TB
 
 LLM provider for Anthropic Claude models (Opus, Sonnet, Haiku) — implements the LLMProvider protocol to provide access to Anthropic's API for knowledge extraction and pipeline tasks
 
+#### Attributes
+
+| Name | Value             |
+| ---- | ----------------- |
+| type | service-component |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate  | Direction |
@@ -288,6 +287,12 @@ LLM provider for Anthropic Claude models (Opus, Sonnet, Haiku) — implements th
 **Type**: `applicationcomponent`
 
 Decorator that wraps a ReferenceSource and caches results to SQLite — provides TTL-based expiry ensuring stale data is refreshed while improving efficiency when querying the same terms repeatedly
+
+#### Attributes
+
+| Name | Value             |
+| ---- | ----------------- |
+| type | service-component |
 
 #### Relationships
 
@@ -304,6 +309,12 @@ Decorator that wraps a ReferenceSource and caches results to SQLite — provides
 
 Records domain events to the change audit trail — subscribes to domain events and persists them as change records using a change record port, registered with the event publisher during application startup
 
+#### Attributes
+
+| Name | Value             |
+| ---- | ----------------- |
+| type | service-component |
+
 #### Relationships
 
 | Type        | Related Element                                   | Predicate  | Direction |
@@ -317,6 +328,12 @@ Records domain events to the change audit trail — subscribes to domain events 
 **Type**: `applicationcomponent`
 
 Infrastructure adapter fetching semantic relation data from the ConceptNet knowledge graph API for ontology enrichment
+
+#### Attributes
+
+| Name | Value             |
+| ---- | ----------------- |
+| type | service-component |
 
 #### Relationships
 
@@ -332,6 +349,12 @@ Infrastructure adapter fetching semantic relation data from the ConceptNet knowl
 
 Infrastructure adapter fetching entity data from DBpedia SPARQL endpoint for ontology enrichment
 
+#### Attributes
+
+| Name | Value             |
+| ---- | ----------------- |
+| type | service-component |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate  | Direction |
@@ -345,6 +368,12 @@ Infrastructure adapter fetching entity data from DBpedia SPARQL endpoint for ont
 **Type**: `applicationcomponent`
 
 Infrastructure adapter implementing remote sync via DuckDB and Parquet files — provides efficient columnar snapshot-based synchronization
+
+#### Attributes
+
+| Name | Value             |
+| ---- | ----------------- |
+| type | service-component |
 
 #### Relationships
 
@@ -360,6 +389,12 @@ Infrastructure adapter implementing remote sync via DuckDB and Parquet files —
 
 Infrastructure adapter implementing GraphML serialization and deserialization for graph-structured ontology import/export
 
+#### Attributes
+
+| Name | Value             |
+| ---- | ----------------- |
+| type | service-component |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate  | Direction |
@@ -373,6 +408,12 @@ Infrastructure adapter implementing GraphML serialization and deserialization fo
 **Type**: `applicationcomponent`
 
 In-process event publisher using the observer pattern — handlers execute synchronously within the same transaction boundary, implementing the EventPublisher port for local single-process deployments with isolated exception handling to prevent cascade failures
+
+#### Attributes
+
+| Name | Value             |
+| ---- | ----------------- |
+| type | service-component |
 
 #### Relationships
 
@@ -389,6 +430,12 @@ In-process event publisher using the observer pattern — handlers execute synch
 
 Wraps ConfigurationManager to implement the ConfigurationStore port — converts Pydantic Settings objects to plain dicts for the domain entity, maintaining separation between infrastructure and domain logic
 
+#### Attributes
+
+| Name | Value             |
+| ---- | ----------------- |
+| type | service-component |
+
 #### Relationships
 
 | Type        | Related Element                                | Predicate  | Direction |
@@ -402,6 +449,12 @@ Wraps ConfigurationManager to implement the ConfigurationStore port — converts
 **Type**: `applicationcomponent`
 
 Infrastructure adapter routing LLM completion requests to the appropriate provider — selects between OpenAI and Anthropic providers based on pipeline configuration and exposes available provider list for health checks
+
+#### Attributes
+
+| Name | Value             |
+| ---- | ----------------- |
+| type | service-component |
 
 #### Relationships
 
@@ -419,6 +472,12 @@ Infrastructure adapter routing LLM completion requests to the appropriate provid
 
 Repository for offline reference data lookups — queries pre-imported reference.db to provide fast offline access to reference data from ConceptNet, DBpedia, Wikidata, and schema.org
 
+#### Attributes
+
+| Name | Value             |
+| ---- | ----------------- |
+| type | service-component |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate  | Direction |
@@ -433,6 +492,12 @@ Repository for offline reference data lookups — queries pre-imported reference
 **Type**: `applicationcomponent`
 
 Infrastructure adapter implementing the GraphEngine port using NetworkX DiGraph — supports directed graph construction, shortest/all paths, centrality algorithms (betweenness, pagerank, closeness, degree), community detection, and subgraph extraction
+
+#### Attributes
+
+| Name | Value             |
+| ---- | ----------------- |
+| type | service-component |
 
 #### Relationships
 
@@ -451,6 +516,12 @@ Infrastructure adapter implementing the GraphEngine port using NetworkX DiGraph 
 
 No-op implementation of the SyncTarget port — used when remote synchronization is not configured, all operations succeed without side effects allowing the versioning system to function normally in single-workspace scenarios
 
+#### Attributes
+
+| Name | Value             |
+| ---- | ----------------- |
+| type | service-component |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate  | Direction |
@@ -464,6 +535,12 @@ No-op implementation of the SyncTarget port — used when remote synchronization
 **Type**: `applicationcomponent`
 
 LLM provider for OpenAI models (GPT-4o, GPT-4-turbo, GPT-3.5-turbo) — implements the LLMProvider protocol to provide access to OpenAI's API for knowledge extraction and pipeline tasks
+
+#### Attributes
+
+| Name | Value             |
+| ---- | ----------------- |
+| type | service-component |
 
 #### Relationships
 
@@ -479,6 +556,12 @@ LLM provider for OpenAI models (GPT-4o, GPT-4-turbo, GPT-3.5-turbo) — implemen
 
 Infrastructure adapter implementing OWL (Web Ontology Language) serialization and deserialization for ontology round-trip import/export
 
+#### Attributes
+
+| Name | Value             |
+| ---- | ----------------- |
+| type | service-component |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate  | Direction |
@@ -492,6 +575,12 @@ Infrastructure adapter implementing OWL (Web Ontology Language) serialization an
 **Type**: `applicationcomponent`
 
 Semantic query engine implementation using RDFLib for RDF/SPARQL operations — provides the SemanticQueryEngine protocol interface via an RDFLib in-memory graph supporting SPARQL queries with validation
+
+#### Attributes
+
+| Name | Value             |
+| ---- | ----------------- |
+| type | service-component |
 
 #### Relationships
 
@@ -507,6 +596,12 @@ Semantic query engine implementation using RDFLib for RDF/SPARQL operations — 
 
 Infrastructure adapter implementing remote sync via AWS S3 — pushes and pulls Parquet snapshots for cross-device ontology synchronization
 
+#### Attributes
+
+| Name | Value             |
+| ---- | ----------------- |
+| type | service-component |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate  | Direction |
@@ -521,6 +616,12 @@ Infrastructure adapter implementing remote sync via AWS S3 — pushes and pulls 
 
 Infrastructure adapter fetching type and property definitions from schema.org vocabulary for ontology enrichment
 
+#### Attributes
+
+| Name | Value             |
+| ---- | ----------------- |
+| type | service-component |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate  | Direction |
@@ -534,6 +635,12 @@ Infrastructure adapter fetching type and property definitions from schema.org vo
 **Type**: `applicationcomponent`
 
 Infrastructure adapter wrapping the sentence-transformers library — provides lazy-loaded semantic embedding generation (all-MiniLM-L12-v2) with sync and async interfaces for single and batch text encoding
+
+#### Attributes
+
+| Name | Value             |
+| ---- | ----------------- |
+| type | service-component |
 
 #### Relationships
 
@@ -552,6 +659,12 @@ Infrastructure adapter wrapping the sentence-transformers library — provides l
 
 Infrastructure adapter implementing SKOS (Simple Knowledge Organization System) serialization and deserialization for ontology round-trip import/export in Turtle/RDF format
 
+#### Attributes
+
+| Name | Value             |
+| ---- | ----------------- |
+| type | service-component |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate  | Direction |
@@ -566,6 +679,12 @@ Infrastructure adapter implementing SKOS (Simple Knowledge Organization System) 
 
 Infrastructure adapter implementing NLP text processing using spaCy — performs named entity recognition, dependency parsing, and concept extraction
 
+#### Attributes
+
+| Name | Value             |
+| ---- | ----------------- |
+| type | service-component |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate  | Direction |
@@ -579,6 +698,12 @@ Infrastructure adapter implementing NLP text processing using spaCy — performs
 **Type**: `applicationcomponent`
 
 SQLAlchemy-based repository for persisting versioning domain entities — implements the ChangeRepository protocol handling persistence of change events, entity versions, changesets, and proposals to SQLite
+
+#### Attributes
+
+| Name | Value    |
+| ---- | -------- |
+| type | internal |
 
 #### Relationships
 
@@ -601,6 +726,12 @@ SQLAlchemy-based repository for persisting versioning domain entities — implem
 
 SQLAlchemy-based implementation of the ExtractionRepository port — manages persistence of extraction results using SQLAlchemy ORM with full entity and layer execution metadata
 
+#### Attributes
+
+| Name | Value    |
+| ---- | -------- |
+| type | internal |
+
 #### Relationships
 
 | Type        | Related Element                                     | Predicate  | Direction |
@@ -615,6 +746,12 @@ SQLAlchemy-based implementation of the ExtractionRepository port — manages per
 **Type**: `applicationcomponent`
 
 SQLAlchemy-based repository for interchange domain persistence — implements the ImportRunRepository port handling persistence of ImportRun entities and their change event correlations using SQLite
+
+#### Attributes
+
+| Name | Value    |
+| ---- | -------- |
+| type | internal |
 
 #### Relationships
 
@@ -631,6 +768,12 @@ SQLAlchemy-based repository for interchange domain persistence — implements th
 **Type**: `applicationcomponent`
 
 SQLAlchemy-based implementation of the OntologyRepository port — manages persistence of all ontology entities using a unified single-table inheritance pattern with node_type discriminator, enforcing invariants and maintaining referential integrity
+
+#### Attributes
+
+| Name | Value    |
+| ---- | -------- |
+| type | internal |
 
 #### Relationships
 
@@ -650,6 +793,12 @@ SQLAlchemy-based implementation of the OntologyRepository port — manages persi
 
 Infrastructure adapter implementing repository ports via SQLAlchemy — persists ontology entities, relationships, change events, changesets, proposals, and extraction results to local.db using single-table inheritance ORM model
 
+#### Attributes
+
+| Name | Value    |
+| ---- | -------- |
+| type | internal |
+
 #### Relationships
 
 | Type        | Related Element                                        | Predicate  | Direction |
@@ -668,6 +817,12 @@ Infrastructure adapter implementing repository ports via SQLAlchemy — persists
 
 SQLite implementation of the PipelineRepository port for operations.db — manages persistence of pipeline configurations and execution records with complete instrumentation for observability
 
+#### Attributes
+
+| Name | Value    |
+| ---- | -------- |
+| type | internal |
+
 #### Relationships
 
 | Type        | Related Element                                       | Predicate  | Direction |
@@ -685,6 +840,12 @@ SQLite implementation of the PipelineRepository port for operations.db — manag
 
 Infrastructure adapter implementing the MetricsCollector port — aggregates health status from LLM providers, NLP pipeline, embedding model, and SQLite database connectivity; tracks service uptime
 
+#### Attributes
+
+| Name | Value             |
+| ---- | ----------------- |
+| type | service-component |
+
 #### Relationships
 
 | Type        | Related Element                                | Predicate  | Direction |
@@ -698,6 +859,12 @@ Infrastructure adapter implementing the MetricsCollector port — aggregates hea
 **Type**: `applicationcomponent`
 
 Infrastructure adapter fetching entity data from Wikidata SPARQL endpoint for ontology enrichment
+
+#### Attributes
+
+| Name | Value             |
+| ---- | ----------------- |
+| type | service-component |
 
 #### Relationships
 
@@ -780,6 +947,12 @@ Application function that executes SPARQL queries over the in-memory graph const
 
 Domain service for system administration — aggregates health checks from metrics, embedding, NLP, and LLM components; manages application configuration sections; tracks background task lifecycle
 
+#### Attributes
+
+| Name        | Value       |
+| ----------- | ----------- |
+| serviceType | synchronous |
+
 #### Relationships
 
 | Type        | Related Element                                                     | Predicate    | Direction |
@@ -791,7 +964,9 @@ Domain service for system administration — aggregates health checks from metri
 | inter-layer | `api.operation.get-embedding-health`                                | `references` | inbound   |
 | inter-layer | `api.operation.get-nlp-health`                                      | `references` | inbound   |
 | inter-layer | `api.operation.get-service-metrics`                                 | `references` | inbound   |
+| inter-layer | `api.operation.get-services-health`                                 | `references` | inbound   |
 | inter-layer | `api.operation.get-system-health`                                   | `references` | inbound   |
+| inter-layer | `api.operation.get-tasks-health`                                    | `references` | inbound   |
 | inter-layer | `api.operation.list-background-tasks`                               | `references` | inbound   |
 | inter-layer | `api.operation.reset-configuration`                                 | `references` | inbound   |
 | inter-layer | `api.operation.update-configuration-section`                        | `references` | inbound   |
@@ -813,6 +988,12 @@ Domain service for system administration — aggregates health checks from metri
 
 Domain service orchestrating four-layer knowledge extraction pipeline (KG context, LLM, NLP, reference enrichment) — coordinates layer execution, recovers from failures, deduplicates entities by label similarity, and persists results
 
+#### Attributes
+
+| Name        | Value       |
+| ----------- | ----------- |
+| serviceType | synchronous |
+
 #### Relationships
 
 | Type        | Related Element                                                           | Predicate        | Direction |
@@ -823,7 +1004,6 @@ Domain service orchestrating four-layer knowledge extraction pipeline (KG contex
 | inter-layer | `api.operation.get-reference-relations`                                   | `references`     | inbound   |
 | inter-layer | `api.operation.get-reference-status`                                      | `references`     | inbound   |
 | inter-layer | `api.operation.search-references`                                         | `references`     | inbound   |
-| inter-layer | `data-store.storedlogic.extraction-results-table`                         | `serves`         | inbound   |
 | inter-layer | `data-store.storedlogic.sqlite-vec-cosine-similarity`                     | `serves`         | inbound   |
 | inter-layer | `technology.systemsoftware.sentence-transformers`                         | `realizes`       | inbound   |
 | inter-layer | `technology.systemsoftware.spa-cy`                                        | `realizes`       | inbound   |
@@ -855,10 +1035,17 @@ Domain service orchestrating four-layer knowledge extraction pipeline (KG contex
 
 Read-only domain service for knowledge graph analytics — builds in-memory NetworkX and RDFLib graphs with lazy stale-flag invalidation; supports shortest path, centrality, community detection, subgraph extraction, and SPARQL queries
 
+#### Attributes
+
+| Name        | Value       |
+| ----------- | ----------- |
+| serviceType | synchronous |
+
 #### Relationships
 
 | Type        | Related Element                                                   | Predicate        | Direction |
 | ----------- | ----------------------------------------------------------------- | ---------------- | --------- |
+| inter-layer | `api.operation.build-graph`                                       | `references`     | inbound   |
 | inter-layer | `api.operation.build-knowledge-graph`                             | `references`     | inbound   |
 | inter-layer | `api.operation.check-cycle`                                       | `references`     | inbound   |
 | inter-layer | `api.operation.execute-sparql`                                    | `references`     | inbound   |
@@ -891,6 +1078,12 @@ Read-only domain service for knowledge graph analytics — builds in-memory Netw
 
 Domain service managing import run lifecycle for SKOS/OWL/GraphML interchange — creates runs in PENDING state, transitions them to COMMITTED/FAILED/ROLLED_BACK, and manages correlation context for change event linkage
 
+#### Attributes
+
+| Name        | Value       |
+| ----------- | ----------- |
+| serviceType | synchronous |
+
 #### Relationships
 
 | Type        | Related Element                                                  | Predicate    | Direction |
@@ -900,7 +1093,6 @@ Domain service managing import run lifecycle for SKOS/OWL/GraphML interchange �
 | inter-layer | `api.operation.get-run-change-events`                            | `references` | inbound   |
 | inter-layer | `api.operation.import-ontology`                                  | `references` | inbound   |
 | inter-layer | `api.operation.list-import-runs`                                 | `references` | inbound   |
-| inter-layer | `data-store.storedlogic.import-runs-table`                       | `serves`     | inbound   |
 | inter-layer | `ux.view.interchange-view`                                       | `serves`     | inbound   |
 | intra-layer | `application.applicationcomponent.graph-ml-interchange-adapter`  | `realizes`   | inbound   |
 | intra-layer | `application.applicationcomponent.owl-interchange-adapter`       | `realizes`   | inbound   |
@@ -919,10 +1111,17 @@ Domain service managing import run lifecycle for SKOS/OWL/GraphML interchange �
 
 Core domain service managing the full ontology lifecycle — create/read/update/delete for taxonomies, concept schemes, classes, individuals, and property definitions; generates embeddings and publishes domain events
 
+#### Attributes
+
+| Name        | Value       |
+| ----------- | ----------- |
+| serviceType | synchronous |
+
 #### Relationships
 
 | Type        | Related Element                                               | Predicate    | Direction |
 | ----------- | ------------------------------------------------------------- | ------------ | --------- |
+| inter-layer | `api.operation.add-class-to-scheme`                           | `references` | inbound   |
 | inter-layer | `api.operation.add-parent-class-to-individual`                | `references` | inbound   |
 | inter-layer | `api.operation.create-class`                                  | `references` | inbound   |
 | inter-layer | `api.operation.create-concept-scheme`                         | `references` | inbound   |
@@ -957,8 +1156,6 @@ Core domain service managing the full ontology lifecycle — create/read/update/
 | inter-layer | `api.operation.update-individual`                             | `references` | inbound   |
 | inter-layer | `api.operation.update-property-definition`                    | `references` | inbound   |
 | inter-layer | `api.operation.update-taxonomy`                               | `references` | inbound   |
-| inter-layer | `data-store.storedlogic.individual-classes-table`             | `serves`     | inbound   |
-| inter-layer | `data-store.storedlogic.property-definitions-table`           | `serves`     | inbound   |
 | inter-layer | `technology.systemsoftware.fast-api`                          | `realizes`   | inbound   |
 | inter-layer | `technology.systemsoftware.pydantic`                          | `realizes`   | inbound   |
 | inter-layer | `technology.systemsoftware.python`                            | `realizes`   | inbound   |
@@ -992,6 +1189,12 @@ Core domain service managing the full ontology lifecycle — create/read/update/
 
 Domain service managing LLM pipeline configuration lifecycle and execution — creates/updates/deletes configurations, executes pipelines with timeout handling and full token/duration instrumentation, publishes PipelineExecuted events
 
+#### Attributes
+
+| Name        | Value       |
+| ----------- | ----------- |
+| serviceType | synchronous |
+
 #### Relationships
 
 | Type        | Related Element                                               | Predicate        | Direction |
@@ -1003,8 +1206,6 @@ Domain service managing LLM pipeline configuration lifecycle and execution — c
 | inter-layer | `api.operation.get-pipeline-executions`                       | `references`     | inbound   |
 | inter-layer | `api.operation.list-pipeline-configurations`                  | `references`     | inbound   |
 | inter-layer | `api.operation.update-pipeline-configuration`                 | `references`     | inbound   |
-| inter-layer | `data-store.storedlogic.pipeline-configurations-table`        | `serves`         | inbound   |
-| inter-layer | `data-store.storedlogic.pipeline-executions-table`            | `serves`         | inbound   |
 | inter-layer | `technology.systemsoftware.python`                            | `realizes`       | inbound   |
 | intra-layer | `application.applicationcomponent.llm-provider-router`        | `realizes`       | inbound   |
 | intra-layer | `application.applicationcomponent.sqlite-pipeline-repository` | `realizes`       | inbound   |
@@ -1020,6 +1221,12 @@ Domain service managing LLM pipeline configuration lifecycle and execution — c
 **Type**: `applicationservice`
 
 Unified domain service for change history, changeset lifecycle (WORKING→STAGED→PROPOSED→APPROVED→MERGED), conflict detection and resolution, proposal workflow, and remote sync push/pull
+
+#### Attributes
+
+| Name        | Value       |
+| ----------- | ----------- |
+| serviceType | synchronous |
 
 #### Relationships
 
@@ -1042,11 +1249,6 @@ Unified domain service for change history, changeset lifecycle (WORKING→STAGED
 | inter-layer | `api.operation.resolve-conflicts`                           | `references` | inbound   |
 | inter-layer | `api.operation.stage-changeset`                             | `references` | inbound   |
 | inter-layer | `api.operation.submit-proposal`                             | `references` | inbound   |
-| inter-layer | `data-store.storedlogic.changeset-events-table`             | `serves`     | inbound   |
-| inter-layer | `data-store.storedlogic.changesets-table`                   | `serves`     | inbound   |
-| inter-layer | `data-store.storedlogic.conflict-resolutions-table`         | `serves`     | inbound   |
-| inter-layer | `data-store.storedlogic.entity-versions-table`              | `serves`     | inbound   |
-| inter-layer | `data-store.storedlogic.proposals-table`                    | `serves`     | inbound   |
 | inter-layer | `technology.systemsoftware.duck-db`                         | `realizes`   | inbound   |
 | inter-layer | `technology.systemsoftware.python`                          | `realizes`   | inbound   |
 | intra-layer | `application.applicationcomponent.duck-db-sync-adapter`     | `realizes`   | inbound   |
@@ -1061,4 +1263,4 @@ Unified domain service for change history, changeset lifecycle (WORKING→STAGED
 
 ---
 
-Generated: 2026-05-08T12:53:37.492Z | Model Version: 0.1.0
+Generated: 2026-05-10T10:17:36.894Z | Model Version: 0.1.0

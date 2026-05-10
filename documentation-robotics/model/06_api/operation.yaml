@@ -7,6 +7,12 @@ api.operation.create-taxonomy:
   name: Create Taxonomy
   description: POST /api/taxonomies — create a new taxonomy in the ontology
     management context
+  attributes:
+    operationId: createTaxonomy
+    summary: Create Taxonomy
+    tags: taxonomies
+    http_method: POST
+    http_path: /api/taxonomies
   source_reference:
     provenance: extracted
     locations:
@@ -24,6 +30,12 @@ api.operation.list-taxonomies:
   layer_id: api
   name: List Taxonomies
   description: GET /api/taxonomies — list all taxonomies with optional filtering
+  attributes:
+    operationId: listTaxonomies
+    summary: List Taxonomies
+    tags: taxonomies
+    http_method: GET
+    http_path: /api/taxonomies
   source_reference:
     provenance: extracted
     locations:
@@ -41,6 +53,12 @@ api.operation.get-taxonomy:
   layer_id: api
   name: Get Taxonomy
   description: GET /api/taxonomies/{taxonomy_id} — retrieve a single taxonomy by ID
+  attributes:
+    operationId: getTaxonomy
+    summary: Get Taxonomy
+    tags: taxonomies
+    http_method: GET
+    http_path: /api/taxonomies/{taxonomy_id}
   source_reference:
     provenance: extracted
     locations:
@@ -58,6 +76,12 @@ api.operation.update-taxonomy:
   layer_id: api
   name: Update Taxonomy
   description: PUT /api/taxonomies/{taxonomy_id} — update an existing taxonomy
+  attributes:
+    operationId: updateTaxonomy
+    summary: Update Taxonomy
+    tags: taxonomies
+    http_method: PUT
+    http_path: /api/taxonomies/{taxonomy_id}
   source_reference:
     provenance: extracted
     locations:
@@ -76,6 +100,12 @@ api.operation.delete-taxonomy:
   name: Delete Taxonomy
   description: DELETE /api/taxonomies/{taxonomy_id} — delete a taxonomy and
     cascade to child entities
+  attributes:
+    operationId: deleteTaxonomy
+    summary: Delete Taxonomy
+    tags: taxonomies
+    http_method: DELETE
+    http_path: /api/taxonomies/{taxonomy_id}
   source_reference:
     provenance: extracted
     locations:
@@ -94,6 +124,12 @@ api.operation.create-concept-scheme:
   name: Create Concept Scheme
   description: POST /api/taxonomies/{taxonomy_id}/schemes — create a concept
     scheme within a taxonomy
+  attributes:
+    operationId: createConceptScheme
+    summary: Create Concept Scheme
+    tags: taxonomies
+    http_method: POST
+    http_path: /api/taxonomies/{taxonomy_id}/schemes
   source_reference:
     provenance: extracted
     locations:
@@ -111,6 +147,12 @@ api.operation.list-concept-schemes:
   layer_id: api
   name: List Concept Schemes
   description: GET /api/schemes — list all concept schemes with optional taxonomy filter
+  attributes:
+    operationId: listConceptSchemes
+    summary: List Concept Schemes
+    tags: schemes
+    http_method: GET
+    http_path: /api/schemes
   source_reference:
     provenance: extracted
     locations:
@@ -128,6 +170,12 @@ api.operation.get-concept-scheme:
   layer_id: api
   name: Get Concept Scheme
   description: GET /api/schemes/{scheme_id} — retrieve a single concept scheme by ID
+  attributes:
+    operationId: getConceptScheme
+    summary: Get Concept Scheme
+    tags: schemes
+    http_method: GET
+    http_path: /api/schemes/{scheme_id}
   source_reference:
     provenance: extracted
     locations:
@@ -145,6 +193,12 @@ api.operation.update-concept-scheme:
   layer_id: api
   name: Update Concept Scheme
   description: PUT /api/schemes/{scheme_id} — update an existing concept scheme
+  attributes:
+    operationId: updateConceptScheme
+    summary: Update Concept Scheme
+    tags: schemes
+    http_method: PUT
+    http_path: /api/schemes/{scheme_id}
   source_reference:
     provenance: extracted
     locations:
@@ -162,6 +216,12 @@ api.operation.delete-concept-scheme:
   layer_id: api
   name: Delete Concept Scheme
   description: DELETE /api/schemes/{scheme_id} — delete a concept scheme and its classes
+  attributes:
+    operationId: deleteConceptScheme
+    summary: Delete Concept Scheme
+    tags: schemes
+    http_method: DELETE
+    http_path: /api/schemes/{scheme_id}
   source_reference:
     provenance: extracted
     locations:
@@ -180,6 +240,12 @@ api.operation.create-class:
   name: Create Class
   description: POST /api/schemes/{scheme_id}/classes — create a class within a
     concept scheme
+  attributes:
+    operationId: createClass
+    summary: Create Class
+    tags: schemes
+    http_method: POST
+    http_path: /api/schemes/{scheme_id}/classes
   source_reference:
     provenance: extracted
     locations:
@@ -198,6 +264,12 @@ api.operation.list-classes:
   name: List Classes
   description: GET /api/classes — list all classes with optional filtering by
     scheme, parent, search
+  attributes:
+    operationId: listClasses
+    summary: List Classes
+    tags: classes
+    http_method: GET
+    http_path: /api/classes
   source_reference:
     provenance: extracted
     locations:
@@ -215,6 +287,12 @@ api.operation.get-class:
   layer_id: api
   name: Get Class
   description: GET /api/classes/{class_id} — retrieve a single ontology class by ID
+  attributes:
+    operationId: getClass
+    summary: Get Class
+    tags: classes
+    http_method: GET
+    http_path: /api/classes/{class_id}
   source_reference:
     provenance: extracted
     locations:
@@ -232,6 +310,12 @@ api.operation.update-class:
   layer_id: api
   name: Update Class
   description: PUT /api/classes/{class_id} — update an existing ontology class
+  attributes:
+    operationId: updateClass
+    summary: Update Class
+    tags: classes
+    http_method: PUT
+    http_path: /api/classes/{class_id}
   source_reference:
     provenance: extracted
     locations:
@@ -250,6 +334,12 @@ api.operation.move-class:
   name: Move Class
   description: POST /api/classes/{class_id}/move — move a class to a different
     parent within the hierarchy
+  attributes:
+    operationId: moveClass
+    summary: Move Class
+    tags: classes
+    http_method: POST
+    http_path: /api/classes/{class_id}/move
   source_reference:
     provenance: extracted
     locations:
@@ -267,6 +357,12 @@ api.operation.delete-class:
   layer_id: api
   name: Delete Class
   description: DELETE /api/classes/{class_id} — delete a class and cascade to subclasses
+  attributes:
+    operationId: deleteClass
+    summary: Delete Class
+    tags: classes
+    http_method: DELETE
+    http_path: /api/classes/{class_id}
   source_reference:
     provenance: extracted
     locations:
@@ -285,6 +381,12 @@ api.operation.create-relationship:
   name: Create Relationship
   description: POST /api/relationships — create a typed directed relationship
     between two ontology entities
+  attributes:
+    operationId: createRelationship
+    summary: Create Relationship
+    tags: relationships
+    http_method: POST
+    http_path: /api/relationships
   source_reference:
     provenance: extracted
     locations:
@@ -303,6 +405,12 @@ api.operation.list-relationships:
   name: List Relationships
   description: GET /api/relationships — list relationships with optional
     source/target/type filtering
+  attributes:
+    operationId: listRelationships
+    summary: List Relationships
+    tags: relationships
+    http_method: GET
+    http_path: /api/relationships
   source_reference:
     provenance: extracted
     locations:
@@ -321,6 +429,12 @@ api.operation.get-relationship:
   name: Get Relationship
   description: GET /api/relationships/{relationship_id} — retrieve a single
     relationship by ID
+  attributes:
+    operationId: getRelationship
+    summary: Get Relationship
+    tags: relationships
+    http_method: GET
+    http_path: /api/relationships/{relationship_id}
   source_reference:
     provenance: extracted
     locations:
@@ -339,6 +453,12 @@ api.operation.delete-relationship:
   name: Delete Relationship
   description: DELETE /api/relationships/{relationship_id} — remove a typed
     relationship between ontology entities
+  attributes:
+    operationId: deleteRelationship
+    summary: Delete Relationship
+    tags: relationships
+    http_method: DELETE
+    http_path: /api/relationships/{relationship_id}
   source_reference:
     provenance: extracted
     locations:
@@ -357,6 +477,12 @@ api.operation.create-property-definition:
   name: Create Property Definition
   description: POST /api/properties — define a new relationship type (object
     property) in the ontology
+  attributes:
+    operationId: createPropertyDefinition
+    summary: Create Property Definition
+    tags: properties
+    http_method: POST
+    http_path: /api/properties
   source_reference:
     provenance: extracted
     locations:
@@ -374,6 +500,12 @@ api.operation.list-property-definitions:
   layer_id: api
   name: List Property Definitions
   description: GET /api/properties — list all property definitions (relationship types)
+  attributes:
+    operationId: listPropertyDefinitions
+    summary: List Property Definitions
+    tags: properties
+    http_method: GET
+    http_path: /api/properties
   source_reference:
     provenance: extracted
     locations:
@@ -392,6 +524,12 @@ api.operation.get-property-definition:
   name: Get Property Definition
   description: GET /api/properties/{property_id} — retrieve a single property
     definition by ID
+  attributes:
+    operationId: getPropertyDefinition
+    summary: Get Property Definition
+    tags: properties
+    http_method: GET
+    http_path: /api/properties/{property_id}
   source_reference:
     provenance: extracted
     locations:
@@ -409,6 +547,12 @@ api.operation.update-property-definition:
   layer_id: api
   name: Update Property Definition
   description: PUT /api/properties/{property_id} — update an existing property definition
+  attributes:
+    operationId: updatePropertyDefinition
+    summary: Update Property Definition
+    tags: properties
+    http_method: PUT
+    http_path: /api/properties/{property_id}
   source_reference:
     provenance: extracted
     locations:
@@ -426,6 +570,12 @@ api.operation.delete-property-definition:
   layer_id: api
   name: Delete Property Definition
   description: DELETE /api/properties/{property_id} — delete a property definition
+  attributes:
+    operationId: deletePropertyDefinition
+    summary: Delete Property Definition
+    tags: properties
+    http_method: DELETE
+    http_path: /api/properties/{property_id}
   source_reference:
     provenance: extracted
     locations:
@@ -444,6 +594,12 @@ api.operation.create-individual:
   name: Create Individual
   description: POST /api/individuals — create an individual (named instance) of
     one or more classes
+  attributes:
+    operationId: createIndividual
+    summary: Create Individual
+    tags: individuals
+    http_method: POST
+    http_path: /api/individuals
   source_reference:
     provenance: extracted
     locations:
@@ -462,6 +618,12 @@ api.operation.list-individuals:
   name: List Individuals
   description: GET /api/individuals — list all individuals with optional
     class/scheme filtering
+  attributes:
+    operationId: listIndividuals
+    summary: List Individuals
+    tags: individuals
+    http_method: GET
+    http_path: /api/individuals
   source_reference:
     provenance: extracted
     locations:
@@ -479,6 +641,12 @@ api.operation.get-individual:
   layer_id: api
   name: Get Individual
   description: GET /api/individuals/{individual_id} — retrieve a single individual by ID
+  attributes:
+    operationId: getIndividual
+    summary: Get Individual
+    tags: individuals
+    http_method: GET
+    http_path: /api/individuals/{individual_id}
   source_reference:
     provenance: extracted
     locations:
@@ -496,6 +664,12 @@ api.operation.update-individual:
   layer_id: api
   name: Update Individual
   description: PUT /api/individuals/{individual_id} — update an existing individual
+  attributes:
+    operationId: updateIndividual
+    summary: Update Individual
+    tags: individuals
+    http_method: PUT
+    http_path: /api/individuals/{individual_id}
   source_reference:
     provenance: extracted
     locations:
@@ -513,6 +687,12 @@ api.operation.delete-individual:
   layer_id: api
   name: Delete Individual
   description: DELETE /api/individuals/{individual_id} — delete an individual
+  attributes:
+    operationId: deleteIndividual
+    summary: Delete Individual
+    tags: individuals
+    http_method: DELETE
+    http_path: /api/individuals/{individual_id}
   source_reference:
     provenance: extracted
     locations:
@@ -531,6 +711,12 @@ api.operation.add-parent-class-to-individual:
   name: Add Parent Class To Individual
   description: POST /api/individuals/{individual_id}/classes — add a parent class
     assignment to an individual
+  attributes:
+    operationId: addParentClassToIndividual
+    summary: Add Parent Class To Individual
+    tags: individuals
+    http_method: POST
+    http_path: /api/individuals/{individual_id}/classes
   source_reference:
     provenance: extracted
     locations:
@@ -549,6 +735,12 @@ api.operation.remove-parent-class-from-individual:
   name: Remove Parent Class From Individual
   description: DELETE /api/individuals/{individual_id}/classes/{class_id} — remove
     a class assignment from an individual
+  attributes:
+    operationId: removeParentClassFromIndividual
+    summary: Remove Parent Class From Individual
+    tags: individuals
+    http_method: DELETE
+    http_path: /api/individuals/{individual_id}/classes/{class_id}
   source_reference:
     provenance: extracted
     locations:
@@ -567,6 +759,12 @@ api.operation.reorder-individual-classes:
   name: Reorder Individual Classes
   description: PUT /api/individuals/{individual_id}/classes — reorder the class
     assignments on an individual
+  attributes:
+    operationId: reorderIndividualClasses
+    summary: Reorder Individual Classes
+    tags: individuals
+    http_method: PUT
+    http_path: /api/individuals/{individual_id}/classes
   source_reference:
     provenance: extracted
     locations:
@@ -585,6 +783,12 @@ api.operation.get-individual-inherited-properties:
   name: Get Individual Inherited Properties
   description: GET /api/individuals/{individual_id}/inherited-properties —
     retrieve data properties inherited from parent classes
+  attributes:
+    operationId: getIndividualInheritedProperties
+    summary: Get Individual Inherited Properties
+    tags: individuals
+    http_method: GET
+    http_path: /api/individuals/{individual_id}/inherited-properties
   source_reference:
     provenance: extracted
     locations:
@@ -603,6 +807,12 @@ api.operation.build-knowledge-graph:
   name: Build Knowledge Graph
   description: POST /api/graph/build — build an in-memory knowledge graph from
     persisted ontology entities and relationships
+  attributes:
+    operationId: buildKnowledgeGraph
+    summary: Build Knowledge Graph
+    tags: graph
+    http_method: POST
+    http_path: /api/graph/build
   source_reference:
     provenance: extracted
     locations:
@@ -621,6 +831,12 @@ api.operation.get-graph-metrics:
   name: Get Graph Metrics
   description: GET /api/graph/metrics — retrieve global graph statistics (node
     count, edge count, density, diameter)
+  attributes:
+    operationId: getGraphMetrics
+    summary: Get Graph Metrics
+    tags: graph
+    http_method: GET
+    http_path: /api/graph/metrics
   source_reference:
     provenance: extracted
     locations:
@@ -639,6 +855,12 @@ api.operation.get-degree-distribution:
   name: Get Degree Distribution
   description: GET /api/graph/degree-distribution — retrieve node degree
     distribution histogram
+  attributes:
+    operationId: getDegreeDistribution
+    summary: Get Degree Distribution
+    tags: graph
+    http_method: GET
+    http_path: /api/graph/degree-distribution
   source_reference:
     provenance: extracted
     locations:
@@ -656,6 +878,12 @@ api.operation.get-shortest-path:
   layer_id: api
   name: Get Shortest Path
   description: GET /api/graph/paths/shortest — find shortest path between two graph nodes
+  attributes:
+    operationId: getShortestPath
+    summary: Get Shortest Path
+    tags: graph
+    http_method: GET
+    http_path: /api/graph/paths/shortest
   source_reference:
     provenance: extracted
     locations:
@@ -674,6 +902,12 @@ api.operation.get-all-paths:
   name: Get All Paths
   description: GET /api/graph/paths/all — find all paths between two graph nodes
     up to a maximum depth
+  attributes:
+    operationId: getAllPaths
+    summary: Get All Paths
+    tags: graph
+    http_method: GET
+    http_path: /api/graph/paths/all
   source_reference:
     provenance: extracted
     locations:
@@ -692,6 +926,12 @@ api.operation.get-centrality:
   name: Get Centrality
   description: GET /api/graph/centrality — compute node centrality scores
     (betweenness, pagerank, closeness, degree)
+  attributes:
+    operationId: getCentrality
+    summary: Get Centrality
+    tags: graph
+    http_method: GET
+    http_path: /api/graph/centrality
   source_reference:
     provenance: extracted
     locations:
@@ -710,6 +950,12 @@ api.operation.get-communities:
   name: Get Communities
   description: GET /api/graph/communities — detect communities/clusters in the
     knowledge graph
+  attributes:
+    operationId: getCommunities
+    summary: Get Communities
+    tags: graph
+    http_method: GET
+    http_path: /api/graph/communities
   source_reference:
     provenance: extracted
     locations:
@@ -728,6 +974,12 @@ api.operation.get-neighbors:
   name: Get Neighbors
   description: GET /api/graph/nodes/{node_id}/neighbors — retrieve immediate
     neighbors of a graph node
+  attributes:
+    operationId: getNeighbors
+    summary: Get Neighbors
+    tags: graph
+    http_method: GET
+    http_path: /api/graph/nodes/{node_id}/neighbors
   source_reference:
     provenance: extracted
     locations:
@@ -745,6 +997,12 @@ api.operation.get-subgraph:
   layer_id: api
   name: Get Subgraph
   description: GET /api/graph/subgraph — extract a subgraph for a set of root node IDs
+  attributes:
+    operationId: getSubgraph
+    summary: Get Subgraph
+    tags: graph
+    http_method: GET
+    http_path: /api/graph/subgraph
   source_reference:
     provenance: extracted
     locations:
@@ -763,6 +1021,12 @@ api.operation.get-subgraph-by-depth:
   name: Get Subgraph By Depth
   description: GET /api/graph/nodes/{node_id}/subgraph — extract a depth-bounded
     subgraph rooted at a node
+  attributes:
+    operationId: getSubgraphByDepth
+    summary: Get Subgraph By Depth
+    tags: graph
+    http_method: GET
+    http_path: /api/graph/nodes/{node_id}/subgraph
   source_reference:
     provenance: extracted
     locations:
@@ -781,6 +1045,12 @@ api.operation.check-cycle:
   name: Check Cycle
   description: POST /api/graph/cycle-check — detect if adding a directed edge
     would create a cycle
+  attributes:
+    operationId: checkCycle
+    summary: Check Cycle
+    tags: graph
+    http_method: POST
+    http_path: /api/graph/cycle-check
   source_reference:
     provenance: extracted
     locations:
@@ -799,6 +1069,12 @@ api.operation.execute-sparql:
   name: Execute SPARQL
   description: POST /api/graph/sparql — execute a SPARQL SELECT query over the
     in-memory RDF graph
+  attributes:
+    operationId: executeSparql
+    summary: Execute SPARQL
+    tags: graph
+    http_method: POST
+    http_path: /api/graph/sparql
   source_reference:
     provenance: extracted
     locations:
@@ -817,6 +1093,12 @@ api.operation.get-rdf-triples:
   name: Get RDF Triples
   description: GET /api/graph/rdf/triples — retrieve all RDF triples from the
     knowledge graph
+  attributes:
+    operationId: getRdfTriples
+    summary: Get RDF Triples
+    tags: graph
+    http_method: GET
+    http_path: /api/graph/rdf/triples
   source_reference:
     provenance: extracted
     locations:
@@ -835,6 +1117,12 @@ api.operation.get-rdf-triple-count:
   name: Get RDF Triple Count
   description: GET /api/graph/rdf/count — get the count of RDF triples in the
     knowledge graph
+  attributes:
+    operationId: getRdfTripleCount
+    summary: Get RDF Triple Count
+    tags: graph
+    http_method: GET
+    http_path: /api/graph/rdf/count
   source_reference:
     provenance: extracted
     locations:
@@ -853,6 +1141,12 @@ api.operation.extract-entities:
   name: Extract Entities
   description: POST /api/extract — extract ontology entities from a text corpus
     using NLP and LLM pipelines
+  attributes:
+    operationId: extractEntities
+    summary: Extract Entities
+    tags: extract
+    http_method: POST
+    http_path: /api/extract
   source_reference:
     provenance: extracted
     locations:
@@ -871,6 +1165,12 @@ api.operation.analyze-text:
   name: Analyze Text
   description: POST /api/analyze_text — analyze text for entities, concepts, and
     relationships without persisting
+  attributes:
+    operationId: analyzeText
+    summary: Analyze Text
+    tags: analyze_text
+    http_method: POST
+    http_path: /api/analyze_text
   source_reference:
     provenance: extracted
     locations:
@@ -889,6 +1189,12 @@ api.operation.enrich-from-references:
   name: Enrich From References
   description: POST /api/enrich_from_references — enrich existing ontology
     entities with data from external reference sources
+  attributes:
+    operationId: enrichFromReferences
+    summary: Enrich From References
+    tags: enrich_from_references
+    http_method: POST
+    http_path: /api/enrich_from_references
   source_reference:
     provenance: extracted
     locations:
@@ -907,6 +1213,12 @@ api.operation.get-system-health:
   name: Get System Health
   description: GET /api/v1/admin/health — retrieve overall system health status
     across all services
+  attributes:
+    operationId: getSystemHealth
+    summary: Get System Health
+    tags: admin
+    http_method: GET
+    http_path: /api/v1/admin/health
   source_reference:
     provenance: extracted
     locations:
@@ -925,6 +1237,12 @@ api.operation.get-database-health:
   name: Get Database Health
   description: GET /api/v1/admin/health/database — check database connectivity and
     integrity for local.db and operations.db
+  attributes:
+    operationId: getDatabaseHealth
+    summary: Get Database Health
+    tags: admin
+    http_method: GET
+    http_path: /api/v1/admin/health/database
   source_reference:
     provenance: extracted
     locations:
@@ -943,6 +1261,12 @@ api.operation.get-service-metrics:
   name: Get Service Metrics
   description: GET /api/v1/admin/health/services — retrieve per-service metrics
     and uptime statistics
+  attributes:
+    operationId: getServiceMetrics
+    summary: Get Service Metrics
+    tags: admin
+    http_method: GET
+    http_path: /api/v1/admin/health/services
   source_reference:
     provenance: extracted
     locations:
@@ -961,6 +1285,12 @@ api.operation.get-embedding-health:
   name: Get Embedding Health
   description: GET /api/v1/admin/health/embedding — check embedding model
     availability and readiness
+  attributes:
+    operationId: getEmbeddingHealth
+    summary: Get Embedding Health
+    tags: admin
+    http_method: GET
+    http_path: /api/v1/admin/health/embedding
   source_reference:
     provenance: extracted
     locations:
@@ -979,6 +1309,12 @@ api.operation.get-nlp-health:
   name: Get NLP Health
   description: GET /api/v1/admin/health/nlp — check spaCy NLP processor
     availability and readiness
+  attributes:
+    operationId: getNlpHealth
+    summary: Get NLP Health
+    tags: admin
+    http_method: GET
+    http_path: /api/v1/admin/health/nlp
   source_reference:
     provenance: extracted
     locations:
@@ -997,6 +1333,12 @@ api.operation.get-background-tasks-summary:
   name: Get Background Tasks Summary
   description: GET /api/v1/admin/health/tasks — retrieve background task queue
     summary and counts
+  attributes:
+    operationId: getBackgroundTasksSummary
+    summary: Get Background Tasks Summary
+    tags: admin
+    http_method: GET
+    http_path: /api/v1/admin/health/tasks
   source_reference:
     provenance: extracted
     locations:
@@ -1014,6 +1356,12 @@ api.operation.get-configuration:
   layer_id: api
   name: Get Configuration
   description: GET /api/v1/admin/configuration — retrieve current application configuration
+  attributes:
+    operationId: getConfiguration
+    summary: Get Configuration
+    tags: admin
+    http_method: GET
+    http_path: /api/v1/admin/configuration
   source_reference:
     provenance: extracted
     locations:
@@ -1032,6 +1380,12 @@ api.operation.update-configuration-section:
   name: Update Configuration Section
   description: PATCH /api/v1/admin/configuration — update a section of the
     application configuration
+  attributes:
+    operationId: updateConfigurationSection
+    summary: Update Configuration Section
+    tags: admin
+    http_method: PATCH
+    http_path: /api/v1/admin/configuration
   source_reference:
     provenance: extracted
     locations:
@@ -1050,6 +1404,12 @@ api.operation.reset-configuration:
   name: Reset Configuration
   description: POST /api/v1/admin/configuration/reset — reset configuration to
     defaults from config.json
+  attributes:
+    operationId: resetConfiguration
+    summary: Reset Configuration
+    tags: admin
+    http_method: POST
+    http_path: /api/v1/admin/configuration/reset
   source_reference:
     provenance: extracted
     locations:
@@ -1067,6 +1427,12 @@ api.operation.list-background-tasks:
   layer_id: api
   name: List Background Tasks
   description: GET /api/v1/admin/tasks — list all background tasks with status
+  attributes:
+    operationId: listBackgroundTasks
+    summary: List Background Tasks
+    tags: admin
+    http_method: GET
+    http_path: /api/v1/admin/tasks
   source_reference:
     provenance: extracted
     locations:
@@ -1084,6 +1450,12 @@ api.operation.get-background-task:
   layer_id: api
   name: Get Background Task
   description: GET /api/v1/admin/tasks/{task_id} — retrieve a single background task by ID
+  attributes:
+    operationId: getBackgroundTask
+    summary: Get Background Task
+    tags: admin
+    http_method: GET
+    http_path: /api/v1/admin/tasks/{task_id}
   source_reference:
     provenance: extracted
     locations:
@@ -1102,6 +1474,12 @@ api.operation.get-reference-status:
   name: Get Reference Status
   description: GET /api/reference/status — check availability and status of
     external reference sources (ConceptNet, DBpedia, Wikidata, schema.org)
+  attributes:
+    operationId: getReferenceStatus
+    summary: Get Reference Status
+    tags: reference
+    http_method: GET
+    http_path: /api/reference/status
   source_reference:
     provenance: extracted
     locations:
@@ -1120,6 +1498,12 @@ api.operation.search-references:
   name: Search References
   description: POST /api/reference/search — search external reference sources for
     concepts matching a query
+  attributes:
+    operationId: searchReferences
+    summary: Search References
+    tags: reference
+    http_method: POST
+    http_path: /api/reference/search
   source_reference:
     provenance: extracted
     locations:
@@ -1138,6 +1522,12 @@ api.operation.get-reference-relations:
   name: Get Reference Relations
   description: POST /api/reference/relations — retrieve semantic relations for a
     concept from external reference sources
+  attributes:
+    operationId: getReferenceRelations
+    summary: Get Reference Relations
+    tags: reference
+    http_method: POST
+    http_path: /api/reference/relations
   source_reference:
     provenance: extracted
     locations:
@@ -1156,6 +1546,12 @@ api.operation.export-ontology:
   name: Export Ontology
   description: POST /api/v1/interchange/export — export ontology in SKOS, OWL, or
     GraphML format as streaming response
+  attributes:
+    operationId: exportOntology
+    summary: Export Ontology
+    tags: interchange
+    http_method: POST
+    http_path: /api/v1/interchange/export
   source_reference:
     provenance: extracted
     locations:
@@ -1174,6 +1570,12 @@ api.operation.import-ontology:
   name: Import Ontology
   description: POST /api/v1/interchange/import — import ontology from SKOS, OWL,
     or GraphML file; creates ImportRun record
+  attributes:
+    operationId: importOntology
+    summary: Import Ontology
+    tags: interchange
+    http_method: POST
+    http_path: /api/v1/interchange/import
   source_reference:
     provenance: extracted
     locations:
@@ -1192,6 +1594,12 @@ api.operation.list-import-runs:
   name: List Import Runs
   description: GET /api/v1/interchange/runs — list all import run records with
     status and metadata
+  attributes:
+    operationId: listImportRuns
+    summary: List Import Runs
+    tags: interchange
+    http_method: GET
+    http_path: /api/v1/interchange/runs
   source_reference:
     provenance: extracted
     locations:
@@ -1210,6 +1618,12 @@ api.operation.get-import-run:
   name: Get Import Run
   description: GET /api/v1/interchange/runs/{run_id} — retrieve a single import
     run record by ID
+  attributes:
+    operationId: getImportRun
+    summary: Get Import Run
+    tags: interchange
+    http_method: GET
+    http_path: /api/v1/interchange/runs/{run_id}
   source_reference:
     provenance: extracted
     locations:
@@ -1228,6 +1642,12 @@ api.operation.get-run-change-events:
   name: Get Run Change Events
   description: GET /api/v1/interchange/runs/{run_id}/change-events — retrieve all
     change events generated by an import run
+  attributes:
+    operationId: getRunChangeEvents
+    summary: Get Run Change Events
+    tags: interchange
+    http_method: GET
+    http_path: /api/v1/interchange/runs/{run_id}/change-events
   source_reference:
     provenance: extracted
     locations:
@@ -1246,6 +1666,12 @@ api.operation.get-change-history-all:
   name: Get Change History All
   description: GET /api/v1/versioning/changes — retrieve full change history for
     all entities
+  attributes:
+    operationId: getChangeHistoryAll
+    summary: Get Change History All
+    tags: versioning
+    http_method: GET
+    http_path: /api/v1/versioning/changes
   source_reference:
     provenance: extracted
     locations:
@@ -1264,6 +1690,12 @@ api.operation.get-change-history-by-entity:
   name: Get Change History By Entity
   description: GET /api/v1/versioning/changes/{entity_id} — retrieve change
     history for a specific entity
+  attributes:
+    operationId: getChangeHistoryByEntity
+    summary: Get Change History By Entity
+    tags: versioning
+    http_method: GET
+    http_path: /api/v1/versioning/changes/{entity_id}
   source_reference:
     provenance: extracted
     locations:
@@ -1282,6 +1714,12 @@ api.operation.list-entity-versions:
   name: List Entity Versions
   description: GET /api/v1/versioning/versions/{entity_id} — list all stored
     versions of an entity
+  attributes:
+    operationId: listEntityVersions
+    summary: List Entity Versions
+    tags: versioning
+    http_method: GET
+    http_path: /api/v1/versioning/versions/{entity_id}
   source_reference:
     provenance: extracted
     locations:
@@ -1300,6 +1738,12 @@ api.operation.get-entity-version:
   name: Get Entity Version
   description: GET /api/v1/versioning/versions/{entity_id}/{version} — retrieve a
     specific historical version of an entity
+  attributes:
+    operationId: getEntityVersion
+    summary: Get Entity Version
+    tags: versioning
+    http_method: GET
+    http_path: /api/v1/versioning/versions/{entity_id}/{version}
   source_reference:
     provenance: extracted
     locations:
@@ -1318,6 +1762,12 @@ api.operation.create-changeset:
   name: Create Changeset
   description: POST /api/v1/versioning/changesets — create a new versioning
     changeset for grouping changes
+  attributes:
+    operationId: createChangeset
+    summary: Create Changeset
+    tags: versioning
+    http_method: POST
+    http_path: /api/v1/versioning/changesets
   source_reference:
     provenance: extracted
     locations:
@@ -1336,6 +1786,12 @@ api.operation.get-changeset:
   name: Get Changeset
   description: GET /api/v1/versioning/changesets/{changeset_id} — retrieve a
     versioning changeset by ID
+  attributes:
+    operationId: getChangeset
+    summary: Get Changeset
+    tags: versioning
+    http_method: GET
+    http_path: /api/v1/versioning/changesets/{changeset_id}
   source_reference:
     provenance: extracted
     locations:
@@ -1354,6 +1810,12 @@ api.operation.stage-changeset:
   name: Stage Changeset
   description: POST /api/v1/versioning/changesets/{changeset_id}/stage — mark a
     changeset as staged for review
+  attributes:
+    operationId: stageChangeset
+    summary: Stage Changeset
+    tags: versioning
+    http_method: POST
+    http_path: /api/v1/versioning/changesets/{changeset_id}/stage
   source_reference:
     provenance: extracted
     locations:
@@ -1372,6 +1834,12 @@ api.operation.submit-proposal:
   name: Submit Proposal
   description: POST /api/v1/versioning/changesets/{changeset_id}/submit — submit a
     changeset as a merge proposal
+  attributes:
+    operationId: submitProposal
+    summary: Submit Proposal
+    tags: versioning
+    http_method: POST
+    http_path: /api/v1/versioning/changesets/{changeset_id}/submit
   source_reference:
     provenance: extracted
     locations:
@@ -1390,6 +1858,12 @@ api.operation.approve-proposal:
   name: Approve Proposal
   description: POST /api/v1/versioning/proposals/{proposal_id}/approve — approve a
     merge proposal
+  attributes:
+    operationId: approveProposal
+    summary: Approve Proposal
+    tags: versioning
+    http_method: POST
+    http_path: /api/v1/versioning/proposals/{proposal_id}/approve
   source_reference:
     provenance: extracted
     locations:
@@ -1408,6 +1882,12 @@ api.operation.reject-proposal:
   name: Reject Proposal
   description: POST /api/v1/versioning/proposals/{proposal_id}/reject — reject a
     merge proposal
+  attributes:
+    operationId: rejectProposal
+    summary: Reject Proposal
+    tags: versioning
+    http_method: POST
+    http_path: /api/v1/versioning/proposals/{proposal_id}/reject
   source_reference:
     provenance: extracted
     locations:
@@ -1426,6 +1906,12 @@ api.operation.detect-conflicts:
   name: Detect Conflicts
   description: GET /api/v1/versioning/proposals/{proposal_id}/conflicts — detect
     merge conflicts in a proposal
+  attributes:
+    operationId: detectConflicts
+    summary: Detect Conflicts
+    tags: versioning
+    http_method: GET
+    http_path: /api/v1/versioning/proposals/{proposal_id}/conflicts
   source_reference:
     provenance: extracted
     locations:
@@ -1444,6 +1930,12 @@ api.operation.auto-resolve-conflicts:
   name: Auto Resolve Conflicts
   description: POST /api/v1/versioning/proposals/{proposal_id}/auto-resolve —
     automatically resolve merge conflicts using default strategies
+  attributes:
+    operationId: autoResolveConflicts
+    summary: Auto Resolve Conflicts
+    tags: versioning
+    http_method: POST
+    http_path: /api/v1/versioning/proposals/{proposal_id}/auto-resolve
   source_reference:
     provenance: extracted
     locations:
@@ -1462,6 +1954,12 @@ api.operation.resolve-conflicts:
   name: Resolve Conflicts
   description: POST /api/v1/versioning/proposals/{proposal_id}/resolve — manually
     resolve merge conflicts with explicit resolutions
+  attributes:
+    operationId: resolveConflicts
+    summary: Resolve Conflicts
+    tags: versioning
+    http_method: POST
+    http_path: /api/v1/versioning/proposals/{proposal_id}/resolve
   source_reference:
     provenance: extracted
     locations:
@@ -1480,6 +1978,12 @@ api.operation.merge-proposal:
   name: Merge Proposal
   description: POST /api/v1/versioning/proposals/{proposal_id}/merge — merge an
     approved proposal into the main ontology
+  attributes:
+    operationId: mergeProposal
+    summary: Merge Proposal
+    tags: versioning
+    http_method: POST
+    http_path: /api/v1/versioning/proposals/{proposal_id}/merge
   source_reference:
     provenance: extracted
     locations:
@@ -1498,6 +2002,12 @@ api.operation.get-sync-status:
   name: Get Sync Status
   description: GET /api/v1/versioning/sync/status — retrieve current remote sync
     status and last sync timestamps
+  attributes:
+    operationId: getSyncStatus
+    summary: Get Sync Status
+    tags: versioning
+    http_method: GET
+    http_path: /api/v1/versioning/sync/status
   source_reference:
     provenance: extracted
     locations:
@@ -1516,6 +2026,12 @@ api.operation.push-changes:
   name: Push Changes
   description: POST /api/v1/versioning/sync/push — push local changes to remote
     sync target (S3/DuckDB)
+  attributes:
+    operationId: pushChanges
+    summary: Push Changes
+    tags: versioning
+    http_method: POST
+    http_path: /api/v1/versioning/sync/push
   source_reference:
     provenance: extracted
     locations:
@@ -1534,6 +2050,12 @@ api.operation.pull-changes:
   name: Pull Changes
   description: POST /api/v1/versioning/sync/pull — pull remote changes from sync
     target into local ontology
+  attributes:
+    operationId: pullChanges
+    summary: Pull Changes
+    tags: versioning
+    http_method: POST
+    http_path: /api/v1/versioning/sync/pull
   source_reference:
     provenance: extracted
     locations:
@@ -1551,6 +2073,12 @@ api.operation.create-pipeline-configuration:
   layer_id: api
   name: Create Pipeline Configuration
   description: POST /api/pipelines — create a new LLM pipeline configuration
+  attributes:
+    operationId: createPipelineConfiguration
+    summary: Create Pipeline Configuration
+    tags: pipelines
+    http_method: POST
+    http_path: /api/pipelines
   source_reference:
     provenance: extracted
     locations:
@@ -1568,6 +2096,12 @@ api.operation.list-pipeline-configurations:
   layer_id: api
   name: List Pipeline Configurations
   description: GET /api/pipelines — list all LLM pipeline configurations
+  attributes:
+    operationId: listPipelineConfigurations
+    summary: List Pipeline Configurations
+    tags: pipelines
+    http_method: GET
+    http_path: /api/pipelines
   source_reference:
     provenance: extracted
     locations:
@@ -1586,6 +2120,12 @@ api.operation.get-pipeline-configuration:
   name: Get Pipeline Configuration
   description: GET /api/pipelines/{pipeline_id} — retrieve a single pipeline
     configuration by ID
+  attributes:
+    operationId: getPipelineConfiguration
+    summary: Get Pipeline Configuration
+    tags: pipelines
+    http_method: GET
+    http_path: /api/pipelines/{pipeline_id}
   source_reference:
     provenance: extracted
     locations:
@@ -1603,6 +2143,12 @@ api.operation.update-pipeline-configuration:
   layer_id: api
   name: Update Pipeline Configuration
   description: PUT /api/pipelines/{pipeline_id} — update an existing pipeline configuration
+  attributes:
+    operationId: updatePipelineConfiguration
+    summary: Update Pipeline Configuration
+    tags: pipelines
+    http_method: PUT
+    http_path: /api/pipelines/{pipeline_id}
   source_reference:
     provenance: extracted
     locations:
@@ -1620,6 +2166,12 @@ api.operation.delete-pipeline-configuration:
   layer_id: api
   name: Delete Pipeline Configuration
   description: DELETE /api/pipelines/{pipeline_id} — delete a pipeline configuration
+  attributes:
+    operationId: deletePipelineConfiguration
+    summary: Delete Pipeline Configuration
+    tags: pipelines
+    http_method: DELETE
+    http_path: /api/pipelines/{pipeline_id}
   source_reference:
     provenance: extracted
     locations:
@@ -1638,6 +2190,12 @@ api.operation.execute-pipeline:
   name: Execute Pipeline
   description: POST /api/pipelines/{pipeline_id}/execute — execute a pipeline
     configuration with optional input overrides
+  attributes:
+    operationId: executePipeline
+    summary: Execute Pipeline
+    tags: pipelines
+    http_method: POST
+    http_path: /api/pipelines/{pipeline_id}/execute
   source_reference:
     provenance: extracted
     locations:
@@ -1656,6 +2214,12 @@ api.operation.get-pipeline-executions:
   name: Get Pipeline Executions
   description: GET /api/pipelines/{pipeline_id}/executions — list all execution
     records for a pipeline
+  attributes:
+    operationId: getPipelineExecutions
+    summary: Get Pipeline Executions
+    tags: pipelines
+    http_method: GET
+    http_path: /api/pipelines/{pipeline_id}/executions
   source_reference:
     provenance: extracted
     locations:
@@ -1664,4 +2228,100 @@ api.operation.get-pipeline-executions:
   metadata:
     created_at: 2026-05-08T09:46:43.386Z
     updated_at: 2026-05-08T09:46:43.386Z
+    version: 1
+api.operation.build-graph:
+  id: 733423f9-f5cd-4314-8582-3483f4858d54
+  path: api.operation.build-graph
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Build Graph
+  description: Explicitly build the in-memory graph from current ontology data;
+    allows on-demand graph refresh and validates that construction succeeds
+    without errors
+  attributes:
+    operationId: buildGraph
+    summary: Build Graph
+    tags: graph
+    http_method: POST
+    http_path: /api/graph/build
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/graph_routes.py
+        symbol: build_graph
+  metadata:
+    created_at: 2026-05-09T10:23:39.064Z
+    updated_at: 2026-05-09T10:23:39.064Z
+    version: 1
+api.operation.add-class-to-scheme:
+  id: 8e6a1762-b936-4a8a-96b3-d394e43c3fd4
+  path: api.operation.add-class-to-scheme
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Add Class To Scheme
+  description: Add an existing class to a concept scheme
+  attributes:
+    operationId: addClassToScheme
+    summary: Add Class To Scheme
+    tags: schemes
+    http_method: POST
+    http_path: /api/schemes/{scheme_id}/classes/{class_id}
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/ontology_routes.py
+        symbol: create_concept_scheme
+  metadata:
+    created_at: 2026-05-09T10:23:39.578Z
+    updated_at: 2026-05-09T10:23:39.578Z
+    version: 1
+api.operation.get-services-health:
+  id: b53b00cf-2907-470e-a79f-245a2981535f
+  path: api.operation.get-services-health
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Services Health
+  description: Get service-level metrics including system uptime and list of
+    available LLM providers
+  attributes:
+    operationId: getServicesHealth
+    summary: Get Services Health
+    tags: admin
+    http_method: GET
+    http_path: /api/v1/admin/health/services
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/admin_routes.py
+        symbol: get_service_metrics
+  metadata:
+    created_at: 2026-05-09T10:23:40.096Z
+    updated_at: 2026-05-09T10:23:40.096Z
+    version: 1
+api.operation.get-tasks-health:
+  id: 077d7e6c-ab8f-473e-8311-a0956cd795f2
+  path: api.operation.get-tasks-health
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Tasks Health
+  description: Get summary of background task execution status with counts grouped
+    by status (pending, running, completed, failed)
+  attributes:
+    operationId: getTasksHealth
+    summary: Get Tasks Health
+    tags: admin
+    http_method: GET
+    http_path: /api/v1/admin/health/tasks
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/admin_routes.py
+        symbol: get_task_summary
+  metadata:
+    created_at: 2026-05-09T10:23:40.608Z
+    updated_at: 2026-05-09T10:23:40.608Z
     version: 1

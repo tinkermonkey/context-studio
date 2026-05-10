@@ -8,6 +8,8 @@ application.applicationcomponent.sentence-transformer-embedding-adapter:
   description: Infrastructure adapter wrapping the sentence-transformers library —
     provides lazy-loaded semantic embedding generation (all-MiniLM-L12-v2) with
     sync and async interfaces for single and batch text encoding
+  attributes:
+    type: service-component
   source_reference:
     provenance: extracted
     locations:
@@ -28,6 +30,8 @@ application.applicationcomponent.network-x-graph-engine-adapter:
     NetworkX DiGraph — supports directed graph construction, shortest/all paths,
     centrality algorithms (betweenness, pagerank, closeness, degree), community
     detection, and subgraph extraction
+  attributes:
+    type: service-component
   source_reference:
     provenance: extracted
     locations:
@@ -47,6 +51,8 @@ application.applicationcomponent.system-metrics-collector-adapter:
   description: Infrastructure adapter implementing the MetricsCollector port —
     aggregates health status from LLM providers, NLP pipeline, embedding model,
     and SQLite database connectivity; tracks service uptime
+  attributes:
+    type: service-component
   source_reference:
     provenance: extracted
     locations:
@@ -67,6 +73,8 @@ application.applicationcomponent.sqlite-persistence-adapter:
     — persists ontology entities, relationships, change events, changesets,
     proposals, and extraction results to local.db using single-table inheritance
     ORM model
+  attributes:
+    type: internal
   source_reference:
     provenance: extracted
     locations:
@@ -87,6 +95,8 @@ application.applicationcomponent.llm-provider-router:
     appropriate provider — selects between OpenAI and Anthropic providers based
     on pipeline configuration and exposes available provider list for health
     checks
+  attributes:
+    type: service-component
   source_reference:
     provenance: extracted
     locations:
@@ -106,6 +116,8 @@ application.applicationcomponent.skos-interchange-adapter:
   description: Infrastructure adapter implementing SKOS (Simple Knowledge
     Organization System) serialization and deserialization for ontology
     round-trip import/export in Turtle/RDF format
+  attributes:
+    type: service-component
   source_reference:
     provenance: extracted
     locations:
@@ -124,6 +136,8 @@ application.applicationcomponent.owl-interchange-adapter:
   name: OWL Interchange Adapter
   description: Infrastructure adapter implementing OWL (Web Ontology Language)
     serialization and deserialization for ontology round-trip import/export
+  attributes:
+    type: service-component
   source_reference:
     provenance: extracted
     locations:
@@ -142,6 +156,8 @@ application.applicationcomponent.graph-ml-interchange-adapter:
   name: GraphML Interchange Adapter
   description: Infrastructure adapter implementing GraphML serialization and
     deserialization for graph-structured ontology import/export
+  attributes:
+    type: service-component
   source_reference:
     provenance: extracted
     locations:
@@ -161,6 +177,8 @@ application.applicationcomponent.spa-cy-nlp-processor:
   description: Infrastructure adapter implementing NLP text processing using spaCy
     — performs named entity recognition, dependency parsing, and concept
     extraction
+  attributes:
+    type: service-component
   source_reference:
     provenance: extracted
     locations:
@@ -179,6 +197,8 @@ application.applicationcomponent.s3-sync-adapter:
   name: S3 Sync Adapter
   description: Infrastructure adapter implementing remote sync via AWS S3 — pushes
     and pulls Parquet snapshots for cross-device ontology synchronization
+  attributes:
+    type: service-component
   source_reference:
     provenance: extracted
     locations:
@@ -197,6 +217,8 @@ application.applicationcomponent.duck-db-sync-adapter:
   name: DuckDB Sync Adapter
   description: Infrastructure adapter implementing remote sync via DuckDB and
     Parquet files — provides efficient columnar snapshot-based synchronization
+  attributes:
+    type: service-component
   source_reference:
     provenance: extracted
     locations:
@@ -215,6 +237,8 @@ application.applicationcomponent.concept-net-reference-source:
   name: ConceptNet Reference Source
   description: Infrastructure adapter fetching semantic relation data from the
     ConceptNet knowledge graph API for ontology enrichment
+  attributes:
+    type: service-component
   source_reference:
     provenance: extracted
     locations:
@@ -233,6 +257,8 @@ application.applicationcomponent.dbpedia-reference-source:
   name: DBpedia Reference Source
   description: Infrastructure adapter fetching entity data from DBpedia SPARQL
     endpoint for ontology enrichment
+  attributes:
+    type: service-component
   source_reference:
     provenance: extracted
     locations:
@@ -251,6 +277,8 @@ application.applicationcomponent.wikidata-reference-source:
   name: Wikidata Reference Source
   description: Infrastructure adapter fetching entity data from Wikidata SPARQL
     endpoint for ontology enrichment
+  attributes:
+    type: service-component
   source_reference:
     provenance: extracted
     locations:
@@ -269,6 +297,8 @@ application.applicationcomponent.schema-org-reference-source:
   name: Schema Org Reference Source
   description: Infrastructure adapter fetching type and property definitions from
     schema.org vocabulary for ontology enrichment
+  attributes:
+    type: service-component
   source_reference:
     provenance: extracted
     locations:
@@ -288,6 +318,8 @@ application.applicationcomponent.json-file-config-store:
   description: Wraps ConfigurationManager to implement the ConfigurationStore port
     — converts Pydantic Settings objects to plain dicts for the domain entity,
     maintaining separation between infrastructure and domain logic
+  attributes:
+    type: service-component
   source_reference:
     provenance: extracted
     locations:
@@ -307,6 +339,8 @@ application.applicationcomponent.change-event-recorder:
   description: Records domain events to the change audit trail — subscribes to
     domain events and persists them as change records using a change record
     port, registered with the event publisher during application startup
+  attributes:
+    type: service-component
   source_reference:
     provenance: extracted
     locations:
@@ -327,6 +361,8 @@ application.applicationcomponent.in-process-event-publisher:
     execute synchronously within the same transaction boundary, implementing the
     EventPublisher port for local single-process deployments with isolated
     exception handling to prevent cascade failures
+  attributes:
+    type: service-component
   source_reference:
     provenance: extracted
     locations:
@@ -346,6 +382,8 @@ application.applicationcomponent.rdflib-query-engine-adapter:
   description: Semantic query engine implementation using RDFLib for RDF/SPARQL
     operations — provides the SemanticQueryEngine protocol interface via an
     RDFLib in-memory graph supporting SPARQL queries with validation
+  attributes:
+    type: service-component
   source_reference:
     provenance: extracted
     locations:
@@ -365,6 +403,8 @@ application.applicationcomponent.anthropic-llm-provider:
   description: LLM provider for Anthropic Claude models (Opus, Sonnet, Haiku) —
     implements the LLMProvider protocol to provide access to Anthropic's API for
     knowledge extraction and pipeline tasks
+  attributes:
+    type: service-component
   source_reference:
     provenance: extracted
     locations:
@@ -384,6 +424,8 @@ application.applicationcomponent.open-ai-llm-provider:
   description: LLM provider for OpenAI models (GPT-4o, GPT-4-turbo, GPT-3.5-turbo)
     — implements the LLMProvider protocol to provide access to OpenAI's API for
     knowledge extraction and pipeline tasks
+  attributes:
+    type: service-component
   source_reference:
     provenance: extracted
     locations:
@@ -404,6 +446,8 @@ application.applicationcomponent.sqlite-ontology-repository:
     manages persistence of all ontology entities using a unified single-table
     inheritance pattern with node_type discriminator, enforcing invariants and
     maintaining referential integrity
+  attributes:
+    type: internal
   source_reference:
     provenance: extracted
     locations:
@@ -423,6 +467,8 @@ application.applicationcomponent.sqlite-change-repository:
   description: SQLAlchemy-based repository for persisting versioning domain
     entities — implements the ChangeRepository protocol handling persistence of
     change events, entity versions, changesets, and proposals to SQLite
+  attributes:
+    type: internal
   source_reference:
     provenance: extracted
     locations:
@@ -442,6 +488,8 @@ application.applicationcomponent.sqlite-extraction-repository:
   description: SQLAlchemy-based implementation of the ExtractionRepository port —
     manages persistence of extraction results using SQLAlchemy ORM with full
     entity and layer execution metadata
+  attributes:
+    type: internal
   source_reference:
     provenance: extracted
     locations:
@@ -461,6 +509,8 @@ application.applicationcomponent.sqlite-interchange-repository:
   description: SQLAlchemy-based repository for interchange domain persistence —
     implements the ImportRunRepository port handling persistence of ImportRun
     entities and their change event correlations using SQLite
+  attributes:
+    type: internal
   source_reference:
     provenance: extracted
     locations:
@@ -480,6 +530,8 @@ application.applicationcomponent.sqlite-pipeline-repository:
   description: SQLite implementation of the PipelineRepository port for
     operations.db — manages persistence of pipeline configurations and execution
     records with complete instrumentation for observability
+  attributes:
+    type: internal
   source_reference:
     provenance: extracted
     locations:
@@ -499,6 +551,8 @@ application.applicationcomponent.local-reference-repository:
   description: Repository for offline reference data lookups — queries
     pre-imported reference.db to provide fast offline access to reference data
     from ConceptNet, DBpedia, Wikidata, and schema.org
+  attributes:
+    type: service-component
   source_reference:
     provenance: extracted
     locations:
@@ -518,6 +572,8 @@ application.applicationcomponent.cached-reference-source:
   description: Decorator that wraps a ReferenceSource and caches results to SQLite
     — provides TTL-based expiry ensuring stale data is refreshed while improving
     efficiency when querying the same terms repeatedly
+  attributes:
+    type: service-component
   source_reference:
     provenance: extracted
     locations:
@@ -538,6 +594,8 @@ application.applicationcomponent.no-op-sync-adapter:
     synchronization is not configured, all operations succeed without side
     effects allowing the versioning system to function normally in
     single-workspace scenarios
+  attributes:
+    type: service-component
   source_reference:
     provenance: extracted
     locations:
