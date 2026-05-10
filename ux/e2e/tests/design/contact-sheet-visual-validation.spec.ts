@@ -18,9 +18,6 @@ test.describe("Contact Sheet Visual Validation", () => {
     "contact-sheet-intent-states",
   ];
 
-  const SCROLL_SETTLE_TIME_MS = 300;
-  const TRANSITION_WAIT_TIME_MS = 500;
-
   test("should render all sections in light mode with correct styling", async ({
     page,
   }) => {
@@ -39,7 +36,7 @@ test.describe("Contact Sheet Visual Validation", () => {
     await page.evaluate(() => {
       window.scrollTo(0, 0);
     });
-    await page.waitForTimeout(SCROLL_SETTLE_TIME_MS);
+    await page.waitForLoadState("networkidle");
     await expect(page).toHaveScreenshot("contact-sheet-full-light.png", {
       fullPage: true,
     });
@@ -62,7 +59,7 @@ test.describe("Contact Sheet Visual Validation", () => {
     await expect(toggleButton).toBeVisible();
     await toggleButton.click();
 
-    await page.waitForTimeout(TRANSITION_WAIT_TIME_MS);
+    await expect(page.locator("body")).toHaveClass(/dark-canvas/);
 
     for (const section of sections) {
       const sectionElement = page.getByTestId(section);
@@ -74,7 +71,7 @@ test.describe("Contact Sheet Visual Validation", () => {
     await page.evaluate(() => {
       window.scrollTo(0, 0);
     });
-    await page.waitForTimeout(SCROLL_SETTLE_TIME_MS);
+    await page.waitForLoadState("networkidle");
     await expect(page).toHaveScreenshot("contact-sheet-full-dark.png", {
       fullPage: true,
     });
@@ -94,10 +91,10 @@ test.describe("Contact Sheet Visual Validation", () => {
     const toggleButton = page.getByTestId("contact-sheet-canvas-toggle");
     await expect(toggleButton).toBeVisible();
     await toggleButton.click();
-    await page.waitForTimeout(TRANSITION_WAIT_TIME_MS);
+    await expect(page.locator("body")).toHaveClass(/dark-canvas/);
 
     await toggleButton.click();
-    await page.waitForTimeout(TRANSITION_WAIT_TIME_MS);
+    await expect(page.locator("body")).not.toHaveClass(/dark-canvas/);
 
     for (const section of sections) {
       const sectionElement = page.getByTestId(section);
@@ -109,7 +106,7 @@ test.describe("Contact Sheet Visual Validation", () => {
     await page.evaluate(() => {
       window.scrollTo(0, 0);
     });
-    await page.waitForTimeout(SCROLL_SETTLE_TIME_MS);
+    await page.waitForLoadState("networkidle");
     await expect(page).toHaveScreenshot("contact-sheet-full-light-restored.png", {
       fullPage: true,
     });
