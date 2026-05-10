@@ -78,7 +78,7 @@ export default function ContactSheet() {
   const [searchFilter, setSearchFilter] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
   const { darkCanvas, toggleDarkCanvas } = useCanvasStore();
-  const { toasts, dismiss, toast } = useToasts();
+  const { toast } = useToasts();
 
   const mockSchemaData: MockEntity[] = [
     { id: "1", title: "Organism", description: "All living entities" },

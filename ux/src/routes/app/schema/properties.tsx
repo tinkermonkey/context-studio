@@ -172,7 +172,7 @@ function PropertiesPageContent({ onCreateClick }: PropertiesPageContentProps) {
 function PropertiesPageWrapper() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const createMutation = useCreateProperty();
-  const { toasts, dismiss, toast } = useToasts();
+  const { toast } = useToasts();
 
   const handleCreateSubmit = async (data: PropertyDefinitionCreateRequest | PropertyDefinitionUpdateRequest) => {
     try {

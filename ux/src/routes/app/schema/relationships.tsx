@@ -2,7 +2,6 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreVertical, ChevronDown } from "lucide-react";
-import { useToasts } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
@@ -332,7 +331,6 @@ function RelationshipsPageContent({
 function RelationshipsPageWrapper() {
   const { data: classesResponse, error: classesError, refetch: refetchClasses } = useClasses();
   const { data: propertiesResponse, error: propertiesError, refetch: refetchProperties } = useProperties();
-  const { toasts, dismiss } = useToasts();
 
   const classes = classesResponse?.items || [];
   const properties = propertiesResponse?.items || [];
