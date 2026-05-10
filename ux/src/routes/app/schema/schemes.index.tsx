@@ -161,7 +161,8 @@ function SchemesPageContent({ onCreateClick, taxonomiesById, taxonomiesError, on
           error={error}
           onRetry={() => refetch()}
           message="Failed to load concept schemes"
-        />
+        daemonLogPath="/local-server/logs/context_studio.log"
+          />
       </div>
     );
   }
@@ -196,6 +197,7 @@ function SchemesPageContent({ onCreateClick, taxonomiesById, taxonomiesError, on
             onRetry={onRetryTaxonomies}
             message="Failed to load parent taxonomies"
             compact
+          daemonLogPath="/local-server/logs/context_studio.log"
           />
         </div>
       )}
@@ -301,7 +303,8 @@ export function SchemesIndexPage() {
                 error={new Error(createError)}
                 onRetry={() => setCreateError(null)}
                 message="Failed to create scheme"
-              />
+              daemonLogPath="/local-server/logs/context_studio.log"
+          />
             </div>
           )}
           <SchemeForm

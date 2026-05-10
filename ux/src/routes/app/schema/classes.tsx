@@ -163,7 +163,7 @@ function ClassesPageContent({ onCreateClick }: ClassesPageContentProps) {
   if (error) {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
-        <ErrorBanner error={error} onRetry={() => refetch()} message="Failed to load classes" />
+        <ErrorBanner error={error} onRetry={() => refetch()} message="Failed to load classes" daemonLogPath="/local-server/logs/context_studio.log" />
       </div>
     );
   }
@@ -195,6 +195,7 @@ function ClassesPageContent({ onCreateClick }: ClassesPageContentProps) {
             onRetry={() => refetchSchemes()}
             message="Failed to load domains"
             compact
+            daemonLogPath="/local-server/logs/context_studio.log"
           />
         </div>
       )}
@@ -291,6 +292,7 @@ function ClassesPageWrapper() {
               error={new Error(createError)}
               onRetry={() => setCreateError(null)}
               message="Failed to create class"
+              daemonLogPath="/local-server/logs/context_studio.log"
             />
           </div>
         )}

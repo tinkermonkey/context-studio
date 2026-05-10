@@ -249,4 +249,99 @@ describe("Classes Schema Page", () => {
       expect(screen.getByText("Company")).toBeInTheDocument();
     });
   });
+
+  // ========================================================================
+  // Partial State
+  // ========================================================================
+  describe("partial state", () => {
+    it("displays classes table even when schemes query fails", async () => {
+      const mockClasses = createListClasses([
+        createClass({
+          id: "class-1",
+          title: "Person",
+          concept_scheme_id: "scheme-1",
+        }),
+        createClass({
+          id: "class-2",
+          title: "Company",
+          concept_scheme_id: "scheme-1",
+        }),
+      ]);
+
+      server.use(
+        rest.get("*/api/classes", (req, res, ctx) =>
+          res(ctx.json(mockClasses)),
+        ),
+        rest.get("*/api/schemes", (req, res, ctx) =>
+          res(ctx.status(500), ctx.json({ detail: "Failed to load schemes" })),
+        ),
+      );
+
+      render(<ClassesPage />);
+
+      // Verify error banner appears for schemes failure
+      await waitFor(() => {
+        expect(screen.getByText(/Failed to load domains/i)).toBeInTheDocument();
+      });
+
+      // Verify classes table still renders despite schemes error
+      expect(screen.getByText("Person")).toBeInTheDocument();
+      expect(screen.getByText("Company")).toBeInTheDocument();
+
+      // Verify retry button is available for schemes
+      expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
+    });
+
+    it("can retry schemes query independently when partial state occurs", async () => {
+      const mockClasses = createListClasses([
+        createClass({
+          id: "class-1",
+          title: "Person",
+          concept_scheme_id: "scheme-1",
+        }),
+      ]);
+
+      const mockSchemes = createListSchemes([
+        { id: "scheme-1", title: "People Domain" },
+      ]);
+
+      let schemesCallCount = 0;
+
+      server.use(
+        rest.get("*/api/classes", (req, res, ctx) =>
+          res(ctx.json(mockClasses)),
+        ),
+        rest.get("*/api/schemes", (req, res, ctx) => {
+          schemesCallCount++;
+          if (schemesCallCount === 1) {
+            return res(ctx.status(500), ctx.json({ detail: "Failed to load schemes" }));
+          }
+          return res(ctx.json(mockSchemes));
+        }),
+      );
+
+      render(<ClassesPage />);
+
+      // Verify initial error state
+      await waitFor(() => {
+        expect(screen.getByText(/Failed to load domains/i)).toBeInTheDocument();
+      });
+
+      // Verify class is visible
+      expect(screen.getByText("Person")).toBeInTheDocument();
+
+      // Click retry and verify recovery
+      const retryButtons = screen.getAllByRole("button", { name: /retry/i });
+      const schemesRetryButton = retryButtons[0]; // First retry button is for schemes error
+      await userEvent.click(schemesRetryButton);
+
+      // Wait for schemes to load successfully
+      await waitFor(() => {
+        // Error banner should disappear
+        expect(screen.queryByText(/Failed to load domains/i)).not.toBeInTheDocument();
+        // Scheme name should now appear in the Domain column
+        expect(screen.getByText("People Domain")).toBeInTheDocument();
+      });
+    });
+  });
 });

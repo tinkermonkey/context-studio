@@ -237,6 +237,7 @@ function Dashboard() {
         onRetry={refetchTaxonomies}
         message="Could not load taxonomies"
         compact
+        daemonLogPath="/local-server/logs/context_studio.log"
       />
       <div
         className="stat-grid"
@@ -291,6 +292,7 @@ function Dashboard() {
             onRetry={refetchChanges}
             message="Could not load recent changes"
             compact
+            daemonLogPath="/local-server/logs/context_studio.log"
           />
           {!changesError && (
             <>
@@ -424,6 +426,7 @@ function Dashboard() {
             onRetry={refetchClasses}
             message="Could not load class hierarchy"
             compact
+            daemonLogPath="/local-server/logs/context_studio.log"
           />
           {!classesError && (
             <HierarchyTree classes={classes?.items} loading={classesLoading} error={classesError} />
@@ -436,6 +439,7 @@ function Dashboard() {
             onRetry={refetchIndividuals}
             message="Could not load individuals"
             compact
+            daemonLogPath="/local-server/logs/context_studio.log"
           />
           {!individualsError && individualsLoading && (
             <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
@@ -467,6 +471,7 @@ function Dashboard() {
           onRetry={refetchPipelines}
           message="Could not load pipelines"
           compact
+          daemonLogPath="/local-server/logs/context_studio.log"
         />
         {!pipelinesError && !pipelinesLoading && pipelines && pipelines.length > 0 && (
           <div>

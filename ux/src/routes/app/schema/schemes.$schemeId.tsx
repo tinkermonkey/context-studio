@@ -131,7 +131,8 @@ function SchemeDetailContent({ schemeId, onCreateClick }: SchemeDetailContentPro
             refetchClasses();
           }}
           message="Failed to load scheme"
-        />
+        daemonLogPath="/local-server/logs/context_studio.log"
+          />
       </div>
     );
   }
@@ -260,7 +261,8 @@ function SchemeDetailPageWrapper() {
               error={new Error(createError)}
               onRetry={() => setCreateError(null)}
               message="Failed to create class"
-            />
+            daemonLogPath="/local-server/logs/context_studio.log"
+          />
           </div>
         )}
         <ClassForm

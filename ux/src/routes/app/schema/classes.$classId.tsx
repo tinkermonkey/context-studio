@@ -64,7 +64,8 @@ function ClassDetailContent({ classId }: ClassDetailContentProps) {
             refetchRel();
           }}
           message="Failed to load class details"
-        />
+        daemonLogPath="/local-server/logs/context_studio.log"
+          />
       </div>
     );
   }
