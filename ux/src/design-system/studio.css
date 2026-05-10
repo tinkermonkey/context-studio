@@ -2051,6 +2051,82 @@ select.input {
   border: 0;
 }
 
+/* ============= Layout utilities ============= */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.stack-sm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.stack-lg {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.flex-end {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-row-center {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--canvas-bd);
+}
+
+.page-header-title {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--canvas-fg-1);
+}
+
+.page-header-subtitle {
+  font-size: 13.5px;
+  color: var(--canvas-fg-2);
+  margin-top: 4px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+}
+
 /* ============= Dark canvas mode ============= */
 body.dark-canvas {
   --canvas-bg: #14191f;

@@ -105,7 +105,7 @@ function PropertiesPageContent({ onCreateClick }: PropertiesPageContentProps) {
 
   if (isLoading) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+      <div className="stack">
         <Skeleton height={32} width={200} />
         <Skeleton height={40} />
         {Array.from({ length: 5 }).map((_, i) => (
@@ -117,7 +117,7 @@ function PropertiesPageContent({ onCreateClick }: PropertiesPageContentProps) {
 
   if (error) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+      <div className="stack">
         <ErrorBanner error={error} onRetry={() => refetch()} message="Failed to load properties" />
       </div>
     );
@@ -178,8 +178,8 @@ function PropertiesPageWrapper() {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+    <div className="stack">
+      <div className="flex-between">
         <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>Property Definitions</h1>
         <Button
           variant="primary"

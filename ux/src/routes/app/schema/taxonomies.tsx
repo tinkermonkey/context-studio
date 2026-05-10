@@ -149,7 +149,7 @@ function TaxonomiesPageContent({
 
   if (isLoading) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+      <div className="stack">
         <Skeleton height={32} width={200} />
         <Skeleton height={40} />
         {Array.from({ length: 5 }).map((_, i) => (
@@ -161,7 +161,7 @@ function TaxonomiesPageContent({
 
   if (error) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+      <div className="stack">
         <ErrorBanner error={error} onRetry={() => refetch()} message="Failed to load taxonomies" />
       </div>
     );
@@ -248,8 +248,8 @@ function TaxonomiesPageWrapper() {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+    <div className="stack">
+      <div className="flex-between">
         <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>Taxonomies</h1>
         <div style={{ display: "flex", gap: "var(--space-2)" }}>
           <Button variant="ghost" onClick={() => {}} data-testid="taxonomy-import-button">

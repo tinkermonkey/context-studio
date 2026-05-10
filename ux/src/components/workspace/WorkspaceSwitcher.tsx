@@ -113,7 +113,7 @@ export function WorkspaceSwitcher({ onSelect, isLoading = false }: WorkspaceSwit
         title="Open Folder"
         size="sm"
         footer={
-          <div style={{ display: "flex", gap: "var(--space-2)", justifyContent: "flex-end" }}>
+          <div className="form-actions">
             <Button
               variant="ghost"
               onClick={() => {
@@ -129,8 +129,8 @@ export function WorkspaceSwitcher({ onSelect, isLoading = false }: WorkspaceSwit
           </div>
         }
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
-          <label style={{ display: "block", fontSize: "var(--text-sm)" }}>Folder path</label>
+        <div className="form-group">
+          <label className="form-group-label">Folder path</label>
           <Input
             type="text"
             placeholder="/path/to/workspace"
@@ -155,7 +155,7 @@ export function WorkspaceSwitcher({ onSelect, isLoading = false }: WorkspaceSwit
         size="sm"
         data-testid="new-workspace-modal"
         footer={
-          <div style={{ display: "flex", gap: "var(--space-2)", justifyContent: "flex-end" }}>
+          <div className="form-actions">
             <Button
               variant="ghost"
               onClick={() => {
@@ -175,8 +175,8 @@ export function WorkspaceSwitcher({ onSelect, isLoading = false }: WorkspaceSwit
           </div>
         }
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
-          <label style={{ display: "block", fontSize: "var(--text-sm)" }}>Folder name</label>
+        <div className="form-group">
+          <label className="form-group-label">Folder name</label>
           <Input
             type="text"
             placeholder="my-workspace"
@@ -201,7 +201,7 @@ export function WorkspaceSwitcher({ onSelect, isLoading = false }: WorkspaceSwit
         size="sm"
         data-testid="clone-git-modal"
         footer={
-          <div style={{ display: "flex", gap: "var(--space-2)", justifyContent: "flex-end" }}>
+          <div className="form-actions">
             <Button
               variant="ghost"
               onClick={() => {
@@ -217,8 +217,8 @@ export function WorkspaceSwitcher({ onSelect, isLoading = false }: WorkspaceSwit
           </div>
         }
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
-          <label style={{ display: "block", fontSize: "var(--text-sm)" }}>Git repository URL</label>
+        <div className="form-group">
+          <label className="form-group-label">Git repository URL</label>
           <Input
             type="text"
             placeholder="https://github.com/user/repo.git"

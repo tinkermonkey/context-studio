@@ -119,16 +119,16 @@ export function SchemeDrawer({ scheme, taxonomyName, onClose }: SchemeDrawerProp
         onDelete={handleDeleteClick}
         data-testid="scheme-drawer"
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+        <div className="stack-lg">
           <div>
-            <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
+            <label className="form-group-label" style={{ marginBottom: "4px" }}>
               ID
             </label>
             <Input type="text" value={scheme.id} disabled mono data-testid="scheme-drawer-id" />
           </div>
 
           <div>
-            <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
+            <label className="form-group-label" style={{ marginBottom: "4px" }}>
               Title
             </label>
             <Input
@@ -140,7 +140,7 @@ export function SchemeDrawer({ scheme, taxonomyName, onClose }: SchemeDrawerProp
           </div>
 
           <div>
-            <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
+            <label className="form-group-label" style={{ marginBottom: "4px" }}>
               Description
             </label>
             <Textarea
@@ -152,7 +152,7 @@ export function SchemeDrawer({ scheme, taxonomyName, onClose }: SchemeDrawerProp
           </div>
 
           <div>
-            <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
+            <label className="form-group-label" style={{ marginBottom: "4px" }}>
               Parent Taxonomy
             </label>
             <Input

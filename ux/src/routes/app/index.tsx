@@ -45,11 +45,8 @@ function changeOperationColor(op: string): string {
 function EmptyState() {
   return (
     <div
+      className="flex flex-col items-center justify-center"
       style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
         padding: "var(--space-12, 48px) var(--space-6)",
         gap: "var(--space-6)",
         textAlign: "center",
@@ -276,14 +273,7 @@ function Dashboard() {
       </div>
 
       {/* Two-column layout */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "var(--space-6)",
-          marginBottom: "var(--space-6)",
-        }}
-      >
+      <div className="grid-2" style={{ marginBottom: "var(--space-6)" }}>
         {/* Recent Activity */}
         <Panel title="Recent Activity">
           <ErrorBanner
@@ -295,7 +285,7 @@ function Dashboard() {
           {!changesError && (
             <>
               {changesLoading ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+                <div className="stack">
                   {Array.from({ length: 4 }).map((_, i) => (
                     <Skeleton
                       key={i}
@@ -347,7 +337,7 @@ function Dashboard() {
         {/* Graph Health / Quick Stats */}
         <Panel title="System Status">
           {!health ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+            <div className="stack">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Skeleton key={i} height="20px" />
               ))}
@@ -410,14 +400,7 @@ function Dashboard() {
       </div>
 
       {/* Knowledge Graph Structure */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "var(--space-6)",
-          marginBottom: "var(--space-6)",
-        }}
-      >
+      <div className="grid-2" style={{ marginBottom: "var(--space-6)" }}>
         <Panel title="Knowledge Graph Structure">
           <ErrorBanner
             error={classesError}
@@ -438,7 +421,7 @@ function Dashboard() {
             compact
           />
           {!individualsError && individualsLoading && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+            <div className="stack">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Skeleton key={i} height="28px" style={{ borderRadius: "var(--radius-md, 6px)" }} />
               ))}
@@ -470,14 +453,7 @@ function Dashboard() {
         />
         {!pipelinesError && !pipelinesLoading && pipelines && pipelines.length > 0 && (
           <div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-2)",
-                marginBottom: "var(--space-4)",
-              }}
-            >
+            <div className="flex-row-center" style={{ marginBottom: "var(--space-4)" }}>
               <Layers size={16} style={{ color: "var(--canvas-fg-3)" }} />
               <span
                 style={{

@@ -166,7 +166,7 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
         onDelete={handleDeleteClick}
         data-testid="class-drawer"
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+        <div className="stack-lg">
           {individualsError && (
             <ErrorBanner
               error={individualsError as Error}
@@ -184,14 +184,14 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
             />
           )}
           <div>
-            <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
+            <label className="form-group-label" style={{ marginBottom: "4px" }}>
               ID
             </label>
             <Input type="text" value={classData.id} disabled mono data-testid="class-drawer-id" />
           </div>
 
           <div>
-            <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
+            <label className="form-group-label" style={{ marginBottom: "4px" }}>
               Name
             </label>
             <Input
@@ -203,7 +203,7 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
           </div>
 
           <div>
-            <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
+            <label className="form-group-label" style={{ marginBottom: "4px" }}>
               Description
             </label>
             <Textarea
@@ -215,7 +215,7 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
           </div>
 
           <div>
-            <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
+            <label className="form-group-label" style={{ marginBottom: "4px" }}>
               Domain
             </label>
             <Select
@@ -234,15 +234,13 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
           </div>
 
           <div>
-            <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
+            <label className="form-group-label" style={{ marginBottom: "4px" }}>
               Parent Class
             </label>
             {selectedParent ? (
               <div
+                className="flex-row-center"
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "var(--space-2)",
                   padding: "var(--space-2) var(--space-3)",
                   background: "var(--canvas-bg-2)",
                   borderRadius: "var(--radius-sm)",

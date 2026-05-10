@@ -43,9 +43,9 @@ export function SchemeForm({ onSubmit, isLoading }: SchemeFormProps) {
 
   return (
     <form onSubmit={handleSubmit} data-testid="scheme-form">
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+      <div className="stack-lg">
         <div>
-          <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
+          <label className="form-group-label" style={{ marginBottom: "4px" }}>
             Title
           </label>
           <Input
@@ -64,7 +64,7 @@ export function SchemeForm({ onSubmit, isLoading }: SchemeFormProps) {
         </div>
 
         <div>
-          <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
+          <label className="form-group-label" style={{ marginBottom: "4px" }}>
             Description (optional)
           </label>
           <Textarea

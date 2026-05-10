@@ -93,9 +93,9 @@ export function ClassEditor({ schemeId, initialData, onSubmit, isLoading }: Clas
 
   return (
     <form onSubmit={handleSubmit} data-testid="class-editor-form">
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+      <div className="stack-lg">
         <div>
-          <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
+          <label className="form-group-label" style={{ marginBottom: "4px" }}>
             Name
           </label>
           <Input
@@ -118,7 +118,7 @@ export function ClassEditor({ schemeId, initialData, onSubmit, isLoading }: Clas
 
         {!initialData && (
           <div>
-            <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
+            <label className="form-group-label" style={{ marginBottom: "4px" }}>
               Domain
             </label>
             <Select
@@ -138,16 +138,14 @@ export function ClassEditor({ schemeId, initialData, onSubmit, isLoading }: Clas
         )}
 
         <div>
-          <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
+          <label className="form-group-label" style={{ marginBottom: "4px" }}>
             Parent Class (optional)
           </label>
           <div style={{ position: "relative" }}>
             {selectedParent ? (
               <div
+                className="flex-row-center"
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "var(--space-2)",
                   padding: "var(--space-2) var(--space-3)",
                   background: "var(--canvas-bg-2)",
                   borderRadius: "var(--radius-sm)",
@@ -248,7 +246,7 @@ export function ClassEditor({ schemeId, initialData, onSubmit, isLoading }: Clas
         </div>
 
         <div>
-          <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
+          <label className="form-group-label" style={{ marginBottom: "4px" }}>
             Description (optional)
           </label>
           <Textarea

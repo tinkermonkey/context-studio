@@ -950,6 +950,24 @@
   color: var(--canvas-fg);
 }
 
+/* ============= Form utilities ============= */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.form-group-label {
+  display: block;
+  font-size: var(--text-sm);
+}
+
+.form-actions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+}
+
 /* ============= Misc additions ============= */
 code {
   background: var(--canvas-bg-2);
