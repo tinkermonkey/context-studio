@@ -3,7 +3,7 @@ import { Button } from "./Button";
 
 interface EmptyStateProps {
   icon?: ReactNode;
-  title: string;
+  title: string | ReactNode;
   description?: string;
   action?: {
     label: string;
