@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -34,8 +34,6 @@ function NodeTypeahead({
   const [search, setSearch] = useState("");
   const [showOptions, setShowOptions] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const listRef = useRef<HTMLDivElement>(null);
 
   const filteredClasses = search.length >= MIN_SEARCH_CHARS
     ? allClasses.filter(
@@ -123,7 +121,6 @@ function NodeTypeahead({
       ) : (
         <>
           <Input
-            ref={inputRef}
             type="text"
             placeholder="Type to search (min 2 chars)"
             value={search}
@@ -133,7 +130,7 @@ function NodeTypeahead({
             data-testid={`${testIdPrefix}-input`}
           />
           {showOptions && filteredClasses.length > 0 && (
-            <div className="entity-results" ref={listRef}>
+            <div className="entity-results">
               {filteredClasses.map((cls, index) => (
                 <button
                   key={cls.id}
@@ -245,7 +242,6 @@ export function PathFinder({ onNodeSelect }: PathFinderProps) {
 
       {error && (
         <div
-          className="error-banner"
           data-testid="path-finder-error"
           style={{
             padding: "var(--space-3)",
@@ -264,7 +260,6 @@ export function PathFinder({ onNodeSelect }: PathFinderProps) {
 
       {noPathFound && (
         <div
-          className="empty-state"
           data-testid="path-finder-empty-state"
           style={{
             padding: "var(--space-3)",
@@ -282,7 +277,6 @@ export function PathFinder({ onNodeSelect }: PathFinderProps) {
       {hasPath && (
         <div data-testid="path-finder-result">
           <div
-            className="distance-label"
             style={{
               fontSize: "var(--text-xs)",
               color: "var(--canvas-fg-3)",
@@ -292,7 +286,6 @@ export function PathFinder({ onNodeSelect }: PathFinderProps) {
             Distance: {pathResult.distance} edge{pathResult.distance !== 1 ? "s" : ""}
           </div>
           <div
-            className="result-wrapper"
             style={{
               display: "flex",
               flexWrap: "wrap",
