@@ -647,6 +647,14 @@ selectors:
     component: routes/app/contact-sheet.tsx
     description: Toggle button for light/dark canvas mode on contact sheet
 
+  # Graph Page
+  - selector: graph-page
+    component: routes/app/graph/index.tsx
+    description: Graph visualization page container
+  - selector: graph-canvas
+    component: components/graph/GraphCanvas.tsx
+    description: Interactive graph visualization canvas powered by reagraph
+
   # Unit Test Fixtures
   - selector: action
     component: components/ui/__tests__/Panel.test.tsx

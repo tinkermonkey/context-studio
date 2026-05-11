@@ -20,8 +20,8 @@ class GraphService extends BaseService {
     );
   }
 
-  async getSubgraph(nodeIds: string): Promise<SubgraphDataResponse> {
-    return this.get<SubgraphDataResponse>("/api/graph/subgraph", { nodes: nodeIds });
+  async getSubgraph(nodeIds: string[]): Promise<SubgraphDataResponse> {
+    return this.get<SubgraphDataResponse>("/api/graph/subgraph", { nodes: nodeIds.join(",") });
   }
 
   async getShortestPath(sourceId: string, targetId: string): Promise<PathResultResponse> {

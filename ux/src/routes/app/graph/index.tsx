@@ -5,6 +5,7 @@ import { useGraphVisualization } from "@/api/hooks/graph";
 import { GraphCanvasComponent } from "@/components/graph/GraphCanvas";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Skeleton } from "@/components/ui/Skeleton";
 import "@/design-system/graph.css";
 
 export const Route = createFileRoute("/app/graph/")({
@@ -32,6 +33,7 @@ function GraphPage() {
           className="btn btn-primary"
           onClick={() => graphVisualization.mutate()}
           disabled={isLoading}
+          aria-busy={isLoading}
         >
           {isLoading ? (
             <>
@@ -57,18 +59,8 @@ function GraphPage() {
 
       {isLoading && !hasData && (
         <div className="graph-shell">
-          <div className="graph-canvas" style={{ background: "#f0f0f0" }}>
-            <div
-              style={{
-                width: "100%",
-                height: "100%",
-                background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
-                backgroundSize: "200% 100%",
-                animation: "pulse 1.5s infinite",
-              }}
-            />
-          </div>
-          <div className="graph-inspector" />
+          <Skeleton width="100%" height="100%" className="graph-canvas" />
+          <Skeleton width="100%" height="100%" className="graph-inspector" />
         </div>
       )}
 
@@ -92,7 +84,7 @@ function GraphPage() {
             onNodeClick={setSelectedNodeId}
             selectedNodeId={selectedNodeId}
           />
-          <div className="graph-inspector">
+          <aside className="graph-inspector" role="complementary" aria-label="Node inspector panel">
             {selectedNodeId ? (
               <div>
                 <div className="gi-head">
@@ -106,20 +98,9 @@ function GraphPage() {
             ) : (
               <div className="empty">No node selected</div>
             )}
-          </div>
+          </aside>
         </div>
       )}
-
-      <style>{`
-        @keyframes pulse {
-          0%, 100% {
-            background-position: 200% 0;
-          }
-          50% {
-            background-position: 0 0;
-          }
-        }
-      `}</style>
     </div>
   );
 }

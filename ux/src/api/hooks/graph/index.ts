@@ -67,7 +67,7 @@ export function useGraphVisualization() {
         };
       }
 
-      const subgraph = await graphService.getSubgraph(nodeIds.join(","));
+      const subgraph = await graphService.getSubgraph(nodeIds);
 
       return {
         nodes: nodeIds.map((id) => ({
@@ -95,7 +95,7 @@ export function useGraphVisualization() {
 
 export function useShortestPath(sourceId: string, targetId: string) {
   return useQuery({
-    queryKey: ["graph", "path", sourceId, targetId],
+    queryKey: QUERY_KEYS.graphPath(sourceId, targetId),
     queryFn: () => graphService.getShortestPath(sourceId, targetId),
     enabled: !!sourceId && !!targetId,
   });

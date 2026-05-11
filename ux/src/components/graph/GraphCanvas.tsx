@@ -1,4 +1,3 @@
-import { useRef } from "react";
 import { GraphCanvas } from "reagraph";
 import type { GraphNode, GraphEdge } from "@/api/hooks/graph";
 import "@/design-system/graph.css";
@@ -16,20 +15,18 @@ export const GraphCanvasComponent = ({
   onNodeClick,
   selectedNodeId,
 }: GraphCanvasComponentProps) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-
   const getDomainColor = (nodeId: string) => {
     const hash = nodeId.charCodeAt(0) % 3;
-    const colors = ["#10b981", "#fbbf24", "#818cf8"];
+    const colors = ["#34d399", "#fbbf24", "#818cf8"];
     return colors[hash];
   };
 
   return (
     <div
-      ref={containerRef}
       data-testid="graph-canvas"
       className="graph-canvas"
-      style={{ width: "100%", height: "100%" }}
+      role="region"
+      aria-label="Graph visualization canvas"
     >
       <GraphCanvas
         nodes={nodes.map((node) => ({
