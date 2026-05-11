@@ -43,7 +43,7 @@ export const COPY = {
 
   // Entity Review Toast Messages
   ENTITY_REJECTED: "Entity rejected",
-  ENTITY_LINKED: "Entity linked to class",
+  ENTITY_LINKED: "Link recorded locally. API persistence coming soon.",
   NO_CONCEPT_SCHEME: "No concept scheme available for creating classes",
   CLASS_CREATED: "Created class: ",
   CLASS_CREATION_FAILED: "Failed to create class: ",

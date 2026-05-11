@@ -19,3 +19,10 @@ export function formatDuration(ms: number): string {
   const seconds = (ms / 1000).toFixed(1);
   return `${seconds}s`;
 }
+
+export function formatConfidence(confidence: number | null | undefined): string {
+  if (confidence == null || isNaN(confidence)) {
+    return "—";
+  }
+  return `${Math.round(confidence * 100)}%`;
+}

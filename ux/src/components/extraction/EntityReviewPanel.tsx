@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Chip } from "@/components/ui/Chip";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { formatConfidence } from "@/utils/confidence";
+import { formatConfidence } from "@/utils/formatters";
 import { COPY } from "@/routes/app/extraction/-copy";
 import type { components } from "@/api/types";
 
@@ -299,11 +299,11 @@ export function EntityReviewPanel({
     toast("info", COPY.ENTITY_REJECTED);
   };
 
-  const handleLinkConfirm = (entity: ExtractedEntitySchema, targetClassId: string) => {
+  const handleLinkConfirm = (entity: ExtractedEntitySchema, _targetClassId: string) => {
     // TODO: Implement entity-to-class linking API call when backend supports it
     // For now, this optimistically updates UI state as placeholder
     setLinkedIds((prev) => new Set([...prev, entity.id]));
-    toast("info", "Link recorded locally. API persistence coming soon.");
+    toast("info", COPY.ENTITY_LINKED);
   };
 
   const handleApproveAll = async () => {
