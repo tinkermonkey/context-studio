@@ -7,6 +7,7 @@ verifying CRUD operations, querying, and data round-tripping.
 
 import sys
 import os
+import dataclasses
 from datetime import datetime, timezone
 from uuid import uuid4
 
@@ -129,10 +130,13 @@ class TestPipelineRepositoryConfigCRUD:
         repo.save_config(sample_config)
 
         # Modify and save again
-        sample_config.title = "Updated Summarizer"
-        sample_config.version = 2
-        sample_config.enabled = False
-        repo.save_config(sample_config)
+        updated_config = dataclasses.replace(
+            sample_config,
+            title="Updated Summarizer",
+            version=2,
+            enabled=False,
+        )
+        repo.save_config(updated_config)
 
         retrieved = repo.get_config(sample_config.id)
         assert retrieved is not None
