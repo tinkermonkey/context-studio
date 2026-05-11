@@ -36,11 +36,10 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import declarative_base
 
+Base = declarative_base()  # type: ignore[valid-type]
 
-Base = declarative_base()
 
-
-class OntologyEntity(Base):
+class OntologyEntity(Base):  # type: ignore[valid-type,misc]
     """
     Unified table for all ontology entity types using single-table inheritance.
 
@@ -208,7 +207,7 @@ class OntologyEntity(Base):
         )
 
 
-class IndividualClass(Base):
+class IndividualClass(Base):  # type: ignore[valid-type,misc]
     """
     Join table for ordered parent class membership of Individual entities.
 
@@ -253,7 +252,7 @@ class IndividualClass(Base):
         return f"<IndividualClass(individual_id={self.individual_id}, class_id={self.class_id}, position={self.position})>"
 
 
-class Relationship(Base):
+class Relationship(Base):  # type: ignore[valid-type,misc]
     """
     A typed, directed edge between two ontology entities.
 
@@ -315,7 +314,7 @@ class Relationship(Base):
         return f"<Relationship(id={self.id}, source={self.source_id}, target={self.target_id})>"
 
 
-class PropertyDefinition(Base):
+class PropertyDefinition(Base):  # type: ignore[valid-type,misc]
     """
     Registry of defined object property types (OWL:ObjectProperty).
 
@@ -382,7 +381,7 @@ class PropertyDefinition(Base):
         return f"<PropertyDefinition(id={self.id}, identifier={self.identifier})>"
 
 
-class ChangeEvent(Base):
+class ChangeEvent(Base):  # type: ignore[valid-type,misc]
     """
     Audit trail of all changes to ontology entities.
 
@@ -469,7 +468,7 @@ class ChangeEvent(Base):
         return f"<ChangeEvent(id={self.id}, entity_id={self.entity_id}, operation={self.operation})>"
 
 
-class ExtractionResult(Base):
+class ExtractionResult(Base):  # type: ignore[valid-type,misc]
     """
     Persistence model for an extraction operation result.
 
@@ -521,7 +520,7 @@ class ExtractionResult(Base):
         return f"<ExtractionResult(id={self.id}, text_len={len(self.text or '')}, entities={len(self.extracted_entities or [])})>"
 
 
-class EntityVersion(Base):
+class EntityVersion(Base):  # type: ignore[valid-type,misc]
     """
     Point-in-time snapshot of an entity's state.
 
@@ -556,7 +555,7 @@ class EntityVersion(Base):
         return f"<EntityVersion(entity_id={self.entity_id}, version={self.version})>"
 
 
-class Changeset(Base):
+class Changeset(Base):  # type: ignore[valid-type,misc]
     """
     A grouped set of related change events (a transaction).
 
@@ -596,7 +595,7 @@ class Changeset(Base):
         return f"<Changeset(id={self.id}, name={self.name}, state={self.state})>"
 
 
-class ChangesetEvent(Base):
+class ChangesetEvent(Base):  # type: ignore[valid-type,misc]
     """
     Junction table linking change events to changesets.
 
@@ -632,7 +631,7 @@ class ChangesetEvent(Base):
         return f"<ChangesetEvent(changeset_id={self.changeset_id}, change_event_id={self.change_event_id})>"
 
 
-class Proposal(Base):
+class Proposal(Base):  # type: ignore[valid-type,misc]
     """
     A formal request to merge a changeset.
 
@@ -672,7 +671,7 @@ class Proposal(Base):
         return f"<Proposal(id={self.id}, changeset_id={self.changeset_id}, state={self.state})>"
 
 
-class ConflictResolution(Base):
+class ConflictResolution(Base):  # type: ignore[valid-type,misc]
     """
     A stored resolution for a conflict in a proposal.
 
@@ -706,7 +705,7 @@ class ConflictResolution(Base):
         return f"<ConflictResolution(proposal_id={self.proposal_id}, entity_id={self.entity_id}, field_name={self.field_name})>"
 
 
-class BatchRun(Base):
+class BatchRun(Base):  # type: ignore[valid-type,misc]
     """
     Abstract base class for all batch run types using joined-table inheritance.
 

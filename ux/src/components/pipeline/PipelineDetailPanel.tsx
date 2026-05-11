@@ -5,7 +5,6 @@ import { Drawer } from "@/components/ui/Drawer";
 import { Textarea } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { useAutosave } from "@/hooks/useAutosave";
 import { useToasts } from "@/components/ui/Toast";
 import { Chip } from "@/components/ui/Chip";
@@ -96,7 +95,6 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
     setIsEditingConfig(false);
   };
 
-  const lastRun = executions[0];
   const expandedExecution = expandedLogId ? executions.find((e) => e.id === expandedLogId) : null;
 
   const autosaveState = isEditingConfig ? undefined : autosaveStatus === "idle" ? undefined : (autosaveStatus as "saving" | "saved" | "error");
