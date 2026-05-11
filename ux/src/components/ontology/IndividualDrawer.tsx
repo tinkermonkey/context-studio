@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Fragment } from "react";
 import { Drawer } from "@/components/ui/Drawer";
 import { Input, Textarea } from "@/components/ui/Input";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
@@ -12,7 +12,6 @@ import {
   useUpdateIndividual,
   useAddClassToIndividual,
   useRemoveClassFromIndividual,
-  useReorderIndividualClasses,
   useIndividualInheritedProperties,
 } from "@/api/hooks/ontology/useIndividuals";
 import { useIndividuals, useClasses } from "@/api/hooks/ontology";
@@ -26,6 +25,7 @@ type DataPropertyValueResponse = components["schemas"]["DataPropertyValueRespons
 interface IndividualDrawerProps {
   individualId: string | null;
   onClose: () => void;
+  onSelectIndividual?: (id: string) => void;
 }
 
 interface ClassChipProps {
@@ -70,12 +70,13 @@ function ClassChip({ classId, className, onRemove, isDisabled }: ClassChipProps)
   );
 }
 
-export function IndividualDrawer({ individualId, onClose }: IndividualDrawerProps) {
+export function IndividualDrawer({ individualId, onClose, onSelectIndividual }: IndividualDrawerProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [showClassOptions, setShowClassOptions] = useState(false);
   const [isAddingClass, setIsAddingClass] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const lastSavedAtRef = useRef<Date | null>(null);
   const { toast } = useToasts();
@@ -83,7 +84,6 @@ export function IndividualDrawer({ individualId, onClose }: IndividualDrawerProp
   const updateMutation = useUpdateIndividual();
   const addClassMutation = useAddClassToIndividual();
   const removeClassMutation = useRemoveClassFromIndividual();
-  const reorderMutation = useReorderIndividualClasses();
 
   const { data: individualsResponse } = useIndividuals();
   const individual = individualsResponse?.items.find((i) => i.id === individualId) || null;
@@ -96,9 +96,8 @@ export function IndividualDrawer({ individualId, onClose }: IndividualDrawerProp
     useIndividualInheritedProperties(individualId || "");
   const inheritedProperties = inheritedPropertiesResponse?.items || [];
 
-  const { data: relatedIndividualsResponse } = useIndividuals();
   const relatedIndividuals =
-    relatedIndividualsResponse?.items
+    individualsResponse?.items
       ?.filter(
         (ind) =>
           ind.id !== individualId &&
@@ -106,24 +105,14 @@ export function IndividualDrawer({ individualId, onClose }: IndividualDrawerProp
       )
       .slice(0, 10) || [];
 
-  useEffect(() => {
-    if (individual) {
-      setTitle(individual.title);
-      setDescription(individual.description || "");
-      lastSavedAtRef.current = null;
-    }
-  }, [individual]);
-
-  if (!individualId || !individual) return null;
-
-  const isDirty = title !== individual.title || description !== individual.description;
+  const isDirty = title !== individual?.title || description !== (individual?.description || "");
 
   const updateData = { title, description };
 
   const { status } = useAutosave({
     data: updateData,
     mutationFn: async () => {
-      if (!isDirty) return;
+      if (!individual || !isDirty) return;
       await updateMutation.mutateAsync({
         id: individual.id,
         data: {
@@ -137,6 +126,29 @@ export function IndividualDrawer({ individualId, onClose }: IndividualDrawerProp
       toast("error", `Autosave failed: ${error.message}`);
     },
   });
+
+  useEffect(() => {
+    if (individual) {
+      setTitle(individual.title);
+      setDescription(individual.description || "");
+      lastSavedAtRef.current = null;
+    }
+  }, [individual]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowClassOptions(false);
+      }
+    };
+
+    if (showClassOptions) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showClassOptions]);
+
+  if (!individualId || !individual) return null;
 
   const handleAddClass = async (classId: string) => {
     if (!classId) return;
@@ -257,7 +269,7 @@ export function IndividualDrawer({ individualId, onClose }: IndividualDrawerProp
             </div>
           )}
 
-          <div style={{ position: "relative" }}>
+          <div style={{ position: "relative" }} ref={dropdownRef}>
             <Input
               type="text"
               placeholder="Search and add classes..."
@@ -344,7 +356,7 @@ export function IndividualDrawer({ individualId, onClose }: IndividualDrawerProp
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "1fr 100px 1fr",
+                gridTemplateColumns: "1fr 100px 1fr 120px",
                 gap: "var(--space-2)",
                 fontSize: "var(--text-sm)",
               }}
@@ -352,33 +364,35 @@ export function IndividualDrawer({ individualId, onClose }: IndividualDrawerProp
               <div style={{ fontWeight: 500, paddingBottom: "var(--space-2)" }}>Property</div>
               <div style={{ fontWeight: 500, paddingBottom: "var(--space-2)" }}>Type</div>
               <div style={{ fontWeight: 500, paddingBottom: "var(--space-2)" }}>Value</div>
+              <div style={{ fontWeight: 500, paddingBottom: "var(--space-2)" }}>Source</div>
 
               {inheritedProperties.map((prop: DataPropertyValueResponse, idx) => (
-                <div key={`${prop.property_identifier}-${idx}`}>
-                  <span className="mono" style={{ fontSize: "var(--text-xs)" }}>
-                    {prop.property_identifier}
-                  </span>
-                </div>
-              ))}
-              {inheritedProperties.map((prop: DataPropertyValueResponse, idx) => (
-                <div key={`${prop.property_identifier}-${idx}-type`}>
-                  <span
-                    style={{
-                      backgroundColor: "var(--canvas-bg-2)",
-                      padding: "2px 6px",
-                      borderRadius: "var(--radius-sm)",
-                      fontSize: "var(--text-xs)",
-                      display: "inline-block",
-                    }}
-                  >
-                    {prop.datatype || "any"}
-                  </span>
-                </div>
-              ))}
-              {inheritedProperties.map((prop: DataPropertyValueResponse, idx) => (
-                <div key={`${prop.property_identifier}-${idx}-value`}>
-                  <span style={{ color: "var(--canvas-fg-3)" }}>—</span>
-                </div>
+                <Fragment key={`${prop.property_identifier}-${idx}`}>
+                  <div>
+                    <span className="mono" style={{ fontSize: "var(--text-xs)" }}>
+                      {prop.property_identifier}
+                    </span>
+                  </div>
+                  <div>
+                    <span
+                      style={{
+                        backgroundColor: "var(--canvas-bg-2)",
+                        padding: "2px 6px",
+                        borderRadius: "var(--radius-sm)",
+                        fontSize: "var(--text-xs)",
+                        display: "inline-block",
+                      }}
+                    >
+                      {prop.datatype || "any"}
+                    </span>
+                  </div>
+                  <div>
+                    <span style={{ color: "var(--canvas-fg-3)" }}>—</span>
+                  </div>
+                  <div>
+                    <span style={{ color: "var(--canvas-fg-3)", fontSize: "var(--text-xs)" }}>TBD</span>
+                  </div>
+                </Fragment>
               ))}
             </div>
           )}
@@ -411,7 +425,17 @@ export function IndividualDrawer({ individualId, onClose }: IndividualDrawerProp
                     }}
                   >
                     <div style={{ fontWeight: 500, marginBottom: "var(--space-1)" }}>
-                      {ind.title}
+                      <span
+                        style={{
+                          color: "var(--cyan-600, #0891b2)",
+                          cursor: "pointer",
+                          textDecoration: "underline",
+                        }}
+                        onClick={() => onSelectIndividual?.(ind.id)}
+                        data-testid={`related-individual-name-${ind.id}`}
+                      >
+                        {ind.title}
+                      </span>
                     </div>
                     <div style={{ display: "flex", gap: "var(--space-1)", flexWrap: "wrap" }}>
                       {sharedClasses.map((classId) => (

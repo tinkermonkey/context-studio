@@ -350,6 +350,7 @@ function IndividualsPageWrapper() {
       <IndividualDrawer
         individualId={selectedId || null}
         onClose={() => handleSelectedIdChange(undefined)}
+        onSelectIndividual={handleSelectedIdChange}
       />
 
       <Modal
