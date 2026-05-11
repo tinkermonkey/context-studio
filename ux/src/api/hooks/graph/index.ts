@@ -50,7 +50,8 @@ export function useGraphVisualization() {
         await graphService.buildGraph();
       } catch (error) {
         throw new Error(
-          `Failed to build graph: ${error instanceof Error ? error.message : String(error)}`
+          `Failed to build graph: ${error instanceof Error ? error.message : String(error)}`,
+          { cause: error }
         );
       }
 
@@ -59,7 +60,8 @@ export function useGraphVisualization() {
         metrics = await graphService.getMetrics();
       } catch (error) {
         throw new Error(
-          `Failed to compute metrics: ${error instanceof Error ? error.message : String(error)}`
+          `Failed to compute metrics: ${error instanceof Error ? error.message : String(error)}`,
+          { cause: error }
         );
       }
 
@@ -82,7 +84,8 @@ export function useGraphVisualization() {
         subgraph = await graphService.getSubgraph(nodeIds);
       } catch (error) {
         throw new Error(
-          `Failed to fetch subgraph: ${error instanceof Error ? error.message : String(error)}`
+          `Failed to fetch subgraph: ${error instanceof Error ? error.message : String(error)}`,
+          { cause: error }
         );
       }
 
