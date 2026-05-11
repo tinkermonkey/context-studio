@@ -654,6 +654,27 @@ selectors:
   - selector: graph-canvas
     component: components/graph/GraphCanvas.tsx
     description: Interactive graph visualization canvas powered by reagraph
+  - selector: graph-metrics-panel
+    component: components/graph/MetricsPanel.tsx
+    description: Graph metrics panel showing analytics and statistics
+  - selector: graph-metrics-node-count
+    component: components/graph/MetricsPanel.tsx
+    description: Node count statistic tile
+  - selector: graph-metrics-edge-count
+    component: components/graph/MetricsPanel.tsx
+    description: Edge count statistic tile
+  - selector: graph-metrics-community-count
+    component: components/graph/MetricsPanel.tsx
+    description: Community count statistic tile
+  - selector: graph-metrics-avg-degree
+    component: components/graph/MetricsPanel.tsx
+    description: Average degree statistic tile
+  - selector: graph-metrics-centrality-list
+    component: components/graph/MetricsPanel.tsx
+    description: Top 10 nodes ranked by betweenness centrality
+  - selector: graph-metrics-degree-distribution
+    component: components/graph/MetricsPanel.tsx
+    description: Degree distribution visualization
 
   # Unit Test Fixtures
   - selector: action

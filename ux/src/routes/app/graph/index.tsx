@@ -3,9 +3,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { RotateCw, Network } from "lucide-react";
 import { useGraphVisualization } from "@/api/hooks/graph";
 import { GraphCanvasComponent } from "@/components/graph/GraphCanvas";
+import { MetricsPanel } from "@/components/graph/MetricsPanel";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { Tabs } from "@/components/ui/Tabs";
 import "@/design-system/graph.css";
 
 export const Route = createFileRoute("/app/graph/")({
@@ -14,6 +16,7 @@ export const Route = createFileRoute("/app/graph/")({
 
 function GraphPage() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | undefined>();
+  const [activeTab, setActiveTab] = useState<string>("metrics");
   const graphVisualization = useGraphVisualization();
 
   const isLoading = graphVisualization.isPending;
@@ -84,19 +87,33 @@ function GraphPage() {
             onNodeClick={setSelectedNodeId}
             selectedNodeId={selectedNodeId}
           />
-          <aside className="graph-inspector" role="complementary" aria-label="Node inspector panel">
-            {selectedNodeId ? (
-              <div>
-                <div className="gi-head">
-                  <div className="gi-title">{selectedNodeId}</div>
-                  <div className="gi-id">Node ID</div>
-                </div>
-                <div className="gi-body">
-                  <p className="gi-desc">Selected node details</p>
-                </div>
-              </div>
+          <aside className="graph-inspector" role="complementary" aria-label="Inspector panel">
+            <Tabs
+              tabs={[
+                { id: "metrics", label: "Metrics" },
+                { id: "node", label: "Node Inspector" },
+              ]}
+              active={activeTab}
+              onChange={setActiveTab}
+            />
+            {activeTab === "metrics" ? (
+              <MetricsPanel />
             ) : (
-              <div className="empty">No node selected</div>
+              <div className="panel">
+                {selectedNodeId ? (
+                  <div>
+                    <div className="gi-head">
+                      <div className="gi-title">{selectedNodeId}</div>
+                      <div className="gi-id">Node ID</div>
+                    </div>
+                    <div className="gi-body">
+                      <p className="gi-desc">Selected node details</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="empty">No node selected</div>
+                )}
+              </div>
             )}
           </aside>
         </div>
