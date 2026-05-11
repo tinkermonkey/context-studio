@@ -1,10 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, Fragment } from "react";
 import { Drawer } from "@/components/ui/Drawer";
 import { Input, Textarea } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
-  useUpdatePipelineFlavor,
   useDeletePipelineFlavor,
   useCreatePipelineFromFlavor,
 } from "@/api/hooks/pipeline";
@@ -105,25 +104,17 @@ export function FlavorDrawer({ flavor, onClose }: FlavorDrawerProps) {
             />
           </div>
 
-          <div
-            className="kv"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "100px 1fr",
-              gap: "8px 16px",
-              alignItems: "center",
-            }}
-          >
+          <div className="kv">
             {(
               [
                 ["Created", createdDate],
                 ["Updated", updatedDate],
               ] as [string, string][]
             ).map(([k, v]) => (
-              <div key={k}>
-                <dt style={{ fontSize: "var(--text-xs)", color: "var(--canvas-fg-3)" }}>{k}</dt>
-                <dd style={{ margin: 0, fontSize: "var(--text-sm)" }}>{v}</dd>
-              </div>
+              <Fragment key={k}>
+                <dt>{k}</dt>
+                <dd>{v}</dd>
+              </Fragment>
             ))}
           </div>
 
@@ -133,6 +124,7 @@ export function FlavorDrawer({ flavor, onClose }: FlavorDrawerProps) {
               onClick={handleCreatePipeline}
               disabled={createPipelineMutation.isPending}
               data-testid="flavor-drawer-create-pipeline-button"
+              aria-label="Create a new pipeline from this flavor"
             >
               {createPipelineMutation.isPending ? "Creating..." : "Create Pipeline"}
             </Button>
@@ -140,6 +132,7 @@ export function FlavorDrawer({ flavor, onClose }: FlavorDrawerProps) {
               variant="ghost"
               onClick={() => setShowDeleteConfirm(true)}
               data-testid="flavor-drawer-delete-button"
+              aria-label="Delete this flavor"
             >
               Delete
             </Button>

@@ -862,6 +862,68 @@ selectors:
     component: routes/app/pipelines/runs.tsx
     description: Next page button in pipeline runs pagination
 
+  # Pipeline Flavors Page
+  - selector: flavors-page
+    component: routes/app/pipelines/flavors.tsx
+    description: Main pipeline flavors list page container
+  - selector: flavors-content
+    component: routes/app/pipelines/flavors.tsx
+    description: Content wrapper for flavors page with loading/error/empty states
+  - selector: flavor-add-button
+    component: routes/app/pipelines/flavors.tsx
+    description: Button to create a new pipeline flavor
+  - selector: flavor-create-modal
+    component: routes/app/pipelines/flavors.tsx
+    description: Modal dialog for creating a new pipeline flavor
+  - selector: flavor-row-*
+    component: routes/app/pipelines/flavors.tsx
+    description: Table row for a pipeline flavor (pattern matches flavor-row-{flavorId})
+  - selector: flavor-name-*
+    component: routes/app/pipelines/flavors.tsx
+    description: Flavor name cell in table (pattern matches flavor-name-{flavorId})
+  - selector: flavor-steps-*
+    component: routes/app/pipelines/flavors.tsx
+    description: Flavor step count cell in table (pattern matches flavor-steps-{flavorId})
+  - selector: flavor-row-actions-*
+    component: routes/app/pipelines/flavors.tsx
+    description: Actions button for flavor row (pattern matches flavor-row-actions-{flavorId})
+  - selector: flavor-form
+    component: components/pipeline/FlavorForm.tsx
+    description: Form container for creating a pipeline flavor
+  - selector: flavor-name-input
+    component: components/pipeline/FlavorForm.tsx
+    description: Name input field in flavor form
+  - selector: flavor-description-input
+    component: components/pipeline/FlavorForm.tsx
+    description: Description textarea in flavor form
+  - selector: flavor-steps-input
+    component: components/pipeline/FlavorForm.tsx
+    description: Steps JSON textarea in flavor form
+  - selector: flavor-submit-button
+    component: components/pipeline/FlavorForm.tsx
+    description: Submit button in flavor form
+  - selector: flavor-drawer
+    component: components/pipeline/FlavorDrawer.tsx
+    description: Drawer panel showing flavor details
+  - selector: flavor-drawer-id
+    component: components/pipeline/FlavorDrawer.tsx
+    description: ID field in flavor drawer
+  - selector: flavor-drawer-name
+    component: components/pipeline/FlavorDrawer.tsx
+    description: Name field in flavor drawer
+  - selector: flavor-drawer-description
+    component: components/pipeline/FlavorDrawer.tsx
+    description: Description field in flavor drawer
+  - selector: flavor-drawer-step-count
+    component: components/pipeline/FlavorDrawer.tsx
+    description: Step count field in flavor drawer
+  - selector: flavor-drawer-create-pipeline-button
+    component: components/pipeline/FlavorDrawer.tsx
+    description: Button to create a new pipeline from the flavor
+  - selector: flavor-drawer-delete-button
+    component: components/pipeline/FlavorDrawer.tsx
+    description: Button to delete the flavor
+
   # Unit Test Fixtures
   - selector: action
     component: components/ui/__tests__/Panel.test.tsx

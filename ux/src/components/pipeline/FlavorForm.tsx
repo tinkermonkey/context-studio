@@ -86,8 +86,9 @@ export function FlavorForm({ onSubmit, isLoading }: FlavorFormProps) {
     <form onSubmit={handleSubmit} data-testid="flavor-form">
       <div className="stack-lg">
         <div>
-          <label className="form-group-label">Name</label>
+          <label htmlFor="flavor-name-field" className="form-group-label">Name</label>
           <Input
+            id="flavor-name-field"
             type="text"
             placeholder="Flavor name"
             value={name}
@@ -98,16 +99,13 @@ export function FlavorForm({ onSubmit, isLoading }: FlavorFormProps) {
             onBlur={handleNameBlur}
             data-testid="flavor-name-input"
           />
-          {nameError && (
-            <div style={{ color: "var(--rose-600)", fontSize: "var(--text-xs)", marginTop: "4px" }}>
-              {nameError}
-            </div>
-          )}
+          {nameError && <div className="field-error">{nameError}</div>}
         </div>
 
         <div>
-          <label className="form-group-label">Description (optional)</label>
+          <label htmlFor="flavor-description-field" className="form-group-label">Description (optional)</label>
           <Textarea
+            id="flavor-description-field"
             placeholder="Optional description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -117,8 +115,9 @@ export function FlavorForm({ onSubmit, isLoading }: FlavorFormProps) {
         </div>
 
         <div>
-          <label className="form-group-label">Steps (JSON)</label>
+          <label htmlFor="flavor-steps-field" className="form-group-label">Steps (JSON)</label>
           <Textarea
+            id="flavor-steps-field"
             placeholder='[{"name": "step1", "config": {}}]'
             value={stepsJson}
             onChange={handleStepsChange}
@@ -127,11 +126,7 @@ export function FlavorForm({ onSubmit, isLoading }: FlavorFormProps) {
             rows={6}
             mono
           />
-          {stepsError && (
-            <div style={{ color: "var(--rose-600)", fontSize: "var(--text-xs)", marginTop: "4px" }}>
-              {stepsError}
-            </div>
-          )}
+          {stepsError && <div className="field-error">{stepsError}</div>}
         </div>
 
         <Button

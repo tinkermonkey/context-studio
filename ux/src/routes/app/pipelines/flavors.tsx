@@ -1,11 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreVertical } from "lucide-react";
 import {
   usePipelineFlavors,
   useCreatePipelineFlavor,
-  useDeletePipelineFlavor,
 } from "@/api/hooks/pipeline";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
@@ -53,7 +52,7 @@ function FlavorsPageContent({
       header: "ID",
       size: 100,
       cell: (info) => (
-        <span className="mono" style={{ fontSize: "var(--text-xs)" }}>
+        <span className="mono">
           {(info.getValue() as string).slice(0, 8)}
         </span>
       ),
@@ -65,11 +64,7 @@ function FlavorsPageContent({
         const flavorId = info.row.original.id;
         return (
           <span
-            style={{
-              color: "var(--cyan-600, #0891b2)",
-              fontWeight: 500,
-              cursor: "pointer",
-            }}
+            className="row-link"
             onClick={() => onSelectedIdChange(flavorId)}
             data-testid={`flavor-name-${flavorId}`}
             role="button"
@@ -118,6 +113,7 @@ function FlavorsPageContent({
           data-testid={`flavor-row-actions-${row.original.id}`}
           className="btn btn-icon"
           onClick={() => onSelectedIdChange(row.original.id)}
+          aria-label="View flavor details"
         >
           <MoreVertical size={16} style={{ color: "var(--canvas-fg-3)" }} />
         </button>
@@ -127,7 +123,7 @@ function FlavorsPageContent({
 
   if (isLoading) {
     return (
-      <div className="stack">
+      <div data-testid="flavors-page" className="stack">
         <Skeleton height={32} width={200} />
         <Skeleton height={40} />
         {Array.from({ length: 5 }).map((_, i) => (
@@ -139,7 +135,7 @@ function FlavorsPageContent({
 
   if (error) {
     return (
-      <div className="stack">
+      <div data-testid="flavors-page" className="stack">
         <ErrorBanner
           error={error}
           onRetry={() => refetch()}
@@ -152,14 +148,16 @@ function FlavorsPageContent({
 
   if (flavors.length === 0) {
     return (
-      <EmptyState
-        title="No flavors yet"
-        description="Create a pipeline flavor to get started."
-        action={{
-          label: "Create a flavor",
-          onClick: onCreateClick,
-        }}
-      />
+      <div data-testid="flavors-page">
+        <EmptyState
+          title="No flavors yet"
+          description="Create a pipeline flavor to get started."
+          action={{
+            label: "Create a flavor",
+            onClick: onCreateClick,
+          }}
+        />
+      </div>
     );
   }
 
@@ -237,12 +235,13 @@ function FlavorsPageWrapper() {
 
   return (
     <div className="stack">
-      <div className="flex-between">
-        <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>Pipeline Flavors</h1>
+      <div className="page-head">
+        <h1>Pipeline Flavors</h1>
         <Button
           variant="primary"
           onClick={() => setShowCreateModal(true)}
           data-testid="flavor-add-button"
+          aria-label="Create new pipeline flavor"
         >
           + New flavor
         </Button>
