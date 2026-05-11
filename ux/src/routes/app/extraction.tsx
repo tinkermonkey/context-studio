@@ -1,0 +1,176 @@
+import { useState, useEffect } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useExtract, useNlpAnalysis, useEnrichFromReferences } from "@/api/hooks/extraction";
+import { ExtractionInput } from "@/components/extraction/ExtractionInput";
+import { ExtractionResultPanel } from "@/components/extraction/ExtractionResultPanel";
+import type { components } from "@/api/types";
+
+type ExtractionResultSchema = components["schemas"]["ExtractionResultSchema"];
+type EnrichFromReferencesRequest = components["schemas"]["EnrichFromReferencesRequest"];
+
+export const Route = createFileRoute("/app/extraction")({
+  component: ExtractionPage,
+});
+
+function ExtractionPage() {
+  const [currentText, setCurrentText] = useState<string>("");
+  const [extractionResult, setExtractionResult] = useState<ExtractionResultSchema | null>(null);
+  const [nlpResult, setNlpResult] = useState<ExtractionResultSchema | null>(null);
+  const [enrichmentResult, setEnrichmentResult] = useState<ExtractionResultSchema | null>(null);
+
+  const extractMutation = useExtract();
+  const nlpMutation = useNlpAnalysis();
+  const enrichMutation = useEnrichFromReferences();
+
+  const handleExtract = async (text: string) => {
+    setCurrentText(text);
+    setExtractionResult(null);
+    setNlpResult(null);
+    setEnrichmentResult(null);
+
+    // Start extraction
+    extractMutation.mutate(text, {
+      onSuccess: (result) => {
+        setExtractionResult(result);
+        // Automatically run NLP analysis on the same text
+        nlpMutation.mutate(text);
+      },
+    });
+  };
+
+  // When NLP analysis completes, trigger enrichment if we have extraction results
+  useEffect(() => {
+    if (nlpMutation.isSuccess && nlpMutation.data) {
+      setNlpResult(nlpMutation.data);
+      if (extractionResult?.extracted_entities && extractionResult.extracted_entities.length > 0) {
+        const enrichmentRequest: EnrichFromReferencesRequest = {
+          text: currentText,
+          extracted_entities: extractionResult.extracted_entities,
+        };
+        enrichMutation.mutate(enrichmentRequest);
+      }
+    }
+  }, [nlpMutation.isSuccess, nlpMutation.data]);
+
+  // When enrichment completes, store the result
+  useEffect(() => {
+    if (enrichMutation.isSuccess && enrichMutation.data) {
+      setEnrichmentResult(enrichMutation.data);
+    }
+  }, [enrichMutation.isSuccess, enrichMutation.data]);
+
+  const getLayerEntities = (layerIndex: number) => {
+    let result: ExtractionResultSchema | null = null;
+
+    // Determine which result to use based on layer
+    if (layerIndex === 0 || layerIndex === 1) {
+      result = extractionResult;
+    } else if (layerIndex === 2) {
+      result = nlpResult;
+    } else if (layerIndex === 3) {
+      result = enrichmentResult;
+    }
+
+    if (!result?.extracted_entities) return [];
+    return result.extracted_entities.filter((e) => e.source_layer === layerIndex);
+  };
+
+  const getLayerResult = (layerIndex: number) => {
+    let result: ExtractionResultSchema | null = null;
+
+    if (layerIndex === 0 || layerIndex === 1) {
+      result = extractionResult;
+    } else if (layerIndex === 2) {
+      result = nlpResult;
+    } else if (layerIndex === 3) {
+      result = enrichmentResult;
+    }
+
+    if (!result?.layers_executed) return null;
+    return result.layers_executed.find((l) => l.layer_number === layerIndex);
+  };
+
+  return (
+    <div data-testid="extraction-page">
+      <div className="page-head">
+        <div>
+          <h1>Entity Extraction</h1>
+          <p className="subtitle">Extract entities, relationships, and embeddings from text</p>
+        </div>
+      </div>
+
+      <div className="split-2" style={{ gap: "20px", minHeight: "calc(100vh - 180px)" }}>
+        {/* Left column - Input */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px", overflow: "hidden" }}>
+          <ExtractionInput
+            onExtract={handleExtract}
+            isLoading={extractMutation.isPending}
+          />
+        </div>
+
+        {/* Right column - Results panels */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px", overflow: "auto" }}>
+          {/* KG Context Panel */}
+          <ExtractionResultPanel
+            layer={getLayerResult(0) || { layer_number: 0, layer_name: "KG Context", entities_found: 0, duration_ms: 0, success: false }}
+            layerIndex={0}
+            entities={getLayerEntities(0)}
+            isLoading={extractMutation.isPending}
+            error={
+              extractMutation.isError && extractMutation.error instanceof Error
+                ? extractMutation.error.message
+                : extractMutation.isError
+                  ? "Unknown error occurred"
+                  : null
+            }
+          />
+
+          {/* LLM Extraction Panel */}
+          <ExtractionResultPanel
+            layer={getLayerResult(1) || { layer_number: 1, layer_name: "LLM Extraction", entities_found: 0, duration_ms: 0, success: false }}
+            layerIndex={1}
+            entities={getLayerEntities(1)}
+            isLoading={extractMutation.isPending || nlpMutation.isPending}
+            error={
+              nlpMutation.isError && nlpMutation.error instanceof Error
+                ? nlpMutation.error.message
+                : nlpMutation.isError
+                  ? "Unknown error occurred"
+                  : null
+            }
+          />
+
+          {/* NLP Gap Fill Panel */}
+          <ExtractionResultPanel
+            layer={getLayerResult(2) || { layer_number: 2, layer_name: "NLP Gap Fill", entities_found: 0, duration_ms: 0, success: false }}
+            layerIndex={2}
+            entities={getLayerEntities(2)}
+            isLoading={nlpMutation.isPending}
+            error={
+              nlpMutation.isError && nlpMutation.error instanceof Error
+                ? nlpMutation.error.message
+                : nlpMutation.isError
+                  ? "Unknown error occurred"
+                  : null
+            }
+          />
+
+          {/* Reference Enrichment Panel */}
+          <ExtractionResultPanel
+            layer={getLayerResult(3) || { layer_number: 3, layer_name: "Reference Enrichment", entities_found: 0, duration_ms: 0, success: false }}
+            layerIndex={3}
+            entities={getLayerEntities(3)}
+            isLoading={enrichMutation.isPending}
+            error={
+              enrichMutation.isError && enrichMutation.error instanceof Error
+                ? enrichMutation.error.message
+                : enrichMutation.isError
+                  ? "Unknown error occurred"
+                  : null
+            }
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
