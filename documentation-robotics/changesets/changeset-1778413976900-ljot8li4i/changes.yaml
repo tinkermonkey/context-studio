@@ -1,0 +1,564 @@
+- type: add
+  elementId: data-store.collection.batch-runs
+  layerName: data-store
+  after:
+    id: bdb4884c-9f91-46b6-b306-a38cca11639b
+    path: data-store.collection.batch-runs
+    spec_node_id: data-store.collection
+    type: collection
+    layer_id: data-store
+    name: batch_runs
+    description: Tracks batch processing runs for ontology import operations.
+      Created in local.db via Alembic migration. Contains parent/discriminator
+      for import_runs inheritance.
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: BatchRunModel
+    metadata:
+      created_at: 2026-05-10T11:53:05.394Z
+      updated_at: 2026-05-10T11:53:05.394Z
+      version: 1
+  timestamp: 2026-05-10T11:53:05.418Z
+  sequenceNumber: 0
+- type: add
+  elementId: data-store.collection.extraction-runs
+  layerName: data-store
+  after:
+    id: 29062bab-884b-490b-9178-4c3b25b0e40f
+    path: data-store.collection.extraction-runs
+    spec_node_id: data-store.collection
+    type: collection
+    layer_id: data-store
+    name: extraction_runs
+    description: Tracks individual extraction pipeline runs, including NLP and LLM
+      extraction phases. Stored in local.db as a subtype of batch_runs.
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: ExtractionRunModel
+    metadata:
+      created_at: 2026-05-10T11:53:08.906Z
+      updated_at: 2026-05-10T11:53:08.906Z
+      version: 1
+  timestamp: 2026-05-10T11:53:08.930Z
+  sequenceNumber: 1
+- type: add
+  elementId: technology.systemsoftware.uvicorn
+  layerName: technology
+  after:
+    id: 05b9fccd-47e8-4326-b85c-5557948f2164
+    path: technology.systemsoftware.uvicorn
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: uvicorn
+    description: ASGI server that serves the FastAPI application. Configured with
+      standard extras for websocket and HTTP/2 support.
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/requirements.txt
+          symbol: uvicorn[standard]
+    metadata:
+      created_at: 2026-05-10T11:53:32.795Z
+      updated_at: 2026-05-10T11:53:32.795Z
+      version: 1
+  timestamp: 2026-05-10T11:53:32.817Z
+  sequenceNumber: 2
+- type: add
+  elementId: technology.systemsoftware.boto3
+  layerName: technology
+  after:
+    id: 2c04861f-884d-4e78-9d40-52206ddf966d
+    path: technology.systemsoftware.boto3
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: boto3
+    description: AWS SDK for Python. Used by the S3 sync adapter to push and pull
+      DuckDB snapshot files to remote storage.
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/requirements.txt
+          symbol: boto3
+    metadata:
+      created_at: 2026-05-10T11:53:37.212Z
+      updated_at: 2026-05-10T11:53:37.212Z
+      version: 1
+  timestamp: 2026-05-10T11:53:37.236Z
+  sequenceNumber: 3
+- type: add
+  elementId: technology.systemsoftware.anthropic-sdk
+  layerName: technology
+  after:
+    id: a294e0d2-410f-4d36-9e97-8bfa5b3ccff1
+    path: technology.systemsoftware.anthropic-sdk
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: anthropic-sdk
+    description: Official Anthropic Python client library used by the Anthropic LLM
+      provider adapter to call Claude models.
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/requirements.txt
+          symbol: anthropic
+    metadata:
+      created_at: 2026-05-10T11:53:40.847Z
+      updated_at: 2026-05-10T11:53:40.847Z
+      version: 1
+  timestamp: 2026-05-10T11:53:40.870Z
+  sequenceNumber: 4
+- type: add
+  elementId: technology.systemsoftware.openai-sdk
+  layerName: technology
+  after:
+    id: 07dd2577-81bf-4437-b5bb-a975cebee16d
+    path: technology.systemsoftware.openai-sdk
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: openai-sdk
+    description: Official OpenAI Python client library used by the OpenAI LLM
+      provider adapter to call GPT models.
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/requirements.txt
+          symbol: openai
+    metadata:
+      created_at: 2026-05-10T11:53:43.755Z
+      updated_at: 2026-05-10T11:53:43.755Z
+      version: 1
+  timestamp: 2026-05-10T11:53:43.779Z
+  sequenceNumber: 5
+- type: add
+  elementId: technology.systemsoftware.httpx
+  layerName: technology
+  after:
+    id: 81f58122-8f3e-47d0-b416-78b327c903f4
+    path: technology.systemsoftware.httpx
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: httpx
+    description: Async-capable HTTP client for Python. Used by the reference adapter
+      and test infrastructure for making HTTP requests to external APIs and the
+      FastAPI test client.
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/requirements.txt
+          symbol: httpx
+    metadata:
+      created_at: 2026-05-10T11:53:47.382Z
+      updated_at: 2026-05-10T11:53:47.382Z
+      version: 1
+  timestamp: 2026-05-10T11:53:47.405Z
+  sequenceNumber: 6
+- type: add
+  elementId: apm.logconfiguration.context-studio-server-log-configuration
+  layerName: apm
+  after:
+    id: 97518dc3-9801-442b-a202-a48c9baf52c8
+    path: apm.logconfiguration.context-studio-server-log-configuration
+    spec_node_id: apm.logconfiguration
+    type: logconfiguration
+    layer_id: apm
+    name: Context Studio Server Log Configuration
+    description: Rotating file logger for the local-server. Configured via
+      config.json logging settings (log_level, max_bytes, backup_count). Falls
+      back to stderr StreamHandler if file logging fails.
+    attributes:
+      serviceName: context-studio-local-server
+      minimumSeverity: INFO
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/utils/logger.py
+          symbol: get_logger
+    metadata:
+      created_at: 2026-05-10T11:54:03.996Z
+      updated_at: 2026-05-10T11:54:03.996Z
+      version: 1
+  timestamp: 2026-05-10T11:54:04.021Z
+  sequenceNumber: 7
+- type: add
+  elementId: apm.logprocessor.rotating-file-log-processor
+  layerName: apm
+  after:
+    id: d6cbca7d-f1b3-4e75-b02d-4badcf3f6a2a
+    path: apm.logprocessor.rotating-file-log-processor
+    spec_node_id: apm.logprocessor
+    type: logprocessor
+    layer_id: apm
+    name: Rotating File Log Processor
+    description: Python RotatingFileHandler-based log processor writing to
+      context_studio.log. Rotates based on configurable max_bytes and
+      backup_count. Used by all domain, adapter, and route modules via
+      utils/logger.py.
+    attributes:
+      type: simple
+      enabled: true
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/utils/logger.py
+          symbol: _get_handler
+    metadata:
+      created_at: 2026-05-10T11:54:09.892Z
+      updated_at: 2026-05-10T11:54:09.892Z
+      version: 1
+  timestamp: 2026-05-10T11:54:09.916Z
+  sequenceNumber: 8
+- type: add
+  elementId: testing.testcoveragetarget.interchange-round-trip-tests
+  layerName: testing
+  after:
+    id: 4569e5ca-38fc-4900-ae51-1958a3c0836b
+    path: testing.testcoveragetarget.interchange-round-trip-tests
+    spec_node_id: testing.testcoveragetarget
+    type: testcoveragetarget
+    layer_id: testing
+    name: Interchange Round-Trip Tests
+    description: Integration tests verifying lossless round-trips across SKOS, OWL,
+      and GraphML serialization formats. Located in
+      tests/integration/interchange/. Covers cross-format round-trips and
+      lossiness documentation.
+    attributes:
+      targetType: integration-flow
+      priority: high
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/integration/interchange/test_cross_format_roundtrip.py
+          symbol: test_cross_format_roundtrip
+    metadata:
+      created_at: 2026-05-10T11:54:24.461Z
+      updated_at: 2026-05-10T11:54:24.461Z
+      version: 1
+  timestamp: 2026-05-10T11:54:24.486Z
+  sequenceNumber: 9
+- type: add
+  elementId: testing.testcoveragetarget.adapter-unit-tests
+  layerName: testing
+  after:
+    id: 7042770d-173c-43e5-81ec-995366cf5a0f
+    path: testing.testcoveragetarget.adapter-unit-tests
+    spec_node_id: testing.testcoveragetarget
+    type: testcoveragetarget
+    layer_id: testing
+    name: Adapter Unit Tests
+    description: "Unit tests for adapter-layer components using fakes: LLM provider
+      routing, change recorder, in-process event publisher, NLP processor,
+      cached reference source, and web schema validation. Located in
+      tests/unit/adapters/."
+    attributes:
+      targetType: integration-flow
+      priority: high
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/adapters/llm/test_provider_router_routing.py
+          symbol: TestProviderRouter
+    metadata:
+      created_at: 2026-05-10T11:54:31.167Z
+      updated_at: 2026-05-10T11:54:31.167Z
+      version: 1
+  timestamp: 2026-05-10T11:54:31.194Z
+  sequenceNumber: 10
+- type: add
+  elementId: testing.testcoveragetarget.domain-unit-tests
+  layerName: testing
+  after:
+    id: 181286a0-98d3-46ea-b9d1-48f02f3f49b4
+    path: testing.testcoveragetarget.domain-unit-tests
+    spec_node_id: testing.testcoveragetarget
+    type: testcoveragetarget
+    layer_id: testing
+    name: Domain Unit Tests
+    description: Pure unit tests for all 6 bounded context domain services using
+      fake port implementations. Tests span ontology, graph, extraction,
+      pipeline, versioning, admin, and interchange domains. Located in
+      tests/unit/domain/.
+    attributes:
+      targetType: business-workflow
+      priority: critical
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/test_ontology_service.py
+          symbol: TestOntologyService
+    metadata:
+      created_at: 2026-05-10T11:54:35.237Z
+      updated_at: 2026-05-10T11:54:35.237Z
+      version: 1
+  timestamp: 2026-05-10T11:54:35.261Z
+  sequenceNumber: 11
+- type: relationship-add
+  elementId: technology.systemsoftware.uvicorn::depends-on::technology.systemsoftware.fast-api
+  layerName: technology
+  after:
+    source: technology.systemsoftware.uvicorn
+    target: technology.systemsoftware.fast-api
+    predicate: depends-on
+    layer: technology
+    category: structural
+  timestamp: 2026-05-10T11:55:01.125Z
+  sequenceNumber: 12
+- type: relationship-add
+  elementId: technology.systemsoftware.uvicorn::realizes::application.applicationservice.admin-service
+  layerName: technology
+  after:
+    source: technology.systemsoftware.uvicorn
+    target: application.applicationservice.admin-service
+    predicate: realizes
+    layer: technology
+    targetLayer: application
+    category: structural
+  timestamp: 2026-05-10T11:55:10.123Z
+  sequenceNumber: 13
+- type: relationship-add
+  elementId: technology.systemsoftware.uvicorn::realizes::application.applicationservice.ontology-service
+  layerName: technology
+  after:
+    source: technology.systemsoftware.uvicorn
+    target: application.applicationservice.ontology-service
+    predicate: realizes
+    layer: technology
+    targetLayer: application
+    category: structural
+  timestamp: 2026-05-10T11:55:10.957Z
+  sequenceNumber: 14
+- type: relationship-add
+  elementId: technology.systemsoftware.boto3::depends-on::technology.systemsoftware.python
+  layerName: technology
+  after:
+    source: technology.systemsoftware.boto3
+    target: technology.systemsoftware.python
+    predicate: depends-on
+    layer: technology
+    category: structural
+  timestamp: 2026-05-10T11:55:29.893Z
+  sequenceNumber: 15
+- type: relationship-add
+  elementId: technology.systemsoftware.anthropic-sdk::depends-on::technology.systemsoftware.python
+  layerName: technology
+  after:
+    source: technology.systemsoftware.anthropic-sdk
+    target: technology.systemsoftware.python
+    predicate: depends-on
+    layer: technology
+    category: structural
+  timestamp: 2026-05-10T11:55:30.473Z
+  sequenceNumber: 16
+- type: relationship-add
+  elementId: technology.systemsoftware.openai-sdk::depends-on::technology.systemsoftware.python
+  layerName: technology
+  after:
+    source: technology.systemsoftware.openai-sdk
+    target: technology.systemsoftware.python
+    predicate: depends-on
+    layer: technology
+    category: structural
+  timestamp: 2026-05-10T11:55:31.044Z
+  sequenceNumber: 17
+- type: relationship-add
+  elementId: technology.systemsoftware.httpx::depends-on::technology.systemsoftware.python
+  layerName: technology
+  after:
+    source: technology.systemsoftware.httpx
+    target: technology.systemsoftware.python
+    predicate: depends-on
+    layer: technology
+    category: structural
+  timestamp: 2026-05-10T11:55:31.635Z
+  sequenceNumber: 18
+- type: relationship-add
+  elementId: technology.systemsoftware.boto3::depends-on::technology.systemsoftware.duck-db
+  layerName: technology
+  after:
+    source: technology.systemsoftware.boto3
+    target: technology.systemsoftware.duck-db
+    predicate: depends-on
+    layer: technology
+    category: structural
+  timestamp: 2026-05-10T11:55:36.704Z
+  sequenceNumber: 19
+- type: relationship-add
+  elementId: technology.systemsoftware.boto3::triggers::technology.technologyevent.rate-limit-threshold-event
+  layerName: technology
+  after:
+    source: technology.systemsoftware.boto3
+    target: technology.technologyevent.rate-limit-threshold-event
+    predicate: triggers
+    layer: technology
+    category: structural
+  timestamp: 2026-05-10T11:55:37.296Z
+  sequenceNumber: 20
+- type: relationship-delete
+  elementId: technology.systemsoftware.boto3::depends-on::technology.systemsoftware.duck-db
+  layerName: technology
+  before:
+    source: technology.systemsoftware.boto3
+    target: technology.systemsoftware.duck-db
+    predicate: depends-on
+    layer: technology
+  timestamp: 2026-05-10T11:55:49.360Z
+  sequenceNumber: 21
+- type: relationship-delete
+  elementId: technology.systemsoftware.boto3::triggers::technology.technologyevent.rate-limit-threshold-event
+  layerName: technology
+  before:
+    source: technology.systemsoftware.boto3
+    target: technology.technologyevent.rate-limit-threshold-event
+    predicate: triggers
+    layer: technology
+  timestamp: 2026-05-10T11:55:49.932Z
+  sequenceNumber: 22
+- type: relationship-add
+  elementId: technology.systemsoftware.boto3::realizes::application.applicationservice.versioning-service
+  layerName: technology
+  after:
+    source: technology.systemsoftware.boto3
+    target: application.applicationservice.versioning-service
+    predicate: realizes
+    layer: technology
+    targetLayer: application
+    category: structural
+  timestamp: 2026-05-10T11:55:55.408Z
+  sequenceNumber: 23
+- type: relationship-add
+  elementId: technology.systemsoftware.anthropic-sdk::realizes::application.applicationservice.pipeline-service
+  layerName: technology
+  after:
+    source: technology.systemsoftware.anthropic-sdk
+    target: application.applicationservice.pipeline-service
+    predicate: realizes
+    layer: technology
+    targetLayer: application
+    category: structural
+  timestamp: 2026-05-10T11:55:56.009Z
+  sequenceNumber: 24
+- type: relationship-add
+  elementId: technology.systemsoftware.openai-sdk::realizes::application.applicationservice.pipeline-service
+  layerName: technology
+  after:
+    source: technology.systemsoftware.openai-sdk
+    target: application.applicationservice.pipeline-service
+    predicate: realizes
+    layer: technology
+    targetLayer: application
+    category: structural
+  timestamp: 2026-05-10T11:55:56.607Z
+  sequenceNumber: 25
+- type: relationship-add
+  elementId: technology.systemsoftware.httpx::realizes::application.applicationservice.extraction-service
+  layerName: technology
+  after:
+    source: technology.systemsoftware.httpx
+    target: application.applicationservice.extraction-service
+    predicate: realizes
+    layer: technology
+    targetLayer: application
+    category: structural
+  timestamp: 2026-05-10T11:55:57.200Z
+  sequenceNumber: 26
+- type: relationship-add
+  elementId: data-store.collection.batch-runs::serves::application.applicationcomponent.sqlite-interchange-repository
+  layerName: data-store
+  after:
+    source: data-store.collection.batch-runs
+    target: application.applicationcomponent.sqlite-interchange-repository
+    predicate: serves
+    layer: data-store
+    targetLayer: application
+    category: structural
+  timestamp: 2026-05-10T11:56:08.573Z
+  sequenceNumber: 27
+- type: relationship-add
+  elementId: data-store.collection.extraction-runs::serves::application.applicationcomponent.sqlite-extraction-repository
+  layerName: data-store
+  after:
+    source: data-store.collection.extraction-runs
+    target: application.applicationcomponent.sqlite-extraction-repository
+    predicate: serves
+    layer: data-store
+    targetLayer: application
+    category: structural
+  timestamp: 2026-05-10T11:56:09.186Z
+  sequenceNumber: 28
+- type: relationship-add
+  elementId: apm.logconfiguration.context-studio-server-log-configuration::monitors::business.businessservice.rest-api-gateway-service
+  layerName: apm
+  after:
+    source: apm.logconfiguration.context-studio-server-log-configuration
+    target: business.businessservice.rest-api-gateway-service
+    predicate: monitors
+    layer: apm
+    targetLayer: business
+    category: structural
+  timestamp: 2026-05-10T11:56:21.932Z
+  sequenceNumber: 29
+- type: relationship-add
+  elementId: apm.logprocessor.rotating-file-log-processor::flows-to::apm.span.api-request-span
+  layerName: apm
+  after:
+    source: apm.logprocessor.rotating-file-log-processor
+    target: apm.span.api-request-span
+    predicate: flows-to
+    layer: apm
+    category: structural
+  timestamp: 2026-05-10T11:56:26.822Z
+  sequenceNumber: 30
+- type: relationship-add
+  elementId: testing.testcoveragetarget.interchange-round-trip-tests::tests::application.applicationcomponent.skos-interchange-adapter
+  layerName: testing
+  after:
+    source: testing.testcoveragetarget.interchange-round-trip-tests
+    target: application.applicationcomponent.skos-interchange-adapter
+    predicate: tests
+    layer: testing
+    targetLayer: application
+    category: structural
+  timestamp: 2026-05-10T11:56:37.063Z
+  sequenceNumber: 31
+- type: relationship-add
+  elementId: testing.testcoveragetarget.adapter-unit-tests::tests::application.applicationcomponent.spa-cy-nlp-processor
+  layerName: testing
+  after:
+    source: testing.testcoveragetarget.adapter-unit-tests
+    target: application.applicationcomponent.spa-cy-nlp-processor
+    predicate: tests
+    layer: testing
+    targetLayer: application
+    category: structural
+  timestamp: 2026-05-10T11:56:37.788Z
+  sequenceNumber: 32
+- type: relationship-add
+  elementId: testing.testcoveragetarget.domain-unit-tests::tests::application.applicationcomponent.sqlite-ontology-repository
+  layerName: testing
+  after:
+    source: testing.testcoveragetarget.domain-unit-tests
+    target: application.applicationcomponent.sqlite-ontology-repository
+    predicate: tests
+    layer: testing
+    targetLayer: application
+    category: structural
+  timestamp: 2026-05-10T11:56:38.439Z
+  sequenceNumber: 33
