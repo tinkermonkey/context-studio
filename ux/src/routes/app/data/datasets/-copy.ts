@@ -2,7 +2,8 @@ export const datasetsCopy = {
   pageTitle: "Datasets",
   emptyState: {
     title: "No datasets yet",
-    description: "Datasets allow you to manage and organize imported data sources for knowledge extraction.",
+    description:
+      "Datasets allow you to manage and organize imported data sources for knowledge extraction.",
   },
   create: {
     modalTitle: "New Dataset",

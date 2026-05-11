@@ -272,7 +272,9 @@ function IndividualsPageWrapper() {
       handleSelectedIdChange(result.id);
       toast("success", individualsCopy.create.successToast);
     } catch (error) {
-      setCreateError(error instanceof Error ? error.message : individualsCopy.errors.failedToCreate);
+      setCreateError(
+        error instanceof Error ? error.message : individualsCopy.errors.failedToCreate,
+      );
     }
   };
 
@@ -317,7 +319,10 @@ function IndividualsPageWrapper() {
           toast("success", individualsCopy.delete.successToast);
         })
         .catch((error) => {
-          toast("error", error instanceof Error ? error.message : individualsCopy.delete.errorToast);
+          toast(
+            "error",
+            error instanceof Error ? error.message : individualsCopy.delete.errorToast,
+          );
         });
     }
   };

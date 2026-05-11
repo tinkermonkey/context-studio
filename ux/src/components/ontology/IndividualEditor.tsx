@@ -304,7 +304,8 @@ export function IndividualEditor({
                       marginTop: "2px",
                     }}
                   >
-                    {individualsCopy.form.propertyTypeLabel}{prop.datatype || individualsCopy.form.propertyTypeUnknown}
+                    {individualsCopy.form.propertyTypeLabel}
+                    {prop.datatype || individualsCopy.form.propertyTypeUnknown}
                   </div>
                 </div>
               ))}

@@ -165,7 +165,8 @@ export function IndividualDrawer({
       setShowClassOptions(false);
       toast("success", individualsCopy.toasts.classAdded);
     } catch (error) {
-      const message = error instanceof ApiError ? error.detail : individualsCopy.toasts.failedToAddClass;
+      const message =
+        error instanceof ApiError ? error.detail : individualsCopy.toasts.failedToAddClass;
       toast("error", message);
     } finally {
       setIsAddingClass(false);
@@ -186,7 +187,8 @@ export function IndividualDrawer({
       });
       toast("success", individualsCopy.toasts.classRemoved);
     } catch (error) {
-      const message = error instanceof ApiError ? error.detail : individualsCopy.toasts.failedToRemoveClass;
+      const message =
+        error instanceof ApiError ? error.detail : individualsCopy.toasts.failedToRemoveClass;
       toast("error", message);
     }
   };
@@ -253,7 +255,11 @@ export function IndividualDrawer({
         </div>
 
         {/* Class Membership Panel */}
-        <Panel title={individualsCopy.drawer.classMembershipTitle} data-testid="individual-class-list" className="stack-lg">
+        <Panel
+          title={individualsCopy.drawer.classMembershipTitle}
+          data-testid="individual-class-list"
+          className="stack-lg"
+        >
           {individual.class_ids.length > 0 && (
             <div style={{ display: "flex", gap: "var(--space-2)", flexWrap: "wrap" }}>
               {individual.class_ids.map((classId) => (
@@ -360,10 +366,18 @@ export function IndividualDrawer({
                 fontSize: "var(--text-sm)",
               }}
             >
-              <div style={{ fontWeight: 500, paddingBottom: "var(--space-2)" }}>{individualsCopy.drawer.propertyGridHeaders.property}</div>
-              <div style={{ fontWeight: 500, paddingBottom: "var(--space-2)" }}>{individualsCopy.drawer.propertyGridHeaders.type}</div>
-              <div style={{ fontWeight: 500, paddingBottom: "var(--space-2)" }}>{individualsCopy.drawer.propertyGridHeaders.value}</div>
-              <div style={{ fontWeight: 500, paddingBottom: "var(--space-2)" }}>{individualsCopy.drawer.propertyGridHeaders.source}</div>
+              <div style={{ fontWeight: 500, paddingBottom: "var(--space-2)" }}>
+                {individualsCopy.drawer.propertyGridHeaders.property}
+              </div>
+              <div style={{ fontWeight: 500, paddingBottom: "var(--space-2)" }}>
+                {individualsCopy.drawer.propertyGridHeaders.type}
+              </div>
+              <div style={{ fontWeight: 500, paddingBottom: "var(--space-2)" }}>
+                {individualsCopy.drawer.propertyGridHeaders.value}
+              </div>
+              <div style={{ fontWeight: 500, paddingBottom: "var(--space-2)" }}>
+                {individualsCopy.drawer.propertyGridHeaders.source}
+              </div>
 
               {inheritedProperties.map((prop: DataPropertyValueResponse, idx) => (
                 <Fragment key={`${prop.property_identifier}-${idx}`}>

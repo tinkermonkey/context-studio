@@ -37,7 +37,7 @@ describe("Individuals Data Page", () => {
           await new Promise((resolve) => setTimeout(resolve, 100));
           return res(ctx.json(createListIndividuals([])));
         }),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([]))))
+        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([])))),
       );
 
       const { container } = render(<IndividualsPage />);
@@ -54,7 +54,7 @@ describe("Individuals Data Page", () => {
           await new Promise((resolve) => setTimeout(resolve, 100));
           return res(ctx.json(createListIndividuals([])));
         }),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([]))))
+        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([])))),
       );
 
       render(<IndividualsPage />);
@@ -73,7 +73,7 @@ describe("Individuals Data Page", () => {
         rest.get("*/api/individuals", (req, res, ctx) =>
           res(ctx.status(500), ctx.json({ detail: "Internal server error" })),
         ),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([]))))
+        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([])))),
       );
 
       render(<IndividualsPage />);
@@ -93,23 +93,21 @@ describe("Individuals Data Page", () => {
     it("displays empty state copy when no individuals exist", async () => {
       server.use(
         rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(createListIndividuals([])))),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([]))))
+        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([])))),
       );
 
       render(<IndividualsPage />);
 
       await waitFor(() => {
         expect(screen.getByText("No individuals yet")).toBeInTheDocument();
-        expect(
-          screen.getByText(/Individuals are instances of classes/i),
-        ).toBeInTheDocument();
+        expect(screen.getByText(/Individuals are instances of classes/i)).toBeInTheDocument();
       });
     });
 
     it("displays CTA button with correct label in empty state", async () => {
       server.use(
         rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(createListIndividuals([])))),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([]))))
+        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([])))),
       );
 
       render(<IndividualsPage />);
@@ -126,7 +124,7 @@ describe("Individuals Data Page", () => {
     it("verifies empty-state element is present", async () => {
       server.use(
         rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(createListIndividuals([])))),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([]))))
+        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([])))),
       );
 
       render(<IndividualsPage />);

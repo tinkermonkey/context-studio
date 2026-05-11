@@ -35,11 +35,11 @@ describe("Individual Detail Page (Drawer Component)", () => {
 
       server.use(rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))));
 
-      const { container } = render(
-        <IndividualDrawer individualId={null} onClose={() => {}} />,
-      );
+      const { container } = render(<IndividualDrawer individualId={null} onClose={() => {}} />);
 
-      expect(container.querySelector('[data-testid="individual-detail-page"]')).not.toBeInTheDocument();
+      expect(
+        container.querySelector('[data-testid="individual-detail-page"]'),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -72,12 +72,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(
-        <IndividualDrawer
-          individualId="ind-001"
-          onClose={() => {}}
-        />,
-      );
+      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
 
       await waitFor(() => {
         expect(screen.getByDisplayValue("John Doe")).toBeInTheDocument();
@@ -108,12 +103,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(
-        <IndividualDrawer
-          individualId="ind-001"
-          onClose={() => {}}
-        />,
-      );
+      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
 
       await waitFor(() => {
         const idInput = screen.getByTestId("individual-drawer-id") as HTMLInputElement;
@@ -146,12 +136,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(
-        <IndividualDrawer
-          individualId="ind-001"
-          onClose={() => {}}
-        />,
-      );
+      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
 
       await waitFor(() => {
         const nameInput = screen.getByTestId("individual-drawer-name-input") as HTMLInputElement;
@@ -184,12 +169,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(
-        <IndividualDrawer
-          individualId="ind-001"
-          onClose={() => {}}
-        />,
-      );
+      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
 
       await waitFor(() => {
         const descInput = screen.getByTestId(
@@ -227,12 +207,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(
-        <IndividualDrawer
-          individualId="ind-001"
-          onClose={() => {}}
-        />,
-      );
+      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
 
       await waitFor(() => {
         expect(screen.getByText("Class Membership")).toBeInTheDocument();
@@ -270,12 +245,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(
-        <IndividualDrawer
-          individualId="ind-001"
-          onClose={() => {}}
-        />,
-      );
+      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
 
       await waitFor(() => {
         expect(screen.getByTestId("individual-class-remove-class-person")).toBeInTheDocument();
@@ -307,12 +277,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(
-        <IndividualDrawer
-          individualId="ind-001"
-          onClose={() => {}}
-        />,
-      );
+      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
 
       await waitFor(() => {
         expect(screen.getByTestId("individual-class-typeahead")).toBeInTheDocument();
@@ -343,12 +308,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(
-        <IndividualDrawer
-          individualId="ind-001"
-          onClose={() => {}}
-        />,
-      );
+      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
 
       await waitFor(() => {
         expect(screen.getByText("Inherited Properties")).toBeInTheDocument();
@@ -384,12 +344,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(
-        <IndividualDrawer
-          individualId="ind-001"
-          onClose={() => {}}
-        />,
-      );
+      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
 
       await waitFor(() => {
         expect(screen.getByText("Related Individuals")).toBeInTheDocument();
@@ -420,12 +375,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(
-        <IndividualDrawer
-          individualId="ind-001"
-          onClose={() => {}}
-        />,
-      );
+      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
 
       await waitFor(() => {
         expect(screen.getByTestId("individual-drawer-close-button")).toBeInTheDocument();
@@ -462,12 +412,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(
-        <IndividualDrawer
-          individualId="ind-001"
-          onClose={() => {}}
-        />,
-      );
+      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
 
       await waitFor(() => {
         expect(screen.getByText("Inherited Properties")).toBeInTheDocument();
