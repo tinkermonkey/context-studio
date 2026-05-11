@@ -26,6 +26,7 @@ import { Route as AppSchemaClassesRouteImport } from './routes/app/schema/classe
 import { Route as AppReferenceWorkflowsRouteImport } from './routes/app/reference/workflows'
 import { Route as AppReferenceSourcesRouteImport } from './routes/app/reference/sources'
 import { Route as AppPipelinesRunsRouteImport } from './routes/app/pipelines/runs'
+import { Route as AppPipelinesFlavorsRouteImport } from './routes/app/pipelines/flavors'
 import { Route as AppPipelinesPipelineIdRouteImport } from './routes/app/pipelines/$pipelineId'
 import { Route as AppDataIndividualsRouteImport } from './routes/app/data/individuals'
 import { Route as AppDataDatasetsRouteImport } from './routes/app/data/datasets'
@@ -116,6 +117,11 @@ const AppPipelinesRunsRoute = AppPipelinesRunsRouteImport.update({
   path: '/pipelines/runs',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPipelinesFlavorsRoute = AppPipelinesFlavorsRouteImport.update({
+  id: '/pipelines/flavors',
+  path: '/pipelines/flavors',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppPipelinesPipelineIdRoute = AppPipelinesPipelineIdRouteImport.update({
   id: '/pipelines/$pipelineId',
   path: '/pipelines/$pipelineId',
@@ -147,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/app/data/datasets': typeof AppDataDatasetsRoute
   '/app/data/individuals': typeof AppDataIndividualsRoute
   '/app/pipelines/$pipelineId': typeof AppPipelinesPipelineIdRoute
+  '/app/pipelines/flavors': typeof AppPipelinesFlavorsRoute
   '/app/pipelines/runs': typeof AppPipelinesRunsRoute
   '/app/reference/sources': typeof AppReferenceSourcesRoute
   '/app/reference/workflows': typeof AppReferenceWorkflowsRoute
@@ -169,6 +176,7 @@ export interface FileRoutesByTo {
   '/app/data/datasets': typeof AppDataDatasetsRoute
   '/app/data/individuals': typeof AppDataIndividualsRoute
   '/app/pipelines/$pipelineId': typeof AppPipelinesPipelineIdRoute
+  '/app/pipelines/flavors': typeof AppPipelinesFlavorsRoute
   '/app/pipelines/runs': typeof AppPipelinesRunsRoute
   '/app/reference/sources': typeof AppReferenceSourcesRoute
   '/app/reference/workflows': typeof AppReferenceWorkflowsRoute
@@ -192,6 +200,7 @@ export interface FileRoutesById {
   '/app/data/datasets': typeof AppDataDatasetsRoute
   '/app/data/individuals': typeof AppDataIndividualsRoute
   '/app/pipelines/$pipelineId': typeof AppPipelinesPipelineIdRoute
+  '/app/pipelines/flavors': typeof AppPipelinesFlavorsRoute
   '/app/pipelines/runs': typeof AppPipelinesRunsRoute
   '/app/reference/sources': typeof AppReferenceSourcesRoute
   '/app/reference/workflows': typeof AppReferenceWorkflowsRoute
@@ -217,6 +226,7 @@ export interface FileRouteTypes {
     | '/app/data/datasets'
     | '/app/data/individuals'
     | '/app/pipelines/$pipelineId'
+    | '/app/pipelines/flavors'
     | '/app/pipelines/runs'
     | '/app/reference/sources'
     | '/app/reference/workflows'
@@ -239,6 +249,7 @@ export interface FileRouteTypes {
     | '/app/data/datasets'
     | '/app/data/individuals'
     | '/app/pipelines/$pipelineId'
+    | '/app/pipelines/flavors'
     | '/app/pipelines/runs'
     | '/app/reference/sources'
     | '/app/reference/workflows'
@@ -261,6 +272,7 @@ export interface FileRouteTypes {
     | '/app/data/datasets'
     | '/app/data/individuals'
     | '/app/pipelines/$pipelineId'
+    | '/app/pipelines/flavors'
     | '/app/pipelines/runs'
     | '/app/reference/sources'
     | '/app/reference/workflows'
@@ -402,6 +414,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPipelinesRunsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/pipelines/flavors': {
+      id: '/app/pipelines/flavors'
+      path: '/pipelines/flavors'
+      fullPath: '/app/pipelines/flavors'
+      preLoaderRoute: typeof AppPipelinesFlavorsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/pipelines/$pipelineId': {
       id: '/app/pipelines/$pipelineId'
       path: '/pipelines/$pipelineId'
@@ -451,6 +470,7 @@ interface AppRouteChildren {
   AppDataDatasetsRoute: typeof AppDataDatasetsRoute
   AppDataIndividualsRoute: typeof AppDataIndividualsRoute
   AppPipelinesPipelineIdRoute: typeof AppPipelinesPipelineIdRoute
+  AppPipelinesFlavorsRoute: typeof AppPipelinesFlavorsRoute
   AppPipelinesRunsRoute: typeof AppPipelinesRunsRoute
   AppReferenceSourcesRoute: typeof AppReferenceSourcesRoute
   AppReferenceWorkflowsRoute: typeof AppReferenceWorkflowsRoute
@@ -471,6 +491,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDataDatasetsRoute: AppDataDatasetsRoute,
   AppDataIndividualsRoute: AppDataIndividualsRoute,
   AppPipelinesPipelineIdRoute: AppPipelinesPipelineIdRoute,
+  AppPipelinesFlavorsRoute: AppPipelinesFlavorsRoute,
   AppPipelinesRunsRoute: AppPipelinesRunsRoute,
   AppReferenceSourcesRoute: AppReferenceSourcesRoute,
   AppReferenceWorkflowsRoute: AppReferenceWorkflowsRoute,

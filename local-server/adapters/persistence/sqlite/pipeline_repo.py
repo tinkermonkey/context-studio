@@ -10,11 +10,12 @@ from datetime import datetime
 
 from sqlalchemy.orm import sessionmaker, Session
 
-from domain.pipeline.entities import PipelineConfiguration, Execution
+from domain.pipeline.entities import PipelineConfiguration, Execution, PipelineFlavor
 from domain.pipeline.ports import ExecutionWithTitle
 from adapters.persistence.sqlite.operations.models import (
     PipelineConfigurationModel,
     ExecutionModel,
+    PipelineFlavorModel,
 )
 
 
@@ -319,4 +320,104 @@ class SQLitePipelineRepository:
             status=execution.status,
             error_message=execution.error_message,
             timestamp=execution.timestamp,
+        )
+
+    def get_flavor(self, flavor_id: str) -> Optional[PipelineFlavor]:
+        """
+        Retrieve a pipeline flavor by ID.
+
+        Args:
+            flavor_id: Unique identifier of the flavor
+
+        Returns:
+            PipelineFlavor if found, None otherwise
+        """
+        with self.session_factory() as session:
+            row = session.get(PipelineFlavorModel, str(flavor_id))
+            return self._to_domain_flavor(row) if row else None
+
+    def list_flavors(self) -> list[PipelineFlavor]:
+        """
+        List all pipeline flavors.
+
+        Returns:
+            List of PipelineFlavor objects
+        """
+        with self.session_factory() as session:
+            rows = session.query(PipelineFlavorModel).all()
+            return [self._to_domain_flavor(row) for row in rows]
+
+    def save_flavor(self, flavor: PipelineFlavor) -> PipelineFlavor:
+        """
+        Create or update a pipeline flavor.
+
+        If the flavor's ID already exists, it is updated.
+        Otherwise, a new flavor is created.
+
+        Args:
+            flavor: PipelineFlavor to save
+
+        Returns:
+            The saved PipelineFlavor
+        """
+        with self.session_factory() as session:
+            model = self._to_model_flavor(flavor)
+            session.merge(model)
+            session.commit()
+            return flavor
+
+    def delete_flavor(self, flavor_id: str) -> bool:
+        """
+        Delete a pipeline flavor by ID.
+
+        Args:
+            flavor_id: Unique identifier of the flavor to delete
+
+        Returns:
+            True if deletion was successful, False if flavor was not found
+        """
+        with self.session_factory() as session:
+            row = session.get(PipelineFlavorModel, str(flavor_id))
+            if not row:
+                return False
+            session.delete(row)
+            session.commit()
+            return True
+
+    def _to_domain_flavor(self, row: PipelineFlavorModel) -> PipelineFlavor:
+        """
+        Convert ORM model to domain entity for PipelineFlavor.
+
+        Args:
+            row: SQLAlchemy ORM model instance
+
+        Returns:
+            Domain PipelineFlavor entity
+        """
+        return PipelineFlavor(
+            id=cast(str, row.id),
+            name=cast(str, row.name),
+            description=cast(str, row.description),
+            steps=list(row.steps) if row.steps else [],
+            created_at=cast(datetime, row.created_at),
+            last_updated=cast(datetime, row.last_updated),
+        )
+
+    def _to_model_flavor(self, flavor: PipelineFlavor) -> PipelineFlavorModel:
+        """
+        Convert domain entity to ORM model for PipelineFlavor.
+
+        Args:
+            flavor: Domain PipelineFlavor entity
+
+        Returns:
+            SQLAlchemy ORM model instance
+        """
+        return PipelineFlavorModel(
+            id=str(flavor.id),
+            name=flavor.name,
+            description=flavor.description,
+            steps=flavor.steps,
+            created_at=flavor.created_at,
+            last_updated=flavor.last_updated,
         )

@@ -139,3 +139,43 @@ class ExecutionWithPipelineResponse(BaseModel):
         None, description="Error description if applicable"
     )
     timestamp: datetime = Field(..., description="ISO 8601 execution timestamp")
+
+
+class PipelineFlavorCreateRequest(BaseModel):
+    """Request to create a new pipeline flavor."""
+
+    name: str = Field(..., description="Name of the flavor", min_length=1)
+    description: str = Field(
+        ..., description="Description of the flavor", min_length=1
+    )
+    steps: list[dict] = Field(
+        default_factory=list,
+        description="List of configuration step definitions",
+    )
+
+
+class PipelineFlavorUpdateRequest(BaseModel):
+    """Request to update a pipeline flavor."""
+
+    name: Optional[str] = Field(None, description="Updated name", min_length=1)
+    description: Optional[str] = Field(
+        None, description="Updated description", min_length=1
+    )
+    steps: Optional[list[dict]] = Field(
+        None,
+        description="Updated steps",
+    )
+
+
+class PipelineFlavorResponse(BaseModel):
+    """Response containing pipeline flavor data."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str = Field(..., description="Unique identifier")
+    name: str = Field(..., description="Name of the flavor")
+    description: str = Field(..., description="Description of the flavor")
+    steps: list[dict] = Field(..., description="Configuration step definitions")
+    step_count: int = Field(..., description="Number of steps in this flavor")
+    created_at: datetime = Field(..., description="ISO 8601 creation timestamp")
+    last_updated: datetime = Field(..., description="ISO 8601 last update timestamp")

@@ -15,8 +15,8 @@ from typing import cast, Literal
 from uuid import uuid4
 
 from domain.ports import EventPublisher
-from .entities import Execution, PipelineConfiguration
-from .ports import PipelineRepository, LLMProvider, ExecutionWithTitle
+from .entities import Execution, PipelineConfiguration, PipelineFlavor
+from .ports import PipelineRepository, LLMProvider, ExecutionWithTitle, FlavorRepository
 from .events import PipelineExecuted
 from .exceptions import PipelineNotFoundError
 
@@ -39,6 +39,7 @@ class PipelineService:
     def __init__(
         self,
         pipeline_repo: PipelineRepository,
+        flavor_repo: FlavorRepository,
         llm: LLMProvider,
         event_publisher: EventPublisher,
     ) -> None:
@@ -47,10 +48,12 @@ class PipelineService:
 
         Args:
             pipeline_repo: Port for persisting pipeline configurations and executions
+            flavor_repo: Port for persisting pipeline flavor templates
             llm: Port for invoking LLM models
             event_publisher: Port for publishing domain events
         """
         self._pipeline_repo = pipeline_repo
+        self._flavor_repo = flavor_repo
         self._llm = llm
         self._event_publisher = event_publisher
 
@@ -392,3 +395,109 @@ class PipelineService:
             )
 
         return recorded_execution
+
+    def create_flavor(
+        self,
+        name: str,
+        description: str,
+        steps: list[dict],
+    ) -> PipelineFlavor:
+        """
+        Create a new pipeline flavor.
+
+        Args:
+            name: Human-readable name for the flavor
+            description: Description of the flavor
+            steps: List of step definitions
+
+        Returns:
+            The created PipelineFlavor
+        """
+        now = datetime.now(timezone.utc)
+        flavor = PipelineFlavor(
+            id=str(uuid4()),
+            name=name,
+            description=description,
+            steps=steps,
+            created_at=now,
+            last_updated=now,
+        )
+        return self._flavor_repo.save_flavor(flavor)
+
+    def get_flavor(self, flavor_id: str) -> PipelineFlavor:
+        """
+        Retrieve a pipeline flavor by ID.
+
+        Args:
+            flavor_id: Flavor ID
+
+        Returns:
+            PipelineFlavor
+
+        Raises:
+            PipelineNotFoundError: If flavor not found
+        """
+        flavor = self._flavor_repo.get_flavor(flavor_id)
+        if flavor is None:
+            raise PipelineNotFoundError(f"Pipeline flavor {flavor_id} not found")
+        return flavor
+
+    def list_flavors(self) -> list[PipelineFlavor]:
+        """
+        List all pipeline flavors.
+
+        Returns:
+            List of PipelineFlavor objects
+        """
+        return self._flavor_repo.list_flavors()
+
+    def update_flavor(
+        self,
+        flavor_id: str,
+        name: str | None = None,
+        description: str | None = None,
+        steps: list[dict] | None = None,
+    ) -> PipelineFlavor:
+        """
+        Update a pipeline flavor.
+
+        Args:
+            flavor_id: Flavor ID
+            name: Updated name (optional)
+            description: Updated description (optional)
+            steps: Updated steps (optional)
+
+        Returns:
+            The updated PipelineFlavor
+
+        Raises:
+            PipelineNotFoundError: If flavor not found
+        """
+        existing = self._flavor_repo.get_flavor(flavor_id)
+        if existing is None:
+            raise PipelineNotFoundError(f"Pipeline flavor {flavor_id} not found")
+
+        updated = PipelineFlavor(
+            id=existing.id,
+            name=name if name is not None else existing.name,
+            description=description if description is not None else existing.description,
+            steps=steps if steps is not None else existing.steps,
+            created_at=existing.created_at,
+            last_updated=datetime.now(timezone.utc),
+        )
+        return self._flavor_repo.save_flavor(updated)
+
+    def delete_flavor(self, flavor_id: str) -> None:
+        """
+        Delete a pipeline flavor.
+
+        Args:
+            flavor_id: Flavor ID
+
+        Raises:
+            PipelineNotFoundError: If flavor not found
+        """
+        flavor = self._flavor_repo.get_flavor(flavor_id)
+        if flavor is None:
+            raise PipelineNotFoundError(f"Pipeline flavor {flavor_id} not found")
+        self._flavor_repo.delete_flavor(flavor_id)

@@ -41,6 +41,7 @@ const NAV_TREE = [
     children: [
       { id: "pipelines-all", label: "All pipelines", path: "/app/pipelines" },
       { id: "pipelines-runs", label: "Run history", path: "/app/pipelines/runs" },
+      { id: "pipelines-flavors", label: "Flavors", path: "/app/pipelines/flavors" },
     ],
   },
   {

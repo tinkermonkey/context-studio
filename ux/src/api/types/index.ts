@@ -1611,6 +1611,99 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/pipelines/flavors": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Pipeline Flavors
+     * @description Retrieve all pipeline flavors.
+     *
+     *     Returns:
+     *         List of PipelineFlavorResponse objects
+     */
+    get: operations["list_pipeline_flavors_api_pipelines_flavors_get"];
+    put?: never;
+    /**
+     * Create Pipeline Flavor
+     * @description Create a new pipeline flavor.
+     *
+     *     Args:
+     *         request: PipelineFlavorCreateRequest with flavor details
+     *         service: PipelineService from dependency injection
+     *
+     *     Returns:
+     *         Created PipelineFlavorResponse with server-generated id
+     *
+     *     Raises:
+     *         HTTPException: 400 if invalid input, 409 if name already exists
+     */
+    post: operations["create_pipeline_flavor_api_pipelines_flavors_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/flavors/{flavor_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Pipeline Flavor
+     * @description Retrieve a pipeline flavor by ID.
+     *
+     *     Args:
+     *         flavor_id: The pipeline flavor ID
+     *         service: PipelineService from dependency injection
+     *
+     *     Returns:
+     *         PipelineFlavorResponse
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found
+     */
+    get: operations["get_pipeline_flavor_api_pipelines_flavors__flavor_id__get"];
+    /**
+     * Update Pipeline Flavor
+     * @description Update a pipeline flavor.
+     *
+     *     Args:
+     *         flavor_id: The pipeline flavor ID
+     *         request: PipelineFlavorUpdateRequest with optional fields to update
+     *         service: PipelineService from dependency injection
+     *
+     *     Returns:
+     *         Updated PipelineFlavorResponse
+     *
+     *     Raises:
+     *         HTTPException: 400 if invalid, 404 if not found
+     */
+    put: operations["update_pipeline_flavor_api_pipelines_flavors__flavor_id__put"];
+    post?: never;
+    /**
+     * Delete Pipeline Flavor
+     * @description Delete a pipeline flavor.
+     *
+     *     Args:
+     *         flavor_id: The pipeline flavor ID
+     *         service: PipelineService from dependency injection
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found
+     */
+    delete: operations["delete_pipeline_flavor_api_pipelines_flavors__flavor_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/reference/status": {
     parameters: {
       query?: never;
@@ -4796,6 +4889,99 @@ export interface components {
       input_text: string;
     };
     /**
+     * PipelineFlavorCreateRequest
+     * @description Request to create a new pipeline flavor.
+     */
+    PipelineFlavorCreateRequest: {
+      /**
+       * Name
+       * @description Name of the flavor
+       */
+      name: string;
+      /**
+       * Description
+       * @description Description of the flavor
+       */
+      description: string;
+      /**
+       * Steps
+       * @description List of configuration step definitions
+       */
+      steps?: {
+        [key: string]: unknown;
+      }[];
+    };
+    /**
+     * PipelineFlavorResponse
+     * @description Response containing pipeline flavor data.
+     */
+    PipelineFlavorResponse: {
+      /**
+       * Id
+       * @description Unique identifier
+       */
+      id: string;
+      /**
+       * Name
+       * @description Name of the flavor
+       */
+      name: string;
+      /**
+       * Description
+       * @description Description of the flavor
+       */
+      description: string;
+      /**
+       * Steps
+       * @description Configuration step definitions
+       */
+      steps: {
+        [key: string]: unknown;
+      }[];
+      /**
+       * Step Count
+       * @description Number of steps in this flavor
+       */
+      step_count: number;
+      /**
+       * Created At
+       * Format: date-time
+       * @description ISO 8601 creation timestamp
+       */
+      created_at: string;
+      /**
+       * Last Updated
+       * Format: date-time
+       * @description ISO 8601 last update timestamp
+       */
+      last_updated: string;
+    };
+    /**
+     * PipelineFlavorUpdateRequest
+     * @description Request to update a pipeline flavor.
+     */
+    PipelineFlavorUpdateRequest: {
+      /**
+       * Name
+       * @description Updated name
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description Updated description
+       */
+      description?: string | null;
+      /**
+       * Steps
+       * @description Updated steps
+       */
+      steps?:
+        | {
+            [key: string]: unknown;
+          }[]
+        | null;
+    };
+    /**
      * PredicateNode
      * @description Predicate node of a triple—a property definition.
      */
@@ -7801,6 +7987,154 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["ExecutionResponse"][];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_pipeline_flavors_api_pipelines_flavors_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PipelineFlavorResponse"][];
+        };
+      };
+    };
+  };
+  create_pipeline_flavor_api_pipelines_flavors_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PipelineFlavorCreateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PipelineFlavorResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_pipeline_flavor_api_pipelines_flavors__flavor_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        flavor_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PipelineFlavorResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_pipeline_flavor_api_pipelines_flavors__flavor_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        flavor_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PipelineFlavorUpdateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PipelineFlavorResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_pipeline_flavor_api_pipelines_flavors__flavor_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        flavor_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {

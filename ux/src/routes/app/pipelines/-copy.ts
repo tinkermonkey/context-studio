@@ -63,6 +63,17 @@ export const COPY = {
   PAGINATION_PREVIOUS: "Previous",
   PAGINATION_NEXT: "Next",
 
+  // Pipeline Flavors Page
+  FLAVORS_PAGE_TITLE: "Pipeline Flavors",
+  NEW_FLAVOR_BUTTON: "New Flavor",
+  SEARCH_FLAVORS_PLACEHOLDER: "Search by name or description…",
+  FLAVORS_LOAD_ERROR: "Failed to load pipeline flavors",
+  NO_FLAVORS_TITLE: "No pipeline flavors yet",
+  NO_FLAVORS_DESCRIPTION: "Create your first flavor to save template configurations.",
+  CREATE_FLAVOR_CTA: "Create Flavor",
+  NO_FLAVORS_FILTERED_TITLE: "No flavors match your search",
+  NO_FLAVORS_FILTERED_DESCRIPTION: "Try adjusting your search criteria.",
+
   // Toast messages
   PIPELINE_COMPLETED: (title: string) => `Pipeline '${title}' completed`,
   PIPELINE_FAILED: (title: string) => `Pipeline '${title}' failed`,

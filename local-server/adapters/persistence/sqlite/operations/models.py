@@ -92,3 +92,29 @@ class ExecutionModel(OperationsBase):  # type: ignore[valid-type,misc]
     __table_args__ = (
         Index("ix_executions_config_timestamp", "pipeline_config_id", "timestamp"),
     )
+
+
+class PipelineFlavorModel(OperationsBase):  # type: ignore[valid-type,misc]
+    """
+    SQLAlchemy ORM model for reusable pipeline flavor templates in operations.db.
+
+    Flavors are parameterized blueprints that can be instantiated into multiple
+    pipeline configurations.
+
+    Attributes:
+        id: UUID as string, primary key
+        name: Human-readable name for the flavor (unique)
+        description: Description of what this flavor is for
+        steps: JSON list of step definitions
+        created_at: UTC timestamp of creation
+        last_updated: UTC timestamp of most recent update
+    """
+
+    __tablename__ = "pipeline_flavors"
+
+    id = Column(String(36), primary_key=True, nullable=False)
+    name = Column(String(255), nullable=False, unique=True, index=True)
+    description = Column(Text, nullable=False)
+    steps = Column(JSON, nullable=False, default=list)
+    created_at = Column(DateTime, nullable=False)
+    last_updated = Column(DateTime, nullable=False)
