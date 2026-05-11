@@ -40,18 +40,12 @@ interface IndividualsPageContentProps {
   onRetryClasses: () => void;
   onEditClick: (id: string) => void;
   onDeleteClick: (id: string) => void;
-  onRunPipelineClick: () => void;
-  onImportClick: () => void;
 }
 
 function IndividualsEmptyState({
   onCreateClick,
-  onRunPipelineClick,
-  onImportClick,
 }: {
   onCreateClick: () => void;
-  onRunPipelineClick: () => void;
-  onImportClick: () => void;
 }) {
   return (
     <div className="empty-state" data-testid="empty-state">
@@ -94,8 +88,6 @@ function IndividualsPageContent({
   onRetryClasses,
   onEditClick,
   onDeleteClick,
-  onRunPipelineClick,
-  onImportClick,
 }: IndividualsPageContentProps) {
   const [searchFilter, setSearchFilter] = useState("");
 
@@ -248,8 +240,6 @@ function IndividualsPageContent({
     return (
       <IndividualsEmptyState
         onCreateClick={onCreateClick}
-        onRunPipelineClick={onRunPipelineClick}
-        onImportClick={onImportClick}
       />
     );
   }
@@ -391,14 +381,6 @@ function IndividualsPageWrapper() {
     }
   };
 
-  const handleRunPipelineClick = () => {
-    // TODO: implement pipeline execution
-  };
-
-  const handleImportClick = () => {
-    // TODO: implement import dialog
-  };
-
   return (
     <div className="stack" data-testid="individuals-page">
       <div className="flex-between">
@@ -424,8 +406,6 @@ function IndividualsPageWrapper() {
           onRetryClasses={() => refetchClasses()}
           onEditClick={handleEditClick}
           onDeleteClick={handleDeleteClick}
-          onRunPipelineClick={handleRunPipelineClick}
-          onImportClick={handleImportClick}
         />
       </div>
 
