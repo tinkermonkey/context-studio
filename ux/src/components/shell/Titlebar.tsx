@@ -6,7 +6,10 @@ interface TitlebarProps {
   workspacePath?: string;
 }
 
-export function Titlebar({ workspaceName = "Context Studio", workspacePath = "~/Projects/context-studio" }: TitlebarProps) {
+export function Titlebar({
+  workspaceName = "Context Studio",
+  workspacePath = "~/Projects/context-studio",
+}: TitlebarProps) {
   const openPalette = useCommandPaletteStore((s) => s.openPalette);
 
   return (
@@ -27,7 +30,12 @@ export function Titlebar({ workspaceName = "Context Studio", workspacePath = "~/
       </div>
       <div className="titlebar-spacer" />
       <div className="titlebar-actions">
-        <button className="titlebar-btn" onClick={openPalette} type="button" title="Command palette (⌘K)">
+        <button
+          className="titlebar-btn"
+          onClick={openPalette}
+          type="button"
+          title="Command palette (⌘K)"
+        >
           <Search size={12} />
           <span className="kbd-mini">⌘K</span>
         </button>

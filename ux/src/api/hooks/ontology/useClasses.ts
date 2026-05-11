@@ -5,6 +5,7 @@ import type { components } from "@/api/types";
 
 type ClassCreateRequest = components["schemas"]["ClassCreateRequest"];
 type ClassUpdateRequest = components["schemas"]["ClassUpdateRequest"];
+type ClassMoveRequest = components["schemas"]["ClassMoveRequest"];
 
 interface ClassListParams {
   concept_scheme_id?: string;
@@ -31,13 +32,8 @@ export function useClass(id: string) {
 export function useCreateClass() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      schemeId,
-      data,
-    }: {
-      schemeId: string;
-      data: ClassCreateRequest;
-    }) => ontologyService.createClass(schemeId, data),
+    mutationFn: ({ schemeId, data }: { schemeId: string; data: ClassCreateRequest }) =>
+      ontologyService.createClass(schemeId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.classes() });
     },
@@ -47,16 +43,22 @@ export function useCreateClass() {
 export function useUpdateClass() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: ClassUpdateRequest;
-    }) => ontologyService.updateClass(id, data),
+    mutationFn: ({ id, data }: { id: string; data: ClassUpdateRequest }) =>
+      ontologyService.updateClass(id, data),
     onSuccess: (_result, { id }) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.classes() });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.class(id) });
+    },
+  });
+}
+
+export function useMoveClass() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: ClassMoveRequest }) =>
+      ontologyService.moveClass(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.classes() });
     },
   });
 }

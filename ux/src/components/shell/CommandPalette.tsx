@@ -33,31 +33,39 @@ export function CommandPalette() {
     if (!query.trim()) return actions;
     const q = query.toLowerCase();
     return actions.filter(
-      (a) =>
-        a.label.toLowerCase().includes(q) ||
-        a.description?.toLowerCase().includes(q)
+      (a) => a.label.toLowerCase().includes(q) || a.description?.toLowerCase().includes(q),
     );
   }, [query, actions]);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setActiveIndex((i) => Math.min(i + 1, filtered.length - 1));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setActiveIndex((i) => Math.max(i - 1, 0));
-    } else if (e.key === "Enter" && filtered[activeIndex]) {
-      e.preventDefault();
-      filtered[activeIndex].onSelect();
-      closePalette();
-    }
-  }, [filtered, activeIndex, closePalette]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActiveIndex((i) => Math.min(i + 1, filtered.length - 1));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActiveIndex((i) => Math.max(i - 1, 0));
+      } else if (e.key === "Enter" && filtered[activeIndex]) {
+        e.preventDefault();
+        filtered[activeIndex].onSelect();
+        closePalette();
+      }
+    },
+    [filtered, activeIndex, closePalette],
+  );
 
   if (!open) return null;
 
   return (
     <div className="palette-backdrop" onClick={closePalette}>
-      <div className="palette" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal aria-label="Command palette" onKeyDown={handleKeyDown}>
+      <div
+        className="palette"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal
+        aria-label="Command palette"
+        onKeyDown={handleKeyDown}
+      >
         <div className="palette-input-row">
           <Search size={18} />
           <input
@@ -66,7 +74,9 @@ export function CommandPalette() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          <kbd className="palette-esc" onClick={closePalette}>esc</kbd>
+          <kbd className="palette-esc" onClick={closePalette}>
+            esc
+          </kbd>
         </div>
         <div className="palette-results">
           {filtered.length === 0 ? (
@@ -76,7 +86,7 @@ export function CommandPalette() {
               <button
                 key={action.id}
                 ref={i === activeIndex ? activeItemRef : undefined}
-                className={`palette-item${i === activeIndex ? " active" : ""}`}
+                className={`palette-item${i === activeIndex ? "active" : ""}`}
                 type="button"
                 onMouseEnter={() => setActiveIndex(i)}
                 onClick={() => {
@@ -86,9 +96,7 @@ export function CommandPalette() {
               >
                 {action.icon && <span className="palette-kind">{action.icon}</span>}
                 <span className="palette-label">{action.label}</span>
-                {action.description && (
-                  <span className="palette-hint">{action.description}</span>
-                )}
+                {action.description && <span className="palette-hint">{action.description}</span>}
                 <span className="palette-arrow">↵</span>
               </button>
             ))

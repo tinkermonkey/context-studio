@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
+from typing import Literal
 from uuid import uuid4
 
 from domain.ports import EventPublisher
@@ -22,7 +23,7 @@ from .entities import (
     PropertyDefinition,
     Individual,
 )
-from .value_objects import DataPropertyValue
+from .value_objects import DataPropertyValue, Status
 from .events import (
     TaxonomyCreated,
     TaxonomyUpdated,
@@ -106,7 +107,7 @@ class OntologyService:
             raise ValueError("Title cannot be empty")
 
         # Check for duplicate title
-        existing = self._repository.list_taxonomies()
+        existing = self._repository.list_taxonomies(limit=None)
         if any(t.title == title for t in existing):
             raise DuplicateEntityError(f"Taxonomy with title '{title}' already exists")
 
@@ -156,14 +157,42 @@ class OntologyService:
             raise EntityNotFoundError("Taxonomy", taxonomy_id)
         return taxonomy
 
-    def list_taxonomies(self) -> list[Taxonomy]:
+    def list_taxonomies(
+        self,
+        limit: int | None = 100,
+        offset: int = 0,
+        sort_by: str | None = None,
+        sort_order: Literal["asc", "desc"] = "asc",
+        query: str | None = None,
+    ) -> list[Taxonomy]:
         """
-        Retrieve all taxonomies.
+        Retrieve taxonomies with optional pagination, sorting, and text search.
+
+        Args:
+            limit: Maximum number of results to return; None means no limit
+            offset: Number of results to skip
+            sort_by: Field to sort by (title, created_at, last_modified); None for default
+            sort_order: Sort direction (asc or desc)
+            query: Text query for LIKE search on title
 
         Returns:
-            List of all Taxonomy entities
+            List of Taxonomy entities
         """
-        return self._repository.list_taxonomies()
+        return self._repository.list_taxonomies(
+            limit=limit, offset=offset, sort_by=sort_by, sort_order=sort_order, query=query
+        )
+
+    def count_taxonomies(self, query: str | None = None) -> int:
+        """
+        Count taxonomies, optionally filtered by text search.
+
+        Args:
+            query: Optional text query for LIKE search on title
+
+        Returns:
+            Total count of taxonomies
+        """
+        return self._repository.count_taxonomies(query=query)
 
     def update_taxonomy(
         self,
@@ -199,7 +228,7 @@ class OntologyService:
         if title is not None and title != taxonomy.title:
             if not title or not title.strip():
                 raise ValueError("Title cannot be empty")
-            existing = self._repository.list_taxonomies()
+            existing = self._repository.list_taxonomies(limit=None)
             if any(t.id != taxonomy_id and t.title == title for t in existing):
                 raise DuplicateEntityError(
                     f"Taxonomy with title '{title}' already exists"
@@ -283,7 +312,7 @@ class OntologyService:
             raise EntityNotFoundError("Taxonomy", taxonomy_id)
 
         # Check for duplicate title (excluding the current taxonomy)
-        existing = self._repository.list_taxonomies()
+        existing = self._repository.list_taxonomies(limit=None)
         if any(t.title == new_title and t.id != taxonomy_id for t in existing):
             raise DuplicateEntityError(
                 f"Taxonomy with title '{new_title}' already exists"
@@ -336,7 +365,7 @@ class OntologyService:
             raise EntityNotFoundError("Taxonomy", taxonomy_id)
 
         # Check for concept schemes
-        schemes = self._repository.list_concept_schemes(taxonomy_id=taxonomy_id)
+        schemes = self._repository.list_concept_schemes(taxonomy_id=taxonomy_id, limit=None)
         if schemes:
             raise OntologyError(
                 f"Cannot delete taxonomy {taxonomy_id}: it has {len(schemes)} concept scheme(s)"
@@ -358,6 +387,84 @@ class OntologyService:
                 taxonomy_id,
                 handler_names,
             )
+
+    def publish_taxonomy(self, taxonomy_id: str, commit_message: str | None = None) -> Taxonomy:
+        """
+        Publish a taxonomy, transitioning status from draft to published.
+
+        Args:
+            taxonomy_id: The ID of the taxonomy to publish
+            commit_message: Optional commit message for the publication
+
+        Returns:
+            The updated Taxonomy with status=published
+
+        Raises:
+            EntityNotFoundError: If the taxonomy does not exist
+        """
+        taxonomy = self._repository.get_taxonomy(taxonomy_id)
+        if taxonomy is None:
+            raise EntityNotFoundError("Taxonomy", taxonomy_id)
+
+        if taxonomy.status == Status.PUBLISHED:
+            return taxonomy
+
+        old_status = taxonomy.status
+        taxonomy.status = Status.PUBLISHED
+        taxonomy.last_modified = datetime.now(timezone.utc)
+        taxonomy = self._repository.save_taxonomy(taxonomy)
+
+        failures = self._event_publisher.publish(
+            TaxonomyUpdated(
+                taxonomy_id=taxonomy_id,
+                changed_fields=("status",),
+                old_values={"status": old_status},
+                new_values={"status": Status.PUBLISHED.value},
+                commit_message=commit_message,
+            )
+        )
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for TaxonomyUpdated publish (taxonomy_id=%s): %s. "
+                "Taxonomy is published but audit trail may have gaps.",
+                taxonomy_id,
+                handler_names,
+            )
+
+        return taxonomy
+
+    def get_publish_diff_stats(self, taxonomy_id: str) -> dict[str, int]:
+        """
+        Calculate diff statistics for publishing a taxonomy.
+
+        Returns counts of classes that will be affected by the publish action.
+
+        Args:
+            taxonomy_id: The ID of the taxonomy to get publish diff stats for
+
+        Returns:
+            Dictionary with keys: 'added', 'modified', 'removed' (counts)
+
+        Raises:
+            EntityNotFoundError: If the taxonomy does not exist
+        """
+        taxonomy = self._repository.get_taxonomy(taxonomy_id)
+        if taxonomy is None:
+            raise EntityNotFoundError("Taxonomy", taxonomy_id)
+
+        # For a draft taxonomy, count all classes as "added" (they will be published)
+        # In a full version history system, we would compare with the last published version
+        schemes = self._repository.list_concept_schemes(taxonomy_id=taxonomy_id)
+        total_classes = 0
+        for scheme in schemes:
+            total_classes += self.count_classes(concept_scheme_id=scheme.id)
+
+        return {
+            "added": total_classes if taxonomy.status == Status.DRAFT else 0,
+            "modified": 0,
+            "removed": 0,
+        }
 
     # ConceptScheme operations
 
@@ -394,7 +501,7 @@ class OntologyService:
 
         # Check for duplicate title within this taxonomy
         existing_schemes = self._repository.list_concept_schemes(
-            taxonomy_id=taxonomy_id
+            taxonomy_id=taxonomy_id, limit=None
         )
         if any(s.title == title for s in existing_schemes):
             raise DuplicateEntityError(
@@ -450,18 +557,51 @@ class OntologyService:
         return scheme
 
     def list_concept_schemes(
-        self, taxonomy_id: str | None = None
+        self,
+        taxonomy_id: str | None = None,
+        limit: int | None = 100,
+        offset: int = 0,
+        sort_by: str | None = None,
+        sort_order: Literal["asc", "desc"] = "asc",
+        query: str | None = None,
     ) -> list[ConceptScheme]:
         """
-        Retrieve concept schemes, optionally filtered by taxonomy.
+        Retrieve concept schemes with optional filtering, pagination, sorting, and text search.
 
         Args:
             taxonomy_id: Optional ID to filter schemes to a specific taxonomy
+            limit: Maximum number of results to return; None means no limit
+            offset: Number of results to skip
+            sort_by: Field to sort by (title, created_at, last_modified); None for default
+            sort_order: Sort direction (asc or desc)
+            query: Text query for LIKE search on title
 
         Returns:
             List of ConceptScheme entities
         """
-        return self._repository.list_concept_schemes(taxonomy_id=taxonomy_id)
+        return self._repository.list_concept_schemes(
+            taxonomy_id=taxonomy_id,
+            limit=limit,
+            offset=offset,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            query=query,
+        )
+
+    def count_concept_schemes(
+        self, taxonomy_id: str | None = None, query: str | None = None
+    ) -> int:
+        """
+        Count concept schemes, optionally filtered by taxonomy and text search.
+
+        Args:
+            taxonomy_id: Optional taxonomy ID to filter by
+            query: Optional text query for LIKE search on title
+
+        Returns:
+            Total count of concept schemes
+        """
+        return self._repository.count_concept_schemes(taxonomy_id=taxonomy_id, query=query)
 
     def rename_scheme(self, concept_scheme_id: str, new_title: str) -> ConceptScheme:
         """
@@ -490,7 +630,7 @@ class OntologyService:
 
         # Check for duplicate title within this taxonomy (excluding the current scheme)
         existing_schemes = self._repository.list_concept_schemes(
-            taxonomy_id=scheme.taxonomy_id
+            taxonomy_id=scheme.taxonomy_id, limit=None
         )
         if any(
             s.title == new_title and s.id != concept_scheme_id for s in existing_schemes
@@ -547,7 +687,7 @@ class OntologyService:
             raise EntityNotFoundError("ConceptScheme", concept_scheme_id)
 
         # Check for classes
-        classes = self._repository.list_classes(concept_scheme_id=concept_scheme_id)
+        classes = self._repository.list_classes(concept_scheme_id=concept_scheme_id, limit=None)
         if classes:
             raise OntologyError(
                 f"Cannot delete concept scheme {concept_scheme_id}: it has {len(classes)} class(es)"
@@ -613,7 +753,7 @@ class OntologyService:
 
         # Check for duplicate title within this scheme
         existing_classes = self._repository.list_classes(
-            concept_scheme_id=concept_scheme_id
+            concept_scheme_id=concept_scheme_id, limit=None
         )
         if any(c.title == title for c in existing_classes):
             raise DuplicateEntityError(
@@ -758,7 +898,7 @@ class OntologyService:
             if not title or not title.strip():
                 raise ValueError("Title cannot be empty")
             existing_classes = self._repository.list_classes(
-                concept_scheme_id=cls.concept_scheme_id
+                concept_scheme_id=cls.concept_scheme_id, limit=None
             )
             if any(c.title == title and c.id != class_id for c in existing_classes):
                 raise DuplicateEntityError(
@@ -838,14 +978,14 @@ class OntologyService:
             raise EntityNotFoundError("Class", class_id)
 
         # Check for subclasses
-        subclasses = self._repository.list_classes(parent_class_id=class_id)
+        subclasses = self._repository.list_classes(parent_class_id=class_id, limit=None)
         if subclasses:
             raise OntologyError(
                 f"Cannot delete class {class_id}: it has {len(subclasses)} subclass(es)"
             )
 
         # Check for individuals referencing this class
-        individuals = self._repository.list_individuals(class_id=class_id)
+        individuals = self._repository.list_individuals(class_id=class_id, limit=None)
         if individuals:
             raise OntologyError(
                 f"Cannot delete class {class_id}: it has {len(individuals)} individual(s)"
@@ -853,8 +993,8 @@ class OntologyService:
 
         # Find and delete all relationships where this class is source or target
         orphaned_relationships = self._repository.list_relationships(
-            source_id=class_id
-        ) + self._repository.list_relationships(target_id=class_id)
+            source_id=class_id, limit=None
+        ) + self._repository.list_relationships(target_id=class_id, limit=None)
 
         for relationship in orphaned_relationships:
             self._repository.delete_relationship(relationship.id)
@@ -1145,6 +1285,7 @@ class OntologyService:
             source_id=source_id,
             target_id=target_id,
             property_id=property_definition_id,
+            limit=None,
         )
         if existing_relationships:
             raise DuplicateEntityError(
@@ -1220,9 +1361,47 @@ class OntologyService:
         source_id: str | None = None,
         target_id: str | None = None,
         property_id: str | None = None,
+        limit: int | None = 100,
+        offset: int = 0,
+        sort_by: str | None = None,
+        sort_order: Literal["asc", "desc"] = "asc",
+        query: str | None = None,
     ) -> list[Relationship]:
         """
-        Retrieve relationships with optional filtering.
+        Retrieve relationships with optional filtering, pagination, sorting, and text search.
+
+        Args:
+            source_id: Optional source entity ID to filter by
+            target_id: Optional target entity ID to filter by
+            property_id: Optional property definition ID to filter by (relationship type)
+            limit: Maximum number of results to return; None means no limit
+            offset: Number of results to skip
+            sort_by: Field to sort by (created_at); None for default
+            sort_order: Sort direction (asc or desc)
+            query: Text query (not used for relationships)
+
+        Returns:
+            List of Relationship entities
+        """
+        return self._repository.list_relationships(
+            source_id=source_id,
+            target_id=target_id,
+            property_id=property_id,
+            limit=limit,
+            offset=offset,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            query=query,
+        )
+
+    def count_relationships(
+        self,
+        source_id: str | None = None,
+        target_id: str | None = None,
+        property_id: str | None = None,
+    ) -> int:
+        """
+        Count relationships, optionally filtered by source, target, or property.
 
         Args:
             source_id: Optional source entity ID to filter by
@@ -1230,9 +1409,9 @@ class OntologyService:
             property_id: Optional property definition ID to filter by (relationship type)
 
         Returns:
-            List of Relationship entities
+            Total count of relationships
         """
-        return self._repository.list_relationships(
+        return self._repository.count_relationships(
             source_id=source_id, target_id=target_id, property_id=property_id
         )
 
@@ -1362,7 +1541,7 @@ class OntologyService:
             raise ValueError("Title cannot be empty")
 
         # Check for duplicate identifier and title
-        existing_props = self._repository.list_property_definitions()
+        existing_props = self._repository.list_property_definitions(limit=None)
         if any(p.identifier == identifier for p in existing_props):
             raise DuplicateEntityError(
                 f"PropertyDefinition with identifier '{identifier}' already exists"
@@ -1472,18 +1651,51 @@ class OntologyService:
         )
 
     def list_property_definitions(
-        self, is_relevant: bool | None = None
+        self,
+        is_relevant: bool | None = None,
+        limit: int | None = 100,
+        offset: int = 0,
+        sort_by: str | None = None,
+        sort_order: Literal["asc", "desc"] = "asc",
+        query: str | None = None,
     ) -> list[PropertyDefinition]:
         """
-        Retrieve property definitions, optionally filtered by relevance.
+        Retrieve property definitions with optional filtering, pagination, sorting, and text search.
 
         Args:
             is_relevant: Optional filter for relevant property definitions
+            limit: Maximum number of results to return; None means no limit
+            offset: Number of results to skip
+            sort_by: Field to sort by (title, created_at, last_modified); None for default
+            sort_order: Sort direction (asc or desc)
+            query: Text query for LIKE search on title
 
         Returns:
             List of PropertyDefinition entities
         """
-        return self._repository.list_property_definitions(is_relevant=is_relevant)
+        return self._repository.list_property_definitions(
+            is_relevant=is_relevant,
+            limit=limit,
+            offset=offset,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            query=query,
+        )
+
+    def count_property_definitions(
+        self, is_relevant: bool | None = None, query: str | None = None
+    ) -> int:
+        """
+        Count property definitions, optionally filtered by relevance and text search.
+
+        Args:
+            is_relevant: Optional filter for relevant property definitions
+            query: Optional text query for LIKE search on title
+
+        Returns:
+            Total count of property definitions
+        """
+        return self._repository.count_property_definitions(is_relevant=is_relevant, query=query)
 
     def update_property_definition(
         self,
@@ -1517,7 +1729,7 @@ class OntologyService:
         if title is not None and title != prop_def.title:
             if not title or not title.strip():
                 raise ValueError("Title cannot be empty")
-            existing_props = self._repository.list_property_definitions()
+            existing_props = self._repository.list_property_definitions(limit=None)
             if any(p.id != property_id and p.title == title for p in existing_props):
                 raise DuplicateEntityError(
                     f"PropertyDefinition with title '{title}' already exists"
@@ -1564,7 +1776,7 @@ class OntologyService:
             raise EntityNotFoundError("PropertyDefinition", property_id)
 
         # Check if property is in use
-        relationships = self._repository.list_relationships(property_id=property_id)
+        relationships = self._repository.list_relationships(property_id=property_id, limit=None)
         if relationships:
             raise OntologyError(
                 f"PropertyDefinition '{property_id}' is in use by {len(relationships)} relationship(s)"
@@ -1619,7 +1831,7 @@ class OntologyService:
             if not title or not title.strip():
                 raise ValueError("Title cannot be empty")
             existing_schemes = self._repository.list_concept_schemes(
-                taxonomy_id=scheme.taxonomy_id
+                taxonomy_id=scheme.taxonomy_id, limit=None
             )
             if any(
                 s.id != concept_scheme_id and s.title == title for s in existing_schemes
@@ -1716,7 +1928,7 @@ class OntologyService:
 
         # Check for duplicate title within each class
         for class_id in class_ids_list:
-            existing = self._repository.list_individuals(class_id=class_id)
+            existing = self._repository.list_individuals(class_id=class_id, limit=None)
             if any(ind.title == title for ind in existing):
                 raise DuplicateEntityError(
                     f"Individual with title '{title}' already exists in class '{class_id}'"
@@ -1843,7 +2055,7 @@ class OntologyService:
             if title_changed:
                 # Check uniqueness within each parent class
                 for class_id in individual.class_ids:
-                    existing = self._repository.list_individuals(class_id=class_id)
+                    existing = self._repository.list_individuals(class_id=class_id, limit=None)
                     if any(
                         ind.title == title and ind.id != individual_id
                         for ind in existing
@@ -1936,8 +2148,8 @@ class OntologyService:
 
         # Find and delete all relationships where this individual is source or target
         orphaned_relationships = self._repository.list_relationships(
-            source_id=individual_id
-        ) + self._repository.list_relationships(target_id=individual_id)
+            source_id=individual_id, limit=None
+        ) + self._repository.list_relationships(target_id=individual_id, limit=None)
 
         for relationship in orphaned_relationships:
             self._repository.delete_relationship(relationship.id)
@@ -2029,7 +2241,7 @@ class OntologyService:
             raise ValueError(f"Class {class_id} is already a parent of this individual")
 
         # Check for duplicate title within the target class before modifying the individual
-        existing = self._repository.list_individuals(class_id=class_id)
+        existing = self._repository.list_individuals(class_id=class_id, limit=None)
         if any(ind.title == individual.title for ind in existing):
             raise DuplicateEntityError(
                 f"Individual with title '{individual.title}' already exists in class '{class_id}'"

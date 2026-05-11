@@ -23,6 +23,13 @@ class NodeType(str, Enum):
     PROPERTY_DEFINITION = "property_definition"
 
 
+class Status(str, Enum):
+    """Enumeration of publication status for domain entities."""
+
+    DRAFT = "draft"
+    PUBLISHED = "published"
+
+
 @dataclass(frozen=True)
 class ExternalReference:
     """

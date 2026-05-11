@@ -3,8 +3,7 @@ import { QUERY_KEYS } from "@/api/config";
 import { adminService } from "@/api/services/admin";
 import type { components } from "@/api/types";
 
-type ConfigSectionUpdateRequest =
-  components["schemas"]["ConfigSectionUpdateRequest"];
+type ConfigSectionUpdateRequest = components["schemas"]["ConfigSectionUpdateRequest"];
 
 export function useConfig() {
   return useQuery({
@@ -16,13 +15,8 @@ export function useConfig() {
 export function useUpdateConfig() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      section,
-      data,
-    }: {
-      section: string;
-      data: ConfigSectionUpdateRequest;
-    }) => adminService.updateConfigSection(section, data),
+    mutationFn: ({ section, data }: { section: string; data: ConfigSectionUpdateRequest }) =>
+      adminService.updateConfigSection(section, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.config });
     },

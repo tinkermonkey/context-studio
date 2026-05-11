@@ -2,8 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { extractionService } from "@/api/services/extraction";
 import type { components } from "@/api/types";
 
-type EnrichFromReferencesRequest =
-  components["schemas"]["EnrichFromReferencesRequest"];
+type EnrichFromReferencesRequest = components["schemas"]["EnrichFromReferencesRequest"];
 
 export function useExtract() {
   return useMutation({
@@ -19,7 +18,6 @@ export function useNlpAnalysis() {
 
 export function useEnrichFromReferences() {
   return useMutation({
-    mutationFn: (data: EnrichFromReferencesRequest) =>
-      extractionService.enrichFromReferences(data),
+    mutationFn: (data: EnrichFromReferencesRequest) => extractionService.enrichFromReferences(data),
   });
 }

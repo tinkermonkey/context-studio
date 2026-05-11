@@ -14,12 +14,22 @@ interface ModalProps {
   footer?: ReactNode;
 }
 
-export function Modal({ open, onClose, title, subtitle, size = "md", children, footer }: ModalProps) {
+export function Modal({
+  open,
+  onClose,
+  title,
+  subtitle,
+  size = "md",
+  children,
+  footer,
+}: ModalProps) {
   useKeyboardShortcut({ key: "Escape", onKeydown: onClose, enabled: open });
 
   useEffect(() => {
     if (open) document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [open]);
 
   if (!open) return null;

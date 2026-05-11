@@ -6,15 +6,9 @@ export function Statusbar() {
 
   const isHealthy = !isError && health?.status === "healthy";
   const isDegraded = !isError && health?.status === "degraded";
-  const statusLabel = isError
-    ? "api offline"
-    : health
-      ? health.status
-      : "connecting...";
+  const statusLabel = isError ? "api offline" : health ? health.status : "connecting...";
 
-  const uptimeLabel = health
-    ? `up ${Math.floor(health.uptime_seconds / 60)}m`
-    : null;
+  const uptimeLabel = health ? `up ${Math.floor(health.uptime_seconds / 60)}m` : null;
 
   return (
     <div className="statusbar">
@@ -40,11 +34,7 @@ export function Statusbar() {
         </span>
         <span className="sb-divider" />
         <span className="sb-item">
-          {isError ? (
-            <AlertCircle size={11} />
-          ) : (
-            <Network size={11} />
-          )}
+          {isError ? <AlertCircle size={11} /> : <Network size={11} />}
           <span>
             {isError
               ? "cannot reach api"

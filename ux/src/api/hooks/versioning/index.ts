@@ -22,8 +22,7 @@ export function useChanges(params?: ChangesParams) {
 export function useCreateChangeset() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: ChangesetCreateRequest) =>
-      versioningService.createChangeset(data),
+    mutationFn: (data: ChangesetCreateRequest) => versioningService.createChangeset(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.changesets });
     },

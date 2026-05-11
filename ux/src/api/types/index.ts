@@ -13,10 +13,18 @@ export interface paths {
     };
     /**
      * List Taxonomies
-     * @description Retrieve all taxonomies.
+     * @description Retrieve taxonomies with optional pagination, sorting, and text search.
+     *
+     *     Args:
+     *         limit: Maximum number of results (1-1000, default 100)
+     *         offset: Number of results to skip (default 0)
+     *         sort_by: Field to sort by (title, created_at, last_modified)
+     *         sort_order: Sort direction (asc or desc, default asc)
+     *         q: Text query for LIKE search on title
+     *         service: OntologyService from dependency injection
      *
      *     Returns:
-     *         ListResponse containing all taxonomies
+     *         ListResponse containing matching taxonomies
      */
     get: operations["list_taxonomies_api_taxonomies_get"];
     put?: never;
@@ -97,6 +105,67 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/taxonomies/{taxonomy_id}/publish-diff": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Publish Diff Stats
+     * @description Get diff statistics for publishing a taxonomy.
+     *
+     *     Args:
+     *         taxonomy_id: The taxonomy ID
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         PublishDiffStats with counts of added, modified, and removed classes
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found
+     */
+    get: operations["get_publish_diff_stats_api_taxonomies__taxonomy_id__publish_diff_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/taxonomies/{taxonomy_id}/publish": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Publish Taxonomy
+     * @description Publish a taxonomy, transitioning status from draft to published.
+     *
+     *     Args:
+     *         taxonomy_id: The taxonomy ID
+     *         request: TaxonomyPublishRequest with commit message
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         Updated TaxonomyResponse with status=published
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found
+     */
+    post: operations["publish_taxonomy_api_taxonomies__taxonomy_id__publish_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/taxonomies/{taxonomy_id}/schemes": {
     parameters: {
       query?: never;
@@ -137,10 +206,15 @@ export interface paths {
     };
     /**
      * List Concept Schemes
-     * @description Retrieve concept schemes, optionally filtered by taxonomy.
+     * @description Retrieve concept schemes with optional filtering, pagination, sorting, and text search.
      *
      *     Args:
      *         taxonomy_id: Optional taxonomy ID to filter by
+     *         limit: Maximum number of results (1-1000, default 100)
+     *         offset: Number of results to skip (default 0)
+     *         sort_by: Field to sort by (title, created_at, last_modified)
+     *         sort_order: Sort direction (asc or desc, default asc)
+     *         q: Text query for LIKE search on title
      *         service: OntologyService from dependency injection
      *
      *     Returns:
@@ -368,12 +442,16 @@ export interface paths {
     };
     /**
      * List Relationships
-     * @description Retrieve relationships with optional filtering.
+     * @description Retrieve relationships with optional filtering, pagination, and sorting.
      *
      *     Args:
      *         source_id: Optional source entity ID to filter by
      *         target_id: Optional target entity ID to filter by
      *         property_id: Optional property definition ID to filter by
+     *         limit: Maximum number of results (1-1000, default 100)
+     *         offset: Number of results to skip (default 0)
+     *         sort_by: Field to sort by (created_at)
+     *         sort_order: Sort direction (asc or desc, default asc)
      *         service: OntologyService from dependency injection
      *
      *     Returns:
@@ -452,10 +530,15 @@ export interface paths {
     };
     /**
      * List Property Definitions
-     * @description Retrieve property definitions, optionally filtered by relevance.
+     * @description Retrieve property definitions with optional filtering, pagination, sorting, and text search.
      *
      *     Args:
      *         is_relevant: Optional filter for relevant properties
+     *         limit: Maximum number of results (1-1000, default 100)
+     *         offset: Number of results to skip (default 0)
+     *         sort_by: Field to sort by (title, created_at, last_modified)
+     *         sort_order: Sort direction (asc or desc, default asc)
+     *         q: Text query for LIKE search on title
      *         service: OntologyService from dependency injection
      *
      *     Returns:
@@ -2956,6 +3039,13 @@ export interface components {
        * @default 1
        */
       version: number;
+      /**
+       * Status
+       * @description Publication status (draft or published)
+       * @default draft
+       * @enum {string}
+       */
+      status: "draft" | "published";
     };
     /**
      * ClassUpdateRequest
@@ -3063,6 +3153,13 @@ export interface components {
        * @default 1
        */
       version: number;
+      /**
+       * Status
+       * @description Publication status (draft or published)
+       * @default draft
+       * @enum {string}
+       */
+      status: "draft" | "published";
     };
     /**
      * ConceptSchemeUpdateRequest
@@ -3922,6 +4019,13 @@ export interface components {
        * @default 1
        */
       version: number;
+      /**
+       * Status
+       * @description Publication status (draft or published)
+       * @default draft
+       * @enum {string}
+       */
+      status: "draft" | "published";
     };
     /**
      * IndividualUpdateRequest
@@ -4652,6 +4756,13 @@ export interface components {
        * @default 1
        */
       version: number;
+      /**
+       * Status
+       * @description Publication status (draft or published)
+       * @default draft
+       * @enum {string}
+       */
+      status: "draft" | "published";
     };
     /**
      * PropertyDefinitionUpdateRequest
@@ -4709,6 +4820,27 @@ export interface components {
      * @enum {string}
      */
     ProposalState: "open" | "approved" | "rejected" | "merged";
+    /**
+     * PublishDiffStats
+     * @description Response containing diff statistics for publishing.
+     */
+    PublishDiffStats: {
+      /**
+       * Added
+       * @description Number of classes that will be added
+       */
+      added: number;
+      /**
+       * Modified
+       * @description Number of classes that will be modified
+       */
+      modified: number;
+      /**
+       * Removed
+       * @description Number of classes that will be removed
+       */
+      removed: number;
+    };
     /**
      * ReferenceRelationSchema
      * @description Response containing a single reference relationship.
@@ -5317,6 +5449,17 @@ export interface components {
       description?: string | null;
     };
     /**
+     * TaxonomyPublishRequest
+     * @description Request to publish a taxonomy.
+     */
+    TaxonomyPublishRequest: {
+      /**
+       * Commit Message
+       * @description Commit message for the publication
+       */
+      commit_message: string;
+    };
+    /**
      * TaxonomyResponse
      * @description Response containing taxonomy data.
      */
@@ -5352,6 +5495,13 @@ export interface components {
        * @default 1
        */
       version: number;
+      /**
+       * Status
+       * @description Publication status (draft or published)
+       * @default draft
+       * @enum {string}
+       */
+      status: "draft" | "published";
     };
     /**
      * TaxonomyUpdateRequest
@@ -5520,7 +5670,18 @@ export type $defs = Record<string, never>;
 export interface operations {
   list_taxonomies_api_taxonomies_get: {
     parameters: {
-      query?: never;
+      query?: {
+        /** @description Maximum number of results */
+        limit?: number;
+        /** @description Number of results to skip */
+        offset?: number;
+        /** @description Field to sort by (title, created_at, last_modified) */
+        sort_by?: string | null;
+        /** @description Sort direction */
+        sort_order?: string;
+        /** @description Text search query on title */
+        q?: string | null;
+      };
       header?: never;
       path?: never;
       cookie?: never;
@@ -5534,6 +5695,15 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ListResponse_TaxonomyResponse_"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };
@@ -5666,6 +5836,72 @@ export interface operations {
       };
     };
   };
+  get_publish_diff_stats_api_taxonomies__taxonomy_id__publish_diff_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        taxonomy_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PublishDiffStats"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  publish_taxonomy_api_taxonomies__taxonomy_id__publish_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        taxonomy_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TaxonomyPublishRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TaxonomyResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   create_concept_scheme_api_taxonomies__taxonomy_id__schemes_post: {
     parameters: {
       query?: never;
@@ -5706,6 +5942,16 @@ export interface operations {
       query?: {
         /** @description Optional taxonomy ID to filter by */
         taxonomy_id?: string | null;
+        /** @description Maximum number of results */
+        limit?: number;
+        /** @description Number of results to skip */
+        offset?: number;
+        /** @description Field to sort by (title, created_at, last_modified) */
+        sort_by?: string | null;
+        /** @description Sort direction */
+        sort_order?: string;
+        /** @description Text search query on title */
+        q?: string | null;
       };
       header?: never;
       path?: never;
@@ -6040,6 +6286,14 @@ export interface operations {
         target_id?: string | null;
         /** @description Optional property definition ID to filter by */
         property_id?: string | null;
+        /** @description Maximum number of results */
+        limit?: number;
+        /** @description Number of results to skip */
+        offset?: number;
+        /** @description Field to sort by (created_at) */
+        sort_by?: string | null;
+        /** @description Sort direction */
+        sort_order?: string;
       };
       header?: never;
       path?: never;
@@ -6165,6 +6419,16 @@ export interface operations {
       query?: {
         /** @description Optional filter for relevant properties */
         is_relevant?: boolean | null;
+        /** @description Maximum number of results */
+        limit?: number;
+        /** @description Number of results to skip */
+        offset?: number;
+        /** @description Field to sort by (title, created_at, last_modified) */
+        sort_by?: string | null;
+        /** @description Sort direction */
+        sort_order?: string;
+        /** @description Text search query on title */
+        q?: string | null;
       };
       header?: never;
       path?: never;

@@ -3,10 +3,8 @@ import { QUERY_KEYS } from "@/api/config";
 import { pipelineService } from "@/api/services/pipeline";
 import type { components } from "@/api/types";
 
-type PipelineConfigurationCreate =
-  components["schemas"]["PipelineConfigurationCreate"];
-type PipelineConfigurationUpdate =
-  components["schemas"]["PipelineConfigurationUpdate"];
+type PipelineConfigurationCreate = components["schemas"]["PipelineConfigurationCreate"];
+type PipelineConfigurationUpdate = components["schemas"]["PipelineConfigurationUpdate"];
 
 export function usePipelines() {
   return useQuery({
@@ -26,8 +24,7 @@ export function usePipeline(id: string) {
 export function useCreatePipeline() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: PipelineConfigurationCreate) =>
-      pipelineService.createPipeline(data),
+    mutationFn: (data: PipelineConfigurationCreate) => pipelineService.createPipeline(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.pipelines });
     },
@@ -37,13 +34,8 @@ export function useCreatePipeline() {
 export function useUpdatePipeline() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: PipelineConfigurationUpdate;
-    }) => pipelineService.updatePipeline(id, data),
+    mutationFn: ({ id, data }: { id: string; data: PipelineConfigurationUpdate }) =>
+      pipelineService.updatePipeline(id, data),
     onSuccess: (_result, { id }) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.pipelines });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.pipeline(id) });
@@ -64,13 +56,8 @@ export function useDeletePipeline() {
 export function useExecutePipeline() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      id,
-      inputText,
-    }: {
-      id: string;
-      inputText: string;
-    }) => pipelineService.executePipeline(id, inputText),
+    mutationFn: ({ id, inputText }: { id: string; inputText: string }) =>
+      pipelineService.executePipeline(id, inputText),
     onSuccess: (_result, { id }) => {
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.pipelineExecutions(id),

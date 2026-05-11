@@ -1,6 +1,7 @@
 import { useRouterState } from "@tanstack/react-router";
-import { Search, Bell, FileText, ChevronDown } from "lucide-react";
+import { Search, Bell, FileText, ChevronDown, Sun, Moon } from "lucide-react";
 import { useCommandPaletteStore } from "@/stores/commandPalette";
+import { useCanvasStore } from "@/stores/canvas";
 
 const ROUTE_LABELS: Record<string, string[]> = {
   "/app": ["Dashboard"],
@@ -27,6 +28,7 @@ interface TopbarProps {
 export function Topbar({ workspaceName = "context-studio" }: TopbarProps) {
   const { location } = useRouterState();
   const openPalette = useCommandPaletteStore((s) => s.openPalette);
+  const { darkCanvas, toggleDarkCanvas } = useCanvasStore();
   const crumbs = ROUTE_LABELS[location.pathname] ?? [location.pathname];
 
   return (
@@ -52,6 +54,16 @@ export function Topbar({ workspaceName = "context-studio" }: TopbarProps) {
         <span className="kbd">⌘K</span>
       </button>
 
+      <button
+        className="topbar-ico"
+        type="button"
+        data-testid="dark-mode-toggle"
+        onClick={toggleDarkCanvas}
+        title={darkCanvas ? "Switch to light canvas" : "Switch to dark canvas"}
+        aria-pressed={darkCanvas}
+      >
+        {darkCanvas ? <Sun size={16} /> : <Moon size={16} />}
+      </button>
       <button className="topbar-ico" type="button" title="Activity">
         <Bell size={16} />
       </button>

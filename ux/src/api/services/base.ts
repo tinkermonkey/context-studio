@@ -1,10 +1,7 @@
 import axiosInstance from "@/api/client/axios";
 
 export abstract class BaseService {
-  protected async get<T>(
-    url: string,
-    params?: Record<string, unknown>
-  ): Promise<T> {
+  protected async get<T>(url: string, params?: Record<string, unknown>): Promise<T> {
     const response = await axiosInstance.get<T>(url, { params });
     return response.data;
   }

@@ -173,13 +173,14 @@ class PropertyDefinitionCreated(DomainEvent):
 @dataclass(frozen=True)
 class TaxonomyUpdated(DomainEvent):
     """
-    Event emitted when a taxonomy is updated (e.g., renamed).
+    Event emitted when a taxonomy is updated (e.g., renamed, published).
 
     Attributes:
         taxonomy_id: ID of the updated taxonomy
         changed_fields: Tuple of field names that changed
         old_values: Dictionary of field names to their previous values
         new_values: Dictionary of field names to their new values
+        commit_message: Optional commit message (provided when publishing)
     """
 
     _aggregate_id_field: ClassVar[str] = "taxonomy_id"
@@ -187,6 +188,7 @@ class TaxonomyUpdated(DomainEvent):
     changed_fields: tuple[str, ...] = field(default_factory=tuple)
     old_values: dict[str, str | None] = field(default_factory=dict)
     new_values: dict[str, str | None] = field(default_factory=dict)
+    commit_message: str | None = None
 
 
 @dataclass(frozen=True)

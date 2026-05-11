@@ -24,8 +24,7 @@ export function useTaxonomy(id: string) {
 export function useCreateTaxonomy() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: TaxonomyCreateRequest) =>
-      ontologyService.createTaxonomy(data),
+    mutationFn: (data: TaxonomyCreateRequest) => ontologyService.createTaxonomy(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.taxonomies });
     },
@@ -35,13 +34,8 @@ export function useCreateTaxonomy() {
 export function useUpdateTaxonomy() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: TaxonomyUpdateRequest;
-    }) => ontologyService.updateTaxonomy(id, data),
+    mutationFn: ({ id, data }: { id: string; data: TaxonomyUpdateRequest }) =>
+      ontologyService.updateTaxonomy(id, data),
     onSuccess: (_result, { id }) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.taxonomies });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.taxonomy(id) });
@@ -55,6 +49,26 @@ export function useDeleteTaxonomy() {
     mutationFn: (id: string) => ontologyService.deleteTaxonomy(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.taxonomies });
+    },
+  });
+}
+
+export function usePublishDiffStats(id: string) {
+  return useQuery({
+    queryKey: QUERY_KEYS.taxonomy(id).concat("publish-diff"),
+    queryFn: () => ontologyService.getPublishDiffStats(id),
+    enabled: !!id,
+  });
+}
+
+export function usePublishTaxonomy() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, commitMessage }: { id: string; commitMessage: string }) =>
+      ontologyService.publishTaxonomy(id, commitMessage),
+    onSuccess: (_result, { id }) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.taxonomies });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.taxonomy(id) });
     },
   });
 }

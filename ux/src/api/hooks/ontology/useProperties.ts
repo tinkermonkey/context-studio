@@ -3,10 +3,8 @@ import { QUERY_KEYS } from "@/api/config";
 import { ontologyService } from "@/api/services/ontology";
 import type { components } from "@/api/types";
 
-type PropertyDefinitionCreateRequest =
-  components["schemas"]["PropertyDefinitionCreateRequest"];
-type PropertyDefinitionUpdateRequest =
-  components["schemas"]["PropertyDefinitionUpdateRequest"];
+type PropertyDefinitionCreateRequest = components["schemas"]["PropertyDefinitionCreateRequest"];
+type PropertyDefinitionUpdateRequest = components["schemas"]["PropertyDefinitionUpdateRequest"];
 
 export function useProperties(isRelevant?: boolean) {
   return useQuery({
@@ -26,8 +24,7 @@ export function useProperty(id: string) {
 export function useCreateProperty() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: PropertyDefinitionCreateRequest) =>
-      ontologyService.createProperty(data),
+    mutationFn: (data: PropertyDefinitionCreateRequest) => ontologyService.createProperty(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.properties });
     },
@@ -37,13 +34,8 @@ export function useCreateProperty() {
 export function useUpdateProperty() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: PropertyDefinitionUpdateRequest;
-    }) => ontologyService.updateProperty(id, data),
+    mutationFn: ({ id, data }: { id: string; data: PropertyDefinitionUpdateRequest }) =>
+      ontologyService.updateProperty(id, data),
     onSuccess: (_result, { id }) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.properties });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.property(id) });

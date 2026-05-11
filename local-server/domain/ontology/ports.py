@@ -11,7 +11,7 @@ Implementations do not inherit from the protocol; they implement the interface s
 
 from __future__ import annotations
 
-from typing import Protocol, Sequence
+from typing import Protocol, Sequence, Literal
 
 from .entities import (
     Class,
@@ -45,12 +45,26 @@ class OntologyRepository(Protocol):
         """
         ...
 
-    def list_taxonomies(self) -> list[Taxonomy]:
+    def list_taxonomies(
+        self,
+        limit: int | None = 100,
+        offset: int = 0,
+        sort_by: str | None = None,
+        sort_order: Literal["asc", "desc"] = "asc",
+        query: str | None = None,
+    ) -> list[Taxonomy]:
         """
-        Retrieve all taxonomies.
+        Retrieve taxonomies with optional pagination, sorting, and text search.
+
+        Args:
+            limit: Maximum number of results to return; None means no limit
+            offset: Number of results to skip
+            sort_by: Field to sort by (title, created_at, last_modified); None for default
+            sort_order: Sort direction (asc or desc)
+            query: Text query for LIKE search on title
 
         Returns:
-            List of all Taxonomy entities
+            List of Taxonomy entities
         """
         ...
 
@@ -78,6 +92,18 @@ class OntologyRepository(Protocol):
         """
         ...
 
+    def count_taxonomies(self, query: str | None = None) -> int:
+        """
+        Count taxonomies, optionally filtered by text search.
+
+        Args:
+            query: Optional text query for LIKE search on title
+
+        Returns:
+            Total count of taxonomies
+        """
+        ...
+
     # ConceptScheme operations
     def get_concept_scheme(self, concept_scheme_id: str) -> ConceptScheme | None:
         """
@@ -92,13 +118,24 @@ class OntologyRepository(Protocol):
         ...
 
     def list_concept_schemes(
-        self, taxonomy_id: str | None = None
+        self,
+        taxonomy_id: str | None = None,
+        limit: int | None = 100,
+        offset: int = 0,
+        sort_by: str | None = None,
+        sort_order: Literal["asc", "desc"] = "asc",
+        query: str | None = None,
     ) -> list[ConceptScheme]:
         """
-        Retrieve concept schemes, optionally filtered by taxonomy.
+        Retrieve concept schemes with optional filtering, pagination, sorting, and text search.
 
         Args:
             taxonomy_id: Optional ID to filter schemes to a specific taxonomy
+            limit: Maximum number of results to return; None means no limit
+            offset: Number of results to skip
+            sort_by: Field to sort by (title, created_at, last_modified); None for default
+            sort_order: Sort direction (asc or desc)
+            query: Text query for LIKE search on title
 
         Returns:
             List of ConceptScheme entities
@@ -126,6 +163,21 @@ class OntologyRepository(Protocol):
 
         Returns:
             True if the concept scheme was deleted, False if it did not exist
+        """
+        ...
+
+    def count_concept_schemes(
+        self, taxonomy_id: str | None = None, query: str | None = None
+    ) -> int:
+        """
+        Count concept schemes, optionally filtered by taxonomy and text search.
+
+        Args:
+            taxonomy_id: Optional taxonomy ID to filter by
+            query: Optional text query for LIKE search on title
+
+        Returns:
+            Total count of concept schemes
         """
         ...
 
@@ -229,14 +281,24 @@ class OntologyRepository(Protocol):
         source_id: str | None = None,
         target_id: str | None = None,
         property_id: str | None = None,
+        limit: int | None = 100,
+        offset: int = 0,
+        sort_by: str | None = None,
+        sort_order: Literal["asc", "desc"] = "asc",
+        query: str | None = None,
     ) -> list[Relationship]:
         """
-        Retrieve relationships with optional filtering.
+        Retrieve relationships with optional filtering, pagination, sorting, and text search.
 
         Args:
             source_id: Optional source entity ID to filter by
             target_id: Optional target entity ID to filter by
             property_id: Optional property definition ID to filter by (relationship type)
+            limit: Maximum number of results to return; None means no limit
+            offset: Number of results to skip
+            sort_by: Field to sort by (created_at); None for default
+            sort_order: Sort direction (asc or desc)
+            query: Text query (not applicable for relationships)
 
         Returns:
             List of Relationship entities
@@ -264,6 +326,25 @@ class OntologyRepository(Protocol):
 
         Returns:
             True if the relationship was deleted, False if it did not exist
+        """
+        ...
+
+    def count_relationships(
+        self,
+        source_id: str | None = None,
+        target_id: str | None = None,
+        property_id: str | None = None,
+    ) -> int:
+        """
+        Count relationships, optionally filtered by source, target, or property.
+
+        Args:
+            source_id: Optional source entity ID to filter by
+            target_id: Optional target entity ID to filter by
+            property_id: Optional property definition ID to filter by (relationship type)
+
+        Returns:
+            Total count of relationships
         """
         ...
 
@@ -295,13 +376,24 @@ class OntologyRepository(Protocol):
         ...
 
     def list_property_definitions(
-        self, is_relevant: bool | None = None
+        self,
+        is_relevant: bool | None = None,
+        limit: int | None = 100,
+        offset: int = 0,
+        sort_by: str | None = None,
+        sort_order: Literal["asc", "desc"] = "asc",
+        query: str | None = None,
     ) -> list[PropertyDefinition]:
         """
-        Retrieve property definitions, optionally filtered by relevance.
+        Retrieve property definitions with optional filtering, pagination, sorting, and text search.
 
         Args:
             is_relevant: Optional filter for relevant property definitions
+            limit: Maximum number of results to return; None means no limit
+            offset: Number of results to skip
+            sort_by: Field to sort by (title, created_at, last_modified); None for default
+            sort_order: Sort direction (asc or desc)
+            query: Text query for LIKE search on title
 
         Returns:
             List of PropertyDefinition entities
@@ -332,6 +424,21 @@ class OntologyRepository(Protocol):
         """
         ...
 
+    def count_property_definitions(
+        self, is_relevant: bool | None = None, query: str | None = None
+    ) -> int:
+        """
+        Count property definitions, optionally filtered by relevance and text search.
+
+        Args:
+            is_relevant: Optional filter for relevant property definitions
+            query: Optional text query for LIKE search on title
+
+        Returns:
+            Total count of property definitions
+        """
+        ...
+
     # Individual operations (deferred — all raise NotImplementedError for now)
     def get_individual(self, individual_id: str) -> Individual | None:
         """
@@ -348,12 +455,19 @@ class OntologyRepository(Protocol):
         """
         ...
 
-    def list_individuals(self, class_id: str | None = None) -> list[Individual]:
+    def list_individuals(
+        self,
+        class_id: str | None = None,
+        limit: int | None = 100,
+        offset: int = 0,
+    ) -> list[Individual]:
         """
         Retrieve individuals, optionally filtered by class.
 
         Args:
             class_id: Optional class ID to filter by
+            limit: Maximum number of results (None for unlimited)
+            offset: Number of results to skip
 
         Returns:
             List of Individual entities

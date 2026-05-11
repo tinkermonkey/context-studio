@@ -7,4 +7,550 @@
 #   component: source component file
 #   description: what this element represents
 
-selectors: []
+selectors:
+  # Workspace Switcher
+  - selector: workspace-use-default-tile
+    component: components/workspace/WorkspaceSwitcher.tsx
+    description: Tile that opens the backend-configured default workspace without prompting
+  - selector: workspace-switcher-overlay
+    component: components/layout/WorkspaceSwitcher.tsx
+    description: Workspace switcher overlay backdrop
+  - selector: workspace-switcher-modal
+    component: components/layout/WorkspaceSwitcher.tsx
+    description: Workspace switcher modal
+  - selector: workspace-folder-input
+    component: components/workspace/WorkspaceSwitcher.tsx
+    description: Folder path input for selecting a local workspace directory
+  - selector: new-workspace-modal
+    component: components/workspace/WorkspaceSwitcher.tsx
+    description: Modal for creating a new workspace
+  - selector: new-workspace-name-input
+    component: components/workspace/WorkspaceSwitcher.tsx
+    description: Name input field in the new workspace modal
+  - selector: clone-git-modal
+    component: components/workspace/WorkspaceSwitcher.tsx
+    description: Modal for cloning a workspace from a git repository
+  - selector: clone-git-url-input
+    component: components/workspace/WorkspaceSwitcher.tsx
+    description: Git URL input field in the clone workspace modal
+
+  # Topbar
+  - selector: dark-mode-toggle
+    component: components/shell/Topbar.tsx
+    description: Button that toggles the canvas between light and dark mode
+
+  # Sidebar
+  - selector: sidebar
+    component: components/shell/Sidebar.tsx
+    description: Main navigation sidebar rail
+  - selector: sidebar-toggle
+    component: components/shell/Sidebar.tsx
+    description: Button that collapses or expands the sidebar
+
+  # Toast
+  - selector: toast-action-*
+    component: components/ui/Toast.tsx
+    description: Action button in toast with undo callback
+
+  # Drawer
+  - selector: drawer-autosave-status
+    component: components/ui/Drawer.tsx
+    description: Autosave status indicator showing save state
+  - selector: drawer-revert-button
+    component: components/ui/Drawer.tsx
+    description: Revert button visible when content is dirty
+  - selector: drawer-delete-button
+    component: components/ui/Drawer.tsx
+    description: Delete action button in drawer
+
+  # EmptyState
+  - selector: empty-state
+    component: components/ui/EmptyState.tsx
+    description: Empty state container with icon, title, and action
+  - selector: empty-state-action
+    component: components/ui/EmptyState.tsx
+    description: Call-to-action button in empty state
+
+  # ConfirmDialog
+  - selector: confirm-dialog
+    component: components/ui/ConfirmDialog.tsx
+    description: Confirmation dialog body
+  - selector: confirm-dialog-cancel
+    component: components/ui/ConfirmDialog.tsx
+    description: Cancel button in confirmation dialog
+  - selector: confirm-dialog-confirm
+    component: components/ui/ConfirmDialog.tsx
+    description: Confirm/affirmative button in confirmation dialog
+
+  # TypeToConfirmDialog
+  - selector: type-confirm-dialog
+    component: components/ui/TypeToConfirmDialog.tsx
+    description: Type-to-confirm dialog body
+  - selector: type-confirm-input
+    component: components/ui/TypeToConfirmDialog.tsx
+    description: Text input for confirming destructive action
+  - selector: type-confirm-button
+    component: components/ui/TypeToConfirmDialog.tsx
+    description: Destructive action button in type-confirm dialog
+  - selector: type-confirm-cancel
+    component: components/ui/TypeToConfirmDialog.tsx
+    description: Cancel button in type-confirm dialog
+
+  # Schema Components
+  - selector: schema-page-layout
+    component: components/schema/SchemaPageLayout.tsx
+    description: Main split-pane layout container with table and drawer
+  - selector: schema-table
+    component: components/schema/SchemaTable.tsx
+    description: Main table container for schema entities
+  - selector: schema-header-*
+    component: components/schema/SchemaTable.tsx
+    description: Table header cell with optional sort indicator
+  - selector: schema-row-*
+    component: components/schema/SchemaTable.tsx
+    description: Table row for entity with dynamic ID suffix
+  - selector: schema-pagination-prev
+    component: components/schema/SchemaTable.tsx
+    description: Previous page button in table pagination
+  - selector: schema-pagination-next
+    component: components/schema/SchemaTable.tsx
+    description: Next page button in table pagination
+  - selector: schema-search-input
+    component: components/schema/FilterBar.tsx
+    description: Search input for filtering table rows
+  - selector: schema-filter-bar
+    component: components/schema/FilterBar.tsx
+    description: Filter bar container with search and filter chips
+  - selector: schema-drawer-container
+    component: components/schema/SchemaPageLayout.tsx
+    description: Drawer container when entity is selected
+
+  # Property Definition Form
+  - selector: property-definition-form
+    component: components/schema/PropertyDefinitionForm.tsx
+    description: Form for creating/editing property definitions
+  - selector: property-definition-identifier-input
+    component: components/schema/PropertyDefinitionForm.tsx
+    description: Snake-case identifier input field
+  - selector: property-definition-title-input
+    component: components/schema/PropertyDefinitionForm.tsx
+    description: Display name input field
+  - selector: property-definition-description-input
+    component: components/schema/PropertyDefinitionForm.tsx
+    description: Description textarea for property definition
+  - selector: property-definition-submit-button
+    component: components/schema/PropertyDefinitionForm.tsx
+    description: Submit button for property form
+
+  # Property Drawer
+  - selector: property-drawer
+    component: components/ontology/PropertyDrawer.tsx
+    description: Drawer for editing property definition details
+  - selector: property-drawer-identifier
+    component: components/ontology/PropertyDrawer.tsx
+    description: Read-only identifier field in property drawer
+  - selector: property-drawer-title-input
+    component: components/ontology/PropertyDrawer.tsx
+    description: Editable title field in property drawer
+  - selector: property-drawer-description-input
+    component: components/ontology/PropertyDrawer.tsx
+    description: Editable description field in property drawer
+  - selector: property-delete-confirm
+    component: components/ontology/PropertyDrawer.tsx
+    description: Confirmation dialog for property deletion
+
+  # Properties Page
+  - selector: property-add-button
+    component: routes/app/schema/properties.tsx
+    description: Button to open create property modal
+  - selector: property-create-modal
+    component: routes/app/schema/properties.tsx
+    description: Modal for creating new property definition
+  - selector: property-create-form
+    component: routes/app/schema/properties.tsx
+    description: Create property form inside modal
+  - selector: properties-page
+    component: routes/app/schema/properties.tsx
+    description: Main properties page container
+  - selector: properties-filter-bar
+    component: routes/app/schema/properties.tsx
+    description: Filter bar on properties page
+  - selector: properties-table
+    component: routes/app/schema/properties.tsx
+    description: Properties table container
+  - selector: properties-drawer
+    component: routes/app/schema/properties.tsx
+    description: Property drawer on properties page
+  - selector: properties-empty-state
+    component: routes/app/schema/properties.tsx
+    description: Empty state shown when no properties exist
+  - selector: property-row-actions-*
+    component: routes/app/schema/properties.tsx
+    description: Actions menu button for property row
+  - selector: properties-content
+    component: routes/app/schema/properties.tsx
+    description: Main content area of properties page
+
+  # Relationship Drawer
+  - selector: relationship-drawer
+    component: components/ontology/RelationshipDrawer.tsx
+    description: Drawer for viewing relationship details
+  - selector: relationship-drawer-id
+    component: components/ontology/RelationshipDrawer.tsx
+    description: Read-only ID field in relationship drawer
+  - selector: relationship-drawer-source-class
+    component: components/ontology/RelationshipDrawer.tsx
+    description: Read-only source class field in relationship drawer
+  - selector: relationship-drawer-target-class
+    component: components/ontology/RelationshipDrawer.tsx
+    description: Read-only target class field in relationship drawer
+  - selector: relationship-drawer-property-type
+    component: components/ontology/RelationshipDrawer.tsx
+    description: Read-only property type field in relationship drawer
+  - selector: relationship-delete-confirm
+    component: components/ontology/RelationshipDrawer.tsx
+    description: Confirmation dialog for deleting a relationship
+
+  # Relationships Page
+  - selector: relationship-add-button
+    component: routes/app/schema/relationships.tsx
+    description: Button to open create relationship dialog
+  - selector: relationships-page
+    component: routes/app/schema/relationships.tsx
+    description: Main relationships page container
+  - selector: relationships-content
+    component: routes/app/schema/relationships.tsx
+    description: Main content area of relationships page
+  - selector: relationship-row-actions-*
+    component: routes/app/schema/relationships.tsx
+    description: Actions menu button for relationship row
+  - selector: relationship-source-class-filter
+    component: routes/app/schema/relationships.tsx
+    description: Dropdown select for filtering relationships by source class
+  - selector: relationship-target-class-filter
+    component: routes/app/schema/relationships.tsx
+    description: Dropdown select for filtering relationships by target class
+  - selector: relationship-create-modal
+    component: routes/app/schema/relationships.tsx
+    description: Modal for creating a new relationship
+
+  # Taxonomy Form
+  - selector: taxonomy-form
+    component: components/schema/TaxonomyForm.tsx
+    description: Form for creating new taxonomy
+  - selector: taxonomy-title-input
+    component: components/schema/TaxonomyForm.tsx
+    description: Title input field in taxonomy form
+  - selector: taxonomy-description-input
+    component: components/schema/TaxonomyForm.tsx
+    description: Description textarea in taxonomy form
+  - selector: taxonomy-submit-button
+    component: components/schema/TaxonomyForm.tsx
+    description: Submit button for taxonomy form
+
+  # Class Form
+  - selector: class-form
+    component: components/schema/ClassForm.tsx
+    description: Form for creating a new class
+  - selector: class-title-input
+    component: components/schema/ClassForm.tsx
+    description: Title input field in class creation form
+  - selector: class-description-input
+    component: components/schema/ClassForm.tsx
+    description: Description textarea in class creation form
+  - selector: class-submit-button
+    component: components/schema/ClassForm.tsx
+    description: Submit button for class creation form
+
+  # Relationship Form
+  - selector: relationship-form
+    component: components/schema/RelationshipForm.tsx
+    description: Form for creating a new relationship
+  - selector: relationship-source-select
+    component: components/schema/RelationshipForm.tsx
+    description: Source class selector in relationship creation form
+  - selector: relationship-target-select
+    component: components/schema/RelationshipForm.tsx
+    description: Target class selector in relationship creation form
+  - selector: relationship-type-select
+    component: components/schema/RelationshipForm.tsx
+    description: Relationship type (property) selector in relationship creation form
+  - selector: relationship-submit-button
+    component: components/schema/RelationshipForm.tsx
+    description: Submit button for relationship creation form
+
+  # Taxonomy Drawer
+  - selector: taxonomy-drawer
+    component: components/ontology/TaxonomyDrawer.tsx
+    description: Drawer for editing taxonomy details
+  - selector: taxonomy-drawer-id
+    component: components/ontology/TaxonomyDrawer.tsx
+    description: Read-only ID field in taxonomy drawer
+  - selector: taxonomy-drawer-title-input
+    component: components/ontology/TaxonomyDrawer.tsx
+    description: Editable title field in taxonomy drawer
+  - selector: taxonomy-drawer-description-input
+    component: components/ontology/TaxonomyDrawer.tsx
+    description: Editable description field in taxonomy drawer
+  - selector: taxonomy-drawer-publish-button
+    component: components/ontology/TaxonomyDrawer.tsx
+    description: Publish button in taxonomy drawer (only visible for draft taxonomies)
+  - selector: taxonomy-delete-confirm
+    component: components/ontology/TaxonomyDrawer.tsx
+    description: Confirmation dialog for taxonomy deletion
+
+  # Taxonomy Publish Dialog
+  - selector: taxonomy-publish-dialog
+    component: components/ontology/TaxonomyPublishDialog.tsx
+    description: Modal dialog for publishing a taxonomy
+  - selector: taxonomy-publish-message-input
+    component: components/ontology/TaxonomyPublishDialog.tsx
+    description: Publication message textarea in publish dialog
+  - selector: taxonomy-publish-cancel-button
+    component: components/ontology/TaxonomyPublishDialog.tsx
+    description: Cancel button in publish dialog
+  - selector: taxonomy-publish-confirm-button
+    component: components/ontology/TaxonomyPublishDialog.tsx
+    description: Confirm/publish button in publish dialog
+
+  # Taxonomies Page
+  - selector: taxonomy-import-button
+    component: routes/app/schema/taxonomies.tsx
+    description: Ghost button to import taxonomy data
+  - selector: taxonomy-add-button
+    component: routes/app/schema/taxonomies.tsx
+    description: Button to open create taxonomy modal
+  - selector: taxonomy-create-modal
+    component: routes/app/schema/taxonomies.tsx
+    description: Modal for creating new taxonomy
+  - selector: taxonomies-page
+    component: routes/app/schema/taxonomies.tsx
+    description: Main taxonomies page container
+  - selector: taxonomies-content
+    component: routes/app/schema/taxonomies.tsx
+    description: Main content area of taxonomies page
+  - selector: taxonomy-row-actions-*
+    component: routes/app/schema/taxonomies.tsx
+    description: Actions menu button for taxonomy row
+
+  # Taxonomy Detail Page
+  - selector: taxonomy-detail-id
+    component: routes/app/schema/taxonomies.$taxonomyId.tsx
+    description: Read-only ID field in taxonomy detail page
+  - selector: taxonomy-detail-title-input
+    component: routes/app/schema/taxonomies.$taxonomyId.tsx
+    description: Editable title field in taxonomy detail page
+  - selector: taxonomy-detail-description-input
+    component: routes/app/schema/taxonomies.$taxonomyId.tsx
+    description: Editable description field in taxonomy detail page
+  - selector: taxonomy-detail-publish-button
+    component: routes/app/schema/taxonomies.$taxonomyId.tsx
+    description: Publish button in taxonomy detail page (only visible for draft taxonomies)
+  - selector: taxonomy-detail-delete-button
+    component: routes/app/schema/taxonomies.$taxonomyId.tsx
+    description: Delete button in taxonomy detail page
+  - selector: taxonomy-detail-delete-confirm
+    component: routes/app/schema/taxonomies.$taxonomyId.tsx
+    description: Confirmation dialog for deleting taxonomy from detail page
+
+  # Concept Schemes Form
+  - selector: scheme-form
+    component: components/schema/SchemeForm.tsx
+    description: Form for creating new concept scheme
+  - selector: scheme-title-input
+    component: components/schema/SchemeForm.tsx
+    description: Title input field in scheme form
+  - selector: scheme-description-input
+    component: components/schema/SchemeForm.tsx
+    description: Description textarea in scheme form
+  - selector: scheme-submit-button
+    component: components/schema/SchemeForm.tsx
+    description: Submit button for scheme form
+
+  # Concept Schemes Drawer
+  - selector: scheme-drawer
+    component: components/ontology/SchemeDrawer.tsx
+    description: Drawer for editing concept scheme details
+  - selector: scheme-drawer-id
+    component: components/ontology/SchemeDrawer.tsx
+    description: Read-only ID field in scheme drawer
+  - selector: scheme-drawer-title-input
+    component: components/ontology/SchemeDrawer.tsx
+    description: Editable title field in scheme drawer
+  - selector: scheme-drawer-description-input
+    component: components/ontology/SchemeDrawer.tsx
+    description: Editable description field in scheme drawer
+  - selector: scheme-drawer-parent-taxonomy
+    component: components/ontology/SchemeDrawer.tsx
+    description: Read-only parent taxonomy field in scheme drawer
+  - selector: scheme-delete-confirm
+    component: components/ontology/SchemeDrawer.tsx
+    description: Confirmation dialog for scheme deletion
+
+  # Concept Schemes Page
+  - selector: scheme-add-button
+    component: routes/app/schema/schemes.tsx
+    description: Button to open create concept scheme modal
+  - selector: scheme-create-modal
+    component: routes/app/schema/schemes.tsx
+    description: Modal for creating new concept scheme
+  - selector: schemes-page
+    component: routes/app/schema/schemes.tsx
+    description: Main concept schemes page container
+  - selector: schemes-content
+    component: routes/app/schema/schemes.tsx
+    description: Main content area of concept schemes page
+  - selector: scheme-row-actions-*
+    component: routes/app/schema/schemes.tsx
+    description: Actions menu button for scheme row
+
+  # Concept Scheme Detail Page
+  - selector: scheme-detail-page
+    component: routes/app/schema/schemes.$schemeId.tsx
+    description: Main concept scheme detail page container
+  - selector: scheme-detail-add-class-button
+    component: routes/app/schema/schemes.$schemeId.tsx
+    description: Button to open create class modal in scheme detail page
+  - selector: scheme-name-link-*
+    component: routes/app/schema/schemes.index.tsx
+    description: Clickable scheme name link in table with dynamic ID suffix
+  - selector: scheme-row-actions-*
+    component: routes/app/schema/schemes.index.tsx
+    description: Actions menu button for scheme row
+
+  # Classes Page
+  - selector: classes-page
+    component: routes/app/schema/classes.tsx
+    description: Main classes page container
+  - selector: classes-content
+    component: routes/app/schema/classes.tsx
+    description: Main content area of classes page
+  - selector: class-add-button
+    component: routes/app/schema/classes.tsx
+    description: Button to open create class modal
+  - selector: class-create-modal
+    component: routes/app/schema/classes.tsx
+    description: Modal for creating new class
+  - selector: class-name-*
+    component: routes/app/schema/classes.tsx
+    description: Clickable class name cell in table with dynamic ID suffix
+  - selector: class-domain-*
+    component: routes/app/schema/classes.tsx
+    description: Class domain/scheme cell in table with dynamic ID suffix
+  - selector: class-row-actions-*
+    component: routes/app/schema/classes.tsx
+    description: Actions menu button for class row
+
+  # Class Drawer
+  - selector: class-drawer
+    component: components/ontology/ClassDrawer.tsx
+    description: Drawer for editing class details
+  - selector: class-drawer-id
+    component: components/ontology/ClassDrawer.tsx
+    description: Read-only ID field in class drawer
+  - selector: class-drawer-name-input
+    component: components/ontology/ClassDrawer.tsx
+    description: Editable name field in class drawer
+  - selector: class-drawer-description-input
+    component: components/ontology/ClassDrawer.tsx
+    description: Editable description field in class drawer
+  - selector: class-drawer-domain-select
+    component: components/ontology/ClassDrawer.tsx
+    description: Domain/scheme selector in class drawer
+  - selector: class-delete-confirm
+    component: components/ontology/ClassDrawer.tsx
+    description: Confirmation dialog for class deletion
+
+  # Class Editor Form
+  - selector: class-editor-form
+    component: components/ontology/ClassEditor.tsx
+    description: Form for creating/editing classes
+  - selector: class-editor-name-input
+    component: components/ontology/ClassEditor.tsx
+    description: Name input field in class editor
+  - selector: class-editor-description-input
+    component: components/ontology/ClassEditor.tsx
+    description: Description textarea in class editor
+  - selector: class-editor-domain-select
+    component: components/ontology/ClassEditor.tsx
+    description: Domain/scheme selector in class editor
+  - selector: class-editor-parent-input
+    component: components/ontology/ClassEditor.tsx
+    description: Parent class input/search field in class editor
+  - selector: class-editor-parent-clear
+    component: components/ontology/ClassEditor.tsx
+    description: Clear button for parent class selection
+  - selector: class-editor-parent-option-*
+    component: components/ontology/ClassEditor.tsx
+    description: Parent class option in dropdown with dynamic ID suffix
+  - selector: class-editor-submit-button
+    component: components/ontology/ClassEditor.tsx
+    description: Submit button for class editor form
+
+  # Hierarchy Tree
+  - selector: hierarchy-node-*
+    component: components/ontology/HierarchyTree.tsx
+    description: Hierarchy tree node with dynamic ID suffix
+
+  # Contact Sheet
+  - selector: contact-sheet-buttons
+    component: routes/app/contact-sheet.tsx
+    description: Buttons section on contact sheet
+  - selector: contact-sheet-chips
+    component: routes/app/contact-sheet.tsx
+    description: Chips section on contact sheet
+  - selector: contact-sheet-stat-tiles
+    component: routes/app/contact-sheet.tsx
+    description: Stat tiles section on contact sheet
+  - selector: contact-sheet-tabs
+    component: routes/app/contact-sheet.tsx
+    description: Tabs section on contact sheet
+  - selector: contact-sheet-form-inputs
+    component: routes/app/contact-sheet.tsx
+    description: Form inputs section on contact sheet
+  - selector: contact-sheet-panel
+    component: routes/app/contact-sheet.tsx
+    description: Panel section on contact sheet
+  - selector: contact-sheet-table
+    component: routes/app/contact-sheet.tsx
+    description: Table section on contact sheet
+  - selector: contact-sheet-hierarchy-tree
+    component: routes/app/contact-sheet.tsx
+    description: Hierarchy tree section on contact sheet
+  - selector: contact-sheet-pipeline-card
+    component: routes/app/contact-sheet.tsx
+    description: Pipeline card section on contact sheet
+  - selector: contact-sheet-toasts
+    component: routes/app/contact-sheet.tsx
+    description: Toasts section on contact sheet
+  - selector: contact-sheet-modal
+    component: routes/app/contact-sheet.tsx
+    description: Modal section on contact sheet
+  - selector: contact-sheet-drawer
+    component: routes/app/contact-sheet.tsx
+    description: Drawer section on contact sheet
+  - selector: contact-sheet-schema-components
+    component: routes/app/contact-sheet.tsx
+    description: Schema components section on contact sheet
+  - selector: contact-sheet-intent-states
+    component: routes/app/contact-sheet.tsx
+    description: Intent states section on contact sheet
+  - selector: contact-sheet-canvas-toggle
+    component: routes/app/contact-sheet.tsx
+    description: Toggle button for light/dark canvas mode on contact sheet
+
+  # Unit Test Fixtures
+  - selector: action
+    component: components/ui/__tests__/Panel.test.tsx
+    description: Action element in Panel test fixture
+  - selector: action-1
+    component: components/schema/__tests__/SchemaTable.test.tsx
+    description: Action element in SchemaTable test fixture
+  - selector: action-2
+    component: components/schema/__tests__/SchemaTable.test.tsx
+    description: Action element in SchemaTable test fixture
+
+  # Miscellaneous
+  - selector: create-toast-btn
+    component: routes/app/contact-sheet.tsx
+    description: Create toast button on contact sheet

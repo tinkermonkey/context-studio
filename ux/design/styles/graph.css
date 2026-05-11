@@ -2,25 +2,25 @@
    Layered on the existing studio palette so the canvas reads as a single piece. */
 
 :root {
-  --graph-bg: #FAFBFC;
+  --graph-bg: #fafbfc;
   --graph-grid: rgba(15, 23, 42, 0.045);
-  --graph-edge: #CBD5E1;
-  --graph-edge-strong: #94A3B8;
+  --graph-edge: #cbd5e1;
+  --graph-edge-strong: #94a3b8;
   --graph-edge-hot: var(--accent-cyan-deep);
   --graph-edge-irrelevant: var(--accent-rose);
-  --graph-cluster-life-bg:    rgba(52, 211, 153, 0.06);
-  --graph-cluster-life-bd:    rgba(52, 211, 153, 0.30);
+  --graph-cluster-life-bg: rgba(52, 211, 153, 0.06);
+  --graph-cluster-life-bd: rgba(52, 211, 153, 0.3);
   --graph-cluster-climate-bg: rgba(251, 191, 36, 0.06);
-  --graph-cluster-climate-bd: rgba(251, 191, 36, 0.30);
-  --graph-cluster-software-bg:rgba(129, 140, 248, 0.06);
-  --graph-cluster-software-bd:rgba(129, 140, 248, 0.30);
+  --graph-cluster-climate-bd: rgba(251, 191, 36, 0.3);
+  --graph-cluster-software-bg: rgba(129, 140, 248, 0.06);
+  --graph-cluster-software-bd: rgba(129, 140, 248, 0.3);
 }
 
 body.dark-canvas {
-  --graph-bg: #11161D;
+  --graph-bg: #11161d;
   --graph-grid: rgba(255, 255, 255, 0.04);
-  --graph-edge: #3A4452;
-  --graph-edge-strong: #5A6573;
+  --graph-edge: #3a4452;
+  --graph-edge-strong: #5a6573;
 }
 
 /* ============ Layout ============ */
@@ -40,12 +40,14 @@ body.dark-canvas {
   overflow: hidden;
   cursor: grab;
 }
-.graph-canvas:active { cursor: grabbing; }
+.graph-canvas:active {
+  cursor: grabbing;
+}
 
 .graph-grid {
-  position: absolute; inset: 0;
-  background-image:
-    radial-gradient(circle, var(--graph-grid) 1px, transparent 1px);
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, var(--graph-grid) 1px, transparent 1px);
   background-size: 18px 18px;
   background-position: 0 0;
   pointer-events: none;
@@ -53,16 +55,21 @@ body.dark-canvas {
 
 .graph-stage {
   position: absolute;
-  left: 50%; top: 50%;
-  width: 1340px; height: 700px;
-  margin-left: -670px; margin-top: -350px;
+  left: 50%;
+  top: 50%;
+  width: 1340px;
+  height: 700px;
+  margin-left: -670px;
+  margin-top: -350px;
   transform-origin: 50% 50%;
   transition: transform 0.12s ease-out;
 }
 
 .graph-svg {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
   overflow: visible;
 }
@@ -97,7 +104,9 @@ body.dark-canvas {
   stroke: var(--graph-edge);
   stroke-width: 1.25;
   pointer-events: none;
-  transition: stroke 0.12s, stroke-width 0.12s;
+  transition:
+    stroke 0.12s,
+    stroke-width 0.12s;
 }
 .graph-edge-hit {
   fill: none;
@@ -144,10 +153,20 @@ body.dark-canvas {
   font-weight: 600;
 }
 
-body.dark-canvas .graph-edge-label rect { fill: var(--canvas-card); stroke: var(--canvas-bd); }
-body.dark-canvas .graph-edge-label text { fill: var(--canvas-fg-2); }
-body.dark-canvas .graph-edge-label.is-hot rect { fill: var(--accent-cyan); stroke: var(--accent-cyan); }
-body.dark-canvas .graph-edge-label.is-hot text { fill: #0B0F14; }
+body.dark-canvas .graph-edge-label rect {
+  fill: var(--canvas-card);
+  stroke: var(--canvas-bd);
+}
+body.dark-canvas .graph-edge-label text {
+  fill: var(--canvas-fg-2);
+}
+body.dark-canvas .graph-edge-label.is-hot rect {
+  fill: var(--accent-cyan);
+  stroke: var(--accent-cyan);
+}
+body.dark-canvas .graph-edge-label.is-hot text {
+  fill: #0b0f14;
+}
 
 /* ============ Nodes ============ */
 .graph-node {
@@ -165,7 +184,10 @@ body.dark-canvas .graph-edge-label.is-hot text { fill: #0B0F14; }
   white-space: nowrap;
   overflow: hidden;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-  transition: border-color 0.1s, box-shadow 0.1s, transform 0.08s;
+  transition:
+    border-color 0.1s,
+    box-shadow 0.1s,
+    transform 0.08s;
   z-index: 2;
 }
 .graph-node:hover {
@@ -175,26 +197,44 @@ body.dark-canvas .graph-edge-label.is-hot text { fill: #0B0F14; }
 }
 .graph-node.selected {
   border-color: var(--accent-cyan-deep);
-  box-shadow: 0 0 0 2px var(--accent-cyan), 0 4px 10px rgba(15, 23, 42, 0.10);
+  box-shadow:
+    0 0 0 2px var(--accent-cyan),
+    0 4px 10px rgba(15, 23, 42, 0.1);
   z-index: 4;
 }
 body.dark-canvas .graph-node.selected {
-  box-shadow: 0 0 0 2px var(--accent-cyan), 0 4px 10px rgba(0, 0, 0, 0.5);
+  box-shadow:
+    0 0 0 2px var(--accent-cyan),
+    0 4px 10px rgba(0, 0, 0, 0.5);
 }
-.graph-node.is-orphan { opacity: 0.55; }
+.graph-node.is-orphan {
+  opacity: 0.55;
+}
 
 .graph-node .swatch {
-  width: 3px; height: 16px; border-radius: 1px;
+  width: 3px;
+  height: 16px;
+  border-radius: 1px;
   background: var(--dom-default);
-  margin-right: 7px; flex: none;
+  margin-right: 7px;
+  flex: none;
 }
-.graph-node[data-domain="life"]    .swatch { background: var(--dom-life); }
-.graph-node[data-domain="climate"] .swatch { background: var(--dom-climate); }
-.graph-node[data-domain="software"]    .swatch { background: var(--dom-software); }
+.graph-node[data-domain="life"] .swatch {
+  background: var(--dom-life);
+}
+.graph-node[data-domain="climate"] .swatch {
+  background: var(--dom-climate);
+}
+.graph-node[data-domain="software"] .swatch {
+  background: var(--dom-software);
+}
 
 .graph-node-title {
-  flex: 1; min-width: 0;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .graph-node-kind {
@@ -219,7 +259,8 @@ body.dark-canvas .graph-node.selected {
 /* ============ Floating legend (top-left) ============ */
 .graph-legend {
   position: absolute;
-  top: 14px; left: 14px;
+  top: 14px;
+  left: 14px;
   background: var(--canvas-card);
   border: 1px solid var(--canvas-bd);
   border-radius: 8px;
@@ -233,7 +274,11 @@ body.dark-canvas .graph-node.selected {
   z-index: 10;
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
 }
-.graph-legend .gl-section { display: flex; flex-direction: column; gap: 4px; }
+.graph-legend .gl-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 .graph-legend .gl-label {
   font-family: var(--mono);
   font-size: 9.5px;
@@ -244,18 +289,31 @@ body.dark-canvas .graph-node.selected {
   margin-bottom: 2px;
 }
 .graph-legend .gl-row {
-  display: flex; align-items: center; gap: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 12px;
 }
-.graph-legend .gl-row[data-disabled="true"] { opacity: 0.5; text-decoration: line-through; }
+.graph-legend .gl-row[data-disabled="true"] {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
 .graph-legend .gl-row .dot {
-  width: 8px; height: 8px; border-radius: 999px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
   background: var(--canvas-fg-3);
   flex: none;
 }
-.graph-legend .dot.dom-life    { background: var(--dom-life); }
-.graph-legend .dot.dom-climate { background: var(--dom-climate); }
-.graph-legend .dot.dom-software{ background: var(--dom-software); }
+.graph-legend .dot.dom-life {
+  background: var(--dom-life);
+}
+.graph-legend .dot.dom-climate {
+  background: var(--dom-climate);
+}
+.graph-legend .dot.dom-software {
+  background: var(--dom-software);
+}
 .graph-legend .gl-count {
   margin-left: auto;
   font-family: var(--mono);
@@ -263,8 +321,10 @@ body.dark-canvas .graph-node.selected {
   color: var(--canvas-fg-3);
 }
 .graph-legend .gl-pill {
-  display: inline-grid; place-items: center;
-  width: 16px; height: 16px;
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
   border-radius: 3px;
   font-family: var(--mono);
   font-size: 9.5px;
@@ -280,7 +340,8 @@ body.dark-canvas .graph-node.selected {
   border-color: rgba(34, 211, 238, 0.25);
 }
 .graph-legend .gl-line {
-  width: 22px; height: 0;
+  width: 22px;
+  height: 0;
   border-top: 1.25px solid var(--graph-edge-strong);
   flex: none;
 }
@@ -303,7 +364,8 @@ body.dark-canvas .graph-node.selected {
 }
 
 .graph-toolbar.predicates {
-  top: 14px; right: 14px;
+  top: 14px;
+  right: 14px;
   flex-direction: column;
   align-items: stretch;
   max-width: 320px;
@@ -318,13 +380,16 @@ body.dark-canvas .graph-node.selected {
   font-weight: 500;
 }
 .graph-toolbar.predicates .gt-chips {
-  display: flex; flex-wrap: wrap;
+  display: flex;
+  flex-wrap: wrap;
   gap: 5px;
   max-width: 280px;
 }
 
 .gt-chip {
-  display: inline-flex; align-items: center; gap: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-family: var(--mono);
   font-size: 11px;
   padding: 4px 8px;
@@ -333,12 +398,28 @@ body.dark-canvas .graph-node.selected {
   background: var(--canvas-bg-2);
   color: var(--canvas-fg-1);
   cursor: pointer;
-  transition: opacity 0.1s, background 0.1s;
+  transition:
+    opacity 0.1s,
+    background 0.1s;
 }
-.gt-chip:hover { background: var(--canvas-card); border-color: var(--accent-cyan-deep); }
-.gt-chip.off { opacity: 0.4; text-decoration: line-through; }
-.gt-chip.irrelevant { color: #B91C1C; background: #FFF1F2; border-color: #FECDD3; }
-body.dark-canvas .gt-chip.irrelevant { color: #FDA4AF; background: rgba(244, 63, 94, 0.10); border-color: rgba(244, 63, 94, 0.25); }
+.gt-chip:hover {
+  background: var(--canvas-card);
+  border-color: var(--accent-cyan-deep);
+}
+.gt-chip.off {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+.gt-chip.irrelevant {
+  color: #b91c1c;
+  background: #fff1f2;
+  border-color: #fecdd3;
+}
+body.dark-canvas .gt-chip.irrelevant {
+  color: #fda4af;
+  background: rgba(244, 63, 94, 0.1);
+  border-color: rgba(244, 63, 94, 0.25);
+}
 .gt-chip-n {
   font-size: 10px;
   color: var(--canvas-fg-3);
@@ -349,16 +430,21 @@ body.dark-canvas .gt-chip.irrelevant { color: #FDA4AF; background: rgba(244, 63,
   min-width: 18px;
   text-align: center;
 }
-.gt-chip.off .gt-chip-n { background: transparent; }
+.gt-chip.off .gt-chip-n {
+  background: transparent;
+}
 
 /* Bottom toolbar */
 .graph-toolbar.bottom {
-  left: 14px; right: 14px; bottom: 14px;
+  left: 14px;
+  right: 14px;
+  bottom: 14px;
   display: flex;
   flex-wrap: wrap;
 }
 .gt-group {
-  display: flex; align-items: center;
+  display: flex;
+  align-items: center;
   gap: 4px;
 }
 .gt-group.zoom {
@@ -367,10 +453,15 @@ body.dark-canvas .gt-chip.irrelevant { color: #FDA4AF; background: rgba(244, 63,
   padding: 2px;
   background: var(--canvas-bg-2);
 }
-.gt-spacer { flex: 1; }
+.gt-spacer {
+  flex: 1;
+}
 .gt-btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  height: 26px; padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
   font-size: 12px;
   font-weight: 500;
   background: transparent;
@@ -380,25 +471,38 @@ body.dark-canvas .gt-chip.irrelevant { color: #FDA4AF; background: rgba(244, 63,
   cursor: pointer;
   white-space: nowrap;
 }
-.gt-btn:hover { color: var(--canvas-fg-1); background: var(--canvas-bg-2); }
+.gt-btn:hover {
+  color: var(--canvas-fg-1);
+  background: var(--canvas-bg-2);
+}
 .gt-btn.on {
   color: var(--canvas-fg-1);
   background: var(--canvas-bg-2);
   border-color: var(--canvas-bd-2);
 }
 .gt-btn.icon {
-  width: 28px; padding: 0;
+  width: 28px;
+  padding: 0;
   justify-content: center;
   font-family: var(--mono);
   font-size: 13px;
   font-weight: 600;
 }
-.gt-btn.icon.ratio { width: auto; padding: 0 8px; min-width: 50px; font-size: 11px; }
+.gt-btn.icon.ratio {
+  width: auto;
+  padding: 0 8px;
+  min-width: 50px;
+  font-size: 11px;
+}
 .gt-btn .dot {
-  width: 7px; height: 7px; border-radius: 999px;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
   background: var(--canvas-fg-4);
 }
-.gt-btn .dot.dom-software { background: var(--dom-software); }
+.gt-btn .dot.dom-software {
+  background: var(--dom-software);
+}
 
 /* ============ Inspector (right rail) ============ */
 .graph-inspector {
@@ -411,7 +515,8 @@ body.dark-canvas .gt-chip.irrelevant { color: #FDA4AF; background: rgba(244, 63,
 }
 .graph-inspector .empty {
   flex: 1;
-  display: grid; place-items: center;
+  display: grid;
+  place-items: center;
   color: var(--canvas-fg-3);
   font-size: 12.5px;
 }
@@ -420,7 +525,11 @@ body.dark-canvas .gt-chip.irrelevant { color: #FDA4AF; background: rgba(244, 63,
   padding: 14px 16px 12px;
   border-bottom: 1px solid var(--canvas-bd);
 }
-.gi-head-eyebrow { display: flex; gap: 6px; margin-bottom: 8px; }
+.gi-head-eyebrow {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
 .gi-title {
   font-size: 18px;
   font-weight: 600;
@@ -481,7 +590,8 @@ body.dark-canvas .gt-chip.irrelevant { color: #FDA4AF; background: rgba(244, 63,
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex; flex-direction: column;
+  display: flex;
+  flex-direction: column;
   gap: 4px;
 }
 .gi-rel {
@@ -499,16 +609,23 @@ body.dark-canvas .gt-chip.irrelevant { color: #FDA4AF; background: rgba(244, 63,
   flex: none;
   color: var(--canvas-fg-4);
 }
-.gi-rel-dir.out { color: var(--accent-cyan-deep); }
+.gi-rel-dir.out {
+  color: var(--accent-cyan-deep);
+}
 .gi-rel-pred {
   font-size: 11px;
   flex: none;
   color: var(--canvas-fg-2);
 }
-.cyan-text { color: var(--accent-cyan-deep); }
-body.dark-canvas .cyan-text { color: var(--accent-cyan); }
+.cyan-text {
+  color: var(--accent-cyan-deep);
+}
+body.dark-canvas .cyan-text {
+  color: var(--accent-cyan);
+}
 .gi-rel-target {
-  display: inline-flex; align-items: center;
+  display: inline-flex;
+  align-items: center;
   height: 24px;
   padding: 0 8px 0 6px;
   border: 1px solid var(--canvas-bd);
@@ -524,15 +641,27 @@ body.dark-canvas .cyan-text { color: var(--accent-cyan); }
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.gi-rel-target:hover { border-color: var(--accent-cyan-deep); background: var(--canvas-bg-2); }
-.gi-rel-target .swatch {
-  width: 3px; height: 12px; border-radius: 1px;
-  background: var(--dom-default);
-  margin-right: 6px; flex: none;
+.gi-rel-target:hover {
+  border-color: var(--accent-cyan-deep);
+  background: var(--canvas-bg-2);
 }
-.gi-rel-target[data-domain="life"]    .swatch { background: var(--dom-life); }
-.gi-rel-target[data-domain="climate"] .swatch { background: var(--dom-climate); }
-.gi-rel-target[data-domain="software"]   .swatch { background: var(--dom-software); }
+.gi-rel-target .swatch {
+  width: 3px;
+  height: 12px;
+  border-radius: 1px;
+  background: var(--dom-default);
+  margin-right: 6px;
+  flex: none;
+}
+.gi-rel-target[data-domain="life"] .swatch {
+  background: var(--dom-life);
+}
+.gi-rel-target[data-domain="climate"] .swatch {
+  background: var(--dom-climate);
+}
+.gi-rel-target[data-domain="software"] .swatch {
+  background: var(--dom-software);
+}
 
 .empty-mini {
   padding: 18px;
@@ -554,7 +683,9 @@ body.dark-canvas .cyan-text { color: var(--accent-cyan); }
   height: 34px;
 }
 .view-toggle button {
-  display: inline-flex; align-items: center; gap: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   height: 28px;
   padding: 0 10px;
   font-size: 12.5px;
@@ -571,4 +702,8 @@ body.dark-canvas .cyan-text { color: var(--accent-cyan); }
   border-color: var(--canvas-bd-2);
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
 }
-.view-toggle button svg { stroke: currentColor; stroke-width: 1.75; fill: none; }
+.view-toggle button svg {
+  stroke: currentColor;
+  stroke-width: 1.75;
+  fill: none;
+}

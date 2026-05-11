@@ -5,113 +5,71 @@
    ========================================================================= */
 
 :root {
-  /* ---- Primary scale (cyan-based) --------------------------------------- */
-  --primary-50:  #E7F2F6;
-  --primary-100: #CFE5ED;
-  --primary-200: #B7D8E3;
-  --primary-300: #9FCBDA;
-  --primary-400: #87BFD1;
-  --primary-500: #3E98B5;
-  --primary-600: #268BAC;
-  --primary-700: #0E7EA3;
-  --primary-800: #0A5872;
-  --primary-900: #084C62;
+  /* Studio dark shell tokens */
+  --shell-bg: #0b0f14;
+  --shell-bg-2: #0f141b;
+  --shell-surface: #131a23;
+  --shell-surface-2: #1a2230;
+  --shell-border: #1e2733;
+  --shell-border-2: #2a3645;
+  --shell-fg-1: #e6edf3;
+  --shell-fg-2: #a6b1bd;
+  --shell-fg-3: #6e7a87;
+  --shell-fg-4: #4a5563;
 
-  /* ---- Shell (always-dark chrome — navy/slate tone) --------------------- */
-  --shell-bg:       #0F1729;
-  --shell-bg-2:     #13203A;
-  --shell-surface:  #1B2949;
-  --shell-surface-2:#1F3155;
-  --shell-border:   #1E3255;
-  --shell-border-2: #2B4268;
-  --shell-fg-1:     #E6EDF3;
-  --shell-fg-2:     #A6B1BD;
-  --shell-fg-3:     #6E7A87;
-  --shell-fg-4:     #4A5563;
-
-  /* ---- Canvas (work surface — light default) ----------------------------- */
-  --canvas-bg:   #FFFFFF;
-  --canvas-bg-2: #F7F9FB;
-  --canvas-card: #FFFFFF;
-  --canvas-bd:   #E5E9EE;
-  --canvas-bd-2: #D6DCE3;
-  --canvas-fg:   #0B1220;
-  --canvas-fg-1: #0B1220;
+  /* Studio canvas (work surface inside the shell) */
+  --canvas-bg: #ffffff;
+  --canvas-bg-2: #f7f9fb;
+  --canvas-card: #ffffff;
+  --canvas-bd: #e5e9ee;
+  --canvas-bd-2: #d6dce3;
+  --canvas-fg: #0b1220;
+  --canvas-fg-1: #0b1220;
   --canvas-fg-2: #475569;
-  --canvas-fg-3: #64748B;
-  --canvas-fg-4: #94A3B8;
+  --canvas-fg-3: #64748b;
+  --canvas-fg-4: #94a3b8;
 
-  /* ---- Accents (primary interactive = amber/orange) --------------------- */
-  --accent-cyan:       #FBBF24;
-  --accent-cyan-2:     #D97706;
-  --accent-cyan-deep:  #B45309;
-  --accent-amber:      #F59E0B;
-  --accent-violet:     #A78BFA;
-  --accent-emerald:    #10B981;
-  --accent-rose:       #F43F5E;
+  /* Accents */
+  --accent-cyan: #22d3ee;
+  --accent-cyan-2: #06b6d4;
+  --accent-cyan-deep: #0e7ea3;
+  --accent-amber: #f59e0b;
+  --accent-violet: #a78bfa;
+  --accent-emerald: #10b981;
+  --accent-rose: #f43f5e;
 
-  /* ---- Domain colors (used for taxonomy / class swatches) --------------- */
-  --dom-life:     #34D399;
-  --dom-climate:  #FBBF24;
-  --dom-software: #818CF8;
-  --dom-default:  #06B6D4;
+  /* Domain colors (used for taxonomies / classes / pipelines) */
+  --dom-life: #34d399;
+  --dom-climate: #fbbf24;
+  --dom-software: #818cf8;
+  --dom-default: #22d3ee;
 
-  /* ---- Semantic intents ------------------------------------------------- */
-  --intent-success-fg: #065F46;
-  --intent-success-bg: #ECFDF5;
-  --intent-success-bd: #A7F3D0;
-  --intent-warning-fg: #92400E;
-  --intent-warning-bg: #FFFBEB;
-  --intent-warning-bd: #FDE68A;
-  --intent-failure-fg: #9F1239;
-  --intent-failure-bg: #FFF1F2;
-  --intent-failure-bd: #FECDD3;
-  --intent-info-fg:    #0E7490;
-  --intent-info-bg:    #ECFEFF;
-  --intent-info-bd:    #A5F3FC;
+  /* Spacing scale */
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
 
-  /* ---- Type families ---------------------------------------------------- */
+  /* Type families */
   --font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", Menlo, ui-monospace, SFMono-Regular, monospace;
+  --font-mono:
+    "JetBrains Mono Variable", "JetBrains Mono", Menlo, ui-monospace, SFMono-Regular, monospace;
   --mono: var(--font-mono);
+}
 
-  /* ---- Type scale ------------------------------------------------------- */
-  --text-xs:   0.75rem;   /* 12 */
-  --text-sm:   0.875rem;  /* 14 — default UI */
-  --text-base: 1rem;      /* 16 */
-  --text-lg:   1.125rem;  /* 18 */
-  --text-xl:   1.25rem;   /* 20 — modal title */
-  --text-2xl:  1.5rem;    /* 24 — page title */
-  --text-3xl:  1.875rem;  /* 30 */
-  --text-4xl:  2.25rem;   /* 36 */
-  --text-5xl:  3rem;      /* 48 */
-  --text-6xl:  3.75rem;   /* 60 */
-
-  /* ---- Spacing (4px scale) ---------------------------------------------- */
-  --space-1:  0.25rem;   /* 4  */
-  --space-2:  0.5rem;    /* 8  */
-  --space-3:  0.75rem;   /* 12 */
-  --space-4:  1rem;      /* 16 */
-  --space-5:  1.25rem;   /* 20 */
-  --space-6:  1.5rem;    /* 24 — card padding */
-  --space-8:  2rem;      /* 32 */
-  --space-10: 2.5rem;    /* 40 */
-  --space-12: 3rem;      /* 48 */
-  --space-16: 4rem;      /* 64 */
-
-  /* ---- Radius ----------------------------------------------------------- */
-  --radius-sm:   2px;
-  --radius-md:   6px;    /* buttons, inputs, nav items */
-  --radius-lg:   8px;    /* panels, cards, drawers */
-  --radius-xl:   12px;   /* modals, command palette */
-  --radius-full: 9999px; /* pills, dots */
-
-  /* ---- Shadows ---------------------------------------------------------- */
-  --shadow:    0 1px 3px 0 rgba(0,0,0,0.10), 0 1px 2px -1px rgba(0,0,0,0.10);
-  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.10), 0 2px 4px -2px rgba(0,0,0,0.10);
-
-  /* ---- Animation -------------------------------------------------------- */
-  --ease-default: ease;
-  --duration-fast: 120ms;
-  --duration-base: 160ms;
+/* Dark canvas mode — inverts only the work surface; shell chrome stays dark */
+body.dark-canvas {
+  --canvas-bg: #14191f;
+  --canvas-bg-2: #1b222a;
+  --canvas-card: #1b222a;
+  --canvas-bd: #2a323c;
+  --canvas-bd-2: #3a4452;
+  --canvas-fg: #e6edf3;
+  --canvas-fg-1: #e6edf3;
+  --canvas-fg-2: #b0bac5;
+  --canvas-fg-3: #7e8a98;
+  --canvas-fg-4: #5a6573;
 }

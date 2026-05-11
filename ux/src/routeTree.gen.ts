@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app/index'
@@ -26,7 +27,13 @@ import { Route as AppPipelinesRunsRouteImport } from './routes/app/pipelines/run
 import { Route as AppPipelinesFlavorsRouteImport } from './routes/app/pipelines/flavors'
 import { Route as AppDataIndividualsRouteImport } from './routes/app/data/individuals'
 import { Route as AppDataDatasetsRouteImport } from './routes/app/data/datasets'
+import { Route as AppSchemaSchemesIndexRouteImport } from './routes/app/schema/schemes.index'
 
+const WelcomeRoute = WelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppRoute = AppRouteImport.update({
   id: '/app',
   path: '/app',
@@ -112,10 +119,16 @@ const AppDataDatasetsRoute = AppDataDatasetsRouteImport.update({
   path: '/data/datasets',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSchemaSchemesIndexRoute = AppSchemaSchemesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppSchemaSchemesRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/welcome': typeof WelcomeRoute
   '/app/contact-sheet': typeof AppContactSheetRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/': typeof AppIndexRoute
@@ -128,12 +141,14 @@ export interface FileRoutesByFullPath {
   '/app/schema/classes': typeof AppSchemaClassesRoute
   '/app/schema/properties': typeof AppSchemaPropertiesRoute
   '/app/schema/relationships': typeof AppSchemaRelationshipsRoute
-  '/app/schema/schemes': typeof AppSchemaSchemesRoute
+  '/app/schema/schemes': typeof AppSchemaSchemesRouteWithChildren
   '/app/schema/taxonomies': typeof AppSchemaTaxonomiesRoute
   '/app/pipelines/': typeof AppPipelinesIndexRoute
+  '/app/schema/schemes/': typeof AppSchemaSchemesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/welcome': typeof WelcomeRoute
   '/app/contact-sheet': typeof AppContactSheetRoute
   '/app/settings': typeof AppSettingsRoute
   '/app': typeof AppIndexRoute
@@ -146,14 +161,15 @@ export interface FileRoutesByTo {
   '/app/schema/classes': typeof AppSchemaClassesRoute
   '/app/schema/properties': typeof AppSchemaPropertiesRoute
   '/app/schema/relationships': typeof AppSchemaRelationshipsRoute
-  '/app/schema/schemes': typeof AppSchemaSchemesRoute
   '/app/schema/taxonomies': typeof AppSchemaTaxonomiesRoute
   '/app/pipelines': typeof AppPipelinesIndexRoute
+  '/app/schema/schemes': typeof AppSchemaSchemesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/welcome': typeof WelcomeRoute
   '/app/contact-sheet': typeof AppContactSheetRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/': typeof AppIndexRoute
@@ -166,15 +182,17 @@ export interface FileRoutesById {
   '/app/schema/classes': typeof AppSchemaClassesRoute
   '/app/schema/properties': typeof AppSchemaPropertiesRoute
   '/app/schema/relationships': typeof AppSchemaRelationshipsRoute
-  '/app/schema/schemes': typeof AppSchemaSchemesRoute
+  '/app/schema/schemes': typeof AppSchemaSchemesRouteWithChildren
   '/app/schema/taxonomies': typeof AppSchemaTaxonomiesRoute
   '/app/pipelines/': typeof AppPipelinesIndexRoute
+  '/app/schema/schemes/': typeof AppSchemaSchemesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/app'
+    | '/welcome'
     | '/app/contact-sheet'
     | '/app/settings'
     | '/app/'
@@ -190,9 +208,11 @@ export interface FileRouteTypes {
     | '/app/schema/schemes'
     | '/app/schema/taxonomies'
     | '/app/pipelines/'
+    | '/app/schema/schemes/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/welcome'
     | '/app/contact-sheet'
     | '/app/settings'
     | '/app'
@@ -205,13 +225,14 @@ export interface FileRouteTypes {
     | '/app/schema/classes'
     | '/app/schema/properties'
     | '/app/schema/relationships'
-    | '/app/schema/schemes'
     | '/app/schema/taxonomies'
     | '/app/pipelines'
+    | '/app/schema/schemes'
   id:
     | '__root__'
     | '/'
     | '/app'
+    | '/welcome'
     | '/app/contact-sheet'
     | '/app/settings'
     | '/app/'
@@ -227,15 +248,24 @@ export interface FileRouteTypes {
     | '/app/schema/schemes'
     | '/app/schema/taxonomies'
     | '/app/pipelines/'
+    | '/app/schema/schemes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
+  WelcomeRoute: typeof WelcomeRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/welcome': {
+      id: '/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof WelcomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app': {
       id: '/app'
       path: '/app'
@@ -355,8 +385,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDataDatasetsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/schema/schemes/': {
+      id: '/app/schema/schemes/'
+      path: '/'
+      fullPath: '/app/schema/schemes/'
+      preLoaderRoute: typeof AppSchemaSchemesIndexRouteImport
+      parentRoute: typeof AppSchemaSchemesRoute
+    }
   }
 }
+
+interface AppSchemaSchemesRouteChildren {
+  AppSchemaSchemesIndexRoute: typeof AppSchemaSchemesIndexRoute
+}
+
+const AppSchemaSchemesRouteChildren: AppSchemaSchemesRouteChildren = {
+  AppSchemaSchemesIndexRoute: AppSchemaSchemesIndexRoute,
+}
+
+const AppSchemaSchemesRouteWithChildren =
+  AppSchemaSchemesRoute._addFileChildren(AppSchemaSchemesRouteChildren)
 
 interface AppRouteChildren {
   AppContactSheetRoute: typeof AppContactSheetRoute
@@ -371,7 +419,7 @@ interface AppRouteChildren {
   AppSchemaClassesRoute: typeof AppSchemaClassesRoute
   AppSchemaPropertiesRoute: typeof AppSchemaPropertiesRoute
   AppSchemaRelationshipsRoute: typeof AppSchemaRelationshipsRoute
-  AppSchemaSchemesRoute: typeof AppSchemaSchemesRoute
+  AppSchemaSchemesRoute: typeof AppSchemaSchemesRouteWithChildren
   AppSchemaTaxonomiesRoute: typeof AppSchemaTaxonomiesRoute
   AppPipelinesIndexRoute: typeof AppPipelinesIndexRoute
 }
@@ -389,7 +437,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppSchemaClassesRoute: AppSchemaClassesRoute,
   AppSchemaPropertiesRoute: AppSchemaPropertiesRoute,
   AppSchemaRelationshipsRoute: AppSchemaRelationshipsRoute,
-  AppSchemaSchemesRoute: AppSchemaSchemesRoute,
+  AppSchemaSchemesRoute: AppSchemaSchemesRouteWithChildren,
   AppSchemaTaxonomiesRoute: AppSchemaTaxonomiesRoute,
   AppPipelinesIndexRoute: AppPipelinesIndexRoute,
 }
@@ -399,6 +447,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
+  WelcomeRoute: WelcomeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

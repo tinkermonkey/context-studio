@@ -3,43 +3,47 @@
 
 const GRAPH_LAYOUT = {
   // Life sciences cluster (left half)
-  cls_cell:       { x: 230,  y: 250, cluster: 'life'    },
-  cls_nucleus:    { x:  90,  y: 110, cluster: 'life'    },
-  cls_mito:       { x: 380,  y:  95, cluster: 'life'    },
-  cls_membrane:   { x:  85,  y: 380, cluster: 'life'    },
-  cls_stem:       { x: 240,  y: 410, cluster: 'life'    },
-  cls_neuron:     { x: 380,  y: 380, cluster: 'life'    },
-  cls_gene:       { x: 560,  y: 170, cluster: 'life'    },
-  cls_variant:    { x: 700,  y: 100, cluster: 'life'    },
-  cls_protein:    { x: 560,  y: 320, cluster: 'life'    },
-  cls_pathway:    { x: 720,  y: 460, cluster: 'life'    },
-  ind_brca1:      { x: 380,  y: 575, cluster: 'life'    },
-  ind_tp53:       { x: 540,  y: 605, cluster: 'life'    },
-  ind_egfr:       { x: 250,  y: 580, cluster: 'life'    },
-  ind_p53:        { x: 580,  y: 470, cluster: 'life'    },
-  ind_apop:       { x: 760,  y: 600, cluster: 'life'    },
+  cls_cell: { x: 230, y: 250, cluster: "life" },
+  cls_nucleus: { x: 90, y: 110, cluster: "life" },
+  cls_mito: { x: 380, y: 95, cluster: "life" },
+  cls_membrane: { x: 85, y: 380, cluster: "life" },
+  cls_stem: { x: 240, y: 410, cluster: "life" },
+  cls_neuron: { x: 380, y: 380, cluster: "life" },
+  cls_gene: { x: 560, y: 170, cluster: "life" },
+  cls_variant: { x: 700, y: 100, cluster: "life" },
+  cls_protein: { x: 560, y: 320, cluster: "life" },
+  cls_pathway: { x: 720, y: 460, cluster: "life" },
+  ind_brca1: { x: 380, y: 575, cluster: "life" },
+  ind_tp53: { x: 540, y: 605, cluster: "life" },
+  ind_egfr: { x: 250, y: 580, cluster: "life" },
+  ind_p53: { x: 580, y: 470, cluster: "life" },
+  ind_apop: { x: 760, y: 600, cluster: "life" },
   // Climate cluster (right half)
-  cls_co2:        { x: 1100, y: 215, cluster: 'climate' },
-  cls_methane:    { x: 1240, y: 105, cluster: 'climate' },
-  cls_warming:    { x: 920,  y: 365, cluster: 'climate' },
-  cls_sealevel:   { x: 1130, y: 405, cluster: 'climate' },
-  cls_deforest:   { x: 920,  y: 165, cluster: 'climate' },
-  cls_renew:      { x: 1255, y: 535, cluster: 'climate' },
-  ind_co2_atm:    { x: 1115, y: 600, cluster: 'climate' },
-  ind_amazon:     { x: 920,  y: 555, cluster: 'climate' },
-  ind_solar_us:   { x: 1255, y: 660, cluster: 'climate' },
+  cls_co2: { x: 1100, y: 215, cluster: "climate" },
+  cls_methane: { x: 1240, y: 105, cluster: "climate" },
+  cls_warming: { x: 920, y: 365, cluster: "climate" },
+  cls_sealevel: { x: 1130, y: 405, cluster: "climate" },
+  cls_deforest: { x: 920, y: 165, cluster: "climate" },
+  cls_renew: { x: 1255, y: 535, cluster: "climate" },
+  ind_co2_atm: { x: 1115, y: 600, cluster: "climate" },
+  ind_amazon: { x: 920, y: 555, cluster: "climate" },
+  ind_solar_us: { x: 1255, y: 660, cluster: "climate" },
   // Software cluster (bottom strip — currently no relationships, hidden by default)
-  cls_hex:        { x: 200,  y: 760, cluster: 'software'},
-  cls_ddd:        { x: 380,  y: 760, cluster: 'software'},
-  cls_micro:      { x: 560,  y: 760, cluster: 'software'},
-  cls_unit:       { x: 740,  y: 760, cluster: 'software'},
-  ind_hex_alistair:{x: 200,  y: 850, cluster: 'software'},
-  ind_evans_ddd:  { x: 380,  y: 850, cluster: 'software'},
+  cls_hex: { x: 200, y: 760, cluster: "software" },
+  cls_ddd: { x: 380, y: 760, cluster: "software" },
+  cls_micro: { x: 560, y: 760, cluster: "software" },
+  cls_unit: { x: 740, y: 760, cluster: "software" },
+  ind_hex_alistair: { x: 200, y: 850, cluster: "software" },
+  ind_evans_ddd: { x: 380, y: 850, cluster: "software" },
 };
 
 const CLUSTER_META = {
-  life:    { title: 'Life Sciences',     domain: 'life',     bbox: { x:  10, y:  40, w: 800, h: 640 } },
-  climate: { title: 'Climate & Environment', domain: 'climate', bbox: { x: 850, y:  40, w: 460, h: 640 } },
+  life: { title: "Life Sciences", domain: "life", bbox: { x: 10, y: 40, w: 800, h: 640 } },
+  climate: {
+    title: "Climate & Environment",
+    domain: "climate",
+    bbox: { x: 850, y: 40, w: 460, h: 640 },
+  },
 };
 
 // Node dimensions (must match rendered HTML — used for edge endpoint math)
@@ -95,7 +99,7 @@ function bezierPath(p1, p2, curvature = 0.28) {
 
 function GraphView({ onCloseGraph }) {
   const { state } = useStore();
-  const [selectedId, setSelectedId] = useState('cls_cell');
+  const [selectedId, setSelectedId] = useState("cls_cell");
   const [hoverEdgeId, setHoverEdgeId] = useState(null);
   const [hiddenPreds, setHiddenPreds] = useState({});
   const [hiddenClusters, setHiddenClusters] = useState({ software: true });
@@ -136,16 +140,19 @@ function GraphView({ onCloseGraph }) {
   }, [fitToCanvas]);
 
   // Look up node (class or individual)
-  const lookupNode = useCallback((id) => {
-    const c = state.classes.find((x) => x.id === id);
-    if (c) return { ...c, kind: 'class' };
-    const i = state.individuals.find((x) => x.id === id);
-    if (i) {
-      const cc = state.classes.find((x) => x.id === i.class_ids[0]);
-      return { ...i, kind: 'individual', domain: cc?.domain || 'default' };
-    }
-    return null;
-  }, [state]);
+  const lookupNode = useCallback(
+    (id) => {
+      const c = state.classes.find((x) => x.id === id);
+      if (c) return { ...c, kind: "class" };
+      const i = state.individuals.find((x) => x.id === id);
+      if (i) {
+        const cc = state.classes.find((x) => x.id === i.class_ids[0]);
+        return { ...i, kind: "individual", domain: cc?.domain || "default" };
+      }
+      return null;
+    },
+    [state],
+  );
 
   // Visible edges (after filters)
   const edges = state.relationships.filter((r) => {
@@ -153,22 +160,28 @@ function GraphView({ onCloseGraph }) {
     const s = lookupNode(r.source_id);
     const t = lookupNode(r.target_id);
     if (!s || !t) return false;
-    if (!showIndividuals && (s.kind === 'individual' || t.kind === 'individual')) return false;
+    if (!showIndividuals && (s.kind === "individual" || t.kind === "individual")) return false;
     if (hiddenClusters[GRAPH_LAYOUT[r.source_id]?.cluster]) return false;
     if (hiddenClusters[GRAPH_LAYOUT[r.target_id]?.cluster]) return false;
     return true;
   });
 
   // Build node list: anything in GRAPH_LAYOUT, filtered by toggles
-  const nodes = Object.keys(GRAPH_LAYOUT).map(lookupNode).filter(Boolean).filter((n) => {
-    if (!showIndividuals && n.kind === 'individual') return false;
-    if (hiddenClusters[GRAPH_LAYOUT[n.id]?.cluster]) return false;
-    return true;
-  });
+  const nodes = Object.keys(GRAPH_LAYOUT)
+    .map(lookupNode)
+    .filter(Boolean)
+    .filter((n) => {
+      if (!showIndividuals && n.kind === "individual") return false;
+      if (hiddenClusters[GRAPH_LAYOUT[n.id]?.cluster]) return false;
+      return true;
+    });
 
   // Mark which nodes are connected at all (dim isolates)
   const connected = new Set();
-  edges.forEach((e) => { connected.add(e.source_id); connected.add(e.target_id); });
+  edges.forEach((e) => {
+    connected.add(e.source_id);
+    connected.add(e.target_id);
+  });
 
   // Predicate counts (for the filter pills)
   const predCounts = state.property_definitions.reduce((acc, p) => {
@@ -178,7 +191,9 @@ function GraphView({ onCloseGraph }) {
   const usedPreds = state.property_definitions.filter((p) => predCounts[p.id] > 0);
 
   const selected = selectedId ? lookupNode(selectedId) : null;
-  const selectedRels = selected ? state.relationships.filter((r) => r.source_id === selected.id || r.target_id === selected.id) : [];
+  const selectedRels = selected
+    ? state.relationships.filter((r) => r.source_id === selected.id || r.target_id === selected.id)
+    : [];
 
   // Pan/zoom handlers
   const onWheel = (e) => {
@@ -188,92 +203,171 @@ function GraphView({ onCloseGraph }) {
     setZoom((z) => Math.min(2.5, Math.max(0.4, z + delta)));
   };
   const onMouseDown = (e) => {
-    if (e.target.closest('.graph-node, .graph-toolbar, .graph-legend, .graph-inspector, .graph-edge-hit')) return;
+    if (
+      e.target.closest(
+        ".graph-node, .graph-toolbar, .graph-legend, .graph-inspector, .graph-edge-hit",
+      )
+    )
+      return;
     dragRef.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y };
   };
   const onMouseMove = (e) => {
     if (!dragRef.current) return;
-    setPan({ x: dragRef.current.panX + (e.clientX - dragRef.current.x), y: dragRef.current.panY + (e.clientY - dragRef.current.y) });
+    setPan({
+      x: dragRef.current.panX + (e.clientX - dragRef.current.x),
+      y: dragRef.current.panY + (e.clientY - dragRef.current.y),
+    });
   };
-  const onMouseUp = () => { dragRef.current = null; };
+  const onMouseUp = () => {
+    dragRef.current = null;
+  };
 
-  const fit = () => { fitToCanvas(); };
+  const fit = () => {
+    fitToCanvas();
+  };
 
   // For arrow heads — pre-compute on the path
   const renderEdges = edges.map((e) => {
-    const s = lookupNode(e.source_id); const t = lookupNode(e.target_id);
-    const sp = GRAPH_LAYOUT[e.source_id]; const tp = GRAPH_LAYOUT[e.target_id];
-    const sw = nodeWidth(s.title); const tw = nodeWidth(t.title);
+    const s = lookupNode(e.source_id);
+    const t = lookupNode(e.target_id);
+    const sp = GRAPH_LAYOUT[e.source_id];
+    const tp = GRAPH_LAYOUT[e.target_id];
+    const sw = nodeWidth(s.title);
+    const tw = nodeWidth(t.title);
     const a = rectEdgePoint(sp.x, sp.y, sw, NODE_H, tp.x, tp.y);
     const b = rectEdgePoint(tp.x, tp.y, tw, NODE_H, sp.x, sp.y);
     const path = bezierPath(a, b, 0.22);
     const prop = state.property_definitions.find((p) => p.id === e.property_definition_id);
     const irrelevant = prop?.is_relevant === false;
-    const isHighlighted = hoverEdgeId === e.id || (selected && (e.source_id === selected.id || e.target_id === selected.id));
+    const isHighlighted =
+      hoverEdgeId === e.id ||
+      (selected && (e.source_id === selected.id || e.target_id === selected.id));
     return { e, prop, path, isHighlighted, irrelevant, end: b };
   });
 
   return (
     <div className="graph-shell">
       {/* SVG canvas */}
-      <div className="graph-canvas"
-           ref={canvasRef}
-           onWheel={onWheel}
-           onMouseDown={onMouseDown}
-           onMouseMove={onMouseMove}
-           onMouseUp={onMouseUp}
-           onMouseLeave={onMouseUp}>
+      <div
+        className="graph-canvas"
+        ref={canvasRef}
+        onWheel={onWheel}
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUp}
+        onMouseLeave={onMouseUp}
+      >
         <div className="graph-grid"></div>
 
-        <div className="graph-stage" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}>
+        <div
+          className="graph-stage"
+          style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}
+        >
           {/* Cluster halos */}
           <svg className="graph-svg" viewBox="0 0 1340 700" preserveAspectRatio="xMidYMid meet">
             <defs>
-              <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--graph-edge-strong)"/>
+              <marker
+                id="arrow"
+                viewBox="0 0 10 10"
+                refX="9"
+                refY="5"
+                markerWidth="7"
+                markerHeight="7"
+                orient="auto-start-reverse"
+              >
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--graph-edge-strong)" />
               </marker>
-              <marker id="arrow-rose" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent-rose)"/>
+              <marker
+                id="arrow-rose"
+                viewBox="0 0 10 10"
+                refX="9"
+                refY="5"
+                markerWidth="7"
+                markerHeight="7"
+                orient="auto-start-reverse"
+              >
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent-rose)" />
               </marker>
-              <marker id="arrow-cyan" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent-cyan)"/>
+              <marker
+                id="arrow-cyan"
+                viewBox="0 0 10 10"
+                refX="9"
+                refY="5"
+                markerWidth="8"
+                markerHeight="8"
+                orient="auto-start-reverse"
+              >
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent-cyan)" />
               </marker>
             </defs>
 
             {/* Cluster zones */}
-            {Object.entries(CLUSTER_META).map(([key, meta]) => hiddenClusters[key] ? null : (
-              <g key={key} className={'graph-cluster cluster-' + meta.domain}>
-                <rect x={meta.bbox.x} y={meta.bbox.y} width={meta.bbox.w} height={meta.bbox.h} rx="14"/>
-                <text x={meta.bbox.x + 16} y={meta.bbox.y + 24} className="graph-cluster-label">
-                  {meta.title.toUpperCase()}
-                </text>
-              </g>
-            ))}
+            {Object.entries(CLUSTER_META).map(([key, meta]) =>
+              hiddenClusters[key] ? null : (
+                <g key={key} className={"graph-cluster cluster-" + meta.domain}>
+                  <rect
+                    x={meta.bbox.x}
+                    y={meta.bbox.y}
+                    width={meta.bbox.w}
+                    height={meta.bbox.h}
+                    rx="14"
+                  />
+                  <text x={meta.bbox.x + 16} y={meta.bbox.y + 24} className="graph-cluster-label">
+                    {meta.title.toUpperCase()}
+                  </text>
+                </g>
+              ),
+            )}
 
             {/* Edges */}
             {renderEdges.map(({ e, prop, path, isHighlighted, irrelevant }) => (
-              <g key={e.id} className={'graph-edge' + (isHighlighted ? ' is-hot' : '') + (irrelevant ? ' is-irrelevant' : '')}>
+              <g
+                key={e.id}
+                className={
+                  "graph-edge" +
+                  (isHighlighted ? " is-hot" : "") +
+                  (irrelevant ? " is-irrelevant" : "")
+                }
+              >
                 {/* invisible thicker hit area */}
-                <path className="graph-edge-hit" d={path.d}
-                      onMouseEnter={() => setHoverEdgeId(e.id)}
-                      onMouseLeave={() => setHoverEdgeId(null)}/>
-                <path className="graph-edge-line" d={path.d}
-                      markerEnd={isHighlighted ? 'url(#arrow-cyan)' : irrelevant ? 'url(#arrow-rose)' : 'url(#arrow)'}/>
+                <path
+                  className="graph-edge-hit"
+                  d={path.d}
+                  onMouseEnter={() => setHoverEdgeId(e.id)}
+                  onMouseLeave={() => setHoverEdgeId(null)}
+                />
+                <path
+                  className="graph-edge-line"
+                  d={path.d}
+                  markerEnd={
+                    isHighlighted
+                      ? "url(#arrow-cyan)"
+                      : irrelevant
+                        ? "url(#arrow-rose)"
+                        : "url(#arrow)"
+                  }
+                />
               </g>
             ))}
 
             {/* Edge labels (above paths so they sit on top) */}
-            {showLabels && renderEdges.map(({ e, prop, path, isHighlighted }) => {
-              const label = prop?.identifier || '?';
-              const w = label.length * 6.6 + 14;
-              return (
-                <g key={'lbl_' + e.id} className={'graph-edge-label' + (isHighlighted ? ' is-hot' : '')}
-                   transform={`translate(${path.mid.x - w / 2}, ${path.mid.y - 9})`}>
-                  <rect width={w} height="18" rx="3"/>
-                  <text x={w / 2} y="12">{label}</text>
-                </g>
-              );
-            })}
+            {showLabels &&
+              renderEdges.map(({ e, prop, path, isHighlighted }) => {
+                const label = prop?.identifier || "?";
+                const w = label.length * 6.6 + 14;
+                return (
+                  <g
+                    key={"lbl_" + e.id}
+                    className={"graph-edge-label" + (isHighlighted ? " is-hot" : "")}
+                    transform={`translate(${path.mid.x - w / 2}, ${path.mid.y - 9})`}
+                  >
+                    <rect width={w} height="18" rx="3" />
+                    <text x={w / 2} y="12">
+                      {label}
+                    </text>
+                  </g>
+                );
+              })}
           </svg>
 
           {/* Nodes (HTML for crisp text + matching .kg-node aesthetic) */}
@@ -283,16 +377,20 @@ function GraphView({ onCloseGraph }) {
             const isSel = selectedId === n.id;
             const isOrphan = !connected.has(n.id);
             return (
-              <button key={n.id}
-                      className={'graph-node kg-node' + (isSel ? ' selected' : '') + (isOrphan ? ' is-orphan' : '')}
-                      data-domain={n.domain}
-                      data-kind={n.kind}
-                      style={{ left: pos.x - w / 2, top: pos.y - NODE_H / 2, width: w, height: NODE_H }}
-                      onClick={() => setSelectedId(n.id)}
-                      title={n.id}>
+              <button
+                key={n.id}
+                className={
+                  "graph-node kg-node" + (isSel ? " selected" : "") + (isOrphan ? " is-orphan" : "")
+                }
+                data-domain={n.domain}
+                data-kind={n.kind}
+                style={{ left: pos.x - w / 2, top: pos.y - NODE_H / 2, width: w, height: NODE_H }}
+                onClick={() => setSelectedId(n.id)}
+                title={n.id}
+              >
                 <span className="swatch"></span>
                 <span className="graph-node-title">{n.title}</span>
-                <span className="graph-node-kind">{n.kind === 'class' ? 'C' : 'I'}</span>
+                <span className="graph-node-kind">{n.kind === "class" ? "C" : "I"}</span>
               </button>
             );
           })}
@@ -304,26 +402,36 @@ function GraphView({ onCloseGraph }) {
             <div className="gl-label">Domains</div>
             <div className="gl-row">
               <span className="dot dom-life"></span>Life sciences
-              <span className="gl-count">{nodes.filter((n) => n.domain === 'life').length}</span>
+              <span className="gl-count">{nodes.filter((n) => n.domain === "life").length}</span>
             </div>
             <div className="gl-row">
               <span className="dot dom-climate"></span>Climate
-              <span className="gl-count">{nodes.filter((n) => n.domain === 'climate').length}</span>
+              <span className="gl-count">{nodes.filter((n) => n.domain === "climate").length}</span>
             </div>
             <div className="gl-row" data-disabled={hiddenClusters.software}>
               <span className="dot dom-software"></span>Software
-              <span className="gl-count">{state.classes.filter((c) => c.domain === 'software').length}</span>
+              <span className="gl-count">
+                {state.classes.filter((c) => c.domain === "software").length}
+              </span>
             </div>
           </div>
           <div className="gl-section">
             <div className="gl-label">Glyphs</div>
-            <div className="gl-row"><span className="gl-pill">C</span>Class</div>
-            <div className="gl-row"><span className="gl-pill ind">I</span>Individual</div>
+            <div className="gl-row">
+              <span className="gl-pill">C</span>Class
+            </div>
+            <div className="gl-row">
+              <span className="gl-pill ind">I</span>Individual
+            </div>
           </div>
           <div className="gl-section">
             <div className="gl-label">Edges</div>
-            <div className="gl-row"><span className="gl-line"></span>Relevant</div>
-            <div className="gl-row"><span className="gl-line dashed"></span>Irrelevant predicate</div>
+            <div className="gl-row">
+              <span className="gl-line"></span>Relevant
+            </div>
+            <div className="gl-row">
+              <span className="gl-line dashed"></span>Irrelevant predicate
+            </div>
           </div>
         </div>
 
@@ -335,9 +443,11 @@ function GraphView({ onCloseGraph }) {
               const off = !!hiddenPreds[p.id];
               const irrelevant = p.is_relevant === false;
               return (
-                <button key={p.id}
-                        className={'gt-chip' + (off ? ' off' : '') + (irrelevant ? ' irrelevant' : '')}
-                        onClick={() => setHiddenPreds({ ...hiddenPreds, [p.id]: !off })}>
+                <button
+                  key={p.id}
+                  className={"gt-chip" + (off ? " off" : "") + (irrelevant ? " irrelevant" : "")}
+                  onClick={() => setHiddenPreds({ ...hiddenPreds, [p.id]: !off })}
+                >
                   <span className="gt-chip-id">{p.identifier}</span>
                   <span className="gt-chip-n">{predCounts[p.id]}</span>
                 </button>
@@ -349,24 +459,48 @@ function GraphView({ onCloseGraph }) {
         {/* Bottom controls — view toggles + zoom */}
         <div className="graph-toolbar bottom">
           <div className="gt-group">
-            <button className={'gt-btn' + (showIndividuals ? ' on' : '')} onClick={() => setShowIndividuals((v) => !v)}>
-              <Icon name="data" size={13}/> Individuals
+            <button
+              className={"gt-btn" + (showIndividuals ? " on" : "")}
+              onClick={() => setShowIndividuals((v) => !v)}
+            >
+              <Icon name="data" size={13} /> Individuals
             </button>
-            <button className={'gt-btn' + (showLabels ? ' on' : '')} onClick={() => setShowLabels((v) => !v)}>
-              <Icon name="tag" size={13}/> Edge labels
+            <button
+              className={"gt-btn" + (showLabels ? " on" : "")}
+              onClick={() => setShowLabels((v) => !v)}
+            >
+              <Icon name="tag" size={13} /> Edge labels
             </button>
-            <button className={'gt-btn' + (!hiddenClusters.software ? ' on' : '')}
-                    onClick={() => setHiddenClusters({ ...hiddenClusters, software: !hiddenClusters.software })}>
+            <button
+              className={"gt-btn" + (!hiddenClusters.software ? " on" : "")}
+              onClick={() =>
+                setHiddenClusters({ ...hiddenClusters, software: !hiddenClusters.software })
+              }
+            >
               <span className="dot dom-software" style={{ marginRight: 6 }}></span>Software cluster
             </button>
           </div>
           <div className="gt-spacer"></div>
           <div className="gt-group zoom">
-            <button className="gt-btn icon" onClick={() => setZoom((z) => Math.max(0.4, z - 0.15))} aria-label="Zoom out">−</button>
-            <button className="gt-btn icon ratio" onClick={fit}>{Math.round(zoom * 100)}%</button>
-            <button className="gt-btn icon" onClick={() => setZoom((z) => Math.min(2.5, z + 0.15))} aria-label="Zoom in">+</button>
+            <button
+              className="gt-btn icon"
+              onClick={() => setZoom((z) => Math.max(0.4, z - 0.15))}
+              aria-label="Zoom out"
+            >
+              −
+            </button>
+            <button className="gt-btn icon ratio" onClick={fit}>
+              {Math.round(zoom * 100)}%
+            </button>
+            <button
+              className="gt-btn icon"
+              onClick={() => setZoom((z) => Math.min(2.5, z + 0.15))}
+              aria-label="Zoom in"
+            >
+              +
+            </button>
             <button className="gt-btn" onClick={fit}>
-              <Icon name="expand" size={13}/> Fit
+              <Icon name="expand" size={13} /> Fit
             </button>
           </div>
         </div>
@@ -374,9 +508,17 @@ function GraphView({ onCloseGraph }) {
 
       {/* Inspector */}
       <aside className="graph-inspector">
-        {selected ? <NodeInspector node={selected} rels={selectedRels} lookupNode={lookupNode}
-                                   onSelect={setSelectedId} state={state}/>
-                  : <div className="empty">Select a node to inspect.</div>}
+        {selected ? (
+          <NodeInspector
+            node={selected}
+            rels={selectedRels}
+            lookupNode={lookupNode}
+            onSelect={setSelectedId}
+            state={state}
+          />
+        ) : (
+          <div className="empty">Select a node to inspect.</div>
+        )}
       </aside>
     </div>
   );
@@ -389,14 +531,18 @@ function NodeInspector({ node, rels, lookupNode, onSelect, state }) {
   const scheme = state.concept_schemes.find((s) => s.id === node.concept_scheme_id);
 
   const renderRelLine = (r, dir) => {
-    const otherId = dir === 'out' ? r.target_id : r.source_id;
+    const otherId = dir === "out" ? r.target_id : r.source_id;
     const other = lookupNode(otherId);
     const prop = state.property_definitions.find((p) => p.id === r.property_definition_id);
     return (
       <li key={r.id} className="gi-rel">
-        <span className={'gi-rel-dir ' + dir}>{dir === 'out' ? '→' : '←'}</span>
+        <span className={"gi-rel-dir " + dir}>{dir === "out" ? "→" : "←"}</span>
         <span className="mono cyan-text gi-rel-pred">{prop?.identifier}</span>
-        <button className="kg-node gi-rel-target" data-domain={other?.domain} onClick={() => onSelect(otherId)}>
+        <button
+          className="kg-node gi-rel-target"
+          data-domain={other?.domain}
+          onClick={() => onSelect(otherId)}
+        >
           <span className="swatch"></span>
           <span>{other?.title}</span>
         </button>
@@ -409,36 +555,76 @@ function NodeInspector({ node, rels, lookupNode, onSelect, state }) {
       <div className="gi-head">
         <div className="gi-head-eyebrow">
           <span className="chip gray">{node.kind}</span>
-          {node.domain && <span className={'chip ' + (node.domain === 'life' ? 'emerald' : node.domain === 'climate' ? 'amber' : 'violet')}>{node.domain}</span>}
+          {node.domain && (
+            <span
+              className={
+                "chip " +
+                (node.domain === "life"
+                  ? "emerald"
+                  : node.domain === "climate"
+                    ? "amber"
+                    : "violet")
+              }
+            >
+              {node.domain}
+            </span>
+          )}
         </div>
         <div className="gi-title">{node.title}</div>
-        <div className="gi-id mono">{node.id} · v{node.version}</div>
+        <div className="gi-id mono">
+          {node.id} · v{node.version}
+        </div>
       </div>
       <div className="gi-body">
         {node.description && <p className="gi-desc">{node.description}</p>}
 
         <dl className="kv">
-          {tax && (<><dt>taxonomy</dt><dd>{tax.title}</dd></>)}
-          {scheme && (<><dt>scheme</dt><dd>{scheme.title}</dd></>)}
-          {node.kind === 'individual' && node.source && (<><dt>source</dt><dd className="mono">{node.source}</dd></>)}
-          {node.kind === 'individual' && typeof node.confidence === 'number' && (<><dt>confidence</dt><dd className="mono">{node.confidence.toFixed(2)}</dd></>)}
-          <dt>edges</dt><dd className="mono">{rels.length} ({out.length} out, {incoming.length} in)</dd>
+          {tax && (
+            <>
+              <dt>taxonomy</dt>
+              <dd>{tax.title}</dd>
+            </>
+          )}
+          {scheme && (
+            <>
+              <dt>scheme</dt>
+              <dd>{scheme.title}</dd>
+            </>
+          )}
+          {node.kind === "individual" && node.source && (
+            <>
+              <dt>source</dt>
+              <dd className="mono">{node.source}</dd>
+            </>
+          )}
+          {node.kind === "individual" && typeof node.confidence === "number" && (
+            <>
+              <dt>confidence</dt>
+              <dd className="mono">{node.confidence.toFixed(2)}</dd>
+            </>
+          )}
+          <dt>edges</dt>
+          <dd className="mono">
+            {rels.length} ({out.length} out, {incoming.length} in)
+          </dd>
         </dl>
 
         {out.length > 0 && (
           <>
             <div className="gi-section-label">Outgoing · {out.length}</div>
-            <ul className="gi-rels">{out.map((r) => renderRelLine(r, 'out'))}</ul>
+            <ul className="gi-rels">{out.map((r) => renderRelLine(r, "out"))}</ul>
           </>
         )}
         {incoming.length > 0 && (
           <>
             <div className="gi-section-label">Incoming · {incoming.length}</div>
-            <ul className="gi-rels">{incoming.map((r) => renderRelLine(r, 'in'))}</ul>
+            <ul className="gi-rels">{incoming.map((r) => renderRelLine(r, "in"))}</ul>
           </>
         )}
         {rels.length === 0 && (
-          <div className="empty-mini" style={{ marginTop: 12 }}>No relationships yet.</div>
+          <div className="empty-mini" style={{ marginTop: 12 }}>
+            No relationships yet.
+          </div>
         )}
       </div>
     </>

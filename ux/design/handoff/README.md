@@ -80,6 +80,7 @@ SKILL.md                   Skill definition (allows this system to be invoked
 ```
 
 **Read order for an implementer:**
+
 1. This handoff
 2. `README.md` — design system reference
 3. `styles/tokens.css` top to bottom — every variable
@@ -96,6 +97,7 @@ SKILL.md                   Skill definition (allows this system to be invoked
 **Wordmark.** "Context Studio", Inter 600/-0.01em. Optional eyebrow `CTX · v1.4` in JetBrains Mono, uppercase, 0.1em tracking.
 
 **Voice.**
+
 - Terse, technical, sentence case.
 - State the consequence; never apologize. "Pipeline failed: connection refused." Not "Oops, something went wrong."
 - Use real domain terms (class, property, taxonomy, individual). Don't soften them.
@@ -139,45 +141,45 @@ All tokens live in `styles/tokens.css`. Import that first, then `studio.css`. Vi
 
 ### Color — shell (constant dark chrome)
 
-| Token | Value | Use |
-|---|---|---|
-| `--shell-bg` | `#0B0F14` | Titlebar base, sidebar |
-| `--shell-bg-2` | `#0F141B` | Topbar, statusbar |
-| `--shell-surface` | `#131A23` | Hover/active surface inside shell, palette background |
-| `--shell-surface-2` | `#1A2230` | Deeper hover, palette item active |
-| `--shell-border` | `#1E2733` | Subtle dividers |
-| `--shell-border-2` | `#2A3645` | Visible borders, focused inputs |
-| `--shell-fg-1` | `#E6EDF3` | Primary text |
-| `--shell-fg-2` | `#A6B1BD` | Secondary text |
-| `--shell-fg-3` | `#6E7A87` | Muted text, icon resting |
-| `--shell-fg-4` | `#475569` | Disabled / placeholder |
+| Token               | Value     | Use                                                   |
+| ------------------- | --------- | ----------------------------------------------------- |
+| `--shell-bg`        | `#0B0F14` | Titlebar base, sidebar                                |
+| `--shell-bg-2`      | `#0F141B` | Topbar, statusbar                                     |
+| `--shell-surface`   | `#131A23` | Hover/active surface inside shell, palette background |
+| `--shell-surface-2` | `#1A2230` | Deeper hover, palette item active                     |
+| `--shell-border`    | `#1E2733` | Subtle dividers                                       |
+| `--shell-border-2`  | `#2A3645` | Visible borders, focused inputs                       |
+| `--shell-fg-1`      | `#E6EDF3` | Primary text                                          |
+| `--shell-fg-2`      | `#A6B1BD` | Secondary text                                        |
+| `--shell-fg-3`      | `#6E7A87` | Muted text, icon resting                              |
+| `--shell-fg-4`      | `#475569` | Disabled / placeholder                                |
 
 ### Color — canvas (light, default)
 
-| Token | Value | Use |
-|---|---|---|
-| `--canvas-bg` | `#FFFFFF` | Main work surface |
+| Token           | Value     | Use                        |
+| --------------- | --------- | -------------------------- |
+| `--canvas-bg`   | `#FFFFFF` | Main work surface          |
 | `--canvas-bg-2` | `#F7F9FB` | Table headers, inset zones |
 | `--canvas-card` | `#FFFFFF` | Panels, stat tiles, drawer |
-| `--canvas-bd` | `#E5E9EE` | Hairline borders |
-| `--canvas-bd-2` | `#D6DCE3` | Visible borders |
-| `--canvas-fg-1` | `#0B1220` | Primary text |
-| `--canvas-fg-2` | `#475569` | Secondary text, body copy |
-| `--canvas-fg-3` | `#64748B` | Muted text, captions |
-| `--canvas-fg-4` | `#94A3B8` | Placeholder, disabled |
+| `--canvas-bd`   | `#E5E9EE` | Hairline borders           |
+| `--canvas-bd-2` | `#D6DCE3` | Visible borders            |
+| `--canvas-fg-1` | `#0B1220` | Primary text               |
+| `--canvas-fg-2` | `#475569` | Secondary text, body copy  |
+| `--canvas-fg-3` | `#64748B` | Muted text, captions       |
+| `--canvas-fg-4` | `#94A3B8` | Placeholder, disabled      |
 
 ### Color — canvas (dark, `body.dark-canvas`)
 
-| Token | Value |
-|---|---|
-| `--canvas-bg` | `#14191F` |
+| Token                             | Value     |
+| --------------------------------- | --------- |
+| `--canvas-bg`                     | `#14191F` |
 | `--canvas-bg-2` / `--canvas-card` | `#1B222A` |
-| `--canvas-bd` | `#2A323C` |
-| `--canvas-bd-2` | `#3A4452` |
-| `--canvas-fg-1` | `#E6EDF3` |
-| `--canvas-fg-2` | `#B0BAC5` |
-| `--canvas-fg-3` | `#7E8A98` |
-| `--canvas-fg-4` | `#5A6573` |
+| `--canvas-bd`                     | `#2A323C` |
+| `--canvas-bd-2`                   | `#3A4452` |
+| `--canvas-fg-1`                   | `#E6EDF3` |
+| `--canvas-fg-2`                   | `#B0BAC5` |
+| `--canvas-fg-3`                   | `#7E8A98` |
+| `--canvas-fg-4`                   | `#5A6573` |
 
 In dark-canvas mode the topbar pulls down to `--shell-bg` (so chrome doesn't read as "lit up" against the darker canvas), chips swap to dark-tinted pastels, and primary buttons flip to the cyan accent on dark text.
 
@@ -185,11 +187,11 @@ In dark-canvas mode the topbar pulls down to `--shell-bg` (so chrome doesn't rea
 
 **Cyan is the only accent that signals action and state.** Use it sparingly — in normal screens it should be on **one** focused element at a time (active nav, focus ring, primary button on dark, env pill).
 
-| Token | Value | Use |
-|---|---|---|
-| `--accent-cyan` | `#22D3EE` | The accent — focus rings, active markers, env pill |
-| `--accent-cyan-2` | `#06B6D4` | Slightly deeper variant |
-| `--accent-cyan-deep` | `#0E7EA3` | Buttons on light canvas, links, deep emphasis |
+| Token                | Value     | Use                                                |
+| -------------------- | --------- | -------------------------------------------------- |
+| `--accent-cyan`      | `#22D3EE` | The accent — focus rings, active markers, env pill |
+| `--accent-cyan-2`    | `#06B6D4` | Slightly deeper variant                            |
+| `--accent-cyan-deep` | `#0E7EA3` | Buttons on light canvas, links, deep emphasis      |
 
 For tinted backgrounds, derive via `color-mix(in oklab, var(--accent-cyan) 12%, transparent)` rather than hand-mixing.
 
@@ -201,59 +203,59 @@ For tinted backgrounds, derive via `color-mix(in oklab, var(--accent-cyan) 12%, 
 
 These exist for status (success/warning/error/info) and for domain-coding the hierarchy. **Never use them as a brand action color.**
 
-| Name | Hex | Reserved for |
-|---|---|---|
-| `cyan` | `#22D3EE` | Default domain, action accent |
-| `violet` | `#A78BFA` | software domain (in a 4-color palette) — also extract step |
-| `emerald` | `#10B981` | success intent · life domain |
-| `amber` | `#F59E0B` | warning intent · climate domain · resolve step |
-| `rose` | `#F43F5E` | failure intent |
-| `indigo` | `#818CF8` | software domain |
+| Name      | Hex       | Reserved for                                               |
+| --------- | --------- | ---------------------------------------------------------- |
+| `cyan`    | `#22D3EE` | Default domain, action accent                              |
+| `violet`  | `#A78BFA` | software domain (in a 4-color palette) — also extract step |
+| `emerald` | `#10B981` | success intent · life domain                               |
+| `amber`   | `#F59E0B` | warning intent · climate domain · resolve step             |
+| `rose`    | `#F43F5E` | failure intent                                             |
+| `indigo`  | `#818CF8` | software domain                                            |
 
 ### Color — domain palette (4 domains, used as a 2.5–3px swatch on hierarchy nodes)
 
-| Domain | Hex |
-|---|---|
-| `life` | `#34D399` (emerald) |
-| `climate` | `#FBBF24` (amber) |
-| `software` | `#818CF8` (indigo) |
-| `default` | `#22D3EE` (cyan) |
+| Domain     | Hex                 |
+| ---------- | ------------------- |
+| `life`     | `#34D399` (emerald) |
+| `climate`  | `#FBBF24` (amber)   |
+| `software` | `#818CF8` (indigo)  |
+| `default`  | `#22D3EE` (cyan)    |
 
 ### Color — semantic intents
 
-| Intent | Text | Background | Border |
-|---|---|---|---|
-| success | `#065F46` | `#ECFDF5` | `#A7F3D0` |
-| warning | `#92400E` | `#FFFBEB` | `#FDE68A` |
-| failure | `#9F1239` | `#FFF1F2` | `#FECDD3` |
-| info | `#0E7490` | `#ECFEFF` | `#A5F3FC` |
-| secondary | `#5B21B6` | `#F5F3FF` | `#DDD6FE` |
+| Intent    | Text      | Background | Border    |
+| --------- | --------- | ---------- | --------- |
+| success   | `#065F46` | `#ECFDF5`  | `#A7F3D0` |
+| warning   | `#92400E` | `#FFFBEB`  | `#FDE68A` |
+| failure   | `#9F1239` | `#FFF1F2`  | `#FECDD3` |
+| info      | `#0E7490` | `#ECFEFF`  | `#A5F3FC` |
+| secondary | `#5B21B6` | `#F5F3FF`  | `#DDD6FE` |
 
 In dark-canvas mode chips invert to a dark-tinted pastel — see `studio.css` `.chip` overrides.
 
 ### Typography
 
-| Family | Tokens | Use |
-|---|---|---|
-| **Inter** (sans) | `--font-sans` | All UI: body, headings, buttons, labels |
-| **JetBrains Mono** | `--mono` | IDs, paths, kbd, eyebrows, table headers, stat numbers, code |
+| Family             | Tokens        | Use                                                          |
+| ------------------ | ------------- | ------------------------------------------------------------ |
+| **Inter** (sans)   | `--font-sans` | All UI: body, headings, buttons, labels                      |
+| **JetBrains Mono** | `--mono`      | IDs, paths, kbd, eyebrows, table headers, stat numbers, code |
 
 Mono is **load-bearing**, not decorative. Anything that is technically an identifier, path, command, key, or measured value goes in mono. This is what makes the product read as an IDE rather than an app.
 
 **Scale** (see `preview/type-scale.html`):
 
-| Token | Size | Weight | Use |
-|---|---|---|---|
-| `--text-6xl` | 60 | 800 | Hero (rare) |
-| `--text-5xl` | 48 | 800 | Display |
-| `--text-4xl` | 36 | 800 | H2 |
-| `--text-3xl` | 30 | 700 | H3 |
-| `--text-2xl` | 24 | 700 | Page title |
-| `--text-xl` | 20 | 500 | Modal title |
-| `--text-lg` | 18 | 600 | Section header |
-| `--text-base` | 16 | 400 | Emphasized body |
-| `--text-sm` | 14 | 400 | **Default UI text** |
-| `--text-xs` | 12 | 500 | Caption / button-xs |
+| Token         | Size | Weight | Use                 |
+| ------------- | ---- | ------ | ------------------- |
+| `--text-6xl`  | 60   | 800    | Hero (rare)         |
+| `--text-5xl`  | 48   | 800    | Display             |
+| `--text-4xl`  | 36   | 800    | H2                  |
+| `--text-3xl`  | 30   | 700    | H3                  |
+| `--text-2xl`  | 24   | 700    | Page title          |
+| `--text-xl`   | 20   | 500    | Modal title         |
+| `--text-lg`   | 18   | 600    | Section header      |
+| `--text-base` | 16   | 400    | Emphasized body     |
+| `--text-sm`   | 14   | 400    | **Default UI text** |
+| `--text-xs`   | 12   | 500    | Caption / button-xs |
 
 Body text: 13–14px Inter. Page titles: 24px / 700 / -0.015em. Headings tighten letter-spacing as size grows (-0.01em at 30, -0.02em at 36+).
 
@@ -265,14 +267,14 @@ Tailwind 4px scale. `--space-1` (4) · `--space-2` (8) · `--space-3` (12) · `-
 
 ### Radius
 
-| Token | px | Use |
-|---|---|---|
-| `--radius-sm` | 2 | Divider chips, hairline indicators |
-| (4) | 4 | Chips, table corners, hierarchy node-pills |
-| `--radius-md` | 6 | Buttons, inputs, icon buttons, nav items |
-| `--radius-lg` | 8 | Panels, cards, drawers |
-| `--radius-xl` | 12 | Modals, command palette |
-| `--radius-full` | 9999 | Avatars, env pill, status dots |
+| Token           | px   | Use                                        |
+| --------------- | ---- | ------------------------------------------ |
+| `--radius-sm`   | 2    | Divider chips, hairline indicators         |
+| (4)             | 4    | Chips, table corners, hierarchy node-pills |
+| `--radius-md`   | 6    | Buttons, inputs, icon buttons, nav items   |
+| `--radius-lg`   | 8    | Panels, cards, drawers                     |
+| `--radius-xl`   | 12   | Modals, command palette                    |
+| `--radius-full` | 9999 | Avatars, env pill, status dots             |
 
 ### Shadows
 
@@ -297,40 +299,44 @@ Used sparingly. The studio leans on **borders for separation, not elevation.**
 Every component below has a visual reference card in `preview/`. CSS lives in `styles/studio.css` (and `crud.css` for forms/modals). All are realized as JSX in `components/` for the prototype.
 
 ### Chrome (always dark)
-| Component | File | Anatomy |
-|---|---|---|
-| Titlebar | `shell.jsx` `Titlebar` | 36px tall · traffic lights · workspace path button · ⌘K chip |
-| Sidebar | `shell.jsx` `Sidebar` + `NavItem` | 240/64px · brand row · nav tree with cyan-bar active state · footer user row |
-| Topbar | `shell.jsx` `Topbar` | 52px · workspace chip · breadcrumbs · ⌘K palette button · bell · docs · env pill |
-| Statusbar | `shell.jsx` `Statusbar` | 26px · two groups separated by 1×12 dividers · pulsing daemon dot · live cpu/mem |
+
+| Component | File                              | Anatomy                                                                          |
+| --------- | --------------------------------- | -------------------------------------------------------------------------------- |
+| Titlebar  | `shell.jsx` `Titlebar`            | 36px tall · traffic lights · workspace path button · ⌘K chip                     |
+| Sidebar   | `shell.jsx` `Sidebar` + `NavItem` | 240/64px · brand row · nav tree with cyan-bar active state · footer user row     |
+| Topbar    | `shell.jsx` `Topbar`              | 52px · workspace chip · breadcrumbs · ⌘K palette button · bell · docs · env pill |
+| Statusbar | `shell.jsx` `Statusbar`           | 26px · two groups separated by 1×12 dividers · pulsing daemon dot · live cpu/mem |
 
 ### Overlays
-| Component | File | Anatomy |
-|---|---|---|
-| Command palette | `shell.jsx` `CommandPalette` | 640px · 12px radius · dark · search row · 56px-wide kind tag · ↵ ↑↓ esc footer |
-| Workspace switcher | `shell.jsx` `WorkspaceSwitcher` | 700px · "Open folder…" / "New…" / "Clone from git…" · recent list |
-| Modal / dialog | `modal.jsx`, `dialogs.jsx` | 12px radius · backdrop `rgba(2,5,9,0.55)` + 6px blur |
-| Toast | `crud.css` | 7px radius · 22px circular icon mark · 220ms slide-in |
+
+| Component          | File                            | Anatomy                                                                        |
+| ------------------ | ------------------------------- | ------------------------------------------------------------------------------ |
+| Command palette    | `shell.jsx` `CommandPalette`    | 640px · 12px radius · dark · search row · 56px-wide kind tag · ↵ ↑↓ esc footer |
+| Workspace switcher | `shell.jsx` `WorkspaceSwitcher` | 700px · "Open folder…" / "New…" / "Clone from git…" · recent list              |
+| Modal / dialog     | `modal.jsx`, `dialogs.jsx`      | 12px radius · backdrop `rgba(2,5,9,0.55)` + 6px blur                           |
+| Toast              | `crud.css`                      | 7px radius · 22px circular icon mark · 220ms slide-in                          |
 
 ### Surfaces & primitives
-| Selector | Use |
-|---|---|
-| `.panel`, `.panel-head`, `.panel-title`, `.panel-body` | Default content card |
-| `.stat`, `.stat .label`, `.stat .value`, `.stat .meta` | Stat tile (2px colored left bar, mono uppercase label, 28/700 number) |
-| `.drawer`, `.drawer-head`, `.drawer-body`, `.drawer-body .kv` | Right-side detail drawer |
-| `.table-wrap`, `table.t`, `.mono`, `.row-link`, `.row-actions` | Table — mono ID column, cyan row links, 5%-cyan selected row |
-| `.chip` + `.cyan` `.amber` `.violet` `.emerald` `.rose` `.gray` | Inline pill — mono 11px, 3px radius |
-| `.tabs`, `.tab`, `.tab.active`, `.tab .count` | 13px medium · 2px black underline on active · mono count |
-| `.btn`, `.btn-primary`, `.btn-accent`, `.btn-ghost`, `.btn-icon`, `.btn-sm` | 34px default · 28px small · 6px radius |
-| `.input`, `.search-input`, `<select>`, `<textarea>` | 5px radius · `#F7F9FB` resting · `#fff + cyan ring` focused |
-| `.kbd`, `.kbd-mini` | Keyboard hint chip |
+
+| Selector                                                                    | Use                                                                   |
+| --------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `.panel`, `.panel-head`, `.panel-title`, `.panel-body`                      | Default content card                                                  |
+| `.stat`, `.stat .label`, `.stat .value`, `.stat .meta`                      | Stat tile (2px colored left bar, mono uppercase label, 28/700 number) |
+| `.drawer`, `.drawer-head`, `.drawer-body`, `.drawer-body .kv`               | Right-side detail drawer                                              |
+| `.table-wrap`, `table.t`, `.mono`, `.row-link`, `.row-actions`              | Table — mono ID column, cyan row links, 5%-cyan selected row          |
+| `.chip` + `.cyan` `.amber` `.violet` `.emerald` `.rose` `.gray`             | Inline pill — mono 11px, 3px radius                                   |
+| `.tabs`, `.tab`, `.tab.active`, `.tab .count`                               | 13px medium · 2px black underline on active · mono count              |
+| `.btn`, `.btn-primary`, `.btn-accent`, `.btn-ghost`, `.btn-icon`, `.btn-sm` | 34px default · 28px small · 6px radius                                |
+| `.input`, `.search-input`, `<select>`, `<textarea>`                         | 5px radius · `#F7F9FB` resting · `#fff + cyan ring` focused           |
+| `.kbd`, `.kbd-mini`                                                         | Keyboard hint chip                                                    |
 
 ### Domain & graph
-| Selector | Use |
-|---|---|
+
+| Selector                                | Use                                                     |
+| --------------------------------------- | ------------------------------------------------------- | ------- | ------- | ------- |
 | `.kg-row`, `.kg-node` (`hierarchy.jsx`) | Hierarchy viewer — domain swatch via `data-domain` attr |
-| `.flow-node` (`pipeline-card.jsx`) | Pipeline step — `data-kind="source|extract|resolve|write"` |
-| `.flow-arrow` | 24×1px line with right-angle arrowhead |
+| `.flow-node` (`pipeline-card.jsx`)      | Pipeline step — `data-kind="source                      | extract | resolve | write"` |
+| `.flow-arrow`                           | 24×1px line with right-angle arrowhead                  |
 
 ### Iconography
 
@@ -441,6 +447,7 @@ Same surface pattern as Schema. Individuals are instances; the table foregrounds
 ### Pipelines (`page-rest.jsx`, `pipeline-card.jsx`)
 
 Cards in a 2-column grid. Each card:
+
 - **Head** — name (truncates) + description, status chip, source-data tags, kebab, "Run" button.
 - **Flow strip** (gradient inside the card) — sequence of `.flow-node`s connected by 24px arrow lines. Four kinds: `source` (cyan), `extract` (violet), `resolve` (amber), `write` (emerald).
 - **Foot** — 5-stat row (last run, ingested, created, updated, errors).
@@ -462,18 +469,18 @@ Interactive node-link diagram. Domain-colored nodes, neutral edges, accent-cyan 
 
 ## 9. Interactions & keyboard
 
-| Action | Behavior |
-|---|---|
-| ⌘K / Ctrl+K | Toggle command palette |
-| Esc | Close palette / dialog / drawer |
-| Click workspace chip | Open workspace switcher |
-| Click sidebar parent | Navigate to first child + auto-expand |
-| Click collapse arrow | Toggle sidebar 240 ↔ 64px |
-| Hover row in palette | Highlight + show → arrow |
-| Click pipeline "Run" | Trigger run + reflect in statusbar "1 pipeline running" |
-| Toggle dark canvas | Add/remove `body.dark-canvas` |
-| Tab / Shift-Tab | Walk focusable elements in DOM order |
-| Focus | Cyan ring `box-shadow: 0 0 0 3px rgba(34,211,238,0.13)` on the input/control |
+| Action               | Behavior                                                                     |
+| -------------------- | ---------------------------------------------------------------------------- |
+| ⌘K / Ctrl+K          | Toggle command palette                                                       |
+| Esc                  | Close palette / dialog / drawer                                              |
+| Click workspace chip | Open workspace switcher                                                      |
+| Click sidebar parent | Navigate to first child + auto-expand                                        |
+| Click collapse arrow | Toggle sidebar 240 ↔ 64px                                                    |
+| Hover row in palette | Highlight + show → arrow                                                     |
+| Click pipeline "Run" | Trigger run + reflect in statusbar "1 pipeline running"                      |
+| Toggle dark canvas   | Add/remove `body.dark-canvas`                                                |
+| Tab / Shift-Tab      | Walk focusable elements in DOM order                                         |
+| Focus                | Cyan ring `box-shadow: 0 0 0 3px rgba(34,211,238,0.13)` on the input/control |
 
 Routing in the prototype uses `#r=<route>` URL fragments. The real app should use whatever the host framework provides (React Router, Tauri's router, etc.). Route IDs are documented in `components/shell.jsx` `NAV_TREE` and `ROUTE_LABELS`.
 

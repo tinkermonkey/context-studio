@@ -1,7 +1,7 @@
 # ============================================================================
 # Stage 1: Base Environment Setup
 # ============================================================================
-# Last dependency refresh: 2026-04-04
+# Last dependency refresh: 2026-05-09
 FROM switchyard-orchestrator:latest
 
 # The base image already includes:
@@ -17,9 +17,7 @@ USER root
 # ============================================================================
 # Stage 2: Install Project-Specific Runtimes and System Dependencies
 # ============================================================================
-# Install Node.js 22.x and build dependencies for SQLite extensions and Tauri
 
-# Set environment to avoid interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install Node.js 22.x (for frontend/ux and Tauri app)
@@ -47,19 +45,26 @@ RUN apt-get update && apt-get install -y \
     rm -rf /var/lib/apt/lists/*
 
 # ============================================================================
-# Stage 3: Pre-install Dependencies (RECOMMENDED for fast startup)
+# Stage 3: Create runtime user BEFORE installing dependencies
 # ============================================================================
-# WORKDIR should match where the orchestrator will mount the project
-WORKDIR /workspace/context-studio
+# Create orchestrator user early so npm ci can run as this user,
+# avoiding an expensive chown of 700MB+ node_modules afterward.
+RUN groupadd -g 1000 orchestrator || true && \
+    useradd -m -u 1000 -g 1000 orchestrator || true && \
+    mkdir -p /home/orchestrator/.ssh && \
+    chown orchestrator:orchestrator /home/orchestrator/.ssh && \
+    chmod 700 /home/orchestrator/.ssh
 
 # ============================================================================
-# Python Dependencies - local-server/
+# Stage 4: Pre-install Dependencies
 # ============================================================================
-# Copy only dependency manifests for installation
+WORKDIR /workspace/context-studio
+
+# --- Python Dependencies (local-server/) ---
+# pip installs system-wide as root
 COPY local-server/requirements.txt ./local-server/requirements.txt
 COPY local-server/requirements-dev.txt ./local-server/requirements-dev.txt
 
-# Install Python dependencies (system-wide, no venv needed in container)
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install --no-cache-dir -r local-server/requirements.txt && \
     pip install --no-cache-dir -r local-server/requirements-dev.txt
@@ -71,55 +76,32 @@ RUN python -m spacy download en_core_web_sm
 # is not readable (e.g., partial bind mounts in orchestrator environments)
 RUN printf '[pytest]\nasyncio_mode = auto\n' > local-server/pytest.ini
 
-# ============================================================================
-# Frontend Dependencies (Node.js) - ux/
-# ============================================================================
-# Copy only package manifests for installation
-COPY ux/package.json ux/package-lock.json* ./ux/
+# Install Node.js development tools globally (as root)
+RUN npm install -g prettier eslint typescript
 
-# Install UX dependencies with cache mount for faster builds
-RUN --mount=type=cache,target=/root/.npm \
+# --- Frontend Dependencies (Node.js) ---
+# Set up workspace ownership so npm ci runs as orchestrator (avoids 60s+ chown)
+RUN mkdir -p /workspace/context-studio/ux /workspace/context-studio/app && \
+    chown -R orchestrator:orchestrator /workspace/context-studio
+
+# Copy package manifests with correct ownership
+COPY --chown=orchestrator:orchestrator ux/package.json ux/package-lock.json* ./ux/
+COPY --chown=orchestrator:orchestrator app/package.json app/package-lock.json* ./app/
+
+# Switch to orchestrator for npm ci — installs node_modules owned by orchestrator directly
+USER orchestrator
+
+RUN --mount=type=cache,target=/home/orchestrator/.npm,uid=1000,gid=1000 \
     cd ux && \
     npm ci --legacy-peer-deps
 
-# ============================================================================
-# Desktop App Dependencies (Node.js) - app/
-# ============================================================================
-# Copy only package manifests for installation
-COPY app/package.json app/package-lock.json* ./app/
-
-# Install app dependencies with cache mount for faster builds
-RUN --mount=type=cache,target=/root/.npm \
+RUN --mount=type=cache,target=/home/orchestrator/.npm,uid=1000,gid=1000 \
     cd app && \
     npm ci
 
-# Install Node.js development tools globally
-RUN npm install -g prettier eslint typescript
-
 # ============================================================================
-# Stage 4: Ownership and Permissions
+# Stage 5: Runtime Configuration
 # ============================================================================
-# Change ownership ONLY of what was installed, NOT source code
-# Source code ownership is handled by the mount
-
-# Create orchestrator user (matches orchestrator container for consistent permissions)
-# Use GID 1000 as primary group to avoid conflicts
-RUN groupadd -g 1000 orchestrator || true && \
-    useradd -m -u 1000 -g 1000 orchestrator || true && \
-    mkdir -p /home/orchestrator/.ssh && \
-    chown orchestrator:orchestrator /home/orchestrator/.ssh && \
-    chmod 700 /home/orchestrator/.ssh
-
-# Change ownership of installed dependencies
-RUN chown -R orchestrator:orchestrator /workspace/context-studio/ux/node_modules && \
-    chown -R orchestrator:orchestrator /workspace/context-studio/app/node_modules
-
-# ============================================================================
-# Stage 5: Switch to Runtime User
-# ============================================================================
-USER orchestrator
-
-# Set environment variables for all tech stacks
 ENV NODE_ENV=development
 
 # ============================================================================

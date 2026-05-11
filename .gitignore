@@ -50,6 +50,9 @@ __pycache__/
 
 # Test outputs
 ux/test_output.txt
+ux/test-results/
+ux/coverage/
+ux/e2e/reports/
 
 .env
 **/.env*

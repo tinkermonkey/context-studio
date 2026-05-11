@@ -1,22 +1,35 @@
-import "@testing-library/jest-dom";
+import "@testing-library/jest-dom/vitest";
 import { afterEach, beforeEach, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
 
-vi.mock("axios", () => ({
-  default: {
-    create: vi.fn(() => ({
-      interceptors: {
-        request: { use: vi.fn() },
-        response: { use: vi.fn() },
-      },
-      request: vi.fn(() => Promise.resolve({ data: {} })),
-      get: vi.fn(() => Promise.resolve({ data: {} })),
-      post: vi.fn(() => Promise.resolve({ data: {} })),
-      put: vi.fn(() => Promise.resolve({ data: {} })),
-      delete: vi.fn(() => Promise.resolve({ data: {} })),
-    })),
+// Mock @tanstack/react-router to handle useSearch gracefully in tests
+vi.mock("@tanstack/react-router", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@tanstack/react-router")>();
+  return {
+    ...actual,
+    useSearch: (_options?: Record<string, unknown>) => {
+      try {
+        // Try to use the real useSearch
+        return actual.useSearch?.(_options as any) ?? {};
+      } catch {
+        // If it fails (no active match), return empty search params
+        // This allows components to work in tests without a fully configured router
+        return {};
+      }
+    },
+  };
+});
+
+// Set up a mock clipboard API for testing - create it at global scope
+const mockClipboardWriteText = vi.fn().mockResolvedValue(undefined);
+Object.defineProperty(navigator, "clipboard", {
+  value: {
+    writeText: mockClipboardWriteText,
   },
-}));
+  configurable: true,
+  writable: true,
+});
+(globalThis as any).__mockClipboardWriteText = mockClipboardWriteText;
 
 afterEach(() => {
   cleanup();
@@ -51,7 +64,9 @@ Object.defineProperty(window, "matchMedia", {
   observe(_target: Element): void {}
   unobserve(_target: Element): void {}
   disconnect(): void {}
-  takeRecords(): IntersectionObserverEntry[] { return []; }
+  takeRecords(): IntersectionObserverEntry[] {
+    return [];
+  }
 };
 
 global.ResizeObserver = class ResizeObserver {

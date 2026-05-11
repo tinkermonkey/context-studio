@@ -1,9 +1,9 @@
-@import '@fontsource-variable/inter';
-@import '@fontsource-variable/jetbrains-mono';
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/jetbrains-mono";
 
-@import './design-system/tokens.css';
-@import './design-system/studio.css';
-@import './design-system/crud.css';
-@import './design-system/graph.css';
+@import "./design-system/tokens.css";
+@import "./design-system/studio.css";
+@import "./design-system/crud.css";
+@import "./design-system/graph.css";
 
-@import 'tailwindcss';
+@import "tailwindcss";

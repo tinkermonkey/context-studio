@@ -2,7 +2,7 @@
 
 Companion to `README.md`. The README is the **visual** spec — tokens, components, screens at a structural level. This document is the **behavioral** spec — flows, states, copy, accessibility, and the rules that govern how surfaces respond to user action.
 
-If the README answers *"what does it look like?"*, this answers *"what happens when…?"*.
+If the README answers _"what does it look like?"_, this answers _"what happens when…?"_.
 
 ---
 
@@ -27,17 +27,17 @@ The user is a **technical curator**: data engineer, ML engineer, ontologist, or 
 
 **Always-true vocabulary:**
 
-| Term | Meaning |
-|---|---|
-| Workspace | A local folder containing a schema, data, pipelines, and config. The unit of "project." |
-| Taxonomy | A namespaced hierarchy of classes (`life`, `climate`, `software`). |
-| Class | A type definition. Has properties, relationships, a domain, and instances. |
-| Property | A typed attribute on a class. |
-| Relationship | A typed edge between two classes. |
-| Individual | An instance of a class. The leaf data. |
-| Pipeline | A named extraction + ingestion flow that produces individuals. |
-| Run | One execution of a pipeline. Has a status, duration, counts, and a log. |
-| Daemon | The local graph process. Owns the index. Lives at `:7474`. |
+| Term         | Meaning                                                                                 |
+| ------------ | --------------------------------------------------------------------------------------- |
+| Workspace    | A local folder containing a schema, data, pipelines, and config. The unit of "project." |
+| Taxonomy     | A namespaced hierarchy of classes (`life`, `climate`, `software`).                      |
+| Class        | A type definition. Has properties, relationships, a domain, and instances.              |
+| Property     | A typed attribute on a class.                                                           |
+| Relationship | A typed edge between two classes.                                                       |
+| Individual   | An instance of a class. The leaf data.                                                  |
+| Pipeline     | A named extraction + ingestion flow that produces individuals.                          |
+| Run          | One execution of a pipeline. Has a status, duration, counts, and a log.                 |
+| Daemon       | The local graph process. Owns the index. Lives at `:7474`.                              |
 
 These terms are load-bearing — UI labels, error messages, and docs all use them verbatim. Never substitute "type" for "class" or "record" for "individual."
 
@@ -94,26 +94,26 @@ Every screen must implement five states. The default specs in the README cover t
 
 ### General rules
 
-| State | Trigger | Treatment |
-|---|---|---|
-| Loading | Initial fetch, refresh, after a mutation | Skeletons (1px borders, `--canvas-bg-2` fill, 1.4s wave). Never blank space. ≤300ms — show skeleton; >300ms — keep skeleton; <100ms — skip skeleton. |
-| Empty | No data exists yet | Centered illustration *placeholder* (line-icon, 48px, `--canvas-fg-4`), one-line title, two-line guidance, single primary CTA. |
-| Partial | Some data, but a critical piece is missing | Render what's there; show an inline banner above the missing region with a remediation CTA. |
-| Error | Fetch failed, daemon down, network | Page-level error card: failure-intent border-left, technical message in mono, "Retry" + "Open daemon log" actions. |
-| Offline | Daemon connection lost | Statusbar dot turns rose, statusbar text "graph daemon disconnected." Mutations disabled across the app — primary buttons disabled with tooltip "Daemon disconnected." Reads remain available from the local cache. |
+| State   | Trigger                                    | Treatment                                                                                                                                                                                                           |
+| ------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Loading | Initial fetch, refresh, after a mutation   | Skeletons (1px borders, `--canvas-bg-2` fill, 1.4s wave). Never blank space. ≤300ms — show skeleton; >300ms — keep skeleton; <100ms — skip skeleton.                                                                |
+| Empty   | No data exists yet                         | Centered illustration _placeholder_ (line-icon, 48px, `--canvas-fg-4`), one-line title, two-line guidance, single primary CTA.                                                                                      |
+| Partial | Some data, but a critical piece is missing | Render what's there; show an inline banner above the missing region with a remediation CTA.                                                                                                                         |
+| Error   | Fetch failed, daemon down, network         | Page-level error card: failure-intent border-left, technical message in mono, "Retry" + "Open daemon log" actions.                                                                                                  |
+| Offline | Daemon connection lost                     | Statusbar dot turns rose, statusbar text "graph daemon disconnected." Mutations disabled across the app — primary buttons disabled with tooltip "Daemon disconnected." Reads remain available from the local cache. |
 
 ### Per-screen empty states
 
-| Screen | Empty title | Empty guidance | CTA |
-|---|---|---|---|
-| Dashboard | "Empty workspace" | "Add a taxonomy to start defining what your knowledge graph contains." | "+ New taxonomy" |
-| Schema → Taxonomies | "No taxonomies yet" | "A taxonomy groups related classes. Most workspaces start with one or two." | "+ New taxonomy" |
-| Schema → Classes | "No classes in this taxonomy" | "Classes are the types your individuals will conform to." | "+ New class" |
-| Schema → Properties | "No properties on this class" | "Properties are typed attributes — name, latitude, accuracy, etc." | "+ Add property" |
-| Schema → Relationships | "No relationships defined" | "Relationships are typed edges between classes." | "+ New relationship" |
-| Data → Individuals | "No individuals yet" | "Run a pipeline or import a dataset to populate this class." | "Run pipeline" + "Import…" (secondary) |
-| Pipelines | "No pipelines configured" | "A pipeline extracts individuals from a source and writes them to a class." | "+ New pipeline" |
-| External Reference | "No reference sources" | "Connect documents, datasets, or APIs to ground your graph in real-world data." | "+ Add source" |
+| Screen                 | Empty title                   | Empty guidance                                                                  | CTA                                    |
+| ---------------------- | ----------------------------- | ------------------------------------------------------------------------------- | -------------------------------------- |
+| Dashboard              | "Empty workspace"             | "Add a taxonomy to start defining what your knowledge graph contains."          | "+ New taxonomy"                       |
+| Schema → Taxonomies    | "No taxonomies yet"           | "A taxonomy groups related classes. Most workspaces start with one or two."     | "+ New taxonomy"                       |
+| Schema → Classes       | "No classes in this taxonomy" | "Classes are the types your individuals will conform to."                       | "+ New class"                          |
+| Schema → Properties    | "No properties on this class" | "Properties are typed attributes — name, latitude, accuracy, etc."              | "+ Add property"                       |
+| Schema → Relationships | "No relationships defined"    | "Relationships are typed edges between classes."                                | "+ New relationship"                   |
+| Data → Individuals     | "No individuals yet"          | "Run a pipeline or import a dataset to populate this class."                    | "Run pipeline" + "Import…" (secondary) |
+| Pipelines              | "No pipelines configured"     | "A pipeline extracts individuals from a source and writes them to a class."     | "+ New pipeline"                       |
+| External Reference     | "No reference sources"        | "Connect documents, datasets, or APIs to ground your graph in real-world data." | "+ Add source"                         |
 
 ### Skeletons — what counts
 
@@ -121,12 +121,12 @@ Skeletons mirror the **shape** of the populated content. A table renders 6 skele
 
 ### Error states — categories & treatment
 
-| Category | Examples | Treatment |
-|---|---|---|
-| Validation | Form field invalid | Inline below field, failure-intent text, mono if echoing identifier |
-| Action | "Could not save class" | Banner inside the open dialog/drawer; preserves form state |
-| Resource | Class not found, run not found | Page-level — replace canvas with error card, keep chrome |
-| System | Daemon down, network down | Global statusbar treatment + per-action disabling |
+| Category   | Examples                       | Treatment                                                           |
+| ---------- | ------------------------------ | ------------------------------------------------------------------- |
+| Validation | Form field invalid             | Inline below field, failure-intent text, mono if echoing identifier |
+| Action     | "Could not save class"         | Banner inside the open dialog/drawer; preserves form state          |
+| Resource   | Class not found, run not found | Page-level — replace canvas with error card, keep chrome            |
+| System     | Daemon down, network down      | Global statusbar treatment + per-action disabling                   |
 
 ---
 
@@ -154,11 +154,11 @@ Skeletons mirror the **shape** of the populated content. A table renders 6 skele
 
 ### Save / discard semantics
 
-| Surface | Save trigger | Discard trigger |
-|---|---|---|
-| Drawer | autosave on blur | revert button in drawer head (only visible while dirty) |
-| Dialog | explicit Save button | Cancel button or ESC (with confirm if dirty) |
-| Inline edit (table cell) | blur or ↵ | ESC reverts |
+| Surface                  | Save trigger         | Discard trigger                                         |
+| ------------------------ | -------------------- | ------------------------------------------------------- |
+| Drawer                   | autosave on blur     | revert button in drawer head (only visible while dirty) |
+| Dialog                   | explicit Save button | Cancel button or ESC (with confirm if dirty)            |
+| Inline edit (table cell) | blur or ↵            | ESC reverts                                             |
 
 ---
 
@@ -168,15 +168,15 @@ Skeletons mirror the **shape** of the populated content. A table renders 6 skele
 
 ### What requires confirmation
 
-| Action | Reason | Treatment |
-|---|---|---|
-| Delete class with ≥1 instance | Cascades to individuals | Type-to-confirm: user types the class name |
-| Delete property in use | Cascades to data | Standard confirm |
-| Delete pipeline | Removes run history | Standard confirm |
-| Delete workspace from "Recent" | Removes only the entry, not files | None — undoable via toast |
-| Publish taxonomy | Immutable | Standard confirm with diff summary |
-| Reset workspace | Wipes local cache | Type-to-confirm: user types `reset` |
-| Force-close daemon | Interrupts running pipelines | Standard confirm listing affected runs |
+| Action                         | Reason                            | Treatment                                  |
+| ------------------------------ | --------------------------------- | ------------------------------------------ |
+| Delete class with ≥1 instance  | Cascades to individuals           | Type-to-confirm: user types the class name |
+| Delete property in use         | Cascades to data                  | Standard confirm                           |
+| Delete pipeline                | Removes run history               | Standard confirm                           |
+| Delete workspace from "Recent" | Removes only the entry, not files | None — undoable via toast                  |
+| Publish taxonomy               | Immutable                         | Standard confirm with diff summary         |
+| Reset workspace                | Wipes local cache                 | Type-to-confirm: user types `reset`        |
+| Force-close daemon             | Interrupts running pipelines      | Standard confirm listing affected runs     |
 
 ### What does NOT require confirmation
 
@@ -198,6 +198,7 @@ Skeletons mirror the **shape** of the populated content. A table renders 6 skele
 - Body: state the consequence in one sentence, then the scope in mono on a new line. Don't apologize, don't soften.
 
 Example:
+
 > **Delete class?**
 > This will remove the class and all 1,247 individuals that reference it. This cannot be undone.
 > `cls_organism · life`
@@ -212,10 +213,12 @@ Example:
 The app launches into the **Workspace switcher overlay**, not the Dashboard. No chrome behind it (or behind it is the empty shell with a single brand mark centered, 96px, faded to 30%).
 
 Switcher head copy:
+
 > **Open a workspace**
 > A workspace is a local folder containing your schema, data, pipelines, and config.
 
 Three primary actions, large tiles in a row:
+
 - **Open folder…** — opens the OS file picker. The selected folder is checked for a `.context-studio/` directory; if missing, prompt to initialize.
 - **New workspace…** — same picker, plus a name field. Creates `.context-studio/` and a starter taxonomy.
 - **Clone from git…** — URL field + destination folder. Clones, then opens.
@@ -252,16 +255,16 @@ No modals, tours, or tooltips. The product is its own tutorial.
 
 Verify each pairing meets AA (4.5:1 for body, 3:1 for large/UI):
 
-| Pair | Result | Action if fails |
-|---|---|---|
-| `--canvas-fg-1` (`#0B1220`) on `--canvas-bg` (`#FFF`) | ✅ pass | — |
-| `--canvas-fg-2` (`#475569`) on `--canvas-bg` | ✅ pass | — |
-| `--canvas-fg-3` (`#64748B`) on `--canvas-bg` | ✅ pass | — |
-| `--canvas-fg-4` (`#94A3B8`) on `--canvas-bg` | ⚠️ borderline (3.0:1) | Use only for non-essential placeholder/disabled |
-| `--accent-cyan-deep` (`#0E7EA3`) on `--canvas-bg` | ✅ pass for buttons/links | — |
-| `--accent-cyan` (`#22D3EE`) on `--canvas-bg` | ❌ fails for text | Never set body text in `--accent-cyan`. Use `--accent-cyan-deep`. Cyan is for **fills, dots, and strokes** on light. |
-| `--shell-fg-1` (`#E6EDF3`) on `--shell-bg` (`#0B0F14`) | ✅ pass | — |
-| `--shell-fg-3` (`#6E7A87`) on `--shell-bg` | ⚠️ borderline | Avoid for body text; OK for icons + disabled |
+| Pair                                                   | Result                    | Action if fails                                                                                                      |
+| ------------------------------------------------------ | ------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `--canvas-fg-1` (`#0B1220`) on `--canvas-bg` (`#FFF`)  | ✅ pass                   | —                                                                                                                    |
+| `--canvas-fg-2` (`#475569`) on `--canvas-bg`           | ✅ pass                   | —                                                                                                                    |
+| `--canvas-fg-3` (`#64748B`) on `--canvas-bg`           | ✅ pass                   | —                                                                                                                    |
+| `--canvas-fg-4` (`#94A3B8`) on `--canvas-bg`           | ⚠️ borderline (3.0:1)     | Use only for non-essential placeholder/disabled                                                                      |
+| `--accent-cyan-deep` (`#0E7EA3`) on `--canvas-bg`      | ✅ pass for buttons/links | —                                                                                                                    |
+| `--accent-cyan` (`#22D3EE`) on `--canvas-bg`           | ❌ fails for text         | Never set body text in `--accent-cyan`. Use `--accent-cyan-deep`. Cyan is for **fills, dots, and strokes** on light. |
+| `--shell-fg-1` (`#E6EDF3`) on `--shell-bg` (`#0B0F14`) | ✅ pass                   | —                                                                                                                    |
+| `--shell-fg-3` (`#6E7A87`) on `--shell-bg`             | ⚠️ borderline             | Avoid for body text; OK for icons + disabled                                                                         |
 
 ### Focus
 
@@ -301,12 +304,12 @@ Desktop-only product. Minimum supported window size: **1024 × 720**. Below this
 
 ### Breakpoints
 
-| Width | Behavior |
-|---|---|
-| ≥ 1440 | Default. All layouts as specified. |
-| 1280–1440 | Sidebar stays expanded. Dashboard 2-column area becomes 1.2fr / 1fr. |
+| Width     | Behavior                                                                                                              |
+| --------- | --------------------------------------------------------------------------------------------------------------------- |
+| ≥ 1440    | Default. All layouts as specified.                                                                                    |
+| 1280–1440 | Sidebar stays expanded. Dashboard 2-column area becomes 1.2fr / 1fr.                                                  |
 | 1024–1280 | Sidebar auto-collapses to 64px. User can re-expand; preference persists per-window. Dashboard stat grid wraps to 2×2. |
-| < 1024 | "Window too small" overlay. |
+| < 1024    | "Window too small" overlay.                                                                                           |
 
 ### Drawers vs. dialogs
 
@@ -333,16 +336,16 @@ Desktop-only product. Minimum supported window size: **1024 × 720**. Below this
 
 Standardize these strings. Use them verbatim across the product.
 
-| Concept | Button | Confirmation title | Toast on success |
-|---|---|---|---|
-| Create | "+ New \<thing\>" | n/a | "\<Thing\> created · \<id\>" |
-| Save | "Save" | n/a | "Saved" (only if not autosaved) |
-| Delete | "Delete" | "Delete \<thing\>?" | "\<Thing\> deleted · Undo" |
-| Archive | "Archive" | "Archive \<thing\>?" | "\<Thing\> archived · Undo" |
-| Publish | "Publish…" | "Publish \<thing\>?" | "\<Thing\> published · \<version\>" |
-| Run | "Run" | n/a (running is non-destructive) | "Pipeline started" → "Pipeline ran · N records" |
-| Cancel run | "Cancel run" | n/a | "Run canceled" |
-| Refresh | "Refresh" | n/a | (no toast) |
+| Concept    | Button            | Confirmation title               | Toast on success                                |
+| ---------- | ----------------- | -------------------------------- | ----------------------------------------------- |
+| Create     | "+ New \<thing\>" | n/a                              | "\<Thing\> created · \<id\>"                    |
+| Save       | "Save"            | n/a                              | "Saved" (only if not autosaved)                 |
+| Delete     | "Delete"          | "Delete \<thing\>?"              | "\<Thing\> deleted · Undo"                      |
+| Archive    | "Archive"         | "Archive \<thing\>?"             | "\<Thing\> archived · Undo"                     |
+| Publish    | "Publish…"        | "Publish \<thing\>?"             | "\<Thing\> published · \<version\>"             |
+| Run        | "Run"             | n/a (running is non-destructive) | "Pipeline started" → "Pipeline ran · N records" |
+| Cancel run | "Cancel run"      | n/a                              | "Run canceled"                                  |
+| Refresh    | "Refresh"         | n/a                              | (no toast)                                      |
 
 ### Error message patterns
 

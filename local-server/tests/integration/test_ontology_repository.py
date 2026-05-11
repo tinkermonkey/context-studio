@@ -32,6 +32,7 @@ from domain.ontology.value_objects import (
     ExternalReference,
     DataPropertyValue,
     SearchCriteria,
+    Status,
 )
 
 from adapters.persistence.sqlite.models import Base
@@ -696,3 +697,109 @@ class TestRelationshipCRUD:
         deleted = repo.delete_relationship("rel-1")
         assert deleted is True
         assert repo.get_relationship("rel-1") is None
+
+
+class TestStatusPersistence:
+    """Tests for verifying status field persistence on entity updates."""
+
+    def test_taxonomy_status_persisted_on_update(self, repo):
+        """Test that taxonomy status is persisted when updating."""
+        # Create taxonomy with default draft status
+        taxonomy = Taxonomy(id="tax-status-1", title="Test Taxonomy")
+        saved = repo.save_taxonomy(taxonomy)
+        assert saved.status == Status.DRAFT
+
+        # Update status to published
+        saved.status = Status.PUBLISHED
+        updated = repo.save_taxonomy(saved)
+        assert updated.status == Status.PUBLISHED
+
+        # Retrieve from DB to confirm persistence
+        retrieved = repo.get_taxonomy(saved.id)
+        assert retrieved is not None
+        assert retrieved.status == Status.PUBLISHED
+
+    def test_concept_scheme_status_persisted_on_update(self, repo, sample_taxonomy):
+        """Test that concept scheme status is persisted when updating."""
+        # Create concept scheme with default draft status
+        scheme = ConceptScheme(
+            id="scheme-status-1",
+            taxonomy_id=sample_taxonomy.id,
+            title="Test Scheme",
+        )
+        saved = repo.save_concept_scheme(scheme)
+        assert saved.status == Status.DRAFT
+
+        # Update status to published
+        saved.status = Status.PUBLISHED
+        updated = repo.save_concept_scheme(saved)
+        assert updated.status == Status.PUBLISHED
+
+        # Retrieve from DB to confirm persistence
+        retrieved = repo.get_concept_scheme(saved.id)
+        assert retrieved is not None
+        assert retrieved.status == Status.PUBLISHED
+
+    def test_class_status_persisted_on_update(self, repo, sample_concept_scheme, sample_taxonomy):
+        """Test that class status is persisted when updating."""
+        # Create class with default draft status
+        cls = Class(
+            id="class-status-1",
+            concept_scheme_id=sample_concept_scheme.id,
+            taxonomy_id=sample_taxonomy.id,
+            title="Test Class",
+        )
+        saved = repo.save_class(cls)
+        assert saved.status == Status.DRAFT
+
+        # Update status to published
+        saved.status = Status.PUBLISHED
+        updated = repo.save_class(saved)
+        assert updated.status == Status.PUBLISHED
+
+        # Retrieve from DB to confirm persistence
+        retrieved = repo.get_class(saved.id)
+        assert retrieved is not None
+        assert retrieved.status == Status.PUBLISHED
+
+    def test_individual_status_persisted_on_update(self, repo, sample_class):
+        """Test that individual status is persisted when updating."""
+        # Create individual with default draft status
+        individual = Individual(
+            id="ind-status-1",
+            title="Test Individual",
+            class_ids=[sample_class.id],
+        )
+        saved = repo.save_individual(individual)
+        assert saved.status == Status.DRAFT
+
+        # Update status to published
+        saved.status = Status.PUBLISHED
+        updated = repo.save_individual(saved)
+        assert updated.status == Status.PUBLISHED
+
+        # Retrieve from DB to confirm persistence
+        retrieved = repo.get_individual(saved.id)
+        assert retrieved is not None
+        assert retrieved.status == Status.PUBLISHED
+
+    def test_property_definition_status_persisted_on_update(self, repo):
+        """Test that property definition status is persisted when updating."""
+        # Create property definition with default draft status
+        prop = PropertyDefinition(
+            id="prop-status-1",
+            identifier="test_property",
+            title="Test Property",
+        )
+        saved = repo.save_property_definition(prop)
+        assert saved.status == Status.DRAFT
+
+        # Update status to published
+        saved.status = Status.PUBLISHED
+        updated = repo.save_property_definition(saved)
+        assert updated.status == Status.PUBLISHED
+
+        # Retrieve from DB to confirm persistence
+        retrieved = repo.get_property_definition(saved.id)
+        assert retrieved is not None
+        assert retrieved.status == Status.PUBLISHED

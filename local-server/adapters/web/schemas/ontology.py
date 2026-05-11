@@ -25,7 +25,7 @@ These schemas handle serialization/deserialization between HTTP and domain model
 """
 
 from datetime import datetime
-from typing import Optional, Any, TypeVar, Generic
+from typing import Optional, Any, TypeVar, Generic, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -51,6 +51,20 @@ class TaxonomyUpdateRequest(BaseModel):
     description: Optional[str] = Field(None, description="New description")
 
 
+class TaxonomyPublishRequest(BaseModel):
+    """Request to publish a taxonomy."""
+
+    commit_message: str = Field(..., description="Commit message for the publication", min_length=1)
+
+
+class PublishDiffStats(BaseModel):
+    """Response containing diff statistics for publishing."""
+
+    added: int = Field(..., description="Number of classes that will be added")
+    modified: int = Field(..., description="Number of classes that will be modified")
+    removed: int = Field(..., description="Number of classes that will be removed")
+
+
 class TaxonomyResponse(BaseModel):
     """Response containing taxonomy data."""
 
@@ -65,6 +79,9 @@ class TaxonomyResponse(BaseModel):
     )
     version: int = Field(
         default=1, description="Version number for optimistic concurrency control"
+    )
+    status: Literal["draft", "published"] = Field(
+        default="draft", description="Publication status (draft or published)"
     )
 
 
@@ -102,6 +119,9 @@ class ConceptSchemeResponse(BaseModel):
     )
     version: int = Field(
         default=1, description="Version number for optimistic concurrency control"
+    )
+    status: Literal["draft", "published"] = Field(
+        default="draft", description="Publication status (draft or published)"
     )
 
 
@@ -222,6 +242,9 @@ class ClassResponse(BaseModel):
     version: int = Field(
         default=1, description="Version number for optimistic concurrency control"
     )
+    status: Literal["draft", "published"] = Field(
+        default="draft", description="Publication status (draft or published)"
+    )
 
 
 # ==================== Relationship Schemas ====================
@@ -292,6 +315,9 @@ class PropertyDefinitionResponse(BaseModel):
     version: int = Field(
         default=1, description="Version number for optimistic concurrency control"
     )
+    status: Literal["draft", "published"] = Field(
+        default="draft", description="Publication status (draft or published)"
+    )
 
 
 # ==================== Individual Schemas ====================
@@ -348,6 +374,9 @@ class IndividualResponse(BaseModel):
     )
     version: int = Field(
         default=1, description="Version number for optimistic concurrency control"
+    )
+    status: Literal["draft", "published"] = Field(
+        default="draft", description="Publication status (draft or published)"
     )
 
 

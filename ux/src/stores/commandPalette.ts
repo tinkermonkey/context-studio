@@ -27,9 +27,7 @@ export const useCommandPaletteStore = create<CommandPaletteState>((set) => ({
   togglePalette: () => set((state) => ({ open: !state.open })),
   registerActions: (newActions) =>
     set((state) => {
-      const existing = state.actions.filter(
-        (a) => !newActions.find((n) => n.id === a.id)
-      );
+      const existing = state.actions.filter((a) => !newActions.find((n) => n.id === a.id));
       return { actions: [...existing, ...newActions] };
     }),
   unregisterActions: (ids) =>
