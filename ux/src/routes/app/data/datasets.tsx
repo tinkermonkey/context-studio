@@ -4,7 +4,7 @@ import { datasetsCopy } from "./datasets/-copy";
 
 export const Route = createFileRoute("/app/data/datasets")({
   component: () => (
-    <div data-testid="datasets-page">
+    <div>
       <EmptyState
         title={datasetsCopy.emptyState.title}
         description={datasetsCopy.emptyState.description}
