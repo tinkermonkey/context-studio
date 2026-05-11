@@ -8,6 +8,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Sparkline } from "@/components/ui/Sparkline";
 import { FilterBar } from "@/components/schema/FilterBar";
 import { SchemaTable } from "@/components/schema/SchemaTable";
 import { IndividualEditor } from "@/components/ontology/IndividualEditor";
@@ -140,8 +141,15 @@ function IndividualsPageContent({
       header: individualsCopy.table.updatedHeader,
       cell: (info) => {
         const date = info.getValue() as string | null;
-        if (!date) return "—";
-        return new Date(date).toLocaleDateString();
+        const version = info.row.original.version;
+        return (
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)" }}>
+            <Sparkline version={version} lastModified={date} maxHeight={16} />
+            <span style={{ fontSize: "var(--text-xs)", color: "var(--canvas-fg-3)" }}>
+              {date ? new Date(date).toLocaleDateString() : "—"}
+            </span>
+          </div>
+        );
       },
     },
     {
