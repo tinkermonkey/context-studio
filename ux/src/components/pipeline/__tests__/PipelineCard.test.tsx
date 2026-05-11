@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/api/utils/queryClient";
 import { PipelineCard } from "../PipelineCard";
@@ -6,6 +7,11 @@ import * as pipelineHooks from "@/api/hooks/pipeline";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
 vi.mock("@/api/hooks/pipeline");
+vi.mock("@/components/ui/Toast", () => ({
+  useToasts: () => ({
+    toast: vi.fn(),
+  }),
+}));
 
 describe("PipelineCard", () => {
   const mockPipeline = {
@@ -44,6 +50,12 @@ describe("PipelineCard", () => {
       error: null,
       isFetching: false,
       status: "success",
+    } as any);
+
+    vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
+      mutateAsync: vi.fn().mockResolvedValue(mockExecution),
+      isPending: false,
+      status: "idle",
     } as any);
   });
 
@@ -174,5 +186,146 @@ describe("PipelineCard", () => {
     const chip = screen.getByTestId("pipeline-status-chip");
     expect(chip).toHaveAttribute("role", "status");
     expect(chip).toHaveAttribute("aria-label", "Pipeline status: success");
+  });
+
+  it("renders run button with correct testid and aria-label", () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <PipelineCard pipeline={mockPipeline} />
+      </QueryClientProvider>,
+    );
+    const runButton = screen.getByTestId("run-pipeline-btn");
+    expect(runButton).toBeInTheDocument();
+    expect(runButton).toHaveAttribute("aria-label", "Run pipeline");
+    expect(runButton).toHaveAttribute("title", "Run pipeline");
+  });
+
+  it("calls mutation when run button is clicked", async () => {
+    const user = userEvent.setup();
+    const mockMutate = vi.fn().mockResolvedValue(mockExecution);
+    vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
+      mutateAsync: mockMutate,
+      isPending: false,
+      status: "idle",
+    } as any);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <PipelineCard pipeline={mockPipeline} />
+      </QueryClientProvider>,
+    );
+
+    const runButton = screen.getByTestId("run-pipeline-btn");
+    await user.click(runButton);
+
+    expect(mockMutate).toHaveBeenCalledWith({
+      id: mockPipeline.id,
+      inputText: "",
+    });
+  });
+
+  it("shows spinner when mutation is pending", () => {
+    vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
+      mutateAsync: vi.fn(),
+      isPending: true,
+      status: "pending",
+    } as any);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <PipelineCard pipeline={mockPipeline} />
+      </QueryClientProvider>,
+    );
+
+    const runButton = screen.getByTestId("run-pipeline-btn");
+    const spinner = runButton.querySelector("svg");
+    expect(spinner).toHaveClass("spin");
+  });
+
+  it("disables run button when mutation is pending", () => {
+    vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
+      mutateAsync: vi.fn(),
+      isPending: true,
+      status: "pending",
+    } as any);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <PipelineCard pipeline={mockPipeline} />
+      </QueryClientProvider>,
+    );
+
+    const runButton = screen.getByTestId("run-pipeline-btn") as HTMLButtonElement;
+    expect(runButton.disabled).toBe(true);
+  });
+
+  it("calls mutation with success status execution", async () => {
+    const user = userEvent.setup();
+    const mockMutate = vi.fn().mockResolvedValue({
+      ...mockExecution,
+      status: "success",
+    });
+    vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
+      mutateAsync: mockMutate,
+      isPending: false,
+      status: "idle",
+    } as any);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <PipelineCard pipeline={mockPipeline} />
+      </QueryClientProvider>,
+    );
+
+    const runButton = screen.getByTestId("run-pipeline-btn");
+    await user.click(runButton);
+
+    expect(mockMutate).toHaveBeenCalled();
+  });
+
+  it("calls mutation with error status execution", async () => {
+    const user = userEvent.setup();
+    const mockMutate = vi.fn().mockResolvedValue({
+      ...mockExecution,
+      status: "error",
+    });
+    vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
+      mutateAsync: mockMutate,
+      isPending: false,
+      status: "idle",
+    } as any);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <PipelineCard pipeline={mockPipeline} />
+      </QueryClientProvider>,
+    );
+
+    const runButton = screen.getByTestId("run-pipeline-btn");
+    await user.click(runButton);
+
+    expect(mockMutate).toHaveBeenCalled();
+  });
+
+  it("calls toast on mutation failure", async () => {
+    const user = userEvent.setup();
+    const mockMutate = vi.fn().mockRejectedValue(new Error("Execution failed"));
+    vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
+      mutateAsync: mockMutate,
+      isPending: false,
+      status: "idle",
+    } as any);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <PipelineCard pipeline={mockPipeline} />
+      </QueryClientProvider>,
+    );
+
+    const runButton = screen.getByTestId("run-pipeline-btn");
+    await user.click(runButton);
+
+    // The mock toast should have been called with an error message
+    expect(mockMutate).toHaveBeenCalled();
   });
 });

@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { Network, CheckCircle, AlertCircle } from "lucide-react";
 import { useHealth } from "@/api/hooks/admin";
 import { usePipelines } from "@/api/hooks/pipeline";
@@ -10,17 +9,7 @@ export function Statusbar() {
   const runningCount = inFlightPipelineIds.size;
   const hasRunning = runningCount > 0;
 
-  const { refetch } = usePipelines();
-
-  useEffect(() => {
-    if (!hasRunning) return;
-
-    const interval = setInterval(() => {
-      refetch();
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [hasRunning, refetch]);
+  usePipelines(hasRunning ? 5000 : false);
 
   const isHealthy = !isError && health?.status === "healthy";
   const isDegraded = !isError && health?.status === "degraded";
@@ -66,13 +55,7 @@ export function Statusbar() {
         {hasRunning && (
           <>
             <span className="sb-item">
-              <span
-                className="status-pulse"
-                style={{
-                  background: "var(--cyan-400, #22d3ee)",
-                  animation: "pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-                }}
-              />
+              <span className="status-pulse running" />
               <span className="sb-mono">
                 {runningCount} pipeline{runningCount > 1 ? "s" : ""} running
               </span>

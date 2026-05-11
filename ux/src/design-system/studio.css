@@ -737,6 +737,12 @@ a {
 .status-pulse.disconnected::after {
   background: var(--accent-rose);
 }
+.status-pulse.running {
+  background: var(--accent-cyan);
+}
+.status-pulse.running::after {
+  background: var(--accent-cyan);
+}
 
 /* ------------ Page layout ------------ */
 .page-head {

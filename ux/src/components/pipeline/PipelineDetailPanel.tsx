@@ -101,11 +101,15 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
   const handleRunPipeline = async () => {
     try {
       startExecution(pipeline.id);
-      await executeMutation.mutateAsync({
+      const execution = await executeMutation.mutateAsync({
         id: pipeline.id,
         inputText: "",
       });
-      toast("success", `Pipeline '${pipeline.title}' started`);
+      if (execution.status === "success") {
+        toast("success", `Pipeline '${pipeline.title}' completed`);
+      } else if (execution.status === "error" || execution.status === "timeout") {
+        toast("error", `Pipeline '${pipeline.title}' failed`);
+      }
     } catch (error) {
       toast("error", error instanceof Error ? error.message : "Failed to run pipeline");
     } finally {

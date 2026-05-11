@@ -17,9 +17,10 @@ vi.mock("@/stores/executionStore", () => ({
     hasRunningExecutions: vi.fn(() => false),
   })),
 }));
+const mockToast = vi.fn();
 vi.mock("@/components/ui/Toast", () => ({
   useToasts: () => ({
-    toast: vi.fn(),
+    toast: mockToast,
   }),
 }));
 
@@ -410,5 +411,127 @@ describe("PipelineDetailPanel", () => {
 
     const saveButton = screen.getByTestId("pipeline-save-config-button") as HTMLButtonElement;
     expect(saveButton.disabled).toBe(false);
+  });
+
+  it("renders run button with correct testid and aria-label", () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
+      </QueryClientProvider>,
+    );
+
+    const runButton = screen.getByTestId("run-pipeline-btn");
+    expect(runButton).toBeInTheDocument();
+    expect(runButton).toHaveAttribute("aria-label", "Run pipeline");
+    expect(runButton).toHaveAttribute("title", "Run pipeline");
+  });
+
+  it("calls mutation when run button is clicked", async () => {
+    const user = userEvent.setup();
+    const mockMutate = vi.fn().mockResolvedValue(mockExecution);
+    vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
+      mutateAsync: mockMutate,
+      isPending: false,
+      status: "idle",
+    } as any);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
+      </QueryClientProvider>,
+    );
+
+    const runButton = screen.getByTestId("run-pipeline-btn");
+    await user.click(runButton);
+
+    expect(mockMutate).toHaveBeenCalledWith({
+      id: mockPipeline.id,
+      inputText: "",
+    });
+  });
+
+  it("shows spinner when mutation is pending", () => {
+    vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
+      mutateAsync: vi.fn(),
+      isPending: true,
+      status: "pending",
+    } as any);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
+      </QueryClientProvider>,
+    );
+
+    const runButton = screen.getByTestId("run-pipeline-btn");
+    const spinner = runButton.querySelector("svg");
+    expect(spinner).toHaveClass("spin");
+  });
+
+  it("disables run button when mutation is pending", () => {
+    vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
+      mutateAsync: vi.fn(),
+      isPending: true,
+      status: "pending",
+    } as any);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
+      </QueryClientProvider>,
+    );
+
+    const runButton = screen.getByTestId("run-pipeline-btn") as HTMLButtonElement;
+    expect(runButton.disabled).toBe(true);
+  });
+
+  it("calls toast when pipeline completes with success status", async () => {
+    const user = userEvent.setup();
+    const mockMutate = vi.fn().mockResolvedValue({
+      ...mockExecution,
+      status: "success",
+    });
+    vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
+      mutateAsync: mockMutate,
+      isPending: false,
+      status: "idle",
+    } as any);
+
+    mockToast.mockClear();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
+      </QueryClientProvider>,
+    );
+
+    const runButton = screen.getByTestId("run-pipeline-btn");
+    await user.click(runButton);
+
+    expect(mockToast).toHaveBeenCalled();
+    expect(mockMutate).toHaveBeenCalled();
+  });
+
+  it("calls toast when pipeline execution fails", async () => {
+    const user = userEvent.setup();
+    const mockMutate = vi.fn().mockRejectedValue(new Error("Execution failed"));
+    vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
+      mutateAsync: mockMutate,
+      isPending: false,
+      status: "idle",
+    } as any);
+
+    mockToast.mockClear();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
+      </QueryClientProvider>,
+    );
+
+    const runButton = screen.getByTestId("run-pipeline-btn");
+    await user.click(runButton);
+
+    expect(mockToast).toHaveBeenCalled();
   });
 });

@@ -1,7 +1,9 @@
 import type { components } from "@/api/types";
-import { Cpu } from "lucide-react";
-import { usePipelineExecutions } from "@/api/hooks/pipeline";
+import { Cpu, Play, Loader } from "lucide-react";
+import { usePipelineExecutions, useExecutePipeline } from "@/api/hooks/pipeline";
 import { formatRelativeTime, formatDuration } from "@/utils/formatters";
+import { Button } from "@/components/ui/Button";
+import { useToasts } from "@/components/ui/Toast";
 
 type PipelineConfigurationResponse = components["schemas"]["PipelineConfigurationResponse"];
 type ExecutionResponse = components["schemas"]["ExecutionResponse"];
@@ -56,6 +58,24 @@ function getStatusLabel(variant: StatusVariant): string {
 
 export function PipelineCard({ pipeline }: PipelineCardProps) {
   const { data: executions = [] } = usePipelineExecutions(pipeline.id);
+  const executeMutation = useExecutePipeline();
+  const { toast } = useToasts();
+
+  const handleRunPipeline = async () => {
+    try {
+      const execution = await executeMutation.mutateAsync({
+        id: pipeline.id,
+        inputText: "",
+      });
+      if (execution.status === "success") {
+        toast("success", `Pipeline '${pipeline.title}' completed`);
+      } else if (execution.status === "error" || execution.status === "timeout") {
+        toast("error", `Pipeline '${pipeline.title}' failed`);
+      }
+    } catch (error) {
+      toast("error", error instanceof Error ? error.message : "Failed to run pipeline");
+    }
+  };
 
   const lastExecution = executions[0] || null;
   const statusVariant = lastExecution
@@ -74,14 +94,31 @@ export function PipelineCard({ pipeline }: PipelineCardProps) {
           <span className="name">{pipeline.title}</span>
         </div>
 
-        <div
-          className={`chip ${getStatusChipClass(statusVariant)}`}
-          data-testid="pipeline-status-chip"
-          role="status"
-          aria-label={`Pipeline status: ${getStatusLabel(statusVariant)}`}
-        >
-          <span className="dot" />
-          {getStatusLabel(statusVariant)}
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleRunPipeline}
+            disabled={executeMutation.isPending}
+            data-testid="run-pipeline-btn"
+            aria-label="Run pipeline"
+            title="Run pipeline"
+          >
+            {executeMutation.isPending ? (
+              <Loader size={16} className="spin" />
+            ) : (
+              <Play size={16} />
+            )}
+          </Button>
+          <div
+            className={`chip ${getStatusChipClass(statusVariant)}`}
+            data-testid="pipeline-status-chip"
+            role="status"
+            aria-label={`Pipeline status: ${getStatusLabel(statusVariant)}`}
+          >
+            <span className="dot" />
+            {getStatusLabel(statusVariant)}
+          </div>
         </div>
       </div>
 

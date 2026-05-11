@@ -10,10 +10,11 @@ import type { components } from "@/api/types";
 type PipelineConfigurationCreate = components["schemas"]["PipelineConfigurationCreate"];
 type PipelineConfigurationUpdate = components["schemas"]["PipelineConfigurationUpdate"];
 
-export function usePipelines() {
+export function usePipelines(refetchInterval?: number | false) {
   return useQuery({
     queryKey: QUERY_KEYS.pipelines,
     queryFn: () => pipelineService.listPipelines(),
+    refetchInterval,
   });
 }
 
