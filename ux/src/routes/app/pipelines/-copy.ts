@@ -41,7 +41,7 @@ export const COPY = {
   RUN_PIPELINE_HEADER: "Pipeline",
   RUN_STARTED_HEADER: "Started",
   RUN_DURATION_HEADER: "Duration",
-  RUN_TOKENS_HEADER: "Records",
+  RUN_TOKENS_HEADER: "Tokens",
 
   // Pipeline Error Log
   ERROR_DETAILS_TITLE: "Error Details",
