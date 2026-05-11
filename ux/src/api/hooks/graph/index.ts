@@ -46,9 +46,23 @@ export function useGraphVisualization() {
 
   return useMutation({
     mutationFn: async (): Promise<GraphVisualizationData> => {
-      await graphService.buildGraph();
+      try {
+        await graphService.buildGraph();
+      } catch (error) {
+        throw new Error(
+          `Failed to build graph: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
 
-      const metrics = await graphService.getMetrics();
+      let metrics;
+      try {
+        metrics = await graphService.getMetrics();
+      } catch (error) {
+        throw new Error(
+          `Failed to compute metrics: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
+
       const nodeIds = Object.keys(metrics.centrality);
 
       if (nodeIds.length === 0) {
@@ -63,7 +77,14 @@ export function useGraphVisualization() {
         };
       }
 
-      const subgraph = await graphService.getSubgraph(nodeIds);
+      let subgraph;
+      try {
+        subgraph = await graphService.getSubgraph(nodeIds);
+      } catch (error) {
+        throw new Error(
+          `Failed to fetch subgraph: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
 
       return {
         nodes: nodeIds.map((id) => ({
