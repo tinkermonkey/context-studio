@@ -92,31 +92,6 @@ export function PipelinesContent() {
     );
   }
 
-  if (executionsError) {
-    return (
-      <div data-testid="pipelines-page" className="stack">
-        <ErrorBanner
-          error={executionsError}
-          message="Failed to load execution history. Pipeline status indicators may be inaccurate."
-          daemonLogPath="/local-server/logs/context_studio.log"
-          onRetry={() => {}}
-        />
-        <div className="page-head">
-          <h1>{COPY.PIPELINES_PAGE_TITLE}</h1>
-          <Button variant="primary" disabled title="Pipeline creation is not yet implemented">
-            <Plus size={16} style={{ marginRight: "4px" }} />
-            {COPY.NEW_PIPELINE_BUTTON}
-          </Button>
-        </div>
-        <div data-testid="pipelines-grid" className="grid-2">
-          {pipelines.map((pipeline) => (
-            <PipelineCard key={pipeline.id} pipeline={pipeline} />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   if (pipelines.length === 0) {
     return (
       <div data-testid="pipelines-page">
@@ -181,6 +156,16 @@ export function PipelinesContent() {
           ))}
         </div>
       </div>
+
+      {executionsError && (
+        <div style={{ marginBottom: "var(--space-6)" }}>
+          <ErrorBanner
+            error={executionsError}
+            message={COPY.EXECUTIONS_LOAD_ERROR}
+            daemonLogPath="/local-server/logs/context_studio.log"
+          />
+        </div>
+      )}
 
       {showFilteredEmpty ? (
         <EmptyState
