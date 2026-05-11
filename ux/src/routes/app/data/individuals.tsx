@@ -186,7 +186,7 @@ function IndividualsPageContent({
   const showFilteredEmpty = individuals.length > 0 && filteredData.length === 0 && hasFilters;
 
   return (
-    <div data-testid="individuals-page">
+    <div>
       <FilterBar searchValue={searchFilter} onSearchChange={setSearchFilter} />
 
       {showFilteredEmpty ? (
@@ -262,7 +262,7 @@ function IndividualsPageWrapper() {
   };
 
   return (
-    <div className="stack">
+    <div className="stack" data-testid="individuals-page">
       <div className="flex-between">
         <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>Individuals</h1>
         <div className="row">
@@ -275,7 +275,7 @@ function IndividualsPageWrapper() {
           </Button>
         </div>
       </div>
-      <div data-testid="individuals-content">
+      <div>
         <IndividualsPageContent
           onCreateClick={() => setShowCreateModal(true)}
           selectedId={selectedId}

@@ -25,6 +25,7 @@ export function IndividualEditor({ initialData, onSubmit, isLoading }: Individua
     Array.isArray(initialData?.class_ids) ? initialData.class_ids : []
   );
   const [titleError, setTitleError] = useState<string>();
+  const [classError, setClassError] = useState<string>();
 
   const { data: classesResponse } = useClasses();
   const classes = classesResponse?.items || [];
@@ -56,10 +57,11 @@ export function IndividualEditor({ initialData, onSubmit, isLoading }: Individua
     }
 
     if (selectedClassIds.length === 0) {
-      setTitleError("At least one class must be selected");
+      setClassError("At least one class must be selected");
       return;
     }
 
+    setClassError(undefined);
     await onSubmit({
       title,
       description: description || null,
@@ -146,6 +148,11 @@ export function IndividualEditor({ initialData, onSubmit, isLoading }: Individua
               ))
             )}
           </div>
+          {classError && (
+            <div style={{ color: "var(--rose-600)", fontSize: "var(--text-xs)", marginTop: "4px" }}>
+              {classError}
+            </div>
+          )}
         </div>
 
         <div>

@@ -111,7 +111,7 @@ Every screen must implement five states. The default specs in the README cover t
 | Schema → Classes       | "No classes in this taxonomy" | "Classes are the types your individuals will conform to."                       | "+ New class"                          |
 | Schema → Properties    | "No properties on this class" | "Properties are typed attributes — name, latitude, accuracy, etc."              | "+ Add property"                       |
 | Schema → Relationships | "No relationships defined"    | "Relationships are typed edges between classes."                                | "+ New relationship"                   |
-| Data → Individuals     | "No individuals yet"          | "Run a pipeline or import a dataset to populate this class."                    | "Run pipeline" + "Import…" (secondary) |
+| Data → Individuals     | "No individuals yet"          | "Run a pipeline or import a dataset to populate this class."                    | "+ New individual" CTA (with "Run pipeline" and "Import…" added when those features are available) |
 | Pipelines              | "No pipelines configured"     | "A pipeline extracts individuals from a source and writes them to a class."     | "+ New pipeline"                       |
 | External Reference     | "No reference sources"        | "Connect documents, datasets, or APIs to ground your graph in real-world data." | "+ Add source"                         |
 
