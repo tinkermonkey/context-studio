@@ -567,6 +567,12 @@ selectors:
   - selector: individual-class-typeahead
     component: components/ontology/IndividualDrawer.tsx
     description: Class search/typeahead input in individual detail drawer
+  - selector: individual-class-move-up-*
+    component: components/ontology/IndividualDrawer.tsx
+    description: Move up button for class chip with dynamic class ID suffix
+  - selector: individual-class-move-down-*
+    component: components/ontology/IndividualDrawer.tsx
+    description: Move down button for class chip with dynamic class ID suffix
   - selector: individual-class-remove-*
     component: components/ontology/IndividualDrawer.tsx
     description: Remove button for class chip with dynamic class ID suffix
@@ -579,6 +585,9 @@ selectors:
   - selector: related-individuals-panel
     component: components/ontology/IndividualDrawer.tsx
     description: Related individuals panel in individual detail drawer
+  - selector: related-individual-name-*
+    component: components/ontology/IndividualDrawer.tsx
+    description: Clickable related individual name with dynamic ID suffix
   - selector: related-individual-class-*
     component: components/ontology/IndividualDrawer.tsx
     description: Class chip for related individual with dynamic class ID suffix
