@@ -923,6 +923,12 @@ selectors:
   - selector: flavor-drawer-delete-button
     component: components/pipeline/FlavorDrawer.tsx
     description: Button to delete the flavor
+  - selector: flavor-drawer-edit-button
+    component: components/pipeline/FlavorDrawer.tsx
+    description: Button to edit the flavor
+  - selector: flavor-edit-modal
+    component: components/pipeline/FlavorDrawer.tsx
+    description: Modal dialog for editing a pipeline flavor
 
   # Unit Test Fixtures
   - selector: action

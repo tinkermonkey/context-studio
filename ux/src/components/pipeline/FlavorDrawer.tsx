@@ -2,12 +2,16 @@ import { useState, Fragment } from "react";
 import { Drawer } from "@/components/ui/Drawer";
 import { Input, Textarea } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import {
   useDeletePipelineFlavor,
   useCreatePipelineFromFlavor,
+  useUpdatePipelineFlavor,
 } from "@/api/hooks/pipeline";
 import { useToasts } from "@/components/ui/Toast";
+import { FlavorForm } from "@/components/pipeline/FlavorForm";
 import type { PipelineFlavorResponse } from "@/api/services/pipeline";
 
 interface FlavorDrawerProps {
@@ -17,9 +21,12 @@ interface FlavorDrawerProps {
 
 export function FlavorDrawer({ flavor, onClose }: FlavorDrawerProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
   const { toast } = useToasts();
   const deleteMutation = useDeletePipelineFlavor();
   const createPipelineMutation = useCreatePipelineFromFlavor();
+  const updateMutation = useUpdatePipelineFlavor();
 
   const handleDelete = async () => {
     if (!flavor) return;
@@ -49,6 +56,25 @@ export function FlavorDrawer({ flavor, onClose }: FlavorDrawerProps) {
         "error",
         `Failed to create pipeline: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
+    }
+  };
+
+  const handleUpdateSubmit = async (data: {
+    name: string;
+    description?: string;
+    steps: Array<Record<string, unknown>>;
+  }) => {
+    if (!flavor) return;
+    setEditError(null);
+    try {
+      await updateMutation.mutateAsync({
+        id: flavor.id,
+        data,
+      });
+      setShowEditModal(false);
+      toast("success", `Updated flavor "${data.name}"`);
+    } catch (error) {
+      setEditError(error instanceof Error ? error.message : "Failed to update flavor");
     }
   };
 
@@ -129,6 +155,14 @@ export function FlavorDrawer({ flavor, onClose }: FlavorDrawerProps) {
               {createPipelineMutation.isPending ? "Creating..." : "Create Pipeline"}
             </Button>
             <Button
+              variant="accent"
+              onClick={() => setShowEditModal(true)}
+              data-testid="flavor-drawer-edit-button"
+              aria-label="Edit this flavor"
+            >
+              Edit
+            </Button>
+            <Button
               variant="ghost"
               onClick={() => setShowDeleteConfirm(true)}
               data-testid="flavor-drawer-delete-button"
@@ -151,6 +185,36 @@ export function FlavorDrawer({ flavor, onClose }: FlavorDrawerProps) {
         danger
         isLoading={deleteMutation.isPending}
       />
+
+      <Modal
+        open={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setEditError(null);
+        }}
+        title="Edit Pipeline Flavor"
+        size="lg"
+        data-testid="flavor-edit-modal"
+      >
+        {editError && (
+          <div style={{ marginBottom: "var(--space-3)" }}>
+            <ErrorBanner
+              error={new Error(editError)}
+              onRetry={() => setEditError(null)}
+              message="Failed to update flavor"
+            />
+          </div>
+        )}
+        <FlavorForm
+          onSubmit={handleUpdateSubmit}
+          isLoading={updateMutation.isPending}
+          initialData={{
+            name: flavor.name,
+            description: flavor.description,
+            steps: flavor.steps || [],
+          }}
+        />
+      </Modal>
     </>
   );
 }

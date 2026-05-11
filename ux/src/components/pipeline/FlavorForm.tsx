@@ -9,12 +9,17 @@ interface FlavorFormProps {
     steps: Array<Record<string, unknown>>;
   }) => Promise<void>;
   isLoading?: boolean;
+  initialData?: {
+    name: string;
+    description?: string;
+    steps: Array<Record<string, unknown>>;
+  };
 }
 
-export function FlavorForm({ onSubmit, isLoading }: FlavorFormProps) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [stepsJson, setStepsJson] = useState("[]");
+export function FlavorForm({ onSubmit, isLoading, initialData }: FlavorFormProps) {
+  const [name, setName] = useState(initialData?.name ?? "");
+  const [description, setDescription] = useState(initialData?.description ?? "");
+  const [stepsJson, setStepsJson] = useState(JSON.stringify(initialData?.steps ?? [], null, 2));
   const [nameError, setNameError] = useState<string>();
   const [stepsError, setStepsError] = useState<string>();
 
@@ -135,7 +140,7 @@ export function FlavorForm({ onSubmit, isLoading }: FlavorFormProps) {
           disabled={isLoading}
           data-testid="flavor-submit-button"
         >
-          Create Flavor
+          {initialData ? "Update Flavor" : "Create Flavor"}
         </Button>
       </div>
     </form>
