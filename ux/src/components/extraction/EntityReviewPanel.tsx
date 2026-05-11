@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, CheckCircle, X } from "lucide-react";
-import { useCreateClass, useClasses, useSchemes } from "@/api/hooks/ontology";
+import { useCreateClass, useClasses, useSchemes, useCreateRelationship } from "@/api/hooks/ontology";
 import { useToasts } from "@/components/ui/Toast";
 import { Panel } from "@/components/ui/Panel";
 import { Button } from "@/components/ui/Button";
@@ -22,6 +22,247 @@ interface LinkingState {
   searchQuery: string;
 }
 
+interface EntityRowProps {
+  entity: ExtractedEntitySchema;
+  index: number;
+  isProcessing: boolean;
+  availableClasses: Array<{ id: string; title: string }>;
+  onApprove: (entity: ExtractedEntitySchema) => void;
+  onReject: (entityId: string) => void;
+  onLink: (entity: ExtractedEntitySchema, targetClassId: string) => void;
+}
+
+function EntityRow({
+  entity,
+  index,
+  isProcessing,
+  availableClasses,
+  onApprove,
+  onReject,
+  onLink,
+}: EntityRowProps) {
+  const [linkingState, setLinkingState] = useState<{ searchQuery: string } | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Handle click-outside for dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setLinkingState(null);
+      }
+    };
+    if (linkingState) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [linkingState]);
+
+  const filteredClasses = linkingState
+    ? availableClasses.filter((cls) =>
+        cls.title.toLowerCase().includes(linkingState.searchQuery.toLowerCase()) ||
+        cls.id.toLowerCase().includes(linkingState.searchQuery.toLowerCase())
+      )
+    : [];
+
+  return (
+    <div
+      key={entity.id}
+      data-testid={`entity-suggestion-row-${index}`}
+      className="flex-between"
+      style={{
+        padding: "12px",
+        backgroundColor: "var(--canvas-bg-2)",
+        borderRadius: "var(--radius-md)",
+        borderLeft: "3px solid var(--cyan-500)",
+        gap: "12px",
+      }}
+    >
+      {/* Entity info */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontWeight: 500, marginBottom: "4px" }}>
+          {entity.label}
+        </div>
+        <div className="flex-row-center">
+          {entity.entity_type && (
+            <Chip color="gray" className="text-xs">
+              {entity.entity_type}
+            </Chip>
+          )}
+          <span
+            className="mono"
+            style={{
+              fontSize: "var(--text-xs)",
+              color: "var(--canvas-fg-3)",
+            }}
+          >
+            {(entity.confidence * 100).toFixed(0)}%
+          </span>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div style={{ display: "flex", gap: "6px" }}>
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={() => onApprove(entity)}
+          disabled={isProcessing}
+          data-testid={`entity-review-approve-${entity.id}`}
+        >
+          Approve
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onReject(entity.id)}
+          disabled={isProcessing}
+          data-testid={`entity-review-reject-${entity.id}`}
+        >
+          Reject
+        </Button>
+        <div style={{ position: "relative" }} ref={dropdownRef}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() =>
+              setLinkingState({
+                searchQuery: "",
+              })
+            }
+            disabled={isProcessing || linkingState !== null}
+            data-testid={`entity-review-link-${entity.id}`}
+          >
+            Link
+            {linkingState !== null && (
+              <ChevronDown
+                size={14}
+                style={{
+                  marginLeft: "4px",
+                  transform: "rotate(180deg)",
+                }}
+              />
+            )}
+          </Button>
+
+          {linkingState !== null && (
+            <div
+              style={{
+                position: "absolute",
+                top: "100%",
+                right: 0,
+                background: "var(--canvas-bg)",
+                border: "1px solid var(--canvas-fg-4)",
+                borderRadius: "var(--radius-sm)",
+                marginTop: "4px",
+                zIndex: 10,
+                minWidth: "200px",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+              }}
+              role="listbox"
+            >
+              <div style={{ padding: "8px" }}>
+                <Input
+                  type="text"
+                  placeholder="Search classes..."
+                  value={linkingState.searchQuery}
+                  onChange={(e) => {
+                    setLinkingState({
+                      ...linkingState,
+                      searchQuery: e.target.value,
+                    });
+                  }}
+                  data-testid="entity-review-link-input"
+                  style={{ marginBottom: "8px" }}
+                  role="combobox"
+                  aria-expanded={linkingState !== null}
+                  aria-controls="entity-review-options"
+                />
+                {filteredClasses.length > 0 ? (
+                  <div
+                    id="entity-review-options"
+                    style={{
+                      maxHeight: "200px",
+                      overflowY: "auto",
+                    }}
+                  >
+                    {filteredClasses.map((cls) => (
+                      <button
+                        key={cls.id}
+                        type="button"
+                        onClick={() => {
+                          onLink(entity, cls.id);
+                          setLinkingState(null);
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "var(--space-2)",
+                          padding: "var(--space-2) var(--space-3)",
+                          width: "100%",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          textAlign: "left",
+                          fontSize: "var(--text-sm)",
+                          color: "var(--canvas-fg)",
+                          borderBottom: "1px solid var(--canvas-fg-4)",
+                        }}
+                        data-testid={`entity-review-link-option-${cls.id}`}
+                        role="option"
+                      >
+                        <span
+                          className="mono"
+                          style={{
+                            fontSize: "var(--text-xs)",
+                            color: "var(--canvas-fg-3)",
+                          }}
+                        >
+                          {cls.id.slice(0, 8)}
+                        </span>
+                        <span>{cls.title}</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      padding: "8px",
+                      textAlign: "center",
+                      color: "var(--canvas-fg-2)",
+                      fontSize: "var(--text-sm)",
+                    }}
+                  >
+                    No classes found
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Close linking */}
+      {linkingState !== null && (
+        <button
+          type="button"
+          onClick={() => setLinkingState(null)}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            padding: "4px",
+            display: "flex",
+            alignItems: "center",
+          }}
+          aria-label="Close"
+        >
+          <X size={16} color="var(--canvas-fg-3)" />
+        </button>
+      )}
+    </div>
+  );
+}
+
 export function EntityReviewPanel({
   entities,
   layerIndex,
@@ -29,13 +270,12 @@ export function EntityReviewPanel({
 }: EntityReviewPanelProps) {
   const [rejectedIds, setRejectedIds] = useState<Set<string>>(new Set());
   const [linkedIds, setLinkedIds] = useState<Set<string>>(new Set());
-  const [linkingState, setLinkingState] = useState<LinkingState | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const { toast } = useToasts();
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const createClassMutation = useCreateClass();
+  const createRelationshipMutation = useCreateRelationship();
   const { data: classesList } = useClasses();
   const { data: schemesList } = useSchemes();
 
@@ -57,19 +297,6 @@ export function EntityReviewPanel({
   const isHidden = entities.length === 0;
   const isEmpty = !isLoading && unlinkedEntities.length === 0;
   const isPopulated = unlinkedEntities.length > 0 && !isLoading;
-
-  // Handle click-outside for dropdown
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setLinkingState(null);
-      }
-    };
-    if (linkingState) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
-    }
-  }, [linkingState]);
 
   const handleApprove = async (entity: ExtractedEntitySchema) => {
     try {
@@ -105,11 +332,24 @@ export function EntityReviewPanel({
     toast("info", "Entity rejected");
   };
 
-  const handleLinkConfirm = (entity: ExtractedEntitySchema, targetClassId: string) => {
-    setLinkedIds((prev) => new Set([...prev, entity.id]));
-    setLinkingState(null);
-    toast("success", `Entity linked to class`);
-    // TODO: persist via relationship API once available
+  const handleLinkConfirm = async (entity: ExtractedEntitySchema, targetClassId: string) => {
+    try {
+      setIsProcessing(true);
+      await createRelationshipMutation.mutateAsync({
+        source_id: targetClassId,
+        target_id: entity.id,
+        relationship_type: "related_to",
+      });
+      setLinkedIds((prev) => new Set([...prev, entity.id]));
+      toast("success", "Entity linked to class");
+    } catch (error) {
+      toast(
+        "error",
+        `Failed to link entity: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleApproveAll = async () => {
@@ -135,17 +375,18 @@ export function EntityReviewPanel({
         )
       );
 
-      const successful = results.filter((r) => r.status === "fulfilled").length;
-      const failed = results.filter((r) => r.status === "rejected").length;
+      const fulfilledResults = results.filter((r) => r.status === "fulfilled");
+      const failedResults = results.filter((r) => r.status === "rejected");
+      const fulfilledEntityIds = fulfilledResults
+        .map((_, index) => unlinkedEntities[index].id)
+        .filter((id) => id);
 
-      if (successful > 0) {
-        setLinkedIds(
-          (prev) => new Set([...prev, ...unlinkedEntities.map((e) => e.id)])
-        );
-        toast("success", `Created ${successful} class(es)`);
+      if (fulfilledEntityIds.length > 0) {
+        setLinkedIds((prev) => new Set([...prev, ...fulfilledEntityIds]));
+        toast("success", `Created ${fulfilledEntityIds.length} class(es)`);
       }
-      if (failed > 0) {
-        toast("error", `Failed to create ${failed} class(es)`);
+      if (failedResults.length > 0) {
+        toast("error", `Failed to create ${failedResults.length} class(es)`);
       }
     } catch (error) {
       toast(
@@ -174,9 +415,9 @@ export function EntityReviewPanel({
     return (
       <div data-testid={`entity-review-panel-${layerIndex}`}>
         <Panel title={`Entity Review — ${layerName}`}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div className="stack">
             {[0, 1, 2].map((i) => (
-              <div key={i} style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <div key={i} className="flex-row-center">
                 <Skeleton width="200px" height="32px" />
                 <Skeleton width="60px" height="24px" />
                 <div style={{ marginLeft: "auto", display: "flex", gap: "6px" }}>
@@ -197,8 +438,8 @@ export function EntityReviewPanel({
     return (
       <div data-testid={`entity-review-panel-${layerIndex}`}>
         <Panel title={`Entity Review — ${layerName}`}>
-          <div style={{ padding: "12px", color: "var(--canvas-fg-2)", textAlign: "center" }}>
-            <CheckCircle size={20} style={{ margin: "0 auto 8px", display: "block" }} />
+          <div className="stack" style={{ padding: "12px", color: "var(--canvas-fg-2)", textAlign: "center", alignItems: "center" }}>
+            <CheckCircle size={20} />
             <p style={{ margin: 0 }}>All suggestions reviewed</p>
           </div>
         </Panel>
@@ -231,213 +472,26 @@ export function EntityReviewPanel({
   );
 
   // Populated state
+  const availableClasses = classesList?.items?.filter(
+    (cls) => !cls.id.startsWith("_")
+  ) || [];
+
   return (
     <div data-testid={`entity-review-panel-${layerIndex}`}>
       <Panel title={`Entity Review — ${layerName} (${unlinkedEntities.length})`} actions={batchActions}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-          {unlinkedEntities.map((entity, index) => {
-            const availableClasses = classesList?.items?.filter(
-              (cls) => !cls.id.startsWith("_")
-            ) || [];
-
-            const filteredClasses = linkingState?.entityId === entity.id
-              ? availableClasses.filter((cls: typeof availableClasses[0]) =>
-                  cls.title.toLowerCase().includes(linkingState.searchQuery.toLowerCase()) ||
-                  cls.id.toLowerCase().includes(linkingState.searchQuery.toLowerCase())
-                )
-              : [];
-
-            return (
-              <div
-                key={entity.id}
-                data-testid={`entity-suggestion-row-${index}`}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  padding: "12px",
-                  backgroundColor: "var(--canvas-bg-2)",
-                  borderRadius: "var(--radius-md)",
-                  borderLeft: "3px solid var(--cyan-500)",
-                }}
-              >
-                {/* Entity info */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 500, marginBottom: "4px" }}>
-                    {entity.label}
-                  </div>
-                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                    {entity.entity_type && (
-                      <Chip color="gray" className="text-xs">
-                        {entity.entity_type}
-                      </Chip>
-                    )}
-                    <span
-                      className="mono"
-                      style={{
-                        fontSize: "var(--text-xs)",
-                        color: "var(--canvas-fg-3)",
-                      }}
-                    >
-                      {(entity.confidence * 100).toFixed(0)}%
-                    </span>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div style={{ display: "flex", gap: "6px" }}>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => handleApprove(entity)}
-                    disabled={isProcessing}
-                    data-testid={`entity-review-approve-${entity.id}`}
-                  >
-                    Approve
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleReject(entity.id)}
-                    disabled={isProcessing}
-                    data-testid={`entity-review-reject-${entity.id}`}
-                  >
-                    Reject
-                  </Button>
-                  <div style={{ position: "relative" }} ref={dropdownRef}>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() =>
-                        setLinkingState({
-                          entityId: entity.id,
-                          searchQuery: "",
-                        })
-                      }
-                      disabled={isProcessing || linkingState?.entityId === entity.id}
-                      data-testid={`entity-review-link-${entity.id}`}
-                    >
-                      Link
-                      {linkingState?.entityId === entity.id && (
-                        <ChevronDown
-                          size={14}
-                          style={{
-                            marginLeft: "4px",
-                            transform: "rotate(180deg)",
-                          }}
-                        />
-                      )}
-                    </Button>
-
-                    {linkingState?.entityId === entity.id && (
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: "100%",
-                          right: 0,
-                          background: "var(--canvas-bg)",
-                          border: "1px solid var(--canvas-fg-4)",
-                          borderRadius: "var(--radius-sm)",
-                          marginTop: "4px",
-                          zIndex: 10,
-                          minWidth: "200px",
-                          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-                        }}
-                      >
-                        <div style={{ padding: "8px" }}>
-                          <Input
-                            type="text"
-                            placeholder="Search classes..."
-                            value={linkingState.searchQuery}
-                            onChange={(e) => {
-                              setLinkingState({
-                                ...linkingState,
-                                searchQuery: e.target.value,
-                              });
-                            }}
-                            data-testid="entity-review-link-input"
-                            style={{ marginBottom: "8px" }}
-                          />
-                          {filteredClasses.length > 0 ? (
-                            <div
-                              style={{
-                                maxHeight: "200px",
-                                overflowY: "auto",
-                              }}
-                            >
-                              {filteredClasses.map((cls: typeof availableClasses[0]) => (
-                                <button
-                                  key={cls.id}
-                                  type="button"
-                                  onClick={() => handleLinkConfirm(entity, cls.id)}
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "var(--space-2)",
-                                    padding: "var(--space-2) var(--space-3)",
-                                    width: "100%",
-                                    background: "none",
-                                    border: "none",
-                                    cursor: "pointer",
-                                    textAlign: "left",
-                                    fontSize: "var(--text-sm)",
-                                    color: "var(--canvas-fg)",
-                                    borderBottom: "1px solid var(--canvas-fg-4)",
-                                  }}
-                                  data-testid={`entity-review-link-option-${cls.id}`}
-                                >
-                                  <span
-                                    className="mono"
-                                    style={{
-                                      fontSize: "var(--text-xs)",
-                                      color: "var(--canvas-fg-3)",
-                                    }}
-                                  >
-                                    {cls.id.slice(0, 8)}
-                                  </span>
-                                  <span>{cls.title}</span>
-                                </button>
-                              ))}
-                            </div>
-                          ) : (
-                            <div
-                              style={{
-                                padding: "8px",
-                                textAlign: "center",
-                                color: "var(--canvas-fg-2)",
-                                fontSize: "var(--text-sm)",
-                              }}
-                            >
-                              No classes found
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Close linking */}
-                {linkingState?.entityId === entity.id && (
-                  <button
-                    type="button"
-                    onClick={() => setLinkingState(null)}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      padding: "4px",
-                      display: "flex",
-                      alignItems: "center",
-                    }}
-                    aria-label="Close"
-                  >
-                    <X size={16} color="var(--canvas-fg-3)" />
-                  </button>
-                )}
-              </div>
-            );
-          })}
+        <div className="stack">
+          {unlinkedEntities.map((entity, index) => (
+            <EntityRow
+              key={entity.id}
+              entity={entity}
+              index={index}
+              isProcessing={isProcessing}
+              availableClasses={availableClasses}
+              onApprove={handleApprove}
+              onReject={handleReject}
+              onLink={handleLinkConfirm}
+            />
+          ))}
         </div>
       </Panel>
     </div>
