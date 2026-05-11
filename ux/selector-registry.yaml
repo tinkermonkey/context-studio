@@ -813,6 +813,41 @@ selectors:
     component: components/pipeline/PipelineCard.tsx
     description: Status chip showing pipeline execution status (success, failed, idle, or disabled)
 
+  # Pipeline Detail Panel
+  - selector: pipeline-edit-config-button
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Button to enter edit mode for pipeline configuration
+  - selector: pipeline-config-textarea
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Textarea for editing pipeline configuration JSON
+  - selector: pipeline-save-config-button
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Button to save pipeline configuration changes
+  - selector: pipeline-revert-config-button
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Button to cancel pipeline configuration edits and revert
+  - selector: pipeline-config-pre
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Pre-formatted block displaying pipeline configuration in view mode
+  - selector: pipeline-runs-table
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Table displaying execution runs for the pipeline
+  - selector: pipeline-no-runs
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Empty state message when pipeline has never been executed
+  - selector: pipeline-error-log
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Container displaying detailed error message from failed execution
+  - selector: pipeline-copy-error-button
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Button to copy error message to clipboard
+  - selector: pipeline-view-log-*
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Button to expand error log for execution (pattern matches pipeline-view-log-{executionId})
+  - selector: pipeline-detail
+    component: routes/app/pipelines/$pipelineId.tsx
+    description: Main pipeline detail page container
+
   # Unit Test Fixtures
   - selector: action
     component: components/ui/__tests__/Panel.test.tsx

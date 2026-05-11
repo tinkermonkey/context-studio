@@ -9,11 +9,10 @@ Models are defined here and serve as the source of truth for Alembic migrations.
 """
 
 from sqlalchemy import Column, String, Integer, Boolean, DateTime, Text, JSON, Index
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import declarative_base
 
 
-class OperationsBase(DeclarativeBase):
-    pass
+OperationsBase = declarative_base()
 
 
 class PipelineConfigurationModel(OperationsBase):

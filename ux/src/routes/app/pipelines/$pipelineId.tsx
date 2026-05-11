@@ -55,7 +55,7 @@ function PipelineDetailContent() {
       <SchemaPageLayout
         data={pipelines}
         selectedId={pipelineId}
-        renderDrawerContent={(selectedPipeline) =>
+        renderDrawerContent={(_selectedPipeline) =>
           pipeline && (
             <PipelineDetailPanel
               pipeline={pipeline}

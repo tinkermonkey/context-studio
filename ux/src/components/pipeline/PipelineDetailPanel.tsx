@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Copy, X } from "lucide-react";
+import { Copy } from "lucide-react";
 import { usePipelineExecutions, useUpdatePipeline } from "@/api/hooks/pipeline";
 import { Drawer } from "@/components/ui/Drawer";
 import { Textarea } from "@/components/ui/Input";
