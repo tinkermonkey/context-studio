@@ -400,6 +400,7 @@ Task(subagent_type="playwright-test-healer",    prompt="Diagnose failing test in
 | Skill | What it does |
 |---|---|
 | `/frontend-visual-qa` | Visual QA for a completed frontend page or component: screenshots in both canvas modes, layout composition check, form validation timing, test assertion audit. Run after any new page, drawer, or form. |
+| `/context-studio-design` | Generate well-branded UI assets or production components for Context Studio. Contains design tokens, CSS, icons, and visual reference cards. Use when designing new screens or prototypes. |
 | `/context-studio-test` | Run test suites — backend (pytest), frontend unit (vitest), E2E (playwright). Accepts `backend`, `unit`, `integration`, `frontend`, `e2e`, `smoke`, `validate`, `all`. |
 | `/context-studio-check` | Run all validation gates: domain purity, selector contract, OpenAPI freshness, TypeScript. |
 
