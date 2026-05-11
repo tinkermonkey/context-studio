@@ -1,6 +1,32 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
 import { graphService } from "@/api/services/graph";
+import type { components } from "@/api/types";
+
+type GraphMetricsResponse = components["schemas"]["GraphMetricsResponse"];
+type SubgraphDataResponse = components["schemas"]["SubgraphDataResponse"];
+
+export interface GraphNode {
+  id: string;
+  label: string;
+  centrality: number;
+}
+
+export interface GraphEdge {
+  id: string;
+  source: string;
+  target: string;
+}
+
+export interface GraphVisualizationData {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  metadata: {
+    nodeCount: number;
+    edgeCount: number;
+    timestamp: string;
+  };
+}
 
 export function useBuildGraph() {
   const queryClient = useQueryClient();
@@ -16,6 +42,54 @@ export function useGraphMetrics(algorithm?: string) {
   return useQuery({
     queryKey: QUERY_KEYS.graphMetrics,
     queryFn: () => graphService.getMetrics(algorithm),
+  });
+}
+
+export function useGraphVisualization() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (): Promise<GraphVisualizationData> => {
+      await graphService.buildGraph();
+
+      const metrics = await graphService.getMetrics();
+      const nodeIds = Object.keys(metrics.centrality);
+
+      if (nodeIds.length === 0) {
+        return {
+          nodes: [],
+          edges: [],
+          metadata: {
+            nodeCount: 0,
+            edgeCount: 0,
+            timestamp: new Date().toISOString(),
+          },
+        };
+      }
+
+      const subgraph = await graphService.getSubgraph(nodeIds.join(","));
+
+      return {
+        nodes: nodeIds.map((id) => ({
+          id,
+          label: id,
+          centrality: metrics.centrality[id],
+        })),
+        edges: subgraph.edges.map(([source, target]) => ({
+          id: `${source}-${target}`,
+          source,
+          target,
+        })),
+        metadata: {
+          nodeCount: subgraph.node_count,
+          edgeCount: subgraph.edge_count,
+          timestamp: metrics.computed_at,
+        },
+      };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.graph });
+    },
   });
 }
 

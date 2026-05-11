@@ -16,6 +16,7 @@ import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AppSettingsRouteImport } from './routes/app/settings'
 import { Route as AppContactSheetRouteImport } from './routes/app/contact-sheet'
 import { Route as AppPipelinesIndexRouteImport } from './routes/app/pipelines/index'
+import { Route as AppGraphIndexRouteImport } from './routes/app/graph/index'
 import { Route as AppSchemaTaxonomiesRouteImport } from './routes/app/schema/taxonomies'
 import { Route as AppSchemaSchemesRouteImport } from './routes/app/schema/schemes'
 import { Route as AppSchemaRelationshipsRouteImport } from './routes/app/schema/relationships'
@@ -62,6 +63,11 @@ const AppContactSheetRoute = AppContactSheetRouteImport.update({
 const AppPipelinesIndexRoute = AppPipelinesIndexRouteImport.update({
   id: '/pipelines/',
   path: '/pipelines/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppGraphIndexRoute = AppGraphIndexRouteImport.update({
+  id: '/graph/',
+  path: '/graph/',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSchemaTaxonomiesRoute = AppSchemaTaxonomiesRouteImport.update({
@@ -143,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/app/schema/relationships': typeof AppSchemaRelationshipsRoute
   '/app/schema/schemes': typeof AppSchemaSchemesRouteWithChildren
   '/app/schema/taxonomies': typeof AppSchemaTaxonomiesRoute
+  '/app/graph/': typeof AppGraphIndexRoute
   '/app/pipelines/': typeof AppPipelinesIndexRoute
   '/app/schema/schemes/': typeof AppSchemaSchemesIndexRoute
 }
@@ -162,6 +169,7 @@ export interface FileRoutesByTo {
   '/app/schema/properties': typeof AppSchemaPropertiesRoute
   '/app/schema/relationships': typeof AppSchemaRelationshipsRoute
   '/app/schema/taxonomies': typeof AppSchemaTaxonomiesRoute
+  '/app/graph': typeof AppGraphIndexRoute
   '/app/pipelines': typeof AppPipelinesIndexRoute
   '/app/schema/schemes': typeof AppSchemaSchemesIndexRoute
 }
@@ -184,6 +192,7 @@ export interface FileRoutesById {
   '/app/schema/relationships': typeof AppSchemaRelationshipsRoute
   '/app/schema/schemes': typeof AppSchemaSchemesRouteWithChildren
   '/app/schema/taxonomies': typeof AppSchemaTaxonomiesRoute
+  '/app/graph/': typeof AppGraphIndexRoute
   '/app/pipelines/': typeof AppPipelinesIndexRoute
   '/app/schema/schemes/': typeof AppSchemaSchemesIndexRoute
 }
@@ -207,6 +216,7 @@ export interface FileRouteTypes {
     | '/app/schema/relationships'
     | '/app/schema/schemes'
     | '/app/schema/taxonomies'
+    | '/app/graph/'
     | '/app/pipelines/'
     | '/app/schema/schemes/'
   fileRoutesByTo: FileRoutesByTo
@@ -226,6 +236,7 @@ export interface FileRouteTypes {
     | '/app/schema/properties'
     | '/app/schema/relationships'
     | '/app/schema/taxonomies'
+    | '/app/graph'
     | '/app/pipelines'
     | '/app/schema/schemes'
   id:
@@ -247,6 +258,7 @@ export interface FileRouteTypes {
     | '/app/schema/relationships'
     | '/app/schema/schemes'
     | '/app/schema/taxonomies'
+    | '/app/graph/'
     | '/app/pipelines/'
     | '/app/schema/schemes/'
   fileRoutesById: FileRoutesById
@@ -306,6 +318,13 @@ declare module '@tanstack/react-router' {
       path: '/pipelines'
       fullPath: '/app/pipelines/'
       preLoaderRoute: typeof AppPipelinesIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/graph/': {
+      id: '/app/graph/'
+      path: '/graph'
+      fullPath: '/app/graph/'
+      preLoaderRoute: typeof AppGraphIndexRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/schema/taxonomies': {
@@ -421,6 +440,7 @@ interface AppRouteChildren {
   AppSchemaRelationshipsRoute: typeof AppSchemaRelationshipsRoute
   AppSchemaSchemesRoute: typeof AppSchemaSchemesRouteWithChildren
   AppSchemaTaxonomiesRoute: typeof AppSchemaTaxonomiesRoute
+  AppGraphIndexRoute: typeof AppGraphIndexRoute
   AppPipelinesIndexRoute: typeof AppPipelinesIndexRoute
 }
 
@@ -439,6 +459,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppSchemaRelationshipsRoute: AppSchemaRelationshipsRoute,
   AppSchemaSchemesRoute: AppSchemaSchemesRouteWithChildren,
   AppSchemaTaxonomiesRoute: AppSchemaTaxonomiesRoute,
+  AppGraphIndexRoute: AppGraphIndexRoute,
   AppPipelinesIndexRoute: AppPipelinesIndexRoute,
 }
 
