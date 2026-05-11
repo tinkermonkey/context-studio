@@ -67,9 +67,7 @@ export function PipelineCard({ pipeline }: PipelineCardProps) {
   const executeMutation = useExecutePipeline();
   const { toast } = useToasts();
   const { startExecution, endExecution } = useExecutionStore();
-  const isRunning = useExecutionStore((state) =>
-    state.inFlightPipelineIds.has(pipeline.id)
-  );
+  const isRunning = useExecutionStore((state) => state.inFlightPipelineIds.has(pipeline.id));
 
   const handleRunPipeline = async () => {
     try {

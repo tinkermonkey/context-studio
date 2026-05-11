@@ -54,7 +54,6 @@ class PipelineService extends BaseService {
     const url = `/api/pipelines/executions${queryString ? `?${queryString}` : ""}`;
     return this.get<components["schemas"]["ListResponse_ExecutionWithPipelineResponse_"]>(url);
   }
-
 }
 
 export const pipelineService = new PipelineService();

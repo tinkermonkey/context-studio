@@ -87,4 +87,3 @@ export function useAllPipelineExecutions(status?: string, limit: number = 100, o
     queryFn: () => pipelineService.getAllPipelineExecutions(status, limit, offset),
   });
 }
-

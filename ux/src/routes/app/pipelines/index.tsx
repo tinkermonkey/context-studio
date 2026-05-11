@@ -21,10 +21,14 @@ export function PipelinesContent() {
   const filteredPipelines = useMemo(() => {
     const getPipelineFailedStatus = (pipelineId: string): boolean => {
       if (!allExecutions?.items) return false;
-      const executionsForPipeline = allExecutions.items.filter((e) => e.pipeline_config_id === pipelineId);
+      const executionsForPipeline = allExecutions.items.filter(
+        (e) => e.pipeline_config_id === pipelineId,
+      );
       if (executionsForPipeline.length === 0) return false;
       const latestExecution = executionsForPipeline.reduce((latest, current) =>
-        new Date(current.timestamp).getTime() > new Date(latest.timestamp).getTime() ? current : latest
+        new Date(current.timestamp).getTime() > new Date(latest.timestamp).getTime()
+          ? current
+          : latest,
       );
       return latestExecution.status === "error" || latestExecution.status === "timeout";
     };

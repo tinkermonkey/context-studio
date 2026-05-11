@@ -27,14 +27,7 @@ interface EntityRowProps {
   onReject: (entityId: string) => void;
 }
 
-function EntityRow({
-  entity,
-  index,
-  isProcessing,
-  onApprove,
-  onReject,
-}: EntityRowProps) {
-
+function EntityRow({ entity, index, isProcessing, onApprove, onReject }: EntityRowProps) {
   return (
     <div
       key={entity.id}
@@ -224,9 +217,12 @@ export function EntityReviewPanel({
 
   // Error state: if either query failed, show error banner
   if (classesError || schemesError) {
-    const failedQuery = classesError && schemesError
-      ? "classes and concept schemes"
-      : classesError ? "classes" : "concept schemes";
+    const failedQuery =
+      classesError && schemesError
+        ? "classes and concept schemes"
+        : classesError
+          ? "classes"
+          : "concept schemes";
     return (
       <div data-testid={`entity-review-panel-${layerIndex}`}>
         <Panel title={`${COPY.ENTITY_REVIEW_PANEL_TITLE} — ${layerName}`}>
