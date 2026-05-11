@@ -787,6 +787,29 @@ selectors:
     component: components/graph/SparqlEditor.tsx
     description: Loading spinner shown while query is executing
 
+  # Pipelines Page
+  - selector: pipelines-page
+    component: routes/app/pipelines/index.tsx
+    description: Main pipelines list page container
+  - selector: pipelines-grid
+    component: routes/app/pipelines/index.tsx
+    description: 2-column grid of pipeline cards
+  - selector: pipelines-search-input
+    component: routes/app/pipelines/index.tsx
+    description: Search input field for filtering pipelines by name, provider, or model
+  - selector: status-filter-all
+    component: routes/app/pipelines/index.tsx
+    description: Filter chip button to show all pipelines
+  - selector: status-filter-enabled
+    component: routes/app/pipelines/index.tsx
+    description: Filter chip button to show only enabled pipelines
+  - selector: status-filter-disabled
+    component: routes/app/pipelines/index.tsx
+    description: Filter chip button to show only disabled pipelines
+  - selector: pipeline-card-*
+    component: routes/app/pipelines/index.tsx
+    description: Individual pipeline card wrapper (pattern matches pipeline-card-{pipelineId})
+
   # Unit Test Fixtures
   - selector: action
     component: components/ui/__tests__/Panel.test.tsx
