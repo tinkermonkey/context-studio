@@ -537,7 +537,6 @@ describe("IndividualEditor", () => {
   // ========================================================================
   describe("form submission", () => {
     it("handles form submission via form element", async () => {
-      const user = userEvent.setup();
       const onSubmit = vi.fn().mockResolvedValue(undefined);
 
       render(
