@@ -1,0 +1,23 @@
+apm.logprocessor.rotating-file-log-processor:
+  id: d6cbca7d-f1b3-4e75-b02d-4badcf3f6a2a
+  path: apm.logprocessor.rotating-file-log-processor
+  spec_node_id: apm.logprocessor
+  type: logprocessor
+  layer_id: apm
+  name: Rotating File Log Processor
+  description: Python RotatingFileHandler-based log processor writing to
+    context_studio.log. Rotates based on configurable max_bytes and
+    backup_count. Used by all domain, adapter, and route modules via
+    utils/logger.py.
+  attributes:
+    type: simple
+    enabled: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/utils/logger.py
+        symbol: _get_handler
+  metadata:
+    created_at: 2026-05-10T11:54:09.892Z
+    updated_at: 2026-05-10T11:54:09.892Z
+    version: 1

@@ -232,3 +232,71 @@ testing.testcoveragetarget.route-integration-tests:
     created_at: 2026-05-08T12:21:16.528Z
     updated_at: 2026-05-08T12:21:16.528Z
     version: 1
+testing.testcoveragetarget.interchange-round-trip-tests:
+  id: 4569e5ca-38fc-4900-ae51-1958a3c0836b
+  path: testing.testcoveragetarget.interchange-round-trip-tests
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: Interchange Round-Trip Tests
+  description: Integration tests verifying lossless round-trips across SKOS, OWL,
+    and GraphML serialization formats. Located in
+    tests/integration/interchange/. Covers cross-format round-trips and
+    lossiness documentation.
+  attributes:
+    targetType: integration-flow
+    priority: high
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/tests/integration/interchange/test_cross_format_roundtrip.py
+        symbol: test_cross_format_roundtrip
+  metadata:
+    created_at: 2026-05-10T11:54:24.461Z
+    updated_at: 2026-05-10T11:54:24.461Z
+    version: 1
+testing.testcoveragetarget.adapter-unit-tests:
+  id: 7042770d-173c-43e5-81ec-995366cf5a0f
+  path: testing.testcoveragetarget.adapter-unit-tests
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: Adapter Unit Tests
+  description: "Unit tests for adapter-layer components using fakes: LLM provider
+    routing, change recorder, in-process event publisher, NLP processor, cached
+    reference source, and web schema validation. Located in
+    tests/unit/adapters/."
+  attributes:
+    targetType: integration-flow
+    priority: high
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/tests/unit/adapters/llm/test_provider_router_routing.py
+        symbol: TestProviderRouter
+  metadata:
+    created_at: 2026-05-10T11:54:31.167Z
+    updated_at: 2026-05-10T11:54:31.167Z
+    version: 1
+testing.testcoveragetarget.domain-unit-tests:
+  id: 181286a0-98d3-46ea-b9d1-48f02f3f49b4
+  path: testing.testcoveragetarget.domain-unit-tests
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: Domain Unit Tests
+  description: Pure unit tests for all 6 bounded context domain services using
+    fake port implementations. Tests span ontology, graph, extraction, pipeline,
+    versioning, admin, and interchange domains. Located in tests/unit/domain/.
+  attributes:
+    targetType: business-workflow
+    priority: critical
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/tests/unit/domain/test_ontology_service.py
+        symbol: TestOntologyService
+  metadata:
+    created_at: 2026-05-10T11:54:35.237Z
+    updated_at: 2026-05-10T11:54:35.237Z
+    version: 1

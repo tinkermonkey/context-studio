@@ -16,8 +16,8 @@ Application components, services, and interactions.
 | ------------------------- | ----- |
 | Elements                  | 40    |
 | Intra-Layer Relationships | 55    |
-| Inter-Layer Relationships | 155   |
-| Inbound Relationships     | 151   |
+| Inter-Layer Relationships | 166   |
+| Inbound Relationships     | 162   |
 | Outbound Relationships    | 4     |
 
 **Cross-Layer References**:
@@ -206,12 +206,14 @@ flowchart TB
 | `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.sparql-query-function`    | `business.businessfunction.semantic-search`                               | `business`    | `realizes`   | many-to-many | medium   |
 | `data-store.accesspattern.serves.application.applicationfunction`    | `data-store.accesspattern.entity-by-parent-range-scan`     | `application.applicationfunction.sparql-query-function`                   | `application` | `serves`     | many-to-many | medium   |
 | `data-store.accesspattern.serves.application.applicationfunction`    | `data-store.accesspattern.vector-similarity-search`        | `application.applicationfunction.embedding-generation`                    | `application` | `serves`     | many-to-many | medium   |
+| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.batch-runs`                         | `application.applicationcomponent.sqlite-interchange-repository`          | `application` | `serves`     | many-to-many | medium   |
 | `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.change-events`                      | `application.applicationcomponent.sqlite-change-repository`               | `application` | `serves`     | many-to-many | medium   |
 | `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.changeset-events-table`             | `application.applicationcomponent.sqlite-change-repository`               | `application` | `serves`     | many-to-many | medium   |
 | `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.changesets-table`                   | `application.applicationcomponent.sqlite-change-repository`               | `application` | `serves`     | many-to-many | medium   |
 | `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.conflict-resolutions-table`         | `application.applicationcomponent.sqlite-change-repository`               | `application` | `serves`     | many-to-many | medium   |
 | `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.entity-versions-table`              | `application.applicationcomponent.sqlite-change-repository`               | `application` | `serves`     | many-to-many | medium   |
 | `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.extraction-results-table`           | `application.applicationcomponent.sqlite-extraction-repository`           | `application` | `serves`     | many-to-many | medium   |
+| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.extraction-runs`                    | `application.applicationcomponent.sqlite-extraction-repository`           | `application` | `serves`     | many-to-many | medium   |
 | `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.import-runs-table`                  | `application.applicationcomponent.sqlite-interchange-repository`          | `application` | `serves`     | many-to-many | medium   |
 | `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.individual-classes-table`           | `application.applicationcomponent.sqlite-ontology-repository`             | `application` | `serves`     | many-to-many | medium   |
 | `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.ontology-entities`                  | `application.applicationcomponent.sqlite-ontology-repository`             | `application` | `serves`     | many-to-many | medium   |
@@ -225,10 +227,14 @@ flowchart TB
 | `data-store.storedlogic.implements.application.applicationfunction`  | `data-store.storedlogic.sqlite-vec-cosine-similarity`      | `application.applicationfunction.embedding-generation`                    | `application` | `implements` | many-to-many | medium   |
 | `data-store.storedlogic.serves.application.applicationservice`       | `data-store.storedlogic.sqlite-vec-cosine-similarity`      | `application.applicationservice.extraction-service`                       | `application` | `serves`     | many-to-many | medium   |
 | `technology.systemsoftware.serves.application.applicationcomponent`  | `technology.systemsoftware.alembic`                        | `application.applicationcomponent.sqlite-persistence-adapter`             | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.anthropic-sdk`                  | `application.applicationservice.pipeline-service`                         | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.boto3`                          | `application.applicationservice.versioning-service`                       | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.duck-db`                        | `application.applicationservice.versioning-service`                       | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.fast-api`                       | `application.applicationservice.ontology-service`                         | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.serves.application.applicationcomponent`  | `technology.systemsoftware.fast-api`                       | `application.applicationcomponent.sqlite-persistence-adapter`             | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.httpx`                          | `application.applicationservice.extraction-service`                       | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.serves.application.applicationcomponent`  | `technology.systemsoftware.network-x`                      | `application.applicationcomponent.network-x-graph-engine-adapter`         | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.openai-sdk`                     | `application.applicationservice.pipeline-service`                         | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.pydantic`                       | `application.applicationservice.ontology-service`                         | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.python`                         | `application.applicationservice.admin-service`                            | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.python`                         | `application.applicationservice.ontology-service`                         | `application` | `realizes`   | many-to-many | medium   |
@@ -243,7 +249,12 @@ flowchart TB
 | `technology.systemsoftware.serves.application.applicationcomponent`  | `technology.systemsoftware.sqlalchemy`                     | `application.applicationcomponent.sqlite-persistence-adapter`             | `application` | `serves`     | many-to-many | medium   |
 | `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.tan-stack-query`                | `application.applicationservice.admin-service`                            | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.tan-stack-router`               | `application.applicationservice.admin-service`                            | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.uvicorn`                        | `application.applicationservice.admin-service`                            | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.uvicorn`                        | `application.applicationservice.ontology-service`                         | `application` | `realizes`   | many-to-many | medium   |
+| `testing.testcoveragetarget.tests.application.applicationcomponent`  | `testing.testcoveragetarget.adapter-unit-tests`            | `application.applicationcomponent.spa-cy-nlp-processor`                   | `application` | `tests`      | many-to-many | medium   |
+| `testing.testcoveragetarget.tests.application.applicationcomponent`  | `testing.testcoveragetarget.domain-unit-tests`             | `application.applicationcomponent.sqlite-ontology-repository`             | `application` | `tests`      | many-to-many | medium   |
 | `testing.testcoveragetarget.tests.application.applicationcomponent`  | `testing.testcoveragetarget.interchange-integration-tests` | `application.applicationcomponent.sqlite-interchange-repository`          | `application` | `tests`      | many-to-many | medium   |
+| `testing.testcoveragetarget.tests.application.applicationcomponent`  | `testing.testcoveragetarget.interchange-round-trip-tests`  | `application.applicationcomponent.skos-interchange-adapter`               | `application` | `tests`      | many-to-many | medium   |
 | `testing.testcoveragetarget.tests.application.applicationcomponent`  | `testing.testcoveragetarget.route-integration-tests`       | `application.applicationcomponent.sqlite-ontology-repository`             | `application` | `tests`      | many-to-many | medium   |
 | `testing.testcoveragetarget.tests.application.applicationcomponent`  | `testing.testcoveragetarget.versioning-integration-tests`  | `application.applicationcomponent.sqlite-change-repository`               | `application` | `tests`      | many-to-many | medium   |
 | `ux.view.serves.application.applicationservice`                      | `ux.view.admin-view`                                       | `application.applicationservice.admin-service`                            | `application` | `serves`     | many-to-many | medium   |
@@ -667,9 +678,10 @@ Infrastructure adapter implementing SKOS (Simple Knowledge Organization System) 
 
 #### Relationships
 
-| Type        | Related Element                                     | Predicate  | Direction |
-| ----------- | --------------------------------------------------- | ---------- | --------- |
-| intra-layer | `application.applicationservice.import-run-service` | `realizes` | outbound  |
+| Type        | Related Element                                           | Predicate  | Direction |
+| ----------- | --------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `testing.testcoveragetarget.interchange-round-trip-tests` | `tests`    | inbound   |
+| intra-layer | `application.applicationservice.import-run-service`       | `realizes` | outbound  |
 
 ### SpaCy NLP Processor {#spacy-nlp-processor}
 
@@ -689,6 +701,7 @@ Infrastructure adapter implementing NLP text processing using spaCy — performs
 
 | Type        | Related Element                                     | Predicate  | Direction |
 | ----------- | --------------------------------------------------- | ---------- | --------- |
+| inter-layer | `testing.testcoveragetarget.adapter-unit-tests`     | `tests`    | inbound   |
 | intra-layer | `application.applicationservice.extraction-service` | `realizes` | outbound  |
 
 ### SQLite Change Repository {#sqlite-change-repository}
@@ -737,6 +750,7 @@ SQLAlchemy-based implementation of the ExtractionRepository port — manages per
 | Type        | Related Element                                     | Predicate  | Direction |
 | ----------- | --------------------------------------------------- | ---------- | --------- |
 | inter-layer | `data-store.collection.extraction-results-table`    | `serves`   | inbound   |
+| inter-layer | `data-store.collection.extraction-runs`             | `serves`   | inbound   |
 | intra-layer | `application.applicationservice.extraction-service` | `realizes` | outbound  |
 
 ### SQLite Interchange Repository {#sqlite-interchange-repository}
@@ -757,6 +771,7 @@ SQLAlchemy-based repository for interchange domain persistence — implements th
 
 | Type        | Related Element                                            | Predicate  | Direction |
 | ----------- | ---------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `data-store.collection.batch-runs`                         | `serves`   | inbound   |
 | inter-layer | `data-store.collection.import-runs-table`                  | `serves`   | inbound   |
 | inter-layer | `testing.testcoveragetarget.interchange-integration-tests` | `tests`    | inbound   |
 | intra-layer | `application.applicationservice.import-run-service`        | `realizes` | outbound  |
@@ -782,6 +797,7 @@ SQLAlchemy-based implementation of the OntologyRepository port — manages persi
 | inter-layer | `data-store.collection.individual-classes-table`     | `serves`   | inbound   |
 | inter-layer | `data-store.collection.ontology-entities`            | `serves`   | inbound   |
 | inter-layer | `data-store.collection.property-definitions-table`   | `serves`   | inbound   |
+| inter-layer | `testing.testcoveragetarget.domain-unit-tests`       | `tests`    | inbound   |
 | inter-layer | `testing.testcoveragetarget.route-integration-tests` | `tests`    | inbound   |
 | intra-layer | `application.applicationservice.ontology-service`    | `realizes` | outbound  |
 
@@ -974,6 +990,7 @@ Domain service for system administration — aggregates health checks from metri
 | inter-layer | `technology.systemsoftware.react`                                   | `realizes`   | inbound   |
 | inter-layer | `technology.systemsoftware.tan-stack-query`                         | `realizes`   | inbound   |
 | inter-layer | `technology.systemsoftware.tan-stack-router`                        | `realizes`   | inbound   |
+| inter-layer | `technology.systemsoftware.uvicorn`                                 | `realizes`   | inbound   |
 | inter-layer | `ux.view.admin-view`                                                | `serves`     | inbound   |
 | inter-layer | `ux.view.configuration-view`                                        | `serves`     | inbound   |
 | intra-layer | `application.applicationcomponent.json-file-config-store`           | `realizes`   | inbound   |
@@ -1005,6 +1022,7 @@ Domain service orchestrating four-layer knowledge extraction pipeline (KG contex
 | inter-layer | `api.operation.get-reference-status`                                      | `references`     | inbound   |
 | inter-layer | `api.operation.search-references`                                         | `references`     | inbound   |
 | inter-layer | `data-store.storedlogic.sqlite-vec-cosine-similarity`                     | `serves`         | inbound   |
+| inter-layer | `technology.systemsoftware.httpx`                                         | `realizes`       | inbound   |
 | inter-layer | `technology.systemsoftware.sentence-transformers`                         | `realizes`       | inbound   |
 | inter-layer | `technology.systemsoftware.spa-cy`                                        | `realizes`       | inbound   |
 | inter-layer | `ux.view.rag-experiments-view`                                            | `serves`         | inbound   |
@@ -1159,6 +1177,7 @@ Core domain service managing the full ontology lifecycle — create/read/update/
 | inter-layer | `technology.systemsoftware.fast-api`                          | `realizes`   | inbound   |
 | inter-layer | `technology.systemsoftware.pydantic`                          | `realizes`   | inbound   |
 | inter-layer | `technology.systemsoftware.python`                            | `realizes`   | inbound   |
+| inter-layer | `technology.systemsoftware.uvicorn`                           | `realizes`   | inbound   |
 | inter-layer | `ux.view.classes-view`                                        | `serves`     | inbound   |
 | inter-layer | `ux.view.concept-schemes-view`                                | `serves`     | inbound   |
 | inter-layer | `ux.view.datasets-view`                                       | `serves`     | inbound   |
@@ -1206,6 +1225,8 @@ Domain service managing LLM pipeline configuration lifecycle and execution — c
 | inter-layer | `api.operation.get-pipeline-executions`                       | `references`     | inbound   |
 | inter-layer | `api.operation.list-pipeline-configurations`                  | `references`     | inbound   |
 | inter-layer | `api.operation.update-pipeline-configuration`                 | `references`     | inbound   |
+| inter-layer | `technology.systemsoftware.anthropic-sdk`                     | `realizes`       | inbound   |
+| inter-layer | `technology.systemsoftware.openai-sdk`                        | `realizes`       | inbound   |
 | inter-layer | `technology.systemsoftware.python`                            | `realizes`       | inbound   |
 | intra-layer | `application.applicationcomponent.llm-provider-router`        | `realizes`       | inbound   |
 | intra-layer | `application.applicationcomponent.sqlite-pipeline-repository` | `realizes`       | inbound   |
@@ -1249,6 +1270,7 @@ Unified domain service for change history, changeset lifecycle (WORKING→STAGED
 | inter-layer | `api.operation.resolve-conflicts`                           | `references` | inbound   |
 | inter-layer | `api.operation.stage-changeset`                             | `references` | inbound   |
 | inter-layer | `api.operation.submit-proposal`                             | `references` | inbound   |
+| inter-layer | `technology.systemsoftware.boto3`                           | `realizes`   | inbound   |
 | inter-layer | `technology.systemsoftware.duck-db`                         | `realizes`   | inbound   |
 | inter-layer | `technology.systemsoftware.python`                          | `realizes`   | inbound   |
 | intra-layer | `application.applicationcomponent.duck-db-sync-adapter`     | `realizes`   | inbound   |
@@ -1263,4 +1285,4 @@ Unified domain service for change history, changeset lifecycle (WORKING→STAGED
 
 ---
 
-Generated: 2026-05-10T10:17:36.894Z | Model Version: 0.1.0
+Generated: 2026-05-10T11:56:49.462Z | Model Version: 0.1.0

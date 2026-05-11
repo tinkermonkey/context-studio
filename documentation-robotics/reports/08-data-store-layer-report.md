@@ -14,11 +14,11 @@ Databases, data stores, and persistence mechanisms.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 23    |
+| Elements                  | 25    |
 | Intra-Layer Relationships | 6     |
-| Inter-Layer Relationships | 26    |
+| Inter-Layer Relationships | 28    |
 | Inbound Relationships     | 4     |
-| Outbound Relationships    | 22    |
+| Outbound Relationships    | 24    |
 
 **Cross-Layer References**:
 
@@ -32,12 +32,14 @@ flowchart LR
   subgraph data_store
     data_store_accesspattern_entity_by_parent_range_scan["entity_by_parent RANGE_SCAN"]
     data_store_accesspattern_vector_similarity_search["vector_similarity_search"]
+    data_store_collection_batch_runs["batch_runs"]
     data_store_collection_change_events["change_events"]
     data_store_collection_changeset_events_table["changeset_events table"]
     data_store_collection_changesets_table["changesets table"]
     data_store_collection_conflict_resolutions_table["conflict_resolutions table"]
     data_store_collection_entity_versions_table["entity_versions table"]
     data_store_collection_extraction_results_table["extraction_results table"]
+    data_store_collection_extraction_runs["extraction_runs"]
     data_store_collection_import_runs_table["import_runs table"]
     data_store_collection_individual_classes_table["individual_classes table"]
     data_store_collection_ontology_entities["ontology_entities"]
@@ -92,12 +94,14 @@ flowchart TB
 | ------------------------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------- | ------------- | ------------ | ------------ | -------- |
 | `data-store.accesspattern.serves.application.applicationfunction`   | `data-store.accesspattern.entity-by-parent-range-scan`   | `application.applicationfunction.sparql-query-function`          | `application` | `serves`     | many-to-many | medium   |
 | `data-store.accesspattern.serves.application.applicationfunction`   | `data-store.accesspattern.vector-similarity-search`      | `application.applicationfunction.embedding-generation`           | `application` | `serves`     | many-to-many | medium   |
+| `data-store.collection.serves.application.applicationcomponent`     | `data-store.collection.batch-runs`                       | `application.applicationcomponent.sqlite-interchange-repository` | `application` | `serves`     | many-to-many | medium   |
 | `data-store.collection.serves.application.applicationcomponent`     | `data-store.collection.change-events`                    | `application.applicationcomponent.sqlite-change-repository`      | `application` | `serves`     | many-to-many | medium   |
 | `data-store.collection.serves.application.applicationcomponent`     | `data-store.collection.changeset-events-table`           | `application.applicationcomponent.sqlite-change-repository`      | `application` | `serves`     | many-to-many | medium   |
 | `data-store.collection.serves.application.applicationcomponent`     | `data-store.collection.changesets-table`                 | `application.applicationcomponent.sqlite-change-repository`      | `application` | `serves`     | many-to-many | medium   |
 | `data-store.collection.serves.application.applicationcomponent`     | `data-store.collection.conflict-resolutions-table`       | `application.applicationcomponent.sqlite-change-repository`      | `application` | `serves`     | many-to-many | medium   |
 | `data-store.collection.serves.application.applicationcomponent`     | `data-store.collection.entity-versions-table`            | `application.applicationcomponent.sqlite-change-repository`      | `application` | `serves`     | many-to-many | medium   |
 | `data-store.collection.serves.application.applicationcomponent`     | `data-store.collection.extraction-results-table`         | `application.applicationcomponent.sqlite-extraction-repository`  | `application` | `serves`     | many-to-many | medium   |
+| `data-store.collection.serves.application.applicationcomponent`     | `data-store.collection.extraction-runs`                  | `application.applicationcomponent.sqlite-extraction-repository`  | `application` | `serves`     | many-to-many | medium   |
 | `data-store.collection.serves.application.applicationcomponent`     | `data-store.collection.import-runs-table`                | `application.applicationcomponent.sqlite-interchange-repository` | `application` | `serves`     | many-to-many | medium   |
 | `data-store.collection.serves.application.applicationcomponent`     | `data-store.collection.individual-classes-table`         | `application.applicationcomponent.sqlite-ontology-repository`    | `application` | `serves`     | many-to-many | medium   |
 | `data-store.collection.serves.application.applicationcomponent`     | `data-store.collection.ontology-entities`                | `application.applicationcomponent.sqlite-ontology-repository`    | `application` | `serves`     | many-to-many | medium   |
@@ -167,6 +171,20 @@ Vector similarity search access pattern using SQLiteVector cosine similarity —
 | Type        | Related Element                                        | Predicate | Direction |
 | ----------- | ------------------------------------------------------ | --------- | --------- |
 | inter-layer | `application.applicationfunction.embedding-generation` | `serves`  | outbound  |
+
+### batch_runs {#batch-runs}
+
+**ID**: `data-store.collection.batch-runs`
+
+**Type**: `collection`
+
+Tracks batch processing runs for ontology import operations. Created in local.db via Alembic migration. Contains parent/discriminator for import_runs inheritance.
+
+#### Relationships
+
+| Type        | Related Element                                                  | Predicate | Direction |
+| ----------- | ---------------------------------------------------------------- | --------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-interchange-repository` | `serves`  | outbound  |
 
 ### change_events {#change-events}
 
@@ -282,6 +300,20 @@ SQLite table: extraction_results — stores NLP/LLM extraction run outputs, sour
 | Name           | Value |
 | -------------- | ----- |
 | collectionType | TABLE |
+
+#### Relationships
+
+| Type        | Related Element                                                 | Predicate | Direction |
+| ----------- | --------------------------------------------------------------- | --------- | --------- |
+| inter-layer | `application.applicationcomponent.sqlite-extraction-repository` | `serves`  | outbound  |
+
+### extraction_runs {#extraction-runs}
+
+**ID**: `data-store.collection.extraction-runs`
+
+**Type**: `collection`
+
+Tracks individual extraction pipeline runs, including NLP and LLM extraction phases. Stored in local.db as a subtype of batch_runs.
 
 #### Relationships
 
@@ -621,4 +653,4 @@ Foreign key cascade delete rule on parent_entity_id in ontology_entities — del
 
 ---
 
-Generated: 2026-05-10T10:17:36.894Z | Model Version: 0.1.0
+Generated: 2026-05-10T11:56:49.462Z | Model Version: 0.1.0

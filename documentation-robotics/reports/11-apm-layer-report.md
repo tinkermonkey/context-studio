@@ -14,16 +14,16 @@ Observability, monitoring, metrics, logging, and tracing.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 8     |
-| Intra-Layer Relationships | 4     |
-| Inter-Layer Relationships | 11    |
+| Elements                  | 10    |
+| Intra-Layer Relationships | 5     |
+| Inter-Layer Relationships | 12    |
 | Inbound Relationships     | 3     |
-| Outbound Relationships    | 8     |
+| Outbound Relationships    | 9     |
 
 **Cross-Layer References**:
 
 - **Upstream layers**: [Testing](./12-testing-layer-report.md)
-- **Downstream layers**: [API](./06-api-layer-report.md), [Navigation](./10-navigation-layer-report.md), [UX](./09-ux-layer-report.md)
+- **Downstream layers**: [API](./06-api-layer-report.md), [Business](./02-business-layer-report.md), [Navigation](./10-navigation-layer-report.md), [UX](./09-ux-layer-report.md)
 
 ## Intra-Layer Relationships
 
@@ -33,6 +33,8 @@ flowchart LR
     apm_alert_background_task_dead_letter_alert["Background Task Dead Letter Alert"]
     apm_alert_llm_pipeline_failure_alert["LLM Pipeline Failure Alert"]
     apm_alert_rate_limit_breach_alert["Rate Limit Breach Alert"]
+    apm_logconfiguration_context_studio_server_log_configuration["Context Studio Server Log Configuration"]
+    apm_logprocessor_rotating_file_log_processor["Rotating File Log Processor"]
     apm_metricinstrument_background_task_queue_depth["Background Task Queue Depth"]
     apm_metricinstrument_llm_execution_tracker["LLM Execution Tracker"]
     apm_metricinstrument_rag_processing_time["RAG Processing Time"]
@@ -42,6 +44,7 @@ flowchart LR
     apm_alert_background_task_dead_letter_alert -->|monitors| apm_span_api_request_span
     apm_alert_llm_pipeline_failure_alert -->|monitors| apm_metricinstrument_llm_execution_tracker
     apm_alert_rate_limit_breach_alert -->|monitors| apm_metricinstrument_rag_processing_time
+    apm_logprocessor_rotating_file_log_processor -->|flows-to| apm_span_api_request_span
   end
 ```
 
@@ -63,6 +66,7 @@ flowchart TB
   apm["APM"]
   testing["Testing"]
   apm --> api
+  apm --> business
   apm --> navigation
   apm --> ux
   testing --> apm
@@ -71,19 +75,20 @@ flowchart TB
 
 ## Inter-Layer Relationships Table
 
-| Relationship ID                                              | Source Node                                        | Dest Node                                           | Dest Layer   | Predicate    | Cardinality  | Strength |
-| ------------------------------------------------------------ | -------------------------------------------------- | --------------------------------------------------- | ------------ | ------------ | ------------ | -------- |
-| `apm.alert.monitors.api.ratelimit`                           | `apm.alert.rate-limit-breach-alert`                | `api.ratelimit.external-reference-api-rate-limit`   | `api`        | `monitors`   | many-to-many | medium   |
-| `apm.metricinstrument.monitors.navigation.route`             | `apm.metricinstrument.background-task-queue-depth` | `navigation.route.admin-route`                      | `navigation` | `monitors`   | many-to-many | medium   |
-| `apm.metricinstrument.monitors.navigation.route`             | `apm.metricinstrument.llm-execution-tracker`       | `navigation.route.rag-experiments-route`            | `navigation` | `monitors`   | many-to-many | medium   |
-| `apm.metricinstrument.monitors.navigation.route`             | `apm.metricinstrument.rag-processing-time`         | `navigation.route.rag-experiments-route`            | `navigation` | `monitors`   | many-to-many | medium   |
-| `apm.metricinstrument.monitors.ux.view`                      | `apm.metricinstrument.rag-processing-time`         | `ux.view.rag-experiments-view`                      | `ux`         | `monitors`   | many-to-many | medium   |
-| `apm.span.monitors.navigation.navigationflow`                | `apm.span.api-request-span`                        | `navigation.navigationflow.ontology-hierarchy-flow` | `navigation` | `monitors`   | many-to-many | medium   |
-| `apm.span.monitors.ux.view`                                  | `apm.span.api-request-span`                        | `ux.view.rag-experiments-view`                      | `ux`         | `monitors`   | many-to-many | medium   |
-| `apm.span.monitors.ux.view`                                  | `apm.span.database-query-span`                     | `ux.view.datasets-view`                             | `ux`         | `monitors`   | many-to-many | medium   |
-| `testing.testcoveragetarget.references.apm.metricinstrument` | `testing.testcoveragetarget.admin-health`          | `apm.metricinstrument.background-task-queue-depth`  | `apm`        | `references` | many-to-many | medium   |
-| `testing.testcoveragetarget.references.apm.metricinstrument` | `testing.testcoveragetarget.extraction-pipeline`   | `apm.metricinstrument.llm-execution-tracker`        | `apm`        | `references` | many-to-many | medium   |
-| `testing.testcoveragetarget.references.apm.metricinstrument` | `testing.testcoveragetarget.graph-analysis`        | `apm.metricinstrument.rag-processing-time`          | `apm`        | `references` | many-to-many | medium   |
+| Relationship ID                                              | Source Node                                                    | Dest Node                                           | Dest Layer   | Predicate    | Cardinality  | Strength |
+| ------------------------------------------------------------ | -------------------------------------------------------------- | --------------------------------------------------- | ------------ | ------------ | ------------ | -------- |
+| `apm.alert.monitors.api.ratelimit`                           | `apm.alert.rate-limit-breach-alert`                            | `api.ratelimit.external-reference-api-rate-limit`   | `api`        | `monitors`   | many-to-many | medium   |
+| `apm.logconfiguration.monitors.business.businessservice`     | `apm.logconfiguration.context-studio-server-log-configuration` | `business.businessservice.rest-api-gateway-service` | `business`   | `monitors`   | many-to-many | medium   |
+| `apm.metricinstrument.monitors.navigation.route`             | `apm.metricinstrument.background-task-queue-depth`             | `navigation.route.admin-route`                      | `navigation` | `monitors`   | many-to-many | medium   |
+| `apm.metricinstrument.monitors.navigation.route`             | `apm.metricinstrument.llm-execution-tracker`                   | `navigation.route.rag-experiments-route`            | `navigation` | `monitors`   | many-to-many | medium   |
+| `apm.metricinstrument.monitors.navigation.route`             | `apm.metricinstrument.rag-processing-time`                     | `navigation.route.rag-experiments-route`            | `navigation` | `monitors`   | many-to-many | medium   |
+| `apm.metricinstrument.monitors.ux.view`                      | `apm.metricinstrument.rag-processing-time`                     | `ux.view.rag-experiments-view`                      | `ux`         | `monitors`   | many-to-many | medium   |
+| `apm.span.monitors.navigation.navigationflow`                | `apm.span.api-request-span`                                    | `navigation.navigationflow.ontology-hierarchy-flow` | `navigation` | `monitors`   | many-to-many | medium   |
+| `apm.span.monitors.ux.view`                                  | `apm.span.api-request-span`                                    | `ux.view.rag-experiments-view`                      | `ux`         | `monitors`   | many-to-many | medium   |
+| `apm.span.monitors.ux.view`                                  | `apm.span.database-query-span`                                 | `ux.view.datasets-view`                             | `ux`         | `monitors`   | many-to-many | medium   |
+| `testing.testcoveragetarget.references.apm.metricinstrument` | `testing.testcoveragetarget.admin-health`                      | `apm.metricinstrument.background-task-queue-depth`  | `apm`        | `references` | many-to-many | medium   |
+| `testing.testcoveragetarget.references.apm.metricinstrument` | `testing.testcoveragetarget.extraction-pipeline`               | `apm.metricinstrument.llm-execution-tracker`        | `apm`        | `references` | many-to-many | medium   |
+| `testing.testcoveragetarget.references.apm.metricinstrument` | `testing.testcoveragetarget.graph-analysis`                    | `apm.metricinstrument.rag-processing-time`          | `apm`        | `references` | many-to-many | medium   |
 
 ## Element Reference
 
@@ -157,6 +162,48 @@ Warning alert when external reference API rate limits are approached — the ref
 | ----------- | ------------------------------------------------- | ---------- | --------- |
 | inter-layer | `api.ratelimit.external-reference-api-rate-limit` | `monitors` | outbound  |
 | intra-layer | `apm.metricinstrument.rag-processing-time`        | `monitors` | outbound  |
+
+### Context Studio Server Log Configuration {#context-studio-server-log-configuration}
+
+**ID**: `apm.logconfiguration.context-studio-server-log-configuration`
+
+**Type**: `logconfiguration`
+
+Rotating file logger for the local-server. Configured via config.json logging settings (log_level, max_bytes, backup_count). Falls back to stderr StreamHandler if file logging fails.
+
+#### Attributes
+
+| Name            | Value                       |
+| --------------- | --------------------------- |
+| minimumSeverity | INFO                        |
+| serviceName     | context-studio-local-server |
+
+#### Relationships
+
+| Type        | Related Element                                     | Predicate  | Direction |
+| ----------- | --------------------------------------------------- | ---------- | --------- |
+| inter-layer | `business.businessservice.rest-api-gateway-service` | `monitors` | outbound  |
+
+### Rotating File Log Processor {#rotating-file-log-processor}
+
+**ID**: `apm.logprocessor.rotating-file-log-processor`
+
+**Type**: `logprocessor`
+
+Python RotatingFileHandler-based log processor writing to context_studio.log. Rotates based on configurable max_bytes and backup_count. Used by all domain, adapter, and route modules via utils/logger.py.
+
+#### Attributes
+
+| Name    | Value  |
+| ------- | ------ |
+| enabled | true   |
+| type    | simple |
+
+#### Relationships
+
+| Type        | Related Element             | Predicate  | Direction |
+| ----------- | --------------------------- | ---------- | --------- |
+| intra-layer | `apm.span.api-request-span` | `flows-to` | outbound  |
 
 ### Background Task Queue Depth {#background-task-queue-depth}
 
@@ -264,6 +311,7 @@ Trace span representing the full duration of a single HTTP API request, from rec
 | inter-layer | `navigation.navigationflow.ontology-hierarchy-flow` | `monitors` | outbound  |
 | inter-layer | `ux.view.rag-experiments-view`                      | `monitors` | outbound  |
 | intra-layer | `apm.alert.background-task-dead-letter-alert`       | `monitors` | inbound   |
+| intra-layer | `apm.logprocessor.rotating-file-log-processor`      | `flows-to` | inbound   |
 
 ### Database Query Span {#database-query-span}
 
@@ -296,4 +344,4 @@ OpenTelemetry span covering SQLAlchemy database query execution across local.db 
 
 ---
 
-Generated: 2026-05-10T10:17:36.894Z | Model Version: 0.1.0
+Generated: 2026-05-10T11:56:49.462Z | Model Version: 0.1.0

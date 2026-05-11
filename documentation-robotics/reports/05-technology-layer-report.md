@@ -14,11 +14,11 @@ Infrastructure, platforms, systems, and technology components.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 20    |
-| Intra-Layer Relationships | 24    |
-| Inter-Layer Relationships | 25    |
+| Elements                  | 25    |
+| Intra-Layer Relationships | 29    |
+| Inter-Layer Relationships | 31    |
 | Inbound Relationships     | 6     |
-| Outbound Relationships    | 19    |
+| Outbound Relationships    | 25    |
 
 **Cross-Layer References**:
 
@@ -32,10 +32,14 @@ flowchart LR
   subgraph technology
     technology_communicationnetwork_localhost_lan["Localhost LAN"]
     technology_systemsoftware_alembic["Alembic"]
+    technology_systemsoftware_anthropic_sdk["anthropic-sdk"]
+    technology_systemsoftware_boto3["boto3"]
     technology_systemsoftware_duck_db["DuckDB"]
     technology_systemsoftware_fast_api["FastAPI"]
     technology_systemsoftware_flowbite_react["Flowbite React"]
+    technology_systemsoftware_httpx["httpx"]
     technology_systemsoftware_network_x["NetworkX"]
+    technology_systemsoftware_openai_sdk["openai-sdk"]
     technology_systemsoftware_pydantic["Pydantic"]
     technology_systemsoftware_python["Python"]
     technology_systemsoftware_rdflib["RDFLib"]
@@ -46,18 +50,23 @@ flowchart LR
     technology_systemsoftware_tailwind_css["Tailwind CSS"]
     technology_systemsoftware_tan_stack_query["TanStack Query"]
     technology_systemsoftware_tan_stack_router["TanStack Router"]
+    technology_systemsoftware_uvicorn["uvicorn"]
     technology_systemsoftware_vite["Vite"]
     technology_technologycollaboration_external_knowledge_integration["External Knowledge Integration"]
     technology_technologyevent_rate_limit_threshold_event["Rate Limit Threshold Event"]
     technology_technologyinteraction_s3_sync_via_boto3["S3 Sync via boto3"]
     technology_systemsoftware_alembic -->|depends-on| technology_systemsoftware_python
     technology_systemsoftware_alembic -->|depends-on| technology_systemsoftware_sqlalchemy
+    technology_systemsoftware_anthropic_sdk -->|depends-on| technology_systemsoftware_python
+    technology_systemsoftware_boto3 -->|depends-on| technology_systemsoftware_python
     technology_systemsoftware_duck_db -->|depends-on| technology_systemsoftware_python
     technology_systemsoftware_fast_api -->|depends-on| technology_systemsoftware_python
     technology_systemsoftware_fast_api -->|triggers| technology_technologyevent_rate_limit_threshold_event
     technology_systemsoftware_fast_api -->|uses| technology_communicationnetwork_localhost_lan
     technology_systemsoftware_flowbite_react -->|depends-on| technology_systemsoftware_react
+    technology_systemsoftware_httpx -->|depends-on| technology_systemsoftware_python
     technology_systemsoftware_network_x -->|depends-on| technology_systemsoftware_python
+    technology_systemsoftware_openai_sdk -->|depends-on| technology_systemsoftware_python
     technology_systemsoftware_pydantic -->|depends-on| technology_systemsoftware_python
     technology_systemsoftware_rdflib -->|depends-on| technology_systemsoftware_python
     technology_systemsoftware_sentence_transformers -->|depends-on| technology_systemsoftware_python
@@ -66,6 +75,7 @@ flowchart LR
     technology_systemsoftware_tailwind_css -->|depends-on| technology_systemsoftware_vite
     technology_systemsoftware_tan_stack_query -->|depends-on| technology_systemsoftware_react
     technology_systemsoftware_tan_stack_router -->|depends-on| technology_systemsoftware_react
+    technology_systemsoftware_uvicorn -->|depends-on| technology_systemsoftware_fast_api
     technology_systemsoftware_vite -->|depends-on| technology_systemsoftware_react
     technology_systemsoftware_vite -->|uses| technology_communicationnetwork_localhost_lan
     technology_technologycollaboration_external_knowledge_integration -->|performs| technology_technologyinteraction_s3_sync_via_boto3
@@ -110,10 +120,14 @@ flowchart TB
 | `data-model.objectschema.depends-on.technology.systemsoftware`      | `data-model.objectschema.pipeline-configuration`  | `technology.systemsoftware.sqlalchemy`                                    | `technology`  | `depends-on` | many-to-many | medium   |
 | `data-model.objectschema.depends-on.technology.systemsoftware`      | `data-model.objectschema.relationship`            | `technology.systemsoftware.sqlalchemy`                                    | `technology`  | `depends-on` | many-to-many | medium   |
 | `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.alembic`               | `application.applicationcomponent.sqlite-persistence-adapter`             | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.anthropic-sdk`         | `application.applicationservice.pipeline-service`                         | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.boto3`                 | `application.applicationservice.versioning-service`                       | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.duck-db`               | `application.applicationservice.versioning-service`                       | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.fast-api`              | `application.applicationservice.ontology-service`                         | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.fast-api`              | `application.applicationcomponent.sqlite-persistence-adapter`             | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.httpx`                 | `application.applicationservice.extraction-service`                       | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.network-x`             | `application.applicationcomponent.network-x-graph-engine-adapter`         | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.openai-sdk`            | `application.applicationservice.pipeline-service`                         | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.pydantic`              | `application.applicationservice.ontology-service`                         | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.python`                | `application.applicationservice.admin-service`                            | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.python`                | `application.applicationservice.ontology-service`                         | `application` | `realizes`   | many-to-many | medium   |
@@ -128,6 +142,8 @@ flowchart TB
 | `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.sqlalchemy`            | `application.applicationcomponent.sqlite-persistence-adapter`             | `application` | `serves`     | many-to-many | medium   |
 | `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.tan-stack-query`       | `application.applicationservice.admin-service`                            | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.tan-stack-router`      | `application.applicationservice.admin-service`                            | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.uvicorn`               | `application.applicationservice.admin-service`                            | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.uvicorn`               | `application.applicationservice.ontology-service`                         | `application` | `realizes`   | many-to-many | medium   |
 
 ## Element Reference
 
@@ -176,6 +192,48 @@ Database schema migration tool for SQLite — autogenerates migration scripts fr
 | intra-layer | `technology.systemsoftware.python`                            | `depends-on` | outbound  |
 | intra-layer | `technology.systemsoftware.sqlalchemy`                        | `depends-on` | outbound  |
 
+### anthropic-sdk {#anthropic-sdk}
+
+**ID**: `technology.systemsoftware.anthropic-sdk`
+
+**Type**: `systemsoftware`
+
+Official Anthropic Python client library used by the Anthropic LLM provider adapter to call Claude models.
+
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
+
+#### Relationships
+
+| Type        | Related Element                                   | Predicate    | Direction |
+| ----------- | ------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationservice.pipeline-service` | `realizes`   | outbound  |
+| intra-layer | `technology.systemsoftware.python`                | `depends-on` | outbound  |
+
+### boto3 {#boto3}
+
+**ID**: `technology.systemsoftware.boto3`
+
+**Type**: `systemsoftware`
+
+AWS SDK for Python. Used by the S3 sync adapter to push and pull DuckDB snapshot files to remote storage.
+
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
+
+#### Relationships
+
+| Type        | Related Element                                     | Predicate    | Direction |
+| ----------- | --------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationservice.versioning-service` | `realizes`   | outbound  |
+| intra-layer | `technology.systemsoftware.python`                  | `depends-on` | outbound  |
+
 ### DuckDB {#duckdb}
 
 **ID**: `technology.systemsoftware.duck-db`
@@ -220,6 +278,7 @@ Python HTTP API framework — provides route declarations, dependency injection,
 | intra-layer | `technology.systemsoftware.python`                            | `depends-on` | outbound  |
 | intra-layer | `technology.technologyevent.rate-limit-threshold-event`       | `triggers`   | outbound  |
 | intra-layer | `technology.communicationnetwork.localhost-lan`               | `uses`       | outbound  |
+| intra-layer | `technology.systemsoftware.uvicorn`                           | `depends-on` | inbound   |
 
 ### Flowbite React {#flowbite-react}
 
@@ -241,6 +300,27 @@ Component library (v0.11) built on Tailwind CSS used for UX interface elements �
 | ----------- | --------------------------------- | ------------ | --------- |
 | intra-layer | `technology.systemsoftware.react` | `depends-on` | outbound  |
 
+### httpx {#httpx}
+
+**ID**: `technology.systemsoftware.httpx`
+
+**Type**: `systemsoftware`
+
+Async-capable HTTP client for Python. Used by the reference adapter and test infrastructure for making HTTP requests to external APIs and the FastAPI test client.
+
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
+
+#### Relationships
+
+| Type        | Related Element                                     | Predicate    | Direction |
+| ----------- | --------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationservice.extraction-service` | `realizes`   | outbound  |
+| intra-layer | `technology.systemsoftware.python`                  | `depends-on` | outbound  |
+
 ### NetworkX {#networkx}
 
 **ID**: `technology.systemsoftware.network-x`
@@ -261,6 +341,27 @@ Python graph library (v3.1+) used by NetworkXGraphEngine adapter — provides di
 | ----------- | ----------------------------------------------------------------- | ------------ | --------- |
 | inter-layer | `application.applicationcomponent.network-x-graph-engine-adapter` | `serves`     | outbound  |
 | intra-layer | `technology.systemsoftware.python`                                | `depends-on` | outbound  |
+
+### openai-sdk {#openai-sdk}
+
+**ID**: `technology.systemsoftware.openai-sdk`
+
+**Type**: `systemsoftware`
+
+Official OpenAI Python client library used by the OpenAI LLM provider adapter to call GPT models.
+
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
+
+#### Relationships
+
+| Type        | Related Element                                   | Predicate    | Direction |
+| ----------- | ------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationservice.pipeline-service` | `realizes`   | outbound  |
+| intra-layer | `technology.systemsoftware.python`                | `depends-on` | outbound  |
 
 ### Pydantic {#pydantic}
 
@@ -306,9 +407,13 @@ Primary backend runtime for local-server — all domain services, adapters, and 
 | inter-layer | `application.applicationservice.pipeline-service`   | `realizes`   | outbound  |
 | inter-layer | `application.applicationservice.versioning-service` | `realizes`   | outbound  |
 | intra-layer | `technology.systemsoftware.alembic`                 | `depends-on` | inbound   |
+| intra-layer | `technology.systemsoftware.anthropic-sdk`           | `depends-on` | inbound   |
+| intra-layer | `technology.systemsoftware.boto3`                   | `depends-on` | inbound   |
 | intra-layer | `technology.systemsoftware.duck-db`                 | `depends-on` | inbound   |
 | intra-layer | `technology.systemsoftware.fast-api`                | `depends-on` | inbound   |
+| intra-layer | `technology.systemsoftware.httpx`                   | `depends-on` | inbound   |
 | intra-layer | `technology.systemsoftware.network-x`               | `depends-on` | inbound   |
+| intra-layer | `technology.systemsoftware.openai-sdk`              | `depends-on` | inbound   |
 | intra-layer | `technology.systemsoftware.pydantic`                | `depends-on` | inbound   |
 | intra-layer | `technology.systemsoftware.rdflib`                  | `depends-on` | inbound   |
 | intra-layer | `technology.systemsoftware.sentence-transformers`   | `depends-on` | inbound   |
@@ -494,6 +599,28 @@ Type-safe file-based router (v1.116) for the React UX — manages all client-sid
 | inter-layer | `application.applicationservice.admin-service` | `realizes`   | outbound  |
 | intra-layer | `technology.systemsoftware.react`              | `depends-on` | outbound  |
 
+### uvicorn {#uvicorn}
+
+**ID**: `technology.systemsoftware.uvicorn`
+
+**Type**: `systemsoftware`
+
+ASGI server that serves the FastAPI application. Configured with standard extras for websocket and HTTP/2 support.
+
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
+
+#### Relationships
+
+| Type        | Related Element                                   | Predicate    | Direction |
+| ----------- | ------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationservice.admin-service`    | `realizes`   | outbound  |
+| inter-layer | `application.applicationservice.ontology-service` | `realizes`   | outbound  |
+| intra-layer | `technology.systemsoftware.fast-api`              | `depends-on` | outbound  |
+
 ### Vite {#vite}
 
 **ID**: `technology.systemsoftware.vite`
@@ -576,4 +703,4 @@ Technology interaction in which the sync adapter serializes the local knowledge 
 
 ---
 
-Generated: 2026-05-10T10:17:36.894Z | Model Version: 0.1.0
+Generated: 2026-05-10T11:56:49.462Z | Model Version: 0.1.0

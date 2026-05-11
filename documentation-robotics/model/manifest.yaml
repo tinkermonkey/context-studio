@@ -3,7 +3,7 @@ schema: documentation-robotics-v1
 cli_version: 0.1.3
 spec_version: 0.8.4
 created: 2026-03-23T12:18:08.630Z
-updated: 2026-05-10T10:17:36.892Z
+updated: 2026-05-10T11:56:49.460Z
 project:
   name: Context Studio
   description: Local-first knowledge graph application for RAG and communication
@@ -62,7 +62,7 @@ layers:
     enabled: true
     elements:
       communicationnetwork: 1
-      systemsoftware: 16
+      systemsoftware: 21
       technologycollaboration: 1
       technologyevent: 1
       technologyinteraction: 1
@@ -96,7 +96,7 @@ layers:
     enabled: true
     elements:
       accesspattern: 2
-      collection: 14
+      collection: 16
       database: 4
       retentionpolicy: 1
       storedlogic: 1
@@ -131,6 +131,8 @@ layers:
       alert: 3
       metricinstrument: 3
       span: 2
+      logconfiguration: 1
+      logprocessor: 1
   testing:
     order: 12
     name: Testing
@@ -141,8 +143,8 @@ layers:
       coveragegap: 1
       inputspacepartition: 1
       outcomecategory: 2
-      testcoveragetarget: 11
+      testcoveragetarget: 14
 changeset_history:
-  - name: fix-model-attributes-snake-case
-    committed_at: 2026-05-10T10:17:36.892Z
+  - name: backend-gap-fill
+    committed_at: 2026-05-10T11:56:49.459Z
     action: committed

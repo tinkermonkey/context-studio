@@ -1,0 +1,22 @@
+apm.logconfiguration.context-studio-server-log-configuration:
+  id: 97518dc3-9801-442b-a202-a48c9baf52c8
+  path: apm.logconfiguration.context-studio-server-log-configuration
+  spec_node_id: apm.logconfiguration
+  type: logconfiguration
+  layer_id: apm
+  name: Context Studio Server Log Configuration
+  description: Rotating file logger for the local-server. Configured via
+    config.json logging settings (log_level, max_bytes, backup_count). Falls
+    back to stderr StreamHandler if file logging fails.
+  attributes:
+    serviceName: context-studio-local-server
+    minimumSeverity: INFO
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/utils/logger.py
+        symbol: get_logger
+  metadata:
+    created_at: 2026-05-10T11:54:03.996Z
+    updated_at: 2026-05-10T11:54:03.996Z
+    version: 1

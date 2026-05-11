@@ -291,3 +291,40 @@ data-store.collection.pipeline-executions-table:
     created_at: 2026-05-08T12:53:01.359Z
     updated_at: 2026-05-08T12:53:01.359Z
     version: 1
+data-store.collection.batch-runs:
+  id: bdb4884c-9f91-46b6-b306-a38cca11639b
+  path: data-store.collection.batch-runs
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: batch_runs
+  description: Tracks batch processing runs for ontology import operations.
+    Created in local.db via Alembic migration. Contains parent/discriminator for
+    import_runs inheritance.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+        symbol: BatchRunModel
+  metadata:
+    created_at: 2026-05-10T11:53:05.394Z
+    updated_at: 2026-05-10T11:53:05.394Z
+    version: 1
+data-store.collection.extraction-runs:
+  id: 29062bab-884b-490b-9178-4c3b25b0e40f
+  path: data-store.collection.extraction-runs
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: extraction_runs
+  description: Tracks individual extraction pipeline runs, including NLP and LLM
+    extraction phases. Stored in local.db as a subtype of batch_runs.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+        symbol: ExtractionRunModel
+  metadata:
+    created_at: 2026-05-10T11:53:08.906Z
+    updated_at: 2026-05-10T11:53:08.906Z
+    version: 1

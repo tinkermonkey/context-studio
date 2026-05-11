@@ -16,13 +16,13 @@ Business processes, functions, roles, and services.
 | ------------------------- | ----- |
 | Elements                  | 9     |
 | Intra-Layer Relationships | 8     |
-| Inter-Layer Relationships | 5     |
-| Inbound Relationships     | 5     |
+| Inter-Layer Relationships | 6     |
+| Inbound Relationships     | 6     |
 | Outbound Relationships    | 0     |
 
 **Cross-Layer References**:
 
-- **Upstream layers**: [Application](./04-application-layer-report.md), [Data Store](./08-data-store-layer-report.md)
+- **Upstream layers**: [APM](./11-apm-layer-report.md), [Application](./04-application-layer-report.md), [Data Store](./08-data-store-layer-report.md)
 
 ## Intra-Layer Relationships
 
@@ -66,6 +66,7 @@ flowchart TB
   navigation["Navigation"]
   apm["APM"]
   testing["Testing"]
+  apm --> business
   application --> business
   data_store --> business
   class business current
@@ -73,13 +74,14 @@ flowchart TB
 
 ## Inter-Layer Relationships Table
 
-| Relationship ID                                                      | Source Node                                                | Dest Node                                     | Dest Layer | Predicate  | Cardinality  | Strength |
-| -------------------------------------------------------------------- | ---------------------------------------------------------- | --------------------------------------------- | ---------- | ---------- | ------------ | -------- |
-| `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.embedding-generation`     | `business.businessfunction.entity-enrichment` | `business` | `realizes` | many-to-many | medium   |
-| `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.llm-provider-routing`     | `business.businessfunction.entity-enrichment` | `business` | `realizes` | many-to-many | medium   |
-| `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.network-metrics-function` | `business.businessfunction.semantic-search`   | `business` | `realizes` | many-to-many | medium   |
-| `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.sparql-query-function`    | `business.businessfunction.semantic-search`   | `business` | `realizes` | many-to-many | medium   |
-| `data-store.storedlogic.realizes.business.businessfunction`          | `data-store.storedlogic.sqlite-vec-cosine-similarity`      | `business.businessfunction.semantic-search`   | `business` | `realizes` | many-to-many | medium   |
+| Relationship ID                                                      | Source Node                                                    | Dest Node                                           | Dest Layer | Predicate  | Cardinality  | Strength |
+| -------------------------------------------------------------------- | -------------------------------------------------------------- | --------------------------------------------------- | ---------- | ---------- | ------------ | -------- |
+| `apm.logconfiguration.monitors.business.businessservice`             | `apm.logconfiguration.context-studio-server-log-configuration` | `business.businessservice.rest-api-gateway-service` | `business` | `monitors` | many-to-many | medium   |
+| `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.embedding-generation`         | `business.businessfunction.entity-enrichment`       | `business` | `realizes` | many-to-many | medium   |
+| `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.llm-provider-routing`         | `business.businessfunction.entity-enrichment`       | `business` | `realizes` | many-to-many | medium   |
+| `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.network-metrics-function`     | `business.businessfunction.semantic-search`         | `business` | `realizes` | many-to-many | medium   |
+| `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.sparql-query-function`        | `business.businessfunction.semantic-search`         | `business` | `realizes` | many-to-many | medium   |
+| `data-store.storedlogic.realizes.business.businessfunction`          | `data-store.storedlogic.sqlite-vec-cosine-similarity`          | `business.businessfunction.semantic-search`         | `business` | `realizes` | many-to-many | medium   |
 
 ## Element Reference
 
@@ -215,9 +217,10 @@ The RESTful API surface of the Context Studio local server, implemented as FastA
 
 #### Relationships
 
-| Type        | Related Element                       | Predicate | Direction |
-| ----------- | ------------------------------------- | --------- | --------- |
-| intra-layer | `business.contract.open-api-contract` | `governs` | inbound   |
+| Type        | Related Element                                                | Predicate  | Direction |
+| ----------- | -------------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `apm.logconfiguration.context-studio-server-log-configuration` | `monitors` | inbound   |
+| intra-layer | `business.contract.open-api-contract`                          | `governs`  | inbound   |
 
 ### OpenAPI Contract {#openapi-contract}
 
@@ -235,4 +238,4 @@ Business contract defining the REST API surface for Context Studio: endpoint sig
 
 ---
 
-Generated: 2026-05-10T10:17:36.894Z | Model Version: 0.1.0
+Generated: 2026-05-10T11:56:49.462Z | Model Version: 0.1.0

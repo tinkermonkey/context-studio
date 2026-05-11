@@ -304,3 +304,104 @@ technology.systemsoftware.tailwind-css:
     created_at: 2026-05-07T22:14:57.665Z
     updated_at: 2026-05-07T22:14:57.665Z
     version: 1
+technology.systemsoftware.uvicorn:
+  id: 05b9fccd-47e8-4326-b85c-5557948f2164
+  path: technology.systemsoftware.uvicorn
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: uvicorn
+  description: ASGI server that serves the FastAPI application. Configured with
+    standard extras for websocket and HTTP/2 support.
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/requirements.txt
+        symbol: uvicorn[standard]
+  metadata:
+    created_at: 2026-05-10T11:53:32.795Z
+    updated_at: 2026-05-10T11:53:32.795Z
+    version: 1
+technology.systemsoftware.boto3:
+  id: 2c04861f-884d-4e78-9d40-52206ddf966d
+  path: technology.systemsoftware.boto3
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: boto3
+  description: AWS SDK for Python. Used by the S3 sync adapter to push and pull
+    DuckDB snapshot files to remote storage.
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/requirements.txt
+        symbol: boto3
+  metadata:
+    created_at: 2026-05-10T11:53:37.212Z
+    updated_at: 2026-05-10T11:53:37.212Z
+    version: 1
+technology.systemsoftware.anthropic-sdk:
+  id: a294e0d2-410f-4d36-9e97-8bfa5b3ccff1
+  path: technology.systemsoftware.anthropic-sdk
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: anthropic-sdk
+  description: Official Anthropic Python client library used by the Anthropic LLM
+    provider adapter to call Claude models.
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/requirements.txt
+        symbol: anthropic
+  metadata:
+    created_at: 2026-05-10T11:53:40.847Z
+    updated_at: 2026-05-10T11:53:40.847Z
+    version: 1
+technology.systemsoftware.openai-sdk:
+  id: 07dd2577-81bf-4437-b5bb-a975cebee16d
+  path: technology.systemsoftware.openai-sdk
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: openai-sdk
+  description: Official OpenAI Python client library used by the OpenAI LLM
+    provider adapter to call GPT models.
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/requirements.txt
+        symbol: openai
+  metadata:
+    created_at: 2026-05-10T11:53:43.755Z
+    updated_at: 2026-05-10T11:53:43.755Z
+    version: 1
+technology.systemsoftware.httpx:
+  id: 81f58122-8f3e-47d0-b416-78b327c903f4
+  path: technology.systemsoftware.httpx
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: httpx
+  description: Async-capable HTTP client for Python. Used by the reference adapter
+    and test infrastructure for making HTTP requests to external APIs and the
+    FastAPI test client.
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/requirements.txt
+        symbol: httpx
+  metadata:
+    created_at: 2026-05-10T11:53:47.382Z
+    updated_at: 2026-05-10T11:53:47.382Z
+    version: 1
