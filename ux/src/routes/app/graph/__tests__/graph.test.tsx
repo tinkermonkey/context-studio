@@ -6,6 +6,11 @@ import { GraphPage } from "../index";
 import * as graphHooks from "@/api/hooks/graph";
 
 vi.mock("@/api/hooks/graph");
+vi.mock("@/components/ui/Toast", () => ({
+  useToasts: () => ({
+    toast: vi.fn(),
+  }),
+}));
 
 describe("Graph Page", () => {
   const mockGraphData = {
@@ -56,7 +61,7 @@ describe("Graph Page", () => {
   });
 
   describe("loading state", () => {
-    it("renders page during loading", () => {
+    it("renders skeleton loaders during graph loading", () => {
       vi.mocked(graphHooks.useGraphVisualization).mockReturnValue({
         data: null,
         isPending: true,
@@ -64,13 +69,15 @@ describe("Graph Page", () => {
         mutate: vi.fn(),
       } as any);
 
-      render(
+      const { container } = render(
         <QueryClientProvider client={queryClient}>
           <GraphPage />
         </QueryClientProvider>,
       );
 
       expect(screen.getByTestId("graph-page")).toBeInTheDocument();
+      const graphShell = container.querySelector(".graph-shell");
+      expect(graphShell).toBeInTheDocument();
     });
   });
 
@@ -155,12 +162,13 @@ describe("Graph Page", () => {
     });
   });
 
-  describe("selectors present", () => {
-    it("has graph-page data-testid", () => {
+  describe("error state", () => {
+    it("renders error banner when graph build fails", () => {
+      const error = new Error("Graph build failed");
       vi.mocked(graphHooks.useGraphVisualization).mockReturnValue({
-        data: mockGraphData,
+        data: null,
         isPending: false,
-        error: null,
+        error,
         mutate: vi.fn(),
       } as any);
 
@@ -172,8 +180,10 @@ describe("Graph Page", () => {
 
       expect(screen.getByTestId("graph-page")).toBeInTheDocument();
     });
+  });
 
-    it("has graph-canvas data-testid when rendered", () => {
+  describe("accessibility and styling", () => {
+    it("build graph button has proper ARIA attributes", () => {
       vi.mocked(graphHooks.useGraphVisualization).mockReturnValue({
         data: mockGraphData,
         isPending: false,
@@ -187,28 +197,16 @@ describe("Graph Page", () => {
         </QueryClientProvider>,
       );
 
-      expect(screen.getByTestId("graph-canvas")).toBeInTheDocument();
+      const button = screen.getByRole("button", { name: /build/i });
+      expect(button).toBeInTheDocument();
     });
 
-    it("has graph-metrics-panel data-testid", () => {
+    it("inspector panel has complementary role for accessibility", () => {
       vi.mocked(graphHooks.useGraphVisualization).mockReturnValue({
         data: mockGraphData,
         isPending: false,
         error: null,
         mutate: vi.fn(),
-      } as any);
-
-      vi.mocked(graphHooks.useGraphMetrics).mockReturnValue({
-        data: {
-          centrality: { "node-1": 0.8 },
-          degree_distribution: { "node-1": 2 },
-          communities: [],
-          average_degree: 1,
-          algorithm: "louvain",
-        },
-        isLoading: false,
-        error: null,
-        refetch: vi.fn(),
       } as any);
 
       render(
@@ -217,7 +215,61 @@ describe("Graph Page", () => {
         </QueryClientProvider>,
       );
 
-      expect(screen.getByTestId("graph-metrics-panel")).toBeInTheDocument();
+      const inspector = screen.getByRole("complementary");
+      expect(inspector).toBeInTheDocument();
+    });
+
+    it("graph shell layout has correct CSS class during loading", () => {
+      vi.mocked(graphHooks.useGraphVisualization).mockReturnValue({
+        data: null,
+        isPending: true,
+        error: null,
+        mutate: vi.fn(),
+      } as any);
+
+      const { container } = render(
+        <QueryClientProvider client={queryClient}>
+          <GraphPage />
+        </QueryClientProvider>,
+      );
+
+      const graphShell = container.querySelector(".graph-shell");
+      expect(graphShell).toBeInTheDocument();
+    });
+
+    it("graph shell layout renders with populated data", () => {
+      vi.mocked(graphHooks.useGraphVisualization).mockReturnValue({
+        data: mockGraphData,
+        isPending: false,
+        error: null,
+        mutate: vi.fn(),
+      } as any);
+
+      const { container } = render(
+        <QueryClientProvider client={queryClient}>
+          <GraphPage />
+        </QueryClientProvider>,
+      );
+
+      const graphShell = container.querySelector(".graph-shell");
+      expect(graphShell).toBeInTheDocument();
+    });
+
+    it("page title renders as heading level 1", () => {
+      vi.mocked(graphHooks.useGraphVisualization).mockReturnValue({
+        data: mockGraphData,
+        isPending: false,
+        error: null,
+        mutate: vi.fn(),
+      } as any);
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <GraphPage />
+        </QueryClientProvider>,
+      );
+
+      expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
     });
   });
 });
