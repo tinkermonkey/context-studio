@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { usePipelines } from "@/api/hooks/pipeline";
 import { PipelineCard } from "@/components/pipeline/PipelineCard";
@@ -12,7 +12,6 @@ import { EmptyState } from "@/components/ui/EmptyState";
 type StatusFilter = "all" | "enabled" | "disabled";
 
 function PipelinesContent() {
-  const navigate = useNavigate();
   const { data: pipelines = [], isLoading, error, refetch } = usePipelines();
   const [searchFilter, setSearchFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -43,10 +42,8 @@ function PipelinesContent() {
     );
   }, [pipelines, searchFilter, statusFilter]);
 
-  const handlePipelineClick = (pipelineId: string) => {
-    navigate({
-      to: `/app/pipelines/${pipelineId}`,
-    });
+  const handlePipelineClick = (_pipelineId: string) => {
+    // Pipeline detail view not yet implemented
   };
 
   if (isLoading) {
