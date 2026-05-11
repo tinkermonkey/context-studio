@@ -10,6 +10,7 @@ import { SchemaTable } from "@/components/schema/SchemaTable";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
+import { getStatusColor } from "@/utils/statusColorUtils";
 import { COPY } from "./-copy";
 import type { components } from "@/api/types";
 
@@ -27,21 +28,6 @@ function formatDuration(ms: number): string {
 
 function formatTimestamp(timestamp: string): string {
   return new Date(timestamp).toLocaleString();
-}
-
-type ChipColor = "emerald" | "rose" | "amber" | "gray";
-
-function getStatusColor(status: string): ChipColor {
-  switch (status) {
-    case "success":
-      return "emerald";
-    case "error":
-      return "rose";
-    case "timeout":
-      return "amber";
-    default:
-      return "gray";
-  }
 }
 
 function RunsPageContent() {
@@ -80,7 +66,7 @@ function RunsPageContent() {
       header: COPY.RUN_STATUS_HEADER,
       size: 100,
       cell: (info) => {
-        const status = info.getValue() as string;
+        const status = info.getValue() as ExecutionWithPipeline["status"];
         return (
           <Chip color={getStatusColor(status)} data-testid={`status-chip-${status}`}>
             {status.charAt(0).toUpperCase() + status.slice(1)}

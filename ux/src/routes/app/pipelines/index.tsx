@@ -14,7 +14,7 @@ type StatusFilter = "all" | "enabled" | "disabled";
 
 export function PipelinesContent() {
   const { data: pipelines = [], isLoading, error, refetch } = usePipelines();
-  const { data: allExecutions } = useAllPipelineExecutions(undefined, 1000);
+  const { data: allExecutions, error: executionsError } = useAllPipelineExecutions(undefined, 50);
   const [searchFilter, setSearchFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
@@ -88,6 +88,31 @@ export function PipelinesContent() {
           message={COPY.PIPELINES_LOAD_ERROR}
           daemonLogPath="/local-server/logs/context_studio.log"
         />
+      </div>
+    );
+  }
+
+  if (executionsError) {
+    return (
+      <div data-testid="pipelines-page" className="stack">
+        <ErrorBanner
+          error={executionsError}
+          message="Failed to load execution history. Pipeline status indicators may be inaccurate."
+          daemonLogPath="/local-server/logs/context_studio.log"
+          onRetry={() => {}}
+        />
+        <div className="page-head">
+          <h1>{COPY.PIPELINES_PAGE_TITLE}</h1>
+          <Button variant="primary" disabled title="Pipeline creation is not yet implemented">
+            <Plus size={16} style={{ marginRight: "4px" }} />
+            {COPY.NEW_PIPELINE_BUTTON}
+          </Button>
+        </div>
+        <div data-testid="pipelines-grid" className="grid-2">
+          {pipelines.map((pipeline) => (
+            <PipelineCard key={pipeline.id} pipeline={pipeline} />
+          ))}
+        </div>
       </div>
     );
   }

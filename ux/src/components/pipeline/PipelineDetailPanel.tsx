@@ -9,6 +9,7 @@ import { useAutosave } from "@/hooks/useAutosave";
 import { useToasts } from "@/components/ui/Toast";
 import { Chip } from "@/components/ui/Chip";
 import { formatRelativeTime, formatDuration } from "@/utils/formatters";
+import { getStatusColor } from "@/utils/statusColorUtils";
 import { useExecutionStore } from "@/stores/executionStore";
 import { COPY } from "@/routes/app/pipelines/-copy";
 import type { components } from "@/api/types";
@@ -19,18 +20,6 @@ type ExecutionResponse = components["schemas"]["ExecutionResponse"];
 interface PipelineDetailPanelProps {
   pipeline: PipelineConfigurationResponse;
   onClose: () => void;
-}
-
-function getStatusColor(status: ExecutionResponse["status"]): "emerald" | "rose" | "gray" {
-  switch (status) {
-    case "success":
-      return "emerald";
-    case "error":
-    case "timeout":
-      return "rose";
-    default:
-      return "gray";
-  }
 }
 
 function getStatusLabel(status: ExecutionResponse["status"]): string {
