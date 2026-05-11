@@ -21,6 +21,7 @@ interface SchemaTableProps<T extends { id: string }> {
   onRowSelect?: (rowId: string) => void;
   selectedId?: string;
   renderRowActions?: (row: T) => React.ReactNode;
+  testIdPrefix?: string;
 }
 
 export function SchemaTable<T extends { id: string }>({
@@ -30,6 +31,7 @@ export function SchemaTable<T extends { id: string }>({
   onRowSelect,
   selectedId,
   renderRowActions,
+  testIdPrefix = "schema",
 }: SchemaTableProps<T>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState<PaginationState>({
@@ -131,7 +133,7 @@ export function SchemaTable<T extends { id: string }>({
                   key={row.id}
                   onClick={() => onRowSelect?.(row.original.id)}
                   className={selectedId === row.original.id ? "selected" : ""}
-                  data-testid={`schema-row-${row.original.id}`}
+                  data-testid={`${testIdPrefix}-row-${row.original.id}`}
                   style={{ cursor: onRowSelect ? "pointer" : "default" }}
                 >
                   {row.getVisibleCells().map((cell) => (
