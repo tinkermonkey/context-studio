@@ -62,7 +62,7 @@ function RunsPageContent() {
     currentPage * pageSize,
   );
 
-  const executions = executionsResponse?.items || [];
+  const executions = useMemo(() => executionsResponse?.items || [], [executionsResponse?.items]);
   const totalCount = executionsResponse?.total || 0;
 
   const filteredExecutions = useMemo(() => {
@@ -186,12 +186,7 @@ function RunsPageContent() {
       </div>
     );
   } else if (totalCount === 0) {
-    content = (
-      <EmptyState
-        title={COPY.NO_RUNS_TITLE}
-        description={COPY.NO_RUNS_DESCRIPTION}
-      />
-    );
+    content = <EmptyState title={COPY.NO_RUNS_TITLE} description={COPY.NO_RUNS_DESCRIPTION} />;
   } else {
     const hasFilters = !!searchFilter || statusFilter !== "all";
     const showFilteredEmpty = totalCount > 0 && filteredExecutions.length === 0 && hasFilters;
