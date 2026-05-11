@@ -268,7 +268,7 @@ describe("Pipelines Page", () => {
         status: "success",
       } as any);
 
-      const { container } = render(
+      render(
         <QueryClientProvider client={queryClient}>
           <PipelinesContent />
         </QueryClientProvider>,
