@@ -3,6 +3,7 @@ import { Input, Textarea } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { useIndividual } from "@/api/hooks/ontology/useIndividuals";
+import { individualsCopy } from "@/routes/app/data/individuals/-copy";
 import type { components } from "@/api/types";
 
 type IndividualCreateRequest = components["schemas"]["IndividualCreateRequest"];
@@ -73,7 +74,7 @@ export function IndividualEditor({
 
   const validateTitle = (value: string): boolean => {
     if (!value.trim()) {
-      setTitleError("Title is required");
+      setTitleError(individualsCopy.form.titleRequired);
       return false;
     }
     setTitleError(undefined);
@@ -106,7 +107,7 @@ export function IndividualEditor({
     }
 
     if (selectedClassIds.length === 0) {
-      setClassError("At least one class must be selected");
+      setClassError(individualsCopy.form.classesRequired);
       return;
     }
 
@@ -129,10 +130,10 @@ export function IndividualEditor({
     <form onSubmit={handleSubmit} data-testid="individual-form">
       <div className="stack-lg">
         <div>
-          <label className="form-group-label">Title</label>
+          <label className="form-group-label">{individualsCopy.form.titleLabel}</label>
           <Input
             type="text"
-            placeholder="Individual title"
+            placeholder={individualsCopy.form.titlePlaceholder}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onBlur={handleTitleBlur}
@@ -148,7 +149,7 @@ export function IndividualEditor({
         </div>
 
         <div>
-          <label className="form-group-label">Classes</label>
+          <label className="form-group-label">{individualsCopy.form.classesLabel}</label>
           {selectedClasses.length > 0 && (
             <div
               style={{
@@ -197,8 +198,8 @@ export function IndividualEditor({
               type="text"
               placeholder={
                 individualId
-                  ? "Classes cannot be changed in edit mode"
-                  : "Search and add classes..."
+                  ? individualsCopy.form.classesEditPlaceholder
+                  : individualsCopy.form.classesPlaceholder
               }
               value={searchQuery}
               onChange={(e) => {
@@ -269,9 +270,9 @@ export function IndividualEditor({
         </div>
 
         <div>
-          <label className="form-group-label">Description (optional)</label>
+          <label className="form-group-label">{individualsCopy.form.descriptionLabel}</label>
           <Textarea
-            placeholder="Optional description"
+            placeholder={individualsCopy.form.descriptionPlaceholder}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -282,7 +283,7 @@ export function IndividualEditor({
 
         {individualId && uniqueProperties.length > 0 && (
           <div>
-            <label className="form-group-label">Properties</label>
+            <label className="form-group-label">{individualsCopy.form.propertiesLabel}</label>
             <div className="stack">
               {uniqueProperties.map((prop) => (
                 <div key={prop.property_identifier}>
@@ -321,7 +322,7 @@ export function IndividualEditor({
               color: "var(--canvas-fg-3)",
             }}
           >
-            No properties defined for selected classes
+            {individualsCopy.form.noPropertiesMessage}
           </div>
         )}
 
@@ -332,7 +333,7 @@ export function IndividualEditor({
           data-testid="individual-submit-button"
           onKeyDown={handleKeyDown}
         >
-          {individualId ? "Update Individual" : "Create Individual"}
+          {individualId ? individualsCopy.edit.submitButton : individualsCopy.create.submitButton}
         </Button>
       </div>
     </form>

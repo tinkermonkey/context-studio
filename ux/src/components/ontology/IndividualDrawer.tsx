@@ -15,6 +15,7 @@ import {
 } from "@/api/hooks/ontology/useIndividuals";
 import { useIndividuals, useClasses } from "@/api/hooks/ontology";
 import { ApiError } from "@/api/client/interceptors";
+import { individualsCopy } from "@/routes/app/data/individuals/-copy";
 import type { components } from "@/api/types";
 
 type ClassResponse = components["schemas"]["ClassResponse"];
@@ -125,7 +126,7 @@ export function IndividualDrawer({
       lastSavedAtRef.current = new Date();
     },
     onError: (error) => {
-      toast("error", `Autosave failed: ${error.message}`);
+      toast("error", `${individualsCopy.toasts.autosaveFailed}: ${error.message}`);
     },
   });
 
@@ -162,9 +163,9 @@ export function IndividualDrawer({
       });
       setSearchQuery("");
       setShowClassOptions(false);
-      toast("success", "Class added");
+      toast("success", individualsCopy.toasts.classAdded);
     } catch (error) {
-      const message = error instanceof ApiError ? error.detail : "Failed to add class";
+      const message = error instanceof ApiError ? error.detail : individualsCopy.toasts.failedToAddClass;
       toast("error", message);
     } finally {
       setIsAddingClass(false);
@@ -174,7 +175,7 @@ export function IndividualDrawer({
   const handleRemoveClass = async (classId: string) => {
     const canRemove = individual.class_ids.length > 1;
     if (!canRemove) {
-      toast("error", "At least one class must remain");
+      toast("error", individualsCopy.toasts.classRemovalError);
       return;
     }
 
@@ -183,9 +184,9 @@ export function IndividualDrawer({
         individualId: individual.id,
         classId,
       });
-      toast("success", "Class removed");
+      toast("success", individualsCopy.toasts.classRemoved);
     } catch (error) {
-      const message = error instanceof ApiError ? error.detail : "Failed to remove class";
+      const message = error instanceof ApiError ? error.detail : individualsCopy.toasts.failedToRemoveClass;
       toast("error", message);
     }
   };
@@ -221,7 +222,7 @@ export function IndividualDrawer({
       <div className="stack-lg">
         {/* Header Section */}
         <div>
-          <label className="form-group-label">ID</label>
+          <label className="form-group-label">{individualsCopy.drawer.idLabel}</label>
           <Input
             type="text"
             value={individual.id}
@@ -232,7 +233,7 @@ export function IndividualDrawer({
         </div>
 
         <div>
-          <label className="form-group-label">Name</label>
+          <label className="form-group-label">{individualsCopy.drawer.nameLabel}</label>
           <Input
             type="text"
             value={title}
@@ -242,7 +243,7 @@ export function IndividualDrawer({
         </div>
 
         <div>
-          <label className="form-group-label">Description</label>
+          <label className="form-group-label">{individualsCopy.drawer.descriptionLabel}</label>
           <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -252,7 +253,7 @@ export function IndividualDrawer({
         </div>
 
         {/* Class Membership Panel */}
-        <Panel title="Class Membership" data-testid="individual-class-list" className="stack-lg">
+        <Panel title={individualsCopy.drawer.classMembershipTitle} data-testid="individual-class-list" className="stack-lg">
           {individual.class_ids.length > 0 && (
             <div style={{ display: "flex", gap: "var(--space-2)", flexWrap: "wrap" }}>
               {individual.class_ids.map((classId) => (
@@ -270,7 +271,7 @@ export function IndividualDrawer({
           <div style={{ position: "relative" }} ref={dropdownRef}>
             <Input
               type="text"
-              placeholder="Search and add classes..."
+              placeholder={individualsCopy.drawer.classSearchPlaceholder}
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -335,7 +336,7 @@ export function IndividualDrawer({
 
         {/* Inherited Properties Panel */}
         <Panel
-          title="Inherited Properties"
+          title={individualsCopy.drawer.inheritedPropertiesTitle}
           data-testid="individual-properties-panel"
           className="stack-lg"
         >
@@ -347,8 +348,8 @@ export function IndividualDrawer({
             </div>
           ) : inheritedProperties.length === 0 ? (
             <EmptyState
-              title="No properties"
-              description="No properties are defined for this individual's classes"
+              title={individualsCopy.drawer.noPropertiesTitle}
+              description={individualsCopy.drawer.noPropertiesDescription}
             />
           ) : (
             <div
@@ -359,10 +360,10 @@ export function IndividualDrawer({
                 fontSize: "var(--text-sm)",
               }}
             >
-              <div style={{ fontWeight: 500, paddingBottom: "var(--space-2)" }}>Property</div>
-              <div style={{ fontWeight: 500, paddingBottom: "var(--space-2)" }}>Type</div>
-              <div style={{ fontWeight: 500, paddingBottom: "var(--space-2)" }}>Value</div>
-              <div style={{ fontWeight: 500, paddingBottom: "var(--space-2)" }}>Source</div>
+              <div style={{ fontWeight: 500, paddingBottom: "var(--space-2)" }}>{individualsCopy.drawer.propertyGridHeaders.property}</div>
+              <div style={{ fontWeight: 500, paddingBottom: "var(--space-2)" }}>{individualsCopy.drawer.propertyGridHeaders.type}</div>
+              <div style={{ fontWeight: 500, paddingBottom: "var(--space-2)" }}>{individualsCopy.drawer.propertyGridHeaders.value}</div>
+              <div style={{ fontWeight: 500, paddingBottom: "var(--space-2)" }}>{individualsCopy.drawer.propertyGridHeaders.source}</div>
 
               {inheritedProperties.map((prop: DataPropertyValueResponse, idx) => (
                 <Fragment key={`${prop.property_identifier}-${idx}`}>
@@ -400,14 +401,14 @@ export function IndividualDrawer({
 
         {/* Related Individuals Panel */}
         <Panel
-          title="Related Individuals"
+          title={individualsCopy.drawer.relatedIndividualsTitle}
           data-testid="related-individuals-panel"
           className="stack-lg"
         >
           {relatedIndividuals.length === 0 ? (
             <EmptyState
-              title="No related individuals"
-              description="No other individuals share classes with this one"
+              title={individualsCopy.drawer.noRelatedIndividualsTitle}
+              description={individualsCopy.drawer.noRelatedIndividualsDescription}
             />
           ) : (
             <div className="stack">
@@ -466,7 +467,7 @@ export function IndividualDrawer({
                     marginTop: "var(--space-2)",
                   }}
                 >
-                  Showing 10 of many results
+                  {individualsCopy.drawer.showingResults}
                 </div>
               )}
             </div>
@@ -480,7 +481,7 @@ export function IndividualDrawer({
             style={{ flex: 1 }}
             data-testid="individual-drawer-close-button"
           >
-            Close
+            {individualsCopy.drawer.closeButton}
           </Button>
         </div>
       </div>

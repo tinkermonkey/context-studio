@@ -183,7 +183,7 @@ function IndividualsPageContent({
         <ErrorBanner
           error={error}
           onRetry={() => refetch()}
-          message="Failed to load individuals"
+          message={individualsCopy.errors.failedToLoad}
           daemonLogPath="/local-server/logs/context_studio.log"
         />
       </div>
@@ -272,7 +272,7 @@ function IndividualsPageWrapper() {
       handleSelectedIdChange(result.id);
       toast("success", individualsCopy.create.successToast);
     } catch (error) {
-      setCreateError(error instanceof Error ? error.message : "Failed to create individual");
+      setCreateError(error instanceof Error ? error.message : individualsCopy.errors.failedToCreate);
     }
   };
 
@@ -300,24 +300,24 @@ function IndividualsPageWrapper() {
       });
       setShowEditModal(false);
       setEditingId(null);
-      toast("success", "Individual updated successfully");
+      toast("success", individualsCopy.edit.successToast);
     } catch (error) {
-      setEditError(error instanceof Error ? error.message : "Failed to update individual");
+      setEditError(error instanceof Error ? error.message : individualsCopy.errors.failedToUpdate);
     }
   };
 
   const handleDeleteClick = (id: string) => {
-    if (confirm("Are you sure you want to delete this individual?")) {
+    if (confirm(individualsCopy.delete.confirmMessage)) {
       deleteMutation
         .mutateAsync(id)
         .then(() => {
           if (selectedId === id) {
             handleSelectedIdChange(undefined);
           }
-          toast("success", "Individual deleted successfully");
+          toast("success", individualsCopy.delete.successToast);
         })
         .catch((error) => {
-          toast("error", error instanceof Error ? error.message : "Failed to delete individual");
+          toast("error", error instanceof Error ? error.message : individualsCopy.delete.errorToast);
         });
     }
   };
@@ -325,7 +325,7 @@ function IndividualsPageWrapper() {
   return (
     <div className="stack" data-testid="individuals-page">
       <div className="flex-between">
-        <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>Individuals</h1>
+        <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>{individualsCopy.pageTitle}</h1>
         <div className="row">
           <Button
             variant="primary"
@@ -359,7 +359,7 @@ function IndividualsPageWrapper() {
           setShowCreateModal(false);
           setCreateError(null);
         }}
-        title="Create Individual"
+        title={individualsCopy.create.modalTitle}
         size="md"
         data-testid="individual-create-modal"
       >
@@ -383,7 +383,7 @@ function IndividualsPageWrapper() {
           setEditingId(null);
           setEditError(null);
         }}
-        title="Edit Individual"
+        title={individualsCopy.edit.modalTitle}
         size="md"
         data-testid="individual-edit-modal"
       >
