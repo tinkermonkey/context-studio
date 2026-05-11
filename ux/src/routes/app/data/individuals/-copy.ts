@@ -5,6 +5,8 @@ export const individualsCopy = {
     description:
       "Individuals are instances of classes that represent specific entities in your knowledge graph.",
     actionLabel: "+ New individual",
+    runPipelineLabel: "Run pipeline",
+    importLabel: "Import…",
   },
   filteredEmpty: {
     title: "No matching individuals",

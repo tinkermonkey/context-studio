@@ -40,6 +40,48 @@ interface IndividualsPageContentProps {
   onRetryClasses: () => void;
   onEditClick: (id: string) => void;
   onDeleteClick: (id: string) => void;
+  onRunPipelineClick: () => void;
+  onImportClick: () => void;
+}
+
+function IndividualsEmptyState({
+  onCreateClick,
+  onRunPipelineClick,
+  onImportClick,
+}: {
+  onCreateClick: () => void;
+  onRunPipelineClick: () => void;
+  onImportClick: () => void;
+}) {
+  return (
+    <div className="empty-state">
+      <div className="empty-state-content">
+        <div className="empty-state-title">{individualsCopy.emptyState.title}</div>
+        <div className="empty-state-description">{individualsCopy.emptyState.description}</div>
+      </div>
+      <div style={{ display: "flex", gap: "var(--space-2)", justifyContent: "center", flexWrap: "wrap" }}>
+        <Button variant="primary" size="sm" onClick={onCreateClick} data-testid="empty-state-new-individual">
+          {individualsCopy.emptyState.actionLabel}
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onRunPipelineClick}
+          data-testid="empty-state-run-pipeline"
+        >
+          {individualsCopy.emptyState.runPipelineLabel}
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onImportClick}
+          data-testid="empty-state-import"
+        >
+          {individualsCopy.emptyState.importLabel}
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 function IndividualsPageContent({
@@ -52,6 +94,8 @@ function IndividualsPageContent({
   onRetryClasses,
   onEditClick,
   onDeleteClick,
+  onRunPipelineClick,
+  onImportClick,
 }: IndividualsPageContentProps) {
   const [searchFilter, setSearchFilter] = useState("");
 
@@ -152,32 +196,28 @@ function IndividualsPageContent({
         );
       },
     },
-    {
-      id: "actions",
-      header: "",
-      size: 40,
-      cell: ({ row }) => (
-        <div style={{ display: "flex", gap: "var(--space-1)" }}>
-          <button
-            type="button"
-            onClick={() => onEditClick(row.original.id)}
-            className="btn btn-icon"
-            data-testid={`individual-row-edit-${row.original.id}`}
-          >
-            <Edit2 size={16} style={{ color: "var(--canvas-fg-3)" }} />
-          </button>
-          <button
-            type="button"
-            onClick={() => onDeleteClick(row.original.id)}
-            className="btn btn-icon"
-            data-testid={`individual-row-delete-${row.original.id}`}
-          >
-            <Trash2 size={16} style={{ color: "var(--canvas-fg-3)" }} />
-          </button>
-        </div>
-      ),
-    },
   ];
+
+  const renderRowActions = (row: IndividualResponse) => (
+    <div style={{ display: "flex", gap: "var(--space-1)" }}>
+      <button
+        type="button"
+        onClick={() => onEditClick(row.id)}
+        className="btn btn-icon"
+        data-testid={`individual-row-edit-${row.id}`}
+      >
+        <Edit2 size={16} style={{ color: "var(--canvas-fg-3)" }} />
+      </button>
+      <button
+        type="button"
+        onClick={() => onDeleteClick(row.id)}
+        className="btn btn-icon"
+        data-testid={`individual-row-delete-${row.id}`}
+      >
+        <Trash2 size={16} style={{ color: "var(--canvas-fg-3)" }} />
+      </button>
+    </div>
+  );
 
   if (isLoading) {
     return (
@@ -206,13 +246,10 @@ function IndividualsPageContent({
 
   if (individuals.length === 0) {
     return (
-      <EmptyState
-        title={individualsCopy.emptyState.title}
-        description={individualsCopy.emptyState.description}
-        action={{
-          label: individualsCopy.emptyState.actionLabel,
-          onClick: onCreateClick,
-        }}
+      <IndividualsEmptyState
+        onCreateClick={onCreateClick}
+        onRunPipelineClick={onRunPipelineClick}
+        onImportClick={onImportClick}
       />
     );
   }
@@ -247,6 +284,7 @@ function IndividualsPageContent({
           onRowSelect={onSelectedIdChange}
           selectedId={selectedId}
           testIdPrefix="individual"
+          renderRowActions={renderRowActions}
         />
       )}
     </div>
@@ -353,6 +391,14 @@ function IndividualsPageWrapper() {
     }
   };
 
+  const handleRunPipelineClick = () => {
+    // TODO: implement pipeline execution
+  };
+
+  const handleImportClick = () => {
+    // TODO: implement import dialog
+  };
+
   return (
     <div className="stack" data-testid="individuals-page">
       <div className="flex-between">
@@ -378,6 +424,8 @@ function IndividualsPageWrapper() {
           onRetryClasses={() => refetchClasses()}
           onEditClick={handleEditClick}
           onDeleteClick={handleDeleteClick}
+          onRunPipelineClick={handleRunPipelineClick}
+          onImportClick={handleImportClick}
         />
       </div>
 
