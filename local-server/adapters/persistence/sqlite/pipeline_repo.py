@@ -11,6 +11,7 @@ from datetime import datetime
 from sqlalchemy.orm import sessionmaker, Session
 
 from domain.pipeline.entities import PipelineConfiguration, Execution
+from domain.pipeline.ports import ExecutionWithTitle
 from adapters.persistence.sqlite.operations.models import (
     PipelineConfigurationModel,
     ExecutionModel,
@@ -156,12 +157,13 @@ class SQLitePipelineRepository:
         status: str | None = None,
         limit: int = 100,
         offset: int = 0,
-    ) -> tuple[list[Execution], list[str], int]:
+    ) -> tuple[list[ExecutionWithTitle], int]:
         """
         Retrieve execution history across all pipeline configurations with pagination.
 
         Results are returned in reverse chronological order (most recent first).
         Performs a JOIN with PipelineConfigurationModel to fetch pipeline titles.
+        Only includes executions whose pipeline configurations exist (INNER JOIN).
 
         Args:
             status: Optional status filter ("success", "error", "timeout")
@@ -170,14 +172,17 @@ class SQLitePipelineRepository:
 
         Returns:
             Tuple of:
-            - List of Execution objects
-            - List of corresponding pipeline titles (indexed same as executions)
+            - List of ExecutionWithTitle objects (combining executions with their pipeline titles)
             - Total count of all matching executions (for pagination)
         """
         with self.session_factory() as session:
-            count_query = session.query(ExecutionModel)
+            # Count query must use the same JOIN to exclude orphan executions
+            count_query = session.query(ExecutionModel).join(
+                PipelineConfigurationModel,
+                ExecutionModel.pipeline_config_id == PipelineConfigurationModel.id,
+            )
             if status:
-                count_query = count_query.filter_by(status=status)
+                count_query = count_query.filter(ExecutionModel.status == status)
             total = count_query.count()
 
             query = session.query(  # type: ignore[call-overload]
@@ -198,10 +203,15 @@ class SQLitePipelineRepository:
                 .all()
             )
 
-            executions = [self._to_domain_execution(row[0]) for row in rows]
-            titles = [row[1] for row in rows]
+            results = [
+                ExecutionWithTitle(
+                    execution=self._to_domain_execution(row[0]),
+                    pipeline_title=row[1],
+                )
+                for row in rows
+            ]
 
-            return executions, titles, total
+            return results, total
 
     def _to_domain_config(
         self,

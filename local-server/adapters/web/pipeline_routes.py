@@ -186,7 +186,7 @@ async def list_all_pipeline_executions(
         )
 
     try:
-        executions, pipeline_titles, total = await run_sync_in_executor(
+        executions_with_titles, total = await run_sync_in_executor(
             service.list_all_executions,
             status=status_filter,
             limit=limit,
@@ -195,20 +195,22 @@ async def list_all_pipeline_executions(
 
         responses = [
             ExecutionWithPipelineResponse(
-                id=exec.id,
-                pipeline_config_id=exec.pipeline_config_id,
-                pipeline_title=title,
-                output_text=exec.output_text,
-                provider=exec.provider,
-                model=exec.model,
-                tokens_in=exec.tokens_in,
-                tokens_out=exec.tokens_out,
-                duration_ms=exec.duration_ms,
-                status=cast(Literal["success", "error", "timeout"], exec.status),
-                error_message=exec.error_message,
-                timestamp=exec.timestamp,
+                id=item.execution.id,
+                pipeline_config_id=item.execution.pipeline_config_id,
+                pipeline_title=item.pipeline_title,
+                output_text=item.execution.output_text,
+                provider=item.execution.provider,
+                model=item.execution.model,
+                tokens_in=item.execution.tokens_in,
+                tokens_out=item.execution.tokens_out,
+                duration_ms=item.execution.duration_ms,
+                status=cast(
+                    Literal["success", "error", "timeout"], item.execution.status
+                ),
+                error_message=item.execution.error_message,
+                timestamp=item.execution.timestamp,
             )
-            for exec, title in zip(executions, pipeline_titles)
+            for item in executions_with_titles
         ]
 
         return ListResponse(

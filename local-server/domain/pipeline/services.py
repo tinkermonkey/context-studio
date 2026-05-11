@@ -15,7 +15,7 @@ from uuid import uuid4
 
 from domain.ports import EventPublisher
 from .entities import Execution, PipelineConfiguration
-from .ports import PipelineRepository, LLMProvider
+from .ports import PipelineRepository, LLMProvider, ExecutionWithTitle
 from .events import PipelineExecuted
 from .exceptions import PipelineNotFoundError
 
@@ -233,7 +233,7 @@ class PipelineService:
         status: str | None = None,
         limit: int = 100,
         offset: int = 0,
-    ) -> tuple[list[Execution], list[str], int]:
+    ) -> tuple[list[ExecutionWithTitle], int]:
         """
         Retrieve all pipeline executions across all configurations.
 
@@ -246,7 +246,7 @@ class PipelineService:
             offset: Number of executions to skip for pagination (default 0)
 
         Returns:
-            Tuple of (list of Execution objects, list of corresponding pipeline titles, total count)
+            Tuple of (list of ExecutionWithTitle objects, total count)
         """
         return self._pipeline_repo.get_all_executions(
             status=status, limit=limit, offset=offset

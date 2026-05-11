@@ -448,3 +448,81 @@ class TestPipelineRepositoryExecutionTracking:
         assert retrieved.timestamp.replace(
             tzinfo=None
         ) == sample_execution.timestamp.replace(tzinfo=None)
+
+    def test_get_all_executions_excludes_orphaned_executions(
+        self, repo, sample_config, sample_execution
+    ):
+        """
+        Test that get_all_executions count matches data returned (no pagination bugs).
+
+        This verifies the fix for the count/data query mismatch:
+        - The count query must use the same JOIN as the data query
+        - Orphaned executions (whose config was deleted) should not be counted
+        """
+        from sqlalchemy import text
+
+        # Save config and execution
+        repo.save_config(sample_config)
+        repo.record_execution(sample_execution)
+
+        # Create an orphaned execution by directly inserting via session
+        with repo.session_factory() as session:
+            from adapters.persistence.sqlite.operations.models import ExecutionModel
+
+            orphan_exec = ExecutionModel(
+                id=str(uuid4()),
+                pipeline_config_id=str(uuid4()),  # Config that doesn't exist
+                input_text="Orphan input",
+                output_text="Orphan output",
+                provider="openai",
+                model="gpt-4",
+                tokens_in=10,
+                tokens_out=5,
+                duration_ms=1000,
+                status="success",
+                error_message=None,
+                timestamp=datetime.now(timezone.utc),
+            )
+            session.add(orphan_exec)
+            session.commit()
+
+        # Get all executions
+        executions_with_titles, total = repo.get_all_executions()
+
+        # Count should match returned items (orphan should not be counted)
+        assert total == 1, "Count should exclude orphaned executions"
+        assert len(executions_with_titles) == 1, "Should return only non-orphaned executions"
+        assert executions_with_titles[0].execution.id == sample_execution.id
+        assert executions_with_titles[0].pipeline_title == sample_config.title
+
+    def test_get_all_executions_returns_execution_with_title(self, repo, sample_config):
+        """Test that get_all_executions returns ExecutionWithTitle value objects."""
+        repo.save_config(sample_config)
+
+        execution = Execution(
+            id=str(uuid4()),
+            pipeline_config_id=sample_config.id,
+            input_text="Test input",
+            output_text="Test output",
+            provider="openai",
+            model="gpt-4",
+            tokens_in=10,
+            tokens_out=5,
+            duration_ms=1000,
+            status="success",
+            error_message=None,
+            timestamp=datetime.now(timezone.utc),
+        )
+        repo.record_execution(execution)
+
+        executions_with_titles, total = repo.get_all_executions()
+
+        assert total == 1
+        assert len(executions_with_titles) == 1
+
+        item = executions_with_titles[0]
+        # Verify it's an ExecutionWithTitle with proper structure
+        assert hasattr(item, "execution")
+        assert hasattr(item, "pipeline_title")
+        assert item.execution.id == execution.id
+        assert item.pipeline_title == sample_config.title

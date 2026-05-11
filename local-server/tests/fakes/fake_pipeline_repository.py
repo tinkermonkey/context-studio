@@ -8,6 +8,7 @@ sys.path.append(
 )
 
 from domain.pipeline.entities import Execution, PipelineConfiguration
+from domain.pipeline.ports import ExecutionWithTitle
 
 
 class FakePipelineRepository:
@@ -113,11 +114,12 @@ class FakePipelineRepository:
         status: str | None = None,
         limit: int = 100,
         offset: int = 0,
-    ) -> tuple[list[Execution], list[str], int]:
+    ) -> tuple[list[ExecutionWithTitle], int]:
         """
         Retrieve execution history across all pipeline configurations.
 
         Returns results in reverse chronological order (most recent first).
+        Only includes executions whose pipeline configurations exist.
 
         Args:
             status: Optional status filter ("success", "error", "timeout")
@@ -125,7 +127,7 @@ class FakePipelineRepository:
             offset: Number of execution records to skip for pagination
 
         Returns:
-            Tuple of (list of Execution objects, list of corresponding pipeline titles, total count)
+            Tuple of (list of ExecutionWithTitle objects, total count)
         """
         all_executions = []
         for config_id, executions in self._executions.items():
@@ -133,15 +135,14 @@ class FakePipelineRepository:
             if config:
                 for execution in executions:
                     if status is None or execution.status == status:
-                        all_executions.append((execution, config.title))
+                        all_executions.append(
+                            ExecutionWithTitle(execution=execution, pipeline_title=config.title)
+                        )
 
         sorted_executions = sorted(
-            all_executions, key=lambda x: x[0].timestamp, reverse=True
+            all_executions, key=lambda x: x.execution.timestamp, reverse=True
         )
         total = len(sorted_executions)
         paginated = sorted_executions[offset : offset + limit]
 
-        executions = [exec for exec, _ in paginated]
-        titles = [title for _, title in paginated]
-
-        return executions, titles, total
+        return paginated, total
