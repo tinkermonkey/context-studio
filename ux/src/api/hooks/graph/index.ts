@@ -1,10 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
 import { graphService } from "@/api/services/graph";
-import type { components } from "@/api/types";
-
-type GraphMetricsResponse = components["schemas"]["GraphMetricsResponse"];
-type SubgraphDataResponse = components["schemas"]["SubgraphDataResponse"];
 
 export interface GraphNode {
   id: string;
