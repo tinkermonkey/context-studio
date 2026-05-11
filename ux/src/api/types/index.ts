@@ -1461,6 +1461,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/pipelines/executions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List All Pipeline Executions
+     * @description Retrieve execution history across all pipeline configurations.
+     *
+     *     Results are returned in reverse chronological order (most recent first).
+     *
+     *     Args:
+     *         status_filter: Optional status filter ("success", "error", "timeout")
+     *         limit: Maximum number of executions to return (1-500, default 100)
+     *         offset: Number of executions to skip for pagination (default 0)
+     *         service: PipelineService from dependency injection
+     *
+     *     Returns:
+     *         Paginated list of ExecutionWithPipelineResponse objects with total count
+     *
+     *     Raises:
+     *         HTTPException: 400 if invalid status value
+     */
+    get: operations["list_all_pipeline_executions_api_pipelines_executions_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/pipelines/{pipeline_id}": {
     parameters: {
       query?: never;
@@ -1542,40 +1576,6 @@ export interface paths {
      *         HTTPException: 400 if invalid, 404 if configuration not found
      */
     post: operations["execute_pipeline_api_pipelines__pipeline_id__execute_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/pipelines/executions": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List All Pipeline Executions
-     * @description Retrieve execution history across all pipeline configurations.
-     *
-     *     Results are returned in reverse chronological order (most recent first).
-     *
-     *     Args:
-     *         status: Optional status filter ("success", "error", "timeout")
-     *         limit: Maximum number of executions to return (1-500, default 100)
-     *         offset: Number of executions to skip for pagination (default 0)
-     *         service: PipelineService from dependency injection
-     *
-     *     Returns:
-     *         Paginated list of ExecutionWithPipelineResponse objects with total count
-     *
-     *     Raises:
-     *         HTTPException: 400 if invalid status value
-     */
-    get: operations["list_all_pipeline_executions_api_pipelines_executions_get"];
-    put?: never;
-    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -7619,6 +7619,42 @@ export interface operations {
       };
     };
   };
+  list_all_pipeline_executions_api_pipelines_executions_get: {
+    parameters: {
+      query?: {
+        /** @description Optional status filter (success, error, timeout) */
+        status_filter?: string | null;
+        /** @description Maximum number of results */
+        limit?: number;
+        /** @description Number of results to skip */
+        offset?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListResponse_ExecutionWithPipelineResponse_"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   get_pipeline_configuration_api_pipelines__pipeline_id__get: {
     parameters: {
       query?: never;
@@ -7736,42 +7772,6 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ExecutionResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_all_pipeline_executions_api_pipelines_executions_get: {
-    parameters: {
-      query?: {
-        /** @description Optional status filter (success, error, timeout) */
-        status?: string | null;
-        /** @description Maximum number of results */
-        limit?: number;
-        /** @description Number of results to skip */
-        offset?: number;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ListResponse_ExecutionWithPipelineResponse_"];
         };
       };
       /** @description Validation Error */

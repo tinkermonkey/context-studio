@@ -848,6 +848,20 @@ selectors:
     component: routes/app/pipelines/$pipelineId.tsx
     description: Main pipeline detail page container
 
+  # Pipeline Runs Page
+  - selector: pipeline-runs-page
+    component: routes/app/pipelines/runs.tsx
+    description: Main pipeline runs page container
+  - selector: runs-search-input
+    component: routes/app/pipelines/runs.tsx
+    description: Search input field for filtering pipeline runs
+  - selector: pagination-prev
+    component: routes/app/pipelines/runs.tsx
+    description: Previous page button in pipeline runs pagination
+  - selector: pagination-next
+    component: routes/app/pipelines/runs.tsx
+    description: Next page button in pipeline runs pagination
+
   # Unit Test Fixtures
   - selector: action
     component: components/ui/__tests__/Panel.test.tsx

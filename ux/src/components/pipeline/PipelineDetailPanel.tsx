@@ -37,14 +37,14 @@ function getStatusLabel(status: ExecutionResponse["status"]): string {
 
 export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelProps) {
   const [isEditingConfig, setIsEditingConfig] = useState(false);
-  const [configText, setConfigText] = useState(
-    JSON.stringify(pipeline.config || {}, null, 2)
-  );
+  const [configText, setConfigText] = useState(JSON.stringify(pipeline.config || {}, null, 2));
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
   const lastSavedAtRef = useRef<Date | null>(null);
   const { toast } = useToasts();
 
-  const { data: executions = [], isLoading: executionsLoading } = usePipelineExecutions(pipeline.id);
+  const { data: executions = [], isLoading: executionsLoading } = usePipelineExecutions(
+    pipeline.id,
+  );
   const updateMutation = useUpdatePipeline();
 
   useEffect(() => {
@@ -97,7 +97,11 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
 
   const expandedExecution = expandedLogId ? executions.find((e) => e.id === expandedLogId) : null;
 
-  const autosaveState = isEditingConfig ? undefined : autosaveStatus === "idle" ? undefined : (autosaveStatus as "saving" | "saved" | "error");
+  const autosaveState = isEditingConfig
+    ? undefined
+    : autosaveStatus === "idle"
+      ? undefined
+      : (autosaveStatus as "saving" | "saved" | "error");
 
   return (
     <Drawer
@@ -156,10 +160,7 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
               </div>
             </div>
           ) : (
-            <pre
-              data-testid="pipeline-config-pre"
-              className="pipeline-code-block"
-            >
+            <pre data-testid="pipeline-config-pre" className="pipeline-code-block">
               {configText}
             </pre>
           )}
@@ -175,18 +176,12 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
               ))}
             </div>
           ) : executions.length === 0 ? (
-            <div
-              className="pipeline-empty-state"
-              data-testid="pipeline-no-runs"
-            >
+            <div className="pipeline-empty-state" data-testid="pipeline-no-runs">
               This pipeline has never been run
             </div>
           ) : (
             <div className="stack">
-              <table
-                className="t"
-                data-testid="pipeline-runs-table"
-              >
+              <table className="t" data-testid="pipeline-runs-table">
                 <thead>
                   <tr>
                     <th style={{ textAlign: "left" }}>Status</th>
@@ -206,16 +201,16 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
                       </td>
                       <td>{formatRelativeTime(execution.timestamp)}</td>
                       <td>{formatDuration(execution.duration_ms)}</td>
-                      <td>{execution.tokens_in} → {execution.tokens_out}</td>
+                      <td>
+                        {execution.tokens_in} → {execution.tokens_out}
+                      </td>
                       <td style={{ textAlign: "right" }}>
                         {execution.error_message && (
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() =>
-                              setExpandedLogId(
-                                expandedLogId === execution.id ? null : execution.id
-                              )
+                              setExpandedLogId(expandedLogId === execution.id ? null : execution.id)
                             }
                             aria-expanded={expandedLogId === execution.id}
                             data-testid={`pipeline-view-log-${execution.id}`}
@@ -234,19 +229,14 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
 
         {/* Error Log Panel */}
         {expandedExecution && expandedExecution.error_message && (
-          <div
-            data-testid="pipeline-error-log"
-            className="pipeline-error-log"
-          >
+          <div data-testid="pipeline-error-log" className="pipeline-error-log">
             <div className="flex-between" style={{ marginBottom: "var(--space-2)" }}>
               <span className="error-log-title">Error Details</span>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => {
-                  navigator.clipboard.writeText(
-                    expandedExecution.error_message || ""
-                  );
+                  navigator.clipboard.writeText(expandedExecution.error_message || "");
                   toast("success", "Error copied to clipboard");
                 }}
                 aria-label="Copy error to clipboard"
@@ -255,9 +245,7 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
                 <Copy size={14} />
               </Button>
             </div>
-            <pre className="pipeline-error-message">
-              {expandedExecution.error_message}
-            </pre>
+            <pre className="pipeline-error-message">{expandedExecution.error_message}</pre>
           </div>
         )}
       </div>

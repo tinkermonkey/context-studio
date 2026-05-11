@@ -26,19 +26,16 @@ function PipelinesContent() {
           p.title.toLowerCase().includes(query) ||
           p.pipeline.toLowerCase().includes(query) ||
           p.provider.toLowerCase().includes(query) ||
-          p.model.toLowerCase().includes(query)
+          p.model.toLowerCase().includes(query),
       );
     }
 
     if (statusFilter !== "all") {
-      result = result.filter((p) =>
-        statusFilter === "enabled" ? p.enabled : !p.enabled
-      );
+      result = result.filter((p) => (statusFilter === "enabled" ? p.enabled : !p.enabled));
     }
 
     return result.sort(
-      (a, b) =>
-        new Date(b.last_updated).getTime() - new Date(a.last_updated).getTime()
+      (a, b) => new Date(b.last_updated).getTime() - new Date(a.last_updated).getTime(),
     );
   }, [pipelines, searchFilter, statusFilter]);
 
@@ -96,11 +93,7 @@ function PipelinesContent() {
     <div data-testid="pipelines-page">
       <div className="page-head">
         <h1>Pipelines</h1>
-        <Button
-          variant="primary"
-          disabled
-          title="Pipeline creation is not yet implemented"
-        >
+        <Button variant="primary" disabled title="Pipeline creation is not yet implemented">
           <Plus size={16} style={{ marginRight: "4px" }} />
           New Pipeline
         </Button>
@@ -147,10 +140,7 @@ function PipelinesContent() {
           description="Try adjusting your search or filter criteria."
         />
       ) : (
-        <div
-          data-testid="pipelines-grid"
-          className="grid-2"
-        >
+        <div data-testid="pipelines-grid" className="grid-2">
           {filteredPipelines.map((pipeline) => (
             <PipelineCard key={pipeline.id} pipeline={pipeline} />
           ))}

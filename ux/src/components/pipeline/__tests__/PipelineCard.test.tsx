@@ -51,7 +51,7 @@ describe("PipelineCard", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineCard pipeline={mockPipeline} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
     expect(screen.getByText("Test Pipeline")).toBeInTheDocument();
   });
@@ -60,7 +60,7 @@ describe("PipelineCard", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineCard pipeline={mockPipeline} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
     expect(screen.getByText("openai")).toBeInTheDocument();
     expect(screen.getByText("gpt-4")).toBeInTheDocument();
@@ -70,7 +70,7 @@ describe("PipelineCard", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineCard pipeline={mockPipeline} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
     const chip = screen.getByTestId("pipeline-status-chip");
     expect(chip).toHaveTextContent("success");
@@ -81,7 +81,7 @@ describe("PipelineCard", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineCard pipeline={mockPipeline} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
     expect(screen.getByText(/ago/)).toBeInTheDocument();
     expect(screen.getByText(/tokens/)).toBeInTheDocument();
@@ -99,7 +99,7 @@ describe("PipelineCard", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineCard pipeline={mockPipeline} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
     expect(screen.getByText("No runs yet")).toBeInTheDocument();
   });
@@ -117,7 +117,7 @@ describe("PipelineCard", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineCard pipeline={mockPipeline} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
     const chip = screen.getByTestId("pipeline-status-chip");
     expect(chip).toHaveTextContent("failed");
@@ -136,7 +136,7 @@ describe("PipelineCard", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineCard pipeline={mockPipeline} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
     const chip = screen.getByTestId("pipeline-status-chip");
     expect(chip).toHaveTextContent("idle");
@@ -148,7 +148,7 @@ describe("PipelineCard", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineCard pipeline={disabledPipeline} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
     const chip = screen.getByTestId("pipeline-status-chip");
     expect(chip).toHaveTextContent("disabled");
@@ -159,7 +159,7 @@ describe("PipelineCard", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineCard pipeline={mockPipeline} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
     expect(screen.getByTestId("pipeline-card-pipeline-1")).toBeInTheDocument();
     expect(screen.getByTestId("pipeline-status-chip")).toBeInTheDocument();
@@ -169,7 +169,7 @@ describe("PipelineCard", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineCard pipeline={mockPipeline} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
     const chip = screen.getByTestId("pipeline-status-chip");
     expect(chip).toHaveAttribute("role", "status");

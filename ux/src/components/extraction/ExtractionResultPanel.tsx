@@ -53,24 +53,21 @@ export function ExtractionResultPanel({
 
     if (entities.length === 0) {
       return (
-        <div style={{ padding: "12px", color: "var(--canvas-fg-2)" }}>
-          No entities extracted
-        </div>
+        <div style={{ padding: "12px", color: "var(--canvas-fg-2)" }}>No entities extracted</div>
       );
     }
 
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
         <div>
-          <div style={{ marginBottom: "8px", fontSize: "var(--text-sm)", color: "var(--canvas-fg-2)" }}>
+          <div
+            style={{ marginBottom: "8px", fontSize: "var(--text-sm)", color: "var(--canvas-fg-2)" }}
+          >
             Entities ({entities.length})
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
             {entities.map((entity) => (
-              <div
-                key={entity.id}
-                title={`Type: ${entity.entity_type}`}
-              >
+              <div key={entity.id} title={`Type: ${entity.entity_type}`}>
                 <Chip color="cyan">
                   {entity.label} ({(entity.confidence * 100).toFixed(0)}%)
                 </Chip>
@@ -97,7 +94,7 @@ export function ExtractionResultPanel({
                   entities,
                 },
                 null,
-                2
+                2,
               )}
             </pre>
           </div>
@@ -128,13 +125,8 @@ export function ExtractionResultPanel({
 
   return (
     <div data-testid={testId}>
-      <Panel
-        title={layerName}
-        actions={toggleActions}
-      >
-        <div id={`${testId}-json`}>
-          {renderContent()}
-        </div>
+      <Panel title={layerName} actions={toggleActions}>
+        <div id={`${testId}-json`}>{renderContent()}</div>
       </Panel>
     </div>
   );

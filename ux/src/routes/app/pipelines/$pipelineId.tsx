@@ -12,7 +12,11 @@ function PipelineDetailContent() {
   const navigate = useNavigate({ from: "/app/pipelines/$pipelineId" });
 
   const { data: pipelines = [], isLoading: pipelinesLoading } = usePipelines();
-  const { data: pipeline, isLoading: pipelineLoading, error: pipelineError } = usePipeline(pipelineId);
+  const {
+    data: pipeline,
+    isLoading: pipelineLoading,
+    error: pipelineError,
+  } = usePipeline(pipelineId);
 
   const isLoading = pipelinesLoading || pipelineLoading;
 
@@ -56,12 +60,7 @@ function PipelineDetailContent() {
         data={pipelines}
         selectedId={pipelineId}
         renderDrawerContent={(_selectedPipeline) =>
-          pipeline && (
-            <PipelineDetailPanel
-              pipeline={pipeline}
-              onClose={handleClose}
-            />
-          )
+          pipeline && <PipelineDetailPanel pipeline={pipeline} onClose={handleClose} />
         }
       >
         <div className="grid-2">

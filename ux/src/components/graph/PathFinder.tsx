@@ -35,13 +35,14 @@ function NodeTypeahead({
   const [showOptions, setShowOptions] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
 
-  const filteredClasses = search.length >= MIN_SEARCH_CHARS
-    ? allClasses.filter(
-        (cls) =>
-          cls.title.toLowerCase().includes(search.toLowerCase()) ||
-          cls.id.toLowerCase().includes(search.toLowerCase()),
-      )
-    : [];
+  const filteredClasses =
+    search.length >= MIN_SEARCH_CHARS
+      ? allClasses.filter(
+          (cls) =>
+            cls.title.toLowerCase().includes(search.toLowerCase()) ||
+            cls.id.toLowerCase().includes(search.toLowerCase()),
+        )
+      : [];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
@@ -67,9 +68,7 @@ function NodeTypeahead({
     switch (e.key) {
       case "ArrowDown":
         e.preventDefault();
-        setActiveIndex((prev) =>
-          prev < filteredClasses.length - 1 ? prev + 1 : prev,
-        );
+        setActiveIndex((prev) => (prev < filteredClasses.length - 1 ? prev + 1 : prev));
         break;
       case "ArrowUp":
         e.preventDefault();
@@ -89,10 +88,7 @@ function NodeTypeahead({
     }
   };
 
-  const handleOptionKeyDown = (
-    e: React.KeyboardEvent<HTMLButtonElement>,
-    index: number,
-  ) => {
+  const handleOptionKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       handleSelect(filteredClasses[index]);
@@ -140,11 +136,7 @@ function NodeTypeahead({
                   onKeyDown={(e) => handleOptionKeyDown(e, index)}
                   data-testid={`${testIdPrefix}-option-${cls.id}`}
                   aria-selected={activeIndex === index}
-                  style={
-                    activeIndex === index
-                      ? { background: "var(--canvas-bg-2)" }
-                      : {}
-                  }
+                  style={activeIndex === index ? { background: "var(--canvas-bg-2)" } : {}}
                 >
                   <span className="mono" style={{ fontSize: "var(--text-xs)" }}>
                     {cls.id.slice(0, 12)}
@@ -299,9 +291,7 @@ export function PathFinder({ onNodeSelect }: PathFinderProps) {
                 style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}
               >
                 {index > 0 && (
-                  <span style={{ color: "var(--canvas-fg-3)", fontSize: "var(--text-sm)" }}>
-                    →
-                  </span>
+                  <span style={{ color: "var(--canvas-fg-3)", fontSize: "var(--text-sm)" }}>→</span>
                 )}
                 {renderNodeBadge(nodeId, index)}
               </div>

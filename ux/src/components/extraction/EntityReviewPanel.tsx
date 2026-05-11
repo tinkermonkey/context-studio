@@ -53,9 +53,10 @@ function EntityRow({
   }, [linkingState]);
 
   const filteredClasses = linkingState
-    ? availableClasses.filter((cls) =>
-        cls.title.toLowerCase().includes(linkingState.searchQuery.toLowerCase()) ||
-        cls.id.toLowerCase().includes(linkingState.searchQuery.toLowerCase())
+    ? availableClasses.filter(
+        (cls) =>
+          cls.title.toLowerCase().includes(linkingState.searchQuery.toLowerCase()) ||
+          cls.id.toLowerCase().includes(linkingState.searchQuery.toLowerCase()),
       )
     : [];
 
@@ -74,9 +75,7 @@ function EntityRow({
     >
       {/* Entity info */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontWeight: 500, marginBottom: "4px" }}>
-          {entity.label}
-        </div>
+        <div style={{ fontWeight: 500, marginBottom: "4px" }}>{entity.label}</div>
         <div className="flex-row-center">
           {entity.entity_type && (
             <Chip color="gray" className="text-xs">
@@ -140,10 +139,7 @@ function EntityRow({
           </Button>
 
           {linkingState !== null && (
-            <div
-              className="dropdown-popover"
-              role="listbox"
-            >
+            <div className="dropdown-popover" role="listbox">
               <div style={{ padding: "8px" }}>
                 <Input
                   type="text"
@@ -260,7 +256,7 @@ export function EntityReviewPanel({
 
   // Filter entities: only show unlinked, unrejected entities
   const unlinkedEntities = entities.filter(
-    (e) => !e.matched_class_id && !rejectedIds.has(e.id) && !linkedIds.has(e.id)
+    (e) => !e.matched_class_id && !rejectedIds.has(e.id) && !linkedIds.has(e.id),
   );
 
   // Determine state
@@ -289,7 +285,7 @@ export function EntityReviewPanel({
     } catch (error) {
       toast(
         "error",
-        `Failed to create class: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Failed to create class: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     } finally {
       setIsProcessing(false);
@@ -325,13 +321,13 @@ export function EntityReviewPanel({
               title: entity.label,
               description: entity.description || null,
             },
-          })
-        )
+          }),
+        ),
       );
 
       const failedResults = results.filter((r) => r.status === "rejected");
       const fulfilledEntityIds = results
-        .map((r, i) => r.status === "fulfilled" ? unlinkedEntities[i].id : null)
+        .map((r, i) => (r.status === "fulfilled" ? unlinkedEntities[i].id : null))
         .filter((id): id is string => id !== null);
 
       if (fulfilledEntityIds.length > 0) {
@@ -344,7 +340,7 @@ export function EntityReviewPanel({
     } catch (error) {
       toast(
         "error",
-        `Batch operation failed: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Batch operation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     } finally {
       setIsProcessing(false);
@@ -352,9 +348,7 @@ export function EntityReviewPanel({
   };
 
   const handleRejectAll = () => {
-    setRejectedIds(
-      (prev) => new Set([...prev, ...unlinkedEntities.map((e) => e.id)])
-    );
+    setRejectedIds((prev) => new Set([...prev, ...unlinkedEntities.map((e) => e.id)]));
     toast("info", "All entities rejected");
   };
 
@@ -391,7 +385,15 @@ export function EntityReviewPanel({
     return (
       <div data-testid={`entity-review-panel-${layerIndex}`}>
         <Panel title={`Entity Review — ${layerName}`}>
-          <div className="stack" style={{ padding: "12px", color: "var(--canvas-fg-2)", textAlign: "center", alignItems: "center" }}>
+          <div
+            className="stack"
+            style={{
+              padding: "12px",
+              color: "var(--canvas-fg-2)",
+              textAlign: "center",
+              alignItems: "center",
+            }}
+          >
             <CheckCircle size={20} />
             <p style={{ margin: 0 }}>All suggestions reviewed</p>
           </div>
@@ -425,13 +427,14 @@ export function EntityReviewPanel({
   );
 
   // Populated state
-  const availableClasses = classesList?.items?.filter(
-    (cls) => !cls.id.startsWith("_")
-  ) || [];
+  const availableClasses = classesList?.items?.filter((cls) => !cls.id.startsWith("_")) || [];
 
   return (
     <div data-testid={`entity-review-panel-${layerIndex}`}>
-      <Panel title={`Entity Review — ${layerName} (${unlinkedEntities.length})`} actions={batchActions}>
+      <Panel
+        title={`Entity Review — ${layerName} (${unlinkedEntities.length})`}
+        actions={batchActions}
+      >
         <div className="stack">
           {unlinkedEntities.map((entity, index) => (
             <EntityRow

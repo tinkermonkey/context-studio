@@ -14,7 +14,7 @@ type StatusVariant = "success" | "failed" | "idle" | "disabled";
 
 function mapExecutionStatusToVariant(
   status: ExecutionResponse["status"],
-  enabled: boolean
+  enabled: boolean,
 ): StatusVariant {
   if (!enabled) return "disabled";
   switch (status) {
@@ -63,9 +63,7 @@ export function PipelineCard({ pipeline }: PipelineCardProps) {
     : !pipeline.enabled
       ? "disabled"
       : "idle";
-  const lastRunTime = lastExecution
-    ? formatRelativeTime(new Date(lastExecution.timestamp))
-    : null;
+  const lastRunTime = lastExecution ? formatRelativeTime(new Date(lastExecution.timestamp)) : null;
   const duration = lastExecution ? formatDuration(lastExecution.duration_ms) : null;
 
   return (
@@ -105,7 +103,9 @@ export function PipelineCard({ pipeline }: PipelineCardProps) {
             <span>{duration}</span>
           </>
         )}
-        {!lastExecution && <span style={{ color: "var(--canvas-fg-4, var(--canvas-fg-3))" }}>No runs yet</span>}
+        {!lastExecution && (
+          <span style={{ color: "var(--canvas-fg-4, var(--canvas-fg-3))" }}>No runs yet</span>
+        )}
       </div>
     </div>
   );

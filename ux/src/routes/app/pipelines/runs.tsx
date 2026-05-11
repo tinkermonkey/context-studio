@@ -69,8 +69,7 @@ function RunsPageContent() {
     const query = searchFilter.toLowerCase();
     return executions.filter(
       (exec) =>
-        exec.pipeline_title.toLowerCase().includes(query) ||
-        exec.id.toLowerCase().includes(query),
+        exec.pipeline_title.toLowerCase().includes(query) || exec.id.toLowerCase().includes(query),
     );
   }, [executions, searchFilter]);
 
@@ -210,11 +209,7 @@ function RunsPageContent() {
             onChange={(e) => setSearchFilter(e.target.value)}
             data-testid="runs-search-input"
           />
-          <div
-            role="radiogroup"
-            aria-label="Filter runs by status"
-            className="runs-filter-group"
-          >
+          <div role="radiogroup" aria-label="Filter runs by status" className="runs-filter-group">
             {(
               [
                 { label: "All", value: "all" },
@@ -249,11 +244,7 @@ function RunsPageContent() {
         ) : (
           <>
             <div data-testid="pipeline-runs-table">
-              <SchemaTable
-                columns={runColumns}
-                data={filteredExecutions}
-                testIdPrefix="run"
-              />
+              <SchemaTable columns={runColumns} data={filteredExecutions} testIdPrefix="run" />
             </div>
 
             {totalCount > pageSize && (

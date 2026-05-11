@@ -91,7 +91,7 @@ describe("PipelineDetailPanel", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     const preElement = screen.getByTestId("pipeline-config-pre");
@@ -104,7 +104,7 @@ describe("PipelineDetailPanel", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     const editButton = screen.getByTestId("pipeline-edit-config-button");
@@ -122,7 +122,7 @@ describe("PipelineDetailPanel", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     const editButton = screen.getByTestId("pipeline-edit-config-button");
@@ -137,7 +137,7 @@ describe("PipelineDetailPanel", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     const editButton = screen.getByTestId("pipeline-edit-config-button");
@@ -152,7 +152,7 @@ describe("PipelineDetailPanel", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     const editButton = screen.getByTestId("pipeline-edit-config-button");
@@ -174,7 +174,7 @@ describe("PipelineDetailPanel", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     expect(screen.getByTestId("pipeline-runs-table")).toBeInTheDocument();
@@ -192,7 +192,7 @@ describe("PipelineDetailPanel", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     expect(screen.getByTestId("pipeline-no-runs")).toBeInTheDocument();
@@ -211,7 +211,7 @@ describe("PipelineDetailPanel", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     expect(screen.getByTestId(`pipeline-view-log-${mockFailedExecution.id}`)).toBeInTheDocument();
@@ -230,7 +230,7 @@ describe("PipelineDetailPanel", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     const viewLogButton = screen.getByTestId(`pipeline-view-log-${mockFailedExecution.id}`);
@@ -255,7 +255,7 @@ describe("PipelineDetailPanel", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     const viewLogButton = screen.getByTestId(`pipeline-view-log-${mockFailedExecution.id}`);
@@ -278,7 +278,7 @@ describe("PipelineDetailPanel", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     const viewLogButton = screen.getByTestId(`pipeline-view-log-${mockFailedExecution.id}`);
@@ -301,7 +301,7 @@ describe("PipelineDetailPanel", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     const viewLogButton = screen.getByTestId(`pipeline-view-log-${mockFailedExecution.id}`);
@@ -325,7 +325,7 @@ describe("PipelineDetailPanel", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     const viewLogButton = screen.getByTestId(`pipeline-view-log-${mockFailedExecution.id}`);
@@ -338,7 +338,7 @@ describe("PipelineDetailPanel", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     const chip = screen.getByText("success");
@@ -357,7 +357,7 @@ describe("PipelineDetailPanel", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     const chip = screen.getByText("error");
@@ -369,7 +369,7 @@ describe("PipelineDetailPanel", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     const editButton = screen.getByTestId("pipeline-edit-config-button");
@@ -384,7 +384,7 @@ describe("PipelineDetailPanel", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     const editButton = screen.getByTestId("pipeline-edit-config-button");

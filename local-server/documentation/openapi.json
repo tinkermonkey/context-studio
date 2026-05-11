@@ -2938,6 +2938,85 @@
         }
       }
     },
+    "/api/pipelines/executions": {
+      "get": {
+        "tags": [
+          "pipeline"
+        ],
+        "summary": "List All Pipeline Executions",
+        "description": "Retrieve execution history across all pipeline configurations.\n\nResults are returned in reverse chronological order (most recent first).\n\nArgs:\n    status_filter: Optional status filter (\"success\", \"error\", \"timeout\")\n    limit: Maximum number of executions to return (1-500, default 100)\n    offset: Number of executions to skip for pagination (default 0)\n    service: PipelineService from dependency injection\n\nReturns:\n    Paginated list of ExecutionWithPipelineResponse objects with total count\n\nRaises:\n    HTTPException: 400 if invalid status value",
+        "operationId": "list_all_pipeline_executions_api_pipelines_executions_get",
+        "parameters": [
+          {
+            "name": "status_filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional status filter (success, error, timeout)",
+              "title": "Status Filter"
+            },
+            "description": "Optional status filter (success, error, timeout)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "description": "Maximum number of results",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "Maximum number of results"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of results to skip",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Number of results to skip"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResponse_ExecutionWithPipelineResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/pipelines/{pipeline_id}": {
       "get": {
         "tags": [
@@ -3102,85 +3181,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ExecutionResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/pipelines/executions": {
-      "get": {
-        "tags": [
-          "pipeline"
-        ],
-        "summary": "List All Pipeline Executions",
-        "description": "Retrieve execution history across all pipeline configurations.\n\nResults are returned in reverse chronological order (most recent first).\n\nArgs:\n    status: Optional status filter (\"success\", \"error\", \"timeout\")\n    limit: Maximum number of executions to return (1-500, default 100)\n    offset: Number of executions to skip for pagination (default 0)\n    service: PipelineService from dependency injection\n\nReturns:\n    Paginated list of ExecutionWithPipelineResponse objects with total count\n\nRaises:\n    HTTPException: 400 if invalid status value",
-        "operationId": "list_all_pipeline_executions_api_pipelines_executions_get",
-        "parameters": [
-          {
-            "name": "status",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Optional status filter (success, error, timeout)",
-              "title": "Status"
-            },
-            "description": "Optional status filter (success, error, timeout)"
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 500,
-              "minimum": 1,
-              "description": "Maximum number of results",
-              "default": 100,
-              "title": "Limit"
-            },
-            "description": "Maximum number of results"
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "description": "Number of results to skip",
-              "default": 0,
-              "title": "Offset"
-            },
-            "description": "Number of results to skip"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ListResponse_ExecutionWithPipelineResponse_"
                 }
               }
             }

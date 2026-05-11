@@ -103,11 +103,19 @@ function GraphPage() {
             {activeTab === "metrics" ? (
               <MetricsPanel />
             ) : activeTab === "path" ? (
-              <div className="panel" id="panel-path" style={{ padding: "14px 16px", overflowY: "auto" }}>
+              <div
+                className="panel"
+                id="panel-path"
+                style={{ padding: "14px 16px", overflowY: "auto" }}
+              >
                 <PathFinder onNodeSelect={setSelectedNodeId} />
               </div>
             ) : activeTab === "sparql" ? (
-              <div className="panel" id="panel-sparql" style={{ padding: "14px 16px", overflowY: "auto" }}>
+              <div
+                className="panel"
+                id="panel-sparql"
+                style={{ padding: "14px 16px", overflowY: "auto" }}
+              >
                 <SparqlEditor />
               </div>
             ) : (

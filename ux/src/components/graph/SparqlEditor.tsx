@@ -43,7 +43,9 @@ export function SparqlEditor() {
   return (
     <div data-testid="sparql-editor" className="stack-lg">
       <div>
-        <label htmlFor="sparql-query-textarea" className="form-group-label">SPARQL Query</label>
+        <label htmlFor="sparql-query-textarea" className="form-group-label">
+          SPARQL Query
+        </label>
         <Textarea
           id="sparql-query-textarea"
           data-testid="sparql-query-textarea"
@@ -98,9 +100,7 @@ export function SparqlEditor() {
             border: "1px solid var(--rose-200)",
           }}
         >
-          <p style={{ margin: 0, fontWeight: 500, marginBottom: "var(--space-2)" }}>
-            Query Error
-          </p>
+          <p style={{ margin: 0, fontWeight: 500, marginBottom: "var(--space-2)" }}>Query Error</p>
           <p style={{ margin: 0 }}>
             {error instanceof Error ? error.message : "An error occurred while executing the query"}
           </p>

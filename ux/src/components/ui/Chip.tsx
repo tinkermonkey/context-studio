@@ -8,12 +8,7 @@ interface ChipProps extends HTMLAttributes<HTMLSpanElement> {
   className?: string;
 }
 
-export function Chip({
-  color,
-  children,
-  className = "",
-  ...rest
-}: ChipProps) {
+export function Chip({ color, children, className = "", ...rest }: ChipProps) {
   const classes = ["chip", color, className].filter(Boolean).join(" ");
   return (
     <span className={classes} {...rest}>

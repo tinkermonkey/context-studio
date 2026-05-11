@@ -93,20 +93,32 @@ function ExtractionPage() {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "380px 1fr", gap: "20px", minHeight: "calc(100vh - 180px)" }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "380px 1fr",
+          gap: "20px",
+          minHeight: "calc(100vh - 180px)",
+        }}
+      >
         {/* Left column - Input */}
         <div style={{ display: "flex", flexDirection: "column", gap: "12px", overflow: "hidden" }}>
-          <ExtractionInput
-            onExtract={handleExtract}
-            isLoading={extractMutation.isPending}
-          />
+          <ExtractionInput onExtract={handleExtract} isLoading={extractMutation.isPending} />
         </div>
 
         {/* Right column - Results panels */}
         <div style={{ display: "flex", flexDirection: "column", gap: "12px", overflow: "auto" }}>
           {/* KG Context Panel */}
           <ExtractionResultPanel
-            layer={getLayerResult(0) || { layer_number: 0, layer_name: "KG Context", entities_found: 0, duration_ms: 0, success: false }}
+            layer={
+              getLayerResult(0) || {
+                layer_number: 0,
+                layer_name: "KG Context",
+                entities_found: 0,
+                duration_ms: 0,
+                success: false,
+              }
+            }
             layerIndex={0}
             entities={getLayerEntities(0)}
             isLoading={extractMutation.isPending}
@@ -126,7 +138,15 @@ function ExtractionPage() {
 
           {/* LLM Extraction Panel */}
           <ExtractionResultPanel
-            layer={getLayerResult(1) || { layer_number: 1, layer_name: "LLM Extraction", entities_found: 0, duration_ms: 0, success: false }}
+            layer={
+              getLayerResult(1) || {
+                layer_number: 1,
+                layer_name: "LLM Extraction",
+                entities_found: 0,
+                duration_ms: 0,
+                success: false,
+              }
+            }
             layerIndex={1}
             entities={getLayerEntities(1)}
             isLoading={extractMutation.isPending}
@@ -146,7 +166,15 @@ function ExtractionPage() {
 
           {/* NLP Gap Fill Panel */}
           <ExtractionResultPanel
-            layer={getLayerResult(2) || { layer_number: 2, layer_name: "NLP Gap Fill", entities_found: 0, duration_ms: 0, success: false }}
+            layer={
+              getLayerResult(2) || {
+                layer_number: 2,
+                layer_name: "NLP Gap Fill",
+                entities_found: 0,
+                duration_ms: 0,
+                success: false,
+              }
+            }
             layerIndex={2}
             entities={getLayerEntities(2)}
             isLoading={nlpMutation.isPending}
@@ -166,7 +194,15 @@ function ExtractionPage() {
 
           {/* Reference Enrichment Panel */}
           <ExtractionResultPanel
-            layer={getLayerResult(3) || { layer_number: 3, layer_name: "Reference Enrichment", entities_found: 0, duration_ms: 0, success: false }}
+            layer={
+              getLayerResult(3) || {
+                layer_number: 3,
+                layer_name: "Reference Enrichment",
+                entities_found: 0,
+                duration_ms: 0,
+                success: false,
+              }
+            }
             layerIndex={3}
             entities={getLayerEntities(3)}
             isLoading={enrichMutation.isPending}

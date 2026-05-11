@@ -74,11 +74,7 @@ export function usePipelineExecutions(pipelineId: string) {
   });
 }
 
-export function useAllPipelineExecutions(
-  status?: string,
-  limit: number = 100,
-  offset: number = 0,
-) {
+export function useAllPipelineExecutions(status?: string, limit: number = 100, offset: number = 0) {
   return useQuery({
     queryKey: ["allPipelineExecutions", status, limit, offset],
     queryFn: () => pipelineService.getAllPipelineExecutions(status, limit, offset),
