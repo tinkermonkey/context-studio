@@ -66,7 +66,7 @@ describe("PipelineCard", () => {
     expect(screen.getByText("gpt-4")).toBeInTheDocument();
   });
 
-  it("renders success status chip", () => {
+  it("renders success status chip with emerald class", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineCard pipeline={mockPipeline} />
@@ -74,6 +74,7 @@ describe("PipelineCard", () => {
     );
     const chip = screen.getByTestId("pipeline-status-chip");
     expect(chip).toHaveTextContent("success");
+    expect(chip).toHaveClass("chip", "emerald");
   });
 
   it("renders footer stats with last run time", () => {
@@ -103,7 +104,7 @@ describe("PipelineCard", () => {
     expect(screen.getByText("No runs yet")).toBeInTheDocument();
   });
 
-  it("renders failed status for error executions", () => {
+  it("renders failed status with rose class for error executions", () => {
     const failedExecution = { ...mockExecution, status: "error" as const };
     vi.mocked(pipelineHooks.usePipelineExecutions).mockReturnValue({
       data: [failedExecution],
@@ -120,6 +121,38 @@ describe("PipelineCard", () => {
     );
     const chip = screen.getByTestId("pipeline-status-chip");
     expect(chip).toHaveTextContent("failed");
+    expect(chip).toHaveClass("chip", "rose");
+  });
+
+  it("renders idle status with gray class when no executions", () => {
+    vi.mocked(pipelineHooks.usePipelineExecutions).mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: null,
+      isFetching: false,
+      status: "success",
+    } as any);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <PipelineCard pipeline={mockPipeline} />
+      </QueryClientProvider>
+    );
+    const chip = screen.getByTestId("pipeline-status-chip");
+    expect(chip).toHaveTextContent("idle");
+    expect(chip).toHaveClass("chip", "gray");
+  });
+
+  it("renders disabled status with gray class when pipeline is disabled", () => {
+    const disabledPipeline = { ...mockPipeline, enabled: false };
+    render(
+      <QueryClientProvider client={queryClient}>
+        <PipelineCard pipeline={disabledPipeline} />
+      </QueryClientProvider>
+    );
+    const chip = screen.getByTestId("pipeline-status-chip");
+    expect(chip).toHaveTextContent("disabled");
+    expect(chip).toHaveClass("chip", "gray");
   });
 
   it("has correct data-testid attributes", () => {
@@ -130,5 +163,16 @@ describe("PipelineCard", () => {
     );
     expect(screen.getByTestId("pipeline-card-pipeline-1")).toBeInTheDocument();
     expect(screen.getByTestId("pipeline-status-chip")).toBeInTheDocument();
+  });
+
+  it("has ARIA status role and label on chip", () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <PipelineCard pipeline={mockPipeline} />
+      </QueryClientProvider>
+    );
+    const chip = screen.getByTestId("pipeline-status-chip");
+    expect(chip).toHaveAttribute("role", "status");
+    expect(chip).toHaveAttribute("aria-label", "Pipeline status: success");
   });
 });

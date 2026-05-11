@@ -152,12 +152,7 @@ function PipelinesContent() {
           className="grid-2"
         >
           {filteredPipelines.map((pipeline) => (
-            <div
-              key={pipeline.id}
-              data-testid={`pipeline-card-${pipeline.id}`}
-            >
-              <PipelineCard pipeline={pipeline} />
-            </div>
+            <PipelineCard key={pipeline.id} pipeline={pipeline} />
           ))}
         </div>
       )}

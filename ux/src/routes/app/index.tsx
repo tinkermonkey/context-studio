@@ -12,22 +12,11 @@ import { useClasses } from "@/api/hooks/ontology";
 import { useIndividuals } from "@/api/hooks/ontology";
 import { usePipelines } from "@/api/hooks/pipeline";
 import { useChanges } from "@/api/hooks/versioning";
+import { formatRelativeTime } from "@/utils/formatters";
 
 export const Route = createFileRoute("/app/")({
   component: Dashboard,
 });
-
-function formatRelativeTime(isoString: string): string {
-  const now = Date.now();
-  const ts = new Date(isoString).getTime();
-  const diffMs = now - ts;
-  const diffMin = Math.floor(diffMs / 60_000);
-  if (diffMin < 1) return "just now";
-  if (diffMin < 60) return `${diffMin}m ago`;
-  const diffH = Math.floor(diffMin / 60);
-  if (diffH < 24) return `${diffH}h ago`;
-  return `${Math.floor(diffH / 24)}d ago`;
-}
 
 function changeOperationColor(op: string): string {
   switch (op) {

@@ -807,8 +807,11 @@ selectors:
     component: routes/app/pipelines/index.tsx
     description: Filter chip button to show only disabled pipelines
   - selector: pipeline-card-*
-    component: routes/app/pipelines/index.tsx
-    description: Individual pipeline card wrapper (pattern matches pipeline-card-{pipelineId})
+    component: components/pipeline/PipelineCard.tsx
+    description: Individual pipeline card root element (pattern matches pipeline-card-{pipelineId})
+  - selector: pipeline-status-chip
+    component: components/pipeline/PipelineCard.tsx
+    description: Status chip showing pipeline execution status (success, failed, idle, or disabled)
 
   # Unit Test Fixtures
   - selector: action
