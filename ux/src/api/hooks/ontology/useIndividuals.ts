@@ -5,6 +5,8 @@ import type { components } from "@/api/types";
 
 type IndividualCreateRequest = components["schemas"]["IndividualCreateRequest"];
 type IndividualUpdateRequest = components["schemas"]["IndividualUpdateRequest"];
+type IndividualClassRequest = components["schemas"]["IndividualClassRequest"];
+type IndividualClassListRequest = components["schemas"]["IndividualClassListRequest"];
 
 interface IndividualListParams {
   class_id?: string;
@@ -55,6 +57,42 @@ export function useDeleteIndividual() {
     mutationFn: (id: string) => ontologyService.deleteIndividual(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.individuals() });
+    },
+  });
+}
+
+export function useAddClassToIndividual() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ individualId, data }: { individualId: string; data: IndividualClassRequest }) =>
+      ontologyService.addParentClass(individualId, data),
+    onSuccess: (_result, { individualId }) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.individuals() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.individual(individualId) });
+    },
+  });
+}
+
+export function useRemoveClassFromIndividual() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ individualId, classId }: { individualId: string; classId: string }) =>
+      ontologyService.removeParentClass(individualId, classId),
+    onSuccess: (_result, { individualId }) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.individuals() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.individual(individualId) });
+    },
+  });
+}
+
+export function useReorderIndividualClasses() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ individualId, data }: { individualId: string; data: IndividualClassListRequest }) =>
+      ontologyService.reorderIndividualClasses(individualId, data),
+    onSuccess: (_result, { individualId }) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.individuals() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.individual(individualId) });
     },
   });
 }
