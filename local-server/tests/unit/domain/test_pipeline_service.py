@@ -31,7 +31,12 @@ class TestPipelineServiceConfigurationCRUD:
         self.repo = FakePipelineRepository()
         self.llm = FakeLLMProvider()
         self.event_pub = FakeEventPublisher()
-        self.service = PipelineService(self.repo, self.llm, self.event_pub)
+        self.service = PipelineService(
+            pipeline_repo=self.repo,
+            flavor_repo=self.repo,
+            llm=self.llm,
+            event_publisher=self.event_pub,
+        )
 
     def test_create_config(self):
         """Create a new pipeline configuration."""

@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import type { components } from "@/api/types";
 
 type PipelineFlavorResponse = components["schemas"]["PipelineFlavorResponse"];
@@ -16,86 +18,61 @@ export function FlavorDrawer({
   onDelete,
   isDeleting = false,
 }: FlavorDrawerProps) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   const handleDelete = async () => {
-    if (!window.confirm("Are you sure you want to delete this flavor?")) {
-      return;
-    }
-    try {
-      await onDelete(flavor.id);
-      onClose();
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to delete flavor");
-    }
+    await onDelete(flavor.id);
+    onClose();
   };
 
   return (
-    <div
-      data-testid="flavor-drawer"
-      style={{
-        padding: "var(--space-6)",
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--space-6)",
-        height: "100%",
-      }}
-    >
-      <div>
-        <h3 style={{ margin: 0, marginBottom: "var(--space-2)" }}>{flavor.name}</h3>
-        <p style={{ margin: 0, fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>
-          {flavor.description}
-        </p>
-      </div>
-
-      <div style={{ backgroundColor: "var(--color-bg-secondary)", padding: "var(--space-4)" }}>
-        <div style={{ marginBottom: "var(--space-3)" }}>
-          <label style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "var(--color-text-secondary)" }}>
-            ID
-          </label>
-          <p
-            style={{
-              margin: "var(--space-1) 0 0",
-              fontFamily: "monospace",
-              fontSize: "0.875rem",
-              wordBreak: "break-all",
-            }}
-            data-testid="flavor-drawer-id"
-          >
-            {flavor.id}
-          </p>
-        </div>
-
-        <div style={{ marginBottom: "var(--space-3)" }}>
-          <label style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "var(--color-text-secondary)" }}>
-            Steps
-          </label>
-          <p style={{ margin: "var(--space-1) 0 0", fontFamily: "monospace", fontSize: "0.875rem" }} data-testid="flavor-drawer-step-count">
-            {flavor.step_count} step{flavor.step_count !== 1 ? "s" : ""}
-          </p>
-        </div>
-
+    <>
+      <div data-testid="flavor-drawer" className="drawer-body stack-lg">
         <div>
-          <label style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "var(--color-text-secondary)" }}>
-            Created
-          </label>
-          <p style={{ margin: "var(--space-1) 0 0", fontSize: "0.875rem" }}>
-            {new Date(flavor.created_at).toLocaleDateString()}
-          </p>
+          <h3 className="form-group-label">{flavor.name}</h3>
+          <p className="text-secondary">{flavor.description}</p>
         </div>
+
+        <dl className="kv">
+          <dt>ID</dt>
+          <dd data-testid="flavor-drawer-id">{flavor.id}</dd>
+
+          <dt>Steps</dt>
+          <dd data-testid="flavor-drawer-step-count">
+            {flavor.step_count} step{flavor.step_count !== 1 ? "s" : ""}
+          </dd>
+
+          <dt>Created</dt>
+          <dd>{new Date(flavor.created_at).toLocaleDateString()}</dd>
+        </dl>
       </div>
 
-      <div style={{ marginTop: "auto", display: "flex", gap: "var(--space-2)" }}>
+      <div className="drawer-actions">
         <Button
           variant="danger"
-          onClick={handleDelete}
+          size="sm"
+          onClick={() => setShowDeleteConfirm(true)}
           disabled={isDeleting}
           data-testid="flavor-drawer-delete-button"
         >
           {isDeleting ? "Deleting..." : "Delete"}
         </Button>
-        <Button variant="ghost" onClick={onClose} style={{ marginLeft: "auto" }}>
+        <Button variant="ghost" size="sm" onClick={onClose}>
           Close
         </Button>
       </div>
-    </div>
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        title="Delete Flavor"
+        message="Are you sure you want to delete this flavor? This action cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        danger
+        onConfirm={handleDelete}
+        isLoading={isDeleting}
+      />
+    </>
   );
 }

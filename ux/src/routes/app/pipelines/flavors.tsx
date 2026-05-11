@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { ColumnDef } from "@tanstack/react-table";
 import { Plus } from "lucide-react";
 import { useFlavors, useCreateFlavor, useDeleteFlavor } from "@/api/hooks/flavor";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Modal } from "@/components/ui/Modal";
 import { FlavorForm } from "@/components/pipeline/FlavorForm";
 import { FlavorDrawer } from "@/components/pipeline/FlavorDrawer";
 import { COPY } from "./-copy";
@@ -18,7 +19,6 @@ import type { components } from "@/api/types";
 type PipelineFlavorResponse = components["schemas"]["PipelineFlavorResponse"];
 
 function FlavorsContent() {
-  const navigate = useNavigate();
   const { data: flavors = [], isLoading, error, refetch } = useFlavors();
   const createFlavor = useCreateFlavor();
   const deleteFlavor = useDeleteFlavor();
@@ -117,42 +117,21 @@ function FlavorsContent() {
 
   return (
     <div data-testid="flavors-page">
-      {showCreateModal && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(0,0,0,0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
+      <Modal
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        title="Create New Flavor"
+        size="md"
+      >
+        <FlavorForm
+          onSubmit={async (data) => {
+            await createFlavor.mutateAsync(data);
+            setShowCreateModal(false);
           }}
-          onClick={() => setShowCreateModal(false)}
-        >
-          <div
-            style={{
-              backgroundColor: "var(--color-bg)",
-              borderRadius: "8px",
-              padding: "var(--space-6)",
-              maxWidth: "400px",
-              width: "90%",
-            }}
-            onClick={(e) => e.stopPropagation()}
-            data-testid="flavor-create-modal"
-          >
-            <h2 style={{ margin: "0 0 var(--space-4) 0" }}>Create New Flavor</h2>
-            <FlavorForm
-              onSubmit={async (data) => {
-                await createFlavor.mutateAsync(data);
-                setShowCreateModal(false);
-              }}
-              onCancel={() => setShowCreateModal(false)}
-              isLoading={createFlavor.isPending}
-            />
-          </div>
-        </div>
-      )}
+          onCancel={() => setShowCreateModal(false)}
+          isLoading={createFlavor.isPending}
+        />
+      </Modal>
 
       <SchemaPageLayout
         data={filteredFlavors}

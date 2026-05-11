@@ -79,6 +79,7 @@ def pipeline_service(pipeline_repository, event_publisher):
     """Create PipelineService with fake LLM adapter."""
     service = PipelineService(
         pipeline_repo=pipeline_repository,
+        flavor_repo=pipeline_repository,
         llm=FakeLLMProvider(response_content='{"result": "test output"}'),
         event_publisher=event_publisher,
     )
@@ -1026,3 +1027,169 @@ class TestListAllPipelineExecutions:
         returned_ids = [e["id"] for e in body["items"]]
         assert returned_ids[0] == exec_ids[1]
         assert returned_ids[1] == exec_ids[0]
+
+
+class TestFlavorRoutes:
+    """Integration tests for flavor routes."""
+
+    def test_create_flavor(self, client):
+        """POST /api/pipelines/flavors creates a new flavor."""
+        response = client.post(
+            "/api/pipelines/flavors",
+            json={
+                "name": "Extract PDF",
+                "description": "Template for PDF extraction",
+                "steps": [{"type": "parse", "target": "pdf"}],
+            },
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED
+        body = response.json()
+        assert body["name"] == "Extract PDF"
+        assert body["description"] == "Template for PDF extraction"
+        assert body["step_count"] == 1
+        assert body["created_at"] is not None
+        assert body["last_updated"] is not None
+
+
+    def test_list_flavors(self, client):
+        """GET /api/pipelines/flavors returns all flavors."""
+        flavor1 = client.post(
+            "/api/pipelines/flavors",
+            json={
+                "name": "Flavor 1",
+                "description": "First",
+                "steps": [],
+            },
+        ).json()
+
+        flavor2 = client.post(
+            "/api/pipelines/flavors",
+            json={
+                "name": "Flavor 2",
+                "description": "Second",
+                "steps": [{"type": "step"}],
+            },
+        ).json()
+
+        response = client.get("/api/pipelines/flavors")
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+
+        assert len(body) == 2
+        assert any(f["id"] == flavor1["id"] for f in body)
+        assert any(f["id"] == flavor2["id"] for f in body)
+
+    def test_list_flavors_empty(self, client):
+        """GET /api/pipelines/flavors returns empty list when no flavors."""
+        response = client.get("/api/pipelines/flavors")
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert body == []
+
+    def test_get_flavor(self, client):
+        """GET /api/pipelines/flavors/{id} returns a specific flavor."""
+        created = client.post(
+            "/api/pipelines/flavors",
+            json={
+                "name": "Test Flavor",
+                "description": "A test flavor",
+                "steps": [{"type": "parse"}, {"type": "extract"}],
+            },
+        ).json()
+
+        response = client.get(f"/api/pipelines/flavors/{created['id']}")
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+
+        assert body["id"] == created["id"]
+        assert body["name"] == "Test Flavor"
+        assert body["description"] == "A test flavor"
+        assert body["step_count"] == 2
+        assert body["steps"] == [{"type": "parse"}, {"type": "extract"}]
+
+    def test_get_flavor_not_found(self, client):
+        """GET /api/pipelines/flavors/{id} returns 404 for non-existent flavor."""
+        response = client.get("/api/pipelines/flavors/nonexistent-id")
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_update_flavor(self, client):
+        """PUT /api/pipelines/flavors/{id} updates a flavor."""
+        created = client.post(
+            "/api/pipelines/flavors",
+            json={
+                "name": "Original",
+                "description": "Original desc",
+                "steps": [],
+            },
+        ).json()
+
+        response = client.put(
+            f"/api/pipelines/flavors/{created['id']}",
+            json={
+                "name": "Updated",
+                "description": "Updated desc",
+                "steps": [{"type": "new"}],
+            },
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+
+        assert body["name"] == "Updated"
+        assert body["description"] == "Updated desc"
+        assert body["step_count"] == 1
+
+    def test_update_flavor_partial(self, client):
+        """PUT /api/pipelines/flavors/{id} with partial fields."""
+        created = client.post(
+            "/api/pipelines/flavors",
+            json={
+                "name": "Original",
+                "description": "Original desc",
+                "steps": [{"type": "old"}],
+            },
+        ).json()
+
+        response = client.put(
+            f"/api/pipelines/flavors/{created['id']}",
+            json={"name": "Updated"},
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+
+        assert body["name"] == "Updated"
+        assert body["description"] == "Original desc"
+        assert body["step_count"] == 1
+
+    def test_update_flavor_not_found(self, client):
+        """PUT /api/pipelines/flavors/{id} returns 404 for non-existent."""
+        response = client.put(
+            "/api/pipelines/flavors/nonexistent-id",
+            json={"name": "Updated"},
+        )
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_delete_flavor(self, client):
+        """DELETE /api/pipelines/flavors/{id} deletes a flavor."""
+        created = client.post(
+            "/api/pipelines/flavors",
+            json={
+                "name": "To Delete",
+                "description": "This will be deleted",
+                "steps": [],
+            },
+        ).json()
+
+        response = client.delete(f"/api/pipelines/flavors/{created['id']}")
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+
+        # Verify it's deleted
+        get_response = client.get(f"/api/pipelines/flavors/{created['id']}")
+        assert get_response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_delete_flavor_not_found(self, client):
+        """DELETE /api/pipelines/flavors/{id} returns 404 for non-existent."""
+        response = client.delete("/api/pipelines/flavors/nonexistent-id")
+        assert response.status_code == status.HTTP_404_NOT_FOUND
