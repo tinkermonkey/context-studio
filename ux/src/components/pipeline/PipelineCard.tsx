@@ -14,7 +14,7 @@ interface PipelineCardProps {
   pipeline: PipelineConfigurationResponse;
 }
 
-type StatusVariant = "success" | "failed" | "idle" | "disabled";
+type StatusVariant = "success" | "failed" | "idle" | "disabled" | "running";
 
 function mapExecutionStatusToVariant(
   status: ExecutionResponse["status"],
@@ -42,6 +42,8 @@ function getStatusChipClass(variant: StatusVariant): string {
       return "gray";
     case "idle":
       return "gray";
+    case "running":
+      return "cyan";
   }
 }
 
@@ -55,6 +57,8 @@ function getStatusLabel(variant: StatusVariant): string {
       return "disabled";
     case "idle":
       return "idle";
+    case "running":
+      return "running";
   }
 }
 
@@ -63,6 +67,9 @@ export function PipelineCard({ pipeline }: PipelineCardProps) {
   const executeMutation = useExecutePipeline();
   const { toast } = useToasts();
   const { startExecution, endExecution } = useExecutionStore();
+  const isRunning = useExecutionStore((state) =>
+    state.inFlightPipelineIds.has(pipeline.id)
+  );
 
   const handleRunPipeline = async () => {
     try {
@@ -84,11 +91,13 @@ export function PipelineCard({ pipeline }: PipelineCardProps) {
   };
 
   const lastExecution = executions[0] || null;
-  const statusVariant = lastExecution
-    ? mapExecutionStatusToVariant(lastExecution.status, pipeline.enabled)
-    : !pipeline.enabled
-      ? "disabled"
-      : "idle";
+  const statusVariant = isRunning
+    ? "running"
+    : lastExecution
+      ? mapExecutionStatusToVariant(lastExecution.status, pipeline.enabled)
+      : !pipeline.enabled
+        ? "disabled"
+        : "idle";
   const lastRunTime = lastExecution ? formatRelativeTime(new Date(lastExecution.timestamp)) : null;
   const duration = lastExecution ? formatDuration(lastExecution.duration_ms) : null;
 
@@ -113,7 +122,7 @@ export function PipelineCard({ pipeline }: PipelineCardProps) {
             {executeMutation.isPending ? <Loader size={16} className="spin" /> : <Play size={16} />}
           </Button>
           <div
-            className={`chip ${getStatusChipClass(statusVariant)}`}
+            className={`chip ${getStatusChipClass(statusVariant)} ${statusVariant === "running" ? "running" : ""}`}
             data-testid="pipeline-status-chip"
             role="status"
             aria-label={`Pipeline status: ${getStatusLabel(statusVariant)}`}

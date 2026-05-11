@@ -1094,6 +1094,9 @@ table.t .row-actions {
   background: rgba(148, 163, 184, 0.14);
   border-color: rgba(148, 163, 184, 0.25);
 }
+.chip.running .dot {
+  animation: pulse 1.2s ease-out infinite;
+}
 
 /* ------------ Tabs ------------ */
 .tabs {

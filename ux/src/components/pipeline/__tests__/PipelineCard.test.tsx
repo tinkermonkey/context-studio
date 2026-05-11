@@ -8,12 +8,15 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 
 vi.mock("@/api/hooks/pipeline");
 vi.mock("@/stores/executionStore", () => ({
-  useExecutionStore: vi.fn(() => ({
-    inFlightPipelineIds: new Set(),
-    startExecution: vi.fn(),
-    endExecution: vi.fn(),
-    hasRunningExecutions: vi.fn(() => false),
-  })),
+  useExecutionStore: vi.fn((selector) => {
+    const state = {
+      inFlightPipelineIds: new Set(),
+      startExecution: vi.fn(),
+      endExecution: vi.fn(),
+      hasRunningExecutions: vi.fn(() => false),
+    };
+    return selector ? selector(state) : state;
+  }),
 }));
 const mockToast = vi.fn();
 vi.mock("@/components/ui/Toast", () => ({
