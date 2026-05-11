@@ -539,6 +539,44 @@ selectors:
     component: routes/app/data/individuals.tsx
     description: Delete button for individual row with dynamic ID suffix
 
+  # Individual Detail Page (Drawer)
+  - selector: individual-detail-page
+    component: components/ontology/IndividualDrawer.tsx
+    description: Individual detail page drawer container
+  - selector: individual-drawer-id
+    component: components/ontology/IndividualDrawer.tsx
+    description: ID field in individual detail drawer (read-only)
+  - selector: individual-drawer-name-input
+    component: components/ontology/IndividualDrawer.tsx
+    description: Name/title input field in individual detail drawer
+  - selector: individual-drawer-description-input
+    component: components/ontology/IndividualDrawer.tsx
+    description: Description textarea in individual detail drawer
+  - selector: individual-class-list
+    component: components/ontology/IndividualDrawer.tsx
+    description: Class membership panel in individual detail drawer
+  - selector: individual-class-typeahead
+    component: components/ontology/IndividualDrawer.tsx
+    description: Class search/typeahead input in individual detail drawer
+  - selector: individual-class-remove-*
+    component: components/ontology/IndividualDrawer.tsx
+    description: Remove button for class chip with dynamic class ID suffix
+  - selector: individual-class-option-*
+    component: components/ontology/IndividualDrawer.tsx
+    description: Class option in typeahead dropdown with dynamic class ID suffix
+  - selector: individual-properties-panel
+    component: components/ontology/IndividualDrawer.tsx
+    description: Inherited properties panel in individual detail drawer
+  - selector: related-individuals-panel
+    component: components/ontology/IndividualDrawer.tsx
+    description: Related individuals panel in individual detail drawer
+  - selector: related-individual-class-*
+    component: components/ontology/IndividualDrawer.tsx
+    description: Class chip for related individual with dynamic class ID suffix
+  - selector: individual-drawer-close-button
+    component: components/ontology/IndividualDrawer.tsx
+    description: Close button in individual detail drawer
+
   # Hierarchy Tree
   - selector: hierarchy-node-*
     component: components/ontology/HierarchyTree.tsx

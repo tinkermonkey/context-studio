@@ -101,3 +101,11 @@ export function useReorderIndividualClasses() {
     },
   });
 }
+
+export function useIndividualInheritedProperties(id: string) {
+  return useQuery({
+    queryKey: QUERY_KEYS.individual(id, "inherited-properties"),
+    queryFn: () => ontologyService.getIndividualInheritedProperties(id),
+    enabled: !!id,
+  });
+}

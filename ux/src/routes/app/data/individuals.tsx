@@ -10,8 +10,8 @@ import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FilterBar } from "@/components/schema/FilterBar";
 import { SchemaTable } from "@/components/schema/SchemaTable";
-import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import { IndividualEditor } from "@/components/ontology/IndividualEditor";
+import { IndividualDrawer } from "@/components/ontology/IndividualDrawer";
 import {
   useIndividuals,
   useCreateIndividual,
@@ -218,80 +218,13 @@ function IndividualsPageContent({
           />
         </div>
       ) : (
-        <SchemaPageLayout
+        <SchemaTable
+          columns={individualColumns}
           data={filteredData}
+          onRowSelect={onSelectedIdChange}
           selectedId={selectedId}
-          renderDrawerContent={() => {
-            const individual = filteredData.find((i) => i.id === selectedId);
-            return individual ? (
-              <div style={{ padding: "var(--space-4)" }}>
-                <h2 style={{ margin: "0 0 var(--space-3) 0", fontSize: "var(--text-lg)" }}>
-                  {individual.title}
-                </h2>
-                <div
-                  style={{
-                    fontSize: "var(--text-xs)",
-                    color: "var(--canvas-fg-3)",
-                    marginBottom: "var(--space-4)",
-                  }}
-                  className="mono"
-                >
-                  {individual.id}
-                </div>
-                {individual.description && (
-                  <div style={{ marginBottom: "var(--space-4)", fontSize: "var(--text-sm)" }}>
-                    {individual.description}
-                  </div>
-                )}
-                {individual.class_ids.length > 0 && (
-                  <div style={{ marginBottom: "var(--space-4)" }}>
-                    <div
-                      style={{
-                        fontSize: "var(--text-xs)",
-                        fontWeight: 500,
-                        marginBottom: "var(--space-2)",
-                      }}
-                    >
-                      Classes
-                    </div>
-                    <div style={{ display: "flex", gap: "var(--space-2)", flexWrap: "wrap" }}>
-                      {individual.class_ids.map((classId) => (
-                        <span
-                          key={classId}
-                          style={{
-                            backgroundColor: "var(--canvas-bg-2)",
-                            color: "var(--canvas-fg)",
-                            padding: "4px 8px",
-                            borderRadius: "4px",
-                            fontSize: "var(--text-xs)",
-                            fontWeight: 500,
-                          }}
-                        >
-                          {classMap.get(classId) || "Unknown"}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                <Button
-                  variant="primary"
-                  onClick={() => onEditClick(selectedId!)}
-                  style={{ width: "100%", marginTop: "var(--space-4)" }}
-                >
-                  Edit
-                </Button>
-              </div>
-            ) : null;
-          }}
-        >
-          <SchemaTable
-            columns={individualColumns}
-            data={filteredData}
-            onRowSelect={onSelectedIdChange}
-            selectedId={selectedId}
-            testIdPrefix="individual"
-          />
-        </SchemaPageLayout>
+          testIdPrefix="individual"
+        />
       )}
     </div>
   );
@@ -413,6 +346,11 @@ function IndividualsPageWrapper() {
           onDeleteClick={handleDeleteClick}
         />
       </div>
+
+      <IndividualDrawer
+        individualId={selectedId || null}
+        onClose={() => handleSelectedIdChange(undefined)}
+      />
 
       <Modal
         open={showCreateModal}

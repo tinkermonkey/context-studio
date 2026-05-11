@@ -177,6 +177,14 @@ class OntologyService extends BaseService {
     return this.put<IndividualResponse>(`/api/individuals/${individualId}/classes`, data);
   }
 
+  async getIndividualInheritedProperties(
+    individualId: string,
+  ): Promise<components["schemas"]["ListResponse_DataPropertyValueResponse_"]> {
+    return this.get<components["schemas"]["ListResponse_DataPropertyValueResponse_"]>(
+      `/api/individuals/${individualId}/inherited-properties`,
+    );
+  }
+
   // Property Definitions
   async listProperties(isRelevant?: boolean): Promise<ListProperties> {
     return this.get<ListProperties>(
