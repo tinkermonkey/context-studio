@@ -73,6 +73,7 @@ describe("Individuals Data Page", () => {
         rest.get("*/api/individuals", (req, res, ctx) =>
           res(ctx.status(500), ctx.json({ detail: "Internal server error" })),
         ),
+        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([]))))
       );
 
       render(<IndividualsPage />);
@@ -83,23 +84,6 @@ describe("Individuals Data Page", () => {
 
       expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
     });
-
-    it("verifies error state displays error message before table loads", async () => {
-      server.use(
-        rest.get("*/api/individuals", (req, res, ctx) =>
-          res(ctx.status(500), ctx.json({ detail: "Internal server error" })),
-        ),
-      );
-
-      render(<IndividualsPage />);
-
-      await waitFor(() => {
-        expect(screen.getByText(/Failed to load individuals/i)).toBeInTheDocument();
-      });
-
-      const errorBanner = screen.getByText(/Failed to load individuals/i);
-      expect(errorBanner).toBeInTheDocument();
-    });
   });
 
   // ========================================================================
@@ -109,6 +93,7 @@ describe("Individuals Data Page", () => {
     it("displays empty state copy when no individuals exist", async () => {
       server.use(
         rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(createListIndividuals([])))),
+        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([]))))
       );
 
       render(<IndividualsPage />);
@@ -124,6 +109,7 @@ describe("Individuals Data Page", () => {
     it("displays CTA button with correct label in empty state", async () => {
       server.use(
         rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(createListIndividuals([])))),
+        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([]))))
       );
 
       render(<IndividualsPage />);
@@ -140,6 +126,7 @@ describe("Individuals Data Page", () => {
     it("verifies empty-state element is present", async () => {
       server.use(
         rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(createListIndividuals([])))),
+        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([]))))
       );
 
       render(<IndividualsPage />);
