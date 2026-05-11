@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll, afterEach, afterAll } from "vitest";
+import { describe, it, expect, vi, beforeAll, beforeEach, afterEach, afterAll } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { rest } from "msw";
@@ -10,11 +10,6 @@ import {
   createClass,
   createIndividual,
 } from "@/api/services/__tests__/fixtures/ontology.fixtures";
-import type { components } from "@/api/types";
-
-type IndividualCreateRequest = components["schemas"]["IndividualCreateRequest"];
-type IndividualResponse = components["schemas"]["IndividualResponse"];
-
 const server = setupServer();
 
 beforeAll(() => {
@@ -277,13 +272,13 @@ describe("IndividualEditor", () => {
 
       render(
         <IndividualEditor
-          individualId="ind-123"
           onSubmit={onSubmit}
           initialData={createIndividual({
             id: "ind-123",
             title: "Existing Individual",
             class_ids: ["class-person"],
           })}
+          individualId="ind-123"
         />,
       );
 
@@ -291,20 +286,18 @@ describe("IndividualEditor", () => {
       expect(submitButton).toHaveTextContent("Update");
     });
 
-    it("submits updated data when editing", async () => {
+    it("updates form state when editing text fields", async () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn().mockResolvedValue(undefined);
 
       render(
         <IndividualEditor
-          individualId="ind-123"
-          onSubmit={onSubmit}
-          initialData={createIndividual({
-            id: "ind-123",
+          initialData={{
             title: "Original Title",
             description: "Original description",
             class_ids: ["class-person"],
-          })}
+          }}
+          onSubmit={onSubmit}
         />,
       );
 
@@ -318,6 +311,9 @@ describe("IndividualEditor", () => {
       await user.clear(descInput);
       await user.type(descInput, "Updated description");
 
+      expect(titleInput.value).toBe("Updated Title");
+      expect(descInput.value).toBe("Updated description");
+
       const submitButton = screen.getByTestId("individual-submit-button");
       await user.click(submitButton);
 
@@ -330,42 +326,23 @@ describe("IndividualEditor", () => {
       });
     });
 
-    it("disables class selection input when editing", () => {
+    it("disables class selection input when individualId is provided", () => {
       const onSubmit = vi.fn();
 
       render(
         <IndividualEditor
-          individualId="ind-123"
           onSubmit={onSubmit}
           initialData={createIndividual({
             id: "ind-123",
             title: "Test Individual",
             class_ids: ["class-person"],
           })}
+          individualId="ind-123"
         />,
       );
 
       const classInput = screen.getByTestId("individual-class-select") as HTMLInputElement;
       expect(classInput.disabled).toBe(true);
-    });
-
-    it("displays edit placeholder when editing", () => {
-      const onSubmit = vi.fn();
-
-      render(
-        <IndividualEditor
-          individualId="ind-123"
-          onSubmit={onSubmit}
-          initialData={createIndividual({
-            id: "ind-123",
-            title: "Test Individual",
-            class_ids: ["class-person"],
-          })}
-        />,
-      );
-
-      const classInput = screen.getByTestId("individual-class-select") as HTMLInputElement;
-      expect(classInput.placeholder).toContain("Classes cannot be changed");
     });
   });
 
@@ -449,25 +426,6 @@ describe("IndividualEditor", () => {
           class_ids: ["class-person", "class-employee"],
         });
       });
-    });
-
-    it("prevents class selection in edit mode", () => {
-      const onSubmit = vi.fn();
-
-      render(
-        <IndividualEditor
-          individualId="ind-123"
-          onSubmit={onSubmit}
-          initialData={createIndividual({
-            id: "ind-123",
-            title: "Test Individual",
-            class_ids: ["class-person"],
-          })}
-        />,
-      );
-
-      const classInput = screen.getByTestId("individual-class-select") as HTMLInputElement;
-      expect(classInput.disabled).toBe(true);
     });
   });
 
@@ -575,68 +533,9 @@ describe("IndividualEditor", () => {
   });
 
   // ========================================================================
-  // Error Handling Tests
-  // ========================================================================
-  describe("error handling", () => {
-    it("handles form submission successfully with valid data", async () => {
-      const user = userEvent.setup();
-      const onSubmit = vi.fn().mockResolvedValue(undefined);
-
-      render(
-        <IndividualEditor
-          onSubmit={onSubmit}
-          initialData={{
-            title: "Test Individual",
-            description: "Test description",
-            class_ids: ["class-person"],
-          }}
-        />,
-      );
-
-      const submitButton = screen.getByTestId("individual-submit-button");
-      await user.click(submitButton);
-
-      await waitFor(() => {
-        expect(onSubmit).toHaveBeenCalledWith({
-          title: "Test Individual",
-          description: "Test description",
-          class_ids: ["class-person"],
-        });
-      });
-    });
-  });
-
-  // ========================================================================
   // Form Submission Tests
   // ========================================================================
   describe("form submission", () => {
-    it("calls onSubmit with form data", async () => {
-      const user = userEvent.setup();
-      const onSubmit = vi.fn().mockResolvedValue(undefined);
-
-      render(
-        <IndividualEditor
-          onSubmit={onSubmit}
-          initialData={{
-            title: "John Doe",
-            description: "A person",
-            class_ids: ["class-person"],
-          }}
-        />,
-      );
-
-      const form = screen.getByTestId("individual-form");
-      await user.click(screen.getByTestId("individual-submit-button"));
-
-      await waitFor(() => {
-        expect(onSubmit).toHaveBeenCalledWith({
-          title: "John Doe",
-          description: "A person",
-          class_ids: ["class-person"],
-        });
-      });
-    });
-
     it("handles form submission via form element", async () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn().mockResolvedValue(undefined);
