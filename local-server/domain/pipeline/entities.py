@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Literal
 
 
 @dataclass(frozen=True)
@@ -42,7 +43,7 @@ class PipelineConfiguration:
     id: str
     pipeline: str
     title: str
-    provider: str
+    provider: Literal["openai", "anthropic"]
     model: str
     config: dict
     system_prompt: str
@@ -100,7 +101,7 @@ class Execution:
     tokens_in: int
     tokens_out: int
     duration_ms: int
-    status: str
+    status: Literal["success", "error", "timeout"]
     error_message: str | None
     timestamp: datetime
 

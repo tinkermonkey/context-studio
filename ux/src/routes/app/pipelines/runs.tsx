@@ -16,7 +16,7 @@ import type { components } from "@/api/types";
 
 type ExecutionWithPipeline = components["schemas"]["ExecutionWithPipelineResponse"];
 
-type StatusFilter = "all" | "success" | "error" | "timeout" | "running";
+type StatusFilter = "all" | "success" | "error" | "timeout";
 
 function formatDuration(ms: number): string {
   if (ms < 1000) return `${ms}ms`;
