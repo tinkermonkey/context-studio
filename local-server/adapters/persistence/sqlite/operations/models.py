@@ -9,12 +9,14 @@ Models are defined here and serve as the source of truth for Alembic migrations.
 """
 
 from sqlalchemy import Column, String, Integer, Boolean, DateTime, Text, JSON, Index
-from sqlalchemy.orm import declarative_base
-
-OperationsBase = declarative_base()  # type: ignore[name-defined,var-annotated]
+from sqlalchemy.orm import DeclarativeBase
 
 
-class PipelineConfigurationModel(OperationsBase):  # type: ignore[misc,valid-type]
+class OperationsBase(DeclarativeBase):
+    pass
+
+
+class PipelineConfigurationModel(OperationsBase):
     """
     SQLAlchemy ORM model for LLM pipeline configurations in operations.db.
 
@@ -51,7 +53,7 @@ class PipelineConfigurationModel(OperationsBase):  # type: ignore[misc,valid-typ
     seed = Column(Integer, nullable=True)
 
 
-class ExecutionModel(OperationsBase):  # type: ignore[misc,valid-type]
+class ExecutionModel(OperationsBase):
     """
     SQLAlchemy ORM model for pipeline execution records in operations.db.
 
