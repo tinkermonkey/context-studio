@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, Edit2, Trash2 } from "lucide-react";
 import { useToasts } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
@@ -12,7 +12,12 @@ import { FilterBar } from "@/components/schema/FilterBar";
 import { SchemaTable } from "@/components/schema/SchemaTable";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import { IndividualEditor } from "@/components/ontology/IndividualEditor";
-import { useIndividuals, useCreateIndividual } from "@/api/hooks/ontology/useIndividuals";
+import {
+  useIndividuals,
+  useCreateIndividual,
+  useUpdateIndividual,
+  useDeleteIndividual,
+} from "@/api/hooks/ontology/useIndividuals";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { individualsCopy } from "./individuals/-copy";
 import type { components } from "@/api/types";
@@ -29,6 +34,8 @@ interface IndividualsPageContentProps {
   selectedId?: string;
   onSelectedIdChange: (id?: string) => void;
   classMap: Map<string, string>;
+  onEditClick: (id: string) => void;
+  onDeleteClick: (id: string) => void;
 }
 
 function IndividualsPageContent({
@@ -36,6 +43,8 @@ function IndividualsPageContent({
   selectedId,
   onSelectedIdChange,
   classMap,
+  onEditClick,
+  onDeleteClick,
 }: IndividualsPageContentProps) {
   const [searchFilter, setSearchFilter] = useState("");
 
@@ -134,9 +143,24 @@ function IndividualsPageContent({
       header: "",
       size: 40,
       cell: ({ row }) => (
-        <button data-testid={`individual-row-actions-${row.original.id}`} className="btn btn-icon">
-          <MoreVertical size={16} style={{ color: "var(--canvas-fg-3)" }} />
-        </button>
+        <div style={{ display: "flex", gap: "var(--space-1)" }}>
+          <button
+            type="button"
+            onClick={() => onEditClick(row.original.id)}
+            className="btn btn-icon"
+            data-testid={`individual-row-edit-${row.original.id}`}
+          >
+            <Edit2 size={16} style={{ color: "var(--canvas-fg-3)" }} />
+          </button>
+          <button
+            type="button"
+            onClick={() => onDeleteClick(row.original.id)}
+            className="btn btn-icon"
+            data-testid={`individual-row-delete-${row.original.id}`}
+          >
+            <Trash2 size={16} style={{ color: "var(--canvas-fg-3)" }} />
+          </button>
+        </div>
       ),
     },
   ];
@@ -198,11 +222,60 @@ function IndividualsPageContent({
           data={filteredData}
           selectedId={selectedId}
           renderDrawerContent={() => {
-            return (
-              <div style={{ padding: "var(--space-4)", color: "var(--canvas-fg-3)" }}>
-                Individual details drawer coming soon
+            const individual = filteredData.find((i) => i.id === selectedId);
+            return individual ? (
+              <div style={{ padding: "var(--space-4)" }}>
+                <h2 style={{ margin: "0 0 var(--space-3) 0", fontSize: "var(--text-lg)" }}>
+                  {individual.title}
+                </h2>
+                <div
+                  style={{
+                    fontSize: "var(--text-xs)",
+                    color: "var(--canvas-fg-3)",
+                    marginBottom: "var(--space-4)",
+                  }}
+                  className="mono"
+                >
+                  {individual.id}
+                </div>
+                {individual.description && (
+                  <div style={{ marginBottom: "var(--space-4)", fontSize: "var(--text-sm)" }}>
+                    {individual.description}
+                  </div>
+                )}
+                {individual.class_ids.length > 0 && (
+                  <div style={{ marginBottom: "var(--space-4)" }}>
+                    <div style={{ fontSize: "var(--text-xs)", fontWeight: 500, marginBottom: "var(--space-2)" }}>
+                      Classes
+                    </div>
+                    <div style={{ display: "flex", gap: "var(--space-2)", flexWrap: "wrap" }}>
+                      {individual.class_ids.map((classId) => (
+                        <span
+                          key={classId}
+                          style={{
+                            backgroundColor: "var(--canvas-bg-2)",
+                            color: "var(--canvas-fg)",
+                            padding: "4px 8px",
+                            borderRadius: "4px",
+                            fontSize: "var(--text-xs)",
+                            fontWeight: 500,
+                          }}
+                        >
+                          {classMap.get(classId) || "Unknown"}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <Button
+                  variant="primary"
+                  onClick={() => onEditClick(selectedId!)}
+                  style={{ width: "100%", marginTop: "var(--space-4)" }}
+                >
+                  Edit
+                </Button>
               </div>
-            );
+            ) : null;
           }}
         >
           <SchemaTable
@@ -220,11 +293,16 @@ function IndividualsPageContent({
 
 function IndividualsPageWrapper() {
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
   const navigate = useNavigate();
   const searchParams = useSearch({ from: "/app/data/individuals" });
   const selectedId = searchParams.selected;
   const createMutation = useCreateIndividual();
+  const updateMutation = useUpdateIndividual();
+  const deleteMutation = useDeleteIndividual();
   const { toast } = useToasts();
 
   const { data: classesResponse } = useClasses();
@@ -258,6 +336,49 @@ function IndividualsPageWrapper() {
     }
   };
 
+  const handleEditClick = (id: string) => {
+    setEditingId(id);
+    setShowEditModal(true);
+    setEditError(null);
+  };
+
+  const handleEditSubmit = async (data: {
+    title: string;
+    description?: string | null;
+    class_ids: string[];
+  }) => {
+    setEditError(null);
+    if (!editingId) return;
+
+    try {
+      await updateMutation.mutateAsync({
+        id: editingId,
+        data: {
+          title: data.title,
+          description: data.description,
+        },
+      });
+      setShowEditModal(false);
+      setEditingId(null);
+      toast("success", "Individual updated successfully");
+    } catch (error) {
+      setEditError(error instanceof Error ? error.message : "Failed to update individual");
+    }
+  };
+
+  const handleDeleteClick = (id: string) => {
+    if (confirm("Are you sure you want to delete this individual?")) {
+      deleteMutation.mutateAsync(id).then(() => {
+        if (selectedId === id) {
+          handleSelectedIdChange(undefined);
+        }
+        toast("success", "Individual deleted successfully");
+      }).catch((error) => {
+        toast("error", error instanceof Error ? error.message : "Failed to delete individual");
+      });
+    }
+  };
+
   return (
     <div className="stack" data-testid="individuals-page">
       <div className="flex-between">
@@ -278,6 +399,8 @@ function IndividualsPageWrapper() {
           selectedId={selectedId}
           onSelectedIdChange={handleSelectedIdChange}
           classMap={classMap}
+          onEditClick={handleEditClick}
+          onDeleteClick={handleDeleteClick}
         />
       </div>
 
@@ -302,6 +425,36 @@ function IndividualsPageWrapper() {
           </div>
         )}
         <IndividualEditor onSubmit={handleCreateSubmit} isLoading={createMutation.isPending} />
+      </Modal>
+
+      <Modal
+        open={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setEditingId(null);
+          setEditError(null);
+        }}
+        title="Edit Individual"
+        size="md"
+        data-testid="individual-edit-modal"
+      >
+        {editError && (
+          <div style={{ marginBottom: "var(--space-3)" }}>
+            <ErrorBanner
+              error={new Error(editError)}
+              onRetry={() => setEditError(null)}
+              message="Failed to update individual"
+              daemonLogPath="/local-server/logs/context_studio.log"
+            />
+          </div>
+        )}
+        {editingId && (
+          <IndividualEditor
+            individualId={editingId}
+            onSubmit={handleEditSubmit}
+            isLoading={updateMutation.isPending}
+          />
+        )}
       </Modal>
     </div>
   );

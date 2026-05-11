@@ -487,6 +487,61 @@ selectors:
     component: components/ontology/ClassEditor.tsx
     description: Submit button for class editor form
 
+  # Individual Editor Form
+  - selector: individual-form
+    component: components/ontology/IndividualEditor.tsx
+    description: Form for creating/editing individuals
+  - selector: individual-title-input
+    component: components/ontology/IndividualEditor.tsx
+    description: Title input field in individual editor
+  - selector: individual-class-select
+    component: components/ontology/IndividualEditor.tsx
+    description: Class search/typeahead input for selecting classes
+  - selector: individual-class-option-*
+    component: components/ontology/IndividualEditor.tsx
+    description: Class option in dropdown with dynamic ID suffix
+  - selector: individual-class-remove-*
+    component: components/ontology/IndividualEditor.tsx
+    description: Button to remove selected class from chips with dynamic ID suffix
+  - selector: individual-description-input
+    component: components/ontology/IndividualEditor.tsx
+    description: Description textarea in individual editor
+  - selector: individual-property-*
+    component: components/ontology/IndividualEditor.tsx
+    description: Property value input field with dynamic property identifier suffix
+  - selector: individual-submit-button
+    component: components/ontology/IndividualEditor.tsx
+    description: Submit button for individual editor form
+
+  # Individuals Page
+  - selector: individuals-page
+    component: routes/app/data/individuals.tsx
+    description: Main individuals page container
+  - selector: individual-add-button
+    component: routes/app/data/individuals.tsx
+    description: Button to open create individual modal
+  - selector: individual-create-modal
+    component: routes/app/data/individuals.tsx
+    description: Modal for creating new individual
+  - selector: individual-edit-modal
+    component: routes/app/data/individuals.tsx
+    description: Modal for editing existing individual
+  - selector: individual-name-*
+    component: routes/app/data/individuals.tsx
+    description: Clickable individual name cell in table with dynamic ID suffix
+  - selector: individual-class-chip-*
+    component: routes/app/data/individuals.tsx
+    description: Class chip in individual row with dynamic class ID suffix
+  - selector: individual-row-edit-*
+    component: routes/app/data/individuals.tsx
+    description: Edit button for individual row with dynamic ID suffix
+  - selector: individual-row-delete-*
+    component: routes/app/data/individuals.tsx
+    description: Delete button for individual row with dynamic ID suffix
+  - selector: individual-row-actions-*
+    component: routes/app/data/individuals.tsx
+    description: Actions button container for individual row with dynamic ID suffix
+
   # Hierarchy Tree
   - selector: hierarchy-node-*
     component: components/ontology/HierarchyTree.tsx
