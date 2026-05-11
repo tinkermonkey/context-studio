@@ -122,10 +122,10 @@ export function IndividualEditor({
     await performSubmit();
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = async (e: React.KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
       e.preventDefault();
-      performSubmit();
+      await performSubmit();
     }
   };
 
