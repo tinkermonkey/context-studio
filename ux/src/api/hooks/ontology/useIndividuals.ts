@@ -1,18 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
-import { ontologyService } from "@/api/services/ontology";
+import { ontologyService, type IndividualListParams } from "@/api/services/ontology";
 import type { components } from "@/api/types";
 
 type IndividualCreateRequest = components["schemas"]["IndividualCreateRequest"];
 type IndividualUpdateRequest = components["schemas"]["IndividualUpdateRequest"];
 type IndividualClassRequest = components["schemas"]["IndividualClassRequest"];
 type IndividualClassListRequest = components["schemas"]["IndividualClassListRequest"];
-
-interface IndividualListParams {
-  class_id?: string;
-  limit?: number;
-  offset?: number;
-}
 
 export function useIndividuals(params?: IndividualListParams) {
   return useQuery({

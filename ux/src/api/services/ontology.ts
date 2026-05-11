@@ -52,6 +52,8 @@ interface RelationshipListParams {
   property_id?: string;
 }
 
+export type { ClassListParams, IndividualListParams, RelationshipListParams };
+
 class OntologyService extends BaseService {
   // Taxonomies
   async listTaxonomies(): Promise<ListTaxonomies> {
