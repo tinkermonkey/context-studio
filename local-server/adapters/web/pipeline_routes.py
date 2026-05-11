@@ -21,7 +21,7 @@ No business logic lives here—all validation and constraints are in the domain 
 Error handling translates domain exceptions to appropriate HTTP responses.
 """
 
-from typing import Optional
+from typing import Optional, cast, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
@@ -204,7 +204,7 @@ async def list_all_pipeline_executions(
                 tokens_in=exec.tokens_in,
                 tokens_out=exec.tokens_out,
                 duration_ms=exec.duration_ms,
-                status=exec.status,
+                status=cast(Literal["success", "error", "timeout"], exec.status),
                 error_message=exec.error_message,
                 timestamp=exec.timestamp,
             )

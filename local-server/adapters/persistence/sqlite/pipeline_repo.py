@@ -181,7 +181,7 @@ class SQLitePipelineRepository:
                 count_query = count_query.filter_by(status=status)
             total = count_query.count()
 
-            query = session.query(
+            query = session.query(  # type: ignore[call-overload]
                 ExecutionModel,
                 PipelineConfigurationModel.title,
             ).join(

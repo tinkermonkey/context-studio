@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ColumnDef } from "@tanstack/react-table";
 import { ExternalLink } from "lucide-react";
-import { useAllPipelineExecutions, usePipelines } from "@/api/hooks/pipeline";
+import { useAllPipelineExecutions } from "@/api/hooks/pipeline";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -49,9 +49,6 @@ function RunsPageContent() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [currentPage, setCurrentPage] = useState(0);
   const pageSize = 50;
-
-  const { data: pipelines = [] } = usePipelines();
-  const pipelineMap = new Map(pipelines.map((p) => [p.id, p.title]));
 
   const {
     data: executionsResponse,

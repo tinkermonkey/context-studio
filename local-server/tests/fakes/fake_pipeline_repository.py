@@ -107,3 +107,41 @@ class FakePipelineRepository:
         # Sort by timestamp descending (most recent first)
         sorted_executions = sorted(executions, key=lambda e: e.timestamp, reverse=True)
         return sorted_executions[:limit]
+
+    def get_all_executions(
+        self,
+        status: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> tuple[list[Execution], list[str], int]:
+        """
+        Retrieve execution history across all pipeline configurations.
+
+        Returns results in reverse chronological order (most recent first).
+
+        Args:
+            status: Optional status filter ("success", "error", "timeout")
+            limit: Maximum number of execution records to return
+            offset: Number of execution records to skip for pagination
+
+        Returns:
+            Tuple of (list of Execution objects, list of corresponding pipeline titles, total count)
+        """
+        all_executions = []
+        for config_id, executions in self._executions.items():
+            config = self._configs.get(config_id)
+            if config:
+                for execution in executions:
+                    if status is None or execution.status == status:
+                        all_executions.append((execution, config.title))
+
+        sorted_executions = sorted(
+            all_executions, key=lambda x: x[0].timestamp, reverse=True
+        )
+        total = len(sorted_executions)
+        paginated = sorted_executions[offset : offset + limit]
+
+        executions = [exec for exec, _ in paginated]
+        titles = [title for _, title in paginated]
+
+        return executions, titles, total

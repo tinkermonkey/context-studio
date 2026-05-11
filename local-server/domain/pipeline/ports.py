@@ -201,7 +201,7 @@ class PipelineRepository(Protocol):
         status: str | None = None,
         limit: int = 100,
         offset: int = 0,
-    ) -> tuple[list[Execution], int]:
+    ) -> tuple[list[Execution], list[str], int]:
         """
         Retrieve execution history across all pipeline configurations.
 
@@ -213,6 +213,6 @@ class PipelineRepository(Protocol):
             offset: Number of execution records to skip for pagination (default 0)
 
         Returns:
-            Tuple of (list of Execution objects, total count of executions matching filter)
+            Tuple of (list of Execution objects, list of corresponding pipeline titles, total count of executions matching filter)
         """
         ...
