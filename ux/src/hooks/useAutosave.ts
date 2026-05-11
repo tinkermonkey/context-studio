@@ -82,6 +82,9 @@ export function useAutosave<T>({
     return () => {
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
+        if (mutateRef.current && (statusRef.current === "idle" || statusRef.current === "saved")) {
+          mutateRef.current(dataRef.current);
+        }
       }
       if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current);
     };

@@ -368,7 +368,7 @@ describe("useAutosave", () => {
   });
 
   describe("cleanup", () => {
-    it("clears debounce timeout on unmount", async () => {
+    it("flushes pending debounced changes on unmount", async () => {
       const mockMutationFn = vi.fn().mockResolvedValue(undefined);
       let dataValue = { title: "v1" };
 
@@ -384,7 +384,8 @@ describe("useAutosave", () => {
       unmount();
 
       await new Promise((resolve) => setTimeout(resolve, 300));
-      expect(mockMutationFn).not.toHaveBeenCalled();
+      expect(mockMutationFn).toHaveBeenCalledOnce();
+      expect(mockMutationFn.mock.calls[0][0]).toEqual({ title: "v2" });
     });
   });
 
