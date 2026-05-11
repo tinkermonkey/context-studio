@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useExtract, useNlpAnalysis, useEnrichFromReferences } from "@/api/hooks/extraction";
 import { ExtractionInput } from "@/components/extraction/ExtractionInput";
@@ -33,31 +33,26 @@ function ExtractionPage() {
       onSuccess: (result) => {
         setExtractionResult(result);
         // Automatically run NLP analysis on the same text
-        nlpMutation.mutate(text);
+        nlpMutation.mutate(text, {
+          onSuccess: (nlpData) => {
+            setNlpResult(nlpData);
+            // Trigger enrichment if we have extraction results
+            if (result?.extracted_entities && result.extracted_entities.length > 0) {
+              const enrichmentRequest: EnrichFromReferencesRequest = {
+                text,
+                extracted_entities: result.extracted_entities,
+              };
+              enrichMutation.mutate(enrichmentRequest, {
+                onSuccess: (enrichmentData) => {
+                  setEnrichmentResult(enrichmentData);
+                },
+              });
+            }
+          },
+        });
       },
     });
   };
-
-  // When NLP analysis completes, trigger enrichment if we have extraction results
-  useEffect(() => {
-    if (nlpMutation.isSuccess && nlpMutation.data) {
-      setNlpResult(nlpMutation.data);
-      if (extractionResult?.extracted_entities && extractionResult.extracted_entities.length > 0) {
-        const enrichmentRequest: EnrichFromReferencesRequest = {
-          text: currentText,
-          extracted_entities: extractionResult.extracted_entities,
-        };
-        enrichMutation.mutate(enrichmentRequest);
-      }
-    }
-  }, [nlpMutation.isSuccess, nlpMutation.data]);
-
-  // When enrichment completes, store the result
-  useEffect(() => {
-    if (enrichMutation.isSuccess && enrichMutation.data) {
-      setEnrichmentResult(enrichMutation.data);
-    }
-  }, [enrichMutation.isSuccess, enrichMutation.data]);
 
   const getLayerEntities = (layerIndex: number) => {
     let result: ExtractionResultSchema | null = null;
@@ -99,7 +94,7 @@ function ExtractionPage() {
         </div>
       </div>
 
-      <div className="split-2" style={{ gap: "20px", minHeight: "calc(100vh - 180px)" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "380px 1fr", gap: "20px", minHeight: "calc(100vh - 180px)" }}>
         {/* Left column - Input */}
         <div style={{ display: "flex", flexDirection: "column", gap: "12px", overflow: "hidden" }}>
           <ExtractionInput
@@ -130,11 +125,11 @@ function ExtractionPage() {
             layer={getLayerResult(1) || { layer_number: 1, layer_name: "LLM Extraction", entities_found: 0, duration_ms: 0, success: false }}
             layerIndex={1}
             entities={getLayerEntities(1)}
-            isLoading={extractMutation.isPending || nlpMutation.isPending}
+            isLoading={extractMutation.isPending}
             error={
-              nlpMutation.isError && nlpMutation.error instanceof Error
-                ? nlpMutation.error.message
-                : nlpMutation.isError
+              extractMutation.isError && extractMutation.error instanceof Error
+                ? extractMutation.error.message
+                : extractMutation.isError
                   ? "Unknown error occurred"
                   : null
             }

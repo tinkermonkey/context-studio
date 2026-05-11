@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Upload } from "lucide-react";
 import { Textarea } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { useToasts } from "@/components/ui/Toast";
 
 interface ExtractionInputProps {
   onExtract: (text: string) => void;
@@ -11,6 +12,7 @@ interface ExtractionInputProps {
 export function ExtractionInput({ onExtract, isLoading = false }: ExtractionInputProps) {
   const [text, setText] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToasts();
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -19,9 +21,7 @@ export function ExtractionInput({ onExtract, isLoading = false }: ExtractionInpu
     try {
       let content = "";
       if (file.type === "application/pdf") {
-        // For PDF files, we would need a PDF parser library
-        // For now, show error message
-        alert("PDF support coming soon. Please paste text or upload .txt/.md files.");
+        toast("warning", "PDF support coming soon", "Please paste text or upload .txt/.md files.");
         return;
       } else {
         // Read text and markdown files
@@ -30,7 +30,7 @@ export function ExtractionInput({ onExtract, isLoading = false }: ExtractionInpu
       setText(content);
     } catch (error) {
       console.error("Failed to read file:", error);
-      alert("Failed to read file. Please try again.");
+      toast("error", "Failed to read file", "Please try again.");
     }
 
     // Reset file input
@@ -92,6 +92,7 @@ export function ExtractionInput({ onExtract, isLoading = false }: ExtractionInpu
               disabled={isLoading}
               className="btn btn-ghost"
               style={{ width: "100%", cursor: "pointer" }}
+              aria-label="Upload a file (.txt, .md, .pdf) to extract entities"
             >
               <Upload size={16} style={{ marginRight: "8px" }} />
               Or upload a file (.txt, .md, .pdf)

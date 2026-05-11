@@ -718,6 +718,26 @@ selectors:
   - selector: sparql-editor
     component: components/graph/SparqlEditor.tsx
     description: Root container for SPARQL query editor component
+
+  # Extraction Page
+  - selector: extraction-page
+    component: routes/app/extraction.tsx
+    description: Main extraction page container
+  - selector: extraction-input
+    component: components/extraction/ExtractionInput.tsx
+    description: Text input panel for entering or uploading text
+  - selector: extraction-panel-kg-context
+    component: components/extraction/ExtractionResultPanel.tsx
+    description: Result panel for KG Context (layer 0) extraction
+  - selector: extraction-panel-llm-extraction
+    component: components/extraction/ExtractionResultPanel.tsx
+    description: Result panel for LLM Extraction (layer 1)
+  - selector: extraction-panel-nlp-gap-fill
+    component: components/extraction/ExtractionResultPanel.tsx
+    description: Result panel for NLP Gap Fill (layer 2)
+  - selector: extraction-panel-reference-enrichment
+    component: components/extraction/ExtractionResultPanel.tsx
+    description: Result panel for Reference Enrichment (layer 3)
   - selector: sparql-query-textarea
     component: components/graph/SparqlEditor.tsx
     description: Code textarea for entering SPARQL queries

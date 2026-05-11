@@ -4,7 +4,6 @@ import { Panel } from "@/components/ui/Panel";
 import { Chip } from "@/components/ui/Chip";
 import type { components } from "@/api/types";
 
-type ExtractionResultSchema = components["schemas"]["ExtractionResultSchema"];
 type ExtractionLayerResultSchema = components["schemas"]["ExtractionLayerResultSchema"];
 
 interface ExtractionResultPanelProps {
@@ -114,6 +113,8 @@ export function ExtractionResultPanel({
       onClick={() => setShowRawJson(!showRawJson)}
       style={{ padding: "4px", display: "flex", alignItems: "center" }}
       title={showRawJson ? "Hide raw JSON" : "Show raw JSON"}
+      aria-expanded={showRawJson}
+      aria-controls={`${testId}-json`}
     >
       <ChevronDown
         size={16}
@@ -130,9 +131,10 @@ export function ExtractionResultPanel({
       <Panel
         title={layerName}
         actions={toggleActions}
-        className=""
       >
-        {renderContent()}
+        <div id={`${testId}-json`}>
+          {renderContent()}
+        </div>
       </Panel>
     </div>
   );
