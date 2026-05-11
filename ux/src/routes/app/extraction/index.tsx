@@ -11,7 +11,7 @@ import type { components } from "@/api/types";
 type ExtractionResultSchema = components["schemas"]["ExtractionResultSchema"];
 type EnrichFromReferencesRequest = components["schemas"]["EnrichFromReferencesRequest"];
 
-export const Route = createFileRoute("/app/extraction")({
+export const Route = createFileRoute("/app/extraction/")({
   component: ExtractionPage,
 });
 

@@ -14,10 +14,10 @@ import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AppSettingsRouteImport } from './routes/app/settings'
-import { Route as AppExtractionRouteImport } from './routes/app/extraction'
 import { Route as AppContactSheetRouteImport } from './routes/app/contact-sheet'
 import { Route as AppPipelinesIndexRouteImport } from './routes/app/pipelines/index'
 import { Route as AppGraphIndexRouteImport } from './routes/app/graph/index'
+import { Route as AppExtractionIndexRouteImport } from './routes/app/extraction/index'
 import { Route as AppSchemaTaxonomiesRouteImport } from './routes/app/schema/taxonomies'
 import { Route as AppSchemaSchemesRouteImport } from './routes/app/schema/schemes'
 import { Route as AppSchemaRelationshipsRouteImport } from './routes/app/schema/relationships'
@@ -57,11 +57,6 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
-const AppExtractionRoute = AppExtractionRouteImport.update({
-  id: '/extraction',
-  path: '/extraction',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppContactSheetRoute = AppContactSheetRouteImport.update({
   id: '/contact-sheet',
   path: '/contact-sheet',
@@ -75,6 +70,11 @@ const AppPipelinesIndexRoute = AppPipelinesIndexRouteImport.update({
 const AppGraphIndexRoute = AppGraphIndexRouteImport.update({
   id: '/graph/',
   path: '/graph/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppExtractionIndexRoute = AppExtractionIndexRouteImport.update({
+  id: '/extraction/',
+  path: '/extraction/',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSchemaTaxonomiesRoute = AppSchemaTaxonomiesRouteImport.update({
@@ -148,7 +148,6 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteWithChildren
   '/welcome': typeof WelcomeRoute
   '/app/contact-sheet': typeof AppContactSheetRoute
-  '/app/extraction': typeof AppExtractionRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/': typeof AppIndexRoute
   '/app/data/datasets': typeof AppDataDatasetsRoute
@@ -163,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/app/schema/relationships': typeof AppSchemaRelationshipsRoute
   '/app/schema/schemes': typeof AppSchemaSchemesRouteWithChildren
   '/app/schema/taxonomies': typeof AppSchemaTaxonomiesRoute
+  '/app/extraction/': typeof AppExtractionIndexRoute
   '/app/graph/': typeof AppGraphIndexRoute
   '/app/pipelines/': typeof AppPipelinesIndexRoute
   '/app/schema/schemes/': typeof AppSchemaSchemesIndexRoute
@@ -171,7 +171,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/welcome': typeof WelcomeRoute
   '/app/contact-sheet': typeof AppContactSheetRoute
-  '/app/extraction': typeof AppExtractionRoute
   '/app/settings': typeof AppSettingsRoute
   '/app': typeof AppIndexRoute
   '/app/data/datasets': typeof AppDataDatasetsRoute
@@ -185,6 +184,7 @@ export interface FileRoutesByTo {
   '/app/schema/properties': typeof AppSchemaPropertiesRoute
   '/app/schema/relationships': typeof AppSchemaRelationshipsRoute
   '/app/schema/taxonomies': typeof AppSchemaTaxonomiesRoute
+  '/app/extraction': typeof AppExtractionIndexRoute
   '/app/graph': typeof AppGraphIndexRoute
   '/app/pipelines': typeof AppPipelinesIndexRoute
   '/app/schema/schemes': typeof AppSchemaSchemesIndexRoute
@@ -195,7 +195,6 @@ export interface FileRoutesById {
   '/app': typeof AppRouteWithChildren
   '/welcome': typeof WelcomeRoute
   '/app/contact-sheet': typeof AppContactSheetRoute
-  '/app/extraction': typeof AppExtractionRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/': typeof AppIndexRoute
   '/app/data/datasets': typeof AppDataDatasetsRoute
@@ -210,6 +209,7 @@ export interface FileRoutesById {
   '/app/schema/relationships': typeof AppSchemaRelationshipsRoute
   '/app/schema/schemes': typeof AppSchemaSchemesRouteWithChildren
   '/app/schema/taxonomies': typeof AppSchemaTaxonomiesRoute
+  '/app/extraction/': typeof AppExtractionIndexRoute
   '/app/graph/': typeof AppGraphIndexRoute
   '/app/pipelines/': typeof AppPipelinesIndexRoute
   '/app/schema/schemes/': typeof AppSchemaSchemesIndexRoute
@@ -221,7 +221,6 @@ export interface FileRouteTypes {
     | '/app'
     | '/welcome'
     | '/app/contact-sheet'
-    | '/app/extraction'
     | '/app/settings'
     | '/app/'
     | '/app/data/datasets'
@@ -236,6 +235,7 @@ export interface FileRouteTypes {
     | '/app/schema/relationships'
     | '/app/schema/schemes'
     | '/app/schema/taxonomies'
+    | '/app/extraction/'
     | '/app/graph/'
     | '/app/pipelines/'
     | '/app/schema/schemes/'
@@ -244,7 +244,6 @@ export interface FileRouteTypes {
     | '/'
     | '/welcome'
     | '/app/contact-sheet'
-    | '/app/extraction'
     | '/app/settings'
     | '/app'
     | '/app/data/datasets'
@@ -258,6 +257,7 @@ export interface FileRouteTypes {
     | '/app/schema/properties'
     | '/app/schema/relationships'
     | '/app/schema/taxonomies'
+    | '/app/extraction'
     | '/app/graph'
     | '/app/pipelines'
     | '/app/schema/schemes'
@@ -267,7 +267,6 @@ export interface FileRouteTypes {
     | '/app'
     | '/welcome'
     | '/app/contact-sheet'
-    | '/app/extraction'
     | '/app/settings'
     | '/app/'
     | '/app/data/datasets'
@@ -282,6 +281,7 @@ export interface FileRouteTypes {
     | '/app/schema/relationships'
     | '/app/schema/schemes'
     | '/app/schema/taxonomies'
+    | '/app/extraction/'
     | '/app/graph/'
     | '/app/pipelines/'
     | '/app/schema/schemes/'
@@ -330,13 +330,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/extraction': {
-      id: '/app/extraction'
-      path: '/extraction'
-      fullPath: '/app/extraction'
-      preLoaderRoute: typeof AppExtractionRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/app/contact-sheet': {
       id: '/app/contact-sheet'
       path: '/contact-sheet'
@@ -356,6 +349,13 @@ declare module '@tanstack/react-router' {
       path: '/graph'
       fullPath: '/app/graph/'
       preLoaderRoute: typeof AppGraphIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/extraction/': {
+      id: '/app/extraction/'
+      path: '/extraction'
+      fullPath: '/app/extraction/'
+      preLoaderRoute: typeof AppExtractionIndexRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/schema/taxonomies': {
@@ -465,7 +465,6 @@ const AppSchemaSchemesRouteWithChildren =
 
 interface AppRouteChildren {
   AppContactSheetRoute: typeof AppContactSheetRoute
-  AppExtractionRoute: typeof AppExtractionRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppIndexRoute: typeof AppIndexRoute
   AppDataDatasetsRoute: typeof AppDataDatasetsRoute
@@ -480,13 +479,13 @@ interface AppRouteChildren {
   AppSchemaRelationshipsRoute: typeof AppSchemaRelationshipsRoute
   AppSchemaSchemesRoute: typeof AppSchemaSchemesRouteWithChildren
   AppSchemaTaxonomiesRoute: typeof AppSchemaTaxonomiesRoute
+  AppExtractionIndexRoute: typeof AppExtractionIndexRoute
   AppGraphIndexRoute: typeof AppGraphIndexRoute
   AppPipelinesIndexRoute: typeof AppPipelinesIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppContactSheetRoute: AppContactSheetRoute,
-  AppExtractionRoute: AppExtractionRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppIndexRoute: AppIndexRoute,
   AppDataDatasetsRoute: AppDataDatasetsRoute,
@@ -501,6 +500,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppSchemaRelationshipsRoute: AppSchemaRelationshipsRoute,
   AppSchemaSchemesRoute: AppSchemaSchemesRouteWithChildren,
   AppSchemaTaxonomiesRoute: AppSchemaTaxonomiesRoute,
+  AppExtractionIndexRoute: AppExtractionIndexRoute,
   AppGraphIndexRoute: AppGraphIndexRoute,
   AppPipelinesIndexRoute: AppPipelinesIndexRoute,
 }
