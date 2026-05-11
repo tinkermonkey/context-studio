@@ -110,11 +110,7 @@ export function PipelineCard({ pipeline }: PipelineCardProps) {
             aria-label="Run pipeline"
             title="Run pipeline"
           >
-            {executeMutation.isPending ? (
-              <Loader size={16} className="spin" />
-            ) : (
-              <Play size={16} />
-            )}
+            {executeMutation.isPending ? <Loader size={16} className="spin" /> : <Play size={16} />}
           </Button>
           <div
             className={`chip ${getStatusChipClass(statusVariant)}`}
@@ -147,7 +143,9 @@ export function PipelineCard({ pipeline }: PipelineCardProps) {
           </>
         )}
         {!lastExecution && (
-          <span style={{ color: "var(--canvas-fg-4, var(--canvas-fg-3))" }}>{COPY.NO_PIPELINE_RUNS}</span>
+          <span style={{ color: "var(--canvas-fg-4, var(--canvas-fg-3))" }}>
+            {COPY.NO_PIPELINE_RUNS}
+          </span>
         )}
       </div>
     </div>

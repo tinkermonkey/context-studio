@@ -101,7 +101,9 @@ export function SparqlEditor() {
             border: "1px solid var(--rose-200)",
           }}
         >
-          <p style={{ margin: 0, fontWeight: 500, marginBottom: "var(--space-2)" }}>{COPY.QUERY_ERROR_TITLE}</p>
+          <p style={{ margin: 0, fontWeight: 500, marginBottom: "var(--space-2)" }}>
+            {COPY.QUERY_ERROR_TITLE}
+          </p>
           <p style={{ margin: 0 }}>
             {error instanceof Error ? error.message : COPY.QUERY_ERROR_DEFAULT}
           </p>

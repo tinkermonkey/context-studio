@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/api/utils/queryClient";
@@ -48,11 +48,7 @@ const mockClass2 = { id: "class-2", title: "Organization Class" };
 const mockScheme = { id: "scheme-1", title: "Main Scheme" };
 
 function renderWithProvider(component: React.ReactElement) {
-  return render(
-    <QueryClientProvider client={queryClient}>
-      {component}
-    </QueryClientProvider>,
-  );
+  return render(<QueryClientProvider client={queryClient}>{component}</QueryClientProvider>);
 }
 
 describe("EntityReviewPanel", () => {
@@ -83,10 +79,10 @@ describe("EntityReviewPanel", () => {
 
   describe("visibility", () => {
     it("hides when entities array is empty", () => {
-      const { container } = renderWithProvider(
-        <EntityReviewPanel entities={[]} layerIndex={0} />,
-      );
-      expect(container.querySelector('[data-testid="entity-review-panel-0"]')).not.toBeInTheDocument();
+      const { container } = renderWithProvider(<EntityReviewPanel entities={[]} layerIndex={0} />);
+      expect(
+        container.querySelector('[data-testid="entity-review-panel-0"]'),
+      ).not.toBeInTheDocument();
     });
 
     it("shows loading skeletons while isLoading is true", () => {
@@ -94,7 +90,9 @@ describe("EntityReviewPanel", () => {
         <EntityReviewPanel entities={[mockEntity]} layerIndex={0} isLoading={true} />,
       );
       // Skeletons are divs with specific animation styles
-      const skeletonElements = container.querySelectorAll('div[style*="animation: skeleton-shimmer"]');
+      const skeletonElements = container.querySelectorAll(
+        'div[style*="animation: skeleton-shimmer"]',
+      );
       expect(skeletonElements.length).toBeGreaterThan(0);
     });
 
@@ -106,15 +104,11 @@ describe("EntityReviewPanel", () => {
       const { container } = renderWithProvider(
         <EntityReviewPanel entities={[linkedEntity]} layerIndex={0} />,
       );
-      expect(
-        container.textContent?.includes("reviewed")
-      ).toBeTruthy();
+      expect(container.textContent?.includes("reviewed")).toBeTruthy();
     });
 
     it("renders populated state with unlinked entities", () => {
-      renderWithProvider(
-        <EntityReviewPanel entities={[mockEntity, mockEntity2]} layerIndex={0} />,
-      );
+      renderWithProvider(<EntityReviewPanel entities={[mockEntity, mockEntity2]} layerIndex={0} />);
       expect(screen.getByText("Test Entity")).toBeInTheDocument();
       expect(screen.getByText("Another Entity")).toBeInTheDocument();
     });
@@ -135,9 +129,7 @@ describe("EntityReviewPanel", () => {
 
     it("filters out rejected entities", async () => {
       const user = userEvent.setup();
-      renderWithProvider(
-        <EntityReviewPanel entities={[mockEntity, mockEntity2]} layerIndex={0} />,
-      );
+      renderWithProvider(<EntityReviewPanel entities={[mockEntity, mockEntity2]} layerIndex={0} />);
 
       const rejectButton = screen.getByTestId(`entity-review-reject-${mockEntity.id}`);
       await user.click(rejectButton);
@@ -150,9 +142,7 @@ describe("EntityReviewPanel", () => {
       const user = userEvent.setup();
       mockCreateClass.mockResolvedValueOnce({});
 
-      renderWithProvider(
-        <EntityReviewPanel entities={[mockEntity, mockEntity2]} layerIndex={0} />,
-      );
+      renderWithProvider(<EntityReviewPanel entities={[mockEntity, mockEntity2]} layerIndex={0} />);
 
       const approveButton = screen.getByTestId(`entity-review-approve-${mockEntity.id}`);
       await user.click(approveButton);
@@ -164,9 +154,7 @@ describe("EntityReviewPanel", () => {
 
   describe("confidence rendering", () => {
     it("renders confidence percentage correctly", () => {
-      renderWithProvider(
-        <EntityReviewPanel entities={[mockEntity]} layerIndex={0} />,
-      );
+      renderWithProvider(<EntityReviewPanel entities={[mockEntity]} layerIndex={0} />);
       expect(screen.getByText("95%")).toBeInTheDocument();
     });
 
@@ -175,9 +163,7 @@ describe("EntityReviewPanel", () => {
         ...mockEntity,
         confidence: null as any,
       };
-      renderWithProvider(
-        <EntityReviewPanel entities={[noConfidenceEntity]} layerIndex={0} />,
-      );
+      renderWithProvider(<EntityReviewPanel entities={[noConfidenceEntity]} layerIndex={0} />);
       expect(screen.getByText("—")).toBeInTheDocument();
     });
 
@@ -186,26 +172,20 @@ describe("EntityReviewPanel", () => {
         ...mockEntity,
         confidence: undefined as any,
       };
-      renderWithProvider(
-        <EntityReviewPanel entities={[noConfidenceEntity]} layerIndex={0} />,
-      );
+      renderWithProvider(<EntityReviewPanel entities={[noConfidenceEntity]} layerIndex={0} />);
       expect(screen.getByText("—")).toBeInTheDocument();
     });
   });
 
   describe("individual entity row", () => {
     it("renders entity label and entity_type chip", () => {
-      renderWithProvider(
-        <EntityReviewPanel entities={[mockEntity]} layerIndex={0} />,
-      );
+      renderWithProvider(<EntityReviewPanel entities={[mockEntity]} layerIndex={0} />);
       expect(screen.getByText("Test Entity")).toBeInTheDocument();
       expect(screen.getByText("Person")).toBeInTheDocument();
     });
 
     it("displays approve, reject, link buttons", () => {
-      renderWithProvider(
-        <EntityReviewPanel entities={[mockEntity]} layerIndex={0} />,
-      );
+      renderWithProvider(<EntityReviewPanel entities={[mockEntity]} layerIndex={0} />);
       expect(screen.getByTestId(`entity-review-approve-${mockEntity.id}`)).toBeInTheDocument();
       expect(screen.getByTestId(`entity-review-reject-${mockEntity.id}`)).toBeInTheDocument();
       expect(screen.getByTestId(`entity-review-link-${mockEntity.id}`)).toBeInTheDocument();
@@ -215,9 +195,7 @@ describe("EntityReviewPanel", () => {
       mockCreateClass.mockImplementationOnce(() => new Promise(() => {})); // Never resolves
       const user = userEvent.setup();
 
-      renderWithProvider(
-        <EntityReviewPanel entities={[mockEntity, mockEntity2]} layerIndex={0} />,
-      );
+      renderWithProvider(<EntityReviewPanel entities={[mockEntity, mockEntity2]} layerIndex={0} />);
 
       const approveButton = screen.getByTestId(`entity-review-approve-${mockEntity.id}`);
       await user.click(approveButton);
@@ -236,9 +214,7 @@ describe("EntityReviewPanel", () => {
         title: "Test Entity",
       });
 
-      renderWithProvider(
-        <EntityReviewPanel entities={[mockEntity]} layerIndex={0} />,
-      );
+      renderWithProvider(<EntityReviewPanel entities={[mockEntity]} layerIndex={0} />);
 
       const approveButton = screen.getByTestId(`entity-review-approve-${mockEntity.id}`);
       await user.click(approveButton);
@@ -259,9 +235,7 @@ describe("EntityReviewPanel", () => {
         title: "Test Entity",
       });
 
-      renderWithProvider(
-        <EntityReviewPanel entities={[mockEntity, mockEntity2]} layerIndex={0} />,
-      );
+      renderWithProvider(<EntityReviewPanel entities={[mockEntity, mockEntity2]} layerIndex={0} />);
 
       const approveButton = screen.getByTestId(`entity-review-approve-${mockEntity.id}`);
       await user.click(approveButton);
@@ -279,9 +253,7 @@ describe("EntityReviewPanel", () => {
         title: "Test Entity",
       });
 
-      renderWithProvider(
-        <EntityReviewPanel entities={[mockEntity]} layerIndex={0} />,
-      );
+      renderWithProvider(<EntityReviewPanel entities={[mockEntity]} layerIndex={0} />);
 
       const approveButton = screen.getByTestId(`entity-review-approve-${mockEntity.id}`);
       await user.click(approveButton);
@@ -298,14 +270,15 @@ describe("EntityReviewPanel", () => {
         status: "success",
       } as any);
 
-      renderWithProvider(
-        <EntityReviewPanel entities={[mockEntity]} layerIndex={0} />,
-      );
+      renderWithProvider(<EntityReviewPanel entities={[mockEntity]} layerIndex={0} />);
 
       const approveButton = screen.getByTestId(`entity-review-approve-${mockEntity.id}`);
       await user.click(approveButton);
 
-      expect(mockToast).toHaveBeenCalledWith("error", "No concept scheme available for creating classes");
+      expect(mockToast).toHaveBeenCalledWith(
+        "error",
+        "No concept scheme available for creating classes",
+      );
     });
 
     it("shows error toast if class creation fails", async () => {
@@ -313,9 +286,7 @@ describe("EntityReviewPanel", () => {
       const testError = new Error("Creation failed");
       mockCreateClass.mockRejectedValueOnce(testError);
 
-      renderWithProvider(
-        <EntityReviewPanel entities={[mockEntity]} layerIndex={0} />,
-      );
+      renderWithProvider(<EntityReviewPanel entities={[mockEntity]} layerIndex={0} />);
 
       const approveButton = screen.getByTestId(`entity-review-approve-${mockEntity.id}`);
       await user.click(approveButton);
@@ -327,9 +298,7 @@ describe("EntityReviewPanel", () => {
   describe("reject entity", () => {
     it("adds entity to rejectedIds", async () => {
       const user = userEvent.setup();
-      renderWithProvider(
-        <EntityReviewPanel entities={[mockEntity, mockEntity2]} layerIndex={0} />,
-      );
+      renderWithProvider(<EntityReviewPanel entities={[mockEntity, mockEntity2]} layerIndex={0} />);
 
       const rejectButton = screen.getByTestId(`entity-review-reject-${mockEntity.id}`);
       await user.click(rejectButton);
@@ -339,9 +308,7 @@ describe("EntityReviewPanel", () => {
 
     it("shows info toast when entity is rejected", async () => {
       const user = userEvent.setup();
-      renderWithProvider(
-        <EntityReviewPanel entities={[mockEntity]} layerIndex={0} />,
-      );
+      renderWithProvider(<EntityReviewPanel entities={[mockEntity]} layerIndex={0} />);
 
       const rejectButton = screen.getByTestId(`entity-review-reject-${mockEntity.id}`);
       await user.click(rejectButton);
@@ -351,9 +318,7 @@ describe("EntityReviewPanel", () => {
 
     it("entity disappears from unlinked list after rejection", async () => {
       const user = userEvent.setup();
-      renderWithProvider(
-        <EntityReviewPanel entities={[mockEntity, mockEntity2]} layerIndex={0} />,
-      );
+      renderWithProvider(<EntityReviewPanel entities={[mockEntity, mockEntity2]} layerIndex={0} />);
 
       expect(screen.getByText("Test Entity")).toBeInTheDocument();
 
@@ -368,9 +333,7 @@ describe("EntityReviewPanel", () => {
   describe("link dropdown", () => {
     it("opens dropdown when Link button clicked", async () => {
       const user = userEvent.setup();
-      renderWithProvider(
-        <EntityReviewPanel entities={[mockEntity]} layerIndex={0} />,
-      );
+      renderWithProvider(<EntityReviewPanel entities={[mockEntity]} layerIndex={0} />);
 
       const linkButton = screen.getByTestId(`entity-review-link-${mockEntity.id}`);
       await user.click(linkButton);
@@ -396,9 +359,7 @@ describe("EntityReviewPanel", () => {
 
     it("closes dropdown when X button clicked", async () => {
       const user = userEvent.setup();
-      renderWithProvider(
-        <EntityReviewPanel entities={[mockEntity]} layerIndex={0} />,
-      );
+      renderWithProvider(<EntityReviewPanel entities={[mockEntity]} layerIndex={0} />);
 
       const linkButton = screen.getByTestId(`entity-review-link-${mockEntity.id}`);
       await user.click(linkButton);
@@ -411,9 +372,7 @@ describe("EntityReviewPanel", () => {
 
     it("filters classes by title", async () => {
       const user = userEvent.setup();
-      renderWithProvider(
-        <EntityReviewPanel entities={[mockEntity]} layerIndex={0} />,
-      );
+      renderWithProvider(<EntityReviewPanel entities={[mockEntity]} layerIndex={0} />);
 
       const linkButton = screen.getByTestId(`entity-review-link-${mockEntity.id}`);
       await user.click(linkButton);
@@ -422,14 +381,14 @@ describe("EntityReviewPanel", () => {
       await user.type(searchInput, "Organization");
 
       expect(screen.getByTestId(`entity-review-link-option-${mockClass2.id}`)).toBeInTheDocument();
-      expect(screen.queryByTestId(`entity-review-link-option-${mockClass1.id}`)).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId(`entity-review-link-option-${mockClass1.id}`),
+      ).not.toBeInTheDocument();
     });
 
     it("filters classes by id", async () => {
       const user = userEvent.setup();
-      renderWithProvider(
-        <EntityReviewPanel entities={[mockEntity]} layerIndex={0} />,
-      );
+      renderWithProvider(<EntityReviewPanel entities={[mockEntity]} layerIndex={0} />);
 
       const linkButton = screen.getByTestId(`entity-review-link-${mockEntity.id}`);
       await user.click(linkButton);
@@ -438,14 +397,14 @@ describe("EntityReviewPanel", () => {
       await user.type(searchInput, "class-2");
 
       expect(screen.getByTestId(`entity-review-link-option-${mockClass2.id}`)).toBeInTheDocument();
-      expect(screen.queryByTestId(`entity-review-link-option-${mockClass1.id}`)).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId(`entity-review-link-option-${mockClass1.id}`),
+      ).not.toBeInTheDocument();
     });
 
     it("shows 'no classes found' when search has no matches", async () => {
       const user = userEvent.setup();
-      renderWithProvider(
-        <EntityReviewPanel entities={[mockEntity]} layerIndex={0} />,
-      );
+      renderWithProvider(<EntityReviewPanel entities={[mockEntity]} layerIndex={0} />);
 
       const linkButton = screen.getByTestId(`entity-review-link-${mockEntity.id}`);
       await user.click(linkButton);
@@ -458,9 +417,7 @@ describe("EntityReviewPanel", () => {
 
     it("calls link handler and closes dropdown when class option clicked", async () => {
       const user = userEvent.setup();
-      renderWithProvider(
-        <EntityReviewPanel entities={[mockEntity, mockEntity2]} layerIndex={0} />,
-      );
+      renderWithProvider(<EntityReviewPanel entities={[mockEntity, mockEntity2]} layerIndex={0} />);
 
       const linkButton = screen.getByTestId(`entity-review-link-${mockEntity.id}`);
       await user.click(linkButton);
@@ -473,7 +430,10 @@ describe("EntityReviewPanel", () => {
       // Dropdown should close
       expect(screen.queryByTestId("entity-review-link-input")).not.toBeInTheDocument();
       // Toast should show
-      expect(mockToast).toHaveBeenCalledWith("info", expect.stringContaining("Link recorded locally"));
+      expect(mockToast).toHaveBeenCalledWith(
+        "info",
+        expect.stringContaining("Link recorded locally"),
+      );
     });
   });
 
@@ -484,9 +444,7 @@ describe("EntityReviewPanel", () => {
         .mockResolvedValueOnce({ id: "new-class-1", title: mockEntity.label })
         .mockResolvedValueOnce({ id: "new-class-2", title: mockEntity2.label });
 
-      renderWithProvider(
-        <EntityReviewPanel entities={[mockEntity, mockEntity2]} layerIndex={0} />,
-      );
+      renderWithProvider(<EntityReviewPanel entities={[mockEntity, mockEntity2]} layerIndex={0} />);
 
       const approveAllButton = screen.getByRole("button", { name: /approve all/i });
       await user.click(approveAllButton);
@@ -500,9 +458,7 @@ describe("EntityReviewPanel", () => {
         .mockResolvedValueOnce({ id: "new-class-1", title: mockEntity.label })
         .mockRejectedValueOnce(new Error("Creation failed"));
 
-      renderWithProvider(
-        <EntityReviewPanel entities={[mockEntity, mockEntity2]} layerIndex={0} />,
-      );
+      renderWithProvider(<EntityReviewPanel entities={[mockEntity, mockEntity2]} layerIndex={0} />);
 
       const approveAllButton = screen.getByRole("button", { name: /approve all/i });
       await user.click(approveAllButton);
@@ -520,9 +476,7 @@ describe("EntityReviewPanel", () => {
   describe("accessibility", () => {
     it("dropdown has role='listbox' and input has role='combobox'", async () => {
       const user = userEvent.setup();
-      renderWithProvider(
-        <EntityReviewPanel entities={[mockEntity]} layerIndex={0} />,
-      );
+      renderWithProvider(<EntityReviewPanel entities={[mockEntity]} layerIndex={0} />);
 
       const linkButton = screen.getByTestId(`entity-review-link-${mockEntity.id}`);
       await user.click(linkButton);
@@ -536,9 +490,7 @@ describe("EntityReviewPanel", () => {
 
     it("each option has role='option'", async () => {
       const user = userEvent.setup();
-      renderWithProvider(
-        <EntityReviewPanel entities={[mockEntity]} layerIndex={0} />,
-      );
+      renderWithProvider(<EntityReviewPanel entities={[mockEntity]} layerIndex={0} />);
 
       const linkButton = screen.getByTestId(`entity-review-link-${mockEntity.id}`);
       await user.click(linkButton);

@@ -145,11 +145,7 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
           aria-label="Run pipeline"
           title="Run pipeline"
         >
-          {executeMutation.isPending ? (
-            <Loader size={16} className="spin" />
-          ) : (
-            <Play size={16} />
-          )}
+          {executeMutation.isPending ? <Loader size={16} className="spin" /> : <Play size={16} />}
         </Button>
       }
     >

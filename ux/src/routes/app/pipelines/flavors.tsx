@@ -2,10 +2,7 @@ import { useState } from "react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreVertical } from "lucide-react";
-import {
-  usePipelineFlavors,
-  useCreatePipelineFlavor,
-} from "@/api/hooks/pipeline";
+import { usePipelineFlavors, useCreatePipelineFlavor } from "@/api/hooks/pipeline";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -52,11 +49,7 @@ function FlavorsPageContent({
       accessorKey: "id",
       header: COPY.FLAVOR_ID_HEADER,
       size: 100,
-      cell: (info) => (
-        <span className="mono">
-          {(info.getValue() as string).slice(0, 8)}
-        </span>
-      ),
+      cell: (info) => <span className="mono">{(info.getValue() as string).slice(0, 8)}</span>,
     },
     {
       accessorKey: "name",

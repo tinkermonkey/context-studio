@@ -91,7 +91,9 @@ export function FlavorForm({ onSubmit, isLoading, initialData }: FlavorFormProps
     <form onSubmit={handleSubmit} data-testid="flavor-form">
       <div className="stack-lg">
         <div>
-          <label htmlFor="flavor-name-field" className="form-group-label">Name</label>
+          <label htmlFor="flavor-name-field" className="form-group-label">
+            Name
+          </label>
           <Input
             id="flavor-name-field"
             type="text"
@@ -108,7 +110,9 @@ export function FlavorForm({ onSubmit, isLoading, initialData }: FlavorFormProps
         </div>
 
         <div>
-          <label htmlFor="flavor-description-field" className="form-group-label">Description (optional)</label>
+          <label htmlFor="flavor-description-field" className="form-group-label">
+            Description (optional)
+          </label>
           <Textarea
             id="flavor-description-field"
             placeholder="Optional description"
@@ -120,7 +124,9 @@ export function FlavorForm({ onSubmit, isLoading, initialData }: FlavorFormProps
         </div>
 
         <div>
-          <label htmlFor="flavor-steps-field" className="form-group-label">Steps (JSON)</label>
+          <label htmlFor="flavor-steps-field" className="form-group-label">
+            Steps (JSON)
+          </label>
           <Textarea
             id="flavor-steps-field"
             placeholder='[{"name": "step1", "config": {}}]'

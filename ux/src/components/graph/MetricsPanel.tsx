@@ -83,7 +83,11 @@ export function MetricsPanel() {
             <StatTile label={COPY.NODE_COUNT_LABEL} value={nodeCount.toString()} color="cyan" />
           </div>
           <div data-testid="graph-metrics-edge-count">
-            <StatTile label={COPY.EDGE_COUNT_LABEL} value={Math.round(edgeCount).toString()} color="violet" />
+            <StatTile
+              label={COPY.EDGE_COUNT_LABEL}
+              value={Math.round(edgeCount).toString()}
+              color="violet"
+            />
           </div>
           <div data-testid="graph-metrics-community-count">
             <StatTile

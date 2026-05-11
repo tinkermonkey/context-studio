@@ -40,7 +40,10 @@ export function ExtractionPage() {
         const nlpData = await nlpMutation.mutateAsync(text);
         setNlpResult(nlpData);
       } catch (nlpError) {
-        toast("error", `NLP analysis failed: ${nlpError instanceof Error ? nlpError.message : "Unknown error"}`);
+        toast(
+          "error",
+          `NLP analysis failed: ${nlpError instanceof Error ? nlpError.message : "Unknown error"}`,
+        );
         // Continue to enrichment with original extraction data
       }
 
@@ -54,13 +57,19 @@ export function ExtractionPage() {
           const enrichmentData = await enrichMutation.mutateAsync(enrichmentRequest);
           setEnrichmentResult(enrichmentData);
         } catch (enrichError) {
-          toast("error", `Reference enrichment failed: ${enrichError instanceof Error ? enrichError.message : "Unknown error"}`);
+          toast(
+            "error",
+            `Reference enrichment failed: ${enrichError instanceof Error ? enrichError.message : "Unknown error"}`,
+          );
           // Allow extraction/NLP results to remain visible
         }
       }
     } catch (error) {
       // Extraction itself failed - this is a critical error
-      toast("error", `Extraction failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+      toast(
+        "error",
+        `Extraction failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
       // Results already cleared at start
     }
   };

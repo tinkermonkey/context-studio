@@ -11,7 +11,8 @@ export const COPY = {
   // Pipelines empty/error states
   PIPELINES_LOAD_ERROR: "Failed to load pipelines",
   NO_PIPELINES_TITLE: "No pipelines yet",
-  NO_PIPELINES_DESCRIPTION: "Create your first pipeline to get started with extraction and processing.",
+  NO_PIPELINES_DESCRIPTION:
+    "Create your first pipeline to get started with extraction and processing.",
   CREATE_PIPELINE_CTA: "Create Pipeline",
   NO_PIPELINES_FILTERED_TITLE: "No pipelines match your filters",
   NO_PIPELINES_FILTERED_DESCRIPTION: "Try adjusting your search or filter criteria.",

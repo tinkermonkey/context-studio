@@ -153,7 +153,9 @@ export function FlavorDrawer({ flavor, onClose }: FlavorDrawerProps) {
               data-testid="flavor-drawer-create-pipeline-button"
               aria-label="Create a new pipeline from this flavor"
             >
-              {createPipelineMutation.isPending ? COPY.FLAVOR_CREATE_PIPELINE_CREATING : COPY.FLAVOR_CREATE_PIPELINE_BUTTON}
+              {createPipelineMutation.isPending
+                ? COPY.FLAVOR_CREATE_PIPELINE_CREATING
+                : COPY.FLAVOR_CREATE_PIPELINE_BUTTON}
             </Button>
             <Button
               variant="accent"

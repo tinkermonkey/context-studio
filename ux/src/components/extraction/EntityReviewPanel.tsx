@@ -336,10 +336,16 @@ export function EntityReviewPanel({
 
       if (fulfilledEntityIds.length > 0) {
         setLinkedIds((prev) => new Set([...prev, ...fulfilledEntityIds]));
-        toast("success", `${COPY.CLASSES_CREATED}${fulfilledEntityIds.length}${COPY.CLASSES_CREATED_SUFFIX}`);
+        toast(
+          "success",
+          `${COPY.CLASSES_CREATED}${fulfilledEntityIds.length}${COPY.CLASSES_CREATED_SUFFIX}`,
+        );
       }
       if (failedResults.length > 0) {
-        toast("error", `${COPY.CLASSES_CREATION_FAILED}${failedResults.length}${COPY.CLASSES_CREATION_FAILED_SUFFIX}`);
+        toast(
+          "error",
+          `${COPY.CLASSES_CREATION_FAILED}${failedResults.length}${COPY.CLASSES_CREATION_FAILED_SUFFIX}`,
+        );
       }
     } catch (error) {
       toast(

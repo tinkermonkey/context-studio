@@ -73,7 +73,9 @@ export function ExtractionInput({ onExtract, isLoading = false }: ExtractionInpu
               color: "var(--canvas-fg-2)",
             }}
           >
-            <span>{characterCount} {COPY.CHARACTERS_LABEL}</span>
+            <span>
+              {characterCount} {COPY.CHARACTERS_LABEL}
+            </span>
           </div>
 
           <div style={{ display: "flex", gap: "8px", flexDirection: "column" }}>

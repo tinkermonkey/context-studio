@@ -18,9 +18,7 @@ describe("Graph Page", () => {
       { id: "node-1", label: "Node 1", centrality: 0.5 },
       { id: "node-2", label: "Node 2", centrality: 0.3 },
     ],
-    edges: [
-      { id: "edge-1", source: "node-1", target: "node-2" },
-    ],
+    edges: [{ id: "edge-1", source: "node-1", target: "node-2" }],
   };
 
   beforeEach(() => {

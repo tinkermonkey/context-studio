@@ -42,7 +42,9 @@ export function ExtractionResultPanel({
 
   const renderContent = () => {
     if (isLoading) {
-      return <div style={{ padding: "12px", color: "var(--canvas-fg-2)" }}>{COPY.LOADING_STATE}</div>;
+      return (
+        <div style={{ padding: "12px", color: "var(--canvas-fg-2)" }}>{COPY.LOADING_STATE}</div>
+      );
     }
 
     if (error) {
@@ -55,7 +57,9 @@ export function ExtractionResultPanel({
 
     if (entities.length === 0) {
       return (
-        <div style={{ padding: "12px", color: "var(--canvas-fg-2)" }}>{COPY.NO_ENTITIES_EXTRACTED}</div>
+        <div style={{ padding: "12px", color: "var(--canvas-fg-2)" }}>
+          {COPY.NO_ENTITIES_EXTRACTED}
+        </div>
       );
     }
 
