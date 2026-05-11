@@ -54,7 +54,7 @@ function IndividualsEmptyState({
   onImportClick: () => void;
 }) {
   return (
-    <div className="empty-state">
+    <div className="empty-state" data-testid="empty-state">
       <div className="empty-state-content">
         <div className="empty-state-title">{individualsCopy.emptyState.title}</div>
         <div className="empty-state-description">{individualsCopy.emptyState.description}</div>
@@ -66,7 +66,7 @@ function IndividualsEmptyState({
         <Button
           variant="ghost"
           size="sm"
-          onClick={onRunPipelineClick}
+          disabled
           data-testid="empty-state-run-pipeline"
         >
           {individualsCopy.emptyState.runPipelineLabel}
@@ -74,7 +74,7 @@ function IndividualsEmptyState({
         <Button
           variant="ghost"
           size="sm"
-          onClick={onImportClick}
+          disabled
           data-testid="empty-state-import"
         >
           {individualsCopy.emptyState.importLabel}

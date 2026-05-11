@@ -116,7 +116,7 @@ describe("Individuals Data Page", () => {
         expect(screen.getByText("No individuals yet")).toBeInTheDocument();
       });
 
-      const actionButton = screen.getByTestId("empty-state-action");
+      const actionButton = screen.getByTestId("empty-state-new-individual");
       expect(actionButton).toBeInTheDocument();
       expect(actionButton).toHaveTextContent("+ New individual");
     });

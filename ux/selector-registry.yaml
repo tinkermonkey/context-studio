@@ -538,6 +538,15 @@ selectors:
   - selector: individual-row-delete-*
     component: routes/app/data/individuals.tsx
     description: Delete button for individual row with dynamic ID suffix
+  - selector: empty-state-new-individual
+    component: routes/app/data/individuals.tsx
+    description: Primary CTA button to create new individual in empty state
+  - selector: empty-state-run-pipeline
+    component: routes/app/data/individuals.tsx
+    description: Secondary CTA button to run pipeline in empty state
+  - selector: empty-state-import
+    component: routes/app/data/individuals.tsx
+    description: Secondary CTA button to import individuals in empty state
 
   # Individual Detail Page (Drawer)
   - selector: individual-detail-page
