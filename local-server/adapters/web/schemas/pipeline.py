@@ -112,3 +112,30 @@ class ExecutionResponse(BaseModel):
         None, description="Error description if applicable"
     )
     timestamp: datetime = Field(..., description="ISO 8601 execution timestamp")
+
+
+class ExecutionWithPipelineResponse(BaseModel):
+    """Response containing execution record with associated pipeline configuration name."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str = Field(..., description="Unique identifier for this execution")
+    pipeline_config_id: str = Field(
+        ..., description="ID of the executed PipelineConfiguration"
+    )
+    pipeline_title: str = Field(
+        ..., description="Title of the pipeline configuration that was executed"
+    )
+    output_text: str = Field(..., description="The generated response from the LLM")
+    provider: str = Field(..., description="LLM provider that executed the request")
+    model: str = Field(..., description="Model that generated the response")
+    tokens_in: int = Field(..., description="Number of tokens in the input")
+    tokens_out: int = Field(..., description="Number of tokens in the output")
+    duration_ms: int = Field(..., description="Execution duration in milliseconds")
+    status: Literal["success", "error", "timeout"] = Field(
+        ..., description="Completion status (success, error, timeout)"
+    )
+    error_message: Optional[str] = Field(
+        None, description="Error description if applicable"
+    )
+    timestamp: datetime = Field(..., description="ISO 8601 execution timestamp")

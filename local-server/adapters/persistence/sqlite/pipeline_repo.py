@@ -152,6 +152,58 @@ class SQLitePipelineRepository:
             )
             return [self._to_domain_execution(row) for row in rows]
 
+    def get_all_executions(
+        self,
+        status: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> tuple[list[Execution], list[str], int]:
+        """
+        Retrieve execution history across all pipeline configurations with pagination.
+
+        Results are returned in reverse chronological order (most recent first).
+        Performs a JOIN with PipelineConfigurationModel to fetch pipeline titles.
+
+        Args:
+            status: Optional status filter ("success", "error", "timeout")
+            limit: Maximum number of execution records to return
+            offset: Number of execution records to skip for pagination
+
+        Returns:
+            Tuple of:
+            - List of Execution objects
+            - List of corresponding pipeline titles (indexed same as executions)
+            - Total count of all matching executions (for pagination)
+        """
+        with self.session_factory() as session:
+            count_query = session.query(ExecutionModel)
+            if status:
+                count_query = count_query.filter_by(status=status)
+            total = count_query.count()
+
+            query = session.query(
+                ExecutionModel,
+                PipelineConfigurationModel.title,
+            ).join(
+                PipelineConfigurationModel,
+                ExecutionModel.pipeline_config_id == PipelineConfigurationModel.id,
+            )
+
+            if status:
+                query = query.filter(ExecutionModel.status == status)
+
+            rows = (
+                query.order_by(ExecutionModel.timestamp.desc())  # type: ignore[attr-defined]
+                .offset(offset)
+                .limit(limit)
+                .all()
+            )
+
+            executions = [self._to_domain_execution(row[0]) for row in rows]
+            titles = [row[1] for row in rows]
+
+            return executions, titles, total
+
     def _to_domain_config(
         self,
         row: PipelineConfigurationModel,

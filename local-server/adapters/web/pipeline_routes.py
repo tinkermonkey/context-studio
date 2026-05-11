@@ -4,11 +4,12 @@ FastAPI routes for the LLM Pipeline Management bounded context.
 This module implements HTTP endpoints for pipeline configuration and execution:
 - POST   /api/pipelines              → Create pipeline configuration
 - GET    /api/pipelines              → List all configurations
+- GET    /api/pipelines/executions   → Retrieve all execution history (must be before /{id})
 - GET    /api/pipelines/{id}         → Retrieve single configuration
 - PUT    /api/pipelines/{id}         → Update configuration
 - DELETE /api/pipelines/{id}         → Delete configuration
 - POST   /api/pipelines/{id}/execute → Execute pipeline
-- GET    /api/pipelines/{id}/executions → Retrieve execution history
+- GET    /api/pipelines/{id}/executions → Retrieve execution history for pipeline
 
 Each endpoint is a thin adapter that:
 1. Receives HTTP request + parsed Pydantic schema
@@ -20,7 +21,9 @@ No business logic lives here—all validation and constraints are in the domain 
 Error handling translates domain exceptions to appropriate HTTP responses.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from domain.pipeline.services import PipelineService
 from domain.pipeline.exceptions import (
@@ -38,7 +41,9 @@ from adapters.web.schemas.pipeline import (
     PipelineConfigurationResponse,
     PipelineExecuteRequest,
     ExecutionResponse,
+    ExecutionWithPipelineResponse,
 )
+from adapters.web.schemas.ontology import ListResponse
 
 router = APIRouter(prefix="/api", tags=["pipeline"])
 
@@ -140,6 +145,78 @@ async def list_pipeline_configurations(
     try:
         configs = await run_sync_in_executor(service.list_configs)
         return [PipelineConfigurationResponse.model_validate(c) for c in configs]
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.get(
+    "/pipelines/executions", response_model=ListResponse[ExecutionWithPipelineResponse]
+)
+async def list_all_pipeline_executions(
+    status: Optional[str] = Query(
+        None, description="Optional status filter (success, error, timeout)"
+    ),
+    limit: int = Query(100, ge=1, le=500, description="Maximum number of results"),
+    offset: int = Query(0, ge=0, description="Number of results to skip"),
+    service: PipelineService = Depends(get_pipeline_service),
+) -> ListResponse[ExecutionWithPipelineResponse]:
+    """
+    Retrieve execution history across all pipeline configurations.
+
+    Results are returned in reverse chronological order (most recent first).
+
+    Args:
+        status: Optional status filter ("success", "error", "timeout")
+        limit: Maximum number of executions to return (1-500, default 100)
+        offset: Number of executions to skip for pagination (default 0)
+        service: PipelineService from dependency injection
+
+    Returns:
+        Paginated list of ExecutionWithPipelineResponse objects with total count
+
+    Raises:
+        HTTPException: 400 if invalid status value
+    """
+    valid_statuses = {"success", "error", "timeout"}
+    if status is not None and status not in valid_statuses:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid status: must be one of {valid_statuses}",
+        )
+
+    try:
+        executions, pipeline_titles, total = await run_sync_in_executor(
+            service.list_all_executions,
+            status=status,
+            limit=limit,
+            offset=offset,
+        )
+
+        responses = [
+            ExecutionWithPipelineResponse(
+                id=exec.id,
+                pipeline_config_id=exec.pipeline_config_id,
+                pipeline_title=title,
+                output_text=exec.output_text,
+                provider=exec.provider,
+                model=exec.model,
+                tokens_in=exec.tokens_in,
+                tokens_out=exec.tokens_out,
+                duration_ms=exec.duration_ms,
+                status=exec.status,
+                error_message=exec.error_message,
+                timestamp=exec.timestamp,
+            )
+            for exec, title in zip(executions, pipeline_titles)
+        ]
+
+        return ListResponse(
+            items=responses,
+            total=total,
+            limit=limit,
+            offset=offset,
+        )
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)

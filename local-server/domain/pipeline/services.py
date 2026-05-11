@@ -228,6 +228,30 @@ class PipelineService:
             raise PipelineNotFoundError(f"Pipeline configuration {config_id} not found")
         return self._pipeline_repo.get_executions(config_id, limit=limit)
 
+    def list_all_executions(
+        self,
+        status: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> tuple[list[Execution], list[str], int]:
+        """
+        Retrieve all pipeline executions across all configurations.
+
+        Results are returned in reverse chronological order (most recent first).
+
+        Args:
+            status: Optional status filter ("success", "error", "timeout").
+                    If None, returns all executions regardless of status.
+            limit: Maximum number of executions to return (default 100)
+            offset: Number of executions to skip for pagination (default 0)
+
+        Returns:
+            Tuple of (list of Execution objects, list of corresponding pipeline titles, total count)
+        """
+        return self._pipeline_repo.get_all_executions(
+            status=status, limit=limit, offset=offset
+        )
+
     def execute_pipeline(self, config_id: str, input_text: str) -> Execution:
         """
         Execute a pipeline configuration with the given input.

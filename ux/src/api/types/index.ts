@@ -1548,6 +1548,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/pipelines/executions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List All Pipeline Executions
+     * @description Retrieve execution history across all pipeline configurations.
+     *
+     *     Results are returned in reverse chronological order (most recent first).
+     *
+     *     Args:
+     *         status: Optional status filter ("success", "error", "timeout")
+     *         limit: Maximum number of executions to return (1-500, default 100)
+     *         offset: Number of executions to skip for pagination (default 0)
+     *         service: PipelineService from dependency injection
+     *
+     *     Returns:
+     *         Paginated list of ExecutionWithPipelineResponse objects with total count
+     *
+     *     Raises:
+     *         HTTPException: 400 if invalid status value
+     */
+    get: operations["list_all_pipeline_executions_api_pipelines_executions_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/pipelines/{pipeline_id}/executions": {
     parameters: {
       query?: never;
@@ -3462,6 +3496,74 @@ export interface components {
       timestamp: string;
     };
     /**
+     * ExecutionWithPipelineResponse
+     * @description Response containing execution record with associated pipeline configuration name.
+     */
+    ExecutionWithPipelineResponse: {
+      /**
+       * Id
+       * @description Unique identifier for this execution
+       */
+      id: string;
+      /**
+       * Pipeline Config Id
+       * @description ID of the executed PipelineConfiguration
+       */
+      pipeline_config_id: string;
+      /**
+       * Pipeline Title
+       * @description Title of the pipeline configuration that was executed
+       */
+      pipeline_title: string;
+      /**
+       * Output Text
+       * @description The generated response from the LLM
+       */
+      output_text: string;
+      /**
+       * Provider
+       * @description LLM provider that executed the request
+       */
+      provider: string;
+      /**
+       * Model
+       * @description Model that generated the response
+       */
+      model: string;
+      /**
+       * Tokens In
+       * @description Number of tokens in the input
+       */
+      tokens_in: number;
+      /**
+       * Tokens Out
+       * @description Number of tokens in the output
+       */
+      tokens_out: number;
+      /**
+       * Duration Ms
+       * @description Execution duration in milliseconds
+       */
+      duration_ms: number;
+      /**
+       * Status
+       * @description Completion status (success, error, timeout)
+       * @enum {string}
+       */
+      status: "success" | "error" | "timeout";
+      /**
+       * Error Message
+       * @description Error description if applicable
+       */
+      error_message?: string | null;
+      /**
+       * Timestamp
+       * Format: date-time
+       * @description ISO 8601 execution timestamp
+       */
+      timestamp: string;
+    };
+    /**
      * ExportRequest
      * @description Request to export ontology data.
      */
@@ -4187,6 +4289,29 @@ export interface components {
        * @description List of items
        */
       items: components["schemas"]["DataPropertyValueResponse"][];
+      /**
+       * Total
+       * @description Total number of items
+       */
+      total: number;
+      /**
+       * Limit
+       * @description Limit applied
+       */
+      limit: number;
+      /**
+       * Offset
+       * @description Offset applied
+       */
+      offset: number;
+    };
+    /** ListResponse[ExecutionWithPipelineResponse] */
+    ListResponse_ExecutionWithPipelineResponse_: {
+      /**
+       * Items
+       * @description List of items
+       */
+      items: components["schemas"]["ExecutionWithPipelineResponse"][];
       /**
        * Total
        * @description Total number of items
@@ -7611,6 +7736,42 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ExecutionResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_all_pipeline_executions_api_pipelines_executions_get: {
+    parameters: {
+      query?: {
+        /** @description Optional status filter (success, error, timeout) */
+        status?: string | null;
+        /** @description Maximum number of results */
+        limit?: number;
+        /** @description Number of results to skip */
+        offset?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListResponse_ExecutionWithPipelineResponse_"];
         };
       };
       /** @description Validation Error */
