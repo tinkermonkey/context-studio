@@ -99,7 +99,7 @@ export function EntityReviewPanel({
   const { toast } = useToasts();
 
   const createClassMutation = useCreateClass();
-  const { data: classesList, error: classesError, refetch: refetchClasses } = useClasses();
+  const { error: classesError, refetch: refetchClasses } = useClasses();
   const { data: schemesList, error: schemesError, refetch: refetchSchemes } = useSchemes();
 
   const layerNames: Record<number, string> = {
