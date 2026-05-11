@@ -32,6 +32,8 @@ export const individualsCopy = {
     failedToLoad: "Failed to load individuals",
     failedToCreate: "Failed to create individual",
     failedToUpdate: "Failed to update individual",
+    failedToLoadClasses: "Failed to load classes",
+    failedToLoadInheritedProperties: "Failed to load inherited properties",
   },
   form: {
     titleLabel: "Title",
@@ -80,6 +82,8 @@ export const individualsCopy = {
     failedToRemoveClass: "Failed to remove class",
     classRemovalError: "At least one class must remain",
     autosaveFailed: "Autosave failed",
+    classesReordered: "Classes reordered",
+    failedToReorderClasses: "Failed to reorder classes",
   },
   table: {
     idHeader: "ID",

@@ -217,9 +217,9 @@ function IndividualsPageContent({
       {classesError && (
         <div style={{ marginBottom: "var(--space-3)" }}>
           <ErrorBanner
-            error={classesErrorObj || new Error("Failed to load classes")}
+            error={classesErrorObj || new Error(individualsCopy.errors.failedToLoadClasses)}
             onRetry={onRetryClasses}
-            message="Failed to load classes"
+            message={individualsCopy.errors.failedToLoadClasses}
           />
         </div>
       )}

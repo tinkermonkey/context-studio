@@ -264,7 +264,7 @@ export function IndividualDrawer({
     const currentIndex = individual.class_ids.indexOf(classId);
     if (currentIndex === -1) return;
 
-    let newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+    const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
     if (newIndex < 0 || newIndex >= individual.class_ids.length) return;
 
     const newOrder = [...individual.class_ids];
@@ -275,10 +275,10 @@ export function IndividualDrawer({
         individualId: individual.id,
         data: { class_ids: newOrder },
       });
-      toast("success", "Classes reordered");
+      toast("success", individualsCopy.toasts.classesReordered);
     } catch (error) {
       const message =
-        error instanceof ApiError ? error.detail : "Failed to reorder classes";
+        error instanceof ApiError ? error.detail : individualsCopy.toasts.failedToReorderClasses;
       toast("error", message);
     }
   };
@@ -353,9 +353,9 @@ export function IndividualDrawer({
           {classesError && (
             <div style={{ marginBottom: "var(--space-3)" }}>
               <ErrorBanner
-                error={classesErrorObj || new Error("Failed to load classes")}
+                error={classesErrorObj || new Error(individualsCopy.errors.failedToLoadClasses)}
                 onRetry={() => refetchClasses()}
-                message="Failed to load classes"
+                message={individualsCopy.errors.failedToLoadClasses}
                 compact={true}
               />
             </div>
@@ -454,10 +454,10 @@ export function IndividualDrawer({
             <div style={{ marginBottom: "var(--space-3)" }}>
               <ErrorBanner
                 error={
-                  inheritedPropertiesErrorObj || new Error("Failed to load inherited properties")
+                  inheritedPropertiesErrorObj || new Error(individualsCopy.errors.failedToLoadInheritedProperties)
                 }
                 onRetry={() => refetchInheritedProperties()}
-                message="Failed to load inherited properties"
+                message={individualsCopy.errors.failedToLoadInheritedProperties}
                 compact={true}
               />
             </div>
