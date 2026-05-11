@@ -28,7 +28,12 @@ def _setup_pipeline_context() -> tuple[PipelineService, FakePipelineRepository]:
     repository = FakePipelineRepository()
     llm_provider = FakeLLMProvider()
     event_publisher = FakeEventPublisher()
-    service = PipelineService(repository, llm_provider, event_publisher)
+    service = PipelineService(
+        pipeline_repo=repository,
+        flavor_repo=repository,
+        llm=llm_provider,
+        event_publisher=event_publisher,
+    )
     return service, repository
 
 

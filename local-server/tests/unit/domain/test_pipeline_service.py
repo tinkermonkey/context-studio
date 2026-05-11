@@ -297,7 +297,12 @@ class TestPipelineServiceExecution:
             tokens_out=25,
         )
         self.event_pub = FakeEventPublisher()
-        self.service = PipelineService(self.repo, self.llm, self.event_pub)
+        self.service = PipelineService(
+            pipeline_repo=self.repo,
+            flavor_repo=self.repo,
+            llm=self.llm,
+            event_publisher=self.event_pub,
+        )
 
     def test_execute_pipeline_records_successful_execution(self):
         """Execute pipeline records execution with success status and token counts."""

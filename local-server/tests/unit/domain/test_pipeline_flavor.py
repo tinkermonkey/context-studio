@@ -14,7 +14,7 @@ sys.path.append(
 import pytest
 
 from domain.pipeline.services import PipelineService
-from domain.pipeline.exceptions import PipelineError, PipelineNotFoundError
+from domain.pipeline.exceptions import PipelineNotFoundError
 from tests.fakes.fake_pipeline_repository import FakePipelineRepository
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_event_publisher import FakeEventPublisher
