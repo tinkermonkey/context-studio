@@ -1,7 +1,12 @@
 export function formatRelativeTime(dateOrIso: Date | string): string {
   const date = typeof dateOrIso === "string" ? new Date(dateOrIso) : dateOrIso;
-  const now = Date.now();
   const ts = date.getTime();
+
+  if (isNaN(ts)) {
+    return "unknown";
+  }
+
+  const now = Date.now();
   const diffMs = now - ts;
   const diffMin = Math.floor(diffMs / 60_000);
 
