@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Chip } from "@/components/ui/Chip";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { COPY } from "@/routes/app/extraction-copy";
+import { COPY } from "@/routes/app/extraction/-copy";
 import type { components } from "@/api/types";
 
 type ExtractedEntitySchema = components["schemas"]["ExtractedEntitySchema"];

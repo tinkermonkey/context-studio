@@ -37,9 +37,10 @@ export const COPY = {
 
   // Pipeline Detail Panel columns
   RUN_STATUS_HEADER: "Status",
+  RUN_PIPELINE_HEADER: "Pipeline",
   RUN_STARTED_HEADER: "Started",
   RUN_DURATION_HEADER: "Duration",
-  RUN_TOKENS_HEADER: "Tokens",
+  RUN_TOKENS_HEADER: "Records",
 
   // Pipeline Error Log
   ERROR_DETAILS_TITLE: "Error Details",
@@ -66,6 +67,7 @@ export const COPY = {
   NO_FLAVORS_DESCRIPTION: "Create a pipeline flavor to get started.",
   CREATE_A_FLAVOR_CTA: "Create a flavor",
   FLAVORS_LOAD_ERROR: "Failed to load pipeline flavors",
+  RUNS_LOAD_ERROR: "Failed to load pipeline runs",
   NO_FLAVORS_FILTERED_TITLE: "No flavors match your search",
   NO_FLAVORS_FILTERED_DESCRIPTION: "Try adjusting your search criteria.",
 
@@ -108,6 +110,7 @@ export const COPY = {
   AUTOSAVE_FAILED: (error: string) => `Autosave failed: ${error}`,
   ERROR_COPIED: "Error copied to clipboard",
 
+  FLAVOR_CREATED: (name: string) => `Created flavor "${name}"`,
   FLAVOR_DELETED: (name: string) => `Deleted flavor "${name}"`,
   FLAVOR_DELETE_ERROR: (error: string) => `Failed to delete flavor: ${error}`,
   FLAVOR_PIPELINE_CREATED: (name: string) => `Created pipeline from flavor "${name}"`,

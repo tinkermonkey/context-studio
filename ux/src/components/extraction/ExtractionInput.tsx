@@ -3,7 +3,7 @@ import { Upload } from "lucide-react";
 import { Textarea } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useToasts } from "@/components/ui/Toast";
-import { COPY } from "@/routes/app/extraction-copy";
+import { COPY } from "@/routes/app/extraction/-copy";
 
 interface ExtractionInputProps {
   onExtract: (text: string) => void;

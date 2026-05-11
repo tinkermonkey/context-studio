@@ -90,7 +90,7 @@ function RunsPageContent() {
     },
     {
       accessorKey: "pipeline_title",
-      header: COPY.PIPELINES_PAGE_TITLE,
+      header: COPY.RUN_PIPELINE_HEADER,
       cell: (info) => {
         const title = info.getValue() as string;
         const pipelineId = info.row.original.pipeline_config_id;
@@ -180,7 +180,7 @@ function RunsPageContent() {
         <ErrorBanner
           error={error}
           onRetry={() => refetch()}
-          message={COPY.PIPELINES_LOAD_ERROR}
+          message={COPY.RUNS_LOAD_ERROR}
           daemonLogPath="/local-server/logs/context_studio.log"
         />
       </div>

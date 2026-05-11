@@ -228,7 +228,7 @@ function FlavorsPageWrapper() {
       const result = await createMutation.mutateAsync(data);
       setShowCreateModal(false);
       handleSelectedIdChange(result.id);
-      toast("success", COPY.FLAVOR_UPDATED(result.name));
+      toast("success", COPY.FLAVOR_CREATED(result.name));
     } catch (error) {
       setCreateError(error instanceof Error ? error.message : COPY.FLAVOR_CREATE_ERROR);
     }

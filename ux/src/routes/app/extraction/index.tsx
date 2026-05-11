@@ -4,7 +4,7 @@ import { useExtract, useNlpAnalysis, useEnrichFromReferences } from "@/api/hooks
 import { ExtractionInput } from "@/components/extraction/ExtractionInput";
 import { ExtractionResultPanel } from "@/components/extraction/ExtractionResultPanel";
 import { EntityReviewPanel } from "@/components/extraction/EntityReviewPanel";
-import { COPY } from "./extraction-copy";
+import { COPY } from "./-copy";
 import type { components } from "@/api/types";
 
 type ExtractionResultSchema = components["schemas"]["ExtractionResultSchema"];

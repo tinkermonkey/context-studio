@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { Panel } from "@/components/ui/Panel";
 import { Chip } from "@/components/ui/Chip";
-import { COPY } from "@/routes/app/extraction-copy";
+import { COPY } from "@/routes/app/extraction/-copy";
 import type { components } from "@/api/types";
 
 type ExtractionLayerResultSchema = components["schemas"]["ExtractionLayerResultSchema"];
