@@ -1,8 +1,7 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Input, Textarea } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
-import { useIndividual } from "@/api/hooks/ontology/useIndividuals";
 import { individualsCopy } from "@/routes/app/data/individuals/-copy";
 import type { components } from "@/api/types";
 
@@ -20,7 +19,6 @@ interface IndividualEditorProps {
   initialData?: IndividualCreateRequest | IndividualResponse;
   onSubmit: (data: IndividualEditorSubmitData) => Promise<void>;
   isLoading?: boolean;
-  classesError?: boolean;
 }
 
 export function IndividualEditor({
@@ -28,7 +26,6 @@ export function IndividualEditor({
   initialData,
   onSubmit,
   isLoading,
-  classesError,
 }: IndividualEditorProps) {
   const [title, setTitle] = useState(
     initialData && "title" in initialData ? initialData.title : "",
@@ -49,25 +46,8 @@ export function IndividualEditor({
   const [classError, setClassError] = useState<string>();
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const {
-    data: classesResponse,
-    isError: classesQueryError,
-    isLoading: isLoadingClasses,
-  } = useClasses();
-  const {
-    data: existingIndividual,
-    isError: individualQueryError,
-    isLoading: isLoadingIndividual,
-  } = useIndividual(individualId || "");
+  const { data: classesResponse } = useClasses();
   const classes = classesResponse?.items || [];
-
-  useEffect(() => {
-    if (existingIndividual) {
-      setTitle(existingIndividual.title);
-      setDescription(existingIndividual.description || "");
-      setSelectedClassIds(existingIndividual.class_ids);
-    }
-  }, [existingIndividual]);
 
   const selectedClasses = classes.filter((cls) => selectedClassIds.includes(cls.id));
   const filteredClasses = classes.filter(
@@ -75,11 +55,6 @@ export function IndividualEditor({
       !selectedClassIds.includes(cls.id) &&
       (cls.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         cls.id.toLowerCase().includes(searchQuery.toLowerCase())),
-  );
-
-  const allPropertiesToDisplay = selectedClasses.flatMap((cls) => cls.data_properties || []);
-  const uniqueProperties = Array.from(
-    new Map(allPropertiesToDisplay.map((prop) => [prop.property_identifier, prop])).values(),
   );
 
   const validateTitle = (value: string): boolean => {
@@ -280,17 +255,6 @@ export function IndividualEditor({
               {classError}
             </div>
           )}
-          {(classesQueryError || classesError) && (
-            <div
-              style={{
-                color: "var(--rose-600)",
-                fontSize: "var(--text-xs)",
-                marginTop: "4px",
-              }}
-            >
-              Classes failed to load. Please check your connection and retry.
-            </div>
-          )}
         </div>
 
         <div>
@@ -304,20 +268,6 @@ export function IndividualEditor({
             rows={4}
           />
         </div>
-
-        {individualId && selectedClasses.length > 0 && (
-          <div
-            style={{
-              padding: "var(--space-3)",
-              background: "var(--canvas-bg-2)",
-              borderRadius: "var(--radius-sm)",
-              fontSize: "var(--text-sm)",
-              color: "var(--canvas-fg-3)",
-            }}
-          >
-            {individualsCopy.form.noPropertiesMessage}
-          </div>
-        )}
 
         <Button
           type="submit"

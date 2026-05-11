@@ -457,7 +457,6 @@ function IndividualsPageWrapper() {
         <IndividualEditor
           onSubmit={handleCreateSubmit}
           isLoading={createMutation.isPending}
-          classesError={classesError}
         />
       </Modal>
 
@@ -505,7 +504,6 @@ function IndividualsPageWrapper() {
             initialData={editingIndividual}
             onSubmit={handleEditSubmit}
             isLoading={updateMutation.isPending}
-            classesError={classesError}
           />
         )}
       </Modal>
