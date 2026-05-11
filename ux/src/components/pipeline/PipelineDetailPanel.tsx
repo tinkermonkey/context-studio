@@ -284,7 +284,7 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
                     await navigator.clipboard.writeText(expandedExecution.error_message || "");
                     toast("success", COPY.ERROR_COPIED);
                   } catch {
-                    toast("error", "Failed to copy error message");
+                    toast("error", COPY.CLIPBOARD_COPY_ERROR);
                   }
                 }}
                 aria-label="Copy error to clipboard"

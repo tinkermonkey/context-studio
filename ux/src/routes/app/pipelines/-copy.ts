@@ -117,4 +117,5 @@ export const COPY = {
   FLAVOR_PIPELINE_CREATED: (name: string) => `Created pipeline from flavor "${name}"`,
   FLAVOR_PIPELINE_CREATE_ERROR: (error: string) => `Failed to create pipeline: ${error}`,
   FLAVOR_UPDATED: (name: string) => `Updated flavor "${name}"`,
+  CLIPBOARD_COPY_ERROR: "Failed to copy error message",
 } as const;
