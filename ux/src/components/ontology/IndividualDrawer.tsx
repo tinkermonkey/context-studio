@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef, Fragment } from "react";
+import { ChevronUp, ChevronDown } from "lucide-react";
 import { Drawer } from "@/components/ui/Drawer";
 import { Input, Textarea } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Panel } from "@/components/ui/Panel";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { useAutosave } from "@/hooks/useAutosave";
 import { useToasts } from "@/components/ui/Toast";
 import {
@@ -12,6 +14,7 @@ import {
   useAddClassToIndividual,
   useRemoveClassFromIndividual,
   useIndividualInheritedProperties,
+  useReorderIndividualClasses,
 } from "@/api/hooks/ontology/useIndividuals";
 import { useIndividuals, useClasses } from "@/api/hooks/ontology";
 import { ApiError } from "@/api/client/interceptors";
@@ -31,10 +34,23 @@ interface ClassChipProps {
   classId: string;
   className: string;
   onRemove: (id: string) => void;
+  onMoveUp: (id: string) => void;
+  onMoveDown: (id: string) => void;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
   isDisabled: boolean;
 }
 
-function ClassChip({ classId, className, onRemove, isDisabled }: ClassChipProps) {
+function ClassChip({
+  classId,
+  className,
+  onRemove,
+  onMoveUp,
+  onMoveDown,
+  canMoveUp,
+  canMoveDown,
+  isDisabled,
+}: ClassChipProps) {
   return (
     <div
       style={{
@@ -48,23 +64,67 @@ function ClassChip({ classId, className, onRemove, isDisabled }: ClassChipProps)
       }}
     >
       <span>{className}</span>
-      <button
-        type="button"
-        onClick={() => onRemove(classId)}
-        disabled={isDisabled}
-        style={{
-          background: "none",
-          border: "none",
-          cursor: isDisabled ? "not-allowed" : "pointer",
-          padding: 0,
-          color: isDisabled ? "var(--canvas-fg-4)" : "var(--canvas-fg-3)",
-          fontSize: "var(--text-sm)",
-          opacity: isDisabled ? 0.5 : 1,
-        }}
-        data-testid={`individual-class-remove-${classId}`}
-      >
-        ✕
-      </button>
+      <div style={{ display: "flex", gap: "2px" }}>
+        <button
+          type="button"
+          onClick={() => onMoveUp(classId)}
+          disabled={!canMoveUp || isDisabled}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: !canMoveUp || isDisabled ? "not-allowed" : "pointer",
+            padding: "0 2px",
+            color:
+              !canMoveUp || isDisabled ? "var(--canvas-fg-4)" : "var(--canvas-fg-3)",
+            opacity: !canMoveUp || isDisabled ? 0.5 : 1,
+            display: "flex",
+            alignItems: "center",
+          }}
+          data-testid={`individual-class-move-up-${classId}`}
+          title="Move up"
+        >
+          <ChevronUp size={14} />
+        </button>
+        <button
+          type="button"
+          onClick={() => onMoveDown(classId)}
+          disabled={!canMoveDown || isDisabled}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: !canMoveDown || isDisabled ? "not-allowed" : "pointer",
+            padding: "0 2px",
+            color:
+              !canMoveDown || isDisabled ? "var(--canvas-fg-4)" : "var(--canvas-fg-3)",
+            opacity: !canMoveDown || isDisabled ? 0.5 : 1,
+            display: "flex",
+            alignItems: "center",
+          }}
+          data-testid={`individual-class-move-down-${classId}`}
+          title="Move down"
+        >
+          <ChevronDown size={14} />
+        </button>
+        <button
+          type="button"
+          onClick={() => onRemove(classId)}
+          disabled={isDisabled}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: isDisabled ? "not-allowed" : "pointer",
+            padding: "0 2px",
+            color: isDisabled ? "var(--canvas-fg-4)" : "var(--canvas-fg-3)",
+            opacity: isDisabled ? 0.5 : 1,
+            display: "flex",
+            alignItems: "center",
+          }}
+          data-testid={`individual-class-remove-${classId}`}
+          title="Remove"
+        >
+          ✕
+        </button>
+      </div>
     </div>
   );
 }
@@ -87,16 +147,23 @@ export function IndividualDrawer({
   const updateMutation = useUpdateIndividual();
   const addClassMutation = useAddClassToIndividual();
   const removeClassMutation = useRemoveClassFromIndividual();
+  const reorderMutation = useReorderIndividualClasses();
 
   const { data: individualsResponse } = useIndividuals();
   const individual = individualsResponse?.items.find((i) => i.id === individualId) || null;
 
-  const { data: classesResponse } = useClasses();
+  const { data: classesResponse, isError: classesError, error: classesErrorObj, refetch: refetchClasses } =
+    useClasses();
   const classes = classesResponse?.items || [];
   const classMap = new Map(classes.map((c: ClassResponse) => [c.id, c.title]));
 
-  const { data: inheritedPropertiesResponse, isLoading: isLoadingProperties } =
-    useIndividualInheritedProperties(individualId || "");
+  const {
+    data: inheritedPropertiesResponse,
+    isLoading: isLoadingProperties,
+    isError: inheritedPropertiesError,
+    error: inheritedPropertiesErrorObj,
+    refetch: refetchInheritedProperties,
+  } = useIndividualInheritedProperties(individualId || "");
   const inheritedProperties = inheritedPropertiesResponse?.items || [];
 
   const relatedIndividuals =
@@ -119,7 +186,7 @@ export function IndividualDrawer({
       await updateMutation.mutateAsync({
         id: individual.id,
         data: {
-          title: title || undefined,
+          title,
           description: description || null,
         },
       });
@@ -193,6 +260,29 @@ export function IndividualDrawer({
     }
   };
 
+  const handleMoveClass = async (classId: string, direction: "up" | "down") => {
+    const currentIndex = individual.class_ids.indexOf(classId);
+    if (currentIndex === -1) return;
+
+    let newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+    if (newIndex < 0 || newIndex >= individual.class_ids.length) return;
+
+    const newOrder = [...individual.class_ids];
+    [newOrder[currentIndex], newOrder[newIndex]] = [newOrder[newIndex], newOrder[currentIndex]];
+
+    try {
+      await reorderMutation.mutateAsync({
+        individualId: individual.id,
+        data: { class_ids: newOrder },
+      });
+      toast("success", "Classes reordered");
+    } catch (error) {
+      const message =
+        error instanceof ApiError ? error.detail : "Failed to reorder classes";
+      toast("error", message);
+    }
+  };
+
   const revert = () => {
     if (individual) {
       setTitle(individual.title);
@@ -260,14 +350,28 @@ export function IndividualDrawer({
           data-testid="individual-class-list"
           className="stack-lg"
         >
+          {classesError && (
+            <div style={{ marginBottom: "var(--space-3)" }}>
+              <ErrorBanner
+                error={classesErrorObj || new Error("Failed to load classes")}
+                onRetry={() => refetchClasses()}
+                message="Failed to load classes"
+                compact={true}
+              />
+            </div>
+          )}
           {individual.class_ids.length > 0 && (
             <div style={{ display: "flex", gap: "var(--space-2)", flexWrap: "wrap" }}>
-              {individual.class_ids.map((classId) => (
+              {individual.class_ids.map((classId, index) => (
                 <ClassChip
                   key={classId}
                   classId={classId}
                   className={classMap.get(classId) || individualsCopy.drawer.classNameFallback}
                   onRemove={handleRemoveClass}
+                  onMoveUp={() => handleMoveClass(classId, "up")}
+                  onMoveDown={() => handleMoveClass(classId, "down")}
+                  canMoveUp={index > 0}
+                  canMoveDown={index < individual.class_ids.length - 1}
                   isDisabled={individual.class_ids.length === 1}
                 />
               ))}
@@ -346,13 +450,25 @@ export function IndividualDrawer({
           data-testid="individual-properties-panel"
           className="stack-lg"
         >
+          {inheritedPropertiesError && (
+            <div style={{ marginBottom: "var(--space-3)" }}>
+              <ErrorBanner
+                error={
+                  inheritedPropertiesErrorObj || new Error("Failed to load inherited properties")
+                }
+                onRetry={() => refetchInheritedProperties()}
+                message="Failed to load inherited properties"
+                compact={true}
+              />
+            </div>
+          )}
           {isLoadingProperties ? (
             <div className="stack">
               <Skeleton height={40} />
               <Skeleton height={40} />
               <Skeleton height={40} />
             </div>
-          ) : inheritedProperties.length === 0 ? (
+          ) : inheritedPropertiesError ? null : inheritedProperties.length === 0 ? (
             <EmptyState
               title={individualsCopy.drawer.noPropertiesTitle}
               description={individualsCopy.drawer.noPropertiesDescription}

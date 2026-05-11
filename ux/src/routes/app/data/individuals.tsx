@@ -34,6 +34,9 @@ interface IndividualsPageContentProps {
   selectedId?: string;
   onSelectedIdChange: (id?: string) => void;
   classMap: Map<string, string>;
+  classesError: boolean;
+  classesErrorObj: Error | null;
+  onRetryClasses: () => void;
   onEditClick: (id: string) => void;
   onDeleteClick: (id: string) => void;
 }
@@ -43,6 +46,9 @@ function IndividualsPageContent({
   selectedId,
   onSelectedIdChange,
   classMap,
+  classesError,
+  classesErrorObj,
+  onRetryClasses,
   onEditClick,
   onDeleteClick,
 }: IndividualsPageContentProps) {
@@ -208,6 +214,15 @@ function IndividualsPageContent({
 
   return (
     <div>
+      {classesError && (
+        <div style={{ marginBottom: "var(--space-3)" }}>
+          <ErrorBanner
+            error={classesErrorObj || new Error("Failed to load classes")}
+            onRetry={onRetryClasses}
+            message="Failed to load classes"
+          />
+        </div>
+      )}
       <FilterBar searchValue={searchFilter} onSearchChange={setSearchFilter} />
 
       {showFilteredEmpty ? (
@@ -244,7 +259,7 @@ function IndividualsPageWrapper() {
   const deleteMutation = useDeleteIndividual();
   const { toast } = useToasts();
 
-  const { data: classesResponse } = useClasses();
+  const { data: classesResponse, isError: classesError, error: classesErrorObj, refetch: refetchClasses } = useClasses();
   const classes = classesResponse?.items || [];
   const classMap = new Map(classes.map((c: ClassResponse) => [c.id, c.title]));
 
@@ -347,6 +362,9 @@ function IndividualsPageWrapper() {
           selectedId={selectedId}
           onSelectedIdChange={handleSelectedIdChange}
           classMap={classMap}
+          classesError={classesError}
+          classesErrorObj={classesErrorObj || null}
+          onRetryClasses={() => refetchClasses()}
           onEditClick={handleEditClick}
           onDeleteClick={handleDeleteClick}
         />
