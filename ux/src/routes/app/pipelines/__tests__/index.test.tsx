@@ -123,6 +123,7 @@ describe("Pipelines Page", () => {
       );
 
       expect(screen.getByTestId("pipelines-page")).toBeInTheDocument();
+      expect(screen.queryByTestId("pipelines-grid")).not.toBeInTheDocument();
     });
   });
 
@@ -166,6 +167,7 @@ describe("Pipelines Page", () => {
       );
 
       expect(screen.getByTestId("pipelines-page")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
     });
   });
 

@@ -179,6 +179,7 @@ describe("Graph Page", () => {
       );
 
       expect(screen.getByTestId("graph-page")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
     });
   });
 
