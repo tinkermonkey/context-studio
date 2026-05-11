@@ -4,6 +4,7 @@ import { useExtract, useNlpAnalysis, useEnrichFromReferences } from "@/api/hooks
 import { ExtractionInput } from "@/components/extraction/ExtractionInput";
 import { ExtractionResultPanel } from "@/components/extraction/ExtractionResultPanel";
 import { EntityReviewPanel } from "@/components/extraction/EntityReviewPanel";
+import { COPY } from "./extraction-copy";
 import type { components } from "@/api/types";
 
 type ExtractionResultSchema = components["schemas"]["ExtractionResultSchema"];
@@ -88,8 +89,8 @@ function ExtractionPage() {
     <div data-testid="extraction-page">
       <div className="page-head">
         <div>
-          <h1>Entity Extraction</h1>
-          <p className="subtitle">Extract entities, relationships, and embeddings from text</p>
+          <h1>{COPY.PAGE_TITLE}</h1>
+          <p className="subtitle">{COPY.PAGE_SUBTITLE}</p>
         </div>
       </div>
 
@@ -113,7 +114,7 @@ function ExtractionPage() {
             layer={
               getLayerResult(0) || {
                 layer_number: 0,
-                layer_name: "KG Context",
+                layer_name: COPY.KG_CONTEXT_LAYER,
                 entities_found: 0,
                 duration_ms: 0,
                 success: false,
@@ -141,7 +142,7 @@ function ExtractionPage() {
             layer={
               getLayerResult(1) || {
                 layer_number: 1,
-                layer_name: "LLM Extraction",
+                layer_name: COPY.LLM_EXTRACTION_LAYER,
                 entities_found: 0,
                 duration_ms: 0,
                 success: false,
@@ -169,7 +170,7 @@ function ExtractionPage() {
             layer={
               getLayerResult(2) || {
                 layer_number: 2,
-                layer_name: "NLP Gap Fill",
+                layer_name: COPY.NLP_GAP_FILL_LAYER,
                 entities_found: 0,
                 duration_ms: 0,
                 success: false,
@@ -197,7 +198,7 @@ function ExtractionPage() {
             layer={
               getLayerResult(3) || {
                 layer_number: 3,
-                layer_name: "Reference Enrichment",
+                layer_name: COPY.REFERENCE_ENRICHMENT_LAYER,
                 entities_found: 0,
                 duration_ms: 0,
                 success: false,

@@ -17,6 +17,7 @@ import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import { FlavorDrawer } from "@/components/pipeline/FlavorDrawer";
 import { FlavorForm } from "@/components/pipeline/FlavorForm";
 import { useToasts } from "@/components/ui/Toast";
+import { COPY } from "./-copy";
 import type { PipelineFlavorResponse } from "@/api/services/pipeline";
 
 interface FlavorsSearchParams {
@@ -49,7 +50,7 @@ function FlavorsPageContent({
   const flavorColumns: ColumnDef<PipelineFlavorResponse>[] = [
     {
       accessorKey: "id",
-      header: "ID",
+      header: COPY.FLAVOR_ID_HEADER,
       size: 100,
       cell: (info) => (
         <span className="mono">
@@ -59,7 +60,7 @@ function FlavorsPageContent({
     },
     {
       accessorKey: "name",
-      header: "Name",
+      header: COPY.FLAVOR_NAME_HEADER,
       cell: (info) => {
         const flavorId = info.row.original.id;
         return (
@@ -76,7 +77,7 @@ function FlavorsPageContent({
     },
     {
       accessorKey: "description",
-      header: "Description",
+      header: COPY.FLAVOR_DESCRIPTION_HEADER,
       cell: (info) => {
         const desc = (info.getValue() as string) || "—";
         const truncated = desc.length > 50 ? `${desc.slice(0, 50)}…` : desc;
@@ -89,7 +90,7 @@ function FlavorsPageContent({
     },
     {
       id: "steps",
-      header: "Steps",
+      header: COPY.FLAVOR_STEPS_HEADER,
       cell: ({ row }) => (
         <span className="mono" data-testid={`flavor-steps-${row.original.id}`}>
           {row.original.step_count}
@@ -98,7 +99,7 @@ function FlavorsPageContent({
     },
     {
       accessorKey: "last_updated",
-      header: "Updated",
+      header: COPY.FLAVOR_UPDATED_HEADER,
       cell: (info) => {
         const date = info.getValue() as string | null;
         return date ? new Date(date).toLocaleDateString() : "—";
@@ -139,7 +140,7 @@ function FlavorsPageContent({
         <ErrorBanner
           error={error}
           onRetry={() => refetch()}
-          message="Failed to load pipeline flavors"
+          message={COPY.FLAVORS_LOAD_ERROR}
           daemonLogPath="/local-server/logs/context_studio.log"
         />
       </div>
@@ -150,10 +151,10 @@ function FlavorsPageContent({
     return (
       <div data-testid="flavors-page">
         <EmptyState
-          title="No flavors yet"
-          description="Create a pipeline flavor to get started."
+          title={COPY.NO_FLAVORS_TITLE}
+          description={COPY.NO_FLAVORS_DESCRIPTION}
           action={{
-            label: "Create a flavor",
+            label: COPY.CREATE_A_FLAVOR_CTA,
             onClick: onCreateClick,
           }}
         />
@@ -171,8 +172,8 @@ function FlavorsPageContent({
       {showFilteredEmpty ? (
         <div style={{ marginTop: "var(--space-6)" }}>
           <EmptyState
-            title="No flavors match your search"
-            description="Try adjusting your search criteria."
+            title={COPY.NO_FLAVORS_FILTERED_TITLE}
+            description={COPY.NO_FLAVORS_FILTERED_DESCRIPTION}
           />
         </div>
       ) : (
@@ -227,23 +228,23 @@ function FlavorsPageWrapper() {
       const result = await createMutation.mutateAsync(data);
       setShowCreateModal(false);
       handleSelectedIdChange(result.id);
-      toast("success", `Created flavor "${result.name}"`);
+      toast("success", COPY.FLAVOR_UPDATED(result.name));
     } catch (error) {
-      setCreateError(error instanceof Error ? error.message : "Failed to create flavor");
+      setCreateError(error instanceof Error ? error.message : COPY.FLAVOR_CREATE_ERROR);
     }
   };
 
   return (
     <div className="stack">
       <div className="page-head">
-        <h1>Pipeline Flavors</h1>
+        <h1>{COPY.FLAVORS_PAGE_TITLE}</h1>
         <Button
           variant="primary"
           onClick={() => setShowCreateModal(true)}
           data-testid="flavor-add-button"
           aria-label="Create new pipeline flavor"
         >
-          + New flavor
+          {COPY.NEW_FLAVOR_BUTTON}
         </Button>
       </div>
       <div data-testid="flavors-content">
@@ -260,7 +261,7 @@ function FlavorsPageWrapper() {
           setShowCreateModal(false);
           setCreateError(null);
         }}
-        title="Create Pipeline Flavor"
+        title={COPY.CREATE_FLAVOR_MODAL_TITLE}
         size="lg"
         data-testid="flavor-create-modal"
       >
@@ -269,7 +270,7 @@ function FlavorsPageWrapper() {
             <ErrorBanner
               error={new Error(createError)}
               onRetry={() => setCreateError(null)}
-              message="Failed to create flavor"
+              message={COPY.FLAVOR_CREATE_ERROR}
             />
           </div>
         )}

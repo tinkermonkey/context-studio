@@ -5,6 +5,7 @@ import { formatRelativeTime, formatDuration } from "@/utils/formatters";
 import { Button } from "@/components/ui/Button";
 import { useToasts } from "@/components/ui/Toast";
 import { useExecutionStore } from "@/stores/executionStore";
+import { COPY } from "@/routes/app/pipelines/-copy";
 
 type PipelineConfigurationResponse = components["schemas"]["PipelineConfigurationResponse"];
 type ExecutionResponse = components["schemas"]["ExecutionResponse"];
@@ -71,12 +72,12 @@ export function PipelineCard({ pipeline }: PipelineCardProps) {
         inputText: "",
       });
       if (execution.status === "success") {
-        toast("success", `Pipeline '${pipeline.title}' completed`);
+        toast("success", COPY.PIPELINE_COMPLETED(pipeline.title));
       } else if (execution.status === "error" || execution.status === "timeout") {
-        toast("error", `Pipeline '${pipeline.title}' failed`);
+        toast("error", COPY.PIPELINE_FAILED(pipeline.title));
       }
     } catch (error) {
-      toast("error", error instanceof Error ? error.message : "Failed to run pipeline");
+      toast("error", error instanceof Error ? error.message : COPY.PIPELINE_RUN_ERROR);
     } finally {
       endExecution(pipeline.id);
     }
@@ -146,7 +147,7 @@ export function PipelineCard({ pipeline }: PipelineCardProps) {
           </>
         )}
         {!lastExecution && (
-          <span style={{ color: "var(--canvas-fg-4, var(--canvas-fg-3))" }}>No runs yet</span>
+          <span style={{ color: "var(--canvas-fg-4, var(--canvas-fg-3))" }}>{COPY.NO_PIPELINE_RUNS}</span>
         )}
       </div>
     </div>

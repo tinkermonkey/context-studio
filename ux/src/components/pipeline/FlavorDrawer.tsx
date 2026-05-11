@@ -12,6 +12,7 @@ import {
 } from "@/api/hooks/pipeline";
 import { useToasts } from "@/components/ui/Toast";
 import { FlavorForm } from "@/components/pipeline/FlavorForm";
+import { COPY } from "@/routes/app/pipelines/-copy";
 import type { PipelineFlavorResponse } from "@/api/services/pipeline";
 
 interface FlavorDrawerProps {
@@ -32,12 +33,12 @@ export function FlavorDrawer({ flavor, onClose }: FlavorDrawerProps) {
     if (!flavor) return;
     try {
       await deleteMutation.mutateAsync(flavor.id);
-      toast("success", `Deleted flavor "${flavor.name}"`);
+      toast("success", COPY.FLAVOR_DELETED(flavor.name));
       onClose();
     } catch (error) {
       toast(
         "error",
-        `Failed to delete flavor: ${error instanceof Error ? error.message : "Unknown error"}`,
+        COPY.FLAVOR_DELETE_ERROR(error instanceof Error ? error.message : "Unknown error"),
       );
     }
   };
@@ -50,11 +51,11 @@ export function FlavorDrawer({ flavor, onClose }: FlavorDrawerProps) {
         flavorId: flavor.id,
         title,
       });
-      toast("success", `Created pipeline from flavor "${flavor.name}"`);
+      toast("success", COPY.FLAVOR_PIPELINE_CREATED(flavor.name));
     } catch (error) {
       toast(
         "error",
-        `Failed to create pipeline: ${error instanceof Error ? error.message : "Unknown error"}`,
+        COPY.FLAVOR_PIPELINE_CREATE_ERROR(error instanceof Error ? error.message : "Unknown error"),
       );
     }
   };
@@ -72,9 +73,9 @@ export function FlavorDrawer({ flavor, onClose }: FlavorDrawerProps) {
         data,
       });
       setShowEditModal(false);
-      toast("success", `Updated flavor "${data.name}"`);
+      toast("success", COPY.FLAVOR_UPDATED(data.name));
     } catch (error) {
-      setEditError(error instanceof Error ? error.message : "Failed to update flavor");
+      setEditError(error instanceof Error ? error.message : COPY.FLAVOR_UPDATE_ERROR);
     }
   };
 
@@ -94,7 +95,7 @@ export function FlavorDrawer({ flavor, onClose }: FlavorDrawerProps) {
       >
         <div className="stack-lg">
           <div>
-            <label className="form-group-label">ID</label>
+            <label className="form-group-label">{COPY.FLAVOR_DRAWER_ID_LABEL}</label>
             <Input
               type="text"
               value={flavor.id.slice(0, 8)}
@@ -105,12 +106,12 @@ export function FlavorDrawer({ flavor, onClose }: FlavorDrawerProps) {
           </div>
 
           <div>
-            <label className="form-group-label">Name</label>
+            <label className="form-group-label">{COPY.FLAVOR_DRAWER_NAME_LABEL}</label>
             <Input type="text" value={flavor.name} disabled data-testid="flavor-drawer-name" />
           </div>
 
           <div>
-            <label className="form-group-label">Description</label>
+            <label className="form-group-label">{COPY.FLAVOR_DRAWER_DESCRIPTION_LABEL}</label>
             <Textarea
               value={flavor.description || ""}
               disabled
@@ -120,7 +121,7 @@ export function FlavorDrawer({ flavor, onClose }: FlavorDrawerProps) {
           </div>
 
           <div>
-            <label className="form-group-label">Step Count</label>
+            <label className="form-group-label">{COPY.FLAVOR_DRAWER_STEP_COUNT_LABEL}</label>
             <Input
               type="text"
               value={flavor.step_count.toString()}
@@ -133,8 +134,8 @@ export function FlavorDrawer({ flavor, onClose }: FlavorDrawerProps) {
           <div className="kv">
             {(
               [
-                ["Created", createdDate],
-                ["Updated", updatedDate],
+                [COPY.FLAVOR_DRAWER_CREATED_LABEL, createdDate],
+                [COPY.FLAVOR_DRAWER_UPDATED_LABEL, updatedDate],
               ] as [string, string][]
             ).map(([k, v]) => (
               <Fragment key={k}>
@@ -152,7 +153,7 @@ export function FlavorDrawer({ flavor, onClose }: FlavorDrawerProps) {
               data-testid="flavor-drawer-create-pipeline-button"
               aria-label="Create a new pipeline from this flavor"
             >
-              {createPipelineMutation.isPending ? "Creating..." : "Create Pipeline"}
+              {createPipelineMutation.isPending ? COPY.FLAVOR_CREATE_PIPELINE_CREATING : COPY.FLAVOR_CREATE_PIPELINE_BUTTON}
             </Button>
             <Button
               variant="accent"
@@ -160,7 +161,7 @@ export function FlavorDrawer({ flavor, onClose }: FlavorDrawerProps) {
               data-testid="flavor-drawer-edit-button"
               aria-label="Edit this flavor"
             >
-              Edit
+              {COPY.FLAVOR_EDIT_BUTTON}
             </Button>
             <Button
               variant="ghost"
@@ -168,7 +169,7 @@ export function FlavorDrawer({ flavor, onClose }: FlavorDrawerProps) {
               data-testid="flavor-drawer-delete-button"
               aria-label="Delete this flavor"
             >
-              Delete
+              {COPY.FLAVOR_DELETE_BUTTON}
             </Button>
           </div>
         </div>
@@ -176,10 +177,10 @@ export function FlavorDrawer({ flavor, onClose }: FlavorDrawerProps) {
 
       <ConfirmDialog
         open={showDeleteConfirm}
-        title="Delete Flavor"
-        message={`Are you sure you want to delete "${flavor.name}"? This cannot be undone.`}
-        confirmLabel="Delete"
-        cancelLabel="Cancel"
+        title={COPY.DELETE_FLAVOR_TITLE}
+        message={COPY.FLAVOR_DELETE_CONFIRM_MESSAGE(flavor.name)}
+        confirmLabel={COPY.DELETE_CONFIRM_LABEL}
+        cancelLabel={COPY.CANCEL_LABEL}
         onConfirm={handleDelete}
         onClose={() => setShowDeleteConfirm(false)}
         danger
@@ -192,7 +193,7 @@ export function FlavorDrawer({ flavor, onClose }: FlavorDrawerProps) {
           setShowEditModal(false);
           setEditError(null);
         }}
-        title="Edit Pipeline Flavor"
+        title={COPY.EDIT_FLAVOR_MODAL_TITLE}
         size="lg"
         data-testid="flavor-edit-modal"
       >
@@ -201,7 +202,7 @@ export function FlavorDrawer({ flavor, onClose }: FlavorDrawerProps) {
             <ErrorBanner
               error={new Error(editError)}
               onRetry={() => setEditError(null)}
-              message="Failed to update flavor"
+              message={COPY.FLAVOR_UPDATE_ERROR}
             />
           </div>
         )}

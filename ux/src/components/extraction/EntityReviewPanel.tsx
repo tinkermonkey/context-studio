@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Chip } from "@/components/ui/Chip";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { COPY } from "@/routes/app/extraction-copy";
 import type { components } from "@/api/types";
 
 type ExtractedEntitySchema = components["schemas"]["ExtractedEntitySchema"];
@@ -103,7 +104,7 @@ function EntityRow({
           disabled={isProcessing}
           data-testid={`entity-review-approve-${entity.id}`}
         >
-          Approve
+          {COPY.APPROVE_BUTTON}
         </Button>
         <Button
           variant="ghost"
@@ -112,7 +113,7 @@ function EntityRow({
           disabled={isProcessing}
           data-testid={`entity-review-reject-${entity.id}`}
         >
-          Reject
+          {COPY.REJECT_BUTTON}
         </Button>
         <div style={{ position: "relative" }} ref={dropdownRef}>
           <Button
@@ -126,7 +127,7 @@ function EntityRow({
             disabled={isProcessing || linkingState !== null}
             data-testid={`entity-review-link-${entity.id}`}
           >
-            Link
+            {COPY.LINK_BUTTON}
             {linkingState !== null && (
               <ChevronDown
                 size={14}
@@ -143,7 +144,7 @@ function EntityRow({
               <div style={{ padding: "8px" }}>
                 <Input
                   type="text"
-                  placeholder="Search classes..."
+                  placeholder={COPY.SEARCH_CLASSES_PLACEHOLDER}
                   value={linkingState.searchQuery}
                   onChange={(e) => {
                     setLinkingState({
@@ -199,7 +200,7 @@ function EntityRow({
                       fontSize: "var(--text-sm)",
                     }}
                   >
-                    No classes found
+                    {COPY.NO_CLASSES_FOUND}
                   </div>
                 )}
               </div>
@@ -268,7 +269,7 @@ export function EntityReviewPanel({
       setIsProcessing(true);
       const defaultScheme = schemesList?.items?.[0];
       if (!defaultScheme) {
-        toast("error", "No concept scheme available for creating classes");
+        toast("error", COPY.NO_CONCEPT_SCHEME);
         return;
       }
 
@@ -281,11 +282,11 @@ export function EntityReviewPanel({
       });
 
       setLinkedIds((prev) => new Set([...prev, entity.id]));
-      toast("success", `Created class: ${entity.label}`);
+      toast("success", `${COPY.CLASS_CREATED}${entity.label}`);
     } catch (error) {
       toast(
         "error",
-        `Failed to create class: ${error instanceof Error ? error.message : "Unknown error"}`,
+        `${COPY.CLASS_CREATION_FAILED}${error instanceof Error ? error.message : "Unknown error"}`,
       );
     } finally {
       setIsProcessing(false);
@@ -294,12 +295,12 @@ export function EntityReviewPanel({
 
   const handleReject = (entityId: string) => {
     setRejectedIds((prev) => new Set([...prev, entityId]));
-    toast("info", "Entity rejected");
+    toast("info", COPY.ENTITY_REJECTED);
   };
 
   const handleLinkConfirm = (entity: ExtractedEntitySchema, _targetClassId: string) => {
     setLinkedIds((prev) => new Set([...prev, entity.id]));
-    toast("success", "Entity linked to class");
+    toast("success", COPY.ENTITY_LINKED);
   };
 
   const handleApproveAll = async () => {
@@ -309,7 +310,7 @@ export function EntityReviewPanel({
       setIsProcessing(true);
       const defaultScheme = schemesList?.items?.[0];
       if (!defaultScheme) {
-        toast("error", "No concept scheme available for creating classes");
+        toast("error", COPY.NO_CONCEPT_SCHEME);
         return;
       }
 
@@ -332,15 +333,15 @@ export function EntityReviewPanel({
 
       if (fulfilledEntityIds.length > 0) {
         setLinkedIds((prev) => new Set([...prev, ...fulfilledEntityIds]));
-        toast("success", `Created ${fulfilledEntityIds.length} class(es)`);
+        toast("success", `${COPY.CLASSES_CREATED}${fulfilledEntityIds.length}${COPY.CLASSES_CREATED_SUFFIX}`);
       }
       if (failedResults.length > 0) {
-        toast("error", `Failed to create ${failedResults.length} class(es)`);
+        toast("error", `${COPY.CLASSES_CREATION_FAILED}${failedResults.length}${COPY.CLASSES_CREATION_FAILED_SUFFIX}`);
       }
     } catch (error) {
       toast(
         "error",
-        `Batch operation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+        `${COPY.BATCH_OPERATION_FAILED}${error instanceof Error ? error.message : "Unknown error"}`,
       );
     } finally {
       setIsProcessing(false);
@@ -349,7 +350,7 @@ export function EntityReviewPanel({
 
   const handleRejectAll = () => {
     setRejectedIds((prev) => new Set([...prev, ...unlinkedEntities.map((e) => e.id)]));
-    toast("info", "All entities rejected");
+    toast("info", COPY.ALL_ENTITIES_REJECTED);
   };
 
   // Hidden state
@@ -361,7 +362,7 @@ export function EntityReviewPanel({
   if (isLoading) {
     return (
       <div data-testid={`entity-review-panel-${layerIndex}`}>
-        <Panel title={`Entity Review — ${layerName}`}>
+        <Panel title={`${COPY.ENTITY_REVIEW_PANEL_TITLE} — ${layerName}`}>
           <div className="stack">
             {[0, 1, 2].map((i) => (
               <div key={i} className="flex-row-center">
@@ -384,7 +385,7 @@ export function EntityReviewPanel({
   if (isEmpty) {
     return (
       <div data-testid={`entity-review-panel-${layerIndex}`}>
-        <Panel title={`Entity Review — ${layerName}`}>
+        <Panel title={`${COPY.ENTITY_REVIEW_PANEL_TITLE} — ${layerName}`}>
           <div
             className="stack"
             style={{
@@ -395,7 +396,7 @@ export function EntityReviewPanel({
             }}
           >
             <CheckCircle size={20} />
-            <p style={{ margin: 0 }}>All suggestions reviewed</p>
+            <p style={{ margin: 0 }}>{COPY.ALL_SUGGESTIONS_REVIEWED}</p>
           </div>
         </Panel>
       </div>
@@ -412,7 +413,7 @@ export function EntityReviewPanel({
         disabled={isProcessing}
         data-testid="entity-review-approve-all-button"
       >
-        Approve All
+        {COPY.APPROVE_ALL_BUTTON}
       </Button>
       <Button
         variant="ghost"
@@ -421,7 +422,7 @@ export function EntityReviewPanel({
         disabled={isProcessing}
         data-testid="entity-review-reject-all-button"
       >
-        Reject All
+        {COPY.REJECT_ALL_BUTTON}
       </Button>
     </div>
   );
@@ -432,7 +433,7 @@ export function EntityReviewPanel({
   return (
     <div data-testid={`entity-review-panel-${layerIndex}`}>
       <Panel
-        title={`Entity Review — ${layerName} (${unlinkedEntities.length})`}
+        title={`${COPY.ENTITY_REVIEW_PANEL_TITLE} — ${layerName} (${unlinkedEntities.length})`}
         actions={batchActions}
       >
         <div className="stack">

@@ -4,6 +4,7 @@ import { Panel } from "@/components/ui/Panel";
 import { StatTile } from "@/components/ui/StatTile";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
+import { COPY } from "@/routes/app/graph/-copy";
 
 type GraphMetricsResponse = components["schemas"]["GraphMetricsResponse"];
 
@@ -14,25 +15,25 @@ export function MetricsPanel() {
     <div className="panel-body">
       <div className="grid-2">
         <div className="stat" data-color="cyan">
-          <div className="label">Node Count</div>
+          <div className="label">{COPY.NODE_COUNT_LABEL}</div>
           <Skeleton width={40} height="1.5rem" />
         </div>
         <div className="stat" data-color="violet">
-          <div className="label">Edge Count</div>
+          <div className="label">{COPY.EDGE_COUNT_LABEL}</div>
           <Skeleton width={40} height="1.5rem" />
         </div>
         <div className="stat" data-color="amber">
-          <div className="label">Communities</div>
+          <div className="label">{COPY.COMMUNITIES_LABEL}</div>
           <Skeleton width={40} height="1.5rem" />
         </div>
         <div className="stat" data-color="emerald">
-          <div className="label">Avg Degree</div>
+          <div className="label">{COPY.AVG_DEGREE_LABEL}</div>
           <Skeleton width={40} height="1.5rem" />
         </div>
       </div>
 
       <div className="metrics-section">
-        <div className="metrics-section-title">Top Centrality</div>
+        <div className="metrics-section-title">{COPY.TOP_CENTRALITY_SECTION}</div>
         <div className="centrality-list-skeleton">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="centrality-row-skeleton">
@@ -47,7 +48,7 @@ export function MetricsPanel() {
 
   const renderEmptyState = () => (
     <div className="metrics-empty-state">
-      <p>Build the graph to see metrics</p>
+      <p>{COPY.BUILD_GRAPH_TO_SEE_METRICS}</p>
     </div>
   );
 
@@ -79,14 +80,14 @@ export function MetricsPanel() {
       <div className="panel-body">
         <div className="grid-2">
           <div data-testid="graph-metrics-node-count">
-            <StatTile label="Node Count" value={nodeCount.toString()} color="cyan" />
+            <StatTile label={COPY.NODE_COUNT_LABEL} value={nodeCount.toString()} color="cyan" />
           </div>
           <div data-testid="graph-metrics-edge-count">
-            <StatTile label="Edge Count" value={Math.round(edgeCount).toString()} color="violet" />
+            <StatTile label={COPY.EDGE_COUNT_LABEL} value={Math.round(edgeCount).toString()} color="violet" />
           </div>
           <div data-testid="graph-metrics-community-count">
             <StatTile
-              label="Communities"
+              label={COPY.COMMUNITIES_LABEL}
               value={communityCount.toString()}
               color="amber"
               sub={metrics.algorithm}
@@ -94,7 +95,7 @@ export function MetricsPanel() {
           </div>
           <div data-testid="graph-metrics-avg-degree">
             <StatTile
-              label="Avg Degree"
+              label={COPY.AVG_DEGREE_LABEL}
               value={metrics.average_degree.toFixed(2)}
               color="emerald"
             />
@@ -103,7 +104,7 @@ export function MetricsPanel() {
 
         {topCentralityNodes.length > 0 && (
           <div className="metrics-section">
-            <div className="metrics-section-title">Top Centrality Nodes</div>
+            <div className="metrics-section-title">{COPY.TOP_CENTRALITY_NODES_SECTION}</div>
             <div data-testid="graph-metrics-centrality-list" className="centrality-list">
               {topCentralityNodes.map(([nodeId, score], index) => (
                 <div key={nodeId} className="centrality-row">
@@ -120,7 +121,7 @@ export function MetricsPanel() {
 
         {degreeDistributionEntries.length > 0 && (
           <div className="metrics-section">
-            <div className="metrics-section-title">Degree Distribution</div>
+            <div className="metrics-section-title">{COPY.DEGREE_DISTRIBUTION_SECTION}</div>
             <div data-testid="graph-metrics-degree-distribution" className="degree-chart">
               {degreeDistributionEntries.map(({ degree, count }) => (
                 <div key={degree} className="degree-bar-container">
@@ -143,13 +144,13 @@ export function MetricsPanel() {
 
   return (
     <div data-testid="graph-metrics-panel" id="panel-metrics">
-      <Panel title="Graph Metrics">
+      <Panel title={COPY.METRICS_PANEL_TITLE}>
         {error && !isLoading && !data ? (
           <div className="panel-body">
             <ErrorBanner
               error={error as Error}
               onRetry={() => refetch()}
-              message="Failed to load metrics"
+              message={COPY.METRICS_LOAD_ERROR}
               compact
             />
           </div>

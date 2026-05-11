@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { COPY } from "./-copy";
 
 type StatusFilter = "all" | "enabled" | "disabled";
 
@@ -62,7 +63,7 @@ function PipelinesContent() {
         <ErrorBanner
           error={error}
           onRetry={() => refetch()}
-          message="Failed to load pipelines"
+          message={COPY.PIPELINES_LOAD_ERROR}
           daemonLogPath="/local-server/logs/context_studio.log"
         />
       </div>
@@ -73,10 +74,10 @@ function PipelinesContent() {
     return (
       <div data-testid="pipelines-page">
         <EmptyState
-          title="No pipelines yet"
-          description="Create your first pipeline to get started with extraction and processing."
+          title={COPY.NO_PIPELINES_TITLE}
+          description={COPY.NO_PIPELINES_DESCRIPTION}
           action={{
-            label: "Create Pipeline",
+            label: COPY.CREATE_PIPELINE_CTA,
             onClick: () => {
               /* Pipeline creation route not yet implemented */
             },
@@ -92,31 +93,31 @@ function PipelinesContent() {
   return (
     <div data-testid="pipelines-page">
       <div className="page-head">
-        <h1>Pipelines</h1>
+        <h1>{COPY.PIPELINES_PAGE_TITLE}</h1>
         <Button variant="primary" disabled title="Pipeline creation is not yet implemented">
           <Plus size={16} style={{ marginRight: "4px" }} />
-          New Pipeline
+          {COPY.NEW_PIPELINE_BUTTON}
         </Button>
       </div>
 
       <div className="stack" style={{ marginBottom: "var(--space-6)" }}>
         <Input
           type="text"
-          placeholder="Search by name, provider, or model…"
+          placeholder={COPY.SEARCH_PIPELINES_PLACEHOLDER}
           value={searchFilter}
           onChange={(e) => setSearchFilter(e.target.value)}
           data-testid="pipelines-search-input"
         />
         <div
           role="radiogroup"
-          aria-label="Filter pipelines by status"
+          aria-label={COPY.FILTER_PIPELINES_LABEL}
           style={{ display: "flex", gap: "var(--space-2)" }}
         >
           {(
             [
-              { label: "All", value: "all" },
-              { label: "Enabled", value: "enabled" },
-              { label: "Disabled", value: "disabled" },
+              { label: COPY.FILTER_ALL, value: "all" },
+              { label: COPY.FILTER_ENABLED, value: "enabled" },
+              { label: COPY.FILTER_DISABLED, value: "disabled" },
             ] as const
           ).map((option) => (
             <button
@@ -136,8 +137,8 @@ function PipelinesContent() {
 
       {showFilteredEmpty ? (
         <EmptyState
-          title="No pipelines match your filters"
-          description="Try adjusting your search or filter criteria."
+          title={COPY.NO_PIPELINES_FILTERED_TITLE}
+          description={COPY.NO_PIPELINES_FILTERED_DESCRIPTION}
         />
       ) : (
         <div data-testid="pipelines-grid" className="grid-2">

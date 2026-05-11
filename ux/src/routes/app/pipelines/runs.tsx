@@ -10,6 +10,7 @@ import { SchemaTable } from "@/components/schema/SchemaTable";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
+import { COPY } from "./-copy";
 import type { components } from "@/api/types";
 
 type ExecutionWithPipeline = components["schemas"]["ExecutionWithPipelineResponse"];
@@ -76,7 +77,7 @@ function RunsPageContent() {
   const runColumns: ColumnDef<ExecutionWithPipeline>[] = [
     {
       accessorKey: "status",
-      header: "Status",
+      header: COPY.RUN_STATUS_HEADER,
       size: 100,
       cell: (info) => {
         const status = info.getValue() as string;
@@ -89,7 +90,7 @@ function RunsPageContent() {
     },
     {
       accessorKey: "pipeline_title",
-      header: "Pipeline",
+      header: COPY.PIPELINES_PAGE_TITLE,
       cell: (info) => {
         const title = info.getValue() as string;
         const pipelineId = info.row.original.pipeline_config_id;
@@ -107,7 +108,7 @@ function RunsPageContent() {
     },
     {
       accessorKey: "timestamp",
-      header: "Started",
+      header: COPY.RUN_STARTED_HEADER,
       cell: (info) => {
         const timestamp = info.getValue() as string;
         return (
@@ -122,7 +123,7 @@ function RunsPageContent() {
     },
     {
       accessorKey: "duration_ms",
-      header: "Duration",
+      header: COPY.RUN_DURATION_HEADER,
       cell: (info) => {
         const duration = info.getValue() as number;
         return (
@@ -134,7 +135,7 @@ function RunsPageContent() {
     },
     {
       id: "tokens",
-      header: "Records",
+      header: COPY.RUN_TOKENS_HEADER,
       cell: ({ row }) => {
         const total = (row.original.tokens_in || 0) + (row.original.tokens_out || 0);
         return (
@@ -154,7 +155,7 @@ function RunsPageContent() {
           data-testid={`view-log-${row.original.id}`}
           className="runs-view-log-link"
         >
-          View log
+          {COPY.PIPELINE_VIEW_LOG}
           <ExternalLink size={12} />
         </a>
       ),
@@ -179,7 +180,7 @@ function RunsPageContent() {
         <ErrorBanner
           error={error}
           onRetry={() => refetch()}
-          message="Failed to load pipeline runs"
+          message={COPY.PIPELINES_LOAD_ERROR}
           daemonLogPath="/local-server/logs/context_studio.log"
         />
       </div>
@@ -187,8 +188,8 @@ function RunsPageContent() {
   } else if (totalCount === 0) {
     content = (
       <EmptyState
-        title="No pipeline runs yet"
-        description="Execute a pipeline to see run history here."
+        title={COPY.NO_RUNS_TITLE}
+        description={COPY.NO_RUNS_DESCRIPTION}
       />
     );
   } else {
@@ -198,24 +199,24 @@ function RunsPageContent() {
     content = (
       <>
         <div className="page-head">
-          <h1>Run History</h1>
+          <h1>{COPY.RUN_HISTORY_PAGE_TITLE}</h1>
         </div>
 
         <div className="stack runs-filter-bar">
           <Input
             type="text"
-            placeholder="Search by pipeline name…"
+            placeholder={COPY.SEARCH_RUNS_PLACEHOLDER}
             value={searchFilter}
             onChange={(e) => setSearchFilter(e.target.value)}
             data-testid="runs-search-input"
           />
-          <div role="radiogroup" aria-label="Filter runs by status" className="runs-filter-group">
+          <div role="radiogroup" aria-label={COPY.FILTER_RUNS_LABEL} className="runs-filter-group">
             {(
               [
-                { label: "All", value: "all" },
-                { label: "Success", value: "success" },
-                { label: "Error", value: "error" },
-                { label: "Timeout", value: "timeout" },
+                { label: COPY.FILTER_ALL, value: "all" },
+                { label: COPY.STATUS_FILTER_SUCCESS, value: "success" },
+                { label: COPY.STATUS_FILTER_ERROR, value: "error" },
+                { label: COPY.STATUS_FILTER_TIMEOUT, value: "timeout" },
               ] as const
             ).map((option) => (
               <button
@@ -238,8 +239,8 @@ function RunsPageContent() {
 
         {showFilteredEmpty ? (
           <EmptyState
-            title="No runs match your filter"
-            description="Try adjusting your search or filter criteria."
+            title={COPY.NO_RUNS_FILTERED_TITLE}
+            description={COPY.NO_RUNS_FILTERED_DESCRIPTION}
           />
         ) : (
           <>
@@ -255,7 +256,7 @@ function RunsPageContent() {
                   onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
                   data-testid="pagination-prev"
                 >
-                  Previous
+                  {COPY.PAGINATION_PREVIOUS}
                 </Button>
                 <span className="runs-page-counter">
                   Page {currentPage + 1} of {Math.ceil(totalCount / pageSize)}
@@ -266,7 +267,7 @@ function RunsPageContent() {
                   onClick={() => setCurrentPage(currentPage + 1)}
                   data-testid="pagination-next"
                 >
-                  Next
+                  {COPY.PAGINATION_NEXT}
                 </Button>
               </div>
             )}

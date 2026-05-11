@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { Panel } from "@/components/ui/Panel";
 import { Chip } from "@/components/ui/Chip";
+import { COPY } from "@/routes/app/extraction-copy";
 import type { components } from "@/api/types";
 
 type ExtractionLayerResultSchema = components["schemas"]["ExtractionLayerResultSchema"];
@@ -40,7 +41,7 @@ export function ExtractionResultPanel({
 
   const renderContent = () => {
     if (isLoading) {
-      return <div style={{ padding: "12px", color: "var(--canvas-fg-2)" }}>Loading...</div>;
+      return <div style={{ padding: "12px", color: "var(--canvas-fg-2)" }}>{COPY.LOADING_STATE}</div>;
     }
 
     if (error) {
@@ -53,7 +54,7 @@ export function ExtractionResultPanel({
 
     if (entities.length === 0) {
       return (
-        <div style={{ padding: "12px", color: "var(--canvas-fg-2)" }}>No entities extracted</div>
+        <div style={{ padding: "12px", color: "var(--canvas-fg-2)" }}>{COPY.NO_ENTITIES_EXTRACTED}</div>
       );
     }
 
@@ -63,7 +64,7 @@ export function ExtractionResultPanel({
           <div
             style={{ marginBottom: "8px", fontSize: "var(--text-sm)", color: "var(--canvas-fg-2)" }}
           >
-            Entities ({entities.length})
+            {COPY.ENTITIES_LABEL} ({entities.length})
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
             {entities.map((entity) => (
@@ -109,7 +110,7 @@ export function ExtractionResultPanel({
       className="btn btn-icon"
       onClick={() => setShowRawJson(!showRawJson)}
       style={{ padding: "4px", display: "flex", alignItems: "center" }}
-      title={showRawJson ? "Hide raw JSON" : "Show raw JSON"}
+      title={showRawJson ? COPY.HIDE_RAW_JSON : COPY.SHOW_RAW_JSON}
       aria-expanded={showRawJson}
       aria-controls={`${testId}-json`}
     >

@@ -3,6 +3,7 @@ import { Upload } from "lucide-react";
 import { Textarea } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useToasts } from "@/components/ui/Toast";
+import { COPY } from "@/routes/app/extraction-copy";
 
 interface ExtractionInputProps {
   onExtract: (text: string) => void;
@@ -21,7 +22,7 @@ export function ExtractionInput({ onExtract, isLoading = false }: ExtractionInpu
     try {
       let content = "";
       if (file.type === "application/pdf") {
-        toast("warning", "PDF support coming soon", "Please paste text or upload .txt/.md files.");
+        toast("warning", COPY.PDF_SUPPORT_WARNING, COPY.PDF_SUPPORT_HINT);
         return;
       } else {
         // Read text and markdown files
@@ -30,7 +31,7 @@ export function ExtractionInput({ onExtract, isLoading = false }: ExtractionInpu
       setText(content);
     } catch (error) {
       console.error("Failed to read file:", error);
-      toast("error", "Failed to read file", "Please try again.");
+      toast("error", COPY.FILE_READ_ERROR, COPY.FILE_READ_RETRY);
     }
 
     // Reset file input
@@ -51,14 +52,14 @@ export function ExtractionInput({ onExtract, isLoading = false }: ExtractionInpu
   return (
     <div className="panel" data-testid="extraction-input">
       <div className="panel-head">
-        <span className="panel-title">Input</span>
+        <span className="panel-title">{COPY.INPUT_PANEL_TITLE}</span>
       </div>
       <div className="panel-body">
         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
           <Textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Paste text here to extract entities, relationships, and embeddings..."
+            placeholder={COPY.INPUT_PLACEHOLDER}
             rows={8}
             style={{ resize: "vertical" }}
           />
@@ -72,7 +73,7 @@ export function ExtractionInput({ onExtract, isLoading = false }: ExtractionInpu
               color: "var(--canvas-fg-2)",
             }}
           >
-            <span>{characterCount} characters</span>
+            <span>{characterCount} {COPY.CHARACTERS_LABEL}</span>
           </div>
 
           <div style={{ display: "flex", gap: "8px", flexDirection: "column" }}>
@@ -83,7 +84,7 @@ export function ExtractionInput({ onExtract, isLoading = false }: ExtractionInpu
               style={{ width: "100%" }}
               aria-busy={isLoading}
             >
-              {isLoading ? "Extracting..." : "Extract"}
+              {isLoading ? COPY.EXTRACTING_BUTTON : COPY.EXTRACT_BUTTON}
             </Button>
 
             <button
@@ -95,7 +96,7 @@ export function ExtractionInput({ onExtract, isLoading = false }: ExtractionInpu
               aria-label="Upload a file (.txt, .md, .pdf) to extract entities"
             >
               <Upload size={16} style={{ marginRight: "8px" }} />
-              Or upload a file (.txt, .md, .pdf)
+              {COPY.UPLOAD_FILE_BUTTON}
             </button>
             <input
               ref={fileInputRef}

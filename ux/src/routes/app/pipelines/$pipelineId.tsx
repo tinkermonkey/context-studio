@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import { PipelineDetailPanel } from "@/components/pipeline/PipelineDetailPanel";
+import { COPY } from "./-copy";
 
 function PipelineDetailContent() {
   const { pipelineId } = useParams({ from: "/app/pipelines/$pipelineId" });
@@ -42,7 +43,7 @@ function PipelineDetailContent() {
       <div data-testid="pipeline-detail">
         <ErrorBanner
           error={pipelineError}
-          message="Failed to load pipeline"
+          message={COPY.PIPELINE_LOAD_ERROR}
           daemonLogPath="/local-server/logs/context_studio.log"
           onRetry={() => {}}
         />

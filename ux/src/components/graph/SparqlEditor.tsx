@@ -3,6 +3,7 @@ import { Loader2 } from "lucide-react";
 import { Textarea } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useSparqlQuery } from "@/api/hooks/graph";
+import { COPY } from "@/routes/app/graph/-copy";
 
 const PLACEHOLDER_QUERY = `PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -44,7 +45,7 @@ export function SparqlEditor() {
     <div data-testid="sparql-editor" className="stack-lg">
       <div>
         <label htmlFor="sparql-query-textarea" className="form-group-label">
-          SPARQL Query
+          {COPY.SPARQL_QUERY_LABEL}
         </label>
         <Textarea
           id="sparql-query-textarea"
@@ -67,7 +68,7 @@ export function SparqlEditor() {
             marginTop: "var(--space-2)",
           }}
         >
-          Press Ctrl+Enter (or ⌘+Enter on Mac) to run
+          {COPY.SPARQL_KEYBOARD_HINT}
         </div>
       </div>
 
@@ -81,10 +82,10 @@ export function SparqlEditor() {
         {isPending ? (
           <>
             <Loader2 size={16} className="animate-spin" data-testid="sparql-loading-spinner" />
-            Running...
+            {COPY.RUNNING_QUERY_BUTTON}
           </>
         ) : (
-          "Run Query"
+          COPY.RUN_QUERY_BUTTON
         )}
       </Button>
 
@@ -100,9 +101,9 @@ export function SparqlEditor() {
             border: "1px solid var(--rose-200)",
           }}
         >
-          <p style={{ margin: 0, fontWeight: 500, marginBottom: "var(--space-2)" }}>Query Error</p>
+          <p style={{ margin: 0, fontWeight: 500, marginBottom: "var(--space-2)" }}>{COPY.QUERY_ERROR_TITLE}</p>
           <p style={{ margin: 0 }}>
-            {error instanceof Error ? error.message : "An error occurred while executing the query"}
+            {error instanceof Error ? error.message : COPY.QUERY_ERROR_DEFAULT}
           </p>
         </div>
       )}
@@ -119,7 +120,7 @@ export function SparqlEditor() {
             textAlign: "center",
           }}
         >
-          Query returned no results
+          {COPY.QUERY_NO_RESULTS}
         </div>
       )}
 
@@ -134,7 +135,7 @@ export function SparqlEditor() {
             textAlign: "center",
           }}
         >
-          Enter a SPARQL query and click Run
+          {COPY.QUERY_IDLE_STATE}
         </div>
       )}
 

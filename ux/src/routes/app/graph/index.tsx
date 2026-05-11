@@ -10,6 +10,7 @@ import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Tabs } from "@/components/ui/Tabs";
+import { COPY } from "./-copy";
 import "@/design-system/graph.css";
 
 export const Route = createFileRoute("/app/graph/")({
@@ -31,8 +32,8 @@ function GraphPage() {
     <div data-testid="graph-page">
       <div className="page-head">
         <div>
-          <h1>Graph Visualization</h1>
-          <p className="subtitle">Explore your knowledge graph</p>
+          <h1>{COPY.PAGE_TITLE}</h1>
+          <p className="subtitle">{COPY.PAGE_SUBTITLE}</p>
         </div>
         <button
           className="btn btn-primary"
@@ -43,12 +44,12 @@ function GraphPage() {
           {isLoading ? (
             <>
               <RotateCw size={16} className="animate-spin" />
-              Building...
+              {COPY.BUILDING_GRAPH_BUTTON}
             </>
           ) : (
             <>
               <RotateCw size={16} />
-              Build Graph
+              {COPY.BUILD_GRAPH_BUTTON}
             </>
           )}
         </button>
@@ -58,7 +59,7 @@ function GraphPage() {
         <ErrorBanner
           error={error as Error}
           onRetry={() => graphVisualization.mutate()}
-          message="Failed to build graph"
+          message={COPY.ERROR_MESSAGE}
         />
       )}
 
@@ -72,10 +73,10 @@ function GraphPage() {
       {!isLoading && !hasData && !error && (
         <EmptyState
           icon={<Network size={48} />}
-          title="No graph data"
-          description="Build a graph to visualize your knowledge base"
+          title={COPY.EMPTY_STATE_TITLE}
+          description={COPY.EMPTY_STATE_DESCRIPTION}
           action={{
-            label: "Build Graph",
+            label: COPY.BUILD_GRAPH_BUTTON,
             onClick: () => graphVisualization.mutate(),
           }}
         />
@@ -92,10 +93,10 @@ function GraphPage() {
           <aside className="graph-inspector" role="complementary" aria-label="Inspector panel">
             <Tabs
               tabs={[
-                { id: "metrics", label: "Metrics" },
-                { id: "path", label: "Path Finder" },
-                { id: "sparql", label: "SPARQL Query" },
-                { id: "node", label: "Node Inspector" },
+                { id: "metrics", label: COPY.METRICS_TAB },
+                { id: "path", label: COPY.PATH_FINDER_TAB },
+                { id: "sparql", label: COPY.SPARQL_QUERY_TAB },
+                { id: "node", label: COPY.NODE_INSPECTOR_TAB },
               ]}
               active={activeTab}
               onChange={setActiveTab}
@@ -124,14 +125,14 @@ function GraphPage() {
                   <div>
                     <div className="gi-head">
                       <div className="gi-title">{selectedNodeId}</div>
-                      <div className="gi-id">Node ID</div>
+                      <div className="gi-id">{COPY.NODE_ID_LABEL}</div>
                     </div>
                     <div className="gi-body">
-                      <p className="gi-desc">Selected node details</p>
+                      <p className="gi-desc">{COPY.SELECTED_NODE_DETAILS}</p>
                     </div>
                   </div>
                 ) : (
-                  <div className="empty">No node selected</div>
+                  <div className="empty">{COPY.NO_NODE_SELECTED}</div>
                 )}
               </div>
             )}

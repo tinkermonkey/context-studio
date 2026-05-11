@@ -10,6 +10,7 @@ import { useToasts } from "@/components/ui/Toast";
 import { Chip } from "@/components/ui/Chip";
 import { formatRelativeTime, formatDuration } from "@/utils/formatters";
 import { useExecutionStore } from "@/stores/executionStore";
+import { COPY } from "@/routes/app/pipelines/-copy";
 import type { components } from "@/api/types";
 
 type PipelineConfigurationResponse = components["schemas"]["PipelineConfigurationResponse"];
@@ -71,7 +72,7 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
       lastSavedAtRef.current = new Date();
     },
     onError: (error) => {
-      toast("error", `Autosave failed: ${error.message}`);
+      toast("error", COPY.AUTOSAVE_FAILED(error.message));
     },
   });
 
@@ -87,9 +88,9 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
       });
       lastSavedAtRef.current = new Date();
       setIsEditingConfig(false);
-      toast("success", "Pipeline configuration saved");
+      toast("success", COPY.PIPELINE_CONFIG_SAVED);
     } catch (error) {
-      toast("error", error instanceof Error ? error.message : "Failed to save configuration");
+      toast("error", error instanceof Error ? error.message : COPY.PIPELINE_CONFIG_SAVE_ERROR);
     }
   };
 
@@ -106,12 +107,12 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
         inputText: "",
       });
       if (execution.status === "success") {
-        toast("success", `Pipeline '${pipeline.title}' completed`);
+        toast("success", COPY.PIPELINE_COMPLETED(pipeline.title));
       } else if (execution.status === "error" || execution.status === "timeout") {
-        toast("error", `Pipeline '${pipeline.title}' failed`);
+        toast("error", COPY.PIPELINE_FAILED(pipeline.title));
       }
     } catch (error) {
-      toast("error", error instanceof Error ? error.message : "Failed to run pipeline");
+      toast("error", error instanceof Error ? error.message : COPY.PIPELINE_RUN_ERROR);
     } finally {
       endExecution(pipeline.id);
     }
@@ -156,7 +157,7 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
         {/* Definition Editor Section */}
         <div>
           <div className="flex-between">
-            <label className="form-group-label">Pipeline Configuration</label>
+            <label className="form-group-label">{COPY.PIPELINE_CONFIGURATION_LABEL}</label>
             {!isEditingConfig && (
               <Button
                 variant="ghost"
@@ -164,7 +165,7 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
                 onClick={() => setIsEditingConfig(true)}
                 data-testid="pipeline-edit-config-button"
               >
-                Edit
+                {COPY.PIPELINE_EDIT_BUTTON}
               </Button>
             )}
           </div>
@@ -186,7 +187,7 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
                   disabled={updateMutation.isPending || !isDirty}
                   data-testid="pipeline-save-config-button"
                 >
-                  Save
+                  {COPY.PIPELINE_SAVE_BUTTON}
                 </Button>
                 <Button
                   variant="ghost"
@@ -194,7 +195,7 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
                   onClick={handleRevert}
                   data-testid="pipeline-revert-config-button"
                 >
-                  Cancel
+                  {COPY.PIPELINE_CANCEL_BUTTON}
                 </Button>
               </div>
             </div>
@@ -207,7 +208,7 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
 
         {/* Last 10 Runs Section */}
         <div>
-          <label className="form-group-label">Last 10 Runs</label>
+          <label className="form-group-label">{COPY.LAST_10_RUNS_LABEL}</label>
           {executionsLoading ? (
             <div className="stack">
               {Array.from({ length: 3 }).map((_, i) => (
@@ -216,17 +217,17 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
             </div>
           ) : executions.length === 0 ? (
             <div className="pipeline-empty-state" data-testid="pipeline-no-runs">
-              This pipeline has never been run
+              {COPY.PIPELINE_NO_RUNS}
             </div>
           ) : (
             <div className="stack">
               <table className="t" data-testid="pipeline-runs-table">
                 <thead>
                   <tr>
-                    <th style={{ textAlign: "left" }}>Status</th>
-                    <th style={{ textAlign: "left" }}>Started</th>
-                    <th style={{ textAlign: "left" }}>Duration</th>
-                    <th style={{ textAlign: "left" }}>Tokens</th>
+                    <th style={{ textAlign: "left" }}>{COPY.RUN_STATUS_HEADER}</th>
+                    <th style={{ textAlign: "left" }}>{COPY.RUN_STARTED_HEADER}</th>
+                    <th style={{ textAlign: "left" }}>{COPY.RUN_DURATION_HEADER}</th>
+                    <th style={{ textAlign: "left" }}>{COPY.RUN_TOKENS_HEADER}</th>
                     <th style={{ textAlign: "right", width: 40 }} />
                   </tr>
                 </thead>
@@ -254,7 +255,7 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
                             aria-expanded={expandedLogId === execution.id}
                             data-testid={`pipeline-view-log-${execution.id}`}
                           >
-                            View log
+                            {COPY.PIPELINE_VIEW_LOG}
                           </Button>
                         )}
                       </td>
@@ -270,13 +271,13 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
         {expandedExecution && expandedExecution.error_message && (
           <div data-testid="pipeline-error-log" className="pipeline-error-log">
             <div className="flex-between" style={{ marginBottom: "var(--space-2)" }}>
-              <span className="error-log-title">Error Details</span>
+              <span className="error-log-title">{COPY.ERROR_DETAILS_TITLE}</span>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => {
                   navigator.clipboard.writeText(expandedExecution.error_message || "");
-                  toast("success", "Error copied to clipboard");
+                  toast("success", COPY.ERROR_COPIED);
                 }}
                 aria-label="Copy error to clipboard"
                 data-testid="pipeline-copy-error-button"

@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { useShortestPath } from "@/api/hooks/graph";
+import { COPY } from "@/routes/app/graph/-copy";
 import type { components } from "@/api/types";
 
 type ClassResponse = components["schemas"]["ClassResponse"];
@@ -118,7 +119,7 @@ function NodeTypeahead({
         <>
           <Input
             type="text"
-            placeholder="Type to search (min 2 chars)"
+            placeholder={COPY.PATH_FINDER_SEARCH_PLACEHOLDER}
             value={search}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
@@ -198,7 +199,7 @@ export function PathFinder({ onNodeSelect }: PathFinderProps) {
   return (
     <div data-testid="path-finder" className="stack-lg">
       <NodeTypeahead
-        label="Source Node"
+        label={COPY.SOURCE_NODE_LABEL}
         selectedNode={selectedSource || null}
         onSelect={(cls) => setSourceId(cls.id)}
         onClear={handleClearSource}
@@ -207,7 +208,7 @@ export function PathFinder({ onNodeSelect }: PathFinderProps) {
       />
 
       <NodeTypeahead
-        label="Target Node"
+        label={COPY.TARGET_NODE_LABEL}
         selectedNode={selectedTarget || null}
         onSelect={(cls) => setTargetId(cls.id)}
         onClear={handleClearTarget}
@@ -225,10 +226,10 @@ export function PathFinder({ onNodeSelect }: PathFinderProps) {
         {isLoading ? (
           <>
             <Loader2 size={16} className="animate-spin" />
-            Finding path...
+            {COPY.FINDING_PATH_BUTTON}
           </>
         ) : (
-          "Find Path"
+          COPY.FIND_PATH_BUTTON
         )}
       </Button>
 
@@ -245,7 +246,7 @@ export function PathFinder({ onNodeSelect }: PathFinderProps) {
           }}
         >
           <p style={{ margin: 0 }}>
-            {error instanceof Error ? error.message : "Failed to find path"}
+            {error instanceof Error ? error.message : COPY.PATH_FINDER_ERROR_DEFAULT}
           </p>
         </div>
       )}
@@ -262,7 +263,7 @@ export function PathFinder({ onNodeSelect }: PathFinderProps) {
             textAlign: "center",
           }}
         >
-          <p style={{ margin: 0 }}>No path found between these nodes</p>
+          <p style={{ margin: 0 }}>{COPY.NO_PATH_FOUND}</p>
         </div>
       )}
 
