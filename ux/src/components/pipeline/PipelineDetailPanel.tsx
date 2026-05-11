@@ -61,15 +61,23 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
     data: isEditingConfig ? undefined : configText,
     mutationFn: async () => {
       if (!isDirty) return;
-      await updateMutation.mutateAsync({
-        id: pipeline.id,
-        data: {
-          title: pipeline.title,
-          enabled: pipeline.enabled,
-          config: JSON.parse(configText),
-        },
-      });
-      lastSavedAtRef.current = new Date();
+      try {
+        const parsed = JSON.parse(configText);
+        await updateMutation.mutateAsync({
+          id: pipeline.id,
+          data: {
+            title: pipeline.title,
+            enabled: pipeline.enabled,
+            config: parsed,
+          },
+        });
+        lastSavedAtRef.current = new Date();
+      } catch (error) {
+        if (error instanceof SyntaxError) {
+          throw new Error("Invalid JSON in pipeline configuration");
+        }
+        throw error;
+      }
     },
     onError: (error) => {
       toast("error", COPY.AUTOSAVE_FAILED(error.message));
@@ -271,9 +279,13 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => {
-                  navigator.clipboard.writeText(expandedExecution.error_message || "");
-                  toast("success", COPY.ERROR_COPIED);
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(expandedExecution.error_message || "");
+                    toast("success", COPY.ERROR_COPIED);
+                  } catch {
+                    toast("error", "Failed to copy error message");
+                  }
                 }}
                 aria-label="Copy error to clipboard"
                 data-testid="pipeline-copy-error-button"

@@ -17,6 +17,7 @@ function PipelineDetailContent() {
     data: pipeline,
     isLoading: pipelineLoading,
     error: pipelineError,
+    refetch: refetchPipeline,
   } = usePipeline(pipelineId);
 
   const isLoading = pipelinesLoading || pipelineLoading;
@@ -45,7 +46,7 @@ function PipelineDetailContent() {
           error={pipelineError}
           message={COPY.PIPELINE_LOAD_ERROR}
           daemonLogPath="/local-server/logs/context_studio.log"
-          onRetry={() => {}}
+          onRetry={refetchPipeline}
         />
       </div>
     );
