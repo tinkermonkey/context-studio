@@ -316,6 +316,8 @@ function IndividualsPageWrapper() {
     if (!editingId) return;
 
     try {
+      // Class changes are handled separately via dedicated add/remove class mutations.
+      // The IndividualEditor prevents class changes during edit mode anyway.
       await updateMutation.mutateAsync({
         id: editingId,
         data: {

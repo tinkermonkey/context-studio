@@ -99,9 +99,7 @@ export function IndividualEditor({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const performSubmit = async () => {
     if (!validateTitle(title)) {
       return;
     }
@@ -119,10 +117,15 @@ export function IndividualEditor({
     });
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await performSubmit();
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
       e.preventDefault();
-      handleSubmit(e as unknown as React.FormEvent);
+      performSubmit();
     }
   };
 
