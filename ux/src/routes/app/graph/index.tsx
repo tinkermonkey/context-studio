@@ -99,7 +99,7 @@ function GraphPage() {
             {activeTab === "metrics" ? (
               <MetricsPanel />
             ) : (
-              <div className="panel">
+              <div className="panel" id="panel-node">
                 {selectedNodeId ? (
                   <div>
                     <div className="gi-head">

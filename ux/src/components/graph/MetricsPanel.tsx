@@ -11,46 +11,44 @@ export function MetricsPanel() {
   const { data, isLoading, error, refetch } = useGraphMetrics();
 
   const renderLoadingState = () => (
-    <div className="metrics-grid">
-      <div className="stat" data-color="cyan">
-        <div className="label">Node Count</div>
-        <Skeleton width={40} height="1.5rem" />
-      </div>
-      <div className="stat" data-color="violet">
-        <div className="label">Edge Count</div>
-        <Skeleton width={40} height="1.5rem" />
-      </div>
-      <div className="stat" data-color="amber">
-        <div className="label">Communities</div>
-        <Skeleton width={40} height="1.5rem" />
-      </div>
-      <div className="stat" data-color="emerald">
-        <div className="label">Avg Degree</div>
-        <Skeleton width={40} height="1.5rem" />
+    <div className="panel-body">
+      <div className="grid-2">
+        <div className="stat" data-color="cyan">
+          <div className="label">Node Count</div>
+          <Skeleton width={40} height="1.5rem" />
+        </div>
+        <div className="stat" data-color="violet">
+          <div className="label">Edge Count</div>
+          <Skeleton width={40} height="1.5rem" />
+        </div>
+        <div className="stat" data-color="amber">
+          <div className="label">Communities</div>
+          <Skeleton width={40} height="1.5rem" />
+        </div>
+        <div className="stat" data-color="emerald">
+          <div className="label">Avg Degree</div>
+          <Skeleton width={40} height="1.5rem" />
+        </div>
       </div>
 
-      <div style={{ gridColumn: "1 / -1", marginTop: "1rem" }}>
-        <div style={{ fontSize: "0.875rem", fontWeight: 500, marginBottom: "0.5rem" }}>
+      <div className="metrics-section">
+        <div className="metrics-section-title">
           Top Centrality
         </div>
-        {[...Array(5)].map((_, i) => (
-          <div key={i} style={{ display: "flex", gap: "0.5rem", marginBottom: "0.5rem" }}>
-            <Skeleton width={100} height="1.25rem" />
-            <Skeleton width={40} height="1.25rem" />
-          </div>
-        ))}
+        <div className="centrality-list-skeleton">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="centrality-row-skeleton">
+              <Skeleton width={100} height="1.25rem" />
+              <Skeleton width={40} height="1.25rem" />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
 
   const renderEmptyState = () => (
-    <div
-      style={{
-        textAlign: "center",
-        padding: "2rem 1rem",
-        color: "var(--text-secondary)",
-      }}
-    >
+    <div className="metrics-empty-state">
       <p>Build the graph to see metrics</p>
     </div>
   );
@@ -63,96 +61,71 @@ export function MetricsPanel() {
     const centralityEntries = Object.entries(metrics.centrality).sort(([, a], [, b]) => b - a);
     const topCentralityNodes = centralityEntries.slice(0, 10);
 
-    const maxDegree = Math.max(...Object.values(metrics.degree_distribution));
-    const degreeDistributionEntries = Object.entries(metrics.degree_distribution)
+    // Aggregate degree_distribution (node_id → degree) into histogram (degree → count)
+    const degreeHistogram: Record<number, number> = {};
+    Object.entries(metrics.degree_distribution).forEach(([, degree]) => {
+      const d = degree as number;
+      degreeHistogram[d] = (degreeHistogram[d] || 0) + 1;
+    });
+
+    const degreeDistributionEntries = Object.entries(degreeHistogram)
       .map(([degree, count]) => ({ degree: parseInt(degree, 10), count }))
       .sort((a, b) => a.degree - b.degree);
 
+    const maxDegree = degreeDistributionEntries.length > 0
+      ? Math.max(...degreeDistributionEntries.map(e => e.count))
+      : 0;
+
     return (
-      <div className="metrics-grid">
-        <div data-testid="graph-metrics-node-count">
-          <StatTile label="Node Count" value={nodeCount.toString()} color="cyan" />
-        </div>
-        <div data-testid="graph-metrics-edge-count">
-          <StatTile label="Edge Count" value={Math.round(edgeCount).toString()} color="violet" />
-        </div>
-        <div data-testid="graph-metrics-community-count">
-          <StatTile
-            label="Communities"
-            value={communityCount.toString()}
-            color="amber"
-            sub={`${metrics.algorithm}`}
-          />
-        </div>
-        <div data-testid="graph-metrics-avg-degree">
-          <StatTile
-            label="Avg Degree"
-            value={metrics.average_degree.toFixed(2)}
-            color="emerald"
-            sub="betweenness"
-          />
+      <div className="panel-body">
+        <div className="grid-2">
+          <div data-testid="graph-metrics-node-count">
+            <StatTile label="Node Count" value={nodeCount.toString()} color="cyan" />
+          </div>
+          <div data-testid="graph-metrics-edge-count">
+            <StatTile label="Edge Count" value={Math.round(edgeCount).toString()} color="violet" />
+          </div>
+          <div data-testid="graph-metrics-community-count">
+            <StatTile
+              label="Communities"
+              value={communityCount.toString()}
+              color="amber"
+              sub={metrics.algorithm}
+            />
+          </div>
+          <div data-testid="graph-metrics-avg-degree">
+            <StatTile
+              label="Avg Degree"
+              value={metrics.average_degree.toFixed(2)}
+              color="emerald"
+            />
+          </div>
         </div>
 
         {topCentralityNodes.length > 0 && (
-          <div
-            style={{
-              gridColumn: "1 / -1",
-              marginTop: "1rem",
-            }}
-          >
-            <div style={{ fontSize: "0.875rem", fontWeight: 500, marginBottom: "0.75rem" }}>
+          <div className="metrics-section">
+            <div className="metrics-section-title">
               Top Centrality Nodes
             </div>
             <div
               data-testid="graph-metrics-centrality-list"
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.5rem",
-              }}
+              className="centrality-list"
             >
               {topCentralityNodes.map(([nodeId, score], index) => (
                 <div
                   key={nodeId}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: "0.5rem",
-                    borderRadius: "var(--radius-sm, 4px)",
-                    background: "var(--canvas-bg-tertiary)",
-                    fontSize: "0.75rem",
-                  }}
+                  className="centrality-row"
                 >
-                  <span
-                    style={{
-                      fontWeight: 500,
-                      color: "var(--text-secondary)",
-                      minWidth: "24px",
-                    }}
-                  >
+                  <span className="centrality-index">
                     {index + 1}.
                   </span>
                   <span
-                    style={{
-                      flex: 1,
-                      fontFamily: "var(--mono)",
-                      fontSize: "0.6875rem",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      marginLeft: "0.5rem",
-                    }}
+                    className="centrality-node-id"
                     title={nodeId}
                   >
                     {nodeId}
                   </span>
-                  <span
-                    style={{
-                      fontWeight: 500,
-                      color: "var(--cyan-600)",
-                      marginLeft: "0.5rem",
-                    }}
-                  >
+                  <span className="centrality-score">
                     {score.toFixed(3)}
                   </span>
                 </div>
@@ -162,54 +135,27 @@ export function MetricsPanel() {
         )}
 
         {degreeDistributionEntries.length > 0 && (
-          <div
-            style={{
-              gridColumn: "1 / -1",
-              marginTop: "1rem",
-            }}
-          >
-            <div style={{ fontSize: "0.875rem", fontWeight: 500, marginBottom: "0.75rem" }}>
+          <div className="metrics-section">
+            <div className="metrics-section-title">
               Degree Distribution
             </div>
             <div
               data-testid="graph-metrics-degree-distribution"
-              style={{
-                display: "flex",
-                alignItems: "flex-end",
-                gap: "0.25rem",
-                height: "120px",
-                padding: "0.5rem 0",
-              }}
+              className="degree-chart"
             >
               {degreeDistributionEntries.map(({ degree, count }) => (
                 <div
                   key={degree}
-                  style={{
-                    flex: 1,
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: "0.25rem",
-                  }}
+                  className="degree-bar-container"
                 >
                   <div
+                    className="degree-bar"
                     style={{
-                      width: "100%",
                       height: `${(count / maxDegree) * 100}px`,
-                      background: "var(--violet-500)",
-                      borderRadius: "var(--radius-sm, 4px)",
-                      minHeight: "2px",
                     }}
                     title={`Degree ${degree}: ${count} nodes`}
                   />
-                  <span
-                    style={{
-                      fontSize: "0.5rem",
-                      color: "var(--text-secondary)",
-                      whiteSpace: "nowrap",
-                      textAnchor: "middle",
-                    }}
-                  >
+                  <span className="degree-label">
                     {degree}
                   </span>
                 </div>
@@ -222,18 +168,18 @@ export function MetricsPanel() {
   };
 
   return (
-    <div data-testid="graph-metrics-panel">
-      <Panel title="Graph Metrics" className="metrics-panel">
-        {error && (
-          <ErrorBanner
-            error={error as Error}
-            onRetry={() => refetch()}
-            message="Failed to load metrics"
-            compact
-          />
-        )}
-
-        {isLoading ? (
+    <div data-testid="graph-metrics-panel" id="panel-metrics">
+      <Panel title="Graph Metrics">
+        {error && !isLoading && !data ? (
+          <div className="panel-body">
+            <ErrorBanner
+              error={error as Error}
+              onRetry={() => refetch()}
+              message="Failed to load metrics"
+              compact
+            />
+          </div>
+        ) : isLoading ? (
           renderLoadingState()
         ) : !data || Object.keys(data.centrality).length === 0 ? (
           renderEmptyState()
