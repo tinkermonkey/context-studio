@@ -11,10 +11,16 @@ vi.mock("@/components/ui/Toast", () => ({
     toast: vi.fn(),
   }),
 }));
+
 vi.mock("@/stores/executionStore", () => ({
-  useExecutionStore: () => ({
-    startExecution: vi.fn(),
-    endExecution: vi.fn(),
+  useExecutionStore: vi.fn((selector) => {
+    const state = {
+      inFlightPipelineIds: new Set(),
+      startExecution: vi.fn(),
+      endExecution: vi.fn(),
+      hasRunningExecutions: vi.fn(() => false),
+    };
+    return selector ? selector(state) : state;
   }),
 }));
 
@@ -62,6 +68,14 @@ describe("Pipelines Page", () => {
       mutateAsync: vi.fn(),
       isPending: false,
       status: "idle",
+    } as any);
+
+    vi.mocked(pipelineHooks.useAllPipelineExecutions).mockReturnValue({
+      data: { items: [], total: 0 },
+      isLoading: false,
+      error: null,
+      isFetching: false,
+      status: "success",
     } as any);
   });
 
@@ -315,6 +329,156 @@ describe("Pipelines Page", () => {
       );
 
       expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
+    });
+  });
+
+  describe("failed pipeline sorting", () => {
+    it("pins failed pipelines to top of the list", () => {
+      const failedExecution = {
+        id: "exec-failed",
+        pipeline_config_id: "pipeline-1",
+        output_text: "Error",
+        provider: "openai",
+        model: "gpt-4",
+        tokens_in: 100,
+        tokens_out: 50,
+        duration_ms: 2000,
+        status: "error" as const,
+        error_message: "Execution failed",
+        timestamp: "2026-05-11T10:00:00Z",
+      };
+
+      const successExecution = {
+        id: "exec-success",
+        pipeline_config_id: "pipeline-2",
+        output_text: "Result",
+        provider: "anthropic",
+        model: "claude-opus",
+        tokens_in: 100,
+        tokens_out: 50,
+        duration_ms: 2000,
+        status: "success" as const,
+        error_message: null,
+        timestamp: "2026-05-11T12:00:00Z",
+      };
+
+      vi.mocked(pipelineHooks.usePipelines).mockReturnValue({
+        data: [mockPipeline1, mockPipeline2],
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+        isFetching: false,
+        status: "success",
+      } as any);
+
+      vi.mocked(pipelineHooks.useAllPipelineExecutions).mockReturnValue({
+        data: {
+          items: [failedExecution, successExecution],
+          total: 2,
+        },
+        isLoading: false,
+        error: null,
+        isFetching: false,
+        status: "success",
+      } as any);
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <PipelinesContent />
+        </QueryClientProvider>,
+      );
+
+      const grid = screen.getByTestId("pipelines-grid");
+      const cards = grid.querySelectorAll("[data-testid^='pipeline-card-']");
+      expect(cards.length).toBe(2);
+      expect(cards[0]).toHaveAttribute("data-testid", "pipeline-card-pipeline-1");
+      expect(cards[1]).toHaveAttribute("data-testid", "pipeline-card-pipeline-2");
+    });
+
+    it("handles timeout status as failed for sorting purposes", () => {
+      const timeoutExecution = {
+        id: "exec-timeout",
+        pipeline_config_id: "pipeline-2",
+        output_text: "",
+        provider: "openai",
+        model: "gpt-4",
+        tokens_in: 100,
+        tokens_out: 0,
+        duration_ms: 60000,
+        status: "timeout" as const,
+        error_message: "Execution timed out",
+        timestamp: "2026-05-11T10:00:00Z",
+      };
+
+      vi.mocked(pipelineHooks.usePipelines).mockReturnValue({
+        data: [mockPipeline1, mockPipeline2],
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+        isFetching: false,
+        status: "success",
+      } as any);
+
+      vi.mocked(pipelineHooks.useAllPipelineExecutions).mockReturnValue({
+        data: {
+          items: [timeoutExecution],
+          total: 1,
+        },
+        isLoading: false,
+        error: null,
+        isFetching: false,
+        status: "success",
+      } as any);
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <PipelinesContent />
+        </QueryClientProvider>,
+      );
+
+      const grid = screen.getByTestId("pipelines-grid");
+      const cards = grid.querySelectorAll("[data-testid^='pipeline-card-']");
+      expect(cards.length).toBe(2);
+      expect(cards[0]).toHaveAttribute("data-testid", "pipeline-card-pipeline-2");
+    });
+  });
+
+  describe("running state with pulse dot", () => {
+    it("displays idle status when pipeline is not executing and has no executions", () => {
+      vi.mocked(pipelineHooks.usePipelines).mockReturnValue({
+        data: [mockPipeline1],
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+        isFetching: false,
+        status: "success",
+      } as any);
+
+      vi.mocked(pipelineHooks.usePipelineExecutions).mockReturnValue({
+        data: [],
+        isLoading: false,
+        error: null,
+        isFetching: false,
+        status: "success",
+      } as any);
+
+      vi.mocked(pipelineHooks.useAllPipelineExecutions).mockReturnValue({
+        data: { items: [], total: 0 },
+        isLoading: false,
+        error: null,
+        isFetching: false,
+        status: "success",
+      } as any);
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <PipelinesContent />
+        </QueryClientProvider>,
+      );
+
+      const card = screen.getByTestId("pipeline-card-pipeline-1");
+      const statusChip = card.querySelector("[data-testid='pipeline-status-chip']");
+      expect(statusChip).toHaveTextContent("idle");
     });
   });
 });

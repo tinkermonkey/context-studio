@@ -344,4 +344,5 @@ describe("PipelineCard", () => {
     expect(mockMutate).toHaveBeenCalled();
     expect(mockToast).toHaveBeenCalledWith("error", "Execution failed");
   });
+
 });

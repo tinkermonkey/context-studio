@@ -1,9 +1,7 @@
 import { useState, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
-import { usePipelines } from "@/api/hooks/pipeline";
-import { pipelineService } from "@/api/services/pipeline";
-import { useQuery } from "@tanstack/react-query";
+import { usePipelines, useAllPipelineExecutions } from "@/api/hooks/pipeline";
 import { PipelineCard } from "@/components/pipeline/PipelineCard";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -16,18 +14,18 @@ type StatusFilter = "all" | "enabled" | "disabled";
 
 export function PipelinesContent() {
   const { data: pipelines = [], isLoading, error, refetch } = usePipelines();
-  const { data: allExecutions } = useQuery({
-    queryKey: ["pipeline-executions-all"],
-    queryFn: () => pipelineService.getAllPipelineExecutions(undefined, 1000),
-    enabled: pipelines.length > 0,
-  });
+  const { data: allExecutions } = useAllPipelineExecutions(undefined, 1000);
   const [searchFilter, setSearchFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
   const getPipelineFailedStatus = (pipelineId: string): boolean => {
     if (!allExecutions?.items) return false;
-    const latestExecution = allExecutions.items.find((e) => e.pipeline_config_id === pipelineId);
-    return latestExecution?.status === "error" || latestExecution?.status === "timeout";
+    const executionsForPipeline = allExecutions.items.filter((e) => e.pipeline_config_id === pipelineId);
+    if (executionsForPipeline.length === 0) return false;
+    const latestExecution = executionsForPipeline.reduce((latest, current) =>
+      new Date(current.timestamp).getTime() > new Date(latest.timestamp).getTime() ? current : latest
+    );
+    return latestExecution.status === "error" || latestExecution.status === "timeout";
   };
 
   const filteredPipelines = useMemo(() => {
