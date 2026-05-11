@@ -123,7 +123,7 @@ export function IndividualEditor({
             type="text"
             placeholder={individualsCopy.form.titlePlaceholder}
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => { setTitle(e.target.value); setTitleError(undefined); }}
             onBlur={handleTitleBlur}
             onKeyDown={handleKeyDown}
             autoFocus

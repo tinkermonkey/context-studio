@@ -404,25 +404,28 @@ function IndividualsPageWrapper() {
           </Button>
         </div>
       </div>
-      <div>
-        <IndividualsPageContent
-          onCreateClick={() => setShowCreateModal(true)}
-          selectedId={selectedId}
-          onSelectedIdChange={handleSelectedIdChange}
-          classMap={classMap}
-          classesError={classesError}
-          classesErrorObj={classesErrorObj || null}
-          onRetryClasses={() => refetchClasses()}
-          onEditClick={handleEditClick}
-          onDeleteClick={handleDeleteClick}
-        />
+      <div className={selectedId ? "split-2" : undefined}>
+        <div>
+          <IndividualsPageContent
+            onCreateClick={() => setShowCreateModal(true)}
+            selectedId={selectedId}
+            onSelectedIdChange={handleSelectedIdChange}
+            classMap={classMap}
+            classesError={classesError}
+            classesErrorObj={classesErrorObj || null}
+            onRetryClasses={() => refetchClasses()}
+            onEditClick={handleEditClick}
+            onDeleteClick={handleDeleteClick}
+          />
+        </div>
+        {selectedId && (
+          <IndividualDrawer
+            individualId={selectedId}
+            onClose={() => handleSelectedIdChange(undefined)}
+            onSelectIndividual={handleSelectedIdChange}
+          />
+        )}
       </div>
-
-      <IndividualDrawer
-        individualId={selectedId || null}
-        onClose={() => handleSelectedIdChange(undefined)}
-        onSelectIndividual={handleSelectedIdChange}
-      />
 
       <Modal
         open={showCreateModal}
