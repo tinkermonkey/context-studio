@@ -17,7 +17,7 @@ export const Route = createFileRoute("/app/graph/")({
   component: GraphPage,
 });
 
-function GraphPage() {
+export function GraphPage() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | undefined>();
   const [activeTab, setActiveTab] = useState<string>("metrics");
   const graphVisualization = useGraphVisualization();

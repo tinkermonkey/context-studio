@@ -12,7 +12,7 @@ import { COPY } from "./-copy";
 
 type StatusFilter = "all" | "enabled" | "disabled";
 
-function PipelinesContent() {
+export function PipelinesContent() {
   const { data: pipelines = [], isLoading, error, refetch } = usePipelines();
   const [searchFilter, setSearchFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");

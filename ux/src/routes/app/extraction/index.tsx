@@ -14,7 +14,7 @@ export const Route = createFileRoute("/app/extraction")({
   component: ExtractionPage,
 });
 
-function ExtractionPage() {
+export function ExtractionPage() {
   const [extractionResult, setExtractionResult] = useState<ExtractionResultSchema | null>(null);
   const [nlpResult, setNlpResult] = useState<ExtractionResultSchema | null>(null);
   const [enrichmentResult, setEnrichmentResult] = useState<ExtractionResultSchema | null>(null);
