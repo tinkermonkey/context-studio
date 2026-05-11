@@ -260,7 +260,7 @@ export function IndividualDrawer({
                 <ClassChip
                   key={classId}
                   classId={classId}
-                  className={classMap.get(classId) || "Unknown"}
+                  className={classMap.get(classId) || individualsCopy.drawer.classNameFallback}
                   onRemove={handleRemoveClass}
                   isDisabled={individual.class_ids.length === 1}
                 />
@@ -382,7 +382,7 @@ export function IndividualDrawer({
                         display: "inline-block",
                       }}
                     >
-                      {prop.datatype || "any"}
+                      {prop.datatype || individualsCopy.drawer.propertyTypeDefault}
                     </span>
                   </div>
                   <div>
@@ -390,7 +390,7 @@ export function IndividualDrawer({
                   </div>
                   <div>
                     <span style={{ color: "var(--canvas-fg-3)", fontSize: "var(--text-xs)" }}>
-                      TBD
+                      {individualsCopy.drawer.propertySourcePlaceholder}
                     </span>
                   </div>
                 </Fragment>
@@ -451,7 +451,7 @@ export function IndividualDrawer({
                           }}
                           data-testid={`related-individual-class-${classId}`}
                         >
-                          {classMap.get(classId) || "Unknown"}
+                          {classMap.get(classId) || individualsCopy.drawer.classNameFallback}
                         </span>
                       ))}
                     </div>

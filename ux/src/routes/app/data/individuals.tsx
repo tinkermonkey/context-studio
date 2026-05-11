@@ -61,7 +61,7 @@ function IndividualsPageContent({
   const individualColumns: ColumnDef<IndividualResponse>[] = [
     {
       accessorKey: "id",
-      header: "ID",
+      header: individualsCopy.table.idHeader,
       size: 100,
       cell: (info) => (
         <span className="mono" style={{ fontSize: "var(--text-xs)" }}>
@@ -71,7 +71,7 @@ function IndividualsPageContent({
     },
     {
       accessorKey: "title",
-      header: "Name",
+      header: individualsCopy.table.nameHeader,
       cell: (info) => {
         const individualId = info.row.original.id;
         return (
@@ -91,7 +91,7 @@ function IndividualsPageContent({
     },
     {
       accessorKey: "class_ids",
-      header: "Classes",
+      header: individualsCopy.table.classesHeader,
       cell: (info) => {
         const classIds = info.getValue() as string[];
         return (
@@ -121,7 +121,7 @@ function IndividualsPageContent({
     },
     {
       accessorKey: "description",
-      header: "Description",
+      header: individualsCopy.table.descriptionHeader,
       cell: (info) => {
         const desc = info.getValue() as string | null | undefined;
         if (!desc) return <span className="muted-text">—</span>;
@@ -131,7 +131,7 @@ function IndividualsPageContent({
     },
     {
       accessorKey: "last_modified",
-      header: "Updated",
+      header: individualsCopy.table.updatedHeader,
       cell: (info) => {
         const date = info.getValue() as string | null;
         if (!date) return "—";
@@ -332,7 +332,7 @@ function IndividualsPageWrapper() {
             onClick={() => setShowCreateModal(true)}
             data-testid="individual-add-button"
           >
-            + New individual
+            {individualsCopy.create.buttonLabel}
           </Button>
         </div>
       </div>
@@ -368,7 +368,7 @@ function IndividualsPageWrapper() {
             <ErrorBanner
               error={new Error(createError)}
               onRetry={() => setCreateError(null)}
-              message="Failed to create individual"
+              message={individualsCopy.errors.failedToCreate}
               daemonLogPath="/local-server/logs/context_studio.log"
             />
           </div>
@@ -392,7 +392,7 @@ function IndividualsPageWrapper() {
             <ErrorBanner
               error={new Error(editError)}
               onRetry={() => setEditError(null)}
-              message="Failed to update individual"
+              message={individualsCopy.errors.failedToUpdate}
               daemonLogPath="/local-server/logs/context_studio.log"
             />
           </div>

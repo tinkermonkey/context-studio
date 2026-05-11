@@ -292,7 +292,7 @@ export function IndividualEditor({
                   </label>
                   <Input
                     type="text"
-                    placeholder={`Enter ${prop.property_identifier}`}
+                    placeholder={`${individualsCopy.form.propertyInputPrefix}${prop.property_identifier}`}
                     defaultValue={prop.value ? String(prop.value) : ""}
                     data-testid={`individual-property-${prop.property_identifier}`}
                     disabled
@@ -304,7 +304,7 @@ export function IndividualEditor({
                       marginTop: "2px",
                     }}
                   >
-                    Type: {prop.datatype || "unknown"}
+                    {individualsCopy.form.propertyTypeLabel}{prop.datatype || individualsCopy.form.propertyTypeUnknown}
                   </div>
                 </div>
               ))}
