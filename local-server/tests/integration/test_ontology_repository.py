@@ -12,7 +12,6 @@ Tests the adapter against a real in-memory SQLite database to verify:
 import sys
 import os
 import pytest
-import dataclasses
 
 sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -163,8 +162,8 @@ class TestTaxonomyCRUD:
         """Test updating a taxonomy."""
         old_version = sample_taxonomy.version
 
-        updated_taxonomy = dataclasses.replace(sample_taxonomy, title="Updated Biology")
-        updated = repo.save_taxonomy(updated_taxonomy)
+        sample_taxonomy.title = "Updated Biology"
+        updated = repo.save_taxonomy(sample_taxonomy)
 
         assert updated.title == "Updated Biology"
         assert updated.version == old_version + 1
