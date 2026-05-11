@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, Fragment } from "react";
 import { Drawer } from "@/components/ui/Drawer";
 import { Input, Textarea } from "@/components/ui/Input";
-import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { Button } from "@/components/ui/Button";
 import { Panel } from "@/components/ui/Panel";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -18,7 +17,6 @@ import { useIndividuals, useClasses } from "@/api/hooks/ontology";
 import { ApiError } from "@/api/client/interceptors";
 import type { components } from "@/api/types";
 
-type IndividualResponse = components["schemas"]["IndividualResponse"];
 type ClassResponse = components["schemas"]["ClassResponse"];
 type DataPropertyValueResponse = components["schemas"]["DataPropertyValueResponse"];
 
@@ -70,7 +68,11 @@ function ClassChip({ classId, className, onRemove, isDisabled }: ClassChipProps)
   );
 }
 
-export function IndividualDrawer({ individualId, onClose, onSelectIndividual }: IndividualDrawerProps) {
+export function IndividualDrawer({
+  individualId,
+  onClose,
+  onSelectIndividual,
+}: IndividualDrawerProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -250,11 +252,7 @@ export function IndividualDrawer({ individualId, onClose, onSelectIndividual }: 
         </div>
 
         {/* Class Membership Panel */}
-        <Panel
-          title="Class Membership"
-          data-testid="individual-class-list"
-          className="stack-lg"
-        >
+        <Panel title="Class Membership" data-testid="individual-class-list" className="stack-lg">
           {individual.class_ids.length > 0 && (
             <div style={{ display: "flex", gap: "var(--space-2)", flexWrap: "wrap" }}>
               {individual.class_ids.map((classId) => (
@@ -390,7 +388,9 @@ export function IndividualDrawer({ individualId, onClose, onSelectIndividual }: 
                     <span style={{ color: "var(--canvas-fg-3)" }}>—</span>
                   </div>
                   <div>
-                    <span style={{ color: "var(--canvas-fg-3)", fontSize: "var(--text-xs)" }}>TBD</span>
+                    <span style={{ color: "var(--canvas-fg-3)", fontSize: "var(--text-xs)" }}>
+                      TBD
+                    </span>
                   </div>
                 </Fragment>
               ))}
