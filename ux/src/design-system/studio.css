@@ -2159,6 +2159,51 @@ select.input {
   transform: translateY(-2px);
 }
 
+/* ============= Pipeline detail panel ============= */
+.pipeline-code-block {
+  background: var(--canvas-bg-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  overflow: auto;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--canvas-fg-2);
+  font-family: var(--mono);
+}
+
+.pipeline-empty-state {
+  padding: var(--space-4);
+  background: var(--canvas-bg-2);
+  border-radius: var(--radius-sm);
+  color: var(--canvas-fg-3);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+.pipeline-error-log {
+  background: var(--canvas-bg-2);
+  border-left: 3px solid var(--rose-500, #f43f5e);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+}
+
+.error-log-title {
+  font-weight: 500;
+  font-size: var(--text-sm);
+}
+
+.pipeline-error-message {
+  background: var(--canvas-bg-3);
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  overflow: auto;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--rose-500, #f43f5e);
+  max-height: 200px;
+  font-family: var(--mono);
+}
+
 /* ============= Dark canvas mode ============= */
 body.dark-canvas {
   --canvas-bg: #14191f;

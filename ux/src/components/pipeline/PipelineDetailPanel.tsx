@@ -55,22 +55,18 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
   const isDirty = configText !== JSON.stringify(pipeline.config || {}, null, 2);
 
   const { status: autosaveStatus } = useAutosave({
-    data: configText,
+    data: isEditingConfig ? undefined : configText,
     mutationFn: async () => {
       if (!isDirty) return;
-      try {
-        await updateMutation.mutateAsync({
-          id: pipeline.id,
-          data: {
-            title: pipeline.title,
-            enabled: pipeline.enabled,
-            config: JSON.parse(configText),
-          },
-        });
-        lastSavedAtRef.current = new Date();
-      } catch (error) {
-        throw error;
-      }
+      await updateMutation.mutateAsync({
+        id: pipeline.id,
+        data: {
+          title: pipeline.title,
+          enabled: pipeline.enabled,
+          config: JSON.parse(configText),
+        },
+      });
+      lastSavedAtRef.current = new Date();
     },
     onError: (error) => {
       toast("error", `Autosave failed: ${error.message}`);
@@ -101,7 +97,7 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
   };
 
   const lastRun = executions[0];
-  const hasFailedRun = lastRun && lastRun.error_message;
+  const expandedExecution = expandedLogId ? executions.find((e) => e.id === expandedLogId) : null;
 
   const autosaveState = isEditingConfig ? undefined : autosaveStatus === "idle" ? undefined : (autosaveStatus as "saving" | "saved" | "error");
 
@@ -114,19 +110,11 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
       isDirty={isDirty && !isEditingConfig}
       lastSavedAt={lastSavedAtRef.current || undefined}
       onRevert={!isEditingConfig ? handleRevert : undefined}
-      data-testid="pipeline-detail"
     >
       <div className="stack-lg">
         {/* Definition Editor Section */}
         <div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "var(--space-2)",
-            }}
-          >
+          <div className="flex-between">
             <label className="form-group-label">Pipeline Configuration</label>
             {!isEditingConfig && (
               <Button
@@ -141,7 +129,7 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
           </div>
 
           {isEditingConfig ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
+            <div className="stack">
               <Textarea
                 value={configText}
                 onChange={(e) => setConfigText(e.target.value)}
@@ -171,17 +159,8 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
             </div>
           ) : (
             <pre
-              style={{
-                background: "var(--canvas-bg-2)",
-                padding: "var(--space-3)",
-                borderRadius: "var(--radius-sm)",
-                overflow: "auto",
-                fontSize: "var(--text-xs)",
-                lineHeight: 1.5,
-                color: "var(--canvas-fg-2)",
-              }}
               data-testid="pipeline-config-pre"
-              className="mono"
+              className="pipeline-code-block"
             >
               {configText}
             </pre>
@@ -192,31 +171,23 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
         <div>
           <label className="form-group-label">Last 10 Runs</label>
           {executionsLoading ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
+            <div className="stack">
               {Array.from({ length: 3 }).map((_, i) => (
                 <Skeleton key={i} height={40} />
               ))}
             </div>
           ) : executions.length === 0 ? (
             <div
-              style={{
-                padding: "var(--space-4)",
-                background: "var(--canvas-bg-2)",
-                borderRadius: "var(--radius-sm)",
-                color: "var(--canvas-fg-3)",
-                fontSize: "var(--text-sm)",
-                textAlign: "center",
-              }}
+              className="pipeline-empty-state"
               data-testid="pipeline-no-runs"
             >
               This pipeline has never been run
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
+            <div className="stack">
               <table
                 className="t"
                 data-testid="pipeline-runs-table"
-                style={{ width: "100%", fontSize: "var(--text-sm)" }}
               >
                 <thead>
                   <tr>
@@ -248,6 +219,7 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
                                 expandedLogId === execution.id ? null : execution.id
                               )
                             }
+                            aria-expanded={expandedLogId === execution.id}
                             data-testid={`pipeline-view-log-${execution.id}`}
                           >
                             View log
@@ -263,53 +235,30 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
         </div>
 
         {/* Error Log Panel */}
-        {hasFailedRun && expandedLogId === lastRun.id && lastRun.error_message && (
+        {expandedExecution && expandedExecution.error_message && (
           <div
             data-testid="pipeline-error-log"
-            style={{
-              background: "var(--canvas-bg-2)",
-              borderLeft: "3px solid var(--rose-500, #f43f5e)",
-              padding: "var(--space-3)",
-              borderRadius: "var(--radius-sm)",
-            }}
+            className="pipeline-error-log"
           >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "var(--space-2)",
-              }}
-            >
-              <span style={{ fontWeight: 500, fontSize: "var(--text-sm)" }}>Error Details</span>
+            <div className="flex-between" style={{ marginBottom: "var(--space-2)" }}>
+              <span className="error-log-title">Error Details</span>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => {
                   navigator.clipboard.writeText(
-                    lastRun.error_message || ""
+                    expandedExecution.error_message || ""
                   );
                   toast("success", "Error copied to clipboard");
                 }}
+                aria-label="Copy error to clipboard"
                 data-testid="pipeline-copy-error-button"
               >
                 <Copy size={14} />
               </Button>
             </div>
-            <pre
-              style={{
-                background: "var(--canvas-bg-3)",
-                padding: "var(--space-2)",
-                borderRadius: "var(--radius-sm)",
-                overflow: "auto",
-                fontSize: "var(--text-xs)",
-                lineHeight: 1.5,
-                color: "var(--rose-500, #f43f5e)",
-                maxHeight: "200px",
-              }}
-              className="mono"
-            >
-              {lastRun.error_message}
+            <pre className="pipeline-error-message">
+              {expandedExecution.error_message}
             </pre>
           </div>
         )}

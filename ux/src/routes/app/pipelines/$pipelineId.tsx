@@ -1,16 +1,11 @@
-import { useState, useRef } from "react";
 import { createFileRoute, useParams, useNavigate } from "@tanstack/react-router";
-import { usePipeline, usePipelineExecutions, useUpdatePipeline } from "@/api/hooks/pipeline";
+import { usePipeline } from "@/api/hooks/pipeline";
 import { usePipelines } from "@/api/hooks/pipeline";
 import { PipelineCard } from "@/components/pipeline/PipelineCard";
-import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import { PipelineDetailPanel } from "@/components/pipeline/PipelineDetailPanel";
-import type { components } from "@/api/types";
-
-type PipelineConfigurationResponse = components["schemas"]["PipelineConfigurationResponse"];
 
 function PipelineDetailContent() {
   const { pipelineId } = useParams({ from: "/app/pipelines/$pipelineId" });
@@ -23,8 +18,8 @@ function PipelineDetailContent() {
 
   if (isLoading) {
     return (
-      <div data-testid="pipeline-detail" style={{ display: "flex", gap: "var(--space-4)" }}>
-        <div style={{ flex: 1 }}>
+      <div data-testid="pipeline-detail" className="flex-row-center">
+        <div className="grow">
           <div className="grid-2">
             {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} height={120} />
@@ -73,8 +68,15 @@ function PipelineDetailContent() {
           {pipelines.map((p) => (
             <div
               key={p.id}
+              role="button"
+              tabIndex={0}
+              className="pipeline-card-wrapper"
               onClick={() => navigate({ to: `/app/pipelines/${p.id}` })}
-              style={{ cursor: "pointer" }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  navigate({ to: `/app/pipelines/${p.id}` });
+                }
+              }}
             >
               <PipelineCard pipeline={p} />
             </div>
