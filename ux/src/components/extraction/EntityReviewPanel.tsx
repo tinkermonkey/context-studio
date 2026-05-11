@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Chip } from "@/components/ui/Chip";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { formatConfidence } from "@/utils/confidence";
 import { COPY } from "@/routes/app/extraction/-copy";
 import type { components } from "@/api/types";
 
@@ -90,7 +91,7 @@ function EntityRow({
               color: "var(--canvas-fg-3)",
             }}
           >
-            {(entity.confidence * 100).toFixed(0)}%
+            {formatConfidence(entity.confidence)}
           </span>
         </div>
       </div>
@@ -298,9 +299,11 @@ export function EntityReviewPanel({
     toast("info", COPY.ENTITY_REJECTED);
   };
 
-  const handleLinkConfirm = (entity: ExtractedEntitySchema, _targetClassId: string) => {
+  const handleLinkConfirm = (entity: ExtractedEntitySchema, targetClassId: string) => {
+    // TODO: Implement entity-to-class linking API call when backend supports it
+    // For now, this optimistically updates UI state as placeholder
     setLinkedIds((prev) => new Set([...prev, entity.id]));
-    toast("success", COPY.ENTITY_LINKED);
+    toast("info", "Link recorded locally. API persistence coming soon.");
   };
 
   const handleApproveAll = async () => {

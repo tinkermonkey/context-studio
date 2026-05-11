@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { Panel } from "@/components/ui/Panel";
 import { Chip } from "@/components/ui/Chip";
+import { formatConfidence } from "@/utils/confidence";
 import { COPY } from "@/routes/app/extraction/-copy";
 import type { components } from "@/api/types";
 
@@ -70,7 +71,7 @@ export function ExtractionResultPanel({
             {entities.map((entity) => (
               <div key={entity.id} title={`Type: ${entity.entity_type}`}>
                 <Chip color="cyan">
-                  {entity.label} ({(entity.confidence * 100).toFixed(0)}%)
+                  {entity.label} ({formatConfidence(entity.confidence)})
                 </Chip>
               </div>
             ))}

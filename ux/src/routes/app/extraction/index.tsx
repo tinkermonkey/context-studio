@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useExtract, useNlpAnalysis, useEnrichFromReferences } from "@/api/hooks/extraction";
+import { useToasts } from "@/components/ui/Toast";
 import { ExtractionInput } from "@/components/extraction/ExtractionInput";
 import { ExtractionResultPanel } from "@/components/extraction/ExtractionResultPanel";
 import { EntityReviewPanel } from "@/components/extraction/EntityReviewPanel";
@@ -19,6 +20,7 @@ export function ExtractionPage() {
   const [nlpResult, setNlpResult] = useState<ExtractionResultSchema | null>(null);
   const [enrichmentResult, setEnrichmentResult] = useState<ExtractionResultSchema | null>(null);
 
+  const { toast } = useToasts();
   const extractMutation = useExtract();
   const nlpMutation = useNlpAnalysis();
   const enrichMutation = useEnrichFromReferences();
@@ -28,30 +30,39 @@ export function ExtractionPage() {
     setNlpResult(null);
     setEnrichmentResult(null);
 
-    // Start extraction
-    extractMutation.mutate(text, {
-      onSuccess: (result) => {
-        setExtractionResult(result);
-        // Automatically run NLP analysis on the same text
-        nlpMutation.mutate(text, {
-          onSuccess: (nlpData) => {
-            setNlpResult(nlpData);
-            // Trigger enrichment if we have extraction results
-            if (result?.extracted_entities && result.extracted_entities.length > 0) {
-              const enrichmentRequest: EnrichFromReferencesRequest = {
-                text,
-                extracted_entities: result.extracted_entities,
-              };
-              enrichMutation.mutate(enrichmentRequest, {
-                onSuccess: (enrichmentData) => {
-                  setEnrichmentResult(enrichmentData);
-                },
-              });
-            }
-          },
-        });
-      },
-    });
+    try {
+      // Step 1: Extract
+      const result = await extractMutation.mutateAsync(text);
+      setExtractionResult(result);
+
+      // Step 2: NLP (always run on same text)
+      try {
+        const nlpData = await nlpMutation.mutateAsync(text);
+        setNlpResult(nlpData);
+      } catch (nlpError) {
+        toast("error", `NLP analysis failed: ${nlpError instanceof Error ? nlpError.message : "Unknown error"}`);
+        // Continue to enrichment with original extraction data
+      }
+
+      // Step 3: Enrichment (if we have entities)
+      if (result?.extracted_entities && result.extracted_entities.length > 0) {
+        try {
+          const enrichmentRequest: EnrichFromReferencesRequest = {
+            text,
+            extracted_entities: result.extracted_entities,
+          };
+          const enrichmentData = await enrichMutation.mutateAsync(enrichmentRequest);
+          setEnrichmentResult(enrichmentData);
+        } catch (enrichError) {
+          toast("error", `Reference enrichment failed: ${enrichError instanceof Error ? enrichError.message : "Unknown error"}`);
+          // Allow extraction/NLP results to remain visible
+        }
+      }
+    } catch (error) {
+      // Extraction itself failed - this is a critical error
+      toast("error", `Extraction failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+      // Results already cleared at start
+    }
   };
 
   const getLayerEntities = (layerIndex: number) => {
