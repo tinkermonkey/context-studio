@@ -42,10 +42,6 @@ function PipelinesContent() {
     );
   }, [pipelines, searchFilter, statusFilter]);
 
-  const handlePipelineClick = (_pipelineId: string) => {
-    // Pipeline detail view not yet implemented
-  };
-
   if (isLoading) {
     return (
       <div data-testid="pipelines-page" className="stack">
@@ -158,17 +154,7 @@ function PipelinesContent() {
           {filteredPipelines.map((pipeline) => (
             <div
               key={pipeline.id}
-              onClick={() => handlePipelineClick(pipeline.id)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  handlePipelineClick(pipeline.id);
-                }
-              }}
-              role="button"
-              tabIndex={0}
               data-testid={`pipeline-card-${pipeline.id}`}
-              className="pipeline-card-wrapper"
             >
               <PipelineCard pipeline={pipeline} />
             </div>
