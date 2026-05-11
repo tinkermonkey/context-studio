@@ -154,7 +154,7 @@ async def list_pipeline_configurations(
     "/pipelines/executions", response_model=ListResponse[ExecutionWithPipelineResponse]
 )
 async def list_all_pipeline_executions(
-    status_filter: Optional[str] = Query(
+    status_filter: Optional[Literal["success", "error", "timeout"]] = Query(
         None, description="Optional status filter (success, error, timeout)"
     ),
     limit: int = Query(100, ge=1, le=500, description="Maximum number of results"),
@@ -175,16 +175,7 @@ async def list_all_pipeline_executions(
     Returns:
         Paginated list of ExecutionWithPipelineResponse objects with total count
 
-    Raises:
-        HTTPException: 400 if invalid status value
     """
-    valid_statuses = {"success", "error", "timeout"}
-    if status_filter is not None and status_filter not in valid_statuses:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid status: must be one of {valid_statuses}",
-        )
-
     try:
         executions_with_titles, total = await run_sync_in_executor(
             service.list_all_executions,

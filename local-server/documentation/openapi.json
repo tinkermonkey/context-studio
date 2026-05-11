@@ -2944,7 +2944,7 @@
           "pipeline"
         ],
         "summary": "List All Pipeline Executions",
-        "description": "Retrieve execution history across all pipeline configurations.\n\nResults are returned in reverse chronological order (most recent first).\n\nArgs:\n    status_filter: Optional status filter (\"success\", \"error\", \"timeout\")\n    limit: Maximum number of executions to return (1-500, default 100)\n    offset: Number of executions to skip for pagination (default 0)\n    service: PipelineService from dependency injection\n\nReturns:\n    Paginated list of ExecutionWithPipelineResponse objects with total count\n\nRaises:\n    HTTPException: 400 if invalid status value",
+        "description": "Retrieve execution history across all pipeline configurations.\n\nResults are returned in reverse chronological order (most recent first).\n\nArgs:\n    status_filter: Optional status filter (\"success\", \"error\", \"timeout\")\n    limit: Maximum number of executions to return (1-500, default 100)\n    offset: Number of executions to skip for pagination (default 0)\n    service: PipelineService from dependency injection\n\nReturns:\n    Paginated list of ExecutionWithPipelineResponse objects with total count",
         "operationId": "list_all_pipeline_executions_api_pipelines_executions_get",
         "parameters": [
           {
@@ -2954,6 +2954,11 @@
             "schema": {
               "anyOf": [
                 {
+                  "enum": [
+                    "success",
+                    "error",
+                    "timeout"
+                  ],
                   "type": "string"
                 },
                 {

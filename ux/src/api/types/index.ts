@@ -1482,9 +1482,6 @@ export interface paths {
      *
      *     Returns:
      *         Paginated list of ExecutionWithPipelineResponse objects with total count
-     *
-     *     Raises:
-     *         HTTPException: 400 if invalid status value
      */
     get: operations["list_all_pipeline_executions_api_pipelines_executions_get"];
     put?: never;
@@ -7623,7 +7620,7 @@ export interface operations {
     parameters: {
       query?: {
         /** @description Optional status filter (success, error, timeout) */
-        status_filter?: string | null;
+        status_filter?: ("success" | "error" | "timeout") | null;
         /** @description Maximum number of results */
         limit?: number;
         /** @description Number of results to skip */

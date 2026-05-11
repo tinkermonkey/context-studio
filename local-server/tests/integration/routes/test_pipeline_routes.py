@@ -953,12 +953,12 @@ class TestListAllPipelineExecutions:
         assert body["total"] == 1
         assert all(e["status"] == "success" for e in body["items"])
 
-    def test_list_all_executions_with_invalid_status_returns_400(self, client):
-        """GET /api/pipelines/executions returns 400 for invalid status_filter."""
+    def test_list_all_executions_with_invalid_status_returns_422(self, client):
+        """GET /api/pipelines/executions returns 422 for invalid status_filter."""
         response = client.get("/api/pipelines/executions?status_filter=invalid_status")
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
         body = response.json()
-        assert "Invalid status" in body["detail"]
+        assert "detail" in body
 
     def test_list_all_executions_includes_pipeline_title(self, client):
         """GET /api/pipelines/executions includes pipeline_title in response."""
