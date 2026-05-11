@@ -33,26 +33,24 @@ type RelationshipResponse = components["schemas"]["RelationshipResponse"];
 type RelationshipCreateRequest = components["schemas"]["RelationshipCreateRequest"];
 type ListRelationships = components["schemas"]["ListResponse_RelationshipResponse_"];
 
-interface ClassListParams {
+export interface ClassListParams {
   concept_scheme_id?: string;
   parent_class_id?: string;
   limit?: number;
   offset?: number;
 }
 
-interface IndividualListParams {
+export interface IndividualListParams {
   class_id?: string;
   limit?: number;
   offset?: number;
 }
 
-interface RelationshipListParams {
+export interface RelationshipListParams {
   source_id?: string;
   target_id?: string;
   property_id?: string;
 }
-
-export type { ClassListParams, IndividualListParams, RelationshipListParams };
 
 class OntologyService extends BaseService {
   // Taxonomies

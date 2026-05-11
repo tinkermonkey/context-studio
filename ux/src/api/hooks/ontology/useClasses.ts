@@ -1,18 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
-import { ontologyService } from "@/api/services/ontology";
+import { ontologyService, type ClassListParams } from "@/api/services/ontology";
 import type { components } from "@/api/types";
 
 type ClassCreateRequest = components["schemas"]["ClassCreateRequest"];
 type ClassUpdateRequest = components["schemas"]["ClassUpdateRequest"];
 type ClassMoveRequest = components["schemas"]["ClassMoveRequest"];
-
-interface ClassListParams {
-  concept_scheme_id?: string;
-  parent_class_id?: string;
-  limit?: number;
-  offset?: number;
-}
 
 export function useClasses(params?: ClassListParams) {
   return useQuery({
