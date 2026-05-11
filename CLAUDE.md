@@ -307,6 +307,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 - Write clean, readable, and maintainable code
 - When API signatures change, run `npm run generate-types` to regenerate API types, then update hooks and services
+- **CSS design reference**: `ux/design/styles/` is the source of truth for the design system. When porting CSS, verify `body.dark-canvas` rule counts match between the reference and `src/design-system/studio.css` — this is the most common source of drift.
 
 ### API Client Architecture
 
@@ -322,6 +323,33 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 3. **Promote User Focus**: UX should be clean and focused without extraneous elements and decoration
 4. **Error Handling**: Implement error catching within user workflows utilizing tools like useButterToast to communicate errors
 5. **Asynchronous**: Where possible, user interactions should be asynchronous to maintain performance and statelessness
+6. **CSS over inline styles**: Style with classes from `src/design-system/`. Before adding `style={{}}`, check for an existing utility class. If a pattern recurs more than once, add a class. Inline styles are only acceptable for values computed at runtime.
+7. **New component checklist**: Every new interactive component must have: CSS class-based styling, `data-testid` on the root element, and ARIA roles (`role`, `aria-selected`, `aria-controls`, etc.) on any interactive element.
+
+### Layout Patterns
+
+**Pages with a detail drawer must use `SchemaPageLayout`.**  Every page that opens a detail panel when a row is selected must wrap its table and drawer in `SchemaPageLayout`, which applies the `split-2` CSS grid (`1fr 380px`). Never render the drawer as stacked content below the table. This applies to all data and schema pages — not just Phase 4 schema pages.
+
+```tsx
+<SchemaPageLayout
+  data={filteredData}
+  selectedId={selectedId}
+  renderDrawerContent={(entity) => <MyDrawer ... />}
+>
+  <MyTable ... />
+</SchemaPageLayout>
+```
+
+### Form Validation Behavior
+
+**Validation errors must clear on `onChange`, not only on `onBlur`.**  After a failed submit reveals an error, the user expects it to disappear the moment they start correcting the field — not after they click away. Always clear field errors in the `onChange` handler:
+
+```tsx
+onChange={(e) => {
+  setValue(e.target.value);
+  setFieldError(undefined);  // required — do not leave this only in onBlur
+}}
+```
 
 ### Testing Strategy
 
@@ -329,10 +357,14 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 - Integration tests for React hooks and components
 - Mock external dependencies (APIs, native modules)
 - Separate test configs for different test types (API vs integration)
-- Comprehensive unit tests: Test individual components and functions in isolation where possible
-- End-to-End testing: Create scenarios that test the full user journey
-- Good logging: Make sure all files have good logging
-- Graceful degradation: Implement fallback strategies when components fail
+- Component unit tests must assert: correct CSS class names per variant, `data-testid` presence, and ARIA roles on interactive elements
+- E2E tests: never use `waitForTimeout` — assert the expected DOM condition (class presence, attribute value, element visibility) and let Playwright poll
+- **Drawer layout**: populated-state tests for pages with drawers must assert `container.querySelector('[data-testid="schema-page-layout"]')` is present when a row is selected
+- **Validation error absence**: tests that verify error clearing must assert `expect(screen.queryByText("...error...")).not.toBeInTheDocument()` — asserting only that the input value changed is not sufficient
+
+### Visual QA
+
+**Run `/frontend-visual-qa` after implementing any new page, drawer, or form.** The skill takes screenshots in both light and dark canvas modes, verifies layout composition, tests form validation timing interactively, and audits test assertion completeness. It produces a structured pass/fail report. Do not consider frontend work done until this check passes.
 
 <!-- generated-agents-section -->
 
@@ -367,6 +399,8 @@ Task(subagent_type="playwright-test-healer",    prompt="Diagnose failing test in
 
 | Skill | What it does |
 |---|---|
+| `/frontend-visual-qa` | Visual QA for a completed frontend page or component: screenshots in both canvas modes, layout composition check, form validation timing, test assertion audit. Run after any new page, drawer, or form. |
+| `/context-studio-design` | Generate well-branded UI assets or production components for Context Studio. Contains design tokens, CSS, icons, and visual reference cards. Use when designing new screens or prototypes. |
 | `/context-studio-test` | Run test suites — backend (pytest), frontend unit (vitest), E2E (playwright). Accepts `backend`, `unit`, `integration`, `frontend`, `e2e`, `smoke`, `validate`, `all`. |
 | `/context-studio-check` | Run all validation gates: domain purity, selector contract, OpenAPI freshness, TypeScript. |
 

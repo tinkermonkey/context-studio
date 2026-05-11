@@ -1,15 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
-import { ontologyService } from "@/api/services/ontology";
+import { ontologyService, type RelationshipListParams } from "@/api/services/ontology";
 import type { components } from "@/api/types";
 
 type RelationshipCreateRequest = components["schemas"]["RelationshipCreateRequest"];
-
-interface RelationshipListParams {
-  source_id?: string;
-  target_id?: string;
-  property_id?: string;
-}
 
 export function useRelationships(params?: RelationshipListParams) {
   return useQuery({

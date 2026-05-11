@@ -18,3 +18,4 @@ PRPs
 *.local
 index.html
 screenshots/
+routeTree.gen.ts

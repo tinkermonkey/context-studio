@@ -1,16 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
-import { ontologyService } from "@/api/services/ontology";
+import { ontologyService, type IndividualListParams } from "@/api/services/ontology";
 import type { components } from "@/api/types";
 
 type IndividualCreateRequest = components["schemas"]["IndividualCreateRequest"];
 type IndividualUpdateRequest = components["schemas"]["IndividualUpdateRequest"];
-
-interface IndividualListParams {
-  class_id?: string;
-  limit?: number;
-  offset?: number;
-}
+type IndividualClassRequest = components["schemas"]["IndividualClassRequest"];
+type IndividualClassListRequest = components["schemas"]["IndividualClassListRequest"];
 
 export function useIndividuals(params?: IndividualListParams) {
   return useQuery({
@@ -56,5 +52,54 @@ export function useDeleteIndividual() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.individuals() });
     },
+  });
+}
+
+export function useAddClassToIndividual() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ individualId, data }: { individualId: string; data: IndividualClassRequest }) =>
+      ontologyService.addParentClass(individualId, data),
+    onSuccess: (_result, { individualId }) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.individuals() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.individual(individualId) });
+    },
+  });
+}
+
+export function useRemoveClassFromIndividual() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ individualId, classId }: { individualId: string; classId: string }) =>
+      ontologyService.removeParentClass(individualId, classId),
+    onSuccess: (_result, { individualId }) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.individuals() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.individual(individualId) });
+    },
+  });
+}
+
+export function useReorderIndividualClasses() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      individualId,
+      data,
+    }: {
+      individualId: string;
+      data: IndividualClassListRequest;
+    }) => ontologyService.reorderIndividualClasses(individualId, data),
+    onSuccess: (_result, { individualId }) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.individuals() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.individual(individualId) });
+    },
+  });
+}
+
+export function useIndividualInheritedProperties(id: string) {
+  return useQuery({
+    queryKey: QUERY_KEYS.individual(id, "inherited-properties"),
+    queryFn: () => ontologyService.getIndividualInheritedProperties(id),
+    enabled: !!id,
   });
 }

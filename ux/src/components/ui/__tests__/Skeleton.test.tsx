@@ -79,9 +79,7 @@ describe("Skeleton", () => {
     });
 
     it("applies custom class along with inline styles", () => {
-      const { container } = render(
-        <Skeleton className="custom-class" width="100px" />,
-      );
+      const { container } = render(<Skeleton className="custom-class" width="100px" />);
       const skeleton = container.firstChild as HTMLDivElement;
       expect(skeleton.className).toBe("custom-class");
       expect(skeleton.style.width).toBe("100px");
@@ -90,20 +88,14 @@ describe("Skeleton", () => {
 
   describe("custom styles", () => {
     it("accepts style prop for additional styles", () => {
-      const { container } = render(
-        <Skeleton style={{ marginBottom: "8px" }} />,
-      );
+      const { container } = render(<Skeleton style={{ marginBottom: "8px" }} />);
       const skeleton = container.firstChild as HTMLDivElement;
       expect(skeleton.style.marginBottom).toBe("8px");
     });
 
     it("merges custom styles with default styles", () => {
       const { container } = render(
-        <Skeleton
-          width="100px"
-          height="20px"
-          style={{ marginLeft: "4px" }}
-        />,
+        <Skeleton width="100px" height="20px" style={{ marginLeft: "4px" }} />,
       );
       const skeleton = container.firstChild as HTMLDivElement;
       expect(skeleton.style.width).toBe("100px");
@@ -112,9 +104,7 @@ describe("Skeleton", () => {
     });
 
     it("allows overriding default styles via style prop", () => {
-      const { container } = render(
-        <Skeleton height="20px" style={{ borderRadius: "4px" }} />,
-      );
+      const { container } = render(<Skeleton height="20px" style={{ borderRadius: "4px" }} />);
       const skeleton = container.firstChild as HTMLDivElement;
       expect(skeleton.style.borderRadius).toBe("4px");
     });

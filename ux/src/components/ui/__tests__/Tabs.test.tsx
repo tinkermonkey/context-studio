@@ -13,33 +13,25 @@ describe("Tabs", () => {
 
   describe("CSS class styling", () => {
     it("applies tabs container class", () => {
-      const { container } = render(
-        <Tabs tabs={mockTabs} active="tab-1" onChange={vi.fn()} />,
-      );
+      const { container } = render(<Tabs tabs={mockTabs} active="tab-1" onChange={vi.fn()} />);
       expect(container.querySelector(".tabs")).toBeInTheDocument();
     });
 
     it("renders tab buttons with tab class", () => {
-      const { container } = render(
-        <Tabs tabs={mockTabs} active="tab-1" onChange={vi.fn()} />,
-      );
+      const { container } = render(<Tabs tabs={mockTabs} active="tab-1" onChange={vi.fn()} />);
       const tabButtons = container.querySelectorAll(".tab");
       expect(tabButtons.length).toBe(3);
     });
 
     it("applies active class to active tab", () => {
-      const { container } = render(
-        <Tabs tabs={mockTabs} active="tab-2" onChange={vi.fn()} />,
-      );
+      const { container } = render(<Tabs tabs={mockTabs} active="tab-2" onChange={vi.fn()} />);
       const tabs = container.querySelectorAll(".tab");
       const activeTab = tabs[1];
       expect(activeTab).toHaveClass("active");
     });
 
     it("does not apply active class to inactive tabs", () => {
-      const { container } = render(
-        <Tabs tabs={mockTabs} active="tab-1" onChange={vi.fn()} />,
-      );
+      const { container } = render(<Tabs tabs={mockTabs} active="tab-1" onChange={vi.fn()} />);
       const tabs = container.querySelectorAll(".tab");
       expect(tabs[1]).not.toHaveClass("active");
       expect(tabs[2]).not.toHaveClass("active");
@@ -117,9 +109,7 @@ describe("Tabs", () => {
     });
 
     it("aria-selected updates when active tab changes", () => {
-      const { rerender } = render(
-        <Tabs tabs={mockTabs} active="tab-1" onChange={vi.fn()} />,
-      );
+      const { rerender } = render(<Tabs tabs={mockTabs} active="tab-1" onChange={vi.fn()} />);
       const tabs = screen.getAllByRole("tab");
       expect(tabs[0]).toHaveAttribute("aria-selected", "true");
       expect(tabs[1]).toHaveAttribute("aria-selected", "false");
@@ -167,9 +157,7 @@ describe("Tabs", () => {
 
   describe("empty state", () => {
     it("renders empty container when no tabs provided", () => {
-      const { container } = render(
-        <Tabs tabs={[]} active="" onChange={vi.fn()} />,
-      );
+      const { container } = render(<Tabs tabs={[]} active="" onChange={vi.fn()} />);
       expect(container.querySelector(".tabs")).toBeInTheDocument();
       expect(container.querySelectorAll(".tab").length).toBe(0);
     });

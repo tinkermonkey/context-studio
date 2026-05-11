@@ -39,7 +39,7 @@ def e2e_config_file(temp_db_dir):
             "operations_db_path": str(temp_db_dir / "operations.db"),
         },
         "logging": {"log_level": "INFO", "max_bytes": 10485760, "backup_count": 5},
-        "llm": {"openai_api_key": "", "anthropic_api_key": ""},
+        "llm": {"openai_api_key": "sk-test-key-123456789", "anthropic_api_key": ""},
         "nlp": {},
         "reference": {
             "cache_db_path": str(temp_db_dir / "reference_api_cache.db"),

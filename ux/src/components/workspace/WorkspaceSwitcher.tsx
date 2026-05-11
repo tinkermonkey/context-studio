@@ -246,7 +246,15 @@ interface TileProps {
   highlight?: boolean;
 }
 
-function Tile({ testId, icon, title, description, onClick, disabled = false, highlight = false }: TileProps) {
+function Tile({
+  testId,
+  icon,
+  title,
+  description,
+  onClick,
+  disabled = false,
+  highlight = false,
+}: TileProps) {
   return (
     <button
       data-testid={testId}

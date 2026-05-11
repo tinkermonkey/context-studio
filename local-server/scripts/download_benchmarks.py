@@ -23,7 +23,7 @@ from pathlib import Path
 # Ensure local-server is in the path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from datasets import load_dataset
+from datasets import load_dataset  # type: ignore[import-untyped]
 from utils.logger import get_logger
 
 _logger = get_logger(__name__)

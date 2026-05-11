@@ -3,6 +3,8 @@
 !.claude/agents/**
 !.claude/commands/
 !.claude/commands/**
+!.claude/skills/
+!.claude/skills/**
 .serena/
 .vscode/
 .mcp.json

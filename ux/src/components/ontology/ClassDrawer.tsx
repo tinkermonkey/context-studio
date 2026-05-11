@@ -184,16 +184,12 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
             />
           )}
           <div>
-            <label className="form-group-label">
-              ID
-            </label>
+            <label className="form-group-label">ID</label>
             <Input type="text" value={classData.id} disabled mono data-testid="class-drawer-id" />
           </div>
 
           <div>
-            <label className="form-group-label">
-              Name
-            </label>
+            <label className="form-group-label">Name</label>
             <Input
               type="text"
               value={title}
@@ -203,9 +199,7 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
           </div>
 
           <div>
-            <label className="form-group-label">
-              Description
-            </label>
+            <label className="form-group-label">Description</label>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -215,9 +209,7 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
           </div>
 
           <div>
-            <label className="form-group-label">
-              Domain
-            </label>
+            <label className="form-group-label">Domain</label>
             <Select
               value={domainId}
               onChange={(e) => handleSchemeChange(e.target.value)}
@@ -234,9 +226,7 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
           </div>
 
           <div>
-            <label className="form-group-label">
-              Parent Class
-            </label>
+            <label className="form-group-label">Parent Class</label>
             {selectedParent ? (
               <div
                 className="flex-row-center"

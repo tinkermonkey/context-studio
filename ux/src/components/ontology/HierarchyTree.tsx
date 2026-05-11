@@ -153,7 +153,13 @@ export function HierarchyTree({
   };
 
   if (error) {
-    return <EmptyState title="Error" description={error.message || "Failed to load class hierarchy"} variant="compact" />;
+    return (
+      <EmptyState
+        title="Error"
+        description={error.message || "Failed to load class hierarchy"}
+        variant="compact"
+      />
+    );
   }
 
   if (loading) {

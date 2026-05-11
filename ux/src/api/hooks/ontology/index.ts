@@ -22,6 +22,9 @@ export {
   useCreateIndividual,
   useUpdateIndividual,
   useDeleteIndividual,
+  useAddClassToIndividual,
+  useRemoveClassFromIndividual,
+  useReorderIndividualClasses,
 } from "./useIndividuals";
 
 export {

@@ -33,20 +33,20 @@ type RelationshipResponse = components["schemas"]["RelationshipResponse"];
 type RelationshipCreateRequest = components["schemas"]["RelationshipCreateRequest"];
 type ListRelationships = components["schemas"]["ListResponse_RelationshipResponse_"];
 
-interface ClassListParams {
+export interface ClassListParams {
   concept_scheme_id?: string;
   parent_class_id?: string;
   limit?: number;
   offset?: number;
 }
 
-interface IndividualListParams {
+export interface IndividualListParams {
   class_id?: string;
   limit?: number;
   offset?: number;
 }
 
-interface RelationshipListParams {
+export interface RelationshipListParams {
   source_id?: string;
   target_id?: string;
   property_id?: string;
@@ -175,6 +175,14 @@ class OntologyService extends BaseService {
     data: IndividualClassListRequest,
   ): Promise<IndividualResponse> {
     return this.put<IndividualResponse>(`/api/individuals/${individualId}/classes`, data);
+  }
+
+  async getIndividualInheritedProperties(
+    individualId: string,
+  ): Promise<components["schemas"]["ListResponse_DataPropertyValueResponse_"]> {
+    return this.get<components["schemas"]["ListResponse_DataPropertyValueResponse_"]>(
+      `/api/individuals/${individualId}/inherited-properties`,
+    );
   }
 
   // Property Definitions

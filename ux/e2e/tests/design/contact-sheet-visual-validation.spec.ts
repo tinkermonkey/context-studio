@@ -18,9 +18,7 @@ test.describe("Contact Sheet Visual Validation", () => {
     "contact-sheet-intent-states",
   ];
 
-  test("should render all sections in light mode with correct styling", async ({
-    page,
-  }) => {
+  test("should render all sections in light mode with correct styling", async ({ page }) => {
     await page.goto("/app/contact-sheet");
     await page.waitForLoadState("networkidle");
 
@@ -47,9 +45,7 @@ test.describe("Contact Sheet Visual Validation", () => {
     }
   });
 
-  test("should toggle to dark canvas mode and render all sections correctly", async ({
-    page,
-  }) => {
+  test("should toggle to dark canvas mode and render all sections correctly", async ({ page }) => {
     await page.goto("/app/contact-sheet");
     await page.waitForLoadState("networkidle");
 
@@ -82,9 +78,7 @@ test.describe("Contact Sheet Visual Validation", () => {
     }
   });
 
-  test("should toggle back to light canvas mode and restore original styling", async ({
-    page,
-  }) => {
+  test("should toggle back to light canvas mode and restore original styling", async ({ page }) => {
     await page.goto("/app/contact-sheet");
     await page.waitForLoadState("networkidle");
 
