@@ -814,6 +814,9 @@ selectors:
     description: Status chip showing pipeline execution status (success, failed, idle, or disabled)
 
   # Pipeline Detail Panel
+  - selector: run-pipeline-btn
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Button to execute the pipeline
   - selector: pipeline-edit-config-button
     component: components/pipeline/PipelineDetailPanel.tsx
     description: Button to enter edit mode for pipeline configuration

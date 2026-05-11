@@ -64,6 +64,9 @@ export function useExecutePipeline() {
       pipelineService.executePipeline(id, inputText),
     onSuccess: (_result, { id }) => {
       queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.pipelines,
+      });
+      queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.pipelineExecutions(id),
       });
     },

@@ -1,8 +1,26 @@
+import { useEffect } from "react";
 import { Network, CheckCircle, AlertCircle } from "lucide-react";
 import { useHealth } from "@/api/hooks/admin";
+import { usePipelines } from "@/api/hooks/pipeline";
+import { useExecutionStore } from "@/stores/executionStore";
 
 export function Statusbar() {
   const { data: health, isError } = useHealth();
+  const { inFlightPipelineIds } = useExecutionStore();
+  const runningCount = inFlightPipelineIds.size;
+  const hasRunning = runningCount > 0;
+
+  const { refetch } = usePipelines();
+
+  useEffect(() => {
+    if (!hasRunning) return;
+
+    const interval = setInterval(() => {
+      refetch();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [hasRunning, refetch]);
 
   const isHealthy = !isError && health?.status === "healthy";
   const isDegraded = !isError && health?.status === "degraded";
@@ -45,6 +63,23 @@ export function Statusbar() {
         </span>
       </div>
       <div className="statusbar-group">
+        {hasRunning && (
+          <>
+            <span className="sb-item">
+              <span
+                className="status-pulse"
+                style={{
+                  background: "var(--cyan-400, #22d3ee)",
+                  animation: "pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+                }}
+              />
+              <span className="sb-mono">
+                {runningCount} pipeline{runningCount > 1 ? "s" : ""} running
+              </span>
+            </span>
+            <span className="sb-divider" />
+          </>
+        )}
         {uptimeLabel && (
           <>
             <span className="sb-item">

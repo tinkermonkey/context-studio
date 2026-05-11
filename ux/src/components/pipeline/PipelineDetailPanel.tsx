@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { Copy } from "lucide-react";
-import { usePipelineExecutions, useUpdatePipeline } from "@/api/hooks/pipeline";
+import { Copy, Play, Loader } from "lucide-react";
+import { usePipelineExecutions, useUpdatePipeline, useExecutePipeline } from "@/api/hooks/pipeline";
 import { Drawer } from "@/components/ui/Drawer";
 import { Textarea } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -9,6 +9,7 @@ import { useAutosave } from "@/hooks/useAutosave";
 import { useToasts } from "@/components/ui/Toast";
 import { Chip } from "@/components/ui/Chip";
 import { formatRelativeTime, formatDuration } from "@/utils/formatters";
+import { useExecutionStore } from "@/stores/executionStore";
 import type { components } from "@/api/types";
 
 type PipelineConfigurationResponse = components["schemas"]["PipelineConfigurationResponse"];
@@ -46,6 +47,8 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
     pipeline.id,
   );
   const updateMutation = useUpdatePipeline();
+  const executeMutation = useExecutePipeline();
+  const { startExecution, endExecution } = useExecutionStore();
 
   useEffect(() => {
     setConfigText(JSON.stringify(pipeline.config || {}, null, 2));
@@ -95,6 +98,21 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
     setIsEditingConfig(false);
   };
 
+  const handleRunPipeline = async () => {
+    try {
+      startExecution(pipeline.id);
+      await executeMutation.mutateAsync({
+        id: pipeline.id,
+        inputText: "",
+      });
+      toast("success", `Pipeline '${pipeline.title}' started`);
+    } catch (error) {
+      toast("error", error instanceof Error ? error.message : "Failed to run pipeline");
+    } finally {
+      endExecution(pipeline.id);
+    }
+  };
+
   const expandedExecution = expandedLogId ? executions.find((e) => e.id === expandedLogId) : null;
 
   const autosaveState = isEditingConfig
@@ -112,6 +130,23 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
       isDirty={isDirty && !isEditingConfig}
       lastSavedAt={lastSavedAtRef.current || undefined}
       onRevert={!isEditingConfig ? handleRevert : undefined}
+      headerAction={
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleRunPipeline}
+          disabled={executeMutation.isPending}
+          data-testid="run-pipeline-btn"
+          aria-label="Run pipeline"
+          title="Run pipeline"
+        >
+          {executeMutation.isPending ? (
+            <Loader size={16} className="spin" />
+          ) : (
+            <Play size={16} />
+          )}
+        </Button>
+      }
     >
       <div className="stack-lg">
         {/* Definition Editor Section */}

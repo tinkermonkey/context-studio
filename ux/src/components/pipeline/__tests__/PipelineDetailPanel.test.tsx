@@ -9,6 +9,14 @@ import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 
 vi.mock("@/api/hooks/pipeline");
 vi.mock("@/hooks/useAutosave");
+vi.mock("@/stores/executionStore", () => ({
+  useExecutionStore: vi.fn(() => ({
+    inFlightPipelineIds: new Set(),
+    startExecution: vi.fn(),
+    endExecution: vi.fn(),
+    hasRunningExecutions: vi.fn(() => false),
+  })),
+}));
 vi.mock("@/components/ui/Toast", () => ({
   useToasts: () => ({
     toast: vi.fn(),
@@ -69,6 +77,12 @@ describe("PipelineDetailPanel", () => {
     } as any);
 
     vi.mocked(pipelineHooks.useUpdatePipeline).mockReturnValue({
+      mutateAsync: vi.fn().mockResolvedValue({}),
+      isPending: false,
+      status: "idle",
+    } as any);
+
+    vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
       mutateAsync: vi.fn().mockResolvedValue({}),
       isPending: false,
       status: "idle",
