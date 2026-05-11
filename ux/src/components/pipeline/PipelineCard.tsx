@@ -4,6 +4,7 @@ import { usePipelineExecutions, useExecutePipeline } from "@/api/hooks/pipeline"
 import { formatRelativeTime, formatDuration } from "@/utils/formatters";
 import { Button } from "@/components/ui/Button";
 import { useToasts } from "@/components/ui/Toast";
+import { useExecutionStore } from "@/stores/executionStore";
 
 type PipelineConfigurationResponse = components["schemas"]["PipelineConfigurationResponse"];
 type ExecutionResponse = components["schemas"]["ExecutionResponse"];
@@ -60,9 +61,11 @@ export function PipelineCard({ pipeline }: PipelineCardProps) {
   const { data: executions = [] } = usePipelineExecutions(pipeline.id);
   const executeMutation = useExecutePipeline();
   const { toast } = useToasts();
+  const { startExecution, endExecution } = useExecutionStore();
 
   const handleRunPipeline = async () => {
     try {
+      startExecution(pipeline.id);
       const execution = await executeMutation.mutateAsync({
         id: pipeline.id,
         inputText: "",
@@ -74,6 +77,8 @@ export function PipelineCard({ pipeline }: PipelineCardProps) {
       }
     } catch (error) {
       toast("error", error instanceof Error ? error.message : "Failed to run pipeline");
+    } finally {
+      endExecution(pipeline.id);
     }
   };
 
@@ -94,7 +99,7 @@ export function PipelineCard({ pipeline }: PipelineCardProps) {
           <span className="name">{pipeline.title}</span>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
+        <div className="pipeline-card-actions">
           <Button
             variant="ghost"
             size="sm"

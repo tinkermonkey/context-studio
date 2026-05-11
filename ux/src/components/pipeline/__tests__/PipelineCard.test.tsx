@@ -7,9 +7,18 @@ import * as pipelineHooks from "@/api/hooks/pipeline";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
 vi.mock("@/api/hooks/pipeline");
+vi.mock("@/stores/executionStore", () => ({
+  useExecutionStore: vi.fn(() => ({
+    inFlightPipelineIds: new Set(),
+    startExecution: vi.fn(),
+    endExecution: vi.fn(),
+    hasRunningExecutions: vi.fn(() => false),
+  })),
+}));
+const mockToast = vi.fn();
 vi.mock("@/components/ui/Toast", () => ({
   useToasts: () => ({
-    toast: vi.fn(),
+    toast: mockToast,
   }),
 }));
 
@@ -44,6 +53,8 @@ describe("PipelineCard", () => {
   };
 
   beforeEach(() => {
+    vi.clearAllMocks();
+
     vi.mocked(pipelineHooks.usePipelineExecutions).mockReturnValue({
       data: [mockExecution],
       isLoading: false,
@@ -281,6 +292,7 @@ describe("PipelineCard", () => {
     await user.click(runButton);
 
     expect(mockMutate).toHaveBeenCalled();
+    expect(mockToast).toHaveBeenCalledWith("success", "Pipeline 'Test Pipeline' completed");
   });
 
   it("calls mutation with error status execution", async () => {
@@ -305,6 +317,7 @@ describe("PipelineCard", () => {
     await user.click(runButton);
 
     expect(mockMutate).toHaveBeenCalled();
+    expect(mockToast).toHaveBeenCalledWith("error", "Pipeline 'Test Pipeline' failed");
   });
 
   it("calls toast on mutation failure", async () => {
@@ -325,7 +338,7 @@ describe("PipelineCard", () => {
     const runButton = screen.getByTestId("run-pipeline-btn");
     await user.click(runButton);
 
-    // The mock toast should have been called with an error message
     expect(mockMutate).toHaveBeenCalled();
+    expect(mockToast).toHaveBeenCalledWith("error", "Execution failed");
   });
 });
