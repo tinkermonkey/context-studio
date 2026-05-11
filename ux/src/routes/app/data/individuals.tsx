@@ -267,7 +267,12 @@ function IndividualsPageWrapper() {
   const deleteMutation = useDeleteIndividual();
   const { toast } = useToasts();
 
-  const { data: classesResponse, isError: classesError, error: classesErrorObj, refetch: refetchClasses } = useClasses();
+  const {
+    data: classesResponse,
+    isError: classesError,
+    error: classesErrorObj,
+    refetch: refetchClasses,
+  } = useClasses();
   const classes = classesResponse?.items || [];
   const classMap = new Map(classes.map((c: ClassResponse) => [c.id, c.title]));
 

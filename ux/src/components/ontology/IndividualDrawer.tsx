@@ -74,8 +74,7 @@ function ClassChip({
             border: "none",
             cursor: !canMoveUp || isDisabled ? "not-allowed" : "pointer",
             padding: "0 2px",
-            color:
-              !canMoveUp || isDisabled ? "var(--canvas-fg-4)" : "var(--canvas-fg-3)",
+            color: !canMoveUp || isDisabled ? "var(--canvas-fg-4)" : "var(--canvas-fg-3)",
             opacity: !canMoveUp || isDisabled ? 0.5 : 1,
             display: "flex",
             alignItems: "center",
@@ -94,8 +93,7 @@ function ClassChip({
             border: "none",
             cursor: !canMoveDown || isDisabled ? "not-allowed" : "pointer",
             padding: "0 2px",
-            color:
-              !canMoveDown || isDisabled ? "var(--canvas-fg-4)" : "var(--canvas-fg-3)",
+            color: !canMoveDown || isDisabled ? "var(--canvas-fg-4)" : "var(--canvas-fg-3)",
             opacity: !canMoveDown || isDisabled ? 0.5 : 1,
             display: "flex",
             alignItems: "center",
@@ -152,8 +150,12 @@ export function IndividualDrawer({
   const { data: individualsResponse } = useIndividuals();
   const individual = individualsResponse?.items.find((i) => i.id === individualId) || null;
 
-  const { data: classesResponse, isError: classesError, error: classesErrorObj, refetch: refetchClasses } =
-    useClasses();
+  const {
+    data: classesResponse,
+    isError: classesError,
+    error: classesErrorObj,
+    refetch: refetchClasses,
+  } = useClasses();
   const classes = classesResponse?.items || [];
   const classMap = new Map(classes.map((c: ClassResponse) => [c.id, c.title]));
 
@@ -454,7 +456,8 @@ export function IndividualDrawer({
             <div style={{ marginBottom: "var(--space-3)" }}>
               <ErrorBanner
                 error={
-                  inheritedPropertiesErrorObj || new Error(individualsCopy.errors.failedToLoadInheritedProperties)
+                  inheritedPropertiesErrorObj ||
+                  new Error(individualsCopy.errors.failedToLoadInheritedProperties)
                 }
                 onRetry={() => refetchInheritedProperties()}
                 message={individualsCopy.errors.failedToLoadInheritedProperties}

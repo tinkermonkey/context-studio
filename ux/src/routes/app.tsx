@@ -118,7 +118,7 @@ function AppShell() {
 
   return (
     <div className="desktop-frame">
-      <div className={`app-shell${collapsed ? " collapsed" : ""}`}>
+      <div className={`app-shell${collapsed ? "collapsed" : ""}`}>
         <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((v) => !v)} />
         <div className="workspace">
           <Topbar />
