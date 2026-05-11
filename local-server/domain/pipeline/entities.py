@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 
-@dataclass
+@dataclass(frozen=True)
 class PipelineConfiguration:
     """
     Configuration for an LLM pipeline.
@@ -65,7 +65,7 @@ class PipelineConfiguration:
             raise ValueError(f"seed must be non-negative if provided, got {self.seed}")
 
 
-@dataclass
+@dataclass(frozen=True)
 class Execution:
     """
     Record of a single LLM pipeline execution.
@@ -84,7 +84,7 @@ class Execution:
         tokens_out: Number of tokens in the output
         duration_ms: Execution duration in milliseconds
         status: Completion status ("success" | "error" | "timeout")
-        error_message: Error description if status is "error", None otherwise
+        error_message: Error description if status is "error" or "timeout", None otherwise
         timestamp: When the execution occurred
 
     Raises:

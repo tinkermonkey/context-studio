@@ -21,8 +21,7 @@ class SQLitePipelineRepository:
     """
     SQLite implementation of the PipelineRepository port for operations.db.
 
-    Manages persistence of pipeline configurations and execution records with
-    complete instrumentation for observability.
+    Manages persistence of pipeline configurations and execution records.
     """
 
     def __init__(self, session_factory: sessionmaker) -> None:
