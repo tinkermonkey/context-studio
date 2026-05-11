@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Input, Textarea, Select } from "@/components/ui/Input";
+import { Input, Textarea } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { useIndividual } from "@/api/hooks/ontology/useIndividuals";
@@ -7,8 +7,6 @@ import type { components } from "@/api/types";
 
 type IndividualCreateRequest = components["schemas"]["IndividualCreateRequest"];
 type IndividualResponse = components["schemas"]["IndividualResponse"];
-type ClassResponse = components["schemas"]["ClassResponse"];
-type DataPropertyValueResponse = components["schemas"]["DataPropertyValueResponse"];
 
 interface IndividualEditorSubmitData {
   title: string;
@@ -89,13 +87,17 @@ export function IndividualEditor({
   };
 
   const handleAddClass = (classId: string) => {
-    setSelectedClassIds((prev) => [...prev, classId]);
-    setSearchQuery("");
-    setShowClassOptions(false);
+    if (!individualId) {
+      setSelectedClassIds((prev) => [...prev, classId]);
+      setSearchQuery("");
+      setShowClassOptions(false);
+    }
   };
 
   const handleRemoveClass = (classId: string) => {
-    setSelectedClassIds((prev) => prev.filter((id) => id !== classId));
+    if (!individualId) {
+      setSelectedClassIds((prev) => prev.filter((id) => id !== classId));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -195,14 +197,17 @@ export function IndividualEditor({
             <Input
               ref={searchInputRef}
               type="text"
-              placeholder="Search and add classes..."
+              placeholder={individualId ? "Classes cannot be changed in edit mode" : "Search and add classes..."}
               value={searchQuery}
               onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setShowClassOptions(true);
+                if (!individualId) {
+                  setSearchQuery(e.target.value);
+                  setShowClassOptions(true);
+                }
               }}
-              onFocus={() => setShowClassOptions(true)}
+              onFocus={() => !individualId && setShowClassOptions(true)}
               onKeyDown={handleKeyDown}
+              disabled={!!individualId}
               data-testid="individual-class-select"
             />
             {showClassOptions && filteredClasses.length > 0 && (

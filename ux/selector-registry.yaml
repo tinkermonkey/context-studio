@@ -538,9 +538,6 @@ selectors:
   - selector: individual-row-delete-*
     component: routes/app/data/individuals.tsx
     description: Delete button for individual row with dynamic ID suffix
-  - selector: individual-row-actions-*
-    component: routes/app/data/individuals.tsx
-    description: Actions button container for individual row with dynamic ID suffix
 
   # Hierarchy Tree
   - selector: hierarchy-node-*

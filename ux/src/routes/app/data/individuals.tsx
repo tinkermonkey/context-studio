@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreVertical, Edit2, Trash2 } from "lucide-react";
+import { Edit2, Trash2 } from "lucide-react";
 import { useToasts } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
@@ -324,12 +324,13 @@ function IndividualsPageWrapper() {
   }) => {
     setCreateError(null);
     try {
-      await createMutation.mutateAsync({
+      const result = await createMutation.mutateAsync({
         title: data.title,
         description: data.description,
         class_ids: data.class_ids,
       });
       setShowCreateModal(false);
+      handleSelectedIdChange(result.id);
       toast("success", individualsCopy.create.successToast);
     } catch (error) {
       setCreateError(error instanceof Error ? error.message : "Failed to create individual");
