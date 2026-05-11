@@ -19,7 +19,7 @@ export function Sparkline({ version, lastModified, maxHeight = 20 }: SparklinePr
   };
 
   const barCount = Math.min(version, 10);
-  const barWidth = Math.max(2, Math.floor(100 / barCount));
+  const barWidth = 3; // Fixed 3px bar width for consistent rendering
   const gap = 1;
   const color = getRecencyColor(lastModified);
 
@@ -39,7 +39,7 @@ export function Sparkline({ version, lastModified, maxHeight = 20 }: SparklinePr
           <div
             key={index}
             style={{
-              width: `${barWidth}%`,
+              width: `${barWidth}px`,
               height: `${height}%`,
               backgroundColor: color,
               borderRadius: "2px",
