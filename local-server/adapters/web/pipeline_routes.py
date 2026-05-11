@@ -154,7 +154,7 @@ async def list_pipeline_configurations(
     "/pipelines/executions", response_model=ListResponse[ExecutionWithPipelineResponse]
 )
 async def list_all_pipeline_executions(
-    status: Optional[str] = Query(
+    status_filter: Optional[str] = Query(
         None, description="Optional status filter (success, error, timeout)"
     ),
     limit: int = Query(100, ge=1, le=500, description="Maximum number of results"),
@@ -167,7 +167,7 @@ async def list_all_pipeline_executions(
     Results are returned in reverse chronological order (most recent first).
 
     Args:
-        status: Optional status filter ("success", "error", "timeout")
+        status_filter: Optional status filter ("success", "error", "timeout")
         limit: Maximum number of executions to return (1-500, default 100)
         offset: Number of executions to skip for pagination (default 0)
         service: PipelineService from dependency injection
@@ -179,7 +179,7 @@ async def list_all_pipeline_executions(
         HTTPException: 400 if invalid status value
     """
     valid_statuses = {"success", "error", "timeout"}
-    if status is not None and status not in valid_statuses:
+    if status_filter is not None and status_filter not in valid_statuses:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid status: must be one of {valid_statuses}",
@@ -188,7 +188,7 @@ async def list_all_pipeline_executions(
     try:
         executions, pipeline_titles, total = await run_sync_in_executor(
             service.list_all_executions,
-            status=status,
+            status=status_filter,
             limit=limit,
             offset=offset,
         )

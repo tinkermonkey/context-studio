@@ -195,3 +195,24 @@ class PipelineRepository(Protocol):
             List of Execution objects, up to limit
         """
         ...
+
+    def get_all_executions(
+        self,
+        status: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> tuple[list[Execution], int]:
+        """
+        Retrieve execution history across all pipeline configurations.
+
+        Results are returned in reverse chronological order (most recent first).
+
+        Args:
+            status: Optional status filter ("success", "error", "timeout")
+            limit: Maximum number of execution records to return (1-500, default 100)
+            offset: Number of execution records to skip for pagination (default 0)
+
+        Returns:
+            Tuple of (list of Execution objects, total count of executions matching filter)
+        """
+        ...

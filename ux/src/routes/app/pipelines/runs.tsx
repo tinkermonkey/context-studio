@@ -28,7 +28,9 @@ function formatTimestamp(timestamp: string): string {
   return new Date(timestamp).toLocaleString();
 }
 
-function getStatusColor(status: string): "emerald" | "rose" | "amber" {
+type ChipColor = "emerald" | "rose" | "amber" | "gray";
+
+function getStatusColor(status: string): ChipColor {
   switch (status) {
     case "success":
       return "emerald";
@@ -37,7 +39,7 @@ function getStatusColor(status: string): "emerald" | "rose" | "amber" {
     case "timeout":
       return "amber";
     default:
-      return "gray" as any;
+      return "gray";
   }
 }
 
@@ -97,11 +99,7 @@ function RunsPageContent() {
         const pipelineId = info.row.original.pipeline_config_id;
         return (
           <span
-            style={{
-              color: "var(--cyan-600, #0891b2)",
-              cursor: "pointer",
-              textDecoration: "underline",
-            }}
+            className="runs-pipeline-link"
             onClick={() => navigate({ to: `/app/pipelines/${pipelineId}` })}
             data-testid={`pipeline-link-${pipelineId}`}
             role="button"
@@ -158,13 +156,7 @@ function RunsPageContent() {
         <a
           href={`/app/pipelines/${row.original.pipeline_config_id}?execution=${row.original.id}`}
           data-testid={`view-log-${row.original.id}`}
-          style={{
-            color: "var(--cyan-600, #0891b2)",
-            textDecoration: "underline",
-            display: "flex",
-            alignItems: "center",
-            gap: "4px",
-          }}
+          className="runs-view-log-link"
         >
           View log
           <ExternalLink size={12} />
@@ -173,8 +165,10 @@ function RunsPageContent() {
     },
   ];
 
+  let content;
+
   if (isLoading) {
-    return (
+    content = (
       <div className="stack">
         <Skeleton height={32} width={200} />
         <Skeleton height={40} />
@@ -183,10 +177,8 @@ function RunsPageContent() {
         ))}
       </div>
     );
-  }
-
-  if (error) {
-    return (
+  } else if (error) {
+    content = (
       <div className="stack">
         <ErrorBanner
           error={error}
@@ -196,122 +188,107 @@ function RunsPageContent() {
         />
       </div>
     );
-  }
-
-  if (totalCount === 0) {
-    return (
+  } else if (totalCount === 0) {
+    content = (
       <EmptyState
         title="No pipeline runs yet"
         description="Execute a pipeline to see run history here."
       />
     );
+  } else {
+    const hasFilters = !!searchFilter || statusFilter !== "all";
+    const showFilteredEmpty = totalCount > 0 && filteredExecutions.length === 0 && hasFilters;
+
+    content = (
+      <>
+        <div className="page-head">
+          <h1>Run History</h1>
+        </div>
+
+        <div className="stack runs-filter-bar">
+          <Input
+            type="text"
+            placeholder="Search by pipeline name…"
+            value={searchFilter}
+            onChange={(e) => setSearchFilter(e.target.value)}
+            data-testid="runs-search-input"
+          />
+          <div
+            role="radiogroup"
+            aria-label="Filter runs by status"
+            className="runs-filter-group"
+          >
+            {(
+              [
+                { label: "All", value: "all" },
+                { label: "Success", value: "success" },
+                { label: "Error", value: "error" },
+                { label: "Timeout", value: "timeout" },
+              ] as const
+            ).map((option) => (
+              <button
+                key={option.value}
+                role="radio"
+                aria-checked={statusFilter === option.value}
+                onClick={() => {
+                  setStatusFilter(option.value);
+                  setCurrentPage(0);
+                }}
+                className="status-filter-chip"
+                data-testid={`status-filter-${option.value}`}
+                data-active={statusFilter === option.value}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {showFilteredEmpty ? (
+          <EmptyState
+            title="No runs match your filter"
+            description="Try adjusting your search or filter criteria."
+          />
+        ) : (
+          <>
+            <div data-testid="pipeline-runs-table">
+              <SchemaTable
+                columns={runColumns}
+                data={filteredExecutions}
+                testIdPrefix="run"
+              />
+            </div>
+
+            {totalCount > pageSize && (
+              <div className="runs-pagination-container">
+                <Button
+                  variant="ghost"
+                  disabled={currentPage === 0}
+                  onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                  data-testid="pagination-prev"
+                >
+                  Previous
+                </Button>
+                <span className="runs-page-counter">
+                  Page {currentPage + 1} of {Math.ceil(totalCount / pageSize)}
+                </span>
+                <Button
+                  variant="ghost"
+                  disabled={(currentPage + 1) * pageSize >= totalCount}
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  data-testid="pagination-next"
+                >
+                  Next
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+      </>
+    );
   }
 
-  const hasFilters = !!searchFilter || statusFilter !== "all";
-  const showFilteredEmpty = totalCount > 0 && filteredExecutions.length === 0 && hasFilters;
-
-  return (
-    <div data-testid="pipeline-runs-page">
-      <div className="page-head">
-        <h1>Run History</h1>
-      </div>
-
-      <div className="stack" style={{ marginBottom: "var(--space-6)" }}>
-        <Input
-          type="text"
-          placeholder="Search by pipeline name…"
-          value={searchFilter}
-          onChange={(e) => setSearchFilter(e.target.value)}
-          data-testid="runs-search-input"
-        />
-        <div
-          role="radiogroup"
-          aria-label="Filter runs by status"
-          style={{ display: "flex", gap: "var(--space-2)" }}
-        >
-          {(
-            [
-              { label: "All", value: "all" },
-              { label: "Success", value: "success" },
-              { label: "Error", value: "error" },
-              { label: "Timeout", value: "timeout" },
-            ] as const
-          ).map((option) => (
-            <button
-              key={option.value}
-              role="radio"
-              aria-checked={statusFilter === option.value}
-              onClick={() => {
-                setStatusFilter(option.value);
-                setCurrentPage(0);
-              }}
-              className="status-filter-chip"
-              data-testid={`status-filter-${option.value}`}
-              data-active={statusFilter === option.value}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {showFilteredEmpty ? (
-        <EmptyState
-          title="No runs match your filter"
-          description="Try adjusting your search or filter criteria."
-        />
-      ) : (
-        <>
-          <div data-testid="pipeline-runs-table">
-            <SchemaTable
-              columns={runColumns}
-              data={filteredExecutions}
-              testIdPrefix="run"
-            />
-          </div>
-
-          {totalCount > pageSize && (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                gap: "var(--space-2)",
-                marginTop: "var(--space-6)",
-              }}
-            >
-              <Button
-                variant="ghost"
-                disabled={currentPage === 0}
-                onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-                data-testid="pagination-prev"
-              >
-                Previous
-              </Button>
-              <span
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  padding: "0 var(--space-2)",
-                  color: "var(--canvas-fg-2)",
-                  fontSize: "var(--text-sm)",
-                }}
-              >
-                Page {currentPage + 1} of {Math.ceil(totalCount / pageSize)}
-              </span>
-              <Button
-                variant="ghost"
-                disabled={(currentPage + 1) * pageSize >= totalCount}
-                onClick={() => setCurrentPage(currentPage + 1)}
-                data-testid="pagination-next"
-              >
-                Next
-              </Button>
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  );
+  return <div data-testid="pipeline-runs-page">{content}</div>;
 }
 
 export const Route = createFileRoute("/app/pipelines/runs")({
