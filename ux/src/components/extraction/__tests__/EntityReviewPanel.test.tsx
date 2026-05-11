@@ -66,6 +66,7 @@ describe("EntityReviewPanel", () => {
       data: { items: [mockClass1, mockClass2] },
       isLoading: false,
       error: null,
+      refetch: vi.fn(),
       status: "success",
     } as any);
 
@@ -73,6 +74,7 @@ describe("EntityReviewPanel", () => {
       data: { items: [mockScheme] },
       isLoading: false,
       error: null,
+      refetch: vi.fn(),
       status: "success",
     } as any);
   });
@@ -184,11 +186,10 @@ describe("EntityReviewPanel", () => {
       expect(screen.getByText("Person")).toBeInTheDocument();
     });
 
-    it("displays approve, reject, link buttons", () => {
+    it("displays approve and reject buttons", () => {
       renderWithProvider(<EntityReviewPanel entities={[mockEntity]} layerIndex={0} />);
       expect(screen.getByTestId(`entity-review-approve-${mockEntity.id}`)).toBeInTheDocument();
       expect(screen.getByTestId(`entity-review-reject-${mockEntity.id}`)).toBeInTheDocument();
-      expect(screen.getByTestId(`entity-review-link-${mockEntity.id}`)).toBeInTheDocument();
     });
 
     it("disables buttons when isProcessing is true", async () => {
@@ -330,110 +331,51 @@ describe("EntityReviewPanel", () => {
     });
   });
 
-  describe("link dropdown", () => {
-    it("opens dropdown when Link button clicked", async () => {
-      const user = userEvent.setup();
+  describe("error handling", () => {
+    it("shows error banner when classes query fails", () => {
+      const testError = new Error("Failed to load classes");
+      mockUseClasses.mockReturnValueOnce({
+        data: null,
+        isLoading: false,
+        error: testError,
+        refetch: vi.fn(),
+        status: "error",
+      } as any);
+
       renderWithProvider(<EntityReviewPanel entities={[mockEntity]} layerIndex={0} />);
 
-      const linkButton = screen.getByTestId(`entity-review-link-${mockEntity.id}`);
-      await user.click(linkButton);
-
-      expect(screen.getByTestId("entity-review-link-input")).toBeInTheDocument();
+      expect(screen.getByText(/Failed to load classes/i)).toBeInTheDocument();
     });
 
-    it("closes dropdown when clicking outside", async () => {
-      const user = userEvent.setup();
-      const { container } = renderWithProvider(
-        <EntityReviewPanel entities={[mockEntity]} layerIndex={0} />,
-      );
+    it("shows error banner when schemes query fails", () => {
+      const testError = new Error("Failed to load schemes");
+      mockUseSchemes.mockReturnValueOnce({
+        data: null,
+        isLoading: false,
+        error: testError,
+        refetch: vi.fn(),
+        status: "error",
+      } as any);
 
-      const linkButton = screen.getByTestId(`entity-review-link-${mockEntity.id}`);
-      await user.click(linkButton);
-
-      expect(screen.getByTestId("entity-review-link-input")).toBeInTheDocument();
-
-      await user.click(container);
-
-      expect(screen.queryByTestId("entity-review-link-input")).not.toBeInTheDocument();
-    });
-
-    it("closes dropdown when X button clicked", async () => {
-      const user = userEvent.setup();
       renderWithProvider(<EntityReviewPanel entities={[mockEntity]} layerIndex={0} />);
 
-      const linkButton = screen.getByTestId(`entity-review-link-${mockEntity.id}`);
-      await user.click(linkButton);
-
-      const closeButton = screen.getByRole("button", { name: /close/i });
-      await user.click(closeButton);
-
-      expect(screen.queryByTestId("entity-review-link-input")).not.toBeInTheDocument();
+      expect(screen.getByText(/Failed to load concept schemes/i)).toBeInTheDocument();
     });
 
-    it("filters classes by title", async () => {
-      const user = userEvent.setup();
+    it("shows retry button in error banner", () => {
+      const testError = new Error("Failed to load classes");
+      mockUseClasses.mockReturnValueOnce({
+        data: null,
+        isLoading: false,
+        error: testError,
+        refetch: vi.fn(),
+        status: "error",
+      } as any);
+
       renderWithProvider(<EntityReviewPanel entities={[mockEntity]} layerIndex={0} />);
 
-      const linkButton = screen.getByTestId(`entity-review-link-${mockEntity.id}`);
-      await user.click(linkButton);
-
-      const searchInput = screen.getByTestId("entity-review-link-input");
-      await user.type(searchInput, "Organization");
-
-      expect(screen.getByTestId(`entity-review-link-option-${mockClass2.id}`)).toBeInTheDocument();
-      expect(
-        screen.queryByTestId(`entity-review-link-option-${mockClass1.id}`),
-      ).not.toBeInTheDocument();
-    });
-
-    it("filters classes by id", async () => {
-      const user = userEvent.setup();
-      renderWithProvider(<EntityReviewPanel entities={[mockEntity]} layerIndex={0} />);
-
-      const linkButton = screen.getByTestId(`entity-review-link-${mockEntity.id}`);
-      await user.click(linkButton);
-
-      const searchInput = screen.getByTestId("entity-review-link-input");
-      await user.type(searchInput, "class-2");
-
-      expect(screen.getByTestId(`entity-review-link-option-${mockClass2.id}`)).toBeInTheDocument();
-      expect(
-        screen.queryByTestId(`entity-review-link-option-${mockClass1.id}`),
-      ).not.toBeInTheDocument();
-    });
-
-    it("shows 'no classes found' when search has no matches", async () => {
-      const user = userEvent.setup();
-      renderWithProvider(<EntityReviewPanel entities={[mockEntity]} layerIndex={0} />);
-
-      const linkButton = screen.getByTestId(`entity-review-link-${mockEntity.id}`);
-      await user.click(linkButton);
-
-      const searchInput = screen.getByTestId("entity-review-link-input");
-      await user.type(searchInput, "nonexistent");
-
-      expect(screen.getByText(/no classes found/i)).toBeInTheDocument();
-    });
-
-    it("calls link handler and closes dropdown when class option clicked", async () => {
-      const user = userEvent.setup();
-      renderWithProvider(<EntityReviewPanel entities={[mockEntity, mockEntity2]} layerIndex={0} />);
-
-      const linkButton = screen.getByTestId(`entity-review-link-${mockEntity.id}`);
-      await user.click(linkButton);
-
-      const classOption = screen.getByTestId(`entity-review-link-option-${mockClass1.id}`);
-      await user.click(classOption);
-
-      // Entity should disappear from list (it was linked)
-      expect(screen.queryByText("Test Entity")).not.toBeInTheDocument();
-      // Dropdown should close
-      expect(screen.queryByTestId("entity-review-link-input")).not.toBeInTheDocument();
-      // Toast should show
-      expect(mockToast).toHaveBeenCalledWith(
-        "info",
-        expect.stringContaining("Link recorded locally"),
-      );
+      const retryButton = screen.getByRole("button", { name: /retry/i });
+      expect(retryButton).toBeInTheDocument();
     });
   });
 
@@ -474,29 +416,14 @@ describe("EntityReviewPanel", () => {
   });
 
   describe("accessibility", () => {
-    it("dropdown has role='listbox' and input has role='combobox'", async () => {
-      const user = userEvent.setup();
+    it("buttons are accessible with proper data-testid attributes", () => {
       renderWithProvider(<EntityReviewPanel entities={[mockEntity]} layerIndex={0} />);
 
-      const linkButton = screen.getByTestId(`entity-review-link-${mockEntity.id}`);
-      await user.click(linkButton);
+      const approveButton = screen.getByTestId(`entity-review-approve-${mockEntity.id}`);
+      const rejectButton = screen.getByTestId(`entity-review-reject-${mockEntity.id}`);
 
-      const input = screen.getByTestId("entity-review-link-input");
-      expect(input).toHaveAttribute("role", "combobox");
-
-      const options = screen.getByRole("listbox");
-      expect(options).toBeInTheDocument();
-    });
-
-    it("each option has role='option'", async () => {
-      const user = userEvent.setup();
-      renderWithProvider(<EntityReviewPanel entities={[mockEntity]} layerIndex={0} />);
-
-      const linkButton = screen.getByTestId(`entity-review-link-${mockEntity.id}`);
-      await user.click(linkButton);
-
-      const options = screen.getAllByRole("option");
-      expect(options.length).toBe(2);
+      expect(approveButton).toBeInTheDocument();
+      expect(rejectButton).toBeInTheDocument();
     });
   });
 });

@@ -1,10 +1,10 @@
-import { useState, useRef, useEffect } from "react";
-import { ChevronDown, CheckCircle, X } from "lucide-react";
+import { useState } from "react";
+import { CheckCircle } from "lucide-react";
 import { useCreateClass, useClasses, useSchemes } from "@/api/hooks/ontology";
 import { useToasts } from "@/components/ui/Toast";
+import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { Panel } from "@/components/ui/Panel";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
 import { Chip } from "@/components/ui/Chip";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { formatConfidence } from "@/utils/formatters";
@@ -23,44 +23,17 @@ interface EntityRowProps {
   entity: ExtractedEntitySchema;
   index: number;
   isProcessing: boolean;
-  availableClasses: Array<{ id: string; title: string }>;
   onApprove: (entity: ExtractedEntitySchema) => void;
   onReject: (entityId: string) => void;
-  onLink: (entity: ExtractedEntitySchema, _targetClassId: string) => void;
 }
 
 function EntityRow({
   entity,
   index,
   isProcessing,
-  availableClasses,
   onApprove,
   onReject,
-  onLink,
 }: EntityRowProps) {
-  const [linkingState, setLinkingState] = useState<{ searchQuery: string } | null>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Handle click-outside for dropdown
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setLinkingState(null);
-      }
-    };
-    if (linkingState) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
-    }
-  }, [linkingState]);
-
-  const filteredClasses = linkingState
-    ? availableClasses.filter(
-        (cls) =>
-          cls.title.toLowerCase().includes(linkingState.searchQuery.toLowerCase()) ||
-          cls.id.toLowerCase().includes(linkingState.searchQuery.toLowerCase()),
-      )
-    : [];
 
   return (
     <div
@@ -116,118 +89,7 @@ function EntityRow({
         >
           {COPY.REJECT_BUTTON}
         </Button>
-        <div style={{ position: "relative" }} ref={dropdownRef}>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() =>
-              setLinkingState({
-                searchQuery: "",
-              })
-            }
-            disabled={isProcessing || linkingState !== null}
-            data-testid={`entity-review-link-${entity.id}`}
-          >
-            {COPY.LINK_BUTTON}
-            {linkingState !== null && (
-              <ChevronDown
-                size={14}
-                style={{
-                  marginLeft: "4px",
-                  transform: "rotate(180deg)",
-                }}
-              />
-            )}
-          </Button>
-
-          {linkingState !== null && (
-            <div className="dropdown-popover" role="listbox">
-              <div style={{ padding: "8px" }}>
-                <Input
-                  type="text"
-                  placeholder={COPY.SEARCH_CLASSES_PLACEHOLDER}
-                  value={linkingState.searchQuery}
-                  onChange={(e) => {
-                    setLinkingState({
-                      ...linkingState,
-                      searchQuery: e.target.value,
-                    });
-                  }}
-                  data-testid="entity-review-link-input"
-                  style={{ marginBottom: "8px" }}
-                  role="combobox"
-                  aria-expanded={linkingState !== null}
-                  aria-controls="entity-review-options"
-                />
-                {filteredClasses.length > 0 ? (
-                  <div
-                    id="entity-review-options"
-                    style={{
-                      maxHeight: "200px",
-                      overflowY: "auto",
-                    }}
-                  >
-                    {filteredClasses.map((cls) => (
-                      <button
-                        key={cls.id}
-                        type="button"
-                        onClick={() => {
-                          onLink(entity, cls.id);
-                          setLinkingState(null);
-                        }}
-                        className="dropdown-option"
-                        data-testid={`entity-review-link-option-${cls.id}`}
-                        role="option"
-                      >
-                        <span
-                          className="mono"
-                          style={{
-                            fontSize: "var(--text-xs)",
-                            color: "var(--canvas-fg-3)",
-                          }}
-                        >
-                          {cls.id.slice(0, 8)}
-                        </span>
-                        <span>{cls.title}</span>
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div
-                    style={{
-                      padding: "8px",
-                      textAlign: "center",
-                      color: "var(--canvas-fg-2)",
-                      fontSize: "var(--text-sm)",
-                    }}
-                  >
-                    {COPY.NO_CLASSES_FOUND}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
       </div>
-
-      {/* Close linking */}
-      {linkingState !== null && (
-        <button
-          type="button"
-          onClick={() => setLinkingState(null)}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            padding: "4px",
-            display: "flex",
-            alignItems: "center",
-          }}
-          aria-label="Close"
-        >
-          <X size={16} color="var(--canvas-fg-3)" />
-        </button>
-      )}
     </div>
   );
 }
@@ -244,8 +106,8 @@ export function EntityReviewPanel({
   const { toast } = useToasts();
 
   const createClassMutation = useCreateClass();
-  const { data: classesList } = useClasses();
-  const { data: schemesList } = useSchemes();
+  const { data: classesList, error: classesError, refetch: refetchClasses } = useClasses();
+  const { data: schemesList, error: schemesError, refetch: refetchSchemes } = useSchemes();
 
   const layerNames: Record<number, string> = {
     0: "KG Context",
@@ -297,13 +159,6 @@ export function EntityReviewPanel({
   const handleReject = (entityId: string) => {
     setRejectedIds((prev) => new Set([...prev, entityId]));
     toast("info", COPY.ENTITY_REJECTED);
-  };
-
-  const handleLinkConfirm = (entity: ExtractedEntitySchema, _targetClassId: string) => {
-    // TODO: Implement entity-to-class linking API call when backend supports it
-    // For now, this optimistically updates UI state as placeholder
-    setLinkedIds((prev) => new Set([...prev, entity.id]));
-    toast("info", COPY.ENTITY_LINKED);
   };
 
   const handleApproveAll = async () => {
@@ -365,6 +220,28 @@ export function EntityReviewPanel({
   // Hidden state
   if (isHidden) {
     return null;
+  }
+
+  // Error state: if either query failed, show error banner
+  if (classesError || schemesError) {
+    const failedQuery = classesError ? "classes" : "concept schemes";
+    return (
+      <div data-testid={`entity-review-panel-${layerIndex}`}>
+        <Panel title={`${COPY.ENTITY_REVIEW_PANEL_TITLE} — ${layerName}`}>
+          <div className="stack">
+            <ErrorBanner
+              error={classesError || schemesError}
+              onRetry={() => {
+                if (classesError) refetchClasses();
+                if (schemesError) refetchSchemes();
+              }}
+              message={`Failed to load ${failedQuery}`}
+              compact
+            />
+          </div>
+        </Panel>
+      </div>
+    );
   }
 
   // Loading state
@@ -436,9 +313,6 @@ export function EntityReviewPanel({
     </div>
   );
 
-  // Populated state
-  const availableClasses = classesList?.items?.filter((cls) => !cls.id.startsWith("_")) || [];
-
   return (
     <div data-testid={`entity-review-panel-${layerIndex}`}>
       <Panel
@@ -452,10 +326,8 @@ export function EntityReviewPanel({
               entity={entity}
               index={index}
               isProcessing={isProcessing}
-              availableClasses={availableClasses}
               onApprove={handleApprove}
               onReject={handleReject}
-              onLink={handleLinkConfirm}
             />
           ))}
         </div>
