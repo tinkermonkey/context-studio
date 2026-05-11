@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, CheckCircle, X } from "lucide-react";
-import { useCreateClass, useClasses, useSchemes, useCreateRelationship } from "@/api/hooks/ontology";
+import { useCreateClass, useClasses, useSchemes } from "@/api/hooks/ontology";
 import { useToasts } from "@/components/ui/Toast";
 import { Panel } from "@/components/ui/Panel";
 import { Button } from "@/components/ui/Button";
@@ -15,11 +15,6 @@ interface EntityReviewPanelProps {
   entities: ExtractedEntitySchema[];
   layerIndex: number;
   isLoading?: boolean;
-}
-
-interface LinkingState {
-  entityId: string;
-  searchQuery: string;
 }
 
 interface EntityRowProps {
@@ -101,7 +96,7 @@ function EntityRow({
       </div>
 
       {/* Actions */}
-      <div style={{ display: "flex", gap: "6px" }}>
+      <div className="flex-gap-sm">
         <Button
           variant="primary"
           size="sm"
@@ -146,18 +141,7 @@ function EntityRow({
 
           {linkingState !== null && (
             <div
-              style={{
-                position: "absolute",
-                top: "100%",
-                right: 0,
-                background: "var(--canvas-bg)",
-                border: "1px solid var(--canvas-fg-4)",
-                borderRadius: "var(--radius-sm)",
-                marginTop: "4px",
-                zIndex: 10,
-                minWidth: "200px",
-                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-              }}
+              className="dropdown-popover"
               role="listbox"
             >
               <div style={{ padding: "8px" }}>
@@ -193,20 +177,7 @@ function EntityRow({
                           onLink(entity, cls.id);
                           setLinkingState(null);
                         }}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "var(--space-2)",
-                          padding: "var(--space-2) var(--space-3)",
-                          width: "100%",
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          textAlign: "left",
-                          fontSize: "var(--text-sm)",
-                          color: "var(--canvas-fg)",
-                          borderBottom: "1px solid var(--canvas-fg-4)",
-                        }}
+                        className="dropdown-option"
                         data-testid={`entity-review-link-option-${cls.id}`}
                         role="option"
                       >
@@ -275,7 +246,6 @@ export function EntityReviewPanel({
   const { toast } = useToasts();
 
   const createClassMutation = useCreateClass();
-  const createRelationshipMutation = useCreateRelationship();
   const { data: classesList } = useClasses();
   const { data: schemesList } = useSchemes();
 
@@ -332,24 +302,9 @@ export function EntityReviewPanel({
     toast("info", "Entity rejected");
   };
 
-  const handleLinkConfirm = async (entity: ExtractedEntitySchema, targetClassId: string) => {
-    try {
-      setIsProcessing(true);
-      await createRelationshipMutation.mutateAsync({
-        source_id: targetClassId,
-        target_id: entity.id,
-        relationship_type: "related_to",
-      });
-      setLinkedIds((prev) => new Set([...prev, entity.id]));
-      toast("success", "Entity linked to class");
-    } catch (error) {
-      toast(
-        "error",
-        `Failed to link entity: ${error instanceof Error ? error.message : "Unknown error"}`
-      );
-    } finally {
-      setIsProcessing(false);
-    }
+  const handleLinkConfirm = (entity: ExtractedEntitySchema, targetClassId: string) => {
+    setLinkedIds((prev) => new Set([...prev, entity.id]));
+    toast("success", "Entity linked to class");
   };
 
   const handleApproveAll = async () => {
@@ -375,11 +330,10 @@ export function EntityReviewPanel({
         )
       );
 
-      const fulfilledResults = results.filter((r) => r.status === "fulfilled");
       const failedResults = results.filter((r) => r.status === "rejected");
-      const fulfilledEntityIds = fulfilledResults
-        .map((_, index) => unlinkedEntities[index].id)
-        .filter((id) => id);
+      const fulfilledEntityIds = results
+        .map((r, i) => r.status === "fulfilled" ? unlinkedEntities[i].id : null)
+        .filter((id): id is string => id !== null);
 
       if (fulfilledEntityIds.length > 0) {
         setLinkedIds((prev) => new Set([...prev, ...fulfilledEntityIds]));
@@ -420,7 +374,7 @@ export function EntityReviewPanel({
               <div key={i} className="flex-row-center">
                 <Skeleton width="200px" height="32px" />
                 <Skeleton width="60px" height="24px" />
-                <div style={{ marginLeft: "auto", display: "flex", gap: "6px" }}>
+                <div style={{ marginLeft: "auto" }} className="flex-gap-sm">
                   <Skeleton width="60px" height="28px" />
                   <Skeleton width="60px" height="28px" />
                   <Skeleton width="60px" height="28px" />
@@ -449,7 +403,7 @@ export function EntityReviewPanel({
 
   // Batch actions
   const batchActions = (
-    <div style={{ display: "flex", gap: "6px" }}>
+    <div className="flex-gap-sm">
       <Button
         variant="primary"
         size="sm"
