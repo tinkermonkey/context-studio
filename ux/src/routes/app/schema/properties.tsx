@@ -68,9 +68,7 @@ function PropertiesPageContent({ onCreateClick }: PropertiesPageContentProps) {
     {
       accessorKey: "description",
       header: "Description",
-      cell: (info) => (
-        <span className="muted-text">{(info.getValue() as string) || "—"}</span>
-      ),
+      cell: (info) => <span className="muted-text">{(info.getValue() as string) || "—"}</span>,
     },
     {
       accessorKey: "last_modified",
@@ -85,10 +83,7 @@ function PropertiesPageContent({ onCreateClick }: PropertiesPageContentProps) {
       header: "",
       size: 40,
       cell: ({ row }) => (
-        <button
-          data-testid={`property-row-actions-${row.original.id}`}
-          className="btn btn-icon"
-        >
+        <button data-testid={`property-row-actions-${row.original.id}`} className="btn btn-icon">
           <MoreVertical size={16} style={{ color: "var(--canvas-fg-3)" }} />
         </button>
       ),

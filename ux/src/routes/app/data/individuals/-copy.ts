@@ -1,7 +1,8 @@
 export const individualsCopy = {
   emptyState: {
     title: "No individuals yet",
-    description: "Individuals are instances of classes that represent specific entities in your knowledge graph.",
+    description:
+      "Individuals are instances of classes that represent specific entities in your knowledge graph.",
     actionLabel: "+ New individual",
   },
   filteredEmpty: {

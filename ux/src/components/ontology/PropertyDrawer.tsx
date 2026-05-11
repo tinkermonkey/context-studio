@@ -107,9 +107,7 @@ export function PropertyDrawer({ property, onClose }: PropertyDrawerProps) {
       >
         <div className="stack-lg">
           <div>
-            <label className="form-group-label">
-              Identifier
-            </label>
+            <label className="form-group-label">Identifier</label>
             <Input
               type="text"
               value={property.identifier}
@@ -120,9 +118,7 @@ export function PropertyDrawer({ property, onClose }: PropertyDrawerProps) {
           </div>
 
           <div>
-            <label className="form-group-label">
-              Title
-            </label>
+            <label className="form-group-label">Title</label>
             <Input
               type="text"
               value={title}
@@ -132,9 +128,7 @@ export function PropertyDrawer({ property, onClose }: PropertyDrawerProps) {
           </div>
 
           <div>
-            <label className="form-group-label">
-              Description
-            </label>
+            <label className="form-group-label">Description</label>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}

@@ -134,10 +134,7 @@ function IndividualsPageContent({
       header: "",
       size: 40,
       cell: ({ row }) => (
-        <button
-          data-testid={`individual-row-actions-${row.original.id}`}
-          className="btn btn-icon"
-        >
+        <button data-testid={`individual-row-actions-${row.original.id}`} className="btn btn-icon">
           <MoreVertical size={16} style={{ color: "var(--canvas-fg-3)" }} />
         </button>
       ),

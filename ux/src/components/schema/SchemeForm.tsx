@@ -45,9 +45,7 @@ export function SchemeForm({ onSubmit, isLoading }: SchemeFormProps) {
     <form onSubmit={handleSubmit} data-testid="scheme-form">
       <div className="stack-lg">
         <div>
-          <label className="form-group-label">
-            Title
-          </label>
+          <label className="form-group-label">Title</label>
           <Input
             type="text"
             placeholder="Scheme name"
@@ -64,9 +62,7 @@ export function SchemeForm({ onSubmit, isLoading }: SchemeFormProps) {
         </div>
 
         <div>
-          <label className="form-group-label">
-            Description (optional)
-          </label>
+          <label className="form-group-label">Description (optional)</label>
           <Textarea
             placeholder="Optional description"
             value={description}

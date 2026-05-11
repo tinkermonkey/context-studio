@@ -132,7 +132,7 @@ This test validates the visual rendering of the Contact Sheet component gallery 
 - Each screenshot shows the section with proper styling and layout
 - No visual glitches or rendering artifacts
 
-**Selectors Used**: All 14 contact-sheet-* selectors (see step 1)
+**Selectors Used**: All 14 contact-sheet-\* selectors (see step 1)
 
 **Invariants Verified**:
 
@@ -265,7 +265,7 @@ This test validates the visual rendering of the Contact Sheet component gallery 
 - No visual glitches or rendering artifacts in dark mode
 - Colors are inverted/adjusted correctly from light mode baseline
 
-**Selectors Used**: All 14 contact-sheet-* selectors (see step 1)
+**Selectors Used**: All 14 contact-sheet-\* selectors (see step 1)
 
 **Invariants Verified**:
 

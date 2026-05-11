@@ -73,9 +73,7 @@ export function RelationshipDrawer({
       >
         <div className="stack-lg">
           <div>
-            <label className="form-group-label">
-              ID
-            </label>
+            <label className="form-group-label">ID</label>
             <Input
               type="text"
               value={relationship.id}
@@ -86,9 +84,7 @@ export function RelationshipDrawer({
           </div>
 
           <div>
-            <label className="form-group-label">
-              Source Class
-            </label>
+            <label className="form-group-label">Source Class</label>
             <Input
               type="text"
               value={sourceName}
@@ -98,9 +94,7 @@ export function RelationshipDrawer({
           </div>
 
           <div>
-            <label className="form-group-label">
-              Target Class
-            </label>
+            <label className="form-group-label">Target Class</label>
             <Input
               type="text"
               value={targetName}
@@ -110,9 +104,7 @@ export function RelationshipDrawer({
           </div>
 
           <div>
-            <label className="form-group-label">
-              Relationship Type
-            </label>
+            <label className="form-group-label">Relationship Type</label>
             <Input
               type="text"
               value={propertyName}

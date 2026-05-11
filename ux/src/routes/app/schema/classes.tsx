@@ -125,9 +125,7 @@ function ClassesPageContent({
       id: "propertyCount",
       header: "Properties",
       cell: ({ row }) => (
-        <span className="muted-text">
-          {row.original.data_properties?.length ?? 0}
-        </span>
+        <span className="muted-text">{row.original.data_properties?.length ?? 0}</span>
       ),
     },
     {
@@ -143,10 +141,7 @@ function ClassesPageContent({
       header: "",
       size: 40,
       cell: ({ row }) => (
-        <button
-          data-testid={`class-row-actions-${row.original.id}`}
-          className="btn btn-icon"
-        >
+        <button data-testid={`class-row-actions-${row.original.id}`} className="btn btn-icon">
           <MoreVertical size={16} style={{ color: "var(--canvas-fg-3)" }} />
         </button>
       ),

@@ -30,24 +30,18 @@ const mockData: TestItem[] = [
 describe("SchemaTable", () => {
   describe("data-testid attributes", () => {
     it("has schema-table data-testid", () => {
-      render(
-        <SchemaTable columns={mockColumns} data={mockData} />,
-      );
+      render(<SchemaTable columns={mockColumns} data={mockData} />);
       expect(screen.getByTestId("schema-table")).toBeInTheDocument();
     });
 
     it("has column header testids", () => {
-      render(
-        <SchemaTable columns={mockColumns} data={mockData} />,
-      );
+      render(<SchemaTable columns={mockColumns} data={mockData} />);
       expect(screen.getByTestId("schema-header-name")).toBeInTheDocument();
       expect(screen.getByTestId("schema-header-type")).toBeInTheDocument();
     });
 
     it("has row testids", () => {
-      render(
-        <SchemaTable columns={mockColumns} data={mockData} />,
-      );
+      render(<SchemaTable columns={mockColumns} data={mockData} />);
       expect(screen.getByTestId("schema-row-1")).toBeInTheDocument();
       expect(screen.getByTestId("schema-row-2")).toBeInTheDocument();
     });
@@ -55,24 +49,18 @@ describe("SchemaTable", () => {
 
   describe("table rendering", () => {
     it("renders table element", () => {
-      const { container } = render(
-        <SchemaTable columns={mockColumns} data={mockData} />,
-      );
+      const { container } = render(<SchemaTable columns={mockColumns} data={mockData} />);
       expect(container.querySelector("table")).toBeInTheDocument();
     });
 
     it("renders column headers", () => {
-      render(
-        <SchemaTable columns={mockColumns} data={mockData} />,
-      );
+      render(<SchemaTable columns={mockColumns} data={mockData} />);
       expect(screen.getByText("Name")).toBeInTheDocument();
       expect(screen.getByText("Type")).toBeInTheDocument();
     });
 
     it("renders data rows", () => {
-      render(
-        <SchemaTable columns={mockColumns} data={mockData} />,
-      );
+      render(<SchemaTable columns={mockColumns} data={mockData} />);
       expect(screen.getByText("Item 1")).toBeInTheDocument();
       expect(screen.getByText("Item 2")).toBeInTheDocument();
       expect(screen.getByText("TypeA")).toBeInTheDocument();
@@ -82,9 +70,7 @@ describe("SchemaTable", () => {
 
   describe("empty state", () => {
     it("renders empty state message when no data", () => {
-      render(
-        <SchemaTable columns={mockColumns} data={[]} />,
-      );
+      render(<SchemaTable columns={mockColumns} data={[]} />);
       expect(screen.getByText("No items")).toBeInTheDocument();
     });
   });
@@ -102,9 +88,7 @@ describe("SchemaTable", () => {
       const { container } = render(
         <SchemaTable columns={mockColumns} data={mockData} selectedId="1" />,
       );
-      const unselectedRow = container.querySelector(
-        'tr[data-testid="schema-row-2"]',
-      );
+      const unselectedRow = container.querySelector('tr[data-testid="schema-row-2"]');
       expect(unselectedRow).not.toHaveClass("selected");
     });
   });
@@ -113,13 +97,7 @@ describe("SchemaTable", () => {
     it("calls onRowSelect when row is clicked", async () => {
       const onRowSelect = vi.fn();
       const user = userEvent.setup();
-      render(
-        <SchemaTable
-          columns={mockColumns}
-          data={mockData}
-          onRowSelect={onRowSelect}
-        />,
-      );
+      render(<SchemaTable columns={mockColumns} data={mockData} onRowSelect={onRowSelect} />);
       const row = screen.getByTestId("schema-row-1");
       await user.click(row);
       expect(onRowSelect).toHaveBeenCalledWith("1");
@@ -127,9 +105,7 @@ describe("SchemaTable", () => {
 
     it("does not call onRowSelect when not provided", async () => {
       const user = userEvent.setup();
-      const { container } = render(
-        <SchemaTable columns={mockColumns} data={mockData} />,
-      );
+      const { container } = render(<SchemaTable columns={mockColumns} data={mockData} />);
       const row = container.querySelector('tr[data-testid="schema-row-1"]');
       if (row) {
         await user.click(row);
@@ -147,9 +123,7 @@ describe("SchemaTable", () => {
     });
 
     it("does not show data rows when loading", () => {
-      render(
-        <SchemaTable columns={mockColumns} data={mockData} isLoading={true} />,
-      );
+      render(<SchemaTable columns={mockColumns} data={mockData} isLoading={true} />);
       expect(screen.queryByText("Item 1")).not.toBeInTheDocument();
     });
   });
@@ -161,9 +135,7 @@ describe("SchemaTable", () => {
         name: `Item ${i}`,
         type: `Type${i % 2}`,
       }));
-      render(
-        <SchemaTable columns={mockColumns} data={largeData} />,
-      );
+      render(<SchemaTable columns={mockColumns} data={largeData} />);
       expect(screen.getByTestId("schema-pagination-prev")).toBeInTheDocument();
       expect(screen.getByTestId("schema-pagination-next")).toBeInTheDocument();
     });
@@ -174,9 +146,7 @@ describe("SchemaTable", () => {
         name: `Item ${i}`,
         type: `Type${i % 2}`,
       }));
-      render(
-        <SchemaTable columns={mockColumns} data={largeData} />,
-      );
+      render(<SchemaTable columns={mockColumns} data={largeData} />);
       expect(screen.getByText(/Page 1 of/)).toBeInTheDocument();
     });
 
@@ -187,9 +157,7 @@ describe("SchemaTable", () => {
         type: `Type${i % 2}`,
       }));
       const user = userEvent.setup();
-      render(
-        <SchemaTable columns={mockColumns} data={largeData} />,
-      );
+      render(<SchemaTable columns={mockColumns} data={largeData} />);
       const nextButton = screen.getByTestId("schema-pagination-next");
       await user.click(nextButton);
       expect(screen.getByText(/Page 2 of/)).toBeInTheDocument();
@@ -202,20 +170,14 @@ describe("SchemaTable", () => {
         <button data-testid={`action-${row.id}`}>Edit</button>
       );
       render(
-        <SchemaTable
-          columns={mockColumns}
-          data={mockData}
-          renderRowActions={renderActions}
-        />,
+        <SchemaTable columns={mockColumns} data={mockData} renderRowActions={renderActions} />,
       );
       expect(screen.getByTestId("action-1")).toBeInTheDocument();
       expect(screen.getByTestId("action-2")).toBeInTheDocument();
     });
 
     it("does not render actions when not provided", () => {
-      const { container } = render(
-        <SchemaTable columns={mockColumns} data={mockData} />,
-      );
+      const { container } = render(<SchemaTable columns={mockColumns} data={mockData} />);
       const lastCell = container.querySelector("tbody tr:last-child td:last-child");
       expect(lastCell?.textContent).toBe("");
     });

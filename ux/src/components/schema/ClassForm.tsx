@@ -45,9 +45,7 @@ export function ClassForm({ onSubmit, isLoading }: ClassFormProps) {
     <form onSubmit={handleSubmit} data-testid="class-form">
       <div className="stack-lg">
         <div>
-          <label className="form-group-label">
-            Title
-          </label>
+          <label className="form-group-label">Title</label>
           <Input
             type="text"
             placeholder="Class name"
@@ -64,9 +62,7 @@ export function ClassForm({ onSubmit, isLoading }: ClassFormProps) {
         </div>
 
         <div>
-          <label className="form-group-label">
-            Description (optional)
-          </label>
+          <label className="form-group-label">Description (optional)</label>
           <Textarea
             placeholder="Optional description"
             value={description}

@@ -121,16 +121,12 @@ export function SchemeDrawer({ scheme, taxonomyName, onClose }: SchemeDrawerProp
       >
         <div className="stack-lg">
           <div>
-            <label className="form-group-label">
-              ID
-            </label>
+            <label className="form-group-label">ID</label>
             <Input type="text" value={scheme.id} disabled mono data-testid="scheme-drawer-id" />
           </div>
 
           <div>
-            <label className="form-group-label">
-              Title
-            </label>
+            <label className="form-group-label">Title</label>
             <Input
               type="text"
               value={title}
@@ -140,9 +136,7 @@ export function SchemeDrawer({ scheme, taxonomyName, onClose }: SchemeDrawerProp
           </div>
 
           <div>
-            <label className="form-group-label">
-              Description
-            </label>
+            <label className="form-group-label">Description</label>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -152,9 +146,7 @@ export function SchemeDrawer({ scheme, taxonomyName, onClose }: SchemeDrawerProp
           </div>
 
           <div>
-            <label className="form-group-label">
-              Parent Taxonomy
-            </label>
+            <label className="form-group-label">Parent Taxonomy</label>
             <Input
               type="text"
               value={taxonomyName}

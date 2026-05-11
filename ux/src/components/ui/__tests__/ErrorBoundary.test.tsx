@@ -174,10 +174,7 @@ describe("ErrorBoundary", () => {
         </ErrorBoundary>,
       );
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        "Error boundary caught:",
-        expect.any(Error),
-      );
+      expect(consoleSpy).toHaveBeenCalledWith("Error boundary caught:", expect.any(Error));
     });
   });
 });

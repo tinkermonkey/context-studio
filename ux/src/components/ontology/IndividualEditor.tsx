@@ -22,7 +22,7 @@ export function IndividualEditor({ initialData, onSubmit, isLoading }: Individua
   const [title, setTitle] = useState(initialData?.title || "");
   const [description, setDescription] = useState(initialData?.description || "");
   const [selectedClassIds, setSelectedClassIds] = useState<string[]>(
-    Array.isArray(initialData?.class_ids) ? initialData.class_ids : []
+    Array.isArray(initialData?.class_ids) ? initialData.class_ids : [],
   );
   const [titleError, setTitleError] = useState<string>();
   const [classError, setClassError] = useState<string>();
@@ -45,7 +45,7 @@ export function IndividualEditor({ initialData, onSubmit, isLoading }: Individua
 
   const handleClassToggle = (classId: string) => {
     setSelectedClassIds((prev) =>
-      prev.includes(classId) ? prev.filter((id) => id !== classId) : [...prev, classId]
+      prev.includes(classId) ? prev.filter((id) => id !== classId) : [...prev, classId],
     );
   };
 
@@ -140,7 +140,10 @@ export function IndividualEditor({ initialData, onSubmit, isLoading }: Individua
                     style={{ marginRight: "var(--space-2)" }}
                     data-testid={`individual-editor-class-checkbox-${cls.id}`}
                   />
-                  <span className="mono" style={{ fontSize: "var(--text-xs)", marginRight: "var(--space-2)" }}>
+                  <span
+                    className="mono"
+                    style={{ fontSize: "var(--text-xs)", marginRight: "var(--space-2)" }}
+                  >
                     {cls.id.slice(0, 8)}
                   </span>
                   <span>{cls.title}</span>

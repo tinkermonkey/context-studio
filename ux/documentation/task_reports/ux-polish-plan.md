@@ -34,28 +34,28 @@ There are 166 inline `style={{}}` usages across components and 121 in route page
 
 Each test verifies: correct CSS class names for each variant, `data-testid` attributes, proper ARIA roles.
 
-| Component | Key assertions |
-|---|---|
-| `Button` | `.btn` + `.btn-{variant}` applied; `.btn-sm` on `size="sm"`; disabled state |
-| `Chip` | `.chip` class; color variant classes |
-| `Input` | `.input` on all three exports; `.mono`; `.textarea` on `Textarea` |
-| `Panel` | `.panel-head` only when `title` provided; `.panel-body` always |
-| `Tabs` | Active tab gets active class; click switches active tab |
-| `StatTile` | Renders label and value; trend indicator |
-| `Skeleton` | Renders with correct class |
-| `EmptyState` | `data-testid="empty-state"`; action button conditional |
-| `ErrorBoundary` | Catches errors and renders fallback |
-| `Modal` | Renders children when open; does not render when closed |
-| `Drawer` | `data-testid="drawer-autosave-status"`, revert + delete buttons present |
+| Component       | Key assertions                                                              |
+| --------------- | --------------------------------------------------------------------------- |
+| `Button`        | `.btn` + `.btn-{variant}` applied; `.btn-sm` on `size="sm"`; disabled state |
+| `Chip`          | `.chip` class; color variant classes                                        |
+| `Input`         | `.input` on all three exports; `.mono`; `.textarea` on `Textarea`           |
+| `Panel`         | `.panel-head` only when `title` provided; `.panel-body` always              |
+| `Tabs`          | Active tab gets active class; click switches active tab                     |
+| `StatTile`      | Renders label and value; trend indicator                                    |
+| `Skeleton`      | Renders with correct class                                                  |
+| `EmptyState`    | `data-testid="empty-state"`; action button conditional                      |
+| `ErrorBoundary` | Catches errors and renders fallback                                         |
+| `Modal`         | Renders children when open; does not render when closed                     |
+| `Drawer`        | `data-testid="drawer-autosave-status"`, revert + delete buttons present     |
 
 #### 2b — Schema component contracts (4 components)
 
-| Component | Key assertions |
-|---|---|
-| `FilterBar` | `data-testid="schema-filter-bar"` + `"schema-search-input"`; chips render; remove callback fires |
-| `SchemaTable` | Renders rows; empty state when no data; column headers present |
-| `SchemaPageLayout` | Renders header, content, and optional actions slot |
-| `HierarchyTree` | Renders nodes; expand/collapse works |
+| Component          | Key assertions                                                                                   |
+| ------------------ | ------------------------------------------------------------------------------------------------ |
+| `FilterBar`        | `data-testid="schema-filter-bar"` + `"schema-search-input"`; chips render; remove callback fires |
+| `SchemaTable`      | Renders rows; empty state when no data; column headers present                                   |
+| `SchemaPageLayout` | Renders header, content, and optional actions slot                                               |
+| `HierarchyTree`    | Renders nodes; expand/collapse works                                                             |
 
 #### 2c — Dark mode token tests
 
@@ -106,18 +106,18 @@ Phase 5 (contact sheet)  → last, once CSS and tests are stable
 
 ## Key file locations
 
-| Thing | Path |
-|---|---|
-| App design tokens | `src/design-system/tokens.css` |
-| App shell/canvas CSS | `src/design-system/studio.css` |
-| App form/table CSS | `src/design-system/crud.css` |
-| Design reference tokens | `design/styles/tokens.css` |
-| Design reference studio | `design/styles/studio.css` |
-| Design reference crud | `design/styles/crud.css` |
-| Missing from app (settings) | `design/styles/settings.css` |
-| Missing from app (individuals) | `design/styles/individuals.css` |
-| React contact sheet | `src/routes/app/contact-sheet.tsx` |
-| Static HTML contact sheet | `design/Context Studio - Browser.html` |
-| Existing UI tests | `src/components/ui/__tests__/` |
-| E2E tests | `e2e/tests/` |
-| Selector registry | `selector-registry.yaml` |
+| Thing                          | Path                                   |
+| ------------------------------ | -------------------------------------- |
+| App design tokens              | `src/design-system/tokens.css`         |
+| App shell/canvas CSS           | `src/design-system/studio.css`         |
+| App form/table CSS             | `src/design-system/crud.css`           |
+| Design reference tokens        | `design/styles/tokens.css`             |
+| Design reference studio        | `design/styles/studio.css`             |
+| Design reference crud          | `design/styles/crud.css`               |
+| Missing from app (settings)    | `design/styles/settings.css`           |
+| Missing from app (individuals) | `design/styles/individuals.css`        |
+| React contact sheet            | `src/routes/app/contact-sheet.tsx`     |
+| Static HTML contact sheet      | `design/Context Studio - Browser.html` |
+| Existing UI tests              | `src/components/ui/__tests__/`         |
+| E2E tests                      | `e2e/tests/`                           |
+| Selector registry              | `selector-registry.yaml`               |

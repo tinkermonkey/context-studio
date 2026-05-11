@@ -116,18 +116,14 @@ function RelationshipsPageContent({
       accessorKey: "source_id",
       header: "Source Class",
       cell: (info) => (
-        <span className="muted-text">
-          {classesById.get(info.getValue() as string) || "—"}
-        </span>
+        <span className="muted-text">{classesById.get(info.getValue() as string) || "—"}</span>
       ),
     },
     {
       accessorKey: "target_id",
       header: "Target Class",
       cell: (info) => (
-        <span className="muted-text">
-          {classesById.get(info.getValue() as string) || "—"}
-        </span>
+        <span className="muted-text">{classesById.get(info.getValue() as string) || "—"}</span>
       ),
     },
     {

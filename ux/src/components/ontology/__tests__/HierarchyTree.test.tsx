@@ -175,9 +175,7 @@ describe("HierarchyTree", () => {
     });
 
     it("does not render badge for leaf nodes", () => {
-      const { container } = render(
-        <HierarchyTree classes={[mockHierarchy[2]]} />,
-      );
+      const { container } = render(<HierarchyTree classes={[mockHierarchy[2]]} />);
       const badge = container.querySelector(".badge-tiny");
       expect(badge).not.toBeInTheDocument();
     });
@@ -187,9 +185,7 @@ describe("HierarchyTree", () => {
     it("calls onNodeSelect when node is clicked", async () => {
       const onNodeSelect = vi.fn();
       const user = userEvent.setup();
-      render(
-        <HierarchyTree classes={mockClasses} onNodeSelect={onNodeSelect} />,
-      );
+      render(<HierarchyTree classes={mockClasses} onNodeSelect={onNodeSelect} />);
       const node = screen.getByTestId("hierarchy-node-class-1");
       await user.click(node);
       expect(onNodeSelect).toHaveBeenCalledWith("class-1");
@@ -205,9 +201,7 @@ describe("HierarchyTree", () => {
     it("calls onNodeSelect with correct child id when child is clicked", async () => {
       const onNodeSelect = vi.fn();
       const user = userEvent.setup();
-      render(
-        <HierarchyTree classes={mockHierarchy} onNodeSelect={onNodeSelect} />,
-      );
+      render(<HierarchyTree classes={mockHierarchy} onNodeSelect={onNodeSelect} />);
       const expandButton = screen.getByLabelText("Expand");
       await user.click(expandButton);
       const childNode = screen.getByTestId("hierarchy-node-child-1");
@@ -218,9 +212,7 @@ describe("HierarchyTree", () => {
 
   describe("loading state", () => {
     it("renders skeleton loaders when loading is true", () => {
-      const { container } = render(
-        <HierarchyTree classes={[]} loading={true} />,
-      );
+      const { container } = render(<HierarchyTree classes={[]} loading={true} />);
       const skeletons = container.querySelectorAll("div");
       const hasLoading = Array.from(skeletons).some((el) =>
         el.style.animation?.includes("skeleton-shimmer"),
@@ -237,23 +229,17 @@ describe("HierarchyTree", () => {
   describe("error state", () => {
     it("renders error message when error provided", () => {
       const error = new Error("Failed to load");
-      render(
-        <HierarchyTree classes={[]} error={error} />,
-      );
+      render(<HierarchyTree classes={[]} error={error} />);
       expect(screen.getByText("Failed to load")).toBeInTheDocument();
     });
 
     it("renders default error message when error has no message", () => {
-      render(
-        <HierarchyTree classes={[]} error={new Error("")} />,
-      );
+      render(<HierarchyTree classes={[]} error={new Error("")} />);
       expect(screen.getByText("Failed to load class hierarchy")).toBeInTheDocument();
     });
 
     it("does not render nodes when error", () => {
-      render(
-        <HierarchyTree classes={mockClasses} error={new Error("Error")} />,
-      );
+      render(<HierarchyTree classes={mockClasses} error={new Error("Error")} />);
       expect(screen.queryByText("Root Class")).not.toBeInTheDocument();
     });
   });
@@ -273,9 +259,7 @@ describe("HierarchyTree", () => {
   describe("max depth", () => {
     it("limits expansion to maxDepth", async () => {
       const user = userEvent.setup();
-      render(
-        <HierarchyTree classes={mockHierarchy} maxDepth={2} />,
-      );
+      render(<HierarchyTree classes={mockHierarchy} maxDepth={2} />);
 
       // Expand root (depth 0) - should have expand button
       expect(screen.getAllByLabelText("Expand")).toHaveLength(1);
@@ -286,7 +270,12 @@ describe("HierarchyTree", () => {
       expect(screen.getAllByLabelText("Expand")).toHaveLength(1); // Just child-1's expand button
 
       // Expand child-1 (depth 1)
-      await user.click(screen.getByText("Child 1").closest(".kg-row")?.querySelector("button") as HTMLButtonElement);
+      await user.click(
+        screen
+          .getByText("Child 1")
+          .closest(".kg-row")
+          ?.querySelector("button") as HTMLButtonElement,
+      );
 
       // Grandchild should be visible
       expect(screen.getByText("Grandchild")).toBeInTheDocument();
@@ -315,9 +304,7 @@ describe("HierarchyTree", () => {
 
   describe("complete structure", () => {
     it("renders full tree with root and children", () => {
-      render(
-        <HierarchyTree classes={mockHierarchy} />,
-      );
+      render(<HierarchyTree classes={mockHierarchy} />);
       expect(screen.getByText("Root")).toBeInTheDocument();
       expect(screen.queryByText("Child 1")).not.toBeInTheDocument();
     });
@@ -325,12 +312,7 @@ describe("HierarchyTree", () => {
     it("renders tree with expansion", async () => {
       const user = userEvent.setup();
       const onNodeSelect = vi.fn();
-      render(
-        <HierarchyTree
-          classes={mockHierarchy}
-          onNodeSelect={onNodeSelect}
-        />,
-      );
+      render(<HierarchyTree classes={mockHierarchy} onNodeSelect={onNodeSelect} />);
 
       // Initial state
       expect(screen.getByText("Root")).toBeInTheDocument();

@@ -45,9 +45,7 @@ export function TaxonomyForm({ onSubmit, isLoading }: TaxonomyFormProps) {
     <form onSubmit={handleSubmit} data-testid="taxonomy-form">
       <div className="stack-lg">
         <div>
-          <label className="form-group-label">
-            Title
-          </label>
+          <label className="form-group-label">Title</label>
           <Input
             type="text"
             placeholder="Taxonomy name"
@@ -64,9 +62,7 @@ export function TaxonomyForm({ onSubmit, isLoading }: TaxonomyFormProps) {
         </div>
 
         <div>
-          <label className="form-group-label">
-            Description (optional)
-          </label>
+          <label className="form-group-label">Description (optional)</label>
           <Textarea
             placeholder="Optional description"
             value={description}

@@ -122,16 +122,12 @@ export function TaxonomyDrawer({ taxonomy, onClose }: TaxonomyDrawerProps) {
       >
         <div className="stack-lg">
           <div>
-            <label className="form-group-label">
-              ID
-            </label>
+            <label className="form-group-label">ID</label>
             <Input type="text" value={taxonomy.id} disabled mono data-testid="taxonomy-drawer-id" />
           </div>
 
           <div>
-            <label className="form-group-label">
-              Title
-            </label>
+            <label className="form-group-label">Title</label>
             <Input
               type="text"
               value={title}
@@ -141,9 +137,7 @@ export function TaxonomyDrawer({ taxonomy, onClose }: TaxonomyDrawerProps) {
           </div>
 
           <div>
-            <label className="form-group-label">
-              Description
-            </label>
+            <label className="form-group-label">Description</label>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}

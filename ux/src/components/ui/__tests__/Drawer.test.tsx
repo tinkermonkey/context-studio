@@ -134,12 +134,7 @@ describe("Drawer", () => {
   describe("autosave status", () => {
     it("does not render autosave status when autosaveState is idle", () => {
       render(
-        <Drawer
-          open={true}
-          onClose={vi.fn()}
-          title="Drawer"
-          autosaveState="idle"
-        >
+        <Drawer open={true} onClose={vi.fn()} title="Drawer" autosaveState="idle">
           Content
         </Drawer>,
       );
@@ -148,12 +143,7 @@ describe("Drawer", () => {
 
     it("renders drawer-autosave-status when autosaveState is saving", () => {
       render(
-        <Drawer
-          open={true}
-          onClose={vi.fn()}
-          title="Drawer"
-          autosaveState="saving"
-        >
+        <Drawer open={true} onClose={vi.fn()} title="Drawer" autosaveState="saving">
           Content
         </Drawer>,
       );
@@ -180,12 +170,7 @@ describe("Drawer", () => {
 
     it("renders autosave status when autosaveState is error", () => {
       render(
-        <Drawer
-          open={true}
-          onClose={vi.fn()}
-          title="Drawer"
-          autosaveState="error"
-        >
+        <Drawer open={true} onClose={vi.fn()} title="Drawer" autosaveState="error">
           Content
         </Drawer>,
       );
@@ -201,20 +186,12 @@ describe("Drawer", () => {
           Content
         </Drawer>,
       );
-      expect(
-        screen.queryByRole("button", { name: "Revert" }),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Revert" })).not.toBeInTheDocument();
     });
 
     it("renders revert button when isDirty and onRevert provided", () => {
       render(
-        <Drawer
-          open={true}
-          onClose={vi.fn()}
-          title="Drawer"
-          isDirty={true}
-          onRevert={vi.fn()}
-        >
+        <Drawer open={true} onClose={vi.fn()} title="Drawer" isDirty={true} onRevert={vi.fn()}>
           Content
         </Drawer>,
       );
@@ -224,13 +201,7 @@ describe("Drawer", () => {
 
     it("revert button has ghost variant", () => {
       render(
-        <Drawer
-          open={true}
-          onClose={vi.fn()}
-          title="Drawer"
-          isDirty={true}
-          onRevert={vi.fn()}
-        >
+        <Drawer open={true} onClose={vi.fn()} title="Drawer" isDirty={true} onRevert={vi.fn()}>
           Content
         </Drawer>,
       );
@@ -243,13 +214,7 @@ describe("Drawer", () => {
       const onRevert = vi.fn();
       const user = userEvent.setup();
       render(
-        <Drawer
-          open={true}
-          onClose={vi.fn()}
-          title="Drawer"
-          isDirty={true}
-          onRevert={onRevert}
-        >
+        <Drawer open={true} onClose={vi.fn()} title="Drawer" isDirty={true} onRevert={onRevert}>
           Content
         </Drawer>,
       );
@@ -260,19 +225,11 @@ describe("Drawer", () => {
 
     it("does not render revert button when isDirty is false", () => {
       render(
-        <Drawer
-          open={true}
-          onClose={vi.fn()}
-          title="Drawer"
-          isDirty={false}
-          onRevert={vi.fn()}
-        >
+        <Drawer open={true} onClose={vi.fn()} title="Drawer" isDirty={false} onRevert={vi.fn()}>
           Content
         </Drawer>,
       );
-      expect(
-        screen.queryByRole("button", { name: "Revert" }),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Revert" })).not.toBeInTheDocument();
     });
   });
 
@@ -283,19 +240,12 @@ describe("Drawer", () => {
           Content
         </Drawer>,
       );
-      expect(
-        screen.queryByRole("button", { name: "Delete" }),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Delete" })).not.toBeInTheDocument();
     });
 
     it("renders delete button when onDelete provided", () => {
       render(
-        <Drawer
-          open={true}
-          onClose={vi.fn()}
-          title="Drawer"
-          onDelete={vi.fn()}
-        >
+        <Drawer open={true} onClose={vi.fn()} title="Drawer" onDelete={vi.fn()}>
           Content
         </Drawer>,
       );
@@ -305,12 +255,7 @@ describe("Drawer", () => {
 
     it("delete button has danger variant", () => {
       render(
-        <Drawer
-          open={true}
-          onClose={vi.fn()}
-          title="Drawer"
-          onDelete={vi.fn()}
-        >
+        <Drawer open={true} onClose={vi.fn()} title="Drawer" onDelete={vi.fn()}>
           Content
         </Drawer>,
       );
@@ -323,12 +268,7 @@ describe("Drawer", () => {
       const onDelete = vi.fn();
       const user = userEvent.setup();
       render(
-        <Drawer
-          open={true}
-          onClose={vi.fn()}
-          title="Drawer"
-          onDelete={onDelete}
-        >
+        <Drawer open={true} onClose={vi.fn()} title="Drawer" onDelete={onDelete}>
           Content
         </Drawer>,
       );

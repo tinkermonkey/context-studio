@@ -81,9 +81,7 @@ function TaxonomiesPageContent({
     {
       accessorKey: "description",
       header: "Description",
-      cell: (info) => (
-        <span className="muted-text">{(info.getValue() as string) || "—"}</span>
-      ),
+      cell: (info) => <span className="muted-text">{(info.getValue() as string) || "—"}</span>,
     },
     {
       accessorKey: "status",
@@ -129,10 +127,7 @@ function TaxonomiesPageContent({
       header: "",
       size: 40,
       cell: ({ row }) => (
-        <button
-          data-testid={`taxonomy-row-actions-${row.original.id}`}
-          className="btn btn-icon"
-        >
+        <button data-testid={`taxonomy-row-actions-${row.original.id}`} className="btn btn-icon">
           <MoreVertical size={16} style={{ color: "var(--canvas-fg-3)" }} />
         </button>
       ),

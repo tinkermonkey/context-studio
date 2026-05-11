@@ -45,19 +45,9 @@ function Section({
   );
 }
 
-function Row({
-  wrap = false,
-  children,
-}: {
-  wrap?: boolean;
-  children: React.ReactNode;
-}) {
+function Row({ wrap = false, children }: { wrap?: boolean; children: React.ReactNode }) {
   const className = `contact-sheet-row${wrap ? " wrap" : ""}`;
-  return (
-    <div className={className}>
-      {children}
-    </div>
-  );
+  return <div className={className}>{children}</div>;
 }
 
 interface MockEntity {
@@ -279,9 +269,7 @@ export default function ContactSheet() {
                 { name: "hasSubclass", type: "Relation", status: "draft", count: "18" },
               ].map((row) => (
                 <tr key={row.name} className="row-link">
-                  <td className="contact-sheet-table-mono">
-                    {row.name}
-                  </td>
+                  <td className="contact-sheet-table-mono">{row.name}</td>
                   <td>
                     <Chip
                       color={
@@ -417,9 +405,7 @@ export default function ContactSheet() {
               </div>
               <div className="stat-item">
                 <div className="l">Status</div>
-                <div className="v contact-sheet-pipeline-status">
-                  38% running
-                </div>
+                <div className="v contact-sheet-pipeline-status">38% running</div>
               </div>
             </div>
           </div>
@@ -508,9 +494,7 @@ export default function ContactSheet() {
       {/* ── Schema Components ── */}
       <Section title="Schema Components" testid="contact-sheet-schema-components">
         <div className="contact-sheet-schema-intro">
-          <h3>
-            Filter Bar + Table + Drawer Layout
-          </h3>
+          <h3>Filter Bar + Table + Drawer Layout</h3>
           <div className="contact-sheet-schema-table-container">
             <FilterBar
               searchValue={searchFilter}
@@ -529,9 +513,7 @@ export default function ContactSheet() {
         </div>
         {selectedEntity && (
           <div className="contact-sheet-schema-drawer-demo">
-            <h4>
-              SchemaDrawer (selected: {selectedEntity.title})
-            </h4>
+            <h4>SchemaDrawer (selected: {selectedEntity.title})</h4>
             <Drawer
               open={!!selectedEntity}
               onClose={() => setSelectedSchemaId(undefined)}
@@ -543,7 +525,9 @@ export default function ContactSheet() {
                 <dt className="contact-sheet-kv-label">Title</dt>
                 <dd className="contact-sheet-kv-value">{selectedEntity.title}</dd>
                 <dt className="contact-sheet-kv-label">ID</dt>
-                <dd className="contact-sheet-kv-value contact-sheet-kv-value-mono">{selectedEntity.id}</dd>
+                <dd className="contact-sheet-kv-value contact-sheet-kv-value-mono">
+                  {selectedEntity.id}
+                </dd>
                 <dt className="contact-sheet-kv-label">Description</dt>
                 <dd className="contact-sheet-kv-value">{selectedEntity.description}</dd>
               </dl>

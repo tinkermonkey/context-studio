@@ -40,11 +40,7 @@ describe("Panel", () => {
     });
 
     it("renders element title", () => {
-      render(
-        <Panel title={<strong>Bold Title</strong>}>
-          Content
-        </Panel>,
-      );
+      render(<Panel title={<strong>Bold Title</strong>}>Content</Panel>);
       expect(screen.getByText("Bold Title")).toBeInTheDocument();
     });
   });
@@ -93,11 +89,7 @@ describe("Panel", () => {
 
   describe("custom classes", () => {
     it("accepts additional className prop on panel container", () => {
-      const { container } = render(
-        <Panel className="custom-class">
-          Content
-        </Panel>,
-      );
+      const { container } = render(<Panel className="custom-class">Content</Panel>);
       const panel = container.querySelector(".panel");
       expect(panel).toHaveClass("panel");
       expect(panel).toHaveClass("custom-class");

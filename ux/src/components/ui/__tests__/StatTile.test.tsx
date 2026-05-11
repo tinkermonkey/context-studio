@@ -73,18 +73,14 @@ describe("StatTile", () => {
     });
 
     it("displays element value", () => {
-      render(
-        <StatTile label="Stat" value={<strong>Important</strong>} />,
-      );
+      render(<StatTile label="Stat" value={<strong>Important</strong>} />);
       expect(screen.getByText("Important")).toBeInTheDocument();
     });
   });
 
   describe("metadata/subtitle", () => {
     it("renders meta class when sub prop is provided", () => {
-      const { container } = render(
-        <StatTile label="Count" value={42} sub="Last updated today" />,
-      );
+      const { container } = render(<StatTile label="Count" value={42} sub="Last updated today" />);
       const meta = container.querySelector(".meta");
       expect(meta).toBeInTheDocument();
     });
@@ -104,12 +100,7 @@ describe("StatTile", () => {
   describe("complete structure", () => {
     it("renders all elements together", () => {
       const { container } = render(
-        <StatTile
-          label="Active Users"
-          value={1250}
-          color="emerald"
-          sub="+5% from yesterday"
-        />,
+        <StatTile label="Active Users" value={1250} color="emerald" sub="+5% from yesterday" />,
       );
       expect(container.querySelector(".stat")).toBeInTheDocument();
       expect(container.querySelector(".label")).toHaveTextContent("Active Users");

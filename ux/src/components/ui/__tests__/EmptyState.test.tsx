@@ -12,12 +12,7 @@ describe("EmptyState", () => {
     });
 
     it("has empty-state-action data-testid when action is provided", () => {
-      render(
-        <EmptyState
-          title="No items"
-          action={{ label: "Create", onClick: vi.fn() }}
-        />,
-      );
+      render(<EmptyState title="No items" action={{ label: "Create", onClick: vi.fn() }} />);
       expect(screen.getByTestId("empty-state-action")).toBeInTheDocument();
     });
 
@@ -35,17 +30,13 @@ describe("EmptyState", () => {
     });
 
     it("applies compact class when variant is compact", () => {
-      const { container } = render(
-        <EmptyState title="No items" variant="compact" />,
-      );
+      const { container } = render(<EmptyState title="No items" variant="compact" />);
       const emptyState = container.querySelector(".empty-state");
       expect(emptyState).toHaveClass("compact");
     });
 
     it("does not apply compact class for default variant", () => {
-      const { container } = render(
-        <EmptyState title="No items" variant="default" />,
-      );
+      const { container } = render(<EmptyState title="No items" variant="default" />);
       const emptyState = container.querySelector(".empty-state");
       expect(emptyState).not.toHaveClass("compact");
     });
@@ -53,9 +44,7 @@ describe("EmptyState", () => {
 
   describe("icon", () => {
     it("renders icon element when provided", () => {
-      const { container } = render(
-        <EmptyState title="No items" icon={<span>📦</span>} />,
-      );
+      const { container } = render(<EmptyState title="No items" icon={<span>📦</span>} />);
       const icon = container.querySelector(".empty-state-icon");
       expect(icon).toBeInTheDocument();
       expect(screen.getByText("📦")).toBeInTheDocument();
@@ -97,12 +86,7 @@ describe("EmptyState", () => {
     });
 
     it("displays description text", () => {
-      render(
-        <EmptyState
-          title="No items"
-          description="No results match your search"
-        />,
-      );
+      render(<EmptyState title="No items" description="No results match your search" />);
       expect(screen.getByText("No results match your search")).toBeInTheDocument();
     });
 
@@ -115,12 +99,7 @@ describe("EmptyState", () => {
 
   describe("action button", () => {
     it("renders button when action is provided", () => {
-      render(
-        <EmptyState
-          title="No items"
-          action={{ label: "Create New", onClick: vi.fn() }}
-        />,
-      );
+      render(<EmptyState title="No items" action={{ label: "Create New", onClick: vi.fn() }} />);
       expect(screen.getByRole("button", { name: "Create New" })).toBeInTheDocument();
     });
 
@@ -130,24 +109,14 @@ describe("EmptyState", () => {
     });
 
     it("applies primary variant and sm size to action button", () => {
-      render(
-        <EmptyState
-          title="No items"
-          action={{ label: "Create", onClick: vi.fn() }}
-        />,
-      );
+      render(<EmptyState title="No items" action={{ label: "Create", onClick: vi.fn() }} />);
       const button = screen.getByRole("button", { name: "Create" });
       expect(button).toHaveClass("btn-primary");
       expect(button).toHaveClass("btn-sm");
     });
 
     it("applies empty-state-action class", () => {
-      render(
-        <EmptyState
-          title="No items"
-          action={{ label: "Create", onClick: vi.fn() }}
-        />,
-      );
+      render(<EmptyState title="No items" action={{ label: "Create", onClick: vi.fn() }} />);
       const button = screen.getByTestId("empty-state-action");
       expect(button).toHaveClass("empty-state-action");
     });
@@ -155,12 +124,7 @@ describe("EmptyState", () => {
     it("calls action callback when button is clicked", async () => {
       const onClick = vi.fn();
       const user = userEvent.setup();
-      render(
-        <EmptyState
-          title="No items"
-          action={{ label: "Create", onClick }}
-        />,
-      );
+      render(<EmptyState title="No items" action={{ label: "Create", onClick }} />);
       const button = screen.getByRole("button", { name: "Create" });
       await user.click(button);
       expect(onClick).toHaveBeenCalled();
