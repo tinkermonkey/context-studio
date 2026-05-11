@@ -738,6 +738,33 @@ selectors:
   - selector: extraction-panel-reference-enrichment
     component: components/extraction/ExtractionResultPanel.tsx
     description: Result panel for Reference Enrichment (layer 3)
+  - selector: entity-review-panel-*
+    component: components/extraction/EntityReviewPanel.tsx
+    description: Entity review panel root container (pattern matches entity-review-panel-{layerIndex})
+  - selector: entity-suggestion-row-*
+    component: components/extraction/EntityReviewPanel.tsx
+    description: Entity suggestion row in review queue (pattern matches entity-suggestion-row-{index})
+  - selector: entity-review-approve-all-button
+    component: components/extraction/EntityReviewPanel.tsx
+    description: Button to approve all suggested entities
+  - selector: entity-review-reject-all-button
+    component: components/extraction/EntityReviewPanel.tsx
+    description: Button to reject all suggested entities
+  - selector: entity-review-approve-*
+    component: components/extraction/EntityReviewPanel.tsx
+    description: Approve button for a single entity (pattern matches entity-review-approve-{entityId})
+  - selector: entity-review-reject-*
+    component: components/extraction/EntityReviewPanel.tsx
+    description: Reject button for a single entity (pattern matches entity-review-reject-{entityId})
+  - selector: entity-review-link-*
+    component: components/extraction/EntityReviewPanel.tsx
+    description: Link button for a single entity (pattern matches entity-review-link-{entityId})
+  - selector: entity-review-link-input
+    component: components/extraction/EntityReviewPanel.tsx
+    description: Search input field in the link typeahead
+  - selector: entity-review-link-option-*
+    component: components/extraction/EntityReviewPanel.tsx
+    description: Class option in the link typeahead (pattern matches entity-review-link-option-{classId})
   - selector: sparql-query-textarea
     component: components/graph/SparqlEditor.tsx
     description: Code textarea for entering SPARQL queries

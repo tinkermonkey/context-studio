@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useExtract, useNlpAnalysis, useEnrichFromReferences } from "@/api/hooks/extraction";
 import { ExtractionInput } from "@/components/extraction/ExtractionInput";
 import { ExtractionResultPanel } from "@/components/extraction/ExtractionResultPanel";
+import { EntityReviewPanel } from "@/components/extraction/EntityReviewPanel";
 import type { components } from "@/api/types";
 
 type ExtractionResultSchema = components["schemas"]["ExtractionResultSchema"];
@@ -117,6 +118,11 @@ function ExtractionPage() {
                   : null
             }
           />
+          <EntityReviewPanel
+            entities={getLayerEntities(0)}
+            layerIndex={0}
+            isLoading={extractMutation.isPending}
+          />
 
           {/* LLM Extraction Panel */}
           <ExtractionResultPanel
@@ -131,6 +137,11 @@ function ExtractionPage() {
                   ? "Unknown error occurred"
                   : null
             }
+          />
+          <EntityReviewPanel
+            entities={getLayerEntities(1)}
+            layerIndex={1}
+            isLoading={extractMutation.isPending}
           />
 
           {/* NLP Gap Fill Panel */}
@@ -147,6 +158,11 @@ function ExtractionPage() {
                   : null
             }
           />
+          <EntityReviewPanel
+            entities={getLayerEntities(2)}
+            layerIndex={2}
+            isLoading={nlpMutation.isPending}
+          />
 
           {/* Reference Enrichment Panel */}
           <ExtractionResultPanel
@@ -161,6 +177,11 @@ function ExtractionPage() {
                   ? "Unknown error occurred"
                   : null
             }
+          />
+          <EntityReviewPanel
+            entities={getLayerEntities(3)}
+            layerIndex={3}
+            isLoading={enrichMutation.isPending}
           />
         </div>
       </div>
