@@ -88,8 +88,13 @@ export function useRemoveClassFromIndividual() {
 export function useReorderIndividualClasses() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ individualId, data }: { individualId: string; data: IndividualClassListRequest }) =>
-      ontologyService.reorderIndividualClasses(individualId, data),
+    mutationFn: ({
+      individualId,
+      data,
+    }: {
+      individualId: string;
+      data: IndividualClassListRequest;
+    }) => ontologyService.reorderIndividualClasses(individualId, data),
     onSuccess: (_result, { individualId }) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.individuals() });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.individual(individualId) });

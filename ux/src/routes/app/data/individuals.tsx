@@ -245,7 +245,13 @@ function IndividualsPageContent({
                 )}
                 {individual.class_ids.length > 0 && (
                   <div style={{ marginBottom: "var(--space-4)" }}>
-                    <div style={{ fontSize: "var(--text-xs)", fontWeight: 500, marginBottom: "var(--space-2)" }}>
+                    <div
+                      style={{
+                        fontSize: "var(--text-xs)",
+                        fontWeight: 500,
+                        marginBottom: "var(--space-2)",
+                      }}
+                    >
                       Classes
                     </div>
                     <div style={{ display: "flex", gap: "var(--space-2)", flexWrap: "wrap" }}>
@@ -369,14 +375,17 @@ function IndividualsPageWrapper() {
 
   const handleDeleteClick = (id: string) => {
     if (confirm("Are you sure you want to delete this individual?")) {
-      deleteMutation.mutateAsync(id).then(() => {
-        if (selectedId === id) {
-          handleSelectedIdChange(undefined);
-        }
-        toast("success", "Individual deleted successfully");
-      }).catch((error) => {
-        toast("error", error instanceof Error ? error.message : "Failed to delete individual");
-      });
+      deleteMutation
+        .mutateAsync(id)
+        .then(() => {
+          if (selectedId === id) {
+            handleSelectedIdChange(undefined);
+          }
+          toast("success", "Individual deleted successfully");
+        })
+        .catch((error) => {
+          toast("error", error instanceof Error ? error.message : "Failed to delete individual");
+        });
     }
   };
 

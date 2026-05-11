@@ -27,7 +27,9 @@ export function IndividualEditor({
   onSubmit,
   isLoading,
 }: IndividualEditorProps) {
-  const [title, setTitle] = useState(initialData && "title" in initialData ? initialData.title : "");
+  const [title, setTitle] = useState(
+    initialData && "title" in initialData ? initialData.title : "",
+  );
   const [description, setDescription] = useState(
     initialData && "description" in initialData ? initialData.description || "" : "",
   );
@@ -64,13 +66,9 @@ export function IndividualEditor({
         cls.id.toLowerCase().includes(searchQuery.toLowerCase())),
   );
 
-  const allPropertiesToDisplay = selectedClasses.flatMap(
-    (cls) => cls.data_properties || [],
-  );
+  const allPropertiesToDisplay = selectedClasses.flatMap((cls) => cls.data_properties || []);
   const uniqueProperties = Array.from(
-    new Map(
-      allPropertiesToDisplay.map((prop) => [prop.property_identifier, prop]),
-    ).values(),
+    new Map(allPropertiesToDisplay.map((prop) => [prop.property_identifier, prop])).values(),
   );
 
   const validateTitle = (value: string): boolean => {
@@ -197,7 +195,11 @@ export function IndividualEditor({
             <Input
               ref={searchInputRef}
               type="text"
-              placeholder={individualId ? "Classes cannot be changed in edit mode" : "Search and add classes..."}
+              placeholder={
+                individualId
+                  ? "Classes cannot be changed in edit mode"
+                  : "Search and add classes..."
+              }
               value={searchQuery}
               onChange={(e) => {
                 if (!individualId) {
