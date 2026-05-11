@@ -27,6 +27,8 @@ export const QUERY_KEYS = {
   pipelines: ["pipelines"] as const,
   pipeline: (id: string) => ["pipelines", id] as const,
   pipelineExecutions: (id?: string) => ["pipeline-executions", id] as const,
+  pipelineFlavors: ["pipeline-flavors"] as const,
+  pipelineFlavor: (id: string) => ["pipeline-flavors", id] as const,
   // Versioning
   changes: (params?: object) => ["changes", params] as const,
   changesets: ["changesets"] as const,

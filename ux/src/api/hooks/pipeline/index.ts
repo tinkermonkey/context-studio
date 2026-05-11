@@ -1,6 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
-import { pipelineService } from "@/api/services/pipeline";
+import {
+  pipelineService,
+  type PipelineFlavorCreate,
+  type PipelineFlavorResponse,
+  type PipelineFlavorUpdate,
+} from "@/api/services/pipeline";
 import type { components } from "@/api/types";
 
 type PipelineConfigurationCreate = components["schemas"]["PipelineConfigurationCreate"];
@@ -78,5 +83,63 @@ export function useAllPipelineExecutions(status?: string, limit: number = 100, o
   return useQuery({
     queryKey: ["allPipelineExecutions", status, limit, offset],
     queryFn: () => pipelineService.getAllPipelineExecutions(status, limit, offset),
+  });
+}
+
+export function usePipelineFlavors() {
+  return useQuery({
+    queryKey: QUERY_KEYS.pipelineFlavors,
+    queryFn: () => pipelineService.listFlavors(),
+  });
+}
+
+export function usePipelineFlavor(id: string) {
+  return useQuery({
+    queryKey: QUERY_KEYS.pipelineFlavor(id),
+    queryFn: () => pipelineService.getFlavor(id),
+    enabled: !!id,
+  });
+}
+
+export function useCreatePipelineFlavor() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: PipelineFlavorCreate) => pipelineService.createFlavor(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.pipelineFlavors });
+    },
+  });
+}
+
+export function useUpdatePipelineFlavor() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: PipelineFlavorUpdate }) =>
+      pipelineService.updateFlavor(id, data),
+    onSuccess: (_result, { id }) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.pipelineFlavors });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.pipelineFlavor(id) });
+    },
+  });
+}
+
+export function useDeletePipelineFlavor() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => pipelineService.deleteFlavor(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.pipelineFlavors });
+    },
+  });
+}
+
+export function useCreatePipelineFromFlavor() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ flavorId, title }: { flavorId: string; title: string }) =>
+      pipelineService.createPipelineFromFlavor(flavorId, title),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.pipelines });
+    },
   });
 }

@@ -1,9 +1,292 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { useState, useMemo } from "react";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { ColumnDef } from "@tanstack/react-table";
+import { MoreVertical } from "lucide-react";
+import {
+  usePipelineFlavors,
+  useCreatePipelineFlavor,
+  useDeletePipelineFlavor,
+} from "@/api/hooks/pipeline";
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { ErrorBanner } from "@/components/ui/ErrorBanner";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { FilterBar } from "@/components/schema/FilterBar";
+import { SchemaTable } from "@/components/schema/SchemaTable";
+import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
+import { FlavorDrawer } from "@/components/pipeline/FlavorDrawer";
+import { FlavorForm } from "@/components/pipeline/FlavorForm";
+import { useToasts } from "@/components/ui/Toast";
+import type { PipelineFlavorResponse } from "@/api/services/pipeline";
+
+interface FlavorsSearchParams {
+  selected?: string;
+}
+
+interface FlavorsPageContentProps {
+  onCreateClick: () => void;
+  selectedId?: string;
+  onSelectedIdChange: (id: string | undefined) => void;
+}
+
+function FlavorsPageContent({
+  onCreateClick,
+  selectedId,
+  onSelectedIdChange,
+}: FlavorsPageContentProps) {
+  const [searchFilter, setSearchFilter] = useState("");
+
+  const { data: flavorsResponse, isLoading, error, refetch } = usePipelineFlavors();
+  const flavors = flavorsResponse || [];
+
+  const filteredData = flavors.filter(
+    (flavor: PipelineFlavorResponse) =>
+      flavor.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
+      (flavor.description?.toLowerCase().includes(searchFilter.toLowerCase()) ?? false) ||
+      flavor.id.toLowerCase().includes(searchFilter.toLowerCase()),
+  );
+
+  const flavorColumns: ColumnDef<PipelineFlavorResponse>[] = [
+    {
+      accessorKey: "id",
+      header: "ID",
+      size: 100,
+      cell: (info) => (
+        <span className="mono" style={{ fontSize: "var(--text-xs)" }}>
+          {(info.getValue() as string).slice(0, 8)}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "name",
+      header: "Name",
+      cell: (info) => {
+        const flavorId = info.row.original.id;
+        return (
+          <span
+            style={{
+              color: "var(--cyan-600, #0891b2)",
+              fontWeight: 500,
+              cursor: "pointer",
+            }}
+            onClick={() => onSelectedIdChange(flavorId)}
+            data-testid={`flavor-name-${flavorId}`}
+            role="button"
+          >
+            {info.getValue() as string}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: "description",
+      header: "Description",
+      cell: (info) => {
+        const desc = (info.getValue() as string) || "—";
+        const truncated = desc.length > 50 ? `${desc.slice(0, 50)}…` : desc;
+        return (
+          <span className="muted-text" title={desc}>
+            {truncated}
+          </span>
+        );
+      },
+    },
+    {
+      id: "steps",
+      header: "Steps",
+      cell: ({ row }) => (
+        <span className="mono" data-testid={`flavor-steps-${row.original.id}`}>
+          {row.original.step_count}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "last_updated",
+      header: "Updated",
+      cell: (info) => {
+        const date = info.getValue() as string | null;
+        return date ? new Date(date).toLocaleDateString() : "—";
+      },
+    },
+    {
+      id: "actions",
+      header: "",
+      size: 40,
+      cell: ({ row }) => (
+        <button
+          data-testid={`flavor-row-actions-${row.original.id}`}
+          className="btn btn-icon"
+          onClick={() => onSelectedIdChange(row.original.id)}
+        >
+          <MoreVertical size={16} style={{ color: "var(--canvas-fg-3)" }} />
+        </button>
+      ),
+    },
+  ];
+
+  if (isLoading) {
+    return (
+      <div className="stack">
+        <Skeleton height={32} width={200} />
+        <Skeleton height={40} />
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} height={40} />
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="stack">
+        <ErrorBanner
+          error={error}
+          onRetry={() => refetch()}
+          message="Failed to load pipeline flavors"
+          daemonLogPath="/local-server/logs/context_studio.log"
+        />
+      </div>
+    );
+  }
+
+  if (flavors.length === 0) {
+    return (
+      <EmptyState
+        title="No flavors yet"
+        description="Create a pipeline flavor to get started."
+        action={{
+          label: "Create a flavor",
+          onClick: onCreateClick,
+        }}
+      />
+    );
+  }
+
+  const hasFilters = !!searchFilter;
+  const showFilteredEmpty = flavors.length > 0 && filteredData.length === 0 && hasFilters;
+
+  return (
+    <div data-testid="flavors-page">
+      <FilterBar searchValue={searchFilter} onSearchChange={setSearchFilter} />
+
+      {showFilteredEmpty ? (
+        <div style={{ marginTop: "var(--space-6)" }}>
+          <EmptyState
+            title="No flavors match your search"
+            description="Try adjusting your search criteria."
+          />
+        </div>
+      ) : (
+        <SchemaPageLayout
+          data={filteredData}
+          selectedId={selectedId}
+          renderDrawerContent={(flavor) => (
+            <FlavorDrawer
+              key={flavor.id}
+              flavor={flavor}
+              onClose={() => onSelectedIdChange(undefined)}
+            />
+          )}
+        >
+          <SchemaTable
+            columns={flavorColumns}
+            data={filteredData}
+            onRowSelect={onSelectedIdChange}
+            selectedId={selectedId}
+            testIdPrefix="flavor"
+          />
+        </SchemaPageLayout>
+      )}
+    </div>
+  );
+}
+
+function FlavorsPageWrapper() {
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const searchParams = useSearch({ from: "/app/pipelines/flavors" });
+  const selectedId = searchParams.selected;
+  const createMutation = useCreatePipelineFlavor();
+  const { toast } = useToasts();
+
+  const handleSelectedIdChange = (id: string | undefined) => {
+    navigate({
+      to: "/app/pipelines/flavors",
+      search: id ? { selected: id } : {},
+      replace: true,
+    });
+  };
+
+  const handleCreateSubmit = async (data: {
+    name: string;
+    description?: string;
+    steps: Array<Record<string, unknown>>;
+  }) => {
+    setCreateError(null);
+    try {
+      const result = await createMutation.mutateAsync(data);
+      setShowCreateModal(false);
+      handleSelectedIdChange(result.id);
+      toast("success", `Created flavor "${result.name}"`);
+    } catch (error) {
+      setCreateError(error instanceof Error ? error.message : "Failed to create flavor");
+    }
+  };
+
+  return (
+    <div className="stack">
+      <div className="flex-between">
+        <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>Pipeline Flavors</h1>
+        <Button
+          variant="primary"
+          onClick={() => setShowCreateModal(true)}
+          data-testid="flavor-add-button"
+        >
+          + New flavor
+        </Button>
+      </div>
+      <div data-testid="flavors-content">
+        <FlavorsPageContent
+          onCreateClick={() => setShowCreateModal(true)}
+          selectedId={selectedId}
+          onSelectedIdChange={handleSelectedIdChange}
+        />
+      </div>
+
+      <Modal
+        open={showCreateModal}
+        onClose={() => {
+          setShowCreateModal(false);
+          setCreateError(null);
+        }}
+        title="Create Pipeline Flavor"
+        size="lg"
+        data-testid="flavor-create-modal"
+      >
+        {createError && (
+          <div style={{ marginBottom: "var(--space-3)" }}>
+            <ErrorBanner
+              error={new Error(createError)}
+              onRetry={() => setCreateError(null)}
+              message="Failed to create flavor"
+            />
+          </div>
+        )}
+        <FlavorForm onSubmit={handleCreateSubmit} isLoading={createMutation.isPending} />
+      </Modal>
+    </div>
+  );
+}
+
+export function FlavorsPage() {
+  return <FlavorsPageWrapper />;
+}
 
 export const Route = createFileRoute("/app/pipelines/flavors")({
-  component: () => (
-    <div style={{ color: "var(--canvas-fg-2)", fontSize: "var(--text-sm)" }}>
-      Flavors — coming soon
-    </div>
-  ),
+  component: FlavorsPage,
+  validateSearch: (search: Record<string, unknown>): FlavorsSearchParams => ({
+    selected: typeof search.selected === "string" ? search.selected : undefined,
+  }),
 });
