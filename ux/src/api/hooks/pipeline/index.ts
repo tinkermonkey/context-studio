@@ -3,7 +3,6 @@ import { QUERY_KEYS } from "@/api/config";
 import {
   pipelineService,
   type PipelineFlavorCreate,
-  type PipelineFlavorResponse,
   type PipelineFlavorUpdate,
 } from "@/api/services/pipeline";
 import type { components } from "@/api/types";

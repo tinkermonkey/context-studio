@@ -41,7 +41,7 @@ export function FlavorForm({ onSubmit, isLoading, initialData }: FlavorFormProps
       }
       setStepsError(undefined);
       return true;
-    } catch (e) {
+    } catch {
       setStepsError("Invalid JSON format");
       return false;
     }
