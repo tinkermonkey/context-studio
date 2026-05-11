@@ -13,7 +13,6 @@ export const Route = createFileRoute("/app/extraction")({
 });
 
 function ExtractionPage() {
-  const [currentText, setCurrentText] = useState<string>("");
   const [extractionResult, setExtractionResult] = useState<ExtractionResultSchema | null>(null);
   const [nlpResult, setNlpResult] = useState<ExtractionResultSchema | null>(null);
   const [enrichmentResult, setEnrichmentResult] = useState<ExtractionResultSchema | null>(null);
@@ -23,7 +22,6 @@ function ExtractionPage() {
   const enrichMutation = useEnrichFromReferences();
 
   const handleExtract = async (text: string) => {
-    setCurrentText(text);
     setExtractionResult(null);
     setNlpResult(null);
     setEnrichmentResult(null);
