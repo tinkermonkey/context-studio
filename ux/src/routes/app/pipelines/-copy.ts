@@ -51,6 +51,7 @@ export const COPY = {
   RUN_HISTORY_PAGE_TITLE: "Run History",
   SEARCH_RUNS_PLACEHOLDER: "Search by pipeline name…",
   FILTER_RUNS_LABEL: "Filter runs by status",
+  RUNS_LOAD_ERROR: "Failed to load run history",
   STATUS_FILTER_SUCCESS: "Success",
   STATUS_FILTER_ERROR: "Error",
   STATUS_FILTER_TIMEOUT: "Timeout",
