@@ -149,7 +149,7 @@ export function IndividualDrawer({
   const removeClassMutation = useRemoveClassFromIndividual();
   const reorderMutation = useReorderIndividualClasses();
 
-  const { data: individual, isLoading: isLoadingIndividual, error: individualError } = useIndividual(individualId || "");
+  const { data: individual, isLoading: isLoadingIndividual, error: individualError, refetch: refetchIndividual } = useIndividual(individualId || "");
   const { data: individualsResponse } = useIndividuals();
 
   const {
@@ -273,7 +273,7 @@ export function IndividualDrawer({
         <div style={{ padding: "var(--space-3)" }}>
           <ErrorBanner
             error={individualError}
-            onRetry={() => {}}
+            onRetry={() => refetchIndividual()}
             message={individualsCopy.errors.failedToLoad}
             compact={true}
           />

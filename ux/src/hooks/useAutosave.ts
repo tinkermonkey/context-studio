@@ -23,6 +23,8 @@ export function useAutosave<T>({
   const statusRef = useRef<AutosaveStatus>("idle");
   const isFirstRenderRef = useRef(true);
   const mutateRef = useRef<((data: T) => void) | null>(null);
+  const dataRef = useRef(data);
+  dataRef.current = data;
 
   const mutation = useMutation({
     mutationFn,
@@ -80,14 +82,10 @@ export function useAutosave<T>({
     return () => {
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
-        // Flush pending changes before unmounting
-        if (mutateRef.current && (statusRef.current === "idle" || statusRef.current === "saved")) {
-          mutateRef.current(data);
-        }
       }
       if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current);
     };
-  }, [data]);
+  }, []);
 
   return {
     status,
