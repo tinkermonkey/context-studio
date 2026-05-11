@@ -89,11 +89,10 @@ export function useGraphVisualization() {
   });
 }
 
-export function useShortestPath(sourceId: string, targetId: string) {
-  return useQuery({
-    queryKey: QUERY_KEYS.graphPath(sourceId, targetId),
-    queryFn: () => graphService.getShortestPath(sourceId, targetId),
-    enabled: !!sourceId && !!targetId,
+export function useShortestPath() {
+  return useMutation({
+    mutationFn: (args: { sourceId: string; targetId: string }) =>
+      graphService.getShortestPath(args.sourceId, args.targetId),
   });
 }
 
