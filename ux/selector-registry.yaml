@@ -676,6 +676,44 @@ selectors:
     component: components/graph/MetricsPanel.tsx
     description: Degree distribution visualization
 
+  # Path Finder
+  - selector: path-finder
+    component: components/graph/PathFinder.tsx
+    description: Root container for path finder component
+  - selector: path-finder-source-input
+    component: components/graph/PathFinder.tsx
+    description: Source node typeahead input
+  - selector: path-finder-source-option-*
+    component: components/graph/PathFinder.tsx
+    description: Source node option in dropdown (pattern matches option-{classId})
+  - selector: path-finder-clear-source
+    component: components/graph/PathFinder.tsx
+    description: Button to clear selected source node
+  - selector: path-finder-target-input
+    component: components/graph/PathFinder.tsx
+    description: Target node typeahead input
+  - selector: path-finder-target-option-*
+    component: components/graph/PathFinder.tsx
+    description: Target node option in dropdown (pattern matches option-{classId})
+  - selector: path-finder-clear-target
+    component: components/graph/PathFinder.tsx
+    description: Button to clear selected target node
+  - selector: path-finder-find-button
+    component: components/graph/PathFinder.tsx
+    description: Find path button (disabled until both nodes selected)
+  - selector: path-finder-result
+    component: components/graph/PathFinder.tsx
+    description: Result path container
+  - selector: path-finder-result-node-*
+    component: components/graph/PathFinder.tsx
+    description: Clickable node button in result path (pattern matches result-node-{nodeId})
+  - selector: path-finder-empty-state
+    component: components/graph/PathFinder.tsx
+    description: Empty state shown when no path found
+  - selector: path-finder-error
+    component: components/graph/PathFinder.tsx
+    description: Error message displayed when path search fails
+
   # Unit Test Fixtures
   - selector: action
     component: components/ui/__tests__/Panel.test.tsx

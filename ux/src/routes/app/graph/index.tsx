@@ -4,6 +4,7 @@ import { RotateCw, Network } from "lucide-react";
 import { useGraphVisualization } from "@/api/hooks/graph";
 import { GraphCanvasComponent } from "@/components/graph/GraphCanvas";
 import { MetricsPanel } from "@/components/graph/MetricsPanel";
+import { PathFinder } from "@/components/graph/PathFinder";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -91,6 +92,7 @@ function GraphPage() {
             <Tabs
               tabs={[
                 { id: "metrics", label: "Metrics" },
+                { id: "path", label: "Path Finder" },
                 { id: "node", label: "Node Inspector" },
               ]}
               active={activeTab}
@@ -98,6 +100,10 @@ function GraphPage() {
             />
             {activeTab === "metrics" ? (
               <MetricsPanel />
+            ) : activeTab === "path" ? (
+              <div className="panel" id="panel-path" style={{ padding: "14px 16px", overflowY: "auto" }}>
+                <PathFinder onNodeSelect={setSelectedNodeId} />
+              </div>
             ) : (
               <div className="panel" id="panel-node">
                 {selectedNodeId ? (
