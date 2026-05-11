@@ -23,16 +23,7 @@ from .entities import Execution, PipelineConfiguration
 
 @dataclass(frozen=True)
 class ExecutionWithTitle:
-    """
-    Combines an Execution with its pipeline title in a single value object.
-
-    This eliminates the fragile parallel-list pattern by structurally guaranteeing
-    that execution and title correspondence cannot be violated.
-
-    Attributes:
-        execution: The Execution record
-        pipeline_title: The title of the pipeline configuration
-    """
+    """Pairs an execution with its pipeline title."""
 
     execution: Execution
     pipeline_title: str

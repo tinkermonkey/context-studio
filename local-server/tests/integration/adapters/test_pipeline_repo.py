@@ -459,8 +459,6 @@ class TestPipelineRepositoryExecutionTracking:
         - The count query must use the same JOIN as the data query
         - Orphaned executions (whose config was deleted) should not be counted
         """
-        from sqlalchemy import text
-
         # Save config and execution
         repo.save_config(sample_config)
         repo.record_execution(sample_execution)
