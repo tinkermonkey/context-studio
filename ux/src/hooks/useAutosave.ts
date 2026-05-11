@@ -78,10 +78,16 @@ export function useAutosave<T>({
 
   useEffect(() => {
     return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+        // Flush pending changes before unmounting
+        if (mutateRef.current && (statusRef.current === "idle" || statusRef.current === "saved")) {
+          mutateRef.current(data);
+        }
+      }
       if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current);
     };
-  }, []);
+  }, [data]);
 
   return {
     status,

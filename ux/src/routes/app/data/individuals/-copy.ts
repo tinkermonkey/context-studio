@@ -76,6 +76,8 @@ export const individualsCopy = {
     noRelatedIndividualsDescription: "No other individuals share classes with this one",
     showingResults: "Showing 10 of many results",
     closeButton: "Close",
+    notFoundTitle: "Individual Not Found",
+    notFoundDescription: "This individual has been deleted or is no longer available",
   },
   toasts: {
     classAdded: "Class added",
@@ -86,6 +88,7 @@ export const individualsCopy = {
     autosaveFailed: "Autosave failed",
     classesReordered: "Classes reordered",
     failedToReorderClasses: "Failed to reorder classes",
+    pendingChanges: "Waiting for autosave to complete...",
   },
   table: {
     idHeader: "ID",

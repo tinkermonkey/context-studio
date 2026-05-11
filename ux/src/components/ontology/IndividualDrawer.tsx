@@ -10,13 +10,15 @@ import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { useAutosave } from "@/hooks/useAutosave";
 import { useToasts } from "@/components/ui/Toast";
 import {
+  useIndividuals,
+  useIndividual,
   useUpdateIndividual,
   useAddClassToIndividual,
   useRemoveClassFromIndividual,
   useIndividualInheritedProperties,
   useReorderIndividualClasses,
 } from "@/api/hooks/ontology/useIndividuals";
-import { useIndividuals, useClasses } from "@/api/hooks/ontology";
+import { useClasses } from "@/api/hooks/ontology";
 import { ApiError } from "@/api/client/interceptors";
 import { individualsCopy } from "@/routes/app/data/individuals/-copy";
 import type { components } from "@/api/types";
@@ -147,8 +149,8 @@ export function IndividualDrawer({
   const removeClassMutation = useRemoveClassFromIndividual();
   const reorderMutation = useReorderIndividualClasses();
 
+  const { data: individual, isLoading: isLoadingIndividual, error: individualError } = useIndividual(individualId || "");
   const { data: individualsResponse } = useIndividuals();
-  const individual = individualsResponse?.items.find((i) => i.id === individualId) || null;
 
   const {
     data: classesResponse,
@@ -199,13 +201,22 @@ export function IndividualDrawer({
     },
   });
 
+  const handleClose = () => {
+    // If there are unsaved changes and a save is pending, prevent closing
+    if (isDirty && status !== "idle" && status !== "saved") {
+      toast("warning", individualsCopy.toasts.pendingChanges);
+      return;
+    }
+    onClose();
+  };
+
   useEffect(() => {
     if (individual) {
       setTitle(individual.title);
       setDescription(individual.description || "");
       lastSavedAtRef.current = null;
     }
-  }, [individual]);
+  }, [individual?.id, individual?.version]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -220,7 +231,79 @@ export function IndividualDrawer({
     }
   }, [showClassOptions]);
 
-  if (!individualId || !individual) return null;
+  // Drawer is intentionally closed
+  if (!individualId) return null;
+
+  // Handle loading state
+  if (isLoadingIndividual) {
+    return (
+      <Drawer
+        open={true}
+        onClose={handleClose}
+        title="Loading..."
+        autosaveState={undefined}
+        isDirty={false}
+        lastSavedAt={undefined}
+        onRevert={() => {}}
+        data-testid="individual-detail-page"
+      >
+        <div className="stack-lg">
+          <Skeleton height={40} />
+          <Skeleton height={40} />
+          <Skeleton height={80} />
+          <Skeleton height={200} />
+        </div>
+      </Drawer>
+    );
+  }
+
+  // Handle error state
+  if (individualError) {
+    return (
+      <Drawer
+        open={true}
+        onClose={handleClose}
+        title="Error"
+        autosaveState={undefined}
+        isDirty={false}
+        lastSavedAt={undefined}
+        onRevert={() => {}}
+        data-testid="individual-detail-page"
+      >
+        <div style={{ padding: "var(--space-3)" }}>
+          <ErrorBanner
+            error={individualError}
+            onRetry={() => {}}
+            message={individualsCopy.errors.failedToLoad}
+            compact={true}
+          />
+        </div>
+      </Drawer>
+    );
+  }
+
+  // Handle not-found state
+  if (!individual) {
+    return (
+      <Drawer
+        open={true}
+        onClose={handleClose}
+        title={individualsCopy.drawer.notFoundTitle}
+        autosaveState={undefined}
+        isDirty={false}
+        lastSavedAt={undefined}
+        onRevert={() => {}}
+        data-testid="individual-detail-page"
+      >
+        <div style={{ padding: "var(--space-3)" }}>
+          <EmptyState
+            title={individualsCopy.drawer.notFoundTitle}
+            description={individualsCopy.drawer.notFoundDescription}
+          />
+        </div>
+      </Drawer>
+    );
+  }
 
   const handleAddClass = async (classId: string) => {
     if (!classId) return;
@@ -305,7 +388,7 @@ export function IndividualDrawer({
   return (
     <Drawer
       open={!!individual}
-      onClose={onClose}
+      onClose={handleClose}
       title={individual.title}
       autosaveState={autosaveState}
       isDirty={isDirty}
@@ -610,7 +693,7 @@ export function IndividualDrawer({
         <div style={{ display: "flex", gap: "var(--space-2)" }}>
           <Button
             variant="ghost"
-            onClick={onClose}
+            onClick={handleClose}
             style={{ flex: 1 }}
             data-testid="individual-drawer-close-button"
           >
