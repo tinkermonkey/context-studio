@@ -20,6 +20,7 @@ interface IndividualEditorProps {
   initialData?: IndividualCreateRequest | IndividualResponse;
   onSubmit: (data: IndividualEditorSubmitData) => Promise<void>;
   isLoading?: boolean;
+  classesError?: boolean;
 }
 
 export function IndividualEditor({
@@ -27,6 +28,7 @@ export function IndividualEditor({
   initialData,
   onSubmit,
   isLoading,
+  classesError,
 }: IndividualEditorProps) {
   const [title, setTitle] = useState(
     initialData && "title" in initialData ? initialData.title : "",
@@ -47,8 +49,16 @@ export function IndividualEditor({
   const [classError, setClassError] = useState<string>();
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: classesResponse } = useClasses();
-  const { data: existingIndividual } = useIndividual(individualId || "");
+  const {
+    data: classesResponse,
+    isError: classesQueryError,
+    isLoading: isLoadingClasses,
+  } = useClasses();
+  const {
+    data: existingIndividual,
+    isError: individualQueryError,
+    isLoading: isLoadingIndividual,
+  } = useIndividual(individualId || "");
   const classes = classesResponse?.items || [];
 
   useEffect(() => {
@@ -270,6 +280,17 @@ export function IndividualEditor({
               {classError}
             </div>
           )}
+          {(classesQueryError || classesError) && (
+            <div
+              style={{
+                color: "var(--rose-600)",
+                fontSize: "var(--text-xs)",
+                marginTop: "4px",
+              }}
+            >
+              Classes failed to load. Please check your connection and retry.
+            </div>
+          )}
         </div>
 
         <div>
@@ -284,39 +305,7 @@ export function IndividualEditor({
           />
         </div>
 
-        {individualId && uniqueProperties.length > 0 && (
-          <div>
-            <label className="form-group-label">{individualsCopy.form.propertiesLabel}</label>
-            <div className="stack">
-              {uniqueProperties.map((prop) => (
-                <div key={prop.property_identifier}>
-                  <label className="form-group-label" style={{ fontSize: "var(--text-sm)" }}>
-                    {prop.property_identifier}
-                  </label>
-                  <Input
-                    type="text"
-                    placeholder={`${individualsCopy.form.propertyInputPrefix}${prop.property_identifier}`}
-                    defaultValue={prop.value ? String(prop.value) : ""}
-                    data-testid={`individual-property-${prop.property_identifier}`}
-                    disabled
-                  />
-                  <div
-                    style={{
-                      fontSize: "var(--text-xs)",
-                      color: "var(--canvas-fg-3)",
-                      marginTop: "2px",
-                    }}
-                  >
-                    {individualsCopy.form.propertyTypeLabel}
-                    {prop.datatype || individualsCopy.form.propertyTypeUnknown}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {individualId && uniqueProperties.length === 0 && selectedClasses.length > 0 && (
+        {individualId && selectedClasses.length > 0 && (
           <div
             style={{
               padding: "var(--space-3)",

@@ -18,6 +18,7 @@ import {
   useCreateIndividual,
   useUpdateIndividual,
   useDeleteIndividual,
+  useIndividual,
 } from "@/api/hooks/ontology/useIndividuals";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { individualsCopy } from "./individuals/-copy";
@@ -304,6 +305,14 @@ function IndividualsPageWrapper() {
   const classes = classesResponse?.items || [];
   const classMap = new Map(classes.map((c: ClassResponse) => [c.id, c.title]));
 
+  const {
+    data: editingIndividual,
+    isLoading: isLoadingEditingIndividual,
+    isError: editingIndividualError,
+    error: editingIndividualErrorObj,
+    refetch: refetchEditingIndividual,
+  } = useIndividual(editingId || "");
+
   const handleSelectedIdChange = (id?: string) => {
     navigate({
       to: "/app/data/individuals",
@@ -425,6 +434,16 @@ function IndividualsPageWrapper() {
         size="md"
         data-testid="individual-create-modal"
       >
+        {classesError && (
+          <div style={{ marginBottom: "var(--space-3)" }}>
+            <ErrorBanner
+              error={classesErrorObj || new Error(individualsCopy.errors.failedToLoadClasses)}
+              onRetry={() => refetchClasses()}
+              message={individualsCopy.errors.failedToLoadClasses}
+              daemonLogPath="/local-server/logs/context_studio.log"
+            />
+          </div>
+        )}
         {createError && (
           <div style={{ marginBottom: "var(--space-3)" }}>
             <ErrorBanner
@@ -435,7 +454,11 @@ function IndividualsPageWrapper() {
             />
           </div>
         )}
-        <IndividualEditor onSubmit={handleCreateSubmit} isLoading={createMutation.isPending} />
+        <IndividualEditor
+          onSubmit={handleCreateSubmit}
+          isLoading={createMutation.isPending}
+          classesError={classesError}
+        />
       </Modal>
 
       <Modal
@@ -449,6 +472,16 @@ function IndividualsPageWrapper() {
         size="md"
         data-testid="individual-edit-modal"
       >
+        {editingIndividualError && (
+          <div style={{ marginBottom: "var(--space-3)" }}>
+            <ErrorBanner
+              error={editingIndividualErrorObj || new Error(individualsCopy.errors.failedToLoad)}
+              onRetry={() => refetchEditingIndividual()}
+              message={individualsCopy.errors.failedToLoad}
+              daemonLogPath="/local-server/logs/context_studio.log"
+            />
+          </div>
+        )}
         {editError && (
           <div style={{ marginBottom: "var(--space-3)" }}>
             <ErrorBanner
@@ -459,11 +492,20 @@ function IndividualsPageWrapper() {
             />
           </div>
         )}
-        {editingId && (
+        {isLoadingEditingIndividual && (
+          <div className="stack-lg">
+            <Skeleton height={40} />
+            <Skeleton height={40} />
+            <Skeleton height={80} />
+          </div>
+        )}
+        {editingId && !isLoadingEditingIndividual && !editingIndividualError && (
           <IndividualEditor
             individualId={editingId}
+            initialData={editingIndividual}
             onSubmit={handleEditSubmit}
             isLoading={updateMutation.isPending}
+            classesError={classesError}
           />
         )}
       </Modal>
