@@ -24,7 +24,7 @@ interface EntityRowProps {
   availableClasses: Array<{ id: string; title: string }>;
   onApprove: (entity: ExtractedEntitySchema) => void;
   onReject: (entityId: string) => void;
-  onLink: (entity: ExtractedEntitySchema, targetClassId: string) => void;
+  onLink: (entity: ExtractedEntitySchema, _targetClassId: string) => void;
 }
 
 function EntityRow({
@@ -266,7 +266,6 @@ export function EntityReviewPanel({
   // Determine state
   const isHidden = entities.length === 0;
   const isEmpty = !isLoading && unlinkedEntities.length === 0;
-  const isPopulated = unlinkedEntities.length > 0 && !isLoading;
 
   const handleApprove = async (entity: ExtractedEntitySchema) => {
     try {
@@ -302,7 +301,7 @@ export function EntityReviewPanel({
     toast("info", "Entity rejected");
   };
 
-  const handleLinkConfirm = (entity: ExtractedEntitySchema, targetClassId: string) => {
+  const handleLinkConfirm = (entity: ExtractedEntitySchema, _targetClassId: string) => {
     setLinkedIds((prev) => new Set([...prev, entity.id]));
     toast("success", "Entity linked to class");
   };
