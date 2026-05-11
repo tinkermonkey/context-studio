@@ -36,7 +36,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
 
       server.use(
         rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses)))
+        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
       );
 
       const { container } = render(<IndividualDrawer individualId={null} onClose={() => {}} />);
@@ -70,7 +70,9 @@ describe("Individual Detail Page (Drawer Component)", () => {
 
       server.use(
         rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/individuals/ind-001", (req, res, ctx) => res(ctx.json(mockIndividuals.items[0]))),
+        rest.get("*/api/individuals/ind-001", (req, res, ctx) =>
+          res(ctx.json(mockIndividuals.items[0])),
+        ),
         rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
         rest.get("*/api/individuals/ind-001/inherited-properties", (req, res, ctx) =>
           res(ctx.json({ items: [], total: 0, limit: 10, offset: 0 })),
@@ -102,7 +104,9 @@ describe("Individual Detail Page (Drawer Component)", () => {
 
       server.use(
         rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/individuals/ind-001", (req, res, ctx) => res(ctx.json(mockIndividuals.items[0]))),
+        rest.get("*/api/individuals/ind-001", (req, res, ctx) =>
+          res(ctx.json(mockIndividuals.items[0])),
+        ),
         rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
         rest.get("*/api/individuals/*/inherited-properties", (req, res, ctx) =>
           res(ctx.json({ items: [], total: 0, limit: 10, offset: 0 })),
@@ -136,7 +140,9 @@ describe("Individual Detail Page (Drawer Component)", () => {
 
       server.use(
         rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/individuals/ind-001", (req, res, ctx) => res(ctx.json(mockIndividuals.items[0]))),
+        rest.get("*/api/individuals/ind-001", (req, res, ctx) =>
+          res(ctx.json(mockIndividuals.items[0])),
+        ),
         rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
         rest.get("*/api/individuals/*/inherited-properties", (req, res, ctx) =>
           res(ctx.json({ items: [], total: 0, limit: 10, offset: 0 })),
@@ -170,7 +176,9 @@ describe("Individual Detail Page (Drawer Component)", () => {
 
       server.use(
         rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/individuals/ind-001", (req, res, ctx) => res(ctx.json(mockIndividuals.items[0]))),
+        rest.get("*/api/individuals/ind-001", (req, res, ctx) =>
+          res(ctx.json(mockIndividuals.items[0])),
+        ),
         rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
         rest.get("*/api/individuals/*/inherited-properties", (req, res, ctx) =>
           res(ctx.json({ items: [], total: 0, limit: 10, offset: 0 })),
@@ -209,7 +217,9 @@ describe("Individual Detail Page (Drawer Component)", () => {
 
       server.use(
         rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/individuals/ind-001", (req, res, ctx) => res(ctx.json(mockIndividuals.items[0]))),
+        rest.get("*/api/individuals/ind-001", (req, res, ctx) =>
+          res(ctx.json(mockIndividuals.items[0])),
+        ),
         rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
         rest.get("*/api/individuals/*/inherited-properties", (req, res, ctx) =>
           res(ctx.json({ items: [], total: 0, limit: 10, offset: 0 })),
@@ -248,7 +258,9 @@ describe("Individual Detail Page (Drawer Component)", () => {
 
       server.use(
         rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/individuals/ind-001", (req, res, ctx) => res(ctx.json(mockIndividuals.items[0]))),
+        rest.get("*/api/individuals/ind-001", (req, res, ctx) =>
+          res(ctx.json(mockIndividuals.items[0])),
+        ),
         rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
         rest.get("*/api/individuals/*/inherited-properties", (req, res, ctx) =>
           res(ctx.json({ items: [], total: 0, limit: 10, offset: 0 })),
@@ -281,7 +293,9 @@ describe("Individual Detail Page (Drawer Component)", () => {
 
       server.use(
         rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/individuals/ind-001", (req, res, ctx) => res(ctx.json(mockIndividuals.items[0]))),
+        rest.get("*/api/individuals/ind-001", (req, res, ctx) =>
+          res(ctx.json(mockIndividuals.items[0])),
+        ),
         rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
         rest.get("*/api/individuals/*/inherited-properties", (req, res, ctx) =>
           res(ctx.json({ items: [], total: 0, limit: 10, offset: 0 })),
@@ -313,7 +327,9 @@ describe("Individual Detail Page (Drawer Component)", () => {
 
       server.use(
         rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/individuals/ind-001", (req, res, ctx) => res(ctx.json(mockIndividuals.items[0]))),
+        rest.get("*/api/individuals/ind-001", (req, res, ctx) =>
+          res(ctx.json(mockIndividuals.items[0])),
+        ),
         rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
         rest.get("*/api/individuals/*/inherited-properties", (req, res, ctx) =>
           res(ctx.json({ items: [], total: 0, limit: 10, offset: 0 })),
@@ -350,7 +366,9 @@ describe("Individual Detail Page (Drawer Component)", () => {
 
       server.use(
         rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/individuals/ind-001", (req, res, ctx) => res(ctx.json(mockIndividuals.items[0]))),
+        rest.get("*/api/individuals/ind-001", (req, res, ctx) =>
+          res(ctx.json(mockIndividuals.items[0])),
+        ),
         rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
         rest.get("*/api/individuals/*/inherited-properties", (req, res, ctx) =>
           res(ctx.json({ items: [], total: 0, limit: 10, offset: 0 })),
@@ -382,7 +400,9 @@ describe("Individual Detail Page (Drawer Component)", () => {
 
       server.use(
         rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/individuals/ind-001", (req, res, ctx) => res(ctx.json(mockIndividuals.items[0]))),
+        rest.get("*/api/individuals/ind-001", (req, res, ctx) =>
+          res(ctx.json(mockIndividuals.items[0])),
+        ),
         rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
         rest.get("*/api/individuals/*/inherited-properties", (req, res, ctx) =>
           res(ctx.json({ items: [], total: 0, limit: 10, offset: 0 })),
@@ -420,7 +440,9 @@ describe("Individual Detail Page (Drawer Component)", () => {
 
       server.use(
         rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/individuals/ind-001", (req, res, ctx) => res(ctx.json(mockIndividuals.items[0]))),
+        rest.get("*/api/individuals/ind-001", (req, res, ctx) =>
+          res(ctx.json(mockIndividuals.items[0])),
+        ),
         rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
         rest.get("*/api/individuals/*/inherited-properties", (req, res, ctx) =>
           res(ctx.status(500), ctx.json({ detail: "Server error" })),

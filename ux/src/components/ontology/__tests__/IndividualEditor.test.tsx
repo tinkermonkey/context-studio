@@ -49,9 +49,7 @@ const mockClasses = [
 
 function setupDefaultMocks() {
   server.use(
-    rest.get("*/api/classes", (req, res, ctx) =>
-      res(ctx.json(createListClasses(mockClasses))),
-    ),
+    rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses(mockClasses)))),
   );
 }
 
@@ -239,9 +237,7 @@ describe("IndividualEditor", () => {
         />,
       );
 
-      const submitButton = screen.getByTestId(
-        "individual-submit-button",
-      ) as HTMLButtonElement;
+      const submitButton = screen.getByTestId("individual-submit-button") as HTMLButtonElement;
       expect(submitButton.disabled).toBe(true);
     });
 
@@ -305,9 +301,7 @@ describe("IndividualEditor", () => {
       await user.clear(titleInput);
       await user.type(titleInput, "Updated Title");
 
-      const descInput = screen.getByTestId(
-        "individual-description-input",
-      ) as HTMLTextAreaElement;
+      const descInput = screen.getByTestId("individual-description-input") as HTMLTextAreaElement;
       await user.clear(descInput);
       await user.type(descInput, "Updated description");
 
@@ -468,9 +462,7 @@ describe("IndividualEditor", () => {
       );
 
       const titleInput = screen.getByTestId("individual-title-input") as HTMLInputElement;
-      const descInput = screen.getByTestId(
-        "individual-description-input",
-      ) as HTMLTextAreaElement;
+      const descInput = screen.getByTestId("individual-description-input") as HTMLTextAreaElement;
 
       expect(titleInput.value).toBe("John Doe");
       expect(descInput.value).toBe("A person entity");
@@ -520,9 +512,7 @@ describe("IndividualEditor", () => {
         expect(titleInput.value).toBe("Updated");
       });
 
-      const descInput = screen.getByTestId(
-        "individual-description-input",
-      ) as HTMLTextAreaElement;
+      const descInput = screen.getByTestId("individual-description-input") as HTMLTextAreaElement;
       await user.clear(descInput);
       await user.type(descInput, "Updated description");
 

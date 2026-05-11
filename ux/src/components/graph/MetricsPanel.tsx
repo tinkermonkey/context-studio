@@ -32,9 +32,7 @@ export function MetricsPanel() {
       </div>
 
       <div className="metrics-section">
-        <div className="metrics-section-title">
-          Top Centrality
-        </div>
+        <div className="metrics-section-title">Top Centrality</div>
         <div className="centrality-list-skeleton">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="centrality-row-skeleton">
@@ -72,9 +70,10 @@ export function MetricsPanel() {
       .map(([degree, count]) => ({ degree: parseInt(degree, 10), count }))
       .sort((a, b) => a.degree - b.degree);
 
-    const maxDegree = degreeDistributionEntries.length > 0
-      ? Math.max(...degreeDistributionEntries.map(e => e.count))
-      : 0;
+    const maxDegree =
+      degreeDistributionEntries.length > 0
+        ? Math.max(...degreeDistributionEntries.map((e) => e.count))
+        : 0;
 
     return (
       <div className="panel-body">
@@ -104,30 +103,15 @@ export function MetricsPanel() {
 
         {topCentralityNodes.length > 0 && (
           <div className="metrics-section">
-            <div className="metrics-section-title">
-              Top Centrality Nodes
-            </div>
-            <div
-              data-testid="graph-metrics-centrality-list"
-              className="centrality-list"
-            >
+            <div className="metrics-section-title">Top Centrality Nodes</div>
+            <div data-testid="graph-metrics-centrality-list" className="centrality-list">
               {topCentralityNodes.map(([nodeId, score], index) => (
-                <div
-                  key={nodeId}
-                  className="centrality-row"
-                >
-                  <span className="centrality-index">
-                    {index + 1}.
-                  </span>
-                  <span
-                    className="centrality-node-id"
-                    title={nodeId}
-                  >
+                <div key={nodeId} className="centrality-row">
+                  <span className="centrality-index">{index + 1}.</span>
+                  <span className="centrality-node-id" title={nodeId}>
                     {nodeId}
                   </span>
-                  <span className="centrality-score">
-                    {score.toFixed(3)}
-                  </span>
+                  <span className="centrality-score">{score.toFixed(3)}</span>
                 </div>
               ))}
             </div>
@@ -136,18 +120,10 @@ export function MetricsPanel() {
 
         {degreeDistributionEntries.length > 0 && (
           <div className="metrics-section">
-            <div className="metrics-section-title">
-              Degree Distribution
-            </div>
-            <div
-              data-testid="graph-metrics-degree-distribution"
-              className="degree-chart"
-            >
+            <div className="metrics-section-title">Degree Distribution</div>
+            <div data-testid="graph-metrics-degree-distribution" className="degree-chart">
               {degreeDistributionEntries.map(({ degree, count }) => (
-                <div
-                  key={degree}
-                  className="degree-bar-container"
-                >
+                <div key={degree} className="degree-bar-container">
                   <div
                     className="degree-bar"
                     style={{
@@ -155,9 +131,7 @@ export function MetricsPanel() {
                     }}
                     title={`Degree ${degree}: ${count} nodes`}
                   />
-                  <span className="degree-label">
-                    {degree}
-                  </span>
+                  <span className="degree-label">{degree}</span>
                 </div>
               ))}
             </div>
