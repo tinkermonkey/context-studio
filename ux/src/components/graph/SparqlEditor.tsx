@@ -46,16 +46,17 @@ export function SparqlEditor() {
   return (
     <div data-testid="sparql-editor" className="stack-lg">
       <div>
-        <label className="form-group-label">SPARQL Query</label>
+        <label htmlFor="sparql-query-textarea" className="form-group-label">SPARQL Query</label>
         <Textarea
+          id="sparql-query-textarea"
           data-testid="sparql-query-textarea"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={PLACEHOLDER_QUERY}
           mono={true}
+          rows={6}
           style={{
-            minHeight: "120px",
             resize: "vertical",
           }}
           disabled={isPending}
@@ -80,7 +81,7 @@ export function SparqlEditor() {
       >
         {isPending ? (
           <>
-            <Loader2 size={16} className="animate-spin" />
+            <Loader2 size={16} className="animate-spin" data-testid="sparql-loading-spinner" />
             Running...
           </>
         ) : (
@@ -151,7 +152,7 @@ export function SparqlEditor() {
             }}
           >
             {data.results.length} result{data.results.length !== 1 ? "s" : ""}
-            {data.triple_count !== undefined && ` (${data.triple_count} triples)`}
+            {` (${data.triple_count} triples)`}
           </div>
           <div className="table-wrap" style={{ maxHeight: "400px", overflowY: "auto" }}>
             <table className="t" data-testid="sparql-results-table">
