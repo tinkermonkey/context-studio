@@ -18,7 +18,7 @@ export function Tabs({ tabs, active, onChange }: TabsProps) {
         <button
           key={tab.id}
           id={`tab-${tab.id}`}
-          className={`tab${active === tab.id ? "active" : ""}`}
+          className={`tab${active === tab.id ? " active" : ""}`}
           onClick={() => onChange(tab.id)}
           type="button"
           role="tab"
