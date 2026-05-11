@@ -5,6 +5,7 @@ import { useGraphVisualization } from "@/api/hooks/graph";
 import { GraphCanvasComponent } from "@/components/graph/GraphCanvas";
 import { MetricsPanel } from "@/components/graph/MetricsPanel";
 import { PathFinder } from "@/components/graph/PathFinder";
+import { SparqlEditor } from "@/components/graph/SparqlEditor";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -93,6 +94,7 @@ function GraphPage() {
               tabs={[
                 { id: "metrics", label: "Metrics" },
                 { id: "path", label: "Path Finder" },
+                { id: "sparql", label: "SPARQL Query" },
                 { id: "node", label: "Node Inspector" },
               ]}
               active={activeTab}
@@ -103,6 +105,10 @@ function GraphPage() {
             ) : activeTab === "path" ? (
               <div className="panel" id="panel-path" style={{ padding: "14px 16px", overflowY: "auto" }}>
                 <PathFinder onNodeSelect={setSelectedNodeId} />
+              </div>
+            ) : activeTab === "sparql" ? (
+              <div className="panel" id="panel-sparql" style={{ padding: "14px 16px", overflowY: "auto" }}>
+                <SparqlEditor />
               </div>
             ) : (
               <div className="panel" id="panel-node">

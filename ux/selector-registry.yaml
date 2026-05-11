@@ -714,6 +714,32 @@ selectors:
     component: components/graph/PathFinder.tsx
     description: Error message displayed when path search fails
 
+  # SPARQL Editor
+  - selector: sparql-editor
+    component: components/graph/SparqlEditor.tsx
+    description: Root container for SPARQL query editor component
+  - selector: sparql-query-textarea
+    component: components/graph/SparqlEditor.tsx
+    description: Code textarea for entering SPARQL queries
+  - selector: sparql-run-button
+    component: components/graph/SparqlEditor.tsx
+    description: Button to execute the SPARQL query
+  - selector: sparql-results-table
+    component: components/graph/SparqlEditor.tsx
+    description: Table displaying SPARQL query results
+  - selector: sparql-result-row-*
+    component: components/graph/SparqlEditor.tsx
+    description: Individual result row in SPARQL results table (pattern matches result-row-{index})
+  - selector: sparql-error-banner
+    component: components/graph/SparqlEditor.tsx
+    description: Error message banner shown when query execution fails
+  - selector: sparql-empty-state
+    component: components/graph/SparqlEditor.tsx
+    description: Empty state message shown when query returns no results
+  - selector: sparql-loading-spinner
+    component: components/graph/SparqlEditor.tsx
+    description: Loading spinner shown while query is executing
+
   # Unit Test Fixtures
   - selector: action
     component: components/ui/__tests__/Panel.test.tsx
