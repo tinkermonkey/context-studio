@@ -74,7 +74,7 @@ export function PipelineDetailPanel({ pipeline, onClose }: PipelineDetailPanelPr
         lastSavedAtRef.current = new Date();
       } catch (error) {
         if (error instanceof SyntaxError) {
-          throw new Error("Invalid JSON in pipeline configuration");
+          throw new Error("Invalid JSON in pipeline configuration", { cause: error });
         }
         throw error;
       }
