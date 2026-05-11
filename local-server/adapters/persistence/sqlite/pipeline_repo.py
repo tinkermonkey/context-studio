@@ -5,7 +5,7 @@ Provides persistence for pipeline configurations and execution records in operat
 Handles domain-to-ORM mapping, session management, and query logic.
 """
 
-from typing import Optional, cast
+from typing import Optional, cast, Literal
 from datetime import datetime
 
 from sqlalchemy.orm import sessionmaker, Session
@@ -230,7 +230,7 @@ class SQLitePipelineRepository:
             id=cast(str, row.id),
             pipeline=cast(str, row.pipeline),
             title=cast(str, row.title),
-            provider=cast(str, row.provider),
+            provider=cast(Literal["openai", "anthropic"], row.provider),
             model=cast(str, row.model),
             config=dict(row.config) if row.config else {},
             system_prompt=cast(str, row.system_prompt),
@@ -291,7 +291,7 @@ class SQLitePipelineRepository:
             tokens_in=cast(int, row.tokens_in),
             tokens_out=cast(int, row.tokens_out),
             duration_ms=cast(int, row.duration_ms),
-            status=cast(str, row.status),
+            status=cast(Literal["success", "error", "timeout"], row.status),
             error_message=cast(str | None, row.error_message),
             timestamp=cast(datetime, row.timestamp),
         )

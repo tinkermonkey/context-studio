@@ -11,6 +11,7 @@ from __future__ import annotations
 import logging
 import time
 from datetime import datetime, timezone
+from typing import cast, Literal
 from uuid import uuid4
 
 from domain.ports import EventPublisher
@@ -85,7 +86,7 @@ class PipelineService:
             id=str(uuid4()),
             pipeline=pipeline,
             title=title,
-            provider=provider,
+            provider=cast(Literal["openai", "anthropic"], provider),
             model=model,
             config=config,
             system_prompt=system_prompt,
@@ -175,7 +176,7 @@ class PipelineService:
             id=existing.id,
             pipeline=existing.pipeline,
             title=title if title is not None else existing.title,
-            provider=provider if provider is not None else existing.provider,
+            provider=cast(Literal["openai", "anthropic"], provider if provider is not None else existing.provider),
             model=model if model is not None else existing.model,
             config=config if config is not None else existing.config,
             system_prompt=(
