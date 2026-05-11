@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { usePipelines } from "@/api/hooks/pipeline";
 import { PipelineCard } from "@/components/pipeline/PipelineCard";
@@ -8,19 +8,11 @@ import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
-import type { components } from "@/api/types";
-
-type PipelineConfigurationResponse = components["schemas"]["PipelineConfigurationResponse"];
 
 type StatusFilter = "all" | "enabled" | "disabled";
 
-interface PipelinesSearchParams {
-  selected?: string;
-}
-
 function PipelinesContent() {
   const navigate = useNavigate();
-  const { selected: selectedId } = useSearch({ from: "/app/pipelines/" });
   const { data: pipelines = [], isLoading, error, refetch } = usePipelines();
   const [searchFilter, setSearchFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -51,33 +43,21 @@ function PipelinesContent() {
     );
   }, [pipelines, searchFilter, statusFilter]);
 
-  const handleNewPipeline = () => {
-    navigate({ to: "/app/pipelines" });
-  };
-
   const handlePipelineClick = (pipelineId: string) => {
     navigate({
-      to: "/app/pipelines",
-      search: (prev: PipelinesSearchParams) => ({ ...prev, selected: pipelineId }),
-      replace: true,
+      to: `/app/pipelines/${pipelineId}`,
     });
   };
 
   if (isLoading) {
     return (
-      <div className="stack">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div data-testid="pipelines-page" className="stack">
+        <div className="flex-between">
           <Skeleton width={200} height={32} />
           <Skeleton width={120} height={32} />
         </div>
         <Skeleton height={40} />
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(2, 1fr)",
-            gap: "var(--space-4)",
-          }}
-        >
+        <div className="grid-2">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} height={120} />
           ))}
@@ -88,7 +68,7 @@ function PipelinesContent() {
 
   if (error) {
     return (
-      <div className="stack">
+      <div data-testid="pipelines-page" className="stack">
         <ErrorBanner
           error={error}
           onRetry={() => refetch()}
@@ -101,14 +81,18 @@ function PipelinesContent() {
 
   if (pipelines.length === 0) {
     return (
-      <EmptyState
-        title="No pipelines yet"
-        description="Create your first pipeline to get started with extraction and processing."
-        action={{
-          label: "Create Pipeline",
-          onClick: handleNewPipeline,
-        }}
-      />
+      <div data-testid="pipelines-page">
+        <EmptyState
+          title="No pipelines yet"
+          description="Create your first pipeline to get started with extraction and processing."
+          action={{
+            label: "Create Pipeline",
+            onClick: () => {
+              /* Pipeline creation route not yet implemented */
+            },
+          }}
+        />
+      </div>
     );
   }
 
@@ -117,17 +101,19 @@ function PipelinesContent() {
 
   return (
     <div data-testid="pipelines-page">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--space-6)" }}>
-        <h1 style={{ margin: 0, fontSize: "var(--text-2xl)", fontWeight: 600 }}>
-          Pipelines
-        </h1>
-        <Button variant="primary" onClick={handleNewPipeline}>
+      <div className="page-head">
+        <h1>Pipelines</h1>
+        <Button
+          variant="primary"
+          disabled
+          title="Pipeline creation is not yet implemented"
+        >
           <Plus size={16} style={{ marginRight: "4px" }} />
           New Pipeline
         </Button>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", marginBottom: "var(--space-6)" }}>
+      <div className="stack" style={{ marginBottom: "var(--space-6)" }}>
         <Input
           type="text"
           placeholder="Search by name, provider, or model…"
@@ -135,7 +121,11 @@ function PipelinesContent() {
           onChange={(e) => setSearchFilter(e.target.value)}
           data-testid="pipelines-search-input"
         />
-        <div style={{ display: "flex", gap: "var(--space-2)" }}>
+        <div
+          role="radiogroup"
+          aria-label="Filter pipelines by status"
+          style={{ display: "flex", gap: "var(--space-2)" }}
+        >
           {(
             [
               { label: "All", value: "all" },
@@ -145,22 +135,12 @@ function PipelinesContent() {
           ).map((option) => (
             <button
               key={option.value}
+              role="radio"
+              aria-checked={statusFilter === option.value}
               onClick={() => setStatusFilter(option.value)}
-              style={{
-                padding: "4px 12px",
-                borderRadius: "var(--radius-md, 6px)",
-                border: "1px solid var(--canvas-bd)",
-                background:
-                  statusFilter === option.value
-                    ? "var(--canvas-bg-2)"
-                    : "transparent",
-                color: "var(--canvas-fg)",
-                fontSize: "var(--text-xs)",
-                cursor: "pointer",
-                fontWeight: statusFilter === option.value ? 600 : 500,
-                transition: "background 0.15s",
-              }}
+              className="status-filter-chip"
               data-testid={`status-filter-${option.value}`}
+              data-active={statusFilter === option.value}
             >
               {option.label}
             </button>
@@ -176,18 +156,22 @@ function PipelinesContent() {
       ) : (
         <div
           data-testid="pipelines-grid"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(2, 1fr)",
-            gap: "var(--space-4)",
-          }}
+          className="grid-2"
         >
           {filteredPipelines.map((pipeline) => (
             <div
               key={pipeline.id}
               onClick={() => handlePipelineClick(pipeline.id)}
-              style={{ cursor: "pointer" }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handlePipelineClick(pipeline.id);
+                }
+              }}
+              role="button"
+              tabIndex={0}
               data-testid={`pipeline-card-${pipeline.id}`}
+              className="pipeline-card-wrapper"
             >
               <PipelineCard pipeline={pipeline} />
             </div>
@@ -199,8 +183,5 @@ function PipelinesContent() {
 }
 
 export const Route = createFileRoute("/app/pipelines/")({
-  validateSearch: (search: Record<string, unknown>): PipelinesSearchParams => ({
-    selected: search.selected as string | undefined,
-  }),
   component: PipelinesContent,
 });

@@ -2122,6 +2122,43 @@ select.input {
   gap: var(--space-6);
 }
 
+/* ------------ Pipeline page styles ------------ */
+.status-filter-chip {
+  padding: 4px 12px;
+  border-radius: var(--radius-md, 6px);
+  border: 1px solid var(--canvas-bd);
+  background: transparent;
+  color: var(--canvas-fg);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+
+.status-filter-chip[data-active="true"] {
+  background: var(--canvas-bg-2);
+  font-weight: 600;
+}
+
+.status-filter-chip:hover {
+  border-color: var(--canvas-bd-2);
+}
+
+.pipeline-card-wrapper {
+  cursor: pointer;
+  outline: none;
+}
+
+.pipeline-card-wrapper:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.pipeline-card-wrapper:hover {
+  transform: translateY(-2px);
+}
+
 /* ============= Dark canvas mode ============= */
 body.dark-canvas {
   --canvas-bg: #14191f;
