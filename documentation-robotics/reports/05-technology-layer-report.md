@@ -14,11 +14,11 @@ Infrastructure, platforms, systems, and technology components.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 25    |
-| Intra-Layer Relationships | 29    |
-| Inter-Layer Relationships | 31    |
+| Elements                  | 33    |
+| Intra-Layer Relationships | 31    |
+| Inter-Layer Relationships | 38    |
 | Inbound Relationships     | 6     |
-| Outbound Relationships    | 25    |
+| Outbound Relationships    | 32    |
 
 **Cross-Layer References**:
 
@@ -27,65 +27,43 @@ Infrastructure, platforms, systems, and technology components.
 
 ## Intra-Layer Relationships
 
-```mermaid
-flowchart LR
-  subgraph technology
-    technology_communicationnetwork_localhost_lan["Localhost LAN"]
-    technology_systemsoftware_alembic["Alembic"]
-    technology_systemsoftware_anthropic_sdk["anthropic-sdk"]
-    technology_systemsoftware_boto3["boto3"]
-    technology_systemsoftware_duck_db["DuckDB"]
-    technology_systemsoftware_fast_api["FastAPI"]
-    technology_systemsoftware_flowbite_react["Flowbite React"]
-    technology_systemsoftware_httpx["httpx"]
-    technology_systemsoftware_network_x["NetworkX"]
-    technology_systemsoftware_openai_sdk["openai-sdk"]
-    technology_systemsoftware_pydantic["Pydantic"]
-    technology_systemsoftware_python["Python"]
-    technology_systemsoftware_rdflib["RDFLib"]
-    technology_systemsoftware_react["React"]
-    technology_systemsoftware_sentence_transformers["sentence-transformers"]
-    technology_systemsoftware_spa_cy["spaCy"]
-    technology_systemsoftware_sqlalchemy["SQLAlchemy"]
-    technology_systemsoftware_tailwind_css["Tailwind CSS"]
-    technology_systemsoftware_tan_stack_query["TanStack Query"]
-    technology_systemsoftware_tan_stack_router["TanStack Router"]
-    technology_systemsoftware_uvicorn["uvicorn"]
-    technology_systemsoftware_vite["Vite"]
-    technology_technologycollaboration_external_knowledge_integration["External Knowledge Integration"]
-    technology_technologyevent_rate_limit_threshold_event["Rate Limit Threshold Event"]
-    technology_technologyinteraction_s3_sync_via_boto3["S3 Sync via boto3"]
-    technology_systemsoftware_alembic -->|depends-on| technology_systemsoftware_python
-    technology_systemsoftware_alembic -->|depends-on| technology_systemsoftware_sqlalchemy
-    technology_systemsoftware_anthropic_sdk -->|depends-on| technology_systemsoftware_python
-    technology_systemsoftware_boto3 -->|depends-on| technology_systemsoftware_python
-    technology_systemsoftware_duck_db -->|depends-on| technology_systemsoftware_python
-    technology_systemsoftware_fast_api -->|depends-on| technology_systemsoftware_python
-    technology_systemsoftware_fast_api -->|triggers| technology_technologyevent_rate_limit_threshold_event
-    technology_systemsoftware_fast_api -->|uses| technology_communicationnetwork_localhost_lan
-    technology_systemsoftware_flowbite_react -->|depends-on| technology_systemsoftware_react
-    technology_systemsoftware_httpx -->|depends-on| technology_systemsoftware_python
-    technology_systemsoftware_network_x -->|depends-on| technology_systemsoftware_python
-    technology_systemsoftware_openai_sdk -->|depends-on| technology_systemsoftware_python
-    technology_systemsoftware_pydantic -->|depends-on| technology_systemsoftware_python
-    technology_systemsoftware_rdflib -->|depends-on| technology_systemsoftware_python
-    technology_systemsoftware_sentence_transformers -->|depends-on| technology_systemsoftware_python
-    technology_systemsoftware_spa_cy -->|depends-on| technology_systemsoftware_python
-    technology_systemsoftware_sqlalchemy -->|depends-on| technology_systemsoftware_python
-    technology_systemsoftware_tailwind_css -->|depends-on| technology_systemsoftware_vite
-    technology_systemsoftware_tan_stack_query -->|depends-on| technology_systemsoftware_react
-    technology_systemsoftware_tan_stack_router -->|depends-on| technology_systemsoftware_react
-    technology_systemsoftware_uvicorn -->|depends-on| technology_systemsoftware_fast_api
-    technology_systemsoftware_vite -->|depends-on| technology_systemsoftware_react
-    technology_systemsoftware_vite -->|uses| technology_communicationnetwork_localhost_lan
-    technology_technologycollaboration_external_knowledge_integration -->|performs| technology_technologyinteraction_s3_sync_via_boto3
-    technology_technologycollaboration_external_knowledge_integration -->|triggers| technology_technologyevent_rate_limit_threshold_event
-    technology_technologycollaboration_external_knowledge_integration -->|uses| technology_communicationnetwork_localhost_lan
-    technology_technologyevent_rate_limit_threshold_event -->|triggers| technology_technologyinteraction_s3_sync_via_boto3
-    technology_technologyinteraction_s3_sync_via_boto3 -->|realizes| technology_technologycollaboration_external_knowledge_integration
-    technology_technologyinteraction_s3_sync_via_boto3 -->|triggers| technology_technologyevent_rate_limit_threshold_event
-  end
-```
+*This layer has >30 elements. Summary table shown instead of diagram.*
+
+| Element                                                             | Type                      | Relationships |
+| ------------------------------------------------------------------- | ------------------------- | ------------- |
+| `technology.communicationnetwork.localhost-lan`                     | `communicationnetwork`    | 4             |
+| `technology.systemsoftware.alembic`                                 | `systemsoftware`          | 2             |
+| `technology.systemsoftware.anthropic-sdk`                           | `systemsoftware`          | 1             |
+| `technology.systemsoftware.axios`                                   | `systemsoftware`          | 1             |
+| `technology.systemsoftware.boto3`                                   | `systemsoftware`          | 1             |
+| `technology.systemsoftware.duck-db`                                 | `systemsoftware`          | 2             |
+| `technology.systemsoftware.fast-api`                                | `systemsoftware`          | 4             |
+| `technology.systemsoftware.flowbite-react`                          | `systemsoftware`          | 1             |
+| `technology.systemsoftware.httpx`                                   | `systemsoftware`          | 1             |
+| `technology.systemsoftware.hugging-face-datasets`                   | `systemsoftware`          | 0             |
+| `technology.systemsoftware.network-x`                               | `systemsoftware`          | 1             |
+| `technology.systemsoftware.openai-sdk`                              | `systemsoftware`          | 1             |
+| `technology.systemsoftware.pyarrow`                                 | `systemsoftware`          | 1             |
+| `technology.systemsoftware.pydantic`                                | `systemsoftware`          | 1             |
+| `technology.systemsoftware.python`                                  | `systemsoftware`          | 13            |
+| `technology.systemsoftware.python-multipart`                        | `systemsoftware`          | 0             |
+| `technology.systemsoftware.rdflib`                                  | `systemsoftware`          | 1             |
+| `technology.systemsoftware.react`                                   | `systemsoftware`          | 4             |
+| `technology.systemsoftware.reagraph`                                | `systemsoftware`          | 0             |
+| `technology.systemsoftware.sentence-transformers`                   | `systemsoftware`          | 1             |
+| `technology.systemsoftware.spa-cy`                                  | `systemsoftware`          | 1             |
+| `technology.systemsoftware.sqlalchemy`                              | `systemsoftware`          | 2             |
+| `technology.systemsoftware.tailwind-css`                            | `systemsoftware`          | 1             |
+| `technology.systemsoftware.tan-stack-form`                          | `systemsoftware`          | 0             |
+| `technology.systemsoftware.tan-stack-query`                         | `systemsoftware`          | 1             |
+| `technology.systemsoftware.tan-stack-router`                        | `systemsoftware`          | 1             |
+| `technology.systemsoftware.tan-stack-table`                         | `systemsoftware`          | 0             |
+| `technology.systemsoftware.uvicorn`                                 | `systemsoftware`          | 1             |
+| `technology.systemsoftware.vite`                                    | `systemsoftware`          | 3             |
+| `technology.systemsoftware.zustand`                                 | `systemsoftware`          | 0             |
+| `technology.technologycollaboration.external-knowledge-integration` | `technologycollaboration` | 4             |
+| `technology.technologyevent.rate-limit-threshold-event`             | `technologyevent`         | 4             |
+| `technology.technologyinteraction.s3-sync-via-boto3`                | `technologyinteraction`   | 4             |
 
 ## Inter-Layer Dependencies
 
@@ -126,24 +104,31 @@ flowchart TB
 | `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.fast-api`              | `application.applicationservice.ontology-service`                         | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.fast-api`              | `application.applicationcomponent.sqlite-persistence-adapter`             | `application` | `serves`     | many-to-many | medium   |
 | `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.httpx`                 | `application.applicationservice.extraction-service`                       | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.hugging-face-datasets` | `application.applicationservice.extraction-service`                       | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.network-x`             | `application.applicationcomponent.network-x-graph-engine-adapter`         | `application` | `serves`     | many-to-many | medium   |
 | `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.openai-sdk`            | `application.applicationservice.pipeline-service`                         | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.pyarrow`               | `application.applicationservice.versioning-service`                       | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.pydantic`              | `application.applicationservice.ontology-service`                         | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.python-multipart`      | `application.applicationservice.ontology-service`                         | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.python`                | `application.applicationservice.admin-service`                            | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.python`                | `application.applicationservice.ontology-service`                         | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.python`                | `application.applicationservice.pipeline-service`                         | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.python`                | `application.applicationservice.versioning-service`                       | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.rdflib`                | `application.applicationservice.graph-analysis-service`                   | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.react`                 | `application.applicationservice.admin-service`                            | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.reagraph`              | `application.applicationservice.graph-analysis-service`                   | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.sentence-transformers` | `application.applicationservice.extraction-service`                       | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.sentence-transformers` | `application.applicationcomponent.sentence-transformer-embedding-adapter` | `application` | `serves`     | many-to-many | medium   |
 | `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.spa-cy`                | `application.applicationservice.extraction-service`                       | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.spa-cy`                | `application.applicationcomponent.sentence-transformer-embedding-adapter` | `application` | `serves`     | many-to-many | medium   |
 | `technology.systemsoftware.serves.application.applicationcomponent` | `technology.systemsoftware.sqlalchemy`            | `application.applicationcomponent.sqlite-persistence-adapter`             | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.tan-stack-form`        | `application.applicationservice.ontology-service`                         | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.tan-stack-query`       | `application.applicationservice.admin-service`                            | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.tan-stack-router`      | `application.applicationservice.admin-service`                            | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.tan-stack-table`       | `application.applicationservice.admin-service`                            | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.uvicorn`               | `application.applicationservice.admin-service`                            | `application` | `realizes`   | many-to-many | medium   |
 | `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.uvicorn`               | `application.applicationservice.ontology-service`                         | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice` | `technology.systemsoftware.zustand`               | `application.applicationservice.admin-service`                            | `application` | `realizes`   | many-to-many | medium   |
 
 ## Element Reference
 
@@ -166,6 +151,7 @@ The local loopback network over which the React SPA communicates with the FastAP
 
 | Type        | Related Element                                                     | Predicate | Direction |
 | ----------- | ------------------------------------------------------------------- | --------- | --------- |
+| intra-layer | `technology.systemsoftware.axios`                                   | `uses`    | inbound   |
 | intra-layer | `technology.systemsoftware.fast-api`                                | `uses`    | inbound   |
 | intra-layer | `technology.systemsoftware.vite`                                    | `uses`    | inbound   |
 | intra-layer | `technology.technologycollaboration.external-knowledge-integration` | `uses`    | inbound   |
@@ -213,6 +199,26 @@ Official Anthropic Python client library used by the Anthropic LLM provider adap
 | inter-layer | `application.applicationservice.pipeline-service` | `realizes`   | outbound  |
 | intra-layer | `technology.systemsoftware.python`                | `depends-on` | outbound  |
 
+### Axios {#axios}
+
+**ID**: `technology.systemsoftware.axios`
+
+**Type**: `systemsoftware`
+
+Promise-based HTTP client used by the type-safe API layer for communicating with the FastAPI backend
+
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
+
+#### Relationships
+
+| Type        | Related Element                                 | Predicate | Direction |
+| ----------- | ----------------------------------------------- | --------- | --------- |
+| intra-layer | `technology.communicationnetwork.localhost-lan` | `uses`    | outbound  |
+
 ### boto3 {#boto3}
 
 **ID**: `technology.systemsoftware.boto3`
@@ -254,6 +260,7 @@ In-process analytical SQL engine used by DuckDBSyncAdapter for serializing the l
 | ----------- | --------------------------------------------------- | ------------ | --------- |
 | inter-layer | `application.applicationservice.versioning-service` | `realizes`   | outbound  |
 | intra-layer | `technology.systemsoftware.python`                  | `depends-on` | outbound  |
+| intra-layer | `technology.systemsoftware.pyarrow`                 | `depends-on` | inbound   |
 
 ### FastAPI {#fastapi}
 
@@ -321,6 +328,26 @@ Async-capable HTTP client for Python. Used by the reference adapter and test inf
 | inter-layer | `application.applicationservice.extraction-service` | `realizes`   | outbound  |
 | intra-layer | `technology.systemsoftware.python`                  | `depends-on` | outbound  |
 
+### HuggingFace Datasets {#huggingface-datasets}
+
+**ID**: `technology.systemsoftware.hugging-face-datasets`
+
+**Type**: `systemsoftware`
+
+HuggingFace datasets library used for loading and processing reference datasets for ontology enrichment
+
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
+
+#### Relationships
+
+| Type        | Related Element                                     | Predicate  | Direction |
+| ----------- | --------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationservice.extraction-service` | `realizes` | outbound  |
+
 ### NetworkX {#networkx}
 
 **ID**: `technology.systemsoftware.network-x`
@@ -362,6 +389,27 @@ Official OpenAI Python client library used by the OpenAI LLM provider adapter to
 | ----------- | ------------------------------------------------- | ------------ | --------- |
 | inter-layer | `application.applicationservice.pipeline-service` | `realizes`   | outbound  |
 | intra-layer | `technology.systemsoftware.python`                | `depends-on` | outbound  |
+
+### pyarrow {#pyarrow}
+
+**ID**: `technology.systemsoftware.pyarrow`
+
+**Type**: `systemsoftware`
+
+Apache Arrow columnar data format library used for Parquet file serialization in DuckDB-based remote sync operations
+
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
+
+#### Relationships
+
+| Type        | Related Element                                     | Predicate    | Direction |
+| ----------- | --------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationservice.versioning-service` | `realizes`   | outbound  |
+| intra-layer | `technology.systemsoftware.duck-db`                 | `depends-on` | outbound  |
 
 ### Pydantic {#pydantic}
 
@@ -420,6 +468,26 @@ Primary backend runtime for local-server — all domain services, adapters, and 
 | intra-layer | `technology.systemsoftware.spa-cy`                  | `depends-on` | inbound   |
 | intra-layer | `technology.systemsoftware.sqlalchemy`              | `depends-on` | inbound   |
 
+### python-multipart {#python-multipart}
+
+**ID**: `technology.systemsoftware.python-multipart`
+
+**Type**: `systemsoftware`
+
+Python library providing multipart form data parsing, enabling FastAPI file upload endpoints for ontology import operations
+
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
+
+#### Relationships
+
+| Type        | Related Element                                   | Predicate  | Direction |
+| ----------- | ------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationservice.ontology-service` | `realizes` | outbound  |
+
 ### RDFLib {#rdflib}
 
 **ID**: `technology.systemsoftware.rdflib`
@@ -464,6 +532,26 @@ JavaScript UI library (v19.1) powering the Context Studio front-end — all UX c
 | intra-layer | `technology.systemsoftware.tan-stack-query`    | `depends-on` | inbound   |
 | intra-layer | `technology.systemsoftware.tan-stack-router`   | `depends-on` | inbound   |
 | intra-layer | `technology.systemsoftware.vite`               | `depends-on` | inbound   |
+
+### Reagraph {#reagraph}
+
+**ID**: `technology.systemsoftware.reagraph`
+
+**Type**: `systemsoftware`
+
+React-based graph visualization library used for rendering knowledge graph network diagrams in the UX
+
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
+
+#### Relationships
+
+| Type        | Related Element                                         | Predicate  | Direction |
+| ----------- | ------------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationservice.graph-analysis-service` | `realizes` | outbound  |
 
 ### sentence-transformers {#sentence-transformers}
 
@@ -557,6 +645,26 @@ Utility-first CSS framework (v4.1) used for all frontend styling in the React UX
 | ----------- | -------------------------------- | ------------ | --------- |
 | intra-layer | `technology.systemsoftware.vite` | `depends-on` | outbound  |
 
+### TanStack Form {#tanstack-form}
+
+**ID**: `technology.systemsoftware.tan-stack-form`
+
+**Type**: `systemsoftware`
+
+TanStack Form library used for type-safe form state management in Context Studio UX components
+
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
+
+#### Relationships
+
+| Type        | Related Element                                   | Predicate  | Direction |
+| ----------- | ------------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationservice.ontology-service` | `realizes` | outbound  |
+
 ### TanStack Query {#tanstack-query}
 
 **ID**: `technology.systemsoftware.tan-stack-query`
@@ -598,6 +706,26 @@ Type-safe file-based router (v1.116) for the React UX — manages all client-sid
 | ----------- | ---------------------------------------------- | ------------ | --------- |
 | inter-layer | `application.applicationservice.admin-service` | `realizes`   | outbound  |
 | intra-layer | `technology.systemsoftware.react`              | `depends-on` | outbound  |
+
+### TanStack Table {#tanstack-table}
+
+**ID**: `technology.systemsoftware.tan-stack-table`
+
+**Type**: `systemsoftware`
+
+TanStack Table (formerly React Table) used for building data-intensive tables with sorting, filtering, and pagination in the Context Studio UX
+
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
+
+#### Relationships
+
+| Type        | Related Element                                | Predicate  | Direction |
+| ----------- | ---------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationservice.admin-service` | `realizes` | outbound  |
 
 ### uvicorn {#uvicorn}
 
@@ -642,6 +770,26 @@ Frontend build tool (v6.2) for the React UX — handles TypeScript compilation, 
 | intra-layer | `technology.systemsoftware.tailwind-css`        | `depends-on` | inbound   |
 | intra-layer | `technology.systemsoftware.react`               | `depends-on` | outbound  |
 | intra-layer | `technology.communicationnetwork.localhost-lan` | `uses`       | outbound  |
+
+### Zustand {#zustand}
+
+**ID**: `technology.systemsoftware.zustand`
+
+**Type**: `systemsoftware`
+
+Zustand lightweight state management library used for complex UI state in Context Studio React components
+
+#### Attributes
+
+| Name         | Value      |
+| ------------ | ---------- |
+| softwareType | middleware |
+
+#### Relationships
+
+| Type        | Related Element                                | Predicate  | Direction |
+| ----------- | ---------------------------------------------- | ---------- | --------- |
+| inter-layer | `application.applicationservice.admin-service` | `realizes` | outbound  |
 
 ### External Knowledge Integration {#external-knowledge-integration}
 
@@ -703,4 +851,4 @@ Technology interaction in which the sync adapter serializes the local knowledge 
 
 ---
 
-Generated: 2026-05-10T11:56:49.462Z | Model Version: 0.1.0
+Generated: 2026-05-11T12:08:50.651Z | Model Version: 0.1.0

@@ -14,11 +14,11 @@ REST APIs, operations, endpoints, and API integrations.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 191   |
-| Intra-Layer Relationships | 137   |
-| Inter-Layer Relationships | 139   |
+| Elements                  | 198   |
+| Intra-Layer Relationships | 142   |
+| Inter-Layer Relationships | 142   |
 | Inbound Relationships     | 39    |
-| Outbound Relationships    | 100   |
+| Outbound Relationships    | 103   |
 
 **Cross-Layer References**:
 
@@ -62,6 +62,7 @@ REST APIs, operations, endpoints, and API integrations.
 | `api.operation.execute-sparql`                       | `operation`       | 2             |
 | `api.operation.export-ontology`                      | `operation`       | 2             |
 | `api.operation.extract-entities`                     | `operation`       | 2             |
+| `api.operation.extract-triples`                      | `operation`       | 2             |
 | `api.operation.get-all-paths`                        | `operation`       | 1             |
 | `api.operation.get-background-task`                  | `operation`       | 1             |
 | `api.operation.get-background-tasks-summary`         | `operation`       | 1             |
@@ -86,6 +87,7 @@ REST APIs, operations, endpoints, and API integrations.
 | `api.operation.get-pipeline-configuration`           | `operation`       | 1             |
 | `api.operation.get-pipeline-executions`              | `operation`       | 1             |
 | `api.operation.get-property-definition`              | `operation`       | 1             |
+| `api.operation.get-publish-diff-stats`               | `operation`       | 1             |
 | `api.operation.get-rdf-triple-count`                 | `operation`       | 1             |
 | `api.operation.get-rdf-triples`                      | `operation`       | 2             |
 | `api.operation.get-reference-relations`              | `operation`       | 3             |
@@ -114,6 +116,7 @@ REST APIs, operations, endpoints, and API integrations.
 | `api.operation.list-taxonomies`                      | `operation`       | 1             |
 | `api.operation.merge-proposal`                       | `operation`       | 1             |
 | `api.operation.move-class`                           | `operation`       | 2             |
+| `api.operation.publish-taxonomy`                     | `operation`       | 2             |
 | `api.operation.pull-changes`                         | `operation`       | 1             |
 | `api.operation.push-changes`                         | `operation`       | 1             |
 | `api.operation.reject-proposal`                      | `operation`       | 2             |
@@ -147,6 +150,7 @@ REST APIs, operations, endpoints, and API integrations.
 | `api.requestbody.export-request`                     | `requestbody`     | 1             |
 | `api.requestbody.external-reference-request`         | `requestbody`     | 1             |
 | `api.requestbody.extract-request`                    | `requestbody`     | 1             |
+| `api.requestbody.extract-triple-request`             | `requestbody`     | 1             |
 | `api.requestbody.individual-class-list-request`      | `requestbody`     | 1             |
 | `api.requestbody.individual-class-request`           | `requestbody`     | 1             |
 | `api.requestbody.individual-create-request`          | `requestbody`     | 1             |
@@ -165,6 +169,7 @@ REST APIs, operations, endpoints, and API integrations.
 | `api.requestbody.serialization-scope-request`        | `requestbody`     | 1             |
 | `api.requestbody.sparqlrequest`                      | `requestbody`     | 1             |
 | `api.requestbody.taxonomy-create-request`            | `requestbody`     | 1             |
+| `api.requestbody.taxonomy-publish-request`           | `requestbody`     | 1             |
 | `api.requestbody.taxonomy-update-request`            | `requestbody`     | 1             |
 | `api.response.app-configuration-response`            | `response`        | 3             |
 | `api.response.background-task-response`              | `response`        | 2             |
@@ -185,6 +190,7 @@ REST APIs, operations, endpoints, and API integrations.
 | `api.response.entity-version-response`               | `response`        | 2             |
 | `api.response.execution-response`                    | `response`        | 2             |
 | `api.response.external-reference-response`           | `response`        | 1             |
+| `api.response.extract-triple-response`               | `response`        | 1             |
 | `api.response.extraction-result-schema`              | `response`        | 2             |
 | `api.response.graph-metrics-response`                | `response`        | 1             |
 | `api.response.import-conflict-response`              | `response`        | 1             |
@@ -200,6 +206,7 @@ REST APIs, operations, endpoints, and API integrations.
 | `api.response.pipeline-configuration-response`       | `response`        | 5             |
 | `api.response.property-definition-response`          | `response`        | 5             |
 | `api.response.proposal-response`                     | `response`        | 3             |
+| `api.response.publish-diff-stats`                    | `response`        | 1             |
 | `api.response.reference-relation-schema`             | `response`        | 1             |
 | `api.response.reference-relations-response-schema`   | `response`        | 1             |
 | `api.response.reference-result-schema`               | `response`        | 1             |
@@ -216,7 +223,7 @@ REST APIs, operations, endpoints, and API integrations.
 | `api.response.sync-result-response`                  | `response`        | 2             |
 | `api.response.sync-status-response`                  | `response`        | 1             |
 | `api.response.system-health-response`                | `response`        | 1             |
-| `api.response.taxonomy-response`                     | `response`        | 5             |
+| `api.response.taxonomy-response`                     | `response`        | 6             |
 | `api.response.triple-count-response`                 | `response`        | 1             |
 | `api.response.triple-response`                       | `response`        | 1             |
 | `api.response.triples-response`                      | `response`        | 1             |
@@ -282,6 +289,7 @@ flowchart TB
 | `api.operation.references.application.applicationservice` | `api.operation.execute-sparql`                          | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.export-ontology`                         | `application.applicationservice.import-run-service`           | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.extract-entities`                        | `application.applicationservice.extraction-service`           | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.extract-triples`                         | `application.applicationservice.extraction-service`           | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.get-all-paths`                           | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.get-background-task`                     | `application.applicationservice.admin-service`                | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.get-background-tasks-summary`            | `application.applicationservice.admin-service`                | `application` | `references` | many-to-many | medium   |
@@ -306,6 +314,7 @@ flowchart TB
 | `api.operation.references.application.applicationservice` | `api.operation.get-pipeline-configuration`              | `application.applicationservice.pipeline-service`             | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.get-pipeline-executions`                 | `application.applicationservice.pipeline-service`             | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.get-property-definition`                 | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.get-publish-diff-stats`                  | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.get-rdf-triple-count`                    | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.get-rdf-triples`                         | `application.applicationservice.graph-analysis-service`       | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.get-reference-relations`                 | `application.applicationservice.extraction-service`           | `application` | `references` | many-to-many | medium   |
@@ -334,6 +343,7 @@ flowchart TB
 | `api.operation.references.application.applicationservice` | `api.operation.list-taxonomies`                         | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.merge-proposal`                          | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.move-class`                              | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice` | `api.operation.publish-taxonomy`                        | `application.applicationservice.ontology-service`             | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.pull-changes`                            | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.push-changes`                            | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
 | `api.operation.references.application.applicationservice` | `api.operation.reject-proposal`                         | `application.applicationservice.versioning-service`           | `application` | `references` | many-to-many | medium   |
@@ -1181,6 +1191,32 @@ POST /api/extract — extract ontology entities from a text corpus using NLP and
 | intra-layer | `api.requestbody.extract-request`                   | `aggregates` | outbound  |
 | intra-layer | `api.response.extraction-result-schema`             | `delivers`   | outbound  |
 
+### Extract Triples {#extract-triples}
+
+**ID**: `api.operation.extract-triples`
+
+**Type**: `operation`
+
+Extract subject-predicate-object triples from text using NLP and ontology context
+
+#### Attributes
+
+| Name        | Value                         |
+| ----------- | ----------------------------- |
+| http_method | POST                          |
+| http_path   | /extraction/triples           |
+| operationId | extractTriples                |
+| summary     | Extract RDF triples from text |
+| tags        | extraction                    |
+
+#### Relationships
+
+| Type        | Related Element                                     | Predicate    | Direction |
+| ----------- | --------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationservice.extraction-service` | `references` | outbound  |
+| intra-layer | `api.requestbody.extract-triple-request`            | `aggregates` | outbound  |
+| intra-layer | `api.response.extract-triple-response`              | `delivers`   | outbound  |
+
 ### Get All Paths {#get-all-paths}
 
 **ID**: `api.operation.get-all-paths`
@@ -1783,6 +1819,31 @@ GET /api/properties/\{property_id\} — retrieve a single property definition by
 | ----------- | ------------------------------------------------- | ------------ | --------- |
 | inter-layer | `application.applicationservice.ontology-service` | `references` | outbound  |
 | intra-layer | `api.response.property-definition-response`       | `delivers`   | outbound  |
+
+### Get Publish Diff Stats {#get-publish-diff-stats}
+
+**ID**: `api.operation.get-publish-diff-stats`
+
+**Type**: `operation`
+
+Get statistics about changes between draft and published state of a taxonomy
+
+#### Attributes
+
+| Name        | Value                                    |
+| ----------- | ---------------------------------------- |
+| http_method | GET                                      |
+| http_path   | /taxonomies/\{taxonomy_id\}/publish-diff |
+| operationId | getPublishDiffStats                      |
+| summary     | Get taxonomy publish diff statistics     |
+| tags        | taxonomies                               |
+
+#### Relationships
+
+| Type        | Related Element                                   | Predicate    | Direction |
+| ----------- | ------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationservice.ontology-service` | `references` | outbound  |
+| intra-layer | `api.response.publish-diff-stats`                 | `delivers`   | outbound  |
 
 ### Get RDF Triple Count {#get-rdf-triple-count}
 
@@ -2489,6 +2550,32 @@ POST /api/classes/\{class_id\}/move — move a class to a different parent withi
 | intra-layer | `api.requestbody.class-move-request`              | `aggregates` | outbound  |
 | intra-layer | `api.response.class-response`                     | `delivers`   | outbound  |
 
+### Publish Taxonomy {#publish-taxonomy}
+
+**ID**: `api.operation.publish-taxonomy`
+
+**Type**: `operation`
+
+Publish a taxonomy draft, committing staged changes to the published state
+
+#### Attributes
+
+| Name        | Value                               |
+| ----------- | ----------------------------------- |
+| http_method | POST                                |
+| http_path   | /taxonomies/\{taxonomy_id\}/publish |
+| operationId | publishTaxonomy                     |
+| summary     | Publish a taxonomy                  |
+| tags        | taxonomies                          |
+
+#### Relationships
+
+| Type        | Related Element                                   | Predicate    | Direction |
+| ----------- | ------------------------------------------------- | ------------ | --------- |
+| inter-layer | `application.applicationservice.ontology-service` | `references` | outbound  |
+| intra-layer | `api.requestbody.taxonomy-publish-request`        | `aggregates` | outbound  |
+| intra-layer | `api.response.taxonomy-response`                  | `delivers`   | outbound  |
+
 ### Pull Changes {#pull-changes}
 
 **ID**: `api.operation.pull-changes`
@@ -3163,6 +3250,20 @@ Request body specifying text and optional configuration for entity extraction fr
 | ----------- | -------------------------------- | ------------ | --------- |
 | intra-layer | `api.operation.extract-entities` | `aggregates` | inbound   |
 
+### ExtractTripleRequest {#extracttriplerequest}
+
+**ID**: `api.requestbody.extract-triple-request`
+
+**Type**: `requestbody`
+
+Request body for extracting RDF triples from text with ontology context and extraction options
+
+#### Relationships
+
+| Type        | Related Element                 | Predicate    | Direction |
+| ----------- | ------------------------------- | ------------ | --------- |
+| intra-layer | `api.operation.extract-triples` | `aggregates` | inbound   |
+
 ### IndividualClassListRequest {#individualclasslistrequest}
 
 **ID**: `api.requestbody.individual-class-list-request`
@@ -3419,6 +3520,20 @@ Request body to create a new taxonomy with title and optional description
 | Type        | Related Element                 | Predicate    | Direction |
 | ----------- | ------------------------------- | ------------ | --------- |
 | intra-layer | `api.operation.create-taxonomy` | `aggregates` | inbound   |
+
+### TaxonomyPublishRequest {#taxonomypublishrequest}
+
+**ID**: `api.requestbody.taxonomy-publish-request`
+
+**Type**: `requestbody`
+
+Request body for publishing a taxonomy with optional commit message
+
+#### Relationships
+
+| Type        | Related Element                  | Predicate    | Direction |
+| ----------- | -------------------------------- | ------------ | --------- |
+| intra-layer | `api.operation.publish-taxonomy` | `aggregates` | inbound   |
 
 ### TaxonomyUpdateRequest {#taxonomyupdaterequest}
 
@@ -3844,6 +3959,26 @@ Response containing an external reference with source URI, label, and relation t
 | ----------- | -------------------------------------- | ---------- | --------- |
 | intra-layer | `api.operation.enrich-from-references` | `delivers` | inbound   |
 
+### ExtractTripleResponse {#extracttripleresponse}
+
+**ID**: `api.response.extract-triple-response`
+
+**Type**: `response`
+
+Response from triple extraction containing extracted triples, warnings, and metadata
+
+#### Attributes
+
+| Name        | Value                                                         |
+| ----------- | ------------------------------------------------------------- |
+| description | Triple extraction results with extracted triples and metadata |
+
+#### Relationships
+
+| Type        | Related Element                 | Predicate  | Direction |
+| ----------- | ------------------------------- | ---------- | --------- |
+| intra-layer | `api.operation.extract-triples` | `delivers` | inbound   |
+
 ### ExtractionResultSchema {#extractionresultschema}
 
 **ID**: `api.response.extraction-result-schema`
@@ -4173,6 +4308,26 @@ Response containing a merge proposal with source/target changeset references, st
 | intra-layer | `api.operation.approve-proposal` | `delivers` | inbound   |
 | intra-layer | `api.operation.reject-proposal`  | `delivers` | inbound   |
 | intra-layer | `api.operation.submit-proposal`  | `delivers` | inbound   |
+
+### PublishDiffStats {#publishdiffstats}
+
+**ID**: `api.response.publish-diff-stats`
+
+**Type**: `response`
+
+Statistics about differences between draft and published taxonomy state: added, modified, removed class counts
+
+#### Attributes
+
+| Name        | Value                                                        |
+| ----------- | ------------------------------------------------------------ |
+| description | Publish diff statistics with added, modified, removed counts |
+
+#### Relationships
+
+| Type        | Related Element                        | Predicate  | Direction |
+| ----------- | -------------------------------------- | ---------- | --------- |
+| intra-layer | `api.operation.get-publish-diff-stats` | `delivers` | inbound   |
 
 ### ReferenceRelationSchema {#referencerelationschema}
 
@@ -4526,6 +4681,7 @@ Response containing a taxonomy's ID, title, description, and associated concept 
 | intra-layer | `api.operation.delete-taxonomy`           | `delivers` | inbound   |
 | intra-layer | `api.operation.get-taxonomy`              | `delivers` | inbound   |
 | intra-layer | `api.operation.list-taxonomies`           | `delivers` | inbound   |
+| intra-layer | `api.operation.publish-taxonomy`          | `delivers` | inbound   |
 | intra-layer | `api.operation.update-taxonomy`           | `delivers` | inbound   |
 
 ### TripleCountResponse {#triplecountresponse}
@@ -4637,4 +4793,4 @@ X-API-Key header authentication scheme — optional, enabled when require_secure
 
 ---
 
-Generated: 2026-05-10T11:56:49.462Z | Model Version: 0.1.0
+Generated: 2026-05-11T12:08:47.429Z | Model Version: 0.1.0

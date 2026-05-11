@@ -1,0 +1,199 @@
+- type: add
+  elementId: testing.testcoveragemodel.context-studio-backend-test-coverage-model
+  layerName: testing
+  after:
+    id: 030a2da3-946f-41dd-af3f-b13f2c4af0f6
+    path: testing.testcoveragemodel.context-studio-backend-test-coverage-model
+    spec_node_id: testing.testcoveragemodel
+    type: testcoveragemodel
+    layer_id: testing
+    name: Context Studio Backend Test Coverage Model
+    description: ISP-based test coverage model for the Context Studio local-server
+      backend, covering unit, integration, E2E, and performance test tiers
+      across all bounded contexts
+    attributes:
+      version: "1.0"
+      application: context-studio-local-server
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/
+          symbol: test_suite
+    metadata:
+      created_at: 2026-05-11T12:09:26.217Z
+      updated_at: 2026-05-11T12:09:26.217Z
+      version: 1
+  timestamp: 2026-05-11T12:09:26.241Z
+  sequenceNumber: 0
+- type: add
+  elementId: testing.coveragerequirement.domain-unit-test-coverage
+  layerName: testing
+  after:
+    id: 9e53e6f8-d828-49d1-a5de-334489bc82cf
+    path: testing.coveragerequirement.domain-unit-test-coverage
+    spec_node_id: testing.coveragerequirement
+    type: coveragerequirement
+    layer_id: testing
+    name: Domain Unit Test Coverage
+    description: "Coverage requirement for domain layer pure unit tests: all domain
+      entities, services, and value objects must be tested with fake port
+      implementations"
+    attributes:
+      coverageCriteria: all-partitions
+      priority: critical
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit/domain/
+          symbol: domain_unit_tests
+    metadata:
+      created_at: 2026-05-11T12:09:32.534Z
+      updated_at: 2026-05-11T12:09:32.534Z
+      version: 1
+  timestamp: 2026-05-11T12:09:32.557Z
+  sequenceNumber: 1
+- type: add
+  elementId: testing.coveragerequirement.route-integration-test-coverage
+  layerName: testing
+  after:
+    id: f4e02652-8d32-432f-aa41-bd1a82004920
+    path: testing.coveragerequirement.route-integration-test-coverage
+    spec_node_id: testing.coveragerequirement
+    type: coveragerequirement
+    layer_id: testing
+    name: Route Integration Test Coverage
+    description: "Coverage requirement for FastAPI route integration tests: all CRUD
+      endpoints must be tested with real SQLite DB, covering success and error
+      paths"
+    attributes:
+      coverageCriteria: each-choice
+      priority: high
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/integration/routes/
+          symbol: route_integration_tests
+    metadata:
+      created_at: 2026-05-11T12:09:33.027Z
+      updated_at: 2026-05-11T12:09:33.027Z
+      version: 1
+  timestamp: 2026-05-11T12:09:33.057Z
+  sequenceNumber: 2
+- type: add
+  elementId: testing.coveragerequirement.e2e-test-coverage
+  layerName: testing
+  after:
+    id: d9329a24-6021-48e5-89d7-6b2666e6883e
+    path: testing.coveragerequirement.e2e-test-coverage
+    spec_node_id: testing.coveragerequirement
+    type: coveragerequirement
+    layer_id: testing
+    name: E2E Test Coverage
+    description: "Coverage requirement for end-to-end workflow tests: key
+      multi-bounded-context flows (extraction, versioning, pipeline) must be
+      covered"
+    attributes:
+      coverageCriteria: path-coverage
+      priority: high
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/e2e/
+          symbol: e2e_tests
+    metadata:
+      created_at: 2026-05-11T12:09:33.567Z
+      updated_at: 2026-05-11T12:09:33.567Z
+      version: 1
+  timestamp: 2026-05-11T12:09:33.599Z
+  sequenceNumber: 3
+- type: relationship-add
+  elementId: testing.testcoveragemodel.context-studio-backend-test-coverage-model::aggregates::testing.testcoveragetarget.domain-unit-tests
+  layerName: testing
+  after:
+    source: testing.testcoveragemodel.context-studio-backend-test-coverage-model
+    target: testing.testcoveragetarget.domain-unit-tests
+    predicate: aggregates
+    layer: testing
+    category: structural
+  timestamp: 2026-05-11T12:09:54.715Z
+  sequenceNumber: 4
+- type: relationship-add
+  elementId: testing.testcoveragemodel.context-studio-backend-test-coverage-model::aggregates::testing.testcoveragetarget.route-integration-tests
+  layerName: testing
+  after:
+    source: testing.testcoveragemodel.context-studio-backend-test-coverage-model
+    target: testing.testcoveragetarget.route-integration-tests
+    predicate: aggregates
+    layer: testing
+    category: structural
+  timestamp: 2026-05-11T12:10:00.332Z
+  sequenceNumber: 5
+- type: relationship-add
+  elementId: testing.testcoveragemodel.context-studio-backend-test-coverage-model::aggregates::testing.testcoveragetarget.e2e-test-suite
+  layerName: testing
+  after:
+    source: testing.testcoveragemodel.context-studio-backend-test-coverage-model
+    target: testing.testcoveragetarget.e2e-test-suite
+    predicate: aggregates
+    layer: testing
+    category: structural
+  timestamp: 2026-05-11T12:10:00.943Z
+  sequenceNumber: 6
+- type: relationship-add
+  elementId: testing.testcoveragemodel.context-studio-backend-test-coverage-model::aggregates::testing.testcoveragetarget.ontology-crud
+  layerName: testing
+  after:
+    source: testing.testcoveragemodel.context-studio-backend-test-coverage-model
+    target: testing.testcoveragetarget.ontology-crud
+    predicate: aggregates
+    layer: testing
+    category: structural
+  timestamp: 2026-05-11T12:10:01.582Z
+  sequenceNumber: 7
+- type: relationship-add
+  elementId: testing.testcoveragemodel.context-studio-backend-test-coverage-model::aggregates::testing.testcoveragetarget.graph-analysis
+  layerName: testing
+  after:
+    source: testing.testcoveragemodel.context-studio-backend-test-coverage-model
+    target: testing.testcoveragetarget.graph-analysis
+    predicate: aggregates
+    layer: testing
+    category: structural
+  timestamp: 2026-05-11T12:10:02.194Z
+  sequenceNumber: 8
+- type: relationship-add
+  elementId: testing.coveragerequirement.domain-unit-test-coverage::covers::application.applicationfunction.embedding-generation
+  layerName: testing
+  after:
+    source: testing.coveragerequirement.domain-unit-test-coverage
+    target: application.applicationfunction.embedding-generation
+    predicate: covers
+    layer: testing
+    targetLayer: application
+    category: structural
+  timestamp: 2026-05-11T12:10:02.816Z
+  sequenceNumber: 9
+- type: relationship-add
+  elementId: testing.coveragerequirement.route-integration-test-coverage::covers::application.applicationfunction.sparql-query-function
+  layerName: testing
+  after:
+    source: testing.coveragerequirement.route-integration-test-coverage
+    target: application.applicationfunction.sparql-query-function
+    predicate: covers
+    layer: testing
+    targetLayer: application
+    category: structural
+  timestamp: 2026-05-11T12:10:13.300Z
+  sequenceNumber: 10
+- type: relationship-add
+  elementId: testing.coveragerequirement.e2e-test-coverage::covers::application.applicationfunction.llm-provider-routing
+  layerName: testing
+  after:
+    source: testing.coveragerequirement.e2e-test-coverage
+    target: application.applicationfunction.llm-provider-routing
+    predicate: covers
+    layer: testing
+    targetLayer: application
+    category: structural
+  timestamp: 2026-05-11T12:10:13.946Z
+  sequenceNumber: 11

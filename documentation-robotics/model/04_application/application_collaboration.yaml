@@ -1,0 +1,19 @@
+application.applicationcollaboration.hexagonal-port-adapter-wiring:
+  id: 3504e0ce-3cc9-49c8-8340-a8389ef37802
+  path: application.applicationcollaboration.hexagonal-port-adapter-wiring
+  spec_node_id: application.applicationcollaboration
+  type: applicationcollaboration
+  layer_id: application
+  name: Hexagonal Port-Adapter Wiring
+  description: "Composition root collaboration: app.py wires domain services to
+    infrastructure adapters via dependency injection at startup, implementing
+    the hexagonal architecture pattern"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/app.py
+        symbol: lifespan
+  metadata:
+    created_at: 2026-05-11T12:03:46.275Z
+    updated_at: 2026-05-11T12:03:46.275Z
+    version: 1

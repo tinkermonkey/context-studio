@@ -1128,4 +1128,4 @@ String schema for entity identifiers — UUID v4 format, used as primary keys ac
 
 ---
 
-Generated: 2026-05-10T11:56:49.462Z | Model Version: 0.1.0
+Generated: 2026-05-11T12:08:50.651Z | Model Version: 0.1.0

@@ -1,0 +1,201 @@
+- type: add
+  elementId: technology.systemsoftware.pyarrow
+  layerName: technology
+  after:
+    id: 32243de7-0597-469f-8c6a-2503ce901685
+    path: technology.systemsoftware.pyarrow
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: pyarrow
+    description: Apache Arrow columnar data format library used for Parquet file
+      serialization in DuckDB-based remote sync operations
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/requirements.txt
+          symbol: pyarrow
+    metadata:
+      created_at: 2026-05-11T12:07:53.240Z
+      updated_at: 2026-05-11T12:07:53.240Z
+      version: 1
+  timestamp: 2026-05-11T12:07:53.265Z
+  sequenceNumber: 0
+- type: add
+  elementId: technology.systemsoftware.python-multipart
+  layerName: technology
+  after:
+    id: bb1965e5-4c96-43eb-b463-763d662c60b5
+    path: technology.systemsoftware.python-multipart
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: python-multipart
+    description: Python library providing multipart form data parsing, enabling
+      FastAPI file upload endpoints for ontology import operations
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/requirements.txt
+          symbol: python-multipart
+    metadata:
+      created_at: 2026-05-11T12:07:53.872Z
+      updated_at: 2026-05-11T12:07:53.872Z
+      version: 1
+  timestamp: 2026-05-11T12:07:53.907Z
+  sequenceNumber: 1
+- type: add
+  elementId: technology.systemsoftware.hugging-face-datasets
+  layerName: technology
+  after:
+    id: d712f26d-1084-4f08-a92c-44424d757b30
+    path: technology.systemsoftware.hugging-face-datasets
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: HuggingFace Datasets
+    description: HuggingFace datasets library used for loading and processing
+      reference datasets for ontology enrichment
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/requirements.txt
+          symbol: datasets
+    metadata:
+      created_at: 2026-05-11T12:07:54.411Z
+      updated_at: 2026-05-11T12:07:54.411Z
+      version: 1
+  timestamp: 2026-05-11T12:07:54.434Z
+  sequenceNumber: 2
+- type: add
+  elementId: technology.systemsoftware.tan-stack-table
+  layerName: technology
+  after:
+    id: 2e9d4f1e-09af-4095-a03f-0650c60234b1
+    path: technology.systemsoftware.tan-stack-table
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: TanStack Table
+    description: TanStack Table (formerly React Table) used for building
+      data-intensive tables with sorting, filtering, and pagination in the
+      Context Studio UX
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ux/package.json
+          symbol: "@tanstack/react-table"
+    metadata:
+      created_at: 2026-05-11T12:08:01.815Z
+      updated_at: 2026-05-11T12:08:01.815Z
+      version: 1
+  timestamp: 2026-05-11T12:08:01.862Z
+  sequenceNumber: 3
+- type: add
+  elementId: technology.systemsoftware.tan-stack-form
+  layerName: technology
+  after:
+    id: 1e280935-e3bd-40b2-9a0b-b2dcfac71b6d
+    path: technology.systemsoftware.tan-stack-form
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: TanStack Form
+    description: TanStack Form library used for type-safe form state management in
+      Context Studio UX components
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ux/package.json
+          symbol: "@tanstack/react-form"
+    metadata:
+      created_at: 2026-05-11T12:08:02.751Z
+      updated_at: 2026-05-11T12:08:02.751Z
+      version: 1
+  timestamp: 2026-05-11T12:08:02.790Z
+  sequenceNumber: 4
+- type: add
+  elementId: technology.systemsoftware.zustand
+  layerName: technology
+  after:
+    id: c51d8fb6-9d30-4bd0-b107-d1a2e788a196
+    path: technology.systemsoftware.zustand
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: Zustand
+    description: Zustand lightweight state management library used for complex UI
+      state in Context Studio React components
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ux/package.json
+          symbol: zustand
+    metadata:
+      created_at: 2026-05-11T12:08:03.643Z
+      updated_at: 2026-05-11T12:08:03.643Z
+      version: 1
+  timestamp: 2026-05-11T12:08:03.685Z
+  sequenceNumber: 5
+- type: add
+  elementId: technology.systemsoftware.axios
+  layerName: technology
+  after:
+    id: 1e98cedb-dca7-4d8e-a0e1-2840f64624e0
+    path: technology.systemsoftware.axios
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: Axios
+    description: Promise-based HTTP client used by the type-safe API layer for
+      communicating with the FastAPI backend
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ux/package.json
+          symbol: axios
+    metadata:
+      created_at: 2026-05-11T12:08:04.567Z
+      updated_at: 2026-05-11T12:08:04.567Z
+      version: 1
+  timestamp: 2026-05-11T12:08:04.612Z
+  sequenceNumber: 6
+- type: add
+  elementId: technology.systemsoftware.reagraph
+  layerName: technology
+  after:
+    id: 3ece0446-5e2a-4bb7-a2ec-3c61db772999
+    path: technology.systemsoftware.reagraph
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: Reagraph
+    description: React-based graph visualization library used for rendering
+      knowledge graph network diagrams in the UX
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ux/package.json
+          symbol: reagraph
+    metadata:
+      created_at: 2026-05-11T12:08:05.439Z
+      updated_at: 2026-05-11T12:08:05.439Z
+      version: 1
+  timestamp: 2026-05-11T12:08:05.480Z
+  sequenceNumber: 7

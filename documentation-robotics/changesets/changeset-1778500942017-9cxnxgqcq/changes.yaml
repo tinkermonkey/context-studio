@@ -1,0 +1,773 @@
+- type: add
+  elementId: api.operation.get-publish-diff-stats
+  layerName: api
+  after:
+    id: 8127f98f-9050-4349-b70a-e5dc255970c4
+    path: api.operation.get-publish-diff-stats
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Publish Diff Stats
+    description: Get statistics about changes between draft and published state of a
+      taxonomy
+    attributes:
+      operationId: getPublishDiffStats
+      summary: Get taxonomy publish diff statistics
+      tags: taxonomies
+      http_method: GET
+      http_path: /taxonomies/{taxonomy_id}/publish-diff
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: get_publish_diff_stats
+    metadata:
+      created_at: 2026-05-11T12:02:45.511Z
+      updated_at: 2026-05-11T12:02:45.511Z
+      version: 1
+  timestamp: 2026-05-11T12:02:45.535Z
+  sequenceNumber: 0
+- type: add
+  elementId: api.operation.publish-taxonomy
+  layerName: api
+  after:
+    id: 36726ba7-0b48-41b8-8ce9-faf7448b43bb
+    path: api.operation.publish-taxonomy
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Publish Taxonomy
+    description: Publish a taxonomy draft, committing staged changes to the published state
+    attributes:
+      operationId: publishTaxonomy
+      summary: Publish a taxonomy
+      tags: taxonomies
+      http_method: POST
+      http_path: /taxonomies/{taxonomy_id}/publish
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/ontology_routes.py
+          symbol: publish_taxonomy
+    metadata:
+      created_at: 2026-05-11T12:02:46.084Z
+      updated_at: 2026-05-11T12:02:46.084Z
+      version: 1
+  timestamp: 2026-05-11T12:02:46.107Z
+  sequenceNumber: 1
+- type: add
+  elementId: api.operation.extract-triples
+  layerName: api
+  after:
+    id: 4312fd1b-4535-4e2f-aec7-6c946943fd0a
+    path: api.operation.extract-triples
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Extract Triples
+    description: Extract subject-predicate-object triples from text using NLP and
+      ontology context
+    attributes:
+      operationId: extractTriples
+      summary: Extract RDF triples from text
+      tags: extraction
+      http_method: POST
+      http_path: /extraction/triples
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/extraction_routes.py
+          symbol: extract_triples
+    metadata:
+      created_at: 2026-05-11T12:02:46.656Z
+      updated_at: 2026-05-11T12:02:46.656Z
+      version: 1
+  timestamp: 2026-05-11T12:02:46.680Z
+  sequenceNumber: 2
+- type: add
+  elementId: api.requestbody.taxonomy-publish-request
+  layerName: api
+  after:
+    id: fdadf165-5068-4314-ac25-34b28ec8b41d
+    path: api.requestbody.taxonomy-publish-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: TaxonomyPublishRequest
+    description: Request body for publishing a taxonomy with optional commit message
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/ontology.py
+          symbol: TaxonomyPublishRequest
+    metadata:
+      created_at: 2026-05-11T12:02:52.577Z
+      updated_at: 2026-05-11T12:02:52.577Z
+      version: 1
+  timestamp: 2026-05-11T12:02:52.600Z
+  sequenceNumber: 3
+- type: add
+  elementId: api.requestbody.extract-triple-request
+  layerName: api
+  after:
+    id: 2a9b9769-ff7c-4064-8cc4-fbaa547692fd
+    path: api.requestbody.extract-triple-request
+    spec_node_id: api.requestbody
+    type: requestbody
+    layer_id: api
+    name: ExtractTripleRequest
+    description: Request body for extracting RDF triples from text with ontology
+      context and extraction options
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/extraction.py
+          symbol: ExtractTripleRequest
+    metadata:
+      created_at: 2026-05-11T12:02:53.611Z
+      updated_at: 2026-05-11T12:02:53.611Z
+      version: 1
+  timestamp: 2026-05-11T12:02:53.633Z
+  sequenceNumber: 4
+- type: add
+  elementId: api.response.publish-diff-stats
+  layerName: api
+  after:
+    id: 4da5b8b1-0dd8-4e7a-9a3b-88b618c7d54a
+    path: api.response.publish-diff-stats
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: PublishDiffStats
+    description: "Statistics about differences between draft and published taxonomy
+      state: added, modified, removed class counts"
+    attributes:
+      description: Publish diff statistics with added, modified, removed counts
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/ontology.py
+          symbol: PublishDiffStats
+    metadata:
+      created_at: 2026-05-11T12:03:00.105Z
+      updated_at: 2026-05-11T12:03:00.105Z
+      version: 1
+  timestamp: 2026-05-11T12:03:00.133Z
+  sequenceNumber: 5
+- type: add
+  elementId: api.response.extract-triple-response
+  layerName: api
+  after:
+    id: 8d3b6187-4bbc-401f-9f82-69b27495baac
+    path: api.response.extract-triple-response
+    spec_node_id: api.response
+    type: response
+    layer_id: api
+    name: ExtractTripleResponse
+    description: Response from triple extraction containing extracted triples,
+      warnings, and metadata
+    attributes:
+      description: Triple extraction results with extracted triples and metadata
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web/schemas/extraction.py
+          symbol: ExtractTripleResponse
+    metadata:
+      created_at: 2026-05-11T12:03:00.691Z
+      updated_at: 2026-05-11T12:03:00.691Z
+      version: 1
+  timestamp: 2026-05-11T12:03:00.716Z
+  sequenceNumber: 6
+- type: add
+  elementId: application.applicationevent.ontology-changed-event
+  layerName: application
+  after:
+    id: 4e7c9bff-d979-4b67-8e6d-79fa8c265000
+    path: application.applicationevent.ontology-changed-event
+    spec_node_id: application.applicationevent
+    type: applicationevent
+    layer_id: application
+    name: Ontology Changed Event
+    description: Domain events fired when ontology entities are created, updated, or
+      deleted (TaxonomyCreated, ClassCreated, ClassUpdated, ClassDeleted,
+      ClassMoved, etc.)
+    attributes:
+      eventType: domain
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/domain/ontology/events.py
+          symbol: TaxonomyCreated
+    metadata:
+      created_at: 2026-05-11T12:03:19.406Z
+      updated_at: 2026-05-11T12:03:19.406Z
+      version: 1
+  timestamp: 2026-05-11T12:03:19.429Z
+  sequenceNumber: 7
+- type: add
+  elementId: application.applicationevent.graph-invalidated-event
+  layerName: application
+  after:
+    id: b5217713-cb66-4caa-9cbb-6ecc8a43577c
+    path: application.applicationevent.graph-invalidated-event
+    spec_node_id: application.applicationevent
+    type: applicationevent
+    layer_id: application
+    name: Graph Invalidated Event
+    description: Domain event fired when ontology changes require the in-memory
+      knowledge graph to be rebuilt
+    attributes:
+      eventType: domain
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/domain/ontology/events.py
+          symbol: GraphInvalidated
+    metadata:
+      created_at: 2026-05-11T12:03:19.900Z
+      updated_at: 2026-05-11T12:03:19.900Z
+      version: 1
+  timestamp: 2026-05-11T12:03:19.923Z
+  sequenceNumber: 8
+- type: add
+  elementId: application.applicationevent.extraction-completed-event
+  layerName: application
+  after:
+    id: edaeeb0e-55a9-4edb-a60e-a9bc0e659074
+    path: application.applicationevent.extraction-completed-event
+    spec_node_id: application.applicationevent
+    type: applicationevent
+    layer_id: application
+    name: Extraction Completed Event
+    description: Domain event fired when an entity extraction pipeline run completes
+      successfully
+    attributes:
+      eventType: domain
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/domain/extraction/events.py
+          symbol: ExtractionCompleted
+    metadata:
+      created_at: 2026-05-11T12:03:20.400Z
+      updated_at: 2026-05-11T12:03:20.400Z
+      version: 1
+  timestamp: 2026-05-11T12:03:20.426Z
+  sequenceNumber: 9
+- type: add
+  elementId: application.applicationevent.pipeline-executed-event
+  layerName: application
+  after:
+    id: 3b4de693-9d9b-4e31-8656-eb1cfb0746fa
+    path: application.applicationevent.pipeline-executed-event
+    spec_node_id: application.applicationevent
+    type: applicationevent
+    layer_id: application
+    name: Pipeline Executed Event
+    description: Domain event fired when an LLM pipeline execution completes
+    attributes:
+      eventType: domain
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/domain/pipeline/events.py
+          symbol: PipelineExecuted
+    metadata:
+      created_at: 2026-05-11T12:03:20.932Z
+      updated_at: 2026-05-11T12:03:20.932Z
+      version: 1
+  timestamp: 2026-05-11T12:03:20.966Z
+  sequenceNumber: 10
+- type: add
+  elementId: application.applicationevent.changeset-merged-event
+  layerName: application
+  after:
+    id: 9f215618-57f0-4125-8075-41af5ac31ac6
+    path: application.applicationevent.changeset-merged-event
+    spec_node_id: application.applicationevent
+    type: applicationevent
+    layer_id: application
+    name: Changeset Merged Event
+    description: Domain event fired when a versioning changeset proposal is merged
+      into the main graph
+    attributes:
+      eventType: domain
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/domain/versioning/events.py
+          symbol: ChangesetMerged
+    metadata:
+      created_at: 2026-05-11T12:03:21.467Z
+      updated_at: 2026-05-11T12:03:21.467Z
+      version: 1
+  timestamp: 2026-05-11T12:03:21.493Z
+  sequenceNumber: 11
+- type: add
+  elementId: application.applicationevent.sync-completed-event
+  layerName: application
+  after:
+    id: f5547717-1f69-4d92-8925-50ac56132e42
+    path: application.applicationevent.sync-completed-event
+    spec_node_id: application.applicationevent
+    type: applicationevent
+    layer_id: application
+    name: Sync Completed Event
+    description: Domain event fired when a remote sync push or pull operation completes
+    attributes:
+      eventType: domain
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/domain/versioning/events.py
+          symbol: SyncCompleted
+    metadata:
+      created_at: 2026-05-11T12:03:22.008Z
+      updated_at: 2026-05-11T12:03:22.008Z
+      version: 1
+  timestamp: 2026-05-11T12:03:22.054Z
+  sequenceNumber: 12
+- type: add
+  elementId: application.applicationinterface.rest-api-interface
+  layerName: application
+  after:
+    id: aefb5723-cbd0-486b-a43a-36d50607942c
+    path: application.applicationinterface.rest-api-interface
+    spec_node_id: application.applicationinterface
+    type: applicationinterface
+    layer_id: application
+    name: REST API Interface
+    description: HTTP REST interface exposed by FastAPI, providing all routes for
+      ontology management, graph analysis, extraction, versioning, pipeline, and
+      admin operations
+    attributes:
+      protocol: REST
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/app.py
+          symbol: app
+    metadata:
+      created_at: 2026-05-11T12:03:26.961Z
+      updated_at: 2026-05-11T12:03:26.961Z
+      version: 1
+  timestamp: 2026-05-11T12:03:26.985Z
+  sequenceNumber: 13
+- type: add
+  elementId: application.applicationprocess.background-task-executor
+  layerName: application
+  after:
+    id: f466f48b-f153-430b-bf72-dd01046ab4ea
+    path: application.applicationprocess.background-task-executor
+    spec_node_id: application.applicationprocess
+    type: applicationprocess
+    layer_id: application
+    name: Background Task Executor
+    description: Asynchronous background task executor that processes long-running
+      operations (graph builds, extraction runs, sync operations) off the
+      request thread
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/domain/admin/services.py
+          symbol: AdminService
+    metadata:
+      created_at: 2026-05-11T12:03:33.560Z
+      updated_at: 2026-05-11T12:03:33.560Z
+      version: 1
+  timestamp: 2026-05-11T12:03:33.586Z
+  sequenceNumber: 14
+- type: add
+  elementId: application.applicationprocess.alembic-migration-runner
+  layerName: application
+  after:
+    id: 3ca6cc17-8220-470b-b5e2-f5aeecc93a10
+    path: application.applicationprocess.alembic-migration-runner
+    spec_node_id: application.applicationprocess
+    type: applicationprocess
+    layer_id: application
+    name: Alembic Migration Runner
+    description: Database schema migration process managed by Alembic, runs on
+      application startup to apply pending migrations to local.db and
+      operations.db
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/alembic.ini
+          symbol: alembic_upgrade
+    metadata:
+      created_at: 2026-05-11T12:03:34.066Z
+      updated_at: 2026-05-11T12:03:34.066Z
+      version: 1
+  timestamp: 2026-05-11T12:03:34.092Z
+  sequenceNumber: 15
+- type: add
+  elementId: application.applicationprocess.reference-data-import-process
+  layerName: application
+  after:
+    id: 4ae705e8-8dd4-4f96-97a7-33afa4606d47
+    path: application.applicationprocess.reference-data-import-process
+    spec_node_id: application.applicationprocess
+    type: applicationprocess
+    layer_id: application
+    name: Reference Data Import Process
+    description: Batch import process for loading external reference data from
+      ConceptNet, DBpedia, schema.org into reference.db
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/reference/
+          symbol: reference_import
+    metadata:
+      created_at: 2026-05-11T12:03:34.585Z
+      updated_at: 2026-05-11T12:03:34.585Z
+      version: 1
+  timestamp: 2026-05-11T12:03:34.622Z
+  sequenceNumber: 16
+- type: add
+  elementId: application.applicationinteraction.domain-event-publication
+  layerName: application
+  after:
+    id: 3f6bac16-9110-461d-bfbe-6e99527005c4
+    path: application.applicationinteraction.domain-event-publication
+    spec_node_id: application.applicationinteraction
+    type: applicationinteraction
+    layer_id: application
+    name: Domain Event Publication
+    description: "In-process event publication pattern: domain services publish
+      events via the EventPublisher port, the In-Process Event Publisher
+      delivers them synchronously to registered handlers"
+    attributes:
+      pattern: publish-subscribe
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/domain/ports.py
+          symbol: EventPublisher
+    metadata:
+      created_at: 2026-05-11T12:03:41.334Z
+      updated_at: 2026-05-11T12:03:41.334Z
+      version: 1
+  timestamp: 2026-05-11T12:03:41.361Z
+  sequenceNumber: 17
+- type: add
+  elementId: application.applicationinteraction.llm-provider-request
+  layerName: application
+  after:
+    id: 498e559f-a922-42db-8e08-98ffedbfd842
+    path: application.applicationinteraction.llm-provider-request
+    spec_node_id: application.applicationinteraction
+    type: applicationinteraction
+    layer_id: application
+    name: LLM Provider Request
+    description: Request-reply interaction pattern between the Pipeline Service and
+      LLM providers (OpenAI, Anthropic) routed through the LLM Provider Router
+    attributes:
+      pattern: request-reply
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/llm/
+          symbol: LLMProvider
+    metadata:
+      created_at: 2026-05-11T12:03:41.839Z
+      updated_at: 2026-05-11T12:03:41.839Z
+      version: 1
+  timestamp: 2026-05-11T12:03:41.864Z
+  sequenceNumber: 18
+- type: add
+  elementId: application.applicationinteraction.external-reference-enrichment
+  layerName: application
+  after:
+    id: 70efb895-d2c1-4183-baac-14d77b47bb95
+    path: application.applicationinteraction.external-reference-enrichment
+    spec_node_id: application.applicationinteraction
+    type: applicationinteraction
+    layer_id: application
+    name: External Reference Enrichment
+    description: Fire-and-forget interaction pattern where extraction enrichment
+      requests are dispatched to multiple external reference sources
+      concurrently
+    attributes:
+      pattern: fire-and-forget
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/reference/
+          symbol: enrich_from_references
+    metadata:
+      created_at: 2026-05-11T12:03:42.349Z
+      updated_at: 2026-05-11T12:03:42.349Z
+      version: 1
+  timestamp: 2026-05-11T12:03:42.374Z
+  sequenceNumber: 19
+- type: add
+  elementId: application.applicationcollaboration.hexagonal-port-adapter-wiring
+  layerName: application
+  after:
+    id: 3504e0ce-3cc9-49c8-8340-a8389ef37802
+    path: application.applicationcollaboration.hexagonal-port-adapter-wiring
+    spec_node_id: application.applicationcollaboration
+    type: applicationcollaboration
+    layer_id: application
+    name: Hexagonal Port-Adapter Wiring
+    description: "Composition root collaboration: app.py wires domain services to
+      infrastructure adapters via dependency injection at startup, implementing
+      the hexagonal architecture pattern"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/app.py
+          symbol: lifespan
+    metadata:
+      created_at: 2026-05-11T12:03:46.275Z
+      updated_at: 2026-05-11T12:03:46.275Z
+      version: 1
+  timestamp: 2026-05-11T12:03:46.300Z
+  sequenceNumber: 20
+- type: relationship-add
+  elementId: api.operation.get-publish-diff-stats::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.get-publish-diff-stats
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+  timestamp: 2026-05-11T12:04:50.333Z
+  sequenceNumber: 21
+- type: relationship-add
+  elementId: api.operation.get-publish-diff-stats::delivers::api.response.publish-diff-stats
+  layerName: api
+  after:
+    source: api.operation.get-publish-diff-stats
+    target: api.response.publish-diff-stats
+    predicate: delivers
+    layer: api
+    category: structural
+  timestamp: 2026-05-11T12:04:50.961Z
+  sequenceNumber: 22
+- type: relationship-add
+  elementId: api.operation.publish-taxonomy::references::application.applicationservice.ontology-service
+  layerName: api
+  after:
+    source: api.operation.publish-taxonomy
+    target: application.applicationservice.ontology-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+  timestamp: 2026-05-11T12:04:51.830Z
+  sequenceNumber: 23
+- type: relationship-add
+  elementId: api.operation.publish-taxonomy::aggregates::api.requestbody.taxonomy-publish-request
+  layerName: api
+  after:
+    source: api.operation.publish-taxonomy
+    target: api.requestbody.taxonomy-publish-request
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-05-11T12:04:52.627Z
+  sequenceNumber: 24
+- type: relationship-add
+  elementId: api.operation.publish-taxonomy::delivers::api.response.taxonomy-response
+  layerName: api
+  after:
+    source: api.operation.publish-taxonomy
+    target: api.response.taxonomy-response
+    predicate: delivers
+    layer: api
+    category: structural
+  timestamp: 2026-05-11T12:04:53.594Z
+  sequenceNumber: 25
+- type: relationship-add
+  elementId: api.operation.extract-triples::references::application.applicationservice.extraction-service
+  layerName: api
+  after:
+    source: api.operation.extract-triples
+    target: application.applicationservice.extraction-service
+    predicate: references
+    layer: api
+    targetLayer: application
+    category: structural
+  timestamp: 2026-05-11T12:04:54.390Z
+  sequenceNumber: 26
+- type: relationship-add
+  elementId: api.operation.extract-triples::aggregates::api.requestbody.extract-triple-request
+  layerName: api
+  after:
+    source: api.operation.extract-triples
+    target: api.requestbody.extract-triple-request
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-05-11T12:04:55.052Z
+  sequenceNumber: 27
+- type: relationship-add
+  elementId: api.operation.extract-triples::delivers::api.response.extract-triple-response
+  layerName: api
+  after:
+    source: api.operation.extract-triples
+    target: api.response.extract-triple-response
+    predicate: delivers
+    layer: api
+    category: structural
+  timestamp: 2026-05-11T12:04:55.678Z
+  sequenceNumber: 28
+- type: relationship-add
+  elementId: application.applicationevent.ontology-changed-event::triggers::application.applicationprocess.background-task-executor
+  layerName: application
+  after:
+    source: application.applicationevent.ontology-changed-event
+    target: application.applicationprocess.background-task-executor
+    predicate: triggers
+    layer: application
+    category: structural
+  timestamp: 2026-05-11T12:05:11.094Z
+  sequenceNumber: 29
+- type: relationship-add
+  elementId: application.applicationevent.graph-invalidated-event::triggers::application.applicationprocess.background-task-executor
+  layerName: application
+  after:
+    source: application.applicationevent.graph-invalidated-event
+    target: application.applicationprocess.background-task-executor
+    predicate: triggers
+    layer: application
+    category: structural
+  timestamp: 2026-05-11T12:05:11.711Z
+  sequenceNumber: 30
+- type: relationship-add
+  elementId: application.applicationevent.extraction-completed-event::triggers::application.applicationprocess.background-task-executor
+  layerName: application
+  after:
+    source: application.applicationevent.extraction-completed-event
+    target: application.applicationprocess.background-task-executor
+    predicate: triggers
+    layer: application
+    category: structural
+  timestamp: 2026-05-11T12:05:12.344Z
+  sequenceNumber: 31
+- type: relationship-add
+  elementId: application.applicationevent.pipeline-executed-event::triggers::application.applicationprocess.background-task-executor
+  layerName: application
+  after:
+    source: application.applicationevent.pipeline-executed-event
+    target: application.applicationprocess.background-task-executor
+    predicate: triggers
+    layer: application
+    category: structural
+  timestamp: 2026-05-11T12:05:12.967Z
+  sequenceNumber: 32
+- type: relationship-add
+  elementId: application.applicationevent.changeset-merged-event::triggers::application.applicationprocess.background-task-executor
+  layerName: application
+  after:
+    source: application.applicationevent.changeset-merged-event
+    target: application.applicationprocess.background-task-executor
+    predicate: triggers
+    layer: application
+    category: structural
+  timestamp: 2026-05-11T12:05:13.595Z
+  sequenceNumber: 33
+- type: relationship-add
+  elementId: application.applicationevent.sync-completed-event::triggers::application.applicationprocess.background-task-executor
+  layerName: application
+  after:
+    source: application.applicationevent.sync-completed-event
+    target: application.applicationprocess.background-task-executor
+    predicate: triggers
+    layer: application
+    category: structural
+  timestamp: 2026-05-11T12:05:14.235Z
+  sequenceNumber: 34
+- type: relationship-add
+  elementId: application.applicationinterface.rest-api-interface::depends-on::application.applicationservice.ontology-service
+  layerName: application
+  after:
+    source: application.applicationinterface.rest-api-interface
+    target: application.applicationservice.ontology-service
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-05-11T12:05:42.434Z
+  sequenceNumber: 35
+- type: relationship-add
+  elementId: application.applicationprocess.background-task-executor::depends-on::application.applicationinterface.rest-api-interface
+  layerName: application
+  after:
+    source: application.applicationprocess.background-task-executor
+    target: application.applicationinterface.rest-api-interface
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-05-11T12:06:04.242Z
+  sequenceNumber: 36
+- type: relationship-add
+  elementId: application.applicationprocess.alembic-migration-runner::depends-on::application.applicationcollaboration.hexagonal-port-adapter-wiring
+  layerName: application
+  after:
+    source: application.applicationprocess.alembic-migration-runner
+    target: application.applicationcollaboration.hexagonal-port-adapter-wiring
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-05-11T12:06:12.015Z
+  sequenceNumber: 37
+- type: relationship-add
+  elementId: application.applicationinteraction.domain-event-publication::depends-on::application.applicationcollaboration.hexagonal-port-adapter-wiring
+  layerName: application
+  after:
+    source: application.applicationinteraction.domain-event-publication
+    target: application.applicationcollaboration.hexagonal-port-adapter-wiring
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-05-11T12:06:12.719Z
+  sequenceNumber: 38
+- type: relationship-add
+  elementId: application.applicationinteraction.llm-provider-request::depends-on::application.applicationcollaboration.hexagonal-port-adapter-wiring
+  layerName: application
+  after:
+    source: application.applicationinteraction.llm-provider-request
+    target: application.applicationcollaboration.hexagonal-port-adapter-wiring
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-05-11T12:06:13.421Z
+  sequenceNumber: 39
+- type: relationship-add
+  elementId: application.applicationinteraction.external-reference-enrichment::depends-on::application.applicationcollaboration.hexagonal-port-adapter-wiring
+  layerName: application
+  after:
+    source: application.applicationinteraction.external-reference-enrichment
+    target: application.applicationcollaboration.hexagonal-port-adapter-wiring
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-05-11T12:06:14.287Z
+  sequenceNumber: 40
+- type: relationship-add
+  elementId: application.applicationprocess.reference-data-import-process::depends-on::application.applicationcollaboration.hexagonal-port-adapter-wiring
+  layerName: application
+  after:
+    source: application.applicationprocess.reference-data-import-process
+    target: application.applicationcollaboration.hexagonal-port-adapter-wiring
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-05-11T12:06:18.801Z
+  sequenceNumber: 41
+- type: relationship-add
+  elementId: application.applicationcollaboration.hexagonal-port-adapter-wiring::depends-on::application.applicationinterface.rest-api-interface
+  layerName: application
+  after:
+    source: application.applicationcollaboration.hexagonal-port-adapter-wiring
+    target: application.applicationinterface.rest-api-interface
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-05-11T12:06:19.594Z
+  sequenceNumber: 42

@@ -2325,3 +2325,73 @@ api.operation.get-tasks-health:
     created_at: 2026-05-09T10:23:40.608Z
     updated_at: 2026-05-09T10:23:40.608Z
     version: 1
+api.operation.get-publish-diff-stats:
+  id: 8127f98f-9050-4349-b70a-e5dc255970c4
+  path: api.operation.get-publish-diff-stats
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Publish Diff Stats
+  description: Get statistics about changes between draft and published state of a taxonomy
+  attributes:
+    operationId: getPublishDiffStats
+    summary: Get taxonomy publish diff statistics
+    tags: taxonomies
+    http_method: GET
+    http_path: /taxonomies/{taxonomy_id}/publish-diff
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/ontology_routes.py
+        symbol: get_publish_diff_stats
+  metadata:
+    created_at: 2026-05-11T12:02:45.511Z
+    updated_at: 2026-05-11T12:02:45.511Z
+    version: 1
+api.operation.publish-taxonomy:
+  id: 36726ba7-0b48-41b8-8ce9-faf7448b43bb
+  path: api.operation.publish-taxonomy
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Publish Taxonomy
+  description: Publish a taxonomy draft, committing staged changes to the published state
+  attributes:
+    operationId: publishTaxonomy
+    summary: Publish a taxonomy
+    tags: taxonomies
+    http_method: POST
+    http_path: /taxonomies/{taxonomy_id}/publish
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/ontology_routes.py
+        symbol: publish_taxonomy
+  metadata:
+    created_at: 2026-05-11T12:02:46.084Z
+    updated_at: 2026-05-11T12:02:46.084Z
+    version: 1
+api.operation.extract-triples:
+  id: 4312fd1b-4535-4e2f-aec7-6c946943fd0a
+  path: api.operation.extract-triples
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Extract Triples
+  description: Extract subject-predicate-object triples from text using NLP and
+    ontology context
+  attributes:
+    operationId: extractTriples
+    summary: Extract RDF triples from text
+    tags: extraction
+    http_method: POST
+    http_path: /extraction/triples
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/extraction_routes.py
+        symbol: extract_triples
+  metadata:
+    created_at: 2026-05-11T12:02:46.656Z
+    updated_at: 2026-05-11T12:02:46.656Z
+    version: 1

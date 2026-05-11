@@ -1,0 +1,61 @@
+application.applicationinteraction.domain-event-publication:
+  id: 3f6bac16-9110-461d-bfbe-6e99527005c4
+  path: application.applicationinteraction.domain-event-publication
+  spec_node_id: application.applicationinteraction
+  type: applicationinteraction
+  layer_id: application
+  name: Domain Event Publication
+  description: "In-process event publication pattern: domain services publish
+    events via the EventPublisher port, the In-Process Event Publisher delivers
+    them synchronously to registered handlers"
+  attributes:
+    pattern: publish-subscribe
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/ports.py
+        symbol: EventPublisher
+  metadata:
+    created_at: 2026-05-11T12:03:41.334Z
+    updated_at: 2026-05-11T12:03:41.334Z
+    version: 1
+application.applicationinteraction.llm-provider-request:
+  id: 498e559f-a922-42db-8e08-98ffedbfd842
+  path: application.applicationinteraction.llm-provider-request
+  spec_node_id: application.applicationinteraction
+  type: applicationinteraction
+  layer_id: application
+  name: LLM Provider Request
+  description: Request-reply interaction pattern between the Pipeline Service and
+    LLM providers (OpenAI, Anthropic) routed through the LLM Provider Router
+  attributes:
+    pattern: request-reply
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/llm/
+        symbol: LLMProvider
+  metadata:
+    created_at: 2026-05-11T12:03:41.839Z
+    updated_at: 2026-05-11T12:03:41.839Z
+    version: 1
+application.applicationinteraction.external-reference-enrichment:
+  id: 70efb895-d2c1-4183-baac-14d77b47bb95
+  path: application.applicationinteraction.external-reference-enrichment
+  spec_node_id: application.applicationinteraction
+  type: applicationinteraction
+  layer_id: application
+  name: External Reference Enrichment
+  description: Fire-and-forget interaction pattern where extraction enrichment
+    requests are dispatched to multiple external reference sources concurrently
+  attributes:
+    pattern: fire-and-forget
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/reference/
+        symbol: enrich_from_references
+  metadata:
+    created_at: 2026-05-11T12:03:42.349Z
+    updated_at: 2026-05-11T12:03:42.349Z
+    version: 1

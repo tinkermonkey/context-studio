@@ -1,0 +1,56 @@
+application.applicationprocess.background-task-executor:
+  id: f466f48b-f153-430b-bf72-dd01046ab4ea
+  path: application.applicationprocess.background-task-executor
+  spec_node_id: application.applicationprocess
+  type: applicationprocess
+  layer_id: application
+  name: Background Task Executor
+  description: Asynchronous background task executor that processes long-running
+    operations (graph builds, extraction runs, sync operations) off the request
+    thread
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/admin/services.py
+        symbol: AdminService
+  metadata:
+    created_at: 2026-05-11T12:03:33.560Z
+    updated_at: 2026-05-11T12:03:33.560Z
+    version: 1
+application.applicationprocess.alembic-migration-runner:
+  id: 3ca6cc17-8220-470b-b5e2-f5aeecc93a10
+  path: application.applicationprocess.alembic-migration-runner
+  spec_node_id: application.applicationprocess
+  type: applicationprocess
+  layer_id: application
+  name: Alembic Migration Runner
+  description: Database schema migration process managed by Alembic, runs on
+    application startup to apply pending migrations to local.db and
+    operations.db
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/alembic.ini
+        symbol: alembic_upgrade
+  metadata:
+    created_at: 2026-05-11T12:03:34.066Z
+    updated_at: 2026-05-11T12:03:34.066Z
+    version: 1
+application.applicationprocess.reference-data-import-process:
+  id: 4ae705e8-8dd4-4f96-97a7-33afa4606d47
+  path: application.applicationprocess.reference-data-import-process
+  spec_node_id: application.applicationprocess
+  type: applicationprocess
+  layer_id: application
+  name: Reference Data Import Process
+  description: Batch import process for loading external reference data from
+    ConceptNet, DBpedia, schema.org into reference.db
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/reference/
+        symbol: reference_import
+  metadata:
+    created_at: 2026-05-11T12:03:34.585Z
+    updated_at: 2026-05-11T12:03:34.585Z
+    version: 1

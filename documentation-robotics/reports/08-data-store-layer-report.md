@@ -653,4 +653,4 @@ Foreign key cascade delete rule on parent_entity_id in ontology_entities — del
 
 ---
 
-Generated: 2026-05-10T11:56:49.462Z | Model Version: 0.1.0
+Generated: 2026-05-11T12:10:16.880Z | Model Version: 0.1.0

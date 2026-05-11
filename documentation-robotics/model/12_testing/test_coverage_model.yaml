@@ -1,0 +1,22 @@
+testing.testcoveragemodel.context-studio-backend-test-coverage-model:
+  id: 030a2da3-946f-41dd-af3f-b13f2c4af0f6
+  path: testing.testcoveragemodel.context-studio-backend-test-coverage-model
+  spec_node_id: testing.testcoveragemodel
+  type: testcoveragemodel
+  layer_id: testing
+  name: Context Studio Backend Test Coverage Model
+  description: ISP-based test coverage model for the Context Studio local-server
+    backend, covering unit, integration, E2E, and performance test tiers across
+    all bounded contexts
+  attributes:
+    version: "1.0"
+    application: context-studio-local-server
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/tests/
+        symbol: test_suite
+  metadata:
+    created_at: 2026-05-11T12:09:26.217Z
+    updated_at: 2026-05-11T12:09:26.217Z
+    version: 1

@@ -1,0 +1,119 @@
+application.applicationevent.ontology-changed-event:
+  id: 4e7c9bff-d979-4b67-8e6d-79fa8c265000
+  path: application.applicationevent.ontology-changed-event
+  spec_node_id: application.applicationevent
+  type: applicationevent
+  layer_id: application
+  name: Ontology Changed Event
+  description: Domain events fired when ontology entities are created, updated, or
+    deleted (TaxonomyCreated, ClassCreated, ClassUpdated, ClassDeleted,
+    ClassMoved, etc.)
+  attributes:
+    eventType: domain
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/ontology/events.py
+        symbol: TaxonomyCreated
+  metadata:
+    created_at: 2026-05-11T12:03:19.406Z
+    updated_at: 2026-05-11T12:03:19.406Z
+    version: 1
+application.applicationevent.graph-invalidated-event:
+  id: b5217713-cb66-4caa-9cbb-6ecc8a43577c
+  path: application.applicationevent.graph-invalidated-event
+  spec_node_id: application.applicationevent
+  type: applicationevent
+  layer_id: application
+  name: Graph Invalidated Event
+  description: Domain event fired when ontology changes require the in-memory
+    knowledge graph to be rebuilt
+  attributes:
+    eventType: domain
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/ontology/events.py
+        symbol: GraphInvalidated
+  metadata:
+    created_at: 2026-05-11T12:03:19.900Z
+    updated_at: 2026-05-11T12:03:19.900Z
+    version: 1
+application.applicationevent.extraction-completed-event:
+  id: edaeeb0e-55a9-4edb-a60e-a9bc0e659074
+  path: application.applicationevent.extraction-completed-event
+  spec_node_id: application.applicationevent
+  type: applicationevent
+  layer_id: application
+  name: Extraction Completed Event
+  description: Domain event fired when an entity extraction pipeline run completes
+    successfully
+  attributes:
+    eventType: domain
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/extraction/events.py
+        symbol: ExtractionCompleted
+  metadata:
+    created_at: 2026-05-11T12:03:20.400Z
+    updated_at: 2026-05-11T12:03:20.400Z
+    version: 1
+application.applicationevent.pipeline-executed-event:
+  id: 3b4de693-9d9b-4e31-8656-eb1cfb0746fa
+  path: application.applicationevent.pipeline-executed-event
+  spec_node_id: application.applicationevent
+  type: applicationevent
+  layer_id: application
+  name: Pipeline Executed Event
+  description: Domain event fired when an LLM pipeline execution completes
+  attributes:
+    eventType: domain
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipeline/events.py
+        symbol: PipelineExecuted
+  metadata:
+    created_at: 2026-05-11T12:03:20.932Z
+    updated_at: 2026-05-11T12:03:20.932Z
+    version: 1
+application.applicationevent.changeset-merged-event:
+  id: 9f215618-57f0-4125-8075-41af5ac31ac6
+  path: application.applicationevent.changeset-merged-event
+  spec_node_id: application.applicationevent
+  type: applicationevent
+  layer_id: application
+  name: Changeset Merged Event
+  description: Domain event fired when a versioning changeset proposal is merged
+    into the main graph
+  attributes:
+    eventType: domain
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/events.py
+        symbol: ChangesetMerged
+  metadata:
+    created_at: 2026-05-11T12:03:21.467Z
+    updated_at: 2026-05-11T12:03:21.467Z
+    version: 1
+application.applicationevent.sync-completed-event:
+  id: f5547717-1f69-4d92-8925-50ac56132e42
+  path: application.applicationevent.sync-completed-event
+  spec_node_id: application.applicationevent
+  type: applicationevent
+  layer_id: application
+  name: Sync Completed Event
+  description: Domain event fired when a remote sync push or pull operation completes
+  attributes:
+    eventType: domain
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/versioning/events.py
+        symbol: SyncCompleted
+  metadata:
+    created_at: 2026-05-11T12:03:22.008Z
+    updated_at: 2026-05-11T12:03:22.008Z
+    version: 1

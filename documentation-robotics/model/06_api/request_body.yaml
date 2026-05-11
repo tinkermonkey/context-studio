@@ -601,3 +601,38 @@ api.requestbody.pipeline-execute-request:
     created_at: 2026-05-08T11:47:52.352Z
     updated_at: 2026-05-08T11:47:52.352Z
     version: 1
+api.requestbody.taxonomy-publish-request:
+  id: fdadf165-5068-4314-ac25-34b28ec8b41d
+  path: api.requestbody.taxonomy-publish-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: TaxonomyPublishRequest
+  description: Request body for publishing a taxonomy with optional commit message
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/ontology.py
+        symbol: TaxonomyPublishRequest
+  metadata:
+    created_at: 2026-05-11T12:02:52.577Z
+    updated_at: 2026-05-11T12:02:52.577Z
+    version: 1
+api.requestbody.extract-triple-request:
+  id: 2a9b9769-ff7c-4064-8cc4-fbaa547692fd
+  path: api.requestbody.extract-triple-request
+  spec_node_id: api.requestbody
+  type: requestbody
+  layer_id: api
+  name: ExtractTripleRequest
+  description: Request body for extracting RDF triples from text with ontology
+    context and extraction options
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/schemas/extraction.py
+        symbol: ExtractTripleRequest
+  metadata:
+    created_at: 2026-05-11T12:02:53.611Z
+    updated_at: 2026-05-11T12:02:53.611Z
+    version: 1

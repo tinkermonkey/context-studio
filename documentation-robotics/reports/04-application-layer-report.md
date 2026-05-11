@@ -14,10 +14,10 @@ Application components, services, and interactions.
 
 | Metric                    | Count |
 | ------------------------- | ----- |
-| Elements                  | 40    |
-| Intra-Layer Relationships | 55    |
-| Inter-Layer Relationships | 166   |
-| Inbound Relationships     | 162   |
+| Elements                  | 54    |
+| Intra-Layer Relationships | 69    |
+| Inter-Layer Relationships | 179   |
+| Inbound Relationships     | 175   |
 | Outbound Relationships    | 4     |
 
 **Cross-Layer References**:
@@ -29,48 +29,62 @@ Application components, services, and interactions.
 
 *This layer has >30 elements. Summary table shown instead of diagram.*
 
-| Element                                                                   | Type                   | Relationships |
-| ------------------------------------------------------------------------- | ---------------------- | ------------- |
-| `application.applicationcomponent.anthropic-llm-provider`                 | `applicationcomponent` | 1             |
-| `application.applicationcomponent.cached-reference-source`                | `applicationcomponent` | 1             |
-| `application.applicationcomponent.change-event-recorder`                  | `applicationcomponent` | 1             |
-| `application.applicationcomponent.concept-net-reference-source`           | `applicationcomponent` | 1             |
-| `application.applicationcomponent.dbpedia-reference-source`               | `applicationcomponent` | 1             |
-| `application.applicationcomponent.duck-db-sync-adapter`                   | `applicationcomponent` | 1             |
-| `application.applicationcomponent.graph-ml-interchange-adapter`           | `applicationcomponent` | 1             |
-| `application.applicationcomponent.in-process-event-publisher`             | `applicationcomponent` | 2             |
-| `application.applicationcomponent.json-file-config-store`                 | `applicationcomponent` | 1             |
-| `application.applicationcomponent.llm-provider-router`                    | `applicationcomponent` | 3             |
-| `application.applicationcomponent.local-reference-repository`             | `applicationcomponent` | 1             |
-| `application.applicationcomponent.network-x-graph-engine-adapter`         | `applicationcomponent` | 3             |
-| `application.applicationcomponent.no-op-sync-adapter`                     | `applicationcomponent` | 1             |
-| `application.applicationcomponent.open-ai-llm-provider`                   | `applicationcomponent` | 1             |
-| `application.applicationcomponent.owl-interchange-adapter`                | `applicationcomponent` | 1             |
-| `application.applicationcomponent.rdflib-query-engine-adapter`            | `applicationcomponent` | 1             |
-| `application.applicationcomponent.s3-sync-adapter`                        | `applicationcomponent` | 1             |
-| `application.applicationcomponent.schema-org-reference-source`            | `applicationcomponent` | 1             |
-| `application.applicationcomponent.sentence-transformer-embedding-adapter` | `applicationcomponent` | 2             |
-| `application.applicationcomponent.skos-interchange-adapter`               | `applicationcomponent` | 1             |
-| `application.applicationcomponent.spa-cy-nlp-processor`                   | `applicationcomponent` | 1             |
-| `application.applicationcomponent.sqlite-change-repository`               | `applicationcomponent` | 1             |
-| `application.applicationcomponent.sqlite-extraction-repository`           | `applicationcomponent` | 1             |
-| `application.applicationcomponent.sqlite-interchange-repository`          | `applicationcomponent` | 1             |
-| `application.applicationcomponent.sqlite-ontology-repository`             | `applicationcomponent` | 1             |
-| `application.applicationcomponent.sqlite-persistence-adapter`             | `applicationcomponent` | 2             |
-| `application.applicationcomponent.sqlite-pipeline-repository`             | `applicationcomponent` | 1             |
-| `application.applicationcomponent.system-metrics-collector-adapter`       | `applicationcomponent` | 1             |
-| `application.applicationcomponent.wikidata-reference-source`              | `applicationcomponent` | 1             |
-| `application.applicationfunction.embedding-generation`                    | `applicationfunction`  | 2             |
-| `application.applicationfunction.llm-provider-routing`                    | `applicationfunction`  | 2             |
-| `application.applicationfunction.network-metrics-function`                | `applicationfunction`  | 2             |
-| `application.applicationfunction.sparql-query-function`                   | `applicationfunction`  | 2             |
-| `application.applicationservice.admin-service`                            | `applicationservice`   | 3             |
-| `application.applicationservice.extraction-service`                       | `applicationservice`   | 18            |
-| `application.applicationservice.graph-analysis-service`                   | `applicationservice`   | 8             |
-| `application.applicationservice.import-run-service`                       | `applicationservice`   | 8             |
-| `application.applicationservice.ontology-service`                         | `applicationservice`   | 14            |
-| `application.applicationservice.pipeline-service`                         | `applicationservice`   | 6             |
-| `application.applicationservice.versioning-service`                       | `applicationservice`   | 9             |
+| Element                                                                   | Type                       | Relationships |
+| ------------------------------------------------------------------------- | -------------------------- | ------------- |
+| `application.applicationcollaboration.hexagonal-port-adapter-wiring`      | `applicationcollaboration` | 6             |
+| `application.applicationcomponent.anthropic-llm-provider`                 | `applicationcomponent`     | 1             |
+| `application.applicationcomponent.cached-reference-source`                | `applicationcomponent`     | 1             |
+| `application.applicationcomponent.change-event-recorder`                  | `applicationcomponent`     | 1             |
+| `application.applicationcomponent.concept-net-reference-source`           | `applicationcomponent`     | 1             |
+| `application.applicationcomponent.dbpedia-reference-source`               | `applicationcomponent`     | 1             |
+| `application.applicationcomponent.duck-db-sync-adapter`                   | `applicationcomponent`     | 1             |
+| `application.applicationcomponent.graph-ml-interchange-adapter`           | `applicationcomponent`     | 1             |
+| `application.applicationcomponent.in-process-event-publisher`             | `applicationcomponent`     | 2             |
+| `application.applicationcomponent.json-file-config-store`                 | `applicationcomponent`     | 1             |
+| `application.applicationcomponent.llm-provider-router`                    | `applicationcomponent`     | 3             |
+| `application.applicationcomponent.local-reference-repository`             | `applicationcomponent`     | 1             |
+| `application.applicationcomponent.network-x-graph-engine-adapter`         | `applicationcomponent`     | 3             |
+| `application.applicationcomponent.no-op-sync-adapter`                     | `applicationcomponent`     | 1             |
+| `application.applicationcomponent.open-ai-llm-provider`                   | `applicationcomponent`     | 1             |
+| `application.applicationcomponent.owl-interchange-adapter`                | `applicationcomponent`     | 1             |
+| `application.applicationcomponent.rdflib-query-engine-adapter`            | `applicationcomponent`     | 1             |
+| `application.applicationcomponent.s3-sync-adapter`                        | `applicationcomponent`     | 1             |
+| `application.applicationcomponent.schema-org-reference-source`            | `applicationcomponent`     | 1             |
+| `application.applicationcomponent.sentence-transformer-embedding-adapter` | `applicationcomponent`     | 2             |
+| `application.applicationcomponent.skos-interchange-adapter`               | `applicationcomponent`     | 1             |
+| `application.applicationcomponent.spa-cy-nlp-processor`                   | `applicationcomponent`     | 1             |
+| `application.applicationcomponent.sqlite-change-repository`               | `applicationcomponent`     | 1             |
+| `application.applicationcomponent.sqlite-extraction-repository`           | `applicationcomponent`     | 1             |
+| `application.applicationcomponent.sqlite-interchange-repository`          | `applicationcomponent`     | 1             |
+| `application.applicationcomponent.sqlite-ontology-repository`             | `applicationcomponent`     | 1             |
+| `application.applicationcomponent.sqlite-persistence-adapter`             | `applicationcomponent`     | 2             |
+| `application.applicationcomponent.sqlite-pipeline-repository`             | `applicationcomponent`     | 1             |
+| `application.applicationcomponent.system-metrics-collector-adapter`       | `applicationcomponent`     | 1             |
+| `application.applicationcomponent.wikidata-reference-source`              | `applicationcomponent`     | 1             |
+| `application.applicationevent.changeset-merged-event`                     | `applicationevent`         | 1             |
+| `application.applicationevent.extraction-completed-event`                 | `applicationevent`         | 1             |
+| `application.applicationevent.graph-invalidated-event`                    | `applicationevent`         | 1             |
+| `application.applicationevent.ontology-changed-event`                     | `applicationevent`         | 1             |
+| `application.applicationevent.pipeline-executed-event`                    | `applicationevent`         | 1             |
+| `application.applicationevent.sync-completed-event`                       | `applicationevent`         | 1             |
+| `application.applicationfunction.embedding-generation`                    | `applicationfunction`      | 2             |
+| `application.applicationfunction.llm-provider-routing`                    | `applicationfunction`      | 2             |
+| `application.applicationfunction.network-metrics-function`                | `applicationfunction`      | 2             |
+| `application.applicationfunction.sparql-query-function`                   | `applicationfunction`      | 2             |
+| `application.applicationinteraction.domain-event-publication`             | `applicationinteraction`   | 1             |
+| `application.applicationinteraction.external-reference-enrichment`        | `applicationinteraction`   | 1             |
+| `application.applicationinteraction.llm-provider-request`                 | `applicationinteraction`   | 1             |
+| `application.applicationinterface.rest-api-interface`                     | `applicationinterface`     | 3             |
+| `application.applicationprocess.alembic-migration-runner`                 | `applicationprocess`       | 1             |
+| `application.applicationprocess.background-task-executor`                 | `applicationprocess`       | 7             |
+| `application.applicationprocess.reference-data-import-process`            | `applicationprocess`       | 1             |
+| `application.applicationservice.admin-service`                            | `applicationservice`       | 3             |
+| `application.applicationservice.extraction-service`                       | `applicationservice`       | 18            |
+| `application.applicationservice.graph-analysis-service`                   | `applicationservice`       | 8             |
+| `application.applicationservice.import-run-service`                       | `applicationservice`       | 8             |
+| `application.applicationservice.ontology-service`                         | `applicationservice`       | 15            |
+| `application.applicationservice.pipeline-service`                         | `applicationservice`       | 6             |
+| `application.applicationservice.versioning-service`                       | `applicationservice`       | 9             |
 
 ## Inter-Layer Dependencies
 
@@ -100,176 +114,208 @@ flowchart TB
 
 ## Inter-Layer Relationships Table
 
-| Relationship ID                                                      | Source Node                                                | Dest Node                                                                 | Dest Layer    | Predicate    | Cardinality  | Strength |
-| -------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------- | ------------- | ------------ | ------------ | -------- |
-| `api.operation.references.application.applicationservice`            | `api.operation.add-class-to-scheme`                        | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.add-parent-class-to-individual`             | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.analyze-text`                               | `application.applicationservice.extraction-service`                       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.approve-proposal`                           | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.auto-resolve-conflicts`                     | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.build-graph`                                | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.build-knowledge-graph`                      | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.check-cycle`                                | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.create-changeset`                           | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.create-class`                               | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.create-concept-scheme`                      | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.create-individual`                          | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.create-pipeline-configuration`              | `application.applicationservice.pipeline-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.create-property-definition`                 | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.create-relationship`                        | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.create-taxonomy`                            | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.delete-class`                               | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.delete-concept-scheme`                      | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.delete-individual`                          | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.delete-pipeline-configuration`              | `application.applicationservice.pipeline-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.delete-property-definition`                 | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.delete-relationship`                        | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.delete-taxonomy`                            | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.detect-conflicts`                           | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.enrich-from-references`                     | `application.applicationservice.extraction-service`                       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.execute-pipeline`                           | `application.applicationservice.pipeline-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.execute-sparql`                             | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.export-ontology`                            | `application.applicationservice.import-run-service`                       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.extract-entities`                           | `application.applicationservice.extraction-service`                       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-all-paths`                              | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-background-task`                        | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-background-tasks-summary`               | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-centrality`                             | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-change-history-all`                     | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-change-history-by-entity`               | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-changeset`                              | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-class`                                  | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-communities`                            | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-concept-scheme`                         | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-configuration`                          | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-database-health`                        | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-degree-distribution`                    | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-embedding-health`                       | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-entity-version`                         | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-graph-metrics`                          | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-import-run`                             | `application.applicationservice.import-run-service`                       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-individual-inherited-properties`        | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-individual`                             | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-neighbors`                              | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-nlp-health`                             | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-pipeline-configuration`                 | `application.applicationservice.pipeline-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-pipeline-executions`                    | `application.applicationservice.pipeline-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-property-definition`                    | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-rdf-triple-count`                       | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-rdf-triples`                            | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-reference-relations`                    | `application.applicationservice.extraction-service`                       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-reference-status`                       | `application.applicationservice.extraction-service`                       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-relationship`                           | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-run-change-events`                      | `application.applicationservice.import-run-service`                       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-service-metrics`                        | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-services-health`                        | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-shortest-path`                          | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-subgraph-by-depth`                      | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-subgraph`                               | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-sync-status`                            | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-system-health`                          | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-tasks-health`                           | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.get-taxonomy`                               | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.import-ontology`                            | `application.applicationservice.import-run-service`                       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.list-background-tasks`                      | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.list-classes`                               | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.list-concept-schemes`                       | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.list-entity-versions`                       | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.list-import-runs`                           | `application.applicationservice.import-run-service`                       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.list-individuals`                           | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.list-pipeline-configurations`               | `application.applicationservice.pipeline-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.list-property-definitions`                  | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.list-relationships`                         | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.list-taxonomies`                            | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.merge-proposal`                             | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.move-class`                                 | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.pull-changes`                               | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.push-changes`                               | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.reject-proposal`                            | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.remove-parent-class-from-individual`        | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.reorder-individual-classes`                 | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.reset-configuration`                        | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.resolve-conflicts`                          | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.search-references`                          | `application.applicationservice.extraction-service`                       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.stage-changeset`                            | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.submit-proposal`                            | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.update-class`                               | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.update-concept-scheme`                      | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.update-configuration-section`               | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.update-individual`                          | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.update-pipeline-configuration`              | `application.applicationservice.pipeline-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.update-property-definition`                 | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `api.operation.references.application.applicationservice`            | `api.operation.update-taxonomy`                            | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
-| `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.embedding-generation`     | `business.businessfunction.entity-enrichment`                             | `business`    | `realizes`   | many-to-many | medium   |
-| `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.llm-provider-routing`     | `business.businessfunction.entity-enrichment`                             | `business`    | `realizes`   | many-to-many | medium   |
-| `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.network-metrics-function` | `business.businessfunction.semantic-search`                               | `business`    | `realizes`   | many-to-many | medium   |
-| `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.sparql-query-function`    | `business.businessfunction.semantic-search`                               | `business`    | `realizes`   | many-to-many | medium   |
-| `data-store.accesspattern.serves.application.applicationfunction`    | `data-store.accesspattern.entity-by-parent-range-scan`     | `application.applicationfunction.sparql-query-function`                   | `application` | `serves`     | many-to-many | medium   |
-| `data-store.accesspattern.serves.application.applicationfunction`    | `data-store.accesspattern.vector-similarity-search`        | `application.applicationfunction.embedding-generation`                    | `application` | `serves`     | many-to-many | medium   |
-| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.batch-runs`                         | `application.applicationcomponent.sqlite-interchange-repository`          | `application` | `serves`     | many-to-many | medium   |
-| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.change-events`                      | `application.applicationcomponent.sqlite-change-repository`               | `application` | `serves`     | many-to-many | medium   |
-| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.changeset-events-table`             | `application.applicationcomponent.sqlite-change-repository`               | `application` | `serves`     | many-to-many | medium   |
-| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.changesets-table`                   | `application.applicationcomponent.sqlite-change-repository`               | `application` | `serves`     | many-to-many | medium   |
-| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.conflict-resolutions-table`         | `application.applicationcomponent.sqlite-change-repository`               | `application` | `serves`     | many-to-many | medium   |
-| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.entity-versions-table`              | `application.applicationcomponent.sqlite-change-repository`               | `application` | `serves`     | many-to-many | medium   |
-| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.extraction-results-table`           | `application.applicationcomponent.sqlite-extraction-repository`           | `application` | `serves`     | many-to-many | medium   |
-| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.extraction-runs`                    | `application.applicationcomponent.sqlite-extraction-repository`           | `application` | `serves`     | many-to-many | medium   |
-| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.import-runs-table`                  | `application.applicationcomponent.sqlite-interchange-repository`          | `application` | `serves`     | many-to-many | medium   |
-| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.individual-classes-table`           | `application.applicationcomponent.sqlite-ontology-repository`             | `application` | `serves`     | many-to-many | medium   |
-| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.ontology-entities`                  | `application.applicationcomponent.sqlite-ontology-repository`             | `application` | `serves`     | many-to-many | medium   |
-| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.pipeline-configurations-table`      | `application.applicationcomponent.sqlite-pipeline-repository`             | `application` | `serves`     | many-to-many | medium   |
-| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.pipeline-executions-table`          | `application.applicationcomponent.sqlite-pipeline-repository`             | `application` | `serves`     | many-to-many | medium   |
-| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.property-definitions-table`         | `application.applicationcomponent.sqlite-ontology-repository`             | `application` | `serves`     | many-to-many | medium   |
-| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.proposals-table`                    | `application.applicationcomponent.sqlite-change-repository`               | `application` | `serves`     | many-to-many | medium   |
-| `data-store.database.serves.application.applicationcomponent`        | `data-store.database.operationsdb`                         | `application.applicationcomponent.sqlite-pipeline-repository`             | `application` | `serves`     | many-to-many | medium   |
-| `data-store.database.serves.application.applicationcomponent`        | `data-store.database.reference-api-cachedb`                | `application.applicationcomponent.cached-reference-source`                | `application` | `serves`     | many-to-many | medium   |
-| `data-store.database.serves.application.applicationcomponent`        | `data-store.database.referencedb`                          | `application.applicationcomponent.local-reference-repository`             | `application` | `serves`     | many-to-many | medium   |
-| `data-store.storedlogic.implements.application.applicationfunction`  | `data-store.storedlogic.sqlite-vec-cosine-similarity`      | `application.applicationfunction.embedding-generation`                    | `application` | `implements` | many-to-many | medium   |
-| `data-store.storedlogic.serves.application.applicationservice`       | `data-store.storedlogic.sqlite-vec-cosine-similarity`      | `application.applicationservice.extraction-service`                       | `application` | `serves`     | many-to-many | medium   |
-| `technology.systemsoftware.serves.application.applicationcomponent`  | `technology.systemsoftware.alembic`                        | `application.applicationcomponent.sqlite-persistence-adapter`             | `application` | `serves`     | many-to-many | medium   |
-| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.anthropic-sdk`                  | `application.applicationservice.pipeline-service`                         | `application` | `realizes`   | many-to-many | medium   |
-| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.boto3`                          | `application.applicationservice.versioning-service`                       | `application` | `realizes`   | many-to-many | medium   |
-| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.duck-db`                        | `application.applicationservice.versioning-service`                       | `application` | `realizes`   | many-to-many | medium   |
-| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.fast-api`                       | `application.applicationservice.ontology-service`                         | `application` | `realizes`   | many-to-many | medium   |
-| `technology.systemsoftware.serves.application.applicationcomponent`  | `technology.systemsoftware.fast-api`                       | `application.applicationcomponent.sqlite-persistence-adapter`             | `application` | `serves`     | many-to-many | medium   |
-| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.httpx`                          | `application.applicationservice.extraction-service`                       | `application` | `realizes`   | many-to-many | medium   |
-| `technology.systemsoftware.serves.application.applicationcomponent`  | `technology.systemsoftware.network-x`                      | `application.applicationcomponent.network-x-graph-engine-adapter`         | `application` | `serves`     | many-to-many | medium   |
-| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.openai-sdk`                     | `application.applicationservice.pipeline-service`                         | `application` | `realizes`   | many-to-many | medium   |
-| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.pydantic`                       | `application.applicationservice.ontology-service`                         | `application` | `realizes`   | many-to-many | medium   |
-| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.python`                         | `application.applicationservice.admin-service`                            | `application` | `realizes`   | many-to-many | medium   |
-| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.python`                         | `application.applicationservice.ontology-service`                         | `application` | `realizes`   | many-to-many | medium   |
-| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.python`                         | `application.applicationservice.pipeline-service`                         | `application` | `realizes`   | many-to-many | medium   |
-| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.python`                         | `application.applicationservice.versioning-service`                       | `application` | `realizes`   | many-to-many | medium   |
-| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.rdflib`                         | `application.applicationservice.graph-analysis-service`                   | `application` | `realizes`   | many-to-many | medium   |
-| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.react`                          | `application.applicationservice.admin-service`                            | `application` | `realizes`   | many-to-many | medium   |
-| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.sentence-transformers`          | `application.applicationservice.extraction-service`                       | `application` | `realizes`   | many-to-many | medium   |
-| `technology.systemsoftware.serves.application.applicationcomponent`  | `technology.systemsoftware.sentence-transformers`          | `application.applicationcomponent.sentence-transformer-embedding-adapter` | `application` | `serves`     | many-to-many | medium   |
-| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.spa-cy`                         | `application.applicationservice.extraction-service`                       | `application` | `realizes`   | many-to-many | medium   |
-| `technology.systemsoftware.serves.application.applicationcomponent`  | `technology.systemsoftware.spa-cy`                         | `application.applicationcomponent.sentence-transformer-embedding-adapter` | `application` | `serves`     | many-to-many | medium   |
-| `technology.systemsoftware.serves.application.applicationcomponent`  | `technology.systemsoftware.sqlalchemy`                     | `application.applicationcomponent.sqlite-persistence-adapter`             | `application` | `serves`     | many-to-many | medium   |
-| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.tan-stack-query`                | `application.applicationservice.admin-service`                            | `application` | `realizes`   | many-to-many | medium   |
-| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.tan-stack-router`               | `application.applicationservice.admin-service`                            | `application` | `realizes`   | many-to-many | medium   |
-| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.uvicorn`                        | `application.applicationservice.admin-service`                            | `application` | `realizes`   | many-to-many | medium   |
-| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.uvicorn`                        | `application.applicationservice.ontology-service`                         | `application` | `realizes`   | many-to-many | medium   |
-| `testing.testcoveragetarget.tests.application.applicationcomponent`  | `testing.testcoveragetarget.adapter-unit-tests`            | `application.applicationcomponent.spa-cy-nlp-processor`                   | `application` | `tests`      | many-to-many | medium   |
-| `testing.testcoveragetarget.tests.application.applicationcomponent`  | `testing.testcoveragetarget.domain-unit-tests`             | `application.applicationcomponent.sqlite-ontology-repository`             | `application` | `tests`      | many-to-many | medium   |
-| `testing.testcoveragetarget.tests.application.applicationcomponent`  | `testing.testcoveragetarget.interchange-integration-tests` | `application.applicationcomponent.sqlite-interchange-repository`          | `application` | `tests`      | many-to-many | medium   |
-| `testing.testcoveragetarget.tests.application.applicationcomponent`  | `testing.testcoveragetarget.interchange-round-trip-tests`  | `application.applicationcomponent.skos-interchange-adapter`               | `application` | `tests`      | many-to-many | medium   |
-| `testing.testcoveragetarget.tests.application.applicationcomponent`  | `testing.testcoveragetarget.route-integration-tests`       | `application.applicationcomponent.sqlite-ontology-repository`             | `application` | `tests`      | many-to-many | medium   |
-| `testing.testcoveragetarget.tests.application.applicationcomponent`  | `testing.testcoveragetarget.versioning-integration-tests`  | `application.applicationcomponent.sqlite-change-repository`               | `application` | `tests`      | many-to-many | medium   |
-| `ux.view.serves.application.applicationservice`                      | `ux.view.admin-view`                                       | `application.applicationservice.admin-service`                            | `application` | `serves`     | many-to-many | medium   |
-| `ux.view.serves.application.applicationservice`                      | `ux.view.classes-view`                                     | `application.applicationservice.ontology-service`                         | `application` | `serves`     | many-to-many | medium   |
-| `ux.view.serves.application.applicationservice`                      | `ux.view.concept-schemes-view`                             | `application.applicationservice.ontology-service`                         | `application` | `serves`     | many-to-many | medium   |
-| `ux.view.serves.application.applicationservice`                      | `ux.view.configuration-view`                               | `application.applicationservice.admin-service`                            | `application` | `serves`     | many-to-many | medium   |
-| `ux.view.serves.application.applicationservice`                      | `ux.view.datasets-view`                                    | `application.applicationservice.ontology-service`                         | `application` | `serves`     | many-to-many | medium   |
-| `ux.view.serves.application.applicationservice`                      | `ux.view.individuals-view`                                 | `application.applicationservice.ontology-service`                         | `application` | `serves`     | many-to-many | medium   |
-| `ux.view.serves.application.applicationservice`                      | `ux.view.interchange-view`                                 | `application.applicationservice.import-run-service`                       | `application` | `serves`     | many-to-many | medium   |
-| `ux.view.serves.application.applicationservice`                      | `ux.view.properties-view`                                  | `application.applicationservice.ontology-service`                         | `application` | `serves`     | many-to-many | medium   |
-| `ux.view.serves.application.applicationservice`                      | `ux.view.rag-experiments-view`                             | `application.applicationservice.extraction-service`                       | `application` | `serves`     | many-to-many | medium   |
-| `ux.view.serves.application.applicationservice`                      | `ux.view.relationships-view`                               | `application.applicationservice.ontology-service`                         | `application` | `serves`     | many-to-many | medium   |
-| `ux.view.serves.application.applicationservice`                      | `ux.view.taxonomies-view`                                  | `application.applicationservice.ontology-service`                         | `application` | `serves`     | many-to-many | medium   |
+| Relationship ID                                                      | Source Node                                                   | Dest Node                                                                 | Dest Layer    | Predicate    | Cardinality  | Strength |
+| -------------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------- | ------------ | ------------ | -------- |
+| `api.operation.references.application.applicationservice`            | `api.operation.add-class-to-scheme`                           | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.add-parent-class-to-individual`                | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.analyze-text`                                  | `application.applicationservice.extraction-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.approve-proposal`                              | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.auto-resolve-conflicts`                        | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.build-graph`                                   | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.build-knowledge-graph`                         | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.check-cycle`                                   | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.create-changeset`                              | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.create-class`                                  | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.create-concept-scheme`                         | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.create-individual`                             | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.create-pipeline-configuration`                 | `application.applicationservice.pipeline-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.create-property-definition`                    | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.create-relationship`                           | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.create-taxonomy`                               | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.delete-class`                                  | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.delete-concept-scheme`                         | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.delete-individual`                             | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.delete-pipeline-configuration`                 | `application.applicationservice.pipeline-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.delete-property-definition`                    | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.delete-relationship`                           | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.delete-taxonomy`                               | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.detect-conflicts`                              | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.enrich-from-references`                        | `application.applicationservice.extraction-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.execute-pipeline`                              | `application.applicationservice.pipeline-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.execute-sparql`                                | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.export-ontology`                               | `application.applicationservice.import-run-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.extract-entities`                              | `application.applicationservice.extraction-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.extract-triples`                               | `application.applicationservice.extraction-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-all-paths`                                 | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-background-task`                           | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-background-tasks-summary`                  | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-centrality`                                | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-change-history-all`                        | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-change-history-by-entity`                  | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-changeset`                                 | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-class`                                     | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-communities`                               | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-concept-scheme`                            | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-configuration`                             | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-database-health`                           | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-degree-distribution`                       | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-embedding-health`                          | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-entity-version`                            | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-graph-metrics`                             | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-import-run`                                | `application.applicationservice.import-run-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-individual-inherited-properties`           | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-individual`                                | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-neighbors`                                 | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-nlp-health`                                | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-pipeline-configuration`                    | `application.applicationservice.pipeline-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-pipeline-executions`                       | `application.applicationservice.pipeline-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-property-definition`                       | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-publish-diff-stats`                        | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-rdf-triple-count`                          | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-rdf-triples`                               | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-reference-relations`                       | `application.applicationservice.extraction-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-reference-status`                          | `application.applicationservice.extraction-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-relationship`                              | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-run-change-events`                         | `application.applicationservice.import-run-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-service-metrics`                           | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-services-health`                           | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-shortest-path`                             | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-subgraph-by-depth`                         | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-subgraph`                                  | `application.applicationservice.graph-analysis-service`                   | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-sync-status`                               | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-system-health`                             | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-tasks-health`                              | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.get-taxonomy`                                  | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.import-ontology`                               | `application.applicationservice.import-run-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.list-background-tasks`                         | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.list-classes`                                  | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.list-concept-schemes`                          | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.list-entity-versions`                          | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.list-import-runs`                              | `application.applicationservice.import-run-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.list-individuals`                              | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.list-pipeline-configurations`                  | `application.applicationservice.pipeline-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.list-property-definitions`                     | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.list-relationships`                            | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.list-taxonomies`                               | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.merge-proposal`                                | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.move-class`                                    | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.publish-taxonomy`                              | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.pull-changes`                                  | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.push-changes`                                  | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.reject-proposal`                               | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.remove-parent-class-from-individual`           | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.reorder-individual-classes`                    | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.reset-configuration`                           | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.resolve-conflicts`                             | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.search-references`                             | `application.applicationservice.extraction-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.stage-changeset`                               | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.submit-proposal`                               | `application.applicationservice.versioning-service`                       | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.update-class`                                  | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.update-concept-scheme`                         | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.update-configuration-section`                  | `application.applicationservice.admin-service`                            | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.update-individual`                             | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.update-pipeline-configuration`                 | `application.applicationservice.pipeline-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.update-property-definition`                    | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `api.operation.references.application.applicationservice`            | `api.operation.update-taxonomy`                               | `application.applicationservice.ontology-service`                         | `application` | `references` | many-to-many | medium   |
+| `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.embedding-generation`        | `business.businessfunction.entity-enrichment`                             | `business`    | `realizes`   | many-to-many | medium   |
+| `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.llm-provider-routing`        | `business.businessfunction.entity-enrichment`                             | `business`    | `realizes`   | many-to-many | medium   |
+| `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.network-metrics-function`    | `business.businessfunction.semantic-search`                               | `business`    | `realizes`   | many-to-many | medium   |
+| `application.applicationfunction.realizes.business.businessfunction` | `application.applicationfunction.sparql-query-function`       | `business.businessfunction.semantic-search`                               | `business`    | `realizes`   | many-to-many | medium   |
+| `data-store.accesspattern.serves.application.applicationfunction`    | `data-store.accesspattern.entity-by-parent-range-scan`        | `application.applicationfunction.sparql-query-function`                   | `application` | `serves`     | many-to-many | medium   |
+| `data-store.accesspattern.serves.application.applicationfunction`    | `data-store.accesspattern.vector-similarity-search`           | `application.applicationfunction.embedding-generation`                    | `application` | `serves`     | many-to-many | medium   |
+| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.batch-runs`                            | `application.applicationcomponent.sqlite-interchange-repository`          | `application` | `serves`     | many-to-many | medium   |
+| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.change-events`                         | `application.applicationcomponent.sqlite-change-repository`               | `application` | `serves`     | many-to-many | medium   |
+| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.changeset-events-table`                | `application.applicationcomponent.sqlite-change-repository`               | `application` | `serves`     | many-to-many | medium   |
+| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.changesets-table`                      | `application.applicationcomponent.sqlite-change-repository`               | `application` | `serves`     | many-to-many | medium   |
+| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.conflict-resolutions-table`            | `application.applicationcomponent.sqlite-change-repository`               | `application` | `serves`     | many-to-many | medium   |
+| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.entity-versions-table`                 | `application.applicationcomponent.sqlite-change-repository`               | `application` | `serves`     | many-to-many | medium   |
+| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.extraction-results-table`              | `application.applicationcomponent.sqlite-extraction-repository`           | `application` | `serves`     | many-to-many | medium   |
+| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.extraction-runs`                       | `application.applicationcomponent.sqlite-extraction-repository`           | `application` | `serves`     | many-to-many | medium   |
+| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.import-runs-table`                     | `application.applicationcomponent.sqlite-interchange-repository`          | `application` | `serves`     | many-to-many | medium   |
+| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.individual-classes-table`              | `application.applicationcomponent.sqlite-ontology-repository`             | `application` | `serves`     | many-to-many | medium   |
+| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.ontology-entities`                     | `application.applicationcomponent.sqlite-ontology-repository`             | `application` | `serves`     | many-to-many | medium   |
+| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.pipeline-configurations-table`         | `application.applicationcomponent.sqlite-pipeline-repository`             | `application` | `serves`     | many-to-many | medium   |
+| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.pipeline-executions-table`             | `application.applicationcomponent.sqlite-pipeline-repository`             | `application` | `serves`     | many-to-many | medium   |
+| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.property-definitions-table`            | `application.applicationcomponent.sqlite-ontology-repository`             | `application` | `serves`     | many-to-many | medium   |
+| `data-store.collection.serves.application.applicationcomponent`      | `data-store.collection.proposals-table`                       | `application.applicationcomponent.sqlite-change-repository`               | `application` | `serves`     | many-to-many | medium   |
+| `data-store.database.serves.application.applicationcomponent`        | `data-store.database.operationsdb`                            | `application.applicationcomponent.sqlite-pipeline-repository`             | `application` | `serves`     | many-to-many | medium   |
+| `data-store.database.serves.application.applicationcomponent`        | `data-store.database.reference-api-cachedb`                   | `application.applicationcomponent.cached-reference-source`                | `application` | `serves`     | many-to-many | medium   |
+| `data-store.database.serves.application.applicationcomponent`        | `data-store.database.referencedb`                             | `application.applicationcomponent.local-reference-repository`             | `application` | `serves`     | many-to-many | medium   |
+| `data-store.storedlogic.implements.application.applicationfunction`  | `data-store.storedlogic.sqlite-vec-cosine-similarity`         | `application.applicationfunction.embedding-generation`                    | `application` | `implements` | many-to-many | medium   |
+| `data-store.storedlogic.serves.application.applicationservice`       | `data-store.storedlogic.sqlite-vec-cosine-similarity`         | `application.applicationservice.extraction-service`                       | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent`  | `technology.systemsoftware.alembic`                           | `application.applicationcomponent.sqlite-persistence-adapter`             | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.anthropic-sdk`                     | `application.applicationservice.pipeline-service`                         | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.boto3`                             | `application.applicationservice.versioning-service`                       | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.duck-db`                           | `application.applicationservice.versioning-service`                       | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.fast-api`                          | `application.applicationservice.ontology-service`                         | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent`  | `technology.systemsoftware.fast-api`                          | `application.applicationcomponent.sqlite-persistence-adapter`             | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.httpx`                             | `application.applicationservice.extraction-service`                       | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.hugging-face-datasets`             | `application.applicationservice.extraction-service`                       | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent`  | `technology.systemsoftware.network-x`                         | `application.applicationcomponent.network-x-graph-engine-adapter`         | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.openai-sdk`                        | `application.applicationservice.pipeline-service`                         | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.pyarrow`                           | `application.applicationservice.versioning-service`                       | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.pydantic`                          | `application.applicationservice.ontology-service`                         | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.python-multipart`                  | `application.applicationservice.ontology-service`                         | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.python`                            | `application.applicationservice.admin-service`                            | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.python`                            | `application.applicationservice.ontology-service`                         | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.python`                            | `application.applicationservice.pipeline-service`                         | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.python`                            | `application.applicationservice.versioning-service`                       | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.rdflib`                            | `application.applicationservice.graph-analysis-service`                   | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.react`                             | `application.applicationservice.admin-service`                            | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.reagraph`                          | `application.applicationservice.graph-analysis-service`                   | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.sentence-transformers`             | `application.applicationservice.extraction-service`                       | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent`  | `technology.systemsoftware.sentence-transformers`             | `application.applicationcomponent.sentence-transformer-embedding-adapter` | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.spa-cy`                            | `application.applicationservice.extraction-service`                       | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent`  | `technology.systemsoftware.spa-cy`                            | `application.applicationcomponent.sentence-transformer-embedding-adapter` | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.serves.application.applicationcomponent`  | `technology.systemsoftware.sqlalchemy`                        | `application.applicationcomponent.sqlite-persistence-adapter`             | `application` | `serves`     | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.tan-stack-form`                    | `application.applicationservice.ontology-service`                         | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.tan-stack-query`                   | `application.applicationservice.admin-service`                            | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.tan-stack-router`                  | `application.applicationservice.admin-service`                            | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.tan-stack-table`                   | `application.applicationservice.admin-service`                            | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.uvicorn`                           | `application.applicationservice.admin-service`                            | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.uvicorn`                           | `application.applicationservice.ontology-service`                         | `application` | `realizes`   | many-to-many | medium   |
+| `technology.systemsoftware.realizes.application.applicationservice`  | `technology.systemsoftware.zustand`                           | `application.applicationservice.admin-service`                            | `application` | `realizes`   | many-to-many | medium   |
+| `testing.coveragerequirement.covers.application.applicationfunction` | `testing.coveragerequirement.domain-unit-test-coverage`       | `application.applicationfunction.embedding-generation`                    | `application` | `covers`     | many-to-many | medium   |
+| `testing.coveragerequirement.covers.application.applicationfunction` | `testing.coveragerequirement.e2e-test-coverage`               | `application.applicationfunction.llm-provider-routing`                    | `application` | `covers`     | many-to-many | medium   |
+| `testing.coveragerequirement.covers.application.applicationfunction` | `testing.coveragerequirement.route-integration-test-coverage` | `application.applicationfunction.sparql-query-function`                   | `application` | `covers`     | many-to-many | medium   |
+| `testing.testcoveragetarget.tests.application.applicationcomponent`  | `testing.testcoveragetarget.adapter-unit-tests`               | `application.applicationcomponent.spa-cy-nlp-processor`                   | `application` | `tests`      | many-to-many | medium   |
+| `testing.testcoveragetarget.tests.application.applicationcomponent`  | `testing.testcoveragetarget.domain-unit-tests`                | `application.applicationcomponent.sqlite-ontology-repository`             | `application` | `tests`      | many-to-many | medium   |
+| `testing.testcoveragetarget.tests.application.applicationcomponent`  | `testing.testcoveragetarget.interchange-integration-tests`    | `application.applicationcomponent.sqlite-interchange-repository`          | `application` | `tests`      | many-to-many | medium   |
+| `testing.testcoveragetarget.tests.application.applicationcomponent`  | `testing.testcoveragetarget.interchange-round-trip-tests`     | `application.applicationcomponent.skos-interchange-adapter`               | `application` | `tests`      | many-to-many | medium   |
+| `testing.testcoveragetarget.tests.application.applicationcomponent`  | `testing.testcoveragetarget.route-integration-tests`          | `application.applicationcomponent.sqlite-ontology-repository`             | `application` | `tests`      | many-to-many | medium   |
+| `testing.testcoveragetarget.tests.application.applicationcomponent`  | `testing.testcoveragetarget.versioning-integration-tests`     | `application.applicationcomponent.sqlite-change-repository`               | `application` | `tests`      | many-to-many | medium   |
+| `ux.view.serves.application.applicationservice`                      | `ux.view.admin-view`                                          | `application.applicationservice.admin-service`                            | `application` | `serves`     | many-to-many | medium   |
+| `ux.view.serves.application.applicationservice`                      | `ux.view.classes-view`                                        | `application.applicationservice.ontology-service`                         | `application` | `serves`     | many-to-many | medium   |
+| `ux.view.serves.application.applicationservice`                      | `ux.view.concept-schemes-view`                                | `application.applicationservice.ontology-service`                         | `application` | `serves`     | many-to-many | medium   |
+| `ux.view.serves.application.applicationservice`                      | `ux.view.configuration-view`                                  | `application.applicationservice.admin-service`                            | `application` | `serves`     | many-to-many | medium   |
+| `ux.view.serves.application.applicationservice`                      | `ux.view.datasets-view`                                       | `application.applicationservice.ontology-service`                         | `application` | `serves`     | many-to-many | medium   |
+| `ux.view.serves.application.applicationservice`                      | `ux.view.individuals-view`                                    | `application.applicationservice.ontology-service`                         | `application` | `serves`     | many-to-many | medium   |
+| `ux.view.serves.application.applicationservice`                      | `ux.view.interchange-view`                                    | `application.applicationservice.import-run-service`                       | `application` | `serves`     | many-to-many | medium   |
+| `ux.view.serves.application.applicationservice`                      | `ux.view.properties-view`                                     | `application.applicationservice.ontology-service`                         | `application` | `serves`     | many-to-many | medium   |
+| `ux.view.serves.application.applicationservice`                      | `ux.view.rag-experiments-view`                                | `application.applicationservice.extraction-service`                       | `application` | `serves`     | many-to-many | medium   |
+| `ux.view.serves.application.applicationservice`                      | `ux.view.relationships-view`                                  | `application.applicationservice.ontology-service`                         | `application` | `serves`     | many-to-many | medium   |
+| `ux.view.serves.application.applicationservice`                      | `ux.view.taxonomies-view`                                     | `application.applicationservice.ontology-service`                         | `application` | `serves`     | many-to-many | medium   |
 
 ## Element Reference
+
+### Hexagonal Port-Adapter Wiring {#hexagonal-port-adapter-wiring}
+
+**ID**: `application.applicationcollaboration.hexagonal-port-adapter-wiring`
+
+**Type**: `applicationcollaboration`
+
+Composition root collaboration: app.py wires domain services to infrastructure adapters via dependency injection at startup, implementing the hexagonal architecture pattern
+
+#### Relationships
+
+| Type        | Related Element                                                    | Predicate    | Direction |
+| ----------- | ------------------------------------------------------------------ | ------------ | --------- |
+| intra-layer | `application.applicationinterface.rest-api-interface`              | `depends-on` | outbound  |
+| intra-layer | `application.applicationinteraction.domain-event-publication`      | `depends-on` | inbound   |
+| intra-layer | `application.applicationinteraction.external-reference-enrichment` | `depends-on` | inbound   |
+| intra-layer | `application.applicationinteraction.llm-provider-request`          | `depends-on` | inbound   |
+| intra-layer | `application.applicationprocess.alembic-migration-runner`          | `depends-on` | inbound   |
+| intra-layer | `application.applicationprocess.reference-data-import-process`     | `depends-on` | inbound   |
 
 ### Anthropic LLM Provider {#anthropic-llm-provider}
 
@@ -888,6 +934,126 @@ Infrastructure adapter fetching entity data from Wikidata SPARQL endpoint for on
 | ----------- | --------------------------------------------------- | ---------- | --------- |
 | intra-layer | `application.applicationservice.extraction-service` | `realizes` | outbound  |
 
+### Changeset Merged Event {#changeset-merged-event}
+
+**ID**: `application.applicationevent.changeset-merged-event`
+
+**Type**: `applicationevent`
+
+Domain event fired when a versioning changeset proposal is merged into the main graph
+
+#### Attributes
+
+| Name      | Value  |
+| --------- | ------ |
+| eventType | domain |
+
+#### Relationships
+
+| Type        | Related Element                                           | Predicate  | Direction |
+| ----------- | --------------------------------------------------------- | ---------- | --------- |
+| intra-layer | `application.applicationprocess.background-task-executor` | `triggers` | outbound  |
+
+### Extraction Completed Event {#extraction-completed-event}
+
+**ID**: `application.applicationevent.extraction-completed-event`
+
+**Type**: `applicationevent`
+
+Domain event fired when an entity extraction pipeline run completes successfully
+
+#### Attributes
+
+| Name      | Value  |
+| --------- | ------ |
+| eventType | domain |
+
+#### Relationships
+
+| Type        | Related Element                                           | Predicate  | Direction |
+| ----------- | --------------------------------------------------------- | ---------- | --------- |
+| intra-layer | `application.applicationprocess.background-task-executor` | `triggers` | outbound  |
+
+### Graph Invalidated Event {#graph-invalidated-event}
+
+**ID**: `application.applicationevent.graph-invalidated-event`
+
+**Type**: `applicationevent`
+
+Domain event fired when ontology changes require the in-memory knowledge graph to be rebuilt
+
+#### Attributes
+
+| Name      | Value  |
+| --------- | ------ |
+| eventType | domain |
+
+#### Relationships
+
+| Type        | Related Element                                           | Predicate  | Direction |
+| ----------- | --------------------------------------------------------- | ---------- | --------- |
+| intra-layer | `application.applicationprocess.background-task-executor` | `triggers` | outbound  |
+
+### Ontology Changed Event {#ontology-changed-event}
+
+**ID**: `application.applicationevent.ontology-changed-event`
+
+**Type**: `applicationevent`
+
+Domain events fired when ontology entities are created, updated, or deleted (TaxonomyCreated, ClassCreated, ClassUpdated, ClassDeleted, ClassMoved, etc.)
+
+#### Attributes
+
+| Name      | Value  |
+| --------- | ------ |
+| eventType | domain |
+
+#### Relationships
+
+| Type        | Related Element                                           | Predicate  | Direction |
+| ----------- | --------------------------------------------------------- | ---------- | --------- |
+| intra-layer | `application.applicationprocess.background-task-executor` | `triggers` | outbound  |
+
+### Pipeline Executed Event {#pipeline-executed-event}
+
+**ID**: `application.applicationevent.pipeline-executed-event`
+
+**Type**: `applicationevent`
+
+Domain event fired when an LLM pipeline execution completes
+
+#### Attributes
+
+| Name      | Value  |
+| --------- | ------ |
+| eventType | domain |
+
+#### Relationships
+
+| Type        | Related Element                                           | Predicate  | Direction |
+| ----------- | --------------------------------------------------------- | ---------- | --------- |
+| intra-layer | `application.applicationprocess.background-task-executor` | `triggers` | outbound  |
+
+### Sync Completed Event {#sync-completed-event}
+
+**ID**: `application.applicationevent.sync-completed-event`
+
+**Type**: `applicationevent`
+
+Domain event fired when a remote sync push or pull operation completes
+
+#### Attributes
+
+| Name      | Value  |
+| --------- | ------ |
+| eventType | domain |
+
+#### Relationships
+
+| Type        | Related Element                                           | Predicate  | Direction |
+| ----------- | --------------------------------------------------------- | ---------- | --------- |
+| intra-layer | `application.applicationprocess.background-task-executor` | `triggers` | outbound  |
+
 ### Embedding Generation {#embedding-generation}
 
 **ID**: `application.applicationfunction.embedding-generation`
@@ -903,6 +1069,7 @@ Application function that generates vector embeddings for ontology entities usin
 | inter-layer | `business.businessfunction.entity-enrichment`                             | `realizes`       | outbound  |
 | inter-layer | `data-store.accesspattern.vector-similarity-search`                       | `serves`         | inbound   |
 | inter-layer | `data-store.storedlogic.sqlite-vec-cosine-similarity`                     | `implements`     | inbound   |
+| inter-layer | `testing.coveragerequirement.domain-unit-test-coverage`                   | `covers`         | inbound   |
 | intra-layer | `application.applicationcomponent.sentence-transformer-embedding-adapter` | `composes`       | inbound   |
 | intra-layer | `application.applicationservice.extraction-service`                       | `delivers-value` | outbound  |
 
@@ -919,6 +1086,7 @@ Application function that routes LLM requests to the appropriate provider (OpenA
 | Type        | Related Element                                        | Predicate        | Direction |
 | ----------- | ------------------------------------------------------ | ---------------- | --------- |
 | inter-layer | `business.businessfunction.entity-enrichment`          | `realizes`       | outbound  |
+| inter-layer | `testing.coveragerequirement.e2e-test-coverage`        | `covers`         | inbound   |
 | intra-layer | `application.applicationcomponent.llm-provider-router` | `composes`       | inbound   |
 | intra-layer | `application.applicationservice.pipeline-service`      | `delivers-value` | outbound  |
 
@@ -952,8 +1120,139 @@ Application function that executes SPARQL queries over the in-memory graph const
 | ----------- | ----------------------------------------------------------------- | ---------------- | --------- |
 | inter-layer | `business.businessfunction.semantic-search`                       | `realizes`       | outbound  |
 | inter-layer | `data-store.accesspattern.entity-by-parent-range-scan`            | `serves`         | inbound   |
+| inter-layer | `testing.coveragerequirement.route-integration-test-coverage`     | `covers`         | inbound   |
 | intra-layer | `application.applicationcomponent.network-x-graph-engine-adapter` | `composes`       | inbound   |
 | intra-layer | `application.applicationservice.graph-analysis-service`           | `delivers-value` | outbound  |
+
+### Domain Event Publication {#domain-event-publication}
+
+**ID**: `application.applicationinteraction.domain-event-publication`
+
+**Type**: `applicationinteraction`
+
+In-process event publication pattern: domain services publish events via the EventPublisher port, the In-Process Event Publisher delivers them synchronously to registered handlers
+
+#### Attributes
+
+| Name    | Value             |
+| ------- | ----------------- |
+| pattern | publish-subscribe |
+
+#### Relationships
+
+| Type        | Related Element                                                      | Predicate    | Direction |
+| ----------- | -------------------------------------------------------------------- | ------------ | --------- |
+| intra-layer | `application.applicationcollaboration.hexagonal-port-adapter-wiring` | `depends-on` | outbound  |
+
+### External Reference Enrichment {#external-reference-enrichment}
+
+**ID**: `application.applicationinteraction.external-reference-enrichment`
+
+**Type**: `applicationinteraction`
+
+Fire-and-forget interaction pattern where extraction enrichment requests are dispatched to multiple external reference sources concurrently
+
+#### Attributes
+
+| Name    | Value           |
+| ------- | --------------- |
+| pattern | fire-and-forget |
+
+#### Relationships
+
+| Type        | Related Element                                                      | Predicate    | Direction |
+| ----------- | -------------------------------------------------------------------- | ------------ | --------- |
+| intra-layer | `application.applicationcollaboration.hexagonal-port-adapter-wiring` | `depends-on` | outbound  |
+
+### LLM Provider Request {#llm-provider-request}
+
+**ID**: `application.applicationinteraction.llm-provider-request`
+
+**Type**: `applicationinteraction`
+
+Request-reply interaction pattern between the Pipeline Service and LLM providers (OpenAI, Anthropic) routed through the LLM Provider Router
+
+#### Attributes
+
+| Name    | Value         |
+| ------- | ------------- |
+| pattern | request-reply |
+
+#### Relationships
+
+| Type        | Related Element                                                      | Predicate    | Direction |
+| ----------- | -------------------------------------------------------------------- | ------------ | --------- |
+| intra-layer | `application.applicationcollaboration.hexagonal-port-adapter-wiring` | `depends-on` | outbound  |
+
+### REST API Interface {#rest-api-interface}
+
+**ID**: `application.applicationinterface.rest-api-interface`
+
+**Type**: `applicationinterface`
+
+HTTP REST interface exposed by FastAPI, providing all routes for ontology management, graph analysis, extraction, versioning, pipeline, and admin operations
+
+#### Attributes
+
+| Name     | Value |
+| -------- | ----- |
+| protocol | REST  |
+
+#### Relationships
+
+| Type        | Related Element                                                      | Predicate    | Direction |
+| ----------- | -------------------------------------------------------------------- | ------------ | --------- |
+| intra-layer | `application.applicationcollaboration.hexagonal-port-adapter-wiring` | `depends-on` | inbound   |
+| intra-layer | `application.applicationservice.ontology-service`                    | `depends-on` | outbound  |
+| intra-layer | `application.applicationprocess.background-task-executor`            | `depends-on` | inbound   |
+
+### Alembic Migration Runner {#alembic-migration-runner}
+
+**ID**: `application.applicationprocess.alembic-migration-runner`
+
+**Type**: `applicationprocess`
+
+Database schema migration process managed by Alembic, runs on application startup to apply pending migrations to local.db and operations.db
+
+#### Relationships
+
+| Type        | Related Element                                                      | Predicate    | Direction |
+| ----------- | -------------------------------------------------------------------- | ------------ | --------- |
+| intra-layer | `application.applicationcollaboration.hexagonal-port-adapter-wiring` | `depends-on` | outbound  |
+
+### Background Task Executor {#background-task-executor}
+
+**ID**: `application.applicationprocess.background-task-executor`
+
+**Type**: `applicationprocess`
+
+Asynchronous background task executor that processes long-running operations (graph builds, extraction runs, sync operations) off the request thread
+
+#### Relationships
+
+| Type        | Related Element                                           | Predicate    | Direction |
+| ----------- | --------------------------------------------------------- | ------------ | --------- |
+| intra-layer | `application.applicationevent.changeset-merged-event`     | `triggers`   | inbound   |
+| intra-layer | `application.applicationevent.extraction-completed-event` | `triggers`   | inbound   |
+| intra-layer | `application.applicationevent.graph-invalidated-event`    | `triggers`   | inbound   |
+| intra-layer | `application.applicationevent.ontology-changed-event`     | `triggers`   | inbound   |
+| intra-layer | `application.applicationevent.pipeline-executed-event`    | `triggers`   | inbound   |
+| intra-layer | `application.applicationevent.sync-completed-event`       | `triggers`   | inbound   |
+| intra-layer | `application.applicationinterface.rest-api-interface`     | `depends-on` | outbound  |
+
+### Reference Data Import Process {#reference-data-import-process}
+
+**ID**: `application.applicationprocess.reference-data-import-process`
+
+**Type**: `applicationprocess`
+
+Batch import process for loading external reference data from ConceptNet, DBpedia, schema.org into reference.db
+
+#### Relationships
+
+| Type        | Related Element                                                      | Predicate    | Direction |
+| ----------- | -------------------------------------------------------------------- | ------------ | --------- |
+| intra-layer | `application.applicationcollaboration.hexagonal-port-adapter-wiring` | `depends-on` | outbound  |
 
 ### Admin Service {#admin-service}
 
@@ -990,7 +1289,9 @@ Domain service for system administration — aggregates health checks from metri
 | inter-layer | `technology.systemsoftware.react`                                   | `realizes`   | inbound   |
 | inter-layer | `technology.systemsoftware.tan-stack-query`                         | `realizes`   | inbound   |
 | inter-layer | `technology.systemsoftware.tan-stack-router`                        | `realizes`   | inbound   |
+| inter-layer | `technology.systemsoftware.tan-stack-table`                         | `realizes`   | inbound   |
 | inter-layer | `technology.systemsoftware.uvicorn`                                 | `realizes`   | inbound   |
+| inter-layer | `technology.systemsoftware.zustand`                                 | `realizes`   | inbound   |
 | inter-layer | `ux.view.admin-view`                                                | `serves`     | inbound   |
 | inter-layer | `ux.view.configuration-view`                                        | `serves`     | inbound   |
 | intra-layer | `application.applicationcomponent.json-file-config-store`           | `realizes`   | inbound   |
@@ -1018,11 +1319,13 @@ Domain service orchestrating four-layer knowledge extraction pipeline (KG contex
 | inter-layer | `api.operation.analyze-text`                                              | `references`     | inbound   |
 | inter-layer | `api.operation.enrich-from-references`                                    | `references`     | inbound   |
 | inter-layer | `api.operation.extract-entities`                                          | `references`     | inbound   |
+| inter-layer | `api.operation.extract-triples`                                           | `references`     | inbound   |
 | inter-layer | `api.operation.get-reference-relations`                                   | `references`     | inbound   |
 | inter-layer | `api.operation.get-reference-status`                                      | `references`     | inbound   |
 | inter-layer | `api.operation.search-references`                                         | `references`     | inbound   |
 | inter-layer | `data-store.storedlogic.sqlite-vec-cosine-similarity`                     | `serves`         | inbound   |
 | inter-layer | `technology.systemsoftware.httpx`                                         | `realizes`       | inbound   |
+| inter-layer | `technology.systemsoftware.hugging-face-datasets`                         | `realizes`       | inbound   |
 | inter-layer | `technology.systemsoftware.sentence-transformers`                         | `realizes`       | inbound   |
 | inter-layer | `technology.systemsoftware.spa-cy`                                        | `realizes`       | inbound   |
 | inter-layer | `ux.view.rag-experiments-view`                                            | `serves`         | inbound   |
@@ -1079,6 +1382,7 @@ Read-only domain service for knowledge graph analytics — builds in-memory Netw
 | inter-layer | `api.operation.get-subgraph-by-depth`                             | `references`     | inbound   |
 | inter-layer | `api.operation.get-subgraph`                                      | `references`     | inbound   |
 | inter-layer | `technology.systemsoftware.rdflib`                                | `realizes`       | inbound   |
+| inter-layer | `technology.systemsoftware.reagraph`                              | `realizes`       | inbound   |
 | intra-layer | `application.applicationcomponent.network-x-graph-engine-adapter` | `realizes`       | inbound   |
 | intra-layer | `application.applicationcomponent.rdflib-query-engine-adapter`    | `realizes`       | inbound   |
 | intra-layer | `application.applicationfunction.network-metrics-function`        | `delivers-value` | inbound   |
@@ -1158,6 +1462,7 @@ Core domain service managing the full ontology lifecycle — create/read/update/
 | inter-layer | `api.operation.get-individual-inherited-properties`           | `references` | inbound   |
 | inter-layer | `api.operation.get-individual`                                | `references` | inbound   |
 | inter-layer | `api.operation.get-property-definition`                       | `references` | inbound   |
+| inter-layer | `api.operation.get-publish-diff-stats`                        | `references` | inbound   |
 | inter-layer | `api.operation.get-relationship`                              | `references` | inbound   |
 | inter-layer | `api.operation.get-taxonomy`                                  | `references` | inbound   |
 | inter-layer | `api.operation.list-classes`                                  | `references` | inbound   |
@@ -1167,6 +1472,7 @@ Core domain service managing the full ontology lifecycle — create/read/update/
 | inter-layer | `api.operation.list-relationships`                            | `references` | inbound   |
 | inter-layer | `api.operation.list-taxonomies`                               | `references` | inbound   |
 | inter-layer | `api.operation.move-class`                                    | `references` | inbound   |
+| inter-layer | `api.operation.publish-taxonomy`                              | `references` | inbound   |
 | inter-layer | `api.operation.remove-parent-class-from-individual`           | `references` | inbound   |
 | inter-layer | `api.operation.reorder-individual-classes`                    | `references` | inbound   |
 | inter-layer | `api.operation.update-class`                                  | `references` | inbound   |
@@ -1176,7 +1482,9 @@ Core domain service managing the full ontology lifecycle — create/read/update/
 | inter-layer | `api.operation.update-taxonomy`                               | `references` | inbound   |
 | inter-layer | `technology.systemsoftware.fast-api`                          | `realizes`   | inbound   |
 | inter-layer | `technology.systemsoftware.pydantic`                          | `realizes`   | inbound   |
+| inter-layer | `technology.systemsoftware.python-multipart`                  | `realizes`   | inbound   |
 | inter-layer | `technology.systemsoftware.python`                            | `realizes`   | inbound   |
+| inter-layer | `technology.systemsoftware.tan-stack-form`                    | `realizes`   | inbound   |
 | inter-layer | `technology.systemsoftware.uvicorn`                           | `realizes`   | inbound   |
 | inter-layer | `ux.view.classes-view`                                        | `serves`     | inbound   |
 | inter-layer | `ux.view.concept-schemes-view`                                | `serves`     | inbound   |
@@ -1189,6 +1497,7 @@ Core domain service managing the full ontology lifecycle — create/read/update/
 | intra-layer | `application.applicationcomponent.in-process-event-publisher` | `realizes`   | inbound   |
 | intra-layer | `application.applicationcomponent.sqlite-ontology-repository` | `realizes`   | inbound   |
 | intra-layer | `application.applicationcomponent.sqlite-persistence-adapter` | `realizes`   | inbound   |
+| intra-layer | `application.applicationinterface.rest-api-interface`         | `depends-on` | inbound   |
 | intra-layer | `application.applicationservice.extraction-service`           | `depends-on` | inbound   |
 | intra-layer | `application.applicationservice.graph-analysis-service`       | `depends-on` | inbound   |
 | intra-layer | `application.applicationservice.import-run-service`           | `depends-on` | inbound   |
@@ -1272,6 +1581,7 @@ Unified domain service for change history, changeset lifecycle (WORKING→STAGED
 | inter-layer | `api.operation.submit-proposal`                             | `references` | inbound   |
 | inter-layer | `technology.systemsoftware.boto3`                           | `realizes`   | inbound   |
 | inter-layer | `technology.systemsoftware.duck-db`                         | `realizes`   | inbound   |
+| inter-layer | `technology.systemsoftware.pyarrow`                         | `realizes`   | inbound   |
 | inter-layer | `technology.systemsoftware.python`                          | `realizes`   | inbound   |
 | intra-layer | `application.applicationcomponent.duck-db-sync-adapter`     | `realizes`   | inbound   |
 | intra-layer | `application.applicationcomponent.no-op-sync-adapter`       | `realizes`   | inbound   |
@@ -1285,4 +1595,4 @@ Unified domain service for change history, changeset lifecycle (WORKING→STAGED
 
 ---
 
-Generated: 2026-05-10T11:56:49.462Z | Model Version: 0.1.0
+Generated: 2026-05-11T12:10:16.880Z | Model Version: 0.1.0

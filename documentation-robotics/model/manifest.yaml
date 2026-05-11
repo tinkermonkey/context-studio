@@ -3,7 +3,7 @@ schema: documentation-robotics-v1
 cli_version: 0.1.3
 spec_version: 0.8.4
 created: 2026-03-23T12:18:08.630Z
-updated: 2026-05-10T11:56:49.460Z
+updated: 2026-05-11T12:10:16.878Z
 project:
   name: Context Studio
   description: Local-first knowledge graph application for RAG and communication
@@ -52,8 +52,13 @@ layers:
     path: documentation-robotics/model/04_application/
     enabled: true
     elements:
+      applicationcollaboration: 1
       applicationcomponent: 29
+      applicationevent: 6
       applicationfunction: 4
+      applicationinteraction: 3
+      applicationinterface: 1
+      applicationprocess: 3
       applicationservice: 7
   technology:
     order: 5
@@ -62,7 +67,7 @@ layers:
     enabled: true
     elements:
       communicationnetwork: 1
-      systemsoftware: 21
+      systemsoftware: 29
       technologycollaboration: 1
       technologyevent: 1
       technologyinteraction: 1
@@ -74,10 +79,10 @@ layers:
     elements:
       info: 1
       openapidocument: 1
-      operation: 98
+      operation: 101
       ratelimit: 1
-      requestbody: 34
-      response: 55
+      requestbody: 36
+      response: 57
       securityscheme: 1
   data-model:
     order: 7
@@ -129,10 +134,10 @@ layers:
     enabled: true
     elements:
       alert: 3
-      metricinstrument: 3
-      span: 2
       logconfiguration: 1
       logprocessor: 1
+      metricinstrument: 3
+      span: 2
   testing:
     order: 12
     name: Testing
@@ -144,7 +149,9 @@ layers:
       inputspacepartition: 1
       outcomecategory: 2
       testcoveragetarget: 14
+      testcoveragemodel: 1
+      coveragerequirement: 3
 changeset_history:
-  - name: backend-gap-fill
-    committed_at: 2026-05-10T11:56:49.459Z
+  - name: testing-layer-completeness
+    committed_at: 2026-05-11T12:10:16.878Z
     action: committed
