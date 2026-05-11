@@ -35,15 +35,11 @@ export const COPY = {
   ALL_SUGGESTIONS_REVIEWED: "All suggestions reviewed",
   APPROVE_BUTTON: "Approve",
   REJECT_BUTTON: "Reject",
-  LINK_BUTTON: "Link",
   APPROVE_ALL_BUTTON: "Approve All",
   REJECT_ALL_BUTTON: "Reject All",
-  SEARCH_CLASSES_PLACEHOLDER: "Search classes...",
-  NO_CLASSES_FOUND: "No classes found",
 
   // Entity Review Toast Messages
   ENTITY_REJECTED: "Entity rejected",
-  ENTITY_LINKED: "Link recorded locally. API persistence coming soon.",
   NO_CONCEPT_SCHEME: "No concept scheme available for creating classes",
   CLASS_CREATED: "Created class: ",
   CLASS_CREATION_FAILED: "Failed to create class: ",

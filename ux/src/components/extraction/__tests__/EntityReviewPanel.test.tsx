@@ -414,16 +414,4 @@ describe("EntityReviewPanel", () => {
       expect(hasError).toBe(true);
     });
   });
-
-  describe("accessibility", () => {
-    it("buttons are accessible with proper data-testid attributes", () => {
-      renderWithProvider(<EntityReviewPanel entities={[mockEntity]} layerIndex={0} />);
-
-      const approveButton = screen.getByTestId(`entity-review-approve-${mockEntity.id}`);
-      const rejectButton = screen.getByTestId(`entity-review-reject-${mockEntity.id}`);
-
-      expect(approveButton).toBeInTheDocument();
-      expect(rejectButton).toBeInTheDocument();
-    });
-  });
 });

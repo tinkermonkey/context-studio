@@ -224,7 +224,9 @@ export function EntityReviewPanel({
 
   // Error state: if either query failed, show error banner
   if (classesError || schemesError) {
-    const failedQuery = classesError ? "classes" : "concept schemes";
+    const failedQuery = classesError && schemesError
+      ? "classes and concept schemes"
+      : classesError ? "classes" : "concept schemes";
     return (
       <div data-testid={`entity-review-panel-${layerIndex}`}>
         <Panel title={`${COPY.ENTITY_REVIEW_PANEL_TITLE} — ${layerName}`}>
@@ -255,7 +257,6 @@ export function EntityReviewPanel({
                 <Skeleton width="200px" height="32px" />
                 <Skeleton width="60px" height="24px" />
                 <div style={{ marginLeft: "auto" }} className="flex-gap-sm">
-                  <Skeleton width="60px" height="28px" />
                   <Skeleton width="60px" height="28px" />
                   <Skeleton width="60px" height="28px" />
                 </div>
