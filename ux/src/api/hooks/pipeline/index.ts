@@ -66,6 +66,9 @@ export function useExecutePipeline() {
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.pipelineExecutions(id),
       });
+      queryClient.invalidateQueries({
+        queryKey: ["all-pipeline-executions"],
+      });
     },
   });
 }

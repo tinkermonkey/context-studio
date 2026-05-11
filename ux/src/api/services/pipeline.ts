@@ -46,7 +46,7 @@ class PipelineService extends BaseService {
     offset?: number,
   ): Promise<components["schemas"]["ListResponse_ExecutionWithPipelineResponse_"]> {
     const params = new URLSearchParams();
-    if (status) params.append("status", status);
+    if (status) params.append("status_filter", status);
     if (limit != null) params.append("limit", limit.toString());
     if (offset != null) params.append("offset", offset.toString());
 

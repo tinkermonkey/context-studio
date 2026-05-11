@@ -22,6 +22,7 @@ sys.path.append(
 
 import pytest
 import tempfile
+import time
 from pathlib import Path
 from uuid import uuid4
 
@@ -1009,7 +1010,6 @@ class TestListAllPipelineExecutions:
         pipeline_id = create_response.json()["id"]
 
         # Execute pipeline twice with a small delay
-        import time
         exec_ids = []
         for i in range(2):
             response = client.post(

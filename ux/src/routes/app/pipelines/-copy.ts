@@ -61,47 +61,6 @@ export const COPY = {
   PAGINATION_PREVIOUS: "Previous",
   PAGINATION_NEXT: "Next",
 
-  // Pipeline Flavors Page
-  FLAVORS_PAGE_TITLE: "Pipeline Flavors",
-  NEW_FLAVOR_BUTTON: "+ New flavor",
-  NO_FLAVORS_TITLE: "No flavors yet",
-  NO_FLAVORS_DESCRIPTION: "Create a pipeline flavor to get started.",
-  CREATE_A_FLAVOR_CTA: "Create a flavor",
-  FLAVORS_LOAD_ERROR: "Failed to load pipeline flavors",
-  RUNS_LOAD_ERROR: "Failed to load pipeline runs",
-  NO_FLAVORS_FILTERED_TITLE: "No flavors match your search",
-  NO_FLAVORS_FILTERED_DESCRIPTION: "Try adjusting your search criteria.",
-
-  // Flavor Table columns
-  FLAVOR_ID_HEADER: "ID",
-  FLAVOR_NAME_HEADER: "Name",
-  FLAVOR_DESCRIPTION_HEADER: "Description",
-  FLAVOR_STEPS_HEADER: "Steps",
-  FLAVOR_UPDATED_HEADER: "Updated",
-
-  // Flavor Modal/Drawer
-  CREATE_FLAVOR_MODAL_TITLE: "Create Pipeline Flavor",
-  EDIT_FLAVOR_MODAL_TITLE: "Edit Pipeline Flavor",
-  DELETE_FLAVOR_TITLE: "Delete Flavor",
-  FLAVOR_CREATE_ERROR: "Failed to create flavor",
-  FLAVOR_UPDATE_ERROR: "Failed to update flavor",
-  FLAVOR_DELETE_CONFIRM_MESSAGE: (flavorName: string) =>
-    `Are you sure you want to delete "${flavorName}"? This cannot be undone.`,
-  DELETE_CONFIRM_LABEL: "Delete",
-  CANCEL_LABEL: "Cancel",
-
-  // Flavor Drawer
-  FLAVOR_DRAWER_ID_LABEL: "ID",
-  FLAVOR_DRAWER_NAME_LABEL: "Name",
-  FLAVOR_DRAWER_DESCRIPTION_LABEL: "Description",
-  FLAVOR_DRAWER_STEP_COUNT_LABEL: "Step Count",
-  FLAVOR_DRAWER_CREATED_LABEL: "Created",
-  FLAVOR_DRAWER_UPDATED_LABEL: "Updated",
-  FLAVOR_CREATE_PIPELINE_BUTTON: "Create Pipeline",
-  FLAVOR_CREATE_PIPELINE_CREATING: "Creating...",
-  FLAVOR_EDIT_BUTTON: "Edit",
-  FLAVOR_DELETE_BUTTON: "Delete",
-
   // Toast messages
   PIPELINE_COMPLETED: (title: string) => `Pipeline '${title}' completed`,
   PIPELINE_FAILED: (title: string) => `Pipeline '${title}' failed`,
@@ -110,12 +69,5 @@ export const COPY = {
   PIPELINE_CONFIG_SAVE_ERROR: "Failed to save configuration",
   AUTOSAVE_FAILED: (error: string) => `Autosave failed: ${error}`,
   ERROR_COPIED: "Error copied to clipboard",
-
-  FLAVOR_CREATED: (name: string) => `Created flavor "${name}"`,
-  FLAVOR_DELETED: (name: string) => `Deleted flavor "${name}"`,
-  FLAVOR_DELETE_ERROR: (error: string) => `Failed to delete flavor: ${error}`,
-  FLAVOR_PIPELINE_CREATED: (name: string) => `Created pipeline from flavor "${name}"`,
-  FLAVOR_PIPELINE_CREATE_ERROR: (error: string) => `Failed to create pipeline: ${error}`,
-  FLAVOR_UPDATED: (name: string) => `Updated flavor "${name}"`,
   CLIPBOARD_COPY_ERROR: "Failed to copy error message",
 } as const;
