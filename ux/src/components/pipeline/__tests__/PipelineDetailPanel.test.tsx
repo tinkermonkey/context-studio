@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/api/utils/queryClient";
 import { PipelineDetailPanel } from "../PipelineDetailPanel";
 import * as pipelineHooks from "@/api/hooks/pipeline";
+import { useAutosave } from "@/hooks/useAutosave";
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 
 vi.mock("@/api/hooks/pipeline");
@@ -72,6 +73,14 @@ describe("PipelineDetailPanel", () => {
       isPending: false,
       status: "idle",
     } as any);
+
+    vi.mocked(useAutosave).mockReturnValue({
+      status: "idle",
+      lastSavedAt: null,
+      lastError: null,
+      save: vi.fn(),
+      isLoading: false,
+    });
   });
 
   afterEach(() => {

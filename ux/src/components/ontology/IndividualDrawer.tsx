@@ -221,7 +221,7 @@ export function IndividualDrawer({
       setDescription(individual.description || "");
       lastSavedAtRef.current = null;
     }
-  }, [individual?.id, individual?.version]);
+  }, [individual]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
