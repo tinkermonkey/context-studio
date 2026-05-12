@@ -116,7 +116,7 @@ export function EditConfigModal({
     >
       <div className="stack-lg">
         {errors._form && (
-          <div style={{ color: "var(--error-fg)", fontSize: "14px" }}>{errors._form}</div>
+          <div className="form-error">{errors._form}</div>
         )}
 
         {fields.map((field) => (

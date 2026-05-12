@@ -1689,7 +1689,6 @@ select.input {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  cursor: pointer;
 }
 .config-tile:hover {
   border-color: var(--canvas-bd-2);

@@ -20,12 +20,8 @@ function SettingsPage() {
   const [openSection, setOpenSection] = useState<string | null>(null);
 
   const handleUpdateSection = async (section: string, updates: { [key: string]: unknown }) => {
-    try {
-      await updateMutation.mutateAsync({ section, data: { updates } });
-      toast("success", `${section} settings updated`);
-    } catch (error) {
-      throw error;
-    }
+    await updateMutation.mutateAsync({ section, data: { updates } });
+    toast("success", `${section} settings updated`);
   };
 
   if (isLoading) {
