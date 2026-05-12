@@ -24,16 +24,14 @@ function SettingsPage() {
       await updateMutation.mutateAsync({ section, data: { updates } });
       toast("success", `${section} settings updated`);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to update settings";
-      toast("error", message);
       throw error;
     }
   };
 
   if (isLoading) {
     return (
-      <div style={{ padding: "var(--space-6)" }}>
-        <div style={{ marginBottom: "var(--space-6)" }}>
+      <div data-testid="settings-page">
+        <div className="page-head">
           <Skeleton height={60} width={400} />
           <Skeleton height={20} width={300} style={{ marginTop: "8px" }} />
         </div>
@@ -169,9 +167,9 @@ function SettingsPage() {
     (Array.isArray(sections.reference_sources) ? sections.reference_sources.length : 0) || 0;
 
   return (
-    <div style={{ padding: "var(--space-6)" }} data-testid="settings-page">
+    <div data-testid="settings-page">
       {/* Page Header */}
-      <div className="page-head" style={{ marginBottom: "var(--space-6)" }}>
+      <div className="page-head">
         <div>
           <h1>Settings</h1>
           <p>Configure application settings and external integrations</p>
@@ -191,7 +189,7 @@ function SettingsPage() {
               {workspaceConfig.path ? (
                 <>
                   <br />
-                  <span style={{ fontSize: "10px", color: "var(--canvas-fg-4)" }}>
+                  <span className="config-tile-meta">
                     {String(workspaceConfig.path)}
                   </span>
                 </>
@@ -210,13 +208,17 @@ function SettingsPage() {
           description="Language model configuration"
           summary={
             <span>
-              {String(llmConfig.provider || "Not configured")
-                .charAt(0)
-                .toUpperCase() + String(llmConfig.provider || "not").slice(1)}
-              <br />
-              <span style={{ fontSize: "10px", color: "var(--canvas-fg-4)" }}>
-                {String(llmConfig.model || "Not configured")}
-              </span>
+              {llmConfig.provider ? (
+                <>
+                  {String(llmConfig.provider).charAt(0).toUpperCase() + String(llmConfig.provider).slice(1)}
+                  <br />
+                  <span className="config-tile-meta">
+                    {String(llmConfig.model || "Not configured")}
+                  </span>
+                </>
+              ) : (
+                "Not configured"
+              )}
             </span>
           }
           testid="config-tile-llm"
@@ -235,7 +237,7 @@ function SettingsPage() {
               {embeddingConfig.vector_dimensions ? (
                 <>
                   <br />
-                  <span style={{ fontSize: "10px", color: "var(--canvas-fg-4)" }}>
+                  <span className="config-tile-meta">
                     {String(embeddingConfig.vector_dimensions)} dimensions
                   </span>
                 </>

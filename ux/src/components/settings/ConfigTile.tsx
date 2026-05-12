@@ -31,12 +31,12 @@ export function ConfigTile({
   };
 
   return (
-    <div className="config-tile" data-testid={testid}>
+    <div className="config-tile" data-testid={testid} role="region" aria-label={title}>
       <div className="head">
         <div className="icon">
           <Icon size={18} />
         </div>
-        <div style={{ flex: 1 }}>
+        <div className="config-tile-content">
           <div className="title">{title}</div>
           <div className="desc">{description}</div>
         </div>
@@ -45,7 +45,7 @@ export function ConfigTile({
       <div className="meta">{summary}</div>
 
       {(onEdit || onNavigate) && (
-        <div style={{ marginTop: "4px" }}>
+        <div className="config-tile-actions">
           <Button
             variant="ghost"
             size="sm"
@@ -55,6 +55,7 @@ export function ConfigTile({
             }}
             disabled={isLoading}
             data-testid={`${testid}-button`}
+            aria-label={`${onNavigate ? "Manage" : "Edit"} ${title}`}
           >
             {onNavigate ? "Manage" : "Edit"}
           </Button>

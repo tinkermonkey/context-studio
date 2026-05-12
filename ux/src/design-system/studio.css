@@ -1732,6 +1732,16 @@ select.input {
   gap: 12px;
   flex-wrap: wrap;
 }
+.config-tile-meta {
+  font-size: 10px;
+  color: var(--canvas-fg-4);
+}
+.config-tile-content {
+  flex: 1;
+}
+.config-tile-actions {
+  margin-top: 4px;
+}
 
 /* ------------ Command palette ------------ */
 .palette-backdrop {

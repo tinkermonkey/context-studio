@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Input, Select } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
@@ -38,16 +38,25 @@ export function EditConfigModal({
   const [formState, setFormState] = useState<{ [key: string]: unknown }>(values);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSaving, setIsSaving] = useState(false);
+  const clearedSensitiveFields = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     setFormState(values);
     setErrors({});
+    clearedSensitiveFields.current = new Set();
   }, [values, open]);
 
   const handleChange = (key: string, value: unknown) => {
     setFormState((prev) => ({ ...prev, [key]: value }));
     if (errors[key]) {
       setErrors((prev) => ({ ...prev, [key]: "" }));
+    }
+  };
+
+  const handleSensitiveFieldFocus = (key: string) => {
+    if (!clearedSensitiveFields.current.has(key) && formState[key]) {
+      clearedSensitiveFields.current.add(key);
+      setFormState((prev) => ({ ...prev, [key]: "" }));
     }
   };
 
@@ -82,7 +91,7 @@ export function EditConfigModal({
   };
 
   const footer = (
-    <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+    <div className="form-actions">
       <Button variant="ghost" onClick={onClose} disabled={isSaving}>
         Cancel
       </Button>
@@ -105,14 +114,14 @@ export function EditConfigModal({
       size={section === "llmprovider" ? "lg" : "md"}
       footer={footer}
     >
-      <div className="stack" style={{ gap: "16px" }}>
+      <div className="stack-lg">
         {errors._form && (
           <div style={{ color: "var(--error-fg)", fontSize: "14px" }}>{errors._form}</div>
         )}
 
         {fields.map((field) => (
           <div key={field.key}>
-            <label style={{ fontSize: "13px", fontWeight: 500, marginBottom: "4px", display: "block" }}>
+            <label className="form-group-label">
               {field.label}
               {field.required && <span style={{ color: "var(--error-fg)" }}>*</span>}
             </label>
@@ -123,6 +132,8 @@ export function EditConfigModal({
                 onChange={(e) => handleChange(field.key, e.target.value)}
                 disabled={field.readOnly || isSaving}
                 data-testid={`${section.toLowerCase()}-${field.key}-select`}
+                aria-label={field.label}
+                aria-required={field.required}
               >
                 <option value="">Select an option</option>
                 {field.options.map((opt) => (
@@ -133,23 +144,24 @@ export function EditConfigModal({
               </Select>
             ) : (
               <Input
-                type={field.type || "text"}
-                placeholder={field.placeholder}
-                value={
-                  field.sensitive && formState[field.key]
-                    ? "••••••••"
-                    : String(formState[field.key] || "")
-                }
+                type={field.sensitive ? "password" : (field.type || "text")}
+                placeholder={field.sensitive && formState[field.key] ? "Enter new value to replace existing" : field.placeholder}
+                value={String(formState[field.key] || "")}
                 onChange={(e) => handleChange(field.key, e.target.value)}
+                onFocus={() => field.sensitive && handleSensitiveFieldFocus(field.key)}
                 readOnly={field.readOnly}
                 disabled={isSaving}
                 mono={field.type === "password" || field.type === "email"}
                 data-testid={`${section.toLowerCase()}-${field.key}-input`}
+                aria-label={field.label}
+                aria-required={field.required}
+                aria-invalid={!!errors[field.key]}
+                aria-describedby={errors[field.key] ? `${field.key}-error` : undefined}
               />
             )}
 
             {errors[field.key] && (
-              <div style={{ fontSize: "12px", color: "var(--error-fg)", marginTop: "4px" }}>
+              <div className="field-error" id={`${field.key}-error`}>
                 {errors[field.key]}
               </div>
             )}
