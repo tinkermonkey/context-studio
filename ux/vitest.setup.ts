@@ -60,3 +60,26 @@ global.ResizeObserver = class ResizeObserver {
   unobserve(_target: Element) {}
   disconnect() {}
 };
+
+// Mock TanStack Router to provide synchronous rendering in tests
+vi.mock("@tanstack/react-router", async () => {
+  const actual = await vi.importActual("@tanstack/react-router");
+  return {
+    ...actual,
+    useNavigate: () => vi.fn(),
+    useRouter: () => ({
+      state: { status: "idle" },
+      navigate: vi.fn(),
+    }),
+    useRouterState: () => ({
+      location: { pathname: "/app" },
+      status: "idle",
+    }),
+    useSearch: () => ({}),
+    useMatch: () => ({
+      pathname: "/app",
+      params: {},
+      search: {},
+    }),
+  };
+});
