@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/Button";
+import { Chip } from "@/components/ui/Chip";
 import { useToasts } from "@/components/ui/Toast";
 import { useReferenceStatus } from "@/api/hooks/reference";
 import type { components } from "@/api/types";
@@ -31,15 +32,9 @@ export function ReferenceSourceDrawer({
     : "—";
 
   const statusLabel = source.available ? "Active" : "Inactive";
-  const statusBgColor = source.available
-    ? "var(--emerald-100, #d1fae5)"
-    : "var(--gray-100, #f3f4f6)";
-  const statusTextColor = source.available
-    ? "var(--emerald-800, #065f46)"
-    : "var(--gray-600, #4b5563)";
 
   return (
-    <div className="kv">
+    <div className="kv" data-testid="reference-source-drawer">
       <div className="kv-row">
         <div className="kv-label">Source</div>
         <div className="kv-value">{source.name}</div>
@@ -48,18 +43,9 @@ export function ReferenceSourceDrawer({
       <div className="kv-row">
         <div className="kv-label">Status</div>
         <div className="kv-value">
-          <span
-            style={{
-              backgroundColor: statusBgColor,
-              color: statusTextColor,
-              padding: "4px 8px",
-              borderRadius: "4px",
-              fontSize: "var(--text-xs)",
-              fontWeight: 500,
-            }}
-          >
+          <Chip color={source.available ? "emerald" : "gray"}>
             {statusLabel}
-          </span>
+          </Chip>
         </div>
       </div>
 
