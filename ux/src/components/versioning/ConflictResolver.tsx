@@ -333,7 +333,9 @@ export function ConflictResolver({ proposalId, onResolved }: ConflictResolverPro
 
   const resolveConflictsMutation = useResolveConflicts();
 
-  const conflicts = conflictReport?.conflicts || [];
+  const conflicts = useMemo(() => {
+    return conflictReport?.conflicts || [];
+  }, [conflictReport]);
 
   const uniqueEntityIds = useMemo(() => {
     return [...new Set(conflicts.map((c) => c.entity_id))];
