@@ -21,8 +21,14 @@ function SettingsPage() {
   const [openSection, setOpenSection] = useState<string | null>(null);
 
   const handleUpdateSection = async (section: string, updates: { [key: string]: unknown }) => {
-    await updateMutation.mutateAsync({ section, data: { updates } });
-    toast("success", COPY.settingsUpdatedSuccess(section));
+    try {
+      await updateMutation.mutateAsync({ section, data: { updates } });
+      toast("success", COPY.settingsUpdatedSuccess(section));
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : COPY.failedToSaveSettings;
+      toast("error", errorMsg);
+      throw error;
+    }
   };
 
   if (isLoading) {
