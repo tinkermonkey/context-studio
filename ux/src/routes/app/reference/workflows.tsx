@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreVertical, Settings } from "lucide-react";
+import { MoreVertical, Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -14,6 +14,7 @@ import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import { GroundingWorkflowDrawer } from "@/components/reference/GroundingWorkflowDrawer";
 import { GroundingWorkflowForm } from "@/components/reference/GroundingWorkflowForm";
 import { useToasts } from "@/components/ui/Toast";
+import { formatRelativeTime } from "@/utils/formatters";
 import {
   useGroundingWorkflows,
   useCreateGroundingWorkflow,
@@ -22,27 +23,6 @@ import type { GroundingWorkflowResponse, GroundingWorkflowCreate } from "@/api/s
 
 interface WorkflowsSearchParams {
   selected?: string;
-}
-
-function relativeTime(date: string | null | undefined): string {
-  if (!date) return "—";
-
-  const lastRunDate = new Date(date);
-  const now = new Date();
-  const diffMs = now.getTime() - lastRunDate.getTime();
-  const diffMins = Math.floor(diffMs / (1000 * 60));
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHours / 24);
-
-  if (diffMins < 1) {
-    return "just now";
-  } else if (diffMins < 60) {
-    return `${diffMins}m ago`;
-  } else if (diffHours < 24) {
-    return `${diffHours}h ago`;
-  } else {
-    return `${diffDays}d ago`;
-  }
 }
 
 interface WorkflowsPageContentProps {
@@ -131,11 +111,14 @@ function WorkflowsPageContent({
     {
       accessorKey: "last_run",
       header: "Last Run",
-      cell: (info) => (
-        <span className="muted-text" style={{ fontSize: "var(--text-xs)" }}>
-          {relativeTime(info.getValue() as string)}
-        </span>
-      ),
+      cell: (info) => {
+        const date = info.getValue() as string | null;
+        return (
+          <span className="muted-text" style={{ fontSize: "var(--text-xs)" }}>
+            {date ? formatRelativeTime(date) : "—"}
+          </span>
+        );
+      },
     },
   ];
 
@@ -268,7 +251,7 @@ function WorkflowsPageWrapper() {
       <div className="flex-between">
         <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>Grounding Workflows</h1>
         <Button variant="primary" onClick={handleCreateClick} data-testid="new-workflow-button">
-          <Settings size={16} style={{ marginRight: "var(--space-1)" }} />
+          <Plus size={16} style={{ marginRight: "var(--space-1)" }} />
           New Workflow
         </Button>
       </div>

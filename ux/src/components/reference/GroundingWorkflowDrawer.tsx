@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { useToasts } from "@/components/ui/Toast";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useUndoDelete } from "@/hooks/useUndoDelete";
 import {
   useGroundingWorkflow,
   useUpdateGroundingWorkflow,
@@ -27,10 +29,14 @@ export function GroundingWorkflowDrawer({
   const deleteMutation = useDeleteGroundingWorkflow();
   const runMutation = useRunGroundingWorkflow();
   const { toast } = useToasts();
+  const { performDelete, undo, deletedId } = useUndoDelete({
+    onDelete: deleteMutation.mutateAsync,
+  });
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(workflow?.title || "");
   const [isSaving, setIsSaving] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleNameChange = async (newName: string) => {
     if (!workflow || newName === workflow.title) {
@@ -63,17 +69,21 @@ export function GroundingWorkflowDrawer({
     }
   };
 
-  const handleDelete = () => {
-    if (confirm("Are you sure you want to delete this workflow? This cannot be undone.")) {
-      deleteMutation
-        .mutateAsync(workflowId)
-        .then(() => {
-          toast("success", "Workflow deleted");
-          onClose();
-        })
-        .catch((error) => {
-          toast("error", error instanceof Error ? error.message : "Failed to delete workflow");
-        });
+  const handleDeleteConfirm = async () => {
+    try {
+      await performDelete(workflowId);
+      toast(
+        "success",
+        "Workflow deleted",
+        undefined,
+        {
+          action: { label: "Undo", onAction: undo },
+          autoDismissMs: 8000,
+        },
+      );
+      onClose();
+    } catch (error) {
+      toast("error", error instanceof Error ? error.message : "Failed to delete workflow");
     }
   };
 
@@ -266,7 +276,7 @@ export function GroundingWorkflowDrawer({
           <Button
             variant="danger"
             size="sm"
-            onClick={handleDelete}
+            onClick={() => setShowDeleteConfirm(true)}
             disabled={deleteMutation.isPending}
             data-testid="workflow-delete-button"
           >
@@ -274,6 +284,17 @@ export function GroundingWorkflowDrawer({
           </Button>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        title="Delete Workflow"
+        message="Are you sure you want to delete this workflow? This action cannot be undone."
+        confirmLabel="Delete"
+        danger
+        onConfirm={handleDeleteConfirm}
+        isLoading={deleteMutation.isPending}
+      />
     </div>
   );
 }

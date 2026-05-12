@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { Chip } from "@/components/ui/Chip";
 import { useReferenceStatus, useClasses } from "@/api/hooks";
 import type { GroundingWorkflowCreate } from "@/api/services/reference";
 import type { components } from "@/api/types";
@@ -25,6 +26,7 @@ export function GroundingWorkflowForm({
   const [sourceError, setSourceError] = useState<string>();
   const [scopeError, setScopeError] = useState<string>();
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const dropdownContainerRef = useRef<HTMLDivElement>(null);
 
   const { data: statusResponse } = useReferenceStatus();
   const sources = statusResponse?.sources || [];
@@ -42,6 +44,24 @@ export function GroundingWorkflowForm({
   useEffect(() => {
     if (showClassOptions) {
       searchInputRef.current?.focus();
+    }
+  }, [showClassOptions]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownContainerRef.current &&
+        !dropdownContainerRef.current.contains(event.target as Node)
+      ) {
+        setShowClassOptions(false);
+      }
+    };
+
+    if (showClassOptions) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
     }
   }, [showClassOptions]);
 
@@ -76,6 +96,7 @@ export function GroundingWorkflowForm({
     setSelectedClassIds((prev) => [...prev, classId]);
     setSearchQuery("");
     setShowClassOptions(false);
+    setScopeError(undefined);
   };
 
   const handleRemoveClass = (classId: string) => {
@@ -177,18 +198,13 @@ export function GroundingWorkflowForm({
                 <div
                   key={cls.id}
                   style={{
-                    padding: "4px 8px",
-                    background: "var(--violet-100)",
-                    borderRadius: "var(--radius-sm)",
                     display: "flex",
                     alignItems: "center",
                     gap: "var(--space-1)",
-                    fontSize: "var(--text-sm)",
-                    color: "var(--violet-900)",
                   }}
                   data-testid={`workflow-class-chip-${cls.id}`}
                 >
-                  <span>{cls.title}</span>
+                  <Chip color="violet">{cls.title}</Chip>
                   <button
                     type="button"
                     onClick={() => {
@@ -200,10 +216,11 @@ export function GroundingWorkflowForm({
                       border: "none",
                       cursor: "pointer",
                       padding: 0,
-                      color: "var(--violet-700)",
+                      color: "var(--canvas-fg-3)",
                       fontSize: "var(--text-sm)",
                     }}
                     data-testid={`workflow-class-remove-${cls.id}`}
+                    aria-label={`Remove ${cls.title}`}
                   >
                     ✕
                   </button>
@@ -212,7 +229,7 @@ export function GroundingWorkflowForm({
             </div>
           )}
 
-          <div style={{ position: "relative" }}>
+          <div style={{ position: "relative" }} ref={dropdownContainerRef}>
             <Input
               ref={searchInputRef}
               type="text"
