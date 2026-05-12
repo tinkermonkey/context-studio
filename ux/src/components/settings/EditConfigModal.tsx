@@ -116,9 +116,7 @@ export function EditConfigModal({
       footer={footer}
     >
       <div className="stack-lg">
-        {errors._form && (
-          <div className="form-error">{errors._form}</div>
-        )}
+        {errors._form && <div className="form-error">{errors._form}</div>}
 
         {fields.map((field) => (
           <div key={field.key}>
@@ -145,8 +143,12 @@ export function EditConfigModal({
               </Select>
             ) : (
               <Input
-                type={field.sensitive ? "password" : (field.type || "text")}
-                placeholder={field.sensitive && formState[field.key] ? COPY.sensitiveFieldPlaceholder : field.placeholder}
+                type={field.sensitive ? "password" : field.type || "text"}
+                placeholder={
+                  field.sensitive && formState[field.key]
+                    ? COPY.sensitiveFieldPlaceholder
+                    : field.placeholder
+                }
                 value={String(formState[field.key] || "")}
                 onChange={(e) => handleChange(field.key, e.target.value)}
                 onFocus={() => field.sensitive && handleSensitiveFieldFocus(field.key)}

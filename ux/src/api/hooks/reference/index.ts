@@ -51,8 +51,7 @@ export function useGroundingWorkflow(id: string) {
 export function useCreateGroundingWorkflow() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: GroundingWorkflowCreate) =>
-      referenceService.createGroundingWorkflow(data),
+    mutationFn: (data: GroundingWorkflowCreate) => referenceService.createGroundingWorkflow(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.groundingWorkflows });
     },

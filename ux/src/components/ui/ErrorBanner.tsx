@@ -93,7 +93,8 @@ export function ErrorBanner({
                 transition: "background 0.15s",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = "var(--rose-100, #ffe4e6)";
+                (e.currentTarget as HTMLButtonElement).style.background =
+                  "var(--rose-100, #ffe4e6)";
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.background = "transparent";

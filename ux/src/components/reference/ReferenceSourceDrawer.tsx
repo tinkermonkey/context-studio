@@ -11,10 +11,7 @@ interface ReferenceSourceDrawerProps {
   onClose: () => void;
 }
 
-export function ReferenceSourceDrawer({
-  source,
-  onClose: _onClose,
-}: ReferenceSourceDrawerProps) {
+export function ReferenceSourceDrawer({ source, onClose: _onClose }: ReferenceSourceDrawerProps) {
   const { refetch } = useReferenceStatus();
   const { toast } = useToasts();
 
@@ -43,9 +40,7 @@ export function ReferenceSourceDrawer({
       <div className="kv-row">
         <div className="kv-label">Status</div>
         <div className="kv-value">
-          <Chip color={source.available ? "emerald" : "gray"}>
-            {statusLabel}
-          </Chip>
+          <Chip color={source.available ? "emerald" : "gray"}>{statusLabel}</Chip>
         </div>
       </div>
 

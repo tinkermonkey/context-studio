@@ -524,7 +524,9 @@ export function ConflictResolver({ proposalId, onResolved }: ConflictResolverPro
           onClick={handleApplyResolutions}
           disabled={!allConflictsResolved || resolveConflictsMutation.isPending}
         >
-          {resolveConflictsMutation.isPending ? COPY.applyingResolutionsButton : COPY.applyResolutionsButton}
+          {resolveConflictsMutation.isPending
+            ? COPY.applyingResolutionsButton
+            : COPY.applyResolutionsButton}
         </Button>
       </div>
     </div>

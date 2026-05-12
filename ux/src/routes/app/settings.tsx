@@ -139,8 +139,12 @@ function SettingsPage() {
     },
     {
       key: "path",
-      label: syncConfig.target_type === "s3" ? COPY.syncTargetS3BucketLabel : COPY.syncTargetPathLabel,
-      placeholder: syncConfig.target_type === "s3" ? COPY.syncTargetS3BucketPlaceholder : COPY.syncTargetPathPlaceholder,
+      label:
+        syncConfig.target_type === "s3" ? COPY.syncTargetS3BucketLabel : COPY.syncTargetPathLabel,
+      placeholder:
+        syncConfig.target_type === "s3"
+          ? COPY.syncTargetS3BucketPlaceholder
+          : COPY.syncTargetPathPlaceholder,
     },
     ...(syncConfig.target_type === "s3"
       ? [
@@ -186,9 +190,7 @@ function SettingsPage() {
               {workspaceConfig.path ? (
                 <>
                   <br />
-                  <span className="config-tile-meta">
-                    {String(workspaceConfig.path)}
-                  </span>
+                  <span className="config-tile-meta">{String(workspaceConfig.path)}</span>
                 </>
               ) : null}
             </span>
@@ -207,7 +209,8 @@ function SettingsPage() {
             <span>
               {llmConfig.provider ? (
                 <>
-                  {String(llmConfig.provider).charAt(0).toUpperCase() + String(llmConfig.provider).slice(1)}
+                  {String(llmConfig.provider).charAt(0).toUpperCase() +
+                    String(llmConfig.provider).slice(1)}
                   <br />
                   <span className="config-tile-meta">
                     {String(llmConfig.model || COPY.notConfigured)}
@@ -251,9 +254,7 @@ function SettingsPage() {
           icon={Type}
           title={COPY.nlpModelTileTitle}
           description={COPY.nlpModelTileDescription}
-          summary={
-            <span>{String(nlpConfig.model_name || COPY.notConfigured)}</span>
-          }
+          summary={<span>{String(nlpConfig.model_name || COPY.notConfigured)}</span>}
           testid="config-tile-nlp"
           onEdit={() => setOpenSection("nlp")}
           isLoading={isLoading}

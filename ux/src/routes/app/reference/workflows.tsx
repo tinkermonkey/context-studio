@@ -16,10 +16,7 @@ import { GroundingWorkflowForm } from "@/components/reference/GroundingWorkflowF
 import { useToasts } from "@/components/ui/Toast";
 import { formatRelativeTime } from "@/utils/formatters";
 import { COPY } from "./copy";
-import {
-  useGroundingWorkflows,
-  useCreateGroundingWorkflow,
-} from "@/api/hooks/reference";
+import { useGroundingWorkflows, useCreateGroundingWorkflow } from "@/api/hooks/reference";
 import type { GroundingWorkflowResponse, GroundingWorkflowCreate } from "@/api/services/reference";
 
 interface WorkflowsSearchParams {
@@ -103,8 +100,7 @@ function WorkflowsPageContent({
       header: COPY.workflowsTableHeaderStatus,
       cell: (info) => {
         const status = info.getValue() as string;
-        const statusColor =
-          status === "active" ? "emerald" : status === "error" ? "rose" : "gray";
+        const statusColor = status === "active" ? "emerald" : status === "error" ? "rose" : "gray";
 
         return <Chip color={statusColor}>{status}</Chip>;
       },
@@ -240,10 +236,7 @@ function WorkflowsPageWrapper() {
       handleSelectedIdChange(result.id);
       toast("success", COPY.workflowCreatedSuccess);
     } catch (error) {
-      toast(
-        "error",
-        error instanceof Error ? error.message : COPY.workflowCreateError,
-      );
+      toast("error", error instanceof Error ? error.message : COPY.workflowCreateError);
     }
   };
 

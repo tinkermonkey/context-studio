@@ -63,19 +63,16 @@ class VersioningService extends BaseService {
   }
 
   async getProposalConflicts(proposalId: string): Promise<ConflictReportResponse> {
-    return this.get<ConflictReportResponse>(
-      `/api/v1/versioning/proposals/${proposalId}/conflicts`,
-    );
+    return this.get<ConflictReportResponse>(`/api/v1/versioning/proposals/${proposalId}/conflicts`);
   }
 
   async resolveConflicts(
     proposalId: string,
     resolutions: Record<string, Record<string, unknown>>,
   ): Promise<ConflictReportResponse> {
-    return this.post<ConflictReportResponse>(
-      `/api/v1/versioning/proposals/${proposalId}/resolve`,
-      { resolutions },
-    );
+    return this.post<ConflictReportResponse>(`/api/v1/versioning/proposals/${proposalId}/resolve`, {
+      resolutions,
+    });
   }
 }
 

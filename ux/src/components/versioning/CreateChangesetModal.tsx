@@ -61,13 +61,11 @@ export function CreateChangesetModal({
   };
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title={COPY.createChangesetModalTitle}
-      size="md"
-    >
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+    <Modal open={open} onClose={onClose} title={COPY.createChangesetModalTitle} size="md">
+      <form
+        onSubmit={handleSubmit}
+        style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+      >
         {/* Info */}
         <p style={{ fontSize: "13px", color: "var(--canvas-fg-2)", margin: 0 }}>
           {COPY.createChangesetInfoPrefix}

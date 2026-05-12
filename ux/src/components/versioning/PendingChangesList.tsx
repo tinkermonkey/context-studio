@@ -44,11 +44,7 @@ function getOperationChip(operation: string) {
 }
 
 function getEntityTypeChip(entityType: string) {
-  return (
-    <span className="chip">
-      {entityType}
-    </span>
-  );
+  return <span className="chip">{entityType}</span>;
 }
 
 export function PendingChangesList({
@@ -71,9 +67,7 @@ export function PendingChangesList({
   }
 
   if (error) {
-    return (
-      <ErrorBanner error={error} onRetry={onRetry} message={COPY.noPendingChangesLoaded} />
-    );
+    return <ErrorBanner error={error} onRetry={onRetry} message={COPY.noPendingChangesLoaded} />;
   }
 
   if (changes.length === 0) {
@@ -152,9 +146,7 @@ export function PendingChangesList({
             padding: "12px",
             borderBottom: "1px solid var(--canvas-border)",
             alignItems: "center",
-            backgroundColor: selectedIds.has(change.id)
-              ? "var(--canvas-bg-2)"
-              : "var(--canvas-bg)",
+            backgroundColor: selectedIds.has(change.id) ? "var(--canvas-bg-2)" : "var(--canvas-bg)",
           }}
           data-testid={`pending-change-${change.id}`}
         >

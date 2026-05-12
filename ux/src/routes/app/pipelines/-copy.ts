@@ -10,7 +10,8 @@ export const COPY = {
 
   // Pipelines empty/error states
   PIPELINES_LOAD_ERROR: "Failed to load pipelines",
-  EXECUTIONS_LOAD_ERROR: "Failed to load execution history. Pipeline status indicators may be inaccurate.",
+  EXECUTIONS_LOAD_ERROR:
+    "Failed to load execution history. Pipeline status indicators may be inaccurate.",
   NO_PIPELINES_TITLE: "No pipelines yet",
   NO_PIPELINES_DESCRIPTION:
     "Create your first pipeline to get started with extraction and processing.",

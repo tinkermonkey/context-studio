@@ -34,7 +34,8 @@ export const COPY = {
 
   // Workflows empty states
   workflowsEmptyStateTitle: "No grounding workflows",
-  workflowsEmptyStateDescription: "Create your first grounding workflow to enrich extracted entities",
+  workflowsEmptyStateDescription:
+    "Create your first grounding workflow to enrich extracted entities",
   workflowsFilteredEmptyTitle: "No workflows match your search",
   workflowsFilteredEmptyDescription: "Try a different search term",
 

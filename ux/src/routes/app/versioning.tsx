@@ -60,10 +60,7 @@ export function VersioningPage() {
               }}
             />
           ) : (
-            <EmptyState
-              title={COPY.noProposalSelected}
-              description={COPY.selectProposalMessage}
-            />
+            <EmptyState title={COPY.noProposalSelected} description={COPY.selectProposalMessage} />
           )}
         </div>
       )}

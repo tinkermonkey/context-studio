@@ -31,9 +31,7 @@ describe("Versioning Page", () => {
   describe("page structure", () => {
     it("renders versioning page root", async () => {
       server.use(
-        rest.get("*/api/v1/versioning/changesets", (req, res, ctx) =>
-          res(ctx.json([])),
-        ),
+        rest.get("*/api/v1/versioning/changesets", (req, res, ctx) => res(ctx.json([]))),
         rest.get("*/api/v1/versioning/changes", (req, res, ctx) =>
           res(ctx.json({ events: [], total: 0 })),
         ),
@@ -48,9 +46,7 @@ describe("Versioning Page", () => {
 
     it("displays tabs for changesets, conflicts, and sync", async () => {
       server.use(
-        rest.get("*/api/v1/versioning/changesets", (req, res, ctx) =>
-          res(ctx.json([])),
-        ),
+        rest.get("*/api/v1/versioning/changesets", (req, res, ctx) => res(ctx.json([]))),
         rest.get("*/api/v1/versioning/changes", (req, res, ctx) =>
           res(ctx.json({ events: [], total: 0 })),
         ),
@@ -72,9 +68,7 @@ describe("Versioning Page", () => {
   describe("changeset panel states", () => {
     it("displays changeset panel on default tab with page root testid", async () => {
       server.use(
-        rest.get("*/api/v1/versioning/changesets", (req, res, ctx) =>
-          res(ctx.json([])),
-        ),
+        rest.get("*/api/v1/versioning/changesets", (req, res, ctx) => res(ctx.json([]))),
         rest.get("*/api/v1/versioning/changes", (req, res, ctx) =>
           res(ctx.json({ events: [], total: 0 })),
         ),
@@ -104,12 +98,8 @@ describe("Versioning Page", () => {
       });
 
       server.use(
-        rest.get("*/api/v1/versioning/changesets", (req, res, ctx) =>
-          res(ctx.json([])),
-        ),
-        rest.get("*/api/v1/versioning/changes", (req, res, ctx) =>
-          res(ctx.json(mockChanges)),
-        ),
+        rest.get("*/api/v1/versioning/changesets", (req, res, ctx) => res(ctx.json([]))),
+        rest.get("*/api/v1/versioning/changes", (req, res, ctx) => res(ctx.json(mockChanges))),
       );
 
       render(<VersioningPage />);
@@ -130,9 +120,7 @@ describe("Versioning Page", () => {
         rest.get("*/api/v1/versioning/sync/status", (req, res, ctx) =>
           res(ctx.json(createSyncStatus())),
         ),
-        rest.get("*/api/v1/versioning/changesets", (req, res, ctx) =>
-          res(ctx.json([])),
-        ),
+        rest.get("*/api/v1/versioning/changesets", (req, res, ctx) => res(ctx.json([]))),
         rest.get("*/api/v1/versioning/changes", (req, res, ctx) =>
           res(ctx.json({ events: [], total: 0 })),
         ),
@@ -155,9 +143,7 @@ describe("Versioning Page", () => {
   describe("conflict resolver states", () => {
     it("renders conflict tab and shows empty state when no proposal selected", async () => {
       server.use(
-        rest.get("*/api/v1/versioning/changesets", (req, res, ctx) =>
-          res(ctx.json([])),
-        ),
+        rest.get("*/api/v1/versioning/changesets", (req, res, ctx) => res(ctx.json([]))),
         rest.get("*/api/v1/versioning/changes", (req, res, ctx) =>
           res(ctx.json({ events: [], total: 0 })),
         ),

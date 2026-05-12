@@ -28,11 +28,7 @@ function getStatusChip(status: string) {
 
   const chipClass = chipMap[status] || "gray";
 
-  return (
-    <span className={`chip ${chipClass}`}>
-      {status}
-    </span>
-  );
+  return <span className={`chip ${chipClass}`}>{status}</span>;
 }
 
 function determineStatus(syncStatus: SyncStatusResponse): string {
@@ -86,9 +82,7 @@ function SyncStatusCard({
     >
       <div>
         <div style={{ padding: "16px", borderBottom: "1px solid var(--canvas-bd)" }}>
-          <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "8px" }}>
-            {title}
-          </div>
+          <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "8px" }}>{title}</div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             {getStatusChip(status)}
           </div>
@@ -97,7 +91,9 @@ function SyncStatusCard({
         <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
           {lastSyncTime != null && (
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: "12px", color: "var(--canvas-fg-3)" }}>{COPY.lastSyncLabel}</span>
+              <span style={{ fontSize: "12px", color: "var(--canvas-fg-3)" }}>
+                {COPY.lastSyncLabel}
+              </span>
               <span
                 style={{
                   fontSize: "12px",
@@ -216,7 +212,11 @@ export function SyncStatusPanel({ onConflictDetected }: SyncStatusPanelProps) {
     const syncSection = config.sections.sync as Record<string, unknown> | undefined;
     if (!syncSection) return COPY.notConfiguredLabel;
 
-    return (syncSection.target_path as string) || (syncSection.s3_bucket as string) || COPY.notConfiguredLabel;
+    return (
+      (syncSection.target_path as string) ||
+      (syncSection.s3_bucket as string) ||
+      COPY.notConfiguredLabel
+    );
   };
 
   if (syncStatusLoading) {
@@ -249,7 +249,10 @@ export function SyncStatusPanel({ onConflictDetected }: SyncStatusPanelProps) {
   const status = determineStatus(syncStatus);
 
   return (
-    <div data-testid="sync-status-panel" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+    <div
+      data-testid="sync-status-panel"
+      style={{ display: "flex", flexDirection: "column", gap: "24px" }}
+    >
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
         <SyncStatusCard
           title={COPY.pushCardTitle}
@@ -278,7 +281,9 @@ export function SyncStatusPanel({ onConflictDetected }: SyncStatusPanelProps) {
           fontSize: "12px",
         }}
       >
-        <div style={{ color: "var(--canvas-fg-3)", marginBottom: "4px" }}>{COPY.syncTargetLabel}</div>
+        <div style={{ color: "var(--canvas-fg-3)", marginBottom: "4px" }}>
+          {COPY.syncTargetLabel}
+        </div>
         <div
           style={{
             fontFamily: "var(--mono)",

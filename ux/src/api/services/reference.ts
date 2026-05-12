@@ -71,10 +71,7 @@ class ReferenceService extends BaseService {
     id: string,
     data: GroundingWorkflowUpdate,
   ): Promise<GroundingWorkflowResponse> {
-    return this.put<GroundingWorkflowResponse>(
-      `/api/reference/grounding-workflows/${id}`,
-      data,
-    );
+    return this.put<GroundingWorkflowResponse>(`/api/reference/grounding-workflows/${id}`, data);
   }
 
   async deleteGroundingWorkflow(id: string): Promise<void> {

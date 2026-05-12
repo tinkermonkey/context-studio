@@ -18,17 +18,18 @@ interface GroundingWorkflowDrawerProps {
   onClose: () => void;
 }
 
-export function GroundingWorkflowDrawer({
-  workflowId,
-  onClose,
-}: GroundingWorkflowDrawerProps) {
+export function GroundingWorkflowDrawer({ workflowId, onClose }: GroundingWorkflowDrawerProps) {
   const { data: workflow, isLoading } = useGroundingWorkflow(workflowId);
   const { data: runs = [], isLoading: runsLoading } = useGroundingWorkflowRuns(workflowId);
   const updateMutation = useUpdateGroundingWorkflow();
   const deleteMutation = useDeleteGroundingWorkflow();
   const runMutation = useRunGroundingWorkflow();
   const { toast } = useToasts();
-  const { performDelete, undo, deletedId: _deletedId } = useUndoDelete({
+  const {
+    performDelete,
+    undo,
+    deletedId: _deletedId,
+  } = useUndoDelete({
     onDelete: deleteMutation.mutateAsync,
   });
 
@@ -71,15 +72,10 @@ export function GroundingWorkflowDrawer({
   const handleDeleteConfirm = async () => {
     try {
       await performDelete(workflowId);
-      toast(
-        "success",
-        "Workflow deleted",
-        undefined,
-        {
-          action: { label: "Undo", onAction: undo },
-          autoDismissMs: 8000,
-        },
-      );
+      toast("success", "Workflow deleted", undefined, {
+        action: { label: "Undo", onAction: undo },
+        autoDismissMs: 8000,
+      });
       onClose();
     } catch (error) {
       toast("error", error instanceof Error ? error.message : "Failed to delete workflow");
@@ -108,9 +104,7 @@ export function GroundingWorkflowDrawer({
   const statusColor =
     workflow.status === "active" ? "emerald" : workflow.status === "error" ? "rose" : "gray";
 
-  const lastRun = workflow.last_run
-    ? new Date(workflow.last_run).toLocaleString()
-    : "Never";
+  const lastRun = workflow.last_run ? new Date(workflow.last_run).toLocaleString() : "Never";
 
   return (
     <div className="kv" data-testid="grounding-workflow-drawer">
@@ -243,9 +237,7 @@ export function GroundingWorkflowDrawer({
                           {run.status}
                         </Chip>
                       </div>
-                      <div style={{ color: "var(--canvas-fg-3)" }}>
-                        {run.record_count} records
-                      </div>
+                      <div style={{ color: "var(--canvas-fg-3)" }}>{run.record_count} records</div>
                       {run.error_message && (
                         <div style={{ color: "var(--rose-600)", marginTop: "var(--space-1)" }}>
                           {run.error_message}

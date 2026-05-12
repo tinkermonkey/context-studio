@@ -7,9 +7,7 @@
   "paths": {
     "/api/taxonomies": {
       "post": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Create Taxonomy",
         "description": "Create a new taxonomy.\n\nArgs:\n    request: TaxonomyCreateRequest with title and optional description\n    service: OntologyService from dependency injection\n\nReturns:\n    Created taxonomy as TaxonomyResponse\n\nRaises:\n    HTTPException: 400 if title is empty, 409 if title already exists",
         "operationId": "create_taxonomy_api_taxonomies_post",
@@ -47,9 +45,7 @@
         }
       },
       "get": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "List Taxonomies",
         "description": "Retrieve taxonomies with optional pagination, sorting, and text search.\n\nArgs:\n    limit: Maximum number of results (1-1000, default 100)\n    offset: Number of results to skip (default 0)\n    sort_by: Field to sort by (title, created_at, last_modified)\n    sort_order: Sort direction (asc or desc, default asc)\n    q: Text query for LIKE search on title\n    service: OntologyService from dependency injection\n\nReturns:\n    ListResponse containing matching taxonomies",
         "operationId": "list_taxonomies_api_taxonomies_get",
@@ -158,9 +154,7 @@
     },
     "/api/taxonomies/{taxonomy_id}": {
       "get": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Get Taxonomy",
         "description": "Retrieve a taxonomy by ID.\n\nArgs:\n    taxonomy_id: The taxonomy ID\n    service: OntologyService from dependency injection\n\nReturns:\n    TaxonomyResponse\n\nRaises:\n    HTTPException: 404 if taxonomy not found",
         "operationId": "get_taxonomy_api_taxonomies__taxonomy_id__get",
@@ -199,9 +193,7 @@
         }
       },
       "put": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Update Taxonomy",
         "description": "Update a taxonomy's title and/or description.\n\nArgs:\n    taxonomy_id: The taxonomy ID\n    request: TaxonomyUpdateRequest with optional fields to update\n    service: OntologyService from dependency injection\n\nReturns:\n    Updated TaxonomyResponse\n\nRaises:\n    HTTPException: 400 if invalid input, 404 if not found, 409 if title exists",
         "operationId": "update_taxonomy_api_taxonomies__taxonomy_id__put",
@@ -250,9 +242,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Delete Taxonomy",
         "description": "Delete a taxonomy.\n\nArgs:\n    taxonomy_id: The taxonomy ID\n    service: OntologyService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found, 422 if it has concept schemes",
         "operationId": "delete_taxonomy_api_taxonomies__taxonomy_id__delete",
@@ -286,9 +276,7 @@
     },
     "/api/taxonomies/{taxonomy_id}/publish-diff": {
       "get": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Get Publish Diff Stats",
         "description": "Get diff statistics for publishing a taxonomy.\n\nArgs:\n    taxonomy_id: The taxonomy ID\n    service: OntologyService from dependency injection\n\nReturns:\n    PublishDiffStats with counts of added, modified, and removed classes\n\nRaises:\n    HTTPException: 404 if not found",
         "operationId": "get_publish_diff_stats_api_taxonomies__taxonomy_id__publish_diff_get",
@@ -329,9 +317,7 @@
     },
     "/api/taxonomies/{taxonomy_id}/publish": {
       "post": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Publish Taxonomy",
         "description": "Publish a taxonomy, transitioning status from draft to published.\n\nArgs:\n    taxonomy_id: The taxonomy ID\n    request: TaxonomyPublishRequest with commit message\n    service: OntologyService from dependency injection\n\nReturns:\n    Updated TaxonomyResponse with status=published\n\nRaises:\n    HTTPException: 404 if not found",
         "operationId": "publish_taxonomy_api_taxonomies__taxonomy_id__publish_post",
@@ -382,9 +368,7 @@
     },
     "/api/taxonomies/{taxonomy_id}/schemes": {
       "post": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Create Concept Scheme",
         "description": "Create a new concept scheme within a taxonomy.\n\nArgs:\n    taxonomy_id: The parent taxonomy ID\n    request: ConceptSchemeCreateRequest with title and optional description\n    service: OntologyService from dependency injection\n\nReturns:\n    Created ConceptSchemeResponse\n\nRaises:\n    HTTPException: 400 if invalid, 404 if taxonomy not found, 409 if title exists",
         "operationId": "create_concept_scheme_api_taxonomies__taxonomy_id__schemes_post",
@@ -435,9 +419,7 @@
     },
     "/api/schemes": {
       "get": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "List Concept Schemes",
         "description": "Retrieve concept schemes with optional filtering, pagination, sorting, and text search.\n\nArgs:\n    taxonomy_id: Optional taxonomy ID to filter by\n    limit: Maximum number of results (1-1000, default 100)\n    offset: Number of results to skip (default 0)\n    sort_by: Field to sort by (title, created_at, last_modified)\n    sort_order: Sort direction (asc or desc, default asc)\n    q: Text query for LIKE search on title\n    service: OntologyService from dependency injection\n\nReturns:\n    ListResponse containing matching concept schemes",
         "operationId": "list_concept_schemes_api_schemes_get",
@@ -564,9 +546,7 @@
     },
     "/api/schemes/{scheme_id}": {
       "get": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Get Concept Scheme",
         "description": "Retrieve a concept scheme by ID.\n\nArgs:\n    scheme_id: The concept scheme ID\n    service: OntologyService from dependency injection\n\nReturns:\n    ConceptSchemeResponse\n\nRaises:\n    HTTPException: 404 if not found",
         "operationId": "get_concept_scheme_api_schemes__scheme_id__get",
@@ -605,9 +585,7 @@
         }
       },
       "put": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Update Concept Scheme",
         "description": "Update a concept scheme's title and/or description.\n\nArgs:\n    scheme_id: The concept scheme ID\n    request: ConceptSchemeUpdateRequest with optional fields to update\n    service: OntologyService from dependency injection\n\nReturns:\n    Updated ConceptSchemeResponse\n\nRaises:\n    HTTPException: 400 if invalid, 404 if not found, 409 if title exists",
         "operationId": "update_concept_scheme_api_schemes__scheme_id__put",
@@ -656,9 +634,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Delete Concept Scheme",
         "description": "Delete a concept scheme.\n\nArgs:\n    scheme_id: The concept scheme ID\n    service: OntologyService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found, 422 if it has classes",
         "operationId": "delete_concept_scheme_api_schemes__scheme_id__delete",
@@ -692,9 +668,7 @@
     },
     "/api/schemes/{scheme_id}/classes": {
       "post": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Create Class",
         "description": "Create a new class within a concept scheme.\n\nArgs:\n    scheme_id: The parent concept scheme ID\n    request: ClassCreateRequest with title and optional description/parent\n    service: OntologyService from dependency injection\n\nReturns:\n    Created ClassResponse\n\nRaises:\n    HTTPException: 400 if invalid, 404 if scheme/parent not found, 409 if title exists",
         "operationId": "create_class_api_schemes__scheme_id__classes_post",
@@ -745,9 +719,7 @@
     },
     "/api/classes": {
       "get": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "List Classes",
         "description": "Retrieve classes with optional filtering and pagination.\n\nArgs:\n    concept_scheme_id: Optional concept scheme ID to filter by\n    parent_class_id: Optional parent class ID to filter by\n    limit: Maximum number of results (1-1000, default 100)\n    offset: Number of results to skip (default 0)\n    service: OntologyService from dependency injection\n\nReturns:\n    ListResponse containing matching classes",
         "operationId": "list_classes_api_classes_get",
@@ -842,9 +814,7 @@
     },
     "/api/classes/{class_id}": {
       "get": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Get Class",
         "description": "Retrieve a class by ID.\n\nArgs:\n    class_id: The class ID\n    service: OntologyService from dependency injection\n\nReturns:\n    ClassResponse\n\nRaises:\n    HTTPException: 404 if not found",
         "operationId": "get_class_api_classes__class_id__get",
@@ -883,9 +853,7 @@
         }
       },
       "put": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Update Class",
         "description": "Update a class's title and/or description.\n\nArgs:\n    class_id: The class ID\n    request: ClassUpdateRequest with optional fields to update\n    service: OntologyService from dependency injection\n\nReturns:\n    Updated ClassResponse\n\nRaises:\n    HTTPException: 400 if invalid, 404 if not found, 409 if title exists",
         "operationId": "update_class_api_classes__class_id__put",
@@ -934,9 +902,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Delete Class",
         "description": "Delete a class.\n\nArgs:\n    class_id: The class ID\n    service: OntologyService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found, 422 if it has subclasses or individuals",
         "operationId": "delete_class_api_classes__class_id__delete",
@@ -970,9 +936,7 @@
     },
     "/api/classes/{class_id}/move": {
       "post": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Move Class",
         "description": "Move a class to a different concept scheme.\n\nArgs:\n    class_id: The class ID\n    request: ClassMoveRequest with target_scheme_id\n    service: OntologyService from dependency injection\n\nReturns:\n    Updated ClassResponse with new concept_scheme_id\n\nRaises:\n    HTTPException: 400 if invalid, 404 if not found",
         "operationId": "move_class_api_classes__class_id__move_post",
@@ -1023,9 +987,7 @@
     },
     "/api/relationships": {
       "post": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Create Relationship",
         "description": "Create a new typed relationship between two entities.\n\nArgs:\n    request: RelationshipCreateRequest with source, target, and relationship_type\n    service: OntologyService from dependency injection\n\nReturns:\n    Created RelationshipResponse\n\nRaises:\n    HTTPException: 400 if invalid (self-loop), 404 if entities not found, 409 if duplicate",
         "operationId": "create_relationship_api_relationships_post",
@@ -1063,9 +1025,7 @@
         }
       },
       "get": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "List Relationships",
         "description": "Retrieve relationships with optional filtering, pagination, and sorting.\n\nArgs:\n    source_id: Optional source entity ID to filter by\n    target_id: Optional target entity ID to filter by\n    property_id: Optional property definition ID to filter by\n    limit: Maximum number of results (1-1000, default 100)\n    offset: Number of results to skip (default 0)\n    sort_by: Field to sort by (created_at)\n    sort_order: Sort direction (asc or desc, default asc)\n    service: OntologyService from dependency injection\n\nReturns:\n    ListResponse containing matching relationships",
         "operationId": "list_relationships_api_relationships_get",
@@ -1210,9 +1170,7 @@
     },
     "/api/relationships/{relationship_id}": {
       "get": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Get Relationship",
         "description": "Retrieve a relationship by ID.\n\nArgs:\n    relationship_id: The relationship ID\n    service: OntologyService from dependency injection\n\nReturns:\n    RelationshipResponse\n\nRaises:\n    HTTPException: 404 if not found",
         "operationId": "get_relationship_api_relationships__relationship_id__get",
@@ -1251,9 +1209,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Delete Relationship",
         "description": "Delete a relationship.\n\nArgs:\n    relationship_id: The relationship ID\n    service: OntologyService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found",
         "operationId": "delete_relationship_api_relationships__relationship_id__delete",
@@ -1287,9 +1243,7 @@
     },
     "/api/properties": {
       "post": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Create Property Definition",
         "description": "Create a new property definition (relationship type).\n\nArgs:\n    request: PropertyDefinitionCreateRequest with identifier and title\n    service: OntologyService from dependency injection\n\nReturns:\n    Created PropertyDefinitionResponse\n\nRaises:\n    HTTPException: 400 if invalid, 409 if identifier or title exists",
         "operationId": "create_property_definition_api_properties_post",
@@ -1327,9 +1281,7 @@
         }
       },
       "get": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "List Property Definitions",
         "description": "Retrieve property definitions with optional filtering, pagination, sorting, and text search.\n\nArgs:\n    is_relevant: Optional filter for relevant properties\n    limit: Maximum number of results (1-1000, default 100)\n    offset: Number of results to skip (default 0)\n    sort_by: Field to sort by (title, created_at, last_modified)\n    sort_order: Sort direction (asc or desc, default asc)\n    q: Text query for LIKE search on title\n    service: OntologyService from dependency injection\n\nReturns:\n    ListResponse containing property definitions",
         "operationId": "list_property_definitions_api_properties_get",
@@ -1456,9 +1408,7 @@
     },
     "/api/properties/{property_id}": {
       "get": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Get Property Definition",
         "description": "Retrieve a property definition by ID.\n\nArgs:\n    property_id: The property definition ID\n    service: OntologyService from dependency injection\n\nReturns:\n    PropertyDefinitionResponse\n\nRaises:\n    HTTPException: 404 if not found",
         "operationId": "get_property_definition_api_properties__property_id__get",
@@ -1497,9 +1447,7 @@
         }
       },
       "put": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Update Property Definition",
         "description": "Update a property definition's title and/or description.\n\nNote: identifier cannot be changed after creation.\n\nArgs:\n    property_id: The property definition ID\n    request: PropertyDefinitionUpdateRequest with optional fields to update\n    service: OntologyService from dependency injection\n\nReturns:\n    Updated PropertyDefinitionResponse\n\nRaises:\n    HTTPException: 400 if invalid, 404 if not found",
         "operationId": "update_property_definition_api_properties__property_id__put",
@@ -1548,9 +1496,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Delete Property Definition",
         "description": "Delete a property definition.\n\nArgs:\n    property_id: The property definition ID\n    service: OntologyService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found",
         "operationId": "delete_property_definition_api_properties__property_id__delete",
@@ -1584,9 +1530,7 @@
     },
     "/api/individuals": {
       "post": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Create Individual",
         "description": "Create a new individual instance of one or more classes.\n\nArgs:\n    request: IndividualCreateRequest with class_ids and title\n    service: OntologyService from dependency injection\n\nReturns:\n    Created IndividualResponse\n\nRaises:\n    HTTPException: 400 if invalid or invariant violated, 404 if class not found, 409 if title exists",
         "operationId": "create_individual_api_individuals_post",
@@ -1624,9 +1568,7 @@
         }
       },
       "get": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "List Individuals",
         "description": "Retrieve individuals with optional filtering and pagination.\n\nArgs:\n    class_id: Optional class ID to filter by (returns Individuals having this Class as a parent)\n    limit: Maximum number of results (1-1000, default 100)\n    offset: Number of results to skip (default 0)\n    service: OntologyService from dependency injection\n\nReturns:\n    ListResponse containing matching individuals",
         "operationId": "list_individuals_api_individuals_get",
@@ -1703,9 +1645,7 @@
     },
     "/api/individuals/{individual_id}": {
       "get": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Get Individual",
         "description": "Retrieve an individual by ID.\n\nArgs:\n    individual_id: The individual ID\n    service: OntologyService from dependency injection\n\nReturns:\n    IndividualResponse\n\nRaises:\n    HTTPException: 404 if not found",
         "operationId": "get_individual_api_individuals__individual_id__get",
@@ -1744,9 +1684,7 @@
         }
       },
       "put": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Update Individual",
         "description": "Update an individual's title and/or description.\n\nNote: class membership changes use dedicated endpoints; this endpoint is for data updates only.\n\nArgs:\n    individual_id: The individual ID\n    request: IndividualUpdateRequest with optional fields to update\n    service: OntologyService from dependency injection\n\nReturns:\n    Updated IndividualResponse\n\nRaises:\n    HTTPException: 400 if invalid, 404 if not found, 409 if title exists",
         "operationId": "update_individual_api_individuals__individual_id__put",
@@ -1795,9 +1733,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Delete Individual",
         "description": "Delete an individual.\n\nArgs:\n    individual_id: The individual ID\n    service: OntologyService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found",
         "operationId": "delete_individual_api_individuals__individual_id__delete",
@@ -1831,9 +1767,7 @@
     },
     "/api/individuals/{individual_id}/classes": {
       "post": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Add Parent Class To Individual",
         "description": "Add a parent class to an individual (appended to the end of the class list).\n\nArgs:\n    individual_id: The individual ID\n    request: IndividualClassRequest with class_id to add\n    service: OntologyService from dependency injection\n\nReturns:\n    Updated IndividualResponse\n\nRaises:\n    HTTPException: 400 if class already a parent, 404 if individual or class not found",
         "operationId": "add_parent_class_to_individual_api_individuals__individual_id__classes_post",
@@ -1882,9 +1816,7 @@
         }
       },
       "put": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Reorder Individual Classes",
         "description": "Reorder or replace the full ordered class list for an individual.\n\nThe order matters for property attribute inheritance: when two parent Classes\ndeclare a property with the same name but conflicting type/constraints, the\nfirst parent (by class membership order) wins.\n\nArgs:\n    individual_id: The individual ID\n    request: IndividualClassListRequest with ordered class_ids (full replacement)\n    service: OntologyService from dependency injection\n\nReturns:\n    Updated IndividualResponse\n\nRaises:\n    HTTPException: 404 if individual not found, 422 if class list is invalid",
         "operationId": "reorder_individual_classes_api_individuals__individual_id__classes_put",
@@ -1935,9 +1867,7 @@
     },
     "/api/individuals/{individual_id}/classes/{class_id}": {
       "delete": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Remove Parent Class From Individual",
         "description": "Remove a parent class from an individual.\n\nArgs:\n    individual_id: The individual ID\n    class_id: The class ID to remove\n    service: OntologyService from dependency injection\n\nRaises:\n    HTTPException: 400 if class not a parent or is last parent, 404 if individual not found",
         "operationId": "remove_parent_class_from_individual_api_individuals__individual_id__classes__class_id__delete",
@@ -1980,9 +1910,7 @@
     },
     "/api/individuals/{individual_id}/inherited-properties": {
       "get": {
-        "tags": [
-          "ontology"
-        ],
+        "tags": ["ontology"],
         "summary": "Get Individual Inherited Properties",
         "description": "Get the deduplicated property attribute list for an individual.\n\nReturns the superset of data_properties declared on all parent Classes,\nwith first-class-wins precedence on name collisions: when two parent Classes\ndeclare a property with the same name but conflicting type/constraints,\nthe property from the first parent (by class membership order) wins.\n\nArgs:\n    individual_id: The individual ID\n    service: OntologyService from dependency injection\n\nReturns:\n    ListResponse containing deduplicated properties\n\nRaises:\n    HTTPException: 404 if individual not found",
         "operationId": "get_individual_inherited_properties_api_individuals__individual_id__inherited_properties_get",
@@ -2023,9 +1951,7 @@
     },
     "/api/graph/build": {
       "post": {
-        "tags": [
-          "graph"
-        ],
+        "tags": ["graph"],
         "summary": "Build Graph",
         "description": "Explicitly build the in-memory graph from current ontology data.\n\nThis endpoint allows clients to trigger graph construction on demand. Graph building\nnormally happens lazily on first query, but this endpoint enables explicit control\nover graph refresh timing and validates that the graph can be built without errors.\n\nArgs:\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    KnowledgeGraphResponse containing node count, edge count, and build timestamp\n\nRaises:\n    HTTPException: 422 if graph construction fails",
         "operationId": "build_graph_api_graph_build_post",
@@ -2045,9 +1971,7 @@
     },
     "/api/graph/metrics": {
       "get": {
-        "tags": [
-          "graph"
-        ],
+        "tags": ["graph"],
         "summary": "Get Metrics",
         "description": "Get structural metrics for the entire graph.\n\nArgs:\n    algorithm: Centrality algorithm to use (betweenness, pagerank, closeness, degree)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    GraphMetricsResponse containing density, average degree, connected components, degree distribution, centrality scores, communities, algorithm, and computed timestamp\n\nRaises:\n    HTTPException: 400 if algorithm is invalid or community detection fails, 422 if graph error occurs",
         "operationId": "get_metrics_api_graph_metrics_get",
@@ -2091,9 +2015,7 @@
     },
     "/api/graph/degree-distribution": {
       "get": {
-        "tags": [
-          "graph"
-        ],
+        "tags": ["graph"],
         "summary": "Get Degree Distribution",
         "description": "Get the degree distribution across all nodes in the graph.\n\nThe degree of a node is the number of edges connected to it. This endpoint\nprovides the in-degree and out-degree counts for each node, useful for network analysis\nand topology studies.\n\nArgs:\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    DegreeDistributionResponse containing node ID to degree mappings\n\nRaises:\n    HTTPException: 422 if graph error occurs",
         "operationId": "get_degree_distribution_api_graph_degree_distribution_get",
@@ -2113,9 +2035,7 @@
     },
     "/api/graph/paths/shortest": {
       "get": {
-        "tags": [
-          "graph"
-        ],
+        "tags": ["graph"],
         "summary": "Get Shortest Path",
         "description": "Find the shortest path between two nodes.\n\nArgs:\n    source_id: ID of the starting node\n    target_id: ID of the ending node\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    PathResultResponse if a path exists\n\nRaises:\n    HTTPException: 404 if either node is not found or no path exists, 422 if graph error occurs",
         "operationId": "get_shortest_path_api_graph_paths_shortest_get",
@@ -2169,9 +2089,7 @@
     },
     "/api/graph/paths/all": {
       "get": {
-        "tags": [
-          "graph"
-        ],
+        "tags": ["graph"],
         "summary": "Get All Paths",
         "description": "Find all simple paths between two nodes up to a maximum depth.\n\nArgs:\n    source_id: ID of the starting node\n    target_id: ID of the ending node\n    max_depth: Maximum path length to explore (minimum 1, maximum 20)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    List of PathResultResponse objects, one for each found path\n\nRaises:\n    HTTPException: 404 if either node is not found, 422 if graph error occurs",
         "operationId": "get_all_paths_api_graph_paths_all_get",
@@ -2243,9 +2161,7 @@
     },
     "/api/graph/centrality": {
       "get": {
-        "tags": [
-          "graph"
-        ],
+        "tags": ["graph"],
         "summary": "Get Centrality",
         "description": "Compute centrality scores for all nodes using the specified algorithm.\n\nArgs:\n    algorithm: Name of the centrality algorithm (betweenness, pagerank, closeness, degree)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    CentralityResponse mapping node IDs to centrality scores\n\nRaises:\n    HTTPException: 400 if algorithm is not recognized, 422 if graph error occurs",
         "operationId": "get_centrality_api_graph_centrality_get",
@@ -2289,9 +2205,7 @@
     },
     "/api/graph/communities": {
       "get": {
-        "tags": [
-          "graph"
-        ],
+        "tags": ["graph"],
         "summary": "Get Communities",
         "description": "Partition the graph into communities using the specified algorithm.\n\nArgs:\n    algorithm: Name of the community detection algorithm (louvain, label_propagation)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    CommunitiesResponse containing detected communities as lists of node IDs\n\nRaises:\n    HTTPException: 400 if algorithm is not recognized or community detection fails, 422 if graph error occurs",
         "operationId": "get_communities_api_graph_communities_get",
@@ -2335,9 +2249,7 @@
     },
     "/api/graph/nodes/{node_id}/neighbors": {
       "get": {
-        "tags": [
-          "graph"
-        ],
+        "tags": ["graph"],
         "summary": "Get Neighbors",
         "description": "Get all neighbors of a node up to a specified depth with optional directional filtering.\n\nArgs:\n    node_id: ID of the queried node\n    direction: Direction of traversal (in, out, or both)\n    depth: Maximum distance from center node (minimum 1, maximum 10, default 1)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    NeighborsResponse containing lists of incoming and outgoing neighbors\n\nRaises:\n    HTTPException: 404 if node is not found, 400 if direction is invalid, 422 if graph error occurs",
         "operationId": "get_neighbors_api_graph_nodes__node_id__neighbors_get",
@@ -2356,11 +2268,7 @@
             "in": "query",
             "required": false,
             "schema": {
-              "enum": [
-                "in",
-                "out",
-                "both"
-              ],
+              "enum": ["in", "out", "both"],
               "type": "string",
               "description": "Direction: 'in', 'out', or 'both'",
               "default": "both",
@@ -2409,9 +2317,7 @@
     },
     "/api/graph/subgraph": {
       "get": {
-        "tags": [
-          "graph"
-        ],
+        "tags": ["graph"],
         "summary": "Get Subgraph",
         "description": "Extract a subgraph containing the specified nodes and all edges between them.\n\nThis endpoint extracts a subgraph from a pre-computed list of node IDs.\nFor depth-based neighborhood extraction, use GET /nodes/{node_id}/subgraph instead.\n\nArgs:\n    nodes: Comma-separated list of node IDs (e.g., \"id1,id2,id3\")\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    SubgraphDataResponse containing the nodes and edges in the subgraph\n\nRaises:\n    HTTPException: 404 if any node is not found, 400 if nodes parameter is invalid, 422 if graph error occurs",
         "operationId": "get_subgraph_api_graph_subgraph_get",
@@ -2454,9 +2360,7 @@
     },
     "/api/graph/nodes/{node_id}/subgraph": {
       "get": {
-        "tags": [
-          "graph"
-        ],
+        "tags": ["graph"],
         "summary": "Get Subgraph By Depth",
         "description": "Extract a subgraph containing a center node and all nodes within a specified depth (FR-9).\n\nThis implements depth-based subgraph extraction where depth 1 returns the center node\nand its immediate neighbors, depth 2 returns two hops away, etc.\n\nArgs:\n    node_id: ID of the center node\n    depth: Maximum distance from center node (minimum 1, maximum 10, default 1)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    SubgraphResultResponse containing center node ID, subgraph data, and depth\n\nRaises:\n    HTTPException: 404 if center node is not found, 400 if depth is invalid, 422 if graph error occurs",
         "operationId": "get_subgraph_by_depth_api_graph_nodes__node_id__subgraph_get",
@@ -2511,9 +2415,7 @@
     },
     "/api/graph/cycle-check": {
       "post": {
-        "tags": [
-          "graph"
-        ],
+        "tags": ["graph"],
         "summary": "Check Cycle",
         "description": "Check if adding an edge from source to target would create a cycle.\n\nArgs:\n    request: CycleCheckRequest with source_id and target_id\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    CycleCheckResponse indicating whether a cycle would be created\n\nRaises:\n    HTTPException: 404 if either node is not found, 422 if graph error occurs",
         "operationId": "check_cycle_api_graph_cycle_check_post",
@@ -2553,9 +2455,7 @@
     },
     "/api/graph/sparql": {
       "post": {
-        "tags": [
-          "graph"
-        ],
+        "tags": ["graph"],
         "summary": "Execute Sparql",
         "description": "Execute a SPARQL SELECT query against the RDF graph.\n\nArgs:\n    request: SPARQLRequest containing the query string\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    SPARQLResponse containing query results and triple count\n\nRaises:\n    HTTPException: 400 if query is invalid, 422 if graph error occurs",
         "operationId": "execute_sparql_api_graph_sparql_post",
@@ -2595,9 +2495,7 @@
     },
     "/api/graph/rdf/triples": {
       "get": {
-        "tags": [
-          "graph"
-        ],
+        "tags": ["graph"],
         "summary": "Get Rdf Triples",
         "description": "Retrieve RDF triples matching optional subject/predicate/object patterns.\n\nArgs:\n    subject: Optional subject to match\n    predicate: Optional predicate to match\n    object_param: Optional object to match\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    TriplesResponse containing matching triples and count\n\nRaises:\n    HTTPException: 422 if graph error occurs",
         "operationId": "get_rdf_triples_api_graph_rdf_triples_get",
@@ -2683,9 +2581,7 @@
     },
     "/api/graph/rdf/count": {
       "get": {
-        "tags": [
-          "graph"
-        ],
+        "tags": ["graph"],
         "summary": "Get Rdf Triple Count",
         "description": "Get the number of RDF triples in the graph.\n\nArgs:\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    TripleCountResponse containing the triple count\n\nRaises:\n    HTTPException: 422 if graph error occurs",
         "operationId": "get_rdf_triple_count_api_graph_rdf_count_get",
@@ -2705,9 +2601,7 @@
     },
     "/api/extract": {
       "post": {
-        "tags": [
-          "extraction"
-        ],
+        "tags": ["extraction"],
         "summary": "Extract Entities",
         "description": "Extract entities from text through coordinated extraction layers.\n\nFour layers execute sequentially:\n- Layer 0: Knowledge graph context (uses embedding similarity)\n- Layer 1: LLM extraction (structured JSON output)\n- Layer 2: NLP gap-filling (catches missed entities)\n- Layer 3: Reference source enrichment (adds URIs and metadata)\n\nArgs:\n    request: ExtractRequest with text to extract from\n    service: ExtractionService from dependency injection\n\nReturns:\n    ExtractionResultSchema containing extracted entities and layer metadata\n\nRaises:\n    HTTPException: 400 if text is empty/invalid, 500 for internal errors",
         "operationId": "extract_entities_api_extract_post",
@@ -2747,9 +2641,7 @@
     },
     "/api/analyze_text": {
       "post": {
-        "tags": [
-          "extraction"
-        ],
+        "tags": ["extraction"],
         "summary": "Analyze Text",
         "description": "Analyze text for linguistic features and named entities.\n\nThis use case focuses on NLP-based analysis including tokenization,\nentity recognition, language detection, and linguistic features.\nIt may also provide context from the knowledge graph.\n\nLayers executed:\n- Layer 0: Knowledge graph context (uses embedding similarity)\n- Layer 2: NLP gap-filling (focused entity recognition)\n\nArgs:\n    request: AnalyzeTextRequest with text to analyze\n    service: ExtractionService from dependency injection\n\nReturns:\n    ExtractionResultSchema containing analyzed entities and linguistic metadata\n\nRaises:\n    HTTPException: 400 if text is empty/invalid, 500 for internal errors",
         "operationId": "analyze_text_api_analyze_text_post",
@@ -2789,9 +2681,7 @@
     },
     "/api/enrich_from_references": {
       "post": {
-        "tags": [
-          "extraction"
-        ],
+        "tags": ["extraction"],
         "summary": "Enrich From References",
         "description": "Enrich extracted entities with external reference knowledge.\n\nThis use case takes already-extracted entities and enriches them with\nURIs, metadata, and relationships from external knowledge sources such as\nConceptNet, DBpedia, Wikidata, and schema.org.\n\nLayers executed:\n- Layer 3: Reference source enrichment (adds URIs and metadata)\n\nArgs:\n    request: EnrichFromReferencesRequest with text and entities to enrich\n    service: ExtractionService from dependency injection\n\nReturns:\n    ExtractionResultSchema with enriched entities and reference metadata\n\nRaises:\n    HTTPException: 400 if text is empty/invalid, 500 for internal errors",
         "operationId": "enrich_from_references_api_enrich_from_references_post",
@@ -2831,10 +2721,7 @@
     },
     "/api/extraction/extract": {
       "post": {
-        "tags": [
-          "extraction",
-          "extraction"
-        ],
+        "tags": ["extraction", "extraction"],
         "summary": "Extract Triples",
         "description": "Extract RDF triples from text, scoped to a specific ontology.\n\nThis endpoint uses an LLM to extract subject-predicate-object triples\nfrom the input text, linking them to classes and individuals from a\nspecific ontology. Each triple is returned with confidence and provenance\n(character offsets into the source text).\n\nArgs:\n    request: ExtractTripleRequest with text, ontology_id, and extraction options\n    service: ExtractionService from dependency injection\n\nReturns:\n    ExtractTripleResponse with extracted triples, warnings, and metadata\n\nRaises:\n    HTTPException: 400 if input is invalid, 500 for internal errors",
         "operationId": "extract_triples_api_extraction_extract_post",
@@ -2874,9 +2761,7 @@
     },
     "/api/pipelines": {
       "get": {
-        "tags": [
-          "pipeline"
-        ],
+        "tags": ["pipeline"],
         "summary": "List Pipeline Configurations",
         "description": "Retrieve all pipeline configurations.\n\nReturns:\n    List of PipelineConfigurationResponse objects",
         "operationId": "list_pipeline_configurations_api_pipelines_get",
@@ -2898,9 +2783,7 @@
         }
       },
       "post": {
-        "tags": [
-          "pipeline"
-        ],
+        "tags": ["pipeline"],
         "summary": "Create Pipeline Configuration",
         "description": "Create a new pipeline configuration.\n\nArgs:\n    request: PipelineConfigurationCreate with configuration details\n    service: PipelineService from dependency injection\n\nReturns:\n    Created PipelineConfigurationResponse with server-generated id\n\nRaises:\n    HTTPException: 400 if invalid input, 500 for internal errors",
         "operationId": "create_pipeline_configuration_api_pipelines_post",
@@ -2940,9 +2823,7 @@
     },
     "/api/pipelines/executions": {
       "get": {
-        "tags": [
-          "pipeline"
-        ],
+        "tags": ["pipeline"],
         "summary": "List All Pipeline Executions",
         "description": "Retrieve execution history across all pipeline configurations.\n\nResults are returned in reverse chronological order (most recent first).\n\nArgs:\n    status_filter: Optional status filter (\"success\", \"error\", \"timeout\")\n    limit: Maximum number of executions to return (1-500, default 100)\n    offset: Number of executions to skip for pagination (default 0)\n    service: PipelineService from dependency injection\n\nReturns:\n    Paginated list of ExecutionWithPipelineResponse objects with total count",
         "operationId": "list_all_pipeline_executions_api_pipelines_executions_get",
@@ -2954,11 +2835,7 @@
             "schema": {
               "anyOf": [
                 {
-                  "enum": [
-                    "success",
-                    "error",
-                    "timeout"
-                  ],
+                  "enum": ["success", "error", "timeout"],
                   "type": "string"
                 },
                 {
@@ -3024,9 +2901,7 @@
     },
     "/api/pipelines/flavors": {
       "get": {
-        "tags": [
-          "pipeline"
-        ],
+        "tags": ["pipeline"],
         "summary": "List Pipeline Flavors",
         "description": "Retrieve all pipeline flavors.\n\nReturns:\n    List of PipelineFlavorResponse objects",
         "operationId": "list_pipeline_flavors_api_pipelines_flavors_get",
@@ -3048,9 +2923,7 @@
         }
       },
       "post": {
-        "tags": [
-          "pipeline"
-        ],
+        "tags": ["pipeline"],
         "summary": "Create Pipeline Flavor",
         "description": "Create a new pipeline flavor.\n\nArgs:\n    request: PipelineFlavorCreateRequest with flavor details\n    service: PipelineService from dependency injection\n\nReturns:\n    Created PipelineFlavorResponse with server-generated id\n\nRaises:\n    HTTPException: 400 if invalid input, 409 if name already exists",
         "operationId": "create_pipeline_flavor_api_pipelines_flavors_post",
@@ -3090,9 +2963,7 @@
     },
     "/api/pipelines/flavors/{flavor_id}": {
       "get": {
-        "tags": [
-          "pipeline"
-        ],
+        "tags": ["pipeline"],
         "summary": "Get Pipeline Flavor",
         "description": "Retrieve a pipeline flavor by ID.\n\nArgs:\n    flavor_id: The pipeline flavor ID\n    service: PipelineService from dependency injection\n\nReturns:\n    PipelineFlavorResponse\n\nRaises:\n    HTTPException: 404 if not found",
         "operationId": "get_pipeline_flavor_api_pipelines_flavors__flavor_id__get",
@@ -3131,9 +3002,7 @@
         }
       },
       "put": {
-        "tags": [
-          "pipeline"
-        ],
+        "tags": ["pipeline"],
         "summary": "Update Pipeline Flavor",
         "description": "Update a pipeline flavor.\n\nArgs:\n    flavor_id: The pipeline flavor ID\n    request: PipelineFlavorUpdateRequest with optional fields to update\n    service: PipelineService from dependency injection\n\nReturns:\n    Updated PipelineFlavorResponse\n\nRaises:\n    HTTPException: 400 if invalid, 404 if not found",
         "operationId": "update_pipeline_flavor_api_pipelines_flavors__flavor_id__put",
@@ -3182,9 +3051,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "pipeline"
-        ],
+        "tags": ["pipeline"],
         "summary": "Delete Pipeline Flavor",
         "description": "Delete a pipeline flavor.\n\nArgs:\n    flavor_id: The pipeline flavor ID\n    service: PipelineService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found",
         "operationId": "delete_pipeline_flavor_api_pipelines_flavors__flavor_id__delete",
@@ -3218,9 +3085,7 @@
     },
     "/api/pipelines/{pipeline_id}": {
       "get": {
-        "tags": [
-          "pipeline"
-        ],
+        "tags": ["pipeline"],
         "summary": "Get Pipeline Configuration",
         "description": "Retrieve a pipeline configuration by ID.\n\nArgs:\n    pipeline_id: The pipeline configuration ID\n    service: PipelineService from dependency injection\n\nReturns:\n    PipelineConfigurationResponse\n\nRaises:\n    HTTPException: 404 if not found",
         "operationId": "get_pipeline_configuration_api_pipelines__pipeline_id__get",
@@ -3259,9 +3124,7 @@
         }
       },
       "put": {
-        "tags": [
-          "pipeline"
-        ],
+        "tags": ["pipeline"],
         "summary": "Update Pipeline Configuration",
         "description": "Update a pipeline configuration's properties.\n\nArgs:\n    pipeline_id: The pipeline configuration ID\n    request: PipelineConfigurationUpdate with optional fields to update\n    service: PipelineService from dependency injection\n\nReturns:\n    Updated PipelineConfigurationResponse\n\nRaises:\n    HTTPException: 400 if invalid, 404 if not found",
         "operationId": "update_pipeline_configuration_api_pipelines__pipeline_id__put",
@@ -3310,9 +3173,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "pipeline"
-        ],
+        "tags": ["pipeline"],
         "summary": "Delete Pipeline Configuration",
         "description": "Delete a pipeline configuration.\n\nArgs:\n    pipeline_id: The pipeline configuration ID\n    service: PipelineService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found",
         "operationId": "delete_pipeline_configuration_api_pipelines__pipeline_id__delete",
@@ -3346,9 +3207,7 @@
     },
     "/api/pipelines/{pipeline_id}/execute": {
       "post": {
-        "tags": [
-          "pipeline"
-        ],
+        "tags": ["pipeline"],
         "summary": "Execute Pipeline",
         "description": "Execute a pipeline configuration with the given input.\n\nArgs:\n    pipeline_id: The pipeline configuration ID\n    request: PipelineExecuteRequest with input_text\n    service: PipelineService from dependency injection\n\nReturns:\n    ExecutionResponse with output, tokens, duration, and status\n\nRaises:\n    HTTPException: 400 if invalid, 404 if configuration not found",
         "operationId": "execute_pipeline_api_pipelines__pipeline_id__execute_post",
@@ -3399,9 +3258,7 @@
     },
     "/api/pipelines/{pipeline_id}/executions": {
       "get": {
-        "tags": [
-          "pipeline"
-        ],
+        "tags": ["pipeline"],
         "summary": "Get Pipeline Executions",
         "description": "Retrieve execution history for a pipeline configuration.\n\nResults are returned in reverse chronological order (most recent first).\n\nArgs:\n    pipeline_id: The pipeline configuration ID\n    service: PipelineService from dependency injection\n\nReturns:\n    List of ExecutionResponse objects, up to 50 most recent\n\nRaises:\n    HTTPException: 404 if configuration not found",
         "operationId": "get_pipeline_executions_api_pipelines__pipeline_id__executions_get",
@@ -3446,9 +3303,7 @@
     },
     "/api/reference/status": {
       "get": {
-        "tags": [
-          "reference"
-        ],
+        "tags": ["reference"],
         "summary": "Reference Status",
         "description": "Check availability of all reference sources.\n\nReturns:\n    ReferenceStatusResponseSchema with status of each source\n\nRaises:\n    HTTPException: 500 if no sources are configured",
         "operationId": "reference_status_api_reference_status_get",
@@ -3468,9 +3323,7 @@
     },
     "/api/reference/search": {
       "post": {
-        "tags": [
-          "reference"
-        ],
+        "tags": ["reference"],
         "summary": "Search References",
         "description": "Search for references across multiple sources.\n\nAggregates results from all available sources (or specified sources).\nSources that fail or are unavailable are tracked but don't block the response.\n\nArgs:\n    request: ReferenceSearchRequest with search parameters\n    sources: List of reference sources from dependency injection\n\nReturns:\n    ReferenceSearchResponseSchema with aggregated results from all sources\n\nRaises:\n    HTTPException: 400 if search term is invalid, 500 if no sources configured",
         "operationId": "search_references_api_reference_search_post",
@@ -3510,9 +3363,7 @@
     },
     "/api/reference/relations": {
       "post": {
-        "tags": [
-          "reference"
-        ],
+        "tags": ["reference"],
         "summary": "Get Reference Relations",
         "description": "Get relationships for a reference URI across multiple sources.\n\nAggregates relationships from all available sources (or specified sources).\nSources that fail or are unavailable are tracked but don't block the response.\n\nArgs:\n    request: ReferenceRelationsRequest with URI to query\n    sources: List of reference sources from dependency injection\n\nReturns:\n    ReferenceRelationsResponseSchema with aggregated relationships\n\nRaises:\n    HTTPException: 400 if URI is invalid, 500 if no sources configured",
         "operationId": "get_reference_relations_api_reference_relations_post",
@@ -3552,9 +3403,7 @@
     },
     "/api/v1/versioning/changes": {
       "get": {
-        "tags": [
-          "versioning"
-        ],
+        "tags": ["versioning"],
         "summary": "Get Change History All",
         "description": "Get all change history events.\n\nArgs:\n    service: VersioningService from dependency injection\n    limit: Maximum number of results to return\n\nReturns:\n    ChangeHistoryResponse with all changes\n\nRaises:\n    HTTPException: 500 for internal errors",
         "operationId": "get_change_history_all_api_v1_versioning_changes_get",
@@ -3596,9 +3445,7 @@
     },
     "/api/v1/versioning/changes/{entity_id}": {
       "get": {
-        "tags": [
-          "versioning"
-        ],
+        "tags": ["versioning"],
         "summary": "Get Change History By Entity",
         "description": "Get change history for a specific entity.\n\nArgs:\n    entity_id: ID of the entity to get changes for\n    service: VersioningService from dependency injection\n    limit: Maximum number of results to return\n\nReturns:\n    ChangeHistoryResponse with filtered changes\n\nRaises:\n    HTTPException: 500 for internal errors",
         "operationId": "get_change_history_by_entity_api_v1_versioning_changes__entity_id__get",
@@ -3649,9 +3496,7 @@
     },
     "/api/v1/versioning/versions/{entity_id}": {
       "get": {
-        "tags": [
-          "versioning"
-        ],
+        "tags": ["versioning"],
         "summary": "List Versions",
         "description": "List all versions of an entity.\n\nArgs:\n    entity_id: ID of the entity\n    service: VersioningService from dependency injection\n\nReturns:\n    List of entity versions\n\nRaises:\n    HTTPException: 500 for internal errors",
         "operationId": "list_versions_api_v1_versioning_versions__entity_id__get",
@@ -3696,9 +3541,7 @@
     },
     "/api/v1/versioning/versions/{entity_id}/{version}": {
       "get": {
-        "tags": [
-          "versioning"
-        ],
+        "tags": ["versioning"],
         "summary": "Get Entity Version",
         "description": "Get a specific version of an entity.\n\nArgs:\n    entity_id: ID of the entity\n    version: Version number\n    service: VersioningService from dependency injection\n\nReturns:\n    The specific entity version\n\nRaises:\n    HTTPException: 404 if version not found, 500 for internal errors",
         "operationId": "get_entity_version_api_v1_versioning_versions__entity_id___version__get",
@@ -3748,9 +3591,7 @@
     },
     "/api/v1/versioning/changesets": {
       "post": {
-        "tags": [
-          "versioning"
-        ],
+        "tags": ["versioning"],
         "summary": "Create Changeset",
         "description": "Create a new changeset.\n\nArgs:\n    request: ChangesetCreateRequest with changeset details\n    service: VersioningService from dependency injection\n\nReturns:\n    Created ChangesetResponse with server-generated id\n\nRaises:\n    HTTPException: 400 for invalid input, 500 for internal errors",
         "operationId": "create_changeset_api_v1_versioning_changesets_post",
@@ -3788,9 +3629,7 @@
         }
       },
       "get": {
-        "tags": [
-          "versioning"
-        ],
+        "tags": ["versioning"],
         "summary": "List Changesets",
         "description": "List all changesets.\n\nArgs:\n    service: VersioningService from dependency injection\n    limit: Maximum number of results to return\n\nReturns:\n    List of ChangesetResponse objects\n\nRaises:\n    HTTPException: 500 for internal errors",
         "operationId": "list_changesets_api_v1_versioning_changesets_get",
@@ -3836,9 +3675,7 @@
     },
     "/api/v1/versioning/changesets/{changeset_id}": {
       "get": {
-        "tags": [
-          "versioning"
-        ],
+        "tags": ["versioning"],
         "summary": "Get Changeset",
         "description": "Retrieve a changeset by ID.\n\nArgs:\n    changeset_id: ID of the changeset\n    service: VersioningService from dependency injection\n\nReturns:\n    ChangesetResponse\n\nRaises:\n    HTTPException: 404 if not found, 500 for internal errors",
         "operationId": "get_changeset_api_v1_versioning_changesets__changeset_id__get",
@@ -3879,9 +3716,7 @@
     },
     "/api/v1/versioning/changesets/{changeset_id}/stage": {
       "post": {
-        "tags": [
-          "versioning"
-        ],
+        "tags": ["versioning"],
         "summary": "Stage Changeset",
         "description": "Transition a changeset from WORKING to STAGED.\n\nArgs:\n    changeset_id: ID of the changeset to stage\n    service: VersioningService from dependency injection\n\nReturns:\n    Updated ChangesetResponse in STAGED state\n\nRaises:\n    HTTPException: 404 if not found, 409 for invalid state, 500 for internal errors",
         "operationId": "stage_changeset_api_v1_versioning_changesets__changeset_id__stage_post",
@@ -3922,9 +3757,7 @@
     },
     "/api/v1/versioning/changesets/{changeset_id}/submit": {
       "post": {
-        "tags": [
-          "versioning"
-        ],
+        "tags": ["versioning"],
         "summary": "Submit Proposal",
         "description": "Submit a changeset as a proposal for review.\n\nTransitions the changeset from STAGED to PROPOSED and creates a Proposal in 'open' state.\n\nArgs:\n    changeset_id: ID of the changeset to propose\n    service: VersioningService from dependency injection\n\nReturns:\n    Created ProposalResponse\n\nRaises:\n    HTTPException: 404 if not found, 409 for invalid state, 500 for internal errors",
         "operationId": "submit_proposal_api_v1_versioning_changesets__changeset_id__submit_post",
@@ -3965,9 +3798,7 @@
     },
     "/api/v1/versioning/changesets/{changeset_id}/apply": {
       "post": {
-        "tags": [
-          "versioning"
-        ],
+        "tags": ["versioning"],
         "summary": "Apply Changeset",
         "description": "Apply a changeset by staging and submitting it in one action.\n\nTransitions the changeset from WORKING to STAGED to PROPOSED and creates\na Proposal in 'open' state. This combines stage and submit into a single operation.\n\nArgs:\n    changeset_id: ID of the changeset to apply\n    service: VersioningService from dependency injection\n\nReturns:\n    Created ProposalResponse\n\nRaises:\n    HTTPException: 404 if not found, 409 for invalid state, 500 for internal errors",
         "operationId": "apply_changeset_api_v1_versioning_changesets__changeset_id__apply_post",
@@ -4008,9 +3839,7 @@
     },
     "/api/v1/versioning/proposals/{proposal_id}/approve": {
       "post": {
-        "tags": [
-          "versioning"
-        ],
+        "tags": ["versioning"],
         "summary": "Approve Proposal",
         "description": "Approve a proposal.\n\nTransitions the linked changeset from PROPOSED to APPROVED\nand updates the proposal state to 'approved'.\n\nArgs:\n    proposal_id: ID of the proposal to approve\n    service: VersioningService from dependency injection\n\nReturns:\n    Updated ProposalResponse in 'approved' state\n\nRaises:\n    HTTPException: 404 if not found, 409 for invalid state, 500 for internal errors",
         "operationId": "approve_proposal_api_v1_versioning_proposals__proposal_id__approve_post",
@@ -4051,9 +3880,7 @@
     },
     "/api/v1/versioning/proposals/{proposal_id}/reject": {
       "post": {
-        "tags": [
-          "versioning"
-        ],
+        "tags": ["versioning"],
         "summary": "Reject Proposal",
         "description": "Reject a proposal.\n\nTransitions the linked changeset back to WORKING state,\nrecords the rejection reason, and updates the proposal state to 'rejected'.\n\nArgs:\n    proposal_id: ID of the proposal to reject\n    request: RejectProposalRequest with rejection reason\n    service: VersioningService from dependency injection\n\nReturns:\n    Updated ProposalResponse in 'rejected' state\n\nRaises:\n    HTTPException: 404 if not found, 409 for invalid state, 500 for internal errors",
         "operationId": "reject_proposal_api_v1_versioning_proposals__proposal_id__reject_post",
@@ -4104,9 +3931,7 @@
     },
     "/api/v1/versioning/proposals/{proposal_id}/conflicts": {
       "get": {
-        "tags": [
-          "versioning"
-        ],
+        "tags": ["versioning"],
         "summary": "Detect Conflicts",
         "description": "Detect field-level conflicts in a proposal.\n\nCompares change events in the changeset to identify conflicts.\n\nArgs:\n    proposal_id: ID of the proposal to check for conflicts\n    service: VersioningService from dependency injection\n\nReturns:\n    ConflictReportResponse with detected conflicts\n\nRaises:\n    HTTPException: 404 if not found, 500 for internal errors",
         "operationId": "detect_conflicts_api_v1_versioning_proposals__proposal_id__conflicts_get",
@@ -4147,9 +3972,7 @@
     },
     "/api/v1/versioning/proposals/{proposal_id}/auto-resolve": {
       "post": {
-        "tags": [
-          "versioning"
-        ],
+        "tags": ["versioning"],
         "summary": "Auto Resolve Conflicts",
         "description": "Automatically resolve conflicts in a proposal using the specified merge strategy.\n\nDetects conflicts and applies the requested resolution strategy, then persists\nthe resolutions so they are available for the merge workflow.\n\nArgs:\n    proposal_id: ID of the proposal to auto-resolve conflicts for\n    request: AutoResolveConflictsRequest with merge strategy\n    service: VersioningService from dependency injection\n\nReturns:\n    ConflictReportResponse with conflicts resolved according to the strategy\n\nRaises:\n    HTTPException: 404 if not found, 409 for invalid state, 500 for internal errors",
         "operationId": "auto_resolve_conflicts_api_v1_versioning_proposals__proposal_id__auto_resolve_post",
@@ -4200,9 +4023,7 @@
     },
     "/api/v1/versioning/proposals/{proposal_id}/resolve": {
       "post": {
-        "tags": [
-          "versioning"
-        ],
+        "tags": ["versioning"],
         "summary": "Resolve Conflicts",
         "description": "Manually resolve conflicts in a proposal.\n\nDetects conflicts, applies the provided resolutions, and validates that\nall conflicts are covered.\n\nArgs:\n    proposal_id: ID of the proposal to resolve conflicts for\n    request: ResolveConflictsRequest with conflict resolutions\n    service: VersioningService from dependency injection\n\nReturns:\n    ConflictReportResponse with all conflicts marked as resolved\n\nRaises:\n    HTTPException: 404 if not found, 409 if unresolved conflicts remain, 500 for internal errors",
         "operationId": "resolve_conflicts_api_v1_versioning_proposals__proposal_id__resolve_post",
@@ -4253,9 +4074,7 @@
     },
     "/api/v1/versioning/proposals/{proposal_id}/merge": {
       "post": {
-        "tags": [
-          "versioning"
-        ],
+        "tags": ["versioning"],
         "summary": "Merge Proposal",
         "description": "Merge an approved proposal.\n\nDetects conflicts using any stored resolutions, and blocks the merge\nif unresolved conflicts exist. Transitions the changeset from APPROVED\nto MERGED.\n\nArgs:\n    proposal_id: ID of the proposal to merge\n    service: VersioningService from dependency injection\n\nReturns:\n    MergeResultResponse with details of the merge operation\n\nRaises:\n    HTTPException: 404 if not found, 409 for invalid state or unresolved conflicts, 500 for internal errors",
         "operationId": "merge_proposal_api_v1_versioning_proposals__proposal_id__merge_post",
@@ -4296,9 +4115,7 @@
     },
     "/api/v1/versioning/sync/status": {
       "get": {
-        "tags": [
-          "versioning"
-        ],
+        "tags": ["versioning"],
         "summary": "Get Sync Status",
         "description": "Get the current synchronization status.\n\nReturns information about unprocessed changes and sync configuration.\n\nArgs:\n    service: VersioningService from dependency injection\n\nReturns:\n    SyncStatusResponse with sync status\n\nRaises:\n    HTTPException: 500 for internal errors",
         "operationId": "get_sync_status_api_v1_versioning_sync_status_get",
@@ -4318,9 +4135,7 @@
     },
     "/api/v1/versioning/sync/push": {
       "post": {
-        "tags": [
-          "versioning"
-        ],
+        "tags": ["versioning"],
         "summary": "Push Changes",
         "description": "Push local unprocessed changes to the remote sync target.\n\nArgs:\n    service: VersioningService from dependency injection\n\nReturns:\n    SyncResultResponse with push results\n\nRaises:\n    HTTPException: 500 for internal errors",
         "operationId": "push_changes_api_v1_versioning_sync_push_post",
@@ -4340,9 +4155,7 @@
     },
     "/api/v1/versioning/sync/pull": {
       "post": {
-        "tags": [
-          "versioning"
-        ],
+        "tags": ["versioning"],
         "summary": "Pull Changes",
         "description": "Pull remote changes and record them locally.\n\nArgs:\n    service: VersioningService from dependency injection\n\nReturns:\n    SyncResultResponse with pull results\n\nRaises:\n    HTTPException: 500 for internal errors",
         "operationId": "pull_changes_api_v1_versioning_sync_pull_post",
@@ -4362,9 +4175,7 @@
     },
     "/api/v1/admin/health": {
       "get": {
-        "tags": [
-          "admin"
-        ],
+        "tags": ["admin"],
         "summary": "Check Health",
         "description": "Check system health and component readiness.\n\nReturns the overall system health status along with the readiness of optional\ncomponents (NLP pipeline, embedding model, LLM providers).\n\nHealth status rules:\n- \"healthy\": All systems operational\n- \"degraded\": One or more issues detected (e.g., missing LLM providers, unavailable\n  components, failed background tasks) but core systems functional\n- \"unhealthy\": Critical systems (database) unavailable\n\nReturns:\n    SystemHealthResponse with status and component readiness\n\nRaises:\n    HTTPException: 500 for internal errors",
         "operationId": "check_health_api_v1_admin_health_get",
@@ -4384,9 +4195,7 @@
     },
     "/api/v1/admin/health/database": {
       "get": {
-        "tags": [
-          "admin"
-        ],
+        "tags": ["admin"],
         "summary": "Get Database Health",
         "description": "Get database component health status.\n\nReturns detailed health information about the database connection and any issues.\n\nReturns:\n    DatabaseHealthResponse with connectivity status and issues list\n\nRaises:\n    HTTPException: 500 for internal errors",
         "operationId": "get_database_health_api_v1_admin_health_database_get",
@@ -4406,9 +4215,7 @@
     },
     "/api/v1/admin/health/services": {
       "get": {
-        "tags": [
-          "admin"
-        ],
+        "tags": ["admin"],
         "summary": "Get Service Metrics",
         "description": "Get service-level metrics.\n\nReturns system uptime and list of available LLM providers.\n\nReturns:\n    ServiceMetricsResponse with uptime and available providers\n\nRaises:\n    HTTPException: 500 for internal errors",
         "operationId": "get_service_metrics_api_v1_admin_health_services_get",
@@ -4428,9 +4235,7 @@
     },
     "/api/v1/admin/health/embedding": {
       "get": {
-        "tags": [
-          "admin"
-        ],
+        "tags": ["admin"],
         "summary": "Get Embedding Status",
         "description": "Get embedding model component status.\n\nReturns availability and status details for the embedding model.\n\nReturns:\n    ComponentStatusResponse with availability and details\n\nRaises:\n    HTTPException: 500 for internal errors",
         "operationId": "get_embedding_status_api_v1_admin_health_embedding_get",
@@ -4450,9 +4255,7 @@
     },
     "/api/v1/admin/health/nlp": {
       "get": {
-        "tags": [
-          "admin"
-        ],
+        "tags": ["admin"],
         "summary": "Get Nlp Status",
         "description": "Get NLP pipeline component status.\n\nReturns availability and status details for the NLP pipeline.\n\nReturns:\n    ComponentStatusResponse with availability and details\n\nRaises:\n    HTTPException: 500 for internal errors",
         "operationId": "get_nlp_status_api_v1_admin_health_nlp_get",
@@ -4472,9 +4275,7 @@
     },
     "/api/v1/admin/health/tasks": {
       "get": {
-        "tags": [
-          "admin"
-        ],
+        "tags": ["admin"],
         "summary": "Get Task Summary",
         "description": "Get summary of background task execution status.\n\nReturns counts of tasks grouped by status (pending, running, completed, failed).\n\nReturns:\n    BackgroundTaskSummaryResponse with task counts by status\n\nRaises:\n    HTTPException: 500 for internal errors",
         "operationId": "get_task_summary_api_v1_admin_health_tasks_get",
@@ -4494,9 +4295,7 @@
     },
     "/api/v1/admin/configuration": {
       "get": {
-        "tags": [
-          "admin"
-        ],
+        "tags": ["admin"],
         "summary": "Get Configuration",
         "description": "Retrieve current application configuration.\n\nReturns all configuration sections with sensitive values (API keys)\nmasked in the API response to prevent exposure through the HTTP interface.\n\nReturns:\n    AppConfigurationResponse with configuration sections and masked API keys\n\nRaises:\n    HTTPException: 500 for internal errors",
         "operationId": "get_configuration_api_v1_admin_configuration_get",
@@ -4516,9 +4315,7 @@
     },
     "/api/v1/admin/configuration/{section}": {
       "patch": {
-        "tags": [
-          "admin"
-        ],
+        "tags": ["admin"],
         "summary": "Update Configuration",
         "description": "Update a configuration section.\n\nLoads the current configuration, updates the specified section with new values,\nand persists the changes. Returns the updated configuration with masked API keys.\n\nArgs:\n    section: Name of the configuration section to update (e.g., \"llm\", \"server\")\n    request: ConfigSectionUpdateRequest with key-value pairs to update\n    service: Injected AdminService\n\nReturns:\n    AppConfigurationResponse with updated configuration and masked API keys\n\nRaises:\n    HTTPException 400: If the section does not exist",
         "operationId": "update_configuration_api_v1_admin_configuration__section__patch",
@@ -4569,9 +4366,7 @@
     },
     "/api/v1/admin/configuration/reset": {
       "post": {
-        "tags": [
-          "admin"
-        ],
+        "tags": ["admin"],
         "summary": "Reset Configuration",
         "description": "Reset configuration to defaults while preserving credentials.\n\nResets all configuration values to their defaults. Credential fields\n(API keys, secrets) are preserved. Returns configuration with masked credentials.\n\nReturns:\n    AppConfigurationResponse with reset configuration and masked credentials\n\nRaises:\n    HTTPException: 500 for internal errors",
         "operationId": "reset_configuration_api_v1_admin_configuration_reset_post",
@@ -4591,9 +4386,7 @@
     },
     "/api/v1/admin/tasks": {
       "get": {
-        "tags": [
-          "admin"
-        ],
+        "tags": ["admin"],
         "summary": "List Tasks",
         "description": "List all background tasks.\n\nReturns metadata and status for all registered background tasks,\nwhether pending, running, completed, or failed.\n\nReturns:\n    List of BackgroundTaskResponse objects\n\nRaises:\n    HTTPException: 500 for internal errors",
         "operationId": "list_tasks_api_v1_admin_tasks_get",
@@ -4617,9 +4410,7 @@
     },
     "/api/v1/admin/tasks/{task_id}": {
       "get": {
-        "tags": [
-          "admin"
-        ],
+        "tags": ["admin"],
         "summary": "Get Task",
         "description": "Retrieve background task details by ID.\n\nReturns metadata and current status for a specific background task.\n\nArgs:\n    task_id: Unique identifier of the task\n    service: Injected AdminService\n\nReturns:\n    BackgroundTaskResponse with task details and status\n\nRaises:\n    HTTPException 404: If task_id does not exist",
         "operationId": "get_task_api_v1_admin_tasks__task_id__get",
@@ -4660,9 +4451,7 @@
     },
     "/api/v1/interchange/export": {
       "post": {
-        "tags": [
-          "interchange"
-        ],
+        "tags": ["interchange"],
         "summary": "Export Ontology",
         "description": "Export ontology data in the specified format.\n\nArgs:\n    request: Export request with format and scope\n    ontology_repo: Injected OntologyRepository\n\nReturns:\n    Binary file data as blob\n\nRaises:\n    HTTPException: If export fails or format is unsupported",
         "operationId": "export_ontology_api_v1_interchange_export_post",
@@ -4695,9 +4484,7 @@
     },
     "/api/v1/interchange/import": {
       "post": {
-        "tags": [
-          "interchange"
-        ],
+        "tags": ["interchange"],
         "summary": "Import Ontology",
         "description": "Import ontology data from a file.\n\nSupports dry-run mode to preview conflicts, or direct commit with user-chosen resolutions.\n\nArgs:\n    format: Import format (skos, owl, graphml)\n    file: File to import\n    dry_run: \"true\" for dry-run (returns plan), \"false\" to commit\n    resolutions: Optional JSON-encoded list of ResolutionRecord to apply when committing\n    ontology_repo: Injected OntologyRepository\n    interchange_repo: Injected BatchRunRepository\n\nReturns:\n    ImportPlanResponse (dry-run) or ImportRunResponse (committed)\n\nRaises:\n    HTTPException: If import fails or format is unsupported",
         "operationId": "import_ontology_api_v1_interchange_import_post",
@@ -4745,9 +4532,7 @@
     },
     "/api/v1/interchange/runs": {
       "get": {
-        "tags": [
-          "interchange"
-        ],
+        "tags": ["interchange"],
         "summary": "List Import Runs",
         "description": "List all import runs with optional filtering.\n\nArgs:\n    interchange_repo: Injected interchange repository\n    offset: Number of results to skip\n    limit: Maximum number of results to return\n    status: Optional status filter (pending, committed, failed, rolled_back)\n\nReturns:\n    Paginated list of import runs\n\nRaises:\n    HTTPException: If query fails or invalid status provided",
         "operationId": "list_import_runs_api_v1_interchange_runs_get",
@@ -4824,9 +4609,7 @@
     },
     "/api/v1/interchange/runs/{run_id}": {
       "get": {
-        "tags": [
-          "interchange"
-        ],
+        "tags": ["interchange"],
         "summary": "Get Import Run",
         "description": "Get a specific import run by ID.\n\nArgs:\n    run_id: The import run ID\n    interchange_repo: Injected interchange repository\n\nReturns:\n    Import run details\n\nRaises:\n    HTTPException: If run not found or query fails",
         "operationId": "get_import_run_api_v1_interchange_runs__run_id__get",
@@ -4867,9 +4650,7 @@
     },
     "/api/v1/interchange/runs/{run_id}/change-events": {
       "get": {
-        "tags": [
-          "interchange"
-        ],
+        "tags": ["interchange"],
         "summary": "Get Run Change Events",
         "description": "Get change events associated with an import run.\n\nArgs:\n    run_id: The import run ID\n    interchange_repo: Injected interchange repository\n    offset: Number of results to skip\n    limit: Maximum number of results to return\n    entity_type: Optional filter by entity type\n    change_type: Optional filter by change type\n\nReturns:\n    Paginated list of change events\n\nRaises:\n    HTTPException: If run not found or query fails",
         "operationId": "get_run_change_events_api_v1_interchange_runs__run_id__change_events_get",
@@ -4984,9 +4765,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "text"
-        ],
+        "required": ["text"],
         "title": "AnalyzeTextRequest",
         "description": "Request to analyze text for linguistic features and named entities."
       },
@@ -5032,12 +4811,7 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "pending",
-              "running",
-              "completed",
-              "failed"
-            ],
+            "enum": ["pending", "running", "completed", "failed"],
             "title": "Status",
             "description": "Task status: \"pending\", \"running\", \"completed\", or \"failed\""
           },
@@ -5100,12 +4874,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "name",
-          "status",
-          "created_at"
-        ],
+        "required": ["id", "name", "status", "created_at"],
         "title": "BackgroundTaskResponse",
         "description": "Response containing background task status and metadata."
       },
@@ -5126,9 +4895,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "total"
-        ],
+        "required": ["total"],
         "title": "BackgroundTaskSummaryResponse",
         "description": "Response containing summary of background task execution status."
       },
@@ -5165,10 +4932,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "format",
-          "file"
-        ],
+        "required": ["format", "file"],
         "title": "Body_import_ontology_api_v1_interchange_import_post"
       },
       "CentralityResponse": {
@@ -5188,10 +4952,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "algorithm",
-          "scores"
-        ],
+        "required": ["algorithm", "scores"],
         "title": "CentralityResponse",
         "description": "Response containing centrality scores."
       },
@@ -5212,32 +4973,19 @@
           }
         },
         "type": "object",
-        "required": [
-          "events",
-          "total"
-        ],
+        "required": ["events", "total"],
         "title": "ChangeHistoryResponse",
         "description": "Response with paginated change history results"
       },
       "ChangeOperation": {
         "type": "string",
-        "enum": [
-          "create",
-          "update",
-          "delete"
-        ],
+        "enum": ["create", "update", "delete"],
         "title": "ChangeOperation",
         "description": "Types of operations on entities."
       },
       "ChangeState": {
         "type": "string",
-        "enum": [
-          "working",
-          "staged",
-          "proposed",
-          "approved",
-          "merged"
-        ],
+        "enum": ["working", "staged", "proposed", "approved", "merged"],
         "title": "ChangeState",
         "description": "Valid states for a changeset."
       },
@@ -5271,9 +5019,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "name"
-        ],
+        "required": ["name"],
         "title": "ChangesetCreateRequest",
         "description": "Request to create a new changeset"
       },
@@ -5327,13 +5073,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "name",
-          "state",
-          "created_at",
-          "updated_at"
-        ],
+        "required": ["id", "name", "state", "created_at", "updated_at"],
         "title": "ChangesetResponse",
         "description": "Response representing a changeset"
       },
@@ -5371,9 +5111,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "title"
-        ],
+        "required": ["title"],
         "title": "ClassCreateRequest",
         "description": "Request to create a new class."
       },
@@ -5386,9 +5124,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "target_scheme_id"
-        ],
+        "required": ["target_scheme_id"],
         "title": "ClassMoveRequest",
         "description": "Request to move a class to a different concept scheme."
       },
@@ -5520,22 +5256,14 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "draft",
-              "published"
-            ],
+            "enum": ["draft", "published"],
             "title": "Status",
             "description": "Publication status (draft or published)",
             "default": "draft"
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "concept_scheme_id",
-          "taxonomy_id",
-          "title"
-        ],
+        "required": ["id", "concept_scheme_id", "taxonomy_id", "title"],
         "title": "ClassResponse",
         "description": "Response containing class data."
       },
@@ -5591,10 +5319,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "algorithm",
-          "communities"
-        ],
+        "required": ["algorithm", "communities"],
         "title": "CommunitiesResponse",
         "description": "Response containing community detection results."
       },
@@ -5613,9 +5338,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "available"
-        ],
+        "required": ["available"],
         "title": "ComponentStatusResponse",
         "description": "Response containing individual component status."
       },
@@ -5641,9 +5364,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "title"
-        ],
+        "required": ["title"],
         "title": "ConceptSchemeCreateRequest",
         "description": "Request to create a new concept scheme."
       },
@@ -5710,21 +5431,14 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "draft",
-              "published"
-            ],
+            "enum": ["draft", "published"],
             "title": "Status",
             "description": "Publication status (draft or published)",
             "default": "draft"
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "taxonomy_id",
-          "title"
-        ],
+        "required": ["id", "taxonomy_id", "title"],
         "title": "ConceptSchemeResponse",
         "description": "Response containing concept scheme data."
       },
@@ -5770,9 +5484,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "updates"
-        ],
+        "required": ["updates"],
         "title": "ConfigSectionUpdateRequest",
         "description": "Request to update a configuration section."
       },
@@ -5798,10 +5510,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "proposal_id",
-          "has_conflicts"
-        ],
+        "required": ["proposal_id", "has_conflicts"],
         "title": "ConflictReportResponse",
         "description": "Response with conflict detection results"
       },
@@ -5853,13 +5562,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "entity_id",
-          "field_name",
-          "base_value",
-          "incoming_value",
-          "is_resolved"
-        ],
+        "required": ["entity_id", "field_name", "base_value", "incoming_value", "is_resolved"],
         "title": "ConflictResponse",
         "description": "Response representing a detected conflict"
       },
@@ -5877,10 +5580,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "source_id",
-          "target_id"
-        ],
+        "required": ["source_id", "target_id"],
         "title": "CycleCheckRequest",
         "description": "Request to check if adding an edge would create a cycle."
       },
@@ -5903,11 +5603,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "source_id",
-          "target_id",
-          "would_create_cycle"
-        ],
+        "required": ["source_id", "target_id", "would_create_cycle"],
         "title": "CycleCheckResponse",
         "description": "Response from cycle detection check."
       },
@@ -5953,10 +5649,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "property_identifier",
-          "value"
-        ],
+        "required": ["property_identifier", "value"],
         "title": "DataPropertyValueResponse",
         "description": "Response containing data property value."
       },
@@ -5977,9 +5670,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "connected"
-        ],
+        "required": ["connected"],
         "title": "DatabaseHealthResponse",
         "description": "Response containing database health status details."
       },
@@ -6003,10 +5694,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "in_degree",
-          "out_degree"
-        ],
+        "required": ["in_degree", "out_degree"],
         "title": "DegreeDistributionResponse",
         "description": "Response containing degree distribution for all nodes."
       },
@@ -6028,10 +5716,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "text",
-          "extracted_entities"
-        ],
+        "required": ["text", "extracted_entities"],
         "title": "EnrichFromReferencesRequest",
         "description": "Request to enrich extracted entities with external reference knowledge."
       },
@@ -6078,13 +5763,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "entity_id",
-          "version",
-          "state",
-          "snapshot",
-          "created_at"
-        ],
+        "required": ["entity_id", "version", "state", "snapshot", "created_at"],
         "title": "EntityVersionResponse",
         "description": "Response representing an entity version"
       },
@@ -6132,11 +5811,7 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "success",
-              "error",
-              "timeout"
-            ],
+            "enum": ["success", "error", "timeout"],
             "title": "Status",
             "description": "Completion status (success, error, timeout)"
           },
@@ -6224,11 +5899,7 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "success",
-              "error",
-              "timeout"
-            ],
+            "enum": ["success", "error", "timeout"],
             "title": "Status",
             "description": "Completion status (success, error, timeout)"
           },
@@ -6272,11 +5943,7 @@
         "properties": {
           "format": {
             "type": "string",
-            "enum": [
-              "skos",
-              "owl",
-              "graphml"
-            ],
+            "enum": ["skos", "owl", "graphml"],
             "title": "Format",
             "description": "Export format: skos, owl, or graphml"
           },
@@ -6292,10 +5959,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "format",
-          "scope"
-        ],
+        "required": ["format", "scope"],
         "title": "ExportRequest",
         "description": "Request to export ontology data."
       },
@@ -6338,10 +6002,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "source",
-          "identifier"
-        ],
+        "required": ["source", "identifier"],
         "title": "ExternalReferenceResponse",
         "description": "Response containing external reference data."
       },
@@ -6355,9 +6016,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "text"
-        ],
+        "required": ["text"],
         "title": "ExtractRequest",
         "description": "Request to extract entities from text."
       },
@@ -6392,9 +6051,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "model"
-        ],
+        "required": ["model"],
         "title": "ExtractTripleOptions",
         "description": "Options for triple extraction."
       },
@@ -6417,11 +6074,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "text",
-          "ontology_id",
-          "options"
-        ],
+        "required": ["text", "ontology_id", "options"],
         "title": "ExtractTripleRequest",
         "description": "Request to extract triples from text scoped to an ontology."
       },
@@ -6449,10 +6102,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "triples",
-          "metadata"
-        ],
+        "required": ["triples", "metadata"],
         "title": "ExtractTripleResponse",
         "description": "Response containing extracted triples."
       },
@@ -6529,13 +6179,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "label",
-          "entity_type",
-          "source_layer",
-          "confidence"
-        ],
+        "required": ["id", "label", "entity_type", "source_layer", "confidence"],
         "title": "ExtractedEntitySchema",
         "description": "Response containing extracted entity data."
       },
@@ -6583,13 +6227,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "subject",
-          "predicate",
-          "object",
-          "confidence",
-          "provenance"
-        ],
+        "required": ["subject", "predicate", "object", "confidence", "provenance"],
         "title": "ExtractedTriple",
         "description": "A single extracted triple with confidence and provenance."
       },
@@ -6634,13 +6272,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "layer_number",
-          "layer_name",
-          "entities_found",
-          "duration_ms",
-          "success"
-        ],
+        "required": ["layer_number", "layer_name", "entities_found", "duration_ms", "success"],
         "title": "ExtractionLayerResultSchema",
         "description": "Response containing execution metadata for a single extraction layer."
       },
@@ -6665,11 +6297,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "model",
-          "tokens_used",
-          "duration_ms"
-        ],
+        "required": ["model", "tokens_used", "duration_ms"],
         "title": "ExtractionMetadata",
         "description": "Metadata about a triple extraction operation."
       },
@@ -6713,12 +6341,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "text",
-          "total_duration_ms",
-          "created_at"
-        ],
+        "required": ["id", "text", "total_duration_ms", "created_at"],
         "title": "ExtractionResultSchema",
         "description": "Response containing the complete output of an extraction operation."
       },
@@ -6809,11 +6432,7 @@
         "properties": {
           "match_kind": {
             "type": "string",
-            "enum": [
-              "external_reference",
-              "uuid",
-              "title"
-            ],
+            "enum": ["external_reference", "uuid", "title"],
             "title": "Match Kind",
             "description": "Type of match: external_reference, uuid, or title"
           },
@@ -6839,13 +6458,7 @@
             "anyOf": [
               {
                 "type": "string",
-                "enum": [
-                  "skip",
-                  "overwrite",
-                  "merge",
-                  "rename",
-                  "abort"
-                ]
+                "enum": ["skip", "overwrite", "merge", "rename", "abort"]
               },
               {
                 "type": "null"
@@ -6857,13 +6470,7 @@
           "available_resolutions": {
             "items": {
               "type": "string",
-              "enum": [
-                "skip",
-                "overwrite",
-                "merge",
-                "rename",
-                "abort"
-              ]
+              "enum": ["skip", "overwrite", "merge", "rename", "abort"]
             },
             "type": "array",
             "title": "Available Resolutions",
@@ -6871,11 +6478,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "match_kind",
-          "incoming",
-          "available_resolutions"
-        ],
+        "required": ["match_kind", "incoming", "available_resolutions"],
         "title": "ImportConflictResponse",
         "description": "Represents a conflict detected during import."
       },
@@ -6939,9 +6542,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "new_entity_count"
-        ],
+        "required": ["new_entity_count"],
         "title": "ImportPlanResponse",
         "description": "Result of an import dry-run, describing what would be imported."
       },
@@ -6972,11 +6573,7 @@
           },
           "format": {
             "type": "string",
-            "enum": [
-              "skos",
-              "owl",
-              "graphml"
-            ],
+            "enum": ["skos", "owl", "graphml"],
             "title": "Format",
             "description": "Format of imported file"
           },
@@ -7027,25 +6624,13 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "pending",
-              "committed",
-              "failed",
-              "rolled_back"
-            ],
+            "enum": ["pending", "committed", "failed", "rolled_back"],
             "title": "Status",
             "description": "Current status: pending, committed, failed, or rolled_back"
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "created_at",
-          "format",
-          "source_hash",
-          "scope",
-          "status"
-        ],
+        "required": ["id", "created_at", "format", "source_hash", "scope", "status"],
         "title": "ImportRunResponse",
         "description": "Response containing import run data."
       },
@@ -7061,9 +6646,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "class_ids"
-        ],
+        "required": ["class_ids"],
         "title": "IndividualClassListRequest",
         "description": "Request to reorder individual class membership."
       },
@@ -7076,9 +6659,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "class_id"
-        ],
+        "required": ["class_id"],
         "title": "IndividualClassRequest",
         "description": "Request to manage individual class membership."
       },
@@ -7119,10 +6700,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "class_ids",
-          "title"
-        ],
+        "required": ["class_ids", "title"],
         "title": "IndividualCreateRequest",
         "description": "Request to create a new individual."
       },
@@ -7206,21 +6784,14 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "draft",
-              "published"
-            ],
+            "enum": ["draft", "published"],
             "title": "Status",
             "description": "Publication status (draft or published)",
             "default": "draft"
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "class_ids",
-          "title"
-        ],
+        "required": ["id", "class_ids", "title"],
         "title": "IndividualResponse",
         "description": "Response containing individual data."
       },
@@ -7311,13 +6882,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "timestamp",
-          "entity_id",
-          "entity_type",
-          "operation"
-        ],
+        "required": ["id", "timestamp", "entity_id", "entity_type", "operation"],
         "title": "InterchangeChangeEventResponse",
         "description": "Response containing interchange change event data."
       },
@@ -7346,12 +6911,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "node_count",
-          "edge_count",
-          "is_directed",
-          "timestamp"
-        ],
+        "required": ["node_count", "edge_count", "is_directed", "timestamp"],
         "title": "KnowledgeGraphResponse",
         "description": "Response containing knowledge graph metadata."
       },
@@ -7374,11 +6934,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "label",
-          "language_code",
-          "sense_type"
-        ],
+        "required": ["label", "language_code", "sense_type"],
         "title": "LexicalSenseResponse",
         "description": "Response containing lexical sense data."
       },
@@ -7409,12 +6965,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "items",
-          "total",
-          "limit",
-          "offset"
-        ],
+        "required": ["items", "total", "limit", "offset"],
         "title": "ListResponse[ClassResponse]"
       },
       "ListResponse_ConceptSchemeResponse_": {
@@ -7444,12 +6995,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "items",
-          "total",
-          "limit",
-          "offset"
-        ],
+        "required": ["items", "total", "limit", "offset"],
         "title": "ListResponse[ConceptSchemeResponse]"
       },
       "ListResponse_DataPropertyValueResponse_": {
@@ -7479,12 +7025,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "items",
-          "total",
-          "limit",
-          "offset"
-        ],
+        "required": ["items", "total", "limit", "offset"],
         "title": "ListResponse[DataPropertyValueResponse]"
       },
       "ListResponse_ExecutionWithPipelineResponse_": {
@@ -7514,12 +7055,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "items",
-          "total",
-          "limit",
-          "offset"
-        ],
+        "required": ["items", "total", "limit", "offset"],
         "title": "ListResponse[ExecutionWithPipelineResponse]"
       },
       "ListResponse_ImportRunResponse_": {
@@ -7549,12 +7085,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "items",
-          "total",
-          "limit",
-          "offset"
-        ],
+        "required": ["items", "total", "limit", "offset"],
         "title": "ListResponse[ImportRunResponse]"
       },
       "ListResponse_IndividualResponse_": {
@@ -7584,12 +7115,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "items",
-          "total",
-          "limit",
-          "offset"
-        ],
+        "required": ["items", "total", "limit", "offset"],
         "title": "ListResponse[IndividualResponse]"
       },
       "ListResponse_InterchangeChangeEventResponse_": {
@@ -7619,12 +7145,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "items",
-          "total",
-          "limit",
-          "offset"
-        ],
+        "required": ["items", "total", "limit", "offset"],
         "title": "ListResponse[InterchangeChangeEventResponse]"
       },
       "ListResponse_PropertyDefinitionResponse_": {
@@ -7654,12 +7175,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "items",
-          "total",
-          "limit",
-          "offset"
-        ],
+        "required": ["items", "total", "limit", "offset"],
         "title": "ListResponse[PropertyDefinitionResponse]"
       },
       "ListResponse_RelationshipResponse_": {
@@ -7689,12 +7205,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "items",
-          "total",
-          "limit",
-          "offset"
-        ],
+        "required": ["items", "total", "limit", "offset"],
         "title": "ListResponse[RelationshipResponse]"
       },
       "ListResponse_TaxonomyResponse_": {
@@ -7724,12 +7235,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "items",
-          "total",
-          "limit",
-          "offset"
-        ],
+        "required": ["items", "total", "limit", "offset"],
         "title": "ListResponse[TaxonomyResponse]"
       },
       "MergeResultResponse": {
@@ -7774,11 +7280,7 @@
       },
       "MergeStrategy": {
         "type": "string",
-        "enum": [
-          "last_write_wins",
-          "base_value_wins",
-          "manual"
-        ],
+        "enum": ["last_write_wins", "base_value_wins", "manual"],
         "title": "MergeStrategy",
         "description": "Strategy for resolving conflicts during merge."
       },
@@ -7791,11 +7293,7 @@
           },
           "direction": {
             "type": "string",
-            "enum": [
-              "in",
-              "out",
-              "both"
-            ],
+            "enum": ["in", "out", "both"],
             "title": "Direction",
             "description": "Direction of traversal: 'in', 'out', or 'both'"
           },
@@ -7817,12 +7315,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "node_id",
-          "direction",
-          "incoming",
-          "outgoing"
-        ],
+        "required": ["node_id", "direction", "incoming", "outgoing"],
         "title": "NeighborsResponse",
         "description": "Response containing neighbor nodes."
       },
@@ -7846,10 +7339,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "label"
-        ],
+        "required": ["id", "label"],
         "title": "ObjectNodeClass",
         "description": "Object node: class/concept."
       },
@@ -7873,10 +7363,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "label"
-        ],
+        "required": ["id", "label"],
         "title": "ObjectNodeIndividual",
         "description": "Object node: individual instance."
       },
@@ -7923,9 +7410,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "value"
-        ],
+        "required": ["value"],
         "title": "ObjectNodeLiteral",
         "description": "Object node: literal value."
       },
@@ -7964,13 +7449,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "source_id",
-          "target_id",
-          "nodes",
-          "distance",
-          "relationships"
-        ],
+        "required": ["source_id", "target_id", "nodes", "distance", "relationships"],
         "title": "PathResultResponse",
         "description": "Response containing a single path between two nodes."
       },
@@ -8026,14 +7505,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "pipeline",
-          "title",
-          "provider",
-          "model",
-          "system_prompt",
-          "user_prompt"
-        ],
+        "required": ["pipeline", "title", "provider", "model", "system_prompt", "user_prompt"],
         "title": "PipelineConfigurationCreate",
         "description": "Request to create a new pipeline configuration."
       },
@@ -8227,9 +7699,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "input_text"
-        ],
+        "required": ["input_text"],
         "title": "PipelineExecuteRequest",
         "description": "Request to execute a pipeline."
       },
@@ -8258,10 +7728,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "name",
-          "description"
-        ],
+        "required": ["name", "description"],
         "title": "PipelineFlavorCreateRequest",
         "description": "Request to create a new pipeline flavor."
       },
@@ -8385,10 +7852,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "property_definition_id",
-          "label"
-        ],
+        "required": ["property_definition_id", "label"],
         "title": "PredicateNode",
         "description": "Predicate node of a triple\u2014a property definition."
       },
@@ -8420,10 +7884,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "identifier",
-          "title"
-        ],
+        "required": ["identifier", "title"],
         "title": "PropertyDefinitionCreateRequest",
         "description": "Request to create a new property definition."
       },
@@ -8502,21 +7963,14 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "draft",
-              "published"
-            ],
+            "enum": ["draft", "published"],
             "title": "Status",
             "description": "Publication status (draft or published)",
             "default": "draft"
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "identifier",
-          "title"
-        ],
+        "required": ["id", "identifier", "title"],
         "title": "PropertyDefinitionResponse",
         "description": "Response containing property definition data."
       },
@@ -8601,23 +8055,13 @@
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "changeset_id",
-          "state",
-          "submitted_at"
-        ],
+        "required": ["id", "changeset_id", "state", "submitted_at"],
         "title": "ProposalResponse",
         "description": "Response representing a proposal"
       },
       "ProposalState": {
         "type": "string",
-        "enum": [
-          "open",
-          "approved",
-          "rejected",
-          "merged"
-        ],
+        "enum": ["open", "approved", "rejected", "merged"],
         "title": "ProposalState",
         "description": "Valid states for a proposal."
       },
@@ -8640,11 +8084,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "added",
-          "modified",
-          "removed"
-        ],
+        "required": ["added", "modified", "removed"],
         "title": "PublishDiffStats",
         "description": "Response containing diff statistics for publishing."
       },
@@ -8684,12 +8124,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "subject_uri",
-          "predicate",
-          "object_uri",
-          "source"
-        ],
+        "required": ["subject_uri", "predicate", "object_uri", "source"],
         "title": "ReferenceRelationSchema",
         "description": "Response containing a single reference relationship."
       },
@@ -8726,9 +8161,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "uri"
-        ],
+        "required": ["uri"],
         "title": "ReferenceRelationsRequest",
         "description": "Request to retrieve relationships for a reference URI."
       },
@@ -8771,9 +8204,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "uri"
-        ],
+        "required": ["uri"],
         "title": "ReferenceRelationsResponseSchema",
         "description": "Response containing relationships aggregated from multiple sources."
       },
@@ -8816,11 +8247,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "uri",
-          "label",
-          "source"
-        ],
+        "required": ["uri", "label", "source"],
         "title": "ReferenceResultSchema",
         "description": "Response containing a single reference search result."
       },
@@ -8857,9 +8284,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "term"
-        ],
+        "required": ["term"],
         "title": "ReferenceSearchRequest",
         "description": "Request to search for references across available sources."
       },
@@ -8902,9 +8327,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "term"
-        ],
+        "required": ["term"],
         "title": "ReferenceSearchResponseSchema",
         "description": "Response containing search results aggregated from multiple sources."
       },
@@ -8934,10 +8357,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "name",
-          "available"
-        ],
+        "required": ["name", "available"],
         "title": "ReferenceSourceStatusSchema",
         "description": "Status information for a single reference source."
       },
@@ -8964,9 +8384,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "timestamp"
-        ],
+        "required": ["timestamp"],
         "title": "ReferenceStatusResponseSchema",
         "description": "Response containing status of all reference sources."
       },
@@ -8980,9 +8398,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "reason"
-        ],
+        "required": ["reason"],
         "title": "RejectProposalRequest",
         "description": "Request to reject a proposal"
       },
@@ -9005,11 +8421,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "source_id",
-          "target_id",
-          "relationship_type"
-        ],
+        "required": ["source_id", "target_id", "relationship_type"],
         "title": "RelationshipCreateRequest",
         "description": "Request to create a new relationship."
       },
@@ -9050,12 +8462,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "source_id",
-          "target_id",
-          "property_definition_id"
-        ],
+        "required": ["id", "source_id", "target_id", "property_definition_id"],
         "title": "RelationshipResponse",
         "description": "Response containing relationship data."
       },
@@ -9063,11 +8470,7 @@
         "properties": {
           "match_kind": {
             "type": "string",
-            "enum": [
-              "external_reference",
-              "uuid",
-              "title"
-            ],
+            "enum": ["external_reference", "uuid", "title"],
             "title": "Match Kind",
             "description": "Type of match that was resolved"
           },
@@ -9078,23 +8481,13 @@
           },
           "resolution_chosen": {
             "type": "string",
-            "enum": [
-              "skip",
-              "overwrite",
-              "merge",
-              "rename",
-              "abort"
-            ],
+            "enum": ["skip", "overwrite", "merge", "rename", "abort"],
             "title": "Resolution Chosen",
             "description": "Resolution applied"
           }
         },
         "type": "object",
-        "required": [
-          "match_kind",
-          "entity_id",
-          "resolution_chosen"
-        ],
+        "required": ["match_kind", "entity_id", "resolution_chosen"],
         "title": "ResolutionRecordResponse",
         "description": "Record of a resolution applied during import."
       },
@@ -9111,9 +8504,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "resolutions"
-        ],
+        "required": ["resolutions"],
         "title": "ResolveConflictsRequest",
         "description": "Request to resolve conflicts in a proposal"
       },
@@ -9127,9 +8518,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "query"
-        ],
+        "required": ["query"],
         "title": "SPARQLRequest",
         "description": "Request to execute a SPARQL query."
       },
@@ -9151,10 +8540,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "results",
-          "triple_count"
-        ],
+        "required": ["results", "triple_count"],
         "title": "SPARQLResponse",
         "description": "Response from SPARQL query execution."
       },
@@ -9162,12 +8548,7 @@
         "properties": {
           "scope_type": {
             "type": "string",
-            "enum": [
-              "whole_graph",
-              "taxonomy",
-              "scheme",
-              "entity_set"
-            ],
+            "enum": ["whole_graph", "taxonomy", "scheme", "entity_set"],
             "title": "Scope Type",
             "description": "Scope type: whole_graph, taxonomy, scheme, or entity_set"
           },
@@ -9218,9 +8599,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "scope_type"
-        ],
+        "required": ["scope_type"],
         "title": "SerializationScopeRequest",
         "description": "Request to specify what to export."
       },
@@ -9228,12 +8607,7 @@
         "properties": {
           "scope_type": {
             "type": "string",
-            "enum": [
-              "whole_graph",
-              "taxonomy",
-              "scheme",
-              "entity_set"
-            ],
+            "enum": ["whole_graph", "taxonomy", "scheme", "entity_set"],
             "title": "Scope Type"
           },
           "taxonomy_id": {
@@ -9279,9 +8653,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "scope_type"
-        ],
+        "required": ["scope_type"],
         "title": "SerializationScopeResponse",
         "description": "Response describing what was serialized."
       },
@@ -9302,9 +8674,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "uptime_seconds"
-        ],
+        "required": ["uptime_seconds"],
         "title": "ServiceMetricsResponse",
         "description": "Response containing service-level metrics."
       },
@@ -9348,12 +8718,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "nodes",
-          "edges",
-          "node_count",
-          "edge_count"
-        ],
+        "required": ["nodes", "edges", "node_count", "edge_count"],
         "title": "SubgraphDataResponse",
         "description": "Response containing subgraph nodes and edges."
       },
@@ -9375,11 +8740,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "node_id",
-          "subgraph",
-          "depth"
-        ],
+        "required": ["node_id", "subgraph", "depth"],
         "title": "SubgraphResultResponse",
         "description": "Response containing depth-based subgraph extraction result."
       },
@@ -9387,10 +8748,7 @@
         "properties": {
           "kind": {
             "type": "string",
-            "enum": [
-              "individual",
-              "class"
-            ],
+            "enum": ["individual", "class"],
             "title": "Kind"
           },
           "id": {
@@ -9405,11 +8763,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "kind",
-          "id",
-          "label"
-        ],
+        "required": ["kind", "id", "label"],
         "title": "SubjectNode",
         "description": "Subject node of a triple\u2014individual or class."
       },
@@ -9461,10 +8815,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "pushed",
-          "pulled"
-        ],
+        "required": ["pushed", "pulled"],
         "title": "SyncResultResponse",
         "description": "Response with synchronization operation results"
       },
@@ -9514,10 +8865,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "unprocessed_count",
-          "is_configured"
-        ],
+        "required": ["unprocessed_count", "is_configured"],
         "title": "SyncStatusResponse",
         "description": "Response with synchronization status"
       },
@@ -9525,11 +8873,7 @@
         "properties": {
           "status": {
             "type": "string",
-            "enum": [
-              "healthy",
-              "degraded",
-              "unhealthy"
-            ],
+            "enum": ["healthy", "degraded", "unhealthy"],
             "title": "Status",
             "description": "Overall health status: \"healthy\", \"degraded\", or \"unhealthy\""
           },
@@ -9610,9 +8954,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "title"
-        ],
+        "required": ["title"],
         "title": "TaxonomyCreateRequest",
         "description": "Request to create a new taxonomy."
       },
@@ -9626,9 +8968,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "commit_message"
-        ],
+        "required": ["commit_message"],
         "title": "TaxonomyPublishRequest",
         "description": "Request to publish a taxonomy."
       },
@@ -9690,20 +9030,14 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "draft",
-              "published"
-            ],
+            "enum": ["draft", "published"],
             "title": "Status",
             "description": "Publication status (draft or published)",
             "default": "draft"
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "title"
-        ],
+        "required": ["id", "title"],
         "title": "TaxonomyResponse",
         "description": "Response containing taxonomy data."
       },
@@ -9748,9 +9082,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "count"
-        ],
+        "required": ["count"],
         "title": "TripleCountResponse",
         "description": "Response containing RDF triple count."
       },
@@ -9775,11 +9107,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "text_offset_start",
-          "text_offset_end",
-          "raw"
-        ],
+        "required": ["text_offset_start", "text_offset_end", "raw"],
         "title": "TripleProvenance",
         "description": "Provenance metadata for an extracted triple."
       },
@@ -9802,11 +9130,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "subject",
-          "predicate",
-          "object"
-        ],
+        "required": ["subject", "predicate", "object"],
         "title": "TripleResponse",
         "description": "Response containing a single RDF triple."
       },
@@ -9827,10 +9151,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "triples",
-          "count"
-        ],
+        "required": ["triples", "count"],
         "title": "TriplesResponse",
         "description": "Response containing RDF triples."
       },
@@ -9867,11 +9188,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "loc",
-          "msg",
-          "type"
-        ],
+        "required": ["loc", "msg", "type"],
         "title": "ValidationError"
       },
       "VersioningChangeEventResponse": {

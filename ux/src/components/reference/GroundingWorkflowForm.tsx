@@ -10,10 +10,7 @@ interface GroundingWorkflowFormProps {
   isLoading?: boolean;
 }
 
-export function GroundingWorkflowForm({
-  onSubmit,
-  isLoading,
-}: GroundingWorkflowFormProps) {
+export function GroundingWorkflowForm({ onSubmit, isLoading }: GroundingWorkflowFormProps) {
   const [title, setTitle] = useState("");
   const [source, setSource] = useState("");
   const [selectedClassIds, setSelectedClassIds] = useState<string[]>([]);

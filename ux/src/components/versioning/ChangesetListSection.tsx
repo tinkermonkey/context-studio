@@ -54,16 +54,14 @@ function getStateChip(state: string) {
   );
 }
 
-export function ChangesetListSection({ onApplyError, onConflictDetected }: ChangesetListSectionProps) {
+export function ChangesetListSection({
+  onApplyError,
+  onConflictDetected,
+}: ChangesetListSectionProps) {
   const { toast } = useToasts();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const {
-    data: changesets,
-    isLoading,
-    error,
-    refetch,
-  } = useChangesets();
+  const { data: changesets, isLoading, error, refetch } = useChangesets();
 
   const applyMutation = useApplyChangeset();
 
@@ -98,9 +96,7 @@ export function ChangesetListSection({ onApplyError, onConflictDetected }: Chang
   }
 
   if (error) {
-    return (
-      <ErrorBanner error={error} onRetry={refetch} message={COPY.couldNotLoadChangesets} />
-    );
+    return <ErrorBanner error={error} onRetry={refetch} message={COPY.couldNotLoadChangesets} />;
   }
 
   if (!changesets || changesets.length === 0) {
@@ -201,9 +197,23 @@ export function ChangesetListSection({ onApplyError, onConflictDetected }: Chang
                 backgroundColor: "var(--canvas-bg-2)",
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  gap: "12px",
+                }}
+              >
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: "12px", fontWeight: 500, color: "var(--canvas-fg-2)", marginBottom: "8px" }}>
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: 500,
+                      color: "var(--canvas-fg-2)",
+                      marginBottom: "8px",
+                    }}
+                  >
                     {COPY.changesHeading(changeset.event_ids?.length || 0)}
                   </div>
                   <div
@@ -215,10 +225,10 @@ export function ChangesetListSection({ onApplyError, onConflictDetected }: Chang
                   >
                     {changeset.event_ids && changeset.event_ids.length > 0
                       ? changeset.event_ids.map((id) => (
-                        <div key={id} style={{ marginBottom: "4px" }}>
-                          {id.slice(0, 8)}...
-                        </div>
-                      ))
+                          <div key={id} style={{ marginBottom: "4px" }}>
+                            {id.slice(0, 8)}...
+                          </div>
+                        ))
                       : COPY.noChanges}
                   </div>
                 </div>
