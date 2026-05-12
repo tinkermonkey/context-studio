@@ -25,7 +25,6 @@ function ConflictRow({
   conflict,
   entityName,
   isResolved,
-  resolvedValue,
   onKeepOurs,
   onKeepTheirs,
   onEdit,
@@ -38,7 +37,6 @@ function ConflictRow({
   conflict: ConflictResponse;
   entityName: string;
   isResolved: boolean;
-  resolvedValue?: unknown;
   onKeepOurs: () => void;
   onKeepTheirs: () => void;
   onEdit: () => void;
@@ -113,13 +111,9 @@ function ConflictRow({
         )}
       </div>
 
-      <div className="mono muted">
-        {JSON.stringify(conflict.base_value)}
-      </div>
+      <div className="mono muted">{JSON.stringify(conflict.base_value)}</div>
 
-      <div className="mono muted">
-        {JSON.stringify(conflict.incoming_value)}
-      </div>
+      <div className="mono muted">{JSON.stringify(conflict.incoming_value)}</div>
 
       {isResolved ? (
         <div style={{ fontSize: "11px", fontWeight: 500 }}>
@@ -219,7 +213,10 @@ function ConflictGroup({
   ).length;
 
   return (
-    <div data-testid={`conflict-group-${entityId}`} style={{ borderBottom: "1px solid var(--canvas-bd)" }}>
+    <div
+      data-testid={`conflict-group-${entityId}`}
+      style={{ borderBottom: "1px solid var(--canvas-bd)" }}
+    >
       <div
         onClick={() => setIsExpanded(!isExpanded)}
         onKeyDown={(e) => {
@@ -303,7 +300,6 @@ function ConflictGroup({
                 conflict={conflict}
                 entityName={entityName}
                 isResolved={isResolved}
-                resolvedValue={resolutions[entityId]?.[conflict.field_name]}
                 onKeepOurs={() => onKeepOurs(conflict.field_name)}
                 onKeepTheirs={() => onKeepTheirs(conflict.field_name)}
                 onEdit={() => onEdit(conflict.field_name)}
@@ -349,12 +345,14 @@ export function ConflictResolver({ proposalId, onResolved }: ConflictResolverPro
   const entityMap = useMemo(() => {
     const map = new Map<string, string>();
 
-    const indItems = (individuals as { items?: Array<{ id: string; title?: string }> })?.items || [];
+    const indItems =
+      (individuals as { items?: Array<{ id: string; title?: string }> })?.items || [];
     indItems.forEach((ind) => {
       map.set(ind.id, ind.title || ind.id.substring(0, 8));
     });
 
-    const taxItems = (taxonomyResp as { items?: Array<{ id: string; title: string }> })?.items || [];
+    const taxItems =
+      (taxonomyResp as { items?: Array<{ id: string; title: string }> })?.items || [];
     taxItems.forEach((tax) => {
       map.set(tax.id, tax.title || tax.id.substring(0, 8));
     });
@@ -432,9 +430,7 @@ export function ConflictResolver({ proposalId, onResolved }: ConflictResolverPro
 
   const allConflictsResolved =
     conflicts.length > 0 &&
-    conflicts.every(
-      (c) => resolutions[c.entity_id]?.[c.field_name] !== undefined,
-    );
+    conflicts.every((c) => resolutions[c.entity_id]?.[c.field_name] !== undefined);
 
   const handleApplyResolutions = async () => {
     if (!proposalId || !allConflictsResolved) return;
@@ -473,13 +469,7 @@ export function ConflictResolver({ proposalId, onResolved }: ConflictResolverPro
   }
 
   if (!conflicts || conflicts.length === 0) {
-    return (
-      <EmptyState
-        title="No conflicts"
-        description="All clear"
-        icon="✓"
-      />
-    );
+    return <EmptyState title="No conflicts" description="All clear" icon="✓" />;
   }
 
   return (

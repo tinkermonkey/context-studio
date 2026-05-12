@@ -4,7 +4,6 @@ import { versioningService } from "@/api/services/versioning";
 import type { components } from "@/api/types";
 
 type ChangesetCreateRequest = components["schemas"]["ChangesetCreateRequest"];
-type ConflictReportResponse = components["schemas"]["ConflictReportResponse"];
 
 interface ChangesParams {
   limit?: number;
@@ -76,7 +75,9 @@ export function useApplyChangeset() {
 
 export function useProposalConflicts(proposalId: string | undefined) {
   return useQuery({
-    queryKey: proposalId ? QUERY_KEYS.proposalConflicts(proposalId) : ["proposals", "conflicts", "disabled"],
+    queryKey: proposalId
+      ? QUERY_KEYS.proposalConflicts(proposalId)
+      : ["proposals", "conflicts", "disabled"],
     queryFn: () => {
       if (!proposalId) throw new Error("Proposal ID is required");
       return versioningService.getProposalConflicts(proposalId);
