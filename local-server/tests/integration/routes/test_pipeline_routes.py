@@ -22,6 +22,7 @@ sys.path.append(
 
 import pytest
 import tempfile
+import time
 from pathlib import Path
 from uuid import uuid4
 
@@ -78,6 +79,7 @@ def pipeline_service(pipeline_repository, event_publisher):
     """Create PipelineService with fake LLM adapter."""
     service = PipelineService(
         pipeline_repo=pipeline_repository,
+        flavor_repo=pipeline_repository,
         llm=FakeLLMProvider(response_content='{"result": "test output"}'),
         event_publisher=event_publisher,
     )
@@ -761,3 +763,433 @@ class TestPipelineErrorHandling:
         finally:
             # Restore original service
             original_service.list_executions = original_list_executions
+
+
+class TestListAllPipelineExecutions:
+    """Tests for the list_all_executions paginated endpoint."""
+
+    def test_list_all_executions_returns_200(self, client):
+        """GET /api/pipelines/executions returns 200."""
+        response = client.get("/api/pipelines/executions")
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_list_all_executions_response_structure(self, client):
+        """GET /api/pipelines/executions returns paginated list with total count."""
+        response = client.get("/api/pipelines/executions")
+        body = response.json()
+
+        # Verify required fields
+        assert "items" in body
+        assert "total" in body
+        assert "limit" in body
+        assert "offset" in body
+
+        # Verify types
+        assert isinstance(body["items"], list)
+        assert isinstance(body["total"], int)
+        assert isinstance(body["limit"], int)
+        assert isinstance(body["offset"], int)
+
+    def test_list_all_executions_empty_list(self, client):
+        """GET /api/pipelines/executions returns empty list when no executions."""
+        response = client.get("/api/pipelines/executions")
+        body = response.json()
+
+        assert body["items"] == []
+        assert body["total"] == 0
+        assert body["offset"] == 0
+        assert body["limit"] == 100
+
+    def test_list_all_executions_includes_all_pipelines(self, client):
+        """GET /api/pipelines/executions includes executions from all pipelines."""
+        # Create two pipelines
+        pipeline1_response = client.post(
+            "/api/pipelines",
+            json={
+                "pipeline": "pipeline_list_all_1",
+                "title": "Pipeline 1",
+                "provider": "openai",
+                "model": "gpt-4",
+                "config": {},
+                "system_prompt": "Test",
+                "user_prompt": "Process: {text}",
+            },
+        )
+        pipeline1_id = pipeline1_response.json()["id"]
+
+        pipeline2_response = client.post(
+            "/api/pipelines",
+            json={
+                "pipeline": "pipeline_list_all_2",
+                "title": "Pipeline 2",
+                "provider": "openai",
+                "model": "gpt-4",
+                "config": {},
+                "system_prompt": "Test",
+                "user_prompt": "Process: {text}",
+            },
+        )
+        pipeline2_id = pipeline2_response.json()["id"]
+
+        # Execute both pipelines
+        exec1_response = client.post(
+            f"/api/pipelines/{pipeline1_id}/execute", json={"input_text": "Test 1"}
+        )
+        exec1_id = exec1_response.json()["id"]
+
+        exec2_response = client.post(
+            f"/api/pipelines/{pipeline2_id}/execute", json={"input_text": "Test 2"}
+        )
+        exec2_id = exec2_response.json()["id"]
+
+        # List all executions
+        response = client.get("/api/pipelines/executions")
+        body = response.json()
+
+        # Both executions should be in the list
+        exec_ids = [e["id"] for e in body["items"]]
+        assert exec1_id in exec_ids
+        assert exec2_id in exec_ids
+        assert body["total"] == 2
+
+    def test_list_all_executions_with_pagination_offset(self, client):
+        """GET /api/pipelines/executions respects offset parameter."""
+        # Create a pipeline
+        create_response = client.post(
+            "/api/pipelines",
+            json={
+                "pipeline": "pipeline_pagination",
+                "title": "Pipeline Pagination",
+                "provider": "openai",
+                "model": "gpt-4",
+                "config": {},
+                "system_prompt": "Test",
+                "user_prompt": "Process: {text}",
+            },
+        )
+        pipeline_id = create_response.json()["id"]
+
+        # Execute pipeline 3 times
+        for i in range(3):
+            client.post(
+                f"/api/pipelines/{pipeline_id}/execute", json={"input_text": f"Test {i}"}
+            )
+
+        # List with offset=0, limit=2
+        response = client.get("/api/pipelines/executions?offset=0&limit=2")
+        body = response.json()
+
+        assert len(body["items"]) == 2
+        assert body["offset"] == 0
+        assert body["limit"] == 2
+        assert body["total"] == 3
+
+        # List with offset=2, limit=2
+        response = client.get("/api/pipelines/executions?offset=2&limit=2")
+        body = response.json()
+
+        assert len(body["items"]) == 1
+        assert body["offset"] == 2
+        assert body["limit"] == 2
+        assert body["total"] == 3
+
+    def test_list_all_executions_with_limit(self, client):
+        """GET /api/pipelines/executions respects limit parameter."""
+        # Create a pipeline
+        create_response = client.post(
+            "/api/pipelines",
+            json={
+                "pipeline": "pipeline_limit_test",
+                "title": "Pipeline Limit Test",
+                "provider": "openai",
+                "model": "gpt-4",
+                "config": {},
+                "system_prompt": "Test",
+                "user_prompt": "Process: {text}",
+            },
+        )
+        pipeline_id = create_response.json()["id"]
+
+        # Execute pipeline 5 times
+        for i in range(5):
+            client.post(
+                f"/api/pipelines/{pipeline_id}/execute", json={"input_text": f"Test {i}"}
+            )
+
+        # List with limit=3
+        response = client.get("/api/pipelines/executions?limit=3")
+        body = response.json()
+
+        assert len(body["items"]) == 3
+        assert body["limit"] == 3
+        assert body["total"] == 5
+
+    def test_list_all_executions_with_status_filter_success(self, client):
+        """GET /api/pipelines/executions filters by status_filter=success."""
+        # Create a pipeline
+        create_response = client.post(
+            "/api/pipelines",
+            json={
+                "pipeline": "pipeline_status_filter",
+                "title": "Pipeline Status Filter",
+                "provider": "openai",
+                "model": "gpt-4",
+                "config": {},
+                "system_prompt": "Test",
+                "user_prompt": "Process: {text}",
+            },
+        )
+        pipeline_id = create_response.json()["id"]
+
+        # Execute pipeline (should succeed)
+        client.post(
+            f"/api/pipelines/{pipeline_id}/execute", json={"input_text": "Test"}
+        )
+
+        # List with status_filter=success filter
+        response = client.get("/api/pipelines/executions?status_filter=success")
+        body = response.json()
+
+        # Should have the execution with success status
+        assert body["total"] == 1
+        assert all(e["status"] == "success" for e in body["items"])
+
+    def test_list_all_executions_with_invalid_status_returns_422(self, client):
+        """GET /api/pipelines/executions returns 422 for invalid status_filter."""
+        response = client.get("/api/pipelines/executions?status_filter=invalid_status")
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        body = response.json()
+        assert "detail" in body
+
+    def test_list_all_executions_includes_pipeline_title(self, client):
+        """GET /api/pipelines/executions includes pipeline_title in response."""
+        # Create a pipeline with specific title
+        create_response = client.post(
+            "/api/pipelines",
+            json={
+                "pipeline": "pipeline_with_title",
+                "title": "My Custom Pipeline Title",
+                "provider": "openai",
+                "model": "gpt-4",
+                "config": {},
+                "system_prompt": "Test",
+                "user_prompt": "Process: {text}",
+            },
+        )
+        pipeline_id = create_response.json()["id"]
+
+        # Execute the pipeline
+        client.post(
+            f"/api/pipelines/{pipeline_id}/execute", json={"input_text": "Test"}
+        )
+
+        # List all executions
+        response = client.get("/api/pipelines/executions")
+        body = response.json()
+
+        # Check that pipeline_title is included
+        assert len(body["items"]) > 0
+        execution = body["items"][0]
+        assert "pipeline_title" in execution
+        assert execution["pipeline_title"] == "My Custom Pipeline Title"
+
+    def test_list_all_executions_reverse_chronological_order(self, client):
+        """GET /api/pipelines/executions returns results in reverse chronological order."""
+        # Create a pipeline
+        create_response = client.post(
+            "/api/pipelines",
+            json={
+                "pipeline": "pipeline_chrono_order",
+                "title": "Pipeline Chrono Order",
+                "provider": "openai",
+                "model": "gpt-4",
+                "config": {},
+                "system_prompt": "Test",
+                "user_prompt": "Process: {text}",
+            },
+        )
+        pipeline_id = create_response.json()["id"]
+
+        # Execute pipeline twice with a small delay
+        exec_ids = []
+        for i in range(2):
+            response = client.post(
+                f"/api/pipelines/{pipeline_id}/execute", json={"input_text": f"Test {i}"}
+            )
+            exec_ids.append(response.json()["id"])
+            time.sleep(0.01)  # Small delay to ensure different timestamps
+
+        # List all executions
+        response = client.get("/api/pipelines/executions")
+        body = response.json()
+
+        # Last executed (exec_ids[1]) should come first (reverse chronological)
+        returned_ids = [e["id"] for e in body["items"]]
+        assert returned_ids[0] == exec_ids[1]
+        assert returned_ids[1] == exec_ids[0]
+
+
+class TestFlavorRoutes:
+    """Integration tests for flavor routes."""
+
+    def test_create_flavor(self, client):
+        """POST /api/pipelines/flavors creates a new flavor."""
+        response = client.post(
+            "/api/pipelines/flavors",
+            json={
+                "name": "Extract PDF",
+                "description": "Template for PDF extraction",
+                "steps": [{"type": "parse", "target": "pdf"}],
+            },
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED
+        body = response.json()
+        assert body["name"] == "Extract PDF"
+        assert body["description"] == "Template for PDF extraction"
+        assert body["step_count"] == 1
+        assert body["created_at"] is not None
+        assert body["last_updated"] is not None
+
+
+    def test_list_flavors(self, client):
+        """GET /api/pipelines/flavors returns all flavors."""
+        flavor1 = client.post(
+            "/api/pipelines/flavors",
+            json={
+                "name": "Flavor 1",
+                "description": "First",
+                "steps": [],
+            },
+        ).json()
+
+        flavor2 = client.post(
+            "/api/pipelines/flavors",
+            json={
+                "name": "Flavor 2",
+                "description": "Second",
+                "steps": [{"type": "step"}],
+            },
+        ).json()
+
+        response = client.get("/api/pipelines/flavors")
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+
+        assert len(body) == 2
+        assert any(f["id"] == flavor1["id"] for f in body)
+        assert any(f["id"] == flavor2["id"] for f in body)
+
+    def test_list_flavors_empty(self, client):
+        """GET /api/pipelines/flavors returns empty list when no flavors."""
+        response = client.get("/api/pipelines/flavors")
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert body == []
+
+    def test_get_flavor(self, client):
+        """GET /api/pipelines/flavors/{id} returns a specific flavor."""
+        created = client.post(
+            "/api/pipelines/flavors",
+            json={
+                "name": "Test Flavor",
+                "description": "A test flavor",
+                "steps": [{"type": "parse"}, {"type": "extract"}],
+            },
+        ).json()
+
+        response = client.get(f"/api/pipelines/flavors/{created['id']}")
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+
+        assert body["id"] == created["id"]
+        assert body["name"] == "Test Flavor"
+        assert body["description"] == "A test flavor"
+        assert body["step_count"] == 2
+        assert body["steps"] == [{"type": "parse"}, {"type": "extract"}]
+
+    def test_get_flavor_not_found(self, client):
+        """GET /api/pipelines/flavors/{id} returns 404 for non-existent flavor."""
+        response = client.get("/api/pipelines/flavors/nonexistent-id")
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_update_flavor(self, client):
+        """PUT /api/pipelines/flavors/{id} updates a flavor."""
+        created = client.post(
+            "/api/pipelines/flavors",
+            json={
+                "name": "Original",
+                "description": "Original desc",
+                "steps": [],
+            },
+        ).json()
+
+        response = client.put(
+            f"/api/pipelines/flavors/{created['id']}",
+            json={
+                "name": "Updated",
+                "description": "Updated desc",
+                "steps": [{"type": "new"}],
+            },
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+
+        assert body["name"] == "Updated"
+        assert body["description"] == "Updated desc"
+        assert body["step_count"] == 1
+
+    def test_update_flavor_partial(self, client):
+        """PUT /api/pipelines/flavors/{id} with partial fields."""
+        created = client.post(
+            "/api/pipelines/flavors",
+            json={
+                "name": "Original",
+                "description": "Original desc",
+                "steps": [{"type": "old"}],
+            },
+        ).json()
+
+        response = client.put(
+            f"/api/pipelines/flavors/{created['id']}",
+            json={"name": "Updated"},
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+
+        assert body["name"] == "Updated"
+        assert body["description"] == "Original desc"
+        assert body["step_count"] == 1
+
+    def test_update_flavor_not_found(self, client):
+        """PUT /api/pipelines/flavors/{id} returns 404 for non-existent."""
+        response = client.put(
+            "/api/pipelines/flavors/nonexistent-id",
+            json={"name": "Updated"},
+        )
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_delete_flavor(self, client):
+        """DELETE /api/pipelines/flavors/{id} deletes a flavor."""
+        created = client.post(
+            "/api/pipelines/flavors",
+            json={
+                "name": "To Delete",
+                "description": "This will be deleted",
+                "steps": [],
+            },
+        ).json()
+
+        response = client.delete(f"/api/pipelines/flavors/{created['id']}")
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+
+        # Verify it's deleted
+        get_response = client.get(f"/api/pipelines/flavors/{created['id']}")
+        assert get_response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_delete_flavor_not_found(self, client):
+        """DELETE /api/pipelines/flavors/{id} returns 404 for non-existent."""
+        response = client.delete("/api/pipelines/flavors/nonexistent-id")
+        assert response.status_code == status.HTTP_404_NOT_FOUND

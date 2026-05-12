@@ -149,7 +149,12 @@ export function IndividualDrawer({
   const removeClassMutation = useRemoveClassFromIndividual();
   const reorderMutation = useReorderIndividualClasses();
 
-  const { data: individual, isLoading: isLoadingIndividual, error: individualError, refetch: refetchIndividual } = useIndividual(individualId || "");
+  const {
+    data: individual,
+    isLoading: isLoadingIndividual,
+    error: individualError,
+    refetch: refetchIndividual,
+  } = useIndividual(individualId || "");
   const { data: individualsResponse } = useIndividuals();
 
   const {
@@ -216,7 +221,7 @@ export function IndividualDrawer({
       setDescription(individual.description || "");
       lastSavedAtRef.current = null;
     }
-  }, [individual?.id, individual?.version]);
+  }, [individual]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

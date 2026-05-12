@@ -1112,6 +1112,11 @@ table.t .row-actions {
 .pipeline-card-head > .row {
   flex: none;
 }
+.pipeline-card-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
 .pipeline-card .name {
   font-size: 14px;
   font-weight: 600;

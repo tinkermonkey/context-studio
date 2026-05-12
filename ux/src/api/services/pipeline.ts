@@ -39,6 +39,21 @@ class PipelineService extends BaseService {
   async getPipelineExecutions(pipelineId: string): Promise<ExecutionResponse[]> {
     return this.get<ExecutionResponse[]>(`/api/pipelines/${pipelineId}/executions`);
   }
+
+  async getAllPipelineExecutions(
+    status?: string,
+    limit?: number,
+    offset?: number,
+  ): Promise<components["schemas"]["ListResponse_ExecutionWithPipelineResponse_"]> {
+    const params = new URLSearchParams();
+    if (status) params.append("status_filter", status);
+    if (limit != null) params.append("limit", limit.toString());
+    if (offset != null) params.append("offset", offset.toString());
+
+    const queryString = params.toString();
+    const url = `/api/pipelines/executions${queryString ? `?${queryString}` : ""}`;
+    return this.get<components["schemas"]["ListResponse_ExecutionWithPipelineResponse_"]>(url);
+  }
 }
 
 export const pipelineService = new PipelineService();

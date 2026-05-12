@@ -1461,6 +1461,37 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/pipelines/executions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List All Pipeline Executions
+     * @description Retrieve execution history across all pipeline configurations.
+     *
+     *     Results are returned in reverse chronological order (most recent first).
+     *
+     *     Args:
+     *         status_filter: Optional status filter ("success", "error", "timeout")
+     *         limit: Maximum number of executions to return (1-500, default 100)
+     *         offset: Number of executions to skip for pagination (default 0)
+     *         service: PipelineService from dependency injection
+     *
+     *     Returns:
+     *         Paginated list of ExecutionWithPipelineResponse objects with total count
+     */
+    get: operations["list_all_pipeline_executions_api_pipelines_executions_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/pipelines/{pipeline_id}": {
     parameters: {
       query?: never;
@@ -1575,6 +1606,99 @@ export interface paths {
     put?: never;
     post?: never;
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/flavors": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Pipeline Flavors
+     * @description Retrieve all pipeline flavors.
+     *
+     *     Returns:
+     *         List of PipelineFlavorResponse objects
+     */
+    get: operations["list_pipeline_flavors_api_pipelines_flavors_get"];
+    put?: never;
+    /**
+     * Create Pipeline Flavor
+     * @description Create a new pipeline flavor.
+     *
+     *     Args:
+     *         request: PipelineFlavorCreateRequest with flavor details
+     *         service: PipelineService from dependency injection
+     *
+     *     Returns:
+     *         Created PipelineFlavorResponse with server-generated id
+     *
+     *     Raises:
+     *         HTTPException: 400 if invalid input, 409 if name already exists
+     */
+    post: operations["create_pipeline_flavor_api_pipelines_flavors_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/flavors/{flavor_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Pipeline Flavor
+     * @description Retrieve a pipeline flavor by ID.
+     *
+     *     Args:
+     *         flavor_id: The pipeline flavor ID
+     *         service: PipelineService from dependency injection
+     *
+     *     Returns:
+     *         PipelineFlavorResponse
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found
+     */
+    get: operations["get_pipeline_flavor_api_pipelines_flavors__flavor_id__get"];
+    /**
+     * Update Pipeline Flavor
+     * @description Update a pipeline flavor.
+     *
+     *     Args:
+     *         flavor_id: The pipeline flavor ID
+     *         request: PipelineFlavorUpdateRequest with optional fields to update
+     *         service: PipelineService from dependency injection
+     *
+     *     Returns:
+     *         Updated PipelineFlavorResponse
+     *
+     *     Raises:
+     *         HTTPException: 400 if invalid, 404 if not found
+     */
+    put: operations["update_pipeline_flavor_api_pipelines_flavors__flavor_id__put"];
+    post?: never;
+    /**
+     * Delete Pipeline Flavor
+     * @description Delete a pipeline flavor.
+     *
+     *     Args:
+     *         flavor_id: The pipeline flavor ID
+     *         service: PipelineService from dependency injection
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found
+     */
+    delete: operations["delete_pipeline_flavor_api_pipelines_flavors__flavor_id__delete"];
     options?: never;
     head?: never;
     patch?: never;
@@ -3462,6 +3586,74 @@ export interface components {
       timestamp: string;
     };
     /**
+     * ExecutionWithPipelineResponse
+     * @description Response containing execution record with associated pipeline configuration name.
+     */
+    ExecutionWithPipelineResponse: {
+      /**
+       * Id
+       * @description Unique identifier for this execution
+       */
+      id: string;
+      /**
+       * Pipeline Config Id
+       * @description ID of the executed PipelineConfiguration
+       */
+      pipeline_config_id: string;
+      /**
+       * Pipeline Title
+       * @description Title of the pipeline configuration that was executed
+       */
+      pipeline_title: string;
+      /**
+       * Output Text
+       * @description The generated response from the LLM
+       */
+      output_text: string;
+      /**
+       * Provider
+       * @description LLM provider that executed the request
+       */
+      provider: string;
+      /**
+       * Model
+       * @description Model that generated the response
+       */
+      model: string;
+      /**
+       * Tokens In
+       * @description Number of tokens in the input
+       */
+      tokens_in: number;
+      /**
+       * Tokens Out
+       * @description Number of tokens in the output
+       */
+      tokens_out: number;
+      /**
+       * Duration Ms
+       * @description Execution duration in milliseconds
+       */
+      duration_ms: number;
+      /**
+       * Status
+       * @description Completion status (success, error, timeout)
+       * @enum {string}
+       */
+      status: "success" | "error" | "timeout";
+      /**
+       * Error Message
+       * @description Error description if applicable
+       */
+      error_message?: string | null;
+      /**
+       * Timestamp
+       * Format: date-time
+       * @description ISO 8601 execution timestamp
+       */
+      timestamp: string;
+    };
+    /**
      * ExportRequest
      * @description Request to export ontology data.
      */
@@ -4203,6 +4395,29 @@ export interface components {
        */
       offset: number;
     };
+    /** ListResponse[ExecutionWithPipelineResponse] */
+    ListResponse_ExecutionWithPipelineResponse_: {
+      /**
+       * Items
+       * @description List of items
+       */
+      items: components["schemas"]["ExecutionWithPipelineResponse"][];
+      /**
+       * Total
+       * @description Total number of items
+       */
+      total: number;
+      /**
+       * Limit
+       * @description Limit applied
+       */
+      limit: number;
+      /**
+       * Offset
+       * @description Offset applied
+       */
+      offset: number;
+    };
     /** ListResponse[ImportRunResponse] */
     ListResponse_ImportRunResponse_: {
       /**
@@ -4672,6 +4887,99 @@ export interface components {
        * @description Input text to process
        */
       input_text: string;
+    };
+    /**
+     * PipelineFlavorCreateRequest
+     * @description Request to create a new pipeline flavor.
+     */
+    PipelineFlavorCreateRequest: {
+      /**
+       * Name
+       * @description Name of the flavor
+       */
+      name: string;
+      /**
+       * Description
+       * @description Description of the flavor
+       */
+      description: string;
+      /**
+       * Steps
+       * @description List of configuration step definitions
+       */
+      steps?: {
+        [key: string]: unknown;
+      }[];
+    };
+    /**
+     * PipelineFlavorResponse
+     * @description Response containing pipeline flavor data.
+     */
+    PipelineFlavorResponse: {
+      /**
+       * Id
+       * @description Unique identifier
+       */
+      id: string;
+      /**
+       * Name
+       * @description Name of the flavor
+       */
+      name: string;
+      /**
+       * Description
+       * @description Description of the flavor
+       */
+      description: string;
+      /**
+       * Steps
+       * @description Configuration step definitions
+       */
+      steps: {
+        [key: string]: unknown;
+      }[];
+      /**
+       * Step Count
+       * @description Number of steps in this flavor
+       */
+      step_count: number;
+      /**
+       * Created At
+       * Format: date-time
+       * @description ISO 8601 creation timestamp
+       */
+      created_at: string;
+      /**
+       * Last Updated
+       * Format: date-time
+       * @description ISO 8601 last update timestamp
+       */
+      last_updated: string;
+    };
+    /**
+     * PipelineFlavorUpdateRequest
+     * @description Request to update a pipeline flavor.
+     */
+    PipelineFlavorUpdateRequest: {
+      /**
+       * Name
+       * @description Updated name
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description Updated description
+       */
+      description?: string | null;
+      /**
+       * Steps
+       * @description Updated steps
+       */
+      steps?:
+        | {
+            [key: string]: unknown;
+          }[]
+        | null;
     };
     /**
      * PredicateNode
@@ -7494,6 +7802,42 @@ export interface operations {
       };
     };
   };
+  list_all_pipeline_executions_api_pipelines_executions_get: {
+    parameters: {
+      query?: {
+        /** @description Optional status filter (success, error, timeout) */
+        status_filter?: ("success" | "error" | "timeout") | null;
+        /** @description Maximum number of results */
+        limit?: number;
+        /** @description Number of results to skip */
+        offset?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListResponse_ExecutionWithPipelineResponse_"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   get_pipeline_configuration_api_pipelines__pipeline_id__get: {
     parameters: {
       query?: never;
@@ -7643,6 +7987,154 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["ExecutionResponse"][];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_pipeline_flavors_api_pipelines_flavors_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PipelineFlavorResponse"][];
+        };
+      };
+    };
+  };
+  create_pipeline_flavor_api_pipelines_flavors_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PipelineFlavorCreateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PipelineFlavorResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_pipeline_flavor_api_pipelines_flavors__flavor_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        flavor_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PipelineFlavorResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_pipeline_flavor_api_pipelines_flavors__flavor_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        flavor_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PipelineFlavorUpdateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PipelineFlavorResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_pipeline_flavor_api_pipelines_flavors__flavor_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        flavor_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {

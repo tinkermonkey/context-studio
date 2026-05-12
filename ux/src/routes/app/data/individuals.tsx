@@ -43,35 +43,33 @@ interface IndividualsPageContentProps {
   onDeleteClick: (id: string) => void;
 }
 
-function IndividualsEmptyState({
-  onCreateClick,
-}: {
-  onCreateClick: () => void;
-}) {
+function IndividualsEmptyState({ onCreateClick }: { onCreateClick: () => void }) {
   return (
     <div className="empty-state" data-testid="empty-state">
       <div className="empty-state-content">
         <div className="empty-state-title">{individualsCopy.emptyState.title}</div>
         <div className="empty-state-description">{individualsCopy.emptyState.description}</div>
       </div>
-      <div style={{ display: "flex", gap: "var(--space-2)", justifyContent: "center", flexWrap: "wrap" }}>
-        <Button variant="primary" size="sm" onClick={onCreateClick} data-testid="empty-state-new-individual">
+      <div
+        style={{
+          display: "flex",
+          gap: "var(--space-2)",
+          justifyContent: "center",
+          flexWrap: "wrap",
+        }}
+      >
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={onCreateClick}
+          data-testid="empty-state-new-individual"
+        >
           {individualsCopy.emptyState.actionLabel}
         </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled
-          data-testid="empty-state-run-pipeline"
-        >
+        <Button variant="ghost" size="sm" disabled data-testid="empty-state-run-pipeline">
           {individualsCopy.emptyState.runPipelineLabel}
         </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled
-          data-testid="empty-state-import"
-        >
+        <Button variant="ghost" size="sm" disabled data-testid="empty-state-import">
           {individualsCopy.emptyState.importLabel}
         </Button>
       </div>
@@ -238,11 +236,7 @@ function IndividualsPageContent({
   }
 
   if (individuals.length === 0) {
-    return (
-      <IndividualsEmptyState
-        onCreateClick={onCreateClick}
-      />
-    );
+    return <IndividualsEmptyState onCreateClick={onCreateClick} />;
   }
 
   const hasFilters = !!searchFilter;
@@ -457,10 +451,7 @@ function IndividualsPageWrapper() {
             />
           </div>
         )}
-        <IndividualEditor
-          onSubmit={handleCreateSubmit}
-          isLoading={createMutation.isPending}
-        />
+        <IndividualEditor onSubmit={handleCreateSubmit} isLoading={createMutation.isPending} />
       </Modal>
 
       <Modal

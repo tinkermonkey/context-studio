@@ -7,7 +7,8 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-from domain.pipeline.entities import Execution, PipelineConfiguration
+from domain.pipeline.entities import Execution, PipelineConfiguration, PipelineFlavor
+from domain.pipeline.ports import ExecutionWithTitle
 
 
 class FakePipelineRepository:
@@ -16,6 +17,7 @@ class FakePipelineRepository:
     def __init__(self) -> None:
         self._configs: dict[str, PipelineConfiguration] = {}
         self._executions: dict[str, list[Execution]] = {}
+        self._flavors: dict[str, PipelineFlavor] = {}
 
     def get_config(self, config_id: str) -> PipelineConfiguration | None:
         """
@@ -107,3 +109,90 @@ class FakePipelineRepository:
         # Sort by timestamp descending (most recent first)
         sorted_executions = sorted(executions, key=lambda e: e.timestamp, reverse=True)
         return sorted_executions[:limit]
+
+    def get_all_executions(
+        self,
+        status: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> tuple[list[ExecutionWithTitle], int]:
+        """
+        Retrieve execution history across all pipeline configurations.
+
+        Returns results in reverse chronological order (most recent first).
+        Only includes executions whose pipeline configurations exist.
+
+        Args:
+            status: Optional status filter ("success", "error", "timeout")
+            limit: Maximum number of execution records to return
+            offset: Number of execution records to skip for pagination
+
+        Returns:
+            Tuple of (list of ExecutionWithTitle objects, total count)
+        """
+        all_executions = []
+        for config_id, executions in self._executions.items():
+            config = self._configs.get(config_id)
+            if config:
+                for execution in executions:
+                    if status is None or execution.status == status:
+                        all_executions.append(
+                            ExecutionWithTitle(execution=execution, pipeline_title=config.title)
+                        )
+
+        sorted_executions = sorted(
+            all_executions, key=lambda x: x.execution.timestamp, reverse=True
+        )
+        total = len(sorted_executions)
+        paginated = sorted_executions[offset : offset + limit]
+
+        return paginated, total
+
+    def get_flavor(self, flavor_id: str) -> PipelineFlavor | None:
+        """
+        Retrieve a pipeline flavor by ID.
+
+        Args:
+            flavor_id: Unique identifier of the flavor
+
+        Returns:
+            PipelineFlavor if found, None otherwise
+        """
+        return self._flavors.get(flavor_id)
+
+    def list_flavors(self) -> list[PipelineFlavor]:
+        """
+        List all pipeline flavors.
+
+        Returns:
+            List of PipelineFlavor objects
+        """
+        return list(self._flavors.values())
+
+    def save_flavor(self, flavor: PipelineFlavor) -> PipelineFlavor:
+        """
+        Create or update a pipeline flavor.
+
+        Args:
+            flavor: PipelineFlavor to save
+
+        Returns:
+            The saved PipelineFlavor
+        """
+        self._flavors[flavor.id] = flavor
+        return flavor
+
+    def delete_flavor(self, flavor_id: str) -> bool:
+        """
+        Delete a pipeline flavor by ID.
+
+        Args:
+            flavor_id: Unique identifier of the flavor
+
+        Returns:
+            True if deleted, False if not found
+        """
+        if flavor_id in self._flavors:
+            del self._flavors[flavor_id]
+            return True
+        return False

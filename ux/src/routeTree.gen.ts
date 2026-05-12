@@ -16,6 +16,8 @@ import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AppSettingsRouteImport } from './routes/app/settings'
 import { Route as AppContactSheetRouteImport } from './routes/app/contact-sheet'
 import { Route as AppPipelinesIndexRouteImport } from './routes/app/pipelines/index'
+import { Route as AppGraphIndexRouteImport } from './routes/app/graph/index'
+import { Route as AppExtractionIndexRouteImport } from './routes/app/extraction/index'
 import { Route as AppSchemaTaxonomiesRouteImport } from './routes/app/schema/taxonomies'
 import { Route as AppSchemaSchemesRouteImport } from './routes/app/schema/schemes'
 import { Route as AppSchemaRelationshipsRouteImport } from './routes/app/schema/relationships'
@@ -25,6 +27,7 @@ import { Route as AppReferenceWorkflowsRouteImport } from './routes/app/referenc
 import { Route as AppReferenceSourcesRouteImport } from './routes/app/reference/sources'
 import { Route as AppPipelinesRunsRouteImport } from './routes/app/pipelines/runs'
 import { Route as AppPipelinesFlavorsRouteImport } from './routes/app/pipelines/flavors'
+import { Route as AppPipelinesPipelineIdRouteImport } from './routes/app/pipelines/$pipelineId'
 import { Route as AppDataIndividualsRouteImport } from './routes/app/data/individuals'
 import { Route as AppDataDatasetsRouteImport } from './routes/app/data/datasets'
 import { Route as AppSchemaSchemesIndexRouteImport } from './routes/app/schema/schemes.index'
@@ -62,6 +65,16 @@ const AppContactSheetRoute = AppContactSheetRouteImport.update({
 const AppPipelinesIndexRoute = AppPipelinesIndexRouteImport.update({
   id: '/pipelines/',
   path: '/pipelines/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppGraphIndexRoute = AppGraphIndexRouteImport.update({
+  id: '/graph/',
+  path: '/graph/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppExtractionIndexRoute = AppExtractionIndexRouteImport.update({
+  id: '/extraction/',
+  path: '/extraction/',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSchemaTaxonomiesRoute = AppSchemaTaxonomiesRouteImport.update({
@@ -109,6 +122,11 @@ const AppPipelinesFlavorsRoute = AppPipelinesFlavorsRouteImport.update({
   path: '/pipelines/flavors',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPipelinesPipelineIdRoute = AppPipelinesPipelineIdRouteImport.update({
+  id: '/pipelines/$pipelineId',
+  path: '/pipelines/$pipelineId',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDataIndividualsRoute = AppDataIndividualsRouteImport.update({
   id: '/data/individuals',
   path: '/data/individuals',
@@ -134,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AppIndexRoute
   '/app/data/datasets': typeof AppDataDatasetsRoute
   '/app/data/individuals': typeof AppDataIndividualsRoute
+  '/app/pipelines/$pipelineId': typeof AppPipelinesPipelineIdRoute
   '/app/pipelines/flavors': typeof AppPipelinesFlavorsRoute
   '/app/pipelines/runs': typeof AppPipelinesRunsRoute
   '/app/reference/sources': typeof AppReferenceSourcesRoute
@@ -143,6 +162,8 @@ export interface FileRoutesByFullPath {
   '/app/schema/relationships': typeof AppSchemaRelationshipsRoute
   '/app/schema/schemes': typeof AppSchemaSchemesRouteWithChildren
   '/app/schema/taxonomies': typeof AppSchemaTaxonomiesRoute
+  '/app/extraction/': typeof AppExtractionIndexRoute
+  '/app/graph/': typeof AppGraphIndexRoute
   '/app/pipelines/': typeof AppPipelinesIndexRoute
   '/app/schema/schemes/': typeof AppSchemaSchemesIndexRoute
 }
@@ -154,6 +175,7 @@ export interface FileRoutesByTo {
   '/app': typeof AppIndexRoute
   '/app/data/datasets': typeof AppDataDatasetsRoute
   '/app/data/individuals': typeof AppDataIndividualsRoute
+  '/app/pipelines/$pipelineId': typeof AppPipelinesPipelineIdRoute
   '/app/pipelines/flavors': typeof AppPipelinesFlavorsRoute
   '/app/pipelines/runs': typeof AppPipelinesRunsRoute
   '/app/reference/sources': typeof AppReferenceSourcesRoute
@@ -162,6 +184,8 @@ export interface FileRoutesByTo {
   '/app/schema/properties': typeof AppSchemaPropertiesRoute
   '/app/schema/relationships': typeof AppSchemaRelationshipsRoute
   '/app/schema/taxonomies': typeof AppSchemaTaxonomiesRoute
+  '/app/extraction': typeof AppExtractionIndexRoute
+  '/app/graph': typeof AppGraphIndexRoute
   '/app/pipelines': typeof AppPipelinesIndexRoute
   '/app/schema/schemes': typeof AppSchemaSchemesIndexRoute
 }
@@ -175,6 +199,7 @@ export interface FileRoutesById {
   '/app/': typeof AppIndexRoute
   '/app/data/datasets': typeof AppDataDatasetsRoute
   '/app/data/individuals': typeof AppDataIndividualsRoute
+  '/app/pipelines/$pipelineId': typeof AppPipelinesPipelineIdRoute
   '/app/pipelines/flavors': typeof AppPipelinesFlavorsRoute
   '/app/pipelines/runs': typeof AppPipelinesRunsRoute
   '/app/reference/sources': typeof AppReferenceSourcesRoute
@@ -184,6 +209,8 @@ export interface FileRoutesById {
   '/app/schema/relationships': typeof AppSchemaRelationshipsRoute
   '/app/schema/schemes': typeof AppSchemaSchemesRouteWithChildren
   '/app/schema/taxonomies': typeof AppSchemaTaxonomiesRoute
+  '/app/extraction/': typeof AppExtractionIndexRoute
+  '/app/graph/': typeof AppGraphIndexRoute
   '/app/pipelines/': typeof AppPipelinesIndexRoute
   '/app/schema/schemes/': typeof AppSchemaSchemesIndexRoute
 }
@@ -198,6 +225,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/data/datasets'
     | '/app/data/individuals'
+    | '/app/pipelines/$pipelineId'
     | '/app/pipelines/flavors'
     | '/app/pipelines/runs'
     | '/app/reference/sources'
@@ -207,6 +235,8 @@ export interface FileRouteTypes {
     | '/app/schema/relationships'
     | '/app/schema/schemes'
     | '/app/schema/taxonomies'
+    | '/app/extraction/'
+    | '/app/graph/'
     | '/app/pipelines/'
     | '/app/schema/schemes/'
   fileRoutesByTo: FileRoutesByTo
@@ -218,6 +248,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/app/data/datasets'
     | '/app/data/individuals'
+    | '/app/pipelines/$pipelineId'
     | '/app/pipelines/flavors'
     | '/app/pipelines/runs'
     | '/app/reference/sources'
@@ -226,6 +257,8 @@ export interface FileRouteTypes {
     | '/app/schema/properties'
     | '/app/schema/relationships'
     | '/app/schema/taxonomies'
+    | '/app/extraction'
+    | '/app/graph'
     | '/app/pipelines'
     | '/app/schema/schemes'
   id:
@@ -238,6 +271,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/data/datasets'
     | '/app/data/individuals'
+    | '/app/pipelines/$pipelineId'
     | '/app/pipelines/flavors'
     | '/app/pipelines/runs'
     | '/app/reference/sources'
@@ -247,6 +281,8 @@ export interface FileRouteTypes {
     | '/app/schema/relationships'
     | '/app/schema/schemes'
     | '/app/schema/taxonomies'
+    | '/app/extraction/'
+    | '/app/graph/'
     | '/app/pipelines/'
     | '/app/schema/schemes/'
   fileRoutesById: FileRoutesById
@@ -306,6 +342,20 @@ declare module '@tanstack/react-router' {
       path: '/pipelines'
       fullPath: '/app/pipelines/'
       preLoaderRoute: typeof AppPipelinesIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/graph/': {
+      id: '/app/graph/'
+      path: '/graph'
+      fullPath: '/app/graph/'
+      preLoaderRoute: typeof AppGraphIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/extraction/': {
+      id: '/app/extraction/'
+      path: '/extraction'
+      fullPath: '/app/extraction/'
+      preLoaderRoute: typeof AppExtractionIndexRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/schema/taxonomies': {
@@ -371,6 +421,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPipelinesFlavorsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/pipelines/$pipelineId': {
+      id: '/app/pipelines/$pipelineId'
+      path: '/pipelines/$pipelineId'
+      fullPath: '/app/pipelines/$pipelineId'
+      preLoaderRoute: typeof AppPipelinesPipelineIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/data/individuals': {
       id: '/app/data/individuals'
       path: '/data/individuals'
@@ -412,6 +469,7 @@ interface AppRouteChildren {
   AppIndexRoute: typeof AppIndexRoute
   AppDataDatasetsRoute: typeof AppDataDatasetsRoute
   AppDataIndividualsRoute: typeof AppDataIndividualsRoute
+  AppPipelinesPipelineIdRoute: typeof AppPipelinesPipelineIdRoute
   AppPipelinesFlavorsRoute: typeof AppPipelinesFlavorsRoute
   AppPipelinesRunsRoute: typeof AppPipelinesRunsRoute
   AppReferenceSourcesRoute: typeof AppReferenceSourcesRoute
@@ -421,6 +479,8 @@ interface AppRouteChildren {
   AppSchemaRelationshipsRoute: typeof AppSchemaRelationshipsRoute
   AppSchemaSchemesRoute: typeof AppSchemaSchemesRouteWithChildren
   AppSchemaTaxonomiesRoute: typeof AppSchemaTaxonomiesRoute
+  AppExtractionIndexRoute: typeof AppExtractionIndexRoute
+  AppGraphIndexRoute: typeof AppGraphIndexRoute
   AppPipelinesIndexRoute: typeof AppPipelinesIndexRoute
 }
 
@@ -430,6 +490,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppIndexRoute: AppIndexRoute,
   AppDataDatasetsRoute: AppDataDatasetsRoute,
   AppDataIndividualsRoute: AppDataIndividualsRoute,
+  AppPipelinesPipelineIdRoute: AppPipelinesPipelineIdRoute,
   AppPipelinesFlavorsRoute: AppPipelinesFlavorsRoute,
   AppPipelinesRunsRoute: AppPipelinesRunsRoute,
   AppReferenceSourcesRoute: AppReferenceSourcesRoute,
@@ -439,6 +500,8 @@ const AppRouteChildren: AppRouteChildren = {
   AppSchemaRelationshipsRoute: AppSchemaRelationshipsRoute,
   AppSchemaSchemesRoute: AppSchemaSchemesRouteWithChildren,
   AppSchemaTaxonomiesRoute: AppSchemaTaxonomiesRoute,
+  AppExtractionIndexRoute: AppExtractionIndexRoute,
+  AppGraphIndexRoute: AppGraphIndexRoute,
   AppPipelinesIndexRoute: AppPipelinesIndexRoute,
 }
 

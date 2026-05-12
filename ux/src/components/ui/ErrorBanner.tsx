@@ -3,7 +3,7 @@ import { useToasts } from "./Toast";
 
 interface ErrorBannerProps {
   error: Error | null;
-  onRetry: () => void;
+  onRetry?: () => void;
   message?: string;
   compact?: boolean;
   daemonLogPath?: string;
@@ -74,33 +74,35 @@ export function ErrorBanner({
             <FileText size={12} />
             Logs
           </button>
-          <button
-            type="button"
-            onClick={onRetry}
-            title="Retry loading"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-              padding: "4px 8px",
-              borderRadius: "4px",
-              background: "transparent",
-              border: "1px solid var(--rose-300, #fda4af)",
-              color: "var(--rose-700, #be123c)",
-              fontSize: "var(--text-xs)",
-              cursor: "pointer",
-              transition: "background 0.15s",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "var(--rose-100, #ffe4e6)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-            }}
-          >
-            <RefreshCw size={12} />
-            Retry
-          </button>
+          {onRetry && (
+            <button
+              type="button"
+              onClick={onRetry}
+              title="Retry loading"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                padding: "4px 8px",
+                borderRadius: "4px",
+                background: "transparent",
+                border: "1px solid var(--rose-300, #fda4af)",
+                color: "var(--rose-700, #be123c)",
+                fontSize: "var(--text-xs)",
+                cursor: "pointer",
+                transition: "background 0.15s",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.background = "var(--rose-100, #ffe4e6)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+              }}
+            >
+              <RefreshCw size={12} />
+              Retry
+            </button>
+          )}
         </div>
       </div>
     );
@@ -171,34 +173,36 @@ export function ErrorBanner({
           <FileText size={14} />
           Logs
         </button>
-        <button
-          type="button"
-          onClick={onRetry}
-          title="Retry loading"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "8px 16px",
-            borderRadius: "var(--radius-md, 6px)",
-            background: "var(--rose-600, #e11d48)",
-            border: "1px solid var(--rose-700, #be123c)",
-            color: "white",
-            fontSize: "var(--text-sm)",
-            fontWeight: 500,
-            cursor: "pointer",
-            transition: "background 0.15s",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = "var(--rose-700, #be123c)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = "var(--rose-600, #e11d48)";
-          }}
-        >
-          <RefreshCw size={14} />
-          Retry
-        </button>
+        {onRetry && (
+          <button
+            type="button"
+            onClick={onRetry}
+            title="Retry loading"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 16px",
+              borderRadius: "var(--radius-md, 6px)",
+              background: "var(--rose-600, #e11d48)",
+              border: "1px solid var(--rose-700, #be123c)",
+              color: "white",
+              fontSize: "var(--text-sm)",
+              fontWeight: 500,
+              cursor: "pointer",
+              transition: "background 0.15s",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "var(--rose-700, #be123c)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "var(--rose-600, #e11d48)";
+            }}
+          >
+            <RefreshCw size={14} />
+            Retry
+          </button>
+        )}
       </div>
     </div>
   );

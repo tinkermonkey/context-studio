@@ -737,6 +737,12 @@ a {
 .status-pulse.disconnected::after {
   background: var(--accent-rose);
 }
+.status-pulse.running {
+  background: var(--accent-cyan);
+}
+.status-pulse.running::after {
+  background: var(--accent-cyan);
+}
 
 /* ------------ Page layout ------------ */
 .page-head {
@@ -1087,6 +1093,9 @@ table.t .row-actions {
   color: var(--canvas-fg-2);
   background: rgba(148, 163, 184, 0.14);
   border-color: rgba(148, 163, 184, 0.25);
+}
+.chip.running .dot {
+  animation: pulse 1.2s ease-out infinite;
 }
 
 /* ------------ Tabs ------------ */
@@ -2075,10 +2084,133 @@ select.input {
   gap: var(--space-2);
 }
 
+.flex-gap-sm {
+  display: flex;
+  gap: 6px;
+}
+
+.dropdown-popover {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--canvas-bg);
+  border: 1px solid var(--canvas-fg-4);
+  border-radius: var(--radius-sm);
+  margin-top: 4px;
+  z-index: 10;
+  min-width: 200px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.dropdown-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-size: var(--text-sm);
+  color: var(--canvas-fg);
+  border-bottom: 1px solid var(--canvas-fg-4);
+}
+
+.dropdown-option:hover {
+  background: var(--canvas-bg-2);
+}
+
+.dropdown-option:last-child {
+  border-bottom: none;
+}
+
 .grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-6);
+}
+
+/* ------------ Pipeline page styles ------------ */
+.status-filter-chip {
+  padding: 4px 12px;
+  border-radius: var(--radius-md, 6px);
+  border: 1px solid var(--canvas-bd);
+  background: transparent;
+  color: var(--canvas-fg);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+
+.status-filter-chip[data-active="true"] {
+  background: var(--canvas-bg-2);
+  font-weight: 600;
+}
+
+.status-filter-chip:hover {
+  border-color: var(--canvas-bd-2);
+}
+
+.pipeline-card-wrapper {
+  cursor: pointer;
+  outline: none;
+}
+
+.pipeline-card-wrapper:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.pipeline-card-wrapper:hover {
+  transform: translateY(-2px);
+}
+
+/* ============= Pipeline detail panel ============= */
+.pipeline-code-block {
+  background: var(--canvas-bg-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  overflow: auto;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--canvas-fg-2);
+  font-family: var(--mono);
+}
+
+.pipeline-empty-state {
+  padding: var(--space-4);
+  background: var(--canvas-bg-2);
+  border-radius: var(--radius-sm);
+  color: var(--canvas-fg-3);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+.pipeline-error-log {
+  background: var(--canvas-bg-2);
+  border-left: 3px solid var(--rose-500, #f43f5e);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+}
+
+.error-log-title {
+  font-weight: 500;
+  font-size: var(--text-sm);
+}
+
+.pipeline-error-message {
+  background: var(--canvas-bg-3);
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  overflow: auto;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--rose-500, #f43f5e);
+  max-height: 200px;
+  font-family: var(--mono);
 }
 
 /* ============= Dark canvas mode ============= */

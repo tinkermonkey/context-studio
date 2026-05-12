@@ -14,11 +14,19 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal, Protocol
 
-from .entities import Execution, PipelineConfiguration
+from .entities import Execution, PipelineConfiguration, PipelineFlavor
 
 # ============================================================================
 # Value types used in port contracts
 # ============================================================================
+
+
+@dataclass(frozen=True)
+class ExecutionWithTitle:
+    """Pairs an execution with its pipeline title."""
+
+    execution: Execution
+    pipeline_title: str
 
 
 @dataclass(frozen=True)
@@ -193,5 +201,82 @@ class PipelineRepository(Protocol):
 
         Returns:
             List of Execution objects, up to limit
+        """
+        ...
+
+    def get_all_executions(
+        self,
+        status: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> tuple[list[ExecutionWithTitle], int]:
+        """
+        Retrieve execution history across all pipeline configurations.
+
+        Results are returned in reverse chronological order (most recent first).
+
+        Args:
+            status: Optional status filter ("success", "error", "timeout")
+            limit: Maximum number of execution records to return (1-500, default 100)
+            offset: Number of execution records to skip for pagination (default 0)
+
+        Returns:
+            Tuple of (list of ExecutionWithTitle objects, total count of executions matching filter)
+        """
+        ...
+
+
+class FlavorRepository(Protocol):
+    """
+    Port for persisting and retrieving pipeline flavor templates.
+
+    Flavors are reusable templates for creating pipeline configurations.
+    """
+
+    def get_flavor(self, flavor_id: str) -> PipelineFlavor | None:
+        """
+        Retrieve a pipeline flavor by ID.
+
+        Args:
+            flavor_id: Unique identifier of the flavor
+
+        Returns:
+            PipelineFlavor if found, None otherwise
+        """
+        ...
+
+    def list_flavors(self) -> list[PipelineFlavor]:
+        """
+        List all pipeline flavors.
+
+        Returns:
+            List of PipelineFlavor objects
+        """
+        ...
+
+    def save_flavor(self, flavor: PipelineFlavor) -> PipelineFlavor:
+        """
+        Create or update a pipeline flavor.
+
+        If the flavor's ID already exists, it is updated.
+        Otherwise, a new flavor is created.
+
+        Args:
+            flavor: PipelineFlavor to save
+
+        Returns:
+            The saved PipelineFlavor
+        """
+        ...
+
+    def delete_flavor(self, flavor_id: str) -> bool:
+        """
+        Delete a pipeline flavor by ID.
+
+        Args:
+            flavor_id: Unique identifier of the flavor to delete
+
+        Returns:
+            True if deletion was successful, False if flavor was not found
         """
         ...

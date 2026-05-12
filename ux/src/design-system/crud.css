@@ -983,3 +983,50 @@ code {
   font-size: 11px;
   color: var(--accent-cyan-deep);
 }
+
+/* ============= Pipeline runs page ============= */
+.runs-pipeline-link {
+  color: var(--accent-cyan);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.runs-pipeline-link:hover {
+  color: var(--accent-cyan-deep);
+}
+
+.runs-view-log-link {
+  color: var(--accent-cyan);
+  text-decoration: underline;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.runs-view-log-link:hover {
+  color: var(--accent-cyan-deep);
+}
+
+.runs-filter-bar {
+  margin-bottom: var(--space-6);
+}
+
+.runs-filter-group {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.runs-pagination-container {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-6);
+}
+
+.runs-page-counter {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-2);
+  color: var(--canvas-fg-2);
+  font-size: var(--text-sm);
+}

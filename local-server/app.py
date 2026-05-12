@@ -232,6 +232,7 @@ async def lifespan(app: FastAPI):
 
         pipeline_service = PipelineService(
             pipeline_repo=pipeline_repo,
+            flavor_repo=pipeline_repo,
             llm=llm_router,
             event_publisher=event_publisher,
         )

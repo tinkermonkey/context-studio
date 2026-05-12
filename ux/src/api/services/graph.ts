@@ -6,6 +6,7 @@ type GraphMetricsResponse = components["schemas"]["GraphMetricsResponse"];
 type PathResultResponse = components["schemas"]["PathResultResponse"];
 type SPARQLRequest = components["schemas"]["SPARQLRequest"];
 type SPARQLResponse = components["schemas"]["SPARQLResponse"];
+type SubgraphDataResponse = components["schemas"]["SubgraphDataResponse"];
 
 class GraphService extends BaseService {
   async buildGraph(): Promise<KnowledgeGraphResponse> {
@@ -17,6 +18,10 @@ class GraphService extends BaseService {
       "/api/graph/metrics",
       algorithm ? { algorithm } : undefined,
     );
+  }
+
+  async getSubgraph(nodeIds: string[]): Promise<SubgraphDataResponse> {
+    return this.get<SubgraphDataResponse>("/api/graph/subgraph", { nodes: nodeIds.join(",") });
   }
 
   async getShortestPath(sourceId: string, targetId: string): Promise<PathResultResponse> {

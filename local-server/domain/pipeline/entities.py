@@ -10,9 +10,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Literal
 
 
-@dataclass
+@dataclass(frozen=True)
 class PipelineConfiguration:
     """
     Configuration for an LLM pipeline.
@@ -42,7 +43,7 @@ class PipelineConfiguration:
     id: str
     pipeline: str
     title: str
-    provider: str
+    provider: Literal["openai", "anthropic"]
     model: str
     config: dict
     system_prompt: str
@@ -65,7 +66,7 @@ class PipelineConfiguration:
             raise ValueError(f"seed must be non-negative if provided, got {self.seed}")
 
 
-@dataclass
+@dataclass(frozen=True)
 class Execution:
     """
     Record of a single LLM pipeline execution.
@@ -84,7 +85,7 @@ class Execution:
         tokens_out: Number of tokens in the output
         duration_ms: Execution duration in milliseconds
         status: Completion status ("success" | "error" | "timeout")
-        error_message: Error description if status is "error", None otherwise
+        error_message: Error description if status is "error" or "timeout", None otherwise
         timestamp: When the execution occurred
 
     Raises:
@@ -100,7 +101,7 @@ class Execution:
     tokens_in: int
     tokens_out: int
     duration_ms: int
-    status: str
+    status: Literal["success", "error", "timeout"]
     error_message: str | None
     timestamp: datetime
 
@@ -120,3 +121,44 @@ class Execution:
             )
         if self.status == "error" and not self.error_message:
             raise ValueError("error_message must be set when status is 'error'")
+
+
+@dataclass(frozen=True)
+class PipelineFlavor:
+    """
+    Reusable template for creating pipeline configurations.
+
+    A flavor is a parameterized blueprint that can be instantiated into
+    multiple pipeline configurations, allowing users to create common
+    configurations from predefined templates.
+
+    Attributes:
+        id: Unique identifier (UUID string)
+        name: Human-readable name for the flavor
+        description: Description of what this flavor is for
+        steps: List of configuration step dicts defining the template
+        created_at: Timestamp when this flavor was created
+        last_updated: Timestamp of the most recent update
+
+    Raises:
+        ValueError: If name is empty or steps is not a list
+    """
+
+    id: str
+    name: str
+    description: str
+    steps: list[dict]
+    created_at: datetime
+    last_updated: datetime
+
+    def __post_init__(self) -> None:
+        """Validate flavor invariants."""
+        if not self.name or not self.name.strip():
+            raise ValueError("name cannot be empty")
+        if not isinstance(self.steps, list):
+            raise ValueError("steps must be a list of dicts")
+
+    @property
+    def step_count(self) -> int:
+        """Return the number of steps in this flavor."""
+        return len(self.steps)

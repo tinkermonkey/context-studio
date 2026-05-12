@@ -647,6 +647,274 @@ selectors:
     component: routes/app/contact-sheet.tsx
     description: Toggle button for light/dark canvas mode on contact sheet
 
+  # Graph Page
+  - selector: graph-page
+    component: routes/app/graph/index.tsx
+    description: Graph visualization page container
+  - selector: graph-canvas
+    component: components/graph/GraphCanvas.tsx
+    description: Interactive graph visualization canvas powered by reagraph
+  - selector: graph-metrics-panel
+    component: components/graph/MetricsPanel.tsx
+    description: Graph metrics panel showing analytics and statistics
+  - selector: graph-metrics-node-count
+    component: components/graph/MetricsPanel.tsx
+    description: Node count statistic tile
+  - selector: graph-metrics-edge-count
+    component: components/graph/MetricsPanel.tsx
+    description: Edge count statistic tile
+  - selector: graph-metrics-community-count
+    component: components/graph/MetricsPanel.tsx
+    description: Community count statistic tile
+  - selector: graph-metrics-avg-degree
+    component: components/graph/MetricsPanel.tsx
+    description: Average degree statistic tile
+  - selector: graph-metrics-centrality-list
+    component: components/graph/MetricsPanel.tsx
+    description: Top 10 nodes ranked by betweenness centrality
+  - selector: graph-metrics-degree-distribution
+    component: components/graph/MetricsPanel.tsx
+    description: Degree distribution visualization
+
+  # Path Finder
+  - selector: path-finder
+    component: components/graph/PathFinder.tsx
+    description: Root container for path finder component
+  - selector: path-finder-source-input
+    component: components/graph/PathFinder.tsx
+    description: Source node typeahead input
+  - selector: path-finder-source-option-*
+    component: components/graph/PathFinder.tsx
+    description: Source node option in dropdown (pattern matches option-{classId})
+  - selector: path-finder-clear-source
+    component: components/graph/PathFinder.tsx
+    description: Button to clear selected source node
+  - selector: path-finder-target-input
+    component: components/graph/PathFinder.tsx
+    description: Target node typeahead input
+  - selector: path-finder-target-option-*
+    component: components/graph/PathFinder.tsx
+    description: Target node option in dropdown (pattern matches option-{classId})
+  - selector: path-finder-clear-target
+    component: components/graph/PathFinder.tsx
+    description: Button to clear selected target node
+  - selector: path-finder-find-button
+    component: components/graph/PathFinder.tsx
+    description: Find path button (disabled until both nodes selected)
+  - selector: path-finder-result
+    component: components/graph/PathFinder.tsx
+    description: Result path container
+  - selector: path-finder-result-node-*
+    component: components/graph/PathFinder.tsx
+    description: Clickable node button in result path (pattern matches result-node-{nodeId})
+  - selector: path-finder-empty-state
+    component: components/graph/PathFinder.tsx
+    description: Empty state shown when no path found
+  - selector: path-finder-error
+    component: components/graph/PathFinder.tsx
+    description: Error message displayed when path search fails
+
+  # SPARQL Editor
+  - selector: sparql-editor
+    component: components/graph/SparqlEditor.tsx
+    description: Root container for SPARQL query editor component
+
+  # Extraction Page
+  - selector: extraction-page
+    component: routes/app/extraction.tsx
+    description: Main extraction page container
+  - selector: extraction-input
+    component: components/extraction/ExtractionInput.tsx
+    description: Text input panel for entering or uploading text
+  - selector: extraction-panel-kg-context
+    component: components/extraction/ExtractionResultPanel.tsx
+    description: Result panel for KG Context (layer 0) extraction
+  - selector: extraction-panel-llm-extraction
+    component: components/extraction/ExtractionResultPanel.tsx
+    description: Result panel for LLM Extraction (layer 1)
+  - selector: extraction-panel-nlp-gap-fill
+    component: components/extraction/ExtractionResultPanel.tsx
+    description: Result panel for NLP Gap Fill (layer 2)
+  - selector: extraction-panel-reference-enrichment
+    component: components/extraction/ExtractionResultPanel.tsx
+    description: Result panel for Reference Enrichment (layer 3)
+  - selector: entity-review-panel-*
+    component: components/extraction/EntityReviewPanel.tsx
+    description: Entity review panel root container (pattern matches entity-review-panel-{layerIndex})
+  - selector: entity-suggestion-row-*
+    component: components/extraction/EntityReviewPanel.tsx
+    description: Entity suggestion row in review queue (pattern matches entity-suggestion-row-{index})
+  - selector: entity-review-approve-all-button
+    component: components/extraction/EntityReviewPanel.tsx
+    description: Button to approve all suggested entities
+  - selector: entity-review-reject-all-button
+    component: components/extraction/EntityReviewPanel.tsx
+    description: Button to reject all suggested entities
+  - selector: entity-review-approve-*
+    component: components/extraction/EntityReviewPanel.tsx
+    description: Approve button for a single entity (pattern matches entity-review-approve-{entityId})
+  - selector: entity-review-reject-*
+    component: components/extraction/EntityReviewPanel.tsx
+    description: Reject button for a single entity (pattern matches entity-review-reject-{entityId})
+  - selector: entity-review-link-*
+    component: components/extraction/EntityReviewPanel.tsx
+    description: Link button for a single entity (pattern matches entity-review-link-{entityId})
+  - selector: entity-review-link-input
+    component: components/extraction/EntityReviewPanel.tsx
+    description: Search input field in the link typeahead
+  - selector: entity-review-link-option-*
+    component: components/extraction/EntityReviewPanel.tsx
+    description: Class option in the link typeahead (pattern matches entity-review-link-option-{classId})
+  - selector: sparql-query-textarea
+    component: components/graph/SparqlEditor.tsx
+    description: Code textarea for entering SPARQL queries
+  - selector: sparql-run-button
+    component: components/graph/SparqlEditor.tsx
+    description: Button to execute the SPARQL query
+  - selector: sparql-results-table
+    component: components/graph/SparqlEditor.tsx
+    description: Table displaying SPARQL query results
+  - selector: sparql-result-row-*
+    component: components/graph/SparqlEditor.tsx
+    description: Individual result row in SPARQL results table (pattern matches result-row-{index})
+  - selector: sparql-error-banner
+    component: components/graph/SparqlEditor.tsx
+    description: Error message banner shown when query execution fails
+  - selector: sparql-empty-state
+    component: components/graph/SparqlEditor.tsx
+    description: Empty state message shown when query returns no results
+  - selector: sparql-loading-spinner
+    component: components/graph/SparqlEditor.tsx
+    description: Loading spinner shown while query is executing
+
+  # Pipelines Page
+  - selector: pipelines-page
+    component: routes/app/pipelines/index.tsx
+    description: Main pipelines list page container
+  - selector: pipelines-grid
+    component: routes/app/pipelines/index.tsx
+    description: 2-column grid of pipeline cards
+  - selector: pipelines-search-input
+    component: routes/app/pipelines/index.tsx
+    description: Search input field for filtering pipelines by name, provider, or model
+  - selector: status-filter-all
+    component: routes/app/pipelines/index.tsx
+    description: Filter chip button to show all pipelines
+  - selector: status-filter-enabled
+    component: routes/app/pipelines/index.tsx
+    description: Filter chip button to show only enabled pipelines
+  - selector: status-filter-disabled
+    component: routes/app/pipelines/index.tsx
+    description: Filter chip button to show only disabled pipelines
+  - selector: pipeline-card-*
+    component: components/pipeline/PipelineCard.tsx
+    description: Individual pipeline card root element (pattern matches pipeline-card-{pipelineId})
+  - selector: pipeline-status-chip
+    component: components/pipeline/PipelineCard.tsx
+    description: Status chip showing pipeline execution status (success, failed, idle, or disabled)
+
+  # Pipeline Detail Panel
+  - selector: run-pipeline-btn
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Button to execute the pipeline
+  - selector: pipeline-edit-config-button
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Button to enter edit mode for pipeline configuration
+  - selector: pipeline-config-textarea
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Textarea for editing pipeline configuration JSON
+  - selector: pipeline-save-config-button
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Button to save pipeline configuration changes
+  - selector: pipeline-revert-config-button
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Button to cancel pipeline configuration edits and revert
+  - selector: pipeline-config-pre
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Pre-formatted block displaying pipeline configuration in view mode
+  - selector: pipeline-runs-table
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Table displaying execution runs for the pipeline
+  - selector: pipeline-no-runs
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Empty state message when pipeline has never been executed
+  - selector: pipeline-error-log
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Container displaying detailed error message from failed execution
+  - selector: pipeline-copy-error-button
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Button to copy error message to clipboard
+  - selector: pipeline-view-log-*
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Button to expand error log for execution (pattern matches pipeline-view-log-{executionId})
+  - selector: pipeline-detail
+    component: routes/app/pipelines/$pipelineId.tsx
+    description: Main pipeline detail page container
+
+  # Pipeline Runs Page
+  - selector: pipeline-runs-page
+    component: routes/app/pipelines/runs.tsx
+    description: Main pipeline runs page container
+  - selector: runs-search-input
+    component: routes/app/pipelines/runs.tsx
+    description: Search input field for filtering pipeline runs
+  - selector: pagination-prev
+    component: routes/app/pipelines/runs.tsx
+    description: Previous page button in pipeline runs pagination
+  - selector: pagination-next
+    component: routes/app/pipelines/runs.tsx
+    description: Next page button in pipeline runs pagination
+
+  # Pipeline Flavors Page
+  - selector: flavors-page
+    component: routes/app/pipelines/flavors.tsx
+    description: Main pipeline flavors list page container
+  - selector: flavors-content
+    component: routes/app/pipelines/flavors.tsx
+    description: Content wrapper for flavors page with loading/error/empty states
+  - selector: flavor-add-button
+    component: routes/app/pipelines/flavors.tsx
+    description: Button to create a new pipeline flavor
+  - selector: flavor-create-modal
+    component: routes/app/pipelines/flavors.tsx
+    description: Modal dialog for creating a new pipeline flavor
+  - selector: flavor-row-*
+    component: routes/app/pipelines/flavors.tsx
+    description: Table row for a pipeline flavor (pattern matches flavor-row-{flavorId})
+  - selector: flavor-name-*
+    component: routes/app/pipelines/flavors.tsx
+    description: Flavor name cell in table (pattern matches flavor-name-{flavorId})
+  - selector: flavor-steps-*
+    component: routes/app/pipelines/flavors.tsx
+    description: Flavor step count cell in table (pattern matches flavor-steps-{flavorId})
+  - selector: flavor-row-actions-*
+    component: routes/app/pipelines/flavors.tsx
+    description: Actions button for flavor row (pattern matches flavor-row-actions-{flavorId})
+  - selector: flavor-form
+    component: components/pipeline/FlavorForm.tsx
+    description: Form container for creating a pipeline flavor
+  - selector: flavor-name-input
+    component: components/pipeline/FlavorForm.tsx
+    description: Name input field in flavor form
+  - selector: flavor-description-input
+    component: components/pipeline/FlavorForm.tsx
+    description: Description textarea in flavor form
+  - selector: flavor-submit-button
+    component: components/pipeline/FlavorForm.tsx
+    description: Submit button in flavor form
+  - selector: flavor-drawer
+    component: components/pipeline/FlavorDrawer.tsx
+    description: Drawer panel showing flavor details
+  - selector: flavor-drawer-id
+    component: components/pipeline/FlavorDrawer.tsx
+    description: ID field in flavor drawer
+  - selector: flavor-drawer-step-count
+    component: components/pipeline/FlavorDrawer.tsx
+    description: Step count field in flavor drawer
+  - selector: flavor-drawer-delete-button
+    component: components/pipeline/FlavorDrawer.tsx
+    description: Button to delete the flavor
+
   # Unit Test Fixtures
   - selector: action
     component: components/ui/__tests__/Panel.test.tsx

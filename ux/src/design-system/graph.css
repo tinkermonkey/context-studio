@@ -691,3 +691,122 @@ body.dark-canvas .gt-chip.irrelevant {
   stroke-width: 1.75;
   fill: none;
 }
+
+/* ============ Metrics Panel ============ */
+.metrics-section {
+  margin-top: 1rem;
+}
+
+.metrics-section-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+  color: var(--canvas-fg-1);
+}
+
+.metrics-empty-state {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--text-secondary);
+}
+
+.centrality-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.centrality-list-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.centrality-row-skeleton {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.centrality-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  border-radius: var(--radius-sm, 4px);
+  background: var(--canvas-bg-tertiary);
+  font-size: 0.75rem;
+}
+
+.centrality-index {
+  font-weight: 500;
+  color: var(--text-secondary);
+  min-width: 24px;
+}
+
+.centrality-node-id {
+  flex: 1;
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-left: 0.5rem;
+}
+
+.centrality-score {
+  font-weight: 500;
+  color: var(--cyan-600);
+  margin-left: 0.5rem;
+}
+
+.degree-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.25rem;
+  height: 120px;
+  padding: 0.5rem 0;
+}
+
+.degree-bar-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.degree-bar {
+  width: 100%;
+  background: var(--violet-500);
+  border-radius: var(--radius-sm, 4px);
+  min-height: 2px;
+}
+
+.degree-label {
+  font-size: 0.5rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* ============ Path Finder ============ */
+.node-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--canvas-bg-2);
+  border: 1px solid var(--canvas-bd);
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: var(--font-sans);
+  color: var(--canvas-fg-1);
+  cursor: pointer;
+  transition: all 0.1s;
+  white-space: nowrap;
+}
+.node-badge:hover {
+  border-color: var(--accent-cyan-deep);
+  background: var(--canvas-card);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+}

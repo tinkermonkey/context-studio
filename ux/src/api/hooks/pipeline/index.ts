@@ -6,10 +6,11 @@ import type { components } from "@/api/types";
 type PipelineConfigurationCreate = components["schemas"]["PipelineConfigurationCreate"];
 type PipelineConfigurationUpdate = components["schemas"]["PipelineConfigurationUpdate"];
 
-export function usePipelines() {
+export function usePipelines(refetchInterval?: number | false) {
   return useQuery({
     queryKey: QUERY_KEYS.pipelines,
     queryFn: () => pipelineService.listPipelines(),
+    refetchInterval,
   });
 }
 
@@ -60,7 +61,13 @@ export function useExecutePipeline() {
       pipelineService.executePipeline(id, inputText),
     onSuccess: (_result, { id }) => {
       queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.pipelines,
+      });
+      queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.pipelineExecutions(id),
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["all-pipeline-executions"],
       });
     },
   });
@@ -71,5 +78,12 @@ export function usePipelineExecutions(pipelineId: string) {
     queryKey: QUERY_KEYS.pipelineExecutions(pipelineId),
     queryFn: () => pipelineService.getPipelineExecutions(pipelineId),
     enabled: !!pipelineId,
+  });
+}
+
+export function useAllPipelineExecutions(status?: string, limit: number = 100, offset: number = 0) {
+  return useQuery({
+    queryKey: QUERY_KEYS.allPipelineExecutions(status, limit, offset),
+    queryFn: () => pipelineService.getAllPipelineExecutions(status, limit, offset),
   });
 }

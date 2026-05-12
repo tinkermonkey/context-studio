@@ -82,8 +82,16 @@ temp
 # Documentation (not needed for dependency install)
 documentation
 
-# Legacy server (reference only, not needed for builds)
-legacy-server
+# Legacy code (reference only, not needed for builds)
+legacy
+legacy_ux
+
+# Screenshots (debugging artifacts, gitignored)
+screenshots
+
+# OpenAPI extracts and DR model (not needed for dependency install)
+openapi_extracts
+documentation-robotics
 
 # NLP sandbox and test data
 local-server/nlp_sandbox
