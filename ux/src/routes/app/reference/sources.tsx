@@ -28,10 +28,7 @@ interface SourcesPageContentProps {
   onSelectedIdChange: (id: string | undefined) => void;
 }
 
-function SourcesPageContent({
-  selectedId,
-  onSelectedIdChange,
-}: SourcesPageContentProps) {
+function SourcesPageContent({ selectedId, onSelectedIdChange }: SourcesPageContentProps) {
   const [searchFilter, setSearchFilter] = useState("");
 
   const { data: statusResponse, isLoading, error, refetch } = useReferenceStatus();
@@ -40,9 +37,8 @@ function SourcesPageContent({
     id: source.name,
   }));
 
-  const filteredData = sources.filter(
-    (source: SourceWithId) =>
-      source.name.toLowerCase().includes(searchFilter.toLowerCase()),
+  const filteredData = sources.filter((source: SourceWithId) =>
+    source.name.toLowerCase().includes(searchFilter.toLowerCase()),
   );
 
   const sourceColumns: ColumnDef<SourceWithId>[] = [
@@ -76,11 +72,7 @@ function SourcesPageContent({
         const available = info.getValue() as boolean;
         const statusLabel = available ? "Active" : "Inactive";
 
-        return (
-          <Chip color={available ? "emerald" : "gray"}>
-            {statusLabel}
-          </Chip>
-        );
+        return <Chip color={available ? "emerald" : "gray"}>{statusLabel}</Chip>;
       },
     },
     {
@@ -97,7 +89,7 @@ function SourcesPageContent({
         const diffHours = Math.floor(diffMins / 60);
         const diffDays = Math.floor(diffHours / 24);
 
-        let relativeTime = "";
+        let relativeTime: string;
         if (diffMins < 1) {
           relativeTime = "just now";
         } else if (diffMins < 60) {
@@ -218,10 +210,7 @@ function SourcesPageWrapper() {
         <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>Reference Sources</h1>
       </div>
       <div data-testid="sources-content">
-        <SourcesPageContent
-          selectedId={selectedId}
-          onSelectedIdChange={handleSelectedIdChange}
-        />
+        <SourcesPageContent selectedId={selectedId} onSelectedIdChange={handleSelectedIdChange} />
       </div>
     </div>
   );
