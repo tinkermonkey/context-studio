@@ -3,7 +3,7 @@ import { afterEach, beforeEach, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
 
 // Mock window.scrollTo to avoid jsdom "Not implemented" errors
-window.scrollTo = vi.fn();
+window.scrollTo = vi.fn() as unknown as typeof window.scrollTo;
 
 // Set up a mock clipboard API for testing - create it at global scope
 const mockClipboardWriteText = vi.fn().mockResolvedValue(undefined);
