@@ -4,9 +4,6 @@ import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { useReferenceStatus, useClasses } from "@/api/hooks";
 import type { GroundingWorkflowCreate } from "@/api/services/reference";
-import type { components } from "@/api/types";
-
-type ClassResponse = components["schemas"]["ClassResponse"];
 
 interface GroundingWorkflowFormProps {
   onSubmit: (data: GroundingWorkflowCreate) => Promise<void>;

@@ -22,7 +22,7 @@ export function ReferenceSourceDrawer({
     try {
       await refetch();
       toast("success", `Refreshed ${source.name}`);
-    } catch (_error) {
+    } catch {
       toast("error", `Failed to refresh ${source.name}`);
     }
   };

@@ -12,7 +12,6 @@ import {
   useRunGroundingWorkflow,
   useGroundingWorkflowRuns,
 } from "@/api/hooks/reference";
-import type { GroundingWorkflowResponse } from "@/api/services/reference";
 
 interface GroundingWorkflowDrawerProps {
   workflowId: string;
@@ -29,7 +28,7 @@ export function GroundingWorkflowDrawer({
   const deleteMutation = useDeleteGroundingWorkflow();
   const runMutation = useRunGroundingWorkflow();
   const { toast } = useToasts();
-  const { performDelete, undo, deletedId } = useUndoDelete({
+  const { performDelete, undo, deletedId: _deletedId } = useUndoDelete({
     onDelete: deleteMutation.mutateAsync,
   });
 

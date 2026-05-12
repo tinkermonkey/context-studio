@@ -1,16 +1,10 @@
 import { useState } from "react";
-import { Skeleton } from "@/components/ui/Skeleton";
-import { ErrorBanner } from "@/components/ui/ErrorBanner";
-import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { useChanges, useCreateChangeset } from "@/api/hooks/versioning";
 import { useToasts } from "@/components/ui/Toast";
 import { PendingChangesList } from "./PendingChangesList";
 import { ChangesetListSection } from "./ChangesetListSection";
 import { CreateChangesetModal } from "./CreateChangesetModal";
-import type { components } from "@/api/types";
-
-type VersioningChangeEventResponse = components["schemas"]["VersioningChangeEventResponse"];
 
 interface ChangesetPanelProps {
   onError?: (message: string) => void;

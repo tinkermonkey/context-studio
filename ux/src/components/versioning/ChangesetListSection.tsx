@@ -5,9 +5,6 @@ import { Button } from "@/components/ui/Button";
 import { useChangesets, useApplyChangeset } from "@/api/hooks/versioning";
 import { useToasts } from "@/components/ui/Toast";
 import { formatRelativeTime } from "@/utils/formatters";
-import type { components } from "@/api/types";
-
-type ChangesetResponse = components["schemas"]["ChangesetResponse"];
 
 interface ChangesetListSectionProps {
   onApplyError?: (message: string) => void;
