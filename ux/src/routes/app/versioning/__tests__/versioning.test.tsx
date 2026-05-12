@@ -117,6 +117,7 @@ describe("Versioning Page", () => {
 
       await waitFor(() => {
         expect(screen.getByTestId("changeset-panel")).toBeInTheDocument();
+        expect(screen.getByText("Test Entity")).toBeInTheDocument();
       });
     });
   });
