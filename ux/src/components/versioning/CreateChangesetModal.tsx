@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { COPY } from "@/routes/app/versioning/copy";
 import type { TextareaHTMLAttributes } from "react";
 
 interface CreateChangesetModalProps {
@@ -40,7 +41,7 @@ export function CreateChangesetModal({
 
     // Validate
     if (!name.trim()) {
-      setNameError("Changeset name is required");
+      setNameError(COPY.changesetNameRequired);
       return;
     }
 
@@ -63,13 +64,13 @@ export function CreateChangesetModal({
     <Modal
       open={open}
       onClose={onClose}
-      title="Create Changeset"
+      title={COPY.createChangesetModalTitle}
       size="md"
     >
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
         {/* Info */}
         <p style={{ fontSize: "13px", color: "var(--canvas-fg-2)", margin: 0 }}>
-          Creating changeset with <strong>{selectedCount}</strong> change{selectedCount !== 1 ? "s" : ""}
+          {COPY.createChangesetInfoMessage(selectedCount)}
         </p>
 
         {/* Name field */}
@@ -83,7 +84,7 @@ export function CreateChangesetModal({
             }}
             htmlFor="changeset-name"
           >
-            Changeset Name
+            {COPY.changesetNameLabel}
           </label>
           <Input
             id="changeset-name"
@@ -91,7 +92,7 @@ export function CreateChangesetModal({
             type="text"
             value={name}
             onChange={(e) => handleNameChange(e.target.value)}
-            placeholder="e.g., Add new properties to Person class"
+            placeholder={COPY.changesetNamePlaceholder}
             autoFocus
             disabled={isLoading}
           />
@@ -113,14 +114,14 @@ export function CreateChangesetModal({
             }}
             htmlFor="changeset-description"
           >
-            Description (optional)
+            {COPY.changesetDescriptionLabel}
           </label>
           <Textarea
             id="changeset-description"
             data-testid="changeset-description-input"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Describe the changes in this changeset..."
+            placeholder={COPY.changesetDescriptionPlaceholder}
             rows={3}
             disabled={isLoading}
           />
@@ -135,7 +136,7 @@ export function CreateChangesetModal({
             disabled={isLoading}
             data-testid="changeset-cancel-button"
           >
-            Cancel
+            {COPY.cancelButton}
           </Button>
           <Button
             type="submit"
@@ -143,7 +144,7 @@ export function CreateChangesetModal({
             disabled={isLoading || !name.trim()}
             data-testid="changeset-submit-button"
           >
-            {isLoading ? "Creating..." : "Create Changeset"}
+            {isLoading ? COPY.creatingChangesetButton : COPY.createChangesetButton}
           </Button>
         </div>
       </form>

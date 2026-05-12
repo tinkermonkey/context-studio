@@ -11,6 +11,7 @@ import { SchemaTable } from "@/components/schema/SchemaTable";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import { ReferenceSourceDrawer } from "@/components/reference/ReferenceSourceDrawer";
 import { useReferenceStatus } from "@/api/hooks/reference";
+import { COPY } from "./copy";
 import type { components } from "@/api/types";
 
 type ReferenceSourceStatusSchema = components["schemas"]["ReferenceSourceStatusSchema"];
@@ -44,7 +45,7 @@ function SourcesPageContent({ selectedId, onSelectedIdChange }: SourcesPageConte
   const sourceColumns: ColumnDef<SourceWithId>[] = [
     {
       accessorKey: "name",
-      header: "Name",
+      header: COPY.sourcesTableHeaderName,
       cell: (info) => {
         const sourceId = info.row.original.id;
         return (
@@ -67,17 +68,17 @@ function SourcesPageContent({ selectedId, onSelectedIdChange }: SourcesPageConte
     },
     {
       accessorKey: "available",
-      header: "Status",
+      header: COPY.sourcesTableHeaderStatus,
       cell: (info) => {
         const available = info.getValue() as boolean;
-        const statusLabel = available ? "Active" : "Inactive";
+        const statusLabel = available ? COPY.statusActive : COPY.statusInactive;
 
         return <Chip color={available ? "emerald" : "gray"}>{statusLabel}</Chip>;
       },
     },
     {
       accessorKey: "last_checked",
-      header: "Last Checked",
+      header: COPY.sourcesTableHeaderLastChecked,
       cell: (info) => {
         const date = info.getValue() as string | null;
         if (!date) return <span className="muted-text">—</span>;
@@ -91,13 +92,13 @@ function SourcesPageContent({ selectedId, onSelectedIdChange }: SourcesPageConte
 
         let relativeTime: string;
         if (diffMins < 1) {
-          relativeTime = "just now";
+          relativeTime = COPY.justNow;
         } else if (diffMins < 60) {
-          relativeTime = `${diffMins}m ago`;
+          relativeTime = COPY.minutesAgo(diffMins);
         } else if (diffHours < 24) {
-          relativeTime = `${diffHours}h ago`;
+          relativeTime = COPY.hoursAgo(diffHours);
         } else {
-          relativeTime = `${diffDays}d ago`;
+          relativeTime = COPY.daysAgo(diffDays);
         }
 
         return <span className="muted-text">{relativeTime}</span>;
@@ -144,8 +145,8 @@ function SourcesPageContent({ selectedId, onSelectedIdChange }: SourcesPageConte
     return (
       <div data-testid="reference-sources-page">
         <EmptyState
-          title="No reference sources"
-          description="Reference sources are configured in Settings"
+          title={COPY.sourcesEmptyStateTitle}
+          description={COPY.sourcesEmptyStateDescription}
         />
       </div>
     );
@@ -161,8 +162,8 @@ function SourcesPageContent({ selectedId, onSelectedIdChange }: SourcesPageConte
       {showFilteredEmpty ? (
         <div style={{ marginTop: "var(--space-6)" }}>
           <EmptyState
-            title="No sources match your search"
-            description="Try a different search term"
+            title={COPY.sourcesFilteredEmptyTitle}
+            description={COPY.sourcesFilteredEmptyDescription}
           />
         </div>
       ) : (
@@ -207,7 +208,7 @@ function SourcesPageWrapper() {
   return (
     <div className="stack">
       <div className="flex-between">
-        <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>Reference Sources</h1>
+        <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>{COPY.sourcesPageTitle}</h1>
       </div>
       <div data-testid="sources-content">
         <SourcesPageContent selectedId={selectedId} onSelectedIdChange={handleSelectedIdChange} />

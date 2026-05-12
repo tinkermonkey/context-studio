@@ -6,6 +6,7 @@ import { ChangesetPanel } from "@/components/versioning/ChangesetPanel";
 import { SyncStatusPanel } from "@/components/versioning/SyncStatus";
 import { ConflictResolver } from "@/components/versioning/ConflictResolver";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { COPY } from "./versioning/copy";
 
 export const Route = createFileRoute("/app/versioning")({
   component: VersioningPage,
@@ -21,21 +22,21 @@ function VersioningPage() {
 
   const handleConflictDetected = () => {
     setActiveTab("conflicts");
-    toast("info", "Conflict detected. Resolve conflicts to proceed.");
+    toast("info", COPY.conflictDetectedNotification);
   };
 
   const tabs = [
-    { id: "changesets", label: "Changesets" },
-    { id: "conflicts", label: "Conflicts" },
-    { id: "sync", label: "Sync Status" },
+    { id: "changesets", label: COPY.changesetsTab },
+    { id: "conflicts", label: COPY.conflictsTab },
+    { id: "sync", label: COPY.syncStatusTab },
   ];
 
   return (
     <div>
       <div className="page-head">
         <div>
-          <h1>Versioning</h1>
-          <p className="subtitle">Manage changesets and synchronization</p>
+          <h1>{COPY.versioningPageTitle}</h1>
+          <p className="subtitle">{COPY.versioningPageSubtitle}</p>
         </div>
       </div>
 
@@ -54,14 +55,14 @@ function VersioningPage() {
             <ConflictResolver
               proposalId={search.proposalId}
               onResolved={() => {
-                toast("success", "Conflicts resolved successfully!");
+                toast("success", COPY.conflictsResolvedSuccess);
                 setActiveTab("changesets");
               }}
             />
           ) : (
             <EmptyState
-              title="No proposal selected"
-              description="Select a proposal with conflicts to resolve"
+              title={COPY.noProposalSelected}
+              description={COPY.selectProposalMessage}
             />
           )}
         </div>

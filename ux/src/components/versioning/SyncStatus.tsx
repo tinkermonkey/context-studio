@@ -8,6 +8,7 @@ import { useSyncStatus, usePushSync, usePullSync } from "@/api/hooks/versioning"
 import { useConfig } from "@/api/hooks/admin";
 import { useToasts } from "@/components/ui/Toast";
 import { formatRelativeTime } from "@/utils/formatters";
+import { COPY } from "@/routes/app/versioning/copy";
 import type { components } from "@/api/types";
 
 type SyncStatusResponse = components["schemas"]["SyncStatusResponse"];
@@ -96,7 +97,7 @@ function SyncStatusCard({
         <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
           {lastSyncTime != null && (
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: "12px", color: "var(--canvas-fg-3)" }}>Last sync:</span>
+              <span style={{ fontSize: "12px", color: "var(--canvas-fg-3)" }}>{COPY.lastSyncLabel}</span>
               <span
                 style={{
                   fontSize: "12px",
@@ -112,7 +113,7 @@ function SyncStatusCard({
           {changeCount !== undefined && changeCount > 0 && (
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: "12px", color: "var(--canvas-fg-3)" }}>
-                {title === "Push" ? "Changes ahead:" : "Changes pulled:"}
+                {title === "Push" ? COPY.changesAheadLabel : COPY.changesPulledLabel}
               </span>
               <span
                 style={{
@@ -179,9 +180,9 @@ export function SyncStatusPanel({ onConflictDetected }: SyncStatusPanelProps) {
   const handlePush = async () => {
     try {
       const result = await pushMutation.mutateAsync();
-      toast("success", `Pushed ${result.pushed} changes`);
+      toast("success", COPY.pushSuccessMessage(result.pushed));
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to push";
+      const message = error instanceof Error ? error.message : COPY.failedToPush;
       const isConflict = message.toLowerCase().includes("conflict");
 
       if (isConflict) {
@@ -196,9 +197,9 @@ export function SyncStatusPanel({ onConflictDetected }: SyncStatusPanelProps) {
     try {
       const result = await pullMutation.mutateAsync();
       setLastPullCount(result.pulled);
-      toast("success", `Pulled ${result.pulled} changes`);
+      toast("success", COPY.pullSuccessMessage(result.pulled));
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to pull";
+      const message = error instanceof Error ? error.message : COPY.failedToPull;
       const isConflict = message.toLowerCase().includes("conflict");
 
       if (isConflict) {
@@ -235,10 +236,10 @@ export function SyncStatusPanel({ onConflictDetected }: SyncStatusPanelProps) {
   if (!syncStatus || !syncStatus.is_configured) {
     return (
       <EmptyState
-        title="No sync target configured"
-        description="Configure a sync target in settings to enable push and pull operations"
+        title={COPY.noSyncTargetConfigured}
+        description={COPY.syncTargetDescription}
         action={{
-          label: "Go to Settings",
+          label: COPY.goToSettingsButton,
           onClick: () => navigate({ to: "/app/settings" }),
         }}
       />
@@ -251,7 +252,7 @@ export function SyncStatusPanel({ onConflictDetected }: SyncStatusPanelProps) {
     <div data-testid="sync-status-panel" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
         <SyncStatusCard
-          title="Push"
+          title={COPY.pushCardTitle}
           status={status === "ahead" ? "ahead" : "synced"}
           lastSyncTime={syncStatus.last_pushed_at}
           changeCount={syncStatus.unprocessed_count > 0 ? syncStatus.unprocessed_count : undefined}
@@ -260,7 +261,7 @@ export function SyncStatusPanel({ onConflictDetected }: SyncStatusPanelProps) {
         />
 
         <SyncStatusCard
-          title="Pull"
+          title={COPY.pullCardTitle}
           status="synced"
           lastSyncTime={syncStatus.last_pulled_at}
           changeCount={lastPullCount}
@@ -277,7 +278,7 @@ export function SyncStatusPanel({ onConflictDetected }: SyncStatusPanelProps) {
           fontSize: "12px",
         }}
       >
-        <div style={{ color: "var(--canvas-fg-3)", marginBottom: "4px" }}>Sync target:</div>
+        <div style={{ color: "var(--canvas-fg-3)", marginBottom: "4px" }}>{COPY.syncTargetLabel}</div>
         <div
           style={{
             fontFamily: "var(--mono)",

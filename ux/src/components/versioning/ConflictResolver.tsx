@@ -6,6 +6,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { useProposalConflicts, useResolveConflicts } from "@/api/hooks/versioning";
 import { useIndividuals, useTaxonomies, useClasses } from "@/api/hooks/ontology";
 import { useToasts } from "@/components/ui/Toast";
+import { COPY } from "@/routes/app/versioning/copy";
 import type { components } from "@/api/types";
 
 type ConflictResponse = components["schemas"]["ConflictResponse"];
@@ -117,7 +118,7 @@ function ConflictRow({
 
       {isResolved ? (
         <div style={{ fontSize: "11px", fontWeight: 500 }}>
-          <span className="chip emerald">✓ resolved</span>
+          <span className="chip emerald">{COPY.resolvedChip}</span>
         </div>
       ) : isEditing ? (
         <div className="flex-gap-sm">
@@ -156,7 +157,7 @@ function ConflictRow({
             variant="ghost"
             onClick={onKeepOurs}
           >
-            Ours
+            {COPY.ourValue}
           </Button>
           <Button
             data-testid={`conflict-keep-theirs-${conflict.entity_id}-${conflict.field_name}`}
@@ -164,7 +165,7 @@ function ConflictRow({
             variant="ghost"
             onClick={onKeepTheirs}
           >
-            Theirs
+            {COPY.theirValue}
           </Button>
           <Button
             data-testid={`conflict-edit-${conflict.entity_id}-${conflict.field_name}`}
@@ -172,7 +173,7 @@ function ConflictRow({
             variant="ghost"
             onClick={onEdit}
           >
-            Edit
+            {COPY.editButton}
           </Button>
         </div>
       )}
@@ -281,11 +282,11 @@ function ConflictGroup({
               textTransform: "uppercase",
             }}
           >
-            <div>Entity</div>
-            <div>Field</div>
-            <div>Ours</div>
-            <div>Theirs</div>
-            <div>Action</div>
+            <div>{COPY.entityHeader}</div>
+            <div>{COPY.fieldHeader}</div>
+            <div>{COPY.oursHeader}</div>
+            <div>{COPY.theirsHeader}</div>
+            <div>{COPY.actionHeader}</div>
           </div>
 
           {/* Conflict rows */}
@@ -424,7 +425,7 @@ export function ConflictResolver({ proposalId, onResolved }: ConflictResolverPro
       setEditingKey(null);
       setEditValue("");
     } catch {
-      toast("error", "Invalid JSON value");
+      toast("error", COPY.invalidJSONValue);
     }
   };
 
@@ -443,7 +444,7 @@ export function ConflictResolver({ proposalId, onResolved }: ConflictResolverPro
       setResolutions({});
       onResolved?.();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to resolve conflicts";
+      const message = error instanceof Error ? error.message : COPY.failedToResolveConflicts;
       toast("error", message);
     }
   };
@@ -469,7 +470,7 @@ export function ConflictResolver({ proposalId, onResolved }: ConflictResolverPro
   }
 
   if (!conflicts || conflicts.length === 0) {
-    return <EmptyState title="No conflicts" description="All clear" icon="✓" />;
+    return <EmptyState title={COPY.noConflicts} description={COPY.allClear} icon="✓" />;
   }
 
   return (
@@ -520,7 +521,7 @@ export function ConflictResolver({ proposalId, onResolved }: ConflictResolverPro
           onClick={handleApplyResolutions}
           disabled={!allConflictsResolved || resolveConflictsMutation.isPending}
         >
-          {resolveConflictsMutation.isPending ? "Applying..." : "Apply Resolutions"}
+          {resolveConflictsMutation.isPending ? COPY.applyingResolutionsButton : COPY.applyResolutionsButton}
         </Button>
       </div>
     </div>

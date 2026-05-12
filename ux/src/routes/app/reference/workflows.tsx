@@ -15,6 +15,7 @@ import { GroundingWorkflowDrawer } from "@/components/reference/GroundingWorkflo
 import { GroundingWorkflowForm } from "@/components/reference/GroundingWorkflowForm";
 import { useToasts } from "@/components/ui/Toast";
 import { formatRelativeTime } from "@/utils/formatters";
+import { COPY } from "./copy";
 import {
   useGroundingWorkflows,
   useCreateGroundingWorkflow,
@@ -46,7 +47,7 @@ function WorkflowsPageContent({
   const workflowColumns: ColumnDef<GroundingWorkflowResponse>[] = [
     {
       accessorKey: "title",
-      header: "Name",
+      header: COPY.workflowsTableHeaderName,
       cell: (info) => {
         const workflowId = info.row.original.id;
         return (
@@ -69,12 +70,12 @@ function WorkflowsPageContent({
     },
     {
       accessorKey: "source",
-      header: "Source",
+      header: COPY.workflowsTableHeaderSource,
       cell: (info) => <Chip color="cyan">{info.getValue() as string}</Chip>,
     },
     {
       accessorKey: "class_scope",
-      header: "Class Scope",
+      header: COPY.workflowsTableHeaderClassScope,
       cell: (info) => {
         const scopes = info.getValue() as string[];
         return (
@@ -99,7 +100,7 @@ function WorkflowsPageContent({
     },
     {
       accessorKey: "status",
-      header: "Status",
+      header: COPY.workflowsTableHeaderStatus,
       cell: (info) => {
         const status = info.getValue() as string;
         const statusColor =
@@ -110,7 +111,7 @@ function WorkflowsPageContent({
     },
     {
       accessorKey: "last_run",
-      header: "Last Run",
+      header: COPY.workflowsTableHeaderLastRun,
       cell: (info) => {
         const date = info.getValue() as string | null;
         return (
@@ -161,10 +162,10 @@ function WorkflowsPageContent({
     return (
       <div data-testid="reference-workflows-page">
         <EmptyState
-          title="No grounding workflows"
-          description="Create your first grounding workflow to enrich extracted entities"
+          title={COPY.workflowsEmptyStateTitle}
+          description={COPY.workflowsEmptyStateDescription}
           action={{
-            label: "New Workflow",
+            label: COPY.newWorkflowButton,
             onClick: onCreateClick,
           }}
         />
@@ -182,8 +183,8 @@ function WorkflowsPageContent({
       {showFilteredEmpty ? (
         <div style={{ marginTop: "var(--space-6)" }}>
           <EmptyState
-            title="No workflows match your search"
-            description="Try a different search term"
+            title={COPY.workflowsFilteredEmptyTitle}
+            description={COPY.workflowsFilteredEmptyDescription}
           />
         </div>
       ) : (
@@ -237,11 +238,11 @@ function WorkflowsPageWrapper() {
       const result = await createMutation.mutateAsync(data);
       setShowCreateModal(false);
       handleSelectedIdChange(result.id);
-      toast("success", "Grounding workflow created");
+      toast("success", COPY.workflowCreatedSuccess);
     } catch (error) {
       toast(
         "error",
-        error instanceof Error ? error.message : "Failed to create workflow",
+        error instanceof Error ? error.message : COPY.workflowCreateError,
       );
     }
   };
@@ -249,17 +250,17 @@ function WorkflowsPageWrapper() {
   return (
     <div className="stack">
       <div className="flex-between">
-        <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>Grounding Workflows</h1>
+        <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>{COPY.workflowsPageTitle}</h1>
         <Button variant="primary" onClick={handleCreateClick} data-testid="new-workflow-button">
           <Plus size={16} style={{ marginRight: "var(--space-1)" }} />
-          New Workflow
+          {COPY.newWorkflowButton}
         </Button>
       </div>
 
       <Modal
         open={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        title="Create Grounding Workflow"
+        title={COPY.createWorkflowModalTitle}
         size="md"
         data-testid="workflow-create-modal"
       >

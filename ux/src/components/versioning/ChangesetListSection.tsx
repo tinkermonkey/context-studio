@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { useChangesets, useApplyChangeset } from "@/api/hooks/versioning";
 import { useToasts } from "@/components/ui/Toast";
 import { formatRelativeTime } from "@/utils/formatters";
+import { COPY } from "@/routes/app/versioning/copy";
 
 interface ChangesetListSectionProps {
   onApplyError?: (message: string) => void;
@@ -69,7 +70,7 @@ export function ChangesetListSection({ onApplyError, onConflictDetected }: Chang
   const handleApply = async (changesetId: string) => {
     try {
       await applyMutation.mutateAsync(changesetId);
-      toast("success", "Changeset applied successfully");
+      toast("success", COPY.changesetAppliedSuccess);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to apply changeset";
       const isConflict = message.toLowerCase().includes("conflict");
@@ -111,9 +112,9 @@ export function ChangesetListSection({ onApplyError, onConflictDetected }: Chang
         }}
       >
         <div>
-          <p style={{ margin: "0 0 8px 0", fontSize: "13px" }}>No changesets yet</p>
+          <p style={{ margin: "0 0 8px 0", fontSize: "13px" }}>{COPY.noChangesetsYet}</p>
           <p style={{ margin: 0, fontSize: "12px", color: "var(--canvas-fg-3)" }}>
-            Create your first changeset by staging pending changes
+            {COPY.createFirstChangesetMessage}
           </p>
         </div>
       </div>
@@ -198,7 +199,7 @@ export function ChangesetListSection({ onApplyError, onConflictDetected }: Chang
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: "12px", fontWeight: 500, color: "var(--canvas-fg-2)", marginBottom: "8px" }}>
-                    Changes ({changeset.event_ids?.length || 0})
+                    {COPY.changesHeading(changeset.event_ids?.length || 0)}
                   </div>
                   <div
                     style={{
@@ -213,7 +214,7 @@ export function ChangesetListSection({ onApplyError, onConflictDetected }: Chang
                           {id.slice(0, 8)}...
                         </div>
                       ))
-                      : "No changes"}
+                      : COPY.noChanges}
                   </div>
                 </div>
 
@@ -227,7 +228,7 @@ export function ChangesetListSection({ onApplyError, onConflictDetected }: Chang
                     variant="primary"
                     size="sm"
                   >
-                    {applyMutation.isPending ? "Applying..." : "Apply"}
+                    {applyMutation.isPending ? COPY.applyingButton : COPY.applyButton}
                   </Button>
                 )}
               </div>

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Input, Select } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { COPY } from "@/routes/app/settings/copy";
 
 export interface ConfigField {
   key: string;
@@ -83,7 +84,7 @@ export function EditConfigModal({
       await onSave(diff);
       onClose();
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Failed to save settings";
+      const errorMsg = error instanceof Error ? error.message : COPY.failedToSaveSettings;
       setErrors({ _form: errorMsg });
     } finally {
       setIsSaving(false);
@@ -93,7 +94,7 @@ export function EditConfigModal({
   const footer = (
     <div className="form-actions">
       <Button variant="ghost" onClick={onClose} disabled={isSaving}>
-        Cancel
+        {COPY.cancelButton}
       </Button>
       <Button
         variant="primary"
@@ -101,7 +102,7 @@ export function EditConfigModal({
         disabled={isSaving || isLoading}
         data-testid={`${section.toLowerCase()}-edit-modal-save`}
       >
-        {isSaving ? "Saving..." : "Save"}
+        {isSaving ? COPY.savingButton : COPY.saveButton}
       </Button>
     </div>
   );
@@ -135,7 +136,7 @@ export function EditConfigModal({
                 aria-label={field.label}
                 aria-required={field.required}
               >
-                <option value="">Select an option</option>
+                <option value="">{COPY.selectOptionPlaceholder}</option>
                 {field.options.map((opt) => (
                   <option key={opt.value} value={opt.value}>
                     {opt.label}

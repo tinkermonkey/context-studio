@@ -5,6 +5,7 @@ import { useToasts } from "@/components/ui/Toast";
 import { PendingChangesList } from "./PendingChangesList";
 import { ChangesetListSection } from "./ChangesetListSection";
 import { CreateChangesetModal } from "./CreateChangesetModal";
+import { COPY } from "@/routes/app/versioning/copy";
 
 interface ChangesetPanelProps {
   onError?: (message: string) => void;
@@ -35,7 +36,7 @@ export function ChangesetPanel({ onError, onConflictDetected }: ChangesetPanelPr
       });
       setSelectedChanges(new Set());
       setShowCreateModal(false);
-      toast("success", "Changeset created successfully");
+      toast("success", COPY.changesetCreatedSuccess);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to create changeset";
@@ -64,7 +65,7 @@ export function ChangesetPanel({ onError, onConflictDetected }: ChangesetPanelPr
 
   const handleStageSelected = () => {
     if (selectedChanges.size === 0) {
-      toast("error", "Please select at least one change");
+      toast("error", COPY.selectAtLeastOneChange);
       return;
     }
     setShowCreateModal(true);
@@ -79,14 +80,14 @@ export function ChangesetPanel({ onError, onConflictDetected }: ChangesetPanelPr
         {/* Left Column - Pending Changes */}
         <div className="col" style={{ gap: "12px", overflow: "hidden" }}>
           <div className="between">
-            <h2 style={{ margin: 0, fontSize: "14px", fontWeight: 600 }}>Pending Changes</h2>
+            <h2 style={{ margin: 0, fontSize: "14px", fontWeight: 600 }}>{COPY.pendingChangesHeading}</h2>
             <Button
               onClick={handleStageSelected}
               disabled={selectedChanges.size === 0 || createChangesetMutation.isPending}
               variant="primary"
               size="sm"
             >
-              Stage Selected
+              {COPY.stageSelectedButton}
             </Button>
           </div>
 
@@ -104,7 +105,7 @@ export function ChangesetPanel({ onError, onConflictDetected }: ChangesetPanelPr
         {/* Right Column - Changesets */}
         <div className="col" style={{ gap: "12px", overflow: "hidden" }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: "14px", fontWeight: 600 }}>Changesets</h2>
+            <h2 style={{ margin: 0, fontSize: "14px", fontWeight: 600 }}>{COPY.changesetListHeading}</h2>
           </div>
 
           <ChangesetListSection onApplyError={onError} onConflictDetected={onConflictDetected} />

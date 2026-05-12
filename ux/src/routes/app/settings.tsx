@@ -6,6 +6,7 @@ import { useToasts } from "@/components/ui/Toast";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ConfigTile } from "@/components/settings/ConfigTile";
 import { EditConfigModal, type ConfigField } from "@/components/settings/EditConfigModal";
+import { COPY } from "./settings/copy";
 
 export const Route = createFileRoute("/app/settings")({
   component: SettingsPage,
@@ -21,7 +22,7 @@ function SettingsPage() {
 
   const handleUpdateSection = async (section: string, updates: { [key: string]: unknown }) => {
     await updateMutation.mutateAsync({ section, data: { updates } });
-    toast("success", `${section} settings updated`);
+    toast("success", COPY.settingsUpdatedSuccess(section));
   };
 
   if (isLoading) {
@@ -47,13 +48,13 @@ function SettingsPage() {
   const workspaceFields: ConfigField[] = [
     {
       key: "display_name",
-      label: "Workspace Name",
-      placeholder: "Enter workspace display name",
+      label: COPY.workspaceDisplayNameLabel,
+      placeholder: COPY.workspaceDisplayNamePlaceholder,
       required: true,
     },
     {
       key: "path",
-      label: "Workspace Path",
+      label: COPY.workspacePathLabel,
       readOnly: true,
     },
   ];
@@ -63,34 +64,34 @@ function SettingsPage() {
   const llmFields: ConfigField[] = [
     {
       key: "provider",
-      label: "Provider",
+      label: COPY.llmProviderLabel,
       options: [
-        { label: "Anthropic", value: "anthropic" },
-        { label: "OpenAI", value: "openai" },
-        { label: "Ollama", value: "ollama" },
+        { label: COPY.llmProviderAnthropicOption, value: "anthropic" },
+        { label: COPY.llmProviderOpenAIOption, value: "openai" },
+        { label: COPY.llmProviderOllamaOption, value: "ollama" },
       ],
       required: true,
     },
     {
       key: "model",
-      label: "Model Name",
-      placeholder: "e.g., claude-3-5-sonnet, gpt-4-turbo",
+      label: COPY.llmModelLabel,
+      placeholder: COPY.llmModelPlaceholder,
       required: true,
     },
     {
       key: "api_key",
-      label: "API Key",
+      label: COPY.llmApiKeyLabel,
       type: "password",
       sensitive: true,
-      placeholder: "Enter API key (write-only)",
+      placeholder: COPY.llmApiKeyPlaceholder,
     },
     ...(llmConfig.provider === "ollama"
       ? [
           {
             key: "base_url",
-            label: "Base URL",
+            label: COPY.llmBaseUrlLabel,
             type: "url",
-            placeholder: "http://localhost:11434",
+            placeholder: COPY.llmBaseUrlPlaceholder,
           } as ConfigField,
         ]
       : []),
@@ -101,13 +102,13 @@ function SettingsPage() {
   const embeddingFields: ConfigField[] = [
     {
       key: "model_name",
-      label: "Model Name",
-      placeholder: "e.g., sentence-transformers/all-MiniLM-L6-v2",
+      label: COPY.embeddingModelNameLabel,
+      placeholder: COPY.embeddingModelNamePlaceholder,
       required: true,
     },
     {
       key: "vector_dimensions",
-      label: "Vector Dimensions",
+      label: COPY.embeddingVectorDimensionsLabel,
       type: "number",
       readOnly: true,
     },
@@ -118,8 +119,8 @@ function SettingsPage() {
   const nlpFields: ConfigField[] = [
     {
       key: "model_name",
-      label: "spaCy Model Name",
-      placeholder: "e.g., en_core_web_sm",
+      label: COPY.nlpModelNameLabel,
+      placeholder: COPY.nlpModelNamePlaceholder,
       required: true,
     },
   ];
@@ -129,29 +130,29 @@ function SettingsPage() {
   const syncFields: ConfigField[] = [
     {
       key: "target_type",
-      label: "Sync Target Type",
+      label: COPY.syncTargetTypeLabel,
       options: [
-        { label: "Local Path", value: "local" },
-        { label: "S3", value: "s3" },
+        { label: COPY.syncTargetTypeLocalOption, value: "local" },
+        { label: COPY.syncTargetTypeS3Option, value: "s3" },
       ],
       required: true,
     },
     {
       key: "path",
-      label: syncConfig.target_type === "s3" ? "S3 Bucket" : "Local Path",
-      placeholder: syncConfig.target_type === "s3" ? "my-bucket" : "/path/to/sync",
+      label: syncConfig.target_type === "s3" ? COPY.syncTargetS3BucketLabel : COPY.syncTargetPathLabel,
+      placeholder: syncConfig.target_type === "s3" ? COPY.syncTargetS3BucketPlaceholder : COPY.syncTargetPathPlaceholder,
     },
     ...(syncConfig.target_type === "s3"
       ? [
           {
             key: "aws_access_key_id",
-            label: "AWS Access Key ID",
+            label: COPY.syncTargetAwsAccessKeyLabel,
             type: "password",
             sensitive: true,
           } as ConfigField,
           {
             key: "aws_secret_access_key",
-            label: "AWS Secret Access Key",
+            label: COPY.syncTargetAwsSecretKeyLabel,
             type: "password",
             sensitive: true,
           } as ConfigField,
@@ -167,8 +168,8 @@ function SettingsPage() {
       {/* Page Header */}
       <div className="page-head">
         <div>
-          <h1>Settings</h1>
-          <p>Configure application settings and external integrations</p>
+          <h1>{COPY.settingsPageTitle}</h1>
+          <p>{COPY.settingsPageSubtitle}</p>
         </div>
       </div>
 
@@ -177,11 +178,11 @@ function SettingsPage() {
         {/* Workspace */}
         <ConfigTile
           icon={Folder}
-          title="Workspace"
-          description="Workspace configuration"
+          title={COPY.workspaceTileTitle}
+          description={COPY.workspaceTileDescription}
           summary={
             <span>
-              {String(workspaceConfig.display_name || "Unnamed")}
+              {String(workspaceConfig.display_name || COPY.workspaceUnnamed)}
               {workspaceConfig.path ? (
                 <>
                   <br />
@@ -200,8 +201,8 @@ function SettingsPage() {
         {/* LLM Provider */}
         <ConfigTile
           icon={Cpu}
-          title="LLM Provider"
-          description="Language model configuration"
+          title={COPY.llmProviderTileTitle}
+          description={COPY.llmProviderTileDescription}
           summary={
             <span>
               {llmConfig.provider ? (
@@ -209,11 +210,11 @@ function SettingsPage() {
                   {String(llmConfig.provider).charAt(0).toUpperCase() + String(llmConfig.provider).slice(1)}
                   <br />
                   <span className="config-tile-meta">
-                    {String(llmConfig.model || "Not configured")}
+                    {String(llmConfig.model || COPY.notConfigured)}
                   </span>
                 </>
               ) : (
-                "Not configured"
+                COPY.notConfigured
               )}
             </span>
           }
@@ -225,16 +226,16 @@ function SettingsPage() {
         {/* Embedding Model */}
         <ConfigTile
           icon={Layers}
-          title="Embedding Model"
-          description="Vector embedding configuration"
+          title={COPY.embeddingModelTileTitle}
+          description={COPY.embeddingModelTileDescription}
           summary={
             <span>
-              {String(embeddingConfig.model_name || "Not configured")}
+              {String(embeddingConfig.model_name || COPY.notConfigured)}
               {embeddingConfig.vector_dimensions ? (
                 <>
                   <br />
                   <span className="config-tile-meta">
-                    {String(embeddingConfig.vector_dimensions)} dimensions
+                    {COPY.embeddingDimensionsMeta(Number(embeddingConfig.vector_dimensions))}
                   </span>
                 </>
               ) : null}
@@ -248,10 +249,10 @@ function SettingsPage() {
         {/* NLP Model */}
         <ConfigTile
           icon={Type}
-          title="NLP Model"
-          description="Natural language processing"
+          title={COPY.nlpModelTileTitle}
+          description={COPY.nlpModelTileDescription}
           summary={
-            <span>{String(nlpConfig.model_name || "Not configured")}</span>
+            <span>{String(nlpConfig.model_name || COPY.notConfigured)}</span>
           }
           testid="config-tile-nlp"
           onEdit={() => setOpenSection("nlp")}
@@ -261,9 +262,9 @@ function SettingsPage() {
         {/* Reference Sources */}
         <ConfigTile
           icon={Database}
-          title="Reference Sources"
-          description="Manage knowledge sources"
-          summary={<span>{referenceSourcesCount} source(s) configured</span>}
+          title={COPY.referenceSourcesTileTitle}
+          description={COPY.referenceSourcesTileDescription}
+          summary={<span>{COPY.referenceSourcesMeta(referenceSourcesCount)}</span>}
           testid="config-tile-reference-sources"
           onNavigate={() => navigate({ to: "/app/reference/sources" })}
           isLoading={isLoading}
@@ -272,11 +273,11 @@ function SettingsPage() {
         {/* Sync Target */}
         <ConfigTile
           icon={RefreshCw}
-          title="Sync Target"
-          description="Remote synchronization"
+          title={COPY.syncTargetTileTitle}
+          description={COPY.syncTargetTileDescription}
           summary={
             <span style={{ color: syncConfig.path ? undefined : "var(--canvas-fg-3)" }}>
-              {String(syncConfig.path || "Not configured")}
+              {String(syncConfig.path || COPY.notConfigured)}
             </span>
           }
           testid="config-tile-sync"
@@ -290,7 +291,7 @@ function SettingsPage() {
         open={openSection === "workspace"}
         onClose={() => setOpenSection(null)}
         section="workspace"
-        title="Edit Workspace Settings"
+        title={COPY.editWorkspaceSettingsTitle}
         fields={workspaceFields}
         values={workspaceConfig}
         onSave={(updates) => handleUpdateSection("workspace", updates)}
@@ -301,7 +302,7 @@ function SettingsPage() {
         open={openSection === "llm"}
         onClose={() => setOpenSection(null)}
         section="llmprovider"
-        title="Edit LLM Provider Settings"
+        title={COPY.editLlmProviderSettingsTitle}
         fields={llmFields}
         values={llmConfig}
         onSave={(updates) => handleUpdateSection("llm", updates)}
@@ -312,7 +313,7 @@ function SettingsPage() {
         open={openSection === "embedding"}
         onClose={() => setOpenSection(null)}
         section="embedding"
-        title="Edit Embedding Model Settings"
+        title={COPY.editEmbeddingModelSettingsTitle}
         fields={embeddingFields}
         values={embeddingConfig}
         onSave={(updates) => handleUpdateSection("embedding", updates)}
@@ -323,7 +324,7 @@ function SettingsPage() {
         open={openSection === "nlp"}
         onClose={() => setOpenSection(null)}
         section="nlp"
-        title="Edit NLP Model Settings"
+        title={COPY.editNlpModelSettingsTitle}
         fields={nlpFields}
         values={nlpConfig}
         onSave={(updates) => handleUpdateSection("nlp", updates)}
@@ -334,7 +335,7 @@ function SettingsPage() {
         open={openSection === "sync"}
         onClose={() => setOpenSection(null)}
         section="sync"
-        title="Edit Sync Target Settings"
+        title={COPY.editSyncTargetSettingsTitle}
         fields={syncFields}
         values={syncConfig}
         onSave={(updates) => handleUpdateSection("sync", updates)}
