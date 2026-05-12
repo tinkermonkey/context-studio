@@ -4,6 +4,7 @@ import type { components } from "@/api/types";
 type ChangeHistoryResponse = components["schemas"]["ChangeHistoryResponse"];
 type ChangesetResponse = components["schemas"]["ChangesetResponse"];
 type ChangesetCreateRequest = components["schemas"]["ChangesetCreateRequest"];
+type ProposalResponse = components["schemas"]["ProposalResponse"];
 type SyncStatusResponse = components["schemas"]["SyncStatusResponse"];
 type SyncResultResponse = components["schemas"]["SyncResultResponse"];
 type ConflictReportResponse = components["schemas"]["ConflictReportResponse"];
@@ -57,8 +58,8 @@ class VersioningService extends BaseService {
     return this.post<SyncResultResponse>("/api/v1/versioning/sync/pull");
   }
 
-  async applyChangeset(id: string): Promise<ChangesetResponse> {
-    return this.post<ChangesetResponse>(`/api/v1/versioning/changesets/${id}/apply`);
+  async applyChangeset(id: string): Promise<ProposalResponse> {
+    return this.post<ProposalResponse>(`/api/v1/versioning/changesets/${id}/apply`);
   }
 
   async getProposalConflicts(proposalId: string): Promise<ConflictReportResponse> {

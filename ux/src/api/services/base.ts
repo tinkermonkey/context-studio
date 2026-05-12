@@ -1,5 +1,18 @@
 import axiosInstance from "@/api/client/axios";
 
+/**
+ * BaseService provides HTTP methods that unwrap axios responses.
+ *
+ * Error Handling:
+ * All HTTP errors are converted to ApiError instances by the axios response interceptor
+ * (in interceptors.ts). This ensures error.message always contains the FastAPI detail
+ * field when available, providing meaningful domain error messages to callers.
+ *
+ * Callers should handle errors as:
+ *   catch (error) {
+ *     const message = error instanceof Error ? error.message : "Unknown error";
+ *   }
+ */
 export abstract class BaseService {
   protected async get<T>(url: string, params?: Record<string, unknown>): Promise<T> {
     const response = await axiosInstance.get<T>(url, { params });
