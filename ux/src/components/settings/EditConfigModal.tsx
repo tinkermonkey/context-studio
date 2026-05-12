@@ -72,6 +72,19 @@ export function EditConfigModal({
   };
 
   const handleSave = async () => {
+    const newErrors: { [key: string]: string } = {};
+
+    fields.forEach((field) => {
+      if (field.required && !formState[field.key]) {
+        newErrors[field.key] = `${field.label} is required`;
+      }
+    });
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
     const diff = calculateDiff();
 
     if (Object.keys(diff).length === 0) {

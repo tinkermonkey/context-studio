@@ -62,6 +62,7 @@ export const COPY = {
   editLlmProviderSettingsTitle: "Edit LLM Provider Settings",
   editEmbeddingModelSettingsTitle: "Edit Embedding Model Settings",
   editNlpModelSettingsTitle: "Edit NLP Model Settings",
+  editReferenceSourcesSettingsTitle: "Edit Reference Sources Settings",
   editSyncTargetSettingsTitle: "Edit Sync Target Settings",
 
   // Modal buttons

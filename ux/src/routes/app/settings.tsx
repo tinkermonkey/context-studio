@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Folder, Cpu, Layers, Type, Database, RefreshCw } from "lucide-react";
 import { useConfig, useUpdateConfig } from "@/api/hooks/admin";
 import { useToasts } from "@/components/ui/Toast";
@@ -14,7 +14,6 @@ export const Route = createFileRoute("/app/settings")({
 });
 
 export function SettingsPage() {
-  const navigate = useNavigate();
   const { toast } = useToasts();
   const { data: config, isLoading, error, refetch } = useConfig();
   const updateMutation = useUpdateConfig();
@@ -189,6 +188,10 @@ export function SettingsPage() {
 
   const referenceSourcesCount =
     (Array.isArray(sections.reference_sources) ? sections.reference_sources.length : 0) || 0;
+  const referenceSourcesConfig = typeof sections.reference_sources === "object" &&
+    !Array.isArray(sections.reference_sources)
+    ? sections.reference_sources
+    : {};
 
   return (
     <div data-testid="settings-page">
@@ -290,7 +293,7 @@ export function SettingsPage() {
           description={COPY.referenceSourcesTileDescription}
           summary={<span>{COPY.referenceSourcesMeta(referenceSourcesCount)}</span>}
           testid="config-tile-reference-sources"
-          onNavigate={() => navigate({ to: "/app/reference/sources" })}
+          onEdit={() => setOpenSection("reference_sources")}
           isLoading={isLoading}
         />
 
@@ -352,6 +355,17 @@ export function SettingsPage() {
         fields={nlpFields}
         values={nlpConfig}
         onSave={(updates) => handleUpdateSection("nlp", updates)}
+        isLoading={updateMutation.isPending}
+      />
+
+      <EditConfigModal
+        open={openSection === "reference_sources"}
+        onClose={() => setOpenSection(null)}
+        section="reference_sources"
+        title={COPY.editReferenceSourcesSettingsTitle}
+        fields={[]}
+        values={referenceSourcesConfig}
+        onSave={(updates) => handleUpdateSection("reference_sources", updates)}
         isLoading={updateMutation.isPending}
       />
 
