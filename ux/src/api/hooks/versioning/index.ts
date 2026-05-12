@@ -4,6 +4,7 @@ import { versioningService } from "@/api/services/versioning";
 import type { components } from "@/api/types";
 
 type ChangesetCreateRequest = components["schemas"]["ChangesetCreateRequest"];
+type ResolveConflictsRequest = components["schemas"]["ResolveConflictsRequest"];
 
 interface ChangesParams {
   limit?: number;
@@ -94,7 +95,7 @@ export function useResolveConflicts() {
       resolutions,
     }: {
       proposalId: string;
-      resolutions: Record<string, Record<string, unknown>>;
+      resolutions: ResolveConflictsRequest["resolutions"];
     }) => versioningService.resolveConflicts(proposalId, resolutions),
     onSuccess: (_, { proposalId }) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.proposalConflicts(proposalId) });

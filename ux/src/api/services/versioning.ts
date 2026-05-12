@@ -8,6 +8,7 @@ type ProposalResponse = components["schemas"]["ProposalResponse"];
 type SyncStatusResponse = components["schemas"]["SyncStatusResponse"];
 type SyncResultResponse = components["schemas"]["SyncResultResponse"];
 type ConflictReportResponse = components["schemas"]["ConflictReportResponse"];
+type ResolveConflictsRequest = components["schemas"]["ResolveConflictsRequest"];
 
 interface ChangesParams {
   limit?: number;
@@ -68,7 +69,7 @@ class VersioningService extends BaseService {
 
   async resolveConflicts(
     proposalId: string,
-    resolutions: Record<string, Record<string, unknown>>,
+    resolutions: ResolveConflictsRequest["resolutions"],
   ): Promise<ConflictReportResponse> {
     return this.post<ConflictReportResponse>(`/api/v1/versioning/proposals/${proposalId}/resolve`, {
       resolutions,

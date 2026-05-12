@@ -17,7 +17,7 @@ import { useToasts } from "@/components/ui/Toast";
 import { formatRelativeTime } from "@/utils/formatters";
 import { COPY } from "./copy";
 import { useGroundingWorkflows, useCreateGroundingWorkflow } from "@/api/hooks/reference";
-import type { GroundingWorkflowResponse, GroundingWorkflowCreate } from "@/api/services/reference";
+import type { GroundingWorkflowResponse, GroundingWorkflowCreate } from "@/api/types/grounding";
 
 interface WorkflowsSearchParams {
   selected?: string;

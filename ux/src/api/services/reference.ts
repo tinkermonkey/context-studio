@@ -1,42 +1,15 @@
 import { BaseService } from "./base";
 import type { components } from "@/api/types";
+import type {
+  GroundingWorkflowResponse,
+  GroundingWorkflowCreate,
+  GroundingWorkflowUpdate,
+  WorkflowRun,
+} from "@/api/types/grounding";
 
 type ReferenceSearchRequest = components["schemas"]["ReferenceSearchRequest"];
 type ReferenceSearchResponseSchema = components["schemas"]["ReferenceSearchResponseSchema"];
 type ReferenceStatusResponseSchema = components["schemas"]["ReferenceStatusResponseSchema"];
-
-export interface GroundingWorkflowResponse {
-  id: string;
-  title: string;
-  description?: string;
-  source: string;
-  class_scope: string[];
-  status: "active" | "inactive" | "error";
-  last_run?: string;
-  last_run_record_count?: number;
-}
-
-export interface GroundingWorkflowCreate {
-  title: string;
-  source: string;
-  class_scope: string[];
-}
-
-export interface GroundingWorkflowUpdate {
-  title?: string;
-  source?: string;
-  class_scope?: string[];
-  status?: "active" | "inactive" | "error";
-}
-
-export interface WorkflowRun {
-  id: string;
-  workflow_id: string;
-  status: "success" | "failed" | "running";
-  record_count: number;
-  timestamp: string;
-  error_message?: string;
-}
 
 class ReferenceService extends BaseService {
   async search(
@@ -88,3 +61,8 @@ class ReferenceService extends BaseService {
 }
 
 export const referenceService = new ReferenceService();
+
+// Re-export grounding workflow types for backward compatibility
+// These types are defined in @/api/types/grounding and will be replaced with auto-generated types
+// from the OpenAPI spec once the backend implements the endpoints
+export type { GroundingWorkflowResponse, GroundingWorkflowCreate, GroundingWorkflowUpdate, WorkflowRun } from "@/api/types/grounding";
