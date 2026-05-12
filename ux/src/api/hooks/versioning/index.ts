@@ -66,8 +66,6 @@ export function useApplyChangeset() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => versioningService.applyChangeset(id),
-    // Note: applyChangeset returns ProposalResponse (the created proposal), not a ChangesetResponse.
-    // The mutation stages and submits the changeset in a single action, creating a proposal.
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.changesets });
       queryClient.invalidateQueries({ queryKey: ["changes"] });
