@@ -946,6 +946,71 @@ selectors:
     component: components/reference/ReferenceSourceDrawer.tsx
     description: Refresh button for reference source (pattern matches reference-source-refresh-{sourceName})
 
+  # Reference Grounding Workflows Page
+  - selector: reference-workflows-page
+    component: routes/app/reference/workflows.tsx
+    description: Main grounding workflows page container
+  - selector: reference-workflows-table
+    component: routes/app/reference/workflows.tsx
+    description: Workflows table container
+  - selector: workflows-content
+    component: routes/app/reference/workflows.tsx
+    description: Main content area of workflows page
+  - selector: new-workflow-button
+    component: routes/app/reference/workflows.tsx
+    description: Button to create new grounding workflow
+  - selector: workflow-create-modal
+    component: routes/app/reference/workflows.tsx
+    description: Modal for creating new grounding workflow
+  - selector: grounding-workflow-form
+    component: components/reference/GroundingWorkflowForm.tsx
+    description: Form for creating/editing grounding workflows
+  - selector: workflow-title-input
+    component: components/reference/GroundingWorkflowForm.tsx
+    description: Workflow name input field
+  - selector: workflow-source-select
+    component: components/reference/GroundingWorkflowForm.tsx
+    description: Reference source dropdown select
+  - selector: workflow-scope-input
+    component: components/reference/GroundingWorkflowForm.tsx
+    description: Class scope search and selection input
+  - selector: workflow-class-chip-*
+    component: components/reference/GroundingWorkflowForm.tsx
+    description: Selected class scope chip (pattern matches workflow-class-chip-{classId})
+  - selector: workflow-class-remove-*
+    component: components/reference/GroundingWorkflowForm.tsx
+    description: Remove button for selected class chip (pattern matches workflow-class-remove-{classId})
+  - selector: workflow-scope-option-*
+    component: components/reference/GroundingWorkflowForm.tsx
+    description: Class option in dropdown (pattern matches workflow-scope-option-{classId})
+  - selector: workflow-submit-button
+    component: components/reference/GroundingWorkflowForm.tsx
+    description: Form submit button for workflow creation
+  - selector: grounding-workflow-drawer
+    component: components/reference/GroundingWorkflowDrawer.tsx
+    description: Drawer panel showing workflow details
+  - selector: workflow-name-display
+    component: components/reference/GroundingWorkflowDrawer.tsx
+    description: Workflow name display field (read-only until editing)
+  - selector: workflow-name-edit-input
+    component: components/reference/GroundingWorkflowDrawer.tsx
+    description: Workflow name input when editing
+  - selector: workflow-run-now-button
+    component: components/reference/GroundingWorkflowDrawer.tsx
+    description: Button to execute workflow immediately
+  - selector: workflow-delete-button
+    component: components/reference/GroundingWorkflowDrawer.tsx
+    description: Delete workflow button
+  - selector: workflow-run-*
+    component: components/reference/GroundingWorkflowDrawer.tsx
+    description: Run history item (pattern matches workflow-run-{runId})
+  - selector: workflow-name-*
+    component: routes/app/reference/workflows.tsx
+    description: Clickable workflow name cell in table (pattern matches workflow-name-{workflowId})
+  - selector: workflow-row-actions-*
+    component: routes/app/reference/workflows.tsx
+    description: Actions button for workflow row (pattern matches workflow-row-actions-{workflowId})
+
   # Miscellaneous
   - selector: create-toast-btn
     component: routes/app/contact-sheet.tsx

@@ -39,4 +39,7 @@ export const QUERY_KEYS = {
   // Reference
   referenceSearch: (q?: string) => ["reference-search", q] as const,
   referenceStatus: ["reference-status"] as const,
+  groundingWorkflows: ["grounding-workflows"] as const,
+  groundingWorkflow: (id: string) => ["grounding-workflows", id] as const,
+  groundingWorkflowRuns: (id: string) => ["grounding-workflows", id, "runs"] as const,
 } as const;
