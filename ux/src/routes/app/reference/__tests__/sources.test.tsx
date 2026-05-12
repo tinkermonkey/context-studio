@@ -86,9 +86,9 @@ describe("Reference Sources Page", () => {
         }),
       );
 
-      const { container } = render(<SourcesPageWrapper />);
+      render(<SourcesPageWrapper />);
 
-      // Verify page is rendered even while loading
+      // Verify page is rendered while loading (shows skeleton)
       expect(screen.getByTestId("reference-sources-page")).toBeInTheDocument();
 
       resolveRequest!();
@@ -106,10 +106,12 @@ describe("Reference Sources Page", () => {
         ),
       );
 
-      const { container } = render(<SourcesPageWrapper />);
+      render(<SourcesPageWrapper />);
 
-      // Page should still be accessible even with error
-      expect(screen.getByTestId("reference-sources-page")).toBeInTheDocument();
+      // Verify error banner is displayed
+      await waitFor(() => {
+        expect(screen.getByText("Failed to load reference sources")).toBeInTheDocument();
+      });
     });
   });
 
