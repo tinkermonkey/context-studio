@@ -930,6 +930,9 @@ selectors:
   - selector: reference-sources-page
     component: routes/app/reference/sources.tsx
     description: Main reference sources page container
+  - selector: reference-sources-table
+    component: routes/app/reference/sources.tsx
+    description: Table container for reference sources
   - selector: sources-content
     component: routes/app/reference/sources.tsx
     description: Main content area of reference sources page
@@ -1012,6 +1015,9 @@ selectors:
     description: Actions button for workflow row (pattern matches workflow-row-actions-{workflowId})
 
   # Versioning
+  - selector: versioning-page
+    component: routes/app/versioning.tsx
+    description: Main versioning page container
   - selector: pending-changes-list
     component: components/versioning/PendingChangesList.tsx
     description: Container for the pending changes list
