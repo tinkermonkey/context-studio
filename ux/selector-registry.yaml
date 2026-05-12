@@ -926,6 +926,26 @@ selectors:
     component: components/schema/__tests__/SchemaTable.test.tsx
     description: Action element in SchemaTable test fixture
 
+  # Reference Sources Page
+  - selector: reference-sources-page
+    component: routes/app/reference/sources.tsx
+    description: Main reference sources page container
+  - selector: sources-content
+    component: routes/app/reference/sources.tsx
+    description: Main content area of reference sources page
+  - selector: reference-source-drawer
+    component: components/reference/ReferenceSourceDrawer.tsx
+    description: Drawer panel showing reference source details
+  - selector: reference-source-name-*
+    component: routes/app/reference/sources.tsx
+    description: Clickable source name cell in table (pattern matches reference-source-name-{sourceId})
+  - selector: reference-source-row-actions-*
+    component: routes/app/reference/sources.tsx
+    description: Actions button for source row (pattern matches reference-source-row-actions-{sourceName})
+  - selector: reference-source-refresh-*
+    component: components/reference/ReferenceSourceDrawer.tsx
+    description: Refresh button for reference source (pattern matches reference-source-refresh-{sourceName})
+
   # Miscellaneous
   - selector: create-toast-btn
     component: routes/app/contact-sheet.tsx

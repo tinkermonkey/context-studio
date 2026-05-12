@@ -13,7 +13,7 @@ interface ReferenceSourceDrawerProps {
 
 export function ReferenceSourceDrawer({
   source,
-  onClose,
+  onClose: _onClose,
 }: ReferenceSourceDrawerProps) {
   const { refetch } = useReferenceStatus();
   const { toast } = useToasts();
@@ -22,7 +22,7 @@ export function ReferenceSourceDrawer({
     try {
       await refetch();
       toast("success", `Refreshed ${source.name}`);
-    } catch (error) {
+    } catch (_error) {
       toast("error", `Failed to refresh ${source.name}`);
     }
   };
