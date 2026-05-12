@@ -80,6 +80,88 @@ def service(
 
 
 # ============================================================================
+# Changeset Query Tests
+# ============================================================================
+
+
+class TestListChangesets:
+    """Test list_changesets method with ordering and limit."""
+
+    def test_list_changesets_empty(self, service: VersioningService) -> None:
+        """Test list_changesets returns empty list when no changesets exist."""
+        result = service.list_changesets()
+        assert result == []
+
+    def test_list_changesets_returns_all_when_under_limit(
+        self, service: VersioningService,
+    ) -> None:
+        """Test list_changesets returns all changesets when count < limit."""
+        cs1 = service.create_changeset("Changeset 1")
+        cs2 = service.create_changeset("Changeset 2")
+        cs3 = service.create_changeset("Changeset 3")
+
+        result = service.list_changesets(limit=100)
+
+        assert len(result) == 3
+        assert any(cs.id == cs1.id for cs in result)
+        assert any(cs.id == cs2.id for cs in result)
+        assert any(cs.id == cs3.id for cs in result)
+
+    def test_list_changesets_respects_limit(
+        self, service: VersioningService,
+    ) -> None:
+        """Test list_changesets respects the limit parameter."""
+        for i in range(10):
+            service.create_changeset(f"Changeset {i}")
+
+        result = service.list_changesets(limit=5)
+
+        assert len(result) == 5
+
+    def test_list_changesets_ordered_by_created_at_desc(
+        self, service: VersioningService,
+    ) -> None:
+        """Test list_changesets returns changesets ordered by created_at desc."""
+        import time
+
+        cs1 = service.create_changeset("Changeset 1")
+        time.sleep(0.01)  # Ensure distinct timestamps
+        cs2 = service.create_changeset("Changeset 2")
+        time.sleep(0.01)
+        cs3 = service.create_changeset("Changeset 3")
+
+        result = service.list_changesets()
+
+        assert len(result) == 3
+        # Most recent first
+        assert result[0].id == cs3.id
+        assert result[1].id == cs2.id
+        assert result[2].id == cs1.id
+
+    def test_list_changesets_with_default_limit(
+        self, service: VersioningService,
+    ) -> None:
+        """Test list_changesets uses default limit of 100."""
+        for i in range(50):
+            service.create_changeset(f"Changeset {i}")
+
+        result = service.list_changesets()
+
+        assert len(result) == 50
+
+    def test_list_changesets_limit_zero(
+        self, service: VersioningService,
+    ) -> None:
+        """Test list_changesets with limit=0 returns empty list."""
+        service.create_changeset("Changeset 1")
+        service.create_changeset("Changeset 2")
+
+        result = service.list_changesets(limit=0)
+
+        assert len(result) == 0
+
+
+# ============================================================================
 # Change History Query Tests
 # ============================================================================
 

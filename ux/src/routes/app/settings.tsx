@@ -13,7 +13,7 @@ export const Route = createFileRoute("/app/settings")({
   component: SettingsPage,
 });
 
-function SettingsPage() {
+export function SettingsPage() {
   const navigate = useNavigate();
   const { toast } = useToasts();
   const { data: config, isLoading, error, refetch } = useConfig();

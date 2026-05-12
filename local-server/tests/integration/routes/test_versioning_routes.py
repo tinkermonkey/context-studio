@@ -171,6 +171,91 @@ class TestVersioningRoutes:
         # Should return 404 if version doesn't exist
         assert response.status_code in [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND]
 
+    # ==================== Changeset List Tests ====================
+
+    def test_list_changesets_returns_200_empty(self, client):
+        """GET /api/v1/versioning/changesets returns 200 with empty list."""
+        response = client.get("/api/v1/versioning/changesets")
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert isinstance(data, list)
+        assert len(data) == 0
+
+    def test_list_changesets_returns_200_with_changesets(self, client):
+        """GET /api/v1/versioning/changesets returns all changesets."""
+        # Create multiple changesets
+        cs1_response = client.post(
+            "/api/v1/versioning/changesets",
+            json={"name": "Changeset 1"},
+        )
+        cs1_id = cs1_response.json()["id"]
+
+        cs2_response = client.post(
+            "/api/v1/versioning/changesets",
+            json={"name": "Changeset 2"},
+        )
+        cs2_id = cs2_response.json()["id"]
+
+        # List changesets
+        response = client.get("/api/v1/versioning/changesets")
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert isinstance(data, list)
+        assert len(data) == 2
+        changeset_ids = [cs["id"] for cs in data]
+        assert cs1_id in changeset_ids
+        assert cs2_id in changeset_ids
+
+    def test_list_changesets_respects_limit_parameter(self, client):
+        """GET /api/v1/versioning/changesets?limit=1 respects limit."""
+        # Create 3 changesets
+        for i in range(3):
+            client.post(
+                "/api/v1/versioning/changesets",
+                json={"name": f"Changeset {i}"},
+            )
+
+        # List with limit=1
+        response = client.get("/api/v1/versioning/changesets?limit=1")
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert len(data) == 1
+
+    def test_list_changesets_ordered_by_created_at_desc(self, client):
+        """GET /api/v1/versioning/changesets returns changesets ordered by creation time desc."""
+        import time
+
+        # Create changesets with distinct timestamps
+        cs1_response = client.post(
+            "/api/v1/versioning/changesets",
+            json={"name": "First"},
+        )
+        cs1_id = cs1_response.json()["id"]
+        time.sleep(0.01)
+
+        cs2_response = client.post(
+            "/api/v1/versioning/changesets",
+            json={"name": "Second"},
+        )
+        cs2_id = cs2_response.json()["id"]
+        time.sleep(0.01)
+
+        cs3_response = client.post(
+            "/api/v1/versioning/changesets",
+            json={"name": "Third"},
+        )
+        cs3_id = cs3_response.json()["id"]
+
+        # List and verify ordering
+        response = client.get("/api/v1/versioning/changesets")
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert len(data) == 3
+        # Most recent first
+        assert data[0]["id"] == cs3_id
+        assert data[1]["id"] == cs2_id
+        assert data[2]["id"] == cs1_id
+
     # ==================== Changeset Tests ====================
 
     def test_create_changeset_returns_201(self, client):
@@ -255,6 +340,71 @@ class TestVersioningRoutes:
         data = response.json()
         assert data["state"] == "open"
         assert "id" in data
+
+    # ==================== Apply Changeset Tests ====================
+
+    def test_apply_changeset_returns_200_success(self, client):
+        """POST /api/v1/versioning/changesets/{id}/apply transitions to proposed and returns 200."""
+        # Create a changeset
+        create_response = client.post(
+            "/api/v1/versioning/changesets",
+            json={"name": "Test Changeset"},
+        )
+        changeset_id = create_response.json()["id"]
+
+        # Apply it (stage + submit in one call)
+        response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/apply")
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["state"] == "open"
+        assert "id" in data
+        assert data["changeset_id"] == changeset_id
+
+    def test_apply_changeset_returns_404_nonexistent(self, client):
+        """POST /api/v1/versioning/changesets/{id}/apply returns 404 for nonexistent."""
+        response = client.post(
+            "/api/v1/versioning/changesets/nonexistent-changeset-id/apply"
+        )
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert "not found" in response.json()["detail"].lower()
+
+    def test_apply_changeset_returns_409_invalid_state(self, client):
+        """POST /api/v1/versioning/changesets/{id}/apply returns 409 when already proposed."""
+        # Create and apply a changeset
+        create_response = client.post(
+            "/api/v1/versioning/changesets",
+            json={"name": "Test Changeset"},
+        )
+        changeset_id = create_response.json()["id"]
+
+        # Apply it once
+        client.post(f"/api/v1/versioning/changesets/{changeset_id}/apply")
+
+        # Try to apply again - should return 409
+        response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/apply")
+        assert response.status_code == status.HTTP_409_CONFLICT
+
+    def test_apply_changeset_response_schema_validation(self, client):
+        """POST /api/v1/versioning/changesets/{id}/apply returns valid ProposalResponse."""
+        # Create a changeset
+        create_response = client.post(
+            "/api/v1/versioning/changesets",
+            json={"name": "Test Changeset"},
+        )
+        changeset_id = create_response.json()["id"]
+
+        # Apply it
+        response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/apply")
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        # Verify required ProposalResponse fields
+        assert "id" in data
+        assert "changeset_id" in data
+        assert "state" in data
+        assert data["state"] == "open"
+        assert "submitted_at" in data
+        assert data["changeset_id"] == changeset_id
 
     # ==================== Proposal Workflow Tests ====================
 
