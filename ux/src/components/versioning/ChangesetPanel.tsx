@@ -39,7 +39,7 @@ export function ChangesetPanel({ onError, onConflictDetected }: ChangesetPanelPr
       toast("success", COPY.changesetCreatedSuccess);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Failed to create changeset";
+        error instanceof Error ? error.message : COPY.failedToCreateChangeset;
       onError?.(message);
     }
   };

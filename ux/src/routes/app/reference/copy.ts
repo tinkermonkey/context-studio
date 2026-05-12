@@ -41,6 +41,10 @@ export const COPY = {
   // Workflows modal
   createWorkflowModalTitle: "Create Grounding Workflow",
 
+  // Error messages
+  failedToLoadReferenceSources: "Failed to load reference sources",
+  failedToLoadGroundingWorkflows: "Failed to load grounding workflows",
+
   // Toast messages
   workflowCreatedSuccess: "Grounding workflow created",
   workflowCreateError: "Failed to create workflow",

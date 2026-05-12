@@ -100,11 +100,11 @@ function ConflictRow({
           <div className="diff-tooltip" role="tooltip">
             <div className="diff-container">
               <div className="diff-column diff-removed">
-                <div className="diff-label">Ours</div>
+                <div className="diff-label">{COPY.diffLabelOurs}</div>
                 <div className="diff-value">{JSON.stringify(conflict.base_value)}</div>
               </div>
               <div className="diff-column diff-added">
-                <div className="diff-label">Theirs</div>
+                <div className="diff-label">{COPY.diffLabelTheirs}</div>
                 <div className="diff-value">{JSON.stringify(conflict.incoming_value)}</div>
               </div>
             </div>
@@ -464,7 +464,7 @@ export function ConflictResolver({ proposalId, onResolved }: ConflictResolverPro
       <ErrorBanner
         error={conflictsError}
         onRetry={refetchConflicts}
-        message="Could not load conflicts"
+        message={COPY.couldNotLoadConflicts}
       />
     );
   }

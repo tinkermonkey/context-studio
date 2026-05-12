@@ -135,7 +135,7 @@ function SourcesPageContent({ selectedId, onSelectedIdChange }: SourcesPageConte
         <ErrorBanner
           error={error}
           onRetry={() => refetch()}
-          message="Failed to load reference sources"
+          message={COPY.failedToLoadReferenceSources}
         />
       </div>
     );

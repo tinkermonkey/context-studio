@@ -1,6 +1,7 @@
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { formatRelativeTime } from "@/utils/formatters";
+import { COPY } from "@/routes/app/versioning/copy";
 import type { components } from "@/api/types";
 
 type VersioningChangeEventResponse = components["schemas"]["VersioningChangeEventResponse"];
@@ -71,7 +72,7 @@ export function PendingChangesList({
 
   if (error) {
     return (
-      <ErrorBanner error={error} onRetry={onRetry} message="Could not load pending changes" />
+      <ErrorBanner error={error} onRetry={onRetry} message={COPY.noPendingChangesLoaded} />
     );
   }
 
@@ -89,9 +90,9 @@ export function PendingChangesList({
         }}
       >
         <div>
-          <p style={{ margin: "0 0 8px 0", fontSize: "13px" }}>No pending changes</p>
+          <p style={{ margin: "0 0 8px 0", fontSize: "13px" }}>{COPY.noPendingChanges}</p>
           <p style={{ margin: 0, fontSize: "12px", color: "var(--canvas-fg-3)" }}>
-            All changes have been staged into changesets
+            {COPY.allChangesStaged}
           </p>
         </div>
       </div>

@@ -72,7 +72,7 @@ export function ChangesetListSection({ onApplyError, onConflictDetected }: Chang
       await applyMutation.mutateAsync(changesetId);
       toast("success", COPY.changesetAppliedSuccess);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to apply changeset";
+      const message = err instanceof Error ? err.message : COPY.failedToApplyChangeset;
       const isConflict = message.toLowerCase().includes("conflict");
 
       if (isConflict) {
@@ -94,7 +94,7 @@ export function ChangesetListSection({ onApplyError, onConflictDetected }: Chang
 
   if (error) {
     return (
-      <ErrorBanner error={error} onRetry={refetch} message="Could not load changesets" />
+      <ErrorBanner error={error} onRetry={refetch} message={COPY.couldNotLoadChangesets} />
     );
   }
 

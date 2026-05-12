@@ -113,7 +113,7 @@ function SyncStatusCard({
           {changeCount !== undefined && changeCount > 0 && (
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: "12px", color: "var(--canvas-fg-3)" }}>
-                {title === "Push" ? COPY.changesAheadLabel : COPY.changesPulledLabel}
+                {title === COPY.pushCardTitle ? COPY.changesAheadLabel : COPY.changesPulledLabel}
               </span>
               <span
                 style={{
@@ -189,7 +189,7 @@ export function SyncStatusPanel({ onConflictDetected }: SyncStatusPanelProps) {
         onConflictDetected?.();
       }
 
-      toast("error", `${message}. Try again.`);
+      toast("error", `${message}${COPY.retryErrorSuffix}`);
     }
   };
 
@@ -206,17 +206,17 @@ export function SyncStatusPanel({ onConflictDetected }: SyncStatusPanelProps) {
         onConflictDetected?.();
       }
 
-      toast("error", `${message}. Try again.`);
+      toast("error", `${message}${COPY.retryErrorSuffix}`);
     }
   };
 
   const getSyncTargetUrl = (): string => {
-    if (!config?.sections) return "Not configured";
+    if (!config?.sections) return COPY.notConfiguredLabel;
 
     const syncSection = config.sections.sync as Record<string, unknown> | undefined;
-    if (!syncSection) return "Not configured";
+    if (!syncSection) return COPY.notConfiguredLabel;
 
-    return (syncSection.target_path as string) || (syncSection.s3_bucket as string) || "Not configured";
+    return (syncSection.target_path as string) || (syncSection.s3_bucket as string) || COPY.notConfiguredLabel;
   };
 
   if (syncStatusLoading) {
@@ -228,7 +228,7 @@ export function SyncStatusPanel({ onConflictDetected }: SyncStatusPanelProps) {
       <ErrorBanner
         error={syncStatusError}
         onRetry={refetchSyncStatus}
-        message="Could not load sync status"
+        message={COPY.couldNotLoadSyncStatus}
       />
     );
   }

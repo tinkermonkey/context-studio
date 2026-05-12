@@ -71,6 +71,7 @@ export const COPY = {
 
   // Modal placeholders
   selectOptionPlaceholder: "Select an option",
+  sensitiveFieldPlaceholder: "Enter new value to replace existing",
 
   // Config tile default values
   notConfigured: "Not configured",

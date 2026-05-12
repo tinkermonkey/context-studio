@@ -152,7 +152,7 @@ function WorkflowsPageContent({
         <ErrorBanner
           error={error}
           onRetry={() => refetch()}
-          message="Failed to load grounding workflows"
+          message={COPY.failedToLoadGroundingWorkflows}
         />
       </div>
     );

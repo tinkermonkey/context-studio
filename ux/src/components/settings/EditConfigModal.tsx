@@ -146,7 +146,7 @@ export function EditConfigModal({
             ) : (
               <Input
                 type={field.sensitive ? "password" : (field.type || "text")}
-                placeholder={field.sensitive && formState[field.key] ? "Enter new value to replace existing" : field.placeholder}
+                placeholder={field.sensitive && formState[field.key] ? COPY.sensitiveFieldPlaceholder : field.placeholder}
                 value={String(formState[field.key] || "")}
                 onChange={(e) => handleChange(field.key, e.target.value)}
                 onFocus={() => field.sensitive && handleSensitiveFieldFocus(field.key)}

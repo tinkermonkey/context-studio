@@ -70,7 +70,9 @@ export function CreateChangesetModal({
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
         {/* Info */}
         <p style={{ fontSize: "13px", color: "var(--canvas-fg-2)", margin: 0 }}>
-          {COPY.createChangesetInfoMessage(selectedCount)}
+          {COPY.createChangesetInfoPrefix}
+          <strong>{selectedCount}</strong>
+          {COPY.createChangesetInfoSuffix(selectedCount)}
         </p>
 
         {/* Name field */}
