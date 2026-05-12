@@ -166,7 +166,7 @@ describe("Versioning Page", () => {
       });
     });
 
-    it("displays conflict-resolver testid when resolver is rendered", async () => {
+    it("displays no proposal selected message when conflict tab is clicked", async () => {
       server.use(
         rest.get("*/api/versioning/changesets", (req, res, ctx) =>
           res(ctx.json({ items: [], total: 0 })),
@@ -174,15 +174,16 @@ describe("Versioning Page", () => {
         rest.get("*/api/versioning/changes", (req, res, ctx) =>
           res(ctx.json({ events: [], total: 0 })),
         ),
-        rest.get("*/api/proposals/proposal-1/conflicts", (req, res, ctx) =>
-          res(ctx.json({ conflicts: [] })),
-        ),
       );
 
       render(<VersioningPage />);
 
-      // Verify resolver is available when conflicts component is initialized
-      // (actual resolver rendering depends on route params)
+      const conflictTab = screen.getByRole("tab", { name: /conflict/i });
+      await userEvent.click(conflictTab);
+
+      await waitFor(() => {
+        expect(screen.getByText(/no proposal selected/i)).toBeInTheDocument();
+      });
     });
   });
 });

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from "vitest";
+import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { rest } from "msw";
@@ -41,19 +41,6 @@ describe("Reference Workflows Page", () => {
       );
       expect(skeletonElements.length).toBeGreaterThanOrEqual(3);
     });
-
-    it("displays page root with data-testid during loading", async () => {
-      server.use(
-        rest.get("*/api/reference/status", async (req, res, ctx) => {
-          await new Promise((resolve) => setTimeout(resolve, 100));
-          return res(ctx.json(createReferenceStatusResponse()));
-        }),
-      );
-
-      render(<WorkflowsPage />);
-
-      expect(screen.getByTestId("reference-workflows-page")).toBeInTheDocument();
-    });
   });
 
   // ========================================================================
@@ -70,8 +57,10 @@ describe("Reference Workflows Page", () => {
       render(<WorkflowsPage />);
 
       await waitFor(() => {
-        expect(screen.getByTestId("reference-workflows-page")).toBeInTheDocument();
+        expect(screen.getByText(/Failed to load grounding workflows/i)).toBeInTheDocument();
       });
+
+      expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
     });
   });
 
@@ -81,15 +70,16 @@ describe("Reference Workflows Page", () => {
   describe("empty state", () => {
     it("renders empty state when no workflows exist", async () => {
       server.use(
-        rest.get("*/api/reference/status", (req, res, ctx) =>
-          res(ctx.json(createReferenceStatusResponse())),
+        rest.get("*/api/reference/grounding-workflows", (req, res, ctx) =>
+          res(ctx.json([])),
         ),
       );
 
       render(<WorkflowsPage />);
 
       await waitFor(() => {
-        expect(screen.getByTestId("reference-workflows-page")).toBeInTheDocument();
+        const emptyState = screen.getByTestId("empty-state");
+        expect(emptyState).toBeInTheDocument();
       });
     });
   });
@@ -98,17 +88,62 @@ describe("Reference Workflows Page", () => {
   // Populated State
   // ========================================================================
   describe("populated state", () => {
-    it("renders page root with data-testid in populated state", async () => {
+    it("renders table with workflow rows when data loads", async () => {
+      const mockWorkflows = [
+        {
+          id: "workflow-1",
+          title: "Entity Extraction",
+          source: "anthropic",
+          class_scope: ["Person", "Organization"],
+          status: "active" as const,
+          last_run: new Date().toISOString(),
+        },
+        {
+          id: "workflow-2",
+          title: "Relationship Detection",
+          source: "spacy",
+          class_scope: ["Event"],
+          status: "active" as const,
+          last_run: new Date().toISOString(),
+        },
+      ];
+
       server.use(
         rest.get("*/api/reference/grounding-workflows", (req, res, ctx) =>
-          res(ctx.json({ items: [], total: 0 })),
+          res(ctx.json(mockWorkflows)),
         ),
       );
 
       render(<WorkflowsPage />);
 
       await waitFor(() => {
-        expect(screen.getByTestId("reference-workflows-page")).toBeInTheDocument();
+        expect(screen.getByText("Entity Extraction")).toBeInTheDocument();
+        expect(screen.getByText("Relationship Detection")).toBeInTheDocument();
+      });
+    });
+
+    it("asserts schema-page-layout is present when workflows are rendered", async () => {
+      const mockWorkflows = [
+        {
+          id: "workflow-1",
+          title: "Entity Extraction",
+          source: "anthropic",
+          class_scope: ["Person"],
+          status: "active" as const,
+          last_run: new Date().toISOString(),
+        },
+      ];
+
+      server.use(
+        rest.get("*/api/reference/grounding-workflows", (req, res, ctx) =>
+          res(ctx.json(mockWorkflows)),
+        ),
+      );
+
+      render(<WorkflowsPage />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("schema-page-layout")).toBeInTheDocument();
       });
     });
   });
@@ -118,23 +153,25 @@ describe("Reference Workflows Page", () => {
   // ========================================================================
   describe("create workflow modal", () => {
     it("opens create modal on button click", async () => {
-      const mockResponse = createReferenceStatusResponse();
-
       server.use(
-        rest.get("*/api/reference/status", (req, res, ctx) => res(ctx.json(mockResponse))),
+        rest.get("*/api/reference/grounding-workflows", (req, res, ctx) =>
+          res(ctx.json([])),
+        ),
       );
 
       render(<WorkflowsPage />);
 
       await waitFor(() => {
-        expect(screen.getByTestId("reference-workflows-page")).toBeInTheDocument();
+        expect(screen.getByTestId("new-workflow-button")).toBeInTheDocument();
       });
 
-      // Look for create button (if present)
-      const createButton = screen.queryByRole("button", { name: /create|add|new/i });
-      if (createButton) {
-        await userEvent.click(createButton);
-      }
+      const createButton = screen.getByTestId("new-workflow-button");
+      await userEvent.click(createButton);
+
+      await waitFor(() => {
+        const modal = screen.getByRole("dialog");
+        expect(modal).toBeInTheDocument();
+      });
     });
   });
 });

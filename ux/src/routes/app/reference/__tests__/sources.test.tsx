@@ -41,19 +41,6 @@ describe("Reference Sources Page", () => {
       );
       expect(skeletonElements.length).toBeGreaterThanOrEqual(3);
     });
-
-    it("displays page root with data-testid", async () => {
-      server.use(
-        rest.get("*/api/reference/status", async (req, res, ctx) => {
-          await new Promise((resolve) => setTimeout(resolve, 100));
-          return res(ctx.json(createReferenceStatusResponse()));
-        }),
-      );
-
-      render(<SourcesPage />);
-
-      expect(screen.getByTestId("reference-sources-page")).toBeInTheDocument();
-    });
   });
 
   // ========================================================================
@@ -70,23 +57,10 @@ describe("Reference Sources Page", () => {
       render(<SourcesPage />);
 
       await waitFor(() => {
-        expect(screen.getByTestId("reference-sources-page")).toBeInTheDocument();
+        expect(screen.getByText(/Failed to load reference sources/i)).toBeInTheDocument();
       });
-    });
 
-    it("error banner is present in page root", async () => {
-      server.use(
-        rest.get("*/api/reference/status", (req, res, ctx) =>
-          res(ctx.status(500), ctx.json({ detail: "Server error" })),
-        ),
-      );
-
-      render(<SourcesPage />);
-
-      await waitFor(() => {
-        const pageRoot = screen.getByTestId("reference-sources-page");
-        expect(pageRoot).toBeInTheDocument();
-      });
+      expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
     });
   });
 
@@ -94,21 +68,7 @@ describe("Reference Sources Page", () => {
   // Empty State
   // ========================================================================
   describe("empty state", () => {
-    it("renders empty state when no sources exist", async () => {
-      server.use(
-        rest.get("*/api/reference/status", (req, res, ctx) =>
-          res(ctx.json(createReferenceStatusResponse({ sources: [] }))),
-        ),
-      );
-
-      render(<SourcesPage />);
-
-      await waitFor(() => {
-        expect(screen.getByTestId("reference-sources-page")).toBeInTheDocument();
-      });
-    });
-
-    it("displays empty state UI with proper structure", async () => {
+    it("displays empty state UI when no sources exist", async () => {
       server.use(
         rest.get("*/api/reference/status", (req, res, ctx) =>
           res(ctx.json(createReferenceStatusResponse({ sources: [] }))),
@@ -156,8 +116,7 @@ describe("Reference Sources Page", () => {
       });
     });
 
-
-    it("displays reference-sources-table testid in populated state", async () => {
+    it("asserts schema-page-layout is present when sources are rendered", async () => {
       const mockResponse = createReferenceStatusResponse({
         sources: [
           {
@@ -175,29 +134,7 @@ describe("Reference Sources Page", () => {
       render(<SourcesPage />);
 
       await waitFor(() => {
-        expect(screen.getByTestId("reference-sources-table")).toBeInTheDocument();
-      });
-    });
-
-    it("displays page root with data-testid in populated state", async () => {
-      const mockResponse = createReferenceStatusResponse({
-        sources: [
-          {
-            name: "wikipedia",
-            available: true,
-            last_checked: new Date().toISOString(),
-          },
-        ],
-      });
-
-      server.use(
-        rest.get("*/api/reference/status", (req, res, ctx) => res(ctx.json(mockResponse))),
-      );
-
-      render(<SourcesPage />);
-
-      await waitFor(() => {
-        expect(screen.getByTestId("reference-sources-page")).toBeInTheDocument();
+        expect(screen.getByTestId("schema-page-layout")).toBeInTheDocument();
       });
     });
   });

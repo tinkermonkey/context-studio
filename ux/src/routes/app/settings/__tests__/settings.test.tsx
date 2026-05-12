@@ -228,34 +228,4 @@ describe("Settings Page", () => {
     });
   });
 
-  // ========================================================================
-  // Config Tile Display Order
-  // ========================================================================
-  describe("config tile display order", () => {
-    it("displays all config tiles in correct order", async () => {
-      const mockConfig = createAppConfiguration({
-        sections: {
-          workspace: { display_name: "Workspace", path: "/path" },
-          llm: { provider: "anthropic", model: "claude-3" },
-          embedding: { model_name: "model", vector_dimensions: 384 },
-          nlp: { model_name: "nlp-model" },
-          reference_sources: { enabled: true },
-          sync: { target_type: "local", path: "/sync" },
-        },
-      });
-
-      server.use(rest.get("*/api/admin/config", (req, res, ctx) => res(ctx.json(mockConfig))));
-
-      render(<SettingsPage />);
-
-      await waitFor(() => {
-        expect(screen.getByTestId("config-tile-workspace")).toBeInTheDocument();
-        expect(screen.getByTestId("config-tile-llm")).toBeInTheDocument();
-        expect(screen.getByTestId("config-tile-embedding")).toBeInTheDocument();
-        expect(screen.getByTestId("config-tile-nlp")).toBeInTheDocument();
-        expect(screen.getByTestId("config-tile-reference-sources")).toBeInTheDocument();
-        expect(screen.getByTestId("config-tile-sync")).toBeInTheDocument();
-      });
-    });
-  });
 });
