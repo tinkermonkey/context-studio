@@ -3022,6 +3022,200 @@
         }
       }
     },
+    "/api/pipelines/flavors": {
+      "get": {
+        "tags": [
+          "pipeline"
+        ],
+        "summary": "List Pipeline Flavors",
+        "description": "Retrieve all pipeline flavors.\n\nReturns:\n    List of PipelineFlavorResponse objects",
+        "operationId": "list_pipeline_flavors_api_pipelines_flavors_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PipelineFlavorResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Pipeline Flavors Api Pipelines Flavors Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "pipeline"
+        ],
+        "summary": "Create Pipeline Flavor",
+        "description": "Create a new pipeline flavor.\n\nArgs:\n    request: PipelineFlavorCreateRequest with flavor details\n    service: PipelineService from dependency injection\n\nReturns:\n    Created PipelineFlavorResponse with server-generated id\n\nRaises:\n    HTTPException: 400 if invalid input, 409 if name already exists",
+        "operationId": "create_pipeline_flavor_api_pipelines_flavors_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PipelineFlavorCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineFlavorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipelines/flavors/{flavor_id}": {
+      "get": {
+        "tags": [
+          "pipeline"
+        ],
+        "summary": "Get Pipeline Flavor",
+        "description": "Retrieve a pipeline flavor by ID.\n\nArgs:\n    flavor_id: The pipeline flavor ID\n    service: PipelineService from dependency injection\n\nReturns:\n    PipelineFlavorResponse\n\nRaises:\n    HTTPException: 404 if not found",
+        "operationId": "get_pipeline_flavor_api_pipelines_flavors__flavor_id__get",
+        "parameters": [
+          {
+            "name": "flavor_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Flavor Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineFlavorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "pipeline"
+        ],
+        "summary": "Update Pipeline Flavor",
+        "description": "Update a pipeline flavor.\n\nArgs:\n    flavor_id: The pipeline flavor ID\n    request: PipelineFlavorUpdateRequest with optional fields to update\n    service: PipelineService from dependency injection\n\nReturns:\n    Updated PipelineFlavorResponse\n\nRaises:\n    HTTPException: 400 if invalid, 404 if not found",
+        "operationId": "update_pipeline_flavor_api_pipelines_flavors__flavor_id__put",
+        "parameters": [
+          {
+            "name": "flavor_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Flavor Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PipelineFlavorUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineFlavorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "pipeline"
+        ],
+        "summary": "Delete Pipeline Flavor",
+        "description": "Delete a pipeline flavor.\n\nArgs:\n    flavor_id: The pipeline flavor ID\n    service: PipelineService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found",
+        "operationId": "delete_pipeline_flavor_api_pipelines_flavors__flavor_id__delete",
+        "parameters": [
+          {
+            "name": "flavor_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Flavor Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/pipelines/{pipeline_id}": {
       "get": {
         "tags": [
@@ -3236,200 +3430,6 @@
                 }
               }
             }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/pipelines/flavors": {
-      "get": {
-        "tags": [
-          "pipeline"
-        ],
-        "summary": "List Pipeline Flavors",
-        "description": "Retrieve all pipeline flavors.\n\nReturns:\n    List of PipelineFlavorResponse objects",
-        "operationId": "list_pipeline_flavors_api_pipelines_flavors_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/PipelineFlavorResponse"
-                  },
-                  "type": "array",
-                  "title": "Response List Pipeline Flavors Api Pipelines Flavors Get"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "pipeline"
-        ],
-        "summary": "Create Pipeline Flavor",
-        "description": "Create a new pipeline flavor.\n\nArgs:\n    request: PipelineFlavorCreateRequest with flavor details\n    service: PipelineService from dependency injection\n\nReturns:\n    Created PipelineFlavorResponse with server-generated id\n\nRaises:\n    HTTPException: 400 if invalid input, 409 if name already exists",
-        "operationId": "create_pipeline_flavor_api_pipelines_flavors_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PipelineFlavorCreateRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PipelineFlavorResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/pipelines/flavors/{flavor_id}": {
-      "get": {
-        "tags": [
-          "pipeline"
-        ],
-        "summary": "Get Pipeline Flavor",
-        "description": "Retrieve a pipeline flavor by ID.\n\nArgs:\n    flavor_id: The pipeline flavor ID\n    service: PipelineService from dependency injection\n\nReturns:\n    PipelineFlavorResponse\n\nRaises:\n    HTTPException: 404 if not found",
-        "operationId": "get_pipeline_flavor_api_pipelines_flavors__flavor_id__get",
-        "parameters": [
-          {
-            "name": "flavor_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Flavor Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PipelineFlavorResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "pipeline"
-        ],
-        "summary": "Update Pipeline Flavor",
-        "description": "Update a pipeline flavor.\n\nArgs:\n    flavor_id: The pipeline flavor ID\n    request: PipelineFlavorUpdateRequest with optional fields to update\n    service: PipelineService from dependency injection\n\nReturns:\n    Updated PipelineFlavorResponse\n\nRaises:\n    HTTPException: 400 if invalid, 404 if not found",
-        "operationId": "update_pipeline_flavor_api_pipelines_flavors__flavor_id__put",
-        "parameters": [
-          {
-            "name": "flavor_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Flavor Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PipelineFlavorUpdateRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PipelineFlavorResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "pipeline"
-        ],
-        "summary": "Delete Pipeline Flavor",
-        "description": "Delete a pipeline flavor.\n\nArgs:\n    flavor_id: The pipeline flavor ID\n    service: PipelineService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found",
-        "operationId": "delete_pipeline_flavor_api_pipelines_flavors__flavor_id__delete",
-        "parameters": [
-          {
-            "name": "flavor_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Flavor Id"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -3755,14 +3755,14 @@
         "description": "Create a new changeset.\n\nArgs:\n    request: ChangesetCreateRequest with changeset details\n    service: VersioningService from dependency injection\n\nReturns:\n    Created ChangesetResponse with server-generated id\n\nRaises:\n    HTTPException: 400 for invalid input, 500 for internal errors",
         "operationId": "create_changeset_api_v1_versioning_changesets_post",
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ChangesetCreateRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "201": {
@@ -3771,6 +3771,52 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ChangesetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "versioning"
+        ],
+        "summary": "List Changesets",
+        "description": "List all changesets.\n\nArgs:\n    service: VersioningService from dependency injection\n    limit: Maximum number of results to return\n\nReturns:\n    List of ChangesetResponse objects\n\nRaises:\n    HTTPException: 500 for internal errors",
+        "operationId": "list_changesets_api_v1_versioning_changesets_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChangesetResponse"
+                  },
+                  "title": "Response List Changesets Api V1 Versioning Changesets Get"
                 }
               }
             }
@@ -3882,6 +3928,49 @@
         "summary": "Submit Proposal",
         "description": "Submit a changeset as a proposal for review.\n\nTransitions the changeset from STAGED to PROPOSED and creates a Proposal in 'open' state.\n\nArgs:\n    changeset_id: ID of the changeset to propose\n    service: VersioningService from dependency injection\n\nReturns:\n    Created ProposalResponse\n\nRaises:\n    HTTPException: 404 if not found, 409 for invalid state, 500 for internal errors",
         "operationId": "submit_proposal_api_v1_versioning_changesets__changeset_id__submit_post",
+        "parameters": [
+          {
+            "name": "changeset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Changeset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/versioning/changesets/{changeset_id}/apply": {
+      "post": {
+        "tags": [
+          "versioning"
+        ],
+        "summary": "Apply Changeset",
+        "description": "Apply a changeset by staging and submitting it in one action.\n\nTransitions the changeset from WORKING to STAGED to PROPOSED and creates\na Proposal in 'open' state. This combines stage and submit into a single operation.\n\nArgs:\n    changeset_id: ID of the changeset to apply\n    service: VersioningService from dependency injection\n\nReturns:\n    Created ProposalResponse\n\nRaises:\n    HTTPException: 404 if not found, 409 for invalid state, 500 for internal errors",
+        "operationId": "apply_changeset_api_v1_versioning_changesets__changeset_id__apply_post",
         "parameters": [
           {
             "name": "changeset_id",
