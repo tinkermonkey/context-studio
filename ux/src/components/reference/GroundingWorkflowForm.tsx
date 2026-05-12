@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { useReferenceStatus, useClasses } from "@/api/hooks";
-import type { GroundingWorkflowCreate } from "@/api/types/grounding";
+import type { GroundingWorkflowCreate } from "@/api/types/manual/grounding";
 
 interface GroundingWorkflowFormProps {
   onSubmit: (data: GroundingWorkflowCreate) => Promise<void>;
