@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
-import { useChanges, useCreateChangeset, useApplyChangeset } from "@/api/hooks/versioning";
+import { useChanges, useCreateChangeset } from "@/api/hooks/versioning";
 import { useToasts } from "@/components/ui/Toast";
 import { PendingChangesList } from "./PendingChangesList";
 import { ChangesetListSection } from "./ChangesetListSection";
@@ -30,7 +30,6 @@ export function ChangesetPanel({ onError, onConflictDetected }: ChangesetPanelPr
   } = useChanges();
 
   const createChangesetMutation = useCreateChangeset();
-  const applyChangesetMutation = useApplyChangeset();
 
   const handleCreateChangeset = async (name: string, description?: string) => {
     try {
