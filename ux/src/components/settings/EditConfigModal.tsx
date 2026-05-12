@@ -1,0 +1,161 @@
+import { useState, useEffect } from "react";
+import { Input, Select } from "@/components/ui/Input";
+import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
+
+export interface ConfigField {
+  key: string;
+  label: string;
+  placeholder?: string;
+  type?: "text" | "email" | "password" | "url" | "number";
+  required?: boolean;
+  sensitive?: boolean;
+  readOnly?: boolean;
+  options?: { label: string; value: string }[];
+}
+
+interface EditConfigModalProps {
+  open: boolean;
+  onClose: () => void;
+  section: string;
+  title: string;
+  fields: ConfigField[];
+  values: { [key: string]: unknown };
+  onSave: (updates: { [key: string]: unknown }) => Promise<void>;
+  isLoading?: boolean;
+}
+
+export function EditConfigModal({
+  open,
+  onClose,
+  section,
+  title,
+  fields,
+  values,
+  onSave,
+  isLoading,
+}: EditConfigModalProps) {
+  const [formState, setFormState] = useState<{ [key: string]: unknown }>(values);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    setFormState(values);
+    setErrors({});
+  }, [values, open]);
+
+  const handleChange = (key: string, value: unknown) => {
+    setFormState((prev) => ({ ...prev, [key]: value }));
+    if (errors[key]) {
+      setErrors((prev) => ({ ...prev, [key]: "" }));
+    }
+  };
+
+  const calculateDiff = () => {
+    const diff: { [key: string]: unknown } = {};
+    Object.keys(formState).forEach((key) => {
+      if (JSON.stringify(formState[key]) !== JSON.stringify(values[key])) {
+        diff[key] = formState[key];
+      }
+    });
+    return diff;
+  };
+
+  const handleSave = async () => {
+    const diff = calculateDiff();
+
+    if (Object.keys(diff).length === 0) {
+      onClose();
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await onSave(diff);
+      onClose();
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Failed to save settings";
+      setErrors({ _form: errorMsg });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const footer = (
+    <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+      <Button variant="ghost" onClick={onClose} disabled={isSaving}>
+        Cancel
+      </Button>
+      <Button
+        variant="primary"
+        onClick={handleSave}
+        disabled={isSaving || isLoading}
+        data-testid={`${section.toLowerCase()}-edit-modal-save`}
+      >
+        {isSaving ? "Saving..." : "Save"}
+      </Button>
+    </div>
+  );
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={title}
+      size={section === "llmprovider" ? "lg" : "md"}
+      footer={footer}
+    >
+      <div className="stack" style={{ gap: "16px" }}>
+        {errors._form && (
+          <div style={{ color: "var(--error-fg)", fontSize: "14px" }}>{errors._form}</div>
+        )}
+
+        {fields.map((field) => (
+          <div key={field.key}>
+            <label style={{ fontSize: "13px", fontWeight: 500, marginBottom: "4px", display: "block" }}>
+              {field.label}
+              {field.required && <span style={{ color: "var(--error-fg)" }}>*</span>}
+            </label>
+
+            {field.options ? (
+              <Select
+                value={String(formState[field.key] || "")}
+                onChange={(e) => handleChange(field.key, e.target.value)}
+                disabled={field.readOnly || isSaving}
+                data-testid={`${section.toLowerCase()}-${field.key}-select`}
+              >
+                <option value="">Select an option</option>
+                {field.options.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </Select>
+            ) : (
+              <Input
+                type={field.type || "text"}
+                placeholder={field.placeholder}
+                value={
+                  field.sensitive && formState[field.key]
+                    ? "••••••••"
+                    : String(formState[field.key] || "")
+                }
+                onChange={(e) => handleChange(field.key, e.target.value)}
+                readOnly={field.readOnly}
+                disabled={isSaving}
+                mono={field.type === "password" || field.type === "email"}
+                data-testid={`${section.toLowerCase()}-${field.key}-input`}
+              />
+            )}
+
+            {errors[field.key] && (
+              <div style={{ fontSize: "12px", color: "var(--error-fg)", marginTop: "4px" }}>
+                {errors[field.key]}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </Modal>
+  );
+}
