@@ -31,8 +31,7 @@ function createTestRouter() {
     getParentRoute: () => referenceRoute,
     path: "workflows",
     validateSearch: (search: Record<string, unknown>) => ({
-      selected:
-        typeof search.selected === "string" ? search.selected : undefined,
+      selected: typeof search.selected === "string" ? search.selected : undefined,
     }),
   });
 
@@ -42,9 +41,7 @@ function createTestRouter() {
   });
 
   const routeTree = rootRoute.addChildren([
-    appRoute.addChildren([
-      referenceRoute.addChildren([workflowsRoute, sourcesRoute]),
-    ]),
+    appRoute.addChildren([referenceRoute.addChildren([workflowsRoute, sourcesRoute])]),
   ]);
 
   const memoryHistory = createMemoryHistory({

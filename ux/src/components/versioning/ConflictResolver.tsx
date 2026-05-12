@@ -341,8 +341,16 @@ export function ConflictResolver({ proposalId, onResolved }: ConflictResolverPro
     return [...new Set(conflicts.map((c) => c.entity_id))];
   }, [conflicts]);
 
-  const { data: individuals = [], error: individualsError, refetch: refetchIndividuals } = useIndividuals();
-  const { data: taxonomyResp, error: taxonomiesError, refetch: refetchTaxonomies } = useTaxonomies();
+  const {
+    data: individuals = [],
+    error: individualsError,
+    refetch: refetchIndividuals,
+  } = useIndividuals();
+  const {
+    data: taxonomyResp,
+    error: taxonomiesError,
+    refetch: refetchTaxonomies,
+  } = useTaxonomies();
   const { data: classesResp, error: classesError, refetch: refetchClasses } = useClasses();
 
   const entityMap = useMemo(() => {

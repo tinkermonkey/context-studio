@@ -27,9 +27,7 @@ function AllProviders({ children, queryClient }: AllProvidersProps) {
 
   return (
     <QueryClientProvider client={client}>
-      <ToastProvider>
-        {children}
-      </ToastProvider>
+      <ToastProvider>{children}</ToastProvider>
     </QueryClientProvider>
   );
 }
@@ -46,9 +44,7 @@ export function renderWithProviders(
 
   return render(ui, {
     wrapper: ({ children }) => (
-      <AllProviders queryClient={testQueryClient}>
-        {children}
-      </AllProviders>
+      <AllProviders queryClient={testQueryClient}>{children}</AllProviders>
     ),
     ...renderOptions,
   });

@@ -95,12 +95,7 @@ export function GroundingWorkflowDrawer({ workflowId, onClose }: GroundingWorkfl
   if (error) {
     return (
       <div className="kv" data-testid="grounding-workflow-drawer">
-        <ErrorBanner
-          error={error}
-          onRetry={refetch}
-          message="Failed to load workflow"
-          compact
-        />
+        <ErrorBanner error={error} onRetry={refetch} message="Failed to load workflow" compact />
       </div>
     );
   }

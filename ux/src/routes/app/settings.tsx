@@ -55,11 +55,7 @@ export function SettingsPage() {
           <h1>{COPY.settingsPageTitle}</h1>
           <p>{COPY.settingsPageSubtitle}</p>
         </div>
-        <ErrorBanner
-          error={error}
-          onRetry={refetch}
-          message="Failed to load settings"
-        />
+        <ErrorBanner error={error} onRetry={refetch} message="Failed to load settings" />
       </div>
     );
   }
