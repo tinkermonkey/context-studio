@@ -413,20 +413,23 @@ export function ConflictResolver({ proposalId, onResolved }: ConflictResolverPro
   };
 
   const handleEditSubmit = (entityId: string, fieldName: string) => {
+    let parsedValue;
     try {
-      const parsedValue = JSON.parse(editValue);
-      setResolutions((prev) => ({
-        ...prev,
-        [entityId]: {
-          ...prev[entityId],
-          [fieldName]: parsedValue,
-        },
-      }));
-      setEditingKey(null);
-      setEditValue("");
+      parsedValue = JSON.parse(editValue);
     } catch {
       toast("error", COPY.invalidJSONValue);
+      return;
     }
+
+    setResolutions((prev) => ({
+      ...prev,
+      [entityId]: {
+        ...prev[entityId],
+        [fieldName]: parsedValue,
+      },
+    }));
+    setEditingKey(null);
+    setEditValue("");
   };
 
   const allConflictsResolved =

@@ -78,7 +78,12 @@ export function ChangesetListSection({ onApplyError, onConflictDetected }: Chang
       if (isConflict) {
         onConflictDetected?.();
       }
-      onApplyError?.(message);
+
+      if (onApplyError) {
+        onApplyError(message);
+      } else {
+        toast("error", message);
+      }
     }
   };
 

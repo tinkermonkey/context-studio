@@ -40,7 +40,11 @@ export function ChangesetPanel({ onError, onConflictDetected }: ChangesetPanelPr
     } catch (error) {
       const message =
         error instanceof Error ? error.message : COPY.failedToCreateChangeset;
-      onError?.(message);
+      if (onError) {
+        onError(message);
+      } else {
+        toast("error", message);
+      }
     }
   };
 
