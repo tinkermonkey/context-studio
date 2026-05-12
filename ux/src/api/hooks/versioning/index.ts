@@ -38,6 +38,7 @@ export function useSyncStatus() {
   return useQuery({
     queryKey: QUERY_KEYS.syncStatus,
     queryFn: () => versioningService.getSyncStatus(),
+    refetchInterval: 60_000,
   });
 }
 

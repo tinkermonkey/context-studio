@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
@@ -17,39 +17,18 @@ interface SyncStatusPanelProps {
 }
 
 function getStatusChip(status: string) {
-  const chipClasses: Record<string, { bg: string; text: string }> = {
-    synced: {
-      bg: "var(--accent-emerald-bg, #D1FAE5)",
-      text: "var(--accent-emerald, #065F46)",
-    },
-    ahead: {
-      bg: "var(--accent-amber-bg, #FEF3C7)",
-      text: "var(--accent-amber, #92400E)",
-    },
-    behind: {
-      bg: "var(--accent-amber-bg, #FEF3C7)",
-      text: "var(--accent-amber, #92400E)",
-    },
-    diverged: {
-      bg: "var(--accent-rose-bg, #FFE4E6)",
-      text: "var(--accent-rose, #831839)",
-    },
-    unknown: {
-      bg: "var(--canvas-bg-2)",
-      text: "var(--canvas-fg-2)",
-    },
+  const chipMap: Record<string, string> = {
+    synced: "emerald",
+    ahead: "amber",
+    behind: "amber",
+    diverged: "rose",
+    unknown: "gray",
   };
 
-  const colors = chipClasses[status] || chipClasses.unknown;
+  const chipClass = chipMap[status] || "gray";
 
   return (
-    <span
-      className="chip"
-      style={{
-        backgroundColor: colors.bg,
-        color: colors.text,
-      }}
-    >
+    <span className={`chip ${chipClass}`}>
       {status}
     </span>
   );
@@ -176,13 +155,6 @@ function SyncStatusCard({
           </Button>
         )}
       </div>
-
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 }
@@ -191,7 +163,6 @@ export function SyncStatusPanel({ onConflictDetected }: SyncStatusPanelProps) {
   const { toast } = useToasts();
   const navigate = useNavigate();
   const [lastPullCount, setLastPullCount] = useState<number | undefined>();
-  const [lastPushCount, setLastPushCount] = useState<number | undefined>();
 
   const {
     data: syncStatus,
@@ -205,12 +176,11 @@ export function SyncStatusPanel({ onConflictDetected }: SyncStatusPanelProps) {
   const pushMutation = usePushSync();
   const pullMutation = usePullSync();
 
-  useEffect(() => {
-    if (pushMutation.isSuccess && pushMutation.data) {
-      setLastPushCount(pushMutation.data.pushed);
-      toast("success", `Pushed ${pushMutation.data.pushed} changes`);
-    } else if (pushMutation.isError) {
-      const error = pushMutation.error;
+  const handlePush = async () => {
+    try {
+      const result = await pushMutation.mutateAsync();
+      toast("success", `Pushed ${result.pushed} changes`);
+    } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to push";
       const isConflict = message.toLowerCase().includes("conflict");
 
@@ -220,14 +190,14 @@ export function SyncStatusPanel({ onConflictDetected }: SyncStatusPanelProps) {
 
       toast("error", `${message}. Try again.`);
     }
-  }, [pushMutation.isSuccess, pushMutation.isError, pushMutation.data, pushMutation.error, toast, onConflictDetected]);
+  };
 
-  useEffect(() => {
-    if (pullMutation.isSuccess && pullMutation.data) {
-      setLastPullCount(pullMutation.data.pulled);
-      toast("success", `Pulled ${pullMutation.data.pulled} changes`);
-    } else if (pullMutation.isError) {
-      const error = pullMutation.error;
+  const handlePull = async () => {
+    try {
+      const result = await pullMutation.mutateAsync();
+      setLastPullCount(result.pulled);
+      toast("success", `Pulled ${result.pulled} changes`);
+    } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to pull";
       const isConflict = message.toLowerCase().includes("conflict");
 
@@ -237,14 +207,6 @@ export function SyncStatusPanel({ onConflictDetected }: SyncStatusPanelProps) {
 
       toast("error", `${message}. Try again.`);
     }
-  }, [pullMutation.isSuccess, pullMutation.isError, pullMutation.data, pullMutation.error, toast, onConflictDetected]);
-
-  const handlePush = async () => {
-    await pushMutation.mutateAsync();
-  };
-
-  const handlePull = async () => {
-    await pullMutation.mutateAsync();
   };
 
   const getSyncTargetUrl = (): string => {
