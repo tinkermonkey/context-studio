@@ -97,6 +97,7 @@ export function useResolveConflicts() {
     }) => versioningService.resolveConflicts(proposalId, resolutions),
     onSuccess: (_, { proposalId }) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.proposalConflicts(proposalId) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.syncStatus });
     },
   });
 }

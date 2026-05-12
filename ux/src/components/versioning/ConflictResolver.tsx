@@ -80,6 +80,15 @@ function ConflictRow({
       <div
         onMouseEnter={() => setShowDiff(true)}
         onMouseLeave={() => setShowDiff(false)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setShowDiff(!showDiff);
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-label={`View diff for ${conflict.field_name}`}
         style={{
           position: "relative",
           fontSize: "13px",
@@ -89,7 +98,7 @@ function ConflictRow({
       >
         {conflict.field_name}
         {showDiff && (
-          <div className="diff-tooltip">
+          <div className="diff-tooltip" role="tooltip">
             <div className="diff-container">
               <div className="diff-column diff-removed">
                 <div className="diff-label">Ours</div>
@@ -104,29 +113,11 @@ function ConflictRow({
         )}
       </div>
 
-      <div
-        style={{
-          fontSize: "12px",
-          color: "var(--canvas-fg-3)",
-          fontFamily: "var(--mono)",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-        }}
-      >
+      <div className="mono muted">
         {JSON.stringify(conflict.base_value)}
       </div>
 
-      <div
-        style={{
-          fontSize: "12px",
-          color: "var(--canvas-fg-3)",
-          fontFamily: "var(--mono)",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-        }}
-      >
+      <div className="mono muted">
         {JSON.stringify(conflict.incoming_value)}
       </div>
 
@@ -135,7 +126,7 @@ function ConflictRow({
           <span className="chip emerald">✓ resolved</span>
         </div>
       ) : isEditing ? (
-        <div style={{ display: "flex", gap: "4px" }}>
+        <div className="flex-gap-sm">
           <input
             type="text"
             value={editValue}
@@ -154,6 +145,7 @@ function ConflictRow({
               color: "var(--canvas-fg)",
             }}
             autoFocus
+            aria-label={`Edit resolution for ${conflict.field_name}`}
           />
           <Button size="sm" variant="primary" onClick={onEditSubmit}>
             ✓
@@ -163,7 +155,7 @@ function ConflictRow({
           </Button>
         </div>
       ) : (
-        <div style={{ display: "flex", gap: "4px" }}>
+        <div className="flex-gap-sm">
           <Button
             data-testid={`conflict-keep-ours-${conflict.entity_id}-${conflict.field_name}`}
             size="sm"
@@ -230,6 +222,16 @@ function ConflictGroup({
     <div data-testid={`conflict-group-${entityId}`} style={{ borderBottom: "1px solid var(--canvas-bd)" }}>
       <div
         onClick={() => setIsExpanded(!isExpanded)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setIsExpanded(!isExpanded);
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-expanded={isExpanded}
+        aria-controls={`conflict-group-contents-${entityId}`}
         style={{
           padding: "12px 16px",
           display: "flex",
@@ -240,7 +242,7 @@ function ConflictGroup({
           userSelect: "none",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <div className="flex-row-center" style={{ gap: "8px" }}>
           <span
             style={{
               width: "20px",
@@ -252,6 +254,7 @@ function ConflictGroup({
               transition: "transform 0.2s",
               fontSize: "12px",
             }}
+            aria-hidden="true"
           >
             ▼
           </span>
@@ -265,7 +268,7 @@ function ConflictGroup({
       </div>
 
       {isExpanded && (
-        <>
+        <div id={`conflict-group-contents-${entityId}`}>
           {/* Header row */}
           <div
             style={{
@@ -312,7 +315,7 @@ function ConflictGroup({
               />
             );
           })}
-        </>
+        </div>
       )}
     </div>
   );
@@ -346,23 +349,20 @@ export function ConflictResolver({ proposalId, onResolved }: ConflictResolverPro
   const entityMap = useMemo(() => {
     const map = new Map<string, string>();
 
-    if (individuals && typeof individuals === "object" && "items" in individuals) {
-      (individuals.items as Array<{ id: string; title?: string }>).forEach((ind) => {
-        map.set(ind.id, ind.title || ind.id.substring(0, 8));
-      });
-    }
+    const indItems = (individuals as { items?: Array<{ id: string; title?: string }> })?.items || [];
+    indItems.forEach((ind) => {
+      map.set(ind.id, ind.title || ind.id.substring(0, 8));
+    });
 
-    if (taxonomyResp && typeof taxonomyResp === "object" && "items" in taxonomyResp) {
-      (taxonomyResp.items as Array<{ id: string; title: string }>).forEach((tax) => {
-        map.set(tax.id, tax.title || tax.id.substring(0, 8));
-      });
-    }
+    const taxItems = (taxonomyResp as { items?: Array<{ id: string; title: string }> })?.items || [];
+    taxItems.forEach((tax) => {
+      map.set(tax.id, tax.title || tax.id.substring(0, 8));
+    });
 
-    if (classesResp && typeof classesResp === "object" && "items" in classesResp) {
-      (classesResp.items as Array<{ id: string; title: string }>).forEach((cls) => {
-        map.set(cls.id, cls.title || cls.id.substring(0, 8));
-      });
-    }
+    const clsItems = (classesResp as { items?: Array<{ id: string; title: string }> })?.items || [];
+    clsItems.forEach((cls) => {
+      map.set(cls.id, cls.title || cls.id.substring(0, 8));
+    });
 
     return map;
   }, [individuals, taxonomyResp, classesResp]);
@@ -445,7 +445,6 @@ export function ConflictResolver({ proposalId, onResolved }: ConflictResolverPro
         resolutions,
       });
       setResolutions({});
-      toast("success", "Conflicts resolved successfully");
       onResolved?.();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to resolve conflicts";
