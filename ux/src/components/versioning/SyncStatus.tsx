@@ -168,7 +168,7 @@ export function SyncStatusPanel({ onConflictDetected }: SyncStatusPanelProps) {
     refetch: refetchSyncStatus,
   } = useSyncStatus();
 
-  const { data: config } = useConfig();
+  const { data: config, error: configError, refetch: refetchConfig } = useConfig();
 
   const pushMutation = usePushSync();
   const pullMutation = usePullSync();
@@ -229,6 +229,16 @@ export function SyncStatusPanel({ onConflictDetected }: SyncStatusPanelProps) {
         error={syncStatusError}
         onRetry={refetchSyncStatus}
         message={COPY.couldNotLoadSyncStatus}
+      />
+    );
+  }
+
+  if (configError) {
+    return (
+      <ErrorBanner
+        error={configError}
+        onRetry={refetchConfig}
+        message="Failed to load sync configuration"
       />
     );
   }

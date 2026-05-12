@@ -339,9 +339,9 @@ export function ConflictResolver({ proposalId, onResolved }: ConflictResolverPro
     return [...new Set(conflicts.map((c) => c.entity_id))];
   }, [conflicts]);
 
-  const { data: individuals = [] } = useIndividuals();
-  const { data: taxonomyResp } = useTaxonomies();
-  const { data: classesResp } = useClasses();
+  const { data: individuals = [], error: individualsError, refetch: refetchIndividuals } = useIndividuals();
+  const { data: taxonomyResp, error: taxonomiesError, refetch: refetchTaxonomies } = useTaxonomies();
+  const { data: classesResp, error: classesError, refetch: refetchClasses } = useClasses();
 
   const entityMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -468,6 +468,22 @@ export function ConflictResolver({ proposalId, onResolved }: ConflictResolverPro
         error={conflictsError}
         onRetry={refetchConflicts}
         message={COPY.couldNotLoadConflicts}
+      />
+    );
+  }
+
+  const entityDataError = individualsError || taxonomiesError || classesError;
+  if (entityDataError) {
+    const refetchAll = () => {
+      refetchIndividuals();
+      refetchTaxonomies();
+      refetchClasses();
+    };
+    return (
+      <ErrorBanner
+        error={entityDataError}
+        onRetry={refetchAll}
+        message="Failed to load entity names for conflict resolution"
       />
     );
   }

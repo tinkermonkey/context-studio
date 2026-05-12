@@ -4,6 +4,7 @@ import { Folder, Cpu, Layers, Type, Database, RefreshCw } from "lucide-react";
 import { useConfig, useUpdateConfig } from "@/api/hooks/admin";
 import { useToasts } from "@/components/ui/Toast";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { ConfigTile } from "@/components/settings/ConfigTile";
 import { EditConfigModal, type ConfigField } from "@/components/settings/EditConfigModal";
 import { COPY } from "./settings/copy";
@@ -15,7 +16,7 @@ export const Route = createFileRoute("/app/settings")({
 function SettingsPage() {
   const navigate = useNavigate();
   const { toast } = useToasts();
-  const { data: config, isLoading } = useConfig();
+  const { data: config, isLoading, error, refetch } = useConfig();
   const updateMutation = useUpdateConfig();
 
   const [openSection, setOpenSection] = useState<string | null>(null);
@@ -43,6 +44,22 @@ function SettingsPage() {
             <Skeleton key={i} height={180} />
           ))}
         </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div data-testid="settings-page">
+        <div className="page-head">
+          <h1>{COPY.settingsPageTitle}</h1>
+          <p>{COPY.settingsPageSubtitle}</p>
+        </div>
+        <ErrorBanner
+          error={error}
+          onRetry={refetch}
+          message="Failed to load settings"
+        />
       </div>
     );
   }

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { useToasts } from "@/components/ui/Toast";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useUndoDelete } from "@/hooks/useUndoDelete";
 import {
@@ -19,7 +20,7 @@ interface GroundingWorkflowDrawerProps {
 }
 
 export function GroundingWorkflowDrawer({ workflowId, onClose }: GroundingWorkflowDrawerProps) {
-  const { data: workflow, isLoading } = useGroundingWorkflow(workflowId);
+  const { data: workflow, isLoading, error, refetch } = useGroundingWorkflow(workflowId);
   const { data: runs = [], isLoading: runsLoading } = useGroundingWorkflowRuns(workflowId);
   const updateMutation = useUpdateGroundingWorkflow();
   const deleteMutation = useDeleteGroundingWorkflow();
@@ -87,6 +88,19 @@ export function GroundingWorkflowDrawer({ workflowId, onClose }: GroundingWorkfl
       <div className="kv" data-testid="grounding-workflow-drawer">
         <Skeleton height={32} />
         <Skeleton height={24} style={{ marginTop: "var(--space-3)" }} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="kv" data-testid="grounding-workflow-drawer">
+        <ErrorBanner
+          error={error}
+          onRetry={refetch}
+          message="Failed to load workflow"
+          compact
+        />
       </div>
     );
   }
