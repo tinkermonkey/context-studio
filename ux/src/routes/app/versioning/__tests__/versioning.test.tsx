@@ -5,6 +5,7 @@ import { rest } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
 import {
+  createChangeHistory,
   createChangeset,
   createSyncStatus,
 } from "@/api/services/__tests__/fixtures/versioning.fixtures";
@@ -31,10 +32,12 @@ describe("Versioning Page", () => {
   describe("page structure", () => {
     it("renders versioning page root", async () => {
       server.use(
-        rest.get("*/api/v1/versioning/changesets", async (req, res, ctx) => {
-          await new Promise((resolve) => setTimeout(resolve, 100));
-          return res(ctx.json([]));
-        }),
+        rest.get("*/api/v1/versioning/changesets", (req, res, ctx) =>
+          res(ctx.json([])),
+        ),
+        rest.get("*/api/v1/versioning/changes", (req, res, ctx) =>
+          res(ctx.json({ events: [], total: 0 })),
+        ),
       );
 
       render(<VersioningPage />);
@@ -48,6 +51,9 @@ describe("Versioning Page", () => {
       server.use(
         rest.get("*/api/v1/versioning/changesets", (req, res, ctx) =>
           res(ctx.json([])),
+        ),
+        rest.get("*/api/v1/versioning/changes", (req, res, ctx) =>
+          res(ctx.json({ events: [], total: 0 })),
         ),
       );
 
@@ -70,6 +76,9 @@ describe("Versioning Page", () => {
         rest.get("*/api/v1/versioning/changesets", (req, res, ctx) =>
           res(ctx.json([])),
         ),
+        rest.get("*/api/v1/versioning/changes", (req, res, ctx) =>
+          res(ctx.json({ events: [], total: 0 })),
+        ),
       );
 
       render(<VersioningPage />);
@@ -79,20 +88,35 @@ describe("Versioning Page", () => {
       });
     });
 
-    it("loads changeset data on page render", async () => {
-      const mockChangesets = [createChangeset({ id: "changeset-1", name: "Update taxonomy" })];
+    it("loads and displays pending changes on page render", async () => {
+      const mockChanges = createChangeHistory({
+        events: [
+          {
+            id: "change-1",
+            entity_id: "entity-1",
+            entity_type: "taxonomy",
+            operation: "create",
+            new_state: { title: "Test Entity" },
+            timestamp: new Date().toISOString(),
+            processed: true,
+          },
+        ],
+        total: 1,
+      });
 
       server.use(
         rest.get("*/api/v1/versioning/changesets", (req, res, ctx) =>
-          res(ctx.json(mockChangesets)),
+          res(ctx.json([])),
+        ),
+        rest.get("*/api/v1/versioning/changes", (req, res, ctx) =>
+          res(ctx.json(mockChanges)),
         ),
       );
 
       render(<VersioningPage />);
 
-      // Verify page renders - changeset loading is internal to panel
       await waitFor(() => {
-        expect(screen.getByTestId("versioning-page")).toBeInTheDocument();
+        expect(screen.getByTestId("changeset-panel")).toBeInTheDocument();
       });
     });
   });
@@ -103,12 +127,14 @@ describe("Versioning Page", () => {
   describe("sync status panel states", () => {
     it("switches to sync tab when clicked", async () => {
       server.use(
-        rest.get("*/api/v1/versioning/sync/status", async (req, res, ctx) => {
-          await new Promise((resolve) => setTimeout(resolve, 50));
-          return res(ctx.json(createSyncStatus()));
-        }),
+        rest.get("*/api/v1/versioning/sync/status", (req, res, ctx) =>
+          res(ctx.json(createSyncStatus())),
+        ),
         rest.get("*/api/v1/versioning/changesets", (req, res, ctx) =>
           res(ctx.json([])),
+        ),
+        rest.get("*/api/v1/versioning/changes", (req, res, ctx) =>
+          res(ctx.json({ events: [], total: 0 })),
         ),
       );
 
@@ -132,22 +158,8 @@ describe("Versioning Page", () => {
         rest.get("*/api/v1/versioning/changesets", (req, res, ctx) =>
           res(ctx.json([])),
         ),
-      );
-
-      render(<VersioningPage />);
-
-      const conflictTab = screen.getByRole("tab", { name: /conflict/i });
-      await userEvent.click(conflictTab);
-
-      await waitFor(() => {
-        expect(screen.getByText(/no proposal selected/i)).toBeInTheDocument();
-      });
-    });
-
-    it("displays no proposal selected message when conflict tab is clicked", async () => {
-      server.use(
-        rest.get("*/api/v1/versioning/changesets", (req, res, ctx) =>
-          res(ctx.json([])),
+        rest.get("*/api/v1/versioning/changes", (req, res, ctx) =>
+          res(ctx.json({ events: [], total: 0 })),
         ),
       );
 
