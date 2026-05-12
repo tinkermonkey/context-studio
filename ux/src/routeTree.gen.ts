@@ -13,6 +13,7 @@ import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app/index'
+import { Route as AppVersioningRouteImport } from './routes/app/versioning'
 import { Route as AppSettingsRouteImport } from './routes/app/settings'
 import { Route as AppContactSheetRouteImport } from './routes/app/contact-sheet'
 import { Route as AppPipelinesIndexRouteImport } from './routes/app/pipelines/index'
@@ -50,6 +51,11 @@ const IndexRoute = IndexRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppVersioningRoute = AppVersioningRouteImport.update({
+  id: '/versioning',
+  path: '/versioning',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
@@ -149,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/welcome': typeof WelcomeRoute
   '/app/contact-sheet': typeof AppContactSheetRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/versioning': typeof AppVersioningRoute
   '/app/': typeof AppIndexRoute
   '/app/data/datasets': typeof AppDataDatasetsRoute
   '/app/data/individuals': typeof AppDataIndividualsRoute
@@ -172,6 +179,7 @@ export interface FileRoutesByTo {
   '/welcome': typeof WelcomeRoute
   '/app/contact-sheet': typeof AppContactSheetRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/versioning': typeof AppVersioningRoute
   '/app': typeof AppIndexRoute
   '/app/data/datasets': typeof AppDataDatasetsRoute
   '/app/data/individuals': typeof AppDataIndividualsRoute
@@ -196,6 +204,7 @@ export interface FileRoutesById {
   '/welcome': typeof WelcomeRoute
   '/app/contact-sheet': typeof AppContactSheetRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/versioning': typeof AppVersioningRoute
   '/app/': typeof AppIndexRoute
   '/app/data/datasets': typeof AppDataDatasetsRoute
   '/app/data/individuals': typeof AppDataIndividualsRoute
@@ -222,6 +231,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/app/contact-sheet'
     | '/app/settings'
+    | '/app/versioning'
     | '/app/'
     | '/app/data/datasets'
     | '/app/data/individuals'
@@ -245,6 +255,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/app/contact-sheet'
     | '/app/settings'
+    | '/app/versioning'
     | '/app'
     | '/app/data/datasets'
     | '/app/data/individuals'
@@ -268,6 +279,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/app/contact-sheet'
     | '/app/settings'
+    | '/app/versioning'
     | '/app/'
     | '/app/data/datasets'
     | '/app/data/individuals'
@@ -321,6 +333,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/app/'
       preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/versioning': {
+      id: '/app/versioning'
+      path: '/versioning'
+      fullPath: '/app/versioning'
+      preLoaderRoute: typeof AppVersioningRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/settings': {
@@ -466,6 +485,7 @@ const AppSchemaSchemesRouteWithChildren =
 interface AppRouteChildren {
   AppContactSheetRoute: typeof AppContactSheetRoute
   AppSettingsRoute: typeof AppSettingsRoute
+  AppVersioningRoute: typeof AppVersioningRoute
   AppIndexRoute: typeof AppIndexRoute
   AppDataDatasetsRoute: typeof AppDataDatasetsRoute
   AppDataIndividualsRoute: typeof AppDataIndividualsRoute
@@ -487,6 +507,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppContactSheetRoute: AppContactSheetRoute,
   AppSettingsRoute: AppSettingsRoute,
+  AppVersioningRoute: AppVersioningRoute,
   AppIndexRoute: AppIndexRoute,
   AppDataDatasetsRoute: AppDataDatasetsRoute,
   AppDataIndividualsRoute: AppDataIndividualsRoute,

@@ -1,0 +1,125 @@
+import { useState } from "react";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { ErrorBanner } from "@/components/ui/ErrorBanner";
+import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
+import { useChanges, useCreateChangeset, useApplyChangeset } from "@/api/hooks/versioning";
+import { useToasts } from "@/components/ui/Toast";
+import { PendingChangesList } from "./PendingChangesList";
+import { ChangesetListSection } from "./ChangesetListSection";
+import { CreateChangesetModal } from "./CreateChangesetModal";
+import type { components } from "@/api/types";
+
+type VersioningChangeEventResponse = components["schemas"]["VersioningChangeEventResponse"];
+
+interface ChangesetPanelProps {
+  onError?: (message: string) => void;
+}
+
+export function ChangesetPanel({ onError }: ChangesetPanelProps) {
+  const { toast } = useToasts();
+  const [selectedChanges, setSelectedChanges] = useState<Set<string>>(new Set());
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  const {
+    data: changesData,
+    isLoading: changesLoading,
+    error: changesError,
+    refetch: refetchChanges,
+  } = useChanges();
+
+  const createChangesetMutation = useCreateChangeset();
+  const applyChangesetMutation = useApplyChangeset();
+
+  const handleCreateChangeset = async (name: string, description?: string) => {
+    try {
+      const selectedIds = Array.from(selectedChanges);
+      await createChangesetMutation.mutateAsync({
+        name,
+        description,
+        event_ids: selectedIds,
+      });
+      setSelectedChanges(new Set());
+      setShowCreateModal(false);
+      toast("success", "Changeset created successfully");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to create changeset";
+      onError?.(message);
+    }
+  };
+
+  const handleSelectChange = (changeId: string, selected: boolean) => {
+    const newSet = new Set(selectedChanges);
+    if (selected) {
+      newSet.add(changeId);
+    } else {
+      newSet.delete(changeId);
+    }
+    setSelectedChanges(newSet);
+  };
+
+  const handleSelectAllChanges = (selected: boolean) => {
+    if (selected && changesData?.events) {
+      const allIds = changesData.events.map((e) => e.id);
+      setSelectedChanges(new Set(allIds));
+    } else {
+      setSelectedChanges(new Set());
+    }
+  };
+
+  const handleStageSelected = () => {
+    if (selectedChanges.size === 0) {
+      toast("error", "Please select at least one change");
+      return;
+    }
+    setShowCreateModal(true);
+  };
+
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", minHeight: "calc(100vh - 180px)" }}>
+      {/* Left Column - Pending Changes */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "12px", overflow: "hidden" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <h2 style={{ margin: 0, fontSize: "14px", fontWeight: 600 }}>Pending Changes</h2>
+          <Button
+            onClick={handleStageSelected}
+            disabled={selectedChanges.size === 0 || createChangesetMutation.isPending}
+            variant="primary"
+            size="sm"
+          >
+            Stage Selected
+          </Button>
+        </div>
+
+        <PendingChangesList
+          changes={changesData?.events || []}
+          selectedIds={selectedChanges}
+          isLoading={changesLoading}
+          error={changesError}
+          onSelectChange={handleSelectChange}
+          onSelectAll={handleSelectAllChanges}
+          onRetry={refetchChanges}
+        />
+      </div>
+
+      {/* Right Column - Changesets */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "12px", overflow: "hidden" }}>
+        <div>
+          <h2 style={{ margin: 0, fontSize: "14px", fontWeight: 600 }}>Changesets</h2>
+        </div>
+
+        <ChangesetListSection onApplyError={onError} />
+      </div>
+
+      {/* Create Changeset Modal */}
+      <CreateChangesetModal
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSubmit={handleCreateChangeset}
+        isLoading={createChangesetMutation.isPending}
+        selectedCount={selectedChanges.size}
+      />
+    </div>
+  );
+}

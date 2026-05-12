@@ -245,6 +245,32 @@ async def create_changeset(
         raise HTTPException(status_code=status_code, detail=message)
 
 
+@router.get("/versioning/changesets", response_model=list[ChangesetResponse])
+async def list_changesets(
+    service: VersioningService = Depends(get_versioning_service),
+    limit: int = 100,
+) -> list[ChangesetResponse]:
+    """
+    List all changesets.
+
+    Args:
+        service: VersioningService from dependency injection
+        limit: Maximum number of results to return
+
+    Returns:
+        List of ChangesetResponse objects
+
+    Raises:
+        HTTPException: 500 for internal errors
+    """
+    try:
+        changesets = await run_sync_in_executor(service.list_changesets, limit=limit)
+        return [ChangesetResponse.model_validate(cs) for cs in changesets]
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
 @router.get("/versioning/changesets/{changeset_id}", response_model=ChangesetResponse)
 async def get_changeset(
     changeset_id: str,

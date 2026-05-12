@@ -165,6 +165,18 @@ class VersioningService:
             raise VersionNotFoundError(f"Changeset {changeset_id} not found")
         return changeset
 
+    def list_changesets(self, limit: int = 100) -> list[Changeset]:
+        """
+        List all changesets.
+
+        Args:
+            limit: Maximum number of results to return
+
+        Returns:
+            List of Changeset entities
+        """
+        return self._repo.list_changesets(limit=limit)
+
     def create_changeset(
         self,
         name: str,

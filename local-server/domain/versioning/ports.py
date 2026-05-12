@@ -88,6 +88,10 @@ class ChangeRepository(Protocol):
         """Get a changeset by ID."""
         ...
 
+    def list_changesets(self, limit: int = 100) -> list[Changeset]:
+        """List all changesets."""
+        ...
+
     def update_changeset(self, changeset: Changeset) -> Changeset:
         """
         Update an existing changeset.

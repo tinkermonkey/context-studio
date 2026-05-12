@@ -12,6 +12,13 @@ interface ChangesParams {
 }
 
 class VersioningService extends BaseService {
+  async listChangesets(params?: ChangesParams): Promise<ChangesetResponse[]> {
+    return this.get<ChangesetResponse[]>(
+      "/api/v1/versioning/changesets",
+      params as Record<string, unknown>,
+    );
+  }
+
   async getChanges(params?: ChangesParams): Promise<ChangeHistoryResponse> {
     return this.get<ChangeHistoryResponse>(
       "/api/v1/versioning/changes",
@@ -47,6 +54,10 @@ class VersioningService extends BaseService {
 
   async pullSync(): Promise<SyncResultResponse> {
     return this.post<SyncResultResponse>("/api/v1/versioning/sync/pull");
+  }
+
+  async applyChangeset(id: string): Promise<ChangesetResponse> {
+    return this.post<ChangesetResponse>(`/api/v1/versioning/changesets/${id}/apply`);
   }
 }
 

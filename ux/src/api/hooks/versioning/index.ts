@@ -16,8 +16,12 @@ export function useChanges(params?: ChangesParams) {
   });
 }
 
-// Note: There is no paginated list endpoint for changesets in the current API.
-// Individual changesets can be retrieved by ID via versioningService.getChangeset(id).
+export function useChangesets(params?: { limit?: number }) {
+  return useQuery({
+    queryKey: [...QUERY_KEYS.changesets, params],
+    queryFn: () => versioningService.listChangesets(params),
+  });
+}
 
 export function useCreateChangeset() {
   const queryClient = useQueryClient();
@@ -52,6 +56,16 @@ export function usePullSync() {
     mutationFn: () => versioningService.pullSync(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.syncStatus });
+    },
+  });
+}
+
+export function useApplyChangeset() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => versioningService.applyChangeset(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.changesets });
     },
   });
 }

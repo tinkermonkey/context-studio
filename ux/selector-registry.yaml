@@ -1011,6 +1011,29 @@ selectors:
     component: routes/app/reference/workflows.tsx
     description: Actions button for workflow row (pattern matches workflow-row-actions-{workflowId})
 
+  # Versioning
+  - selector: pending-changes-list
+    component: components/versioning/PendingChangesList.tsx
+    description: Container for the pending changes list
+  - selector: pending-change-*
+    component: components/versioning/PendingChangesList.tsx
+    description: Individual pending change row (pattern matches pending-change-{changeId})
+  - selector: changeset-list
+    component: components/versioning/ChangesetListSection.tsx
+    description: Container for the changesets list
+  - selector: changeset-name-input
+    component: components/versioning/CreateChangesetModal.tsx
+    description: Name input field in create changeset modal
+  - selector: changeset-description-input
+    component: components/versioning/CreateChangesetModal.tsx
+    description: Description textarea in create changeset modal
+  - selector: changeset-cancel-button
+    component: components/versioning/CreateChangesetModal.tsx
+    description: Cancel button in create changeset modal
+  - selector: changeset-submit-button
+    component: components/versioning/CreateChangesetModal.tsx
+    description: Submit button in create changeset modal
+
   # Miscellaneous
   - selector: create-toast-btn
     component: routes/app/contact-sheet.tsx
