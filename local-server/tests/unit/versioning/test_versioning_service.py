@@ -2005,7 +2005,7 @@ class TestSyncStatusErrorHandling:
     def test_get_sync_status_is_configured_error(
         self, repo: FakeChangeRepository, event_publisher: FakeEventPublisher
     ) -> None:
-        """Test that is_configured errors degrade to is_configured=False."""
+        """Test that is_configured errors degrade to is_configured=False and set is_degraded=True."""
 
         class FailingConfigSyncTarget(FakeSyncTarget):
             def is_configured(self) -> bool:
@@ -2022,7 +2022,7 @@ class TestSyncStatusErrorHandling:
 
         assert status.is_configured is False
         assert status.unprocessed_count == repo.count_unprocessed()
-        assert status.is_degraded is False
+        assert status.is_degraded is True
 
     def test_get_sync_status_both_errors(
         self, event_publisher: FakeEventPublisher

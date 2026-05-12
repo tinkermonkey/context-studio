@@ -1163,6 +1163,7 @@ class VersioningService:
             is_configured = self._sync.is_configured()
         except (RuntimeError, OSError) as e:
             _logger.warning("Failed to check sync configuration status: %s", str(e))
+            is_degraded = True
 
         status = SyncStatus(
             last_pushed_at=None,
