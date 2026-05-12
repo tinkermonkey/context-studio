@@ -1037,6 +1037,37 @@ selectors:
     component: components/versioning/CreateChangesetModal.tsx
     description: Submit button in create changeset modal
 
+  # Sync Status Panel
+  - selector: sync-status-panel
+    component: components/versioning/SyncStatus.tsx
+    description: Main container for the sync status panel
+
+  # Conflict Resolver
+  - selector: conflict-resolver
+    component: components/versioning/ConflictResolver.tsx
+    description: Root container for the conflict resolver panel
+  - selector: conflict-list
+    component: components/versioning/ConflictResolver.tsx
+    description: Container for all conflict groups
+  - selector: conflict-group-{entityId}
+    component: components/versioning/ConflictResolver.tsx
+    description: Collapsible group of conflicts for a single entity
+  - selector: conflict-row-{entityId}-{fieldName}
+    component: components/versioning/ConflictResolver.tsx
+    description: Individual conflict row for a field within an entity
+  - selector: conflict-keep-ours-{entityId}-{fieldName}
+    component: components/versioning/ConflictResolver.tsx
+    description: Button to keep the "ours" (base) value for a conflict
+  - selector: conflict-keep-theirs-{entityId}-{fieldName}
+    component: components/versioning/ConflictResolver.tsx
+    description: Button to keep the "theirs" (incoming) value for a conflict
+  - selector: conflict-edit-{entityId}-{fieldName}
+    component: components/versioning/ConflictResolver.tsx
+    description: Button to edit a custom resolution value for a conflict
+  - selector: conflict-apply-resolutions-button
+    component: components/versioning/ConflictResolver.tsx
+    description: Primary button to apply all conflict resolutions
+
   # Miscellaneous
   - selector: create-toast-btn
     component: routes/app/contact-sheet.tsx

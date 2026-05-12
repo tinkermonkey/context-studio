@@ -35,6 +35,8 @@ export const QUERY_KEYS = {
   // Versioning
   changes: (params?: object) => ["changes", params] as const,
   changesets: ["changesets"] as const,
+  proposals: (proposalId?: string) => proposalId ? (["proposals", proposalId] as const) : (["proposals"] as const),
+  proposalConflicts: (proposalId: string) => ["proposals", proposalId, "conflicts"] as const,
   syncStatus: ["sync-status"] as const,
   // Reference
   referenceSearch: (q?: string) => ["reference-search", q] as const,

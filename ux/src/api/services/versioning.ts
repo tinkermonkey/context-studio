@@ -6,6 +6,7 @@ type ChangesetResponse = components["schemas"]["ChangesetResponse"];
 type ChangesetCreateRequest = components["schemas"]["ChangesetCreateRequest"];
 type SyncStatusResponse = components["schemas"]["SyncStatusResponse"];
 type SyncResultResponse = components["schemas"]["SyncResultResponse"];
+type ConflictReportResponse = components["schemas"]["ConflictReportResponse"];
 
 interface ChangesParams {
   limit?: number;
@@ -58,6 +59,22 @@ class VersioningService extends BaseService {
 
   async applyChangeset(id: string): Promise<ChangesetResponse> {
     return this.post<ChangesetResponse>(`/api/v1/versioning/changesets/${id}/apply`);
+  }
+
+  async getProposalConflicts(proposalId: string): Promise<ConflictReportResponse> {
+    return this.get<ConflictReportResponse>(
+      `/api/v1/versioning/proposals/${proposalId}/conflicts`,
+    );
+  }
+
+  async resolveConflicts(
+    proposalId: string,
+    resolutions: Record<string, Record<string, unknown>>,
+  ): Promise<ConflictReportResponse> {
+    return this.post<ConflictReportResponse>(
+      `/api/v1/versioning/proposals/${proposalId}/resolve`,
+      { resolutions },
+    );
   }
 }
 

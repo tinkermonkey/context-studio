@@ -4,6 +4,7 @@ import { versioningService } from "@/api/services/versioning";
 import type { components } from "@/api/types";
 
 type ChangesetCreateRequest = components["schemas"]["ChangesetCreateRequest"];
+type ConflictReportResponse = components["schemas"]["ConflictReportResponse"];
 
 interface ChangesParams {
   limit?: number;
@@ -69,6 +70,33 @@ export function useApplyChangeset() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.changesets });
       queryClient.invalidateQueries({ queryKey: ["changes"] });
+    },
+  });
+}
+
+export function useProposalConflicts(proposalId: string | undefined) {
+  return useQuery({
+    queryKey: proposalId ? QUERY_KEYS.proposalConflicts(proposalId) : ["proposals", "conflicts", "disabled"],
+    queryFn: () => {
+      if (!proposalId) throw new Error("Proposal ID is required");
+      return versioningService.getProposalConflicts(proposalId);
+    },
+    enabled: !!proposalId,
+  });
+}
+
+export function useResolveConflicts() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      proposalId,
+      resolutions,
+    }: {
+      proposalId: string;
+      resolutions: Record<string, Record<string, unknown>>;
+    }) => versioningService.resolveConflicts(proposalId, resolutions),
+    onSuccess: (_, { proposalId }) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.proposalConflicts(proposalId) });
     },
   });
 }
