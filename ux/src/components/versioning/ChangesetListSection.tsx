@@ -11,47 +11,44 @@ type ChangesetResponse = components["schemas"]["ChangesetResponse"];
 
 interface ChangesetListSectionProps {
   onApplyError?: (message: string) => void;
+  onConflictDetected?: () => void;
 }
 
 function getStateChip(state: string) {
-  let bgColor = "var(--canvas-bg-2)";
-  let textColor = "var(--canvas-fg-2)";
+  const chipClasses: Record<string, { bg: string; text: string }> = {
+    working: {
+      bg: "var(--accent-blue-bg, #DBEAFE)",
+      text: "var(--accent-blue, #1E40AF)",
+    },
+    staged: {
+      bg: "var(--accent-amber-bg, #FEF3C7)",
+      text: "var(--accent-amber, #92400E)",
+    },
+    proposed: {
+      bg: "var(--accent-indigo-bg, #DDD6FE)",
+      text: "var(--accent-indigo, #4F46E5)",
+    },
+    approved: {
+      bg: "var(--accent-emerald-bg, #D1FAE5)",
+      text: "var(--accent-emerald, #065F46)",
+    },
+    merged: {
+      bg: "var(--accent-teal-bg, #CCFBF1)",
+      text: "var(--accent-teal, #0D9488)",
+    },
+  };
 
-  switch (state) {
-    case "working":
-      bgColor = "#DBEAFE"; // blue-100
-      textColor = "#1E40AF"; // blue-800
-      break;
-    case "staged":
-      bgColor = "#FEF3C7"; // amber-100
-      textColor = "#92400E"; // amber-800
-      break;
-    case "proposed":
-      bgColor = "#DDD6FE"; // indigo-100
-      textColor = "#4F46E5"; // indigo-600
-      break;
-    case "approved":
-      bgColor = "#D1FAE5"; // emerald-100
-      textColor = "#065F46"; // emerald-900
-      break;
-    case "merged":
-      bgColor = "#CCFBF1"; // teal-100
-      textColor = "#0D9488"; // teal-600
-      break;
-  }
+  const colors = chipClasses[state] || {
+    bg: "var(--canvas-bg-2)",
+    text: "var(--canvas-fg-2)",
+  };
 
   return (
     <span
+      className="chip"
       style={{
-        display: "inline-block",
-        padding: "2px 8px",
-        borderRadius: "4px",
-        fontSize: "11px",
-        fontWeight: 600,
-        textTransform: "uppercase",
-        letterSpacing: "0.05em",
-        backgroundColor: bgColor,
-        color: textColor,
+        backgroundColor: colors.bg,
+        color: colors.text,
       }}
     >
       {state}
@@ -59,7 +56,7 @@ function getStateChip(state: string) {
   );
 }
 
-export function ChangesetListSection({ onApplyError }: ChangesetListSectionProps) {
+export function ChangesetListSection({ onApplyError, onConflictDetected }: ChangesetListSectionProps) {
   const { toast } = useToasts();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -78,8 +75,12 @@ export function ChangesetListSection({ onApplyError }: ChangesetListSectionProps
       toast("success", "Changeset applied successfully");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to apply changeset";
+      const isConflict = message.toLowerCase().includes("conflict");
+
+      if (isConflict) {
+        onConflictDetected?.();
+      }
       onApplyError?.(message);
-      toast("error", message);
     }
   };
 
@@ -132,10 +133,13 @@ export function ChangesetListSection({ onApplyError }: ChangesetListSectionProps
       }}
       data-testid="changeset-list"
     >
-      {changesets.map((changeset, index) => (
+      {changesets.map((changeset) => (
         <div key={changeset.id}>
           {/* Changeset row */}
           <div
+            role="button"
+            tabIndex={0}
+            aria-expanded={expandedId === changeset.id}
             style={{
               display: "grid",
               gridTemplateColumns: "1fr 60px 120px 80px",
@@ -147,6 +151,12 @@ export function ChangesetListSection({ onApplyError }: ChangesetListSectionProps
               cursor: "pointer",
             }}
             onClick={() => setExpandedId(expandedId === changeset.id ? null : changeset.id)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setExpandedId(expandedId === changeset.id ? null : changeset.id);
+              }
+            }}
           >
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: "13px", fontWeight: 500, color: "var(--canvas-fg)" }}>
@@ -210,13 +220,13 @@ export function ChangesetListSection({ onApplyError }: ChangesetListSectionProps
                   </div>
                 </div>
 
-                {(changeset.state as string) !== "merged" && (
+                {changeset.state !== "merged" && (
                   <Button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleApply(changeset.id);
                     }}
-                    disabled={(changeset.state as string) === "merged" || applyMutation.isPending}
+                    disabled={applyMutation.isPending}
                     variant="primary"
                     size="sm"
                   >

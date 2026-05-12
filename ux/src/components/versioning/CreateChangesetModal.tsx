@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import type { TextareaHTMLAttributes, InputHTMLAttributes } from "react";
+import type { TextareaHTMLAttributes } from "react";
 
 interface CreateChangesetModalProps {
   open: boolean;
@@ -26,6 +26,14 @@ export function CreateChangesetModal({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [nameError, setNameError] = useState<string | undefined>();
+
+  useEffect(() => {
+    if (!open) {
+      setName("");
+      setDescription("");
+      setNameError(undefined);
+    }
+  }, [open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,7 +96,7 @@ export function CreateChangesetModal({
             disabled={isLoading}
           />
           {nameError && (
-            <span style={{ fontSize: "12px", color: "#ef4444", margin: 0 }}>
+            <span style={{ fontSize: "12px", color: "var(--accent-red, #ef4444)", margin: 0 }}>
               {nameError}
             </span>
           )}

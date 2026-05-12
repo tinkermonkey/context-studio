@@ -29,6 +29,7 @@ export function useCreateChangeset() {
     mutationFn: (data: ChangesetCreateRequest) => versioningService.createChangeset(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.changesets });
+      queryClient.invalidateQueries({ queryKey: ["changes"] });
     },
   });
 }
@@ -66,6 +67,7 @@ export function useApplyChangeset() {
     mutationFn: (id: string) => versioningService.applyChangeset(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.changesets });
+      queryClient.invalidateQueries({ queryKey: ["changes"] });
     },
   });
 }

@@ -1018,6 +1018,9 @@ selectors:
   - selector: pending-change-*
     component: components/versioning/PendingChangesList.tsx
     description: Individual pending change row (pattern matches pending-change-{changeId})
+  - selector: changeset-panel
+    component: components/versioning/ChangesetPanel.tsx
+    description: Main container for the changeset management panel
   - selector: changeset-list
     component: components/versioning/ChangesetListSection.tsx
     description: Container for the changesets list

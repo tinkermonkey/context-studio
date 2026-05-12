@@ -289,6 +289,53 @@ class VersioningService:
         )
         return persisted_proposal
 
+    def apply_changeset(self, changeset_id: str) -> Proposal:
+        """
+        Apply a changeset by staging and submitting it in one action.
+
+        This is a convenience method that transitions a changeset from WORKING
+        to STAGED, then immediately creates and submits a proposal. This combines
+        stage_changeset and submit_proposal into a single operation.
+
+        Args:
+            changeset_id: ID of the changeset to apply
+
+        Returns:
+            The created Proposal entity in OPEN state
+
+        Raises:
+            ChangesetStateError: If the changeset cannot transition
+            VersionNotFoundError: If the changeset does not exist
+        """
+        changeset = self._repo.get_changeset(changeset_id)
+        if changeset is None:
+            raise VersionNotFoundError(f"Changeset {changeset_id} not found")
+
+        now = datetime.now(timezone.utc)
+        changeset.transition_to(ChangeState.STAGED)
+        changeset.updated_at = now
+
+        changeset.transition_to(ChangeState.PROPOSED)
+        changeset.updated_at = now
+
+        proposal = Proposal(
+            id=str(uuid.uuid4()),
+            changeset_id=changeset_id,
+            _state=ProposalState.OPEN,
+            submitted_at=now,
+        )
+
+        updated_changeset, persisted_proposal = (
+            self._repo.update_changeset_and_proposal_on_submit(changeset, proposal)
+        )
+        _logger.info(
+            "Changeset applied (changeset_id=%s, proposal_id=%s, state=%s)",
+            changeset_id,
+            persisted_proposal.id,
+            persisted_proposal.state,
+        )
+        return persisted_proposal
+
     def approve_proposal(self, proposal_id: str) -> Proposal:
         """
         Approve a proposal.

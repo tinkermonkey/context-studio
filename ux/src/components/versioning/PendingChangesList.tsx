@@ -18,11 +18,11 @@ interface PendingChangesListProps {
 function getOperationColor(operation: string): string {
   switch (operation) {
     case "create":
-      return "#22D3EE"; // cyan
+      return "var(--accent-cyan, #22D3EE)";
     case "update":
-      return "#A78BFA"; // violet
+      return "var(--accent-violet, #A78BFA)";
     case "delete":
-      return "#F87171"; // rose
+      return "var(--accent-rose, #F87171)";
     default:
       return "var(--canvas-fg-3)";
   }
@@ -31,14 +31,8 @@ function getOperationColor(operation: string): string {
 function getOperationChip(operation: string) {
   return (
     <span
+      className="chip"
       style={{
-        display: "inline-block",
-        padding: "2px 8px",
-        borderRadius: "4px",
-        fontSize: "11px",
-        fontWeight: 600,
-        textTransform: "uppercase",
-        letterSpacing: "0.05em",
         backgroundColor: getOperationColor(operation),
         color: "white",
       }}
@@ -50,17 +44,7 @@ function getOperationChip(operation: string) {
 
 function getEntityTypeChip(entityType: string) {
   return (
-    <span
-      style={{
-        display: "inline-block",
-        padding: "2px 8px",
-        borderRadius: "4px",
-        fontSize: "11px",
-        fontWeight: 500,
-        backgroundColor: "var(--canvas-bg-2)",
-        color: "var(--canvas-fg-2)",
-      }}
-    >
+    <span className="chip">
       {entityType}
     </span>
   );

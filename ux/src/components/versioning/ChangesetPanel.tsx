@@ -14,9 +14,10 @@ type VersioningChangeEventResponse = components["schemas"]["VersioningChangeEven
 
 interface ChangesetPanelProps {
   onError?: (message: string) => void;
+  onConflictDetected?: () => void;
 }
 
-export function ChangesetPanel({ onError }: ChangesetPanelProps) {
+export function ChangesetPanel({ onError, onConflictDetected }: ChangesetPanelProps) {
   const { toast } = useToasts();
   const [selectedChanges, setSelectedChanges] = useState<Set<string>>(new Set());
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -77,39 +78,44 @@ export function ChangesetPanel({ onError }: ChangesetPanelProps) {
   };
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", minHeight: "calc(100vh - 180px)" }}>
-      {/* Left Column - Pending Changes */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "12px", overflow: "hidden" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h2 style={{ margin: 0, fontSize: "14px", fontWeight: 600 }}>Pending Changes</h2>
-          <Button
-            onClick={handleStageSelected}
-            disabled={selectedChanges.size === 0 || createChangesetMutation.isPending}
-            variant="primary"
-            size="sm"
-          >
-            Stage Selected
-          </Button>
+    <>
+      <div
+        data-testid="changeset-panel"
+        style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", minHeight: "calc(100vh - 180px)" }}
+      >
+        {/* Left Column - Pending Changes */}
+        <div className="col" style={{ gap: "12px", overflow: "hidden" }}>
+          <div className="between">
+            <h2 style={{ margin: 0, fontSize: "14px", fontWeight: 600 }}>Pending Changes</h2>
+            <Button
+              onClick={handleStageSelected}
+              disabled={selectedChanges.size === 0 || createChangesetMutation.isPending}
+              variant="primary"
+              size="sm"
+            >
+              Stage Selected
+            </Button>
+          </div>
+
+          <PendingChangesList
+            changes={changesData?.events || []}
+            selectedIds={selectedChanges}
+            isLoading={changesLoading}
+            error={changesError}
+            onSelectChange={handleSelectChange}
+            onSelectAll={handleSelectAllChanges}
+            onRetry={refetchChanges}
+          />
         </div>
 
-        <PendingChangesList
-          changes={changesData?.events || []}
-          selectedIds={selectedChanges}
-          isLoading={changesLoading}
-          error={changesError}
-          onSelectChange={handleSelectChange}
-          onSelectAll={handleSelectAllChanges}
-          onRetry={refetchChanges}
-        />
-      </div>
+        {/* Right Column - Changesets */}
+        <div className="col" style={{ gap: "12px", overflow: "hidden" }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: "14px", fontWeight: 600 }}>Changesets</h2>
+          </div>
 
-      {/* Right Column - Changesets */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "12px", overflow: "hidden" }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: "14px", fontWeight: 600 }}>Changesets</h2>
+          <ChangesetListSection onApplyError={onError} onConflictDetected={onConflictDetected} />
         </div>
-
-        <ChangesetListSection onApplyError={onError} />
       </div>
 
       {/* Create Changeset Modal */}
@@ -120,6 +126,6 @@ export function ChangesetPanel({ onError }: ChangesetPanelProps) {
         isLoading={createChangesetMutation.isPending}
         selectedCount={selectedChanges.size}
       />
-    </div>
+    </>
   );
 }
