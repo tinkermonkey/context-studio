@@ -146,10 +146,10 @@ describe("Settings Page", () => {
 
       const { container } = render(<SettingsPage />);
 
-      // Wait for skeleton to appear (skeleton elements have special classes/structure)
+      // Wait for skeletons to appear - they have the skeleton-shimmer animation
       await waitFor(() => {
-        const skeletons = container.querySelectorAll('[style*="background"]');
-        expect(skeletons.length).toBeGreaterThan(0);
+        const skeletons = container.querySelectorAll('[style*="skeleton-shimmer"]');
+        expect(skeletons.length).toBe(8);
       });
 
       resolveRequest!();
@@ -167,12 +167,10 @@ describe("Settings Page", () => {
         ),
       );
 
-      const { container } = render(<SettingsPage />);
+      render(<SettingsPage />);
 
       await waitFor(() => {
-        // Error banner should be visible
-        const errorBanner = container.querySelector('[class*="error"], [class*="alert"]');
-        expect(errorBanner).toBeInTheDocument();
+        expect(screen.getByText("Failed to load settings")).toBeInTheDocument();
       });
     });
 
@@ -379,21 +377,16 @@ describe("Settings Page", () => {
         expect(screen.getByText("My Workspace")).toBeInTheDocument();
       });
 
-      // Click on workspace config tile - find it by its content or role
-      const configTiles = screen.getAllByRole("button");
-      const workspaceTile = configTiles.find((button) =>
-        button.textContent?.includes("Workspace"),
-      );
+      // Click on workspace config tile using its testid
+      const editButton = screen.getByTestId("config-tile-workspace-button");
+      expect(editButton).toBeInTheDocument();
+      await userEvent.click(editButton);
 
-      if (workspaceTile) {
-        await userEvent.click(workspaceTile);
-
-        // Modal should open
-        await waitFor(() => {
-          const modal = screen.queryByRole("dialog");
-          expect(modal || screen.getByTestId("edit-config-modal")).toBeInTheDocument();
-        });
-      }
+      // Modal should open
+      await waitFor(() => {
+        const modal = screen.queryByRole("dialog");
+        expect(modal || screen.getByTestId("edit-config-modal")).toBeInTheDocument();
+      });
     });
 
     it("updates workspace display name when form is submitted", async () => {
@@ -442,21 +435,16 @@ describe("Settings Page", () => {
       });
 
       // Click on workspace config tile to open modal
-      const configTiles = screen.getAllByRole("button");
-      const workspaceTile = configTiles.find((button) =>
-        button.textContent?.includes("Workspace"),
-      );
+      const editButton = screen.getByTestId("config-tile-workspace-button");
+      expect(editButton).toBeInTheDocument();
+      await userEvent.click(editButton);
 
-      if (workspaceTile) {
-        await userEvent.click(workspaceTile);
-
-        // In a more complete test, we'd find and fill the form inputs
-        // For now, just verify the modal opens
-        await waitFor(() => {
-          const modal = screen.queryByRole("dialog");
-          expect(modal || screen.getByTestId("edit-config-modal")).toBeInTheDocument();
-        });
-      }
+      // In a more complete test, we'd find and fill the form inputs
+      // For now, just verify the modal opens
+      await waitFor(() => {
+        const modal = screen.queryByRole("dialog");
+        expect(modal || screen.getByTestId("edit-config-modal")).toBeInTheDocument();
+      });
     });
 
     it("displays success toast when config is updated", async () => {
@@ -501,8 +489,16 @@ describe("Settings Page", () => {
         expect(screen.getByText("My Workspace")).toBeInTheDocument();
       });
 
-      // The actual success message would appear after form submission
-      // For this test, we just verify the page renders correctly and is interactive
+      // Click on workspace config tile to open modal
+      const editButton = screen.getByTestId("config-tile-workspace-button");
+      expect(editButton).toBeInTheDocument();
+      await userEvent.click(editButton);
+
+      // Modal should open
+      await waitFor(() => {
+        const modal = screen.queryByRole("dialog");
+        expect(modal || screen.getByTestId("edit-config-modal")).toBeInTheDocument();
+      });
     });
 
     it("handles different LLM providers", async () => {

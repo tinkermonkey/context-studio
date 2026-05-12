@@ -29,7 +29,7 @@ interface WorkflowsPageContentProps {
   onCreateClick: () => void;
 }
 
-function WorkflowsPageContent({
+export function WorkflowsPageContent({
   selectedId,
   onSelectedIdChange,
   onCreateClick,
@@ -209,7 +209,7 @@ function WorkflowsPageContent({
   );
 }
 
-function WorkflowsPageWrapper() {
+export function WorkflowsPageWrapper() {
   const navigate = useNavigate();
   const searchParams = useSearch({ from: "/app/reference/workflows" });
   const selectedId = searchParams.selected;

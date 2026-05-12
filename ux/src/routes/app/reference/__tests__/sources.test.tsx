@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { rest } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
-import { SourcesPage } from "../sources";
+import { SourcesPageWrapper } from "../sources";
 
 const server = setupServer();
 
@@ -27,7 +27,7 @@ describe("Reference Sources Page", () => {
   describe("page structure", () => {
     it("renders sources page root with testid", async () => {
       server.use(
-        rest.get("*/api/v1/reference/status", (req, res, ctx) =>
+        rest.get("*/api/reference/status", (req, res, ctx) =>
           res(
             ctx.json({
               sources: [],
@@ -37,7 +37,7 @@ describe("Reference Sources Page", () => {
         ),
       );
 
-      render(<SourcesPage />);
+      render(<SourcesPageWrapper />);
 
       await waitFor(() => {
         expect(screen.getByTestId("reference-sources-page")).toBeInTheDocument();
@@ -46,7 +46,7 @@ describe("Reference Sources Page", () => {
 
     it("displays page title", async () => {
       server.use(
-        rest.get("*/api/v1/reference/status", (req, res, ctx) =>
+        rest.get("*/api/reference/status", (req, res, ctx) =>
           res(
             ctx.json({
               sources: [],
@@ -56,7 +56,7 @@ describe("Reference Sources Page", () => {
         ),
       );
 
-      render(<SourcesPage />);
+      render(<SourcesPageWrapper />);
 
       await waitFor(() => {
         expect(screen.getByRole("heading")).toBeInTheDocument();
@@ -75,7 +75,7 @@ describe("Reference Sources Page", () => {
       });
 
       server.use(
-        rest.get("*/api/v1/reference/status", async (req, res, ctx) => {
+        rest.get("*/api/reference/status", async (req, res, ctx) => {
           await promise;
           return res(
             ctx.json({
@@ -86,7 +86,7 @@ describe("Reference Sources Page", () => {
         }),
       );
 
-      const { container } = render(<SourcesPage />);
+      const { container } = render(<SourcesPageWrapper />);
 
       // Verify page is rendered even while loading
       expect(screen.getByTestId("reference-sources-page")).toBeInTheDocument();
@@ -101,12 +101,12 @@ describe("Reference Sources Page", () => {
   describe("error state", () => {
     it("handles API errors gracefully", async () => {
       server.use(
-        rest.get("*/api/v1/reference/status", (req, res, ctx) =>
+        rest.get("*/api/reference/status", (req, res, ctx) =>
           res(ctx.status(500), ctx.json({ detail: "Server error" })),
         ),
       );
 
-      const { container } = render(<SourcesPage />);
+      const { container } = render(<SourcesPageWrapper />);
 
       // Page should still be accessible even with error
       expect(screen.getByTestId("reference-sources-page")).toBeInTheDocument();
@@ -119,7 +119,7 @@ describe("Reference Sources Page", () => {
   describe("empty state", () => {
     it("displays message when no sources exist", async () => {
       server.use(
-        rest.get("*/api/v1/reference/status", (req, res, ctx) =>
+        rest.get("*/api/reference/status", (req, res, ctx) =>
           res(
             ctx.json({
               sources: [],
@@ -129,7 +129,7 @@ describe("Reference Sources Page", () => {
         ),
       );
 
-      render(<SourcesPage />);
+      render(<SourcesPageWrapper />);
 
       await waitFor(() => {
         expect(screen.getByTestId("reference-sources-page")).toBeInTheDocument();
@@ -143,7 +143,7 @@ describe("Reference Sources Page", () => {
   describe("populated state", () => {
     it("displays sources list with data", async () => {
       server.use(
-        rest.get("*/api/v1/reference/status", (req, res, ctx) =>
+        rest.get("*/api/reference/status", (req, res, ctx) =>
           res(
             ctx.json({
               sources: [
@@ -160,7 +160,7 @@ describe("Reference Sources Page", () => {
         ),
       );
 
-      render(<SourcesPage />);
+      render(<SourcesPageWrapper />);
 
       await waitFor(() => {
         expect(screen.getByText("ConceptNet")).toBeInTheDocument();
@@ -169,7 +169,7 @@ describe("Reference Sources Page", () => {
 
     it("displays multiple sources in the list", async () => {
       server.use(
-        rest.get("*/api/v1/reference/status", (req, res, ctx) =>
+        rest.get("*/api/reference/status", (req, res, ctx) =>
           res(
             ctx.json({
               sources: [
@@ -192,7 +192,7 @@ describe("Reference Sources Page", () => {
         ),
       );
 
-      render(<SourcesPage />);
+      render(<SourcesPageWrapper />);
 
       await waitFor(() => {
         expect(screen.getByText("ConceptNet")).toBeInTheDocument();
@@ -207,7 +207,7 @@ describe("Reference Sources Page", () => {
   describe("interactive state", () => {
     it("allows filtering sources by search", async () => {
       server.use(
-        rest.get("*/api/v1/reference/status", (req, res, ctx) =>
+        rest.get("*/api/reference/status", (req, res, ctx) =>
           res(
             ctx.json({
               sources: [
@@ -230,7 +230,7 @@ describe("Reference Sources Page", () => {
         ),
       );
 
-      render(<SourcesPage />);
+      render(<SourcesPageWrapper />);
 
       await waitFor(() => {
         expect(screen.getByText("ConceptNet")).toBeInTheDocument();
@@ -247,7 +247,7 @@ describe("Reference Sources Page", () => {
 
     it("allows selecting a source to view details", async () => {
       server.use(
-        rest.get("*/api/v1/reference/status", (req, res, ctx) =>
+        rest.get("*/api/reference/status", (req, res, ctx) =>
           res(
             ctx.json({
               sources: [
@@ -264,7 +264,7 @@ describe("Reference Sources Page", () => {
         ),
       );
 
-      render(<SourcesPage />);
+      render(<SourcesPageWrapper />);
 
       await waitFor(() => {
         expect(screen.getByText("ConceptNet")).toBeInTheDocument();

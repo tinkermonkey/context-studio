@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { rest } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
-import { WorkflowsPage } from "../workflows";
+import { WorkflowsPageWrapper } from "../workflows";
 
 const server = setupServer();
 
@@ -27,10 +27,10 @@ describe("Reference Workflows Page", () => {
   describe("page structure", () => {
     it("renders workflows page root with testid", async () => {
       server.use(
-        rest.get("*/api/v1/reference/workflows", (req, res, ctx) => res(ctx.json([]))),
+        rest.get("*/api/reference/grounding-workflows", (req, res, ctx) => res(ctx.json([]))),
       );
 
-      render(<WorkflowsPage />);
+      render(<WorkflowsPageWrapper />);
 
       await waitFor(() => {
         expect(screen.getByTestId("reference-workflows-page")).toBeInTheDocument();
@@ -39,10 +39,10 @@ describe("Reference Workflows Page", () => {
 
     it("displays page title", async () => {
       server.use(
-        rest.get("*/api/v1/reference/workflows", (req, res, ctx) => res(ctx.json([]))),
+        rest.get("*/api/reference/grounding-workflows", (req, res, ctx) => res(ctx.json([]))),
       );
 
-      render(<WorkflowsPage />);
+      render(<WorkflowsPageWrapper />);
 
       await waitFor(() => {
         expect(screen.getByRole("heading")).toBeInTheDocument();
@@ -51,16 +51,16 @@ describe("Reference Workflows Page", () => {
 
     it("displays create button", async () => {
       server.use(
-        rest.get("*/api/v1/reference/workflows", (req, res, ctx) => res(ctx.json([]))),
+        rest.get("*/api/reference/grounding-workflows", (req, res, ctx) => res(ctx.json([]))),
       );
 
-      render(<WorkflowsPage />);
+      render(<WorkflowsPageWrapper />);
 
       await waitFor(() => {
-        expect(
-          screen.getByTestId("new-workflow-button") ||
-            screen.getByRole("button", { name: /create|new/i }),
-        ).toBeInTheDocument();
+        const createButton =
+          screen.queryByTestId("new-workflow-button") ??
+          screen.getByRole("button", { name: /create|new/i });
+        expect(createButton).toBeInTheDocument();
       });
     });
   });
@@ -76,13 +76,13 @@ describe("Reference Workflows Page", () => {
       });
 
       server.use(
-        rest.get("*/api/v1/reference/workflows", async (req, res, ctx) => {
+        rest.get("*/api/reference/grounding-workflows", async (req, res, ctx) => {
           await promise;
           return res(ctx.json([]));
         }),
       );
 
-      render(<WorkflowsPage />);
+      render(<WorkflowsPageWrapper />);
 
       // Page should still be rendered even while loading
       expect(screen.getByTestId("reference-workflows-page")).toBeInTheDocument();
@@ -97,12 +97,12 @@ describe("Reference Workflows Page", () => {
   describe("error state", () => {
     it("handles API errors gracefully", async () => {
       server.use(
-        rest.get("*/api/v1/reference/workflows", (req, res, ctx) =>
+        rest.get("*/api/reference/grounding-workflows", (req, res, ctx) =>
           res(ctx.status(500), ctx.json({ detail: "Server error" })),
         ),
       );
 
-      render(<WorkflowsPage />);
+      render(<WorkflowsPageWrapper />);
 
       // Page should still be accessible even with error
       expect(screen.getByTestId("reference-workflows-page")).toBeInTheDocument();
@@ -115,10 +115,10 @@ describe("Reference Workflows Page", () => {
   describe("empty state", () => {
     it("displays empty state when no workflows exist", async () => {
       server.use(
-        rest.get("*/api/v1/reference/workflows", (req, res, ctx) => res(ctx.json([]))),
+        rest.get("*/api/reference/grounding-workflows", (req, res, ctx) => res(ctx.json([]))),
       );
 
-      render(<WorkflowsPage />);
+      render(<WorkflowsPageWrapper />);
 
       await waitFor(() => {
         expect(screen.getByTestId("reference-workflows-page")).toBeInTheDocument();
@@ -132,7 +132,7 @@ describe("Reference Workflows Page", () => {
   describe("populated state", () => {
     it("displays workflows list with data", async () => {
       server.use(
-        rest.get("*/api/v1/reference/workflows", (req, res, ctx) =>
+        rest.get("*/api/reference/grounding-workflows", (req, res, ctx) =>
           res(
             ctx.json([
               {
@@ -149,7 +149,7 @@ describe("Reference Workflows Page", () => {
         ),
       );
 
-      render(<WorkflowsPage />);
+      render(<WorkflowsPageWrapper />);
 
       await waitFor(() => {
         expect(screen.getByText("Entity Grounding")).toBeInTheDocument();
@@ -158,7 +158,7 @@ describe("Reference Workflows Page", () => {
 
     it("displays multiple workflows in the list", async () => {
       server.use(
-        rest.get("*/api/v1/reference/workflows", (req, res, ctx) =>
+        rest.get("*/api/reference/grounding-workflows", (req, res, ctx) =>
           res(
             ctx.json([
               {
@@ -184,7 +184,7 @@ describe("Reference Workflows Page", () => {
         ),
       );
 
-      render(<WorkflowsPage />);
+      render(<WorkflowsPageWrapper />);
 
       await waitFor(() => {
         expect(screen.getByText("Entity Grounding")).toBeInTheDocument();
@@ -194,7 +194,7 @@ describe("Reference Workflows Page", () => {
 
     it("displays source and scope information for workflows", async () => {
       server.use(
-        rest.get("*/api/v1/reference/workflows", (req, res, ctx) =>
+        rest.get("*/api/reference/grounding-workflows", (req, res, ctx) =>
           res(
             ctx.json([
               {
@@ -211,7 +211,7 @@ describe("Reference Workflows Page", () => {
         ),
       );
 
-      render(<WorkflowsPage />);
+      render(<WorkflowsPageWrapper />);
 
       await waitFor(() => {
         expect(screen.getByText("ConceptNet")).toBeInTheDocument();
@@ -227,7 +227,7 @@ describe("Reference Workflows Page", () => {
   describe("interactive state", () => {
     it("allows filtering workflows by search", async () => {
       server.use(
-        rest.get("*/api/v1/reference/workflows", (req, res, ctx) =>
+        rest.get("*/api/reference/grounding-workflows", (req, res, ctx) =>
           res(
             ctx.json([
               {
@@ -253,7 +253,7 @@ describe("Reference Workflows Page", () => {
         ),
       );
 
-      render(<WorkflowsPage />);
+      render(<WorkflowsPageWrapper />);
 
       await waitFor(() => {
         expect(screen.getByText("Entity Grounding")).toBeInTheDocument();
@@ -270,7 +270,7 @@ describe("Reference Workflows Page", () => {
 
     it("allows selecting a workflow to view details", async () => {
       server.use(
-        rest.get("*/api/v1/reference/workflows", (req, res, ctx) =>
+        rest.get("*/api/reference/grounding-workflows", (req, res, ctx) =>
           res(
             ctx.json([
               {
@@ -287,7 +287,7 @@ describe("Reference Workflows Page", () => {
         ),
       );
 
-      render(<WorkflowsPage />);
+      render(<WorkflowsPageWrapper />);
 
       await waitFor(() => {
         expect(screen.getByText("Entity Grounding")).toBeInTheDocument();
@@ -302,10 +302,10 @@ describe("Reference Workflows Page", () => {
 
     it("allows creating a new workflow", async () => {
       server.use(
-        rest.get("*/api/v1/reference/workflows", (req, res, ctx) => res(ctx.json([]))),
+        rest.get("*/api/reference/grounding-workflows", (req, res, ctx) => res(ctx.json([]))),
       );
 
-      render(<WorkflowsPage />);
+      render(<WorkflowsPageWrapper />);
 
       await waitFor(() => {
         expect(screen.getByTestId("reference-workflows-page")).toBeInTheDocument();
@@ -315,7 +315,9 @@ describe("Reference Workflows Page", () => {
       await userEvent.click(createButton);
 
       // Modal should open for workflow creation
-      expect(screen.getByTestId("workflow-create-modal")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByRole("dialog")).toBeInTheDocument();
+      });
     });
   });
 });

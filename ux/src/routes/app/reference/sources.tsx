@@ -29,7 +29,7 @@ interface SourcesPageContentProps {
   onSelectedIdChange: (id: string | undefined) => void;
 }
 
-function SourcesPageContent({ selectedId, onSelectedIdChange }: SourcesPageContentProps) {
+export function SourcesPageContent({ selectedId, onSelectedIdChange }: SourcesPageContentProps) {
   const [searchFilter, setSearchFilter] = useState("");
 
   const { data: statusResponse, isLoading, error, refetch } = useReferenceStatus();
@@ -192,7 +192,7 @@ function SourcesPageContent({ selectedId, onSelectedIdChange }: SourcesPageConte
   );
 }
 
-function SourcesPageWrapper() {
+export function SourcesPageWrapper() {
   const navigate = useNavigate();
   const searchParams = useSearch({ from: "/app/reference/sources" });
   const selectedId = searchParams.selected;

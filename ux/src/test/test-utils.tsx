@@ -2,6 +2,8 @@ import { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, RenderOptions } from "@testing-library/react";
 import { ToastProvider } from "@/components/ui/Toast";
+import * as routerModule from "@tanstack/react-router";
+import { vi } from "vitest";
 
 export function createTestQueryClient() {
   return new QueryClient({
@@ -37,6 +39,12 @@ export function renderWithProviders(
   { queryClient, ...renderOptions }: RenderOptions & { queryClient?: QueryClient } = {},
 ) {
   const testQueryClient = queryClient || createTestQueryClient();
+
+  // Mock router hooks for components that use them
+  vi.spyOn(routerModule, 'useNavigate').mockReturnValue(vi.fn());
+  vi.spyOn(routerModule, 'useSearch').mockReturnValue({});
+  vi.spyOn(routerModule, 'useParams').mockReturnValue({});
+
   return render(ui, {
     wrapper: ({ children }) => (
       <AllProviders queryClient={testQueryClient}>{children}</AllProviders>
