@@ -6,7 +6,6 @@ import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
 import {
   createChangeHistory,
-  createChangeset,
   createSyncStatus,
 } from "@/api/services/__tests__/fixtures/versioning.fixtures";
 import { VersioningPage } from "../../versioning";
