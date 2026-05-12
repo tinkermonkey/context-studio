@@ -1,7 +1,7 @@
 # ============================================================================
 # Stage 1: Base Environment Setup
 # ============================================================================
-# Last dependency refresh: 2026-05-11
+# Last dependency refresh: 2026-05-12
 FROM switchyard-orchestrator:latest
 
 # The base image already includes:
@@ -76,8 +76,9 @@ RUN python -m spacy download en_core_web_sm
 # is not readable (e.g., partial bind mounts in orchestrator environments)
 RUN printf '[pytest]\nasyncio_mode = auto\n' > local-server/pytest.ini
 
-# Install Node.js development tools globally (as root)
-RUN npm install -g prettier eslint typescript
+# Install only version-safe tools globally; typescript and eslint come from
+# the project's own node_modules to avoid major-version conflicts (TS 6 vs 5).
+RUN npm install -g prettier
 
 # --- Frontend Dependencies (Node.js) ---
 # Set up workspace ownership so npm ci runs as orchestrator (avoids 60s+ chown)
