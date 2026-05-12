@@ -15,7 +15,7 @@ export const Route = createFileRoute("/app/versioning")({
   }),
 });
 
-function VersioningPage() {
+export function VersioningPage() {
   const { toast } = useToasts();
   const search = useSearch({ from: "/app/versioning" });
   const [activeTab, setActiveTab] = useState("changesets");
@@ -32,7 +32,7 @@ function VersioningPage() {
   ];
 
   return (
-    <div>
+    <div data-testid="versioning-page">
       <div className="page-head">
         <div>
           <h1>{COPY.versioningPageTitle}</h1>
