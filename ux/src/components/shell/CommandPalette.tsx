@@ -76,13 +76,19 @@ export function CommandPalette() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          <kbd className="palette-esc" data-testid="command-palette-esc-button" onClick={closePalette}>
+          <kbd
+            className="palette-esc"
+            data-testid="command-palette-esc-button"
+            onClick={closePalette}
+          >
             esc
           </kbd>
         </div>
         <div className="palette-results" data-testid="command-palette-results">
           {filtered.length === 0 ? (
-            <div className="palette-empty" data-testid="command-palette-empty-state">No results for "{query}"</div>
+            <div className="palette-empty" data-testid="command-palette-empty-state">
+              No results for "{query}"
+            </div>
           ) : (
             filtered.map((action, i) => (
               <button
@@ -90,7 +96,7 @@ export function CommandPalette() {
                 ref={i === activeIndex ? activeItemRef : undefined}
                 data-testid={`command-palette-item-${action.id}`}
                 data-active={i === activeIndex}
-                className={`palette-item${i === activeIndex ? " active" : ""}`}
+                className={`palette-item${i === activeIndex ? "active" : ""}`}
                 type="button"
                 onMouseEnter={() => setActiveIndex(i)}
                 onClick={() => {

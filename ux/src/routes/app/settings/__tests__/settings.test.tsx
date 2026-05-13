@@ -227,5 +227,4 @@ describe("Settings Page", () => {
       });
     });
   });
-
 });

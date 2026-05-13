@@ -597,7 +597,7 @@ async def list_workflow_runs(
     runs = (
         db.query(WorkflowRun)
         .filter(WorkflowRun.workflow_id == workflow_id)
-        .order_by(WorkflowRun.timestamp.desc())
+        .order_by(WorkflowRun.timestamp.desc())  # type: ignore[attr-defined]
         .all()
     )
     return [_run_to_response(r) for r in runs]

@@ -216,4 +216,3 @@ This test plan covers the Command Palette user flow from § 2.5 of the UX specif
 No factories are required for this test plan. The Command Palette is a shell component that does not create, read, update, or delete domain entities. It consumes a list of PaletteAction objects from the Zustand command palette store, which are registered by various parts of the application (e.g., navigation routes).
 
 **Cleanup**: No `clearTestData()` call is needed after Command Palette tests, as the palette does not modify any persisted state.
-
