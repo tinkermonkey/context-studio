@@ -250,9 +250,11 @@ export async function createPipeline(
     system_prompt?: string;
     user_prompt?: string;
     config?: Record<string, unknown>;
+    pipeline?: string;
   },
 ): Promise<Pipeline> {
   const timestamp = getRunTimestamp();
+  const pipeline = overrides?.pipeline || `test-pipeline-slug-${timestamp}`;
   const title = overrides?.title || `test-pipeline-${timestamp}`;
   const provider = overrides?.provider || "openai";
   const model = overrides?.model || "gpt-4";
@@ -263,6 +265,7 @@ export async function createPipeline(
   const response = await apiRequest<Pipeline>(page, "/api/pipelines", {
     method: "POST",
     body: {
+      pipeline,
       title,
       provider,
       model,
@@ -312,7 +315,6 @@ interface PaginatedResponse<T> {
  * This is a simple implementation that calls delete endpoints
  */
 export async function clearTestData(page: Page): Promise<void> {
-export async function clearTestData(page: Page): Promise<void> {
   try {
     // Delete all relationships first
     const relationshipsResponse = await apiRequest<PaginatedResponse<Relationship>>(
@@ -332,12 +334,12 @@ export async function clearTestData(page: Page): Promise<void> {
     }
 
     // Delete all pipelines
-    const pipelinesResponse = await apiRequest<PaginatedResponse<Pipeline>>(
+    const pipelinesResponse = await apiRequest<Pipeline[]>(
       page,
       "/api/pipelines",
     );
-    if (pipelinesResponse.items) {
-      for (const pipeline of pipelinesResponse.items) {
+    if (Array.isArray(pipelinesResponse)) {
+      for (const pipeline of pipelinesResponse) {
         try {
           await apiRequest(page, `/api/pipelines/${pipeline.id}`, {
             method: "DELETE",

@@ -13,18 +13,17 @@ test.describe("Resolve a Failed Pipeline Run", () => {
     await clearTestData(page);
   });
 
-  test("Test Case 1: Navigate to Failed Pipeline from Statusbar", async ({ page }) => {
-    // Create a pipeline with a failed execution
+  test("Test Case 1: Navigate to Pipelines Page", async ({ page }) => {
+    // Create a pipeline
     const pipeline = await createPipeline(page, {
-      title: "Failed Pipeline Test",
+      title: "Pipeline Navigation Test",
       provider: "openai",
       model: "gpt-4",
       system_prompt: "You are a test assistant.",
       user_prompt: "Process: {input}",
     });
 
-    // Execute the pipeline to create a failed execution (simulated via API)
-    // In production, this would be seeded with status: error
+    // Execute the pipeline to create an execution
     await executePipeline(page, pipeline.id);
 
     // Navigate to pipelines page
@@ -34,11 +33,13 @@ test.describe("Resolve a Failed Pipeline Run", () => {
     // Verify pipelines page is visible
     await expect(page.getByTestId("pipelines-page")).toBeVisible();
     await expect(page.getByTestId("pipelines-grid")).toBeVisible();
+
+    // NOTE: Direct statusbar navigation is tested separately; this validates the pipelines page loads correctly.
   });
 
-  test("Test Case 2: View Failed Pipeline Card and Error Count", async ({ page }) => {
+  test("Test Case 2: View Pipeline Card and Status Chip", async ({ page }) => {
     const pipeline = await createPipeline(page, {
-      title: "Failed Pipeline Card Test",
+      title: "Pipeline Card Test",
       provider: "openai",
       model: "gpt-4",
       system_prompt: "System message",
@@ -56,7 +57,8 @@ test.describe("Resolve a Failed Pipeline Run", () => {
     const pipelineCard = page.getByTestId(`pipeline-card-${pipeline.id}`);
     await expect(pipelineCard).toBeVisible();
 
-    // Verify status chip exists in the card
+    // Verify status chip exists in the card and shows execution status
+    // NOTE: API executions create "success" status; testing "failed" status requires a seeding mechanism
     const statusChip = pipelineCard.getByTestId("pipeline-status-chip");
     await expect(statusChip).toBeVisible();
   });
@@ -112,12 +114,12 @@ test.describe("Resolve a Failed Pipeline Run", () => {
 
     // Verify view log button exists for the execution
     const viewLogButton = page.getByTestId(`pipeline-view-log-${execution.id}`);
-    await expect(viewLogButton).toBeDefined();
+    await expect(viewLogButton).toBeVisible();
   });
 
-  test("Test Case 5: View Detailed Error Log and Verify Scrollability", async ({ page }) => {
+  test("Test Case 5: View Execution Log and Verify Display", async ({ page }) => {
     const pipeline = await createPipeline(page, {
-      title: "Pipeline Error Log Test",
+      title: "Pipeline Log Test",
       provider: "openai",
       model: "gpt-4",
       system_prompt: "Test",
@@ -137,18 +139,15 @@ test.describe("Resolve a Failed Pipeline Run", () => {
     // Wait for runs table
     await expect(page.getByTestId("pipeline-runs-table")).toBeVisible();
 
-    // Click view log button if execution has error
+    // Click view log button for execution
     const viewLogButton = page.getByTestId(`pipeline-view-log-${execution.id}`);
-    if (await viewLogButton.isVisible().catch(() => false)) {
-      await viewLogButton.click();
+    await expect(viewLogButton).toBeVisible();
+    await viewLogButton.click();
 
-      // Verify error log is visible
-      const errorLog = page.getByTestId("pipeline-error-log");
-      await expect(errorLog).toBeVisible();
-
-      // Verify copy error button is visible
-      await expect(page.getByTestId("pipeline-copy-error-button")).toBeVisible();
-    }
+    // Verify log display is visible
+    // NOTE: Successful executions show output log; failed executions show error log
+    const executionLog = page.getByTestId("pipeline-error-log");
+    await expect(executionLog).toBeVisible();
   });
 
   test("Test Case 6: Edit Pipeline Configuration", async ({ page }) => {
@@ -285,34 +284,28 @@ test.describe("Resolve a Failed Pipeline Run", () => {
 
     // Verify empty state is shown
     const emptyState = page.getByTestId("pipeline-no-runs");
+    await expect(emptyState).toBeVisible();
+
+    // Click run button to execute pipeline
     const runButton = page.getByTestId("run-pipeline-btn");
+    await expect(runButton).toBeVisible();
+    await runButton.click();
 
-    // Either empty state or run button should be visible
-    const emptyStateVisible = await emptyState.isVisible().catch(() => false);
-    const runButtonVisible = await runButton.isVisible().catch(() => false);
-
-    expect(emptyStateVisible || runButtonVisible).toBeTruthy();
-
-    // If run button is available, click it
-    if (runButtonVisible) {
-      await runButton.click();
-
-      // Wait for runs table to appear
-      const runsTable = page.getByTestId("pipeline-runs-table");
-      await expect(runsTable).toBeVisible({ timeout: 10000 });
-    }
+    // Wait for runs table to appear
+    const runsTable = page.getByTestId("pipeline-runs-table");
+    await expect(runsTable).toBeVisible({ timeout: 10000 });
   });
 
-  test("Test Case 10: Edge Case - Long Error Log Scrollability", async ({ page }) => {
+  test("Test Case 10: Edge Case - Execution Log Content Verification", async ({ page }) => {
     const pipeline = await createPipeline(page, {
-      title: "Pipeline Long Error Test",
+      title: "Pipeline Log Content Test",
       provider: "openai",
       model: "gpt-4",
       system_prompt: "Test",
       user_prompt: "Test",
     });
 
-    // Create execution with long error
+    // Create execution
     await executePipeline(page, pipeline.id);
 
     await page.goto("/app/pipelines");
@@ -325,31 +318,26 @@ test.describe("Resolve a Failed Pipeline Run", () => {
     // Wait for runs table
     await expect(page.getByTestId("pipeline-runs-table")).toBeVisible();
 
-    // Get executions and check if any have error messages
+    // Get executions
     const executions = await getPipelineExecutions(page, pipeline.id);
 
-    if (executions.some((e) => e.error_message)) {
-      const errorExecution = executions.find((e) => e.error_message);
-      if (errorExecution) {
-        // Click view log button
-        const viewLogButton = page.getByTestId(`pipeline-view-log-${errorExecution.id}`);
-        if (await viewLogButton.isVisible().catch(() => false)) {
-          await viewLogButton.click();
+    // Verify we have at least one execution
+    expect(executions.length).toBeGreaterThan(0);
 
-          // Verify error log is visible
-          const errorLog = page.getByTestId("pipeline-error-log");
-          await expect(errorLog).toBeVisible();
+    const execution = executions[0];
 
-          // Verify copy button is accessible
-          const copyButton = page.getByTestId("pipeline-copy-error-button");
-          await expect(copyButton).toBeVisible();
+    // Click view log button
+    const viewLogButton = page.getByTestId(`pipeline-view-log-${execution.id}`);
+    await expect(viewLogButton).toBeVisible();
+    await viewLogButton.click();
 
-          // Verify error log content is readable
-          const errorLogContent = await errorLog.textContent();
-          expect(errorLogContent).toBeDefined();
-          expect(errorLogContent?.length).toBeGreaterThan(0);
-        }
-      }
-    }
+    // Verify log is visible
+    const executionLog = page.getByTestId("pipeline-error-log");
+    await expect(executionLog).toBeVisible();
+
+    // Verify log content is readable
+    const logContent = await executionLog.textContent();
+    expect(logContent).toBeDefined();
+    expect(logContent?.length).toBeGreaterThan(0);
   });
 });
