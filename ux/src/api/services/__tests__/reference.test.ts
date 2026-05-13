@@ -10,6 +10,10 @@ import { referenceService } from "../reference";
 import {
   createReferenceSearchResponse,
   createReferenceStatusResponse,
+  createGroundingWorkflow,
+  createGroundingWorkflowCreate,
+  createGroundingWorkflowUpdate,
+  createWorkflowRun,
 } from "./fixtures/reference.fixtures";
 
 const server = setupServer();
@@ -230,6 +234,260 @@ describe("ReferenceService", () => {
       await expect(referenceService.getStatus()).rejects.toMatchObject({
         name: "ApiError",
         status: 503,
+      });
+    });
+  });
+
+  describe("listGroundingWorkflows", () => {
+    it("returns list of grounding workflows from GET /api/reference/grounding-workflows", async () => {
+      const mockWorkflows = [
+        createGroundingWorkflow({ id: "wf-1", title: "Workflow 1" }),
+        createGroundingWorkflow({ id: "wf-2", title: "Workflow 2" }),
+      ];
+
+      server.use(
+        rest.get("*/api/reference/grounding-workflows", (req, res, ctx) =>
+          res(ctx.json(mockWorkflows)),
+        ),
+      );
+
+      const result = await referenceService.listGroundingWorkflows();
+
+      expect(result).toHaveLength(2);
+      expect(result[0].title).toBe("Workflow 1");
+    });
+
+    it("throws ApiError on 500 from listGroundingWorkflows", async () => {
+      server.use(
+        rest.get("*/api/reference/grounding-workflows", (req, res, ctx) =>
+          res(
+            ctx.status(500),
+            ctx.json({
+              detail: "Internal server error",
+            }),
+          ),
+        ),
+      );
+
+      await expect(referenceService.listGroundingWorkflows()).rejects.toMatchObject({
+        name: "ApiError",
+        status: 500,
+      });
+    });
+  });
+
+  describe("getGroundingWorkflow", () => {
+    it("returns workflow by ID from GET /api/reference/grounding-workflows/:id", async () => {
+      const mockWorkflow = createGroundingWorkflow({ id: "wf-123" });
+
+      server.use(
+        rest.get("*/api/reference/grounding-workflows/wf-123", (req, res, ctx) =>
+          res(ctx.json(mockWorkflow)),
+        ),
+      );
+
+      const result = await referenceService.getGroundingWorkflow("wf-123");
+
+      expect(result).toEqual(mockWorkflow);
+      expect(result.id).toBe("wf-123");
+    });
+
+    it("throws ApiError with 404 on getGroundingWorkflow with non-existent ID", async () => {
+      server.use(
+        rest.get("*/api/reference/grounding-workflows/not-found", (req, res, ctx) =>
+          res(
+            ctx.status(404),
+            ctx.json({
+              detail: "Workflow not found",
+            }),
+          ),
+        ),
+      );
+
+      await expect(referenceService.getGroundingWorkflow("not-found")).rejects.toMatchObject({
+        name: "ApiError",
+        status: 404,
+      });
+    });
+  });
+
+  describe("createGroundingWorkflow", () => {
+    it("creates workflow from POST /api/reference/grounding-workflows", async () => {
+      const createRequest = createGroundingWorkflowCreate();
+      const mockResponse = createGroundingWorkflow({ id: "wf-999" });
+
+      server.use(
+        rest.post("*/api/reference/grounding-workflows", (req, res, ctx) =>
+          res(ctx.json(mockResponse)),
+        ),
+      );
+
+      const result = await referenceService.createGroundingWorkflow(createRequest);
+
+      expect(result.id).toBe("wf-999");
+      expect(result.source).toBe("dbpedia");
+    });
+
+    it("throws ApiError with 400 on createGroundingWorkflow with invalid data", async () => {
+      const createRequest = createGroundingWorkflowCreate({ title: "" });
+
+      server.use(
+        rest.post("*/api/reference/grounding-workflows", (req, res, ctx) =>
+          res(
+            ctx.status(400),
+            ctx.json({
+              detail: "Title is required",
+            }),
+          ),
+        ),
+      );
+
+      await expect(referenceService.createGroundingWorkflow(createRequest)).rejects.toMatchObject({
+        name: "ApiError",
+        status: 400,
+      });
+    });
+  });
+
+  describe("updateGroundingWorkflow", () => {
+    it("updates workflow from PUT /api/reference/grounding-workflows/:id", async () => {
+      const updateRequest = createGroundingWorkflowUpdate({ title: "Updated Workflow" });
+      const mockResponse = createGroundingWorkflow({
+        id: "wf-123",
+        title: "Updated Workflow",
+      });
+
+      server.use(
+        rest.put("*/api/reference/grounding-workflows/wf-123", (req, res, ctx) =>
+          res(ctx.json(mockResponse)),
+        ),
+      );
+
+      const result = await referenceService.updateGroundingWorkflow("wf-123", updateRequest);
+
+      expect(result.title).toBe("Updated Workflow");
+    });
+
+    it("throws ApiError with 404 on updateGroundingWorkflow with non-existent ID", async () => {
+      const updateRequest = createGroundingWorkflowUpdate();
+
+      server.use(
+        rest.put("*/api/reference/grounding-workflows/not-found", (req, res, ctx) =>
+          res(
+            ctx.status(404),
+            ctx.json({
+              detail: "Workflow not found",
+            }),
+          ),
+        ),
+      );
+
+      await expect(referenceService.updateGroundingWorkflow("not-found", updateRequest)).rejects.toMatchObject({
+        name: "ApiError",
+        status: 404,
+      });
+    });
+  });
+
+  describe("deleteGroundingWorkflow", () => {
+    it("deletes workflow via DELETE /api/reference/grounding-workflows/:id", async () => {
+      server.use(
+        rest.delete("*/api/reference/grounding-workflows/wf-123", (req, res, ctx) =>
+          res(ctx.status(204)),
+        ),
+      );
+
+      await expect(referenceService.deleteGroundingWorkflow("wf-123")).resolves.toBeDefined();
+    });
+
+    it("throws ApiError with 404 on deleteGroundingWorkflow with non-existent ID", async () => {
+      server.use(
+        rest.delete("*/api/reference/grounding-workflows/not-found", (req, res, ctx) =>
+          res(
+            ctx.status(404),
+            ctx.json({
+              detail: "Workflow not found",
+            }),
+          ),
+        ),
+      );
+
+      await expect(referenceService.deleteGroundingWorkflow("not-found")).rejects.toMatchObject({
+        name: "ApiError",
+        status: 404,
+      });
+    });
+  });
+
+  describe("runGroundingWorkflow", () => {
+    it("runs workflow from POST /api/reference/grounding-workflows/:id/run", async () => {
+      const mockRun = createWorkflowRun({ workflow_id: "wf-123", status: "success" });
+
+      server.use(
+        rest.post("*/api/reference/grounding-workflows/wf-123/run", (req, res, ctx) =>
+          res(ctx.json(mockRun)),
+        ),
+      );
+
+      const result = await referenceService.runGroundingWorkflow("wf-123");
+
+      expect(result.status).toBe("success");
+      expect(result.workflow_id).toBe("wf-123");
+    });
+
+    it("throws ApiError with 400 on runGroundingWorkflow when workflow is inactive", async () => {
+      server.use(
+        rest.post("*/api/reference/grounding-workflows/wf-123/run", (req, res, ctx) =>
+          res(
+            ctx.status(400),
+            ctx.json({
+              detail: "Cannot run inactive workflow",
+            }),
+          ),
+        ),
+      );
+
+      await expect(referenceService.runGroundingWorkflow("wf-123")).rejects.toMatchObject({
+        name: "ApiError",
+        status: 400,
+      });
+    });
+  });
+
+  describe("getGroundingWorkflowRuns", () => {
+    it("returns workflow runs from GET /api/reference/grounding-workflows/:id/runs", async () => {
+      const mockRuns = [
+        createWorkflowRun({ id: "run-1", workflow_id: "wf-123" }),
+        createWorkflowRun({ id: "run-2", workflow_id: "wf-123" }),
+      ];
+
+      server.use(
+        rest.get("*/api/reference/grounding-workflows/wf-123/runs", (req, res, ctx) =>
+          res(ctx.json(mockRuns)),
+        ),
+      );
+
+      const result = await referenceService.getGroundingWorkflowRuns("wf-123");
+
+      expect(result).toHaveLength(2);
+      expect(result[0].workflow_id).toBe("wf-123");
+    });
+
+    it("throws ApiError with 404 on getGroundingWorkflowRuns with non-existent workflow", async () => {
+      server.use(
+        rest.get("*/api/reference/grounding-workflows/not-found/runs", (req, res, ctx) =>
+          res(
+            ctx.status(404),
+            ctx.json({
+              detail: "Workflow not found",
+            }),
+          ),
+        ),
+      );
+
+      await expect(referenceService.getGroundingWorkflowRuns("not-found")).rejects.toMatchObject({
+        name: "ApiError",
+        status: 404,
       });
     });
   });

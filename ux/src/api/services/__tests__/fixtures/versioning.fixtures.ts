@@ -68,3 +68,34 @@ export function createSyncResult(
     ...overrides,
   };
 }
+
+export function createProposal(
+  overrides?: Partial<components["schemas"]["ProposalResponse"]>,
+): components["schemas"]["ProposalResponse"] {
+  return {
+    id: "proposal-1",
+    changeset_id: "changeset-1",
+    state: "open",
+    submitted_at: new Date().toISOString(),
+    ...overrides,
+  };
+}
+
+export function createConflictReport(
+  overrides?: Partial<components["schemas"]["ConflictReportResponse"]>,
+): components["schemas"]["ConflictReportResponse"] {
+  return {
+    proposal_id: "proposal-1",
+    conflicts: [
+      {
+        entity_id: "entity-1",
+        field_name: "title",
+        base_value: "Base Title",
+        incoming_value: "Different Title",
+        is_resolved: false,
+      },
+    ],
+    has_conflicts: true,
+    ...overrides,
+  };
+}

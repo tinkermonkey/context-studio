@@ -66,3 +66,18 @@ export function createSPARQLResponse(
     ...overrides,
   };
 }
+
+export function createSubgraphData(
+  overrides?: Partial<components["schemas"]["SubgraphDataResponse"]>,
+): components["schemas"]["SubgraphDataResponse"] {
+  return {
+    nodes: ["node-1", "node-2", "node-3"],
+    edges: [
+      ["node-1", "node-2"],
+      ["node-2", "node-3"],
+    ],
+    node_count: 3,
+    edge_count: 2,
+    ...overrides,
+  };
+}

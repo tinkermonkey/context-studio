@@ -248,3 +248,43 @@ export function createRelationshipCreateRequest(
     ...overrides,
   };
 }
+
+// ============================================================================
+// PublishDiffStats Fixture
+// ============================================================================
+
+export function createPublishDiffStats(
+  overrides?: Partial<components["schemas"]["PublishDiffStats"]>,
+): components["schemas"]["PublishDiffStats"] {
+  return {
+    added: 5,
+    modified: 3,
+    removed: 1,
+    ...overrides,
+  };
+}
+
+// ============================================================================
+// DataPropertyValueResponse Fixture
+// ============================================================================
+
+export function createDataPropertyValue(
+  overrides?: Partial<components["schemas"]["DataPropertyValueResponse"]>,
+): components["schemas"]["DataPropertyValueResponse"] {
+  return {
+    property_identifier: "test_property",
+    value: "test_value",
+    ...overrides,
+  };
+}
+
+export function createListDataPropertyValues(
+  items?: components["schemas"]["DataPropertyValueResponse"][],
+): components["schemas"]["ListResponse_DataPropertyValueResponse_"] {
+  return {
+    items: items || [createDataPropertyValue()],
+    total: items?.length ?? 1,
+    limit: 10,
+    offset: 0,
+  };
+}

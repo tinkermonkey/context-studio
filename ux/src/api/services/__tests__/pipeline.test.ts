@@ -12,6 +12,8 @@ import {
   createPipelineConfigurationCreate,
   createPipelineConfigurationUpdate,
   createExecution,
+  createListExecutionsWithPipeline,
+  createExecutionWithPipeline,
 } from "./fixtures/pipeline.fixtures";
 
 const server = setupServer();
@@ -240,6 +242,86 @@ describe("PipelineService", () => {
       await expect(pipelineService.getPipelineExecutions("not-found")).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
+      });
+    });
+  });
+
+  describe("getAllPipelineExecutions", () => {
+    it("returns all pipeline executions from GET /api/pipelines/executions", async () => {
+      const mockExecutions = createListExecutionsWithPipeline([
+        createExecutionWithPipeline({ id: "e1" }),
+        createExecutionWithPipeline({ id: "e2" }),
+      ]);
+
+      server.use(
+        rest.get("*/api/pipelines/executions", (req, res, ctx) => res(ctx.json(mockExecutions))),
+      );
+
+      const result = await pipelineService.getAllPipelineExecutions();
+
+      expect(result.items).toHaveLength(2);
+      expect(result.items[0].id).toBe("e1");
+    });
+
+    it("filters executions by status parameter", async () => {
+      const mockExecutions = createListExecutionsWithPipeline([
+        createExecutionWithPipeline({ id: "e1", status: "success" }),
+      ]);
+
+      server.use(
+        rest.get("*/api/pipelines/executions", (req, res, ctx) => {
+          const url = new URL(req.url);
+          const status = url.searchParams.get("status_filter");
+          if (status === "success") {
+            return res(ctx.json(mockExecutions));
+          }
+          return res(ctx.json(createListExecutionsWithPipeline([])));
+        }),
+      );
+
+      const result = await pipelineService.getAllPipelineExecutions("success");
+
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].status).toBe("success");
+    });
+
+    it("supports limit and offset pagination", async () => {
+      const mockExecutions = createListExecutionsWithPipeline([
+        createExecutionWithPipeline({ id: "e1" }),
+      ]);
+
+      server.use(
+        rest.get("*/api/pipelines/executions", (req, res, ctx) => {
+          const url = new URL(req.url);
+          const limit = url.searchParams.get("limit");
+          const offset = url.searchParams.get("offset");
+          if (limit === "5" && offset === "10") {
+            return res(ctx.json(mockExecutions));
+          }
+          return res(ctx.json(createListExecutionsWithPipeline([])));
+        }),
+      );
+
+      const result = await pipelineService.getAllPipelineExecutions(undefined, 5, 10);
+
+      expect(result.items).toHaveLength(1);
+    });
+
+    it("throws ApiError on 500 from getAllPipelineExecutions", async () => {
+      server.use(
+        rest.get("*/api/pipelines/executions", (req, res, ctx) =>
+          res(
+            ctx.status(500),
+            ctx.json({
+              detail: "Internal server error",
+            }),
+          ),
+        ),
+      );
+
+      await expect(pipelineService.getAllPipelineExecutions()).rejects.toMatchObject({
+        name: "ApiError",
+        status: 500,
       });
     });
   });

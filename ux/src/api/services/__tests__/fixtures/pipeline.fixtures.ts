@@ -78,3 +78,33 @@ export function createPipelineExecuteRequest(
     ...overrides,
   };
 }
+
+export function createExecutionWithPipeline(
+  overrides?: Partial<components["schemas"]["ExecutionWithPipelineResponse"]>,
+): components["schemas"]["ExecutionWithPipelineResponse"] {
+  return {
+    id: "exec-1",
+    pipeline_config_id: "pipeline-1",
+    pipeline_title: "Text Analysis Pipeline",
+    output_text: "Execution result",
+    provider: "openai",
+    model: "gpt-3.5-turbo",
+    tokens_in: 100,
+    tokens_out: 50,
+    duration_ms: 1500,
+    status: "success",
+    timestamp: new Date().toISOString(),
+    ...overrides,
+  };
+}
+
+export function createListExecutionsWithPipeline(
+  items?: components["schemas"]["ExecutionWithPipelineResponse"][],
+): components["schemas"]["ListResponse_ExecutionWithPipelineResponse_"] {
+  return {
+    items: items || [createExecutionWithPipeline()],
+    total: items?.length ?? 1,
+    limit: 10,
+    offset: 0,
+  };
+}
