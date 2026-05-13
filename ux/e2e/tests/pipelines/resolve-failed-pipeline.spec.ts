@@ -4,8 +4,6 @@ import {
   executePipeline,
   getPipelineExecutions,
   clearTestData,
-  type Pipeline,
-  type Execution,
 } from "../../fixtures/test-helpers";
 
 test.describe("Resolve a Failed Pipeline Run", () => {
