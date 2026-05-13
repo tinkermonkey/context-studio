@@ -98,7 +98,7 @@ test.describe("Class CRUD Operations", () => {
 
     // Step 9: Verify no parent class field (or shows "—")
     const drawerContainer = page.getByTestId("class-drawer");
-    const parentDisplay = drawerContainer.locator("text=—");
+    const _parentDisplay = drawerContainer.locator("text=—");
     // Parent might not be visible if there's no parent, which is expected
   });
 
@@ -264,13 +264,13 @@ test.describe("Class CRUD Operations", () => {
     });
 
     // Create two individuals linked to this class
-    const individual1 = await createIndividual(page, {
+    const _individual1 = await createIndividual(page, {
       title: "Test Individual 1",
       description: "First instance",
       class_ids: [testClass.id],
     });
 
-    const individual2 = await createIndividual(page, {
+    const _individual2 = await createIndividual(page, {
       title: "Test Individual 2",
       description: "Second instance",
       class_ids: [testClass.id],

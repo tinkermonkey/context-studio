@@ -9,7 +9,7 @@ import { apiRequest } from "./api-client";
  */
 
 let entityCounter = 0;
-let testRunId = Date.now();
+const testRunId = Date.now();
 
 const getRunTimestamp = (): string => {
   entityCounter++;
@@ -328,7 +328,7 @@ export async function clearTestData(page: Page): Promise<void> {
 
     // Add a small delay to ensure database operations complete
     await page.waitForLoadState("networkidle");
-  } catch (_e) {
+  } catch {
     // Ignore errors during cleanup - tests may not have created data
     // but we still want cleanup to succeed
   }

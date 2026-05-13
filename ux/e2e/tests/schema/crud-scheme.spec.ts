@@ -12,7 +12,7 @@ test.describe("Concept Scheme CRUD Operations", () => {
 
   test("Test Case 1: Create a Concept Scheme via Modal", async ({ page }) => {
     // Setup: Create parent taxonomy
-    const taxonomy = await createTaxonomy(page, {
+    const _taxonomy = await createTaxonomy(page, {
       title: "Test Taxonomy for Scheme CRUD",
       description: "Parent taxonomy for concept scheme tests",
     });
@@ -230,7 +230,7 @@ test.describe("Concept Scheme CRUD Operations", () => {
     const deleteButton = drawer.locator('[data-testid="drawer-delete-button"]');
     await deleteButton.click();
 
-    const confirmDialog = page.getByTestId("scheme-delete-confirm");
+    const _confirmDialog = page.getByTestId("scheme-delete-confirm");
     const confirmButton = page.getByTestId("confirm-dialog-confirm");
     await confirmButton.click();
 

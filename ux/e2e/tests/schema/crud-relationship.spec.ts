@@ -16,9 +16,9 @@ test.describe("Relationship CRUD Operations", () => {
     // Setup: Create test entities
     const taxonomy = await createTaxonomy(page, { title: "Relationship Test Taxonomy" });
     const scheme = await createConceptScheme(page, taxonomy.id, { title: "Test Scheme" });
-    const sourceClass = await createClass(page, scheme.id, { title: "Source Class" });
-    const targetClass = await createClass(page, scheme.id, { title: "Target Class" });
-    const property = await createPropertyDefinition(page, {
+    const _sourceClass = await createClass(page, scheme.id, { title: "Source Class" });
+    const _targetClass = await createClass(page, scheme.id, { title: "Target Class" });
+    const _property = await createPropertyDefinition(page, {
       identifier: "related_to",
       title: "Related To",
     });
@@ -53,7 +53,7 @@ test.describe("Relationship CRUD Operations", () => {
     // Verify error elements are visible (they should appear when validation fails)
     // We check visibility instead of text to avoid hardcoding error messages
     const errorElements = form.locator("[role='alert'], .error, [class*='error']");
-    const errorCount = await errorElements.count();
+    const _errorCount = await errorElements.count();
 
     // At minimum, we should see some error indication
     // If no visible error elements, the form should still be visible (not submitted)
@@ -95,9 +95,9 @@ test.describe("Relationship CRUD Operations", () => {
     // Setup: Create test entities
     const taxonomy = await createTaxonomy(page, { title: "Relationship Test Taxonomy" });
     const scheme = await createConceptScheme(page, taxonomy.id, { title: "Test Scheme" });
-    const sourceClass = await createClass(page, scheme.id, { title: "Source Class" });
-    const targetClass = await createClass(page, scheme.id, { title: "Target Class" });
-    const property = await createPropertyDefinition(page, {
+    const _sourceClass = await createClass(page, scheme.id, { title: "Source Class" });
+    const _targetClass = await createClass(page, scheme.id, { title: "Target Class" });
+    const _property = await createPropertyDefinition(page, {
       identifier: "related_to",
       title: "Related To",
     });
@@ -186,7 +186,7 @@ test.describe("Relationship CRUD Operations", () => {
 
     // Verify created timestamp is displayed (as read-only text)
     const timestampElements = drawer.locator("time, [aria-label*='created'], [class*='timestamp']");
-    const timestampCount = await timestampElements.count();
+    const _timestampCount = await timestampElements.count();
     // At minimum, we should see some timestamp indication in the drawer
     await expect(drawer).toBeVisible();
   });
@@ -195,9 +195,9 @@ test.describe("Relationship CRUD Operations", () => {
     // Setup: Create test entities and relationship
     const taxonomy = await createTaxonomy(page, { title: "Relationship Test Taxonomy" });
     const scheme = await createConceptScheme(page, taxonomy.id, { title: "Test Scheme" });
-    const sourceClass = await createClass(page, scheme.id, { title: "Source Class" });
-    const targetClass = await createClass(page, scheme.id, { title: "Target Class" });
-    const property = await createPropertyDefinition(page, {
+    const _sourceClass = await createClass(page, scheme.id, { title: "Source Class" });
+    const _targetClass = await createClass(page, scheme.id, { title: "Target Class" });
+    const _property = await createPropertyDefinition(page, {
       identifier: "related_to",
       title: "Related To",
     });
@@ -278,9 +278,9 @@ test.describe("Relationship CRUD Operations", () => {
     // Setup: Create test entities and relationship
     const taxonomy = await createTaxonomy(page, { title: "Relationship Test Taxonomy" });
     const scheme = await createConceptScheme(page, taxonomy.id, { title: "Test Scheme" });
-    const sourceClass = await createClass(page, scheme.id, { title: "Source Class" });
-    const targetClass = await createClass(page, scheme.id, { title: "Target Class" });
-    const property = await createPropertyDefinition(page, {
+    const _sourceClass = await createClass(page, scheme.id, { title: "Source Class" });
+    const _targetClass = await createClass(page, scheme.id, { title: "Target Class" });
+    const _property = await createPropertyDefinition(page, {
       identifier: "related_to",
       title: "Related To",
     });
@@ -370,9 +370,9 @@ test.describe("Relationship CRUD Operations", () => {
     // Setup: Create test entities and relationship
     const taxonomy = await createTaxonomy(page, { title: "Relationship Test Taxonomy" });
     const scheme = await createConceptScheme(page, taxonomy.id, { title: "Test Scheme" });
-    const sourceClass = await createClass(page, scheme.id, { title: "Source Class" });
-    const targetClass = await createClass(page, scheme.id, { title: "Target Class" });
-    const property = await createPropertyDefinition(page, {
+    const _sourceClass = await createClass(page, scheme.id, { title: "Source Class" });
+    const _targetClass = await createClass(page, scheme.id, { title: "Target Class" });
+    const _property = await createPropertyDefinition(page, {
       identifier: "related_to",
       title: "Related To",
     });
@@ -422,7 +422,7 @@ test.describe("Relationship CRUD Operations", () => {
     await deleteButton.click();
     await page.waitForLoadState("networkidle");
 
-    const confirmDialog = page.getByTestId("relationship-delete-confirm");
+    const _confirmDialog = page.getByTestId("relationship-delete-confirm");
     const confirmButton = page.getByTestId("confirm-dialog-confirm");
     await confirmButton.click();
     await page.waitForLoadState("networkidle");
