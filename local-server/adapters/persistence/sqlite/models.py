@@ -16,7 +16,7 @@ Design Notes:
 """
 
 from datetime import datetime, timezone
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, Optional
 
 from sqlalchemy import (
     Column,
@@ -940,39 +940,50 @@ class GroundingWorkflow(Base):  # type: ignore[valid-type,misc]
 
     __tablename__ = "grounding_workflows"
 
-    id = Column(String(36), primary_key=True, nullable=False)
-    title = Column(String(255), nullable=False, index=True)
-    description = Column(Text, nullable=True)
-    source = Column(String(255), nullable=False)
-    class_scope = Column(
+    id: str
+    title: str
+    description: Optional[str]
+    source: str
+    class_scope: list[str]
+    status: str
+    last_run: Optional[datetime]
+    last_run_record_count: Optional[int]
+    created_at: datetime
+    updated_at: datetime
+
+    id = Column(String(36), primary_key=True, nullable=False)  # type: ignore[assignment]
+    title = Column(String(255), nullable=False, index=True)  # type: ignore[assignment]
+    description = Column(Text, nullable=True)  # type: ignore[assignment]
+    source = Column(String(255), nullable=False)  # type: ignore[assignment]
+    class_scope = Column(  # type: ignore[assignment]
         JSON,
         nullable=False,
         default=list,
         doc="JSON list of class IDs or names to scope enrichment",
     )
-    status = Column(
+    status = Column(  # type: ignore[assignment]
         String(20),
         nullable=False,
         default="inactive",
         index=True,
         doc="Workflow status: active, inactive, error",
     )
-    last_run = Column(
+    last_run = Column(  # type: ignore[assignment]
         DateTime(timezone=True),
         nullable=True,
         doc="UTC timestamp of most recent run",
     )
-    last_run_record_count = Column(
+    last_run_record_count = Column(  # type: ignore[assignment]
         Integer,
         nullable=True,
         doc="Record count from most recent run",
     )
-    created_at = Column(
+    created_at = Column(  # type: ignore[assignment]
         DateTime(timezone=True),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
     )
-    updated_at = Column(
+    updated_at = Column(  # type: ignore[assignment]
         DateTime(timezone=True),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
@@ -1005,35 +1016,42 @@ class WorkflowRun(Base):  # type: ignore[valid-type,misc]
 
     __tablename__ = "workflow_runs"
 
-    id = Column(String(36), primary_key=True, nullable=False)
-    workflow_id = Column(
+    id: str
+    workflow_id: str
+    status: str
+    record_count: int
+    timestamp: datetime
+    error_message: Optional[str]
+
+    id = Column(String(36), primary_key=True, nullable=False)  # type: ignore[assignment]
+    workflow_id = Column(  # type: ignore[assignment]
         String(36),
         ForeignKey("grounding_workflows.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
         doc="Parent grounding workflow",
     )
-    status = Column(
+    status = Column(  # type: ignore[assignment]
         String(20),
         nullable=False,
         default="running",
         index=True,
         doc="Run status: running, success, failed",
     )
-    record_count = Column(
+    record_count = Column(  # type: ignore[assignment]
         Integer,
         nullable=False,
         default=0,
         doc="Number of records processed",
     )
-    timestamp = Column(
+    timestamp = Column(  # type: ignore[assignment]
         DateTime(timezone=True),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         index=True,
         doc="UTC timestamp when the run was initiated",
     )
-    error_message = Column(Text, nullable=True)
+    error_message = Column(Text, nullable=True)  # type: ignore[assignment]
 
     __table_args__ = (
         CheckConstraint(
