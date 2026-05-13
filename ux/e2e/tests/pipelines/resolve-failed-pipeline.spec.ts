@@ -258,12 +258,12 @@ test.describe("Resolve a Failed Pipeline Run", () => {
 
     // Verify execution appears in table with correct status
     const executions = await getPipelineExecutions(page, pipeline.id);
-    if (executions.length > 0) {
-      const latestExecution = executions[0];
-      expect(latestExecution.status).toBeDefined();
-      expect(latestExecution.tokens_in).toBeGreaterThanOrEqual(0);
-      expect(latestExecution.tokens_out).toBeGreaterThanOrEqual(0);
-    }
+    expect(executions.length).toBeGreaterThan(0);
+
+    const latestExecution = executions[0];
+    expect(latestExecution.status).toBeDefined();
+    expect(latestExecution.tokens_in).toBeGreaterThanOrEqual(0);
+    expect(latestExecution.tokens_out).toBeGreaterThanOrEqual(0);
   });
 
   test("Test Case 9: Edge Case - Pipeline with No Prior Runs", async ({ page }) => {
