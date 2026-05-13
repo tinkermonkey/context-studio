@@ -926,6 +926,243 @@ selectors:
     component: components/schema/__tests__/SchemaTable.test.tsx
     description: Action element in SchemaTable test fixture
 
+  # Reference Sources Page
+  - selector: reference-sources-page
+    component: routes/app/reference/sources.tsx
+    description: Main reference sources page container
+  - selector: reference-sources-table
+    component: routes/app/reference/sources.tsx
+    description: Table container for reference sources
+  - selector: sources-content
+    component: routes/app/reference/sources.tsx
+    description: Main content area of reference sources page
+  - selector: reference-source-drawer
+    component: components/reference/ReferenceSourceDrawer.tsx
+    description: Drawer panel showing reference source details
+  - selector: reference-source-name-*
+    component: routes/app/reference/sources.tsx
+    description: Clickable source name cell in table (pattern matches reference-source-name-{sourceId})
+  - selector: reference-source-row-actions-*
+    component: routes/app/reference/sources.tsx
+    description: Actions button for source row (pattern matches reference-source-row-actions-{sourceName})
+  - selector: reference-source-refresh-*
+    component: components/reference/ReferenceSourceDrawer.tsx
+    description: Refresh button for reference source (pattern matches reference-source-refresh-{sourceName})
+
+  # Reference Grounding Workflows Page
+  - selector: reference-workflows-page
+    component: routes/app/reference/workflows.tsx
+    description: Main grounding workflows page container
+  - selector: reference-workflows-table
+    component: routes/app/reference/workflows.tsx
+    description: Workflows table container
+  - selector: workflows-content
+    component: routes/app/reference/workflows.tsx
+    description: Main content area of workflows page
+  - selector: new-workflow-button
+    component: routes/app/reference/workflows.tsx
+    description: Button to create new grounding workflow
+  - selector: workflow-create-modal
+    component: routes/app/reference/workflows.tsx
+    description: Modal for creating new grounding workflow
+  - selector: grounding-workflow-form
+    component: components/reference/GroundingWorkflowForm.tsx
+    description: Form for creating/editing grounding workflows
+  - selector: workflow-title-input
+    component: components/reference/GroundingWorkflowForm.tsx
+    description: Workflow name input field
+  - selector: workflow-source-select
+    component: components/reference/GroundingWorkflowForm.tsx
+    description: Reference source dropdown select
+  - selector: workflow-scope-input
+    component: components/reference/GroundingWorkflowForm.tsx
+    description: Class scope search and selection input
+  - selector: workflow-class-chip-*
+    component: components/reference/GroundingWorkflowForm.tsx
+    description: Selected class scope chip (pattern matches workflow-class-chip-{classId})
+  - selector: workflow-class-remove-*
+    component: components/reference/GroundingWorkflowForm.tsx
+    description: Remove button for selected class chip (pattern matches workflow-class-remove-{classId})
+  - selector: workflow-scope-option-*
+    component: components/reference/GroundingWorkflowForm.tsx
+    description: Class option in dropdown (pattern matches workflow-scope-option-{classId})
+  - selector: workflow-submit-button
+    component: components/reference/GroundingWorkflowForm.tsx
+    description: Form submit button for workflow creation
+  - selector: grounding-workflow-drawer
+    component: components/reference/GroundingWorkflowDrawer.tsx
+    description: Drawer panel showing workflow details
+  - selector: workflow-name-display
+    component: components/reference/GroundingWorkflowDrawer.tsx
+    description: Workflow name display field (read-only until editing)
+  - selector: workflow-name-edit-input
+    component: components/reference/GroundingWorkflowDrawer.tsx
+    description: Workflow name input when editing
+  - selector: workflow-run-now-button
+    component: components/reference/GroundingWorkflowDrawer.tsx
+    description: Button to execute workflow immediately
+  - selector: workflow-delete-button
+    component: components/reference/GroundingWorkflowDrawer.tsx
+    description: Delete workflow button
+  - selector: workflow-run-*
+    component: components/reference/GroundingWorkflowDrawer.tsx
+    description: Run history item (pattern matches workflow-run-{runId})
+  - selector: workflow-name-*
+    component: routes/app/reference/workflows.tsx
+    description: Clickable workflow name cell in table (pattern matches workflow-name-{workflowId})
+  - selector: workflow-row-actions-*
+    component: routes/app/reference/workflows.tsx
+    description: Actions button for workflow row (pattern matches workflow-row-actions-{workflowId})
+
+  # Versioning
+  - selector: versioning-page
+    component: routes/app/versioning.tsx
+    description: Main versioning page container
+  - selector: pending-changes-list
+    component: components/versioning/PendingChangesList.tsx
+    description: Container for the pending changes list
+  - selector: pending-change-*
+    component: components/versioning/PendingChangesList.tsx
+    description: Individual pending change row (pattern matches pending-change-{changeId})
+  - selector: changeset-panel
+    component: components/versioning/ChangesetPanel.tsx
+    description: Main container for the changeset management panel
+  - selector: changeset-list
+    component: components/versioning/ChangesetListSection.tsx
+    description: Container for the changesets list
+  - selector: changeset-name-input
+    component: components/versioning/CreateChangesetModal.tsx
+    description: Name input field in create changeset modal
+  - selector: changeset-description-input
+    component: components/versioning/CreateChangesetModal.tsx
+    description: Description textarea in create changeset modal
+  - selector: changeset-cancel-button
+    component: components/versioning/CreateChangesetModal.tsx
+    description: Cancel button in create changeset modal
+  - selector: changeset-submit-button
+    component: components/versioning/CreateChangesetModal.tsx
+    description: Submit button in create changeset modal
+
+  # Sync Status Panel
+  - selector: sync-status-panel
+    component: components/versioning/SyncStatus.tsx
+    description: Main container for the sync status panel
+
+  # Conflict Resolver
+  - selector: conflict-resolver
+    component: components/versioning/ConflictResolver.tsx
+    description: Root container for the conflict resolver panel
+  - selector: conflict-list
+    component: components/versioning/ConflictResolver.tsx
+    description: Container for all conflict groups
+  - selector: conflict-group-{entityId}
+    component: components/versioning/ConflictResolver.tsx
+    description: Collapsible group of conflicts for a single entity
+  - selector: conflict-row-{entityId}-{fieldName}
+    component: components/versioning/ConflictResolver.tsx
+    description: Individual conflict row for a field within an entity
+  - selector: conflict-keep-ours-{entityId}-{fieldName}
+    component: components/versioning/ConflictResolver.tsx
+    description: Button to keep the "ours" (base) value for a conflict
+  - selector: conflict-keep-theirs-{entityId}-{fieldName}
+    component: components/versioning/ConflictResolver.tsx
+    description: Button to keep the "theirs" (incoming) value for a conflict
+  - selector: conflict-edit-{entityId}-{fieldName}
+    component: components/versioning/ConflictResolver.tsx
+    description: Button to edit a custom resolution value for a conflict
+  - selector: conflict-apply-resolutions-button
+    component: components/versioning/ConflictResolver.tsx
+    description: Primary button to apply all conflict resolutions
+
+  # Settings Page
+  - selector: settings-page
+    component: routes/app/settings.tsx
+    description: Root container for the settings page
+  - selector: config-tile-workspace
+    component: routes/app/settings.tsx
+    description: Workspace configuration tile
+  - selector: config-tile-workspace-button
+    component: components/settings/ConfigTile.tsx
+    description: Edit button for workspace settings tile
+  - selector: config-tile-llm
+    component: routes/app/settings.tsx
+    description: LLM Provider configuration tile
+  - selector: config-tile-llm-button
+    component: components/settings/ConfigTile.tsx
+    description: Edit button for LLM Provider settings tile
+  - selector: config-tile-embedding
+    component: routes/app/settings.tsx
+    description: Embedding Model configuration tile
+  - selector: config-tile-embedding-button
+    component: components/settings/ConfigTile.tsx
+    description: Edit button for embedding model settings tile
+  - selector: config-tile-nlp
+    component: routes/app/settings.tsx
+    description: NLP Model configuration tile
+  - selector: config-tile-nlp-button
+    component: components/settings/ConfigTile.tsx
+    description: Edit button for NLP model settings tile
+  - selector: config-tile-reference-sources
+    component: routes/app/settings.tsx
+    description: Reference Sources configuration tile
+  - selector: config-tile-reference-sources-button
+    component: components/settings/ConfigTile.tsx
+    description: Manage button for reference sources settings tile
+  - selector: config-tile-sync
+    component: routes/app/settings.tsx
+    description: Sync Target configuration tile
+  - selector: config-tile-sync-button
+    component: components/settings/ConfigTile.tsx
+    description: Edit button for sync target settings tile
+  - selector: workspace-edit-modal-save
+    component: components/settings/EditConfigModal.tsx
+    description: Save button in workspace edit modal
+  - selector: workspace-display_name-input
+    component: components/settings/EditConfigModal.tsx
+    description: Display name input field in workspace settings
+  - selector: workspace-path-input
+    component: components/settings/EditConfigModal.tsx
+    description: Path input field in workspace settings (read-only)
+  - selector: llmprovider-edit-modal-save
+    component: components/settings/EditConfigModal.tsx
+    description: Save button in LLM provider edit modal
+  - selector: llmprovider-provider-select
+    component: components/settings/EditConfigModal.tsx
+    description: Provider select dropdown in LLM settings
+  - selector: llmprovider-model-input
+    component: components/settings/EditConfigModal.tsx
+    description: Model name input field in LLM settings
+  - selector: llmprovider-api_key-input
+    component: components/settings/EditConfigModal.tsx
+    description: API key input field in LLM settings
+  - selector: llmprovider-base_url-input
+    component: components/settings/EditConfigModal.tsx
+    description: Base URL input field in LLM settings (Ollama only)
+  - selector: embedding-edit-modal-save
+    component: components/settings/EditConfigModal.tsx
+    description: Save button in embedding model edit modal
+  - selector: embedding-model_name-input
+    component: components/settings/EditConfigModal.tsx
+    description: Model name input field in embedding settings
+  - selector: embedding-vector_dimensions-input
+    component: components/settings/EditConfigModal.tsx
+    description: Vector dimensions input field in embedding settings (read-only)
+  - selector: nlp-edit-modal-save
+    component: components/settings/EditConfigModal.tsx
+    description: Save button in NLP model edit modal
+  - selector: nlp-model_name-input
+    component: components/settings/EditConfigModal.tsx
+    description: Model name input field in NLP settings
+  - selector: sync-edit-modal-save
+    component: components/settings/EditConfigModal.tsx
+    description: Save button in sync target edit modal
+  - selector: sync-target_type-select
+    component: components/settings/EditConfigModal.tsx
+    description: Target type select dropdown in sync settings
+  - selector: sync-path-input
+    component: components/settings/EditConfigModal.tsx
+    description: Path input field in sync settings
+
   # Miscellaneous
   - selector: create-toast-btn
     component: routes/app/contact-sheet.tsx

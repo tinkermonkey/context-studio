@@ -455,6 +455,25 @@ class SQLiteChangeRepository:
 
             return None
 
+    def list_changesets(self, limit: int = 100) -> list[DomainChangeset]:
+        """
+        List all changesets ordered by creation date.
+
+        Args:
+            limit: Maximum number of results to return
+
+        Returns:
+            List of Changeset domain entities
+        """
+        with self.session_factory() as session:
+            orm_changesets = (
+                session.query(Changeset)
+                .order_by(Changeset.created_at.desc())
+                .limit(limit)
+                .all()
+            )
+            return [self._to_domain_changeset(cs, session) for cs in orm_changesets]
+
     def update_changeset(self, changeset: DomainChangeset) -> DomainChangeset:
         """
         Update an existing changeset and persist associated event IDs to junction table.

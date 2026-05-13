@@ -194,6 +194,12 @@ class FakeChangeRepository:
             return deepcopy(stored)
         return None
 
+    def list_changesets(self, limit: int = 100) -> list[Changeset]:
+        """List all changesets."""
+        changesets = list(self._changesets.values())
+        changesets.sort(key=lambda c: c.created_at, reverse=True)
+        return [deepcopy(c) for c in changesets[:limit]]
+
     def update_changeset(self, changeset: Changeset) -> Changeset:
         """
         Update an existing changeset.

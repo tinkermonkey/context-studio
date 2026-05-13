@@ -32,11 +32,16 @@ function AllProviders({ children, queryClient }: AllProvidersProps) {
   );
 }
 
+interface RenderWithProvidersOptions extends RenderOptions {
+  queryClient?: QueryClient;
+}
+
 export function renderWithProviders(
   ui: ReactNode,
-  { queryClient, ...renderOptions }: RenderOptions & { queryClient?: QueryClient } = {},
+  { queryClient, ...renderOptions }: RenderWithProvidersOptions = {},
 ) {
   const testQueryClient = queryClient || createTestQueryClient();
+
   return render(ui, {
     wrapper: ({ children }) => (
       <AllProviders queryClient={testQueryClient}>{children}</AllProviders>

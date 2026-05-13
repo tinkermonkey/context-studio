@@ -4,6 +4,7 @@ import { versioningService } from "@/api/services/versioning";
 import type { components } from "@/api/types";
 
 type ChangesetCreateRequest = components["schemas"]["ChangesetCreateRequest"];
+type ResolveConflictsRequest = components["schemas"]["ResolveConflictsRequest"];
 
 interface ChangesParams {
   limit?: number;
@@ -16,8 +17,12 @@ export function useChanges(params?: ChangesParams) {
   });
 }
 
-// Note: There is no paginated list endpoint for changesets in the current API.
-// Individual changesets can be retrieved by ID via versioningService.getChangeset(id).
+export function useChangesets(params?: { limit?: number }) {
+  return useQuery({
+    queryKey: [...QUERY_KEYS.changesets, params],
+    queryFn: () => versioningService.listChangesets(params),
+  });
+}
 
 export function useCreateChangeset() {
   const queryClient = useQueryClient();
@@ -25,6 +30,7 @@ export function useCreateChangeset() {
     mutationFn: (data: ChangesetCreateRequest) => versioningService.createChangeset(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.changesets });
+      queryClient.invalidateQueries({ queryKey: ["changes"] });
     },
   });
 }
@@ -33,6 +39,7 @@ export function useSyncStatus() {
   return useQuery({
     queryKey: QUERY_KEYS.syncStatus,
     queryFn: () => versioningService.getSyncStatus(),
+    refetchInterval: 60_000,
   });
 }
 
@@ -51,6 +58,47 @@ export function usePullSync() {
   return useMutation({
     mutationFn: () => versioningService.pullSync(),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.syncStatus });
+    },
+  });
+}
+
+export function useApplyChangeset() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => versioningService.applyChangeset(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.changesets });
+      queryClient.invalidateQueries({ queryKey: ["changes"] });
+    },
+  });
+}
+
+export function useProposalConflicts(proposalId: string | undefined) {
+  return useQuery({
+    queryKey: proposalId
+      ? QUERY_KEYS.proposalConflicts(proposalId)
+      : ["proposals", "conflicts", "disabled"],
+    queryFn: () => {
+      if (!proposalId) throw new Error("Proposal ID is required");
+      return versioningService.getProposalConflicts(proposalId);
+    },
+    enabled: !!proposalId,
+  });
+}
+
+export function useResolveConflicts() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      proposalId,
+      resolutions,
+    }: {
+      proposalId: string;
+      resolutions: ResolveConflictsRequest["resolutions"];
+    }) => versioningService.resolveConflicts(proposalId, resolutions),
+    onSuccess: (_, { proposalId }) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.proposalConflicts(proposalId) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.syncStatus });
     },
   });

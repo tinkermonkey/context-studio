@@ -22,6 +22,7 @@ interface SchemaTableProps<T extends { id: string }> {
   selectedId?: string;
   renderRowActions?: (row: T) => React.ReactNode;
   testIdPrefix?: string;
+  tableTestId?: string;
 }
 
 export function SchemaTable<T extends { id: string }>({
@@ -32,6 +33,7 @@ export function SchemaTable<T extends { id: string }>({
   selectedId,
   renderRowActions,
   testIdPrefix = "schema",
+  tableTestId,
 }: SchemaTableProps<T>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState<PaginationState>({
@@ -83,7 +85,7 @@ export function SchemaTable<T extends { id: string }>({
 
   return (
     <div
-      data-testid="schema-table"
+      data-testid={tableTestId || "schema-table"}
       style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}
     >
       <div className="table-wrap">

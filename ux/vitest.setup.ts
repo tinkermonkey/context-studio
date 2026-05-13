@@ -2,23 +2,8 @@ import "@testing-library/jest-dom/vitest";
 import { afterEach, beforeEach, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
 
-// Mock @tanstack/react-router to handle useSearch gracefully in tests
-vi.mock("@tanstack/react-router", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@tanstack/react-router")>();
-  return {
-    ...actual,
-    useSearch: (_options?: Record<string, unknown>) => {
-      try {
-        // Try to use the real useSearch
-        return actual.useSearch?.(_options as any) ?? {};
-      } catch {
-        // If it fails (no active match), return empty search params
-        // This allows components to work in tests without a fully configured router
-        return {};
-      }
-    },
-  };
-});
+// Mock window.scrollTo to avoid jsdom "Not implemented" errors
+window.scrollTo = vi.fn() as unknown as typeof window.scrollTo;
 
 // Set up a mock clipboard API for testing - create it at global scope
 const mockClipboardWriteText = vi.fn().mockResolvedValue(undefined);
@@ -75,3 +60,26 @@ global.ResizeObserver = class ResizeObserver {
   unobserve(_target: Element) {}
   disconnect() {}
 };
+
+// Mock TanStack Router to provide synchronous rendering in tests
+vi.mock("@tanstack/react-router", async () => {
+  const actual = await vi.importActual("@tanstack/react-router");
+  return {
+    ...actual,
+    useNavigate: () => vi.fn(),
+    useRouter: () => ({
+      state: { status: "idle" },
+      navigate: vi.fn(),
+    }),
+    useRouterState: () => ({
+      location: { pathname: "/app" },
+      status: "idle",
+    }),
+    useSearch: () => ({}),
+    useMatch: () => ({
+      pathname: "/app",
+      params: {},
+      search: {},
+    }),
+  };
+});

@@ -215,6 +215,11 @@
   margin-top: 4px;
 }
 
+.form-error {
+  font-size: 14px;
+  color: var(--error-fg);
+}
+
 .readonly-display {
   background: var(--canvas-bg-2);
   border: 1px dashed var(--canvas-bd);

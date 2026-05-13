@@ -80,6 +80,88 @@ def service(
 
 
 # ============================================================================
+# Changeset Query Tests
+# ============================================================================
+
+
+class TestListChangesets:
+    """Test list_changesets method with ordering and limit."""
+
+    def test_list_changesets_empty(self, service: VersioningService) -> None:
+        """Test list_changesets returns empty list when no changesets exist."""
+        result = service.list_changesets()
+        assert result == []
+
+    def test_list_changesets_returns_all_when_under_limit(
+        self, service: VersioningService,
+    ) -> None:
+        """Test list_changesets returns all changesets when count < limit."""
+        cs1 = service.create_changeset("Changeset 1")
+        cs2 = service.create_changeset("Changeset 2")
+        cs3 = service.create_changeset("Changeset 3")
+
+        result = service.list_changesets(limit=100)
+
+        assert len(result) == 3
+        assert any(cs.id == cs1.id for cs in result)
+        assert any(cs.id == cs2.id for cs in result)
+        assert any(cs.id == cs3.id for cs in result)
+
+    def test_list_changesets_respects_limit(
+        self, service: VersioningService,
+    ) -> None:
+        """Test list_changesets respects the limit parameter."""
+        for i in range(10):
+            service.create_changeset(f"Changeset {i}")
+
+        result = service.list_changesets(limit=5)
+
+        assert len(result) == 5
+
+    def test_list_changesets_ordered_by_created_at_desc(
+        self, service: VersioningService,
+    ) -> None:
+        """Test list_changesets returns changesets ordered by created_at desc."""
+        import time
+
+        cs1 = service.create_changeset("Changeset 1")
+        time.sleep(0.01)  # Ensure distinct timestamps
+        cs2 = service.create_changeset("Changeset 2")
+        time.sleep(0.01)
+        cs3 = service.create_changeset("Changeset 3")
+
+        result = service.list_changesets()
+
+        assert len(result) == 3
+        # Most recent first
+        assert result[0].id == cs3.id
+        assert result[1].id == cs2.id
+        assert result[2].id == cs1.id
+
+    def test_list_changesets_with_default_limit(
+        self, service: VersioningService,
+    ) -> None:
+        """Test list_changesets uses default limit of 100."""
+        for i in range(50):
+            service.create_changeset(f"Changeset {i}")
+
+        result = service.list_changesets()
+
+        assert len(result) == 50
+
+    def test_list_changesets_limit_zero(
+        self, service: VersioningService,
+    ) -> None:
+        """Test list_changesets with limit=0 returns empty list."""
+        service.create_changeset("Changeset 1")
+        service.create_changeset("Changeset 2")
+
+        result = service.list_changesets(limit=0)
+
+        assert len(result) == 0
+
+
+# ============================================================================
 # Change History Query Tests
 # ============================================================================
 
@@ -399,6 +481,122 @@ class TestChangesetLifecycle:
 
         with pytest.raises(ChangesetStateError):
             service.submit_proposal(changeset.id)
+
+
+# ============================================================================
+# Apply Changeset Tests
+# ============================================================================
+
+
+class TestApplyChangeset:
+    """Test apply_changeset method which stages and proposes in one action."""
+
+    def test_apply_changeset_success(self, service: VersioningService) -> None:
+        """Test applying a changeset successfully transitions it to PROPOSED state."""
+        changeset = service.create_changeset(name="Test changeset")
+        assert changeset.state == ChangeState.WORKING
+
+        proposal = service.apply_changeset(changeset.id)
+
+        assert proposal.changeset_id == changeset.id
+        assert proposal.state == ProposalState.OPEN
+        assert proposal.submitted_at is not None
+
+    def test_apply_changeset_transitions_changeset_states(
+        self, service: VersioningService, repo: FakeChangeRepository
+    ) -> None:
+        """Test that apply_changeset transitions changeset from WORKING to STAGED to PROPOSED."""
+        changeset = service.create_changeset(name="Test changeset")
+        assert changeset.state == ChangeState.WORKING
+
+        service.apply_changeset(changeset.id)
+
+        updated_changeset = repo.get_changeset(changeset.id)
+        assert updated_changeset is not None
+        assert updated_changeset.state == ChangeState.PROPOSED
+
+    def test_apply_changeset_changeset_not_found(self, service: VersioningService) -> None:
+        """Test applying a non-existent changeset raises VersionNotFoundError."""
+        with pytest.raises(VersionNotFoundError):
+            service.apply_changeset("nonexistent-id")
+
+    def test_apply_changeset_creates_proposal(
+        self, service: VersioningService, repo: FakeChangeRepository
+    ) -> None:
+        """Test that apply_changeset creates a Proposal in OPEN state."""
+        changeset = service.create_changeset(name="Test changeset")
+
+        proposal = service.apply_changeset(changeset.id)
+
+        retrieved_proposal = repo.get_proposal(proposal.id)
+        assert retrieved_proposal is not None
+        assert retrieved_proposal.changeset_id == changeset.id
+        assert retrieved_proposal.state == ProposalState.OPEN
+
+    def test_apply_changeset_with_event_ids(
+        self, service: VersioningService, repo: FakeChangeRepository
+    ) -> None:
+        """Test applying a changeset with event IDs."""
+        event_id_1 = repo.record_change(
+            entity_id="entity1",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={"name": "Entity1"},
+        )
+        event_id_2 = repo.record_change(
+            entity_id="entity2",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={"name": "Entity2"},
+        )
+
+        changeset = service.create_changeset(
+            name="Test changeset", event_ids=[event_id_1, event_id_2]
+        )
+
+        proposal = service.apply_changeset(changeset.id)
+
+        assert proposal.state == ProposalState.OPEN
+        updated_changeset = repo.get_changeset(changeset.id)
+        assert updated_changeset is not None
+        assert updated_changeset.state == ChangeState.PROPOSED
+
+    def test_apply_changeset_already_proposed_raises(
+        self, service: VersioningService
+    ) -> None:
+        """Test that applying an already-proposed changeset raises ChangesetStateError."""
+        changeset = service.create_changeset(name="Test changeset")
+        service.apply_changeset(changeset.id)
+
+        with pytest.raises(ChangesetStateError):
+            service.apply_changeset(changeset.id)
+
+    def test_apply_changeset_is_equivalent_to_stage_then_submit(
+        self, service: VersioningService, repo: FakeChangeRepository
+    ) -> None:
+        """Test that apply_changeset result is equivalent to stage_changeset + submit_proposal."""
+        # Create two identical changesets
+        cs1 = service.create_changeset(name="Changeset 1")
+        cs2 = service.create_changeset(name="Changeset 2")
+
+        # Apply one directly
+        proposal1 = service.apply_changeset(cs1.id)
+
+        # Stage and submit the other
+        service.stage_changeset(cs2.id)
+        proposal2 = service.submit_proposal(cs2.id)
+
+        # Both should result in PROPOSED changesets
+        updated_cs1 = repo.get_changeset(cs1.id)
+        updated_cs2 = repo.get_changeset(cs2.id)
+        assert updated_cs1 is not None
+        assert updated_cs2 is not None
+        assert updated_cs1.state == ChangeState.PROPOSED
+        assert updated_cs2.state == ChangeState.PROPOSED
+
+        # Both should have proposals in OPEN state
+        assert proposal1.state == ProposalState.OPEN
+        assert proposal2.state == ProposalState.OPEN
 
 
 # ============================================================================
@@ -1889,7 +2087,7 @@ class TestSyncStatusErrorHandling:
     def test_get_sync_status_is_configured_error(
         self, repo: FakeChangeRepository, event_publisher: FakeEventPublisher
     ) -> None:
-        """Test that is_configured errors degrade to is_configured=False."""
+        """Test that is_configured errors degrade to is_configured=False and set is_degraded=True."""
 
         class FailingConfigSyncTarget(FakeSyncTarget):
             def is_configured(self) -> bool:
@@ -1906,7 +2104,7 @@ class TestSyncStatusErrorHandling:
 
         assert status.is_configured is False
         assert status.unprocessed_count == repo.count_unprocessed()
-        assert status.is_degraded is False
+        assert status.is_degraded is True
 
     def test_get_sync_status_both_errors(
         self, event_publisher: FakeEventPublisher

@@ -1689,7 +1689,6 @@ select.input {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  cursor: pointer;
 }
 .config-tile:hover {
   border-color: var(--canvas-bd-2);
@@ -1731,6 +1730,16 @@ select.input {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+}
+.config-tile-meta {
+  font-size: 10px;
+  color: var(--canvas-fg-4);
+}
+.config-tile-content {
+  flex: 1;
+}
+.config-tile-actions {
+  margin-top: 4px;
 }
 
 /* ------------ Command palette ------------ */
@@ -2377,4 +2386,66 @@ body.dark-canvas .topbar-search input {
   100% {
     opacity: 1;
   }
+}
+
+/* ------------ Conflict Resolver ------------ */
+.diff-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.diff-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 12px;
+  background-color: var(--canvas-bg-2);
+  border: 1px solid var(--canvas-bd);
+  border-radius: var(--radius-md, 6px);
+  font-size: 12px;
+  max-width: 400px;
+}
+
+.diff-column {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.diff-removed {
+  border-left: 3px solid #f43f5e;
+  padding-left: 8px;
+}
+
+.diff-added {
+  border-left: 3px solid #10b981;
+  padding-left: 8px;
+}
+
+.diff-label {
+  font-weight: 600;
+  color: var(--canvas-fg-2);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.diff-value {
+  color: var(--canvas-fg);
+  font-family: var(--mono);
+  word-break: break-word;
+  white-space: normal;
+  line-height: 1.4;
+}
+
+body.dark-canvas .diff-removed {
+  border-left-color: #fda4af;
+}
+
+body.dark-canvas .diff-added {
+  border-left-color: #6ee7b7;
 }

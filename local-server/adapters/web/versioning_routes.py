@@ -245,6 +245,32 @@ async def create_changeset(
         raise HTTPException(status_code=status_code, detail=message)
 
 
+@router.get("/versioning/changesets", response_model=list[ChangesetResponse])
+async def list_changesets(
+    service: VersioningService = Depends(get_versioning_service),
+    limit: int = 100,
+) -> list[ChangesetResponse]:
+    """
+    List all changesets.
+
+    Args:
+        service: VersioningService from dependency injection
+        limit: Maximum number of results to return
+
+    Returns:
+        List of ChangesetResponse objects
+
+    Raises:
+        HTTPException: 500 for internal errors
+    """
+    try:
+        changesets = await run_sync_in_executor(service.list_changesets, limit=limit)
+        return [ChangesetResponse.model_validate(cs) for cs in changesets]
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
 @router.get("/versioning/changesets/{changeset_id}", response_model=ChangesetResponse)
 async def get_changeset(
     changeset_id: str,
@@ -323,6 +349,37 @@ async def submit_proposal(
     """
     try:
         proposal = await run_sync_in_executor(service.submit_proposal, changeset_id)
+        return ProposalResponse.model_validate(proposal)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.post(
+    "/versioning/changesets/{changeset_id}/apply", response_model=ProposalResponse
+)
+async def apply_changeset(
+    changeset_id: str,
+    service: VersioningService = Depends(get_versioning_service),
+) -> ProposalResponse:
+    """
+    Apply a changeset by staging and submitting it in one action.
+
+    Transitions the changeset from WORKING to STAGED to PROPOSED and creates
+    a Proposal in 'open' state. This combines stage and submit into a single operation.
+
+    Args:
+        changeset_id: ID of the changeset to apply
+        service: VersioningService from dependency injection
+
+    Returns:
+        Created ProposalResponse
+
+    Raises:
+        HTTPException: 404 if not found, 409 for invalid state, 500 for internal errors
+    """
+    try:
+        proposal = await run_sync_in_executor(service.apply_changeset, changeset_id)
         return ProposalResponse.model_validate(proposal)
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)

@@ -4,14 +4,24 @@ import type { components } from "@/api/types";
 type ChangeHistoryResponse = components["schemas"]["ChangeHistoryResponse"];
 type ChangesetResponse = components["schemas"]["ChangesetResponse"];
 type ChangesetCreateRequest = components["schemas"]["ChangesetCreateRequest"];
+type ProposalResponse = components["schemas"]["ProposalResponse"];
 type SyncStatusResponse = components["schemas"]["SyncStatusResponse"];
 type SyncResultResponse = components["schemas"]["SyncResultResponse"];
+type ConflictReportResponse = components["schemas"]["ConflictReportResponse"];
+type ResolveConflictsRequest = components["schemas"]["ResolveConflictsRequest"];
 
 interface ChangesParams {
   limit?: number;
 }
 
 class VersioningService extends BaseService {
+  async listChangesets(params?: ChangesParams): Promise<ChangesetResponse[]> {
+    return this.get<ChangesetResponse[]>(
+      "/api/v1/versioning/changesets",
+      params as Record<string, unknown>,
+    );
+  }
+
   async getChanges(params?: ChangesParams): Promise<ChangeHistoryResponse> {
     return this.get<ChangeHistoryResponse>(
       "/api/v1/versioning/changes",
@@ -47,6 +57,23 @@ class VersioningService extends BaseService {
 
   async pullSync(): Promise<SyncResultResponse> {
     return this.post<SyncResultResponse>("/api/v1/versioning/sync/pull");
+  }
+
+  async applyChangeset(id: string): Promise<ProposalResponse> {
+    return this.post<ProposalResponse>(`/api/v1/versioning/changesets/${id}/apply`);
+  }
+
+  async getProposalConflicts(proposalId: string): Promise<ConflictReportResponse> {
+    return this.get<ConflictReportResponse>(`/api/v1/versioning/proposals/${proposalId}/conflicts`);
+  }
+
+  async resolveConflicts(
+    proposalId: string,
+    resolutions: ResolveConflictsRequest["resolutions"],
+  ): Promise<ConflictReportResponse> {
+    return this.post<ConflictReportResponse>(`/api/v1/versioning/proposals/${proposalId}/resolve`, {
+      resolutions,
+    });
   }
 }
 

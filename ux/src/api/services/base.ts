@@ -1,5 +1,6 @@
 import axiosInstance from "@/api/client/axios";
 
+// Errors are normalized to ApiError by the axios interceptor — error.message contains the FastAPI detail
 export abstract class BaseService {
   protected async get<T>(url: string, params?: Record<string, unknown>): Promise<T> {
     const response = await axiosInstance.get<T>(url, { params });

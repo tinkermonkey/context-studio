@@ -61,11 +61,7 @@ function FlavorsContent() {
       size: 80,
       cell: (info) => {
         const flavor = info.row.original;
-        return (
-          <span data-testid={`flavor-steps-${flavor.id}`}>
-            {info.getValue() as number}
-          </span>
-        );
+        return <span data-testid={`flavor-steps-${flavor.id}`}>{info.getValue() as number}</span>;
       },
     },
     {
@@ -186,11 +182,7 @@ function FlavorsContent() {
               }}
             />
           ) : (
-            <SchemaTable
-              columns={flavorColumns}
-              data={filteredFlavors}
-              testIdPrefix="flavor-row"
-            />
+            <SchemaTable columns={flavorColumns} data={filteredFlavors} testIdPrefix="flavor-row" />
           )}
         </div>
       </SchemaPageLayout>

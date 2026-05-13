@@ -12,12 +12,7 @@ interface FlavorDrawerProps {
   isDeleting?: boolean;
 }
 
-export function FlavorDrawer({
-  flavor,
-  onClose,
-  onDelete,
-  isDeleting = false,
-}: FlavorDrawerProps) {
+export function FlavorDrawer({ flavor, onClose, onDelete, isDeleting = false }: FlavorDrawerProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleDelete = async () => {
