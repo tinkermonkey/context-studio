@@ -18,10 +18,12 @@ This test validates the complete user flow for creating a new ontology class fro
 ### Test Case 1: Navigate to Classes Page and Open Modal
 
 **Preconditions**:
+
 - User has a workspace with at least one taxonomy and one concept scheme
 - User is logged in and can access the application
 
 **Steps**:
+
 1. Navigate to `/app/schema/classes` via sidebar or direct URL
 2. Verify Classes page loads with selector `classes-page`
 3. Verify the page content loads with selector `classes-content`
@@ -30,6 +32,7 @@ This test validates the complete user flow for creating a new ontology class fro
 6. Verify the modal contains a form with selector `class-editor-form`
 
 **Expected Result**:
+
 - Classes page is visible and responsive
 - "+ New class" button is clickable and visible
 - Modal appears with the form visible
@@ -39,6 +42,7 @@ This test validates the complete user flow for creating a new ontology class fro
 **Selectors Used**: `classes-page`, `classes-content`, `class-add-button`, `class-create-modal`, `class-editor-form`, `class-editor-name-input`
 
 **Invariants Verified**:
+
 - Modal is shown as an overlay (blocking interaction with page behind)
 - Form fields are initialized with empty values
 
@@ -47,10 +51,12 @@ This test validates the complete user flow for creating a new ontology class fro
 ### Test Case 2: Fill Modal Fields and Submit Successfully
 
 **Preconditions**:
+
 - Modal is open from Test Case 1
 - A concept scheme has been created via factory (`scheme_id`)
 
 **Steps**:
+
 1. Type a valid snake_case class name into the name field (selector `class-editor-name-input`): `test_organism`
 2. Type a display label into the display label field (if visible, use semantic locator for "Display label" or similar field)
 3. Select a domain from the domain dropdown (selector `class-editor-domain-select`); select the first/default available scheme
@@ -60,6 +66,7 @@ This test validates the complete user flow for creating a new ontology class fro
 7. Modal closes automatically after success
 
 **Expected Result**:
+
 - All form values are accepted without validation errors
 - Modal closes after successful submission
 - Success toast appears with text matching pattern `Class created · cls_*` (selector: locate toast with success intent)
@@ -68,6 +75,7 @@ This test validates the complete user flow for creating a new ontology class fro
 **Selectors Used**: `class-editor-name-input`, `class-editor-domain-select`, `class-editor-parent-input`, `class-editor-description-input`, `class-editor-submit-button`, `class-create-modal`
 
 **Invariants Verified**:
+
 - Class name is stored in snake_case format
 - Class receives a generated UUID (id starts with `cls_`)
 - Success toast follows the pattern: "Class created · `<id>`"
@@ -78,10 +86,12 @@ This test validates the complete user flow for creating a new ontology class fro
 ### Test Case 3: New Class Appears in Table and Is Selected
 
 **Preconditions**:
+
 - Class was successfully created in Test Case 2
 - User is on the Classes page (modal has closed)
 
 **Steps**:
+
 1. Verify the Classes table refreshes (selector `schema-table`)
 2. Locate the newly created class row in the table using the class name `test_organism`
 3. Verify the row uses the pattern selector `schema-row-*` where the ID is the generated `cls_*` ID
@@ -89,6 +99,7 @@ This test validates the complete user flow for creating a new ontology class fro
 5. Verify the drawer panel opens on the right side (selector `schema-page-layout` indicates split layout is active)
 
 **Expected Result**:
+
 - New class row appears in the Classes table
 - Row displays the class name and other visible columns (title, domain, etc.)
 - Row is automatically selected (matches the new class's ID)
@@ -97,6 +108,7 @@ This test validates the complete user flow for creating a new ontology class fro
 **Selectors Used**: `schema-table`, `schema-row-*` (dynamic with new class ID), `schema-page-layout`, `class-drawer`
 
 **Invariants Verified**:
+
 - Class appears in the table with the submitted name
 - Selection automatically moves to the new row
 - Drawer layout is applied (split 2-column grid)
@@ -106,10 +118,12 @@ This test validates the complete user flow for creating a new ontology class fro
 ### Test Case 4: Drawer Shows Correct Class Details
 
 **Preconditions**:
+
 - New class is selected and drawer is open from Test Case 3
 - Drawer displays the created class with selector `class-drawer`
 
 **Steps**:
+
 1. Locate the drawer container (selector `class-drawer`)
 2. Verify the read-only ID field displays the generated class ID (selector `class-drawer-id`)
 3. Verify the name field (selector `class-drawer-name-input`) contains `test_organism`
@@ -118,6 +132,7 @@ This test validates the complete user flow for creating a new ontology class fro
 6. Verify no error states or warning messages are shown in the drawer
 
 **Expected Result**:
+
 - Drawer displays all class fields correctly
 - ID field is read-only and shows the generated `cls_*` ID
 - Name, description, and domain fields show the values submitted via the modal
@@ -126,6 +141,7 @@ This test validates the complete user flow for creating a new ontology class fro
 **Selectors Used**: `class-drawer`, `class-drawer-id`, `class-drawer-name-input`, `class-drawer-description-input`, `class-drawer-domain-select`
 
 **Invariants Verified**:
+
 - Drawer data is consistent with form submission
 - ID is persistent and unique
 - Drawer is positioned on the right side (480px width typical per design)
@@ -135,9 +151,11 @@ This test validates the complete user flow for creating a new ontology class fro
 ### Test Case 5: Edge Case — Empty Name Shows Validation Error
 
 **Preconditions**:
+
 - Modal is open (click "+ New class" button from Classes page)
 
 **Steps**:
+
 1. Leave the name field empty (do not type anything)
 2. Move focus away from the name field (blur) by clicking another field
 3. Observe validation error appears below the name field
@@ -146,6 +164,7 @@ This test validates the complete user flow for creating a new ontology class fro
 6. Verify the button is disabled or the submit is blocked, and error persists
 
 **Expected Result**:
+
 - Validation error appears below the name field on blur (not on keystroke)
 - Error message is displayed in failure-intent color (red/rose)
 - Error is shown within the modal, not as a popup or toast
@@ -154,6 +173,7 @@ This test validates the complete user flow for creating a new ontology class fro
 **Selectors Used**: `class-editor-name-input`, `class-editor-submit-button`, `class-create-modal`
 
 **Invariants Verified**:
+
 - Validation is triggered on blur, not keystroke
 - Required field rule is enforced
 - Error message is clear and actionable
@@ -163,18 +183,21 @@ This test validates the complete user flow for creating a new ontology class fro
 ### Test Case 6: Edge Case — Invalid Snake_case Shows Validation Error
 
 **Preconditions**:
+
 - Modal is open (click "+ New class" button from Classes page)
 
 **Steps**:
+
 1. Type an invalid name into the name field (selector `class-editor-name-input`): `Invalid Name` (contains spaces and uppercase)
 2. Move focus away from the name field (blur) by clicking another field
 3. Observe validation error appears below the name field
-4. Verify the error message indicates the snake_case requirement (e.g., "Must match `^[a-z][a-z0-9_]*$`" or similar guidance)
+4. Verify the error message indicates the snake*case requirement (e.g., "Must match `^[a-z]a-z0-9*]\*$`" or similar guidance)
 5. Clear the field and type a valid snake_case name: `invalid_name`
 6. Verify the validation error disappears on blur after the correction
 7. Attempt submit — should succeed now
 
 **Expected Result**:
+
 - Validation error appears for `Invalid Name` on blur
 - Error message references the snake_case pattern requirement
 - Error disappears when field is corrected to valid snake_case
@@ -184,6 +207,7 @@ This test validates the complete user flow for creating a new ontology class fro
 **Selectors Used**: `class-editor-name-input`, `class-create-modal`, `class-editor-submit-button`
 
 **Invariants Verified**:
+
 - Pattern validation is enforced: `/^[a-z][a-z0-9_]*$/`
 - Validation timing is blur-based, not keystroke-based
 - Error state is cleared on valid input
@@ -193,10 +217,12 @@ This test validates the complete user flow for creating a new ontology class fro
 ### Test Case 7: Edge Case — Pressing Escape Closes Modal Without Creating
 
 **Preconditions**:
+
 - Modal is open with the form partially filled (selector `class-create-modal`)
 - One or more fields have been edited (e.g., name field is focused or has partial input)
 
 **Steps**:
+
 1. Type some text into the name field: `test_class`
 2. Press the Escape key
 3. Observe the modal closes
@@ -204,6 +230,7 @@ This test validates the complete user flow for creating a new ontology class fro
 5. Verify no error toast or warning appears
 
 **Expected Result**:
+
 - Modal closes immediately on Escape key press
 - No class is created (no new row appears in the table)
 - No toast notification appears
@@ -212,6 +239,7 @@ This test validates the complete user flow for creating a new ontology class fro
 **Selectors Used**: `class-create-modal`, `schema-table`
 
 **Invariants Verified**:
+
 - Escape key dismisses the modal without side effects
 - No unwanted class creation occurs
 - Form state is discarded (not persisted)
@@ -230,7 +258,7 @@ This test validates the complete user flow for creating a new ontology class fro
 ### Edge Cases
 
 - **Validation — empty field**: Test Case 5 validates required field enforcement
-- **Validation — pattern mismatch**: Test Case 6 validates snake_case pattern `/^[a-z][a-z0-9_]*$/`
+- **Validation — pattern mismatch**: Test Case 6 validates snake*case pattern `/^[a-z]a-z0-9*]\*$/`
 - **Validation — error clearing**: Test Case 6 validates error clears on valid input (on blur)
 - **Modal cancellation**: Test Case 7 validates Escape key dismissal without confirmation (dirty-form protection not implemented)
 - **Spinner timeout**: Test Case 2 validates spinner appears for ≤300ms
@@ -289,6 +317,7 @@ test.afterEach(async ({ page }) => {
 ```
 
 **Test Data Lifecycle**:
+
 1. **Setup**: Create taxonomy and scheme via factory (deterministic, fast)
 2. **Test Execution**: Follow UI interactions in steps 1–8 above
 3. **Verification**: Assert UI state changes (table refresh, drawer display, toast)

@@ -1,9 +1,5 @@
 import { test, expect } from "@playwright/test";
-import {
-  createTaxonomy,
-  createConceptScheme,
-  clearTestData,
-} from "../../fixtures/test-helpers";
+import { createTaxonomy, createConceptScheme, clearTestData } from "../../fixtures/test-helpers";
 
 test.describe("Create Class", () => {
   test.afterEach(async ({ page }) => {
@@ -59,7 +55,9 @@ test.describe("Create Class", () => {
 
     // Fill form fields
     await page.getByTestId("class-editor-name-input").fill("test_organism");
-    await page.getByTestId("class-editor-description-input").fill("Test class for organism classification");
+    await page
+      .getByTestId("class-editor-description-input")
+      .fill("Test class for organism classification");
 
     // Select domain/scheme
     const domainSelect = page.getByTestId("class-editor-domain-select");
@@ -102,7 +100,9 @@ test.describe("Create Class", () => {
 
     // Fill and submit form
     await page.getByTestId("class-editor-name-input").fill("test_organism");
-    await page.getByTestId("class-editor-description-input").fill("Test class for organism classification");
+    await page
+      .getByTestId("class-editor-description-input")
+      .fill("Test class for organism classification");
     const domainSelect = page.getByTestId("class-editor-domain-select");
     await domainSelect.click();
     // Wait for listbox to appear, then select the first option
@@ -269,5 +269,4 @@ test.describe("Create Class", () => {
     const finalRowCount = await page.locator('[data-testid^="schema-row-"]').count();
     expect(finalRowCount).toBe(initialRowCount);
   });
-
 });
