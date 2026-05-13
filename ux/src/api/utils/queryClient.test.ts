@@ -61,9 +61,9 @@ describe("setGlobalErrorHandler", () => {
     const options = queryClient.getDefaultOptions();
     const onError = options.mutations?.onError;
 
-    onError?.(new Error("Custom error") as any, {}, undefined, {} as any);
+    onError?.("string error" as any, {}, undefined, {} as any);
 
-    expect(mockHandler).toHaveBeenCalledWith("error", "Custom error");
+    expect(mockHandler).toHaveBeenCalledWith("error", "An error occurred");
   });
 
   it("does not throw if no handler is set", () => {

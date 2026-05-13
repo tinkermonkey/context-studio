@@ -121,8 +121,8 @@ describe("Dashboard", () => {
 
       const { container } = render(<Dashboard />);
 
-      // Verify skeletons are rendered
-      const skeletons = container.querySelectorAll('[style*="animation"]');
+      // Verify skeletons are rendered by looking for skeleton-shimmer animation
+      const skeletons = container.querySelectorAll('[style*="skeleton-shimmer"]');
       expect(skeletons.length).toBeGreaterThan(0);
 
       resolveTaxonomies!();
