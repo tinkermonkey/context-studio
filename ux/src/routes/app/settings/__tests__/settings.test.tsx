@@ -62,7 +62,9 @@ describe("Settings Page", () => {
     it("displays settings-page testid in populated state", async () => {
       const mockConfig = createAppConfiguration();
 
-      server.use(rest.get("*/api/v1/admin/configuration", (req, res, ctx) => res(ctx.json(mockConfig))));
+      server.use(
+        rest.get("*/api/v1/admin/configuration", (req, res, ctx) => res(ctx.json(mockConfig))),
+      );
 
       render(<SettingsPage />);
 
@@ -99,7 +101,9 @@ describe("Settings Page", () => {
         },
       });
 
-      server.use(rest.get("*/api/v1/admin/configuration", (req, res, ctx) => res(ctx.json(mockConfig))));
+      server.use(
+        rest.get("*/api/v1/admin/configuration", (req, res, ctx) => res(ctx.json(mockConfig))),
+      );
 
       render(<SettingsPage />);
 
@@ -125,7 +129,9 @@ describe("Settings Page", () => {
         },
       });
 
-      server.use(rest.get("*/api/v1/admin/configuration", (req, res, ctx) => res(ctx.json(mockConfig))));
+      server.use(
+        rest.get("*/api/v1/admin/configuration", (req, res, ctx) => res(ctx.json(mockConfig))),
+      );
 
       render(<SettingsPage />);
 
@@ -144,7 +150,9 @@ describe("Settings Page", () => {
         },
       });
 
-      server.use(rest.get("*/api/v1/admin/configuration", (req, res, ctx) => res(ctx.json(mockConfig))));
+      server.use(
+        rest.get("*/api/v1/admin/configuration", (req, res, ctx) => res(ctx.json(mockConfig))),
+      );
 
       render(<SettingsPage />);
 
@@ -163,7 +171,9 @@ describe("Settings Page", () => {
         },
       });
 
-      server.use(rest.get("*/api/v1/admin/configuration", (req, res, ctx) => res(ctx.json(mockConfig))));
+      server.use(
+        rest.get("*/api/v1/admin/configuration", (req, res, ctx) => res(ctx.json(mockConfig))),
+      );
 
       render(<SettingsPage />);
 
@@ -181,7 +191,9 @@ describe("Settings Page", () => {
         },
       });
 
-      server.use(rest.get("*/api/v1/admin/configuration", (req, res, ctx) => res(ctx.json(mockConfig))));
+      server.use(
+        rest.get("*/api/v1/admin/configuration", (req, res, ctx) => res(ctx.json(mockConfig))),
+      );
 
       render(<SettingsPage />);
 
@@ -199,7 +211,9 @@ describe("Settings Page", () => {
         },
       });
 
-      server.use(rest.get("*/api/v1/admin/configuration", (req, res, ctx) => res(ctx.json(mockConfig))));
+      server.use(
+        rest.get("*/api/v1/admin/configuration", (req, res, ctx) => res(ctx.json(mockConfig))),
+      );
 
       render(<SettingsPage />);
 
@@ -218,7 +232,9 @@ describe("Settings Page", () => {
         },
       });
 
-      server.use(rest.get("*/api/v1/admin/configuration", (req, res, ctx) => res(ctx.json(mockConfig))));
+      server.use(
+        rest.get("*/api/v1/admin/configuration", (req, res, ctx) => res(ctx.json(mockConfig))),
+      );
 
       render(<SettingsPage />);
 
@@ -227,5 +243,4 @@ describe("Settings Page", () => {
       });
     });
   });
-
 });
