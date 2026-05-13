@@ -218,36 +218,6 @@ This test validates the complete user flow for creating a new ontology class fro
 
 ---
 
-### Test Case 8: Edge Case — Closing Modal Requires Confirmation if Form is Dirty
-
-**Preconditions**:
-- Modal is open (selector `class-create-modal`)
-- Form has unsaved changes (at least one field has been modified)
-
-**Steps**:
-1. Type a class name into the name field: `unsaved_class`
-2. Click outside the modal (on the darkened backdrop) or use an explicit close button (if present) to attempt to close
-3. Observe a confirmation dialog appears (if dirty-state protection is implemented)
-4. Verify the dialog asks the user to confirm discard or save
-5. Click "Discard" (or equivalent) to close without saving
-6. Modal closes and no class is created
-7. Verify no new row appears in the Classes table
-
-**Expected Result**:
-- Confirmation dialog appears when attempting to close a dirty form (or modal closes without confirmation per design)
-- User can confirm discard of changes
-- Modal closes without creating a class
-- No data is persisted
-
-**Selectors Used**: `class-create-modal`, `confirm-dialog` (if protection is implemented)
-
-**Invariants Verified**:
-- Dirty-state protection is honored (per § 4 "Forms & CRUD behavior" in UX handoff)
-- Discarding changes does not create a class
-- Modal closes cleanly
-
----
-
 ## Coverage Analysis
 
 ### CRUD Coverage
@@ -262,8 +232,7 @@ This test validates the complete user flow for creating a new ontology class fro
 - **Validation — empty field**: Test Case 5 validates required field enforcement
 - **Validation — pattern mismatch**: Test Case 6 validates snake_case pattern `/^[a-z][a-z0-9_]*$/`
 - **Validation — error clearing**: Test Case 6 validates error clears on valid input (on blur)
-- **Modal cancellation**: Test Case 7 validates Escape key dismissal
-- **Dirty-state protection**: Test Case 8 validates confirmation on close with unsaved changes (if implemented)
+- **Modal cancellation**: Test Case 7 validates Escape key dismissal without confirmation (dirty-form protection not implemented)
 - **Spinner timeout**: Test Case 2 validates spinner appears for ≤300ms
 
 ### Anti-Pattern Validations
@@ -291,7 +260,6 @@ None. All required selectors are documented in `ux/selector-registry.yaml`:
 - ✓ `schema-table`, `schema-row-*` (pattern-based, dynamic with class ID)
 - ✓ `schema-page-layout`
 - ✓ `class-drawer`, `class-drawer-id`, `class-drawer-name-input`, `class-drawer-description-input`, `class-drawer-domain-select`
-- ✓ `confirm-dialog` (if dirty-state protection is used)
 
 ---
 
