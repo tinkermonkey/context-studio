@@ -13,6 +13,7 @@ import {
   createPathResult,
   createSPARQLRequest,
   createSPARQLResponse,
+  createSubgraphData,
 } from "./fixtures/graph.fixtures";
 
 const server = setupServer();
@@ -103,6 +104,49 @@ describe("GraphService", () => {
       );
 
       await expect(graphService.getMetrics("invalid")).rejects.toMatchObject({
+        name: "ApiError",
+        status: 400,
+      });
+    });
+  });
+
+  describe("getSubgraph", () => {
+    it("returns subgraph containing specified nodes and connecting edges", async () => {
+      const mockSubgraph = createSubgraphData({
+        nodes: ["node-1", "node-2"],
+        edges: [["node-1", "node-2"]],
+      });
+
+      server.use(
+        rest.get("*/api/graph/subgraph", (req, res, ctx) => {
+          const url = new URL(req.url);
+          const nodes = url.searchParams.get("nodes");
+          if (nodes === "node-1,node-2") {
+            return res(ctx.json(mockSubgraph));
+          }
+          return res(ctx.status(400), ctx.json({ detail: "Invalid nodes" }));
+        }),
+      );
+
+      const result = await graphService.getSubgraph(["node-1", "node-2"]);
+
+      expect(result.nodes).toHaveLength(2);
+      expect(result.nodes[0]).toBe("node-1");
+    });
+
+    it("throws ApiError with 400 on getSubgraph with empty node list", async () => {
+      server.use(
+        rest.get("*/api/graph/subgraph", (req, res, ctx) =>
+          res(
+            ctx.status(400),
+            ctx.json({
+              detail: "At least one node ID is required",
+            }),
+          ),
+        ),
+      );
+
+      await expect(graphService.getSubgraph([])).rejects.toMatchObject({
         name: "ApiError",
         status: 400,
       });
