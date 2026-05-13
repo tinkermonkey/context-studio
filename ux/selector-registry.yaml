@@ -329,6 +329,9 @@ selectors:
   - selector: taxonomies-content
     component: routes/app/schema/taxonomies.tsx
     description: Main content area of taxonomies page
+  - selector: taxonomy-name-*
+    component: routes/app/schema/taxonomies.tsx
+    description: Clickable taxonomy name cell in table with dynamic ID suffix
   - selector: taxonomy-row-actions-*
     component: routes/app/schema/taxonomies.tsx
     description: Actions menu button for taxonomy row
