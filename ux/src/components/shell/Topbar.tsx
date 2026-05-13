@@ -16,7 +16,8 @@ const ROUTE_LABELS: Record<string, string[]> = {
   "/app/pipelines/runs": ["Pipelines", "Run History"],
   "/app/reference/sources": ["External Reference", "Sources"],
   "/app/reference/workflows": ["External Reference", "Grounding Workflows"],
-  "/app/settings": ["Configuration"],
+  "/app/versioning": ["Versioning"],
+  "/app/settings": ["Settings"],
   "/app/contact-sheet": ["Developer", "Contact Sheet"],
 };
 

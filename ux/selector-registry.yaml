@@ -1078,6 +1078,9 @@ selectors:
   - selector: settings-page
     component: routes/app/settings.tsx
     description: Root container for the settings page
+  - selector: edit-config-modal
+    component: components/settings/EditConfigModal.tsx
+    description: Modal dialog for editing a configuration section (workspace, LLM, embedding, NLP, sync)
   - selector: config-tile-workspace
     component: routes/app/settings.tsx
     description: Workspace configuration tile

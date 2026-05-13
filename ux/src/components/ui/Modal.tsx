@@ -12,6 +12,7 @@ interface ModalProps {
   size?: ModalSize;
   children: ReactNode;
   footer?: ReactNode;
+  testId?: string;
 }
 
 export function Modal({
@@ -22,6 +23,7 @@ export function Modal({
   size = "md",
   children,
   footer,
+  testId,
 }: ModalProps) {
   useKeyboardShortcut({ key: "Escape", onKeydown: onClose, enabled: open });
 
@@ -41,6 +43,7 @@ export function Modal({
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal
+        data-testid={testId}
       >
         <div className="modal-head">
           <div className="modal-head-text">

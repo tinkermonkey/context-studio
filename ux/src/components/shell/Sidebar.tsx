@@ -53,7 +53,7 @@ const NAV_TREE = [
       { id: "ref-grounding", label: "Grounding workflows", path: "/app/reference/workflows" },
     ],
   },
-  { id: "settings", label: "Configuration", icon: Settings, path: "/app/settings" },
+  { id: "settings", label: "Settings", icon: Settings, path: "/app/settings" },
 ] as const;
 
 interface SidebarProps {

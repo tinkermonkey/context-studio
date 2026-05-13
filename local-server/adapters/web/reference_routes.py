@@ -5,6 +5,13 @@ This module implements HTTP endpoints for querying external reference sources:
 - GET /api/reference/status — Check availability of reference sources
 - POST /api/reference/search — Search references across sources
 - POST /api/reference/relations — Get relationships for a reference URI
+- GET /api/reference/grounding-workflows — List grounding workflows
+- GET /api/reference/grounding-workflows/{id} — Get a grounding workflow
+- POST /api/reference/grounding-workflows — Create a grounding workflow
+- PUT /api/reference/grounding-workflows/{id} — Update a grounding workflow
+- DELETE /api/reference/grounding-workflows/{id} — Delete a grounding workflow
+- POST /api/reference/grounding-workflows/{id}/run — Trigger a workflow run
+- GET /api/reference/grounding-workflows/{id}/runs — List runs for a workflow
 
 Each endpoint is a thin adapter that:
 1. Receives HTTP request + parsed Pydantic schema
@@ -17,12 +24,18 @@ by a simple aggregation pattern.
 """
 
 import asyncio
+import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
 
-from adapters.web.dependencies import get_reference_sources
+from adapters.persistence.sqlite.models import GroundingWorkflow, WorkflowRun
+from adapters.web.dependencies import get_local_db_session, get_reference_sources
 from adapters.web.schemas.reference import (
+    GroundingWorkflowCreate,
+    GroundingWorkflowResponse,
+    GroundingWorkflowUpdate,
     ReferenceSearchRequest,
     ReferenceRelationsRequest,
     ReferenceSearchResponseSchema,
@@ -31,6 +44,7 @@ from adapters.web.schemas.reference import (
     ReferenceSourceStatusSchema,
     ReferenceResultSchema,
     ReferenceRelationSchema,
+    WorkflowRunResponse,
 )
 from domain.extraction.ports import ReferenceSource
 from utils.logger import get_logger
@@ -308,3 +322,282 @@ async def get_reference_relations(
         sources_failed=sources_failed,
         total_relations=len(relations),
     )
+
+
+# ==================== Grounding Workflow Endpoints ====================
+
+
+def _workflow_to_response(workflow: GroundingWorkflow) -> GroundingWorkflowResponse:
+    """Convert a GroundingWorkflow ORM model to a response schema."""
+    return GroundingWorkflowResponse(
+        id=workflow.id,
+        title=workflow.title,
+        description=workflow.description,
+        source=workflow.source,
+        class_scope=workflow.class_scope or [],
+        status=workflow.status,
+        last_run=workflow.last_run.isoformat() if workflow.last_run else None,
+        last_run_record_count=workflow.last_run_record_count,
+    )
+
+
+def _run_to_response(run: WorkflowRun) -> WorkflowRunResponse:
+    """Convert a WorkflowRun ORM model to a response schema."""
+    return WorkflowRunResponse(
+        id=run.id,
+        workflow_id=run.workflow_id,
+        status=run.status,
+        record_count=run.record_count,
+        timestamp=run.timestamp.isoformat(),
+        error_message=run.error_message,
+    )
+
+
+@router.get(
+    "/grounding-workflows",
+    response_model=list[GroundingWorkflowResponse],
+    status_code=status.HTTP_200_OK,
+)
+async def list_grounding_workflows(
+    db: Session = Depends(get_local_db_session),
+) -> list[GroundingWorkflowResponse]:
+    """
+    List all grounding workflows.
+
+    Returns:
+        List of GroundingWorkflowResponse objects
+    """
+    workflows = db.query(GroundingWorkflow).order_by(GroundingWorkflow.created_at).all()
+    return [_workflow_to_response(w) for w in workflows]
+
+
+@router.get(
+    "/grounding-workflows/{workflow_id}",
+    response_model=GroundingWorkflowResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def get_grounding_workflow(
+    workflow_id: str,
+    db: Session = Depends(get_local_db_session),
+) -> GroundingWorkflowResponse:
+    """
+    Get a single grounding workflow by ID.
+
+    Args:
+        workflow_id: UUID of the workflow
+
+    Returns:
+        GroundingWorkflowResponse
+
+    Raises:
+        HTTPException: 404 if workflow not found
+    """
+    workflow = db.query(GroundingWorkflow).filter(
+        GroundingWorkflow.id == workflow_id
+    ).first()
+    if workflow is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Grounding workflow '{workflow_id}' not found",
+        )
+    return _workflow_to_response(workflow)
+
+
+@router.post(
+    "/grounding-workflows",
+    response_model=GroundingWorkflowResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_grounding_workflow(
+    request: GroundingWorkflowCreate,
+    db: Session = Depends(get_local_db_session),
+) -> GroundingWorkflowResponse:
+    """
+    Create a new grounding workflow.
+
+    Args:
+        request: GroundingWorkflowCreate with workflow details
+
+    Returns:
+        GroundingWorkflowResponse for the created workflow
+    """
+    workflow = GroundingWorkflow(
+        id=str(uuid.uuid4()),
+        title=request.title,
+        description=request.description,
+        source=request.source,
+        class_scope=request.class_scope,
+        status="inactive",
+    )
+    db.add(workflow)
+    db.commit()
+    db.refresh(workflow)
+    return _workflow_to_response(workflow)
+
+
+@router.put(
+    "/grounding-workflows/{workflow_id}",
+    response_model=GroundingWorkflowResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def update_grounding_workflow(
+    workflow_id: str,
+    request: GroundingWorkflowUpdate,
+    db: Session = Depends(get_local_db_session),
+) -> GroundingWorkflowResponse:
+    """
+    Update an existing grounding workflow.
+
+    Args:
+        workflow_id: UUID of the workflow to update
+        request: GroundingWorkflowUpdate with fields to update
+
+    Returns:
+        Updated GroundingWorkflowResponse
+
+    Raises:
+        HTTPException: 404 if workflow not found
+    """
+    workflow = db.query(GroundingWorkflow).filter(
+        GroundingWorkflow.id == workflow_id
+    ).first()
+    if workflow is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Grounding workflow '{workflow_id}' not found",
+        )
+
+    if request.title is not None:
+        workflow.title = request.title
+    if request.description is not None:
+        workflow.description = request.description
+    if request.source is not None:
+        workflow.source = request.source
+    if request.class_scope is not None:
+        workflow.class_scope = request.class_scope
+    if request.status is not None:
+        workflow.status = request.status
+
+    workflow.updated_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(workflow)
+    return _workflow_to_response(workflow)
+
+
+@router.delete(
+    "/grounding-workflows/{workflow_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_grounding_workflow(
+    workflow_id: str,
+    db: Session = Depends(get_local_db_session),
+) -> None:
+    """
+    Delete a grounding workflow and all its runs.
+
+    Args:
+        workflow_id: UUID of the workflow to delete
+
+    Raises:
+        HTTPException: 404 if workflow not found
+    """
+    workflow = db.query(GroundingWorkflow).filter(
+        GroundingWorkflow.id == workflow_id
+    ).first()
+    if workflow is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Grounding workflow '{workflow_id}' not found",
+        )
+    db.delete(workflow)
+    db.commit()
+
+
+@router.post(
+    "/grounding-workflows/{workflow_id}/run",
+    response_model=WorkflowRunResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def run_grounding_workflow(
+    workflow_id: str,
+    db: Session = Depends(get_local_db_session),
+) -> WorkflowRunResponse:
+    """
+    Trigger a grounding workflow run.
+
+    Creates a WorkflowRun record with status 'running' and returns it immediately.
+    Actual enrichment execution is out of scope for the current implementation.
+
+    Args:
+        workflow_id: UUID of the workflow to run
+
+    Returns:
+        WorkflowRunResponse with status 'running'
+
+    Raises:
+        HTTPException: 404 if workflow not found
+    """
+    workflow = db.query(GroundingWorkflow).filter(
+        GroundingWorkflow.id == workflow_id
+    ).first()
+    if workflow is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Grounding workflow '{workflow_id}' not found",
+        )
+
+    run = WorkflowRun(
+        id=str(uuid.uuid4()),
+        workflow_id=workflow_id,
+        status="running",
+        record_count=0,
+        timestamp=datetime.now(timezone.utc),
+    )
+    db.add(run)
+
+    # Update last_run on the workflow
+    workflow.last_run = run.timestamp
+    workflow.updated_at = datetime.now(timezone.utc)
+
+    db.commit()
+    db.refresh(run)
+    return _run_to_response(run)
+
+
+@router.get(
+    "/grounding-workflows/{workflow_id}/runs",
+    response_model=list[WorkflowRunResponse],
+    status_code=status.HTTP_200_OK,
+)
+async def list_workflow_runs(
+    workflow_id: str,
+    db: Session = Depends(get_local_db_session),
+) -> list[WorkflowRunResponse]:
+    """
+    List all runs for a grounding workflow.
+
+    Args:
+        workflow_id: UUID of the workflow
+
+    Returns:
+        List of WorkflowRunResponse objects ordered by timestamp descending
+
+    Raises:
+        HTTPException: 404 if workflow not found
+    """
+    workflow = db.query(GroundingWorkflow).filter(
+        GroundingWorkflow.id == workflow_id
+    ).first()
+    if workflow is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Grounding workflow '{workflow_id}' not found",
+        )
+
+    runs = (
+        db.query(WorkflowRun)
+        .filter(WorkflowRun.workflow_id == workflow_id)
+        .order_by(WorkflowRun.timestamp.desc())
+        .all()
+    )
+    return [_run_to_response(r) for r in runs]

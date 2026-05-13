@@ -916,3 +916,131 @@ class ExtractionRun(BatchRun):
 
     def __repr__(self) -> str:
         return f"<ExtractionRun(id={self.id}, model={self.model}, status={self.status})>"
+
+
+class GroundingWorkflow(Base):  # type: ignore[valid-type,misc]
+    """
+    Configuration record for a grounding workflow.
+
+    A grounding workflow defines how enrichment runs against an external
+    knowledge source (e.g. ConceptNet, schema.org) scoped to a set of classes.
+
+    Attributes:
+        id: UUID as string, primary key
+        title: Human-readable name
+        description: Optional longer description
+        source: External knowledge source name (e.g. "ConceptNet", "schema.org")
+        class_scope: JSON list of class IDs or names to scope enrichment
+        status: Workflow status (active, inactive, error)
+        last_run: UTC timestamp of most recent run (nullable)
+        last_run_record_count: Record count from most recent run (nullable)
+        created_at: UTC timestamp of creation
+        updated_at: UTC timestamp of last modification
+    """
+
+    __tablename__ = "grounding_workflows"
+
+    id = Column(String(36), primary_key=True, nullable=False)
+    title = Column(String(255), nullable=False, index=True)
+    description = Column(Text, nullable=True)
+    source = Column(String(255), nullable=False)
+    class_scope = Column(
+        JSON,
+        nullable=False,
+        default=list,
+        doc="JSON list of class IDs or names to scope enrichment",
+    )
+    status = Column(
+        String(20),
+        nullable=False,
+        default="inactive",
+        index=True,
+        doc="Workflow status: active, inactive, error",
+    )
+    last_run = Column(
+        DateTime(timezone=True),
+        nullable=True,
+        doc="UTC timestamp of most recent run",
+    )
+    last_run_record_count = Column(
+        Integer,
+        nullable=True,
+        doc="Record count from most recent run",
+    )
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('active', 'inactive', 'error')",
+            name="check_valid_workflow_status",
+        ),
+    )
+
+    def __repr__(self) -> str:
+        return f"<GroundingWorkflow(id={self.id}, title={self.title}, status={self.status})>"
+
+
+class WorkflowRun(Base):  # type: ignore[valid-type,misc]
+    """
+    Record of a single execution of a grounding workflow.
+
+    Attributes:
+        id: UUID as string, primary key
+        workflow_id: FK to grounding_workflows.id
+        status: Run status (running, success, failed)
+        record_count: Number of records processed (default 0)
+        timestamp: UTC timestamp when the run was initiated
+        error_message: Optional error message if status is failed
+    """
+
+    __tablename__ = "workflow_runs"
+
+    id = Column(String(36), primary_key=True, nullable=False)
+    workflow_id = Column(
+        String(36),
+        ForeignKey("grounding_workflows.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+        doc="Parent grounding workflow",
+    )
+    status = Column(
+        String(20),
+        nullable=False,
+        default="running",
+        index=True,
+        doc="Run status: running, success, failed",
+    )
+    record_count = Column(
+        Integer,
+        nullable=False,
+        default=0,
+        doc="Number of records processed",
+    )
+    timestamp = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        index=True,
+        doc="UTC timestamp when the run was initiated",
+    )
+    error_message = Column(Text, nullable=True)
+
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('running', 'success', 'failed')",
+            name="check_valid_run_status",
+        ),
+    )
+
+    def __repr__(self) -> str:
+        return f"<WorkflowRun(id={self.id}, workflow_id={self.workflow_id}, status={self.status})>"
