@@ -26,6 +26,7 @@ by a simple aggregation pattern.
 import asyncio
 import uuid
 from datetime import datetime, timezone
+from typing import cast
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -330,26 +331,26 @@ async def get_reference_relations(
 def _workflow_to_response(workflow: GroundingWorkflow) -> GroundingWorkflowResponse:
     """Convert a GroundingWorkflow ORM model to a response schema."""
     return GroundingWorkflowResponse(
-        id=workflow.id,
-        title=workflow.title,
-        description=workflow.description,
-        source=workflow.source,
-        class_scope=workflow.class_scope or [],
-        status=workflow.status,
-        last_run=workflow.last_run.isoformat() if workflow.last_run else None,
-        last_run_record_count=workflow.last_run_record_count,
+        id=cast(str, workflow.id),
+        title=cast(str, workflow.title),
+        description=cast(str | None, workflow.description),
+        source=cast(str, workflow.source),
+        class_scope=cast(list[str], workflow.class_scope or []),
+        status=cast(str, workflow.status),
+        last_run=cast(str | None, workflow.last_run.isoformat() if workflow.last_run else None),
+        last_run_record_count=cast(int | None, workflow.last_run_record_count),
     )
 
 
 def _run_to_response(run: WorkflowRun) -> WorkflowRunResponse:
     """Convert a WorkflowRun ORM model to a response schema."""
     return WorkflowRunResponse(
-        id=run.id,
-        workflow_id=run.workflow_id,
-        status=run.status,
-        record_count=run.record_count,
-        timestamp=run.timestamp.isoformat(),
-        error_message=run.error_message,
+        id=cast(str, run.id),
+        workflow_id=cast(str, run.workflow_id),
+        status=cast(str, run.status),
+        record_count=cast(int, run.record_count),
+        timestamp=cast(str, run.timestamp.isoformat()),
+        error_message=cast(str | None, run.error_message),
     )
 
 
@@ -597,7 +598,7 @@ async def list_workflow_runs(
     runs = (
         db.query(WorkflowRun)
         .filter(WorkflowRun.workflow_id == workflow_id)
-        .order_by(WorkflowRun.timestamp.desc())
+        .order_by(WorkflowRun.timestamp.desc())  # type: ignore[attr-defined]
         .all()
     )
     return [_run_to_response(r) for r in runs]
