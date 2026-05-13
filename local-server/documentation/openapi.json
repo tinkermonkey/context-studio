@@ -3550,6 +3550,290 @@
         }
       }
     },
+    "/api/reference/grounding-workflows": {
+      "get": {
+        "tags": [
+          "reference"
+        ],
+        "summary": "List Grounding Workflows",
+        "description": "List all grounding workflows.\n\nReturns:\n    List of GroundingWorkflowResponse objects",
+        "operationId": "list_grounding_workflows_api_reference_grounding_workflows_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GroundingWorkflowResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Grounding Workflows Api Reference Grounding Workflows Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "reference"
+        ],
+        "summary": "Create Grounding Workflow",
+        "description": "Create a new grounding workflow.\n\nArgs:\n    request: GroundingWorkflowCreate with workflow details\n\nReturns:\n    GroundingWorkflowResponse for the created workflow",
+        "operationId": "create_grounding_workflow_api_reference_grounding_workflows_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroundingWorkflowCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroundingWorkflowResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reference/grounding-workflows/{workflow_id}": {
+      "get": {
+        "tags": [
+          "reference"
+        ],
+        "summary": "Get Grounding Workflow",
+        "description": "Get a single grounding workflow by ID.\n\nArgs:\n    workflow_id: UUID of the workflow\n\nReturns:\n    GroundingWorkflowResponse\n\nRaises:\n    HTTPException: 404 if workflow not found",
+        "operationId": "get_grounding_workflow_api_reference_grounding_workflows__workflow_id__get",
+        "parameters": [
+          {
+            "name": "workflow_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Workflow Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroundingWorkflowResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "reference"
+        ],
+        "summary": "Update Grounding Workflow",
+        "description": "Update an existing grounding workflow.\n\nArgs:\n    workflow_id: UUID of the workflow to update\n    request: GroundingWorkflowUpdate with fields to update\n\nReturns:\n    Updated GroundingWorkflowResponse\n\nRaises:\n    HTTPException: 404 if workflow not found",
+        "operationId": "update_grounding_workflow_api_reference_grounding_workflows__workflow_id__put",
+        "parameters": [
+          {
+            "name": "workflow_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Workflow Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroundingWorkflowUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroundingWorkflowResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "reference"
+        ],
+        "summary": "Delete Grounding Workflow",
+        "description": "Delete a grounding workflow and all its runs.\n\nArgs:\n    workflow_id: UUID of the workflow to delete\n\nRaises:\n    HTTPException: 404 if workflow not found",
+        "operationId": "delete_grounding_workflow_api_reference_grounding_workflows__workflow_id__delete",
+        "parameters": [
+          {
+            "name": "workflow_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Workflow Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reference/grounding-workflows/{workflow_id}/run": {
+      "post": {
+        "tags": [
+          "reference"
+        ],
+        "summary": "Run Grounding Workflow",
+        "description": "Trigger a grounding workflow run.\n\nCreates a WorkflowRun record with status 'running' and returns it immediately.\nActual enrichment execution is out of scope for the current implementation.\n\nArgs:\n    workflow_id: UUID of the workflow to run\n\nReturns:\n    WorkflowRunResponse with status 'running'\n\nRaises:\n    HTTPException: 404 if workflow not found",
+        "operationId": "run_grounding_workflow_api_reference_grounding_workflows__workflow_id__run_post",
+        "parameters": [
+          {
+            "name": "workflow_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Workflow Id"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reference/grounding-workflows/{workflow_id}/runs": {
+      "get": {
+        "tags": [
+          "reference"
+        ],
+        "summary": "List Workflow Runs",
+        "description": "List all runs for a grounding workflow.\n\nArgs:\n    workflow_id: UUID of the workflow\n\nReturns:\n    List of WorkflowRunResponse objects ordered by timestamp descending\n\nRaises:\n    HTTPException: 404 if workflow not found",
+        "operationId": "list_workflow_runs_api_reference_grounding_workflows__workflow_id__runs_get",
+        "parameters": [
+          {
+            "name": "workflow_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Workflow Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkflowRunResponse"
+                  },
+                  "title": "Response List Workflow Runs Api Reference Grounding Workflows  Workflow Id  Runs Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/versioning/changes": {
       "get": {
         "tags": [
@@ -6792,6 +7076,197 @@
         "title": "GraphMetricsResponse",
         "description": "Response containing computed graph metrics."
       },
+      "GroundingWorkflowCreate": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Title",
+            "description": "Human-readable workflow name"
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Source",
+            "description": "External knowledge source name (e.g. 'ConceptNet', 'schema.org')"
+          },
+          "class_scope": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Class Scope",
+            "description": "List of class IDs or names to scope enrichment"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "source"
+        ],
+        "title": "GroundingWorkflowCreate",
+        "description": "Request to create a new grounding workflow."
+      },
+      "GroundingWorkflowResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Workflow UUID"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Human-readable workflow name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional description"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "External knowledge source name"
+          },
+          "class_scope": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Class Scope",
+            "description": "List of class IDs or names to scope enrichment"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Workflow status: active, inactive, error"
+          },
+          "last_run": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Run",
+            "description": "ISO 8601 timestamp of most recent run"
+          },
+          "last_run_record_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Run Record Count",
+            "description": "Record count from most recent run"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "source",
+          "status"
+        ],
+        "title": "GroundingWorkflowResponse",
+        "description": "Response containing a grounding workflow record."
+      },
+      "GroundingWorkflowUpdate": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "description": "Human-readable workflow name"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source",
+            "description": "External knowledge source name"
+          },
+          "class_scope": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Class Scope",
+            "description": "List of class IDs or names to scope enrichment"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status",
+            "description": "Workflow status: active, inactive, error"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional description"
+          }
+        },
+        "type": "object",
+        "title": "GroundingWorkflowUpdate",
+        "description": "Request to update an existing grounding workflow."
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -9962,6 +10437,57 @@
         ],
         "title": "VersioningChangeEventResponse",
         "description": "Response representing a versioning change event"
+      },
+      "WorkflowRunResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Run UUID"
+          },
+          "workflow_id": {
+            "type": "string",
+            "title": "Workflow Id",
+            "description": "Parent workflow UUID"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Run status: running, success, failed"
+          },
+          "record_count": {
+            "type": "integer",
+            "title": "Record Count",
+            "description": "Number of records processed",
+            "default": 0
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp",
+            "description": "ISO 8601 timestamp when run was initiated"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message",
+            "description": "Error message if status is failed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "workflow_id",
+          "status",
+          "timestamp"
+        ],
+        "title": "WorkflowRunResponse",
+        "description": "Response containing a single workflow run record."
       }
     }
   }
