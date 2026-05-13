@@ -14,6 +14,8 @@ export {
   createPipeline,
   executePipeline,
   getPipelineExecutions,
+  createIndividual,
+  getIndividualsByClass,
   clearTestData,
   type Taxonomy,
   type ConceptScheme,
@@ -22,4 +24,5 @@ export {
   type Relationship,
   type Pipeline,
   type Execution,
+  type Individual,
 } from "./factories";

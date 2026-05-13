@@ -1,7 +1,7 @@
 # ============================================================================
 # Stage 1: Base Environment Setup
 # ============================================================================
-# Last dependency refresh: 2026-05-12
+# Last dependency refresh: 2026-05-13
 FROM switchyard-orchestrator:latest
 
 # The base image already includes:
@@ -100,6 +100,14 @@ RUN --mount=type=cache,target=/home/orchestrator/.npm,uid=1000,gid=1000 \
     cd app && \
     npm ci
 
+# --- Playwright Chromium for E2E tests ---
+# System deps must be installed as root; browser binary installs as orchestrator
+USER root
+RUN cd /workspace/context-studio/ux && npx --yes playwright install-deps chromium
+
+USER orchestrator
+RUN cd /workspace/context-studio/ux && npx --yes playwright install chromium
+
 # ============================================================================
 # Stage 5: Runtime Configuration
 # ============================================================================
@@ -121,6 +129,12 @@ RUN node --version && \
 
 # Verify Python dependencies are importable
 RUN python3 -c "import fastapi; import sqlalchemy; import alembic; import pydantic; import pytest; import pytest_asyncio; import networkx; import rdflib; import boto3; import duckdb; import pyarrow; import datasets; print('Python deps OK')"
+
+# Verify Playwright types and browser are installed
+RUN cd /workspace/context-studio/ux && \
+    node -e "require('@playwright/test'); console.log('Playwright types OK')" && \
+    test -d /home/orchestrator/.cache/ms-playwright/chromium-* && \
+    echo "Playwright Chromium browser OK"
 
 # Verify mypy type stubs are installed
 RUN python3 -c "import importlib.metadata; importlib.metadata.version('types-networkx'); print('types-networkx OK')" && \

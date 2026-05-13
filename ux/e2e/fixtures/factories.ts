@@ -9,11 +9,11 @@ import { apiRequest } from "./api-client";
  */
 
 let entityCounter = 0;
+const testRunId = Date.now();
 
 const getRunTimestamp = (): string => {
   entityCounter++;
-  const timestamp = Date.now();
-  return `${timestamp}-${entityCounter}`;
+  return `${testRunId}-${entityCounter}`;
 };
 
 // Type definitions (simplified - matching the API response structure)
@@ -68,6 +68,46 @@ export interface Relationship {
   property_definition_id: string;
   created_at: string;
   is_deleted?: boolean;
+}
+
+export interface Individual {
+  id: string;
+  title: string;
+  description?: string;
+  class_ids: string[];
+  version: number;
+  created_at: string;
+  last_modified: string;
+  is_deleted?: boolean;
+}
+
+// Type definitions for pipelines
+export interface Pipeline {
+  id: string;
+  title: string;
+  provider: string;
+  model: string;
+  system_prompt: string;
+  user_prompt: string;
+  config?: Record<string, unknown>;
+  version: number;
+  enabled: boolean;
+  created_at: string;
+  last_updated: string;
+}
+
+export interface Execution {
+  id: string;
+  pipeline_config_id: string;
+  output_text: string;
+  provider: string;
+  model: string;
+  tokens_in: number;
+  tokens_out: number;
+  duration_ms: number;
+  status: "success" | "error" | "timeout";
+  error_message?: string | null;
+  timestamp: string;
 }
 
 /**
@@ -209,34 +249,34 @@ export async function createRelationship(
   return response;
 }
 
-// Type definitions for pipelines
-export interface Pipeline {
-  id: string;
-  title: string;
-  provider: string;
-  model: string;
-  system_prompt: string;
-  user_prompt: string;
-  config?: Record<string, unknown>;
-  version: number;
-  enabled: boolean;
-  created_at: string;
-  last_updated: string;
+/**
+ * Create a test individual (instance) of a class
+ */
+export async function createIndividual(
+  page: Page,
+  overrides?: {
+    title?: string;
+    description?: string;
+    class_ids?: string[];
+  },
+): Promise<Individual> {
+  const timestamp = getRunTimestamp();
+  const title = overrides?.title || `test-individual-${timestamp}`;
+  const description = overrides?.description || `Test individual created at ${timestamp}`;
+  const class_ids = overrides?.class_ids || [];
+
+  const response = await apiRequest<Individual>(page, "/api/individuals", {
+    method: "POST",
+    body: {
+      title,
+      description,
+      class_ids,
+    },
+  });
+
+  return response;
 }
 
-export interface Execution {
-  id: string;
-  pipeline_config_id: string;
-  output_text: string;
-  provider: string;
-  model: string;
-  tokens_in: number;
-  tokens_out: number;
-  duration_ms: number;
-  status: "success" | "error" | "timeout";
-  error_message?: string | null;
-  timestamp: string;
-}
 
 /**
  * Create a test pipeline configuration
@@ -312,11 +352,28 @@ interface PaginatedResponse<T> {
 
 /**
  * Clear all test data by deleting all non-default entities
- * This is a simple implementation that calls delete endpoints
+ * Handles cascading deletes and soft-deleted entities
  */
 export async function clearTestData(page: Page): Promise<void> {
   try {
-    // Delete all relationships first
+    // Delete individuals first (they have fewer dependencies)
+    const individualsResponse = await apiRequest<PaginatedResponse<Individual>>(
+      page,
+      "/api/individuals",
+    );
+    if (individualsResponse.items) {
+      for (const individual of individualsResponse.items) {
+        try {
+          await apiRequest(page, `/api/individuals/${individual.id}`, {
+            method: "DELETE",
+          });
+        } catch {
+          // Ignore - already deleted or other error
+        }
+      }
+    }
+
+    // Delete all relationships (depends on classes and properties)
     const relationshipsResponse = await apiRequest<PaginatedResponse<Relationship>>(
       page,
       "/api/relationships",
@@ -328,47 +385,28 @@ export async function clearTestData(page: Page): Promise<void> {
             method: "DELETE",
           });
         } catch {
-          // Ignore deletion errors
+          // Ignore - may already be deleted
         }
       }
     }
 
     // Delete all pipelines
-    const pipelinesResponse = await apiRequest<Pipeline[]>(
-      page,
-      "/api/pipelines",
-    );
-    if (Array.isArray(pipelinesResponse)) {
-      for (const pipeline of pipelinesResponse) {
-        try {
-          await apiRequest(page, `/api/pipelines/${pipeline.id}`, {
-            method: "DELETE",
-          });
-        } catch {
-          // Ignore deletion errors
+    try {
+      const pipelinesResponse = await apiRequest<Pipeline[]>(page, "/api/pipelines");
+      if (Array.isArray(pipelinesResponse)) {
+        for (const pipeline of pipelinesResponse) {
+          try {
+            await apiRequest(page, `/api/pipelines/${pipeline.id}`, { method: "DELETE" });
+          } catch {
+            // Ignore deletion errors
+          }
         }
       }
+    } catch {
+      // Ignore if pipelines endpoint doesn't exist
     }
 
-    // Get all taxonomies and delete them
-    const taxonomiesResponse = await apiRequest<PaginatedResponse<Taxonomy>>(
-      page,
-      "/api/taxonomies",
-    );
-    if (taxonomiesResponse.items) {
-      for (const taxonomy of taxonomiesResponse.items) {
-        // Try to delete, but don't fail if it doesn't work
-        try {
-          await apiRequest(page, `/api/taxonomies/${taxonomy.id}`, {
-            method: "DELETE",
-          });
-        } catch {
-          // Ignore deletion errors
-        }
-      }
-    }
-
-    // Get all properties and delete them
+    // Delete all properties (can be used by relationships)
     const propertiesResponse = await apiRequest<PaginatedResponse<PropertyDefinition>>(
       page,
       "/api/properties",
@@ -384,8 +422,44 @@ export async function clearTestData(page: Page): Promise<void> {
         }
       }
     }
-  } catch (_e) {
-    // Ignore errors during cleanup
-    console.log("Cleanup completed with some errors (expected)", _e);
+
+    // Delete all taxonomies (will cascade to schemes and classes)
+    const taxonomiesResponse = await apiRequest<PaginatedResponse<Taxonomy>>(
+      page,
+      "/api/taxonomies",
+    );
+    if (taxonomiesResponse.items) {
+      for (const taxonomy of taxonomiesResponse.items) {
+        try {
+          await apiRequest(page, `/api/taxonomies/${taxonomy.id}`, {
+            method: "DELETE",
+          });
+        } catch {
+          // Ignore - may be in use or already deleted
+        }
+      }
+    }
+
+    // Add a small delay to ensure database operations complete
+    await page.waitForLoadState("networkidle");
+  } catch {
+    // Ignore errors during cleanup - tests may not have created data
+    // but we still want cleanup to succeed
   }
+}
+
+/**
+ * Get individuals by class ID (for checking cascade deletion)
+ */
+export async function getIndividualsByClass(
+  page: Page,
+  classId: string,
+): Promise<Individual[]> {
+  const response = await apiRequest<PaginatedResponse<Individual>>(page, "/api/individuals", {
+    method: "GET",
+  });
+  if (response.items) {
+    return response.items.filter((ind) => ind.class_ids.includes(classId));
+  }
+  return [];
 }
