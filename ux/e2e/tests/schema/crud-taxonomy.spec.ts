@@ -99,7 +99,7 @@ test.describe("Taxonomy CRUD Operations", () => {
     const titleInput = page.getByTestId("taxonomy-drawer-title-input");
 
     // Clear and type new value
-    await titleInput.tripleClick();
+    await titleInput.click({ clickCount: 3 });
     await titleInput.fill("E2E Test Taxonomy Updated");
 
     // Wait for autosave indicator to appear

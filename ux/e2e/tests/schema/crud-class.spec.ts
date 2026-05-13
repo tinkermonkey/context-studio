@@ -126,7 +126,7 @@ test.describe("Class CRUD Operations", () => {
 
     // Step 1-2: Locate and clear the name input, then type new name
     const nameInput = page.getByTestId("class-drawer-name-input");
-    await nameInput.tripleClick();
+    await nameInput.click({ clickCount: 3 });
     await nameInput.fill("Updated Test Class");
 
     // Step 4-5: Verify autosave indicator transitions to "saved"
@@ -138,7 +138,7 @@ test.describe("Class CRUD Operations", () => {
 
     // Step 7: Click description textarea
     const descriptionInput = page.getByTestId("class-drawer-description-input");
-    await descriptionInput.tripleClick();
+    await descriptionInput.click({ clickCount: 3 });
 
     // Step 8: Type new description
     await descriptionInput.fill("Updated description for CRUD test");
