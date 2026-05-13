@@ -147,7 +147,7 @@ test.describe("Promote a draft taxonomy", () => {
     await expect(table).toContainText("draft");
   });
 
-  test("edge case: publish fails when taxonomy has no concept schemes", async ({ page }) => {
+  test("edge case: publish succeeds for empty taxonomy (no concept schemes)", async ({ page }) => {
     // Preconditions: Create a draft taxonomy with no concept schemes
     const emptyTaxonomy = await createTaxonomy(page, {
       title: "Empty Taxonomy",
@@ -179,23 +179,25 @@ test.describe("Promote a draft taxonomy", () => {
 
     // Step 6: Enter a message in the textarea
     const messageInput = page.getByTestId("taxonomy-publish-message-input");
-    await messageInput.fill("Trying to publish empty taxonomy");
+    await messageInput.fill("Publishing empty taxonomy");
 
-    // Step 7: Click "Publish" button — API should reject since there are no changes
+    // Step 7: Click "Publish" button — publish succeeds even with no changes
     const publishButton = page.getByTestId("taxonomy-publish-confirm-button");
     await expect(publishButton).toBeEnabled();
     await publishButton.click();
     await page.waitForLoadState("networkidle");
 
-    // Step 8: Expect error toast to appear
-    const errorToast = page.locator(".toast");
-    await expect(errorToast).toContainText(/no changes|cannot publish|error/i);
+    // Step 8: Dialog closes automatically
+    await expect(publishDialog).not.toBeVisible();
 
-    // Step 9: Dialog should remain open with form state preserved
-    await expect(publishDialog).toBeVisible();
+    // Step 9: Success toast appears
+    await expect(page.locator(".toast")).toContainText(/taxonomy published/i);
 
-    // Step 10: Taxonomy remains in "draft" status, drawer is still visible
+    // Step 10: Drawer remains open; status text updates to "published"
     await expect(drawer).toBeVisible();
-    await expect(drawer).toContainText("draft");
+    await expect(drawer).toContainText("published");
+
+    // Step 11: Publish button is no longer available on the published taxonomy
+    await expect(page.getByTestId("taxonomy-drawer-publish-button")).not.toBeVisible();
   });
 });
