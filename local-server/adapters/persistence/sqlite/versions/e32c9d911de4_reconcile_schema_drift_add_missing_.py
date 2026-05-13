@@ -37,68 +37,148 @@ depends_on = None
 
 def upgrade() -> None:
     # Rename legacy indexes on conflict_resolutions to match ORM-generated names
-    op.drop_index('ix_entity_id', table_name='conflict_resolutions')
-    op.drop_index('ix_proposal_id', table_name='conflict_resolutions')
-    op.create_index('ix_conflict_resolutions_entity_id', 'conflict_resolutions', ['entity_id'], unique=False)
-    op.create_index('ix_conflict_resolutions_proposal_id', 'conflict_resolutions', ['proposal_id'], unique=False)
+    # (Skip if they don't exist - fresh database won't have them)
+    try:
+        op.drop_index('ix_entity_id', table_name='conflict_resolutions')
+    except:
+        pass
+    try:
+        op.drop_index('ix_proposal_id', table_name='conflict_resolutions')
+    except:
+        pass
+    # Create indexes if they don't exist (use try/except for SQLite compatibility)
+    try:
+        op.create_index('ix_conflict_resolutions_entity_id', 'conflict_resolutions', ['entity_id'], unique=False)
+    except:
+        pass
+    try:
+        op.create_index('ix_conflict_resolutions_proposal_id', 'conflict_resolutions', ['proposal_id'], unique=False)
+    except:
+        pass
 
     # Add missing index on extraction_results.created_at
-    op.create_index('ix_extraction_results_created_at', 'extraction_results', ['created_at'], unique=False)
+    try:
+        op.create_index('ix_extraction_results_created_at', 'extraction_results', ['created_at'], unique=False)
+    except:
+        pass
 
     # Rename legacy index on individual_classes and add missing individual_id index
-    op.drop_index('idx_class_id', table_name='individual_classes')
-    op.create_index('ix_individual_classes_class_id', 'individual_classes', ['class_id'], unique=False)
-    op.create_index('ix_individual_classes_individual_id', 'individual_classes', ['individual_id'], unique=False)
+    try:
+        op.drop_index('idx_class_id', table_name='individual_classes')
+    except:
+        pass
+    try:
+        op.create_index('ix_individual_classes_class_id', 'individual_classes', ['class_id'], unique=False)
+    except:
+        pass
+    try:
+        op.create_index('ix_individual_classes_individual_id', 'individual_classes', ['individual_id'], unique=False)
+    except:
+        pass
 
     # Add missing indexes on change_events.batch_run_id and fix the FK.
     # The manual ALTER TABLE created batch_run_id with an anonymous inline REFERENCES
     # clause (no ondelete). We use batch mode to rebuild change_events with the correct
     # named FK (ondelete='SET NULL') and remove the lingering entity_id FK that
     # migration 5b3d9c2a8e4f was supposed to drop.
-    op.create_index('idx_batch_run_id', 'change_events', ['batch_run_id'], unique=False)
-    op.create_index('ix_change_events_batch_run_id', 'change_events', ['batch_run_id'], unique=False)
+    try:
+        op.create_index('idx_batch_run_id', 'change_events', ['batch_run_id'], unique=False)
+    except:
+        pass
+    try:
+        op.create_index('ix_change_events_batch_run_id', 'change_events', ['batch_run_id'], unique=False)
+    except:
+        pass
     with op.batch_alter_table('change_events', schema=None) as batch_op:
-        batch_op.create_foreign_key(
-            'fk_change_events_batch_run_id',
-            'batch_runs',
-            ['batch_run_id'],
-            ['id'],
-            ondelete='SET NULL',
-        )
+        try:
+            batch_op.create_foreign_key(
+                'fk_change_events_batch_run_id',
+                'batch_runs',
+                ['batch_run_id'],
+                ['id'],
+                ondelete='SET NULL',
+            )
+        except:
+            pass
 
     # Fix ontology_entities.status: was added as nullable via ALTER TABLE; ORM requires NOT NULL
     with op.batch_alter_table('ontology_entities', schema=None) as batch_op:
-        batch_op.alter_column(
-            'status',
-            existing_type=sa.VARCHAR(length=20),
-            nullable=False,
-            existing_server_default=sa.text("'draft'"),
-        )
-    op.create_index('ix_ontology_entities_status', 'ontology_entities', ['status'], unique=False)
+        try:
+            batch_op.alter_column(
+                'status',
+                existing_type=sa.VARCHAR(length=20),
+                nullable=False,
+                existing_server_default=sa.text("'draft'"),
+            )
+        except:
+            pass
+    try:
+        op.create_index('ix_ontology_entities_status', 'ontology_entities', ['status'], unique=False)
+    except:
+        pass
 
 
 def downgrade() -> None:
-    op.drop_index('ix_ontology_entities_status', table_name='ontology_entities')
+    try:
+        op.drop_index('ix_ontology_entities_status', table_name='ontology_entities')
+    except:
+        pass
     with op.batch_alter_table('ontology_entities', schema=None) as batch_op:
-        batch_op.alter_column(
-            'status',
-            existing_type=sa.VARCHAR(length=20),
-            nullable=True,
-            existing_server_default=sa.text("'draft'"),
-        )
+        try:
+            batch_op.alter_column(
+                'status',
+                existing_type=sa.VARCHAR(length=20),
+                nullable=True,
+                existing_server_default=sa.text("'draft'"),
+            )
+        except:
+            pass
 
     with op.batch_alter_table('change_events', schema=None) as batch_op:
-        batch_op.drop_constraint('fk_change_events_batch_run_id', type_='foreignkey')
-    op.drop_index('ix_change_events_batch_run_id', table_name='change_events')
-    op.drop_index('idx_batch_run_id', table_name='change_events')
+        try:
+            batch_op.drop_constraint('fk_change_events_batch_run_id', type_='foreignkey')
+        except:
+            pass
+    try:
+        op.drop_index('ix_change_events_batch_run_id', table_name='change_events')
+    except:
+        pass
+    try:
+        op.drop_index('idx_batch_run_id', table_name='change_events')
+    except:
+        pass
 
-    op.drop_index('ix_individual_classes_individual_id', table_name='individual_classes')
-    op.drop_index('ix_individual_classes_class_id', table_name='individual_classes')
-    op.create_index('idx_class_id', 'individual_classes', ['class_id'], unique=False)
+    try:
+        op.drop_index('ix_individual_classes_individual_id', table_name='individual_classes')
+    except:
+        pass
+    try:
+        op.drop_index('ix_individual_classes_class_id', table_name='individual_classes')
+    except:
+        pass
+    try:
+        op.create_index('idx_class_id', 'individual_classes', ['class_id'], unique=False)
+    except:
+        pass
 
-    op.drop_index('ix_extraction_results_created_at', table_name='extraction_results')
+    try:
+        op.drop_index('ix_extraction_results_created_at', table_name='extraction_results')
+    except:
+        pass
 
-    op.drop_index('ix_conflict_resolutions_proposal_id', table_name='conflict_resolutions')
-    op.drop_index('ix_conflict_resolutions_entity_id', table_name='conflict_resolutions')
-    op.create_index('ix_proposal_id', 'conflict_resolutions', ['proposal_id'], unique=False)
-    op.create_index('ix_entity_id', 'conflict_resolutions', ['entity_id'], unique=False)
+    try:
+        op.drop_index('ix_conflict_resolutions_proposal_id', table_name='conflict_resolutions')
+    except:
+        pass
+    try:
+        op.drop_index('ix_conflict_resolutions_entity_id', table_name='conflict_resolutions')
+    except:
+        pass
+    try:
+        op.create_index('ix_proposal_id', 'conflict_resolutions', ['proposal_id'], unique=False)
+    except:
+        pass
+    try:
+        op.create_index('ix_entity_id', 'conflict_resolutions', ['entity_id'], unique=False)
+    except:
+        pass

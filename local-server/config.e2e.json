@@ -2,7 +2,9 @@
   "server": {
     "host": "127.0.0.1",
     "port": 8888,
-    "cors_origins": ["*"]
+    "cors_origins": [
+      "*"
+    ]
   },
   "database": {
     "local_db_path": "./datafiles/e2e-test/local.db",
@@ -15,7 +17,7 @@
   },
   "llm": {
     "openai_api_key": "",
-    "anthropic_api_key": ""
+    "anthropic_api_key": "sk-dummy-key"
   },
   "reference": {
     "cache_db_path": "./datafiles/e2e-test/reference_api_cache.db",

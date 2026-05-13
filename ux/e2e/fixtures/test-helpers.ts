@@ -11,10 +11,13 @@ export {
   createClass,
   createPropertyDefinition,
   createRelationship,
+  createIndividual,
+  getIndividualsByClass,
   clearTestData,
   type Taxonomy,
   type ConceptScheme,
   type OntologyClass,
   type PropertyDefinition,
   type Relationship,
+  type Individual,
 } from "./factories";

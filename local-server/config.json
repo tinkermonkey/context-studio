@@ -1,7 +1,7 @@
 {
   "server": {
     "host": "127.0.0.1",
-    "port": 8000,
+    "port": 8888,
     "cors_origins": [
       "*"
     ]
@@ -17,7 +17,7 @@
   },
   "llm": {
     "openai_api_key": "",
-    "anthropic_api_key": ""
+    "anthropic_api_key": "sk-dummy-test-key"
   },
   "reference": {
     "cache_db_path": "./reference_api_cache.db",
