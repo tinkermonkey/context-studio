@@ -48,7 +48,12 @@ export function Topbar({ workspaceName = "context-studio" }: TopbarProps) {
         ))}
       </div>
 
-      <button className="topbar-palette" onClick={openPalette} type="button">
+      <button
+        className="topbar-palette"
+        data-testid="topbar-palette-button"
+        onClick={openPalette}
+        type="button"
+      >
         <Search size={14} />
         <span>Search or run command…</span>
         <span className="kbd">⌘K</span>
