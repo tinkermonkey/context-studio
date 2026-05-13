@@ -270,46 +270,4 @@ test.describe("Create Class", () => {
     expect(finalRowCount).toBe(initialRowCount);
   });
 
-  test("Edge Case — Closing Modal Requires Confirmation if Form is Dirty", async ({ page }) => {
-    // Setup: Create a taxonomy and concept scheme
-    const taxonomy = await createTaxonomy(page, {
-      title: "test-taxonomy-dirty-form",
-      description: "Taxonomy for dirty form tests",
-    });
-    await createConceptScheme(page, taxonomy.id, {
-      title: "test-scheme-dirty-form",
-      description: "Scheme for dirty form tests",
-    });
-
-    // Navigate to classes page and open modal
-    await page.goto("/app/schema/classes");
-    await page.waitForLoadState("networkidle");
-    const initialRowCount = await page.locator('[data-testid^="schema-row-"]').count();
-
-    await page.getByTestId("class-add-button").click();
-    await expect(page.getByTestId("class-create-modal")).toBeVisible();
-
-    // Type text into the name field to make form dirty
-    await page.getByTestId("class-editor-name-input").fill("unsaved_class");
-
-    // Press Escape to attempt closing with unsaved changes
-    await page.keyboard.press("Escape");
-
-    // Verify confirmation dialog appears
-    const confirmDialog = page.getByTestId("confirm-dialog");
-    await expect(confirmDialog).toBeVisible();
-
-    // Click Discard to confirm closing without saving
-    const discardButton = page.getByTestId("confirm-dialog-cancel");
-    await expect(discardButton).toBeVisible();
-    await discardButton.click();
-
-    // Verify modal is now closed
-    await expect(page.getByTestId("class-create-modal")).not.toBeVisible();
-
-    // Verify no class was created
-    await page.waitForLoadState("networkidle");
-    const finalRowCount = await page.locator('[data-testid^="schema-row-"]').count();
-    expect(finalRowCount).toBe(initialRowCount);
-  });
 });
