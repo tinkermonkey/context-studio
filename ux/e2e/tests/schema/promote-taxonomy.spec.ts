@@ -80,7 +80,10 @@ test.describe("Promote a draft taxonomy", () => {
     await expect(drawer).toContainText("published");
 
     // Step 12: Toast appears with success message
-    await expect(page.getByRole("status")).toContainText(/taxonomy published/i);
+    await expect(page.locator(".toast")).toContainText(/taxonomy published/i);
+
+    // Step 13: Publish button is no longer available on a published taxonomy
+    await expect(page.getByTestId("taxonomy-drawer-publish-button")).not.toBeVisible();
   });
 
   test("edge case: cancel publish dialog leaves taxonomy in draft state", async ({ page }) => {
@@ -136,7 +139,7 @@ test.describe("Promote a draft taxonomy", () => {
     await expect(drawer).toContainText("draft");
 
     // Verify no toast is displayed
-    const toasts = page.getByRole("status");
+    const toasts = page.locator(".toast");
     await expect(toasts).not.toContainText(/taxonomy published/i);
 
     // Verify taxonomy in the table continues to show "draft" status
@@ -171,40 +174,28 @@ test.describe("Promote a draft taxonomy", () => {
     const publishDialog = page.getByTestId("taxonomy-publish-dialog");
     await expect(publishDialog).toBeVisible();
 
-    // Step 5: Diff summary area displays an error or "No changes to publish"
-    await expect(publishDialog).toContainText(/no changes|cannot publish|no concept schemes/i);
+    // Step 5: Diff summary area displays "No changes to publish"
+    await expect(publishDialog).toContainText(/no changes to publish/i);
 
     // Step 6: Enter a message in the textarea
     const messageInput = page.getByTestId("taxonomy-publish-message-input");
     await messageInput.fill("Trying to publish empty taxonomy");
 
-    // Step 7: Attempt to click "Publish" button - verify it's disabled or API rejects
+    // Step 7: Click "Publish" button — API should reject since there are no changes
     const publishButton = page.getByTestId("taxonomy-publish-confirm-button");
+    await expect(publishButton).toBeEnabled();
+    await publishButton.click();
+    await page.waitForLoadState("networkidle");
 
-    // Expected: Button should be disabled if no changes to publish
-    const isDisabled = await publishButton.isDisabled();
+    // Step 8: Expect error toast to appear
+    const errorToast = page.locator(".toast");
+    await expect(errorToast).toContainText(/no changes|cannot publish|error/i);
 
-    if (isDisabled) {
-      // Button is disabled - this is the expected path
-      await expect(publishButton).toBeDisabled();
-    } else {
-      // Button is enabled but API should reject - attempt click and expect error
-      await publishButton.click();
-      await page.waitForLoadState("networkidle");
-
-      // Expect error banner or toast to appear
-      const errorElements = page.locator('[class*="error"], [class*="Error"]');
-      const hasError =
-        (await errorElements.count()) > 0 ||
-        (await page.getByRole("status").count()) > 0;
-
-      // Dialog should remain open with form state preserved
-      await expect(publishDialog).toBeVisible();
-      await expect(drawer).toContainText("draft");
-    }
-
-    // Final assertions: Taxonomy remains in "draft" status, no publish mutation succeeds
-    await expect(drawer).toContainText("draft");
+    // Step 9: Dialog should remain open with form state preserved
     await expect(publishDialog).toBeVisible();
+
+    // Step 10: Taxonomy remains in "draft" status, drawer is still visible
+    await expect(drawer).toBeVisible();
+    await expect(drawer).toContainText("draft");
   });
 });
