@@ -41,12 +41,8 @@ test.describe("Class CRUD Operations", () => {
     );
 
     // Step 6: Select domain from dropdown
-    // Note: We need to interact with the domain selector in the form
-    // The form should have a domain/scheme selector
-    const domainSelect = page.locator('[data-testid="class-form"]').locator("select");
-    if (await domainSelect.count() > 0) {
-      await domainSelect.selectOption(scheme.id);
-    }
+    const domainSelect = page.getByTestId("class-editor-domain-select");
+    await domainSelect.selectOption(scheme.id);
 
     // Step 8: Click submit button
     await page.getByTestId("class-submit-button").click();

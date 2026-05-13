@@ -190,9 +190,7 @@ test.describe("Property CRUD Operations", () => {
 
     // Verify no confirmation dialog appears (property is unused)
     const confirmDialog = page.getByTestId("confirm-dialog");
-    // Give it a short moment in case a dialog appears
-    const isDialogVisible = await confirmDialog.isVisible().catch(() => false);
-    expect(isDialogVisible).toBe(false);
+    await expect(confirmDialog).not.toBeVisible();
 
     // Wait for network idle after deletion
     await page.waitForLoadState("networkidle");

@@ -27,7 +27,7 @@ test.describe("Relationship CRUD Operations", () => {
     await page.goto("/app/relationships");
     await page.waitForLoadState("networkidle");
 
-    // Test Case 1: Open create relationship modal
+    // Open create relationship modal
     await page.getByTestId("relationship-add-button").click();
     await expect(page.getByTestId("relationship-create-modal")).toBeVisible();
 
@@ -44,7 +44,7 @@ test.describe("Relationship CRUD Operations", () => {
     await expect(targetSelect).toBeVisible();
     await expect(typeSelect).toBeVisible();
 
-    // Test Case 1: Submit empty form to trigger validation errors
+    // Submit empty form to trigger validation errors
     await page.getByTestId("relationship-submit-button").click();
 
     // Wait for validation errors to appear
@@ -59,7 +59,7 @@ test.describe("Relationship CRUD Operations", () => {
     // If no visible error elements, the form should still be visible (not submitted)
     await expect(form).toBeVisible();
 
-    // Test Case 1: Fill source class dropdown
+    // Fill source class dropdown
     await sourceSelect.click();
     await page.getByRole("option", { name: "Source Class" }).click();
     await page.waitForLoadState("networkidle");
@@ -67,7 +67,7 @@ test.describe("Relationship CRUD Operations", () => {
     // Verify source error clears on change (form is still visible and we can continue)
     await expect(form).toBeVisible();
 
-    // Test Case 1: Fill target class dropdown
+    // Fill target class dropdown
     await targetSelect.click();
     await page.getByRole("option", { name: "Target Class" }).click();
     await page.waitForLoadState("networkidle");
@@ -75,7 +75,7 @@ test.describe("Relationship CRUD Operations", () => {
     // Verify target error clears on change
     await expect(form).toBeVisible();
 
-    // Test Case 1: Fill relationship type dropdown
+    // Fill relationship type dropdown
     await typeSelect.click();
     await page.getByRole("option", { name: "Related To" }).click();
     await page.waitForLoadState("networkidle");
@@ -83,14 +83,52 @@ test.describe("Relationship CRUD Operations", () => {
     // Verify type error clears on change
     await expect(form).toBeVisible();
 
-    // Test Case 1: Submit the form
+    // Submit the form
     await page.getByTestId("relationship-submit-button").click();
     await page.waitForLoadState("networkidle");
 
     // Modal should close after successful submission
     await expect(page.getByTestId("relationship-create-modal")).not.toBeVisible();
+  });
 
-    // Test Case 2: Verify relationship appears in table
+  test("should read relationship details from drawer", async ({ page }) => {
+    // Setup: Create test entities
+    const taxonomy = await createTaxonomy(page, { title: "Relationship Test Taxonomy" });
+    const scheme = await createConceptScheme(page, taxonomy.id, { title: "Test Scheme" });
+    const sourceClass = await createClass(page, scheme.id, { title: "Source Class" });
+    const targetClass = await createClass(page, scheme.id, { title: "Target Class" });
+    const property = await createPropertyDefinition(page, {
+      identifier: "related_to",
+      title: "Related To",
+    });
+
+    // Create a relationship via form
+    await page.goto("/app/relationships");
+    await page.waitForLoadState("networkidle");
+
+    await page.getByTestId("relationship-add-button").click();
+    await expect(page.getByTestId("relationship-create-modal")).toBeVisible();
+
+    const sourceSelect = page.getByTestId("relationship-source-select");
+    const targetSelect = page.getByTestId("relationship-target-select");
+    const typeSelect = page.getByTestId("relationship-type-select");
+
+    await sourceSelect.click();
+    await page.getByRole("option", { name: "Source Class" }).click();
+    await page.waitForLoadState("networkidle");
+
+    await targetSelect.click();
+    await page.getByRole("option", { name: "Target Class" }).click();
+    await page.waitForLoadState("networkidle");
+
+    await typeSelect.click();
+    await page.getByRole("option", { name: "Related To" }).click();
+    await page.waitForLoadState("networkidle");
+
+    await page.getByTestId("relationship-submit-button").click();
+    await page.waitForLoadState("networkidle");
+
+    // Verify relationship appears in table
     await page.goto("/app/relationships");
     await page.waitForLoadState("networkidle");
 
@@ -102,7 +140,7 @@ test.describe("Relationship CRUD Operations", () => {
     await expect(table).toContainText("Source Class");
     await expect(table).toContainText("Target Class");
 
-    // Test Case 2: Click on relationship row to open drawer
+    // Click on relationship row to open drawer
     // Find the row by looking for one that contains our expected data
     const rows = page.locator('[data-testid^="schema-row-"]');
     const relationshipRow = rows
@@ -111,14 +149,10 @@ test.describe("Relationship CRUD Operations", () => {
       })
       .first();
 
-    // Extract the relationship ID from the row's testid for later verification
-    const rowTestId = await relationshipRow.getAttribute("data-testid");
-    const relationshipId = rowTestId?.replace("schema-row-", "") || "";
-
     await relationshipRow.click();
     await page.waitForLoadState("networkidle");
 
-    // Test Case 2: Verify drawer appears
+    // Verify drawer appears
     const drawer = page.getByTestId("relationship-drawer");
     await expect(drawer).toBeVisible();
 
@@ -128,7 +162,7 @@ test.describe("Relationship CRUD Operations", () => {
     expect(titleText).toContain("Source Class");
     expect(titleText).toContain("Target Class");
 
-    // Test Case 3: Verify field values in drawer (Read operation)
+    // Verify field values in drawer (Read operation)
     const idField = page.getByTestId("relationship-drawer-id");
     await expect(idField).toBeVisible();
     const idValue = await idField.inputValue();
@@ -155,8 +189,63 @@ test.describe("Relationship CRUD Operations", () => {
     const timestampCount = await timestampElements.count();
     // At minimum, we should see some timestamp indication in the drawer
     await expect(drawer).toBeVisible();
+  });
 
-    // Test Case 4: Delete relationship with confirmation
+  test("should cancel delete with confirmation dialog", async ({ page }) => {
+    // Setup: Create test entities and relationship
+    const taxonomy = await createTaxonomy(page, { title: "Relationship Test Taxonomy" });
+    const scheme = await createConceptScheme(page, taxonomy.id, { title: "Test Scheme" });
+    const sourceClass = await createClass(page, scheme.id, { title: "Source Class" });
+    const targetClass = await createClass(page, scheme.id, { title: "Target Class" });
+    const property = await createPropertyDefinition(page, {
+      identifier: "related_to",
+      title: "Related To",
+    });
+
+    // Create a relationship via form
+    await page.goto("/app/relationships");
+    await page.waitForLoadState("networkidle");
+
+    await page.getByTestId("relationship-add-button").click();
+    await expect(page.getByTestId("relationship-create-modal")).toBeVisible();
+
+    const sourceSelect = page.getByTestId("relationship-source-select");
+    const targetSelect = page.getByTestId("relationship-target-select");
+    const typeSelect = page.getByTestId("relationship-type-select");
+
+    await sourceSelect.click();
+    await page.getByRole("option", { name: "Source Class" }).click();
+    await page.waitForLoadState("networkidle");
+
+    await targetSelect.click();
+    await page.getByRole("option", { name: "Target Class" }).click();
+    await page.waitForLoadState("networkidle");
+
+    await typeSelect.click();
+    await page.getByRole("option", { name: "Related To" }).click();
+    await page.waitForLoadState("networkidle");
+
+    await page.getByTestId("relationship-submit-button").click();
+    await page.waitForLoadState("networkidle");
+
+    // Open drawer
+    await page.goto("/app/relationships");
+    await page.waitForLoadState("networkidle");
+
+    const rows = page.locator('[data-testid^="schema-row-"]');
+    const relationshipRow = rows
+      .filter({
+        hasText: /Related To.*Source Class.*Target Class/,
+      })
+      .first();
+
+    await relationshipRow.click();
+    await page.waitForLoadState("networkidle");
+
+    const drawer = page.getByTestId("relationship-drawer");
+    await expect(drawer).toBeVisible();
+
+    // Delete relationship with confirmation
     const deleteButton = page.getByTestId("drawer-delete-button");
     await expect(deleteButton).toBeVisible();
     await deleteButton.click();
@@ -167,11 +256,10 @@ test.describe("Relationship CRUD Operations", () => {
     await expect(confirmDialog).toBeVisible();
 
     // Verify dialog contains deletion message
-    const dialogContent = confirmDialog.locator("text");
     const contentText = await confirmDialog.textContent();
     expect(contentText).toContain("delete");
 
-    // Test Case 4: Click cancel button
+    // Click cancel button
     const cancelButton = page.getByTestId("confirm-dialog-cancel");
     await expect(cancelButton).toBeVisible();
     await cancelButton.click();
@@ -181,14 +269,77 @@ test.describe("Relationship CRUD Operations", () => {
     await expect(confirmDialog).not.toBeVisible();
 
     // Verify relationship is still visible in drawer
+    const idField = page.getByTestId("relationship-drawer-id");
     await expect(drawer).toBeVisible();
     await expect(idField).toBeVisible();
+  });
 
-    // Test Case 5: Delete and verify undo appears
+  test("should delete relationship with confirmation", async ({ page }) => {
+    // Setup: Create test entities and relationship
+    const taxonomy = await createTaxonomy(page, { title: "Relationship Test Taxonomy" });
+    const scheme = await createConceptScheme(page, taxonomy.id, { title: "Test Scheme" });
+    const sourceClass = await createClass(page, scheme.id, { title: "Source Class" });
+    const targetClass = await createClass(page, scheme.id, { title: "Target Class" });
+    const property = await createPropertyDefinition(page, {
+      identifier: "related_to",
+      title: "Related To",
+    });
+
+    // Create a relationship via form
+    await page.goto("/app/relationships");
+    await page.waitForLoadState("networkidle");
+
+    await page.getByTestId("relationship-add-button").click();
+    await expect(page.getByTestId("relationship-create-modal")).toBeVisible();
+
+    const sourceSelect = page.getByTestId("relationship-source-select");
+    const targetSelect = page.getByTestId("relationship-target-select");
+    const typeSelect = page.getByTestId("relationship-type-select");
+
+    await sourceSelect.click();
+    await page.getByRole("option", { name: "Source Class" }).click();
+    await page.waitForLoadState("networkidle");
+
+    await targetSelect.click();
+    await page.getByRole("option", { name: "Target Class" }).click();
+    await page.waitForLoadState("networkidle");
+
+    await typeSelect.click();
+    await page.getByRole("option", { name: "Related To" }).click();
+    await page.waitForLoadState("networkidle");
+
+    await page.getByTestId("relationship-submit-button").click();
+    await page.waitForLoadState("networkidle");
+
+    // Open drawer
+    await page.goto("/app/relationships");
+    await page.waitForLoadState("networkidle");
+
+    const rows = page.locator('[data-testid^="schema-row-"]');
+    const relationshipRow = rows
+      .filter({
+        hasText: /Related To.*Source Class.*Target Class/,
+      })
+      .first();
+
+    // Extract the relationship ID from the row's testid
+    const rowTestId = await relationshipRow.getAttribute("data-testid");
+    const relationshipId = rowTestId?.replace("schema-row-", "") || "";
+
+    await relationshipRow.click();
+    await page.waitForLoadState("networkidle");
+
+    const drawer = page.getByTestId("relationship-drawer");
+    await expect(drawer).toBeVisible();
+
+    // Delete relationship
+    const deleteButton = page.getByTestId("drawer-delete-button");
+    await expect(deleteButton).toBeVisible();
     await deleteButton.click();
     await page.waitForLoadState("networkidle");
 
-    // Confirm deletion this time
+    // Confirm deletion
+    const confirmDialog = page.getByTestId("relationship-delete-confirm");
     await expect(confirmDialog).toBeVisible();
     const confirmButton = page.getByTestId("confirm-dialog-confirm");
     await confirmButton.click();
@@ -196,9 +347,6 @@ test.describe("Relationship CRUD Operations", () => {
 
     // Drawer should close after deletion
     await expect(drawer).not.toBeVisible();
-
-    // Wait for toast to appear
-    await page.waitForLoadState("networkidle");
 
     // Verify toast notification with undo action appears
     const toast = page.locator('[role="status"]').or(page.locator('[data-testid^="toast-action-"]'));
@@ -212,60 +360,117 @@ test.describe("Relationship CRUD Operations", () => {
     await page.goto("/app/relationships");
     await page.waitForLoadState("networkidle");
 
-    const updatedTable = page.getByTestId("schema-table");
     const relationshipRowsAfterDelete = page.locator(
       `[data-testid="schema-row-${relationshipId}"]`,
     );
     await expect(relationshipRowsAfterDelete).not.toBeVisible({ timeout: 3000 });
+  });
 
-    // Test Case 6: Click undo to restore relationship
-    // Navigate back or find the toast if still visible
+  test("should undo relationship deletion within 8-second window", async ({ page }) => {
+    // Setup: Create test entities and relationship
+    const taxonomy = await createTaxonomy(page, { title: "Relationship Test Taxonomy" });
+    const scheme = await createConceptScheme(page, taxonomy.id, { title: "Test Scheme" });
+    const sourceClass = await createClass(page, scheme.id, { title: "Source Class" });
+    const targetClass = await createClass(page, scheme.id, { title: "Target Class" });
+    const property = await createPropertyDefinition(page, {
+      identifier: "related_to",
+      title: "Related To",
+    });
+
+    // Create a relationship via form
     await page.goto("/app/relationships");
     await page.waitForLoadState("networkidle");
 
-    // Look for undo button in toast (it might still be there within 8-second window)
+    await page.getByTestId("relationship-add-button").click();
+    await expect(page.getByTestId("relationship-create-modal")).toBeVisible();
+
+    const sourceSelect = page.getByTestId("relationship-source-select");
+    const targetSelect = page.getByTestId("relationship-target-select");
+    const typeSelect = page.getByTestId("relationship-type-select");
+
+    await sourceSelect.click();
+    await page.getByRole("option", { name: "Source Class" }).click();
+    await page.waitForLoadState("networkidle");
+
+    await targetSelect.click();
+    await page.getByRole("option", { name: "Target Class" }).click();
+    await page.waitForLoadState("networkidle");
+
+    await typeSelect.click();
+    await page.getByRole("option", { name: "Related To" }).click();
+    await page.waitForLoadState("networkidle");
+
+    await page.getByTestId("relationship-submit-button").click();
+    await page.waitForLoadState("networkidle");
+
+    // Delete the relationship
+    await page.goto("/app/relationships");
+    await page.waitForLoadState("networkidle");
+
+    const rows = page.locator('[data-testid^="schema-row-"]');
+    const relationshipRow = rows
+      .filter({
+        hasText: /Related To.*Source Class.*Target Class/,
+      })
+      .first();
+
+    await relationshipRow.click();
+    await page.waitForLoadState("networkidle");
+
+    const drawer = page.getByTestId("relationship-drawer");
+    const deleteButton = page.getByTestId("drawer-delete-button");
+    await deleteButton.click();
+    await page.waitForLoadState("networkidle");
+
+    const confirmDialog = page.getByTestId("relationship-delete-confirm");
+    const confirmButton = page.getByTestId("confirm-dialog-confirm");
+    await confirmButton.click();
+    await page.waitForLoadState("networkidle");
+
+    // Verify drawer closes and toast appears
+    await expect(drawer).not.toBeVisible();
     const toastButtons = page.locator('[data-testid^="toast-action-"]');
-    const toastButtonCount = await toastButtons.count();
+    await expect(toastButtons.first()).toBeVisible({ timeout: 5000 });
 
-    if (toastButtonCount > 0) {
-      const undoActionButton = toastButtons.first();
-      await undoActionButton.click();
-      await page.waitForLoadState("networkidle");
+    // Click undo button
+    const undoActionButton = toastButtons.first();
+    await undoActionButton.click();
+    await page.waitForLoadState("networkidle");
 
-      // Wait for relationship to reappear in table
-      await expect(updatedTable).toContainText("Related To", { timeout: 3000 });
+    // Verify the restored relationship appears in table
+    const table = page.getByTestId("schema-table");
+    await expect(table).toContainText("Related To", { timeout: 3000 });
 
-      // Verify the restored relationship appears with same details
-      const restoredRow = page
-        .locator('[data-testid^="schema-row-"]')
-        .filter({
-          hasText: /Related To.*Source Class.*Target Class/,
-        })
-        .first();
+    // Verify the restored relationship appears with same details
+    const restoredRow = page
+      .locator('[data-testid^="schema-row-"]')
+      .filter({
+        hasText: /Related To.*Source Class.*Target Class/,
+      })
+      .first();
 
-      await expect(restoredRow).toBeVisible();
+    await expect(restoredRow).toBeVisible();
 
-      // Click to open drawer and verify details are preserved
-      await restoredRow.click();
-      await page.waitForLoadState("networkidle");
+    // Click to open drawer and verify details are preserved
+    await restoredRow.click();
+    await page.waitForLoadState("networkidle");
 
-      const restoredDrawer = page.getByTestId("relationship-drawer");
-      await expect(restoredDrawer).toBeVisible();
+    const restoredDrawer = page.getByTestId("relationship-drawer");
+    await expect(restoredDrawer).toBeVisible();
 
-      const restoredSourceValue = await page
-        .getByTestId("relationship-drawer-source-class")
-        .inputValue();
-      expect(restoredSourceValue).toBe("Source Class");
+    const restoredSourceValue = await page
+      .getByTestId("relationship-drawer-source-class")
+      .inputValue();
+    expect(restoredSourceValue).toBe("Source Class");
 
-      const restoredTargetValue = await page
-        .getByTestId("relationship-drawer-target-class")
-        .inputValue();
-      expect(restoredTargetValue).toBe("Target Class");
+    const restoredTargetValue = await page
+      .getByTestId("relationship-drawer-target-class")
+      .inputValue();
+    expect(restoredTargetValue).toBe("Target Class");
 
-      const restoredPropertyValue = await page
-        .getByTestId("relationship-drawer-property-type")
-        .inputValue();
-      expect(restoredPropertyValue).toBe("Related To");
-    }
+    const restoredPropertyValue = await page
+      .getByTestId("relationship-drawer-property-type")
+      .inputValue();
+    expect(restoredPropertyValue).toBe("Related To");
   });
 });
