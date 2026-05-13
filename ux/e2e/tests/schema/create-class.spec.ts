@@ -16,7 +16,7 @@ test.describe("Create Class", () => {
       title: "test-taxonomy-create-class",
       description: "Taxonomy for class creation tests",
     });
-    const scheme = await createConceptScheme(page, taxonomy.id, {
+    await createConceptScheme(page, taxonomy.id, {
       title: "test-scheme-create-class",
       description: "Scheme for class creation tests",
     });
@@ -46,7 +46,7 @@ test.describe("Create Class", () => {
       title: "test-taxonomy-create-class-submit",
       description: "Taxonomy for class submission tests",
     });
-    const scheme = await createConceptScheme(page, taxonomy.id, {
+    await createConceptScheme(page, taxonomy.id, {
       title: "test-scheme-create-class-submit",
       description: "Scheme for class submission tests",
     });
@@ -64,13 +64,15 @@ test.describe("Create Class", () => {
     // Select domain/scheme
     const domainSelect = page.getByTestId("class-editor-domain-select");
     await domainSelect.click();
-    await page.waitForLoadState("networkidle");
-    // Select the first option (our created scheme)
-    const firstOption = page.locator('[data-testid*="class-editor-domain-select"] ~ [role="listbox"] >> [role="option"]').first();
+    // Wait for listbox to appear, then select the first option
+    const listbox = page.locator('[role="listbox"]');
+    await expect(listbox).toBeVisible();
+    const firstOption = listbox.locator('[role="option"]').first();
     await firstOption.click();
 
     // Submit the form
-    await page.getByTestId("class-editor-submit-button").click();
+    const submitButton = page.getByTestId("class-editor-submit-button");
+    await submitButton.click();
 
     // Verify modal closes
     await expect(page.getByTestId("class-create-modal")).not.toBeVisible();
@@ -87,7 +89,7 @@ test.describe("Create Class", () => {
       title: "test-taxonomy-create-class-table",
       description: "Taxonomy for class table tests",
     });
-    const scheme = await createConceptScheme(page, taxonomy.id, {
+    await createConceptScheme(page, taxonomy.id, {
       title: "test-scheme-create-class-table",
       description: "Scheme for class table tests",
     });
@@ -103,8 +105,10 @@ test.describe("Create Class", () => {
     await page.getByTestId("class-editor-description-input").fill("Test class for organism classification");
     const domainSelect = page.getByTestId("class-editor-domain-select");
     await domainSelect.click();
-    await page.waitForLoadState("networkidle");
-    const firstOption = page.locator('[data-testid*="class-editor-domain-select"] ~ [role="listbox"] >> [role="option"]').first();
+    // Wait for listbox to appear, then select the first option
+    const listbox = page.locator('[role="listbox"]');
+    await expect(listbox).toBeVisible();
+    const firstOption = listbox.locator('[role="option"]').first();
     await firstOption.click();
 
     await page.getByTestId("class-editor-submit-button").click();
@@ -133,7 +137,7 @@ test.describe("Create Class", () => {
       title: "test-taxonomy-create-class-drawer",
       description: "Taxonomy for class drawer tests",
     });
-    const scheme = await createConceptScheme(page, taxonomy.id, {
+    await createConceptScheme(page, taxonomy.id, {
       title: "test-scheme-create-class-drawer",
       description: "Scheme for class drawer tests",
     });
@@ -149,8 +153,10 @@ test.describe("Create Class", () => {
     await page.getByTestId("class-editor-description-input").fill(classDescription);
     const domainSelect = page.getByTestId("class-editor-domain-select");
     await domainSelect.click();
-    await page.waitForLoadState("networkidle");
-    const firstOption = page.locator('[data-testid*="class-editor-domain-select"] ~ [role="listbox"] >> [role="option"]').first();
+    // Wait for listbox to appear, then select the first option
+    const listbox = page.locator('[role="listbox"]');
+    await expect(listbox).toBeVisible();
+    const firstOption = listbox.locator('[role="option"]').first();
     await firstOption.click();
 
     await page.getByTestId("class-editor-submit-button").click();
@@ -172,7 +178,7 @@ test.describe("Create Class", () => {
       title: "test-taxonomy-validation-empty",
       description: "Taxonomy for empty name validation tests",
     });
-    const scheme = await createConceptScheme(page, taxonomy.id, {
+    await createConceptScheme(page, taxonomy.id, {
       title: "test-scheme-validation-empty",
       description: "Scheme for empty name validation tests",
     });
@@ -188,17 +194,10 @@ test.describe("Create Class", () => {
     await nameInput.focus();
     await nameInput.blur();
 
-    // Verify validation error appears
-    await page.waitForTimeout(100); // Give validation a moment to appear
-    const errorMessage = page.locator('[role="alert"], .text-red-500, .text-rose-500').first();
-    // Error should be visible (either as alert or styled error message)
+    // Verify validation error appears with proper assertion and auto-retry
     const modal = page.getByTestId("class-create-modal");
-    const errorText = await modal.locator('text=/required|empty/i').first().isVisible().catch(() => false);
-    if (!errorText) {
-      // If no explicit error text, verify the submit button is disabled or error is in form
-      const hasError = await modal.locator('[role="alert"]').first().isVisible().catch(() => false);
-      expect(hasError || errorText).toBeTruthy();
-    }
+    const errorAlert = modal.locator('[role="alert"]');
+    await expect(errorAlert).toBeVisible();
   });
 
   test("Edge Case — Invalid Snake_case Shows Validation Error", async ({ page }) => {
@@ -207,7 +206,7 @@ test.describe("Create Class", () => {
       title: "test-taxonomy-validation-snake",
       description: "Taxonomy for snake_case validation tests",
     });
-    const scheme = await createConceptScheme(page, taxonomy.id, {
+    await createConceptScheme(page, taxonomy.id, {
       title: "test-scheme-validation-snake",
       description: "Scheme for snake_case validation tests",
     });
@@ -220,23 +219,21 @@ test.describe("Create Class", () => {
 
     // Type invalid name and blur
     const nameInput = page.getByTestId("class-editor-name-input");
+    const modal = page.getByTestId("class-create-modal");
+    const errorAlert = modal.locator('[role="alert"]');
+
     await nameInput.fill("Invalid Name");
     await nameInput.blur();
 
     // Verify validation error appears
-    await page.waitForTimeout(100);
-    const modal = page.getByTestId("class-create-modal");
-    const hasError = await modal.locator('[role="alert"]').first().isVisible().catch(() => false);
-    expect(hasError).toBeTruthy();
+    await expect(errorAlert).toBeVisible();
 
     // Correct the field to valid snake_case
     await nameInput.fill("invalid_name");
     await nameInput.blur();
 
-    // Verify error disappears after correction
-    await page.waitForTimeout(100);
-    const errorStillVisible = await modal.locator('[role="alert"]').first().isVisible().catch(() => false);
-    expect(errorStillVisible).toBeFalsy();
+    // Verify error disappears after correction (onChange handler should clear it)
+    await expect(errorAlert).not.toBeVisible();
   });
 
   test("Edge Case — Pressing Escape Closes Modal Without Creating", async ({ page }) => {
@@ -245,7 +242,7 @@ test.describe("Create Class", () => {
       title: "test-taxonomy-escape",
       description: "Taxonomy for escape key tests",
     });
-    const scheme = await createConceptScheme(page, taxonomy.id, {
+    await createConceptScheme(page, taxonomy.id, {
       title: "test-scheme-escape",
       description: "Scheme for escape key tests",
     });
@@ -262,7 +259,7 @@ test.describe("Create Class", () => {
     await page.getByTestId("class-editor-name-input").fill("test_class");
 
     // Press Escape key
-    await page.press("Escape");
+    await page.keyboard.press("Escape");
 
     // Verify modal closes
     await expect(page.getByTestId("class-create-modal")).not.toBeVisible();
@@ -279,7 +276,7 @@ test.describe("Create Class", () => {
       title: "test-taxonomy-dirty-form",
       description: "Taxonomy for dirty form tests",
     });
-    const scheme = await createConceptScheme(page, taxonomy.id, {
+    await createConceptScheme(page, taxonomy.id, {
       title: "test-scheme-dirty-form",
       description: "Scheme for dirty form tests",
     });
@@ -295,36 +292,17 @@ test.describe("Create Class", () => {
     // Type text into the name field to make form dirty
     await page.getByTestId("class-editor-name-input").fill("unsaved_class");
 
-    // Click outside the modal on the backdrop to attempt to close
-    const backdrop = page.locator('[role="presentation"], .modal-backdrop').first();
-    const isBackdropVisible = await backdrop.isVisible().catch(() => false);
+    // Press Escape to attempt closing with unsaved changes
+    await page.keyboard.press("Escape");
 
-    if (isBackdropVisible) {
-      // If backdrop exists and is clickable, click outside
-      const modalBox = page.getByTestId("class-create-modal");
-      const boundingBox = await modalBox.boundingBox();
-      if (boundingBox) {
-        // Click outside the modal bounds
-        await page.click(`[role="presentation"]`);
-      }
-    } else {
-      // Fallback: try pressing Escape to see if confirmation dialog appears
-      await page.press("Escape");
-    }
-
-    // Give a moment for confirmation dialog to appear (if it exists)
-    await page.waitForTimeout(200);
-
-    // Check if confirmation dialog exists
+    // Verify confirmation dialog appears
     const confirmDialog = page.getByTestId("confirm-dialog");
-    const confirmDialogExists = await confirmDialog.isVisible().catch(() => false);
+    await expect(confirmDialog).toBeVisible();
 
-    if (confirmDialogExists) {
-      // If confirmation dialog is shown, verify it and click Discard
-      const discardButton = page.getByTestId("confirm-dialog-cancel");
-      await expect(discardButton).toBeVisible();
-      await discardButton.click();
-    }
+    // Click Discard to confirm closing without saving
+    const discardButton = page.getByTestId("confirm-dialog-cancel");
+    await expect(discardButton).toBeVisible();
+    await discardButton.click();
 
     // Verify modal is now closed
     await expect(page.getByTestId("class-create-modal")).not.toBeVisible();

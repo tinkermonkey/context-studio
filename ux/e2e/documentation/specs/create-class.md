@@ -57,12 +57,10 @@ This test validates the complete user flow for creating a new ontology class fro
 4. Leave the parent class field empty (selector `class-editor-parent-input`) — optional field for this test
 5. Type a description into the description textarea (selector `class-editor-description-input`): `Test class for organism classification`
 6. Click the "Create class" submit button (selector `class-editor-submit-button`)
-7. Observe the button shows a spinner for ≤300ms
-8. Modal closes automatically after success
+7. Modal closes automatically after success
 
 **Expected Result**:
 - All form values are accepted without validation errors
-- Button spinner appears briefly (≤300ms)
 - Modal closes after successful submission
 - Success toast appears with text matching pattern `Class created · cls_*` (selector: locate toast with success intent)
 - Toast is dismissible and visible for ~4 seconds
