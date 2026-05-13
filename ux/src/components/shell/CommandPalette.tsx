@@ -57,9 +57,10 @@ export function CommandPalette() {
   if (!open) return null;
 
   return (
-    <div className="palette-backdrop" onClick={closePalette}>
+    <div className="palette-backdrop" data-testid="command-palette-backdrop" onClick={closePalette}>
       <div
         className="palette"
+        data-testid="command-palette"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal
@@ -70,23 +71,26 @@ export function CommandPalette() {
           <Search size={18} />
           <input
             ref={inputRef}
+            data-testid="command-palette-input"
             placeholder="Search or run command…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          <kbd className="palette-esc" onClick={closePalette}>
+          <kbd className="palette-esc" data-testid="command-palette-esc-button" onClick={closePalette}>
             esc
           </kbd>
         </div>
-        <div className="palette-results">
+        <div className="palette-results" data-testid="command-palette-results">
           {filtered.length === 0 ? (
-            <div className="palette-empty">No results for "{query}"</div>
+            <div className="palette-empty" data-testid="command-palette-empty-state">No results for "{query}"</div>
           ) : (
             filtered.map((action, i) => (
               <button
                 key={action.id}
                 ref={i === activeIndex ? activeItemRef : undefined}
-                className={`palette-item${i === activeIndex ? "active" : ""}`}
+                data-testid={`command-palette-item-${action.id}`}
+                data-active={i === activeIndex}
+                className={`palette-item${i === activeIndex ? " active" : ""}`}
                 type="button"
                 onMouseEnter={() => setActiveIndex(i)}
                 onClick={() => {
