@@ -184,9 +184,6 @@ test.describe("Command Palette", () => {
 
     const palette = page.getByTestId("command-palette");
 
-    // Capture the URL before executing the command
-    const urlBefore = page.url();
-
     // Press Enter to execute the focused command
     await page.keyboard.press("Enter");
 
@@ -302,17 +299,6 @@ test.describe("Command Palette", () => {
 
   test("Test Case 10: Reopen via Topbar ⌘K Chip", async ({ page }) => {
     const palette = page.getByTestId("command-palette");
-
-    // Close palette if it's open
-    const paletteLocator = palette;
-    try {
-      if (await paletteLocator.isVisible()) {
-        await page.keyboard.press("Escape");
-        await expect(palette).not.toBeVisible();
-      }
-    } catch {
-      // Palette already not visible
-    }
 
     // Locate the ⌘K chip button in the Topbar
     const topbarButton = page.getByTestId("topbar-palette-button");
