@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it } from "vitest";
 
 // This hook is complex and requires deep mocking of multiple modules.
 // These tests will be skipped for now as proper testing requires

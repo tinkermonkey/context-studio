@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { rest } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";

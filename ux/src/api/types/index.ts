@@ -1796,6 +1796,153 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/reference/grounding-workflows": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Grounding Workflows
+     * @description List all grounding workflows.
+     *
+     *     Returns:
+     *         List of GroundingWorkflowResponse objects
+     */
+    get: operations["list_grounding_workflows_api_reference_grounding_workflows_get"];
+    put?: never;
+    /**
+     * Create Grounding Workflow
+     * @description Create a new grounding workflow.
+     *
+     *     Args:
+     *         request: GroundingWorkflowCreate with workflow details
+     *
+     *     Returns:
+     *         GroundingWorkflowResponse for the created workflow
+     */
+    post: operations["create_grounding_workflow_api_reference_grounding_workflows_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/reference/grounding-workflows/{workflow_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Grounding Workflow
+     * @description Get a single grounding workflow by ID.
+     *
+     *     Args:
+     *         workflow_id: UUID of the workflow
+     *
+     *     Returns:
+     *         GroundingWorkflowResponse
+     *
+     *     Raises:
+     *         HTTPException: 404 if workflow not found
+     */
+    get: operations["get_grounding_workflow_api_reference_grounding_workflows__workflow_id__get"];
+    /**
+     * Update Grounding Workflow
+     * @description Update an existing grounding workflow.
+     *
+     *     Args:
+     *         workflow_id: UUID of the workflow to update
+     *         request: GroundingWorkflowUpdate with fields to update
+     *
+     *     Returns:
+     *         Updated GroundingWorkflowResponse
+     *
+     *     Raises:
+     *         HTTPException: 404 if workflow not found
+     */
+    put: operations["update_grounding_workflow_api_reference_grounding_workflows__workflow_id__put"];
+    post?: never;
+    /**
+     * Delete Grounding Workflow
+     * @description Delete a grounding workflow and all its runs.
+     *
+     *     Args:
+     *         workflow_id: UUID of the workflow to delete
+     *
+     *     Raises:
+     *         HTTPException: 404 if workflow not found
+     */
+    delete: operations["delete_grounding_workflow_api_reference_grounding_workflows__workflow_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/reference/grounding-workflows/{workflow_id}/run": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Run Grounding Workflow
+     * @description Trigger a grounding workflow run.
+     *
+     *     Creates a WorkflowRun record with status 'running' and returns it immediately.
+     *     Actual enrichment execution is out of scope for the current implementation.
+     *
+     *     Args:
+     *         workflow_id: UUID of the workflow to run
+     *
+     *     Returns:
+     *         WorkflowRunResponse with status 'running'
+     *
+     *     Raises:
+     *         HTTPException: 404 if workflow not found
+     */
+    post: operations["run_grounding_workflow_api_reference_grounding_workflows__workflow_id__run_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/reference/grounding-workflows/{workflow_id}/runs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Workflow Runs
+     * @description List all runs for a grounding workflow.
+     *
+     *     Args:
+     *         workflow_id: UUID of the workflow
+     *
+     *     Returns:
+     *         List of WorkflowRunResponse objects ordered by timestamp descending
+     *
+     *     Raises:
+     *         HTTPException: 404 if workflow not found
+     */
+    get: operations["list_workflow_runs_api_reference_grounding_workflows__workflow_id__runs_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/versioning/changes": {
     parameters: {
       query?: never;
@@ -4037,6 +4184,109 @@ export interface components {
        */
       computed_at: string;
     };
+    /**
+     * GroundingWorkflowCreate
+     * @description Request to create a new grounding workflow.
+     */
+    GroundingWorkflowCreate: {
+      /**
+       * Title
+       * @description Human-readable workflow name
+       */
+      title: string;
+      /**
+       * Source
+       * @description External knowledge source name (e.g. 'ConceptNet', 'schema.org')
+       */
+      source: string;
+      /**
+       * Class Scope
+       * @description List of class IDs or names to scope enrichment
+       */
+      class_scope?: string[];
+      /**
+       * Description
+       * @description Optional description
+       */
+      description?: string | null;
+    };
+    /**
+     * GroundingWorkflowResponse
+     * @description Response containing a grounding workflow record.
+     */
+    GroundingWorkflowResponse: {
+      /**
+       * Id
+       * @description Workflow UUID
+       */
+      id: string;
+      /**
+       * Title
+       * @description Human-readable workflow name
+       */
+      title: string;
+      /**
+       * Description
+       * @description Optional description
+       */
+      description?: string | null;
+      /**
+       * Source
+       * @description External knowledge source name
+       */
+      source: string;
+      /**
+       * Class Scope
+       * @description List of class IDs or names to scope enrichment
+       */
+      class_scope?: string[];
+      /**
+       * Status
+       * @description Workflow status: active, inactive, error
+       */
+      status: string;
+      /**
+       * Last Run
+       * @description ISO 8601 timestamp of most recent run
+       */
+      last_run?: string | null;
+      /**
+       * Last Run Record Count
+       * @description Record count from most recent run
+       */
+      last_run_record_count?: number | null;
+    };
+    /**
+     * GroundingWorkflowUpdate
+     * @description Request to update an existing grounding workflow.
+     */
+    GroundingWorkflowUpdate: {
+      /**
+       * Title
+       * @description Human-readable workflow name
+       */
+      title?: string | null;
+      /**
+       * Source
+       * @description External knowledge source name
+       */
+      source?: string | null;
+      /**
+       * Class Scope
+       * @description List of class IDs or names to scope enrichment
+       */
+      class_scope?: string[] | null;
+      /**
+       * Status
+       * @description Workflow status: active, inactive, error
+       */
+      status?: string | null;
+      /**
+       * Description
+       * @description Optional description
+       */
+      description?: string | null;
+    };
     /** HTTPValidationError */
     HTTPValidationError: {
       /** Detail */
@@ -6013,6 +6263,43 @@ export interface components {
       previous_state?: {
         [key: string]: unknown;
       } | null;
+    };
+    /**
+     * WorkflowRunResponse
+     * @description Response containing a single workflow run record.
+     */
+    WorkflowRunResponse: {
+      /**
+       * Id
+       * @description Run UUID
+       */
+      id: string;
+      /**
+       * Workflow Id
+       * @description Parent workflow UUID
+       */
+      workflow_id: string;
+      /**
+       * Status
+       * @description Run status: running, success, failed
+       */
+      status: string;
+      /**
+       * Record Count
+       * @description Number of records processed
+       * @default 0
+       */
+      record_count: number;
+      /**
+       * Timestamp
+       * @description ISO 8601 timestamp when run was initiated
+       */
+      timestamp: string;
+      /**
+       * Error Message
+       * @description Error message if status is failed
+       */
+      error_message?: string | null;
     };
   };
   responses: never;
@@ -8267,6 +8554,216 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ReferenceRelationsResponseSchema"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_grounding_workflows_api_reference_grounding_workflows_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GroundingWorkflowResponse"][];
+        };
+      };
+    };
+  };
+  create_grounding_workflow_api_reference_grounding_workflows_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["GroundingWorkflowCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GroundingWorkflowResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_grounding_workflow_api_reference_grounding_workflows__workflow_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workflow_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GroundingWorkflowResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_grounding_workflow_api_reference_grounding_workflows__workflow_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workflow_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["GroundingWorkflowUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GroundingWorkflowResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_grounding_workflow_api_reference_grounding_workflows__workflow_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workflow_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  run_grounding_workflow_api_reference_grounding_workflows__workflow_id__run_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workflow_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WorkflowRunResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_workflow_runs_api_reference_grounding_workflows__workflow_id__runs_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workflow_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WorkflowRunResponse"][];
         };
       };
       /** @description Validation Error */

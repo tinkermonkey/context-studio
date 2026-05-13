@@ -330,26 +330,26 @@ async def get_reference_relations(
 def _workflow_to_response(workflow: GroundingWorkflow) -> GroundingWorkflowResponse:
     """Convert a GroundingWorkflow ORM model to a response schema."""
     return GroundingWorkflowResponse(
-        id=workflow.id,
-        title=workflow.title,
-        description=workflow.description,
-        source=workflow.source,
-        class_scope=workflow.class_scope or [],
-        status=workflow.status,
+        id=str(workflow.id),  # type: ignore[arg-type]
+        title=str(workflow.title),  # type: ignore[arg-type]
+        description=str(workflow.description) if workflow.description else None,  # type: ignore[arg-type]
+        source=str(workflow.source),  # type: ignore[arg-type]
+        class_scope=workflow.class_scope or [],  # type: ignore[arg-type]
+        status=str(workflow.status),  # type: ignore[arg-type]
         last_run=workflow.last_run.isoformat() if workflow.last_run else None,
-        last_run_record_count=workflow.last_run_record_count,
+        last_run_record_count=int(workflow.last_run_record_count) if workflow.last_run_record_count else None,  # type: ignore[arg-type]
     )
 
 
 def _run_to_response(run: WorkflowRun) -> WorkflowRunResponse:
     """Convert a WorkflowRun ORM model to a response schema."""
     return WorkflowRunResponse(
-        id=run.id,
-        workflow_id=run.workflow_id,
-        status=run.status,
-        record_count=run.record_count,
+        id=str(run.id),  # type: ignore[arg-type]
+        workflow_id=str(run.workflow_id),  # type: ignore[arg-type]
+        status=str(run.status),  # type: ignore[arg-type]
+        record_count=int(run.record_count),  # type: ignore[arg-type]
         timestamp=run.timestamp.isoformat(),
-        error_message=run.error_message,
+        error_message=str(run.error_message) if run.error_message else None,  # type: ignore[arg-type]
     )
 
 
@@ -468,17 +468,17 @@ async def update_grounding_workflow(
         )
 
     if request.title is not None:
-        workflow.title = request.title
+        workflow.title = request.title  # type: ignore[assignment]
     if request.description is not None:
-        workflow.description = request.description
+        workflow.description = request.description  # type: ignore[assignment]
     if request.source is not None:
-        workflow.source = request.source
+        workflow.source = request.source  # type: ignore[assignment]
     if request.class_scope is not None:
-        workflow.class_scope = request.class_scope
+        workflow.class_scope = request.class_scope  # type: ignore[assignment]
     if request.status is not None:
-        workflow.status = request.status
+        workflow.status = request.status  # type: ignore[assignment]
 
-    workflow.updated_at = datetime.now(timezone.utc)
+    workflow.updated_at = datetime.now(timezone.utc)  # type: ignore[assignment]
     db.commit()
     db.refresh(workflow)
     return _workflow_to_response(workflow)
@@ -556,8 +556,8 @@ async def run_grounding_workflow(
     db.add(run)
 
     # Update last_run on the workflow
-    workflow.last_run = run.timestamp
-    workflow.updated_at = datetime.now(timezone.utc)
+    workflow.last_run = run.timestamp  # type: ignore[assignment]
+    workflow.updated_at = datetime.now(timezone.utc)  # type: ignore[assignment]
 
     db.commit()
     db.refresh(run)
