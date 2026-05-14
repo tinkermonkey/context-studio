@@ -13,7 +13,6 @@ import { SchemaTable } from "@/components/schema/SchemaTable";
 import {
   useDatasets,
   useCreateDataset,
-  useUpdateDataset,
   useDeleteDataset,
 } from "@/api/hooks/admin/useDatasets";
 import { datasetsCopy } from "./datasets/-copy";

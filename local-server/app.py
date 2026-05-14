@@ -330,7 +330,7 @@ async def lifespan(app: FastAPI):
         )
         logger.info("SystemMetricsCollector created")
 
-        dataset_repo = SQLiteDatasetRepository(session_factory)
+        dataset_repo = SQLiteDatasetRepository(local_session_factory)
         logger.info("SQLiteDatasetRepository created")
 
         admin_service = AdminService(
