@@ -185,10 +185,21 @@ class TestActiveDataset:
         retrieved_first = repository.get_dataset(sample_dataset.id)
         assert retrieved_first.is_active is False
 
-    def test_set_active_dataset_nonexistent_raises_error(self, repository):
-        """Setting nonexistent dataset as active raises DatasetNotFoundError."""
-        with pytest.raises(DatasetNotFoundError):
-            repository.set_active_dataset("nonexistent-id")
+    def test_set_active_dataset_nonexistent_raises_error(
+        self, repository, sample_dataset
+    ):
+        """
+        Setting nonexistent dataset as active raises DatasetNotFoundError with message.
+
+        This is the primary test for the critical fix: scalar_one_or_none() + explicit
+        check ensures domain exception mapping works in the route layer.
+        """
+        # Try to set nonexistent dataset as active
+        with pytest.raises(DatasetNotFoundError) as exc_info:
+            repository.set_active_dataset("missing-id")
+
+        # Verify the exception message is informative
+        assert "missing-id" in str(exc_info.value)
 
     def test_get_active_dataset_no_active(self, repository):
         """Getting active dataset when none set returns None."""
@@ -215,37 +226,41 @@ class TestActiveDataset:
 class TestErrorHandling:
     """Test error handling for database operation failures."""
 
-    def test_set_active_dataset_not_found_mapped_correctly(
-        self, repository, sample_dataset
+    def test_get_dataset_database_failure_raises_runtime_error(
+        self, db_engine, session_factory, repository
     ):
         """
-        Verify DatasetNotFoundError is raised (not NoResultFound) for missing dataset.
+        Database failure in get_dataset raises RuntimeError (not SQLAlchemyError).
 
-        This is the critical fix: scalar_one_or_none() + explicit check
-        ensures domain exception mapping works in the route layer.
+        SQLAlchemyError exceptions are caught at the adapter boundary and mapped
+        to RuntimeError to prevent infrastructure exceptions from leaking to routes.
         """
-        # Try to set nonexistent dataset as active
-        with pytest.raises(DatasetNotFoundError) as exc_info:
-            repository.set_active_dataset("missing-id")
+        # Dispose the engine to force a database error on next query
+        db_engine.dispose()
+
+        with pytest.raises(RuntimeError) as exc_info:
+            repository.get_dataset("any-id")
 
         # Verify the exception message is informative
-        assert "missing-id" in str(exc_info.value)
+        assert "Failed to retrieve dataset" in str(exc_info.value)
 
-    def test_dataset_not_found_error_is_domain_exception(self, repository):
+    def test_save_dataset_database_failure_raises_runtime_error(
+        self, db_engine, session_factory, repository, sample_dataset
+    ):
         """
-        Verify DatasetNotFoundError is a domain exception, not a SQLAlchemy exception.
+        Database failure in save_dataset raises RuntimeError (not SQLAlchemyError).
 
-        This ensures the route layer can catch it with the standard domain
-        exception handler without special SQLAlchemy exception handling.
+        SQLAlchemyError exceptions are caught at the adapter boundary and mapped
+        to RuntimeError to prevent infrastructure exceptions from leaking to routes.
         """
-        try:
-            repository.set_active_dataset("nonexistent")
-        except DatasetNotFoundError as e:
-            # Verify it's the right exception type
-            assert isinstance(e, DatasetNotFoundError)
-            assert "not found" in str(e).lower()
-        except Exception:
-            pytest.fail("Expected DatasetNotFoundError, got different exception")
+        # Dispose the engine to force a database error on next query
+        db_engine.dispose()
+
+        with pytest.raises(RuntimeError) as exc_info:
+            repository.save_dataset(sample_dataset)
+
+        # Verify the exception message is informative
+        assert "Failed to save dataset" in str(exc_info.value)
 
 
 class TestDatasetUpdate:

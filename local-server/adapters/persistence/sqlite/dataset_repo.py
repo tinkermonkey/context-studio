@@ -9,7 +9,7 @@ import logging
 from typing import Optional, Sequence
 
 from sqlalchemy import select, func, update
-from sqlalchemy.exc import NoResultFound, SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 
 from domain.admin.entities import Dataset, DatasetMetrics
