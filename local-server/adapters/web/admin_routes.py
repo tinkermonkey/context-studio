@@ -379,7 +379,7 @@ async def create_dataset(
         Created DatasetResponse
 
     Raises:
-        HTTPException: 400 if title is empty, 409 if title already exists
+        HTTPException: 400 if title is empty
     """
     try:
         dataset = await run_sync_in_executor(
@@ -484,7 +484,7 @@ async def delete_dataset(
         service: AdminService from dependency injection
 
     Raises:
-        HTTPException: 404 if not found, 422 if it is the active dataset
+        HTTPException: 404 if not found, 409 if it is the active dataset
     """
     try:
         await run_sync_in_executor(service.delete_dataset, dataset_id)
