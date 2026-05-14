@@ -1044,3 +1044,99 @@ class WorkflowRun(Base):  # type: ignore[valid-type,misc,assignment]
 
     def __repr__(self) -> str:
         return f"<WorkflowRun(id={self.id}, workflow_id={self.workflow_id}, status={self.status})>"
+
+
+class Dataset(Base):  # type: ignore[valid-type,misc]
+    """
+    Persistence model for datasets (importable database files).
+
+    Stores dataset metadata and cached metrics about the dataset's contents.
+
+    Attributes:
+        id: UUID as string, primary key
+        title: Display name
+        filename: Original filename
+        description: Optional longer description
+        created_at: Timestamp of creation (UTC, auto-set)
+        last_accessed: Timestamp of last import/activation
+        schema_version: Database schema version string
+        layers_count: Cached count of taxonomies
+        domains_count: Cached count of concept schemes
+        terms_count: Cached count of classes
+        relationships_count: Cached count of relationships
+        individuals_count: Cached count of individuals
+        is_active: Boolean flag for active dataset
+        version: Version number for optimistic concurrency
+    """
+
+    __tablename__ = "datasets"
+
+    id: str = Column(String(36), primary_key=True, nullable=False)  # type: ignore[assignment]
+    title: str = Column(String(255), nullable=False, index=True)  # type: ignore[assignment]
+    filename: str = Column(String(255), nullable=False)  # type: ignore[assignment]
+    description: Optional[str] = Column(Text, nullable=True)  # type: ignore[assignment]
+    created_at: datetime = Column(  # type: ignore[assignment]
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        doc="Timestamp of creation",
+    )
+    last_accessed: Optional[datetime] = Column(  # type: ignore[assignment]
+        DateTime(timezone=True),
+        nullable=True,
+        doc="Timestamp of last activation/import",
+    )
+    schema_version: str = Column(  # type: ignore[assignment]
+        String(20),
+        nullable=False,
+        default="1.0",
+        doc="Database schema version",
+    )
+    layers_count: int = Column(  # type: ignore[assignment]
+        Integer,
+        nullable=False,
+        default=0,
+        doc="Cached count of taxonomies",
+    )
+    domains_count: int = Column(  # type: ignore[assignment]
+        Integer,
+        nullable=False,
+        default=0,
+        doc="Cached count of concept schemes",
+    )
+    terms_count: int = Column(  # type: ignore[assignment]
+        Integer,
+        nullable=False,
+        default=0,
+        doc="Cached count of classes",
+    )
+    relationships_count: int = Column(  # type: ignore[assignment]
+        Integer,
+        nullable=False,
+        default=0,
+        doc="Cached count of relationships",
+    )
+    individuals_count: int = Column(  # type: ignore[assignment]
+        Integer,
+        nullable=False,
+        default=0,
+        doc="Cached count of individuals",
+    )
+    is_active: bool = Column(  # type: ignore[assignment]
+        Boolean,
+        nullable=False,
+        default=False,
+        index=True,
+        doc="Whether this is the active dataset",
+    )
+    version: int = Column(  # type: ignore[assignment]
+        Integer,
+        nullable=False,
+        default=1,
+        doc="Version number for optimistic concurrency",
+    )
+
+    __table_args__ = (Index("idx_is_active", "is_active"),)
+
+    def __repr__(self) -> str:
+        return f"<Dataset(id={self.id}, title={self.title}, is_active={self.is_active})>"

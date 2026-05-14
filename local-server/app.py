@@ -31,6 +31,7 @@ from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunR
 from adapters.persistence.sqlite.pipeline_repo import SQLitePipelineRepository
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
+from adapters.persistence.sqlite.dataset_repo import SQLiteDatasetRepository
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.llm.provider_router import LLMProviderRouter
 from adapters.events.in_process import InProcessEventPublisher
@@ -329,11 +330,15 @@ async def lifespan(app: FastAPI):
         )
         logger.info("SystemMetricsCollector created")
 
+        dataset_repo = SQLiteDatasetRepository(session_factory)
+        logger.info("SQLiteDatasetRepository created")
+
         admin_service = AdminService(
             metrics_collector=metrics_collector,
             config_store=config_store,
+            dataset_repository=dataset_repo,
         )
-        logger.info("AdminService created and wired with metrics and config store")
+        logger.info("AdminService created and wired with metrics, config store, and dataset repository")
 
         # --- Wire event subscriptions ---
 

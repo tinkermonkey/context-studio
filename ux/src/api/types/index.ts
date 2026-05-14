@@ -2852,6 +2852,129 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/admin/datasets": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Datasets
+     * @description List all datasets.
+     *
+     *     Returns:
+     *         List of all datasets
+     */
+    get: operations["list_datasets_api_v1_admin_datasets_get"];
+    put?: never;
+    /**
+     * Create Dataset
+     * @description Create a new dataset.
+     *
+     *     Args:
+     *         request: DatasetCreateRequest with title, filename, optional description
+     *         service: AdminService from dependency injection
+     *
+     *     Returns:
+     *         Created DatasetResponse
+     *
+     *     Raises:
+     *         HTTPException: 400 if title is empty, 409 if title already exists
+     */
+    post: operations["create_dataset_api_v1_admin_datasets_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/admin/datasets/{dataset_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Dataset
+     * @description Get a dataset by ID.
+     *
+     *     Args:
+     *         dataset_id: The dataset ID
+     *         service: AdminService from dependency injection
+     *
+     *     Returns:
+     *         DatasetResponse
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found
+     */
+    get: operations["get_dataset_api_v1_admin_datasets__dataset_id__get"];
+    /**
+     * Update Dataset
+     * @description Update a dataset's metadata.
+     *
+     *     Args:
+     *         dataset_id: The dataset ID
+     *         request: DatasetUpdateRequest with optional fields to update
+     *         service: AdminService from dependency injection
+     *
+     *     Returns:
+     *         Updated DatasetResponse
+     *
+     *     Raises:
+     *         HTTPException: 400 if invalid, 404 if not found
+     */
+    put: operations["update_dataset_api_v1_admin_datasets__dataset_id__put"];
+    post?: never;
+    /**
+     * Delete Dataset
+     * @description Delete a dataset.
+     *
+     *     Args:
+     *         dataset_id: The dataset ID
+     *         service: AdminService from dependency injection
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found, 422 if it is the active dataset
+     */
+    delete: operations["delete_dataset_api_v1_admin_datasets__dataset_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/admin/datasets/{dataset_id}/activate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Activate Dataset
+     * @description Activate a dataset as the current workspace.
+     *
+     *     Args:
+     *         dataset_id: The dataset ID to activate
+     *         service: AdminService from dependency injection
+     *
+     *     Returns:
+     *         Updated DatasetResponse with is_active=true
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found
+     */
+    post: operations["activate_dataset_api_v1_admin_datasets__dataset_id__activate_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/interchange/export": {
     parameters: {
       query?: never;
@@ -3640,6 +3763,127 @@ export interface components {
        * @description List of any database issues encountered
        */
       issues?: string[];
+    };
+    /**
+     * DatasetCreateRequest
+     * @description Request to create a new dataset.
+     */
+    DatasetCreateRequest: {
+      /**
+       * Title
+       * @description Display name
+       */
+      title: string;
+      /**
+       * Filename
+       * @description Original filename
+       */
+      filename: string;
+      /**
+       * Description
+       * @description Optional description
+       */
+      description?: string | null;
+    };
+    /**
+     * DatasetMetricsResponse
+     * @description Response containing dataset metrics.
+     */
+    DatasetMetricsResponse: {
+      /**
+       * Layers Count
+       * @description Number of taxonomies
+       */
+      layers_count: number;
+      /**
+       * Domains Count
+       * @description Number of concept schemes
+       */
+      domains_count: number;
+      /**
+       * Terms Count
+       * @description Number of classes
+       */
+      terms_count: number;
+      /**
+       * Relationships Count
+       * @description Number of relationships
+       */
+      relationships_count: number;
+      /**
+       * Individuals Count
+       * @description Number of individuals
+       */
+      individuals_count: number;
+    };
+    /**
+     * DatasetResponse
+     * @description Response containing dataset data.
+     */
+    DatasetResponse: {
+      /**
+       * Id
+       * @description Unique identifier
+       */
+      id: string;
+      /**
+       * Title
+       * @description Display name
+       */
+      title: string;
+      /**
+       * Filename
+       * @description Original filename
+       */
+      filename: string;
+      /**
+       * Description
+       * @description Optional description
+       */
+      description?: string | null;
+      /**
+       * Created At
+       * @description Creation timestamp
+       */
+      created_at?: string | null;
+      /**
+       * Last Accessed
+       * @description Last access timestamp
+       */
+      last_accessed?: string | null;
+      /**
+       * Schema Version
+       * @description Database schema version
+       */
+      schema_version: string;
+      /** @description Dataset metrics */
+      metrics: components["schemas"]["DatasetMetricsResponse"];
+      /**
+       * Is Active
+       * @description Whether this is the active dataset
+       */
+      is_active: boolean;
+      /**
+       * Version
+       * @description Version number
+       */
+      version: number;
+    };
+    /**
+     * DatasetUpdateRequest
+     * @description Request to update a dataset.
+     */
+    DatasetUpdateRequest: {
+      /**
+       * Title
+       * @description New title
+       */
+      title?: string | null;
+      /**
+       * Description
+       * @description New description
+       */
+      description?: string | null;
     };
     /**
      * DegreeDistributionResponse
@@ -9583,6 +9827,185 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["BackgroundTaskResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_datasets_api_v1_admin_datasets_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DatasetResponse"][];
+        };
+      };
+    };
+  };
+  create_dataset_api_v1_admin_datasets_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DatasetCreateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DatasetResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_dataset_api_v1_admin_datasets__dataset_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DatasetResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_dataset_api_v1_admin_datasets__dataset_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DatasetUpdateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DatasetResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_dataset_api_v1_admin_datasets__dataset_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  activate_dataset_api_v1_admin_datasets__dataset_id__activate_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DatasetResponse"];
         };
       };
       /** @description Validation Error */

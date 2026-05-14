@@ -8,9 +8,9 @@ explicitly inherit from these protocols.
 
 from __future__ import annotations
 
-from typing import Protocol, Any
+from typing import Protocol, Any, Sequence, Optional
 
-from .entities import AppConfiguration
+from .entities import AppConfiguration, Dataset, DatasetMetrics
 from .value_objects import (
     DatabaseHealth,
     ServiceMetrics,
@@ -172,5 +172,92 @@ class ConfigurationStore(Protocol):
 
         Returns:
             AppConfiguration reset to defaults with credentials preserved
+        """
+        ...
+
+
+class DatasetRepository(Protocol):
+    """
+    Port for persisting and retrieving datasets.
+
+    Implementations handle storing dataset metadata and computing
+    metrics from ontology data.
+    """
+
+    def get_dataset(self, dataset_id: str) -> Optional[Dataset]:
+        """
+        Retrieve a dataset by ID.
+
+        Args:
+            dataset_id: The dataset ID
+
+        Returns:
+            Dataset if found, None otherwise
+        """
+        ...
+
+    def list_datasets(self) -> Sequence[Dataset]:
+        """
+        List all datasets.
+
+        Returns:
+            Sequence of all datasets
+        """
+        ...
+
+    def save_dataset(self, dataset: Dataset) -> Dataset:
+        """
+        Save a dataset (create or update).
+
+        Args:
+            dataset: The dataset to save
+
+        Returns:
+            The saved dataset
+        """
+        ...
+
+    def delete_dataset(self, dataset_id: str) -> bool:
+        """
+        Delete a dataset by ID.
+
+        Args:
+            dataset_id: The dataset ID to delete
+
+        Returns:
+            True if deleted, False if not found
+        """
+        ...
+
+    def get_active_dataset(self) -> Optional[Dataset]:
+        """
+        Get the currently active dataset.
+
+        Returns:
+            Active dataset if one is set, None otherwise
+        """
+        ...
+
+    def set_active_dataset(self, dataset_id: str) -> Dataset:
+        """
+        Set a dataset as active and deactivate others.
+
+        Args:
+            dataset_id: The dataset ID to activate
+
+        Returns:
+            The activated dataset
+        """
+        ...
+
+    def compute_metrics(self, dataset_id: str) -> DatasetMetrics:
+        """
+        Compute or refresh metrics for a dataset by querying the ontology data.
+
+        Args:
+            dataset_id: The dataset ID
+
+        Returns:
+            DatasetMetrics with current entity counts
         """
         ...
