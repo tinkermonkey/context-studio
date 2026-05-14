@@ -10,7 +10,6 @@ import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FilterBar } from "@/components/schema/FilterBar";
 import { SchemaTable } from "@/components/schema/SchemaTable";
-import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import {
   useDatasets,
   useCreateDataset,
@@ -282,8 +281,6 @@ function DatasetsPageWrapper() {
     }
   };
 
-  const { data: datasets, isLoading } = useDatasets();
-
   return (
     <div className="stack" data-testid="datasets-page">
       <div className="flex-between">
@@ -298,16 +295,12 @@ function DatasetsPageWrapper() {
           </Button>
         </div>
       </div>
-      <div className={selectedId ? "split-2" : undefined}>
-        <div>
-          <DatasetsPageContent
-            onCreateClick={() => setShowCreateModal(true)}
-            selectedId={selectedId}
-            onSelectedIdChange={handleSelectedIdChange}
-            onDeleteClick={handleDeleteClick}
-          />
-        </div>
-      </div>
+      <DatasetsPageContent
+        onCreateClick={() => setShowCreateModal(true)}
+        selectedId={selectedId}
+        onSelectedIdChange={handleSelectedIdChange}
+        onDeleteClick={handleDeleteClick}
+      />
 
       <Modal
         open={showCreateModal}

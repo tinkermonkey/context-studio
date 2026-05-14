@@ -20,7 +20,13 @@ when calling synchronous domain service methods.
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from domain.admin.services import AdminService
-from domain.admin.exceptions import ConfigurationError, TaskNotFoundError, AdminError
+from domain.admin.exceptions import (
+    ConfigurationError,
+    TaskNotFoundError,
+    AdminError,
+    DatasetNotFoundError,
+    ActiveDatasetError,
+)
 from adapters.web.dependencies import get_admin_service
 from adapters.web.schemas.admin import (
     SystemHealthResponse,
@@ -53,7 +59,13 @@ def _handle_admin_error(exc: Exception) -> tuple[int, str]:
     Returns:
         Tuple of (status_code, error_message)
     """
-    if isinstance(exc, ConfigurationError):
+    if isinstance(exc, DatasetNotFoundError):
+        logger.warning(f"Dataset not found: {exc}")
+        return (status.HTTP_404_NOT_FOUND, str(exc))
+    elif isinstance(exc, ActiveDatasetError):
+        logger.warning(f"Active dataset error: {exc}")
+        return (status.HTTP_409_CONFLICT, str(exc))
+    elif isinstance(exc, ConfigurationError):
         logger.warning(f"Configuration error: {exc}")
         return (status.HTTP_400_BAD_REQUEST, str(exc))
     elif isinstance(exc, TaskNotFoundError):

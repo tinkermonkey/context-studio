@@ -1136,7 +1136,5 @@ class Dataset(Base):  # type: ignore[valid-type,misc]
         doc="Version number for optimistic concurrency",
     )
 
-    __table_args__ = (Index("idx_is_active", "is_active"),)
-
     def __repr__(self) -> str:
         return f"<Dataset(id={self.id}, title={self.title}, is_active={self.is_active})>"

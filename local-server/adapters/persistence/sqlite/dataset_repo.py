@@ -149,7 +149,7 @@ class SQLiteDatasetRepository:
             ).scalar_one()
             dataset_row.is_active = True
             session.commit()
-        return self._to_domain(dataset_row)
+            return self._to_domain(dataset_row)
 
     def compute_metrics(self, dataset_id: str) -> DatasetMetrics:
         """

@@ -128,12 +128,12 @@ test.describe("Dataset CRUD Operations", () => {
     await expect(createButton).toBeVisible();
   });
 
-  test("should prevent deletion of active dataset", async ({ page }) => {
-    // Setup: Create two datasets
+  test("should prevent deletion of active dataset", async ({ page, context }) => {
+    // Setup: Create a dataset and activate it
     await page.goto("/app/data/datasets");
     await page.waitForLoadState("networkidle");
 
-    // Create first dataset
+    // Create dataset
     await page.getByTestId("dataset-add-button").click();
     await expect(page.getByTestId("dataset-create-modal")).toBeVisible();
     await page.getByTestId("dataset-title-input").fill("E2E Test Dataset Active");
@@ -143,11 +143,28 @@ test.describe("Dataset CRUD Operations", () => {
     await expect(page.getByTestId("dataset-create-modal")).not.toBeVisible();
     await page.waitForLoadState("networkidle");
 
-    // Find the delete button for the active dataset
+    // Get the dataset ID from the table
+    const table = page.getByTestId("schema-table");
+    await expect(table).toContainText("E2E Test Dataset Active");
+
+    // Extract dataset ID from the delete button's data-testid attribute
     const deleteButton = page.locator('[data-testid^="dataset-row-delete-"]').first();
+    const dataTestId = await deleteButton.getAttribute("data-testid");
+    const datasetId = dataTestId?.replace("dataset-row-delete-", "") || "";
+
+    // Activate the dataset via API
+    await context.request.post(`http://localhost:8000/api/v1/admin/datasets/${datasetId}/activate`);
+    await page.waitForLoadState("networkidle");
+
+    // Refresh the page to see the updated state
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+
+    // Find the delete button again after refresh
+    const refreshedDeleteButton = page.locator(`[data-testid="dataset-row-delete-${datasetId}"]`);
 
     // Delete button should be disabled for active dataset
-    await expect(deleteButton).toBeDisabled();
+    await expect(refreshedDeleteButton).toBeDisabled();
   });
 
   test("should support form validation and show error messages", async ({ page }) => {
@@ -162,15 +179,15 @@ test.describe("Dataset CRUD Operations", () => {
     // Try to submit without filling required fields
     await page.getByTestId("dataset-submit-button").click();
 
-    // Wait to ensure form validation error appears
-    await page.waitForTimeout(500);
+    // Verify validation error for missing title
+    await expect(page.getByText("Title is required")).toBeVisible();
 
     // Fill in title and try again
     await page.getByTestId("dataset-title-input").fill("Partial Dataset");
     await page.getByTestId("dataset-submit-button").click();
 
-    // Wait to ensure form validation error appears
-    await page.waitForTimeout(500);
+    // Verify validation error for missing filename
+    await expect(page.getByText("Filename is required")).toBeVisible();
 
     // Fill in filename
     await page.getByTestId("dataset-filename-input").fill("partial.db");
@@ -209,24 +226,20 @@ test.describe("Dataset CRUD Operations", () => {
     // DELETE: Delete the dataset
     const deleteButton = page.locator('[data-testid^="dataset-row-delete-"]').first();
 
+    // Delete button should be enabled for inactive dataset
+    await expect(deleteButton).not.toBeDisabled();
+
     // Setup confirmation dialog handler
     page.on("dialog", (dialog) => {
       dialog.accept();
     });
 
-    // Only click if not disabled (dataset is not active)
-    const isDisabled = await deleteButton.isDisabled();
-    if (!isDisabled) {
-      await deleteButton.click();
-      await page.waitForLoadState("networkidle");
+    // Click delete and verify it was successful
+    await deleteButton.click();
+    await page.waitForLoadState("networkidle");
 
-      // Verify DELETE was successful
-      table = page.getByTestId("schema-table");
-      await expect(table).not.toContainText(datasetTitle);
-    } else {
-      // If dataset is active, we can't delete it
-      // Verify it's still in the table
-      await expect(table).toContainText(datasetTitle);
-    }
+    // Verify DELETE was successful
+    table = page.getByTestId("schema-table");
+    await expect(table).not.toContainText(datasetTitle);
   });
 });

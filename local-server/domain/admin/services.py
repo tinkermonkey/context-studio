@@ -23,7 +23,12 @@ from .value_objects import (
     BackgroundTaskSummary,
 )
 from .ports import MetricsCollector, ConfigurationStore, DatasetRepository
-from .exceptions import TaskNotFoundError, ConfigurationError
+from .exceptions import (
+    TaskNotFoundError,
+    ConfigurationError,
+    DatasetNotFoundError,
+    ActiveDatasetError,
+)
 
 
 class AdminService:
@@ -365,14 +370,14 @@ class AdminService:
             Created Dataset
 
         Raises:
-            ValueError: If title is empty
+            ConfigurationError: If title is empty
             RuntimeError: If dataset repository is not configured
         """
         if not self._datasets:
             raise RuntimeError("Dataset repository not configured")
 
         if not title or not title.strip():
-            raise ValueError("Title cannot be empty")
+            raise ConfigurationError("Title cannot be empty")
 
         dataset = Dataset(
             id=str(uuid.uuid4()),
@@ -399,14 +404,14 @@ class AdminService:
 
         Raises:
             RuntimeError: If dataset repository is not configured
-            ValueError: If dataset not found
+            DatasetNotFoundError: If dataset not found
         """
         if not self._datasets:
             raise RuntimeError("Dataset repository not configured")
 
         dataset = self._datasets.get_dataset(dataset_id)
         if not dataset:
-            raise ValueError(f"Dataset {dataset_id} not found")
+            raise DatasetNotFoundError(f"Dataset {dataset_id} not found")
         return dataset
 
     def list_datasets(self) -> list[Dataset]:
@@ -443,7 +448,8 @@ class AdminService:
 
         Raises:
             RuntimeError: If dataset repository is not configured
-            ValueError: If title is empty or dataset not found
+            ConfigurationError: If title is empty
+            DatasetNotFoundError: If dataset not found
         """
         if not self._datasets:
             raise RuntimeError("Dataset repository not configured")
@@ -452,7 +458,7 @@ class AdminService:
 
         if title is not None:
             if not title.strip():
-                raise ValueError("Title cannot be empty")
+                raise ConfigurationError("Title cannot be empty")
             dataset.rename(title)
 
         if description is not None:
@@ -470,7 +476,8 @@ class AdminService:
 
         Raises:
             RuntimeError: If dataset repository is not configured
-            ValueError: If dataset not found or is active
+            DatasetNotFoundError: If dataset not found
+            ActiveDatasetError: If dataset is active
         """
         if not self._datasets:
             raise RuntimeError("Dataset repository not configured")
@@ -478,7 +485,7 @@ class AdminService:
         dataset = self.get_dataset(dataset_id)
 
         if dataset.is_active:
-            raise ValueError("Cannot delete the active dataset")
+            raise ActiveDatasetError("Cannot delete the active dataset")
 
         self._datasets.delete_dataset(dataset_id)
 
