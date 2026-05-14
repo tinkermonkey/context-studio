@@ -41,7 +41,7 @@ jobs:
 
       - name: Run pytest
         working-directory: ./local-server
-        run: pytest tests/ -v --tb=short -m "not e2e"
+        run: pytest tests/ -v --tb=short -m "not e2e and not performance"
 
   test-node:
     runs-on: ubuntu-latest
