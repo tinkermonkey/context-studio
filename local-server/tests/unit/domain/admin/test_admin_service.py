@@ -1222,3 +1222,154 @@ class TestAdminServiceDatasetManagement:
         assert ds2.is_active is True
         ds1 = self.service.get_dataset(ds1.id)
         assert ds1.is_active is False
+
+    def test_delete_dataset_race_condition_raises_error(self):
+        """Delete dataset raises DatasetNotFoundError when repository delete returns False (race condition)."""
+        from domain.admin.exceptions import DatasetNotFoundError
+        from tests.fakes.fake_dataset_repository import FakeDatasetRepository
+
+        class RaceConditionRepo(FakeDatasetRepository):
+            """Mock repository that simulates race condition."""
+
+            def delete_dataset(self, dataset_id: str) -> bool:
+                """Simulate race condition: dataset exists but delete fails."""
+                # Don't actually delete - return False to simulate concurrent deletion
+                return False
+
+        created = self.service.create_dataset("Race Condition Test", "race.db")
+
+        # Replace repository with race condition variant
+        race_repo = RaceConditionRepo()
+        race_repo.save_dataset(created)
+        self.service._datasets = race_repo
+
+        # Should raise DatasetNotFoundError when delete returns False
+        with pytest.raises(DatasetNotFoundError) as exc_info:
+            self.service.delete_dataset(created.id)
+
+        assert "not found" in str(exc_info.value)
+
+
+class TestDatasetEntityValidation:
+    """Tests for Dataset entity __post_init__ validation."""
+
+    def test_dataset_empty_title_raises_valueerror(self):
+        """Dataset construction raises ValueError with empty title."""
+        from domain.admin.entities import Dataset
+        from datetime import datetime, timezone
+
+        with pytest.raises(ValueError) as exc_info:
+            Dataset(
+                id="test-id",
+                title="",
+                filename="test.db",
+                created_at=datetime.now(timezone.utc),
+                last_accessed=datetime.now(timezone.utc),
+                schema_version="1.0",
+            )
+
+        assert "Title cannot be empty" in str(exc_info.value)
+
+    def test_dataset_whitespace_title_raises_valueerror(self):
+        """Dataset construction raises ValueError with whitespace-only title."""
+        from domain.admin.entities import Dataset
+        from datetime import datetime, timezone
+
+        with pytest.raises(ValueError) as exc_info:
+            Dataset(
+                id="test-id",
+                title="   ",
+                filename="test.db",
+                created_at=datetime.now(timezone.utc),
+                last_accessed=datetime.now(timezone.utc),
+                schema_version="1.0",
+            )
+
+        assert "Title cannot be empty" in str(exc_info.value)
+
+    def test_dataset_empty_filename_raises_valueerror(self):
+        """Dataset construction raises ValueError with empty filename."""
+        from domain.admin.entities import Dataset
+        from datetime import datetime, timezone
+
+        with pytest.raises(ValueError) as exc_info:
+            Dataset(
+                id="test-id",
+                title="Test Dataset",
+                filename="",
+                created_at=datetime.now(timezone.utc),
+                last_accessed=datetime.now(timezone.utc),
+                schema_version="1.0",
+            )
+
+        assert "Filename cannot be empty" in str(exc_info.value)
+
+    def test_dataset_whitespace_filename_raises_valueerror(self):
+        """Dataset construction raises ValueError with whitespace-only filename."""
+        from domain.admin.entities import Dataset
+        from datetime import datetime, timezone
+
+        with pytest.raises(ValueError) as exc_info:
+            Dataset(
+                id="test-id",
+                title="Test Dataset",
+                filename="   ",
+                created_at=datetime.now(timezone.utc),
+                last_accessed=datetime.now(timezone.utc),
+                schema_version="1.0",
+            )
+
+        assert "Filename cannot be empty" in str(exc_info.value)
+
+    def test_dataset_empty_schema_version_raises_valueerror(self):
+        """Dataset construction raises ValueError with empty schema_version."""
+        from domain.admin.entities import Dataset
+        from datetime import datetime, timezone
+
+        with pytest.raises(ValueError) as exc_info:
+            Dataset(
+                id="test-id",
+                title="Test Dataset",
+                filename="test.db",
+                created_at=datetime.now(timezone.utc),
+                last_accessed=datetime.now(timezone.utc),
+                schema_version="",
+            )
+
+        assert "Schema version cannot be empty" in str(exc_info.value)
+
+    def test_dataset_whitespace_schema_version_raises_valueerror(self):
+        """Dataset construction raises ValueError with whitespace-only schema_version."""
+        from domain.admin.entities import Dataset
+        from datetime import datetime, timezone
+
+        with pytest.raises(ValueError) as exc_info:
+            Dataset(
+                id="test-id",
+                title="Test Dataset",
+                filename="test.db",
+                created_at=datetime.now(timezone.utc),
+                last_accessed=datetime.now(timezone.utc),
+                schema_version="   ",
+            )
+
+        assert "Schema version cannot be empty" in str(exc_info.value)
+
+    def test_dataset_valid_construction_succeeds(self):
+        """Dataset construction succeeds with valid parameters."""
+        from domain.admin.entities import Dataset
+        from datetime import datetime, timezone
+
+        ds = Dataset(
+            id="test-id",
+            title="Test Dataset",
+            filename="test.db",
+            created_at=datetime.now(timezone.utc),
+            last_accessed=datetime.now(timezone.utc),
+            schema_version="1.0",
+        )
+
+        assert ds.id == "test-id"
+        assert ds.title == "Test Dataset"
+        assert ds.filename == "test.db"
+        assert ds.schema_version == "1.0"
