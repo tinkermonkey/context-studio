@@ -8,10 +8,9 @@ the ontology entities.
 from typing import Optional, Sequence
 
 from sqlalchemy import select, func, update
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 
 from domain.admin.entities import Dataset, DatasetMetrics
-from domain.admin.ports import DatasetRepository
 from adapters.persistence.sqlite.models import (
     Dataset as DatasetModel,
     OntologyEntity,
@@ -122,7 +121,7 @@ class SQLiteDatasetRepository:
         """
         with self.session_factory() as session:
             row = session.execute(
-                select(DatasetModel).where(DatasetModel.is_active == True)
+                select(DatasetModel).where(DatasetModel.is_active)
             ).scalar_one_or_none()
             return self._to_domain(row) if row else None
 
@@ -140,7 +139,7 @@ class SQLiteDatasetRepository:
             # Deactivate all other datasets
             session.execute(
                 update(DatasetModel)
-                .where(DatasetModel.is_active == True)
+                .where(DatasetModel.is_active)
                 .values(is_active=False)
             )
             # Activate the target dataset

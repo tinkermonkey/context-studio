@@ -1014,7 +1014,6 @@ class TestAdminServiceDatasetManagement:
 
     def test_create_dataset_success(self):
         """Create dataset succeeds with valid parameters."""
-        from domain.admin.exceptions import DatasetNotFoundError
 
         dataset = self.service.create_dataset(
             title="Test Dataset",

@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from types import MappingProxyType
 from typing import Optional
 
-from .entities import SystemHealth, BackgroundTask, AppConfiguration, Dataset, DatasetMetrics
+from .entities import SystemHealth, BackgroundTask, AppConfiguration, Dataset
 from .value_objects import (
     BackgroundTaskStatus,
     SystemHealthStatus,
