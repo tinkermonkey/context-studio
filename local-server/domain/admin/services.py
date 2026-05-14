@@ -487,7 +487,9 @@ class AdminService:
         if dataset.is_active:
             raise ActiveDatasetError("Cannot delete the active dataset")
 
-        self._datasets.delete_dataset(dataset_id)
+        deleted = self._datasets.delete_dataset(dataset_id)
+        if not deleted:
+            raise DatasetNotFoundError(f"Dataset {dataset_id} not found")
 
     def activate_dataset(self, dataset_id: str) -> Dataset:
         """
@@ -501,7 +503,7 @@ class AdminService:
 
         Raises:
             RuntimeError: If dataset repository is not configured
-            ValueError: If dataset not found
+            DatasetNotFoundError: If dataset not found
         """
         if not self._datasets:
             raise RuntimeError("Dataset repository not configured")
@@ -538,7 +540,7 @@ class AdminService:
 
         Raises:
             RuntimeError: If dataset repository is not configured
-            ValueError: If dataset not found
+            DatasetNotFoundError: If dataset not found
         """
         if not self._datasets:
             raise RuntimeError("Dataset repository not configured")

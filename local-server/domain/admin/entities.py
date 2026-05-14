@@ -231,6 +231,15 @@ class Dataset:
     description: Optional[str] = None
     version: int = 1
 
+    def __post_init__(self) -> None:
+        """Validate dataset invariants."""
+        if not self.title or not self.title.strip():
+            raise ValueError("Title cannot be empty")
+        if not self.filename or not self.filename.strip():
+            raise ValueError("Filename cannot be empty")
+        if not self.schema_version or not self.schema_version.strip():
+            raise ValueError("Schema version cannot be empty")
+
     def rename(self, new_title: str) -> None:
         """Rename the dataset."""
         if not new_title or not new_title.strip():
