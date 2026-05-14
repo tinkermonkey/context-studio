@@ -202,7 +202,7 @@ class SQLiteDatasetRepository:
             filename=row.filename,
             description=row.description,
             created_at=row.created_at,
-            last_accessed=row.last_accessed,
+            last_accessed=row.last_accessed or row.created_at,
             schema_version=row.schema_version,
             metrics=DatasetMetrics(
                 layers_count=row.layers_count,
