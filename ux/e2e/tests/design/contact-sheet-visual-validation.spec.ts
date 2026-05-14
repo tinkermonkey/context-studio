@@ -18,6 +18,13 @@ test.describe("Contact Sheet Visual Validation", () => {
     "contact-sheet-intent-states",
   ];
 
+  test.beforeEach(async ({ page }) => {
+    // Set a workspace path in localStorage before any page scripts run
+    await page.addInitScript(() => {
+      localStorage.setItem("context-studio:workspace-path", "/tmp/test-workspace");
+    });
+  });
+
   test("should render all sections in light mode with correct styling", async ({ page }) => {
     await page.goto("/app/contact-sheet");
     await page.waitForLoadState("networkidle");

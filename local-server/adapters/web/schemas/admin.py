@@ -225,3 +225,47 @@ class BackgroundTaskResponse(BaseModel):
     )
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class DatasetMetricsResponse(BaseModel):
+    """Response containing dataset metrics."""
+
+    layers_count: int = Field(..., description="Number of taxonomies")
+    domains_count: int = Field(..., description="Number of concept schemes")
+    terms_count: int = Field(..., description="Number of classes")
+    relationships_count: int = Field(..., description="Number of relationships")
+    individuals_count: int = Field(..., description="Number of individuals")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class DatasetResponse(BaseModel):
+    """Response containing dataset data."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str = Field(..., description="Unique identifier")
+    title: str = Field(..., description="Display name")
+    filename: str = Field(..., description="Original filename")
+    description: Optional[str] = Field(None, description="Optional description")
+    created_at: Optional[datetime] = Field(None, description="Creation timestamp")
+    last_accessed: Optional[datetime] = Field(None, description="Last access timestamp")
+    schema_version: str = Field(..., description="Database schema version")
+    metrics: DatasetMetricsResponse = Field(..., description="Dataset metrics")
+    is_active: bool = Field(..., description="Whether this is the active dataset")
+    version: int = Field(..., description="Version number")
+
+
+class DatasetCreateRequest(BaseModel):
+    """Request to create a new dataset."""
+
+    title: str = Field(..., description="Display name", min_length=1)
+    filename: str = Field(..., description="Original filename")
+    description: Optional[str] = Field(None, description="Optional description")
+
+
+class DatasetUpdateRequest(BaseModel):
+    """Request to update a dataset."""
+
+    title: Optional[str] = Field(None, description="New title", min_length=1)
+    description: Optional[str] = Field(None, description="New description")

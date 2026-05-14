@@ -622,3 +622,229 @@ class TestAdminErrorHandling:
         body = response.json()
         assert "detail" in body
         assert "Failed to reset configuration" in body["detail"]
+
+
+class TestDatasetRoutes:
+    """Tests for dataset CRUD API routes."""
+
+    @pytest.fixture
+    def admin_service_with_datasets(self, metrics_collector, config_store):
+        """Create AdminService with dataset repository."""
+        from tests.fakes.fake_dataset_repository import FakeDatasetRepository
+
+        dataset_repo = FakeDatasetRepository()
+        return AdminService(
+            metrics_collector=metrics_collector,
+            config_store=config_store,
+            dataset_repository=dataset_repo,
+        )
+
+    @pytest.fixture
+    def client_with_datasets(self, admin_service_with_datasets):
+        """Create TestClient with dataset-enabled admin service."""
+        app = FastAPI()
+        app.include_router(router)
+        app.state.admin_service = admin_service_with_datasets
+        return TestClient(app)
+
+    def test_create_dataset_returns_201(self, client_with_datasets):
+        """POST /api/v1/admin/datasets returns 201 Created."""
+        response = client_with_datasets.post(
+            "/api/v1/admin/datasets",
+            json={
+                "title": "Test Dataset",
+                "filename": "test.db",
+                "description": "Test description",
+            },
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED
+        body = response.json()
+        assert body["title"] == "Test Dataset"
+        assert body["filename"] == "test.db"
+        assert body["description"] == "Test description"
+
+    def test_create_dataset_missing_title_returns_422(self, client_with_datasets):
+        """POST /api/v1/admin/datasets with missing required field returns 422 Unprocessable Entity."""
+        response = client_with_datasets.post(
+            "/api/v1/admin/datasets",
+            json={
+                "filename": "test.db",
+            },
+        )
+
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        body = response.json()
+        assert "detail" in body
+
+    def test_list_datasets_returns_200(self, client_with_datasets):
+        """GET /api/v1/admin/datasets returns 200 OK."""
+        response = client_with_datasets.get("/api/v1/admin/datasets")
+
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert isinstance(body, list)
+
+    def test_list_datasets_with_data(self, client_with_datasets):
+        """GET /api/v1/admin/datasets returns created datasets."""
+        # Create a dataset first
+        client_with_datasets.post(
+            "/api/v1/admin/datasets",
+            json={"title": "Test Dataset", "filename": "test.db"},
+        )
+
+        response = client_with_datasets.get("/api/v1/admin/datasets")
+
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert len(body) == 1
+        assert body[0]["title"] == "Test Dataset"
+
+    def test_get_dataset_returns_200(self, client_with_datasets):
+        """GET /api/v1/admin/datasets/{id} returns 200 OK."""
+        # Create a dataset
+        create_response = client_with_datasets.post(
+            "/api/v1/admin/datasets",
+            json={"title": "Get Test", "filename": "get.db"},
+        )
+        dataset_id = create_response.json()["id"]
+
+        response = client_with_datasets.get(f"/api/v1/admin/datasets/{dataset_id}")
+
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert body["id"] == dataset_id
+        assert body["title"] == "Get Test"
+
+    def test_get_dataset_not_found_returns_404(self, client_with_datasets):
+        """GET /api/v1/admin/datasets/{id} with nonexistent ID returns 404 Not Found."""
+        response = client_with_datasets.get("/api/v1/admin/datasets/nonexistent-id")
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        body = response.json()
+        assert "detail" in body
+        assert "not found" in body["detail"].lower()
+
+    def test_update_dataset_returns_200(self, client_with_datasets):
+        """PUT /api/v1/admin/datasets/{id} returns 200 OK."""
+        # Create a dataset
+        create_response = client_with_datasets.post(
+            "/api/v1/admin/datasets",
+            json={"title": "Original", "filename": "orig.db"},
+        )
+        dataset_id = create_response.json()["id"]
+
+        response = client_with_datasets.put(
+            f"/api/v1/admin/datasets/{dataset_id}",
+            json={"title": "Updated", "description": "Updated desc"},
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert body["title"] == "Updated"
+        assert body["description"] == "Updated desc"
+
+    def test_update_dataset_not_found_returns_404(self, client_with_datasets):
+        """PUT /api/v1/admin/datasets/{id} with nonexistent ID returns 404 Not Found."""
+        response = client_with_datasets.put(
+            "/api/v1/admin/datasets/nonexistent-id",
+            json={"title": "New Title"},
+        )
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        body = response.json()
+        assert "detail" in body
+
+    def test_update_dataset_with_valid_data_returns_200(self, client_with_datasets):
+        """PUT /api/v1/admin/datasets/{id} with valid partial update returns 200 OK."""
+        # Create a dataset
+        create_response = client_with_datasets.post(
+            "/api/v1/admin/datasets",
+            json={"title": "Original", "filename": "test.db"},
+        )
+        dataset_id = create_response.json()["id"]
+
+        response = client_with_datasets.put(
+            f"/api/v1/admin/datasets/{dataset_id}",
+            json={"description": "New description"},
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert body["description"] == "New description"
+
+    def test_delete_dataset_returns_204(self, client_with_datasets):
+        """DELETE /api/v1/admin/datasets/{id} returns 204 No Content."""
+        # Create a dataset
+        create_response = client_with_datasets.post(
+            "/api/v1/admin/datasets",
+            json={"title": "Delete Me", "filename": "delete.db"},
+        )
+        dataset_id = create_response.json()["id"]
+
+        response = client_with_datasets.delete(
+            f"/api/v1/admin/datasets/{dataset_id}"
+        )
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    def test_delete_dataset_not_found_returns_404(self, client_with_datasets):
+        """DELETE /api/v1/admin/datasets/{id} with nonexistent ID returns 404 Not Found."""
+        response = client_with_datasets.delete(
+            "/api/v1/admin/datasets/nonexistent-id"
+        )
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        body = response.json()
+        assert "detail" in body
+
+    def test_delete_active_dataset_returns_409(self, client_with_datasets):
+        """DELETE /api/v1/admin/datasets/{id} for active dataset returns 409 Conflict."""
+        # Create and activate a dataset
+        create_response = client_with_datasets.post(
+            "/api/v1/admin/datasets",
+            json={"title": "Active Dataset", "filename": "active.db"},
+        )
+        dataset_id = create_response.json()["id"]
+
+        # Activate it
+        client_with_datasets.post(
+            f"/api/v1/admin/datasets/{dataset_id}/activate"
+        )
+
+        # Try to delete it
+        response = client_with_datasets.delete(
+            f"/api/v1/admin/datasets/{dataset_id}"
+        )
+
+        assert response.status_code == status.HTTP_409_CONFLICT
+        body = response.json()
+        assert "detail" in body
+        assert "active" in body["detail"].lower()
+
+    def test_activate_dataset_returns_200(self, client_with_datasets):
+        """POST /api/v1/admin/datasets/{id}/activate returns 200 OK."""
+        # Create a dataset
+        create_response = client_with_datasets.post(
+            "/api/v1/admin/datasets",
+            json={"title": "To Activate", "filename": "activate.db"},
+        )
+        dataset_id = create_response.json()["id"]
+
+        response = client_with_datasets.post(
+            f"/api/v1/admin/datasets/{dataset_id}/activate"
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert body["is_active"] is True
+
+    def test_activate_dataset_not_found_returns_404(self, client_with_datasets):
+        """POST /api/v1/admin/datasets/{id}/activate with nonexistent ID returns 404 Not Found."""
+        response = client_with_datasets.post(
+            "/api/v1/admin/datasets/nonexistent-id/activate"
+        )
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        body = response.json()
+        assert "detail" in body

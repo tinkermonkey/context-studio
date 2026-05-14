@@ -36,9 +36,9 @@ test.describe("Class CRUD Operations", () => {
     await page.getByTestId("class-title-input").fill("Test Class: CRUD Operations");
 
     // Step 5: Fill in description field
-    await page.getByTestId("class-description-input").fill(
-      "Comprehensive test class for CRUD operations",
-    );
+    await page
+      .getByTestId("class-description-input")
+      .fill("Comprehensive test class for CRUD operations");
 
     // Step 6: Select domain from dropdown
     const domainSelect = page.getByTestId("class-editor-domain-select");
@@ -56,9 +56,7 @@ test.describe("Class CRUD Operations", () => {
     await expect(page.getByTestId("schema-table")).toContainText("Comprehensive test class");
   });
 
-  test("Test Case 2: Click Class Row to Open Detail Drawer and Verify Fields", async ({
-    page,
-  }) => {
+  test("Test Case 2: Click Class Row to Open Detail Drawer and Verify Fields", async ({ page }) => {
     // Setup: Create scheme and class
     const scheme = await createConceptScheme(page, undefined, {
       title: "Test Scheme for Drawer",
@@ -312,9 +310,7 @@ test.describe("Class CRUD Operations", () => {
     // Step 10: Verify dialog closes and class is soft-deleted
     await page.waitForLoadState("networkidle");
     await expect(page.getByTestId("type-confirm-dialog")).not.toBeVisible();
-    await expect(page.getByTestId("schema-table")).not.toContainText(
-      "Test Class with Instances",
-    );
+    await expect(page.getByTestId("schema-table")).not.toContainText("Test Class with Instances");
 
     // Step 11: Verify toast appears
     const toast = page.locator('[data-testid^="toast-action-"]');

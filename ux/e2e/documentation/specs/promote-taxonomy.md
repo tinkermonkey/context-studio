@@ -189,30 +189,33 @@ This test validates the complete "Promote a draft taxonomy" user flow from UX.md
 ## Factory Usage
 
 **Required factories**:
+
 - `createTaxonomy(page, overrides?: {title?, description?})` — creates a draft taxonomy
 - `createConceptScheme(page, taxonomyId?, overrides?: {title?, description?})` — creates a concept scheme under the given taxonomy
 - `createClass(page, schemeId, overrides?: {title?, description?, parent_class_id?})` — creates a class in the scheme
 
 **Cleanup**:
+
 - `clearTestData(page)` called in `afterEach` to delete all created taxonomies, schemes, and classes
 
 ---
 
 ## Open Questions
 
-**Missing selector registration**: The selector pattern `taxonomy-name-*` is used in the code at `/workspace/ux/src/routes/app/schema/taxonomies.tsx` (line 74) to create selectors like `taxonomy-name-{taxonomyId}`, but this pattern is **not registered** in `ux/selector-registry.yaml`. 
+**Missing selector registration**: The selector pattern `taxonomy-name-*` is used in the code at `/workspace/ux/src/routes/app/schema/taxonomies.tsx` (line 74) to create selectors like `taxonomy-name-{taxonomyId}`, but this pattern is **not registered** in `ux/selector-registry.yaml`.
 
 Similar patterns for other entities (e.g., `class-name-*`, `individual-name-*`, `scheme-name-link-*`) are already registered in the registry. This test plan assumes `taxonomy-name-*` will be added to the registry following the same pattern.
 
 **Required action**: Add the following entry to `ux/selector-registry.yaml` (after line 334, in the Taxonomies Page section):
 
 ```yaml
-  - selector: taxonomy-name-*
-    component: routes/app/schema/taxonomies.tsx
-    description: Clickable taxonomy name cell in table with dynamic ID suffix
+- selector: taxonomy-name-*
+  component: routes/app/schema/taxonomies.tsx
+  description: Clickable taxonomy name cell in table with dynamic ID suffix
 ```
 
 All other selectors are verified and registered:
+
 - `taxonomy-drawer` (line 283)
 - `taxonomy-drawer-publish-button` (line 295)
 - `taxonomy-publish-dialog` (line 303)

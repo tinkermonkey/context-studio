@@ -98,9 +98,7 @@ export function createGroundingWorkflowUpdate(
   };
 }
 
-export function createWorkflowRun(
-  overrides?: Partial<WorkflowRun>,
-): WorkflowRun {
+export function createWorkflowRun(overrides?: Partial<WorkflowRun>): WorkflowRun {
   return {
     id: "run-123",
     workflow_id: "workflow-123",

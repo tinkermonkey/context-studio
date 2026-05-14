@@ -22,6 +22,7 @@ This test validates the complete golden path for resolving a failed pipeline run
 ### Test Case 1: Navigate to Failed Pipeline from Statusbar
 
 **Preconditions**:
+
 - Pipeline with a failed execution already exists (created via API with ExecutionResponse status=error)
 - User is on any page in the app
 - Statusbar is visible showing "1 pipeline failed" with a red dot
@@ -34,13 +35,15 @@ This test validates the complete golden path for resolving a failed pipeline run
 4. Verify pipelines grid is visible (selector `pipelines-grid`)
 
 **Expected Result**:
+
 - Navigation completes to `/app/pipelines`
 - Pipelines page renders with the grid of pipeline cards
 - Failed pipeline card is visible with status chip showing `failed` intent
 
 **Selectors Used**: `pipelines-page`, `pipelines-grid`
 
-**Invariants Verified**: 
+**Invariants Verified**:
+
 - Statusbar indicator correctly reflects pipeline failure state
 - Navigation from statusbar is functional and routes to pipelines page
 - Page loads without errors
@@ -50,6 +53,7 @@ This test validates the complete golden path for resolving a failed pipeline run
 ### Test Case 2: View Failed Pipeline Card and Error Count
 
 **Preconditions**:
+
 - User is on pipelines page (`/app/pipelines`)
 - Failed pipeline card exists (from Test Case 1 preconditions)
 
@@ -61,6 +65,7 @@ This test validates the complete golden path for resolving a failed pipeline run
 4. Verify latest run line shows error count or error indicator
 
 **Expected Result**:
+
 - Failed pipeline card displays prominent `failed` status chip
 - The failed state is visually distinct from success/idle/running states
 - Latest run in the card shows error-related information
@@ -68,6 +73,7 @@ This test validates the complete golden path for resolving a failed pipeline run
 **Selectors Used**: `pipeline-card-*`, `pipeline-status-chip`
 
 **Invariants Verified**:
+
 - A pipeline with no prior runs does not display a failure chip (empty state instead)
 - Status chip uses the correct visual intent for failure (red/rose)
 - Error state is observable without opening the drawer
@@ -77,6 +83,7 @@ This test validates the complete golden path for resolving a failed pipeline run
 ### Test Case 3: Open Pipeline Detail Drawer and View Configuration
 
 **Preconditions**:
+
 - User is on pipelines page (`/app/pipelines`)
 - Failed pipeline card is visible with selector `pipeline-card-{pipelineId}`
 
@@ -90,6 +97,7 @@ This test validates the complete golden path for resolving a failed pipeline run
 6. Verify configuration is displayed in read-only pre-formatted block (selector `pipeline-config-pre`)
 
 **Expected Result**:
+
 - Right-side drawer opens showing pipeline details
 - Drawer title is the pipeline name
 - Configuration JSON is visible and readable
@@ -98,6 +106,7 @@ This test validates the complete golden path for resolving a failed pipeline run
 **Selectors Used**: `pipeline-card-*`, `pipeline-config-pre`, `pipeline-edit-config-button`
 
 **Invariants Verified**:
+
 - Drawer opens without navigation change (remains on pipelines page)
 - Configuration is fetched and displayed correctly
 - Edit mode is not active on initial open (read-only display)
@@ -107,6 +116,7 @@ This test validates the complete golden path for resolving a failed pipeline run
 ### Test Case 4: View Last 10 Runs and Failed Execution Details
 
 **Preconditions**:
+
 - Pipeline detail drawer is open from Test Case 3
 - Pipeline has at least one failed execution in its history
 
@@ -119,6 +129,7 @@ This test validates the complete golden path for resolving a failed pipeline run
 5. Click the "View log" button
 
 **Expected Result**:
+
 - Runs table displays up to 10 most recent executions
 - Failed execution is listed with correct status and metadata (start time, duration, token counts)
 - "View log" button becomes visible when hovering over or interacting with the failed row
@@ -127,6 +138,7 @@ This test validates the complete golden path for resolving a failed pipeline run
 **Selectors Used**: `pipeline-runs-table`, `pipeline-view-log-*`
 
 **Invariants Verified**:
+
 - Last 10 runs are correctly ordered (most recent first)
 - Pipelines with no prior runs display the empty state (selector `pipeline-no-runs`)
 - Error log is only displayed when explicitly requested (not shown by default)
@@ -136,6 +148,7 @@ This test validates the complete golden path for resolving a failed pipeline run
 ### Test Case 5: View Detailed Error Log and Verify Scrollability
 
 **Preconditions**:
+
 - Pipeline detail drawer is open
 - "View log" button has been clicked for a failed execution (Test Case 4)
 - Error log panel is now visible
@@ -149,6 +162,7 @@ This test validates the complete golden path for resolving a failed pipeline run
 5. Verify "Copy error" button is visible (selector `pipeline-copy-error-button`)
 
 **Expected Result**:
+
 - Error log panel displays the full error message
 - For long error messages, the container scrolls vertically without affecting drawer scroll
 - Copy button is accessible and allows copying error text to clipboard
@@ -157,6 +171,7 @@ This test validates the complete golden path for resolving a failed pipeline run
 **Selectors Used**: `pipeline-error-log`, `pipeline-copy-error-button`
 
 **Invariants Verified**:
+
 - Error log is only shown for executions with error_message
 - Scrollability works independently from drawer scrolling
 - Copy functionality preserves full error text
@@ -166,6 +181,7 @@ This test validates the complete golden path for resolving a failed pipeline run
 ### Test Case 6: Edit Pipeline Configuration
 
 **Preconditions**:
+
 - Pipeline detail drawer is open from previous test cases
 - Configuration is displayed in read-only mode (selector `pipeline-config-pre`)
 - Edit button is visible (selector `pipeline-edit-config-button`)
@@ -180,6 +196,7 @@ This test validates the complete golden path for resolving a failed pipeline run
 6. Click "Save" button to persist the edit
 
 **Expected Result**:
+
 - Edit mode activates and displays configuration in an editable textarea
 - JSON is properly formatted and editable
 - Save button is enabled when configuration has been modified
@@ -189,6 +206,7 @@ This test validates the complete golden path for resolving a failed pipeline run
 **Selectors Used**: `pipeline-edit-config-button`, `pipeline-config-textarea`, `pipeline-save-config-button`, `pipeline-revert-config-button`, `drawer-autosave-status`
 
 **Invariants Verified**:
+
 - Configuration changes are validated as JSON before save
 - Dirty state is tracked (Save button disabled until changes made)
 - Reverting discards unsaved changes and restores original configuration
@@ -198,6 +216,7 @@ This test validates the complete golden path for resolving a failed pipeline run
 ### Test Case 7: Execute Pipeline and Observe Status Transition
 
 **Preconditions**:
+
 - Pipeline detail drawer is open
 - Pipeline configuration has been edited and saved (from Test Case 6)
 - "Run" button is visible in drawer header (selector `run-pipeline-btn`)
@@ -212,6 +231,7 @@ This test validates the complete golden path for resolving a failed pipeline run
 6. Verify statusbar dot returns to green and shows "0 pipelines running"
 
 **Expected Result**:
+
 - Run button click triggers execution
 - Status chip transitions: failed → running → success
 - Statusbar updates to show running state with amber pulse
@@ -221,6 +241,7 @@ This test validates the complete golden path for resolving a failed pipeline run
 **Selectors Used**: `run-pipeline-btn`, `pipeline-status-chip`, `pipeline-runs-table`
 
 **Invariants Verified**:
+
 - Only one execution can be in-flight per pipeline at a time
 - Status transitions are immediately visible in the UI
 - Statusbar state is synchronized with pipeline execution state
@@ -230,6 +251,7 @@ This test validates the complete golden path for resolving a failed pipeline run
 ### Test Case 8: Verify Success Toast and Execution Metadata
 
 **Preconditions**:
+
 - Pipeline execution from Test Case 7 has completed successfully
 - User is viewing the pipeline drawer
 
@@ -244,6 +266,7 @@ This test validates the complete golden path for resolving a failed pipeline run
 7. Verify token counts and duration are populated in the run row
 
 **Expected Result**:
+
 - Success toast appears with correct message
 - Toast is dismissible or auto-dismisses after 4 seconds
 - New execution is immediately visible in the runs table
@@ -252,6 +275,7 @@ This test validates the complete golden path for resolving a failed pipeline run
 **Selectors Used**: `pipeline-runs-table`
 
 **Invariants Verified**:
+
 - Toast is only shown for user-initiated runs (not for scheduled or API-triggered runs in this test)
 - Execution metadata is fetched and displayed correctly
 - Toast message includes actual record count from backend
@@ -261,6 +285,7 @@ This test validates the complete golden path for resolving a failed pipeline run
 ### Test Case 9: Edge Case - Pipeline with No Prior Runs
 
 **Preconditions**:
+
 - A new pipeline exists with no executions (status = idle)
 - User opens the pipeline detail drawer
 
@@ -273,6 +298,7 @@ This test validates the complete golden path for resolving a failed pipeline run
 5. Click "Run" to execute the pipeline
 
 **Expected Result**:
+
 - Pipeline with no runs does not display a failure chip on the card (displays idle or default state)
 - Empty state message is shown in the runs section
 - Run button works normally
@@ -281,6 +307,7 @@ This test validates the complete golden path for resolving a failed pipeline run
 **Selectors Used**: `pipeline-no-runs`, `run-pipeline-btn`, `pipeline-status-chip`
 
 **Invariants Verified**:
+
 - Pipelines with no prior runs have idle status, not failed
 - Empty state is appropriate and helpful
 - User can still run a pipeline from the idle state
@@ -290,6 +317,7 @@ This test validates the complete golden path for resolving a failed pipeline run
 ### Test Case 10: Edge Case - Long Error Log Scrollability
 
 **Preconditions**:
+
 - A pipeline execution with a very long error message exists
 - Pipeline detail drawer is open
 - "View log" has been clicked to reveal the error log panel
@@ -303,6 +331,7 @@ This test validates the complete golden path for resolving a failed pipeline run
 5. Verify all error content is readable and no content is hidden
 
 **Expected Result**:
+
 - Error log container is scrollable when content exceeds container height
 - Scrolling within error log does not interfere with drawer scrolling
 - All error text is readable and properly formatted
@@ -311,6 +340,7 @@ This test validates the complete golden path for resolving a failed pipeline run
 **Selectors Used**: `pipeline-error-log`, `pipeline-copy-error-button`
 
 **Invariants Verified**:
+
 - Long error messages do not break layout
 - Scrollable content is properly bounded and styled
 - Copy functionality works for the entire error message
@@ -351,11 +381,13 @@ This test validates the complete golden path for resolving a failed pipeline run
 ## Factory Usage
 
 Factories needed:
+
 - **Pipeline creation factory** (not yet in `/ux/e2e/fixtures/factories.ts`) — will create a pipeline with configurable status (idle, failed, running, success)
 - **Execution creation factory** (not yet in factories) — will create pipeline executions with configurable status, error messages, and metadata
 - **Existing `clearTestData`** function will handle deletion of test pipelines
 
 **Note**: Pipeline and Execution factories will need to be added to `factories.ts` before the tests can be generated and run. The factories should:
+
 - Call `POST /api/pipelines` to create a pipeline configuration
 - Call `POST /api/pipelines/{id}/execute` to trigger an execution and optionally mock/seed failure states
 - Support overrides for title, configuration, and execution status

@@ -8,7 +8,7 @@ and application configuration management.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Optional, ClassVar
 
 from domain.admin.value_objects import SystemHealthStatus, BackgroundTaskStatus
@@ -184,3 +184,69 @@ class AppConfiguration:
         if self.sync is not None:
             result["sync"] = self.sync
         return result
+
+
+@dataclass
+class DatasetMetrics:
+    """
+    Aggregated metrics about a dataset's contents.
+
+    These are computed on import and cached; they should be refreshed
+    after large import operations.
+    """
+
+    layers_count: int = 0
+    domains_count: int = 0
+    terms_count: int = 0
+    relationships_count: int = 0
+    individuals_count: int = 0
+
+
+@dataclass
+class Dataset:
+    """
+    Represents an importable or imported dataset (SQLite database file).
+
+    Attributes:
+        id: Unique identifier (UUID as string)
+        title: Display name for the dataset
+        filename: Original filename (e.g., 'production_2024.db')
+        description: Optional longer description
+        created_at: Timestamp of creation
+        last_accessed: Timestamp of last import/activation
+        schema_version: Database schema version (for migration tracking)
+        metrics: DatasetMetrics (layers, domains, terms, relationships counts)
+        is_active: Whether this is the currently active dataset
+        version: Version number for optimistic concurrency control
+    """
+
+    id: str
+    title: str
+    filename: str
+    created_at: datetime
+    last_accessed: datetime
+    schema_version: str
+    metrics: DatasetMetrics = field(default_factory=DatasetMetrics)
+    is_active: bool = False
+    description: Optional[str] = None
+    version: int = 1
+
+    def __post_init__(self) -> None:
+        """Validate dataset invariants."""
+        if not self.title or not self.title.strip():
+            raise ValueError("Title cannot be empty")
+        if not self.filename or not self.filename.strip():
+            raise ValueError("Filename cannot be empty")
+        if not self.schema_version or not self.schema_version.strip():
+            raise ValueError("Schema version cannot be empty")
+
+    def rename(self, new_title: str) -> None:
+        """Rename the dataset."""
+        if not new_title or not new_title.strip():
+            raise ValueError("Title cannot be empty")
+        self.title = new_title
+        self.last_accessed = datetime.now(timezone.utc)
+
+    def mark_accessed(self) -> None:
+        """Update last_accessed timestamp."""
+        self.last_accessed = datetime.now(timezone.utc)

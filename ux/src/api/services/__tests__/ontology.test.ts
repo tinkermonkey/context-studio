@@ -287,7 +287,9 @@ describe("OntologyService - Taxonomies", () => {
       });
 
       server.use(
-        rest.get("*/api/taxonomies/tax-123/publish-diff", (req, res, ctx) => res(ctx.json(mockStats))),
+        rest.get("*/api/taxonomies/tax-123/publish-diff", (req, res, ctx) =>
+          res(ctx.json(mockStats)),
+        ),
       );
 
       const result = await ontologyService.getPublishDiffStats("tax-123");
@@ -325,7 +327,9 @@ describe("OntologyService - Taxonomies", () => {
       });
 
       server.use(
-        rest.post("*/api/taxonomies/tax-123/publish", (req, res, ctx) => res(ctx.json(mockTaxonomy))),
+        rest.post("*/api/taxonomies/tax-123/publish", (req, res, ctx) =>
+          res(ctx.json(mockTaxonomy)),
+        ),
       );
 
       const result = await ontologyService.publishTaxonomy("tax-123", "Release version 1.0");
@@ -522,7 +526,9 @@ describe("OntologyService - Concept Schemes", () => {
         ),
       );
 
-      await expect(ontologyService.updateScheme("not-found", { title: "Updated" })).rejects.toMatchObject({
+      await expect(
+        ontologyService.updateScheme("not-found", { title: "Updated" }),
+      ).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
       });
@@ -727,7 +733,9 @@ describe("OntologyService - Classes", () => {
         ),
       );
 
-      await expect(ontologyService.updateClass("not-found", { title: "Updated" })).rejects.toMatchObject({
+      await expect(
+        ontologyService.updateClass("not-found", { title: "Updated" }),
+      ).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
       });
@@ -969,7 +977,9 @@ describe("OntologyService - Individuals", () => {
         ),
       );
 
-      await expect(ontologyService.updateIndividual("not-found", { title: "Updated" })).rejects.toMatchObject({
+      await expect(
+        ontologyService.updateIndividual("not-found", { title: "Updated" }),
+      ).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
       });
@@ -1069,7 +1079,9 @@ describe("OntologyService - Individuals", () => {
         ),
       );
 
-      await expect(ontologyService.removeParentClass("not-found", "class-old")).rejects.toMatchObject({
+      await expect(
+        ontologyService.removeParentClass("not-found", "class-old"),
+      ).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
       });
@@ -1113,7 +1125,9 @@ describe("OntologyService - Individuals", () => {
         ),
       );
 
-      await expect(ontologyService.reorderIndividualClasses("not-found", reorderRequest)).rejects.toMatchObject({
+      await expect(
+        ontologyService.reorderIndividualClasses("not-found", reorderRequest),
+      ).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
       });
@@ -1151,7 +1165,9 @@ describe("OntologyService - Individuals", () => {
         ),
       );
 
-      await expect(ontologyService.getIndividualInheritedProperties("not-found")).rejects.toMatchObject({
+      await expect(
+        ontologyService.getIndividualInheritedProperties("not-found"),
+      ).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
       });
@@ -1322,7 +1338,9 @@ describe("OntologyService - Property Definitions", () => {
         ),
       );
 
-      await expect(ontologyService.updateProperty("not-found", { title: "Updated" })).rejects.toMatchObject({
+      await expect(
+        ontologyService.updateProperty("not-found", { title: "Updated" }),
+      ).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
       });

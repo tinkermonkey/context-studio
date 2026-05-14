@@ -998,3 +998,378 @@ class TestAdminServiceTaskManagement:
         assert completed.status == BackgroundTaskStatus.COMPLETED
         assert completed.completed_at is not None
         assert completed.result == {"status": "success"}
+
+
+class TestAdminServiceDatasetManagement:
+    """Tests for dataset CRUD operations."""
+
+    def setup_method(self):
+        """Set up test fixtures."""
+        from tests.fakes.fake_dataset_repository import FakeDatasetRepository
+
+        self.metrics = FakeMetricsCollector()
+        self.config_store = FakeConfigurationStore()
+        self.dataset_repo = FakeDatasetRepository()
+        self.service = AdminService(self.metrics, self.config_store, self.dataset_repo)
+
+    def test_create_dataset_success(self):
+        """Create dataset succeeds with valid parameters."""
+
+        dataset = self.service.create_dataset(
+            title="Test Dataset",
+            filename="test.db",
+            description="Test description",
+        )
+
+        assert dataset.id is not None
+        assert dataset.title == "Test Dataset"
+        assert dataset.filename == "test.db"
+        assert dataset.description == "Test description"
+        assert dataset.is_active is False
+        assert dataset.metrics is not None
+
+    def test_create_dataset_empty_title_raises_error(self):
+        """Create dataset raises ConfigurationError with empty title."""
+        with pytest.raises(ConfigurationError) as exc_info:
+            self.service.create_dataset(title="", filename="test.db")
+
+        assert "Title cannot be empty" in str(exc_info.value)
+
+    def test_create_dataset_whitespace_title_raises_error(self):
+        """Create dataset raises ConfigurationError with whitespace-only title."""
+        with pytest.raises(ConfigurationError) as exc_info:
+            self.service.create_dataset(title="   ", filename="test.db")
+
+        assert "Title cannot be empty" in str(exc_info.value)
+
+    def test_list_datasets_empty(self):
+        """List datasets returns empty list when none created."""
+        datasets = self.service.list_datasets()
+
+        assert datasets == []
+
+    def test_list_datasets_multiple(self):
+        """List datasets returns all created datasets."""
+        ds1 = self.service.create_dataset("Dataset 1", "file1.db")
+        ds2 = self.service.create_dataset("Dataset 2", "file2.db")
+
+        datasets = self.service.list_datasets()
+
+        assert len(datasets) == 2
+        dataset_ids = {d.id for d in datasets}
+        assert ds1.id in dataset_ids
+        assert ds2.id in dataset_ids
+
+    def test_get_dataset_success(self):
+        """Get dataset retrieves a dataset by ID."""
+        created = self.service.create_dataset("Get Test", "get_test.db")
+
+        retrieved = self.service.get_dataset(created.id)
+
+        assert retrieved.id == created.id
+        assert retrieved.title == "Get Test"
+
+    def test_get_dataset_not_found_raises_error(self):
+        """Get dataset raises DatasetNotFoundError for nonexistent ID."""
+        from domain.admin.exceptions import DatasetNotFoundError
+
+        with pytest.raises(DatasetNotFoundError) as exc_info:
+            self.service.get_dataset("nonexistent-id")
+
+        assert "Dataset nonexistent-id not found" in str(exc_info.value)
+
+    def test_update_dataset_success(self):
+        """Update dataset modifies title and description."""
+        created = self.service.create_dataset("Original", "test.db", "Original desc")
+
+        updated = self.service.update_dataset(
+            created.id,
+            title="Updated",
+            description="Updated desc",
+        )
+
+        assert updated.title == "Updated"
+        assert updated.description == "Updated desc"
+
+    def test_update_dataset_empty_title_raises_error(self):
+        """Update dataset raises ConfigurationError with empty title."""
+        created = self.service.create_dataset("Original", "test.db")
+
+        with pytest.raises(ConfigurationError) as exc_info:
+            self.service.update_dataset(created.id, title="")
+
+        assert "Title cannot be empty" in str(exc_info.value)
+
+    def test_update_dataset_not_found_raises_error(self):
+        """Update dataset raises DatasetNotFoundError for nonexistent ID."""
+        from domain.admin.exceptions import DatasetNotFoundError
+
+        with pytest.raises(DatasetNotFoundError) as exc_info:
+            self.service.update_dataset("nonexistent", title="New Title")
+
+        assert "not found" in str(exc_info.value)
+
+    def test_delete_dataset_success(self):
+        """Delete dataset removes the dataset."""
+        created = self.service.create_dataset("To Delete", "delete.db")
+
+        self.service.delete_dataset(created.id)
+
+        with pytest.raises(Exception):
+            self.service.get_dataset(created.id)
+
+    def test_delete_active_dataset_raises_error(self):
+        """Delete dataset raises ActiveDatasetError for active dataset."""
+        from domain.admin.exceptions import ActiveDatasetError
+
+        created = self.service.create_dataset("Active", "active.db")
+        self.service.activate_dataset(created.id)
+
+        with pytest.raises(ActiveDatasetError) as exc_info:
+            self.service.delete_dataset(created.id)
+
+        assert "Cannot delete the active dataset" in str(exc_info.value)
+
+    def test_delete_nonexistent_dataset_raises_error(self):
+        """Delete dataset raises DatasetNotFoundError for nonexistent ID."""
+        from domain.admin.exceptions import DatasetNotFoundError
+
+        with pytest.raises(DatasetNotFoundError) as exc_info:
+            self.service.delete_dataset("nonexistent")
+
+        assert "not found" in str(exc_info.value)
+
+    def test_activate_dataset_success(self):
+        """Activate dataset sets is_active to True."""
+        ds1 = self.service.create_dataset("Dataset 1", "file1.db")
+        ds2 = self.service.create_dataset("Dataset 2", "file2.db")
+
+        activated = self.service.activate_dataset(ds1.id)
+
+        assert activated.is_active is True
+        # Verify other dataset is deactivated
+        other = self.service.get_dataset(ds2.id)
+        assert other.is_active is False
+
+    def test_activate_nonexistent_dataset_raises_error(self):
+        """Activate dataset raises DatasetNotFoundError for nonexistent ID."""
+        from domain.admin.exceptions import DatasetNotFoundError
+
+        with pytest.raises(DatasetNotFoundError) as exc_info:
+            self.service.activate_dataset("nonexistent")
+
+        assert "not found" in str(exc_info.value)
+
+    def test_get_active_dataset_success(self):
+        """Get active dataset returns the currently active dataset."""
+        created = self.service.create_dataset("Active", "active.db")
+        self.service.activate_dataset(created.id)
+
+        active = self.service.get_active_dataset()
+
+        assert active is not None
+        assert active.id == created.id
+        assert active.is_active is True
+
+    def test_get_active_dataset_none(self):
+        """Get active dataset returns None when no dataset is active."""
+        active = self.service.get_active_dataset()
+
+        assert active is None
+
+    def test_refresh_dataset_metrics_success(self):
+        """Refresh dataset metrics recomputes metrics."""
+        created = self.service.create_dataset("Metrics Test", "metrics.db")
+
+        refreshed = self.service.refresh_dataset_metrics(created.id)
+
+        assert refreshed.metrics is not None
+        assert isinstance(refreshed.metrics.layers_count, int)
+
+    def test_refresh_nonexistent_dataset_raises_error(self):
+        """Refresh dataset metrics raises DatasetNotFoundError for nonexistent ID."""
+        from domain.admin.exceptions import DatasetNotFoundError
+
+        with pytest.raises(DatasetNotFoundError) as exc_info:
+            self.service.refresh_dataset_metrics("nonexistent")
+
+        assert "not found" in str(exc_info.value)
+
+    def test_dataset_lifecycle(self):
+        """Full dataset lifecycle: create, update, activate, list."""
+        # Create
+        ds1 = self.service.create_dataset("Lifecycle 1", "lc1.db", "First dataset")
+        ds2 = self.service.create_dataset("Lifecycle 2", "lc2.db", "Second dataset")
+
+        # Update
+        ds1 = self.service.update_dataset(ds1.id, title="Updated Lifecycle 1")
+        assert ds1.title == "Updated Lifecycle 1"
+
+        # List
+        all_datasets = self.service.list_datasets()
+        assert len(all_datasets) == 2
+
+        # Activate
+        ds1 = self.service.activate_dataset(ds1.id)
+        assert ds1.is_active is True
+
+        # Verify active dataset
+        active = self.service.get_active_dataset()
+        assert active.id == ds1.id
+
+        # Deactivate by activating another
+        ds2 = self.service.activate_dataset(ds2.id)
+        assert ds2.is_active is True
+        ds1 = self.service.get_dataset(ds1.id)
+        assert ds1.is_active is False
+
+    def test_delete_dataset_race_condition_raises_error(self):
+        """Delete dataset raises DatasetNotFoundError when repository delete returns False (race condition)."""
+        from domain.admin.exceptions import DatasetNotFoundError
+        from tests.fakes.fake_dataset_repository import FakeDatasetRepository
+
+        class RaceConditionRepo(FakeDatasetRepository):
+            """Mock repository that simulates race condition."""
+
+            def delete_dataset(self, dataset_id: str) -> bool:
+                """Simulate race condition: dataset exists but delete fails."""
+                # Don't actually delete - return False to simulate concurrent deletion
+                return False
+
+        created = self.service.create_dataset("Race Condition Test", "race.db")
+
+        # Replace repository with race condition variant
+        race_repo = RaceConditionRepo()
+        race_repo.save_dataset(created)
+        self.service._datasets = race_repo
+
+        # Should raise DatasetNotFoundError when delete returns False
+        with pytest.raises(DatasetNotFoundError) as exc_info:
+            self.service.delete_dataset(created.id)
+
+        assert "not found" in str(exc_info.value)
+
+
+class TestDatasetEntityValidation:
+    """Tests for Dataset entity __post_init__ validation."""
+
+    def test_dataset_empty_title_raises_valueerror(self):
+        """Dataset construction raises ValueError with empty title."""
+        from domain.admin.entities import Dataset
+        from datetime import datetime, timezone
+
+        with pytest.raises(ValueError) as exc_info:
+            Dataset(
+                id="test-id",
+                title="",
+                filename="test.db",
+                created_at=datetime.now(timezone.utc),
+                last_accessed=datetime.now(timezone.utc),
+                schema_version="1.0",
+            )
+
+        assert "Title cannot be empty" in str(exc_info.value)
+
+    def test_dataset_whitespace_title_raises_valueerror(self):
+        """Dataset construction raises ValueError with whitespace-only title."""
+        from domain.admin.entities import Dataset
+        from datetime import datetime, timezone
+
+        with pytest.raises(ValueError) as exc_info:
+            Dataset(
+                id="test-id",
+                title="   ",
+                filename="test.db",
+                created_at=datetime.now(timezone.utc),
+                last_accessed=datetime.now(timezone.utc),
+                schema_version="1.0",
+            )
+
+        assert "Title cannot be empty" in str(exc_info.value)
+
+    def test_dataset_empty_filename_raises_valueerror(self):
+        """Dataset construction raises ValueError with empty filename."""
+        from domain.admin.entities import Dataset
+        from datetime import datetime, timezone
+
+        with pytest.raises(ValueError) as exc_info:
+            Dataset(
+                id="test-id",
+                title="Test Dataset",
+                filename="",
+                created_at=datetime.now(timezone.utc),
+                last_accessed=datetime.now(timezone.utc),
+                schema_version="1.0",
+            )
+
+        assert "Filename cannot be empty" in str(exc_info.value)
+
+    def test_dataset_whitespace_filename_raises_valueerror(self):
+        """Dataset construction raises ValueError with whitespace-only filename."""
+        from domain.admin.entities import Dataset
+        from datetime import datetime, timezone
+
+        with pytest.raises(ValueError) as exc_info:
+            Dataset(
+                id="test-id",
+                title="Test Dataset",
+                filename="   ",
+                created_at=datetime.now(timezone.utc),
+                last_accessed=datetime.now(timezone.utc),
+                schema_version="1.0",
+            )
+
+        assert "Filename cannot be empty" in str(exc_info.value)
+
+    def test_dataset_empty_schema_version_raises_valueerror(self):
+        """Dataset construction raises ValueError with empty schema_version."""
+        from domain.admin.entities import Dataset
+        from datetime import datetime, timezone
+
+        with pytest.raises(ValueError) as exc_info:
+            Dataset(
+                id="test-id",
+                title="Test Dataset",
+                filename="test.db",
+                created_at=datetime.now(timezone.utc),
+                last_accessed=datetime.now(timezone.utc),
+                schema_version="",
+            )
+
+        assert "Schema version cannot be empty" in str(exc_info.value)
+
+    def test_dataset_whitespace_schema_version_raises_valueerror(self):
+        """Dataset construction raises ValueError with whitespace-only schema_version."""
+        from domain.admin.entities import Dataset
+        from datetime import datetime, timezone
+
+        with pytest.raises(ValueError) as exc_info:
+            Dataset(
+                id="test-id",
+                title="Test Dataset",
+                filename="test.db",
+                created_at=datetime.now(timezone.utc),
+                last_accessed=datetime.now(timezone.utc),
+                schema_version="   ",
+            )
+
+        assert "Schema version cannot be empty" in str(exc_info.value)
+
+    def test_dataset_valid_construction_succeeds(self):
+        """Dataset construction succeeds with valid parameters."""
+        from domain.admin.entities import Dataset
+        from datetime import datetime, timezone
+
+        ds = Dataset(
+            id="test-id",
+            title="Test Dataset",
+            filename="test.db",
+            created_at=datetime.now(timezone.utc),
+            last_accessed=datetime.now(timezone.utc),
+            schema_version="1.0",
+        )
+
+        assert ds.id == "test-id"
+        assert ds.title == "Test Dataset"
+        assert ds.filename == "test.db"
+        assert ds.schema_version == "1.0"

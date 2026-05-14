@@ -1,9 +1,5 @@
 import { test, expect } from "@playwright/test";
-import {
-  createTaxonomy,
-  createConceptScheme,
-  clearTestData,
-} from "../../fixtures/test-helpers";
+import { createTaxonomy, createConceptScheme, clearTestData } from "../../fixtures/test-helpers";
 
 test.describe("Concept Scheme CRUD Operations", () => {
   test.afterEach(async ({ page }) => {
@@ -51,9 +47,7 @@ test.describe("Concept Scheme CRUD Operations", () => {
     await expect(schemeTable).toContainText("Test Concept Scheme");
   });
 
-  test("Test Case 2: Click Row to Open Detail Drawer and Verify Field Values", async ({
-    page,
-  }) => {
+  test("Test Case 2: Click Row to Open Detail Drawer and Verify Field Values", async ({ page }) => {
     // Setup: Create parent taxonomy and scheme
     const taxonomy = await createTaxonomy(page, {
       title: "Test Taxonomy for Drawer",
@@ -92,9 +86,7 @@ test.describe("Concept Scheme CRUD Operations", () => {
     await expect(titleField).toHaveValue("Test Concept Scheme");
 
     // Step 6: Verify editable description field
-    const descriptionField = drawer.locator(
-      '[data-testid="scheme-drawer-description-input"]',
-    );
+    const descriptionField = drawer.locator('[data-testid="scheme-drawer-description-input"]');
     await expect(descriptionField).toBeVisible();
     await expect(descriptionField).toHaveValue("A test scheme for CRUD operations");
 

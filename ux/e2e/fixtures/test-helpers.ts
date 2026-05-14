@@ -15,6 +15,7 @@ export {
   executePipeline,
   getPipelineExecutions,
   createIndividual,
+  createDataset,
   getIndividualsByClass,
   clearTestData,
   type Taxonomy,
@@ -25,4 +26,6 @@ export {
   type Pipeline,
   type Execution,
   type Individual,
+  type Dataset,
+  type DatasetMetrics,
 } from "./factories";

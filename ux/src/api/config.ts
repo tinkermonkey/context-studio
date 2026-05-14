@@ -4,6 +4,8 @@ export const QUERY_KEYS = {
   metrics: ["metrics"] as const,
   config: ["config"] as const,
   backgroundTasks: ["background-tasks"] as const,
+  datasets: () => ["datasets"] as const,
+  dataset: (id: string) => ["datasets", id] as const,
   // Ontology
   taxonomies: ["taxonomies"] as const,
   taxonomy: (id: string) => ["taxonomies", id] as const,

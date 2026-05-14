@@ -624,6 +624,38 @@ selectors:
     component: components/ontology/IndividualDrawer.tsx
     description: Close button in individual detail drawer
 
+  # Datasets Page
+  - selector: datasets-page
+    component: routes/app/data/datasets.tsx
+    description: Main datasets page container
+  - selector: dataset-add-button
+    component: routes/app/data/datasets.tsx
+    description: Button to open create dataset modal
+  - selector: dataset-create-modal
+    component: routes/app/data/datasets.tsx
+    description: Modal for creating new dataset
+  - selector: dataset-title-input
+    component: routes/app/data/datasets.tsx
+    description: Title input field in dataset form
+  - selector: dataset-filename-input
+    component: routes/app/data/datasets.tsx
+    description: Filename input field in dataset form
+  - selector: dataset-description-input
+    component: routes/app/data/datasets.tsx
+    description: Description textarea in dataset form
+  - selector: dataset-submit-button
+    component: routes/app/data/datasets.tsx
+    description: Submit button for dataset form
+  - selector: dataset-name-*
+    component: routes/app/data/datasets.tsx
+    description: Clickable dataset name cell in table with dynamic ID suffix
+  - selector: dataset-row-delete-*
+    component: routes/app/data/datasets.tsx
+    description: Delete button for dataset row with dynamic ID suffix
+  - selector: empty-state-new-dataset
+    component: routes/app/data/datasets.tsx
+    description: Primary CTA button to create new dataset in empty state
+
   # Hierarchy Tree
   - selector: hierarchy-node-*
     component: components/ontology/HierarchyTree.tsx

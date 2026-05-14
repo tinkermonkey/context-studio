@@ -6,6 +6,9 @@ type AppConfigurationResponse = components["schemas"]["AppConfigurationResponse"
 type ConfigSectionUpdateRequest = components["schemas"]["ConfigSectionUpdateRequest"];
 type BackgroundTaskResponse = components["schemas"]["BackgroundTaskResponse"];
 type BackgroundTaskSummaryResponse = components["schemas"]["BackgroundTaskSummaryResponse"];
+type DatasetResponse = components["schemas"]["DatasetResponse"];
+type DatasetCreateRequest = components["schemas"]["DatasetCreateRequest"];
+type DatasetUpdateRequest = components["schemas"]["DatasetUpdateRequest"];
 
 class AdminService extends BaseService {
   async getHealth(): Promise<SystemHealthResponse> {
@@ -45,6 +48,30 @@ class AdminService extends BaseService {
 
   async getBackgroundTask(taskId: string): Promise<BackgroundTaskResponse> {
     return this.get<BackgroundTaskResponse>(`/api/v1/admin/tasks/${taskId}`);
+  }
+
+  async listDatasets(): Promise<DatasetResponse[]> {
+    return this.get<DatasetResponse[]>("/api/v1/admin/datasets");
+  }
+
+  async getDataset(datasetId: string): Promise<DatasetResponse> {
+    return this.get<DatasetResponse>(`/api/v1/admin/datasets/${datasetId}`);
+  }
+
+  async createDataset(data: DatasetCreateRequest): Promise<DatasetResponse> {
+    return this.post<DatasetResponse>("/api/v1/admin/datasets", data);
+  }
+
+  async updateDataset(datasetId: string, data: DatasetUpdateRequest): Promise<DatasetResponse> {
+    return this.put<DatasetResponse>(`/api/v1/admin/datasets/${datasetId}`, data);
+  }
+
+  async deleteDataset(datasetId: string): Promise<void> {
+    return this.delete<void>(`/api/v1/admin/datasets/${datasetId}`);
+  }
+
+  async activateDataset(datasetId: string): Promise<DatasetResponse> {
+    return this.post<DatasetResponse>(`/api/v1/admin/datasets/${datasetId}/activate`);
   }
 }
 

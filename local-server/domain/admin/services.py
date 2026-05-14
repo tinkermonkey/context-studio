@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from types import MappingProxyType
 from typing import Optional
 
-from .entities import SystemHealth, BackgroundTask, AppConfiguration
+from .entities import SystemHealth, BackgroundTask, AppConfiguration, Dataset
 from .value_objects import (
     BackgroundTaskStatus,
     SystemHealthStatus,
@@ -22,8 +22,13 @@ from .value_objects import (
     ComponentStatus,
     BackgroundTaskSummary,
 )
-from .ports import MetricsCollector, ConfigurationStore
-from .exceptions import TaskNotFoundError, ConfigurationError
+from .ports import MetricsCollector, ConfigurationStore, DatasetRepository
+from .exceptions import (
+    TaskNotFoundError,
+    ConfigurationError,
+    DatasetNotFoundError,
+    ActiveDatasetError,
+)
 
 
 class AdminService:
@@ -38,6 +43,7 @@ class AdminService:
         self,
         metrics_collector: MetricsCollector,
         config_store: ConfigurationStore,
+        dataset_repository: Optional[DatasetRepository] = None,
     ) -> None:
         """
         Initialize AdminService with required port implementations.
@@ -45,10 +51,12 @@ class AdminService:
         Args:
             metrics_collector: Port implementation for collecting health metrics
             config_store: Port implementation for configuration persistence
+            dataset_repository: Optional port implementation for dataset persistence
         """
         self._metrics = metrics_collector
         self._config = config_store
         self._tasks: dict[str, BackgroundTask] = {}
+        self._datasets = dataset_repository
 
     def check_health(self) -> SystemHealth:
         """
@@ -343,3 +351,200 @@ class AdminService:
             status, datetime.now(timezone.utc), error=error, result=result
         )
         return task
+
+    def create_dataset(
+        self,
+        title: str,
+        filename: str,
+        description: Optional[str] = None,
+    ) -> Dataset:
+        """
+        Create a new dataset.
+
+        Args:
+            title: Display name for the dataset
+            filename: Original filename
+            description: Optional description
+
+        Returns:
+            Created Dataset
+
+        Raises:
+            ConfigurationError: If title is empty
+            RuntimeError: If dataset repository is not configured
+        """
+        if not self._datasets:
+            raise RuntimeError("Dataset repository not configured")
+
+        if not title or not title.strip():
+            raise ConfigurationError("Title cannot be empty")
+
+        dataset = Dataset(
+            id=str(uuid.uuid4()),
+            title=title,
+            filename=filename,
+            description=description,
+            created_at=datetime.now(timezone.utc),
+            last_accessed=datetime.now(timezone.utc),
+            schema_version="1.0",
+        )
+
+        dataset.metrics = self._datasets.compute_metrics(dataset.id)
+        return self._datasets.save_dataset(dataset)
+
+    def get_dataset(self, dataset_id: str) -> Dataset:
+        """
+        Retrieve a dataset by ID.
+
+        Args:
+            dataset_id: The dataset ID
+
+        Returns:
+            Dataset if found
+
+        Raises:
+            RuntimeError: If dataset repository is not configured
+            DatasetNotFoundError: If dataset not found
+        """
+        if not self._datasets:
+            raise RuntimeError("Dataset repository not configured")
+
+        dataset = self._datasets.get_dataset(dataset_id)
+        if not dataset:
+            raise DatasetNotFoundError(f"Dataset {dataset_id} not found")
+        return dataset
+
+    def list_datasets(self) -> list[Dataset]:
+        """
+        List all datasets.
+
+        Returns:
+            List of all datasets
+
+        Raises:
+            RuntimeError: If dataset repository is not configured
+        """
+        if not self._datasets:
+            raise RuntimeError("Dataset repository not configured")
+
+        return list(self._datasets.list_datasets())
+
+    def update_dataset(
+        self,
+        dataset_id: str,
+        title: Optional[str] = None,
+        description: Optional[str] = None,
+    ) -> Dataset:
+        """
+        Update dataset metadata.
+
+        Args:
+            dataset_id: The dataset ID
+            title: New title (optional)
+            description: New description (optional)
+
+        Returns:
+            Updated Dataset
+
+        Raises:
+            RuntimeError: If dataset repository is not configured
+            ConfigurationError: If title is empty
+            DatasetNotFoundError: If dataset not found
+        """
+        if not self._datasets:
+            raise RuntimeError("Dataset repository not configured")
+
+        dataset = self.get_dataset(dataset_id)
+
+        if title is not None:
+            if not title.strip():
+                raise ConfigurationError("Title cannot be empty")
+            dataset.rename(title)
+
+        if description is not None:
+            dataset.description = description
+
+        dataset.version += 1
+        return self._datasets.save_dataset(dataset)
+
+    def delete_dataset(self, dataset_id: str) -> None:
+        """
+        Delete a dataset.
+
+        Args:
+            dataset_id: The dataset ID to delete
+
+        Raises:
+            RuntimeError: If dataset repository is not configured
+            DatasetNotFoundError: If dataset not found
+            ActiveDatasetError: If dataset is active
+        """
+        if not self._datasets:
+            raise RuntimeError("Dataset repository not configured")
+
+        dataset = self.get_dataset(dataset_id)
+
+        if dataset.is_active:
+            raise ActiveDatasetError("Cannot delete the active dataset")
+
+        deleted = self._datasets.delete_dataset(dataset_id)
+        if not deleted:
+            raise DatasetNotFoundError(f"Dataset {dataset_id} not found")
+
+    def activate_dataset(self, dataset_id: str) -> Dataset:
+        """
+        Activate a dataset as the current workspace.
+
+        Args:
+            dataset_id: The dataset ID to activate
+
+        Returns:
+            The activated Dataset
+
+        Raises:
+            RuntimeError: If dataset repository is not configured
+            DatasetNotFoundError: If dataset not found
+        """
+        if not self._datasets:
+            raise RuntimeError("Dataset repository not configured")
+
+        dataset = self.get_dataset(dataset_id)
+        dataset.is_active = True
+        dataset.mark_accessed()
+        return self._datasets.set_active_dataset(dataset_id)
+
+    def get_active_dataset(self) -> Optional[Dataset]:
+        """
+        Get the currently active dataset.
+
+        Returns:
+            Active dataset if one is set, None otherwise
+
+        Raises:
+            RuntimeError: If dataset repository is not configured
+        """
+        if not self._datasets:
+            raise RuntimeError("Dataset repository not configured")
+
+        return self._datasets.get_active_dataset()
+
+    def refresh_dataset_metrics(self, dataset_id: str) -> Dataset:
+        """
+        Recompute metrics for a dataset.
+
+        Args:
+            dataset_id: The dataset ID
+
+        Returns:
+            Dataset with refreshed metrics
+
+        Raises:
+            RuntimeError: If dataset repository is not configured
+            DatasetNotFoundError: If dataset not found
+        """
+        if not self._datasets:
+            raise RuntimeError("Dataset repository not configured")
+
+        dataset = self.get_dataset(dataset_id)
+        dataset.metrics = self._datasets.compute_metrics(dataset_id)
+        return self._datasets.save_dataset(dataset)

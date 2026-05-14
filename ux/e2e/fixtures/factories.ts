@@ -81,6 +81,27 @@ export interface Individual {
   is_deleted?: boolean;
 }
 
+export interface DatasetMetrics {
+  layers_count: number;
+  domains_count: number;
+  terms_count: number;
+  relationships_count: number;
+  individuals_count: number;
+}
+
+export interface Dataset {
+  id: string;
+  title: string;
+  filename: string;
+  description?: string;
+  created_at: string;
+  last_accessed: string;
+  schema_version: string;
+  metrics: DatasetMetrics;
+  is_active: boolean;
+  version: number;
+}
+
 // Type definitions for pipelines
 export interface Pipeline {
   id: string;
@@ -277,6 +298,33 @@ export async function createIndividual(
   return response;
 }
 
+/**
+ * Create a test dataset
+ */
+export async function createDataset(
+  page: Page,
+  overrides?: {
+    title?: string;
+    filename?: string;
+    description?: string;
+  },
+): Promise<Dataset> {
+  const timestamp = getRunTimestamp();
+  const title = overrides?.title || `test-dataset-${timestamp}`;
+  const filename = overrides?.filename || `test-dataset-${timestamp}.db`;
+  const description = overrides?.description || `Test dataset created at ${timestamp}`;
+
+  const response = await apiRequest<Dataset>(page, "/api/v1/admin/datasets", {
+    method: "POST",
+    body: {
+      title,
+      filename,
+      description,
+    },
+  });
+
+  return response;
+}
 
 /**
  * Create a test pipeline configuration
@@ -321,10 +369,7 @@ export async function createPipeline(
 /**
  * Execute a pipeline and get the execution result
  */
-export async function executePipeline(
-  page: Page,
-  pipelineId: string,
-): Promise<Execution> {
+export async function executePipeline(page: Page, pipelineId: string): Promise<Execution> {
   const response = await apiRequest<Execution>(page, `/api/pipelines/${pipelineId}/execute`, {
     method: "POST",
     body: {
@@ -338,10 +383,7 @@ export async function executePipeline(
 /**
  * Get pipeline executions
  */
-export async function getPipelineExecutions(
-  page: Page,
-  pipelineId: string,
-): Promise<Execution[]> {
+export async function getPipelineExecutions(page: Page, pipelineId: string): Promise<Execution[]> {
   const response = await apiRequest<Execution[]>(page, `/api/pipelines/${pipelineId}/executions`);
   return response;
 }
@@ -451,10 +493,7 @@ export async function clearTestData(page: Page): Promise<void> {
 /**
  * Get individuals by class ID (for checking cascade deletion)
  */
-export async function getIndividualsByClass(
-  page: Page,
-  classId: string,
-): Promise<Individual[]> {
+export async function getIndividualsByClass(page: Page, classId: string): Promise<Individual[]> {
   const response = await apiRequest<PaginatedResponse<Individual>>(page, "/api/individuals", {
     method: "GET",
   });

@@ -28,3 +28,15 @@ class InvalidStateTransitionError(AdminError):
     """Raised when an invalid state transition is attempted."""
 
     pass
+
+
+class DatasetNotFoundError(AdminError):
+    """Raised when a dataset is not found."""
+
+    pass
+
+
+class ActiveDatasetError(AdminError):
+    """Raised when attempting to delete or modify the active dataset."""
+
+    pass

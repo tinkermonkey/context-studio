@@ -4719,6 +4719,231 @@
         }
       }
     },
+    "/api/v1/admin/datasets": {
+      "get": {
+        "tags": ["admin"],
+        "summary": "List Datasets",
+        "description": "List all datasets.\n\nReturns:\n    List of all datasets",
+        "operationId": "list_datasets_api_v1_admin_datasets_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DatasetResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Datasets Api V1 Admin Datasets Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["admin"],
+        "summary": "Create Dataset",
+        "description": "Create a new dataset.\n\nArgs:\n    request: DatasetCreateRequest with title, filename, optional description\n    service: AdminService from dependency injection\n\nReturns:\n    Created DatasetResponse\n\nRaises:\n    HTTPException: 400 if title is empty, 409 if title already exists",
+        "operationId": "create_dataset_api_v1_admin_datasets_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatasetCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/datasets/{dataset_id}": {
+      "get": {
+        "tags": ["admin"],
+        "summary": "Get Dataset",
+        "description": "Get a dataset by ID.\n\nArgs:\n    dataset_id: The dataset ID\n    service: AdminService from dependency injection\n\nReturns:\n    DatasetResponse\n\nRaises:\n    HTTPException: 404 if not found",
+        "operationId": "get_dataset_api_v1_admin_datasets__dataset_id__get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["admin"],
+        "summary": "Update Dataset",
+        "description": "Update a dataset's metadata.\n\nArgs:\n    dataset_id: The dataset ID\n    request: DatasetUpdateRequest with optional fields to update\n    service: AdminService from dependency injection\n\nReturns:\n    Updated DatasetResponse\n\nRaises:\n    HTTPException: 400 if invalid, 404 if not found",
+        "operationId": "update_dataset_api_v1_admin_datasets__dataset_id__put",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatasetUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["admin"],
+        "summary": "Delete Dataset",
+        "description": "Delete a dataset.\n\nArgs:\n    dataset_id: The dataset ID\n    service: AdminService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found, 422 if it is the active dataset",
+        "operationId": "delete_dataset_api_v1_admin_datasets__dataset_id__delete",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/datasets/{dataset_id}/activate": {
+      "post": {
+        "tags": ["admin"],
+        "summary": "Activate Dataset",
+        "description": "Activate a dataset as the current workspace.\n\nArgs:\n    dataset_id: The dataset ID to activate\n    service: AdminService from dependency injection\n\nReturns:\n    Updated DatasetResponse with is_active=true\n\nRaises:\n    HTTPException: 404 if not found",
+        "operationId": "activate_dataset_api_v1_admin_datasets__dataset_id__activate_post",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/interchange/export": {
       "post": {
         "tags": ["interchange"],
@@ -5943,6 +6168,196 @@
         "required": ["connected"],
         "title": "DatabaseHealthResponse",
         "description": "Response containing database health status details."
+      },
+      "DatasetCreateRequest": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Title",
+            "description": "Display name"
+          },
+          "filename": {
+            "type": "string",
+            "title": "Filename",
+            "description": "Original filename"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional description"
+          }
+        },
+        "type": "object",
+        "required": ["title", "filename"],
+        "title": "DatasetCreateRequest",
+        "description": "Request to create a new dataset."
+      },
+      "DatasetMetricsResponse": {
+        "properties": {
+          "layers_count": {
+            "type": "integer",
+            "title": "Layers Count",
+            "description": "Number of taxonomies"
+          },
+          "domains_count": {
+            "type": "integer",
+            "title": "Domains Count",
+            "description": "Number of concept schemes"
+          },
+          "terms_count": {
+            "type": "integer",
+            "title": "Terms Count",
+            "description": "Number of classes"
+          },
+          "relationships_count": {
+            "type": "integer",
+            "title": "Relationships Count",
+            "description": "Number of relationships"
+          },
+          "individuals_count": {
+            "type": "integer",
+            "title": "Individuals Count",
+            "description": "Number of individuals"
+          }
+        },
+        "type": "object",
+        "required": [
+          "layers_count",
+          "domains_count",
+          "terms_count",
+          "relationships_count",
+          "individuals_count"
+        ],
+        "title": "DatasetMetricsResponse",
+        "description": "Response containing dataset metrics."
+      },
+      "DatasetResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique identifier"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Display name"
+          },
+          "filename": {
+            "type": "string",
+            "title": "Filename",
+            "description": "Original filename"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional description"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp"
+          },
+          "last_accessed": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Accessed",
+            "description": "Last access timestamp"
+          },
+          "schema_version": {
+            "type": "string",
+            "title": "Schema Version",
+            "description": "Database schema version"
+          },
+          "metrics": {
+            "$ref": "#/components/schemas/DatasetMetricsResponse",
+            "description": "Dataset metrics"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Whether this is the active dataset"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "description": "Version number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "filename",
+          "schema_version",
+          "metrics",
+          "is_active",
+          "version"
+        ],
+        "title": "DatasetResponse",
+        "description": "Response containing dataset data."
+      },
+      "DatasetUpdateRequest": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "description": "New title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "New description"
+          }
+        },
+        "type": "object",
+        "title": "DatasetUpdateRequest",
+        "description": "Request to update a dataset."
       },
       "DegreeDistributionResponse": {
         "properties": {
