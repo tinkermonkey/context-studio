@@ -56,6 +56,8 @@ ux/test_output.txt
 ux/test-results/
 ux/coverage/
 ux/e2e/reports/
+ux/e2e/tests/**/__snapshots__/
+ux/e2e/tests/**/*-snapshots/
 
 .env
 **/.env*
