@@ -13,6 +13,8 @@ import {
   createChangesetCreateRequest,
   createSyncStatus,
   createSyncResult,
+  createProposal,
+  createConflictReport,
 } from "./fixtures/versioning.fixtures";
 
 const server = setupServer();
@@ -395,6 +397,157 @@ describe("VersioningService", () => {
       );
 
       await expect(versioningService.pullSync()).rejects.toMatchObject({
+        name: "ApiError",
+        status: 400,
+      });
+    });
+  });
+
+  describe("listChangesets", () => {
+    it("returns list of changesets from GET /api/v1/versioning/changesets", async () => {
+      const mockChangesets = [
+        createChangeset({ id: "cs-1", name: "Changeset 1" }),
+        createChangeset({ id: "cs-2", name: "Changeset 2" }),
+      ];
+
+      server.use(
+        rest.get("*/api/v1/versioning/changesets", (req, res, ctx) => res(ctx.json(mockChangesets))),
+      );
+
+      const result = await versioningService.listChangesets();
+
+      expect(result).toHaveLength(2);
+      expect(result[0].name).toBe("Changeset 1");
+    });
+
+    it("throws ApiError on 500 from listChangesets", async () => {
+      server.use(
+        rest.get("*/api/v1/versioning/changesets", (req, res, ctx) =>
+          res(
+            ctx.status(500),
+            ctx.json({
+              detail: "Internal server error",
+            }),
+          ),
+        ),
+      );
+
+      await expect(versioningService.listChangesets()).rejects.toMatchObject({
+        name: "ApiError",
+        status: 500,
+      });
+    });
+  });
+
+  describe("applyChangeset", () => {
+    it("applies changeset and returns proposal from POST /api/v1/versioning/changesets/:id/apply", async () => {
+      const mockProposal = createProposal({ changeset_id: "changeset-123" });
+
+      server.use(
+        rest.post("*/api/v1/versioning/changesets/changeset-123/apply", (req, res, ctx) =>
+          res(ctx.json(mockProposal)),
+        ),
+      );
+
+      const result = await versioningService.applyChangeset("changeset-123");
+
+      expect(result.changeset_id).toBe("changeset-123");
+    });
+
+    it("throws ApiError with 404 on applyChangeset with non-existent changeset", async () => {
+      server.use(
+        rest.post("*/api/v1/versioning/changesets/not-found/apply", (req, res, ctx) =>
+          res(
+            ctx.status(404),
+            ctx.json({
+              detail: "Changeset not found",
+            }),
+          ),
+        ),
+      );
+
+      await expect(versioningService.applyChangeset("not-found")).rejects.toMatchObject({
+        name: "ApiError",
+        status: 404,
+      });
+    });
+  });
+
+  describe("getProposalConflicts", () => {
+    it("returns conflict report from GET /api/v1/versioning/proposals/:id/conflicts", async () => {
+      const mockConflicts = createConflictReport({ proposal_id: "proposal-123" });
+
+      server.use(
+        rest.get("*/api/v1/versioning/proposals/proposal-123/conflicts", (req, res, ctx) =>
+          res(ctx.json(mockConflicts)),
+        ),
+      );
+
+      const result = await versioningService.getProposalConflicts("proposal-123");
+
+      expect(result.proposal_id).toBe("proposal-123");
+      expect(result.has_conflicts).toBe(true);
+    });
+
+    it("throws ApiError with 404 on getProposalConflicts with non-existent proposal", async () => {
+      server.use(
+        rest.get("*/api/v1/versioning/proposals/not-found/conflicts", (req, res, ctx) =>
+          res(
+            ctx.status(404),
+            ctx.json({
+              detail: "Proposal not found",
+            }),
+          ),
+        ),
+      );
+
+      await expect(versioningService.getProposalConflicts("not-found")).rejects.toMatchObject({
+        name: "ApiError",
+        status: 404,
+      });
+    });
+  });
+
+  describe("resolveConflicts", () => {
+    it("resolves conflicts from POST /api/v1/versioning/proposals/:id/resolve", async () => {
+      const mockConflicts = createConflictReport({ has_conflicts: false });
+
+      server.use(
+        rest.post("*/api/v1/versioning/proposals/proposal-123/resolve", (req, res, ctx) =>
+          res(ctx.json(mockConflicts)),
+        ),
+      );
+
+      const resolutions: Record<string, Record<string, unknown>> = {
+        "entity-1": {
+          title: "Resolved Title",
+        },
+      };
+
+      const result = await versioningService.resolveConflicts("proposal-123", resolutions);
+
+      expect(result.has_conflicts).toBe(false);
+    });
+
+    it("throws ApiError with 400 on resolveConflicts with incomplete resolutions", async () => {
+      const resolutions: Record<string, Record<string, unknown>> = {
+        "entity-1": {
+          title: "Resolved Title",
+        },
+      };
+
+      server.use(
+        rest.post("*/api/v1/versioning/proposals/proposal-123/resolve", (req, res, ctx) =>
+          res(
+            ctx.status(400),
+            ctx.json({
+              detail: "All conflicts must be resolved",
+            }),
+          ),
+        ),
+      );
+
+      await expect(versioningService.resolveConflicts("proposal-123", resolutions)).rejects.toMatchObject({
         name: "ApiError",
         status: 400,
       });

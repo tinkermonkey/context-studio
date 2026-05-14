@@ -29,6 +29,9 @@ import {
   createRelationship,
   createListRelationships,
   createRelationshipCreateRequest,
+  createPublishDiffStats,
+  createDataPropertyValue,
+  createListDataPropertyValues,
 } from "./fixtures/ontology.fixtures";
 
 // Initialize MSW server for all tests
@@ -274,6 +277,81 @@ describe("OntologyService - Taxonomies", () => {
       });
     });
   });
+
+  describe("getPublishDiffStats", () => {
+    it("returns publish diff stats from GET /api/taxonomies/:id/publish-diff", async () => {
+      const mockStats = createPublishDiffStats({
+        added: 5,
+        modified: 3,
+        removed: 1,
+      });
+
+      server.use(
+        rest.get("*/api/taxonomies/tax-123/publish-diff", (req, res, ctx) => res(ctx.json(mockStats))),
+      );
+
+      const result = await ontologyService.getPublishDiffStats("tax-123");
+
+      expect(result).toEqual(mockStats);
+      expect(result.added).toBe(5);
+      expect(result.modified).toBe(3);
+      expect(result.removed).toBe(1);
+    });
+
+    it("throws ApiError with 404 on getPublishDiffStats with non-existent taxonomy", async () => {
+      server.use(
+        rest.get("*/api/taxonomies/not-found/publish-diff", (req, res, ctx) =>
+          res(
+            ctx.status(404),
+            ctx.json({
+              detail: "Taxonomy not found",
+            }),
+          ),
+        ),
+      );
+
+      await expect(ontologyService.getPublishDiffStats("not-found")).rejects.toMatchObject({
+        name: "ApiError",
+        status: 404,
+      });
+    });
+  });
+
+  describe("publishTaxonomy", () => {
+    it("publishes taxonomy from POST /api/taxonomies/:id/publish", async () => {
+      const mockTaxonomy = createTaxonomy({
+        id: "tax-123",
+        status: "published",
+      });
+
+      server.use(
+        rest.post("*/api/taxonomies/tax-123/publish", (req, res, ctx) => res(ctx.json(mockTaxonomy))),
+      );
+
+      const result = await ontologyService.publishTaxonomy("tax-123", "Release version 1.0");
+
+      expect(result).toEqual(mockTaxonomy);
+      expect(result.status).toBe("published");
+    });
+
+    it("throws ApiError with 400 on publishTaxonomy with invalid commit message", async () => {
+      server.use(
+        rest.post("*/api/taxonomies/tax-123/publish", (req, res, ctx) =>
+          res(
+            ctx.status(400),
+            ctx.json({
+              detail: "Commit message is required",
+            }),
+          ),
+        ),
+      );
+
+      await expect(ontologyService.publishTaxonomy("tax-123", "")).rejects.toMatchObject({
+        name: "ApiError",
+        status: 400,
+      });
+    });
+  });
 });
 
 // ============================================================================
@@ -431,6 +509,24 @@ describe("OntologyService - Concept Schemes", () => {
 
       expect(result.title).toBe("Updated Scheme");
     });
+
+    it("throws ApiError with 404 on updateScheme with non-existent ID", async () => {
+      server.use(
+        rest.put("*/api/schemes/not-found", (req, res, ctx) =>
+          res(
+            ctx.status(404),
+            ctx.json({
+              detail: "Scheme not found",
+            }),
+          ),
+        ),
+      );
+
+      await expect(ontologyService.updateScheme("not-found", { title: "Updated" })).rejects.toMatchObject({
+        name: "ApiError",
+        status: 404,
+      });
+    });
   });
 
   describe("deleteScheme", () => {
@@ -438,6 +534,24 @@ describe("OntologyService - Concept Schemes", () => {
       server.use(rest.delete("*/api/schemes/scheme-123", (req, res, ctx) => res(ctx.status(204))));
 
       await expect(ontologyService.deleteScheme("scheme-123")).resolves.toBeDefined();
+    });
+
+    it("throws ApiError with 404 on deleteScheme with non-existent ID", async () => {
+      server.use(
+        rest.delete("*/api/schemes/not-found", (req, res, ctx) =>
+          res(
+            ctx.status(404),
+            ctx.json({
+              detail: "Scheme not found",
+            }),
+          ),
+        ),
+      );
+
+      await expect(ontologyService.deleteScheme("not-found")).rejects.toMatchObject({
+        name: "ApiError",
+        status: 404,
+      });
     });
   });
 });
@@ -562,6 +676,26 @@ describe("OntologyService - Classes", () => {
 
       expect(result.concept_scheme_id).toBe("scheme-123");
     });
+
+    it("throws ApiError with 404 on createClass with non-existent scheme", async () => {
+      const createRequest = createClassCreateRequest();
+
+      server.use(
+        rest.post("*/api/schemes/not-found/classes", (req, res, ctx) =>
+          res(
+            ctx.status(404),
+            ctx.json({
+              detail: "Scheme not found",
+            }),
+          ),
+        ),
+      );
+
+      await expect(ontologyService.createClass("not-found", createRequest)).rejects.toMatchObject({
+        name: "ApiError",
+        status: 404,
+      });
+    });
   });
 
   describe("updateClass", () => {
@@ -579,6 +713,24 @@ describe("OntologyService - Classes", () => {
       const result = await ontologyService.updateClass("class-123", updateRequest);
 
       expect(result.title).toBe("Updated Dog");
+    });
+
+    it("throws ApiError with 404 on updateClass with non-existent ID", async () => {
+      server.use(
+        rest.put("*/api/classes/not-found", (req, res, ctx) =>
+          res(
+            ctx.status(404),
+            ctx.json({
+              detail: "Class not found",
+            }),
+          ),
+        ),
+      );
+
+      await expect(ontologyService.updateClass("not-found", { title: "Updated" })).rejects.toMatchObject({
+        name: "ApiError",
+        status: 404,
+      });
     });
   });
 
@@ -625,6 +777,24 @@ describe("OntologyService - Classes", () => {
       server.use(rest.delete("*/api/classes/class-123", (req, res, ctx) => res(ctx.status(204))));
 
       await expect(ontologyService.deleteClass("class-123")).resolves.toBeDefined();
+    });
+
+    it("throws ApiError with 404 on deleteClass with non-existent ID", async () => {
+      server.use(
+        rest.delete("*/api/classes/not-found", (req, res, ctx) =>
+          res(
+            ctx.status(404),
+            ctx.json({
+              detail: "Class not found",
+            }),
+          ),
+        ),
+      );
+
+      await expect(ontologyService.deleteClass("not-found")).rejects.toMatchObject({
+        name: "ApiError",
+        status: 404,
+      });
     });
   });
 });
@@ -786,6 +956,24 @@ describe("OntologyService - Individuals", () => {
 
       expect(result.title).toBe("Updated Fido");
     });
+
+    it("throws ApiError with 404 on updateIndividual with non-existent ID", async () => {
+      server.use(
+        rest.put("*/api/individuals/not-found", (req, res, ctx) =>
+          res(
+            ctx.status(404),
+            ctx.json({
+              detail: "Individual not found",
+            }),
+          ),
+        ),
+      );
+
+      await expect(ontologyService.updateIndividual("not-found", { title: "Updated" })).rejects.toMatchObject({
+        name: "ApiError",
+        status: 404,
+      });
+    });
   });
 
   describe("deleteIndividual", () => {
@@ -793,6 +981,24 @@ describe("OntologyService - Individuals", () => {
       server.use(rest.delete("*/api/individuals/ind-123", (req, res, ctx) => res(ctx.status(204))));
 
       await expect(ontologyService.deleteIndividual("ind-123")).resolves.toBeDefined();
+    });
+
+    it("throws ApiError with 404 on deleteIndividual with non-existent ID", async () => {
+      server.use(
+        rest.delete("*/api/individuals/not-found", (req, res, ctx) =>
+          res(
+            ctx.status(404),
+            ctx.json({
+              detail: "Individual not found",
+            }),
+          ),
+        ),
+      );
+
+      await expect(ontologyService.deleteIndividual("not-found")).rejects.toMatchObject({
+        name: "ApiError",
+        status: 404,
+      });
     });
   });
 
@@ -850,6 +1056,24 @@ describe("OntologyService - Individuals", () => {
         ontologyService.removeParentClass("ind-123", "class-old"),
       ).resolves.toBeDefined();
     });
+
+    it("throws ApiError with 404 on removeParentClass with non-existent individual", async () => {
+      server.use(
+        rest.delete("*/api/individuals/not-found/classes/class-old", (req, res, ctx) =>
+          res(
+            ctx.status(404),
+            ctx.json({
+              detail: "Individual not found",
+            }),
+          ),
+        ),
+      );
+
+      await expect(ontologyService.removeParentClass("not-found", "class-old")).rejects.toMatchObject({
+        name: "ApiError",
+        status: 404,
+      });
+    });
   });
 
   describe("reorderIndividualClasses", () => {
@@ -871,6 +1095,66 @@ describe("OntologyService - Individuals", () => {
       const result = await ontologyService.reorderIndividualClasses("ind-123", reorderRequest);
 
       expect(result.class_ids).toEqual(["class-2", "class-1", "class-3"]);
+    });
+
+    it("throws ApiError with 404 on reorderIndividualClasses with non-existent individual", async () => {
+      const reorderRequest = {
+        class_ids: ["class-1"],
+      };
+
+      server.use(
+        rest.put("*/api/individuals/not-found/classes", (req, res, ctx) =>
+          res(
+            ctx.status(404),
+            ctx.json({
+              detail: "Individual not found",
+            }),
+          ),
+        ),
+      );
+
+      await expect(ontologyService.reorderIndividualClasses("not-found", reorderRequest)).rejects.toMatchObject({
+        name: "ApiError",
+        status: 404,
+      });
+    });
+  });
+
+  describe("getIndividualInheritedProperties", () => {
+    it("returns inherited properties for individual from GET /api/individuals/:id/inherited-properties", async () => {
+      const mockProperties = createListDataPropertyValues([
+        createDataPropertyValue({ property_identifier: "color", value: "Brown" }),
+        createDataPropertyValue({ property_identifier: "size", value: "Large" }),
+      ]);
+
+      server.use(
+        rest.get("*/api/individuals/ind-123/inherited-properties", (req, res, ctx) =>
+          res(ctx.json(mockProperties)),
+        ),
+      );
+
+      const result = await ontologyService.getIndividualInheritedProperties("ind-123");
+
+      expect(result.items).toHaveLength(2);
+      expect(result.items[0].property_identifier).toBe("color");
+    });
+
+    it("throws ApiError with 404 on getIndividualInheritedProperties with non-existent individual", async () => {
+      server.use(
+        rest.get("*/api/individuals/not-found/inherited-properties", (req, res, ctx) =>
+          res(
+            ctx.status(404),
+            ctx.json({
+              detail: "Individual not found",
+            }),
+          ),
+        ),
+      );
+
+      await expect(ontologyService.getIndividualInheritedProperties("not-found")).rejects.toMatchObject({
+        name: "ApiError",
+        status: 404,
+      });
     });
   });
 });
@@ -1024,6 +1308,24 @@ describe("OntologyService - Property Definitions", () => {
       const result = await ontologyService.updateProperty("prop-123", updateRequest);
 
       expect(result.title).toBe("Updated Color");
+    });
+
+    it("throws ApiError with 404 on updateProperty with non-existent ID", async () => {
+      server.use(
+        rest.put("*/api/properties/not-found", (req, res, ctx) =>
+          res(
+            ctx.status(404),
+            ctx.json({
+              detail: "Property not found",
+            }),
+          ),
+        ),
+      );
+
+      await expect(ontologyService.updateProperty("not-found", { title: "Updated" })).rejects.toMatchObject({
+        name: "ApiError",
+        status: 404,
+      });
     });
   });
 

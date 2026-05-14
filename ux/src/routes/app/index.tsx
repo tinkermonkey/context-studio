@@ -66,7 +66,7 @@ function EmptyState() {
   );
 }
 
-function Dashboard() {
+export function Dashboard() {
   const { data: health } = useHealth();
   const {
     data: taxonomies,

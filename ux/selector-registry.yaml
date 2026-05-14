@@ -38,6 +38,32 @@ selectors:
   - selector: dark-mode-toggle
     component: components/shell/Topbar.tsx
     description: Button that toggles the canvas between light and dark mode
+  - selector: topbar-palette-button
+    component: components/shell/Topbar.tsx
+    description: Button that opens the command palette from the topbar
+
+  # Command Palette
+  - selector: command-palette
+    component: components/shell/CommandPalette.tsx
+    description: Root command palette dialog overlay
+  - selector: command-palette-backdrop
+    component: components/shell/CommandPalette.tsx
+    description: Clickable backdrop overlay that closes the palette
+  - selector: command-palette-input
+    component: components/shell/CommandPalette.tsx
+    description: Search/command input field in the palette
+  - selector: command-palette-results
+    component: components/shell/CommandPalette.tsx
+    description: Results container displaying filtered command items
+  - selector: command-palette-empty-state
+    component: components/shell/CommandPalette.tsx
+    description: Empty state message shown when no results match the query
+  - selector: command-palette-item-*
+    component: components/shell/CommandPalette.tsx
+    description: Individual command palette item button (pattern matches item-{actionId})
+  - selector: command-palette-esc-button
+    component: components/shell/CommandPalette.tsx
+    description: Esc key indicator button in the palette input row
 
   # Sidebar
   - selector: sidebar
@@ -329,6 +355,9 @@ selectors:
   - selector: taxonomies-content
     component: routes/app/schema/taxonomies.tsx
     description: Main content area of taxonomies page
+  - selector: taxonomy-name-*
+    component: routes/app/schema/taxonomies.tsx
+    description: Clickable taxonomy name cell in table with dynamic ID suffix
   - selector: taxonomy-row-actions-*
     component: routes/app/schema/taxonomies.tsx
     description: Actions menu button for taxonomy row
