@@ -135,6 +135,7 @@ export function createDatasetMetrics(
     domains_count: 3,
     terms_count: 42,
     relationships_count: 15,
+    individuals_count: 8,
     ...overrides,
   };
 }
