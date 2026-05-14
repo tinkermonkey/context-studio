@@ -22,6 +22,7 @@ This test validates the complete CRUD workflow for Property Definitions in Conte
 ### Test Case 1: Create a New Property via Modal
 
 **Preconditions**:
+
 - User is logged in and navigated to `/app/schema/properties`
 - Properties table is visible (may be empty or populated)
 
@@ -306,6 +307,7 @@ The following factories from `/workspace/ux/e2e/fixtures/factories.ts` will be u
   - Called after all test cases to ensure clean state
 
 **Cleanup Strategy** (in `afterEach`):
+
 ```
 await clearTestData(page);
 ```

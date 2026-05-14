@@ -349,7 +349,9 @@ test.describe("Relationship CRUD Operations", () => {
     await expect(drawer).not.toBeVisible();
 
     // Verify toast notification with undo action appears
-    const toast = page.locator('[role="status"]').or(page.locator('[data-testid^="toast-action-"]'));
+    const toast = page
+      .locator('[role="status"]')
+      .or(page.locator('[data-testid^="toast-action-"]'));
     await expect(toast.first()).toBeVisible({ timeout: 5000 });
 
     // Verify undo action button is present

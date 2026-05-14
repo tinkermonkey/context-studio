@@ -24,6 +24,7 @@ This test validates the complete CRUD lifecycle for ontology classes, covering c
 ### Test Case 1: Create a New Class via Create Button
 
 **Preconditions**:
+
 - User is logged in and navigated to `/app/schema/classes`
 - At least one concept scheme exists (pre-created via factory)
 

@@ -56,9 +56,7 @@ describe("Dashboard", () => {
         rest.get("*/api/individuals", (req, res, ctx) =>
           res(ctx.json({ items: [], total: 0, offset: 0 })),
         ),
-        rest.get("*/api/v1/pipelines", (req, res, ctx) =>
-          res(ctx.json([])),
-        ),
+        rest.get("*/api/v1/pipelines", (req, res, ctx) => res(ctx.json([]))),
         rest.get("*/api/v1/versioning/changes", (req, res, ctx) =>
           res(ctx.json({ events: [], total: 0 })),
         ),
@@ -68,9 +66,7 @@ describe("Dashboard", () => {
 
       await waitFor(() => {
         expect(screen.getByText("Welcome to Context Studio")).toBeInTheDocument();
-        expect(
-          screen.getByText("Start building your knowledge graph"),
-        ).toBeInTheDocument();
+        expect(screen.getByText("Start building your knowledge graph")).toBeInTheDocument();
         expect(screen.getByRole("button", { name: /Create taxonomy/i })).toBeInTheDocument();
         expect(screen.getByRole("button", { name: /Run pipeline/i })).toBeInTheDocument();
       });
@@ -92,15 +88,9 @@ describe("Dashboard", () => {
           await taxonomiesPromise;
           return res(ctx.json({ items: [], total: 0 }));
         }),
-        rest.get("*/api/classes", (req, res, ctx) =>
-          res(ctx.json({ items: [], total: 0 })),
-        ),
-        rest.get("*/api/individuals", (req, res, ctx) =>
-          res(ctx.json({ items: [], total: 0 })),
-        ),
-        rest.get("*/api/v1/pipelines", (req, res, ctx) =>
-          res(ctx.json([])),
-        ),
+        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json({ items: [], total: 0 }))),
+        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json({ items: [], total: 0 }))),
+        rest.get("*/api/v1/pipelines", (req, res, ctx) => res(ctx.json([]))),
         rest.get("*/api/v1/admin/health", (req, res, ctx) =>
           res(
             ctx.json({
@@ -137,15 +127,9 @@ describe("Dashboard", () => {
         rest.get("*/api/taxonomies", (req, res, ctx) =>
           res(ctx.status(500), ctx.json({ detail: "Server error" })),
         ),
-        rest.get("*/api/classes", (req, res, ctx) =>
-          res(ctx.json({ items: [], total: 0 })),
-        ),
-        rest.get("*/api/individuals", (req, res, ctx) =>
-          res(ctx.json({ items: [], total: 0 })),
-        ),
-        rest.get("*/api/v1/pipelines", (req, res, ctx) =>
-          res(ctx.json([])),
-        ),
+        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json({ items: [], total: 0 }))),
+        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json({ items: [], total: 0 }))),
+        rest.get("*/api/v1/pipelines", (req, res, ctx) => res(ctx.json([]))),
         rest.get("*/api/v1/admin/health", (req, res, ctx) =>
           res(
             ctx.json({
@@ -178,12 +162,8 @@ describe("Dashboard", () => {
         rest.get("*/api/classes", (req, res, ctx) =>
           res(ctx.status(500), ctx.json({ detail: "Server error" })),
         ),
-        rest.get("*/api/individuals", (req, res, ctx) =>
-          res(ctx.json({ items: [], total: 0 })),
-        ),
-        rest.get("*/api/v1/pipelines", (req, res, ctx) =>
-          res(ctx.json([])),
-        ),
+        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json({ items: [], total: 0 }))),
+        rest.get("*/api/v1/pipelines", (req, res, ctx) => res(ctx.json([]))),
         rest.get("*/api/v1/admin/health", (req, res, ctx) =>
           res(
             ctx.json({
@@ -219,9 +199,7 @@ describe("Dashboard", () => {
         rest.get("*/api/taxonomies", (req, res, ctx) =>
           res(
             ctx.json({
-              items: [
-                { id: "tax-1", title: "Biology", description: "Life sciences" },
-              ],
+              items: [{ id: "tax-1", title: "Biology", description: "Life sciences" }],
               total: 1,
               offset: 0,
             }),
@@ -230,9 +208,7 @@ describe("Dashboard", () => {
         rest.get("*/api/classes", (req, res, ctx) =>
           res(
             ctx.json({
-              items: [
-                { id: "class-1", title: "Organism", description: "Living things" },
-              ],
+              items: [{ id: "class-1", title: "Organism", description: "Living things" }],
               total: 3,
               offset: 0,
             }),
@@ -241,9 +217,7 @@ describe("Dashboard", () => {
         rest.get("*/api/individuals", (req, res, ctx) =>
           res(
             ctx.json({
-              items: [
-                { id: "ind-1", title: "Human", description: "Species" },
-              ],
+              items: [{ id: "ind-1", title: "Human", description: "Species" }],
               total: 5,
               offset: 0,
             }),
@@ -316,15 +290,9 @@ describe("Dashboard", () => {
             }),
           ),
         ),
-        rest.get("*/api/classes", (req, res, ctx) =>
-          res(ctx.json({ items: [], total: 0 })),
-        ),
-        rest.get("*/api/individuals", (req, res, ctx) =>
-          res(ctx.json({ items: [], total: 0 })),
-        ),
-        rest.get("*/api/v1/pipelines", (req, res, ctx) =>
-          res(ctx.json([])),
-        ),
+        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json({ items: [], total: 0 }))),
+        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json({ items: [], total: 0 }))),
+        rest.get("*/api/v1/pipelines", (req, res, ctx) => res(ctx.json([]))),
         rest.get("*/api/v1/admin/health", (req, res, ctx) =>
           res(
             ctx.json({
@@ -366,15 +334,9 @@ describe("Dashboard", () => {
             }),
           ),
         ),
-        rest.get("*/api/classes", (req, res, ctx) =>
-          res(ctx.json({ items: [], total: 0 })),
-        ),
-        rest.get("*/api/individuals", (req, res, ctx) =>
-          res(ctx.json({ items: [], total: 0 })),
-        ),
-        rest.get("*/api/v1/pipelines", (req, res, ctx) =>
-          res(ctx.json([])),
-        ),
+        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json({ items: [], total: 0 }))),
+        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json({ items: [], total: 0 }))),
+        rest.get("*/api/v1/pipelines", (req, res, ctx) => res(ctx.json([]))),
         rest.get("*/api/v1/admin/health", (req, res, ctx) =>
           res(
             ctx.json({
@@ -420,12 +382,8 @@ describe("Dashboard", () => {
         rest.get("*/api/classes", (req, res, ctx) =>
           res(ctx.status(500), ctx.json({ detail: "Error" })),
         ),
-        rest.get("*/api/individuals", (req, res, ctx) =>
-          res(ctx.json({ items: [], total: 0 })),
-        ),
-        rest.get("*/api/v1/pipelines", (req, res, ctx) =>
-          res(ctx.json([])),
-        ),
+        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json({ items: [], total: 0 }))),
+        rest.get("*/api/v1/pipelines", (req, res, ctx) => res(ctx.json([]))),
         rest.get("*/api/v1/admin/health", (req, res, ctx) =>
           res(
             ctx.json({

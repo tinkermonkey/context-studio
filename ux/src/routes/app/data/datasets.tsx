@@ -10,11 +10,7 @@ import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FilterBar } from "@/components/schema/FilterBar";
 import { SchemaTable } from "@/components/schema/SchemaTable";
-import {
-  useDatasets,
-  useCreateDataset,
-  useDeleteDataset,
-} from "@/api/hooks/admin/useDatasets";
+import { useDatasets, useCreateDataset, useDeleteDataset } from "@/api/hooks/admin/useDatasets";
 import { datasetsCopy } from "./datasets/-copy";
 import type { components } from "@/api/types";
 
@@ -193,10 +189,7 @@ function DatasetsPageContent({
 
       {showFilteredEmpty ? (
         <div style={{ marginTop: "var(--space-6)" }}>
-          <EmptyState
-            title="No datasets found"
-            description="Try adjusting your search filter"
-          />
+          <EmptyState title="No datasets found" description="Try adjusting your search filter" />
         </div>
       ) : (
         <SchemaTable

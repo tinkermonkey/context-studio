@@ -22,6 +22,7 @@ This test validates the complete lifecycle of Relationship entities: creation vi
 ### Test Case 1: Create Relationship via Form with Required Field Validation
 
 **Preconditions**:
+
 - Two classes exist (created via factory)
 - One property definition exists (created via factory)
 - User is on `/app/relationships` page
@@ -313,10 +314,14 @@ const taxonomy = await createTaxonomy(page);
 const scheme = await createConceptScheme(page, taxonomy.id);
 const sourceClass = await createClass(page, scheme.id, { title: "Source Class" });
 const targetClass = await createClass(page, scheme.id, { title: "Target Class" });
-const property = await createPropertyDefinition(page, { identifier: "related_to", title: "Related To" });
+const property = await createPropertyDefinition(page, {
+  identifier: "related_to",
+  title: "Related To",
+});
 ```
 
 **Test Execution**:
+
 - Steps 1–6 create a relationship via UI (Test Cases 1–2)
 - Steps 7–9 verify drawer display and delete via UI (Test Cases 3–5)
 - Steps 10–11 restore via undo (Test Case 6)

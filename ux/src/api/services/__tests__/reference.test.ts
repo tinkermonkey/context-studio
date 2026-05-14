@@ -382,7 +382,9 @@ describe("ReferenceService", () => {
         ),
       );
 
-      await expect(referenceService.updateGroundingWorkflow("not-found", updateRequest)).rejects.toMatchObject({
+      await expect(
+        referenceService.updateGroundingWorkflow("not-found", updateRequest),
+      ).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
       });

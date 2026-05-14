@@ -17,7 +17,9 @@ test.describe("Taxonomy CRUD Operations", () => {
 
     // Fill in form fields
     await page.getByTestId("taxonomy-title-input").fill("E2E Test Taxonomy Create");
-    await page.getByTestId("taxonomy-description-input").fill("Test taxonomy created via E2E test suite");
+    await page
+      .getByTestId("taxonomy-description-input")
+      .fill("Test taxonomy created via E2E test suite");
 
     // Submit the form
     await page.getByTestId("taxonomy-submit-button").click();
@@ -32,7 +34,9 @@ test.describe("Taxonomy CRUD Operations", () => {
     await expect(table).toContainText("Test taxonomy created via E2E test suite");
   });
 
-  test("should open detail drawer and verify field values match created taxonomy", async ({ page }) => {
+  test("should open detail drawer and verify field values match created taxonomy", async ({
+    page,
+  }) => {
     // Setup: Create a taxonomy via UI (from previous test steps)
     await page.goto("/app/schema/taxonomies");
     await page.waitForLoadState("networkidle");
@@ -42,7 +46,9 @@ test.describe("Taxonomy CRUD Operations", () => {
     await expect(page.getByTestId("taxonomy-create-modal")).toBeVisible();
 
     await page.getByTestId("taxonomy-title-input").fill("E2E Test Taxonomy Create");
-    await page.getByTestId("taxonomy-description-input").fill("Test taxonomy created via E2E test suite");
+    await page
+      .getByTestId("taxonomy-description-input")
+      .fill("Test taxonomy created via E2E test suite");
     await page.getByTestId("taxonomy-submit-button").click();
 
     await expect(page.getByTestId("taxonomy-create-modal")).not.toBeVisible();
@@ -50,7 +56,10 @@ test.describe("Taxonomy CRUD Operations", () => {
 
     // Test Case 2: Open Detail Drawer and Verify Field Values
     // Find the row with the created taxonomy
-    const tableRow = page.locator('[data-testid^="schema-row-"]').filter({ hasText: "E2E Test Taxonomy Create" }).first();
+    const tableRow = page
+      .locator('[data-testid^="schema-row-"]')
+      .filter({ hasText: "E2E Test Taxonomy Create" })
+      .first();
     await expect(tableRow).toBeVisible();
 
     // Click the row to open the drawer
@@ -84,14 +93,19 @@ test.describe("Taxonomy CRUD Operations", () => {
     await expect(page.getByTestId("taxonomy-create-modal")).toBeVisible();
 
     await page.getByTestId("taxonomy-title-input").fill("E2E Test Taxonomy Create");
-    await page.getByTestId("taxonomy-description-input").fill("Test taxonomy created via E2E test suite");
+    await page
+      .getByTestId("taxonomy-description-input")
+      .fill("Test taxonomy created via E2E test suite");
     await page.getByTestId("taxonomy-submit-button").click();
 
     await expect(page.getByTestId("taxonomy-create-modal")).not.toBeVisible();
     await page.waitForLoadState("networkidle");
 
     // Open drawer
-    const tableRow = page.locator('[data-testid^="schema-row-"]').filter({ hasText: "E2E Test Taxonomy Create" }).first();
+    const tableRow = page
+      .locator('[data-testid^="schema-row-"]')
+      .filter({ hasText: "E2E Test Taxonomy Create" })
+      .first();
     await tableRow.click();
     await expect(page.getByTestId("taxonomy-drawer")).toBeVisible();
 
@@ -113,7 +127,9 @@ test.describe("Taxonomy CRUD Operations", () => {
     await expect(titleInput).toHaveValue("E2E Test Taxonomy Updated");
   });
 
-  test("should delete taxonomy via drawer delete button with confirmation and show undo toast", async ({ page }) => {
+  test("should delete taxonomy via drawer delete button with confirmation and show undo toast", async ({
+    page,
+  }) => {
     // Setup: Create and open taxonomy drawer
     await page.goto("/app/schema/taxonomies");
     await page.waitForLoadState("networkidle");
@@ -123,14 +139,19 @@ test.describe("Taxonomy CRUD Operations", () => {
     await expect(page.getByTestId("taxonomy-create-modal")).toBeVisible();
 
     await page.getByTestId("taxonomy-title-input").fill("E2E Test Taxonomy Create");
-    await page.getByTestId("taxonomy-description-input").fill("Test taxonomy created via E2E test suite");
+    await page
+      .getByTestId("taxonomy-description-input")
+      .fill("Test taxonomy created via E2E test suite");
     await page.getByTestId("taxonomy-submit-button").click();
 
     await expect(page.getByTestId("taxonomy-create-modal")).not.toBeVisible();
     await page.waitForLoadState("networkidle");
 
     // Open drawer
-    const tableRow = page.locator('[data-testid^="schema-row-"]').filter({ hasText: "E2E Test Taxonomy Create" }).first();
+    const tableRow = page
+      .locator('[data-testid^="schema-row-"]')
+      .filter({ hasText: "E2E Test Taxonomy Create" })
+      .first();
     await tableRow.click();
     await expect(page.getByTestId("taxonomy-drawer")).toBeVisible();
 

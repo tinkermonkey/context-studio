@@ -1,9 +1,5 @@
 import { test, expect } from "@playwright/test";
-import {
-  createConceptScheme,
-  createClass,
-  clearTestData,
-} from "../../fixtures/test-helpers";
+import { createConceptScheme, createClass, clearTestData } from "../../fixtures/test-helpers";
 
 test.describe("Individual CRUD Operations", () => {
   test.afterEach(async ({ page }) => {

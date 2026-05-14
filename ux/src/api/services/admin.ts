@@ -62,10 +62,7 @@ class AdminService extends BaseService {
     return this.post<DatasetResponse>("/api/v1/admin/datasets", data);
   }
 
-  async updateDataset(
-    datasetId: string,
-    data: DatasetUpdateRequest,
-  ): Promise<DatasetResponse> {
+  async updateDataset(datasetId: string, data: DatasetUpdateRequest): Promise<DatasetResponse> {
     return this.put<DatasetResponse>(`/api/v1/admin/datasets/${datasetId}`, data);
   }
 

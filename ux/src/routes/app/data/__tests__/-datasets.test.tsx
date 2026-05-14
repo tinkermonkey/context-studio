@@ -158,9 +158,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) =>
-          res(ctx.json(mockDatasets)),
-        ),
+        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
       );
 
       render(<DatasetsPage />);
@@ -181,9 +179,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) =>
-          res(ctx.json(mockDatasets)),
-        ),
+        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
       );
 
       render(<DatasetsPage />);
@@ -207,9 +203,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) =>
-          res(ctx.json(mockDatasets)),
-        ),
+        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
       );
 
       render(<DatasetsPage />);
@@ -232,9 +226,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) =>
-          res(ctx.json(mockDatasets)),
-        ),
+        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
       );
 
       render(<DatasetsPage />);
@@ -257,9 +249,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) =>
-          res(ctx.json(mockDatasets)),
-        ),
+        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
       );
 
       render(<DatasetsPage />);
@@ -273,7 +263,8 @@ describe("Datasets Data Page", () => {
     });
 
     it("truncates long descriptions in description column", async () => {
-      const longDescription = "This is a very long description that should be truncated at 50 characters";
+      const longDescription =
+        "This is a very long description that should be truncated at 50 characters";
       const mockDatasets = createListDatasets([
         createDataset({
           id: "dataset-001",
@@ -284,9 +275,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) =>
-          res(ctx.json(mockDatasets)),
-        ),
+        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
       );
 
       render(<DatasetsPage />);
@@ -310,9 +299,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) =>
-          res(ctx.json(mockDatasets)),
-        ),
+        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
       );
 
       render(<DatasetsPage />);
@@ -334,9 +321,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) =>
-          res(ctx.json(mockDatasets)),
-        ),
+        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
       );
 
       render(<DatasetsPage />);
@@ -360,9 +345,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) =>
-          res(ctx.json(mockDatasets)),
-        ),
+        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
       );
 
       render(<DatasetsPage />);
@@ -386,9 +369,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) =>
-          res(ctx.json(mockDatasets)),
-        ),
+        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
       );
 
       render(<DatasetsPage />);
@@ -426,9 +407,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) =>
-          res(ctx.json(mockDatasets)),
-        ),
+        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
       );
 
       render(<DatasetsPage />);
@@ -462,9 +441,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) =>
-          res(ctx.json(mockDatasets)),
-        ),
+        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
       );
 
       render(<DatasetsPage />);
@@ -495,9 +472,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) =>
-          res(ctx.json(mockDatasets)),
-        ),
+        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
       );
 
       render(<DatasetsPage />);
@@ -528,9 +503,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) =>
-          res(ctx.json(mockDatasets)),
-        ),
+        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
       );
 
       render(<DatasetsPage />);
@@ -562,9 +535,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) =>
-          res(ctx.json(mockDatasets)),
-        ),
+        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
       );
 
       render(<DatasetsPage />);

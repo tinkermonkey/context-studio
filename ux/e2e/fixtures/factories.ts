@@ -369,10 +369,7 @@ export async function createPipeline(
 /**
  * Execute a pipeline and get the execution result
  */
-export async function executePipeline(
-  page: Page,
-  pipelineId: string,
-): Promise<Execution> {
+export async function executePipeline(page: Page, pipelineId: string): Promise<Execution> {
   const response = await apiRequest<Execution>(page, `/api/pipelines/${pipelineId}/execute`, {
     method: "POST",
     body: {
@@ -386,10 +383,7 @@ export async function executePipeline(
 /**
  * Get pipeline executions
  */
-export async function getPipelineExecutions(
-  page: Page,
-  pipelineId: string,
-): Promise<Execution[]> {
+export async function getPipelineExecutions(page: Page, pipelineId: string): Promise<Execution[]> {
   const response = await apiRequest<Execution[]>(page, `/api/pipelines/${pipelineId}/executions`);
   return response;
 }
@@ -499,10 +493,7 @@ export async function clearTestData(page: Page): Promise<void> {
 /**
  * Get individuals by class ID (for checking cascade deletion)
  */
-export async function getIndividualsByClass(
-  page: Page,
-  classId: string,
-): Promise<Individual[]> {
+export async function getIndividualsByClass(page: Page, classId: string): Promise<Individual[]> {
   const response = await apiRequest<PaginatedResponse<Individual>>(page, "/api/individuals", {
     method: "GET",
   });

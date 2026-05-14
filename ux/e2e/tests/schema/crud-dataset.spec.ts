@@ -18,7 +18,9 @@ test.describe("Dataset CRUD Operations", () => {
     // Fill in form fields
     await page.getByTestId("dataset-title-input").fill("E2E Test Dataset Create");
     await page.getByTestId("dataset-filename-input").fill("test_dataset.db");
-    await page.getByTestId("dataset-description-input").fill("Test dataset created via E2E test suite");
+    await page
+      .getByTestId("dataset-description-input")
+      .fill("Test dataset created via E2E test suite");
 
     // Submit the form
     await page.getByTestId("dataset-submit-button").click();

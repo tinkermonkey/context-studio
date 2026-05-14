@@ -411,7 +411,9 @@ describe("VersioningService", () => {
       ];
 
       server.use(
-        rest.get("*/api/v1/versioning/changesets", (req, res, ctx) => res(ctx.json(mockChangesets))),
+        rest.get("*/api/v1/versioning/changesets", (req, res, ctx) =>
+          res(ctx.json(mockChangesets)),
+        ),
       );
 
       const result = await versioningService.listChangesets();
@@ -547,7 +549,9 @@ describe("VersioningService", () => {
         ),
       );
 
-      await expect(versioningService.resolveConflicts("proposal-123", resolutions)).rejects.toMatchObject({
+      await expect(
+        versioningService.resolveConflicts("proposal-123", resolutions),
+      ).rejects.toMatchObject({
         name: "ApiError",
         status: 400,
       });
