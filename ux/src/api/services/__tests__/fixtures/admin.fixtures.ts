@@ -122,3 +122,43 @@ export function createBackgroundTaskArray(
     }),
   );
 }
+
+// ============================================================================
+// Dataset Fixtures
+// ============================================================================
+
+export function createDatasetMetrics(
+  overrides?: Partial<components["schemas"]["DatasetMetricsResponse"]>,
+): components["schemas"]["DatasetMetricsResponse"] {
+  return {
+    layers_count: 5,
+    domains_count: 3,
+    terms_count: 42,
+    relationships_count: 15,
+    ...overrides,
+  };
+}
+
+export function createDataset(
+  overrides?: Partial<components["schemas"]["DatasetResponse"]>,
+): components["schemas"]["DatasetResponse"] {
+  return {
+    id: "dataset-" + Math.random().toString(36).slice(2, 11),
+    title: "Test Dataset",
+    filename: "test_data.csv",
+    description: "A test dataset for development",
+    created_at: new Date().toISOString(),
+    last_accessed: new Date().toISOString(),
+    schema_version: "1.0",
+    metrics: createDatasetMetrics(),
+    is_active: false,
+    version: 1,
+    ...overrides,
+  };
+}
+
+export function createListDatasets(
+  datasets?: components["schemas"]["DatasetResponse"][],
+): components["schemas"]["DatasetResponse"][] {
+  return datasets || [];
+}
