@@ -1,5 +1,6 @@
 import React, { ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
+import { getActiveSpan } from "@/telemetry";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -22,6 +23,15 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
   componentDidCatch(error: Error): void {
     console.error("Error boundary caught:", error);
+
+    const span = getActiveSpan();
+    if (span) {
+      span.recordException(error);
+      span.addEvent("error_boundary_catch", {
+        error_message: error.message,
+        error_stack: error.stack || "no stack trace",
+      });
+    }
   }
 
   private handleReset = (): void => {
