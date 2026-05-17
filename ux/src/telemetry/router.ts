@@ -1,14 +1,22 @@
-import { trace } from "@opentelemetry/api";
+import { trace, Span } from "@opentelemetry/api";
 import { setActiveSpan } from "./context";
 
-export function setupRouterTelemetry(router: any): void {
+interface RouterLike {
+  subscribe(
+    event: "onBeforeLoad",
+    callback: (event: { toLocation?: { pathname: string }; fromLocation?: { pathname: string } }) => void
+  ): void;
+  subscribe(event: "onLoad", callback: () => void): void;
+}
+
+export function setupRouterTelemetry(router: RouterLike): void {
   const tracer = trace.getTracer("router-instrumentation", "1.0.0");
 
-  let navigationSpan: any = null;
+  let navigationSpan: Span | null = null;
   let navigationStartTime: number | null = null;
 
   // Track when navigation starts
-  router.subscribe("onBeforeLoad", (event: any) => {
+  router.subscribe("onBeforeLoad", (event) => {
     const pathname = event.toLocation?.pathname || "unknown";
     const fromPathname = event.fromLocation?.pathname || "root";
     navigationStartTime = performance.now();

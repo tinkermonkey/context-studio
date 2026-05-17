@@ -37,12 +37,14 @@ export function initializeTracing(): BasicTracerProvider | null {
 
     const otlpEndpoint =
       import.meta.env.VITE_OTLP_ENDPOINT ||
-      "http://100.104.222.123:4318/v1/traces";
+      "http://localhost:4318/v1/traces";
 
     const otlpExporter = new OTLPTraceExporter({
       url: otlpEndpoint,
     });
 
+    // Type assertion needed due to version skew between @opentelemetry/exporter-trace-otlp-http
+    // and @opentelemetry/sdk-trace-web. The exporter is compatible at runtime but types don't align.
     tracerProvider.addSpanProcessor(
       new BatchSpanProcessor(otlpExporter as any)
     );
