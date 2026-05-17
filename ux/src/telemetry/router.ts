@@ -1,5 +1,5 @@
-import { Router } from "@tanstack/react-router";
 import { trace } from "@opentelemetry/api";
+import { setActiveSpan } from "./context";
 
 export function setupRouterTelemetry(router: any): void {
   const tracer = trace.getTracer("router-instrumentation", "1.0.0");
@@ -9,14 +9,15 @@ export function setupRouterTelemetry(router: any): void {
 
   // Track when navigation starts
   router.subscribe("onBeforeLoad", (event: any) => {
-    const pathname = event.pathname || "unknown";
-    const fromPathname = event.fromPathname || "root";
+    const pathname = event.toLocation?.pathname || "unknown";
+    const fromPathname = event.fromLocation?.pathname || "root";
     navigationStartTime = performance.now();
     navigationSpan = tracer.startSpan(`Navigation: ${pathname}`);
     navigationSpan.setAttributes({
       "navigation.from": fromPathname,
       "navigation.to": pathname,
     });
+    setActiveSpan(navigationSpan);
   });
 
   // Track when navigation completes
@@ -27,6 +28,7 @@ export function setupRouterTelemetry(router: any): void {
         "navigation.duration_ms": duration,
       });
       navigationSpan.end();
+      setActiveSpan(null);
       navigationSpan = null;
       navigationStartTime = null;
     }

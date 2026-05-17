@@ -2,6 +2,7 @@ import {
   BasicTracerProvider,
   ConsoleSpanExporter,
   SimpleSpanProcessor,
+  BatchSpanProcessor,
 } from "@opentelemetry/sdk-trace-web";
 import { Resource } from "@opentelemetry/resources";
 import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions";
@@ -34,12 +35,16 @@ export function initializeTracing(): BasicTracerProvider | null {
       resource,
     });
 
+    const otlpEndpoint =
+      import.meta.env.VITE_OTLP_ENDPOINT ||
+      "http://100.104.222.123:4318/v1/traces";
+
     const otlpExporter = new OTLPTraceExporter({
-      url: "http://100.104.222.123:4318/v1/traces",
+      url: otlpEndpoint,
     });
 
     tracerProvider.addSpanProcessor(
-      new SimpleSpanProcessor(otlpExporter as any)
+      new BatchSpanProcessor(otlpExporter as any)
     );
 
     // Fallback for development: log spans to console
@@ -48,6 +53,8 @@ export function initializeTracing(): BasicTracerProvider | null {
         new SimpleSpanProcessor(new ConsoleSpanExporter())
       );
     }
+
+    tracerProvider.register();
 
     return tracerProvider;
   } catch (error) {
