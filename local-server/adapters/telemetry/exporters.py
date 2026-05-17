@@ -6,7 +6,7 @@ Handles graceful failure when the collector is unreachable.
 """
 
 import logging
-from typing import Optional
+from typing import Optional, TYPE_CHECKING, cast
 from opentelemetry.sdk.trace.export import SpanExporter
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter as GRPCSpanExporter,
@@ -14,6 +14,10 @@ from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     OTLPSpanExporter as HTTPSpanExporter,
 )
+
+if TYPE_CHECKING:
+    from opentelemetry.sdk._logs.export import LogExporter
+
 try:
     from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
         OTLPLogExporter as GRPCLogExporter,
@@ -86,14 +90,14 @@ def create_log_exporter(
     try:
         exporter: Optional["LogExporter"] = None
         if protocol.lower() == "grpc":
-            exporter = GRPCLogExporter(endpoint=grpc_endpoint, timeout=5)
+            exporter = cast("LogExporter", GRPCLogExporter(endpoint=grpc_endpoint, timeout=5))
             _logger.debug(f"Created gRPC log exporter for {grpc_endpoint}")
         elif protocol.lower() == "http":
-            exporter = HTTPLogExporter(endpoint=http_endpoint, timeout=5)
+            exporter = cast("LogExporter", HTTPLogExporter(endpoint=http_endpoint, timeout=5))
             _logger.debug(f"Created HTTP log exporter for {http_endpoint}")
         else:
             _logger.warning(f"Unknown protocol: {protocol}, defaulting to gRPC")
-            exporter = GRPCLogExporter(endpoint=grpc_endpoint, timeout=5)
+            exporter = cast("LogExporter", GRPCLogExporter(endpoint=grpc_endpoint, timeout=5))
         return exporter
     except Exception as e:
         _logger.warning(

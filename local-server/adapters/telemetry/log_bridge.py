@@ -10,19 +10,23 @@ for non-blocking, batched log export.
 """
 
 import logging
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, Any
 
 from opentelemetry import trace
 
-try:
+if TYPE_CHECKING:
     from opentelemetry.sdk._logs import LoggingHandler as BaseOTLPLogHandler
     from opentelemetry.sdk._logs import LoggerProvider
-except ImportError:
-    BaseOTLPLogHandler = None
-    LoggerProvider = None
-
-if TYPE_CHECKING:
     from opentelemetry.sdk._logs import LoggerProvider as LoggerProviderType
+else:
+    BaseOTLPLogHandler: Any = None
+    LoggerProvider: Any = None
+
+    try:
+        from opentelemetry.sdk._logs import LoggingHandler as BaseOTLPLogHandler
+        from opentelemetry.sdk._logs import LoggerProvider
+    except ImportError:
+        pass
 
 _logger = logging.getLogger(__name__)
 
