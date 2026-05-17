@@ -86,11 +86,15 @@ class TelemetryProvider:
                     self.protocol, self.otlp_endpoint_grpc, self.otlp_endpoint_http
                 )
                 if span_exporter:
-                    batch_processor = BatchSpanProcessor(span_exporter, schedule_delay_millis=5000)
+                    batch_processor = BatchSpanProcessor(
+                        span_exporter, schedule_delay_millis=5000
+                    )
                     tracer_provider.add_span_processor(batch_processor)
                     _logger.info("Span exporter configured with batch processor")
                 else:
-                    _logger.warning("Span exporter creation failed; spans will not be exported")
+                    _logger.warning(
+                        "Span exporter creation failed; spans will not be exported"
+                    )
 
             set_tracer_provider(tracer_provider)
             self.tracer_provider = tracer_provider
@@ -109,7 +113,7 @@ class TelemetryProvider:
         """
         try:
             if self.tracer_provider:
-                self.tracer_provider.shutdown(timeout_millis=5000)
+                self.tracer_provider.shutdown()
                 _logger.info("TracerProvider shut down")
             return True
         except Exception as e:

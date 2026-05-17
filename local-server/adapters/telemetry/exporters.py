@@ -8,8 +8,12 @@ Handles graceful failure when the collector is unreachable.
 import logging
 from typing import Optional
 from opentelemetry.sdk.trace.export import SpanExporter
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter as GRPCSpanExporter
-from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter as HTTPSpanExporter
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+    OTLPSpanExporter as GRPCSpanExporter,
+)
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+    OTLPSpanExporter as HTTPSpanExporter,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -29,6 +33,7 @@ def create_span_exporter(
         SpanExporter instance, or None if creation fails
     """
     try:
+        exporter: Optional[SpanExporter] = None
         if protocol.lower() == "grpc":
             exporter = GRPCSpanExporter(endpoint=grpc_endpoint, timeout=5)
             _logger.debug(f"Created gRPC span exporter for {grpc_endpoint}")
@@ -40,5 +45,7 @@ def create_span_exporter(
             exporter = GRPCSpanExporter(endpoint=grpc_endpoint, timeout=5)
         return exporter
     except Exception as e:
-        _logger.warning(f"Failed to create span exporter: {e}. Spans will not be exported.")
+        _logger.warning(
+            f"Failed to create span exporter: {e}. Spans will not be exported."
+        )
         return None
