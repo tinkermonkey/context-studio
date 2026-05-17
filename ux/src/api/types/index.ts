@@ -2880,7 +2880,7 @@ export interface paths {
      *         Created DatasetResponse
      *
      *     Raises:
-     *         HTTPException: 400 if title is empty, 409 if title already exists
+     *         HTTPException: 400 if title is empty
      */
     post: operations["create_dataset_api_v1_admin_datasets_post"];
     delete?: never;
@@ -2937,7 +2937,7 @@ export interface paths {
      *         service: AdminService from dependency injection
      *
      *     Raises:
-     *         HTTPException: 404 if not found, 422 if it is the active dataset
+     *         HTTPException: 404 if not found, 409 if it is the active dataset
      */
     delete: operations["delete_dataset_api_v1_admin_datasets__dataset_id__delete"];
     options?: never;

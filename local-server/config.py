@@ -32,6 +32,51 @@ class SyncAdapterType(str, Enum):
     NONE = "none"
 
 
+class TelemetryProtocol(str, Enum):
+    """OTLP transport protocol options"""
+
+    GRPC = "grpc"
+    HTTP = "http"
+
+
+class TelemetryConfig(BaseModel):
+    """Telemetry configuration section"""
+
+    enabled: bool = Field(
+        default=False, description="Enable telemetry export to OTLP collector"
+    )
+    service_name: str = Field(
+        default="context-studio-backend", description="Service name for telemetry"
+    )
+    service_version: str = Field(
+        default="1.0.0", description="Service version for telemetry"
+    )
+    environment: str = Field(
+        default="development", description="Deployment environment (development, staging, production)"
+    )
+    otlp_endpoint_grpc: str = Field(
+        default="http://localhost:4317", description="OTLP gRPC collector endpoint"
+    )
+    otlp_endpoint_http: str = Field(
+        default="http://localhost:4318", description="OTLP HTTP collector endpoint"
+    )
+    protocol: TelemetryProtocol = Field(
+        default=TelemetryProtocol.GRPC, description="OTLP transport protocol"
+    )
+    export_logs: bool = Field(
+        default=True, description="Enable log export to OTLP collector"
+    )
+    export_traces: bool = Field(
+        default=True, description="Enable trace export to OTLP collector"
+    )
+    sample_rate: float = Field(
+        default=1.0,
+        ge=0.0,
+        le=1.0,
+        description="Sampling rate for traces (0.0 to 1.0)",
+    )
+
+
 class ServerConfig(BaseModel):
     """Server configuration section"""
 
@@ -165,6 +210,7 @@ class Settings(BaseModel):
     sync: Optional[SyncConfig] = Field(
         default=None, description="Synchronization configuration"
     )
+    telemetry: TelemetryConfig = Field(default_factory=TelemetryConfig)
 
 
 class ConfigurationManager:

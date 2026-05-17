@@ -6,11 +6,15 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Literal, overload
 
+from opentelemetry import trace
+from opentelemetry.trace import Status, StatusCode
+
 from domain.extraction.ports import ReferenceSource, ReferenceResult, ReferenceRelation
 from utils.logger import get_logger
 from utils.async_executor import run_sync_in_executor
 
 logger = get_logger(__name__)
+tracer = trace.get_tracer(__name__)
 
 
 class CachedReferenceSource(ReferenceSource):
@@ -113,21 +117,32 @@ class CachedReferenceSource(ReferenceSource):
         Returns:
             List of ReferenceResult objects from cache or inner source
         """
-        if not self._cache_available:
-            return self._inner.search(term, limit)
+        with tracer.start_as_current_span("reference.cache.lookup") as span:
+            span.set_attribute("reference.source", self.source_name)
 
-        cache_key = f"search:{self.source_name}:{term}:{limit}"
-        cached = self._get_cached(cache_key)
+            try:
+                if not self._cache_available:
+                    span.set_attribute("reference.cache_hit", False)
+                    return self._inner.search(term, limit)
 
-        if cached is not None:
-            logger.debug(f"Cache hit for {cache_key}")
-            return cached
+                cache_key = f"search:{self.source_name}:{term}:{limit}"
+                cached = self._get_cached(cache_key)
 
-        logger.debug(f"Cache miss for {cache_key}, calling inner source")
-        results = self._inner.search(term, limit)
-        self._set_cached(cache_key, results, is_relations=False)
+                if cached is not None:
+                    span.set_attribute("reference.cache_hit", True)
+                    logger.debug(f"Cache hit for {cache_key}")
+                    return cached
 
-        return results
+                span.set_attribute("reference.cache_hit", False)
+                logger.debug(f"Cache miss for {cache_key}, calling inner source")
+                results = self._inner.search(term, limit)
+                self._set_cached(cache_key, results, is_relations=False)
+
+                return results
+            except Exception as e:
+                span.set_status(Status(StatusCode.ERROR))
+                span.record_exception(e)
+                raise
 
     def get_relations(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
         """
@@ -143,21 +158,32 @@ class CachedReferenceSource(ReferenceSource):
         Returns:
             List of ReferenceRelation objects from cache or inner source
         """
-        if not self._cache_available:
-            return self._inner.get_relations(uri, limit)
+        with tracer.start_as_current_span("reference.cache.lookup") as span:
+            span.set_attribute("reference.source", self.source_name)
 
-        cache_key = f"relations:{self.source_name}:{uri}:{limit}"
-        cached = self._get_cached(cache_key, is_relations=True)
+            try:
+                if not self._cache_available:
+                    span.set_attribute("reference.cache_hit", False)
+                    return self._inner.get_relations(uri, limit)
 
-        if cached is not None:
-            logger.debug(f"Cache hit for {cache_key}")
-            return cached
+                cache_key = f"relations:{self.source_name}:{uri}:{limit}"
+                cached = self._get_cached(cache_key, is_relations=True)
 
-        logger.debug(f"Cache miss for {cache_key}, calling inner source")
-        relations = self._inner.get_relations(uri, limit)
-        self._set_cached(cache_key, relations, is_relations=True)
+                if cached is not None:
+                    span.set_attribute("reference.cache_hit", True)
+                    logger.debug(f"Cache hit for {cache_key}")
+                    return cached
 
-        return relations
+                span.set_attribute("reference.cache_hit", False)
+                logger.debug(f"Cache miss for {cache_key}, calling inner source")
+                relations = self._inner.get_relations(uri, limit)
+                self._set_cached(cache_key, relations, is_relations=True)
+
+                return relations
+            except Exception as e:
+                span.set_status(Status(StatusCode.ERROR))
+                span.record_exception(e)
+                raise
 
     def is_available(self) -> bool:
         """

@@ -15,11 +15,15 @@ except ImportError:
     HAS_OPENAI = False
     openai = None  # type: ignore[assignment]
 
+from opentelemetry import trace
+from opentelemetry.trace import Status, StatusCode
+
 from domain.pipeline.ports import LLMResponse
 from utils.logger import get_logger
 from utils.async_executor import run_sync_in_executor
 
 logger = get_logger(__name__)
+tracer = trace.get_tracer(__name__)
 
 
 class OpenAIProvider:
@@ -82,50 +86,59 @@ class OpenAIProvider:
         if not self.is_model_available(model):
             raise ValueError(f"Model {model} is not available from OpenAI provider")
 
-        try:
-            messages = [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ]
+        with tracer.start_as_current_span("llm.complete.openai") as span:
+            span.set_attribute("llm.provider", "openai")
+            span.set_attribute("llm.model", model)
 
-            kwargs = {
-                "model": model,
-                "messages": messages,
-                "temperature": temperature,
-                "max_tokens": max_tokens,
-            }
+            try:
+                messages = [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ]
 
-            if response_format == "json":
-                kwargs["response_format"] = {"type": "json_object"}
-            elif response_format == "text":
-                # OpenAI doesn't require special handling for text mode
-                pass
+                kwargs = {
+                    "model": model,
+                    "messages": messages,
+                    "temperature": temperature,
+                    "max_tokens": max_tokens,
+                }
 
-            if seed is not None:
-                kwargs["seed"] = seed
+                if response_format == "json":
+                    kwargs["response_format"] = {"type": "json_object"}
+                elif response_format == "text":
+                    # OpenAI doesn't require special handling for text mode
+                    pass
 
-            if timeout is not None:
-                kwargs["timeout"] = timeout
+                if seed is not None:
+                    kwargs["seed"] = seed
 
-            start_time = time.perf_counter()
-            response = self._client.chat.completions.create(**kwargs)  # type: ignore[union-attr]
-            elapsed_time = time.perf_counter() - start_time
-            duration_ms = elapsed_time * 1000
+                if timeout is not None:
+                    kwargs["timeout"] = timeout
 
-            return LLMResponse(
-                content=response.choices[0].message.content or "",
-                tokens_in=response.usage.prompt_tokens,
-                tokens_out=response.usage.completion_tokens,
-                duration_ms=duration_ms,
-                finish_reason=response.choices[0].finish_reason or "unknown",
-                model=model,
-            )
-        except Exception as e:
-            logger.error(
-                f"OpenAI API error for model {model}: {type(e).__name__}: {e}",
-                exc_info=True,
-            )
-            raise
+                start_time = time.perf_counter()
+                response = self._client.chat.completions.create(**kwargs)  # type: ignore[union-attr]
+                elapsed_time = time.perf_counter() - start_time
+                duration_ms = elapsed_time * 1000
+
+                span.set_attribute("llm.tokens.input", response.usage.prompt_tokens)
+                span.set_attribute("llm.tokens.output", response.usage.completion_tokens)
+
+                return LLMResponse(
+                    content=response.choices[0].message.content or "",
+                    tokens_in=response.usage.prompt_tokens,
+                    tokens_out=response.usage.completion_tokens,
+                    duration_ms=duration_ms,
+                    finish_reason=response.choices[0].finish_reason or "unknown",
+                    model=model,
+                )
+            except Exception as e:
+                span.set_status(Status(StatusCode.ERROR))
+                span.record_exception(e)
+                logger.error(
+                    f"OpenAI API error for model {model}: {type(e).__name__}: {e}",
+                    exc_info=True,
+                )
+                raise
 
     def is_model_available(self, model: str) -> bool:
         """

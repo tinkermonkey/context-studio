@@ -2,10 +2,12 @@
 Utilities for running synchronous operations asynchronously in a thread pool.
 
 This module provides helpers to prevent blocking the event loop when calling
-synchronous libraries from async contexts.
+synchronous libraries from async contexts. It also ensures context propagation
+for tracing and other context-aware operations.
 """
 
 import asyncio
+import contextvars
 from typing import Callable, TypeVar, Any, ParamSpec
 
 P = ParamSpec("P")
@@ -16,10 +18,10 @@ def run_sync_in_executor(
     func: Callable[P, T], *args: Any, **kwargs: Any
 ) -> asyncio.Future[T]:
     """
-    Run a synchronous function in the default thread pool executor.
+    Run a synchronous function in the default thread pool executor with context propagation.
 
-    Safely handles both positional and keyword arguments by wrapping the call
-    in a lambda before passing to loop.run_in_executor().
+    Copies the current context and runs the function within that context in the executor,
+    ensuring that any context variables (like tracing context) are available in the thread.
 
     Args:
         func: Synchronous function to execute
@@ -33,4 +35,5 @@ def run_sync_in_executor(
         result = await run_sync_in_executor(blocking_func, arg1, arg2=value)
     """
     loop = asyncio.get_running_loop()
-    return loop.run_in_executor(None, lambda: func(*args, **kwargs))
+    ctx = contextvars.copy_context()
+    return loop.run_in_executor(None, lambda: ctx.run(func, *args, **kwargs))

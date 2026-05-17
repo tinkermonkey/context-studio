@@ -11,6 +11,9 @@ which is lightweight and suitable for desktop deployment.
 
 from typing import TYPE_CHECKING, Optional
 
+from opentelemetry import trace
+from opentelemetry.trace import Status, StatusCode
+
 from utils.logger import get_logger
 from utils.async_executor import run_sync_in_executor
 
@@ -18,6 +21,7 @@ if TYPE_CHECKING:
     from sentence_transformers import SentenceTransformer
 
 logger = get_logger(__name__)
+tracer = trace.get_tracer(__name__)
 
 
 class SentenceTransformerEmbedding:
@@ -80,16 +84,22 @@ class SentenceTransformerEmbedding:
         Raises:
             RuntimeError: If model loading fails
         """
-        self._ensure_model_loaded()
-        if self._model is None:
-            raise RuntimeError("Model failed to load")
-        try:
-            # SentenceTransformer.encode returns numpy array; convert to list
-            embedding = self._model.encode(text, convert_to_tensor=False)
-            return embedding.tolist()
-        except Exception as e:
-            logger.error(f"Failed to embed text: {e}")
-            raise
+        with tracer.start_as_current_span("embedding.encode") as span:
+            span.set_attribute("embedding.model", self.model_name)
+            span.set_attribute("embedding.text_count", 1)
+
+            try:
+                self._ensure_model_loaded()
+                if self._model is None:
+                    raise RuntimeError("Model failed to load")
+                # SentenceTransformer.encode returns numpy array; convert to list
+                embedding = self._model.encode(text, convert_to_tensor=False)
+                return embedding.tolist()
+            except Exception as e:
+                span.set_status(Status(StatusCode.ERROR))
+                span.record_exception(e)
+                logger.error(f"Failed to embed text: {e}")
+                raise
 
     def embed_batch(self, texts: list[str]) -> list[list[float]]:
         """
@@ -107,16 +117,22 @@ class SentenceTransformerEmbedding:
         Raises:
             RuntimeError: If model loading fails
         """
-        self._ensure_model_loaded()
-        if self._model is None:
-            raise RuntimeError("Model failed to load")
-        try:
-            # SentenceTransformer.encode returns numpy array; convert to list of lists
-            embeddings = self._model.encode(texts, convert_to_tensor=False)
-            return [emb.tolist() for emb in embeddings]
-        except Exception as e:
-            logger.error(f"Failed to embed batch: {e}")
-            raise
+        with tracer.start_as_current_span("embedding.encode") as span:
+            span.set_attribute("embedding.model", self.model_name)
+            span.set_attribute("embedding.text_count", len(texts))
+
+            try:
+                self._ensure_model_loaded()
+                if self._model is None:
+                    raise RuntimeError("Model failed to load")
+                # SentenceTransformer.encode returns numpy array; convert to list of lists
+                embeddings = self._model.encode(texts, convert_to_tensor=False)
+                return [emb.tolist() for emb in embeddings]
+            except Exception as e:
+                span.set_status(Status(StatusCode.ERROR))
+                span.record_exception(e)
+                logger.error(f"Failed to embed batch: {e}")
+                raise
 
     def similarity(self, embedding_a: list[float], embedding_b: list[float]) -> float:
         """
