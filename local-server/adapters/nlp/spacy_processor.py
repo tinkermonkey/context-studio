@@ -10,11 +10,15 @@ except ImportError:
     HAS_SPACY = False
     spacy = None  # type: ignore[assignment]
 
+from opentelemetry import trace
+from opentelemetry.trace import Status, StatusCode
+
 from domain.extraction.ports import NLPResult, NLPEntity
 from utils.logger import get_logger
 from utils.async_executor import run_sync_in_executor
 
 logger = get_logger(__name__)
+tracer = trace.get_tracer(__name__)
 
 # spaCy's base NER pipeline does not produce per-entity confidence scores.
 # This synthetic default is used as a conservative confidence for all extracted entities.
@@ -72,21 +76,30 @@ class SpacyNLPProcessor:
             NLPResult with tokens, entities, and language.
             Returns empty results if the processor is not ready.
         """
-        if not self.is_ready():
-            logger.warning(
-                f"NLP processor not ready. Returning empty results for text: {text[:100]}"
-            )
-            return NLPResult(tokens=[], entities=[], noun_chunks=[], language="unknown")
+        with tracer.start_as_current_span("nlp.process") as span:
+            span.set_attribute("nlp.model", self.MODEL_NAME)
+            span.set_attribute("nlp.text_length", len(text))
 
-        assert self._nlp is not None
-        doc = self._nlp(text)
-        tokens = [token.text for token in doc]
-        entities = self._extract_from_doc(doc)
-        noun_chunks = [chunk.text for chunk in doc.noun_chunks]
+            try:
+                if not self.is_ready():
+                    logger.warning(
+                        f"NLP processor not ready. Returning empty results for text: {text[:100]}"
+                    )
+                    return NLPResult(tokens=[], entities=[], noun_chunks=[], language="unknown")
 
-        return NLPResult(
-            tokens=tokens, entities=entities, noun_chunks=noun_chunks, language="en"
-        )
+                assert self._nlp is not None
+                doc = self._nlp(text)
+                tokens = [token.text for token in doc]
+                entities = self._extract_from_doc(doc)
+                noun_chunks = [chunk.text for chunk in doc.noun_chunks]
+
+                return NLPResult(
+                    tokens=tokens, entities=entities, noun_chunks=noun_chunks, language="en"
+                )
+            except Exception as e:
+                span.set_status(Status(StatusCode.ERROR))
+                span.record_exception(e)
+                raise
 
     def extract_entities(self, text: str) -> list[NLPEntity]:
         """
@@ -99,15 +112,24 @@ class SpacyNLPProcessor:
             List of NLPEntity objects found in the text.
             Returns empty list if the processor is not ready.
         """
-        if not self.is_ready():
-            logger.warning(
-                f"NLP processor not ready. Returning empty entities for text: {text[:100]}"
-            )
-            return []
+        with tracer.start_as_current_span("nlp.process") as span:
+            span.set_attribute("nlp.model", self.MODEL_NAME)
+            span.set_attribute("nlp.text_length", len(text))
 
-        assert self._nlp is not None
-        doc = self._nlp(text)
-        return self._extract_from_doc(doc)
+            try:
+                if not self.is_ready():
+                    logger.warning(
+                        f"NLP processor not ready. Returning empty entities for text: {text[:100]}"
+                    )
+                    return []
+
+                assert self._nlp is not None
+                doc = self._nlp(text)
+                return self._extract_from_doc(doc)
+            except Exception as e:
+                span.set_status(Status(StatusCode.ERROR))
+                span.record_exception(e)
+                raise
 
     def _extract_from_doc(self, doc) -> list[NLPEntity]:
         """

@@ -2,10 +2,14 @@
 
 from typing import Callable, TypeVar
 
+from opentelemetry import trace
+from opentelemetry.trace import Status, StatusCode
+
 from domain.events import DomainEvent
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
+tracer = trace.get_tracer(__name__)
 
 # Contravariant TypeVar allows handlers typed for specific event subclasses
 # E.g., a handler expecting GraphInvalidated can be assigned to Callable[[DomainEvent], None]
@@ -49,21 +53,39 @@ class InProcessEventPublisher:
             Empty list if all handlers succeeded.
         """
         event_type = type(event)
-        failures: list[tuple[str, Exception]] = []
+        event_type_name = event_type.__name__
+        handler_count = len(self._handlers.get(event_type, []))
 
-        for handler in self._handlers.get(event_type, []):
+        with tracer.start_as_current_span(f"event.publish.{event_type_name}") as span:
+            span.set_attribute("event.id", str(event.event_id))
+            span.set_attribute("event.type", event_type_name)
+            span.set_attribute("event.handler_count", handler_count)
+
             try:
-                handler(event)
-            except Exception as e:
-                handler_name = getattr(handler, "__name__", repr(handler))
-                logger.error(
-                    f"Handler {handler_name} raised exception while processing "
-                    f"event {event_type.__name__} (id: {event.event_id}): {type(e).__name__}: {str(e)}",
-                    exc_info=True,
-                )
-                failures.append((handler_name, e))
+                failures: list[tuple[str, Exception]] = []
 
-        return failures
+                for handler in self._handlers.get(event_type, []):
+                    try:
+                        handler(event)
+                    except Exception as e:
+                        handler_name = getattr(handler, "__name__", repr(handler))
+                        logger.error(
+                            f"Handler {handler_name} raised exception while processing "
+                            f"event {event_type.__name__} (id: {event.event_id}): {type(e).__name__}: {str(e)}",
+                            exc_info=True,
+                        )
+                        failures.append((handler_name, e))
+
+                if failures:
+                    span.set_status(Status(StatusCode.ERROR))
+                    for handler_name, exception in failures:
+                        span.record_exception(exception)
+
+                return failures
+            except Exception as e:
+                span.set_status(Status(StatusCode.ERROR))
+                span.record_exception(e)
+                raise
 
     def subscribe(
         self,

@@ -18,6 +18,9 @@ from datetime import datetime, timezone
 from typing import Optional, Sequence, TYPE_CHECKING
 from uuid import uuid4
 
+from opentelemetry import trace
+from opentelemetry.trace import Status, StatusCode
+
 from domain.versioning.entities import ChangeEvent
 from domain.versioning.value_objects import SyncResult, ChangeOperation, SyncStatus
 
@@ -25,6 +28,7 @@ if TYPE_CHECKING:
     from domain.versioning.ports import ChangeRepository
 
 _logger = logging.getLogger(__name__)
+tracer = trace.get_tracer(__name__)
 
 
 class _S3FileParseError(RuntimeError):
@@ -118,75 +122,83 @@ class S3SyncAdapter:
         Raises:
             RuntimeError: If S3 put operation fails
         """
-        started_at = datetime.now(timezone.utc)
-        if not events:
-            completed_at = datetime.now(timezone.utc)
-            return SyncResult(
-                pushed=0,
-                pulled=0,
-                errors=(),
-                pushed_event_ids=(),
-                started_at=started_at,
-                completed_at=completed_at,
-            )
+        with tracer.start_as_current_span("sync.push.s3") as span:
+            span.set_attribute("sync.adapter", "s3")
+            span.set_attribute("sync.direction", "push")
+            span.set_attribute("sync.record_count", len(events))
+            span.set_attribute("sync.format", "jsonl")
 
-        pushed_event_ids = []
-        try:
-            # Serialize events as JSON Lines
-            lines = []
-            for event in events:
-                pushed_event_ids.append(event.id)
-                line = json.dumps(
-                    {
-                        "id": event.id,
-                        "entity_id": event.entity_id,
-                        "entity_type": event.entity_type,
-                        "operation": event.operation.value,
-                        "timestamp": event.timestamp.isoformat(),
-                        "processed": event.processed,
-                        "user_id": event.user_id,
-                        "change_reason": event.change_reason,
-                        "new_state": event.new_state,
-                        "previous_state": event.previous_state,
-                    }
+            started_at = datetime.now(timezone.utc)
+            if not events:
+                completed_at = datetime.now(timezone.utc)
+                return SyncResult(
+                    pushed=0,
+                    pulled=0,
+                    errors=(),
+                    pushed_event_ids=(),
+                    started_at=started_at,
+                    completed_at=completed_at,
                 )
-                lines.append(line)
 
-            content = "\n".join(lines)
+            pushed_event_ids = []
+            try:
+                # Serialize events as JSON Lines
+                lines = []
+                for event in events:
+                    pushed_event_ids.append(event.id)
+                    line = json.dumps(
+                        {
+                            "id": event.id,
+                            "entity_id": event.entity_id,
+                            "entity_type": event.entity_type,
+                            "operation": event.operation.value,
+                            "timestamp": event.timestamp.isoformat(),
+                            "processed": event.processed,
+                            "user_id": event.user_id,
+                            "change_reason": event.change_reason,
+                            "new_state": event.new_state,
+                            "previous_state": event.previous_state,
+                        }
+                    )
+                    lines.append(line)
 
-            # Generate S3 key with date and UUID
-            now = datetime.now(timezone.utc)
-            date_str = now.strftime("%Y-%m-%d")
-            uuid_str = str(uuid4())
-            key = f"{self._prefix}/changes/{date_str}/{uuid_str}.jsonl"
+                content = "\n".join(lines)
 
-            # Upload to S3
-            self._s3_client.put_object(
-                Bucket=self._bucket,
-                Key=key,
-                Body=content,
-                ContentType="application/x-ndjson",
-            )
+                # Generate S3 key with date and UUID
+                now = datetime.now(timezone.utc)
+                date_str = now.strftime("%Y-%m-%d")
+                uuid_str = str(uuid4())
+                key = f"{self._prefix}/changes/{date_str}/{uuid_str}.jsonl"
 
-            _logger.info(
-                "Pushed %d change events to S3 (key=%s)",
-                len(events),
-                key,
-            )
-            completed_at = datetime.now(timezone.utc)
-            return SyncResult(
-                pushed=len(pushed_event_ids),
-                pulled=0,
-                errors=(),
-                pushed_event_ids=tuple(pushed_event_ids),
-                started_at=started_at,
-                completed_at=completed_at,
-            )
+                # Upload to S3
+                self._s3_client.put_object(
+                    Bucket=self._bucket,
+                    Key=key,
+                    Body=content,
+                    ContentType="application/x-ndjson",
+                )
 
-        except (ValueError, TypeError, KeyError, OSError, self._client_error) as e:
-            error_msg = f"Failed to push changes to S3: {e}"
-            _logger.error(error_msg)
-            raise RuntimeError(error_msg) from e
+                _logger.info(
+                    "Pushed %d change events to S3 (key=%s)",
+                    len(events),
+                    key,
+                )
+                completed_at = datetime.now(timezone.utc)
+                return SyncResult(
+                    pushed=len(pushed_event_ids),
+                    pulled=0,
+                    errors=(),
+                    pushed_event_ids=tuple(pushed_event_ids),
+                    started_at=started_at,
+                    completed_at=completed_at,
+                )
+
+            except (ValueError, TypeError, KeyError, OSError, self._client_error) as e:
+                span.set_status(Status(StatusCode.ERROR))
+                span.record_exception(e)
+                error_msg = f"Failed to push changes to S3: {e}"
+                _logger.error(error_msg)
+                raise RuntimeError(error_msg) from e
 
     def pull(self, since: Optional[datetime] = None) -> list[ChangeEvent]:
         """
@@ -205,97 +217,107 @@ class S3SyncAdapter:
         Raises:
             RuntimeError: If S3 listing fails, file download fails, or JSON parsing fails
         """
-        events: list[ChangeEvent] = []
-        seen_ids: set[str] = set()
-        prefix = f"{self._prefix}/changes/"
+        with tracer.start_as_current_span("sync.pull.s3") as span:
+            span.set_attribute("sync.adapter", "s3")
+            span.set_attribute("sync.direction", "pull")
+            span.set_attribute("sync.format", "jsonl")
 
-        try:
-            # List all objects with the changes prefix
-            paginator = self._s3_client.get_paginator("list_objects_v2")
-            pages = paginator.paginate(Bucket=self._bucket, Prefix=prefix)
+            events: list[ChangeEvent] = []
+            seen_ids: set[str] = set()
+            prefix = f"{self._prefix}/changes/"
 
-            for page in pages:
-                if "Contents" not in page:
-                    continue
+            try:
+                # List all objects with the changes prefix
+                paginator = self._s3_client.get_paginator("list_objects_v2")
+                pages = paginator.paginate(Bucket=self._bucket, Prefix=prefix)
 
-                for obj in page["Contents"]:
-                    key = obj["Key"]
-                    # Filter by date if since provided
-                    if since:
-                        # Extract date from key: {prefix}/changes/{yyyy-mm-dd}/{uuid}.jsonl
-                        parts = key.split("/")
-                        if len(parts) >= 3:
-                            try:
-                                date_str = parts[-2]
-                                file_date = datetime.strptime(
-                                    date_str, "%Y-%m-%d"
-                                ).replace(tzinfo=timezone.utc)
-                                # Only skip if file date is before the date part of since
-                                # (file_date is at midnight, so compare dates not times)
-                                if file_date.date() < since.date():
+                for page in pages:
+                    if "Contents" not in page:
+                        continue
+
+                    for obj in page["Contents"]:
+                        key = obj["Key"]
+                        # Filter by date if since provided
+                        if since:
+                            # Extract date from key: {prefix}/changes/{yyyy-mm-dd}/{uuid}.jsonl
+                            parts = key.split("/")
+                            if len(parts) >= 3:
+                                try:
+                                    date_str = parts[-2]
+                                    file_date = datetime.strptime(
+                                        date_str, "%Y-%m-%d"
+                                    ).replace(tzinfo=timezone.utc)
+                                    # Only skip if file date is before the date part of since
+                                    # (file_date is at midnight, so compare dates not times)
+                                    if file_date.date() < since.date():
+                                        continue
+                                except (ValueError, IndexError):
+                                    # When since is provided, skip S3 objects with unparseable date paths
+                                    _logger.warning(
+                                        "Skipping S3 object with unparseable date path (key=%s)",
+                                        key,
+                                    )
                                     continue
-                            except (ValueError, IndexError):
-                                # When since is provided, skip S3 objects with unparseable date paths
-                                _logger.warning(
-                                    "Skipping S3 object with unparseable date path (key=%s)",
-                                    key,
-                                )
-                                continue
-                    # If since is None, process all objects regardless of date format
+                        # If since is None, process all objects regardless of date format
 
-                    # Download the file
-                    try:
-                        response = self._s3_client.get_object(
-                            Bucket=self._bucket, Key=key
-                        )
-                        content = response["Body"].read().decode("utf-8")
-                    except (OSError, self._client_error) as e:
-                        error_msg = f"Failed to download S3 object {key}: {e}"
-                        _logger.error(error_msg)
-                        raise _S3FileParseError(error_msg) from e
-
-                    # Parse JSON Lines
-                    try:
-                        for line in content.strip().split("\n"):
-                            if not line:
-                                continue
-                            data = json.loads(line)
-                            event_id = data["id"]
-
-                            # Skip duplicate events
-                            if event_id in seen_ids:
-                                _logger.debug(f"Skipping duplicate event {event_id}")
-                                continue
-
-                            seen_ids.add(event_id)
-                            event = ChangeEvent(
-                                id=event_id,
-                                entity_id=data["entity_id"],
-                                entity_type=data["entity_type"],
-                                operation=ChangeOperation(data["operation"]),
-                                timestamp=datetime.fromisoformat(data["timestamp"]),
-                                processed=data.get("processed", False),
-                                user_id=data.get("user_id"),
-                                change_reason=data.get("change_reason"),
-                                new_state=data.get("new_state"),
-                                previous_state=data.get("previous_state"),
+                        # Download the file
+                        try:
+                            response = self._s3_client.get_object(
+                                Bucket=self._bucket, Key=key
                             )
-                            events.append(event)
-                    except (ValueError, TypeError, KeyError) as e:
-                        error_msg = f"Failed to parse S3 object {key}: {e}"
-                        _logger.error(error_msg)
-                        raise _S3FileParseError(error_msg) from e
+                            content = response["Body"].read().decode("utf-8")
+                        except (OSError, self._client_error) as e:
+                            error_msg = f"Failed to download S3 object {key}: {e}"
+                            _logger.error(error_msg)
+                            raise _S3FileParseError(error_msg) from e
 
-            _logger.info("Pulled %d change events from S3 (deduplicated)", len(events))
-            return events
+                        # Parse JSON Lines
+                        try:
+                            for line in content.strip().split("\n"):
+                                if not line:
+                                    continue
+                                data = json.loads(line)
+                                event_id = data["id"]
 
-        except _S3FileParseError as e:
-            # File parsing error already wrapped and logged
-            raise RuntimeError(str(e)) from e.__cause__
-        except (ValueError, TypeError, KeyError, OSError, self._client_error) as e:
-            error_msg = f"Failed to list S3 objects: {e}"
-            _logger.error(error_msg)
-            raise RuntimeError(error_msg) from e
+                                # Skip duplicate events
+                                if event_id in seen_ids:
+                                    _logger.debug(f"Skipping duplicate event {event_id}")
+                                    continue
+
+                                seen_ids.add(event_id)
+                                event = ChangeEvent(
+                                    id=event_id,
+                                    entity_id=data["entity_id"],
+                                    entity_type=data["entity_type"],
+                                    operation=ChangeOperation(data["operation"]),
+                                    timestamp=datetime.fromisoformat(data["timestamp"]),
+                                    processed=data.get("processed", False),
+                                    user_id=data.get("user_id"),
+                                    change_reason=data.get("change_reason"),
+                                    new_state=data.get("new_state"),
+                                    previous_state=data.get("previous_state"),
+                                )
+                                events.append(event)
+                        except (ValueError, TypeError, KeyError) as e:
+                            error_msg = f"Failed to parse S3 object {key}: {e}"
+                            _logger.error(error_msg)
+                            raise _S3FileParseError(error_msg) from e
+
+                _logger.info("Pulled %d change events from S3 (deduplicated)", len(events))
+                span.set_attribute("sync.record_count", len(events))
+                return events
+
+            except _S3FileParseError as e:
+                # File parsing error already wrapped and logged
+                span.set_status(Status(StatusCode.ERROR))
+                span.record_exception(e)
+                raise RuntimeError(str(e)) from e.__cause__
+            except (ValueError, TypeError, KeyError, OSError, self._client_error) as e:
+                span.set_status(Status(StatusCode.ERROR))
+                span.record_exception(e)
+                error_msg = f"Failed to list S3 objects: {e}"
+                _logger.error(error_msg)
+                raise RuntimeError(error_msg) from e
 
     def is_configured(self) -> bool:
         """

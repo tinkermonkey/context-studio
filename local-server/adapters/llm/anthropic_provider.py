@@ -15,11 +15,15 @@ except ImportError:
     HAS_ANTHROPIC = False
     anthropic = None  # type: ignore[assignment]
 
+from opentelemetry import trace
+from opentelemetry.trace import Status, StatusCode
+
 from domain.pipeline.ports import LLMResponse
 from utils.logger import get_logger
 from utils.async_executor import run_sync_in_executor
 
 logger = get_logger(__name__)
+tracer = trace.get_tracer(__name__)
 
 
 class AnthropicProvider:
@@ -88,40 +92,49 @@ class AnthropicProvider:
         if not self.is_model_available(model):
             raise ValueError(f"Model {model} is not available from Anthropic provider")
 
-        try:
-            kwargs = {
-                "model": model,
-                "max_tokens": max_tokens,
-                "temperature": temperature,
-                "system": system_prompt,
-                "messages": [{"role": "user", "content": user_prompt}],
-            }
+        with tracer.start_as_current_span("llm.complete.anthropic") as span:
+            span.set_attribute("llm.provider", "anthropic")
+            span.set_attribute("llm.model", model)
 
-            if seed is not None:
-                kwargs["seed"] = seed
+            try:
+                kwargs = {
+                    "model": model,
+                    "max_tokens": max_tokens,
+                    "temperature": temperature,
+                    "system": system_prompt,
+                    "messages": [{"role": "user", "content": user_prompt}],
+                }
 
-            if timeout is not None:
-                kwargs["timeout"] = timeout
+                if seed is not None:
+                    kwargs["seed"] = seed
 
-            start_time = time.perf_counter()
-            response = self._client.messages.create(**kwargs)  # type: ignore[union-attr]
-            elapsed_time = time.perf_counter() - start_time
-            duration_ms = elapsed_time * 1000
+                if timeout is not None:
+                    kwargs["timeout"] = timeout
 
-            return LLMResponse(
-                content=response.content[0].text if response.content else "",
-                tokens_in=response.usage.input_tokens,
-                tokens_out=response.usage.output_tokens,
-                duration_ms=duration_ms,
-                finish_reason=response.stop_reason or "unknown",
-                model=model,
-            )
-        except Exception as e:
-            logger.error(
-                f"Anthropic API error for model {model}: {type(e).__name__}: {e}",
-                exc_info=True,
-            )
-            raise
+                start_time = time.perf_counter()
+                response = self._client.messages.create(**kwargs)  # type: ignore[union-attr]
+                elapsed_time = time.perf_counter() - start_time
+                duration_ms = elapsed_time * 1000
+
+                span.set_attribute("llm.tokens.input", response.usage.input_tokens)
+                span.set_attribute("llm.tokens.output", response.usage.output_tokens)
+
+                return LLMResponse(
+                    content=response.content[0].text if response.content else "",
+                    tokens_in=response.usage.input_tokens,
+                    tokens_out=response.usage.output_tokens,
+                    duration_ms=duration_ms,
+                    finish_reason=response.stop_reason or "unknown",
+                    model=model,
+                )
+            except Exception as e:
+                span.set_status(Status(StatusCode.ERROR))
+                span.record_exception(e)
+                logger.error(
+                    f"Anthropic API error for model {model}: {type(e).__name__}: {e}",
+                    exc_info=True,
+                )
+                raise
 
     def is_model_available(self, model: str) -> bool:
         """
