@@ -22,5 +22,15 @@
   "reference": {
     "cache_db_path": "./reference_api_cache.db",
     "reference_db_path": "./reference.db"
+  },
+  "telemetry": {
+    "enabled": true,
+    "service_name": "context-studio-backend",
+    "otlp_endpoint_grpc": "http://100.104.222.123:4317",
+    "otlp_endpoint_http": "http://100.104.222.123:4318",
+    "protocol": "grpc",
+    "export_logs": true,
+    "export_traces": true,
+    "sample_rate": 1.0
   }
 }

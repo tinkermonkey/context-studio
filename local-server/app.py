@@ -23,6 +23,9 @@ from config import get_config_manager, get_settings, SyncAdapterType
 from domain.admin.exceptions import ConfigurationError
 from utils.logger import get_logger
 
+# Import telemetry
+from adapters.telemetry import setup_telemetry
+
 # Import adapters
 from adapters.persistence.sqlite.connection import DatabaseManager
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
@@ -135,6 +138,9 @@ async def lifespan(app: FastAPI):
     config_manager = get_config_manager()
     settings = config_manager.get_settings()
     logger.info("Configuration loaded from config.json")
+
+    # Initialize telemetry FIRST (before other adapters)
+    telemetry = setup_telemetry(settings.telemetry)
 
     # Initialize database manager
     db_manager = DatabaseManager()
@@ -508,6 +514,9 @@ async def lifespan(app: FastAPI):
 
         logger.info("Services registered in app.state for dependency injection")
 
+        # Instrument app after FastAPI and database are initialized
+        telemetry.instrument_app(app, db_engine=db_manager.get_local_engine())
+
         yield
 
         logger.info("Shutting down Context Studio server")
@@ -524,6 +533,11 @@ async def lifespan(app: FastAPI):
             embedding_service.cleanup()
         except Exception as e:
             logger.error(f"Error cleaning up embedding service: {e}")
+
+        try:
+            telemetry.shutdown()
+        except Exception as e:
+            logger.error(f"Error shutting down telemetry: {e}")
 
         logger.info("Cleanup completed")
 
