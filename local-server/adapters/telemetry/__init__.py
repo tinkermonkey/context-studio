@@ -12,7 +12,6 @@ from sqlalchemy.engine import Engine
 
 from config import TelemetryConfig
 from adapters.telemetry.provider_setup import TelemetryProvider
-from adapters.telemetry.log_bridge import LogExporter
 from adapters.telemetry.instrumentors import (
     instrument_fastapi,
     instrument_sqlalchemy,
@@ -34,16 +33,17 @@ class TelemetryLifecycle:
         """
         self.provider = provider
         self._instrumented = False
-        self.log_exporter: Optional[LogExporter] = None
 
-    def get_log_exporter(self) -> Optional[LogExporter]:
+    def get_logger_provider(self):
         """
-        Get the log exporter instance.
+        Get the OpenTelemetry LoggerProvider instance.
 
         Returns:
-            Log exporter if telemetry is enabled, None otherwise
+            LoggerProvider if telemetry is enabled with log export, None otherwise
         """
-        return self.log_exporter
+        if self.provider:
+            return self.provider.logger_provider
+        return None
 
     def instrument_app(self, app: FastAPI, db_engine: Optional[Engine] = None) -> bool:
         """
@@ -121,9 +121,7 @@ def setup_telemetry(config: TelemetryConfig) -> TelemetryLifecycle:
 
     if tracer_ok or log_ok:
         _logger.info("Telemetry initialized successfully")
-        lifecycle = TelemetryLifecycle(provider)
-        lifecycle.log_exporter = provider.log_exporter
-        return lifecycle
+        return TelemetryLifecycle(provider)
     else:
         _logger.error("Telemetry initialization failed; running without telemetry")
         return TelemetryLifecycle(None)

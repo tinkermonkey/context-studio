@@ -143,8 +143,9 @@ async def lifespan(app: FastAPI):
     telemetry = setup_telemetry(settings.telemetry)
 
     # Register OTLP log handler if telemetry is enabled and log export is configured
-    if telemetry.get_log_exporter():
-        otlp_log_handler = OTLPLogHandler(telemetry.get_log_exporter())
+    logger_provider = telemetry.get_logger_provider()
+    if logger_provider:
+        otlp_log_handler = OTLPLogHandler(logger_provider)
         otlp_log_handler.setLevel(logging.DEBUG)
         register_otlp_handler(otlp_log_handler)
         logger.info("OTLP log handler registered")

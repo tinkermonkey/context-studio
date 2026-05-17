@@ -1,12 +1,12 @@
 """
 OpenTelemetry SDK provider setup.
 
-Configures TracerProvider and Resource with proper sampling and batching.
+Configures TracerProvider, LoggerProvider, and Resource with proper sampling and batching.
 """
 
 import logging
 import socket
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -14,8 +14,17 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace.sampling import TraceIdRatioBased
 from opentelemetry.trace import set_tracer_provider
 
-from adapters.telemetry.exporters import create_span_exporter
-from adapters.telemetry.log_bridge import create_otlp_log_exporter, LogExporter
+try:
+    from opentelemetry.sdk._logs import LoggerProvider
+    from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
+    LOGGING_SDK_AVAILABLE = True
+except ImportError:
+    LOGGING_SDK_AVAILABLE = False
+
+from adapters.telemetry.exporters import create_span_exporter, create_log_exporter
+
+if TYPE_CHECKING:
+    from opentelemetry.sdk._logs import LoggerProvider as LoggerProviderType
 
 _logger = logging.getLogger(__name__)
 
@@ -60,6 +69,7 @@ class TelemetryProvider:
         self.export_logs = export_logs
 
         self.tracer_provider: Optional[TracerProvider] = None
+        self.logger_provider: Optional["LoggerProviderType"] = None
         self.log_exporter: Optional[LogExporter] = None
 
     def _create_resource(self) -> Resource:
@@ -111,25 +121,42 @@ class TelemetryProvider:
 
     def setup_log_exporter(self) -> bool:
         """
-        Set up and configure the log exporter.
+        Set up and configure the log exporter using OpenTelemetry SDK's LoggerProvider
+        with BatchLogRecordProcessor for non-blocking, batched log export.
 
         Returns:
             True if successful, False otherwise
         """
         try:
             if self.export_logs:
-                log_exporter = create_otlp_log_exporter(
+                if not LOGGING_SDK_AVAILABLE:
+                    _logger.warning(
+                        "OpenTelemetry logging SDK not available; logs will not be exported. "
+                        "Ensure opentelemetry-sdk is installed with logging support."
+                    )
+                    return False
+
+                log_exporter = create_log_exporter(
                     self.protocol, self.otlp_endpoint_grpc, self.otlp_endpoint_http
                 )
-                if log_exporter:
-                    self.log_exporter = log_exporter
-                    _logger.info("Log exporter configured")
-                    return True
-                else:
+                if not log_exporter:
                     _logger.warning(
                         "Log exporter creation failed; logs will not be exported to OTLP"
                     )
                     return False
+
+                resource = self._create_resource()
+                logger_provider = LoggerProvider(resource=resource)
+
+                batch_processor = BatchLogRecordProcessor(
+                    log_exporter, schedule_delay_millis=5000
+                )
+                logger_provider.add_log_record_processor(batch_processor)
+
+                self.logger_provider = logger_provider
+                self.log_exporter = log_exporter
+                _logger.info("Log exporter configured with batch processor")
+                return True
             return True
         except Exception as e:
             _logger.error(f"Failed to set up log exporter: {e}")
@@ -146,9 +173,9 @@ class TelemetryProvider:
             if self.tracer_provider:
                 self.tracer_provider.shutdown()
                 _logger.info("TracerProvider shut down")
-            if self.log_exporter:
-                self.log_exporter.shutdown()
-                _logger.info("Log exporter shut down")
+            if self.logger_provider:
+                self.logger_provider.shutdown()
+                _logger.info("LoggerProvider shut down")
             return True
         except Exception as e:
             _logger.error(f"Failed to shut down provider: {e}")
