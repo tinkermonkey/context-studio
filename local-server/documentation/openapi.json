@@ -4972,7 +4972,7 @@
           "admin"
         ],
         "summary": "Create Dataset",
-        "description": "Create a new dataset.\n\nArgs:\n    request: DatasetCreateRequest with title, filename, optional description\n    service: AdminService from dependency injection\n\nReturns:\n    Created DatasetResponse\n\nRaises:\n    HTTPException: 400 if title is empty, 409 if title already exists",
+        "description": "Create a new dataset.\n\nArgs:\n    request: DatasetCreateRequest with title, filename, optional description\n    service: AdminService from dependency injection\n\nReturns:\n    Created DatasetResponse\n\nRaises:\n    HTTPException: 400 if title is empty",
         "operationId": "create_dataset_api_v1_admin_datasets_post",
         "requestBody": {
           "content": {
@@ -5106,7 +5106,7 @@
           "admin"
         ],
         "summary": "Delete Dataset",
-        "description": "Delete a dataset.\n\nArgs:\n    dataset_id: The dataset ID\n    service: AdminService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found, 422 if it is the active dataset",
+        "description": "Delete a dataset.\n\nArgs:\n    dataset_id: The dataset ID\n    service: AdminService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found, 409 if it is the active dataset",
         "operationId": "delete_dataset_api_v1_admin_datasets__dataset_id__delete",
         "parameters": [
           {
