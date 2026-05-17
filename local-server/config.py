@@ -48,6 +48,12 @@ class TelemetryConfig(BaseModel):
     service_name: str = Field(
         default="context-studio-backend", description="Service name for telemetry"
     )
+    service_version: str = Field(
+        default="1.0.0", description="Service version for telemetry"
+    )
+    environment: str = Field(
+        default="development", description="Deployment environment (development, staging, production)"
+    )
     otlp_endpoint_grpc: str = Field(
         default="http://localhost:4317", description="OTLP gRPC collector endpoint"
     )

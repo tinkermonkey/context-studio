@@ -18,8 +18,6 @@ from adapters.telemetry.exporters import create_span_exporter
 
 _logger = logging.getLogger(__name__)
 
-__version__ = "1.0.0"
-
 
 class TelemetryProvider:
     """Manages OpenTelemetry provider lifecycle."""
@@ -27,6 +25,8 @@ class TelemetryProvider:
     def __init__(
         self,
         service_name: str,
+        service_version: str,
+        environment: str,
         otlp_endpoint_grpc: str,
         otlp_endpoint_http: str,
         protocol: str,
@@ -38,6 +38,8 @@ class TelemetryProvider:
 
         Args:
             service_name: Service name for resource attributes
+            service_version: Service version for resource attributes
+            environment: Deployment environment (development, staging, production)
             otlp_endpoint_grpc: gRPC collector endpoint
             otlp_endpoint_http: HTTP collector endpoint
             protocol: "grpc" or "http"
@@ -45,6 +47,8 @@ class TelemetryProvider:
             export_traces: Whether to export traces
         """
         self.service_name = service_name
+        self.service_version = service_version
+        self.environment = environment
         self.otlp_endpoint_grpc = otlp_endpoint_grpc
         self.otlp_endpoint_http = otlp_endpoint_http
         self.protocol = protocol
@@ -58,8 +62,8 @@ class TelemetryProvider:
         return Resource.create(
             {
                 "service.name": self.service_name,
-                "service.version": __version__,
-                "deployment.environment": "development",
+                "service.version": self.service_version,
+                "deployment.environment": self.environment,
                 "service.instance.id": socket.gethostname(),
             }
         )
@@ -105,8 +109,8 @@ class TelemetryProvider:
         """
         try:
             if self.tracer_provider:
-                self.tracer_provider.force_flush(timeout_millis=5000)
-                _logger.info("TracerProvider flushed")
+                self.tracer_provider.shutdown(timeout_millis=5000)
+                _logger.info("TracerProvider shut down")
             return True
         except Exception as e:
             _logger.error(f"Failed to shut down provider: {e}")

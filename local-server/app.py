@@ -22,8 +22,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from config import get_config_manager, get_settings, SyncAdapterType
 from domain.admin.exceptions import ConfigurationError
 from utils.logger import get_logger
-
-# Import telemetry
 from adapters.telemetry import setup_telemetry
 
 # Import adapters

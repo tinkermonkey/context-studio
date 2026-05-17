@@ -95,6 +95,8 @@ def setup_telemetry(config: TelemetryConfig) -> TelemetryLifecycle:
 
     provider = TelemetryProvider(
         service_name=config.service_name,
+        service_version=config.service_version,
+        environment=config.environment,
         otlp_endpoint_grpc=config.otlp_endpoint_grpc,
         otlp_endpoint_http=config.otlp_endpoint_http,
         protocol=config.protocol.value,
