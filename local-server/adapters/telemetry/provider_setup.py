@@ -15,7 +15,7 @@ from opentelemetry.sdk.trace.sampling import TraceIdRatioBased
 from opentelemetry.trace import set_tracer_provider
 
 from adapters.telemetry.exporters import create_span_exporter
-from adapters.telemetry.log_bridge import create_otlp_log_exporter
+from adapters.telemetry.log_bridge import create_otlp_log_exporter, LogExporter
 
 _logger = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ class TelemetryProvider:
         self.export_logs = export_logs
 
         self.tracer_provider: Optional[TracerProvider] = None
-        self.log_exporter: Optional[object] = None
+        self.log_exporter: Optional[LogExporter] = None
 
     def _create_resource(self) -> Resource:
         """Create a Resource with service attributes."""

@@ -12,6 +12,7 @@ from sqlalchemy.engine import Engine
 
 from config import TelemetryConfig
 from adapters.telemetry.provider_setup import TelemetryProvider
+from adapters.telemetry.log_bridge import LogExporter
 from adapters.telemetry.instrumentors import (
     instrument_fastapi,
     instrument_sqlalchemy,
@@ -33,9 +34,9 @@ class TelemetryLifecycle:
         """
         self.provider = provider
         self._instrumented = False
-        self.log_exporter: Optional[object] = None
+        self.log_exporter: Optional[LogExporter] = None
 
-    def get_log_exporter(self) -> Optional[object]:
+    def get_log_exporter(self) -> Optional[LogExporter]:
         """
         Get the log exporter instance.
 

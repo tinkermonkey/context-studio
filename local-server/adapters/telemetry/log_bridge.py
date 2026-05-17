@@ -8,10 +8,7 @@ Uses a custom implementation compatible with current OpenTelemetry versions.
 """
 
 import logging
-import json
-import time
 from typing import Optional, Protocol
-from threading import Lock
 
 from opentelemetry import trace
 
@@ -48,7 +45,6 @@ class OTLPLogHandler(logging.Handler):
         """
         super().__init__()
         self.exporter = log_exporter
-        self._lock = Lock()
 
     def emit(self, record: logging.LogRecord) -> None:
         """
@@ -60,32 +56,31 @@ class OTLPLogHandler(logging.Handler):
             record: Python LogRecord to emit
         """
         try:
-            with self._lock:
-                # Get current active span context
-                span_context = trace.get_current_span().get_span_context()
+            # Get current active span context
+            span_context = trace.get_current_span().get_span_context()
 
-                # Build attributes dict
-                attributes = {}
+            # Build attributes dict
+            attributes = {}
 
-                # Only inject trace_id and span_id if inside an active span with valid trace
-                if span_context and span_context.is_valid:
-                    attributes["trace_id"] = format(span_context.trace_id, "032x")
-                    attributes["span_id"] = format(span_context.span_id, "016x")
+            # Only inject trace_id and span_id if inside an active span with valid trace
+            if span_context and span_context.is_valid:
+                attributes["trace_id"] = format(span_context.trace_id, "032x")
+                attributes["span_id"] = format(span_context.span_id, "016x")
 
-                # Create OTLP log record
-                log_record = {
-                    "timestamp": int(record.created * 1e9),  # Convert to nanoseconds
-                    "severity_number": _severity_number(record.levelno),
-                    "severity_text": record.levelname,
-                    "body": record.getMessage(),
-                    "attributes": {
-                        "logger.name": record.name,
-                        **attributes,
-                    },
-                }
+            # Create OTLP log record
+            log_record = {
+                "timestamp": int(record.created * 1e9),  # Convert to nanoseconds
+                "severity_number": _severity_number(record.levelno),
+                "severity_text": record.levelname,
+                "body": record.getMessage(),
+                "attributes": {
+                    "logger.name": record.name,
+                    **attributes,
+                },
+            }
 
-                # Export the log record
-                self.exporter.export([log_record])
+            # Export the log record
+            self.exporter.export([log_record])
         except Exception as e:
             # Fail gracefully — do not let logging errors crash the app
             self.handleError(record)
@@ -128,7 +123,6 @@ class SimpleOTLPLogExporter:
             endpoint: OTLP HTTP endpoint (e.g., http://localhost:4318)
         """
         self.endpoint = endpoint
-        self._queue = []
 
     def export(self, logs: list) -> int:
         """

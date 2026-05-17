@@ -75,7 +75,7 @@ def register_otlp_handler(handler: logging.Handler) -> None:
     Register an OTLP log handler for all loggers.
 
     This function is called from app.py lifespan after telemetry setup.
-    Attaches the handler to the root logger and to any already-created loggers.
+    Attaches the handler to the root logger; all child loggers inherit it via propagation.
 
     Args:
         handler: The OTLP log handler to register
@@ -83,16 +83,10 @@ def register_otlp_handler(handler: logging.Handler) -> None:
     global _otlp_handler
     _otlp_handler = handler
 
-    # Attach to root logger so future get_logger() calls inherit it
+    # Attach to root logger so all loggers inherit it via propagation
     root_logger = logging.getLogger()
     if handler not in root_logger.handlers:
         root_logger.addHandler(handler)
-
-    # Attach to any existing loggers (those created before telemetry setup)
-    for logger_name in logging.Logger.manager.loggerDict:
-        logger = logging.getLogger(logger_name)
-        if isinstance(logger, logging.Logger) and handler not in logger.handlers:
-            logger.addHandler(handler)
 
 
 def get_logger(name: str) -> logging.Logger:
@@ -100,26 +94,22 @@ def get_logger(name: str) -> logging.Logger:
     Get a configured logger instance.
 
     Logger handlers are initialized lazily on first use to avoid
-    filesystem access during test collection.
+    filesystem access during test collection. OTLP handler is registered
+    separately via register_otlp_handler() and inherited via propagation.
 
     Args:
         name: The name of the logger, typically __name__
 
     Returns:
-        A configured logging.Logger instance with handlers attached
+        A configured logging.Logger instance with file handler attached
     """
-    global _otlp_handler
     logger = logging.getLogger(name)
 
-    # Attach handler if logger doesn't already have one
+    # Attach file handler if logger doesn't already have one
     if not logger.handlers:
         handler = _get_handler()
         if handler:
             logger.addHandler(handler)
             logger.setLevel(handler.level)
-
-    # Attach OTLP handler if configured and not already attached
-    if _otlp_handler and _otlp_handler not in logger.handlers:
-        logger.addHandler(_otlp_handler)
 
     return logger

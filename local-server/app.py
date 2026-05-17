@@ -24,7 +24,7 @@ from config import get_config_manager, get_settings, SyncAdapterType
 from domain.admin.exceptions import ConfigurationError
 from utils.logger import get_logger, register_otlp_handler
 from adapters.telemetry import setup_telemetry
-from adapters.telemetry.log_bridge import OTLPLogHandler, create_otlp_log_exporter
+from adapters.telemetry.log_bridge import OTLPLogHandler
 
 # Import adapters
 from adapters.persistence.sqlite.connection import DatabaseManager
