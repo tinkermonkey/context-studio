@@ -16,15 +16,12 @@ from opentelemetry import trace
 
 if TYPE_CHECKING:
     from opentelemetry.sdk._logs import LoggingHandler as BaseOTLPLogHandler
-    from opentelemetry.sdk._logs import LoggerProvider
     from opentelemetry.sdk._logs import LoggerProvider as LoggerProviderType
 else:
     BaseOTLPLogHandler: Any = None
-    LoggerProvider: Any = None
 
     try:
         from opentelemetry.sdk._logs import LoggingHandler as BaseOTLPLogHandler
-        from opentelemetry.sdk._logs import LoggerProvider
     except ImportError:
         pass
 
