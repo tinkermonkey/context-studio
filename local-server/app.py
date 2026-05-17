@@ -195,7 +195,7 @@ async def lifespan(app: FastAPI):
 
         # Reference sources (wrapped in cache)
         raw_sources: list[ReferenceSource] = [
-            ConceptNetSource(),
+            ConceptNetSource(base_url=settings.reference.conceptnet_base_url, timeout=settings.reference.conceptnet_timeout),
             DBpediaSource(),
             WikidataSource(),
             SchemaOrgSource(),

@@ -112,6 +112,14 @@ class LLMConfig(BaseModel):
     openai_api_key: str = Field(default="", description="OpenAI API key")
     anthropic_api_key: str = Field(default="", description="Anthropic API key")
 
+    @model_validator(mode="after")
+    def apply_env_fallbacks(self) -> "LLMConfig":
+        if not self.openai_api_key:
+            self.openai_api_key = os.environ.get("OPENAI_API_KEY", "")
+        if not self.anthropic_api_key:
+            self.anthropic_api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        return self
+
 
 class ReferenceConfig(BaseModel):
     """Reference data configuration section"""
@@ -123,6 +131,19 @@ class ReferenceConfig(BaseModel):
     reference_db_path: str = Field(
         default="./reference.db", description="Reference data database path"
     )
+    conceptnet_base_url: str = Field(
+        default="https://api.conceptnet.io", description="ConceptNet API base URL"
+    )
+    conceptnet_timeout: int = Field(
+        default=30, description="ConceptNet API request timeout in seconds"
+    )
+
+    @model_validator(mode="after")
+    def apply_env_fallbacks(self) -> "ReferenceConfig":
+        env_url = os.environ.get("CONCEPTNET_BASE_URL")
+        if env_url:
+            self.conceptnet_base_url = env_url
+        return self
 
 
 class S3Config(BaseModel):

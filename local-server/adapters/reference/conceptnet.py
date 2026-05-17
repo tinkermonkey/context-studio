@@ -17,15 +17,17 @@ class ConceptNetSource:
     Gracefully handles network failures without raising exceptions.
     """
 
-    BASE_URL = "https://api.conceptnet.io"
+    DEFAULT_BASE_URL = "https://api.conceptnet.io"
 
-    def __init__(self, timeout: int = 10):
+    def __init__(self, base_url: str = DEFAULT_BASE_URL, timeout: int = 10):
         """
         Initialize the ConceptNet source adapter.
 
         Args:
+            base_url: ConceptNet API base URL
             timeout: HTTP request timeout in seconds
         """
+        self._base_url = base_url.rstrip("/")
         self._timeout = timeout
 
     @property
@@ -47,7 +49,7 @@ class ConceptNetSource:
         """
         try:
             response = httpx.get(
-                f"{self.BASE_URL}/c/en/test",
+                f"{self._base_url}/c/en/test",
                 timeout=self._timeout,
             )
             return response.status_code == 200
@@ -77,7 +79,7 @@ class ConceptNetSource:
         """
         try:
             response = httpx.get(
-                f"{self.BASE_URL}/query",
+                f"{self._base_url}/query",
                 params={"text": term, "limit": limit},
                 timeout=self._timeout,
             )
@@ -142,7 +144,7 @@ class ConceptNetSource:
         """
         try:
             response = httpx.get(
-                f"{self.BASE_URL}/query",
+                f"{self._base_url}/query",
                 params={"start": uri, "limit": limit},
                 timeout=self._timeout,
             )
