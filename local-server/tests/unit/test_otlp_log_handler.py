@@ -18,25 +18,19 @@ class MockLogger:
         """Initialize the mock logger."""
         self.logged_messages = []
 
-    def debug(self, message, attributes=None):
-        """Log a debug message."""
-        self.logged_messages.append({"message": message, "level": "DEBUG", "attributes": attributes or {}})
+    def emit(self, record):
+        """Emit a log record."""
+        # Handle OTel LogRecord (from SDK's LoggingHandler translation)
+        attributes = record.attributes or {}
 
-    def info(self, message, attributes=None):
-        """Log an info message."""
-        self.logged_messages.append({"message": message, "level": "INFO", "attributes": attributes or {}})
-
-    def warning(self, message, attributes=None):
-        """Log a warning message."""
-        self.logged_messages.append({"message": message, "level": "WARNING", "attributes": attributes or {}})
-
-    def error(self, message, attributes=None):
-        """Log an error message."""
-        self.logged_messages.append({"message": message, "level": "ERROR", "attributes": attributes or {}})
-
-    def critical(self, message, attributes=None):
-        """Log a critical message."""
-        self.logged_messages.append({"message": message, "level": "CRITICAL", "attributes": attributes or {}})
+        self.logged_messages.append({
+            "message": record.body,
+            "severity_text": record.severity_text,
+            "severity_number": record.severity_number,
+            "trace_id": record.trace_id,
+            "span_id": record.span_id,
+            "attributes": attributes
+        })
 
 
 class MockLoggerProvider:
@@ -46,7 +40,7 @@ class MockLoggerProvider:
         """Initialize the mock provider."""
         self.logger = MockLogger()
 
-    def get_logger(self, name):
+    def get_logger(self, name, version=None, schema_url=None, attributes=None):
         """Get a logger."""
         return self.logger
 
@@ -65,7 +59,7 @@ def test_otlp_log_handler_exports_logs():
     assert len(provider.logger.logged_messages) == 1
     logged = provider.logger.logged_messages[0]
     assert logged["message"] == "Test message"
-    assert logged["level"] == "INFO"
+    assert logged["severity_text"] == "INFO"
 
 
 def test_otlp_log_handler_without_trace_context():
@@ -81,8 +75,9 @@ def test_otlp_log_handler_without_trace_context():
 
     assert len(provider.logger.logged_messages) == 1
     logged = provider.logger.logged_messages[0]
-    assert "trace_id" not in logged["attributes"]
-    assert "span_id" not in logged["attributes"]
+    # trace_id and span_id should be 0 (invalid) when not in a span
+    assert logged["trace_id"] == 0
+    assert logged["span_id"] == 0
 
 
 def test_otlp_log_handler_different_levels():
@@ -102,15 +97,9 @@ def test_otlp_log_handler_different_levels():
 
     assert len(provider.logger.logged_messages) == 5
 
-    # Check level mapping
-    levels = [
-        (0, "DEBUG"),
-        (1, "INFO"),
-        (2, "WARNING"),
-        (3, "ERROR"),
-        (4, "CRITICAL"),
-    ]
+    # Check level mapping (OTel SDK normalizes WARNING to WARN)
+    expected_levels = ["DEBUG", "INFO", "WARN", "ERROR", "FATAL"]
 
-    for idx, expected_level in levels:
+    for idx, expected_level in enumerate(expected_levels):
         logged = provider.logger.logged_messages[idx]
-        assert logged["level"] == expected_level
+        assert logged["severity_text"] == expected_level

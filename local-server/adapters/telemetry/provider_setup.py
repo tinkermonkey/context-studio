@@ -70,7 +70,6 @@ class TelemetryProvider:
 
         self.tracer_provider: Optional[TracerProvider] = None
         self.logger_provider: Optional["LoggerProviderType"] = None
-        self.log_exporter: Optional[LogExporter] = None
 
     def _create_resource(self) -> Resource:
         """Create a Resource with service attributes."""
@@ -154,7 +153,6 @@ class TelemetryProvider:
                 logger_provider.add_log_record_processor(batch_processor)
 
                 self.logger_provider = logger_provider
-                self.log_exporter = log_exporter
                 _logger.info("Log exporter configured with batch processor")
                 return True
             return True

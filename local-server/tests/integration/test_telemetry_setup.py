@@ -52,9 +52,11 @@ def test_otlp_log_handler_registration():
 
     # Verify logger provider was called
     assert mock_logger_provider.get_logger.called
-    assert mock_logger.info.called
-    call_args = mock_logger.info.call_args
-    assert call_args[0][0] == "Test log message"
+    # SDK's LoggingHandler calls .emit() on the logger (OTel interface)
+    assert mock_logger.emit.called
+    call_args = mock_logger.emit.call_args
+    # The emit method receives an OTel LogRecord with a body attribute
+    assert call_args[0][0].body == "Test log message"
 
 
 def test_rotating_file_handler_still_active():
