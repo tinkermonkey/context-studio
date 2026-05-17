@@ -6,7 +6,6 @@ to provide automatic spans without code changes.
 """
 
 import logging
-from typing import Optional
 from fastapi import FastAPI
 from sqlalchemy.engine import Engine
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
