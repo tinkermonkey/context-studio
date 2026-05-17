@@ -6,9 +6,11 @@ import logging
 import logging.handlers
 import sys
 from pathlib import Path
+from typing import Optional
 from config import get_settings
 
 _file_handler: logging.Handler | None = None
+_otlp_handler: Optional[logging.Handler] = None
 _handler_init_attempted = False
 
 
@@ -68,6 +70,31 @@ def _get_handler() -> logging.Handler:
     return _file_handler
 
 
+def register_otlp_handler(handler: logging.Handler) -> None:
+    """
+    Register an OTLP log handler for all loggers.
+
+    This function is called from app.py lifespan after telemetry setup.
+    Attaches the handler to the root logger and to any already-created loggers.
+
+    Args:
+        handler: The OTLP log handler to register
+    """
+    global _otlp_handler
+    _otlp_handler = handler
+
+    # Attach to root logger so future get_logger() calls inherit it
+    root_logger = logging.getLogger()
+    if handler not in root_logger.handlers:
+        root_logger.addHandler(handler)
+
+    # Attach to any existing loggers (those created before telemetry setup)
+    for logger_name in logging.Logger.manager.loggerDict:
+        logger = logging.getLogger(logger_name)
+        if isinstance(logger, logging.Logger) and handler not in logger.handlers:
+            logger.addHandler(handler)
+
+
 def get_logger(name: str) -> logging.Logger:
     """
     Get a configured logger instance.
@@ -81,6 +108,7 @@ def get_logger(name: str) -> logging.Logger:
     Returns:
         A configured logging.Logger instance with handlers attached
     """
+    global _otlp_handler
     logger = logging.getLogger(name)
 
     # Attach handler if logger doesn't already have one
@@ -89,5 +117,9 @@ def get_logger(name: str) -> logging.Logger:
         if handler:
             logger.addHandler(handler)
             logger.setLevel(handler.level)
+
+    # Attach OTLP handler if configured and not already attached
+    if _otlp_handler and _otlp_handler not in logger.handlers:
+        logger.addHandler(_otlp_handler)
 
     return logger

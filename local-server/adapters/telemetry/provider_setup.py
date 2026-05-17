@@ -15,6 +15,7 @@ from opentelemetry.sdk.trace.sampling import TraceIdRatioBased
 from opentelemetry.trace import set_tracer_provider
 
 from adapters.telemetry.exporters import create_span_exporter
+from adapters.telemetry.log_bridge import create_otlp_log_exporter
 
 _logger = logging.getLogger(__name__)
 
@@ -32,6 +33,7 @@ class TelemetryProvider:
         protocol: str,
         sample_rate: float,
         export_traces: bool,
+        export_logs: bool,
     ):
         """
         Initialize telemetry provider.
@@ -45,6 +47,7 @@ class TelemetryProvider:
             protocol: "grpc" or "http"
             sample_rate: Sampling rate (0.0 to 1.0)
             export_traces: Whether to export traces
+            export_logs: Whether to export logs
         """
         self.service_name = service_name
         self.service_version = service_version
@@ -54,8 +57,10 @@ class TelemetryProvider:
         self.protocol = protocol
         self.sample_rate = sample_rate
         self.export_traces = export_traces
+        self.export_logs = export_logs
 
         self.tracer_provider: Optional[TracerProvider] = None
+        self.log_exporter: Optional[object] = None
 
     def _create_resource(self) -> Resource:
         """Create a Resource with service attributes."""
@@ -104,6 +109,32 @@ class TelemetryProvider:
             _logger.error(f"Failed to set up TracerProvider: {e}")
             return False
 
+    def setup_log_exporter(self) -> bool:
+        """
+        Set up and configure the log exporter.
+
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            if self.export_logs:
+                log_exporter = create_otlp_log_exporter(
+                    self.protocol, self.otlp_endpoint_grpc, self.otlp_endpoint_http
+                )
+                if log_exporter:
+                    self.log_exporter = log_exporter
+                    _logger.info("Log exporter configured")
+                    return True
+                else:
+                    _logger.warning(
+                        "Log exporter creation failed; logs will not be exported to OTLP"
+                    )
+                    return False
+            return True
+        except Exception as e:
+            _logger.error(f"Failed to set up log exporter: {e}")
+            return False
+
     def shutdown(self) -> bool:
         """
         Shut down provider and flush pending data.
@@ -115,6 +146,9 @@ class TelemetryProvider:
             if self.tracer_provider:
                 self.tracer_provider.shutdown()
                 _logger.info("TracerProvider shut down")
+            if self.log_exporter:
+                self.log_exporter.shutdown()
+                _logger.info("Log exporter shut down")
             return True
         except Exception as e:
             _logger.error(f"Failed to shut down provider: {e}")

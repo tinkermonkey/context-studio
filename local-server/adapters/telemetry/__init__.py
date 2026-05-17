@@ -1,7 +1,7 @@
 """
 Telemetry adapter for OTLP trace and log export.
 
-Provides setup_telemetry() to initialize tracing with auto-instrumentation
+Provides setup_telemetry() to initialize tracing and logging with auto-instrumentation
 for FastAPI, SQLAlchemy, and httpx. Integrates into the app lifespan.
 """
 
@@ -33,6 +33,16 @@ class TelemetryLifecycle:
         """
         self.provider = provider
         self._instrumented = False
+        self.log_exporter: Optional[object] = None
+
+    def get_log_exporter(self) -> Optional[object]:
+        """
+        Get the log exporter instance.
+
+        Returns:
+            Log exporter if telemetry is enabled, None otherwise
+        """
+        return self.log_exporter
 
     def instrument_app(self, app: FastAPI, db_engine: Optional[Engine] = None) -> bool:
         """
@@ -78,7 +88,7 @@ def setup_telemetry(config: TelemetryConfig) -> TelemetryLifecycle:
     Set up telemetry from configuration.
 
     If telemetry.enabled is False, returns a no-op lifecycle.
-    Otherwise, initializes TracerProvider and exporters.
+    Otherwise, initializes TracerProvider and log exporter.
     Exporter failures are logged but non-fatal.
 
     Args:
@@ -102,13 +112,17 @@ def setup_telemetry(config: TelemetryConfig) -> TelemetryLifecycle:
         protocol=config.protocol.value,
         sample_rate=config.sample_rate,
         export_traces=config.export_traces,
+        export_logs=config.export_logs,
     )
 
     tracer_ok = provider.setup_tracer_provider()
+    log_ok = provider.setup_log_exporter()
 
-    if tracer_ok:
+    if tracer_ok or log_ok:
         _logger.info("Telemetry initialized successfully")
-        return TelemetryLifecycle(provider)
+        lifecycle = TelemetryLifecycle(provider)
+        lifecycle.log_exporter = provider.log_exporter
+        return lifecycle
     else:
         _logger.error("Telemetry initialization failed; running without telemetry")
         return TelemetryLifecycle(None)

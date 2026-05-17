@@ -14,6 +14,7 @@ Architecture:
 
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+import logging
 
 import uvicorn
 from fastapi import FastAPI
@@ -21,8 +22,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from config import get_config_manager, get_settings, SyncAdapterType
 from domain.admin.exceptions import ConfigurationError
-from utils.logger import get_logger
+from utils.logger import get_logger, register_otlp_handler
 from adapters.telemetry import setup_telemetry
+from adapters.telemetry.log_bridge import OTLPLogHandler, create_otlp_log_exporter
 
 # Import adapters
 from adapters.persistence.sqlite.connection import DatabaseManager
@@ -139,6 +141,13 @@ async def lifespan(app: FastAPI):
 
     # Initialize telemetry FIRST (before other adapters)
     telemetry = setup_telemetry(settings.telemetry)
+
+    # Register OTLP log handler if telemetry is enabled and log export is configured
+    if telemetry.get_log_exporter():
+        otlp_log_handler = OTLPLogHandler(telemetry.get_log_exporter())
+        otlp_log_handler.setLevel(logging.DEBUG)
+        register_otlp_handler(otlp_log_handler)
+        logger.info("OTLP log handler registered")
 
     # Initialize database manager
     db_manager = DatabaseManager()
