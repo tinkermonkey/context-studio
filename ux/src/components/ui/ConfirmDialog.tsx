@@ -38,8 +38,11 @@ export function ConfirmDialog({
       await onConfirm();
       onClose();
     } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
       if (onError) {
-        onError(error instanceof Error ? error : new Error(String(error)));
+        onError(err);
+      } else {
+        console.error(err);
       }
     } finally {
       setIsProcessing(false);

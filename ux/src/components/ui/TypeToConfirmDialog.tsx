@@ -26,6 +26,7 @@ export function TypeToConfirmDialog({
   isLoading = false,
 }: TypeToConfirmDialogProps) {
   const [input, setInput] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const isConfirmed = input === confirmText;
 
@@ -35,7 +36,7 @@ export function TypeToConfirmDialog({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && isConfirmed && !isLoading) {
+    if (e.key === "Enter" && isConfirmed && !isLoading && !isProcessing) {
       handleConfirmDialogWithClose();
     }
   };
@@ -48,6 +49,7 @@ export function TypeToConfirmDialog({
   };
 
   const handleConfirmDialogWithClose = async () => {
+    setIsProcessing(true);
     try {
       await handleConfirmDialog();
       handleClose();
@@ -55,6 +57,8 @@ export function TypeToConfirmDialog({
       if (onError) {
         onError(error instanceof Error ? error : new Error(String(error)));
       }
+    } finally {
+      setIsProcessing(false);
     }
   };
 
