@@ -6,8 +6,8 @@
   --graph-grid: rgba(15, 23, 42, 0.045);
   --graph-edge: #cbd5e1;
   --graph-edge-strong: #94a3b8;
-  --graph-edge-hot: var(--accent-cyan-deep);
-  --graph-edge-irrelevant: var(--accent-rose);
+  --graph-edge-hot: rgb(var(--accent-primary-deep));
+  --graph-edge-irrelevant: rgb(var(--status-rose));
   --graph-cluster-life-bg: rgba(52, 211, 153, 0.06);
   --graph-cluster-life-bd: rgba(52, 211, 153, 0.3);
   --graph-cluster-climate-bg: rgba(251, 191, 36, 0.06);

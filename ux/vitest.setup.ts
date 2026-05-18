@@ -363,6 +363,101 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
         ),
       ),
   ),
+  Table: React.forwardRef(
+    (
+      {
+        columns = [],
+        data = [],
+        rowKey = "id",
+        selectable = true,
+        selectedRows = [],
+        onSelectRows,
+        onSort,
+        className = "",
+        ...props
+      }: any,
+      ref: any,
+    ) => {
+      const getRowKey = (row: any, index: number) => {
+        if (typeof rowKey === "function") {
+          return rowKey(row, index);
+        }
+        return row[rowKey];
+      };
+
+      return React.createElement(
+        "table",
+        {
+          ref,
+          className: ["table", className].filter(Boolean).join(" "),
+          ...props,
+        },
+        React.createElement(
+          "thead",
+          { className: "table__head" },
+          React.createElement(
+            "tr",
+            { className: "table__row" },
+            selectable &&
+              React.createElement(
+                "th",
+                { className: "table__header table__header--checkbox", style: { width: "30px" } },
+                React.createElement("input", {
+                  type: "checkbox",
+                  className: "table__checkbox",
+                  checked: selectedRows.length === data.length && data.length > 0,
+                }),
+              ),
+            columns.map((column: any) =>
+              React.createElement(
+                "th",
+                {
+                  key: String(column.key),
+                  className: `table__header ${column.sortable ? "table__header--sortable" : ""}`,
+                  style: { width: column.width },
+                },
+                column.label,
+              ),
+            ),
+          ),
+        ),
+        React.createElement(
+          "tbody",
+          { className: "table__body" },
+          data.map((row: any, index: number) => {
+            const rowKeyValue = getRowKey(row, index);
+            return React.createElement(
+              "tr",
+              {
+                key: rowKeyValue,
+                "data-row-key": rowKeyValue,
+                className: `table__row ${selectedRows.includes(rowKeyValue) ? "table__row--selected" : ""}`,
+              },
+              selectable &&
+                React.createElement(
+                  "td",
+                  { className: "table__cell table__cell--checkbox" },
+                  React.createElement("input", {
+                    type: "checkbox",
+                    className: "table__checkbox",
+                    checked: selectedRows.includes(rowKeyValue),
+                  }),
+                ),
+              columns.map((column: any) =>
+                React.createElement(
+                  "td",
+                  { key: `${rowKeyValue}-${String(column.key)}`, className: "table__cell" },
+                  column.render
+                    ? column.render(row[column.key as keyof typeof row], row, index)
+                    : row[column.key as keyof typeof row],
+                ),
+              ),
+            );
+          }),
+        ),
+      );
+    },
+  ) as any,
   StatGrid: React.forwardRef(({ columns = 4, children, className = "", ...props }: any, ref: any) =>
     React.createElement(
       "div",
