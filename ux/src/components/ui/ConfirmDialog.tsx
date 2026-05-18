@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Modal as HeimdallModal, Button as HeimdallButton } from "@tinkermonkey/heimdall-ui";
 import type { ReactNode } from "react";
 
@@ -34,6 +34,7 @@ export function ConfirmDialog({
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleConfirm = async () => {
+    if (isProcessing) return;
     setIsProcessing(true);
     try {
       await onConfirm();
@@ -46,11 +47,9 @@ export function ConfirmDialog({
     }
   };
 
-  useEffect(() => {
-    if (onConfirmButtonRef) {
-      onConfirmButtonRef.current = handleConfirm;
-    }
-  }, [handleConfirm, onConfirmButtonRef]);
+  if (onConfirmButtonRef) {
+    onConfirmButtonRef.current = handleConfirm;
+  }
 
   const isConfirmDisabledState = isProcessing || isLoading || isConfirmDisabled;
   const isCancelDisabled = isProcessing || isLoading;
