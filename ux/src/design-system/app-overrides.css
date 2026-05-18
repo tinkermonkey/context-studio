@@ -10,10 +10,10 @@
   --amber-400: 251 191 36;
 
   /* ---- Domain-Specific Taxonomy Colors ---- */
-  --dom-life: 76 175 80;
-  --dom-climate: 33 150 243;
-  --dom-software: 156 39 176;
-  --dom-default: 158 158 158;
+  --dom-life: rgb(76 175 80);
+  --dom-climate: rgb(33 150 243);
+  --dom-software: rgb(156 39 176);
+  --dom-default: rgb(158 158 158);
 
   /* ---- Canvas Layout Classes ---- */
   --space-canvas-inner: 2rem;
@@ -29,7 +29,7 @@
 
   /* ---- Canvas Surface ---- */
   --canvas-bg-3: rgb(243 244 246);
-  --canvas-fg: var(--canvas-fg-1);
+  --canvas-fg: rgb(var(--canvas-fg-1));
   --canvas-fg-4: rgb(107 114 128);
 
   /* ---- Canvas Border (map to Heimdall tokens with rgb() wrapper) ---- */
@@ -39,7 +39,7 @@
   /* ---- Shell Surface ---- */
   --shell-bg-2: rgb(39 46 56);
   --shell-surface-2: rgb(55 65 81);
-  --shell-fg: var(--shell-fg-1);
+  --shell-fg: rgb(var(--shell-fg-1));
   --shell-border: rgb(var(--canvas-border));
   --shell-border-2: rgb(75 85 99);
 
