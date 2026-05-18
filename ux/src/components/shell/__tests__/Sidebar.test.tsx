@@ -10,7 +10,7 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 
 describe("Sidebar", () => {
-  it("applies 'collapsed' as a discrete class when collapsed prop is true", () => {
+  it("applies 'collapsed' class when collapsed prop is true", () => {
     render(<Sidebar collapsed onToggle={vi.fn()} />);
     expect(screen.getByTestId("sidebar")).toHaveClass("collapsed");
   });
@@ -30,7 +30,7 @@ describe("Sidebar", () => {
   it("toggles from expanded to collapsed on button click", () => {
     const onToggle = vi.fn();
     const { rerender } = render(<Sidebar collapsed={false} onToggle={onToggle} />);
-    expect(screen.getByTestId("sidebar").className).not.toContain("collapsed");
+    expect(screen.getByTestId("sidebar")).not.toHaveClass("collapsed");
 
     fireEvent.click(screen.getByTestId("sidebar-toggle"));
     expect(onToggle).toHaveBeenCalledTimes(1);
