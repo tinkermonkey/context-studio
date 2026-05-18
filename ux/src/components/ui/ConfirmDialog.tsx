@@ -1,17 +1,20 @@
 import { useState } from "react";
 import { Modal as HeimdallModal } from "@tinkermonkey/heimdall-ui";
 import { Button } from "./Button";
+import type { ReactNode } from "react";
 
 interface ConfirmDialogProps {
   open: boolean;
   onClose: () => void;
   title: string;
-  message: string;
+  message: ReactNode;
   confirmLabel?: string;
   cancelLabel?: string;
   danger?: boolean;
   onConfirm: () => void | Promise<void>;
+  onError?: (error: Error) => void;
   isLoading?: boolean;
+  isConfirmDisabled?: boolean;
 }
 
 export function ConfirmDialog({
@@ -23,7 +26,9 @@ export function ConfirmDialog({
   cancelLabel = "Cancel",
   danger = false,
   onConfirm,
+  onError,
   isLoading = false,
+  isConfirmDisabled = false,
 }: ConfirmDialogProps) {
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -32,14 +37,17 @@ export function ConfirmDialog({
     try {
       await onConfirm();
       onClose();
-    } catch {
-      // Error is handled by the consumer's error handling
+    } catch (error) {
+      if (onError) {
+        onError(error instanceof Error ? error : new Error(String(error)));
+      }
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const isDisabled = isProcessing || isLoading;
+  const isConfirmDisabledState = isProcessing || isLoading || isConfirmDisabled;
+  const isCancelDisabled = isProcessing || isLoading;
 
   const footer = (
     <div className="confirm-dialog__footer">
@@ -47,7 +55,7 @@ export function ConfirmDialog({
         variant="ghost"
         size="sm"
         onClick={onClose}
-        disabled={isDisabled}
+        disabled={isCancelDisabled}
         data-testid="confirm-dialog-cancel"
       >
         {cancelLabel}
@@ -56,7 +64,7 @@ export function ConfirmDialog({
         variant={danger ? "danger" : "primary"}
         size="sm"
         onClick={handleConfirm}
-        disabled={isDisabled}
+        disabled={isConfirmDisabledState}
         data-testid="confirm-dialog-confirm"
       >
         {confirmLabel}

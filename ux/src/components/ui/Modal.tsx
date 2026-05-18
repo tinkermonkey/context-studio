@@ -39,7 +39,6 @@ export function Modal({
       title={titleString}
       subtitle={subtitle}
       className={combinedClassName}
-      footer={footer}
       data-testid={testId}
     >
       {typeof title !== "string" && title ? (
@@ -50,6 +49,7 @@ export function Modal({
       ) : (
         children
       )}
+      {footer && <div className="modal__footer">{footer}</div>}
     </HeimdallModal>
   );
 }

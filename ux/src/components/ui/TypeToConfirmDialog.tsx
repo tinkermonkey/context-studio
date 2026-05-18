@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Modal } from "./Modal";
-import { Button } from "./Button";
+import { ConfirmDialog } from "./ConfirmDialog";
 import { Input } from "./Input";
 
 interface TypeToConfirmDialogProps {
@@ -11,6 +10,7 @@ interface TypeToConfirmDialogProps {
   confirmText: string;
   confirmLabel?: string;
   onConfirm: () => void | Promise<void>;
+  onError?: (error: Error) => void;
   isLoading?: boolean;
 }
 
@@ -22,75 +22,66 @@ export function TypeToConfirmDialog({
   confirmText,
   confirmLabel = "Delete",
   onConfirm,
+  onError,
   isLoading = false,
 }: TypeToConfirmDialogProps) {
   const [input, setInput] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
+
   const isConfirmed = input === confirmText;
-  const isDisabled = isLoading || isProcessing || !isConfirmed;
-
-  const handleConfirm = async () => {
-    if (isConfirmed) {
-      setIsProcessing(true);
-      try {
-        await onConfirm();
-        setInput("");
-        onClose();
-      } catch {
-        // Error is handled by the consumer's error handling
-      } finally {
-        setIsProcessing(false);
-      }
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && isConfirmed && !isDisabled) {
-      handleConfirm();
-    }
-  };
 
   const handleClose = () => {
     setInput("");
     onClose();
   };
 
-  const footer = (
-    <div className="flex-between">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={handleClose}
-        disabled={isLoading || isProcessing}
-        data-testid="type-confirm-cancel"
-      >
-        Cancel
-      </Button>
-      <Button
-        variant="danger"
-        size="sm"
-        onClick={handleConfirm}
-        disabled={isDisabled}
-        data-testid="type-confirm-button"
-      >
-        {confirmLabel}
-      </Button>
-    </div>
-  );
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && isConfirmed && !isLoading) {
+      handleConfirmDialogWithClose();
+    }
+  };
+
+  const handleConfirmDialog = async () => {
+    if (isConfirmed) {
+      await onConfirm();
+      setInput("");
+    }
+  };
+
+  const handleConfirmDialogWithClose = async () => {
+    try {
+      await handleConfirmDialog();
+      handleClose();
+    } catch (error) {
+      if (onError) {
+        onError(error instanceof Error ? error : new Error(String(error)));
+      }
+    }
+  };
 
   return (
-    <Modal open={open} onClose={handleClose} title={title} size="sm" footer={footer}>
-      <div className="stack-lg" data-testid="type-confirm-dialog">
-        <div className="type-confirm-message">{message}</div>
-        <div className="type-confirm-text">{confirmText}</div>
-        <Input
-          placeholder="Type the above to confirm"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          data-testid="type-confirm-input"
-        />
-      </div>
-    </Modal>
+    <ConfirmDialog
+      open={open}
+      onClose={handleClose}
+      title={title}
+      message={
+        <div className="stack-lg" data-testid="type-confirm-dialog">
+          <div className="type-confirm-message">{message}</div>
+          <div className="type-confirm-text">{confirmText}</div>
+          <Input
+            placeholder="Type the above to confirm"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            data-testid="type-confirm-input"
+          />
+        </div>
+      }
+      confirmLabel={confirmLabel}
+      danger
+      onConfirm={handleConfirmDialog}
+      onError={onError}
+      isLoading={isLoading}
+      isConfirmDisabled={!isConfirmed}
+    />
   );
 }
