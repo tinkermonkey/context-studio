@@ -61,7 +61,6 @@ export function Drawer({
   const hasAutosaveStatus = autosaveState && autosaveState !== "idle";
   const hasRevert = isDirty && onRevert;
   const hasDelete = onDelete;
-  const hasActions = headerAction || hasAutosaveStatus || hasRevert || hasDelete;
 
   if (!open) return null;
 

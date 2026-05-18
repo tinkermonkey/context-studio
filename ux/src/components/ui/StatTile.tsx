@@ -9,21 +9,24 @@ interface StatTileProps {
 }
 
 export function StatTile({ label, value, color = "cyan", sub, className }: StatTileProps) {
+  if (!sub) {
+    return (
+      <HeimdallStatTile
+        label={label}
+        value={value}
+        color={color}
+        className={className}
+      />
+    );
+  }
+
   return (
-    <HeimdallStatTile
-      label={label}
-      value={value}
-      color={color}
-      delta={
-        sub
-          ? {
-              value: 0,
-              label: sub,
-              direction: "up" as const,
-            }
-          : undefined
-      }
-      className={className}
-    />
+    <div className={["stat-tile", `stat-tile--${color}`, className].filter(Boolean).join(" ")}>
+      <div className="stat-tile__label">{label}</div>
+      <div className="stat-tile__value">{value}</div>
+      <div className="stat-tile__meta">
+        <span className="stat-tile__label-secondary">{sub}</span>
+      </div>
+    </div>
   );
 }
