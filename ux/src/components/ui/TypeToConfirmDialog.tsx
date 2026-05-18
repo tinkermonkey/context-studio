@@ -56,8 +56,7 @@ export function TypeToConfirmDialog({
   };
 
   const footer = (
-    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-      <span style={{ flex: 1 }} />
+    <div className="flex-between">
       <Button
         variant="ghost"
         size="sm"
@@ -81,25 +80,9 @@ export function TypeToConfirmDialog({
 
   return (
     <Modal open={open} onClose={handleClose} title={title} size="sm" footer={footer}>
-      <div
-        style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}
-        data-testid="type-confirm-dialog"
-      >
-        <div style={{ color: "var(--canvas-fg-2)", lineHeight: 1.5 }}>{message}</div>
-        <div
-          style={{
-            fontFamily: "var(--mono)",
-            background: "var(--canvas-bg-2)",
-            padding: "var(--space-2) var(--space-3)",
-            borderRadius: "var(--radius-sm)",
-            fontSize: "12px",
-            color: "var(--canvas-fg)",
-            wordBreak: "break-all",
-            marginTop: "var(--space-2)",
-          }}
-        >
-          {confirmText}
-        </div>
+      <div className="stack-lg" data-testid="type-confirm-dialog">
+        <div className="type-confirm-message">{message}</div>
+        <div className="type-confirm-text">{confirmText}</div>
         <Input
           placeholder="Type the above to confirm"
           value={input}

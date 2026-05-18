@@ -5,46 +5,46 @@ import { StatTile } from "../StatTile";
 
 describe("StatTile", () => {
   describe("CSS class styling", () => {
-    it("applies stat base class", () => {
+    it("applies stat-tile base class", () => {
       const { container } = render(<StatTile label="Count" value={42} />);
-      expect(container.querySelector(".stat")).toBeInTheDocument();
+      expect(container.querySelector(".stat-tile")).toBeInTheDocument();
     });
 
-    it("applies data-color attribute for color variant", () => {
+    it("applies color variant class", () => {
       const { container } = render(<StatTile label="Count" value={42} color="cyan" />);
-      const stat = container.querySelector(".stat");
-      expect(stat).toHaveAttribute("data-color", "cyan");
+      const stat = container.querySelector(".stat-tile");
+      expect(stat).toHaveClass("stat-tile--cyan");
     });
 
     it("applies default cyan color when color not specified", () => {
       const { container } = render(<StatTile label="Count" value={42} />);
-      const stat = container.querySelector(".stat");
-      expect(stat).toHaveAttribute("data-color", "cyan");
+      const stat = container.querySelector(".stat-tile");
+      expect(stat).toHaveClass("stat-tile--cyan");
     });
 
     it("applies violet color variant", () => {
       const { container } = render(<StatTile label="Count" value={42} color="violet" />);
-      const stat = container.querySelector(".stat");
-      expect(stat).toHaveAttribute("data-color", "violet");
+      const stat = container.querySelector(".stat-tile");
+      expect(stat).toHaveClass("stat-tile--violet");
     });
 
     it("applies amber color variant", () => {
       const { container } = render(<StatTile label="Count" value={42} color="amber" />);
-      const stat = container.querySelector(".stat");
-      expect(stat).toHaveAttribute("data-color", "amber");
+      const stat = container.querySelector(".stat-tile");
+      expect(stat).toHaveClass("stat-tile--amber");
     });
 
     it("applies emerald color variant", () => {
       const { container } = render(<StatTile label="Count" value={42} color="emerald" />);
-      const stat = container.querySelector(".stat");
-      expect(stat).toHaveAttribute("data-color", "emerald");
+      const stat = container.querySelector(".stat-tile");
+      expect(stat).toHaveClass("stat-tile--emerald");
     });
   });
 
   describe("label element", () => {
-    it("renders label class", () => {
+    it("renders stat-tile__label class", () => {
       const { container } = render(<StatTile label="Test Label" value={42} />);
-      const label = container.querySelector(".label");
+      const label = container.querySelector(".stat-tile__label");
       expect(label).toBeInTheDocument();
       expect(label).toHaveTextContent("Test Label");
     });
@@ -56,10 +56,10 @@ describe("StatTile", () => {
   });
 
   describe("value element", () => {
-    it("renders num class for value", () => {
+    it("renders stat-tile__value class for value", () => {
       const { container } = render(<StatTile label="Count" value={42} />);
-      const num = container.querySelector(".num");
-      expect(num).toBeInTheDocument();
+      const value = container.querySelector(".stat-tile__value");
+      expect(value).toBeInTheDocument();
     });
 
     it("displays numeric value", () => {
@@ -71,17 +71,12 @@ describe("StatTile", () => {
       render(<StatTile label="Status" value="Active" />);
       expect(screen.getByText("Active")).toBeInTheDocument();
     });
-
-    it("displays element value", () => {
-      render(<StatTile label="Stat" value={<strong>Important</strong>} />);
-      expect(screen.getByText("Important")).toBeInTheDocument();
-    });
   });
 
   describe("metadata/subtitle", () => {
-    it("renders meta class when sub prop is provided", () => {
+    it("renders stat-tile__meta class when sub prop is provided", () => {
       const { container } = render(<StatTile label="Count" value={42} sub="Last updated today" />);
-      const meta = container.querySelector(".meta");
+      const meta = container.querySelector(".stat-tile__meta");
       expect(meta).toBeInTheDocument();
     });
 
@@ -92,7 +87,7 @@ describe("StatTile", () => {
 
     it("does not render meta when sub is not provided", () => {
       const { container } = render(<StatTile label="Count" value={42} />);
-      const meta = container.querySelector(".meta");
+      const meta = container.querySelector(".stat-tile__meta");
       expect(meta).not.toBeInTheDocument();
     });
   });
@@ -102,10 +97,10 @@ describe("StatTile", () => {
       const { container } = render(
         <StatTile label="Active Users" value={1250} color="emerald" sub="+5% from yesterday" />,
       );
-      expect(container.querySelector(".stat")).toBeInTheDocument();
-      expect(container.querySelector(".label")).toHaveTextContent("Active Users");
-      expect(container.querySelector(".num")).toHaveTextContent("1250");
-      expect(container.querySelector(".meta")).toHaveTextContent("+5% from yesterday");
+      expect(container.querySelector(".stat-tile")).toBeInTheDocument();
+      expect(container.querySelector(".stat-tile__label")).toHaveTextContent("Active Users");
+      expect(container.querySelector(".stat-tile__value")).toHaveTextContent("1250");
+      expect(container.querySelector(".stat-tile__label-secondary")).toHaveTextContent("+5% from yesterday");
     });
   });
 });

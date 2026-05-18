@@ -100,13 +100,13 @@ describe("Drawer", () => {
       expect(container.querySelector(".drawer-actions")).toBeInTheDocument();
     });
 
-    it("renders close button with modal-x class", () => {
+    it("renders close button with drawer-close class", () => {
       const { container } = render(
         <Drawer open={true} onClose={vi.fn()} title="Title">
           Content
         </Drawer>,
       );
-      expect(container.querySelector(".modal-x")).toBeInTheDocument();
+      expect(container.querySelector(".drawer-close")).toBeInTheDocument();
     });
 
     it("close button has aria-label", () => {

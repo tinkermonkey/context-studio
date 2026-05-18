@@ -13,7 +13,7 @@ export function Panel({ title, actions, children, className = "" }: PanelProps) 
       {title && (
         <div className="panel-head">
           <span className="panel-title">{title}</span>
-          {actions}
+          {actions && <div className="panel-actions">{actions}</div>}
         </div>
       )}
       <div className="panel-body">{children}</div>

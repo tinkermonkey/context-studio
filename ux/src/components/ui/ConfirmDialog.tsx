@@ -1,4 +1,5 @@
-import { Modal } from "./Modal";
+import { useState } from "react";
+import { Modal as HeimdallModal } from "@tinkermonkey/heimdall-ui";
 import { Button } from "./Button";
 
 interface ConfirmDialogProps {
@@ -24,23 +25,29 @@ export function ConfirmDialog({
   onConfirm,
   isLoading = false,
 }: ConfirmDialogProps) {
+  const [isProcessing, setIsProcessing] = useState(false);
+
   const handleConfirm = async () => {
+    setIsProcessing(true);
     try {
       await onConfirm();
       onClose();
     } catch {
       // Error is handled by the consumer's error handling
+    } finally {
+      setIsProcessing(false);
     }
   };
 
+  const isDisabled = isProcessing || isLoading;
+
   const footer = (
-    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-      <span style={{ flex: 1 }} />
+    <div className="confirm-dialog__footer">
       <Button
         variant="ghost"
         size="sm"
         onClick={onClose}
-        disabled={isLoading}
+        disabled={isDisabled}
         data-testid="confirm-dialog-cancel"
       >
         {cancelLabel}
@@ -49,7 +56,7 @@ export function ConfirmDialog({
         variant={danger ? "danger" : "primary"}
         size="sm"
         onClick={handleConfirm}
-        disabled={isLoading}
+        disabled={isDisabled}
         data-testid="confirm-dialog-confirm"
       >
         {confirmLabel}
@@ -58,10 +65,11 @@ export function ConfirmDialog({
   );
 
   return (
-    <Modal open={open} onClose={onClose} title={title} size="sm" footer={footer}>
-      <div style={{ color: "var(--canvas-fg-2)", lineHeight: 1.5 }} data-testid="confirm-dialog">
+    <HeimdallModal isOpen={open} onClose={onClose} title={title}>
+      <div className="confirm-dialog__message" data-testid="confirm-dialog">
         {message}
       </div>
-    </Modal>
+      {footer}
+    </HeimdallModal>
   );
 }

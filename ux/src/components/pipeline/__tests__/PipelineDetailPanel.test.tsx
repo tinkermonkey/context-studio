@@ -357,7 +357,7 @@ describe("PipelineDetailPanel", () => {
     );
 
     const chip = screen.getByText("success");
-    expect(chip.closest("[class*='chip']")).toHaveClass("emerald");
+    expect(chip.closest("[class*='chip']")).toHaveClass("chip--emerald");
   });
 
   it("renders error status chips with rose class", () => {
@@ -376,7 +376,7 @@ describe("PipelineDetailPanel", () => {
     );
 
     const chip = screen.getByText("error");
-    expect(chip.closest("[class*='chip']")).toHaveClass("rose");
+    expect(chip.closest("[class*='chip']")).toHaveClass("chip--rose");
   });
 
   it("disables save button when no changes are made", async () => {

@@ -14,51 +14,51 @@ describe("Chip", () => {
     it("applies color class for cyan variant", () => {
       const { container } = render(<Chip color="cyan">Cyan</Chip>);
       const chip = container.querySelector(".chip");
-      expect(chip).toHaveClass("cyan");
+      expect(chip).toHaveClass("chip--cyan");
     });
 
     it("applies color class for amber variant", () => {
       const { container } = render(<Chip color="amber">Amber</Chip>);
       const chip = container.querySelector(".chip");
-      expect(chip).toHaveClass("amber");
+      expect(chip).toHaveClass("chip--amber");
     });
 
     it("applies color class for violet variant", () => {
       const { container } = render(<Chip color="violet">Violet</Chip>);
       const chip = container.querySelector(".chip");
-      expect(chip).toHaveClass("violet");
+      expect(chip).toHaveClass("chip--violet");
     });
 
     it("applies color class for emerald variant", () => {
       const { container } = render(<Chip color="emerald">Emerald</Chip>);
       const chip = container.querySelector(".chip");
-      expect(chip).toHaveClass("emerald");
+      expect(chip).toHaveClass("chip--emerald");
     });
 
     it("applies color class for rose variant", () => {
       const { container } = render(<Chip color="rose">Rose</Chip>);
       const chip = container.querySelector(".chip");
-      expect(chip).toHaveClass("rose");
+      expect(chip).toHaveClass("chip--rose");
     });
 
     it("applies color class for gray variant", () => {
       const { container } = render(<Chip color="gray">Gray</Chip>);
       const chip = container.querySelector(".chip");
-      expect(chip).toHaveClass("gray");
+      expect(chip).toHaveClass("chip--neutral");
     });
   });
 
   describe("color indicator dot", () => {
     it("renders dot when color is specified", () => {
       const { container } = render(<Chip color="cyan">Cyan</Chip>);
-      const dot = container.querySelector(".dot");
+      const dot = container.querySelector(".chip__dot");
       expect(dot).toBeInTheDocument();
     });
 
-    it("does not render dot when color is not specified", () => {
+    it("renders dot by default (Heimdall behavior)", () => {
       const { container } = render(<Chip>No color</Chip>);
-      const dot = container.querySelector(".dot");
-      expect(dot).not.toBeInTheDocument();
+      const dot = container.querySelector(".chip__dot");
+      expect(dot).toBeInTheDocument();
     });
   });
 
@@ -77,7 +77,7 @@ describe("Chip", () => {
       );
       const chip = container.querySelector(".chip");
       expect(chip).toHaveClass("chip");
-      expect(chip).toHaveClass("cyan");
+      expect(chip).toHaveClass("chip--cyan");
       expect(chip).toHaveClass("flex");
       expect(chip).toHaveClass("items-center");
     });

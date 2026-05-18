@@ -12,6 +12,7 @@ interface ModalProps {
   children: ReactNode;
   footer?: ReactNode;
   className?: string;
+  testId?: string;
 }
 
 export function Modal({
@@ -23,6 +24,7 @@ export function Modal({
   onClose,
   children,
   footer,
+  testId,
 }: ModalProps) {
   const sizeClass = size ? `modal-${size}` : "modal-md";
   const combinedClassName = [sizeClass, className].filter(Boolean).join(" ");
@@ -38,10 +40,11 @@ export function Modal({
       subtitle={subtitle}
       className={combinedClassName}
       footer={footer}
+      data-testid={testId}
     >
       {typeof title !== "string" && title ? (
         <>
-          <div style={{ marginBottom: "12px" }}>{title}</div>
+          <div className="mb-sm">{title}</div>
           {children}
         </>
       ) : (

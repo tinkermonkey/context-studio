@@ -69,7 +69,7 @@ describe("Modal", () => {
           Content
         </Modal>,
       );
-      expect(screen.getByLabelText("Close")).toBeInTheDocument();
+      expect(screen.getByLabelText("Close dialog")).toBeInTheDocument();
     });
   });
 
@@ -124,22 +124,22 @@ describe("Modal", () => {
   });
 
   describe("header structure", () => {
-    it("renders modal-head class", () => {
+    it("renders modal__header class", () => {
       const { container } = render(
         <Modal open={true} onClose={vi.fn()} title="Title">
           Content
         </Modal>,
       );
-      expect(container.querySelector(".modal-head")).toBeInTheDocument();
+      expect(container.querySelector(".modal__header")).toBeInTheDocument();
     });
 
-    it("renders modal-title", () => {
+    it("renders modal__title", () => {
       const { container } = render(
         <Modal open={true} onClose={vi.fn()} title="Test Title">
           Content
         </Modal>,
       );
-      const title = container.querySelector(".modal-title");
+      const title = container.querySelector(".modal__title");
       expect(title).toBeInTheDocument();
       expect(title).toHaveTextContent("Test Title");
     });
@@ -164,35 +164,35 @@ describe("Modal", () => {
   });
 
   describe("subtitle", () => {
-    it("renders modal-sub when subtitle provided", () => {
+    it("renders modal__subtitle when subtitle provided", () => {
       const { container } = render(
         <Modal open={true} onClose={vi.fn()} title="Title" subtitle="Subtitle">
           Content
         </Modal>,
       );
-      const sub = container.querySelector(".modal-sub");
+      const sub = container.querySelector(".modal__subtitle");
       expect(sub).toBeInTheDocument();
       expect(sub).toHaveTextContent("Subtitle");
     });
 
-    it("does not render modal-sub when subtitle not provided", () => {
+    it("does not render modal__subtitle when subtitle not provided", () => {
       const { container } = render(
         <Modal open={true} onClose={vi.fn()} title="Title">
           Content
         </Modal>,
       );
-      expect(container.querySelector(".modal-sub")).not.toBeInTheDocument();
+      expect(container.querySelector(".modal__subtitle")).not.toBeInTheDocument();
     });
   });
 
   describe("content", () => {
-    it("renders children in modal-body", () => {
+    it("renders children in modal__body", () => {
       const { container } = render(
         <Modal open={true} onClose={vi.fn()} title="Modal">
           <p>Modal content</p>
         </Modal>,
       );
-      const body = container.querySelector(".modal-body");
+      const body = container.querySelector(".modal__body");
       expect(body).toHaveTextContent("Modal content");
     });
 
@@ -209,22 +209,22 @@ describe("Modal", () => {
   });
 
   describe("footer", () => {
-    it("renders modal-foot when footer provided", () => {
+    it("renders modal__footer when footer provided", () => {
       const { container } = render(
         <Modal open={true} onClose={vi.fn()} title="Modal" footer={<button>Save</button>}>
           Content
         </Modal>,
       );
-      expect(container.querySelector(".modal-foot")).toBeInTheDocument();
+      expect(container.querySelector(".modal__footer")).toBeInTheDocument();
     });
 
-    it("does not render modal-foot when footer not provided", () => {
+    it("does not render modal__footer when footer not provided", () => {
       const { container } = render(
         <Modal open={true} onClose={vi.fn()} title="Modal">
           Content
         </Modal>,
       );
-      expect(container.querySelector(".modal-foot")).not.toBeInTheDocument();
+      expect(container.querySelector(".modal__footer")).not.toBeInTheDocument();
     });
 
     it("renders footer content", () => {
@@ -238,13 +238,13 @@ describe("Modal", () => {
   });
 
   describe("close button", () => {
-    it("renders close button with modal-x class", () => {
+    it("renders close button with modal__close class", () => {
       const { container } = render(
         <Modal open={true} onClose={vi.fn()} title="Modal">
           Content
         </Modal>,
       );
-      const closeBtn = container.querySelector(".modal-x");
+      const closeBtn = container.querySelector(".modal__close");
       expect(closeBtn).toBeInTheDocument();
     });
 
@@ -256,7 +256,7 @@ describe("Modal", () => {
           Content
         </Modal>,
       );
-      const closeBtn = screen.getByLabelText("Close");
+      const closeBtn = screen.getByLabelText("Close dialog");
       await user.click(closeBtn);
       expect(onClose).toHaveBeenCalled();
     });

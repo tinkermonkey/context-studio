@@ -6,6 +6,8 @@ import { cleanup } from "@testing-library/react";
 // Mock @tinkermonkey/heimdall-ui — the package bundles its own React JSX runtime
 // which accesses ReactCurrentDispatcher before React initializes in jsdom.
 vi.mock("@tinkermonkey/heimdall-ui", () => ({
+  useFocusTrap: () => {},
+  useBodyOverflow: () => {},
   Button: React.forwardRef(
     ({ variant = "primary", size = "md", className = "", children, ...props }: any, ref: any) =>
       React.createElement(
@@ -119,12 +121,17 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
           title &&
             React.createElement(
               "div",
-              { className: "modal-head" },
-              React.createElement("div", { className: "modal-head-text" }, React.createElement("div", { className: "modal-title" }, title), subtitle && React.createElement("div", { className: "modal-sub" }, subtitle)),
-              React.createElement("button", { className: "modal-x", onClick: onClose, "aria-label": "Close", type: "button" }, "✕"),
+              { className: "modal__header" },
+              React.createElement(
+                "div",
+                { className: "modal__header-text" },
+                React.createElement("div", { className: "modal__title" }, title),
+                subtitle && React.createElement("div", { className: "modal__subtitle" }, subtitle),
+              ),
+              React.createElement("button", { className: "modal__close", onClick: onClose, "aria-label": "Close dialog", type: "button" }, React.createElement("span", {}, "✕")),
             ),
-          React.createElement("div", { className: "modal-body" }, children),
-          footer && React.createElement("div", { className: "modal-foot" }, footer),
+          React.createElement("div", { className: "modal__body" }, children),
+          footer && React.createElement("div", { className: "modal__footer" }, footer),
         ),
       );
     },
@@ -158,20 +165,28 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
   Drawer: React.forwardRef(
     ({ isOpen, onClose, title, children, ...props }: any, ref: any) => {
       if (!isOpen) return null;
+      const handleBackdropClick = (e: React.MouseEvent) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      };
       return React.createElement(
-        "aside",
-        { className: "drawer", ...props, ref },
+        "div",
+        { className: "drawer-backdrop", onClick: handleBackdropClick },
         React.createElement(
           "div",
-          { className: "drawer-head" },
-          React.createElement("span", { className: "title" }, title),
-          React.createElement(
-            "div",
-            { className: "drawer-actions" },
-            React.createElement("button", { className: "modal-x", onClick: onClose, "aria-label": "Close drawer", type: "button" }, "✕"),
-          ),
+          { className: ["drawer", "drawer--right", ...props.className?.split(" ") || []]
+            .filter(Boolean)
+            .join(" "), role: "dialog", "aria-modal": "true", ref, ...props },
+          title &&
+            React.createElement(
+              "div",
+              { className: "drawer__header" },
+              React.createElement("h2", { className: "drawer__title" }, title),
+              React.createElement("button", { className: "drawer__close", onClick: onClose, "aria-label": "Close drawer", type: "button" }, React.createElement("span", {}, "✕")),
+            ),
+          React.createElement("div", { className: "drawer__body" }, children),
         ),
-        React.createElement("div", { className: "drawer-body" }, children),
       );
     },
   ),
@@ -186,6 +201,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
             .join(" "),
           ...props,
         },
+        (form === "default" || form === "env") && React.createElement("span", { className: "chip__dot" }),
         children,
       ),
   ),
@@ -238,16 +254,31 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
       ),
   ),
   StatTile: React.forwardRef(
-    ({ label, value, color = "cyan", className = "", ...props }: any, ref: any) =>
+    ({ label, value, delta, color = "cyan", className = "", ...props }: any, ref: any) =>
       React.createElement(
         "div",
         {
           ref,
-          className: ["stat", `stat--${color}`, className].filter(Boolean).join(" "),
+          className: ["stat-tile", `stat-tile--${color}`, className]
+            .filter(Boolean)
+            .join(" "),
           ...props,
         },
-        React.createElement("div", { className: "stat__label" }, label),
-        React.createElement("div", { className: "stat__value" }, value),
+        React.createElement("div", { className: "stat-tile__label" }, label),
+        React.createElement("div", { className: "stat-tile__value" }, value),
+        delta &&
+          React.createElement(
+            "div",
+            { className: "stat-tile__meta" },
+            React.createElement(
+              "span",
+              { className: `stat-tile__delta stat-tile__delta--${delta.direction || "up"}` },
+              delta.direction === "down" ? "−" : "+",
+              Math.abs(delta.value),
+            ),
+            delta.label &&
+              React.createElement("span", { className: "stat-tile__label-secondary" }, delta.label),
+          ),
       ),
   ),
   TabBar: React.forwardRef(
