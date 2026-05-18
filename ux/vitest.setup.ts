@@ -406,6 +406,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
                   type: "checkbox",
                   className: "table__checkbox",
                   checked: selectedRows.length === data.length && data.length > 0,
+                  onChange: () => {},
                 }),
               ),
             columns.map((column: any) =>
@@ -441,6 +442,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
                     type: "checkbox",
                     className: "table__checkbox",
                     checked: selectedRows.includes(rowKeyValue),
+                    onChange: () => {},
                   }),
                 ),
               columns.map((column: any) =>

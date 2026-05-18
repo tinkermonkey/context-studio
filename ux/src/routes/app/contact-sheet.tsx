@@ -19,6 +19,7 @@ import { Tabs } from "@/components/ui/Tabs";
 import { StatTile } from "@/components/ui/StatTile";
 import { StatGrid } from "@/components/ui/StatGrid";
 import { Panel } from "@/components/ui/Panel";
+import { Table } from "@tinkermonkey/heimdall-ui";
 import { useToasts } from "@/components/ui/Toast";
 import { useCanvasStore } from "@/stores/canvas";
 import { SchemaTable } from "@/components/schema/SchemaTable";
@@ -55,6 +56,13 @@ interface MockEntity {
   id: string;
   title: string;
   description?: string;
+}
+
+interface DemoTableRow {
+  name: string;
+  type: "Class" | "Individual" | "Relation";
+  status: "active" | "draft";
+  count: string;
 }
 
 export default function ContactSheet() {
@@ -253,50 +261,60 @@ export default function ContactSheet() {
       {/* ── Table ── */}
       <Section title="Table" testid="contact-sheet-table">
         <div className="table-wrap">
-          <table className="t">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Status</th>
-                <th>Count</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                { name: "PhotosyntheticOrganism", type: "Class", status: "active", count: "42" },
-                { name: "Arabidopsis thaliana", type: "Individual", status: "active", count: "—" },
-                { name: "hasSubclass", type: "Relation", status: "draft", count: "18" },
-              ].map((row) => (
-                <tr key={row.name} className="row-link">
-                  <td className="contact-sheet-table-mono">{row.name}</td>
-                  <td>
-                    <Chip
-                      color={
-                        row.type === "Class"
-                          ? "violet"
-                          : row.type === "Individual"
-                            ? "cyan"
-                            : "amber"
-                      }
-                    >
-                      {row.type}
-                    </Chip>
-                  </td>
-                  <td>
-                    <Chip color={row.status === "active" ? "emerald" : "gray"}>{row.status}</Chip>
-                  </td>
-                  <td className="contact-sheet-table-mono-col">{row.count}</td>
-                  <td>
-                    <Button variant="ghost" size="sm" title="Open">
-                      <ExternalLink size={12} />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <Table
+            columns={[
+              {
+                key: "name",
+                label: "Name",
+                render: (value) => <span className="contact-sheet-table-mono">{value}</span>,
+              },
+              {
+                key: "type",
+                label: "Type",
+                render: (value) => (
+                  <Chip
+                    color={
+                      value === "Class"
+                        ? "violet"
+                        : value === "Individual"
+                          ? "cyan"
+                          : "amber"
+                    }
+                  >
+                    {value}
+                  </Chip>
+                ),
+              },
+              {
+                key: "status",
+                label: "Status",
+                render: (value) => (
+                  <Chip color={value === "active" ? "emerald" : "gray"}>{value}</Chip>
+                ),
+              },
+              {
+                key: "count",
+                label: "Count",
+                render: (value) => <span className="contact-sheet-table-mono-col">{value}</span>,
+              },
+              {
+                key: "action",
+                label: "",
+                render: () => (
+                  <Button variant="ghost" size="sm" title="Open">
+                    <ExternalLink size={12} />
+                  </Button>
+                ),
+              },
+            ]}
+            data={[
+              { id: "1", name: "PhotosyntheticOrganism", type: "Class", status: "active", count: "42", action: null },
+              { id: "2", name: "Arabidopsis thaliana", type: "Individual", status: "active", count: "—", action: null },
+              { id: "3", name: "hasSubclass", type: "Relation", status: "draft", count: "18", action: null },
+            ]}
+            rowKey="id"
+            className="t"
+          />
         </div>
       </Section>
 

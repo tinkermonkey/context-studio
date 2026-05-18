@@ -346,7 +346,7 @@ body.dark-canvas .graph-node.selected {
   flex: none;
 }
 .graph-legend .gl-line.dashed {
-  border-top: 1.25px dashed var(--accent-rose);
+  border-top: 1.25px dashed rgb(var(--status-rose));
 }
 
 /* ============ Toolbars ============ */
