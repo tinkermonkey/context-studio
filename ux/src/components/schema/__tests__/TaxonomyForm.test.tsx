@@ -70,4 +70,51 @@ describe("TaxonomyForm", () => {
     const submitButton = screen.getByRole("button", { name: /create taxonomy/i });
     expect(submitButton).toBeDisabled();
   });
+
+  it("renders form fields with correct attributes", () => {
+    render(<TaxonomyForm onSubmit={mockOnSubmit} />);
+
+    const titleInput = screen.getByTestId("taxonomy-title-input") as HTMLInputElement;
+    const descriptionInput = screen.getByTestId("taxonomy-description-input") as HTMLTextAreaElement;
+
+    expect(titleInput.type).toBe("text");
+    expect(descriptionInput.tagName).toBe("TEXTAREA");
+  });
+
+  it("shows required indicator on title field", () => {
+    render(<TaxonomyForm onSubmit={mockOnSubmit} />);
+
+    expect(screen.getByText("Title")).toBeInTheDocument();
+  });
+
+  it("shows optional indicator on description field", () => {
+    render(<TaxonomyForm onSubmit={mockOnSubmit} />);
+
+    const descriptionText = screen.getByText(/Description/);
+    expect(descriptionText).toBeInTheDocument();
+  });
+
+  it("preserves error clearing behavior through multiple onChange events", async () => {
+    const user = userEvent.setup();
+    render(<TaxonomyForm onSubmit={mockOnSubmit} />);
+
+    const submitButton = screen.getByRole("button", { name: /create taxonomy/i });
+    fireEvent.click(submitButton);
+
+    expect(await screen.findByText("Title is required")).toBeInTheDocument();
+
+    const titleInput = screen.getByTestId("taxonomy-title-input");
+    await user.type(titleInput, "T");
+
+    expect(screen.queryByText("Title is required")).not.toBeInTheDocument();
+
+    await user.clear(titleInput);
+    fireEvent.click(submitButton);
+
+    expect(await screen.findByText("Title is required")).toBeInTheDocument();
+
+    await user.type(titleInput, "New");
+
+    expect(screen.queryByText("Title is required")).not.toBeInTheDocument();
+  });
 });

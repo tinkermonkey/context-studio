@@ -158,4 +158,59 @@ describe("RelationshipForm", () => {
     const submitButton = screen.getByTestId("relationship-submit-button");
     expect(submitButton).toBeDisabled();
   });
+
+  it("renders select fields with correct structure", () => {
+    const { container } = render(
+      <RelationshipForm
+        onSubmit={mockOnSubmit}
+        classes={mockClasses}
+        properties={mockProperties}
+      />,
+    );
+
+    const selects = container.querySelectorAll("select");
+    expect(selects.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("clears source error on onChange after validation failure", async () => {
+    const user = userEvent.setup();
+    render(
+      <RelationshipForm
+        onSubmit={mockOnSubmit}
+        classes={mockClasses}
+        properties={mockProperties}
+      />,
+    );
+
+    const submitButton = screen.getByTestId("relationship-submit-button");
+    fireEvent.click(submitButton);
+
+    expect(await screen.findByText("Source class is required")).toBeInTheDocument();
+
+    const sourceSelect = screen.getByTestId("relationship-source-select");
+    await user.selectOptions(sourceSelect, "class-1");
+
+    expect(screen.queryByText("Source class is required")).not.toBeInTheDocument();
+  });
+
+  it("preserves other field errors when one field is corrected", async () => {
+    const user = userEvent.setup();
+    render(
+      <RelationshipForm
+        onSubmit={mockOnSubmit}
+        classes={mockClasses}
+        properties={mockProperties}
+      />,
+    );
+
+    const submitButton = screen.getByTestId("relationship-submit-button");
+    fireEvent.click(submitButton);
+
+    expect(await screen.findByText("Source class is required")).toBeInTheDocument();
+
+    const sourceSelect = screen.getByTestId("relationship-source-select");
+    await user.selectOptions(sourceSelect, "class-1");
+
+    expect(await screen.findByText("Target class is required")).toBeInTheDocument();
+  });
 });

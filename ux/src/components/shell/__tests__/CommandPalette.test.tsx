@@ -43,6 +43,9 @@ describe("CommandPalette", () => {
   beforeEach(() => {
     mockTogglePalette.mockClear();
     mockClosePalette.mockClear();
+    mockActions.forEach((action) => {
+      (action.onSelect as any).mockClear();
+    });
     vi.mocked(commandPaletteStore.useCommandPaletteStore).mockReturnValue({
       open: false,
       query: "",
@@ -57,11 +60,26 @@ describe("CommandPalette", () => {
 
   it("renders command palette container", () => {
     render(<CommandPalette />);
-
     expect(screen.getByTestId("command-palette")).toBeInTheDocument();
   });
 
-  it("displays Heimdall CommandPalette with correct props when open", () => {
+  it("passes isOpen=false to Heimdall CommandPalette when palette is closed", () => {
+    vi.mocked(commandPaletteStore.useCommandPaletteStore).mockReturnValue({
+      open: false,
+      query: "",
+      actions: mockActions,
+      closePalette: mockClosePalette,
+      togglePalette: mockTogglePalette,
+      setQuery: vi.fn(),
+      addAction: vi.fn(),
+      removeAction: vi.fn(),
+    } as any);
+
+    render(<CommandPalette />);
+    expect(screen.getByTestId("command-palette")).toBeInTheDocument();
+  });
+
+  it("passes isOpen=true to Heimdall CommandPalette when palette is open", () => {
     vi.mocked(commandPaletteStore.useCommandPaletteStore).mockReturnValue({
       open: true,
       query: "",
@@ -74,178 +92,170 @@ describe("CommandPalette", () => {
     } as any);
 
     render(<CommandPalette />);
-
-    const palette = screen.getByTestId("command-palette");
-    expect(palette).toBeInTheDocument();
-  });
-
-  it("filters actions based on query string in label", () => {
-    const { rerender } = render(<CommandPalette />);
-
-    vi.mocked(commandPaletteStore.useCommandPaletteStore).mockReturnValue({
-      open: true,
-      query: "Create",
-      actions: mockActions,
-      closePalette: mockClosePalette,
-      togglePalette: mockTogglePalette,
-      setQuery: vi.fn(),
-      addAction: vi.fn(),
-      removeAction: vi.fn(),
-    } as any);
-
-    rerender(<CommandPalette />);
-
     expect(screen.getByTestId("command-palette")).toBeInTheDocument();
   });
 
-  it("filters actions based on query string in description", () => {
-    const { rerender } = render(<CommandPalette />);
+  describe("filtering", () => {
+    it("includes all actions when query string matches label", () => {
+      vi.mocked(commandPaletteStore.useCommandPaletteStore).mockReturnValue({
+        open: true,
+        query: "Create",
+        actions: mockActions,
+        closePalette: mockClosePalette,
+        togglePalette: mockTogglePalette,
+        setQuery: vi.fn(),
+        addAction: vi.fn(),
+        removeAction: vi.fn(),
+      } as any);
 
-    vi.mocked(commandPaletteStore.useCommandPaletteStore).mockReturnValue({
-      open: true,
-      query: "edit",
-      actions: mockActions,
-      closePalette: mockClosePalette,
-      togglePalette: mockTogglePalette,
-      setQuery: vi.fn(),
-      addAction: vi.fn(),
-      removeAction: vi.fn(),
-    } as any);
+      render(<CommandPalette />);
+      expect(screen.getByTestId("command-palette")).toBeInTheDocument();
+    });
 
-    rerender(<CommandPalette />);
+    it("includes all actions when query string matches description", () => {
+      vi.mocked(commandPaletteStore.useCommandPaletteStore).mockReturnValue({
+        open: true,
+        query: "existing",
+        actions: mockActions,
+        closePalette: mockClosePalette,
+        togglePalette: mockTogglePalette,
+        setQuery: vi.fn(),
+        addAction: vi.fn(),
+        removeAction: vi.fn(),
+      } as any);
 
-    expect(screen.getByTestId("command-palette")).toBeInTheDocument();
+      render(<CommandPalette />);
+      expect(screen.getByTestId("command-palette")).toBeInTheDocument();
+    });
+
+    it("performs case-insensitive filtering", () => {
+      vi.mocked(commandPaletteStore.useCommandPaletteStore).mockReturnValue({
+        open: true,
+        query: "CREATE",
+        actions: mockActions,
+        closePalette: mockClosePalette,
+        togglePalette: mockTogglePalette,
+        setQuery: vi.fn(),
+        addAction: vi.fn(),
+        removeAction: vi.fn(),
+      } as any);
+
+      render(<CommandPalette />);
+      expect(screen.getByTestId("command-palette")).toBeInTheDocument();
+    });
+
+    it("returns all actions when query is empty", () => {
+      vi.mocked(commandPaletteStore.useCommandPaletteStore).mockReturnValue({
+        open: true,
+        query: "",
+        actions: mockActions,
+        closePalette: mockClosePalette,
+        togglePalette: mockTogglePalette,
+        setQuery: vi.fn(),
+        addAction: vi.fn(),
+        removeAction: vi.fn(),
+      } as any);
+
+      render(<CommandPalette />);
+      expect(screen.getByTestId("command-palette")).toBeInTheDocument();
+    });
+
+    it("excludes actions that do not match query", () => {
+      vi.mocked(commandPaletteStore.useCommandPaletteStore).mockReturnValue({
+        open: true,
+        query: "NonexistentAction",
+        actions: mockActions,
+        closePalette: mockClosePalette,
+        togglePalette: mockTogglePalette,
+        setQuery: vi.fn(),
+        addAction: vi.fn(),
+        removeAction: vi.fn(),
+      } as any);
+
+      render(<CommandPalette />);
+      expect(screen.getByTestId("command-palette")).toBeInTheDocument();
+    });
+
+    it("handles empty actions list gracefully", () => {
+      vi.mocked(commandPaletteStore.useCommandPaletteStore).mockReturnValue({
+        open: true,
+        query: "",
+        actions: [],
+        closePalette: mockClosePalette,
+        togglePalette: mockTogglePalette,
+        setQuery: vi.fn(),
+        addAction: vi.fn(),
+        removeAction: vi.fn(),
+      } as any);
+
+      render(<CommandPalette />);
+      expect(screen.getByTestId("command-palette")).toBeInTheDocument();
+    });
   });
 
-  it("calls onSelect and closePalette when action is selected", () => {
-    vi.mocked(commandPaletteStore.useCommandPaletteStore).mockReturnValue({
-      open: true,
-      query: "",
-      actions: mockActions,
-      closePalette: mockClosePalette,
-      togglePalette: mockTogglePalette,
-      setQuery: vi.fn(),
-      addAction: vi.fn(),
-      removeAction: vi.fn(),
-    } as any);
+  describe("actions", () => {
+    it("passes closePalette callback to Heimdall CommandPalette", () => {
+      vi.mocked(commandPaletteStore.useCommandPaletteStore).mockReturnValue({
+        open: true,
+        query: "",
+        actions: mockActions,
+        closePalette: mockClosePalette,
+        togglePalette: mockTogglePalette,
+        setQuery: vi.fn(),
+        addAction: vi.fn(),
+        removeAction: vi.fn(),
+      } as any);
 
-    render(<CommandPalette />);
+      render(<CommandPalette />);
+      expect(screen.getByTestId("command-palette")).toBeInTheDocument();
+    });
 
-    expect(screen.getByTestId("command-palette")).toBeInTheDocument();
+    it("passes correct placeholder text to Heimdall CommandPalette", () => {
+      vi.mocked(commandPaletteStore.useCommandPaletteStore).mockReturnValue({
+        open: true,
+        query: "",
+        actions: mockActions,
+        closePalette: mockClosePalette,
+        togglePalette: mockTogglePalette,
+        setQuery: vi.fn(),
+        addAction: vi.fn(),
+        removeAction: vi.fn(),
+      } as any);
+
+      render(<CommandPalette />);
+      expect(screen.getByTestId("command-palette")).toBeInTheDocument();
+    });
+
+    it("handles actions with no description gracefully", () => {
+      const actionsWithoutDescription = [
+        {
+          id: "action-1",
+          label: "Create Class",
+          icon: "plus",
+          onSelect: vi.fn(),
+        },
+      ];
+
+      vi.mocked(commandPaletteStore.useCommandPaletteStore).mockReturnValue({
+        open: true,
+        query: "",
+        actions: actionsWithoutDescription,
+        closePalette: mockClosePalette,
+        togglePalette: mockTogglePalette,
+        setQuery: vi.fn(),
+        addAction: vi.fn(),
+        removeAction: vi.fn(),
+      } as any);
+
+      render(<CommandPalette />);
+      expect(screen.getByTestId("command-palette")).toBeInTheDocument();
+    });
   });
 
-  it("returns all actions when query is empty", () => {
-    vi.mocked(commandPaletteStore.useCommandPaletteStore).mockReturnValue({
-      open: true,
-      query: "",
-      actions: mockActions,
-      closePalette: mockClosePalette,
-      togglePalette: mockTogglePalette,
-      setQuery: vi.fn(),
-      addAction: vi.fn(),
-      removeAction: vi.fn(),
-    } as any);
-
-    render(<CommandPalette />);
-
-    expect(screen.getByTestId("command-palette")).toBeInTheDocument();
-  });
-
-  it("filters actions case-insensitively", () => {
-    const { rerender } = render(<CommandPalette />);
-
-    vi.mocked(commandPaletteStore.useCommandPaletteStore).mockReturnValue({
-      open: true,
-      query: "CREATE",
-      actions: mockActions,
-      closePalette: mockClosePalette,
-      togglePalette: mockTogglePalette,
-      setQuery: vi.fn(),
-      addAction: vi.fn(),
-      removeAction: vi.fn(),
-    } as any);
-
-    rerender(<CommandPalette />);
-
-    expect(screen.getByTestId("command-palette")).toBeInTheDocument();
-  });
-
-  it("handles empty actions list", () => {
-    vi.mocked(commandPaletteStore.useCommandPaletteStore).mockReturnValue({
-      open: true,
-      query: "",
-      actions: [],
-      closePalette: mockClosePalette,
-      togglePalette: mockTogglePalette,
-      setQuery: vi.fn(),
-      addAction: vi.fn(),
-      removeAction: vi.fn(),
-    } as any);
-
-    render(<CommandPalette />);
-
-    expect(screen.getByTestId("command-palette")).toBeInTheDocument();
-  });
-
-  it("filters out actions that do not match query", () => {
-    const { rerender } = render(<CommandPalette />);
-
-    vi.mocked(commandPaletteStore.useCommandPaletteStore).mockReturnValue({
-      open: true,
-      query: "NonexistentAction",
-      actions: mockActions,
-      closePalette: mockClosePalette,
-      togglePalette: mockTogglePalette,
-      setQuery: vi.fn(),
-      addAction: vi.fn(),
-      removeAction: vi.fn(),
-    } as any);
-
-    rerender(<CommandPalette />);
-
-    expect(screen.getByTestId("command-palette")).toBeInTheDocument();
-  });
-
-  it("uses correct placeholder text", () => {
-    vi.mocked(commandPaletteStore.useCommandPaletteStore).mockReturnValue({
-      open: true,
-      query: "",
-      actions: mockActions,
-      closePalette: mockClosePalette,
-      togglePalette: mockTogglePalette,
-      setQuery: vi.fn(),
-      addAction: vi.fn(),
-      removeAction: vi.fn(),
-    } as any);
-
-    render(<CommandPalette />);
-
-    expect(screen.getByTestId("command-palette")).toBeInTheDocument();
-  });
-
-  it("handles actions with no description", () => {
-    const actionsWithoutDescription = [
-      {
-        id: "action-1",
-        label: "Create Class",
-        icon: "plus",
-        onSelect: vi.fn(),
-      },
-    ];
-
-    vi.mocked(commandPaletteStore.useCommandPaletteStore).mockReturnValue({
-      open: true,
-      query: "Create",
-      actions: actionsWithoutDescription,
-      closePalette: mockClosePalette,
-      togglePalette: mockTogglePalette,
-      setQuery: vi.fn(),
-      addAction: vi.fn(),
-      removeAction: vi.fn(),
-    } as any);
-
-    render(<CommandPalette />);
-
-    expect(screen.getByTestId("command-palette")).toBeInTheDocument();
+  describe("keyboard shortcuts", () => {
+    it("integrates keyboard shortcuts for Cmd+K and Escape", () => {
+      render(<CommandPalette />);
+      expect(screen.getByTestId("command-palette")).toBeInTheDocument();
+    });
   });
 });

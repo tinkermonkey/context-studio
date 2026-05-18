@@ -158,4 +158,76 @@ describe("PropertyDefinitionForm", () => {
     const submitButton = screen.getByTestId("property-definition-submit-button");
     expect(submitButton).toBeDisabled();
   });
+
+  it("renders form with proper field structure and attributes", () => {
+    render(<PropertyDefinitionForm onSubmit={mockOnSubmit} />);
+
+    const identifierInput = screen.getByTestId("property-definition-identifier-input") as HTMLInputElement;
+    const titleInput = screen.getByTestId("property-definition-title-input") as HTMLInputElement;
+
+    expect(identifierInput.type).toBe("text");
+    expect(titleInput.type).toBe("text");
+  });
+
+  it("validates identifier format with specific error messages", async () => {
+    const user = userEvent.setup();
+    render(<PropertyDefinitionForm onSubmit={mockOnSubmit} />);
+
+    const identifierInput = screen.getByTestId("property-definition-identifier-input");
+    const submitButton = screen.getByTestId("property-definition-submit-button");
+
+    await user.type(identifierInput, "Invalid-ID");
+    fireEvent.click(submitButton);
+
+    expect(await screen.findByText("Identifier must be lowercase with underscores only")).toBeInTheDocument();
+  });
+
+  it("clears identifier error on onChange after failed validation", async () => {
+    const user = userEvent.setup();
+    render(<PropertyDefinitionForm onSubmit={mockOnSubmit} />);
+
+    const submitButton = screen.getByTestId("property-definition-submit-button");
+    fireEvent.click(submitButton);
+
+    expect(await screen.findByText("Identifier is required")).toBeInTheDocument();
+
+    const identifierInput = screen.getByTestId("property-definition-identifier-input");
+    await user.type(identifierInput, "valid_id");
+
+    expect(screen.queryByText("Identifier is required")).not.toBeInTheDocument();
+  });
+
+  it("clears title error on onChange after failed validation", async () => {
+    const user = userEvent.setup();
+    render(<PropertyDefinitionForm onSubmit={mockOnSubmit} />);
+
+    const identifierInput = screen.getByTestId("property-definition-identifier-input");
+    await user.type(identifierInput, "valid_id");
+
+    const submitButton = screen.getByTestId("property-definition-submit-button");
+    fireEvent.click(submitButton);
+
+    expect(await screen.findByText("Title is required")).toBeInTheDocument();
+
+    const titleInput = screen.getByTestId("property-definition-title-input");
+    await user.type(titleInput, "Title");
+
+    expect(screen.queryByText("Title is required")).not.toBeInTheDocument();
+  });
+
+  it("disables identifier field when editing existing property", () => {
+    const initialData: components["schemas"]["PropertyDefinitionResponse"] = {
+      id: "prop-1",
+      identifier: "existing_id",
+      title: "Existing",
+      description: "",
+      created_at: "",
+      updated_at: "",
+    };
+
+    render(<PropertyDefinitionForm initialData={initialData} onSubmit={mockOnSubmit} />);
+
+    const identifierInput = screen.getByTestId("property-definition-identifier-input") as HTMLInputElement;
+    expect(identifierInput.disabled).toBe(true);
+  });
 });

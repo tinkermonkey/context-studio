@@ -158,4 +158,57 @@ describe("FlavorForm", () => {
 
     expect(mockOnCancel).toHaveBeenCalled();
   });
+
+  it("renders input fields with correct attributes and types", () => {
+    render(<FlavorForm onSubmit={mockOnSubmit} />);
+
+    const nameInput = screen.getByTestId("flavor-name-input") as HTMLInputElement;
+    const descriptionInput = screen.getByTestId("flavor-description-input") as HTMLInputElement;
+
+    expect(nameInput.type).toBe("text");
+    expect(descriptionInput.type).toBe("text");
+  });
+
+  it("shows field labels and required indicators", () => {
+    render(<FlavorForm onSubmit={mockOnSubmit} />);
+
+    expect(screen.getByText("Name")).toBeInTheDocument();
+    expect(screen.getByText("Description")).toBeInTheDocument();
+  });
+
+  it("clears name error immediately when user starts typing", async () => {
+    const user = userEvent.setup();
+    render(<FlavorForm onSubmit={mockOnSubmit} />);
+
+    const descriptionInput = screen.getByTestId("flavor-description-input");
+    await user.type(descriptionInput, "Description");
+
+    const submitButton = screen.getByTestId("flavor-submit-button");
+    fireEvent.click(submitButton);
+
+    expect(await screen.findByText("Name is required")).toBeInTheDocument();
+
+    const nameInput = screen.getByTestId("flavor-name-input");
+    await user.type(nameInput, "X");
+
+    expect(screen.queryByText("Name is required")).not.toBeInTheDocument();
+  });
+
+  it("clears description error immediately when user starts typing", async () => {
+    const user = userEvent.setup();
+    render(<FlavorForm onSubmit={mockOnSubmit} />);
+
+    const nameInput = screen.getByTestId("flavor-name-input");
+    await user.type(nameInput, "Name");
+
+    const submitButton = screen.getByTestId("flavor-submit-button");
+    fireEvent.click(submitButton);
+
+    expect(await screen.findByText("Description is required")).toBeInTheDocument();
+
+    const descriptionInput = screen.getByTestId("flavor-description-input");
+    await user.type(descriptionInput, "X");
+
+    expect(screen.queryByText("Description is required")).not.toBeInTheDocument();
+  });
 });

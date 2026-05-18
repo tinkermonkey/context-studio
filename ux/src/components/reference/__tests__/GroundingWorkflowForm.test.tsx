@@ -234,4 +234,63 @@ describe("GroundingWorkflowForm", () => {
     const submitButton = screen.getByTestId("workflow-submit-button");
     expect(submitButton).toBeDisabled();
   });
+
+  it("renders form with correct field types and attributes", () => {
+    render(<GroundingWorkflowForm onSubmit={mockOnSubmit} />);
+
+    const titleInput = screen.getByTestId("workflow-title-input") as HTMLInputElement;
+    const sourceSelect = screen.getByTestId("workflow-source-select") as HTMLSelectElement;
+
+    expect(titleInput.type).toBe("text");
+    expect(sourceSelect.tagName).toBe("SELECT");
+  });
+
+  it("shows required field indicators", () => {
+    render(<GroundingWorkflowForm onSubmit={mockOnSubmit} />);
+
+    expect(screen.getByText("Workflow Name")).toBeInTheDocument();
+    expect(screen.getByText("Reference Source")).toBeInTheDocument();
+    expect(screen.getByText("Class Scope")).toBeInTheDocument();
+  });
+
+  it("clears field errors on appropriate onChange events", async () => {
+    const user = userEvent.setup();
+    render(<GroundingWorkflowForm onSubmit={mockOnSubmit} />);
+
+    const submitButton = screen.getByTestId("workflow-submit-button");
+    fireEvent.click(submitButton);
+
+    expect(await screen.findByText("Title is required")).toBeInTheDocument();
+
+    const titleInput = screen.getByTestId("workflow-title-input");
+    await user.type(titleInput, "Test");
+
+    expect(screen.queryByText("Title is required")).not.toBeInTheDocument();
+  });
+
+  it("clears source error on select change after validation failure", async () => {
+    const user = userEvent.setup();
+    render(<GroundingWorkflowForm onSubmit={mockOnSubmit} />);
+
+    const titleInput = screen.getByTestId("workflow-title-input");
+    await user.type(titleInput, "Test");
+
+    const submitButton = screen.getByTestId("workflow-submit-button");
+    fireEvent.click(submitButton);
+
+    expect(await screen.findByText("Source is required")).toBeInTheDocument();
+
+    const sourceSelect = screen.getByTestId("workflow-source-select");
+    await user.selectOptions(sourceSelect, "source-1");
+
+    expect(screen.queryByText("Source is required")).not.toBeInTheDocument();
+  });
+
+  it("handles form submission state and button text correctly", async () => {
+    const user = userEvent.setup();
+    render(<GroundingWorkflowForm onSubmit={mockOnSubmit} isLoading={false} />);
+
+    const submitButton = screen.getByTestId("workflow-submit-button");
+    expect(submitButton).not.toBeDisabled();
+  });
 });

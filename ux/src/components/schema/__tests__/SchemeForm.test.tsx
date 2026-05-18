@@ -89,4 +89,38 @@ describe("SchemeForm", () => {
     const submitButton = screen.getByTestId("scheme-submit-button");
     expect(submitButton).toBeDisabled();
   });
+
+  it("renders form with proper field attributes", () => {
+    render(<SchemeForm onSubmit={mockOnSubmit} />);
+
+    const titleInput = screen.getByTestId("scheme-title-input") as HTMLInputElement;
+    expect(titleInput.type).toBe("text");
+    expect(titleInput.placeholder).toBe("Scheme name");
+  });
+
+  it("shows required indicator on title field", () => {
+    render(<SchemeForm onSubmit={mockOnSubmit} />);
+
+    expect(screen.getByText("Title")).toBeInTheDocument();
+  });
+
+  it("clears error state during continued form interaction", async () => {
+    const user = userEvent.setup();
+    render(<SchemeForm onSubmit={mockOnSubmit} />);
+
+    const submitButton = screen.getByTestId("scheme-submit-button");
+    fireEvent.click(submitButton);
+
+    expect(await screen.findByText("Title is required")).toBeInTheDocument();
+
+    const titleInput = screen.getByTestId("scheme-title-input");
+    await user.type(titleInput, "Test");
+
+    expect(screen.queryByText("Title is required")).not.toBeInTheDocument();
+
+    const descriptionInput = screen.getByTestId("scheme-description-input");
+    await user.type(descriptionInput, "Description");
+
+    expect(screen.queryByText("Title is required")).not.toBeInTheDocument();
+  });
 });

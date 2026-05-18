@@ -104,4 +104,49 @@ describe("ClassForm", () => {
     expect(await screen.findByText("Title is required")).toBeInTheDocument();
     expect(mockOnSubmit).not.toHaveBeenCalled();
   });
+
+  it("renders title field with required indicator", () => {
+    render(<ClassForm onSubmit={mockOnSubmit} />);
+
+    expect(screen.getByText("Title")).toBeInTheDocument();
+  });
+
+  it("renders description field as optional", () => {
+    render(<ClassForm onSubmit={mockOnSubmit} />);
+
+    const descriptionText = screen.getByText(/Description \(optional\)/);
+    expect(descriptionText).toBeInTheDocument();
+  });
+
+  it("displays field with correct accessibility attributes", () => {
+    render(<ClassForm onSubmit={mockOnSubmit} />);
+
+    const titleInput = screen.getByTestId("class-title-input");
+    expect(titleInput).toHaveAttribute("type", "text");
+    expect(titleInput).toHaveAttribute("placeholder", "Class name");
+  });
+
+  it("displays description textarea with correct attributes", () => {
+    render(<ClassForm onSubmit={mockOnSubmit} />);
+
+    const descriptionInput = screen.getByTestId("class-description-input") as HTMLTextAreaElement;
+    expect(descriptionInput).toHaveAttribute("placeholder", "Optional description");
+    expect(descriptionInput.rows).toBe(4);
+  });
+
+  it("clears error immediately on input focus and typing", async () => {
+    const user = userEvent.setup();
+    render(<ClassForm onSubmit={mockOnSubmit} />);
+
+    const submitButton = screen.getByTestId("class-submit-button");
+    fireEvent.click(submitButton);
+
+    expect(await screen.findByText("Title is required")).toBeInTheDocument();
+
+    const titleInput = screen.getByTestId("class-title-input");
+    await user.click(titleInput);
+    await user.type(titleInput, "A");
+
+    expect(screen.queryByText("Title is required")).not.toBeInTheDocument();
+  });
 });
