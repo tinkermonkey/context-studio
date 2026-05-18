@@ -64,13 +64,6 @@ interface ToastProps {
   onDismiss: (id: string) => void;
 }
 
-const variantMap: Record<ToastType, ToastVariant> = {
-  success: "success",
-  error: "error",
-  warning: "warning",
-  info: "info",
-};
-
 function Toast({ item, onDismiss }: ToastProps) {
   return (
     <div data-testid={`toast-${item.id}`} className="toast-wrapper">
@@ -79,7 +72,7 @@ function Toast({ item, onDismiss }: ToastProps) {
         onClose={() => onDismiss(item.id)}
         title={item.title}
         subtitle={item.sub}
-        variant={variantMap[item.type]}
+        variant={item.type as ToastVariant}
         duration={0}
         data-testid={`toast-content-${item.id}`}
       />

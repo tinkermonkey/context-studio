@@ -904,6 +904,12 @@ select.input {
   pointer-events: none;
   max-width: 380px;
 }
+.toast-wrapper {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
 .toast {
   pointer-events: auto;
   display: flex;
