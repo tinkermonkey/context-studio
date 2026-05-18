@@ -1,0 +1,41 @@
+/* =========================================================================
+   Context Studio — Application-Level Overrides
+   Accent color, domain taxonomy tokens, and layout utilities
+   ========================================================================= */
+
+:root {
+  /* Accent color override: cyan (#22d3ee = rgb(34, 211, 238)) */
+  --accent-primary: 34 211 238;
+
+  /* Domain taxonomy colors (used for classes, taxonomies, pipelines) */
+  --dom-life: #34d399;
+  --dom-climate: #fbbf24;
+  --dom-software: #818cf8;
+  --dom-default: #22d3ee;
+}
+
+/* ============ Layout utilities ============ */
+.canvas-inner {
+  padding: 28px 32px;
+  max-width: 1440px;
+}
+
+.split-2 {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 16px;
+  align-items: start;
+}
+
+.split-3 {
+  display: grid;
+  grid-template-columns: 220px 1fr 320px;
+  gap: 0;
+  height: 100%;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
