@@ -84,6 +84,8 @@ a {
   flex: 1;
   overflow: hidden;
   background: var(--canvas-bg);
+  color: var(--canvas-fg-1);
+  position: relative;
   min-height: 0;
 }
 
@@ -218,7 +220,6 @@ a {
   padding: 1px 5px;
   border-radius: 3px;
 }
-
 
 /* ------------ Sidebar ------------ */
 .shell-rail {
@@ -493,7 +494,6 @@ a {
   display: none;
 }
 
-
 /* ------------ Topbar ------------ */
 .topbar {
   height: 52px;
@@ -645,15 +645,6 @@ a {
   background: var(--accent-cyan);
 }
 
-/* ------------ Canvas ------------ */
-.canvas-area {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-  background: var(--canvas-bg);
-  color: var(--canvas-fg-1);
-  position: relative;
-}
 .canvas-scroll {
   overflow: auto;
   height: 100%;
@@ -2381,9 +2372,6 @@ body.dark-canvas .input {
 body.dark-canvas .input:focus {
   border-color: var(--accent-cyan);
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent-cyan) 15%, transparent);
-}
-body.dark-canvas .canvas-area::-webkit-scrollbar-thumb {
-  background: var(--canvas-bd-2);
 }
 body.dark-canvas .topbar {
   background: var(--shell-bg);
