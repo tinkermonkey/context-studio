@@ -89,30 +89,54 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps = {}) {
   }
 
   function getActiveItemId(): string | undefined {
+    // Collect all matching candidates with their path lengths
+    const candidates: Array<{ id: string; path: string }> = [];
+
     for (const item of NAV_TREE) {
       if ("path" in item && item.path && isRouteMatch(pathname, item.path)) {
-        return item.id;
+        candidates.push({ id: item.id, path: item.path });
       }
       if ("children" in item) {
-        const child = item.children.find((c) => isRouteMatch(pathname, c.path));
-        if (child) {
-          return child.id;
+        for (const child of item.children) {
+          if (isRouteMatch(pathname, child.path)) {
+            candidates.push({ id: child.id, path: child.path });
+          }
         }
       }
     }
-    return undefined;
+
+    // Return the longest matching path (most specific match)
+    if (candidates.length === 0) return undefined;
+    const longest = candidates.reduce((a, b) =>
+      a.path.length > b.path.length ? a : b
+    );
+    return longest.id;
   }
 
   function getActiveGroupId(): string | undefined {
+    // Collect all matching group candidates with their longest child path
+    const candidates: Array<{ groupId: string; maxChildLength: number }> = [];
+
     for (const item of NAV_TREE) {
       if ("children" in item) {
-        const child = item.children.find((c) => isRouteMatch(pathname, c.path));
-        if (child) {
-          return item.id;
+        for (const child of item.children) {
+          if (isRouteMatch(pathname, child.path)) {
+            candidates.push({
+              groupId: item.id,
+              maxChildLength: child.path.length,
+            });
+            break; // Only need one match per group to determine if it's active
+          }
         }
       }
     }
-    return undefined;
+
+    // Return the group with the longest matching child path
+    if (candidates.length === 0) return undefined;
+    const longest = candidates.reduce((a, b) =>
+      a.maxChildLength > b.maxChildLength ? a : b
+    );
+    return longest.groupId;
   }
 
   const activeItemId = getActiveItemId();

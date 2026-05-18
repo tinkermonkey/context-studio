@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { fireEvent, screen } from "@testing-library/react";
 import { render } from "@/test/test-utils";
 import { Sidebar } from "@/components/shell/Sidebar";
@@ -50,64 +50,73 @@ describe("Sidebar", () => {
     it("only Dashboard is active when pathname is exactly /app", () => {
       setMockPathname("/app");
       render(<Sidebar />);
-      // Dashboard should exist and be in a top-level nav-section
       const dashboardItem = screen.getByTestId("sidebar-item-dashboard");
-      expect(dashboardItem.parentElement?.className).toBe("nav-section");
+      expect(dashboardItem).toHaveAttribute("aria-current", "page");
+      // Ensure other top-level items are not active
+      expect(screen.getByTestId("sidebar-item-settings")).not.toHaveAttribute(
+        "aria-current",
+        "page"
+      );
     });
 
     it("does not activate Dashboard when pathname is /app/schema/classes", () => {
       setMockPathname("/app/schema/classes");
       render(<Sidebar />);
-      // Schema group and Classes child should both render
-      expect(screen.getByTestId("sidebar-item-schema")).toBeTruthy();
-      expect(screen.getByTestId("sidebar-item-classes")).toBeTruthy();
-      // Classes should be inside a nav-sub (indicating group is expanded for active child)
+      const dashboardItem = screen.getByTestId("sidebar-item-dashboard");
       const classesItem = screen.getByTestId("sidebar-item-classes");
-      expect(classesItem.closest(".nav-sub")).toBeTruthy();
+      // Dashboard should NOT be active
+      expect(dashboardItem).not.toHaveAttribute("aria-current", "page");
+      // Classes should be the active child
+      expect(classesItem).toHaveAttribute("aria-current", "page");
     });
 
     it("renders correct child when navigating to /app/schema/classes", () => {
       setMockPathname("/app/schema/classes");
       render(<Sidebar />);
-      // Classes child should be rendered in the nav-sub container
       const classesItem = screen.getByTestId("sidebar-item-classes");
-      expect(classesItem.closest(".nav-section .nav-sub")).toBeTruthy();
+      // Classes child should be rendered in the nav-sub container
+      expect(classesItem.closest(".nav-sub")).toBeTruthy();
+      // Classes should be marked as active
+      expect(classesItem).toHaveAttribute("aria-current", "page");
     });
 
     it("renders correct child when navigating to /app/schema/classes with UUID suffix", () => {
       setMockPathname("/app/schema/classes/550e8400-e29b-41d4-a716-446655440000");
       render(<Sidebar />);
-      // Classes should still be active for the detail view
       const classesItem = screen.getByTestId("sidebar-item-classes");
-      expect(classesItem).toBeTruthy();
+      // Classes should still be active for the detail view
+      expect(classesItem).toHaveAttribute("aria-current", "page");
       expect(classesItem.closest(".nav-sub")).toBeTruthy();
     });
 
     it("expands Data group and shows Individuals as active for /app/data/individuals", () => {
       setMockPathname("/app/data/individuals");
       render(<Sidebar />);
-      // Data group and Individuals child should render
       const dataGroup = screen.getByTestId("sidebar-item-data");
       const individualsItem = screen.getByTestId("sidebar-item-individuals");
-      expect(dataGroup).toBeTruthy();
-      expect(individualsItem).toBeTruthy();
+      // Data group should be active
+      expect(dataGroup).toHaveAttribute("aria-current", "page");
+      // Individuals should be the active child
+      expect(individualsItem).toHaveAttribute("aria-current", "page");
       expect(individualsItem.closest(".nav-sub")).toBeTruthy();
     });
 
     it("activates Settings when pathname is /app/settings", () => {
       setMockPathname("/app/settings");
       render(<Sidebar />);
-      // Settings should exist as a top-level item
       const settingsItem = screen.getByTestId("sidebar-item-settings");
-      expect(settingsItem.parentElement?.className).toBe("nav-section");
+      // Settings should be marked as active
+      expect(settingsItem).toHaveAttribute("aria-current", "page");
     });
 
     it("activates correct pipeline child for nested route /app/pipelines/runs/id", () => {
       setMockPathname("/app/pipelines/runs/some-id");
       render(<Sidebar />);
-      // Pipelines group and pipelines-runs child should render
       const pipelineRunsItem = screen.getByTestId("sidebar-item-pipelines-runs");
-      expect(pipelineRunsItem).toBeTruthy();
+      const pipelinesAllItem = screen.getByTestId("sidebar-item-pipelines-all");
+      // Run history should be the active child, not All pipelines
+      expect(pipelineRunsItem).toHaveAttribute("aria-current", "page");
+      expect(pipelinesAllItem).not.toHaveAttribute("aria-current", "page");
       expect(pipelineRunsItem.closest(".nav-sub")).toBeTruthy();
     });
   });

@@ -399,8 +399,16 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
     React.createElement("div", { "data-testid": "heimdall-command-palette" }, children),
   Icon: ({ name, ...props }: any) =>
     React.createElement("span", { "data-icon": name, ...props }, name),
-  NavItem: ({ _icon, label, ...props }: any) =>
-    React.createElement("div", { className: "nav-item", ...props }, label),
+  NavItem: ({ _icon, label, active = false, ...props }: any) =>
+    React.createElement(
+      "div",
+      {
+        className: ["nav-item", active && "nav-item--active"].filter(Boolean).join(" "),
+        "aria-current": active ? "page" : undefined,
+        ...props,
+      },
+      label,
+    ),
   Field: React.forwardRef(
     ({ label, required = false, error, hint, children, className = "", ...props }: any, ref: any) =>
       React.createElement(
