@@ -119,13 +119,13 @@ function AppShell() {
   }, [registerActions, unregisterActions]);
 
   return (
-    <div className="desktop-frame">
+    <div className="shell-layout">
       <Titlebar />
-      <div className={`app-shell ${collapsed ? "collapsed" : ""}`}>
+      <div className="shell-layout__main">
         <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((v) => !v)} />
-        <div className="workspace">
+        <div className="shell-layout__content">
           <Topbar />
-          <div className="canvas-area">
+          <div className="shell-layout__canvas">
             <div className="canvas-scroll">
               <div className="canvas-inner">
                 <ErrorBoundary>
