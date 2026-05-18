@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { createFileRoute, Outlet, useNavigate, redirect } from "@tanstack/react-router";
+import { ShellLayout } from "@tinkermonkey/heimdall-ui";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { useCommandPaletteActions } from "@/hooks/useCommandPaletteActions";
 import { createStaticPaletteActions } from "@/config/staticPaletteActions";
@@ -120,17 +121,21 @@ function AppShell() {
   return (
     <div className="desktop-frame">
       <Titlebar />
-      <Topbar />
-      <div className="canvas-area">
+      <ShellLayout>
         <Sidebar />
-        <div className="canvas-scroll">
-          <div className="canvas-inner">
-            <ErrorBoundary>
-              <Outlet />
-            </ErrorBoundary>
+        <div className="workspace">
+          <Topbar />
+          <div className="canvas-area">
+            <div className="canvas-scroll">
+              <div className="canvas-inner">
+                <ErrorBoundary>
+                  <Outlet />
+                </ErrorBoundary>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </ShellLayout>
       <Statusbar />
       <CommandPalette />
     </div>
