@@ -384,6 +384,83 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
     React.createElement("span", { "data-icon": name, ...props }, name),
   NavItem: ({ _icon, label, ...props }: any) =>
     React.createElement("div", { className: "nav-item", ...props }, label),
+  Field: React.forwardRef(
+    (
+      {
+        label,
+        required = false,
+        error,
+        hint,
+        children,
+        className = "",
+        ...props
+      }: any,
+      ref: any,
+    ) =>
+      React.createElement(
+        "div",
+        { className: ["field", error && "field--error", className].filter(Boolean).join(" "), ref, ...props },
+        label &&
+          React.createElement(
+            "label",
+            { className: "field__label" },
+            label,
+            required && React.createElement("span", { className: "field__required" }, "*"),
+          ),
+        children,
+        error &&
+          React.createElement("div", { className: "field__error" }, error),
+        hint &&
+          React.createElement("div", { className: "field__hint" }, hint),
+      ),
+  ),
+  NumberInput: React.forwardRef(
+    ({ mono = false, error = false, className = "", ...props }: any, ref: any) =>
+      React.createElement("input", {
+        ref,
+        type: "number",
+        className: [
+          "number-input",
+          mono && "number-input--mono",
+          error && "number-input--error",
+          className,
+        ]
+          .filter(Boolean)
+          .join(" "),
+        ...props,
+      }),
+  ),
+  TriState: React.forwardRef(
+    (
+      { indeterminate = false, checked = false, onChange, className = "", ...props }: any,
+      ref: any,
+    ) =>
+      React.createElement("input", {
+        ref,
+        type: "checkbox",
+        checked: !indeterminate && checked,
+        className: [
+          "tri-state",
+          indeterminate && "tri-state--indeterminate",
+          checked && "tri-state--checked",
+          className,
+        ]
+          .filter(Boolean)
+          .join(" "),
+        onChange: (e: any) => {
+          let newState;
+          if (indeterminate) {
+            newState = true;
+          } else if (checked) {
+            newState = null;
+          } else {
+            newState = true;
+          }
+          onChange && onChange({ ...e, target: { ...e.target, checked: newState } });
+        },
+        ...props,
+      }),
+  ),
 }));
 
 // Mock window.scrollTo to avoid jsdom "Not implemented" errors

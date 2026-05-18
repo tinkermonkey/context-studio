@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Input } from "@/components/ui/Input";
+import { Input, Field } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { useReferenceStatus, useClasses } from "@/api/hooks";
@@ -122,8 +122,11 @@ export function GroundingWorkflowForm({ onSubmit, isLoading }: GroundingWorkflow
   return (
     <form onSubmit={handleSubmit} data-testid="grounding-workflow-form">
       <div className="stack-lg">
-        <div>
-          <label className="form-group-label">Workflow Name</label>
+        <Field
+          label="Workflow Name"
+          required
+          error={titleError}
+        >
           <Input
             type="text"
             placeholder="Enter workflow name"
@@ -136,15 +139,13 @@ export function GroundingWorkflowForm({ onSubmit, isLoading }: GroundingWorkflow
             autoFocus
             data-testid="workflow-title-input"
           />
-          {titleError && (
-            <div style={{ color: "var(--rose-600)", fontSize: "var(--text-xs)", marginTop: "4px" }}>
-              {titleError}
-            </div>
-          )}
-        </div>
+        </Field>
 
-        <div>
-          <label className="form-group-label">Reference Source</label>
+        <Field
+          label="Reference Source"
+          required
+          error={sourceError}
+        >
           <select
             value={source}
             onChange={(e) => {
@@ -170,125 +171,120 @@ export function GroundingWorkflowForm({ onSubmit, isLoading }: GroundingWorkflow
               </option>
             ))}
           </select>
-          {sourceError && (
-            <div style={{ color: "var(--rose-600)", fontSize: "var(--text-xs)", marginTop: "4px" }}>
-              {sourceError}
-            </div>
-          )}
-        </div>
+        </Field>
 
-        <div>
-          <label className="form-group-label">Class Scope</label>
-          {selectedClasses.length > 0 && (
-            <div
-              style={{
-                display: "flex",
-                gap: "var(--space-2)",
-                flexWrap: "wrap",
-                marginBottom: "var(--space-2)",
-              }}
-            >
-              {selectedClasses.map((cls) => (
-                <div
-                  key={cls.id}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "var(--space-1)",
-                  }}
-                  data-testid={`workflow-class-chip-${cls.id}`}
-                >
-                  <Chip color="violet">{cls.title}</Chip>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleRemoveClass(cls.id);
-                      setScopeError(undefined);
-                    }}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      padding: 0,
-                      color: "var(--canvas-fg-3)",
-                      fontSize: "var(--text-sm)",
-                    }}
-                    data-testid={`workflow-class-remove-${cls.id}`}
-                    aria-label={`Remove ${cls.title}`}
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div style={{ position: "relative" }} ref={dropdownContainerRef}>
-            <Input
-              ref={searchInputRef}
-              type="text"
-              placeholder="Search classes..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setShowClassOptions(true);
-              }}
-              onFocus={() => setShowClassOptions(true)}
-              data-testid="workflow-scope-input"
-            />
-
-            {showClassOptions && filteredClasses.length > 0 && (
+        <Field
+          label="Class Scope"
+          required
+          error={scopeError}
+        >
+          <div>
+            {selectedClasses.length > 0 && (
               <div
                 style={{
-                  position: "absolute",
-                  top: "100%",
-                  left: 0,
-                  right: 0,
-                  background: "var(--canvas-bg)",
-                  border: "1px solid var(--canvas-fg-4)",
-                  borderRadius: "var(--radius-sm)",
-                  marginTop: "4px",
-                  zIndex: 10,
-                  maxHeight: "200px",
-                  overflowY: "auto",
+                  display: "flex",
+                  gap: "var(--space-2)",
+                  flexWrap: "wrap",
+                  marginBottom: "var(--space-2)",
                 }}
               >
-                {filteredClasses.map((cls) => (
-                  <button
+                {selectedClasses.map((cls) => (
+                  <div
                     key={cls.id}
-                    type="button"
-                    onClick={() => handleAddClass(cls.id)}
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: "var(--space-2)",
-                      padding: "var(--space-2) var(--space-3)",
-                      width: "100%",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      textAlign: "left",
-                      fontSize: "var(--text-sm)",
-                      borderBottom: "1px solid var(--canvas-fg-4)",
+                      gap: "var(--space-1)",
                     }}
-                    data-testid={`workflow-scope-option-${cls.id}`}
+                    data-testid={`workflow-class-chip-${cls.id}`}
                   >
-                    <span className="mono" style={{ fontSize: "var(--text-xs)" }}>
-                      {cls.id.slice(0, 8)}
-                    </span>
-                    <span>{cls.title}</span>
-                  </button>
+                    <Chip color="violet">{cls.title}</Chip>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleRemoveClass(cls.id);
+                        setScopeError(undefined);
+                      }}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        padding: 0,
+                        color: "var(--canvas-fg-3)",
+                        fontSize: "var(--text-sm)",
+                      }}
+                      data-testid={`workflow-class-remove-${cls.id}`}
+                      aria-label={`Remove ${cls.title}`}
+                    >
+                      ✕
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
-          </div>
 
-          {scopeError && (
-            <div style={{ color: "var(--rose-600)", fontSize: "var(--text-xs)", marginTop: "4px" }}>
-              {scopeError}
+            <div style={{ position: "relative" }} ref={dropdownContainerRef}>
+              <Input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search classes..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowClassOptions(true);
+                  setScopeError(undefined);
+                }}
+                onFocus={() => setShowClassOptions(true)}
+                data-testid="workflow-scope-input"
+              />
+
+              {showClassOptions && filteredClasses.length > 0 && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: 0,
+                    right: 0,
+                    background: "var(--canvas-bg)",
+                    border: "1px solid var(--canvas-fg-4)",
+                    borderRadius: "var(--radius-sm)",
+                    marginTop: "4px",
+                    zIndex: 10,
+                    maxHeight: "200px",
+                    overflowY: "auto",
+                  }}
+                >
+                  {filteredClasses.map((cls) => (
+                    <button
+                      key={cls.id}
+                      type="button"
+                      onClick={() => handleAddClass(cls.id)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "var(--space-2)",
+                        padding: "var(--space-2) var(--space-3)",
+                        width: "100%",
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        textAlign: "left",
+                        fontSize: "var(--text-sm)",
+                        borderBottom: "1px solid var(--canvas-fg-4)",
+                      }}
+                      data-testid={`workflow-scope-option-${cls.id}`}
+                    >
+                      <span className="mono" style={{ fontSize: "var(--text-xs)" }}>
+                        {cls.id.slice(0, 8)}
+                      </span>
+                      <span>{cls.title}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </div>
+        </Field>
 
         <Button
           type="submit"

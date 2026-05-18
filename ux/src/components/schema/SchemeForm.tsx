@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Input, Textarea } from "@/components/ui/Input";
+import { Input, Textarea, Field } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import type { components } from "@/api/types";
 
@@ -44,25 +44,25 @@ export function SchemeForm({ onSubmit, isLoading }: SchemeFormProps) {
   return (
     <form onSubmit={handleSubmit} data-testid="scheme-form">
       <div className="stack-lg">
-        <div>
-          <label className="form-group-label">Title</label>
+        <Field
+          label="Title"
+          required
+          error={titleError}
+        >
           <Input
             type="text"
             placeholder="Scheme name"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              setTitleError(undefined);
+            }}
             onBlur={handleTitleBlur}
             data-testid="scheme-title-input"
           />
-          {titleError && (
-            <div style={{ color: "var(--rose-600)", fontSize: "var(--text-xs)", marginTop: "4px" }}>
-              {titleError}
-            </div>
-          )}
-        </div>
+        </Field>
 
-        <div>
-          <label className="form-group-label">Description (optional)</label>
+        <Field label="Description (optional)">
           <Textarea
             placeholder="Optional description"
             value={description}
@@ -70,7 +70,7 @@ export function SchemeForm({ onSubmit, isLoading }: SchemeFormProps) {
             data-testid="scheme-description-input"
             rows={4}
           />
-        </div>
+        </Field>
 
         <Button
           type="submit"

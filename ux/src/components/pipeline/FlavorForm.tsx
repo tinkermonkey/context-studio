@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import { Input, Field } from "@/components/ui/Input";
 import type { components } from "@/api/types";
 
 type PipelineFlavorCreateRequest = components["schemas"]["PipelineFlavorCreateRequest"];
@@ -14,14 +14,21 @@ interface FlavorFormProps {
 export function FlavorForm({ onSubmit, onCancel, isLoading = false }: FlavorFormProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [nameError, setNameError] = useState<string>();
+  const [descriptionError, setDescriptionError] = useState<string>();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setNameError(undefined);
+    setDescriptionError(undefined);
 
-    if (!name.trim() || !description.trim()) {
-      setError("Name and description are required");
+    if (!name.trim()) {
+      setNameError("Name is required");
+      return;
+    }
+
+    if (!description.trim()) {
+      setDescriptionError("Description is required");
       return;
     }
 
@@ -34,37 +41,48 @@ export function FlavorForm({ onSubmit, onCancel, isLoading = false }: FlavorForm
       setName("");
       setDescription("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save flavor");
+      const message = err instanceof Error ? err.message : "Failed to save flavor";
+      setNameError(message);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} data-testid="flavor-form" className="stack">
-      {error && <div className="error-banner">{error}</div>}
+      <Field
+        label="Name"
+        required
+        error={nameError}
+      >
+        <Input
+          type="text"
+          placeholder="Flavor name"
+          value={name}
+          onChange={(e) => {
+            setName(e.target.value);
+            setNameError(undefined);
+          }}
+          disabled={isLoading}
+          data-testid="flavor-name-input"
+        />
+      </Field>
 
-      <Input
-        type="text"
-        placeholder="Flavor name"
-        value={name}
-        onChange={(e) => {
-          setName(e.target.value);
-          if (error) setError(null);
-        }}
-        disabled={isLoading}
-        data-testid="flavor-name-input"
-      />
-
-      <Input
-        type="text"
-        placeholder="Description"
-        value={description}
-        onChange={(e) => {
-          setDescription(e.target.value);
-          if (error) setError(null);
-        }}
-        disabled={isLoading}
-        data-testid="flavor-description-input"
-      />
+      <Field
+        label="Description"
+        required
+        error={descriptionError}
+      >
+        <Input
+          type="text"
+          placeholder="Description"
+          value={description}
+          onChange={(e) => {
+            setDescription(e.target.value);
+            setDescriptionError(undefined);
+          }}
+          disabled={isLoading}
+          data-testid="flavor-description-input"
+        />
+      </Field>
 
       <div style={{ display: "flex", gap: "8px" }}>
         <Button

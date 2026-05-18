@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Input, Textarea } from "@/components/ui/Input";
+import { Input, Textarea, Field } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import type { components } from "@/api/types";
 
@@ -82,50 +82,45 @@ export function PropertyDefinitionForm({
   return (
     <form onSubmit={handleSubmit} data-testid="property-definition-form">
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
-        <div>
-          <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
-            Identifier (snake_case)
-          </label>
+        <Field
+          label="Identifier (snake_case)"
+          required
+          error={identifierError}
+        >
           <Input
             type="text"
             placeholder="property_identifier"
             value={identifier}
-            onChange={(e) => setIdentifier(e.target.value)}
+            onChange={(e) => {
+              setIdentifier(e.target.value);
+              setIdentifierError(undefined);
+            }}
             onBlur={handleIdentifierBlur}
             disabled={!!initialData}
             mono
             data-testid="property-definition-identifier-input"
           />
-          {identifierError && (
-            <div style={{ color: "var(--rose-600)", fontSize: "var(--text-xs)", marginTop: "4px" }}>
-              {identifierError}
-            </div>
-          )}
-        </div>
+        </Field>
 
-        <div>
-          <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
-            Title
-          </label>
+        <Field
+          label="Title"
+          required
+          error={titleError}
+        >
           <Input
             type="text"
             placeholder="Display name"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              setTitleError(undefined);
+            }}
             onBlur={handleTitleBlur}
             data-testid="property-definition-title-input"
           />
-          {titleError && (
-            <div style={{ color: "var(--rose-600)", fontSize: "var(--text-xs)", marginTop: "4px" }}>
-              {titleError}
-            </div>
-          )}
-        </div>
+        </Field>
 
-        <div>
-          <label style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "4px" }}>
-            Description (optional)
-          </label>
+        <Field label="Description (optional)">
           <Textarea
             placeholder="Optional description"
             value={description}
@@ -133,7 +128,7 @@ export function PropertyDefinitionForm({
             data-testid="property-definition-description-input"
             rows={4}
           />
-        </div>
+        </Field>
 
         <Button
           type="submit"
