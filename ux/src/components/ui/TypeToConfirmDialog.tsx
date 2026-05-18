@@ -56,6 +56,8 @@ export function TypeToConfirmDialog({
     } catch (error) {
       if (onError) {
         onError(error instanceof Error ? error : new Error(String(error)));
+      } else {
+        console.error(error);
       }
     } finally {
       setIsProcessing(false);

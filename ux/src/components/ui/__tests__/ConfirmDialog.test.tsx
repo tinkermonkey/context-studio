@@ -335,7 +335,7 @@ describe("ConfirmDialog", () => {
       consoleErrorSpy.mockRestore();
     });
 
-    it("keeps cancel button enabled during async operation", async () => {
+    it("disables both buttons during async operation", async () => {
       const onConfirm = vi.fn().mockImplementation(
         () =>
           new Promise((resolve) => {
