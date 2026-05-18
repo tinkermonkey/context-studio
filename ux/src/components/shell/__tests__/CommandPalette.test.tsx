@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { CommandPalette } from "../CommandPalette";
 import * as commandPaletteStore from "@/stores/commandPalette";
+import * as heimdallModule from "@tinkermonkey/heimdall-ui";
+import * as keyboardShortcutModule from "@/hooks/useKeyboardShortcut";
 
 vi.mock("@/stores/commandPalette", () => ({
   useCommandPaletteStore: vi.fn(),
@@ -9,6 +11,10 @@ vi.mock("@/stores/commandPalette", () => ({
 
 vi.mock("@/hooks/useKeyboardShortcut", () => ({
   useKeyboardShortcut: vi.fn(),
+}));
+
+vi.mock("@tinkermonkey/heimdall-ui", () => ({
+  CommandPalette: vi.fn(() => <div data-testid="heimdall-command-palette" />),
 }));
 
 describe("CommandPalette", () => {
@@ -45,6 +51,8 @@ describe("CommandPalette", () => {
     mockActions.forEach((action) => {
       (action.onSelect as any).mockClear();
     });
+    vi.mocked(heimdallModule.CommandPalette).mockClear();
+    vi.clearAllMocks();
     vi.mocked(commandPaletteStore.useCommandPaletteStore).mockReturnValue({
       open: false,
       query: "",
@@ -75,7 +83,8 @@ describe("CommandPalette", () => {
     } as any);
 
     render(<CommandPalette />);
-    expect(screen.getByTestId("command-palette")).toBeInTheDocument();
+    const calls = vi.mocked(heimdallModule.CommandPalette).mock.calls;
+    expect(calls[calls.length - 1][0]).toMatchObject({ isOpen: false });
   });
 
   it("passes isOpen=true to Heimdall CommandPalette when palette is open", () => {
@@ -91,7 +100,8 @@ describe("CommandPalette", () => {
     } as any);
 
     render(<CommandPalette />);
-    expect(screen.getByTestId("command-palette")).toBeInTheDocument();
+    const calls = vi.mocked(heimdallModule.CommandPalette).mock.calls;
+    expect(calls[calls.length - 1][0]).toMatchObject({ isOpen: true });
   });
 
   describe("filtering", () => {
@@ -108,7 +118,9 @@ describe("CommandPalette", () => {
       } as any);
 
       render(<CommandPalette />);
-      expect(screen.getByTestId("command-palette")).toBeInTheDocument();
+      const call = vi.mocked(heimdallModule.CommandPalette).mock.calls[0][0];
+      expect(call.commands).toHaveLength(1);
+      expect(call.commands[0].label).toBe("Create Class");
     });
 
     it("filters actions by description", () => {
@@ -124,7 +136,9 @@ describe("CommandPalette", () => {
       } as any);
 
       render(<CommandPalette />);
-      expect(screen.getByTestId("command-palette")).toBeInTheDocument();
+      const call = vi.mocked(heimdallModule.CommandPalette).mock.calls[0][0];
+      expect(call.commands).toHaveLength(1);
+      expect(call.commands[0].label).toBe("Edit Class");
     });
 
     it("performs case-insensitive filtering", () => {
@@ -140,7 +154,9 @@ describe("CommandPalette", () => {
       } as any);
 
       render(<CommandPalette />);
-      expect(screen.getByTestId("command-palette")).toBeInTheDocument();
+      const call = vi.mocked(heimdallModule.CommandPalette).mock.calls[0][0];
+      expect(call.commands).toHaveLength(1);
+      expect(call.commands[0].label).toBe("Create Class");
     });
 
     it("returns all actions when query is empty", () => {
@@ -156,7 +172,8 @@ describe("CommandPalette", () => {
       } as any);
 
       render(<CommandPalette />);
-      expect(screen.getByTestId("command-palette")).toBeInTheDocument();
+      const call = vi.mocked(heimdallModule.CommandPalette).mock.calls[0][0];
+      expect(call.commands).toHaveLength(3);
     });
 
     it("excludes actions that do not match query", () => {
@@ -172,7 +189,8 @@ describe("CommandPalette", () => {
       } as any);
 
       render(<CommandPalette />);
-      expect(screen.getByTestId("command-palette")).toBeInTheDocument();
+      const call = vi.mocked(heimdallModule.CommandPalette).mock.calls[0][0];
+      expect(call.commands).toHaveLength(0);
     });
 
     it("handles empty actions list gracefully", () => {
@@ -188,7 +206,8 @@ describe("CommandPalette", () => {
       } as any);
 
       render(<CommandPalette />);
-      expect(screen.getByTestId("command-palette")).toBeInTheDocument();
+      const call = vi.mocked(heimdallModule.CommandPalette).mock.calls[0][0];
+      expect(call.commands).toHaveLength(0);
     });
   });
 
@@ -206,7 +225,8 @@ describe("CommandPalette", () => {
       } as any);
 
       render(<CommandPalette />);
-      expect(screen.getByTestId("command-palette")).toBeInTheDocument();
+      const call = vi.mocked(heimdallModule.CommandPalette).mock.calls[0][0];
+      expect(call.onClose).toBe(mockClosePalette);
     });
 
     it("passes correct placeholder text to Heimdall CommandPalette", () => {
@@ -222,7 +242,8 @@ describe("CommandPalette", () => {
       } as any);
 
       render(<CommandPalette />);
-      expect(screen.getByTestId("command-palette")).toBeInTheDocument();
+      const call = vi.mocked(heimdallModule.CommandPalette).mock.calls[0][0];
+      expect(call.placeholder).toBe("Search or run command…");
     });
 
     it("handles actions with no description gracefully", () => {
@@ -247,14 +268,32 @@ describe("CommandPalette", () => {
       } as any);
 
       render(<CommandPalette />);
-      expect(screen.getByTestId("command-palette")).toBeInTheDocument();
+      const call = vi.mocked(heimdallModule.CommandPalette).mock.calls[0][0];
+      expect(call.commands).toHaveLength(1);
+      expect(call.commands[0].label).toBe("Create Class");
     });
   });
 
   describe("keyboard shortcuts", () => {
     it("integrates keyboard shortcuts for Cmd+K and Escape", () => {
       render(<CommandPalette />);
-      expect(screen.getByTestId("command-palette")).toBeInTheDocument();
+
+      // Verify Cmd+K shortcut is registered
+      expect(vi.mocked(keyboardShortcutModule.useKeyboardShortcut)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          key: "k",
+          modifiers: ["meta"],
+          onKeydown: mockTogglePalette,
+        }),
+      );
+
+      // Verify Escape shortcut is registered
+      expect(vi.mocked(keyboardShortcutModule.useKeyboardShortcut)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          key: "Escape",
+          onKeydown: mockClosePalette,
+        }),
+      );
     });
   });
 });
