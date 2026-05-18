@@ -45,25 +45,7 @@ selectors:
   # Command Palette
   - selector: command-palette
     component: components/shell/CommandPalette.tsx
-    description: Root command palette dialog overlay
-  - selector: command-palette-backdrop
-    component: components/shell/CommandPalette.tsx
-    description: Clickable backdrop overlay that closes the palette
-  - selector: command-palette-input
-    component: components/shell/CommandPalette.tsx
-    description: Search/command input field in the palette
-  - selector: command-palette-results
-    component: components/shell/CommandPalette.tsx
-    description: Results container displaying filtered command items
-  - selector: command-palette-empty-state
-    component: components/shell/CommandPalette.tsx
-    description: Empty state message shown when no results match the query
-  - selector: command-palette-item-*
-    component: components/shell/CommandPalette.tsx
-    description: Individual command palette item button (pattern matches item-{actionId})
-  - selector: command-palette-esc-button
-    component: components/shell/CommandPalette.tsx
-    description: Esc key indicator button in the palette input row
+    description: Root command palette wrapper
 
   # Sidebar
   - selector: sidebar
