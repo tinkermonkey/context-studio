@@ -219,11 +219,12 @@ class SQLiteExtractionRepository:
         ]
 
         # Create domain entity
+        created_at = orm_result.created_at or datetime.now(timezone.utc)  # type: ignore[arg-type]
         return ExtractionResult(
             id=orm_result.id or "",  # type: ignore[arg-type]
             text=orm_result.text or "",  # type: ignore[arg-type]
             extracted_entities=extracted_entities,
             layers_executed=layers_executed,
             total_duration_ms=orm_result.total_duration_ms or 0,  # type: ignore[arg-type]
-            created_at=orm_result.created_at or datetime.now(timezone.utc),  # type: ignore[arg-type]
+            created_at=created_at,
         )

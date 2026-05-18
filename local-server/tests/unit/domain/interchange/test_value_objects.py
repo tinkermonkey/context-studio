@@ -191,7 +191,8 @@ class TestImportConflictDefaultResolution:
             def __str__(self):
                 return "unhandled_kind"
 
-        # We can't easily test this without refactoring, so we'll ensure the function handles all known kinds
+        # We can't easily test this without refactoring, so we'll ensure
+        # the function handles all known kinds
         for kind in MatchKind:
             resolution = ImportConflict.derive_default_resolution(kind)
             assert resolution is None or isinstance(resolution, ResolutionKind)

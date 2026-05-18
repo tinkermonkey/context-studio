@@ -113,7 +113,8 @@ class Class:
         title: Display name for the class
         description: Optional longer description
         parent_class_id: Optional ID of the parent class for hierarchy
-        structural_property_id: Optional ID of the primary structural relationship property definition
+        structural_property_id: Optional ID of the primary structural relationship property
+        definition
         external_references: List of references to external knowledge bases
         lexical_senses: List of word sense disambiguation entries
         data_properties: List of data property values on this class

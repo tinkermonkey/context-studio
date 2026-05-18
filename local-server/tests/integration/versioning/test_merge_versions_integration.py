@@ -63,7 +63,8 @@ class TestMergeVersionsIntegration:
         assert version["snapshot"]["description"] == "A test entity"
 
     def test_merge_creates_multiple_entity_versions(self, client, change_repository):
-        """Test that merging a changeset with updates to multiple entities creates multiple versions."""
+        """Test that merging a changeset with updates to multiple entities creates multiple
+        versions."""
         # Record changes to two different entities
         event_id_1 = change_repository.record_change(
             entity_id="entity-1",
@@ -117,7 +118,8 @@ class TestMergeVersionsIntegration:
     def test_merge_with_conflicts_creates_entity_version_with_resolutions(
         self, client, change_repository
     ):
-        """Test that merging with resolved conflicts creates entity versions with resolved values."""
+        """Test that merging with resolved conflicts creates entity versions with resolved
+        values."""
         # Record conflicting changes
         event_id_1 = change_repository.record_change(
             entity_id="entity-1",

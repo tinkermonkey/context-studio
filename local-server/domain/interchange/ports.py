@@ -59,7 +59,8 @@ class OntologyDeserializer(ABC):
             source: Serialized ontology as bytes or string
             dry_run: If True, returns ImportPlan without persisting.
                      If False, commits changes and returns ImportPlan with ImportRun.
-            resolutions: Optional list of user-chosen ResolutionRecord objects to apply when committing.
+            resolutions: Optional list of user-chosen ResolutionRecord objects to apply when
+            committing.
 
         Returns:
             ImportPlan describing what the import would/did do

@@ -50,7 +50,8 @@ class RDFLibQueryEngine:
         Args:
             nodes: Sequence of ontology entity dictionaries (Taxonomy, ConceptScheme, Class, etc.)
             edges: Sequence of relationship dictionaries linking entities
-            property_definitions: Sequence of property definition dictionaries for relationship types
+            property_definitions: Sequence of property definition dictionaries for relationship
+            types
         """
         # Clear any existing graph
         self._graph = Graph()

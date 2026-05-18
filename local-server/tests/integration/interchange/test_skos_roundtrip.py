@@ -302,7 +302,8 @@ class TestSKOSIdempotentReimport:
     def test_idempotent_reimport_preserves_uuids_and_no_duplicates(
         self, ontology_repo, sample_data
     ):
-        """Test acceptance criterion: idempotent reimport produces no duplicates and preserves UUIDs."""
+        """Test acceptance criterion: idempotent reimport produces no duplicates and preserves
+        UUIDs."""
         # Record original entity IDs (taxonomies, schemes, and classes)
         original_classes = ontology_repo.list_classes()
         original_schemes = ontology_repo.list_concept_schemes()

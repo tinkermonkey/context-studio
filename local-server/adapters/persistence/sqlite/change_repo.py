@@ -90,7 +90,8 @@ class SQLiteChangeRepository:
             user_id: Optional ID of user who made the change
             change_reason: Optional explanation of the change
             changeset_id: Optional ID of a changeset this event belongs to
-            batch_run_id: Optional ID of the batch run (import or extraction) that produced this change
+            batch_run_id: Optional ID of the batch run (import or extraction) that produced this
+            change
 
         Returns:
             The ID of the recorded change event

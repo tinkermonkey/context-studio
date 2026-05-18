@@ -39,7 +39,8 @@ def download_benchmark_dataset(
     Args:
         dataset_name: HuggingFace dataset identifier (e.g., 'text2kg-bench/text2kgbench')
         split: Dataset split to download (e.g., 'test', 'train', 'validation')
-        output_dir: Output directory for dataset files. Defaults to datafiles/benchmarks/{dataset_name}/
+        output_dir: Output directory for dataset files. Defaults to
+        datafiles/benchmarks/{dataset_name}/
 
     Returns:
         Path to the downloaded dataset directory

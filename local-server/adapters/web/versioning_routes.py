@@ -603,7 +603,8 @@ async def merge_proposal(
         MergeResultResponse with details of the merge operation
 
     Raises:
-        HTTPException: 404 if not found, 409 for invalid state or unresolved conflicts, 500 for internal errors
+        HTTPException: 404 if not found, 409 for invalid state or unresolved conflicts, 500 for
+        internal errors
     """
     try:
         result = await run_sync_in_executor(service.merge_proposal, proposal_id)

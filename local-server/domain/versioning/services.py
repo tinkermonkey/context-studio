@@ -527,7 +527,8 @@ class VersioningService:
                 for field_name, later_prev_value in later_prev.items():
                     earlier_new_value = earlier_new.get(field_name)
                     if earlier_new_value != later_prev_value:
-                        # Use the new_state of the first event that modified this field as the base_value
+                        # Use the new_state of the first event that modified
+                        # this field as the base_value
                         first_event = field_first_event.get(field_name, earlier)
                         base_value = (
                             first_event.new_state.get(field_name) if first_event.new_state else None
@@ -741,7 +742,8 @@ class VersioningService:
             _logger.error(error_msg)
             raise ValueError(error_msg)
 
-        # Group events by entity_id with timestamp ordering (reuse fetched events to avoid double-fetch)
+        # Group events by entity_id with timestamp ordering (reuse fetched
+        # events to avoid double-fetch)
         events_by_entity = self._group_and_sort_events(changeset.event_ids, changeset_events)
 
         # Build versions for each entity

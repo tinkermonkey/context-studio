@@ -1032,7 +1032,8 @@ async def create_individual(
         Created IndividualResponse
 
     Raises:
-        HTTPException: 400 if invalid or invariant violated, 404 if class not found, 409 if title exists
+        HTTPException: 400 if invalid or invariant violated, 404 if class not found, 409 if title
+        exists
     """
     try:
         individual = await run_sync_in_executor(

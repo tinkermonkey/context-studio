@@ -11,8 +11,10 @@ Mapping strategy:
 - Class.parent_class_id → skos:broader (and inverse skos:narrower)
 - Class.title → skos:prefLabel
 - Class.description → skos:definition
-- external_references → LOCAL:externalReferences (JSON-encoded full object with source/identifier/uri)
-  - Backwards compatible with legacy dct:source + skos:exactMatch format (heuristically reconstructed on import)
+- external_references → LOCAL:externalReferences (JSON-encoded full object with
+source/identifier/uri)
+  - Backwards compatible with legacy dct:source + skos:exactMatch format (heuristically
+  reconstructed on import)
 """
 
 from __future__ import annotations
@@ -151,7 +153,8 @@ class SKOSSerializer(OntologySerializer):
 
         Args:
             scheme_id: The concept scheme ID
-            include_descendants: If True, include classes within the scheme; if False, only serialize the scheme itself
+            include_descendants: If True, include classes within the scheme; if False, only
+            serialize the scheme itself
         """
         scheme = self.ontology_repo.get_concept_scheme(scheme_id)
         if not scheme:
@@ -227,7 +230,8 @@ class SKOSSerializer(OntologySerializer):
         Args:
             scheme: The concept scheme to add
             include_parent_taxonomy: If True, add link to parent taxonomy
-            include_descendants: If True, add classes within the scheme; if False, only add the scheme itself
+            include_descendants: If True, add classes within the scheme; if False, only add the
+            scheme itself
         """
         if self.graph is None:
             raise RuntimeError("Graph not initialized")

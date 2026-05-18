@@ -477,7 +477,8 @@ Extract triples in the following JSON format:
 
 Return only valid JSON. If no triples can be extracted, return {"triples": []}."""
 
-        user_prompt = f"""Extract RDF triples from the following text, scoped to the ontology context provided.
+        user_prompt = f"""Extract RDF triples from the following text, scoped to the ontology
+        context provided.
 
 Text:
 {text}
@@ -758,7 +759,8 @@ Ontology: {ontology.title if hasattr(ontology, 'title') else str(ontology)}"""
             return entities
 
         # Sort by priority (lower value = higher priority)
-        # Layer 1 (LLM) has highest priority, then Layer 0 (KG), then Layer 2 (NLP), then Layer 3 (Reference)
+        # Layer 1 (LLM) has highest priority, then Layer 0 (KG), then
+        # Layer 2 (NLP), then Layer 3 (Reference)
         sorted_entities = sorted(
             entities,
             key=lambda e: self.DEDUP_PRIORITY.get(e.source_layer, 999),

@@ -2,7 +2,8 @@
 SQLAlchemy ORM models for Context Studio's primary database (local.db).
 
 This module defines all ORM models for the Ontology Management bounded context:
-- OntologyEntity: Single-table inheritance pattern for taxonomies, concept schemes, classes, individuals
+- OntologyEntity: Single-table inheritance pattern for taxonomies, concept schemes, classes,
+individuals
 - Relationship: Typed, directed edges between entities
 - PropertyDefinition: Registry of defined object property types
 
@@ -12,7 +13,8 @@ Design Notes:
 - Single-table inheritance (STI) via node_type discriminator column
 - All timestamps are UTC
 - JSON storage for nested value objects (external_references, lexical_senses, data_properties)
-- PropertyDefinition appears in both ontology_entities (for referential integrity) and property_definitions (optimized queries)
+- PropertyDefinition appears in both ontology_entities (for referential integrity) and
+property_definitions (optimized queries)
 """
 
 from datetime import datetime, timezone

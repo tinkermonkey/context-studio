@@ -188,11 +188,14 @@ class WikidataSource:
                                     if isinstance(value, dict) and "entity-type" in value:
                                         target_id = value.get("id", "")
                                         if target_id and target_id.startswith("Q"):
+                                            object_uri = (
+                                                f"http://www.wikidata.org/entity/{target_id}"
+                                            )
                                             relations.append(
                                                 ReferenceRelation(
                                                     subject_uri=uri,
                                                     predicate=prop_id,
-                                                    object_uri=f"http://www.wikidata.org/entity/{target_id}",
+                                                    object_uri=object_uri,
                                                     source=self.source_name,
                                                 )
                                             )

@@ -5,11 +5,14 @@ Implements OntologySerializer and OntologyDeserializer ports to handle
 GraphML (Graph Markup Language) format for visual tools (Cytoscape, Gephi, yEd, Neo4j).
 
 Mapping strategy:
-- Every entity (Taxonomy, Scheme, Class, Individual, PropertyDefinition) → <node> with a `kind` attribute
+- Every entity (Taxonomy, Scheme, Class, Individual, PropertyDefinition) → <node> with a `kind`
+attribute
 - Every Relationship and structural edge → <edge> with a `kind` attribute
-- Entity attributes flatten to <data> elements with namespaced keys: cs:title, cs:description, cs:created_at, etc.
+- Entity attributes flatten to <data> elements with namespaced keys: cs:title, cs:description,
+cs:created_at, etc.
 - external_references → reserved <data key="cs:external_references"> element, JSON-encoded array
-- For Individuals with multi-class membership, class memberships are edges with <data key="cs:class_order">N</data>
+- For Individuals with multi-class membership, class memberships are edges with <data
+key="cs:class_order">N</data>
 - Layout coordinates (x, y) are ignored on import
 """
 
@@ -173,7 +176,8 @@ class GraphMLSerializer(OntologySerializer):
 
         Args:
             scheme_id: The concept scheme ID
-            include_descendants: If True, include classes within the scheme; if False, only serialize the scheme itself
+            include_descendants: If True, include classes within the scheme; if False, only
+            serialize the scheme itself
         """
         scheme = self.ontology_repo.get_concept_scheme(scheme_id)
         if not scheme:

@@ -89,7 +89,8 @@ class FakeGraphEngine:
             max_depth: Maximum path length to explore (unused in fake)
 
         Returns:
-            List containing single path [[source_id, target_id]] if both exist and connected, else []
+            List containing single path [[source_id, target_id]] if both exist and connected, else
+            []
 
         Raises:
             NodeNotFoundError: If source_id or target_id does not exist

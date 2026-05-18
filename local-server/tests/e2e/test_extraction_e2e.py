@@ -76,7 +76,8 @@ class TestExtractionWorkflow:
         Extraction executes all 4 layers.
 
         Asserts:
-        - Response includes results from Layer 0 (KG), Layer 1 (LLM), Layer 2 (NLP), Layer 3 (Reference)
+        - Response includes results from Layer 0 (KG), Layer 1 (LLM), Layer 2 (NLP), Layer 3
+        (Reference)
         """
         response = e2e_client.post(
             "/api/extract", json={"text": "SQLite is an embedded relational database."}

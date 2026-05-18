@@ -143,7 +143,8 @@ def load_dataset_from_jsonl(dataset_name: str, split: str = "test") -> list[dict
     """
     Attempt to load dataset from local JSONL file.
 
-    Checks for datafiles/benchmarks/{org}/{project}/{split}.jsonl (created by download_benchmarks.py).
+    Checks for datafiles/benchmarks/{org}/{project}/{split}.jsonl (created by
+    download_benchmarks.py).
 
     Args:
         dataset_name: HuggingFace dataset identifier (e.g., 'text2kg-bench/text2kgbench')

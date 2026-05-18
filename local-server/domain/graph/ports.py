@@ -143,7 +143,8 @@ class GraphEngine(Protocol):
         Partition the graph into communities using the specified algorithm.
 
         Args:
-            algorithm: Name of the community detection algorithm (e.g., "louvain", "label_propagation")
+            algorithm: Name of the community detection algorithm (e.g., "louvain",
+            "label_propagation")
 
         Returns:
             List of communities, where each community is a set of node IDs
@@ -168,8 +169,10 @@ class GraphEngine(Protocol):
 
         Args:
             node_id: ID of the center node
-            direction: Direction of traversal: "in" (predecessors), "out" (successors), "both" (default)
-            depth: Maximum distance from center node (default 1). Depth 1 returns immediate neighbors,
+            direction: Direction of traversal: "in" (predecessors), "out" (successors), "both"
+            (default)
+            depth: Maximum distance from center node (default 1). Depth 1 returns immediate
+            neighbors,
                    depth 2 returns two hops away, etc.
 
         Returns:
@@ -214,7 +217,8 @@ class GraphEngine(Protocol):
             target_id: ID of the edge target node
 
         Returns:
-            Dictionary of edge attributes (e.g., property_definition_id), or empty dict if edge doesn't exist
+            Dictionary of edge attributes (e.g., property_definition_id), or empty dict if edge
+            doesn't exist
         """
         ...
 
@@ -248,7 +252,8 @@ class SemanticQueryEngine(Protocol):
         Args:
             nodes: Sequence of ontology entity dictionaries (Taxonomy, ConceptScheme, Class, etc.)
             edges: Sequence of relationship dictionaries linking entities
-            property_definitions: Sequence of property definition dictionaries for relationship types
+            property_definitions: Sequence of property definition dictionaries for relationship
+            types
         """
         ...
 

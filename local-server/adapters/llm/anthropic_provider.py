@@ -76,7 +76,8 @@ class AnthropicProvider:
             max_tokens: Maximum tokens to generate
             response_format: Optional JSON schema for structured output (not used by Anthropic)
             timeout: Request timeout in seconds (passed to Anthropic client)
-            seed: Optional random seed for reproducible generation (passed to Anthropic API if supported)
+            seed: Optional random seed for reproducible generation (passed to Anthropic API if
+            supported)
 
         Returns:
             LLMResponse with generated content and metadata
@@ -179,7 +180,8 @@ class AnthropicProvider:
             max_tokens: Maximum tokens to generate
             response_format: Optional JSON schema for structured output (not used by Anthropic)
             timeout: Request timeout in seconds (passed to Anthropic client)
-            seed: Optional random seed for reproducible generation (passed to Anthropic API if supported)
+            seed: Optional random seed for reproducible generation (passed to Anthropic API if
+            supported)
 
         Returns:
             LLMResponse with generated content and metadata

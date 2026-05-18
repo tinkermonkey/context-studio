@@ -85,7 +85,8 @@ class LLMProvider(Protocol):
             model: Model identifier
             temperature: Sampling temperature (0.0–2.0)
             max_tokens: Maximum tokens to generate
-            response_format: Optional response format ("json" for JSON output, "text" for plain text)
+            response_format: Optional response format ("json" for JSON output, "text" for plain
+            text)
             timeout: Request timeout in seconds (provider-specific behavior)
             seed: Optional random seed for reproducible generation (passed to model if supported)
 

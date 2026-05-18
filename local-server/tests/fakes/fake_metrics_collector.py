@@ -42,7 +42,8 @@ class FakeMetricsCollector:
 
         Args:
             database_health: Optional DatabaseHealth. If None, defaults to connected.
-            service_metrics: Optional ServiceMetrics. If None, defaults to 0 uptime and no providers.
+            service_metrics: Optional ServiceMetrics. If None, defaults to 0 uptime and no
+            providers.
             embedding_status: Optional ComponentStatus. If None, defaults to available.
             nlp_status: Optional ComponentStatus. If None, defaults to available.
             task_summary: Optional BackgroundTaskSummary. If None, defaults to 0 tasks.

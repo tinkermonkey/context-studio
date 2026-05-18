@@ -1060,7 +1060,8 @@ class OntologyService:
         4. If new_parent_id == class_id, raise CircularReferenceError
         5. Load the new parent; raise EntityNotFoundError if not found
         6. Verify new parent is in the same scheme; raise ValueError if not
-        7. Traverse ancestors of new_parent_id; if any ancestor equals class_id, raise CircularReferenceError
+        7. Traverse ancestors of new_parent_id; if any ancestor equals class_id, raise
+        CircularReferenceError
         8. Set the parent and save; publish ClassMoved and GraphInvalidated
 
         Args:
@@ -1071,7 +1072,8 @@ class OntologyService:
             The updated Class
 
         Raises:
-            EntityNotFoundError: If the class, new parent, or any ancestor in the chain does not exist
+            EntityNotFoundError: If the class, new parent, or any ancestor in the chain does not
+            exist
             CircularReferenceError: If the move would create a circular reference
             ValueError: If new parent is in a different scheme
         """
@@ -2016,7 +2018,8 @@ class OntologyService:
 
         Raises:
             EntityNotFoundError: If the individual does not exist
-            DuplicateEntityError: If title is updated to a value that already exists in any parent class
+            DuplicateEntityError: If title is updated to a value that already exists in any parent
+            class
         """
         individual = self._repository.get_individual(individual_id)
         if individual is None:
@@ -2206,7 +2209,8 @@ class OntologyService:
         Raises:
             EntityNotFoundError: If the individual or class does not exist
             ValueError: If the class is already a parent of the individual
-            DuplicateEntityError: If an individual with this title already exists in the target class
+            DuplicateEntityError: If an individual with this title already exists in the target
+            class
         """
         individual = self._repository.get_individual(individual_id)
         if individual is None:

@@ -72,7 +72,8 @@ class OpenAIProvider:
             max_tokens: Maximum tokens to generate
             response_format: Optional JSON schema for structured output
             timeout: Request timeout in seconds (passed to OpenAI client)
-            seed: Optional random seed for reproducible generation (passed to OpenAI API if supported)
+            seed: Optional random seed for reproducible generation (passed to OpenAI API if
+            supported)
 
         Returns:
             LLMResponse with generated content and metadata
@@ -116,7 +117,9 @@ class OpenAIProvider:
                     kwargs["timeout"] = timeout
 
                 start_time = time.perf_counter()
-                response = self._client.chat.completions.create(**kwargs)  # type: ignore[union-attr]
+                response = (  # type: ignore[union-attr]
+                    self._client.chat.completions.create(**kwargs)
+                )
                 elapsed_time = time.perf_counter() - start_time
                 duration_ms = elapsed_time * 1000
 
@@ -185,7 +188,8 @@ class OpenAIProvider:
             max_tokens: Maximum tokens to generate
             response_format: Optional JSON schema for structured output
             timeout: Request timeout in seconds (passed to OpenAI client)
-            seed: Optional random seed for reproducible generation (passed to OpenAI API if supported)
+            seed: Optional random seed for reproducible generation (passed to OpenAI API if
+            supported)
 
         Returns:
             LLMResponse with generated content and metadata

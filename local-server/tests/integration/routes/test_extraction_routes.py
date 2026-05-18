@@ -111,7 +111,8 @@ def populated_repository(repository):
 
 @pytest.fixture(scope="session")
 def embedding_service():
-    """Create embedding service for semantic search (session-scoped to reduce model load overhead)."""
+    """Create embedding service for semantic search (session-scoped to reduce model load
+    overhead)."""
     return SentenceTransformerEmbedding(model_name="all-MiniLM-L12-v2")
 
 
@@ -400,7 +401,8 @@ class TestExtractionRoutes:
         assert "created_at" in body
 
     def test_enrich_from_references_layers_executed_count(self, client):
-        """POST /api/enrich_from_references response includes only Layer 3 (reference enrichment)."""
+        """POST /api/enrich_from_references response includes only Layer 3 (reference
+        enrichment)."""
         entities = [
             {
                 "id": str(uuid4()),

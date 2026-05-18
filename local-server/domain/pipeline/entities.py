@@ -87,7 +87,8 @@ class Execution:
         timestamp: When the execution occurred
 
     Raises:
-        ValueError: If status is invalid, tokens/duration are negative, or error_message validation fails
+        ValueError: If status is invalid, tokens/duration are negative, or error_message validation
+        fails
     """
 
     id: str

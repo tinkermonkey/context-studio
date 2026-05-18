@@ -350,7 +350,8 @@ class TestNeighborsEndpoint:
         assert response.status_code == status.HTTP_200_OK
 
     def test_neighbors_response_structure(self, client, repository_with_data):
-        """GET /nodes/{node_id}/neighbors response contains node_id, direction, incoming, outgoing."""
+        """GET /nodes/{node_id}/neighbors response contains node_id, direction, incoming,
+        outgoing."""
         classes = repository_with_data.list_classes()
         response = client.get(f"/api/graph/nodes/{classes[0].id}/neighbors")
         assert response.status_code == status.HTTP_200_OK

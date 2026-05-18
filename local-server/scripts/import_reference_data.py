@@ -9,7 +9,8 @@ Usage:
     python scripts/import_reference_data.py [--source SOURCE] [--limit LIMIT]
 
 Options:
-    --source SOURCE    Source to import from: 'conceptnet', 'dbpedia', 'schema_org', or 'all' (default: 'all')
+    --source SOURCE Source to import from: 'conceptnet', 'dbpedia', 'schema_org', or 'all' (default:
+    'all')
     --limit LIMIT      Maximum number of entries to import per source (default: None for unlimited)
 """
 

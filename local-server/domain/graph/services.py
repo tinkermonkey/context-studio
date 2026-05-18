@@ -442,8 +442,10 @@ class GraphAnalysisService:
 
         Args:
             node_id: ID of the node
-            direction: Direction of traversal: "in" (predecessors), "out" (successors), or "both" (default)
-            depth: Maximum distance from center node (default 1). Depth 1 returns immediate neighbors,
+            direction: Direction of traversal: "in" (predecessors), "out" (successors), or "both"
+            (default)
+            depth: Maximum distance from center node (default 1). Depth 1 returns immediate
+            neighbors,
                    depth 2 returns two hops away, etc.
 
         Returns:
@@ -562,7 +564,8 @@ class GraphAnalysisService:
             depth: Maximum distance from center node (must be >= 1)
 
         Returns:
-            SubgraphResult containing the center node ID, node IDs, edge IDs, counts, depth, and extraction timestamp
+            SubgraphResult containing the center node ID, node IDs, edge IDs, counts, depth, and
+            extraction timestamp
 
         Raises:
             NodeNotFoundError: If the center node does not exist in the graph

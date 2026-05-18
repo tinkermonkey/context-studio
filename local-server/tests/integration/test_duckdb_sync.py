@@ -295,7 +295,8 @@ class TestDuckDBSyncAdapterPull:
         assert pulled_event.previous_state is None
 
     def test_pull_fails_on_malformed_json_in_new_state(self, duckdb_adapter, temp_output_dir):
-        """Test that pull raises RuntimeError on malformed JSON in new_state instead of silently returning empty dict."""
+        """Test that pull raises RuntimeError on malformed JSON in new_state instead of silently
+        returning empty dict."""
         import pyarrow as pa
         import pyarrow.parquet as pq
 
@@ -331,7 +332,8 @@ class TestDuckDBSyncAdapterPull:
         assert "Failed to parse new_state JSON" in str(exc_info.value)
 
     def test_pull_fails_on_malformed_json_in_previous_state(self, duckdb_adapter, temp_output_dir):
-        """Test that pull raises RuntimeError on malformed JSON in previous_state instead of silently returning None."""
+        """Test that pull raises RuntimeError on malformed JSON in previous_state instead of
+        silently returning None."""
         import pyarrow as pa
         import pyarrow.parquet as pq
 

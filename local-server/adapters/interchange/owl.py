@@ -11,7 +11,8 @@ Mapping strategy:
 - Individual → owl:NamedIndividual (with rdf:type indicating class membership)
 - PropertyDefinition → owl:ObjectProperty
 - Relationship → RDF triple using the property predicate
-- external_references → LOCAL:externalReferences (JSON-encoded full object with source/identifier/uri)
+- external_references → LOCAL:externalReferences (JSON-encoded full object with
+source/identifier/uri)
   - Backwards compatible with legacy owl:sameAs format (heuristically reconstructed on import)
 """
 
@@ -185,7 +186,8 @@ class OWLSerializer(OntologySerializer):
 
         Args:
             scheme_id: The concept scheme ID
-            include_descendants: If True, include classes within the scheme; if False, only serialize the scheme itself
+            include_descendants: If True, include classes within the scheme; if False, only
+            serialize the scheme itself
         """
         scheme = self.ontology_repo.get_concept_scheme(scheme_id)
         if not scheme:
@@ -266,7 +268,8 @@ class OWLSerializer(OntologySerializer):
         Args:
             scheme: The concept scheme to add
             include_parent_taxonomy: If True, add link to parent taxonomy
-            include_descendants: If True, add classes within the scheme; if False, only add the scheme itself
+            include_descendants: If True, add classes within the scheme; if False, only add the
+            scheme itself
         """
         if self.graph is None:
             raise RuntimeError("Graph not initialized")
@@ -357,7 +360,8 @@ class OWLSerializer(OntologySerializer):
     def _add_external_reference_to_graph(
         self, entity_uri: URIRef, ext_ref: ExternalReference
     ) -> None:
-        """Add an external reference to an entity using LOCAL:externalReferences JSON for faithful round-tripping."""
+        """Add an external reference to an entity using LOCAL:externalReferences JSON for faithful
+        round-tripping."""
         if self.graph is None:
             raise RuntimeError("Graph not initialized")
         # Store full external reference object as JSON for faithful round-tripping
@@ -678,7 +682,8 @@ class OWLDeserializer(OntologyDeserializer):
         if parent_class_uri:
             parent_class_id = self._entity_map.get(str(parent_class_uri))
 
-        # Extract external references from LOCAL:externalReferences JSON (primary) or owl:sameAs (legacy)
+        # Extract external references from LOCAL:externalReferences JSON
+        # (primary) or owl:sameAs (legacy)
         external_references = self._extract_external_references_as_dicts(class_uri)
 
         # Get concept scheme from skos:inScheme
@@ -757,7 +762,8 @@ class OWLDeserializer(OntologyDeserializer):
             self.warnings.append(f"NamedIndividual {ind_uri} has no class memberships (rdf:type)")
             return
 
-        # Extract external references from LOCAL:externalReferences JSON (primary) or owl:sameAs (legacy)
+        # Extract external references from LOCAL:externalReferences JSON
+        # (primary) or owl:sameAs (legacy)
         external_references = self._extract_external_references_as_dicts(ind_uri)
 
         self.incoming_entities[entity_id] = {
@@ -845,7 +851,8 @@ class OWLDeserializer(OntologyDeserializer):
                 }
 
     def _extract_external_references_as_dicts(self, entity_uri: Node) -> list[Dict[str, Any]]:
-        """Extract external references from LOCAL:externalReferences JSON (primary) or owl:sameAs (legacy)."""
+        """Extract external references from LOCAL:externalReferences JSON (primary) or owl:sameAs
+        (legacy)."""
         refs = []
 
         if self.graph is not None:
@@ -884,7 +891,8 @@ class OWLDeserializer(OntologyDeserializer):
 
     def _parse_uri_for_reference(self, uri_str: str) -> tuple[str, str]:
         """Parse a URI to extract source and identifier for external references."""
-        # Handle common patterns like http://dbpedia.org/resource/Dog or https://www.wikidata.org/wiki/Q144
+        # Handle common patterns like http://dbpedia.org/resource/Dog
+        # or https://www.wikidata.org/wiki/Q144
         if "#" in uri_str:
             source, identifier = uri_str.rsplit("#", 1)
             # Extract domain from full URL
@@ -916,7 +924,8 @@ class OWLDeserializer(OntologyDeserializer):
         else:
             domain = uri_part
 
-        # Get the main domain name (e.g., 'dbpedia' from 'dbpedia.org', 'wikidata' from 'wikidata.org')
+        # Get the main domain name (e.g., 'dbpedia' from 'dbpedia.org',
+        # 'wikidata' from 'wikidata.org')
         if "." in domain:
             domain = domain.split(".")[0]
 

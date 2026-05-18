@@ -275,7 +275,8 @@ class TestAdminServiceHealthErrorHandling:
         assert any("Error checking NLP" in issue for issue in health.issues)
 
     def test_check_health_resilient_to_task_summary_failure(self):
-        """Health check continues despite background task summary check failure and reports the error."""
+        """Health check continues despite background task summary check failure and reports the
+        error."""
         metrics = FakeMetricsCollector(
             database_health=DatabaseHealth(connected=True, issues=()),
             service_metrics=ServiceMetrics(uptime_seconds=0.0, llm_providers_available=("openai",)),
@@ -576,8 +577,8 @@ class TestAdminServiceConfigurationReset:
         assert reset_config.llm["anthropic_api_key"] == "sk-ant-secret"
 
     def test_reset_configuration_uses_credential_field_names_constant(self):
-        """Reset configuration uses CREDENTIAL_FIELD_NAMES to determine which fields to preserve."""
-        # Create config with both credential fields (in CREDENTIAL_FIELD_NAMES) and non-credential fields
+        """Test credential field names constant preservation."""
+        # Create config with both credential and non-credential fields
         initial = AppConfiguration(
             server={},
             database={
@@ -1195,7 +1196,8 @@ class TestAdminServiceDatasetManagement:
         assert ds1.is_active is False
 
     def test_delete_dataset_race_condition_raises_error(self):
-        """Delete dataset raises DatasetNotFoundError when repository delete returns False (race condition)."""
+        """Delete dataset raises DatasetNotFoundError when repository delete returns False (race
+        condition)."""
         from domain.admin.exceptions import DatasetNotFoundError
         from tests.fakes.fake_dataset_repository import FakeDatasetRepository
 

@@ -907,7 +907,8 @@ class TestMigrationDataSurvival:
                 text("""
                 INSERT INTO change_events
                 (id, entity_id, entity_type, operation, new_state, timestamp, import_run_id)
-                VALUES (:id, :entity_id, :entity_type, :operation, :new_state, :timestamp, :import_run_id)
+                VALUES (:id, :entity_id, :entity_type, :operation, :new_state, :timestamp,
+                :import_run_id)
             """),
                 {
                     "id": event_id,

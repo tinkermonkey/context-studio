@@ -559,7 +559,8 @@ app.include_router(interchange_router)
 
 
 # ==================== Exception Handlers ====================
-# Note: Pydantic validation errors are handled by FastAPI and return 422 (UNPROCESSABLE_ENTITY) by default.
+# Note: Pydantic validation errors are handled by FastAPI and return
+# 422 (UNPROCESSABLE_ENTITY) by default.
 # No custom handler is needed here.
 
 

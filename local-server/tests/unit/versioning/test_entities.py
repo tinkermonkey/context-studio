@@ -255,7 +255,8 @@ class TestConflictReport:
         assert not report.all_resolved
 
     def test_conflict_resolved_to_none_with_strategy(self) -> None:
-        """Test that is_resolved is true when resolved_value is None but resolution_strategy is set."""
+        """Test that is_resolved is true when resolved_value is None but resolution_strategy is
+        set."""
         conflict = Conflict(
             entity_id="entity1",
             entity_type="class",

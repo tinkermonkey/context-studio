@@ -139,7 +139,8 @@ class TestTaxonomyCreated:
 
     def test_taxonomy_created_rejects_empty_taxonomy_id(self):
         """TaxonomyCreated raises ValueError if taxonomy_id is empty."""
-        # When taxonomy_id is empty, aggregate_id becomes empty too, causing aggregate_id validation to fail
+        # When taxonomy_id is empty, aggregate_id becomes empty too,
+        # causing aggregate_id validation to fail
         with pytest.raises(ValueError, match="Event field 'aggregate_id' cannot be empty"):
             TaxonomyCreated(
                 taxonomy_id="",
@@ -558,7 +559,8 @@ class TestClassMoved:
 
     def test_class_moved_rejects_empty_class_id(self):
         """ClassMoved raises ValueError if class_id is empty."""
-        # When class_id is empty, aggregate_id becomes empty too, causing aggregate_id validation to fail
+        # When class_id is empty, aggregate_id becomes empty too,
+        # causing aggregate_id validation to fail
         with pytest.raises(ValueError, match="Event field 'aggregate_id' cannot be empty"):
             ClassMoved(
                 class_id="",

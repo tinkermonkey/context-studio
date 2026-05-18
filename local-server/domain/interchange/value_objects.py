@@ -117,7 +117,8 @@ class ImportConflict:
         match_kind: Type of match (external_reference, uuid, title)
         incoming: Serialized representation of the incoming entity
         existing: Reference to the existing entity (if matched)
-        default_resolution: Derived from match_kind per cascade table (None means no default, user must choose)
+        default_resolution: Derived from match_kind per cascade table (None means no default, user
+        must choose)
         available_resolutions: List of possible resolutions
     """
 

@@ -1044,7 +1044,8 @@ class TestIndividualGraphIntegration:
 
         graph = service.build_graph()
 
-        # Graph should have nodes (at minimum: 1 taxonomy + 1 scheme + 2 classes + 2 individuals = 6+)
+        # Graph should have nodes (at minimum: 1 taxonomy + 1 scheme + 2
+        # classes + 2 individuals = 6+)
         assert graph.node_count >= 6, f"Expected at least 6 nodes, got {graph.node_count}"
 
         # Get degree distribution to verify individuals are in the graph

@@ -148,7 +148,8 @@ async def get_metrics(
         algorithm, and computed timestamp
 
     Raises:
-        HTTPException: 400 if algorithm is invalid or community detection fails, 422 if graph error occurs
+        HTTPException: 400 if algorithm is invalid or community detection fails, 422 if graph error
+        occurs
     """
     try:
         metrics = service.get_metrics(algorithm=algorithm)
@@ -311,7 +312,8 @@ async def get_communities(
         CommunitiesResponse containing detected communities as lists of node IDs
 
     Raises:
-        HTTPException: 400 if algorithm is not recognized or community detection fails, 422 if graph error occurs
+        HTTPException: 400 if algorithm is not recognized or community detection fails, 422 if graph
+        error occurs
     """
     try:
         communities = service.get_communities(algorithm)
@@ -348,7 +350,8 @@ async def get_neighbors(
         NeighborsResponse containing lists of incoming and outgoing neighbors
 
     Raises:
-        HTTPException: 404 if node is not found, 400 if direction is invalid, 422 if graph error occurs
+        HTTPException: 404 if node is not found, 400 if direction is invalid, 422 if graph error
+        occurs
     """
     try:
         # Build separate incoming and outgoing lists for the response
@@ -393,7 +396,8 @@ async def get_subgraph(
         SubgraphDataResponse containing the nodes and edges in the subgraph
 
     Raises:
-        HTTPException: 404 if any node is not found, 400 if nodes parameter is invalid, 422 if graph error occurs
+        HTTPException: 404 if any node is not found, 400 if nodes parameter is invalid, 422 if graph
+        error occurs
     """
     try:
         # Parse and validate the comma-separated node IDs
@@ -442,7 +446,8 @@ async def get_subgraph_by_depth(
         SubgraphResultResponse containing center node ID, subgraph data, and depth
 
     Raises:
-        HTTPException: 404 if center node is not found, 400 if depth is invalid, 422 if graph error occurs
+        HTTPException: 404 if center node is not found, 400 if depth is invalid, 422 if graph error
+        occurs
     """
     try:
         subgraph_result = service.extract_subgraph_by_depth(node_id, depth)

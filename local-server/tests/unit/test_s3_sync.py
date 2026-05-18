@@ -114,7 +114,8 @@ class TestS3SyncAdapterClientErrorHandling:
             adapter.pull()
 
     def test_get_sync_status_raises_runtime_error_on_client_error(self, adapter):
-        """Test that get_sync_status() raises RuntimeError when list_objects_v2 raises ClientError."""
+        """Test that get_sync_status() raises RuntimeError when list_objects_v2 raises
+        ClientError."""
         # Mock paginator to raise ClientError on paginate
         mock_paginator = Mock()
         mock_paginator.paginate.side_effect = MockClientError(

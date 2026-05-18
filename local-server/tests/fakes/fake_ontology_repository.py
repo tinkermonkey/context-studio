@@ -373,9 +373,11 @@ class FakeOntologyRepository:
             The saved Individual
 
         Raises:
-            DuplicateEntityError: If an individual with this title already exists in any of the classes
+            DuplicateEntityError: If an individual with this title already exists in any of the
+            classes
         """
-        # Check for duplicate title within each of the individual's classes (excluding the individual being updated)
+        # Check for duplicate title within each of the individual's classes
+        # (excluding the individual being updated)
         for class_id in individual.class_ids:
             for existing in self._individuals.values():
                 if (

@@ -642,7 +642,8 @@ class TestDatasetRoutes:
         assert body["description"] == "Test description"
 
     def test_create_dataset_missing_title_returns_422(self, client_with_datasets):
-        """POST /api/v1/admin/datasets with missing required field returns 422 Unprocessable Entity."""
+        """POST /api/v1/admin/datasets with missing required field returns 422 Unprocessable
+        Entity."""
         response = client_with_datasets.post(
             "/api/v1/admin/datasets",
             json={

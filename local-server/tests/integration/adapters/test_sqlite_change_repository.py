@@ -339,7 +339,8 @@ class TestSQLiteChangeRepository:
         assert retrieved["entity-2"]["field_c"] == "value_c"
 
     def test_save_conflict_resolutions_overwrites_existing(self, change_repo, session_factory):
-        """Test that save_conflict_resolutions deletes and reinserts (overwrites) existing resolutions."""
+        """Test that save_conflict_resolutions deletes and reinserts (overwrites) existing
+        resolutions."""
         proposal_id = self._create_proposal(session_factory)
 
         # Save initial resolutions

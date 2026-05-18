@@ -287,9 +287,11 @@ class TestPathFindingIntegration:
         """All paths returns all valid paths from real graph."""
         classes = list(populated_repository.list_classes())
         if len(classes) >= 2:
-            response = client.get(
-                f"/api/graph/paths/all?source_id={classes[0].id}&target_id={classes[1].id}&max_depth=5"
+            url = (
+                f"/api/graph/paths/all?source_id={classes[0].id}"
+                f"&target_id={classes[1].id}&max_depth=5"
             )
+            response = client.get(url)
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
 

@@ -244,8 +244,10 @@ class NetworkXGraphEngine:
 
         Args:
             node_id: ID of the center node
-            direction: Direction of traversal: "in" (predecessors), "out" (successors), "both" (default)
-            depth: Maximum distance from center node (default 1). Depth 1 returns immediate neighbors,
+            direction: Direction of traversal: "in" (predecessors), "out" (successors), "both"
+            (default)
+            depth: Maximum distance from center node (default 1). Depth 1 returns immediate
+            neighbors,
                    depth 2 returns two hops away, etc.
 
         Returns:
@@ -340,7 +342,8 @@ class NetworkXGraphEngine:
             target_id: ID of the edge target node
 
         Returns:
-            Dictionary of edge attributes (e.g., property_definition_id), or empty dict if edge doesn't exist
+            Dictionary of edge attributes (e.g., property_definition_id), or empty dict if edge
+            doesn't exist
         """
         if self._graph.has_edge(source_id, target_id):
             return dict(self._graph[source_id][target_id])

@@ -2056,7 +2056,8 @@ class TestSyncStatusErrorHandling:
     def test_get_sync_status_is_configured_error(
         self, repo: FakeChangeRepository, event_publisher: FakeEventPublisher
     ) -> None:
-        """Test that is_configured errors degrade to is_configured=False and set is_degraded=True."""
+        """Test that is_configured errors degrade to is_configured=False and set
+        is_degraded=True."""
 
         class FailingConfigSyncTarget(FakeSyncTarget):
             def is_configured(self) -> bool:

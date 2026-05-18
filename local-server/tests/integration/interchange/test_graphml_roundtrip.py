@@ -622,7 +622,8 @@ class TestGraphMLExternalReferences:
         )
 
     def test_malformed_external_references_in_individual_raises_error(self):
-        """Test that malformed external references JSON in Individual causes deserialization to fail."""
+        """Test that malformed external references JSON in Individual causes deserialization to
+        fail."""
         import io
 
         import networkx as nx

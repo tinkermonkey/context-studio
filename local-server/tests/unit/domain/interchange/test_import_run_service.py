@@ -376,7 +376,8 @@ class TestImportRunServiceCreateWithResolutionsAndPersist:
     """Test ImportRunService.create_with_resolutions_and_persist method."""
 
     def test_create_with_resolutions_without_repo(self):
-        """create_with_resolutions_and_persist creates ImportRun without persisting when repo is None."""
+        """create_with_resolutions_and_persist creates ImportRun without persisting when repo is
+        None."""
         service = ImportRunService()
         scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
         resolutions = [

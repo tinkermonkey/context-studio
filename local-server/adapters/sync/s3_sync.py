@@ -250,7 +250,8 @@ class S3SyncAdapter:
                                     if file_date.date() < since.date():
                                         continue
                                 except (ValueError, IndexError):
-                                    # When since is provided, skip S3 objects with unparseable date paths
+                                    # When since is provided, skip S3 objects
+                                    # with unparseable date paths
                                     _logger.warning(
                                         "Skipping S3 object with unparseable date path" " (key=%s)",
                                         key,

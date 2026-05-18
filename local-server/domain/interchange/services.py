@@ -16,7 +16,8 @@ from .entities import ImportRun, ResolutionRecord
 from .ports import BatchRunRepository
 from .value_objects import SerializationFormat, SerializationScope
 
-# Context variable for tracking the current batch run ID (import or extraction) across async boundaries
+# Context variable for tracking the current batch run ID (import or
+# extraction) across async boundaries
 _batch_run_context: ContextVar[Optional[str]] = ContextVar("batch_run_id", default=None)
 
 
@@ -120,7 +121,8 @@ class ImportRunService:
             The updated ImportRun
 
         Raises:
-            ValueError: If the run is already in a terminal state (COMMITTED, FAILED, or ROLLED_BACK)
+            ValueError: If the run is already in a terminal state (COMMITTED, FAILED, or
+            ROLLED_BACK)
         """
         import_run.mark_committed()
         return import_run

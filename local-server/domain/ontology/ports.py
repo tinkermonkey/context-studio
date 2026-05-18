@@ -513,7 +513,8 @@ class OntologyRepository(Protocol):
         Retrieve all entities and relationships for graph building.
 
         Returns:
-            Tuple of (all entities as typed domain objects, all relationships) for building a complete graph
+            Tuple of (all entities as typed domain objects, all relationships) for building a
+            complete graph
         """
         ...
 

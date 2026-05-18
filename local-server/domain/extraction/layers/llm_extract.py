@@ -67,7 +67,8 @@ Text:
 Return a JSON array with entity objects. Example:
 [
   {{"label": "John", "type": "PERSON", "confidence": 0.95, "uri": null, "description": null}},
-  {{"label": "Google", "type": "ORGANIZATION", "confidence": 0.90, "uri": "https://example.com", "description": "Tech company"}}
+  {{"label": "Google", "type": "ORGANIZATION", "confidence": 0.90, "uri": "https://example.com",
+  "description": "Tech company"}}
 ]
 
 JSON Array:"""

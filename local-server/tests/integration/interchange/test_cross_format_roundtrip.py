@@ -643,7 +643,8 @@ class TestCrossFormatRoundTrip:
     def test_external_references_survive_graphml_leg(
         self, ontology_repo, interchange_repo, representative_graph
     ):
-        """Test that external_references survive GraphML export/import with full tuple comparison."""
+        """Test that external_references survive GraphML export/import with full tuple
+        comparison."""
         original_dog = representative_graph["classes"]["dog"]
         original_refs = {
             (ref.source, ref.identifier, ref.uri) for ref in original_dog.external_references
@@ -732,12 +733,14 @@ class TestCrossFormatRoundTrip:
         self, ontology_repo, interchange_repo, representative_graph
     ):
         """
-        Test the three-leg chain: SKOS export → SKOS import → OWL export → OWL import → GraphML export → GraphML import.
+        Test the three-leg chain: SKOS export → SKOS import → OWL export → OWL import → GraphML
+        export → GraphML import.
 
         Verifies that:
         1. Original ontology exported to SKOS format
         2. SKOS imported into fresh_repo1, entities persisted
-        3. fresh_repo1 re-exported to OWL (completing the first chain: original → SKOS → back to intermediate state)
+        3. fresh_repo1 re-exported to OWL (completing the first chain: original → SKOS → back to
+        intermediate state)
         4. OWL imported into fresh_repo2, entities persisted
         5. fresh_repo2 re-exported to GraphML (completing the second chain)
         6. GraphML imported into fresh_repo3, verified
@@ -835,8 +838,9 @@ class TestCrossFormatRoundTrip:
         # CRITICAL: Persist the OWL-imported entities into fresh_repo2 before re-exporting
         persist_incoming_entities(fresh_repo2, owl_deserializer.incoming_entities)
 
-        # LEG 3: Export from fresh_repo2 (which now has OWL-imported entities) to GraphML
-        # This completes the chain: SKOS export → SKOS import → OWL export → OWL import → GraphML export
+        # LEG 3: Export from fresh_repo2 (which now has OWL-imported
+        # entities) to GraphML. This completes the chain: SKOS export → SKOS
+        # import → OWL export → OWL import → GraphML export
         graphml_serializer = GraphMLSerializer(fresh_repo2)
         graphml_bytes = graphml_serializer.serialize(scope)
 

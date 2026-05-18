@@ -139,15 +139,18 @@ def downgrade() -> None:
 
     # Migrate data back to import_runs (restore from batch_runs)
     op.get_bind().execute(sa.text("""
-        UPDATE import_runs SET created_at = (SELECT created_at FROM batch_runs WHERE batch_runs.id = import_runs.id)
+        UPDATE import_runs SET created_at = (SELECT created_at FROM batch_runs WHERE batch_runs.id =
+        import_runs.id)
         WHERE EXISTS (SELECT 1 FROM batch_runs WHERE batch_runs.id = import_runs.id)
     """))
     op.get_bind().execute(sa.text("""
-        UPDATE import_runs SET created_by = (SELECT created_by FROM batch_runs WHERE batch_runs.id = import_runs.id)
+        UPDATE import_runs SET created_by = (SELECT created_by FROM batch_runs WHERE batch_runs.id =
+        import_runs.id)
         WHERE EXISTS (SELECT 1 FROM batch_runs WHERE batch_runs.id = import_runs.id)
     """))
     op.get_bind().execute(sa.text("""
-        UPDATE import_runs SET status = (SELECT status FROM batch_runs WHERE batch_runs.id = import_runs.id)
+        UPDATE import_runs SET status = (SELECT status FROM batch_runs WHERE batch_runs.id =
+        import_runs.id)
         WHERE EXISTS (SELECT 1 FROM batch_runs WHERE batch_runs.id = import_runs.id)
     """))
     op.get_bind().execute(sa.text("""

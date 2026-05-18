@@ -576,7 +576,8 @@ class TestUpdateClass:
         }
 
     def test_update_class_no_change_no_embedding_regen(self, service):
-        """Update class with no title/description change does not regenerate embedding or emit event."""
+        """Update class with no title/description change does not regenerate embedding or emit
+        event."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog", description="Canine")
@@ -1192,7 +1193,8 @@ class TestDeleteRelationship:
         assert delete_graph_events[0].taxonomy_id == tax.id
 
     def test_delete_relationship_with_deleted_source_and_target_classes(self, service):
-        """Delete relationship when both source and target classes are missing emits no GraphInvalidated."""
+        """Delete relationship when both source and target classes are missing emits no
+        GraphInvalidated."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         dog = service.create_class(concept_scheme_id=scheme.id, title="Dog")
@@ -1227,7 +1229,8 @@ class TestDeleteRelationship:
         assert len(delete_graph_events) == existing_count
 
     def test_delete_relationship_with_individual_source(self, service):
-        """Delete relationship where source is an Individual resolves taxonomy from its parent class."""
+        """Delete relationship where source is an Individual resolves taxonomy from its parent
+        class."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         animal_class = service.create_class(concept_scheme_id=scheme.id, title="Animal")
@@ -1256,7 +1259,8 @@ class TestDeleteRelationship:
         assert delete_graph_events[0].taxonomy_id == tax.id
 
     def test_delete_relationship_with_individual_target(self, service):
-        """Delete relationship where target is an Individual resolves taxonomy from its parent class."""
+        """Delete relationship where target is an Individual resolves taxonomy from its parent
+        class."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         animal_class = service.create_class(concept_scheme_id=scheme.id, title="Animal")
@@ -1314,7 +1318,8 @@ class TestDeleteRelationship:
         assert delete_graph_events[0].taxonomy_id == tax.id
 
     def test_delete_relationship_with_individual_source_deleted_parent_class(self, service):
-        """Delete relationship where source Individual's parent class is deleted uses target class taxonomy."""
+        """Delete relationship where source Individual's parent class is deleted uses target class
+        taxonomy."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         animal_class = service.create_class(concept_scheme_id=scheme.id, title="Animal")
@@ -1349,7 +1354,8 @@ class TestDeleteRelationship:
     def test_delete_relationship_with_individuals_and_deleted_parent_classes(
         self, service, monkeypatch
     ):
-        """Delete relationship where both Individuals have deleted parent classes emits warning and no GraphInvalidated."""
+        """Delete relationship where both Individuals have deleted parent classes emits warning and
+        no GraphInvalidated."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         animal_class = service.create_class(concept_scheme_id=scheme.id, title="Animal")
