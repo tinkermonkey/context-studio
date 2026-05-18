@@ -16,11 +16,13 @@ export function FlavorForm({ onSubmit, onCancel, isLoading = false }: FlavorForm
   const [description, setDescription] = useState("");
   const [nameError, setNameError] = useState<string>();
   const [descriptionError, setDescriptionError] = useState<string>();
+  const [formError, setFormError] = useState<string>();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setNameError(undefined);
     setDescriptionError(undefined);
+    setFormError(undefined);
 
     if (!name.trim()) {
       setNameError("Name is required");
@@ -42,12 +44,17 @@ export function FlavorForm({ onSubmit, onCancel, isLoading = false }: FlavorForm
       setDescription("");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to save flavor";
-      setNameError(message);
+      setFormError(message);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} data-testid="flavor-form" className="stack">
+      {formError && (
+        <div className="error-banner" data-testid="flavor-form-error" role="alert">
+          {formError}
+        </div>
+      )}
       <Field
         label="Name"
         required

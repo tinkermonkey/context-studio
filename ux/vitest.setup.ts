@@ -402,10 +402,14 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
         { className: ["field", error && "field--error", className].filter(Boolean).join(" "), ref, ...props },
         label &&
           React.createElement(
-            "label",
+            "div",
             { className: "field__label" },
-            label,
-            required && React.createElement("span", { className: "field__required" }, "*"),
+            React.createElement(
+              "span",
+              {},
+              label,
+              required && React.createElement("span", { className: "field__required" }, "*"),
+            ),
           ),
         children,
         error &&

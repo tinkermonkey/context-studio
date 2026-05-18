@@ -70,7 +70,7 @@ export function RelationshipForm({
 
   return (
     <form onSubmit={handleSubmit} data-testid="relationship-form">
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+      <div className="stack-lg">
         <Field
           label="Source Class"
           required

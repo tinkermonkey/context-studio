@@ -81,7 +81,7 @@ export function PropertyDefinitionForm({
 
   return (
     <form onSubmit={handleSubmit} data-testid="property-definition-form">
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+      <div className="stack-lg">
         <Field
           label="Identifier (snake_case)"
           required
