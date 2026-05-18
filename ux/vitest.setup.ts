@@ -227,12 +227,12 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
         title &&
           React.createElement(
             "div",
-            { className: "drawer__header" },
-            React.createElement("h2", { className: "drawer__title" }, title),
+            { className: "drawer-head" },
+            React.createElement("h2", { className: "title" }, title),
             React.createElement(
               "button",
               {
-                className: "drawer__close",
+                className: "drawer-close",
                 onClick: onClose,
                 "aria-label": "Close drawer",
                 type: "button",
@@ -240,7 +240,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
               React.createElement("span", {}, "✕"),
             ),
           ),
-        React.createElement("div", { className: "drawer__body" }, children),
+        React.createElement("div", { className: "drawer-body" }, children),
       ),
     );
   }),
