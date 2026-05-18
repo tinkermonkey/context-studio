@@ -123,8 +123,8 @@ describe("PropertyDefinitionForm", () => {
       identifier: "test_property",
       title: "Old Title",
       description: "Old description",
-      created_at: "",
-      updated_at: "",
+      version: 1,
+      status: "draft",
     };
 
     mockOnSubmit.mockResolvedValue(undefined);
@@ -221,8 +221,8 @@ describe("PropertyDefinitionForm", () => {
       identifier: "existing_id",
       title: "Existing",
       description: "",
-      created_at: "",
-      updated_at: "",
+      version: 1,
+      status: "draft",
     };
 
     render(<PropertyDefinitionForm initialData={initialData} onSubmit={mockOnSubmit} />);
