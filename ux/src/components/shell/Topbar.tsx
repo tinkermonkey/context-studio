@@ -38,8 +38,6 @@ export function Topbar() {
   return (
     <HeimdallTopbar
       breadcrumbs={breadcrumbs}
-      searchPlaceholder="Search or run command…"
-      onSearch={handleSearch}
     >
       <div className="topbar-actions">
         <button

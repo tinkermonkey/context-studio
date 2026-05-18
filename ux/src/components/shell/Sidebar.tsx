@@ -153,11 +153,11 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps = {}) {
   };
 
   return (
-    <div data-testid="sidebar" className={`shell-rail ${collapsed ? "collapsed" : ""}`}>
+    <aside data-testid="sidebar" className={`shell-rail ${collapsed ? "collapsed" : ""}`}>
       <button
         data-testid="sidebar-toggle"
         className="rail-collapse"
-        onClick={onToggle}
+        onClick={() => onToggle?.()}
         aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
         <Menu size={20} />
@@ -223,6 +223,6 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps = {}) {
           );
         })}
       </nav>
-    </div>
+    </aside>
   );
 }
