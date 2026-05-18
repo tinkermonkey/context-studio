@@ -2241,6 +2241,15 @@ select.input {
   font-family: var(--mono);
 }
 
+.error-banner {
+  padding: var(--space-3);
+  background: var(--rose-50);
+  border-radius: var(--radius-sm);
+  color: var(--rose-700);
+  font-size: var(--text-sm);
+  border: 1px solid var(--rose-200);
+}
+
 /* ============= Dark canvas mode ============= */
 body.dark-canvas {
   --canvas-bg: #14191f;
