@@ -743,6 +743,24 @@ a {
 .status-pulse.running::after {
   background: var(--accent-cyan);
 }
+.status-pulse.error {
+  background: rgb(var(--rose-500));
+}
+.status-pulse.error::after {
+  background: rgb(var(--rose-500));
+}
+.status-pulse.warning {
+  background: rgb(var(--amber-400));
+}
+.status-pulse.warning::after {
+  background: rgb(var(--amber-400));
+}
+.status-pulse.idle {
+  background: rgb(var(--canvas-fg-3));
+}
+.status-pulse.idle::after {
+  background: rgb(var(--canvas-fg-3));
+}
 
 /* ------------ Page layout ------------ */
 .page-head {
@@ -2230,38 +2248,32 @@ select.input {
 }
 
 .pipeline-error-message {
-  background: var(--canvas-bg-3);
+  background: rgb(var(--canvas-bg-3));
   padding: var(--space-2);
   border-radius: var(--radius-sm);
   overflow: auto;
   font-size: var(--text-xs);
   line-height: 1.5;
-  color: var(--rose-500, #f43f5e);
+  color: rgb(var(--rose-500));
   max-height: 200px;
   font-family: var(--mono);
 }
 
 .error-banner {
   padding: var(--space-3);
-  background: var(--rose-50);
+  background: rgb(var(--rose-50));
   border-radius: var(--radius-sm);
-  color: var(--rose-700);
+  color: rgb(var(--rose-700));
   font-size: var(--text-sm);
-  border: 1px solid var(--rose-200);
+  border: 1px solid rgb(var(--rose-200));
 }
 
 /* ============= Dark canvas mode ============= */
+/* Token redefinitions are now handled by Heimdall's tokens.css and app-overrides.css */
 body.dark-canvas {
-  --canvas-bg: #14191f;
-  --canvas-bg-2: #1b222a;
-  --canvas-card: #1b222a;
-  --canvas-bd: #2a323c;
-  --canvas-bd-2: #3a4452;
-  --canvas-fg: #e6edf3;
-  --canvas-fg-1: #e6edf3;
-  --canvas-fg-2: #b0bac5;
-  --canvas-fg-3: #7e8a98;
-  --canvas-fg-4: #5a6573;
+  /* Canvas colors are automatically redefined by Heimdall in body.dark-canvas */
+  /* Additional light-only values for dark mode */
+  --canvas-fg-4: 75 85 99;
 }
 body.dark-canvas table.t tr:hover td {
   background: rgba(255, 255, 255, 0.03);

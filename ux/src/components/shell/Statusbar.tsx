@@ -22,16 +22,9 @@ export function Statusbar() {
     <div className="statusbar-group">
       <span className="sb-item">
         <span
-          className="status-pulse"
-          style={{
-            background: isError
-              ? "var(--rose-500, #f43f5e)"
-              : isDegraded
-                ? "var(--amber-400, #fbbf24)"
-                : isHealthy
-                  ? undefined
-                  : "var(--canvas-fg-3)",
-          }}
+          className={`status-pulse ${
+            isError ? "error" : isDegraded ? "warning" : isHealthy ? "" : "idle"
+          }`}
         />
         <span>api server</span>
         <span className="sb-mono">:8100</span>

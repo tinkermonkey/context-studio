@@ -1,0 +1,86 @@
+@layer base {
+  :root {
+    /* ---- Semantic Color Palettes (Tailwind-aligned) ---- */
+    /* Rose colors for error states */
+    --rose-50: 253 242 247;
+    --rose-200: 251 207 232;
+    --rose-500: 244 63 94;
+    --rose-700: 190 18 60;
+
+    /* Amber colors for warning states */
+    --amber-400: 251 191 36;
+
+    /* ---- Domain-Specific Taxonomy Colors ---- */
+    --dom-life: 76 175 80;
+    --dom-climate: 33 150 243;
+    --dom-software: 156 39 176;
+    --dom-default: 158 158 158;
+
+    /* ---- Canvas Layout Classes ---- */
+    --space-canvas-inner: 2rem;
+
+    /* ---- Legacy Accent Color Aliases (map to Heimdall semantic colors) ---- */
+    --accent-cyan: var(--accent-primary);
+    --accent-cyan-deep: var(--accent-primary-deep);
+    --accent-cyan-2: var(--accent-primary-hover);
+    --accent-amber: var(--status-amber);
+    --accent-rose: var(--status-rose);
+    --accent-violet: var(--status-violet);
+    --accent-emerald: var(--status-emerald);
+
+    /* ---- Canvas Surface ---- */
+    --canvas-bg-3: 243 244 246;
+    --canvas-fg: var(--canvas-fg-1);
+    --canvas-fg-4: 107 114 128;
+
+    /* ---- Canvas Border (map to Heimdall tokens) ---- */
+    --canvas-bd: var(--canvas-border);
+    --canvas-bd-2: var(--canvas-border-strong);
+
+    /* ---- Shell Surface ---- */
+    --shell-bg-2: 39 46 56;
+    --shell-surface-2: 55 65 81;
+    --shell-fg: var(--shell-fg-1);
+    --shell-border: var(--canvas-border);
+    --shell-border-2: 75 85 99;
+
+    /* ---- Typography Aliases ---- */
+    --mono: var(--font-mono);
+
+    /* ---- Error Styling ---- */
+    --error-fg: 190 18 60;
+  }
+
+  body.dark-canvas {
+    /* Dark canvas inherits Heimdall's dark redefinitions automatically */
+    --canvas-bg-3: 39 46 56;
+    --canvas-fg-4: 75 85 99;
+    --shell-bg-2: 55 65 81;
+    --shell-surface-2: 75 85 99;
+  }
+}
+
+/* ---- Split Layout Utilities ---- */
+.split-2 {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 0;
+}
+
+.split-3 {
+  display: grid;
+  grid-template-columns: 1fr 380px 380px;
+  gap: 0;
+}
+
+/* ---- Statistics Grid ---- */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+/* ---- Canvas Inner Padding ---- */
+.canvas-inner {
+  padding: var(--space-canvas-inner);
+}
