@@ -1,22 +1,55 @@
-import type { ReactNode } from "react";
+import type { ReactNode, HTMLAttributes } from "react";
+import { Panel as HeimdallPanel } from "@tinkermonkey/heimdall-ui";
 
-interface PanelProps {
-  title?: ReactNode;
+interface PanelProps extends HTMLAttributes<HTMLDivElement> {
+  title?: string;
+  subtitle?: string;
   actions?: ReactNode;
+  footer?: ReactNode;
+  bordered?: boolean;
   children: ReactNode;
-  className?: string;
 }
 
-export function Panel({ title, actions, children, className = "" }: PanelProps) {
+export function Panel({
+  title,
+  subtitle,
+  actions,
+  footer,
+  bordered,
+  children,
+  className,
+  ...rest
+}: PanelProps) {
+  if (actions) {
+    return (
+      <div className={className} {...rest}>
+        <HeimdallPanel
+          title={title}
+          subtitle={subtitle}
+          footer={
+            <div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}>
+              <div />
+              <div>{actions}</div>
+            </div>
+          }
+          bordered={bordered}
+        >
+          {children}
+        </HeimdallPanel>
+      </div>
+    );
+  }
+
   return (
-    <div className={`panel ${className}`}>
-      {title && (
-        <div className="panel-head">
-          <span className="panel-title">{title}</span>
-          {actions && <div className="panel-actions">{actions}</div>}
-        </div>
-      )}
-      <div className="panel-body">{children}</div>
-    </div>
+    <HeimdallPanel
+      title={title}
+      subtitle={subtitle}
+      footer={footer}
+      bordered={bordered}
+      className={className}
+      {...rest}
+    >
+      {children}
+    </HeimdallPanel>
   );
 }

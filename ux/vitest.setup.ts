@@ -363,6 +363,24 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
         ),
       ),
   ),
+  StatGrid: React.forwardRef(
+    ({ columns = 4, children, className = "", ...props }: any, ref: any) =>
+      React.createElement(
+        "div",
+        {
+          ref,
+          className: ["stat-grid", className].filter(Boolean).join(" "),
+          style: {
+            display: "grid",
+            gridTemplateColumns: `repeat(${columns}, 1fr)`,
+            gap: "14px",
+            ...props.style,
+          },
+          ...props,
+        },
+        children,
+      ),
+  ),
   Sidebar: ({ children, onCollapse, ..._props }: any) =>
     React.createElement("div", { "data-testid": "heimdall-sidebar" }, [
       React.createElement(

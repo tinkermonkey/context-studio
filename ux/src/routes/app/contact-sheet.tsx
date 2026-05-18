@@ -17,6 +17,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Drawer } from "@/components/ui/Drawer";
 import { Tabs } from "@/components/ui/Tabs";
 import { StatTile } from "@/components/ui/StatTile";
+import { StatGrid } from "@/components/ui/StatGrid";
 import { Panel } from "@/components/ui/Panel";
 import { useToasts } from "@/components/ui/Toast";
 import { useCanvasStore } from "@/stores/canvas";
@@ -172,12 +173,12 @@ export default function ContactSheet() {
 
       {/* ── Stat Grid ── */}
       <Section title="Stat Tiles" testid="contact-sheet-stat-tiles">
-        <div className="stat-grid">
+        <StatGrid>
           <StatTile label="Classes" value="22" color="cyan" sub="4 taxonomies" />
           <StatTile label="Individuals" value="267" color="violet" sub="indexed" />
           <StatTile label="Relationships" value="1,204" color="amber" sub="typed edges" />
           <StatTile label="Pipelines" value="11" color="emerald" sub="1 running" />
-        </div>
+        </StatGrid>
       </Section>
 
       {/* ── Tabs ── */}

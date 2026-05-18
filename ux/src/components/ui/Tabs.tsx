@@ -1,33 +1,26 @@
 import type { ReactNode } from "react";
+import { TabBar as HeimdallTabBar } from "@tinkermonkey/heimdall-ui";
 
 interface Tab {
   id: string;
   label: ReactNode;
+  count?: number;
 }
 
 interface TabsProps {
   tabs: Tab[];
   active: string;
   onChange: (id: string) => void;
+  className?: string;
 }
 
-export function Tabs({ tabs, active, onChange }: TabsProps) {
+export function Tabs({ tabs, active, onChange, className }: TabsProps) {
   return (
-    <div className="tabs" role="tablist">
-      {tabs.map((tab) => (
-        <button
-          key={tab.id}
-          id={`tab-${tab.id}`}
-          className={`tab ${active === tab.id ? "active" : ""}`}
-          onClick={() => onChange(tab.id)}
-          type="button"
-          role="tab"
-          aria-selected={active === tab.id}
-          aria-controls={`panel-${tab.id}`}
-        >
-          {tab.label}
-        </button>
-      ))}
-    </div>
+    <HeimdallTabBar
+      tabs={tabs}
+      activeTabId={active}
+      onSelectTab={onChange}
+      className={className}
+    />
   );
 }
