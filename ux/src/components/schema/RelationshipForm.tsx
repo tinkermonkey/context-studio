@@ -71,11 +71,7 @@ export function RelationshipForm({
   return (
     <form onSubmit={handleSubmit} data-testid="relationship-form">
       <div className="stack-lg">
-        <Field
-          label="Source Class"
-          required
-          error={sourceError}
-        >
+        <Field label="Source Class" required error={sourceError}>
           <select
             value={sourceId}
             onChange={(e) => {
@@ -102,11 +98,7 @@ export function RelationshipForm({
           </select>
         </Field>
 
-        <Field
-          label="Target Class"
-          required
-          error={targetError}
-        >
+        <Field label="Target Class" required error={targetError}>
           <select
             value={targetId}
             onChange={(e) => {
@@ -133,11 +125,7 @@ export function RelationshipForm({
           </select>
         </Field>
 
-        <Field
-          label="Relationship Type (Property)"
-          required
-          error={typeError}
-        >
+        <Field label="Relationship Type (Property)" required error={typeError}>
           <select
             value={relationshipType}
             onChange={(e) => {

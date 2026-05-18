@@ -44,11 +44,7 @@ export function ClassForm({ onSubmit, isLoading }: ClassFormProps) {
   return (
     <form onSubmit={handleSubmit} data-testid="class-form">
       <div className="stack-lg">
-        <Field
-          label="Title"
-          required
-          error={titleError}
-        >
+        <Field label="Title" required error={titleError}>
           <Input
             type="text"
             placeholder="Class name"

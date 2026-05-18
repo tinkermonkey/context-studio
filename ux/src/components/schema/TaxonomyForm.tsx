@@ -44,11 +44,7 @@ export function TaxonomyForm({ onSubmit, isLoading }: TaxonomyFormProps) {
   return (
     <form onSubmit={handleSubmit} data-testid="taxonomy-form">
       <div className="stack-lg">
-        <Field
-          label="Title"
-          required
-          error={titleError}
-        >
+        <Field label="Title" required error={titleError}>
           <Input
             type="text"
             placeholder="Taxonomy name"

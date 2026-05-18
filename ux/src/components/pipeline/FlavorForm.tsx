@@ -55,11 +55,7 @@ export function FlavorForm({ onSubmit, onCancel, isLoading = false }: FlavorForm
           {formError}
         </div>
       )}
-      <Field
-        label="Name"
-        required
-        error={nameError}
-      >
+      <Field label="Name" required error={nameError}>
         <Input
           type="text"
           placeholder="Flavor name"
@@ -73,11 +69,7 @@ export function FlavorForm({ onSubmit, onCancel, isLoading = false }: FlavorForm
         />
       </Field>
 
-      <Field
-        label="Description"
-        required
-        error={descriptionError}
-      >
+      <Field label="Description" required error={descriptionError}>
         <Input
           type="text"
           placeholder="Description"

@@ -82,11 +82,7 @@ export function PropertyDefinitionForm({
   return (
     <form onSubmit={handleSubmit} data-testid="property-definition-form">
       <div className="stack-lg">
-        <Field
-          label="Identifier (snake_case)"
-          required
-          error={identifierError}
-        >
+        <Field label="Identifier (snake_case)" required error={identifierError}>
           <Input
             type="text"
             placeholder="property_identifier"
@@ -102,11 +98,7 @@ export function PropertyDefinitionForm({
           />
         </Field>
 
-        <Field
-          label="Title"
-          required
-          error={titleError}
-        >
+        <Field label="Title" required error={titleError}>
           <Input
             type="text"
             placeholder="Display name"

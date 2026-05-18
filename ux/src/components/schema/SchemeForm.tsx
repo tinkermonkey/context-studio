@@ -44,11 +44,7 @@ export function SchemeForm({ onSubmit, isLoading }: SchemeFormProps) {
   return (
     <form onSubmit={handleSubmit} data-testid="scheme-form">
       <div className="stack-lg">
-        <Field
-          label="Title"
-          required
-          error={titleError}
-        >
+        <Field label="Title" required error={titleError}>
           <Input
             type="text"
             placeholder="Scheme name"

@@ -11,15 +11,15 @@ A graph-native knowledge studio. Dark IDE-style chrome wraps a light "canvas" wo
 
 ## Index
 
-| File                        | Purpose                                                           |
-| --------------------------- | ----------------------------------------------------------------- |
-| `README.md`                 | This document                                                     |
-| `SKILL.md`                  | Skill manifest (cross-compatible with Claude Code skills)         |
-| `styles/tokens.css`         | Reference tokens (read-only, for design documentation)            |
-| `../src/app-overrides.css`  | Application-level token overrides and component styles            |
-| `../src/design-system/`     | Feature-specific styling (graph, chart, etc.)                      |
-| `components/icons.jsx`      | Icon set (Lucide-style outline, 1.75 stroke)                      |
-| `preview/`                  | Design-system preview cards (registered in the Design System tab) |
+| File                       | Purpose                                                           |
+| -------------------------- | ----------------------------------------------------------------- |
+| `README.md`                | This document                                                     |
+| `SKILL.md`                 | Skill manifest (cross-compatible with Claude Code skills)         |
+| `styles/tokens.css`        | Reference tokens (read-only, for design documentation)            |
+| `../src/app-overrides.css` | Application-level token overrides and component styles            |
+| `../src/design-system/`    | Feature-specific styling (graph, chart, etc.)                     |
+| `components/icons.jsx`     | Icon set (Lucide-style outline, 1.75 stroke)                      |
+| `preview/`                 | Design-system preview cards (registered in the Design System tab) |
 
 ---
 

@@ -43,7 +43,9 @@ export function ErrorBanner({
         }}
       >
         <AlertCircle size={16} style={{ color: "rgb(var(--status-rose))" }} />
-        <span style={{ flex: 1, fontSize: "var(--text-xs)", color: "rgb(var(--status-rose-deep))" }}>
+        <span
+          style={{ flex: 1, fontSize: "var(--text-xs)", color: "rgb(var(--status-rose-deep))" }}
+        >
           {message}
         </span>
         <div style={{ display: "flex", gap: "4px" }}>
@@ -65,7 +67,8 @@ export function ErrorBanner({
               transition: "background 0.15s",
             }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgb(var(--semantic-rose-bg))";
+              (e.currentTarget as HTMLButtonElement).style.background =
+                "rgb(var(--semantic-rose-bg))";
             }}
             onMouseLeave={(e) => {
               (e.currentTarget as HTMLButtonElement).style.background = "transparent";
@@ -165,10 +168,12 @@ export function ErrorBanner({
             transition: "background 0.15s",
           }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = "rgb(var(--semantic-rose-border))";
+            (e.currentTarget as HTMLButtonElement).style.background =
+              "rgb(var(--semantic-rose-border))";
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = "rgb(var(--semantic-rose-bg))";
+            (e.currentTarget as HTMLButtonElement).style.background =
+              "rgb(var(--semantic-rose-bg))";
           }}
         >
           <FileText size={14} />
@@ -194,7 +199,8 @@ export function ErrorBanner({
               transition: "background 0.15s",
             }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgb(var(--status-rose-deep))";
+              (e.currentTarget as HTMLButtonElement).style.background =
+                "rgb(var(--status-rose-deep))";
             }}
             onMouseLeave={(e) => {
               (e.currentTarget as HTMLButtonElement).style.background = "rgb(var(--status-rose))";

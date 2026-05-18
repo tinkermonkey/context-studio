@@ -100,7 +100,9 @@ describe("StatTile", () => {
       expect(container.querySelector(".stat-tile")).toBeInTheDocument();
       expect(container.querySelector(".stat-tile__label")).toHaveTextContent("Active Users");
       expect(container.querySelector(".stat-tile__value")).toHaveTextContent("1250");
-      expect(container.querySelector(".stat-tile__label-secondary")).toHaveTextContent("+5% from yesterday");
+      expect(container.querySelector(".stat-tile__label-secondary")).toHaveTextContent(
+        "+5% from yesterday",
+      );
     });
   });
 });

@@ -122,11 +122,7 @@ export function GroundingWorkflowForm({ onSubmit, isLoading }: GroundingWorkflow
   return (
     <form onSubmit={handleSubmit} data-testid="grounding-workflow-form">
       <div className="stack-lg">
-        <Field
-          label="Workflow Name"
-          required
-          error={titleError}
-        >
+        <Field label="Workflow Name" required error={titleError}>
           <Input
             type="text"
             placeholder="Enter workflow name"
@@ -141,11 +137,7 @@ export function GroundingWorkflowForm({ onSubmit, isLoading }: GroundingWorkflow
           />
         </Field>
 
-        <Field
-          label="Reference Source"
-          required
-          error={sourceError}
-        >
+        <Field label="Reference Source" required error={sourceError}>
           <select
             value={source}
             onChange={(e) => {
@@ -173,11 +165,7 @@ export function GroundingWorkflowForm({ onSubmit, isLoading }: GroundingWorkflow
           </select>
         </Field>
 
-        <Field
-          label="Class Scope"
-          required
-          error={scopeError}
-        >
+        <Field label="Class Scope" required error={scopeError}>
           <div>
             {selectedClasses.length > 0 && (
               <div
