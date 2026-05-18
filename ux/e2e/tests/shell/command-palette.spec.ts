@@ -25,7 +25,7 @@ test.describe("Command Palette", () => {
     await expect(input).toBeFocused();
 
     // Assert at least one result exists and first result is highlighted
-    const firstItem = palette.locator('.command-palette__item').first();
+    const firstItem = palette.locator(".command-palette__item").first();
     await expect(firstItem).toBeVisible();
     await expect(firstItem).toHaveClass(/command-palette__item--selected/);
   });
@@ -38,7 +38,7 @@ test.describe("Command Palette", () => {
     const input = palette.locator("input.command-palette__input");
 
     // Get baseline: count initial results
-    const baselineItems = palette.locator('.command-palette__item');
+    const baselineItems = palette.locator(".command-palette__item");
     const baselineCount = await baselineItems.count();
     expect(baselineCount).toBeGreaterThan(0);
 
@@ -46,7 +46,7 @@ test.describe("Command Palette", () => {
     await input.fill("schema");
 
     // Assert results are filtered to matching items
-    const filteredItems = palette.locator('.command-palette__item');
+    const filteredItems = palette.locator(".command-palette__item");
     const filteredCount = await filteredItems.count();
     expect(filteredCount).toBeGreaterThan(0);
 
@@ -56,7 +56,7 @@ test.describe("Command Palette", () => {
 
     // Verify case-insensitive matching by typing uppercase
     await input.fill("SCHEMA");
-    const uppercaseItems = palette.locator('.command-palette__item');
+    const uppercaseItems = palette.locator(".command-palette__item");
     const uppercaseCount = await uppercaseItems.count();
     expect(uppercaseCount).toBeGreaterThan(0);
     const firstUppercaseItem = uppercaseItems.first();
@@ -64,7 +64,7 @@ test.describe("Command Palette", () => {
 
     // Type additional characters to further narrow results
     await input.fill("schema/classes");
-    const narrowedItems = palette.locator('.command-palette__item');
+    const narrowedItems = palette.locator(".command-palette__item");
     const narrowedCount = await narrowedItems.count();
     // Results should either be empty or contain filtered items (no vacuous assertion)
     if (narrowedCount > 0) {
@@ -72,7 +72,7 @@ test.describe("Command Palette", () => {
       await expect(firstNarrowedItem).toBeVisible();
     } else {
       // If no results, empty state should be visible
-      const emptyState = palette.locator('.command-palette__empty');
+      const emptyState = palette.locator(".command-palette__empty");
       await expect(emptyState).toBeVisible();
     }
   });
@@ -87,7 +87,7 @@ test.describe("Command Palette", () => {
     // Type to ensure we have results
     await input.fill("schema");
 
-    const allItems = palette.locator('.command-palette__item');
+    const allItems = palette.locator(".command-palette__item");
     // Assert we have at least 2 items for navigation testing
     await expect(allItems.nth(0)).toBeVisible();
     await expect(allItems.nth(1)).toBeVisible();
@@ -140,7 +140,7 @@ test.describe("Command Palette", () => {
     // Type to ensure we have results
     await input.fill("schema");
 
-    const allItems = palette.locator('.command-palette__item');
+    const allItems = palette.locator(".command-palette__item");
     // Assert we have at least 2 items for navigation testing
     await expect(allItems.nth(0)).toBeVisible();
     await expect(allItems.nth(1)).toBeVisible();
@@ -177,7 +177,7 @@ test.describe("Command Palette", () => {
     // Type to get filtered results
     await input.fill("schema");
 
-    const allItems = palette.locator('.command-palette__item');
+    const allItems = palette.locator(".command-palette__item");
     // Assert at least one result exists
     await expect(allItems.nth(0)).toBeVisible();
 
@@ -198,7 +198,7 @@ test.describe("Command Palette", () => {
     // Type to get results
     await input.fill("schema");
 
-    const allItems = palette.locator('.command-palette__item');
+    const allItems = palette.locator(".command-palette__item");
     // Assert at least one result exists
     await expect(allItems.nth(0)).toBeVisible();
 
@@ -233,7 +233,7 @@ test.describe("Command Palette", () => {
     await page.keyboard.press("Meta+k");
 
     const palette = page.getByTestId("command-palette");
-    const backdrop = palette.locator('.command-palette-backdrop');
+    const backdrop = palette.locator(".command-palette-backdrop");
 
     // Assert palette is open
     await expect(palette).toBeVisible();
@@ -286,7 +286,7 @@ test.describe("Command Palette", () => {
     await expect(input).toHaveValue("");
 
     // Assert first result is highlighted
-    const firstItem = palette.locator('.command-palette__item').first();
+    const firstItem = palette.locator(".command-palette__item").first();
     await expect(firstItem).toBeVisible();
     await expect(firstItem).toHaveClass(/command-palette__item--selected/);
   });
@@ -309,7 +309,7 @@ test.describe("Command Palette", () => {
     await expect(input).toBeFocused();
 
     // Assert first result is highlighted
-    const firstItem = palette.locator('.command-palette__item').first();
+    const firstItem = palette.locator(".command-palette__item").first();
     await expect(firstItem).toBeVisible();
     await expect(firstItem).toHaveClass(/command-palette__item--selected/);
   });
@@ -326,7 +326,7 @@ test.describe("Command Palette", () => {
     await input.fill(nonMatchingQuery);
 
     // Assert the results area shows empty state
-    const emptyState = palette.locator('.command-palette__empty');
+    const emptyState = palette.locator(".command-palette__empty");
     await expect(emptyState).toBeVisible();
 
     // Assert the message contains text
@@ -345,7 +345,7 @@ test.describe("Command Palette", () => {
     await input.fill("schema");
 
     // Assert results appear for matching query
-    const items = palette.locator('.command-palette__item');
+    const items = palette.locator(".command-palette__item");
     const itemCount = await items.count();
     expect(itemCount).toBeGreaterThan(0);
 

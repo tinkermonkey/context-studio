@@ -1,15 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
-import {
-  LayoutGrid,
-  Network,
-  Database,
-  Zap,
-  Link,
-  Settings,
-  Menu,
-  LucideIcon,
-} from "lucide-react";
+import { LayoutGrid, Network, Database, Zap, Link, Settings, Menu, LucideIcon } from "lucide-react";
 import { useSidebarStore } from "@/stores/sidebar";
 
 interface NavItemPath {
@@ -161,8 +152,9 @@ export function Sidebar({ collapsed: collapsedProp, onToggle }: SidebarProps = {
                 <button
                   className={`nav-item ${isGroupActive ? "active-parent" : ""}`}
                   onClick={() => {
-                    const childPath = item.children.find((c) => c.id === activeItemId)?.path
-                      || item.children[0].path;
+                    const childPath =
+                      item.children.find((c) => c.id === activeItemId)?.path ||
+                      item.children[0].path;
                     navigate({ to: childPath });
                     handleGroupToggle(item.id);
                   }}
