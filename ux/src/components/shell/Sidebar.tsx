@@ -184,7 +184,6 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps = {}) {
                     navigate({ to: childPath });
                     handleGroupToggle(item.id);
                   }}
-                  title={collapsed ? item.label : undefined}
                   aria-label={collapsed ? item.label : undefined}
                   data-testid={`sidebar-item-${item.id}`}
                   aria-expanded={isExpanded}
@@ -217,7 +216,6 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps = {}) {
                 label={!collapsed ? item.label : ""}
                 active={isItemActive}
                 onClick={() => navigate({ to: item.path! })}
-                title={collapsed ? item.label : undefined}
                 aria-label={collapsed ? item.label : undefined}
                 data-testid={`sidebar-item-${item.id}`}
               />
