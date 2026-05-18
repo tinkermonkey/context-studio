@@ -72,6 +72,9 @@ selectors:
   - selector: sidebar-toggle
     component: components/shell/Sidebar.tsx
     description: Button that collapses or expands the sidebar
+  - selector: sidebar-item-*
+    component: components/shell/Sidebar.tsx
+    description: Navigation item button with dynamic ID suffix (top-level or child items)
 
   # Toast
   - selector: toast-*

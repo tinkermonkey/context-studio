@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useState } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   LayoutGrid,
@@ -86,18 +86,15 @@ export function Sidebar({ collapsed: collapsedProp, onToggle }: SidebarProps = {
   const navigate = useNavigate();
   const { location } = useRouterState();
   const { collapsed: collapsedStore, toggleCollapsed } = useSidebarStore();
-  const sidebarRef = useRef<HTMLDivElement>(null);
-  const toggleButtonRef = useRef<HTMLButtonElement>(null);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const pathname = location.pathname;
 
   const collapsed = collapsedProp !== undefined ? collapsedProp : collapsedStore;
   const handleToggle = onToggle !== undefined ? onToggle : toggleCollapsed;
 
-  useEffect(() => {
-    if (toggleButtonRef.current) {
-      toggleButtonRef.current.setAttribute("data-testid", "sidebar-toggle");
-    }
-  }, []);
+  function isNavItemGroup(item: NavItemDef | NavItemGroup): item is NavItemGroup {
+    return "children" in item;
+  }
 
   function getActiveItemId(): string | undefined {
     for (const item of NAV_TREE) {
@@ -114,136 +111,107 @@ export function Sidebar({ collapsed: collapsedProp, onToggle }: SidebarProps = {
     return undefined;
   }
 
-  function isNavItemGroup(item: NavItemDef | NavItemGroup): item is NavItemGroup {
-    return "children" in item;
-  }
-
-  type FlatNavItem = {
-    id: string;
-    label: string;
-    parentId: string | undefined;
-    parentLabel: string | undefined;
-    parentIcon: LucideIcon;
-  };
-
-  const flatNavItems: FlatNavItem[] = [];
-  for (const item of NAV_TREE) {
-    if (isNavItemGroup(item)) {
-      for (const child of item.children) {
-        flatNavItems.push({
-          id: child.id,
-          label: child.label,
-          parentId: item.id,
-          parentLabel: item.label,
-          parentIcon: item.lucideIcon,
-        });
-      }
-    } else {
-      flatNavItems.push({
-        id: item.id,
-        label: item.label,
-        parentId: undefined,
-        parentLabel: undefined,
-        parentIcon: item.lucideIcon,
-      });
-    }
-  }
-
-  const handleSelectItem = (itemId: string) => {
-    const navItem = flatNavItems.find((i) => i.id === itemId);
-    if (!navItem) {
-      console.error(`Navigation item with id "${itemId}" not found in navigation tree`);
-      return;
-    }
-
-    let targetPath: string | undefined;
-
+  function getActiveGroupId(): string | undefined {
     for (const item of NAV_TREE) {
-      if (isNavItemGroup(item)) {
-        const child = item.children.find((c) => c.id === itemId);
+      if ("children" in item) {
+        const child = item.children.find((c) => c.path === pathname);
         if (child) {
-          targetPath = child.path;
-          break;
+          return item.id;
         }
-      } else if (item.id === itemId && item.path) {
-        targetPath = item.path;
-        break;
       }
     }
+    return undefined;
+  }
 
-    if (targetPath) {
-      navigate({ to: targetPath });
+  const activeItemId = getActiveItemId();
+  const activeGroupId = getActiveGroupId();
+
+  const handleGroupToggle = (groupId: string) => {
+    const newExpanded = new Set(expandedGroups);
+    if (newExpanded.has(groupId)) {
+      newExpanded.delete(groupId);
+    } else {
+      newExpanded.add(groupId);
     }
+    setExpandedGroups(newExpanded);
   };
-
-  const sections = [
-    {
-      title: "Navigation",
-      items: NAV_TREE.map((item) => {
-        const Icon = item.lucideIcon;
-        return {
-          id: item.id,
-          label: item.label,
-          icon: Icon,
-          hasChildren: isNavItemGroup(item),
-        };
-      }),
-    },
-  ];
 
   return (
-    <div
-      ref={sidebarRef}
-      data-testid="sidebar"
-      className={`sidebar ${collapsed ? "collapsed" : ""}`}
-    >
-        <button
-          ref={toggleButtonRef}
-          className="sidebar__toggle"
-          onClick={handleToggle}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          <Menu size={20} />
-        </button>
+    <div data-testid="sidebar" className={`shell-rail ${collapsed ? "collapsed" : ""}`}>
+      <button
+        data-testid="sidebar-toggle"
+        className="rail-collapse"
+        onClick={handleToggle}
+        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+      >
+        <Menu size={20} />
+      </button>
 
-        <nav className="sidebar__nav">
-          {sections.map((section) => (
-            <div key={section.title} className="sidebar__section">
-              {!collapsed && <div className="sidebar__section-title">{section.title}</div>}
-              <div className="sidebar__items">
-                {section.items.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = getActiveItemId() === item.id;
-                  const displayLabel = item.label;
+      <nav>
+        {NAV_TREE.map((item) => {
+          const Icon = item.lucideIcon;
+          const isGroup = isNavItemGroup(item);
+          const isExpanded = expandedGroups.has(item.id);
+          const isItemActive = activeItemId === item.id;
+          const isGroupActive = isGroup && activeGroupId === item.id;
 
-                  return (
-                    <button
-                      key={item.id}
-                      className={`sidebar__item ${isActive ? "sidebar__item--active" : ""}`}
-                      onClick={() => {
-                        if (item.hasChildren) {
-                          for (const navItem of NAV_TREE) {
-                            if (isNavItemGroup(navItem) && navItem.id === item.id) {
-                              navigate({ to: navItem.children[0].path });
-                              return;
-                            }
-                          }
-                        } else {
-                          handleSelectItem(item.id);
-                        }
-                      }}
-                      title={collapsed ? item.label : undefined}
-                      data-testid={`sidebar-item-${item.id}`}
-                    >
-                      <Icon size={18} className="sidebar__item-icon" />
-                      {!collapsed && <span className="sidebar__item-label">{displayLabel}</span>}
-                    </button>
-                  );
-                })}
+          if (isGroup) {
+            return (
+              <div key={item.id} className="nav-section">
+                <button
+                  className={`nav-item ${isGroupActive ? "active-parent" : ""}`}
+                  onClick={() => {
+                    const childPath = item.children.find((c) => c.id === activeItemId)?.path
+                      || item.children[0].path;
+                    navigate({ to: childPath });
+                    handleGroupToggle(item.id);
+                  }}
+                  title={collapsed ? item.label : undefined}
+                  data-testid={`sidebar-item-${item.id}`}
+                  aria-expanded={isExpanded}
+                  aria-current={isGroupActive ? "page" : undefined}
+                >
+                  <Icon size={16} />
+                  {!collapsed && <span>{item.label}</span>}
+                </button>
+                {(isExpanded || isGroupActive) && (
+                  <div className="nav-sub">
+                    {item.children.map((child) => {
+                      const isChildActive = activeItemId === child.id;
+                      return (
+                        <button
+                          key={child.id}
+                          className={`nav-item ${isChildActive ? "active" : ""}`}
+                          onClick={() => navigate({ to: child.path })}
+                          data-testid={`sidebar-item-${child.id}`}
+                          aria-current={isChildActive ? "page" : undefined}
+                        >
+                          {!collapsed && <span>{child.label}</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
+            );
+          }
+
+          return (
+            <div key={item.id} className="nav-section">
+              <button
+                className={`nav-item ${isItemActive ? "active" : ""}`}
+                onClick={() => navigate({ to: item.path! })}
+                title={collapsed ? item.label : undefined}
+                data-testid={`sidebar-item-${item.id}`}
+                aria-current={isItemActive ? "page" : undefined}
+              >
+                <Icon size={16} />
+                {!collapsed && <span>{item.label}</span>}
+              </button>
             </div>
-          ))}
-        </nav>
+          );
+        })}
+      </nav>
     </div>
   );
 }
