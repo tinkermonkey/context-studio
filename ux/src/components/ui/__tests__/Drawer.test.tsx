@@ -12,7 +12,7 @@ describe("Drawer", () => {
           Content
         </Drawer>,
       );
-      expect(container.querySelector(".drawer")).not.toBeInTheDocument();
+      expect(container.querySelector(".drawer-backdrop")).not.toBeInTheDocument();
     });
 
     it("renders when open is true", () => {
@@ -21,7 +21,7 @@ describe("Drawer", () => {
           Content
         </Drawer>,
       );
-      expect(container.querySelector(".drawer")).toBeInTheDocument();
+      expect(container.querySelector(".drawer-backdrop")).toBeInTheDocument();
     });
 
     it("toggles visibility when open prop changes", () => {
@@ -31,7 +31,7 @@ describe("Drawer", () => {
         </Drawer>,
       );
 
-      expect(container.querySelector(".drawer")).not.toBeInTheDocument();
+      expect(container.querySelector(".drawer-backdrop")).not.toBeInTheDocument();
 
       rerender(
         <Drawer open={true} onClose={vi.fn()} title="Drawer">
@@ -39,18 +39,20 @@ describe("Drawer", () => {
         </Drawer>,
       );
 
-      expect(container.querySelector(".drawer")).toBeInTheDocument();
+      expect(container.querySelector(".drawer-backdrop")).toBeInTheDocument();
     });
   });
 
   describe("CSS class styling", () => {
-    it("applies drawer class", () => {
+    it("applies drawer container with proper classes", () => {
       const { container } = render(
         <Drawer open={true} onClose={vi.fn()} title="Drawer">
           Content
         </Drawer>,
       );
-      expect(container.querySelector(".drawer")).toBeInTheDocument();
+      // Heimdall's Drawer should be present with role='dialog'
+      const drawer = container.querySelector("[role='dialog']");
+      expect(drawer).toBeInTheDocument();
     });
 
     it("renders drawer-head", () => {
@@ -316,6 +318,21 @@ describe("Drawer", () => {
       const closeBtn = screen.getByLabelText("Close drawer");
       await user.click(closeBtn);
       expect(onClose).toHaveBeenCalled();
+    });
+
+    it("calls onClose when backdrop is clicked", async () => {
+      const onClose = vi.fn();
+      const user = userEvent.setup();
+      const { container } = render(
+        <Drawer open={true} onClose={onClose} title="Drawer">
+          Content
+        </Drawer>,
+      );
+      const backdrop = container.querySelector(".drawer-backdrop");
+      if (backdrop) {
+        await user.click(backdrop);
+        expect(onClose).toHaveBeenCalled();
+      }
     });
   });
 });

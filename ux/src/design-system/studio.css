@@ -1222,6 +1222,17 @@ select.input {
   position: sticky;
   top: 16px;
 }
+.drawer--context-studio {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  background: rgb(var(--canvas-surface));
+  border: 1px solid rgb(var(--canvas-border));
+  border-radius: 0;
+}
+.drawer--context-studio .drawer__body {
+  padding: 0;
+}
 .drawer-head {
   padding: 14px 16px;
   border-bottom: 1px solid var(--canvas-bd);
@@ -1262,6 +1273,28 @@ select.input {
 }
 .spin {
   animation: spin 1s linear infinite;
+}
+.drawer-close {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-md);
+  background: transparent;
+  border: 1px solid transparent;
+  color: rgb(var(--canvas-fg-2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 80ms ease-out, color 80ms ease-out;
+  padding: 0;
+  flex-shrink: 0;
+}
+.drawer-close:hover {
+  background: rgb(var(--canvas-card));
+  color: rgb(var(--canvas-fg-1));
+}
+.drawer-close:focus-visible {
+  box-shadow: var(--focus-ring);
 }
 .drawer-body {
   padding: 14px 16px;
