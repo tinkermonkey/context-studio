@@ -46,6 +46,24 @@ selectors:
   - selector: command-palette
     component: components/shell/CommandPalette.tsx
     description: Root command palette wrapper
+  - selector: command-palette-backdrop
+    component: components/shell/CommandPalette.tsx
+    description: Semi-transparent backdrop overlay that closes palette when clicked
+  - selector: command-palette-input
+    component: components/shell/CommandPalette.tsx
+    description: Search input field in command palette header
+  - selector: command-palette-results
+    component: components/shell/CommandPalette.tsx
+    description: Container for command palette results list
+  - selector: command-palette-empty-state
+    component: components/shell/CommandPalette.tsx
+    description: Empty state message shown when no commands match query
+  - selector: command-palette-item-*
+    component: components/shell/CommandPalette.tsx
+    description: Individual command item button with dynamic ID suffix (pattern matches command-palette-item-{actionId})
+  - selector: command-palette-esc-button
+    component: components/shell/CommandPalette.tsx
+    description: Keyboard hint button for Esc key in palette input row
 
   # Sidebar
   - selector: sidebar
@@ -994,6 +1012,9 @@ selectors:
   - selector: action-2
     component: components/schema/__tests__/SchemaTable.test.tsx
     description: Action element in SchemaTable test fixture
+  - selector: heimdall-command-palette
+    component: components/shell/__tests__/CommandPalette.test.tsx
+    description: Mock Heimdall CommandPalette component in unit test fixture
 
   # Reference Sources Page
   - selector: reference-sources-page

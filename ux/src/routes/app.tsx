@@ -8,7 +8,6 @@ import { Sidebar } from "@/components/shell/Sidebar";
 import { Topbar } from "@/components/shell/Topbar";
 import { Statusbar } from "@/components/shell/Statusbar";
 import { Titlebar } from "@/components/shell/Titlebar";
-import { CommandPalette } from "@/components/shell/CommandPalette";
 import { useCommandPaletteStore } from "@/stores/commandPalette";
 
 export const Route = createFileRoute("/app")({
@@ -137,7 +136,6 @@ function AppShell() {
         </div>
       </div>
       <Statusbar />
-      <CommandPalette />
     </div>
   );
 }
