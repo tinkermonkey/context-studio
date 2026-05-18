@@ -180,6 +180,9 @@ export function TaxonomyDrawer({ taxonomy, onClose }: TaxonomyDrawerProps) {
         message="This taxonomy and all its concept schemes will be permanently deleted."
         confirmLabel={taxonomiesCopy.delete.confirmButton}
         onConfirm={handleDelete}
+        onError={(error) => {
+          toast("error", `Delete failed: ${error.message}`);
+        }}
         danger
         isLoading={deleteMutation.isPending}
         data-testid="taxonomy-delete-confirm"

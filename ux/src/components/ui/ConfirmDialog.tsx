@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Modal as HeimdallModal, Button as HeimdallButton } from "@tinkermonkey/heimdall-ui";
 import type { ReactNode } from "react";
 
@@ -11,7 +11,8 @@ interface ConfirmDialogProps {
   cancelLabel?: string;
   danger?: boolean;
   onConfirm: () => void | Promise<void>;
-  onError?: (error: Error) => void;
+  onError: (error: Error) => void;
+  onConfirmButtonRef?: React.MutableRefObject<(() => Promise<void>) | null>;
   isLoading?: boolean;
   isConfirmDisabled?: boolean;
 }
@@ -26,6 +27,7 @@ export function ConfirmDialog({
   danger = false,
   onConfirm,
   onError,
+  onConfirmButtonRef,
   isLoading = false,
   isConfirmDisabled = false,
 }: ConfirmDialogProps) {
@@ -38,15 +40,17 @@ export function ConfirmDialog({
       onClose();
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
-      if (onError) {
-        onError(err);
-      } else {
-        console.error(err);
-      }
+      onError(err);
     } finally {
       setIsProcessing(false);
     }
   };
+
+  useEffect(() => {
+    if (onConfirmButtonRef) {
+      onConfirmButtonRef.current = handleConfirm;
+    }
+  }, [handleConfirm, onConfirmButtonRef]);
 
   const isConfirmDisabledState = isProcessing || isLoading || isConfirmDisabled;
   const isCancelDisabled = isProcessing || isLoading;

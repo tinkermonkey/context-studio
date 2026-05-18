@@ -128,6 +128,9 @@ export function RelationshipDrawer({
         message="This relationship and all its instances will be permanently deleted."
         confirmLabel={relationshipsCopy.delete.confirmButton}
         onConfirm={handleDelete}
+        onError={(error) => {
+          toast("error", `Delete failed: ${error.message}`);
+        }}
         danger
         isLoading={deleteMutation.isPending}
         data-testid="relationship-delete-confirm"

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { Input } from "./Input";
 
@@ -10,7 +10,7 @@ interface TypeToConfirmDialogProps {
   confirmText: string;
   confirmLabel?: string;
   onConfirm: () => void | Promise<void>;
-  onError?: (error: Error) => void;
+  onError: (error: Error) => void;
   isLoading?: boolean;
 }
 
@@ -26,7 +26,7 @@ export function TypeToConfirmDialog({
   isLoading = false,
 }: TypeToConfirmDialogProps) {
   const [input, setInput] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
+  const confirmButtonRef = useRef<() => Promise<void>>(null);
 
   const isConfirmed = input === confirmText;
 
@@ -36,8 +36,8 @@ export function TypeToConfirmDialog({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && isConfirmed && !isLoading && !isProcessing) {
-      handleConfirmDialogWithClose();
+    if (e.key === "Enter" && isConfirmed && !isLoading) {
+      confirmButtonRef.current?.();
     }
   };
 
@@ -45,22 +45,6 @@ export function TypeToConfirmDialog({
     if (isConfirmed) {
       await onConfirm();
       setInput("");
-    }
-  };
-
-  const handleConfirmDialogWithClose = async () => {
-    setIsProcessing(true);
-    try {
-      await handleConfirmDialog();
-      handleClose();
-    } catch (error) {
-      if (onError) {
-        onError(error instanceof Error ? error : new Error(String(error)));
-      } else {
-        console.error(error);
-      }
-    } finally {
-      setIsProcessing(false);
     }
   };
 
@@ -86,6 +70,7 @@ export function TypeToConfirmDialog({
       danger
       onConfirm={handleConfirmDialog}
       onError={onError}
+      onConfirmButtonRef={confirmButtonRef}
       isLoading={isLoading}
       isConfirmDisabled={!isConfirmed}
     />

@@ -152,6 +152,9 @@ export function PropertyDrawer({ property, onClose }: PropertyDrawerProps) {
         message="This property will be permanently deleted."
         confirmLabel={propertiesCopy.delete.confirmButton}
         onConfirm={handleDelete}
+        onError={(error) => {
+          toast("error", `Delete failed: ${error.message}`);
+        }}
         danger
         isLoading={deleteMutation.isPending}
         data-testid="property-delete-confirm"

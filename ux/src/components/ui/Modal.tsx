@@ -29,21 +29,22 @@ export function Modal({
   const sizeClass = size ? `modal-${size}` : "modal-md";
   const combinedClassName = [sizeClass, className].filter(Boolean).join(" ");
 
-  // Convert title to string for Heimdall, or render as ReactNode in children
   const titleString = typeof title === "string" ? title : undefined;
+  const subtitleString = typeof title === "string" ? subtitle : undefined;
 
   return (
     <HeimdallModal
       isOpen={open}
       onClose={onClose}
       title={titleString}
-      subtitle={subtitle}
+      subtitle={subtitleString}
       className={combinedClassName}
       data-testid={testId}
     >
       {typeof title !== "string" && title ? (
         <>
           <div className="mb-sm">{title}</div>
+          {subtitle && <div className="text-secondary text-sm mb-md">{subtitle}</div>}
           {children}
         </>
       ) : (

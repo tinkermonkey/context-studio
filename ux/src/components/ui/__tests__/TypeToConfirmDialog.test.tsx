@@ -18,6 +18,7 @@ describe("TypeToConfirmDialog", () => {
           message="This action is permanent."
           confirmText="delete"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -34,6 +35,7 @@ describe("TypeToConfirmDialog", () => {
           message="Sure?"
           confirmText="delete"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -49,6 +51,7 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -64,6 +67,7 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -81,6 +85,7 @@ describe("TypeToConfirmDialog", () => {
           confirmText="delete"
           confirmLabel="Remove Permanently"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -101,6 +106,7 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -117,6 +123,7 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -139,6 +146,7 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -159,6 +167,7 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -179,6 +188,7 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -207,6 +217,7 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -226,6 +237,7 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -251,6 +263,7 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={onConfirm}
+          onError={vi.fn()}
         />,
       );
 
@@ -273,6 +286,7 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={onConfirm}
+          onError={vi.fn()}
         />,
       );
 
@@ -295,6 +309,7 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={onConfirm}
+          onError={vi.fn()}
         />,
       );
 
@@ -321,6 +336,7 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -341,6 +357,7 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={onConfirm}
+          onError={vi.fn()}
         />,
       );
 
@@ -366,6 +383,7 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={onConfirm}
+          onError={vi.fn()}
         />,
       );
 
@@ -386,6 +404,7 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={onConfirm}
+          onError={vi.fn()}
         />,
       );
 
@@ -412,6 +431,7 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
           isLoading={true}
         />,
       );

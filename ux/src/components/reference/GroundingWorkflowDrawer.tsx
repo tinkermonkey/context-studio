@@ -293,6 +293,9 @@ export function GroundingWorkflowDrawer({ workflowId, onClose }: GroundingWorkfl
         confirmLabel="Delete"
         danger
         onConfirm={handleDeleteConfirm}
+        onError={(error) => {
+          toast("error", `Delete failed: ${error.message}`);
+        }}
         isLoading={deleteMutation.isPending}
       />
     </div>

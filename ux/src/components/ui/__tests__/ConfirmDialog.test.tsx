@@ -17,6 +17,7 @@ describe("ConfirmDialog", () => {
           title="Delete Item?"
           message="This action cannot be undone."
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -32,6 +33,7 @@ describe("ConfirmDialog", () => {
           title="Delete Item?"
           message="This action cannot be undone."
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -46,6 +48,7 @@ describe("ConfirmDialog", () => {
           title="Confirm"
           message="Are you sure?"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -63,6 +66,7 @@ describe("ConfirmDialog", () => {
           confirmLabel="Delete Forever"
           cancelLabel="Nope"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -79,6 +83,7 @@ describe("ConfirmDialog", () => {
           message="Are you sure?"
           danger={true}
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -94,6 +99,7 @@ describe("ConfirmDialog", () => {
           title="Confirm"
           message="Are you sure?"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
           isConfirmDisabled={true}
         />,
       );
@@ -119,6 +125,7 @@ describe("ConfirmDialog", () => {
           title="Confirm"
           message="Are you sure?"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -137,6 +144,7 @@ describe("ConfirmDialog", () => {
           title="Confirm"
           message="Are you sure?"
           onConfirm={onConfirm}
+          onError={vi.fn()}
         />,
       );
 
@@ -157,6 +165,7 @@ describe("ConfirmDialog", () => {
           title="Confirm"
           message="Are you sure?"
           onConfirm={onConfirm}
+          onError={vi.fn()}
         />,
       );
 
@@ -179,6 +188,7 @@ describe("ConfirmDialog", () => {
           title="Confirm"
           message="Are you sure?"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -195,6 +205,7 @@ describe("ConfirmDialog", () => {
           title="Confirm"
           message="Are you sure?"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
           isLoading={true}
         />,
       );
@@ -222,6 +233,7 @@ describe("ConfirmDialog", () => {
           title="Confirm"
           message="Are you sure?"
           onConfirm={onConfirm}
+          onError={vi.fn()}
         />,
       );
 
@@ -311,17 +323,19 @@ describe("ConfirmDialog", () => {
       expect(screen.getByText("Confirm Action")).toBeInTheDocument();
     });
 
-    it("calls console.error when onConfirm fails and onError is not provided", async () => {
-      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    it("does not close dialog when onConfirm fails", async () => {
       const onConfirm = vi.fn().mockRejectedValue(new Error("Operation failed"));
+      const onError = vi.fn();
+      const onClose = vi.fn();
 
       render(
         <ConfirmDialog
           open={true}
-          onClose={vi.fn()}
+          onClose={onClose}
           title="Confirm"
           message="Are you sure?"
           onConfirm={onConfirm}
+          onError={onError}
         />,
       );
 
@@ -329,10 +343,10 @@ describe("ConfirmDialog", () => {
       await userEvent.click(confirmButton);
 
       await waitFor(() => {
-        expect(consoleErrorSpy).toHaveBeenCalled();
+        expect(onError).toHaveBeenCalled();
       });
 
-      consoleErrorSpy.mockRestore();
+      expect(onClose).not.toHaveBeenCalled();
     });
 
     it("disables both buttons during async operation", async () => {
@@ -350,6 +364,7 @@ describe("ConfirmDialog", () => {
           title="Confirm"
           message="Are you sure?"
           onConfirm={onConfirm}
+          onError={vi.fn()}
         />,
       );
 

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useToasts } from "@/components/ui/Toast";
 import type { components } from "@/api/types";
 
 type PipelineFlavorResponse = components["schemas"]["PipelineFlavorResponse"];
@@ -14,6 +15,7 @@ interface FlavorDrawerProps {
 
 export function FlavorDrawer({ flavor, onClose, onDelete, isDeleting = false }: FlavorDrawerProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const { toast } = useToasts();
 
   const handleDelete = async () => {
     await onDelete(flavor.id);
@@ -66,6 +68,9 @@ export function FlavorDrawer({ flavor, onClose, onDelete, isDeleting = false }: 
         cancelLabel="Cancel"
         danger
         onConfirm={handleDelete}
+        onError={(error) => {
+          toast("error", `Delete failed: ${error.message}`);
+        }}
         isLoading={isDeleting}
       />
     </>
