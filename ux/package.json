@@ -25,7 +25,7 @@
     "generate-types": "openapi-typescript ../local-server/documentation/openapi.json -o src/api/types/index.ts && prettier --write src/api/types/index.ts"
   },
   "dependencies": {
-    "@tinkermonkey/heimdall-ui": "github:tinkermonkey/heimdall#b3263c292449c11f9ba871b7dd497948244a686e",
+    "@tinkermonkey/heimdall-ui": "github:tinkermonkey/heimdall#c6bc35441187a2a8ac5bf550566d21deb069e09e",
     "@opentelemetry/api": "1.9.1",
     "@opentelemetry/exporter-trace-otlp-http": "0.218.0",
     "@opentelemetry/resources": "1.30.1",
