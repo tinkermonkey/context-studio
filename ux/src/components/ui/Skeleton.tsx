@@ -14,7 +14,7 @@ export function Skeleton({ width, height = "1em", style, className }: SkeletonPr
       style={{
         width,
         height,
-        background: "var(--canvas-bd)",
+        background: "var(--canvas-border)",
         borderRadius: "var(--radius-md, 6px)",
         animation: "skeleton-shimmer 1.4s ease infinite",
         ...style,

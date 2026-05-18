@@ -55,7 +55,7 @@ describe("Skeleton", () => {
     it("applies canvas background color via CSS variable", () => {
       const { container } = render(<Skeleton />);
       const skeleton = container.firstChild as HTMLDivElement;
-      expect(skeleton.style.background).toBe("var(--canvas-bd)");
+      expect(skeleton.style.background).toBe("var(--canvas-border)");
     });
 
     it("applies border-radius via CSS variable", () => {
@@ -125,16 +125,16 @@ describe("Skeleton", () => {
       expect(skeleton.style.width).toBe("120px");
       expect(skeleton.style.height).toBe("24px");
       expect(skeleton.style.marginBottom).toBe("8px");
-      expect(skeleton.style.background).toBe("var(--canvas-bd)");
+      expect(skeleton.style.background).toBe("var(--canvas-border)");
     });
   });
 
   describe("dark mode token tests", () => {
-    it("maintains canvas-bd token reference with dark-canvas class", () => {
+    it("maintains canvas-border token reference with dark-canvas class", () => {
       document.body.classList.add("dark-canvas");
       const { container } = render(<Skeleton />);
       const skeleton = container.firstChild as HTMLDivElement;
-      expect(skeleton.style.background).toBe("var(--canvas-bd)");
+      expect(skeleton.style.background).toBe("var(--canvas-border)");
       document.body.classList.remove("dark-canvas");
     });
   });

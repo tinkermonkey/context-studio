@@ -1,5 +1,5 @@
 @import "@tinkermonkey/heimdall-ui/css" layer(heimdall);
 @import "./app-overrides.css" layer(app);
-@import "./design-system/graph.css";
+@import "./design-system/graph.css" layer(graph);
 
 @import "tailwindcss";
