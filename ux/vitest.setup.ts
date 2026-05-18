@@ -385,21 +385,14 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
   NavItem: ({ _icon, label, ...props }: any) =>
     React.createElement("div", { className: "nav-item", ...props }, label),
   Field: React.forwardRef(
-    (
-      {
-        label,
-        required = false,
-        error,
-        hint,
-        children,
-        className = "",
-        ...props
-      }: any,
-      ref: any,
-    ) =>
+    ({ label, required = false, error, hint, children, className = "", ...props }: any, ref: any) =>
       React.createElement(
         "div",
-        { className: ["field", error && "field--error", className].filter(Boolean).join(" "), ref, ...props },
+        {
+          className: ["field", error && "field--error", className].filter(Boolean).join(" "),
+          ref,
+          ...props,
+        },
         label &&
           React.createElement(
             "div",
@@ -412,10 +405,8 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
             ),
           ),
         children,
-        error &&
-          React.createElement("div", { className: "field__error" }, error),
-        hint &&
-          React.createElement("div", { className: "field__hint" }, hint),
+        error && React.createElement("div", { className: "field__error" }, error),
+        hint && React.createElement("div", { className: "field__hint" }, hint),
       ),
   ),
   NumberInput: React.forwardRef(
@@ -460,7 +451,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
           } else {
             newState = true;
           }
-          onChange && onChange({ ...e, target: { ...e.target, checked: newState } });
+          onChange?.({ ...e, target: { ...e.target, checked: newState } });
         },
         ...props,
       }),

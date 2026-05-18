@@ -37,49 +37,46 @@ export function CommandPalette() {
   useEffect(() => {
     if (open) {
       setQuery("");
-      instrumentCommandPalette();
+
+      if (!paletteRef.current) return;
+      const root = paletteRef.current;
+
+      root.setAttribute("data-testid", "command-palette");
+
+      const backdrop = root.querySelector("[role='dialog']") as HTMLElement;
+      if (backdrop) {
+        backdrop.setAttribute("data-testid", "command-palette-backdrop");
+      }
+
+      const input = root.querySelector("input") as HTMLInputElement;
+      if (input) {
+        input.setAttribute("data-testid", "command-palette-input");
+      }
+
+      const results = root.querySelector("[role='listbox']") as HTMLElement;
+      if (results) {
+        results.setAttribute("data-testid", "command-palette-results");
+      }
+
+      const empty = root.querySelector("[role='status']") as HTMLElement;
+      if (empty) {
+        empty.setAttribute("data-testid", "command-palette-empty-state");
+      }
+
+      const escButton = root.querySelector(
+        "button[title*='Esc'], button[title*='esc']",
+      ) as HTMLElement;
+      if (escButton) {
+        escButton.setAttribute("data-testid", "command-palette-esc-button");
+      }
+
+      const items = root.querySelectorAll("[role='option']");
+      items.forEach((item, index) => {
+        const actionId = commands[index]?.id || `item-${index}`;
+        item.setAttribute("data-testid", `command-palette-item-${actionId}`);
+      });
     }
-  }, [open]);
-
-  const instrumentCommandPalette = () => {
-    if (!paletteRef.current) return;
-    const root = paletteRef.current;
-
-    root.setAttribute("data-testid", "command-palette");
-
-    const backdrop = root.querySelector("[role='dialog']") as HTMLElement;
-    if (backdrop) {
-      backdrop.setAttribute("data-testid", "command-palette-backdrop");
-    }
-
-    const input = root.querySelector("input") as HTMLInputElement;
-    if (input) {
-      input.setAttribute("data-testid", "command-palette-input");
-    }
-
-    const results = root.querySelector("[role='listbox']") as HTMLElement;
-    if (results) {
-      results.setAttribute("data-testid", "command-palette-results");
-    }
-
-    const empty = root.querySelector("[role='status']") as HTMLElement;
-    if (empty) {
-      empty.setAttribute("data-testid", "command-palette-empty-state");
-    }
-
-    const escButton = root.querySelector(
-      "button[title*='Esc'], button[title*='esc']",
-    ) as HTMLElement;
-    if (escButton) {
-      escButton.setAttribute("data-testid", "command-palette-esc-button");
-    }
-
-    const items = root.querySelectorAll("[role='option']");
-    items.forEach((item, index) => {
-      const actionId = commands[index]?.id || `item-${index}`;
-      item.setAttribute("data-testid", `command-palette-item-${actionId}`);
-    });
-  };
+  }, [open, commands]);
 
   return (
     <div ref={paletteRef}>
