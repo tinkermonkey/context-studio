@@ -19,23 +19,27 @@ export function CommandPalette() {
     );
   }, [query, actions]);
 
-  const commands: Command[] = filtered.map((action) => ({
-    id: action.id,
-    label: action.label,
-    description: action.description,
-    icon: action.icon as any,
-    onSelect: () => {
-      action.onSelect();
-      closePalette();
-    },
-  }));
+  const commands: Command[] = useMemo(
+    () =>
+      filtered.map((action) => ({
+        id: action.id,
+        label: action.label,
+        description: action.description,
+        icon: action.icon as any,
+        onSelect: () => {
+          action.onSelect();
+          closePalette();
+        },
+      })),
+    [filtered, closePalette],
+  );
 
   useEffect(() => {
     if (open) {
       setQuery("");
       instrumentCommandPalette();
     }
-  }, [open, commands]);
+  }, [open]);
 
   const instrumentCommandPalette = () => {
     if (!paletteRef.current) return;

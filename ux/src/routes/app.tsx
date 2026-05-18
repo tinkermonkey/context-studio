@@ -21,54 +21,6 @@ export const Route = createFileRoute("/app")({
   component: AppShell,
 });
 
-interface NavItemDef {
-  id: string;
-  label: string;
-  path?: string;
-  children?: Array<{ id: string; label: string; path: string }>;
-}
-
-const NAV_TREE: NavItemDef[] = [
-  { id: "dashboard", label: "Dashboard", path: "/app" },
-  {
-    id: "schema",
-    label: "Schema",
-    children: [
-      { id: "taxonomies", label: "Taxonomies", path: "/app/schema/taxonomies" },
-      { id: "schemes", label: "Concept schemes", path: "/app/schema/schemes" },
-      { id: "classes", label: "Classes", path: "/app/schema/classes" },
-      { id: "properties", label: "Properties", path: "/app/schema/properties" },
-      { id: "relationships", label: "Relationships", path: "/app/schema/relationships" },
-    ],
-  },
-  {
-    id: "data",
-    label: "Data",
-    children: [
-      { id: "individuals", label: "Individuals", path: "/app/data/individuals" },
-      { id: "datasets", label: "Datasets", path: "/app/data/datasets" },
-    ],
-  },
-  {
-    id: "pipelines",
-    label: "Pipelines",
-    children: [
-      { id: "pipelines-all", label: "All pipelines", path: "/app/pipelines" },
-      { id: "pipelines-runs", label: "Run history", path: "/app/pipelines/runs" },
-      { id: "pipelines-flavors", label: "Flavors", path: "/app/pipelines/flavors" },
-    ],
-  },
-  {
-    id: "reference",
-    label: "External Reference",
-    children: [
-      { id: "ref-sources", label: "Sources", path: "/app/reference/sources" },
-      { id: "ref-grounding", label: "Grounding workflows", path: "/app/reference/workflows" },
-    ],
-  },
-  { id: "settings", label: "Settings", path: "/app/settings" },
-];
-
 const NAV_ACTIONS = [
   { id: "nav-dashboard", label: "Dashboard", description: "Go to dashboard", to: "/app" },
   {
