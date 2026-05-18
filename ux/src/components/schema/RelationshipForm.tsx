@@ -57,13 +57,13 @@ export function RelationshipForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(undefined);
 
     if (!validateFields()) {
       return;
     }
 
     try {
-      setFormError(undefined);
       await onSubmit({
         source_id: sourceId,
         target_id: targetId,
@@ -80,11 +80,7 @@ export function RelationshipForm({
     <form onSubmit={handleSubmit} data-testid="relationship-form">
       <div className="stack-lg">
         {formError && (
-          <div
-            className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm"
-            role="alert"
-            data-testid="relationship-form-error"
-          >
+          <div className="error-banner" role="alert" data-testid="relationship-form-error">
             {formError}
           </div>
         )}

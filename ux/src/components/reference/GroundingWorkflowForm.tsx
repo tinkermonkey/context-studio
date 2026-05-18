@@ -100,6 +100,7 @@ export function GroundingWorkflowForm({ onSubmit, isLoading }: GroundingWorkflow
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(undefined);
 
     if (!validateTitle(title)) {
       return;
@@ -114,7 +115,6 @@ export function GroundingWorkflowForm({ onSubmit, isLoading }: GroundingWorkflow
     }
 
     try {
-      setFormError(undefined);
       await onSubmit({
         title,
         source,
@@ -131,11 +131,7 @@ export function GroundingWorkflowForm({ onSubmit, isLoading }: GroundingWorkflow
     <form onSubmit={handleSubmit} data-testid="grounding-workflow-form">
       <div className="stack-lg">
         {formError && (
-          <div
-            className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm"
-            role="alert"
-            data-testid="grounding-workflow-form-error"
-          >
+          <div className="error-banner" role="alert" data-testid="grounding-workflow-form-error">
             {formError}
           </div>
         )}

@@ -31,13 +31,13 @@ export function ClassForm({ onSubmit, isLoading }: ClassFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(undefined);
 
     if (!validateTitle(title)) {
       return;
     }
 
     try {
-      setFormError(undefined);
       await onSubmit({
         title,
         description: description || null,
@@ -53,11 +53,7 @@ export function ClassForm({ onSubmit, isLoading }: ClassFormProps) {
     <form onSubmit={handleSubmit} data-testid="class-form">
       <div className="stack-lg">
         {formError && (
-          <div
-            className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm"
-            role="alert"
-            data-testid="class-form-error"
-          >
+          <div className="error-banner" role="alert" data-testid="class-form-error">
             {formError}
           </div>
         )}

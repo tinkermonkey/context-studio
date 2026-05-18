@@ -31,13 +31,13 @@ export function SchemeForm({ onSubmit, isLoading }: SchemeFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(undefined);
 
     if (!validateTitle(title)) {
       return;
     }
 
     try {
-      setFormError(undefined);
       await onSubmit({
         title,
         description: description || null,
@@ -53,11 +53,7 @@ export function SchemeForm({ onSubmit, isLoading }: SchemeFormProps) {
     <form onSubmit={handleSubmit} data-testid="scheme-form">
       <div className="stack-lg">
         {formError && (
-          <div
-            className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm"
-            role="alert"
-            data-testid="scheme-form-error"
-          >
+          <div className="error-banner" role="alert" data-testid="scheme-form-error">
             {formError}
           </div>
         )}

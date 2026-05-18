@@ -61,13 +61,13 @@ export function PropertyDefinitionForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(undefined);
 
     if (!validateIdentifier(identifier) || !validateTitle(title)) {
       return;
     }
 
     try {
-      setFormError(undefined);
       if (initialData) {
         await onSubmit({
           title,
@@ -91,11 +91,7 @@ export function PropertyDefinitionForm({
     <form onSubmit={handleSubmit} data-testid="property-definition-form">
       <div className="stack-lg">
         {formError && (
-          <div
-            className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm"
-            role="alert"
-            data-testid="property-definition-form-error"
-          >
+          <div className="error-banner" role="alert" data-testid="property-definition-form-error">
             {formError}
           </div>
         )}
