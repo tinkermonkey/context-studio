@@ -11,7 +11,7 @@ Key responsibilities:
 """
 
 from datetime import datetime, timezone
-from typing import Sequence
+from typing import Sequence, cast
 
 from sqlalchemy import desc
 from sqlalchemy.orm import Session, sessionmaker
@@ -219,7 +219,7 @@ class SQLiteExtractionRepository:
         ]
 
         # Create domain entity
-        created_at = orm_result.created_at or datetime.now(timezone.utc)  # type: ignore[arg-type]
+        created_at = cast(datetime, orm_result.created_at) or datetime.now(timezone.utc)
         return ExtractionResult(
             id=orm_result.id or "",  # type: ignore[arg-type]
             text=orm_result.text or "",  # type: ignore[arg-type]
