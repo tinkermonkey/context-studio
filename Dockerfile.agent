@@ -127,7 +127,10 @@ COPY --chown=orchestrator:orchestrator ux/package.json ux/package-lock.json* ./u
 COPY --chown=orchestrator:orchestrator app/package.json app/package-lock.json* ./app/
 
 # Copy pre-built heimdall-ui tarball from builder stage
+# /tmp copy is used during image build for npm install
 COPY --from=heimdall-builder --chown=orchestrator:orchestrator /build/out/*.tgz /tmp/heimdall-ui.tgz
+# /opt copy survives source mount and is used by entrypoint to fix stale host node_modules
+COPY --from=heimdall-builder /build/out/*.tgz /opt/heimdall-ui.tgz
 
 # Switch to orchestrator for npm ci — installs node_modules owned by orchestrator directly
 USER orchestrator
@@ -191,7 +194,31 @@ RUN python3 -c "import importlib.metadata; importlib.metadata.version('types-net
 RUN test -f /workspace/context-studio/ux/node_modules/@tinkermonkey/heimdall-ui/dist/index.js && \
     echo "heimdall-ui OK"
 
+# Verify stashed tarball is available for runtime patching
+RUN test -f /opt/heimdall-ui.tgz && echo "heimdall-ui tarball stashed OK"
+
+# ============================================================================
+# Entrypoint: fix stale host node_modules at startup
+# ============================================================================
+USER root
+RUN cat > /usr/local/bin/entrypoint.sh << 'ENTRY'
+#!/bin/bash
+BARREL="/workspace/context-studio/ux/node_modules/@tinkermonkey/heimdall-ui/dist/index.d.ts"
+if [ -d "/workspace/context-studio/ux/node_modules" ] && [ -f "$BARREL" ]; then
+  if ! grep -q "useFocusTrap" "$BARREL" 2>/dev/null; then
+    echo "[entrypoint] Stale heimdall-ui detected — reinstalling from patched tarball..."
+    cd /workspace/context-studio/ux && npm install /opt/heimdall-ui.tgz --legacy-peer-deps --no-audit --no-fund 2>&1 | tail -3
+    echo "[entrypoint] heimdall-ui patched."
+  fi
+fi
+exec "$@"
+ENTRY
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+USER orchestrator
+
 # ============================================================================
 # Default command
 # ============================================================================
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["/bin/bash"]
