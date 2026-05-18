@@ -84,13 +84,17 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps = {}) {
     return "children" in item;
   }
 
+  function isRouteMatch(currentPath: string, targetPath: string): boolean {
+    return currentPath === targetPath || currentPath.startsWith(targetPath + "/");
+  }
+
   function getActiveItemId(): string | undefined {
     for (const item of NAV_TREE) {
-      if ("path" in item && item.path && pathname.startsWith(item.path)) {
+      if ("path" in item && item.path && isRouteMatch(pathname, item.path)) {
         return item.id;
       }
       if ("children" in item) {
-        const child = item.children.find((c) => pathname.startsWith(c.path));
+        const child = item.children.find((c) => isRouteMatch(pathname, c.path));
         if (child) {
           return child.id;
         }
@@ -102,7 +106,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps = {}) {
   function getActiveGroupId(): string | undefined {
     for (const item of NAV_TREE) {
       if ("children" in item) {
-        const child = item.children.find((c) => pathname.startsWith(c.path));
+        const child = item.children.find((c) => isRouteMatch(pathname, c.path));
         if (child) {
           return item.id;
         }
@@ -157,6 +161,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps = {}) {
                     handleGroupToggle(item.id);
                   }}
                   title={collapsed ? item.label : undefined}
+                  aria-label={collapsed ? item.label : undefined}
                   data-testid={`sidebar-item-${item.id}`}
                   aria-expanded={isExpanded}
                 />
@@ -170,6 +175,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps = {}) {
                           label={!collapsed ? child.label : ""}
                           active={isChildActive}
                           onClick={() => navigate({ to: child.path })}
+                          aria-label={collapsed ? child.label : undefined}
                           data-testid={`sidebar-item-${child.id}`}
                         />
                       );
@@ -188,6 +194,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps = {}) {
                 active={isItemActive}
                 onClick={() => navigate({ to: item.path! })}
                 title={collapsed ? item.label : undefined}
+                aria-label={collapsed ? item.label : undefined}
                 data-testid={`sidebar-item-${item.id}`}
               />
             </div>
