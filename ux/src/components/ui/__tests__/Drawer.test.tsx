@@ -206,8 +206,8 @@ describe("Drawer", () => {
         </Drawer>,
       );
       const button = screen.getByTestId("drawer-revert-button");
-      expect(button).toHaveClass("btn-ghost");
-      expect(button).toHaveClass("btn-sm");
+      expect(button).toHaveClass("btn--ghost");
+      expect(button).toHaveClass("btn--sm");
     });
 
     it("calls onRevert when revert button clicked", async () => {
@@ -260,8 +260,8 @@ describe("Drawer", () => {
         </Drawer>,
       );
       const button = screen.getByTestId("drawer-delete-button");
-      expect(button).toHaveClass("btn-danger");
-      expect(button).toHaveClass("btn-sm");
+      expect(button).toHaveClass("btn--danger");
+      expect(button).toHaveClass("btn--sm");
     });
 
     it("calls onDelete when delete button clicked", async () => {

@@ -83,7 +83,7 @@ describe("ConfirmDialog", () => {
       );
 
       const confirmButton = screen.getByTestId("confirm-dialog-confirm");
-      expect(confirmButton).toHaveClass("btn-danger");
+      expect(confirmButton).toHaveClass("btn--danger");
     });
   });
 

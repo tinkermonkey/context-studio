@@ -5,26 +5,31 @@ import { Input, Textarea, Select } from "../Input";
 
 describe("Input", () => {
   describe("CSS class styling", () => {
-    it("applies input base class", () => {
+    it("applies text-input base class", () => {
       render(<Input />);
-      expect(screen.getByRole("textbox")).toHaveClass("input");
+      expect(screen.getByRole("textbox")).toHaveClass("text-input");
     });
 
-    it("applies mono class when mono prop is true", () => {
+    it("applies text-input--mono class when mono prop is true", () => {
       render(<Input mono />);
-      expect(screen.getByRole("textbox")).toHaveClass("mono");
+      expect(screen.getByRole("textbox")).toHaveClass("text-input--mono");
     });
 
     it("does not apply mono class when mono prop is false", () => {
       render(<Input mono={false} />);
-      expect(screen.getByRole("textbox")).not.toHaveClass("mono");
+      expect(screen.getByRole("textbox")).not.toHaveClass("text-input--mono");
     });
 
-    it("combines input class with mono class", () => {
+    it("combines text-input class with mono class", () => {
       render(<Input mono />);
       const input = screen.getByRole("textbox");
-      expect(input).toHaveClass("input");
-      expect(input).toHaveClass("mono");
+      expect(input).toHaveClass("text-input");
+      expect(input).toHaveClass("text-input--mono");
+    });
+
+    it("applies text-input--error class when error prop is true", () => {
+      render(<Input error />);
+      expect(screen.getByRole("textbox")).toHaveClass("text-input--error");
     });
   });
 
@@ -32,15 +37,15 @@ describe("Input", () => {
     it("accepts additional className prop", () => {
       render(<Input className="custom-class" />);
       const input = screen.getByRole("textbox");
-      expect(input).toHaveClass("input");
+      expect(input).toHaveClass("text-input");
       expect(input).toHaveClass("custom-class");
     });
 
     it("combines all classes together", () => {
       render(<Input mono className="custom-class" />);
       const input = screen.getByRole("textbox");
-      expect(input).toHaveClass("input");
-      expect(input).toHaveClass("mono");
+      expect(input).toHaveClass("text-input");
+      expect(input).toHaveClass("text-input--mono");
       expect(input).toHaveClass("custom-class");
     });
   });
@@ -65,27 +70,26 @@ describe("Input", () => {
 
 describe("Textarea", () => {
   describe("CSS class styling", () => {
-    it("applies input base class", () => {
+    it("applies text-area base class", () => {
       render(<Textarea />);
-      expect(screen.getByRole("textbox")).toHaveClass("input");
+      expect(screen.getByRole("textbox")).toHaveClass("text-area");
     });
 
-    it("applies textarea class", () => {
-      render(<Textarea />);
-      expect(screen.getByRole("textbox")).toHaveClass("textarea");
-    });
-
-    it("applies mono class when mono prop is true", () => {
+    it("applies text-area--mono class when mono prop is true", () => {
       render(<Textarea mono />);
-      expect(screen.getByRole("textbox")).toHaveClass("mono");
+      expect(screen.getByRole("textbox")).toHaveClass("text-area--mono");
+    });
+
+    it("applies text-area--error class when error prop is true", () => {
+      render(<Textarea error />);
+      expect(screen.getByRole("textbox")).toHaveClass("text-area--error");
     });
 
     it("combines all classes together", () => {
       render(<Textarea mono />);
       const textarea = screen.getByRole("textbox");
-      expect(textarea).toHaveClass("input");
-      expect(textarea).toHaveClass("textarea");
-      expect(textarea).toHaveClass("mono");
+      expect(textarea).toHaveClass("text-area");
+      expect(textarea).toHaveClass("text-area--mono");
     });
   });
 
@@ -93,8 +97,7 @@ describe("Textarea", () => {
     it("accepts additional className prop", () => {
       render(<Textarea className="custom-class" />);
       const textarea = screen.getByRole("textbox");
-      expect(textarea).toHaveClass("input");
-      expect(textarea).toHaveClass("textarea");
+      expect(textarea).toHaveClass("text-area");
       expect(textarea).toHaveClass("custom-class");
     });
   });
@@ -124,33 +127,33 @@ describe("Textarea", () => {
 
 describe("Select", () => {
   describe("CSS class styling", () => {
-    it("applies input base class", () => {
+    it("applies select base class", () => {
       render(
         <Select>
           <option>Option</option>
         </Select>,
       );
-      expect(screen.getByRole("combobox")).toHaveClass("input");
+      expect(screen.getByRole("combobox")).toHaveClass("select");
     });
 
-    it("applies mono class when mono prop is true", () => {
+    it("applies select--error class when error prop is true", () => {
       render(
-        <Select mono>
+        <Select error>
           <option>Option</option>
         </Select>,
       );
-      expect(screen.getByRole("combobox")).toHaveClass("mono");
+      expect(screen.getByRole("combobox")).toHaveClass("select--error");
     });
 
-    it("combines all classes together", () => {
+    it("combines select class with error class", () => {
       render(
-        <Select mono>
+        <Select error>
           <option>Option</option>
         </Select>,
       );
       const select = screen.getByRole("combobox");
-      expect(select).toHaveClass("input");
-      expect(select).toHaveClass("mono");
+      expect(select).toHaveClass("select");
+      expect(select).toHaveClass("select--error");
     });
   });
 
@@ -162,7 +165,7 @@ describe("Select", () => {
         </Select>,
       );
       const select = screen.getByRole("combobox");
-      expect(select).toHaveClass("input");
+      expect(select).toHaveClass("select");
       expect(select).toHaveClass("custom-class");
     });
   });

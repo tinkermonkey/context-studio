@@ -122,7 +122,7 @@ export default function ContactSheet() {
       <Section title="Buttons" testid="contact-sheet-buttons">
         <Row>
           <Button variant="primary">Primary</Button>
-          <Button variant="accent">Accent</Button>
+          <Button variant="secondary">Secondary</Button>
           <Button variant="ghost">Ghost</Button>
           <Button variant="danger">Danger</Button>
         </Row>
@@ -130,8 +130,8 @@ export default function ContactSheet() {
           <Button variant="primary" size="sm">
             Primary sm
           </Button>
-          <Button variant="accent" size="sm">
-            Accent sm
+          <Button variant="secondary" size="sm">
+            Secondary sm
           </Button>
           <Button variant="ghost" size="sm">
             Ghost sm
@@ -148,10 +148,10 @@ export default function ContactSheet() {
             <Plus size={13} className="contact-sheet-icon-spacing" />
             With icon
           </Button>
-          <Button variant="icon" size="sm" title="Edit">
+          <Button variant="ghost" size="sm" title="Edit">
             <Edit2 size={14} />
           </Button>
-          <Button variant="icon" size="sm" title="Delete">
+          <Button variant="ghost" size="sm" title="Delete">
             <Trash2 size={14} />
           </Button>
         </Row>
@@ -288,7 +288,7 @@ export default function ContactSheet() {
                   </td>
                   <td className="contact-sheet-table-mono-col">{row.count}</td>
                   <td>
-                    <Button variant="icon" size="sm" title="Open">
+                    <Button variant="ghost" size="sm" title="Open">
                       <ExternalLink size={12} />
                     </Button>
                   </td>

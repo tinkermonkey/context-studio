@@ -34,7 +34,7 @@ describe("Toast", () => {
       expect(screen.getByText("Info subtitle")).toBeInTheDocument();
     });
 
-    it("renders different toast types with correct icons", () => {
+    it("renders different toast types", () => {
       const successToast: ToastItem = {
         id: "success-1",
         type: "success",
@@ -72,17 +72,16 @@ describe("Toast", () => {
       expect(screen.getByText("Info")).toBeInTheDocument();
     });
 
-    it("renders close button for each toast", () => {
+    it("renders toast with content data-testid", () => {
       const toast: ToastItem = {
         id: "toast-1",
         type: "info",
         title: "Test",
       };
 
-      const { container } = render(<ToastViewport toasts={[toast]} onDismiss={vi.fn()} />);
+      render(<ToastViewport toasts={[toast]} onDismiss={vi.fn()} />);
 
-      const closeButton = container.querySelector(".toast-x");
-      expect(closeButton).toBeInTheDocument();
+      expect(screen.getByTestId("toast-content-toast-1")).toBeInTheDocument();
     });
   });
 
@@ -174,7 +173,7 @@ describe("Toast", () => {
 
       const { container } = render(<ToastViewport toasts={[toast]} onDismiss={onDismiss} />);
 
-      const closeButton = container.querySelector(".toast-x") as HTMLElement;
+      const closeButton = container.querySelector(".toast__close") as HTMLElement;
       await userEvent.click(closeButton);
 
       expect(onDismiss).toHaveBeenCalledWith("toast-1");
@@ -260,7 +259,7 @@ describe("Toast", () => {
 
       const { container } = render(<ToastViewport toasts={toasts} onDismiss={onDismiss} />);
 
-      const closeButtons = container.querySelectorAll(".toast-x");
+      const closeButtons = container.querySelectorAll(".toast__close");
       await userEvent.click(closeButtons[0]);
 
       expect(onDismiss).toHaveBeenCalledWith("toast-1");
