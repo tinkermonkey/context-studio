@@ -46,6 +46,14 @@ describe("Sidebar", () => {
     expect(screen.getByTestId("sidebar")).toHaveClass("collapsed");
   });
 
+  it("does not throw when onToggle is undefined and toggle button is clicked", () => {
+    render(<Sidebar />);
+    const toggleButton = screen.getByTestId("sidebar-toggle");
+    expect(() => {
+      fireEvent.click(toggleButton);
+    }).not.toThrow();
+  });
+
   describe("path matching and highlighting", () => {
     it("only Dashboard is active when pathname is exactly /app", () => {
       setMockPathname("/app");

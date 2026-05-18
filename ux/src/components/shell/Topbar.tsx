@@ -31,10 +31,6 @@ export function Topbar() {
 
   const breadcrumbs = crumbs.map((label) => ({ label }));
 
-  const handleSearch = (query: string) => {
-    openPalette(query);
-  };
-
   return (
     <HeimdallTopbar
       breadcrumbs={breadcrumbs}
