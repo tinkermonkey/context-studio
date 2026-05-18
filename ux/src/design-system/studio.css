@@ -2400,6 +2400,105 @@ body.dark-canvas .topbar-search input {
   background: rgba(0, 0, 0, 0.25);
 }
 
+/* ------------ Error Banner ------------ */
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: rgb(var(--semantic-rose-bg, var(--rose-50)));
+  border: 1px solid rgb(var(--semantic-rose-border, var(--rose-200)));
+}
+
+.error-banner-compact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  background: rgb(var(--semantic-rose-bg, var(--rose-50)));
+  border: 1px solid rgb(var(--semantic-rose-border, var(--rose-200)));
+}
+
+.error-banner-icon {
+  color: rgb(var(--status-rose, var(--rose-500)));
+  flex-shrink: 0;
+}
+
+.error-banner-content {
+  flex: 1;
+}
+
+.error-banner-message {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: rgb(var(--status-rose-deep, var(--rose-700)));
+  margin-bottom: 4px;
+}
+
+.error-banner-message.compact {
+  font-size: var(--text-xs);
+  margin-bottom: 0;
+}
+
+.error-banner-error-text {
+  font-size: var(--text-xs);
+  color: rgb(var(--status-rose-deep, var(--rose-700)));
+  font-family: var(--font-mono);
+}
+
+.error-banner-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.error-banner-actions.compact {
+  gap: 4px;
+}
+
+.error-banner-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgb(var(--semantic-rose-border, var(--rose-200)));
+  color: rgb(var(--status-rose-deep, var(--rose-700)));
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+  background: rgb(var(--semantic-rose-bg, var(--rose-50)));
+}
+
+.error-banner-btn:hover {
+  background: rgb(var(--semantic-rose-border, var(--rose-200)));
+}
+
+.error-banner-btn.compact {
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: var(--text-xs);
+  border-radius: var(--radius-sm);
+  background: transparent;
+}
+
+.error-banner-btn.compact:hover {
+  background: rgb(var(--semantic-rose-bg, var(--rose-50)));
+}
+
+.error-banner-btn-primary {
+  background: rgb(var(--status-rose, var(--rose-500)));
+  border-color: rgb(var(--status-rose-deep, var(--rose-700)));
+  color: white;
+}
+
+.error-banner-btn-primary:hover {
+  background: rgb(var(--status-rose-deep, var(--rose-700)));
+}
+
 @media (prefers-reduced-motion: reduce) {
   .status-pulse::after {
     animation: none;

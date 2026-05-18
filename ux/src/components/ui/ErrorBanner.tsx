@@ -31,48 +31,16 @@ export function ErrorBanner({
 
   if (compact) {
     return (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          padding: "8px 12px",
-          borderRadius: "var(--radius-md)",
-          background: "rgb(var(--semantic-rose-bg))",
-          border: "1px solid rgb(var(--semantic-rose-border))",
-        }}
-      >
-        <AlertCircle size={16} style={{ color: "rgb(var(--status-rose))" }} />
-        <span
-          style={{ flex: 1, fontSize: "var(--text-xs)", color: "rgb(var(--status-rose-deep))" }}
-        >
-          {message}
-        </span>
-        <div style={{ display: "flex", gap: "4px" }}>
+      <div className="error-banner-compact" data-testid="error-banner-compact">
+        <AlertCircle size={16} className="error-banner-icon" />
+        <span className="error-banner-message compact">{message}</span>
+        <div className="error-banner-actions compact">
           <button
             type="button"
             onClick={handleCopyLogPath}
             title="Copy daemon log path"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-              padding: "4px 8px",
-              borderRadius: "var(--radius-sm)",
-              background: "transparent",
-              border: "1px solid rgb(var(--semantic-rose-border))",
-              color: "rgb(var(--status-rose-deep))",
-              fontSize: "var(--text-xs)",
-              cursor: "pointer",
-              transition: "background 0.15s",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background =
-                "rgb(var(--semantic-rose-bg))";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-            }}
+            className="error-banner-btn compact"
+            data-testid="error-banner-logs-btn"
           >
             <FileText size={12} />
             Logs
@@ -82,26 +50,8 @@ export function ErrorBanner({
               type="button"
               onClick={onRetry}
               title="Retry loading"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-                padding: "4px 8px",
-                borderRadius: "var(--radius-sm)",
-                background: "transparent",
-                border: "1px solid rgb(var(--semantic-rose-border))",
-                color: "rgb(var(--status-rose-deep))",
-                fontSize: "var(--text-xs)",
-                cursor: "pointer",
-                transition: "background 0.15s",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background =
-                  "rgb(var(--semantic-rose-bg))";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-              }}
+              className="error-banner-btn compact"
+              data-testid="error-banner-retry-btn"
             >
               <RefreshCw size={12} />
               Retry
@@ -113,68 +63,19 @@ export function ErrorBanner({
   }
 
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--space-3)",
-        padding: "var(--space-4)",
-        borderRadius: "var(--radius-md)",
-        background: "rgb(var(--semantic-rose-bg))",
-        border: "1px solid rgb(var(--semantic-rose-border))",
-      }}
-    >
-      <AlertCircle size={18} style={{ color: "rgb(var(--status-rose))", flexShrink: 0 }} />
-      <div style={{ flex: 1 }}>
-        <div
-          style={{
-            fontSize: "var(--text-sm)",
-            fontWeight: 500,
-            color: "rgb(var(--status-rose-deep))",
-            marginBottom: 4,
-          }}
-        >
-          {message}
-        </div>
-        {error.message && (
-          <div
-            style={{
-              fontSize: "var(--text-xs)",
-              color: "rgb(var(--status-rose-deep))",
-              fontFamily: "var(--font-mono)",
-            }}
-          >
-            {error.message}
-          </div>
-        )}
+    <div className="error-banner" data-testid="error-banner">
+      <AlertCircle size={18} className="error-banner-icon" />
+      <div className="error-banner-content">
+        <div className="error-banner-message">{message}</div>
+        {error.message && <div className="error-banner-error-text">{error.message}</div>}
       </div>
-      <div style={{ display: "flex", gap: "var(--space-2)", flexShrink: 0 }}>
+      <div className="error-banner-actions">
         <button
           type="button"
           onClick={handleCopyLogPath}
           title="Copy daemon log path"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "8px 16px",
-            borderRadius: "var(--radius-md)",
-            background: "rgb(var(--semantic-rose-bg))",
-            border: "1px solid rgb(var(--semantic-rose-border))",
-            color: "rgb(var(--status-rose-deep))",
-            fontSize: "var(--text-sm)",
-            fontWeight: 500,
-            cursor: "pointer",
-            transition: "background 0.15s",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background =
-              "rgb(var(--semantic-rose-border))";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background =
-              "rgb(var(--semantic-rose-bg))";
-          }}
+          className="error-banner-btn"
+          data-testid="error-banner-logs-btn"
         >
           <FileText size={14} />
           Logs
@@ -184,27 +85,8 @@ export function ErrorBanner({
             type="button"
             onClick={onRetry}
             title="Retry loading"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "8px 16px",
-              borderRadius: "var(--radius-md)",
-              background: "rgb(var(--status-rose))",
-              border: "1px solid rgb(var(--status-rose-deep))",
-              color: "white",
-              fontSize: "var(--text-sm)",
-              fontWeight: 500,
-              cursor: "pointer",
-              transition: "background 0.15s",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background =
-                "rgb(var(--status-rose-deep))";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgb(var(--status-rose))";
-            }}
+            className="error-banner-btn error-banner-btn-primary"
+            data-testid="error-banner-retry-btn"
           >
             <RefreshCw size={14} />
             Retry
