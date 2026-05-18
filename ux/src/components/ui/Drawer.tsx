@@ -34,7 +34,7 @@ export function Drawer({
 }: DrawerProps) {
   const drawerRef = useRef<HTMLDivElement>(null);
 
-  useFocusTrap(drawerRef, open);
+  useFocusTrap(drawerRef as React.RefObject<HTMLElement>, open);
   useBodyOverflow(open);
 
   useEffect(() => {
@@ -66,21 +66,13 @@ export function Drawer({
 
   return (
     <div className="drawer-backdrop" onClick={handleBackdropClick}>
-      <div
-        ref={drawerRef}
-        className="drawer drawer--right"
-        role="dialog"
-        aria-modal="true"
-      >
+      <div ref={drawerRef} className="drawer drawer--right" role="dialog" aria-modal="true">
         <div className="drawer-head">
           <div className="title">{title}</div>
           <div className="drawer-actions">
             {headerAction}
             {hasAutosaveStatus && (
-              <div
-                className="drawer-autosave-status"
-                data-testid="drawer-autosave-status"
-              >
+              <div className="drawer-autosave-status" data-testid="drawer-autosave-status">
                 {autosaveState === "saving" && (
                   <>
                     <Loader size={14} className="spin" />
@@ -90,9 +82,7 @@ export function Drawer({
                 {autosaveState === "saved" && lastSavedAt && (
                   <>
                     <CheckCircle size={14} className="autosave-icon-saved" />
-                    <span className="autosave-label">
-                      Saved {formatTimeAgo(lastSavedAt)}
-                    </span>
+                    <span className="autosave-label">Saved {formatTimeAgo(lastSavedAt)}</span>
                   </>
                 )}
                 {autosaveState === "error" && (
