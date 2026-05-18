@@ -21,11 +21,11 @@ test.describe("Command Palette", () => {
     await expect(palette).toBeVisible();
 
     // Assert the search input has keyboard focus
-    const input = palette.locator("input.command-palette__input").first();
+    const input = page.getByTestId("command-palette-input");
     await expect(input).toBeFocused();
 
     // Assert at least one result exists and first result is highlighted
-    const firstItem = palette.locator(".command-palette__item").first();
+    const firstItem = page.locator('[data-testid^="command-palette-item-"]').first();
     await expect(firstItem).toBeVisible();
     await expect(firstItem).toHaveClass(/command-palette__item--selected/);
   });
@@ -34,11 +34,10 @@ test.describe("Command Palette", () => {
     // Open palette
     await page.keyboard.press("Meta+k");
 
-    const palette = page.getByTestId("command-palette");
-    const input = palette.locator("input.command-palette__input");
+    const input = page.getByTestId("command-palette-input");
 
     // Get baseline: count initial results
-    const baselineItems = palette.locator(".command-palette__item");
+    const baselineItems = page.locator('[data-testid^="command-palette-item-"]');
     const baselineCount = await baselineItems.count();
     expect(baselineCount).toBeGreaterThan(0);
 
@@ -46,7 +45,7 @@ test.describe("Command Palette", () => {
     await input.fill("schema");
 
     // Assert results are filtered to matching items
-    const filteredItems = palette.locator(".command-palette__item");
+    const filteredItems = page.locator('[data-testid^="command-palette-item-"]');
     const filteredCount = await filteredItems.count();
     expect(filteredCount).toBeGreaterThan(0);
 
@@ -56,7 +55,7 @@ test.describe("Command Palette", () => {
 
     // Verify case-insensitive matching by typing uppercase
     await input.fill("SCHEMA");
-    const uppercaseItems = palette.locator(".command-palette__item");
+    const uppercaseItems = page.locator('[data-testid^="command-palette-item-"]');
     const uppercaseCount = await uppercaseItems.count();
     expect(uppercaseCount).toBeGreaterThan(0);
     const firstUppercaseItem = uppercaseItems.first();
@@ -64,7 +63,7 @@ test.describe("Command Palette", () => {
 
     // Type additional characters to further narrow results
     await input.fill("schema/classes");
-    const narrowedItems = palette.locator(".command-palette__item");
+    const narrowedItems = page.locator('[data-testid^="command-palette-item-"]');
     const narrowedCount = await narrowedItems.count();
     // Results should either be empty or contain filtered items (no vacuous assertion)
     if (narrowedCount > 0) {
@@ -72,7 +71,7 @@ test.describe("Command Palette", () => {
       await expect(firstNarrowedItem).toBeVisible();
     } else {
       // If no results, empty state should be visible
-      const emptyState = palette.locator(".command-palette__empty");
+      const emptyState = page.getByTestId("command-palette-empty-state");
       await expect(emptyState).toBeVisible();
     }
   });
@@ -81,13 +80,12 @@ test.describe("Command Palette", () => {
     // Open palette
     await page.keyboard.press("Meta+k");
 
-    const palette = page.getByTestId("command-palette");
-    const input = palette.locator("input.command-palette__input");
+    const input = page.getByTestId("command-palette-input");
 
     // Type to ensure we have results
     await input.fill("schema");
 
-    const allItems = palette.locator(".command-palette__item");
+    const allItems = page.locator('[data-testid^="command-palette-item-"]');
     // Assert we have at least 2 items for navigation testing
     await expect(allItems.nth(0)).toBeVisible();
     await expect(allItems.nth(1)).toBeVisible();
@@ -134,13 +132,12 @@ test.describe("Command Palette", () => {
     // Open palette
     await page.keyboard.press("Meta+k");
 
-    const palette = page.getByTestId("command-palette");
-    const input = palette.locator("input.command-palette__input");
+    const input = page.getByTestId("command-palette-input");
 
     // Type to ensure we have results
     await input.fill("schema");
 
-    const allItems = palette.locator(".command-palette__item");
+    const allItems = page.locator('[data-testid^="command-palette-item-"]');
     // Assert we have at least 2 items for navigation testing
     await expect(allItems.nth(0)).toBeVisible();
     await expect(allItems.nth(1)).toBeVisible();
@@ -172,12 +169,12 @@ test.describe("Command Palette", () => {
     await page.keyboard.press("Meta+k");
 
     const palette = page.getByTestId("command-palette");
-    const input = palette.locator("input.command-palette__input");
+    const input = page.getByTestId("command-palette-input");
 
     // Type to get filtered results
     await input.fill("schema");
 
-    const allItems = palette.locator(".command-palette__item");
+    const allItems = page.locator('[data-testid^="command-palette-item-"]');
     // Assert at least one result exists
     await expect(allItems.nth(0)).toBeVisible();
 
@@ -193,12 +190,12 @@ test.describe("Command Palette", () => {
     await page.keyboard.press("Meta+k");
 
     const palette = page.getByTestId("command-palette");
-    const input = palette.locator("input.command-palette__input");
+    const input = page.getByTestId("command-palette-input");
 
     // Type to get results
     await input.fill("schema");
 
-    const allItems = palette.locator(".command-palette__item");
+    const allItems = page.locator('[data-testid^="command-palette-item-"]');
     // Assert at least one result exists
     await expect(allItems.nth(0)).toBeVisible();
 
@@ -233,7 +230,7 @@ test.describe("Command Palette", () => {
     await page.keyboard.press("Meta+k");
 
     const palette = page.getByTestId("command-palette");
-    const backdrop = palette.locator(".command-palette-backdrop");
+    const backdrop = page.getByTestId("command-palette-backdrop");
 
     // Assert palette is open
     await expect(palette).toBeVisible();
@@ -247,7 +244,7 @@ test.describe("Command Palette", () => {
     // Test that clicking on the palette itself does NOT close it
     await page.keyboard.press("Meta+k");
 
-    const input = palette.locator("input.command-palette__input");
+    const input = page.getByTestId("command-palette-input");
     await input.click();
 
     // Palette should still be open
@@ -259,7 +256,7 @@ test.describe("Command Palette", () => {
     await page.keyboard.press("Meta+k");
 
     const palette = page.getByTestId("command-palette");
-    const input = palette.locator("input.command-palette__input");
+    const input = page.getByTestId("command-palette-input");
 
     // Assert palette is open
     await expect(palette).toBeVisible();
@@ -286,7 +283,7 @@ test.describe("Command Palette", () => {
     await expect(input).toHaveValue("");
 
     // Assert first result is highlighted
-    const firstItem = palette.locator(".command-palette__item").first();
+    const firstItem = page.locator('[data-testid^="command-palette-item-"]').first();
     await expect(firstItem).toBeVisible();
     await expect(firstItem).toHaveClass(/command-palette__item--selected/);
   });
@@ -305,11 +302,11 @@ test.describe("Command Palette", () => {
     await expect(palette).toBeVisible();
 
     // Assert input is focused
-    const input = palette.locator("input.command-palette__input");
+    const input = page.getByTestId("command-palette-input");
     await expect(input).toBeFocused();
 
     // Assert first result is highlighted
-    const firstItem = palette.locator(".command-palette__item").first();
+    const firstItem = page.locator('[data-testid^="command-palette-item-"]').first();
     await expect(firstItem).toBeVisible();
     await expect(firstItem).toHaveClass(/command-palette__item--selected/);
   });
@@ -319,14 +316,14 @@ test.describe("Command Palette", () => {
     await page.keyboard.press("Meta+k");
 
     const palette = page.getByTestId("command-palette");
-    const input = palette.locator("input.command-palette__input");
+    const input = page.getByTestId("command-palette-input");
 
     // Type a query that matches no registered actions
     const nonMatchingQuery = "xyzzzzzz-no-results";
     await input.fill(nonMatchingQuery);
 
     // Assert the results area shows empty state
-    const emptyState = palette.locator(".command-palette__empty");
+    const emptyState = page.getByTestId("command-palette-empty-state");
     await expect(emptyState).toBeVisible();
 
     // Assert the message contains text
@@ -345,7 +342,7 @@ test.describe("Command Palette", () => {
     await input.fill("schema");
 
     // Assert results appear for matching query
-    const items = palette.locator(".command-palette__item");
+    const items = page.locator('[data-testid^="command-palette-item-"]');
     const itemCount = await items.count();
     expect(itemCount).toBeGreaterThan(0);
 
