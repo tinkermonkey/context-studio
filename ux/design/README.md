@@ -4,24 +4,22 @@ A graph-native knowledge studio. Dark IDE-style chrome wraps a light "canvas" wo
 
 ## Sources
 
-- `Context Studio.html` — entry point, loads the full app.
-- `styles/tokens.css` — Flowbite/Tailwind-derived foundations (color scales, spacing, radii, shadows, type).
-- `styles/studio.css` — Studio-specific overlay: shell chrome, canvas, hierarchy tree, pipelines, command palette, dark canvas mode.
-- `styles/crud.css` — modals, forms, tri-states, entity pickers, toasts, row menus.
-- `styles/individuals.css`, `styles/settings.css`, `styles/graph.css` — page-specific styling.
-- `components/*.jsx` — React component implementations (Lucide-style outline icons in `icons.jsx`).
+- **Design System:** Heimdall UI — provides the core design tokens (colors, spacing, radii, shadows, type) via `@tinkermonkey/heimdall-ui` npm package.
+- **Application Overrides:** `src/app-overrides.css` — accent color configuration, domain taxonomy colors, layout utilities, and application-level component styles.
+- **Feature Styling:** `src/design-system/graph.css` — graph-specific styling for knowledge graph visualization.
+- **Component Implementations:** `src/components/` — React components built with Heimdall tokens and Tailwind CSS.
 
 ## Index
 
-| File                   | Purpose                                                           |
-| ---------------------- | ----------------------------------------------------------------- |
-| `README.md`            | This document                                                     |
-| `SKILL.md`             | Skill manifest (cross-compatible with Claude Code skills)         |
-| `styles/tokens.css`    | Foundation tokens — colors, type, spacing, radius, shadow         |
-| `styles/studio.css`    | Shell, canvas, components                                         |
-| `styles/crud.css`      | Modals, forms, toasts                                             |
-| `components/icons.jsx` | Icon set (Lucide-style outline, 1.75 stroke)                      |
-| `preview/`             | Design-system preview cards (registered in the Design System tab) |
+| File                        | Purpose                                                           |
+| --------------------------- | ----------------------------------------------------------------- |
+| `README.md`                 | This document                                                     |
+| `SKILL.md`                  | Skill manifest (cross-compatible with Claude Code skills)         |
+| `styles/tokens.css`         | Reference tokens (read-only, for design documentation)            |
+| `../src/app-overrides.css`  | Application-level token overrides and component styles            |
+| `../src/design-system/`     | Feature-specific styling (graph, chart, etc.)                      |
+| `components/icons.jsx`      | Icon set (Lucide-style outline, 1.75 stroke)                      |
+| `preview/`                  | Design-system preview cards (registered in the Design System tab) |
 
 ---
 
@@ -146,14 +144,15 @@ Always render via `<Icon name="…" size={16} />`. Never paste raw SVG into a co
 
 ## How to use this system
 
-- **For production code:** import `styles/tokens.css` first, then `styles/studio.css` (or just the layers you need). Use the CSS classes documented in `studio.css` (`.btn`, `.btn-primary`, `.panel`, `.stat`, `.kg-node`, `.chip.cyan`, etc.) — they're already named for the system.
-- **For mocks / decks / prototypes:** copy `styles/tokens.css` and the relevant pieces of `studio.css` + `crud.css` into your file. Use `Inter` + `JetBrains Mono` from Google Fonts (already imported in tokens.css). Stick to the two-surface rule.
-- **For new components:** keep radii small (4–8px), avoid shadows, prefer borders, use mono for any identifier-shaped string, and pick a single domain or accent color rather than mixing multiple.
+- **For production code:** the design system is loaded automatically via `src/index.css`, which imports Heimdall tokens from `@tinkermonkey/heimdall-ui` and applies application overrides from `src/app-overrides.css`. Use Heimdall CSS custom properties (e.g., `--canvas-fg-1`, `--status-error`, `--semantic-rose-bg`) and Tailwind utility classes. Component styles are defined in class-based CSS files or inline with Heimdall token references.
+- **For mocks / decks / prototypes:** copy the Heimdall tokens (available via the npm package or from `node_modules/@tinkermonkey/heimdall-ui/src/tokens/tokens.css`). Use `Inter` + `JetBrains Mono` from Google Fonts. Stick to the two-surface rule.
+- **For new components:** keep radii small (4–8px), avoid shadows, prefer borders, use mono for any identifier-shaped string, and pick a single domain or accent color rather than mixing multiple. Use Heimdall tokens via CSS custom properties (wrapped in `rgb(var(--token-name))` for RGB tokens).
 
 ---
 
 ## Caveats
 
-- Foundations were originally derived from Flowbite/Tailwind primitives — `tokens.css` keeps that lineage so the app can interop with off-the-shelf Flowbite components if needed. Studio's overlay tokens (`--shell-*`, `--canvas-*`, `--accent-*`) are the day-to-day surface.
+- The design system is now powered by **Heimdall UI** tokens (`@tinkermonkey/heimdall-ui`), which provides a two-surface architecture (shell always dark, canvas light by default with dark mode toggle via `body.dark-canvas`). Application-specific customizations and component styles are layered on top via `src/app-overrides.css`.
 - The icon set is hand-rolled in the Lucide style but is not the Lucide package. If you switch to Lucide-react, names match for ~90% of the set.
 - Inter and JetBrains Mono are loaded from Google Fonts at runtime; for offline/print, swap to local font files.
+- Heimdall tokens use RGB values (e.g., `--canvas-fg-1: 17 24 39`) and must be wrapped in `rgb()` when used in CSS (e.g., `color: rgb(var(--canvas-fg-1))`). Fallback values or hardcoded hex colors are not needed — Heimdall tokens are production-ready.

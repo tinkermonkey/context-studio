@@ -37,13 +37,13 @@ export function ErrorBanner({
           alignItems: "center",
           gap: "8px",
           padding: "8px 12px",
-          borderRadius: "var(--radius-md, 6px)",
-          background: "var(--rose-50, #fff7f5)",
-          border: "1px solid var(--rose-200, #fecaca)",
+          borderRadius: "var(--radius-md)",
+          background: "rgb(var(--semantic-rose-bg))",
+          border: "1px solid rgb(var(--semantic-rose-border))",
         }}
       >
-        <AlertCircle size={16} style={{ color: "var(--rose-600, #e11d48)" }} />
-        <span style={{ flex: 1, fontSize: "var(--text-xs)", color: "var(--rose-700, #be123c)" }}>
+        <AlertCircle size={16} style={{ color: "rgb(var(--status-rose))" }} />
+        <span style={{ flex: 1, fontSize: "var(--text-xs)", color: "rgb(var(--status-rose-deep))" }}>
           {message}
         </span>
         <div style={{ display: "flex", gap: "4px" }}>
@@ -56,16 +56,16 @@ export function ErrorBanner({
               alignItems: "center",
               gap: 4,
               padding: "4px 8px",
-              borderRadius: "4px",
+              borderRadius: "var(--radius-sm)",
               background: "transparent",
-              border: "1px solid var(--rose-300, #fda4af)",
-              color: "var(--rose-700, #be123c)",
+              border: "1px solid rgb(var(--semantic-rose-border))",
+              color: "rgb(var(--status-rose-deep))",
               fontSize: "var(--text-xs)",
               cursor: "pointer",
               transition: "background 0.15s",
             }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "var(--rose-100, #ffe4e6)";
+              (e.currentTarget as HTMLButtonElement).style.background = "rgb(var(--semantic-rose-bg))";
             }}
             onMouseLeave={(e) => {
               (e.currentTarget as HTMLButtonElement).style.background = "transparent";
@@ -84,17 +84,17 @@ export function ErrorBanner({
                 alignItems: "center",
                 gap: 4,
                 padding: "4px 8px",
-                borderRadius: "4px",
+                borderRadius: "var(--radius-sm)",
                 background: "transparent",
-                border: "1px solid var(--rose-300, #fda4af)",
-                color: "var(--rose-700, #be123c)",
+                border: "1px solid rgb(var(--semantic-rose-border))",
+                color: "rgb(var(--status-rose-deep))",
                 fontSize: "var(--text-xs)",
                 cursor: "pointer",
                 transition: "background 0.15s",
               }}
               onMouseEnter={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.background =
-                  "var(--rose-100, #ffe4e6)";
+                  "rgb(var(--semantic-rose-bg))";
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.background = "transparent";
@@ -114,20 +114,20 @@ export function ErrorBanner({
       style={{
         display: "flex",
         alignItems: "center",
-        gap: "var(--space-3, 12px)",
-        padding: "var(--space-4, 16px)",
-        borderRadius: "var(--radius-md, 6px)",
-        background: "var(--rose-50, #fff7f5)",
-        border: "1px solid var(--rose-200, #fecaca)",
+        gap: "var(--space-3)",
+        padding: "var(--space-4)",
+        borderRadius: "var(--radius-md)",
+        background: "rgb(var(--semantic-rose-bg))",
+        border: "1px solid rgb(var(--semantic-rose-border))",
       }}
     >
-      <AlertCircle size={18} style={{ color: "var(--rose-600, #e11d48)", flexShrink: 0 }} />
+      <AlertCircle size={18} style={{ color: "rgb(var(--status-rose))", flexShrink: 0 }} />
       <div style={{ flex: 1 }}>
         <div
           style={{
             fontSize: "var(--text-sm)",
             fontWeight: 500,
-            color: "var(--rose-900, #4c0519)",
+            color: "rgb(var(--status-rose-deep))",
             marginBottom: 4,
           }}
         >
@@ -137,15 +137,15 @@ export function ErrorBanner({
           <div
             style={{
               fontSize: "var(--text-xs)",
-              color: "var(--rose-700, #be123c)",
-              fontFamily: "var(--mono)",
+              color: "rgb(var(--status-rose-deep))",
+              fontFamily: "var(--font-mono)",
             }}
           >
             {error.message}
           </div>
         )}
       </div>
-      <div style={{ display: "flex", gap: "var(--space-2, 8px)", flexShrink: 0 }}>
+      <div style={{ display: "flex", gap: "var(--space-2)", flexShrink: 0 }}>
         <button
           type="button"
           onClick={handleCopyLogPath}
@@ -155,20 +155,20 @@ export function ErrorBanner({
             alignItems: "center",
             gap: 8,
             padding: "8px 16px",
-            borderRadius: "var(--radius-md, 6px)",
-            background: "var(--rose-100, #ffe4e6)",
-            border: "1px solid var(--rose-300, #fda4af)",
-            color: "var(--rose-700, #be123c)",
+            borderRadius: "var(--radius-md)",
+            background: "rgb(var(--semantic-rose-bg))",
+            border: "1px solid rgb(var(--semantic-rose-border))",
+            color: "rgb(var(--status-rose-deep))",
             fontSize: "var(--text-sm)",
             fontWeight: 500,
             cursor: "pointer",
             transition: "background 0.15s",
           }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = "var(--rose-200, #fecaca)";
+            (e.currentTarget as HTMLButtonElement).style.background = "rgb(var(--semantic-rose-border))";
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = "var(--rose-100, #ffe4e6)";
+            (e.currentTarget as HTMLButtonElement).style.background = "rgb(var(--semantic-rose-bg))";
           }}
         >
           <FileText size={14} />
@@ -184,9 +184,9 @@ export function ErrorBanner({
               alignItems: "center",
               gap: 8,
               padding: "8px 16px",
-              borderRadius: "var(--radius-md, 6px)",
-              background: "var(--rose-600, #e11d48)",
-              border: "1px solid var(--rose-700, #be123c)",
+              borderRadius: "var(--radius-md)",
+              background: "rgb(var(--status-rose))",
+              border: "1px solid rgb(var(--status-rose-deep))",
               color: "white",
               fontSize: "var(--text-sm)",
               fontWeight: 500,
@@ -194,10 +194,10 @@ export function ErrorBanner({
               transition: "background 0.15s",
             }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "var(--rose-700, #be123c)";
+              (e.currentTarget as HTMLButtonElement).style.background = "rgb(var(--status-rose-deep))";
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "var(--rose-600, #e11d48)";
+              (e.currentTarget as HTMLButtonElement).style.background = "rgb(var(--status-rose))";
             }}
           >
             <RefreshCw size={14} />

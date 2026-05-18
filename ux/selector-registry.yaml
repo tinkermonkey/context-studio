@@ -969,6 +969,9 @@ selectors:
   - selector: flavor-submit-button
     component: components/pipeline/FlavorForm.tsx
     description: Submit button in flavor form
+  - selector: flavor-form-error
+    component: components/pipeline/FlavorForm.tsx
+    description: Error banner displayed when flavor form submission fails
   - selector: flavor-drawer
     component: components/pipeline/FlavorDrawer.tsx
     description: Drawer panel showing flavor details
