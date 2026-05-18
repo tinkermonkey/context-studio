@@ -2252,7 +2252,7 @@ select.input {
 }
 
 .pipeline-error-message {
-  background: rgb(var(--canvas-bg-3));
+  background: var(--canvas-bg-3);
   padding: var(--space-2);
   border-radius: var(--radius-sm);
   overflow: auto;
@@ -2266,9 +2266,7 @@ select.input {
 /* ============= Dark canvas mode ============= */
 /* Token redefinitions are now handled by Heimdall's tokens.css and app-overrides.css */
 body.dark-canvas {
-  /* Canvas colors are automatically redefined by Heimdall in body.dark-canvas */
-  /* Additional light-only values for dark mode */
-  --canvas-fg-4: 75 85 99;
+  /* Canvas colors are automatically redefined by app-overrides.css */
 }
 body.dark-canvas table.t tr:hover td {
   background: rgba(255, 255, 255, 0.03);

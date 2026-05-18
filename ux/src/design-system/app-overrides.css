@@ -18,6 +18,9 @@
   /* ---- Canvas Layout Classes ---- */
   --space-canvas-inner: 2rem;
 
+  /* ---- Accent Color Overrides (FR-9: use cyan instead of Heimdall default amber) ---- */
+  --accent-primary: 34 211 238;
+
   /* ---- Legacy Accent Color Aliases (map to Heimdall semantic colors with rgb() wrapper) ---- */
   --accent-cyan: rgb(var(--accent-primary));
   --accent-cyan-deep: rgb(var(--accent-primary-deep));
