@@ -199,6 +199,18 @@ a {
   border-radius: 3px;
 }
 
+/* ------------ App Shell Grid ------------ */
+.app-shell {
+  display: grid;
+  grid-template-columns: 256px 1fr;
+  grid-template-rows: 1fr;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+}
+.app-shell.collapsed {
+  grid-template-columns: 64px 1fr;
+}
 
 /* ------------ Sidebar ------------ */
 .shell-rail {

@@ -1,6 +1,5 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { createFileRoute, Outlet, useNavigate, redirect } from "@tanstack/react-router";
-import { ShellLayout } from "@tinkermonkey/heimdall-ui";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { useCommandPaletteActions } from "@/hooks/useCommandPaletteActions";
 import { createStaticPaletteActions } from "@/config/staticPaletteActions";
@@ -93,6 +92,7 @@ const NAV_ACTIONS = [
 ] as const;
 
 function AppShell() {
+  const [collapsed, setCollapsed] = useState(false);
   const { registerActions, unregisterActions } = useCommandPaletteStore();
   const navigate = useNavigate();
   useCommandPaletteActions();
@@ -121,8 +121,8 @@ function AppShell() {
   return (
     <div className="desktop-frame">
       <Titlebar />
-      <ShellLayout>
-        <Sidebar />
+      <div className={`app-shell ${collapsed ? "collapsed" : ""}`}>
+        <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((v) => !v)} />
         <div className="workspace">
           <Topbar />
           <div className="canvas-area">
@@ -135,7 +135,7 @@ function AppShell() {
             </div>
           </div>
         </div>
-      </ShellLayout>
+      </div>
       <Statusbar />
       <CommandPalette />
     </div>
