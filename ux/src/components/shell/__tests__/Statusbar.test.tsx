@@ -121,7 +121,9 @@ describe("Statusbar", () => {
       } as any);
 
       render(<Statusbar />);
-      const pulse = screen.getByTestId("statusbar-left").querySelector(".status-pulse:not(.error):not(.warning):not(.idle)");
+      const pulse = screen
+        .getByTestId("statusbar-left")
+        .querySelector(".status-pulse:not(.error):not(.warning):not(.idle)");
       expect(pulse).toBeInTheDocument();
     });
 

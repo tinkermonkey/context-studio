@@ -63,22 +63,12 @@ export function Drawer({
           </div>
         )}
         {hasRevert && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onRevert}
-            data-testid="drawer-revert-button"
-          >
+          <Button variant="ghost" size="sm" onClick={onRevert} data-testid="drawer-revert-button">
             Revert
           </Button>
         )}
         {hasDelete && (
-          <Button
-            variant="danger"
-            size="sm"
-            onClick={onDelete}
-            data-testid="drawer-delete-button"
-          >
+          <Button variant="danger" size="sm" onClick={onDelete} data-testid="drawer-delete-button">
             Delete
           </Button>
         )}

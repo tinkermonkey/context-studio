@@ -32,9 +32,7 @@ export function Topbar() {
   const breadcrumbs = crumbs.map((label) => ({ label }));
 
   return (
-    <HeimdallTopbar
-      breadcrumbs={breadcrumbs}
-    >
+    <HeimdallTopbar breadcrumbs={breadcrumbs}>
       <div className="topbar-actions">
         <button
           className="topbar-palette"

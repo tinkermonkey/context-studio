@@ -61,12 +61,7 @@ describe("Tabs", () => {
 
   it("forwards className prop to HeimdallTabBar", () => {
     render(
-      <Tabs
-        tabs={defaultTabs}
-        active="tab-1"
-        onChange={mockOnChange}
-        className="custom-class"
-      />
+      <Tabs tabs={defaultTabs} active="tab-1" onChange={mockOnChange} className="custom-class" />,
     );
     const tabBar = screen.getByTestId("heimdall-tab-bar");
     expect(tabBar).toHaveClass("custom-class");

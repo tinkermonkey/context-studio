@@ -107,9 +107,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps = {}) {
 
     // Return the longest matching path (most specific match)
     if (candidates.length === 0) return undefined;
-    const longest = candidates.reduce((a, b) =>
-      a.path.length > b.path.length ? a : b
-    );
+    const longest = candidates.reduce((a, b) => (a.path.length > b.path.length ? a : b));
     return longest.id;
   }
 
@@ -133,9 +131,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps = {}) {
 
     // Return the group with the longest matching child path
     if (candidates.length === 0) return undefined;
-    const longest = candidates.reduce((a, b) =>
-      a.maxChildLength > b.maxChildLength ? a : b
-    );
+    const longest = candidates.reduce((a, b) => (a.maxChildLength > b.maxChildLength ? a : b));
     return longest.groupId;
   }
 

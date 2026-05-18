@@ -63,7 +63,7 @@ describe("Sidebar", () => {
       // Ensure other top-level items are not active
       expect(screen.getByTestId("sidebar-item-settings")).not.toHaveAttribute(
         "aria-current",
-        "page"
+        "page",
       );
     });
 
