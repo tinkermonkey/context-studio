@@ -25,7 +25,16 @@ describe("Titlebar", () => {
     mockOpenPalette.mockClear();
 
     vi.mocked(paletteModule.useCommandPaletteStore).mockImplementation((selector) => {
-      const state = { openPalette: mockOpenPalette };
+      const state = {
+        open: false,
+        query: "",
+        actions: [],
+        openPalette: mockOpenPalette,
+        closePalette: vi.fn(),
+        togglePalette: vi.fn(),
+        registerActions: vi.fn(),
+        unregisterActions: vi.fn(),
+      };
       return selector ? selector(state) : state;
     });
   });

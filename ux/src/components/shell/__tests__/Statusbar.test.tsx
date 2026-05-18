@@ -43,7 +43,10 @@ describe("Statusbar", () => {
       inFlightPipelineIds: new Set(),
     } as any);
 
-    vi.mocked(pipelineModule.usePipelines).mockReturnValue(undefined);
+    vi.mocked(pipelineModule.usePipelines).mockReturnValue({
+      data: [],
+      isError: false,
+    } as any);
   });
 
   describe("health status display", () => {
