@@ -1,10 +1,11 @@
 import { create } from "zustand";
+import type { IconName } from "@tinkermonkey/heimdall-ui";
 
 export interface PaletteAction {
   id: string;
   label: string;
   description?: string;
-  icon?: React.ReactNode;
+  icon?: IconName;
   shortcut?: string;
   onSelect: () => void;
 }
