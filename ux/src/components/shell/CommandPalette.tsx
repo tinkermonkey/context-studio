@@ -67,7 +67,9 @@ export function CommandPalette() {
       empty.setAttribute("data-testid", "command-palette-empty-state");
     }
 
-    const escButton = root.querySelector("button[title*='Esc'], button[title*='esc']") as HTMLElement;
+    const escButton = root.querySelector(
+      "button[title*='Esc'], button[title*='esc']",
+    ) as HTMLElement;
     if (escButton) {
       escButton.setAttribute("data-testid", "command-palette-esc-button");
     }

@@ -39,7 +39,5 @@ export function Titlebar({
     </div>
   );
 
-  return (
-    <HeimdallTitlebar left={left} right={right} />
-  );
+  return <HeimdallTitlebar left={left} right={right} />;
 }

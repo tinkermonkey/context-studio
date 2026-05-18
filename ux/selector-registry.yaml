@@ -74,6 +74,12 @@ selectors:
     description: Button that collapses or expands the sidebar
 
   # Toast
+  - selector: toast-*
+    component: components/ui/Toast.tsx
+    description: Toast wrapper container with dynamic ID suffix
+  - selector: toast-content-*
+    component: components/ui/Toast.tsx
+    description: Toast content element with dynamic ID suffix
   - selector: toast-action-*
     component: components/ui/Toast.tsx
     description: Action button in toast with undo callback

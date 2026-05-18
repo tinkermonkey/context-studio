@@ -26,7 +26,12 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
       React.createElement("input", {
         ref,
         type: "text",
-        className: ["text-input", mono && "text-input--mono", error && "text-input--error", className]
+        className: [
+          "text-input",
+          mono && "text-input--mono",
+          error && "text-input--error",
+          className,
+        ]
           .filter(Boolean)
           .join(" "),
         ...props,
@@ -42,17 +47,16 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
         ...props,
       }),
   ),
-  Select: React.forwardRef(
-    ({ error = false, className = "", children, ...props }: any, ref: any) =>
-      React.createElement(
-        "select",
-        {
-          ref,
-          className: ["select", error && "select--error", className].filter(Boolean).join(" "),
-          ...props,
-        },
-        children,
-      ),
+  Select: React.forwardRef(({ error = false, className = "", children, ...props }: any, ref: any) =>
+    React.createElement(
+      "select",
+      {
+        ref,
+        className: ["select", error && "select--error", className].filter(Boolean).join(" "),
+        ...props,
+      },
+      children,
+    ),
   ),
   Toast: ({ isOpen, onClose, title, subtitle, variant, duration = 4000, ...props }: any) => {
     React.useEffect(() => {
@@ -76,7 +80,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
       ),
     );
   },
-  Sidebar: ({ children, onCollapse, ...props }: any) =>
+  Sidebar: ({ children, onCollapse, ..._props }: any) =>
     React.createElement("div", { "data-testid": "heimdall-sidebar" }, [
       React.createElement(
         "button",
@@ -85,13 +89,13 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
       ),
       children,
     ]),
-  Topbar: ({ children, ...props }: any) =>
+  Topbar: ({ children, ..._props }: any) =>
     React.createElement("div", { "data-testid": "heimdall-topbar" }, children),
-  Titlebar: ({ children, ...props }: any) =>
+  Titlebar: ({ children, ..._props }: any) =>
     React.createElement("div", { "data-testid": "heimdall-titlebar" }, children),
-  Statusbar: ({ children, ...props }: any) =>
+  Statusbar: ({ children, ..._props }: any) =>
     React.createElement("div", { "data-testid": "heimdall-statusbar" }, children),
-  CommandPalette: ({ children, ...props }: any) =>
+  CommandPalette: ({ children, ..._props }: any) =>
     React.createElement("div", { "data-testid": "heimdall-command-palette" }, children),
 }));
 

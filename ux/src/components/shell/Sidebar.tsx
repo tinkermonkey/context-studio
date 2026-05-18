@@ -73,7 +73,9 @@ export function Sidebar({ collapsed: collapsedProp, onToggle }: SidebarProps = {
 
   useEffect(() => {
     if (sidebarRef.current) {
-      const toggleButton = sidebarRef.current.querySelector("button[title*='toggle'], button[title*='collapse']") as HTMLElement;
+      const toggleButton = sidebarRef.current.querySelector(
+        "button[title*='toggle'], button[title*='collapse']",
+      ) as HTMLElement;
       if (toggleButton) {
         toggleButton.setAttribute("data-testid", "sidebar-toggle");
       }

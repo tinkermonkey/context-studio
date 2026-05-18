@@ -19,9 +19,7 @@ export function applyInterceptors(instance: AxiosInstance): void {
   // Request interceptor — inject traceparent header and create span
   instance.interceptors.request.use(
     (config) => {
-      const span = tracer.startSpan(
-        `HTTP ${config.method?.toUpperCase() || "GET"} ${config.url}`
-      );
+      const span = tracer.startSpan(`HTTP ${config.method?.toUpperCase() || "GET"} ${config.url}`);
 
       // Inject traceparent header for trace propagation
       const traceId = span.spanContext().traceId;
@@ -35,7 +33,7 @@ export function applyInterceptors(instance: AxiosInstance): void {
 
       return config;
     },
-    (error) => Promise.reject(error)
+    (error) => Promise.reject(error),
   );
 
   // Response interceptor — normalize FastAPI error bodies into ApiError and record status
@@ -71,8 +69,8 @@ export function applyInterceptors(instance: AxiosInstance): void {
       const detail =
         typeof data?.detail === "string"
           ? data.detail
-          : error.message ?? "An unexpected error occurred";
+          : (error.message ?? "An unexpected error occurred");
       return Promise.reject(new ApiError(detail, status, detail));
-    }
+    },
   );
 }
