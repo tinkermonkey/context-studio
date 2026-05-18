@@ -1,7 +1,24 @@
 # ============================================================================
+# Pre-build stage: Build heimdall-ui with react available
+# ============================================================================
+# heimdall-ui is referenced by git commit hash. Its vite build (prepare script)
+# fails in npm's isolated temp clone because react is only a peerDependency and
+# Rollup can't resolve react/jsx-runtime. We build it here with react installed.
+FROM node:22-slim AS heimdall-builder
+WORKDIR /build
+RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+RUN git clone https://github.com/tinkermonkey/heimdall.git . && \
+    git checkout b3263c292449c11f9ba871b7dd497948244a686e
+RUN mkdir -p /build/out && \
+    npm install && \
+    npm install react@19.1.0 react-dom@19.1.0 --no-save && \
+    npx vite build && \
+    npm pack --pack-destination /build/out
+
+# ============================================================================
 # Stage 1: Base Environment Setup
 # ============================================================================
-# Last dependency refresh: 2026-05-13
+# Last dependency refresh: 2026-05-18
 FROM switchyard-orchestrator:latest
 
 # The base image already includes:
@@ -66,8 +83,8 @@ COPY local-server/requirements.txt ./local-server/requirements.txt
 COPY local-server/requirements-dev.txt ./local-server/requirements-dev.txt
 
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install --no-cache-dir -r local-server/requirements.txt && \
-    pip install --no-cache-dir -r local-server/requirements-dev.txt
+    pip install --no-cache-dir --timeout 120 --retries 3 -r local-server/requirements.txt && \
+    pip install --no-cache-dir --timeout 120 --retries 3 -r local-server/requirements-dev.txt
 
 # Download spaCy language model for NLP adapter
 RUN python -m spacy download en_core_web_sm
@@ -89,12 +106,17 @@ RUN mkdir -p /workspace/context-studio/ux /workspace/context-studio/app && \
 COPY --chown=orchestrator:orchestrator ux/package.json ux/package-lock.json* ./ux/
 COPY --chown=orchestrator:orchestrator app/package.json app/package-lock.json* ./app/
 
+# Copy pre-built heimdall-ui tarball from builder stage
+COPY --from=heimdall-builder --chown=orchestrator:orchestrator /build/out/*.tgz /tmp/heimdall-ui.tgz
+
 # Switch to orchestrator for npm ci — installs node_modules owned by orchestrator directly
 USER orchestrator
 
-RUN --mount=type=cache,target=/home/orchestrator/.npm,uid=1000,gid=1000 \
-    cd ux && \
-    npm ci --legacy-peer-deps
+# Replace git dependency with pre-built tarball to avoid prepare script failure,
+# then install all dependencies
+RUN cd ux && \
+    sed -i 's|"@tinkermonkey/heimdall-ui": "github:tinkermonkey/heimdall#[^"]*"|"@tinkermonkey/heimdall-ui": "file:///tmp/heimdall-ui.tgz"|' package.json && \
+    npm install --legacy-peer-deps
 
 RUN --mount=type=cache,target=/home/orchestrator/.npm,uid=1000,gid=1000 \
     cd app && \
@@ -144,6 +166,10 @@ RUN python3 -c "import importlib.metadata; importlib.metadata.version('types-net
     python3 -c "import importlib.metadata; importlib.metadata.version('types-SQLAlchemy'); print('types-SQLAlchemy OK')" && \
     python3 -c "import importlib.metadata; importlib.metadata.version('pyarrow-stubs'); print('pyarrow-stubs OK')" && \
     python3 -c "import importlib.metadata; importlib.metadata.version('boto3-stubs'); print('boto3-stubs OK')"
+
+# Verify heimdall-ui is installed with dist built
+RUN test -f /workspace/context-studio/ux/node_modules/@tinkermonkey/heimdall-ui/dist/index.js && \
+    echo "heimdall-ui OK"
 
 # ============================================================================
 # Default command

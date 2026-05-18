@@ -1,5 +1,5 @@
 import { useRouterState } from "@tanstack/react-router";
-import { Search, Bell, FileText, ChevronDown, Sun, Moon } from "lucide-react";
+import { Search, Bell, FileText, Sun, Moon } from "lucide-react";
 import { Topbar as HeimdallTopbar } from "@tinkermonkey/heimdall-ui";
 import { useCommandPaletteStore } from "@/stores/commandPalette";
 import { useCanvasStore } from "@/stores/canvas";
@@ -22,11 +22,7 @@ const ROUTE_LABELS: Record<string, string[]> = {
   "/app/contact-sheet": ["Developer", "Contact Sheet"],
 };
 
-interface TopbarProps {
-  workspaceName?: string;
-}
-
-export function Topbar({ workspaceName = "context-studio" }: TopbarProps) {
+export function Topbar() {
   const { location } = useRouterState();
   const openPalette = useCommandPaletteStore((s) => s.openPalette);
   const { darkCanvas, toggleDarkCanvas } = useCanvasStore();

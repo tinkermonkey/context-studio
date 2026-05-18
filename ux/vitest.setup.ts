@@ -1,6 +1,29 @@
 import "@testing-library/jest-dom/vitest";
+import React from "react";
 import { afterEach, beforeEach, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
+
+// Mock @tinkermonkey/heimdall-ui — the package bundles its own React JSX runtime
+// which accesses ReactCurrentDispatcher before React initializes in jsdom.
+vi.mock("@tinkermonkey/heimdall-ui", () => ({
+  Sidebar: ({ children, onCollapse, ...props }: any) =>
+    React.createElement("div", { "data-testid": "heimdall-sidebar" }, [
+      React.createElement(
+        "button",
+        { key: "toggle", title: "toggle sidebar", onClick: onCollapse },
+        "Toggle",
+      ),
+      children,
+    ]),
+  Topbar: ({ children, ...props }: any) =>
+    React.createElement("div", { "data-testid": "heimdall-topbar" }, children),
+  Titlebar: ({ children, ...props }: any) =>
+    React.createElement("div", { "data-testid": "heimdall-titlebar" }, children),
+  Statusbar: ({ children, ...props }: any) =>
+    React.createElement("div", { "data-testid": "heimdall-statusbar" }, children),
+  CommandPalette: ({ children, ...props }: any) =>
+    React.createElement("div", { "data-testid": "heimdall-command-palette" }, children),
+}));
 
 // Mock window.scrollTo to avoid jsdom "Not implemented" errors
 window.scrollTo = vi.fn() as unknown as typeof window.scrollTo;
