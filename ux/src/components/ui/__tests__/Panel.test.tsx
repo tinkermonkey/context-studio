@@ -65,11 +65,7 @@ describe("Panel", () => {
     });
 
     it("renders footer when provided", () => {
-      render(
-        <Panel footer={<div>Footer content</div>}>
-          Content
-        </Panel>,
-      );
+      render(<Panel footer={<div>Footer content</div>}>Content</Panel>);
       expect(screen.getByText("Footer content")).toBeInTheDocument();
     });
   });
