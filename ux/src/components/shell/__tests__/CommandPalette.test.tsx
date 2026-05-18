@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, screen } from "@testing-library/react";
 import { CommandPalette } from "../CommandPalette";
 import * as commandPaletteStore from "@/stores/commandPalette";
 
@@ -96,7 +95,7 @@ describe("CommandPalette", () => {
   });
 
   describe("filtering", () => {
-    it("includes all actions when query string matches label", () => {
+    it("filters actions by label", () => {
       vi.mocked(commandPaletteStore.useCommandPaletteStore).mockReturnValue({
         open: true,
         query: "Create",
@@ -112,7 +111,7 @@ describe("CommandPalette", () => {
       expect(screen.getByTestId("command-palette")).toBeInTheDocument();
     });
 
-    it("includes all actions when query string matches description", () => {
+    it("filters actions by description", () => {
       vi.mocked(commandPaletteStore.useCommandPaletteStore).mockReturnValue({
         open: true,
         query: "existing",
