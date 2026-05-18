@@ -19,14 +19,14 @@ import json
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional, Sequence, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Sequence
 from uuid import uuid4
 
 from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode
 
 from domain.versioning.entities import ChangeEvent
-from domain.versioning.value_objects import SyncResult, ChangeOperation, SyncStatus
+from domain.versioning.value_objects import ChangeOperation, SyncResult, SyncStatus
 
 if TYPE_CHECKING:
     from domain.versioning.ports import ChangeRepository
@@ -47,9 +47,7 @@ class DuckDBSyncAdapter:
     SyncError domain exceptions.
     """
 
-    def __init__(
-        self, output_dir: str, change_repo: "ChangeRepository | None" = None
-    ) -> None:
+    def __init__(self, output_dir: str, change_repo: "ChangeRepository | None" = None) -> None:
         """
         Initialize the sync adapter.
 
@@ -62,13 +60,11 @@ class DuckDBSyncAdapter:
             RuntimeError: If sync directory cannot be created
         """
         if importlib.util.find_spec("duckdb") is None:
-            _logger.error(
-                "duckdb is required for sync adapter. Install with: pip install duckdb"
-            )
+            _logger.error("duckdb is required for sync adapter. Install with: pip install duckdb")
             raise ImportError("duckdb is required for sync adapter")
         if importlib.util.find_spec("pyarrow") is None:
             _logger.error(
-                "pyarrow is required for sync adapter. Install with: pip install pyarrow"
+                "pyarrow is required for sync adapter. Install with: pip install" " pyarrow"
             )
             raise ImportError("pyarrow is required for sync adapter")
 
@@ -152,13 +148,9 @@ class DuckDBSyncAdapter:
                         "processed": event.processed,
                         "user_id": event.user_id,
                         "change_reason": event.change_reason,
-                        "new_state": (
-                            json.dumps(event.new_state) if event.new_state else None
-                        ),
+                        "new_state": json.dumps(event.new_state) if event.new_state else None,
                         "previous_state": (
-                            json.dumps(event.previous_state)
-                            if event.previous_state
-                            else None
+                            json.dumps(event.previous_state) if event.previous_state else None
                         ),
                     }
                     events_by_date[date_str].append(event_dict)
@@ -315,7 +307,10 @@ class DuckDBSyncAdapter:
                                     try:
                                         new_state = json.loads(row["new_state"])
                                     except (json.JSONDecodeError, TypeError) as e:
-                                        error_msg = f"Failed to parse new_state JSON for event {event_id} in {parquet_file}: {e}"
+                                        error_msg = (
+                                            "Failed to parse new_state JSON for event"
+                                            f" {event_id} in {parquet_file}: {e}"
+                                        )
                                         _logger.error(error_msg)
                                         raise RuntimeError(error_msg) from e
 
@@ -324,7 +319,10 @@ class DuckDBSyncAdapter:
                                     try:
                                         previous_state = json.loads(row["previous_state"])
                                     except (json.JSONDecodeError, TypeError) as e:
-                                        error_msg = f"Failed to parse previous_state JSON for event {event_id} in {parquet_file}: {e}"
+                                        error_msg = (
+                                            "Failed to parse previous_state JSON for"
+                                            f" event {event_id} in {parquet_file}: {e}"
+                                        )
                                         _logger.error(error_msg)
                                         raise RuntimeError(error_msg) from e
 
@@ -350,7 +348,8 @@ class DuckDBSyncAdapter:
                             raise RuntimeError(error_msg) from e
 
                 _logger.info(
-                    "Pulled %d change events from Parquet files (deduplicated)", len(events)
+                    "Pulled %d change events from Parquet files (deduplicated)",
+                    len(events),
                 )
                 span.set_attribute("sync.record_count", len(events))
                 return events

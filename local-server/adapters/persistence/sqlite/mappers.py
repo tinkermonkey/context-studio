@@ -9,30 +9,34 @@ SQLAlchemy ORM models. Handles:
 - Embedding vector handling
 """
 
-from typing import Union, Any, cast
 import struct
 from datetime import datetime
+from typing import Any, Union, cast
 
-from domain.ontology.entities import (
-    Taxonomy,
-    ConceptScheme,
-    Class,
-    Individual,
-    Relationship,
-    PropertyDefinition,
-)
-from domain.ontology.value_objects import (
-    ExternalReference,
-    LexicalSense,
-    DataPropertyValue,
-    OntologyMapping,
-    NodeType,
-    Status,
-)
 from adapters.persistence.sqlite.models import (
     OntologyEntity,
-    Relationship as RelationshipORM,
+)
+from adapters.persistence.sqlite.models import (
     PropertyDefinition as PropertyDefinitionORM,
+)
+from adapters.persistence.sqlite.models import (
+    Relationship as RelationshipORM,
+)
+from domain.ontology.entities import (
+    Class,
+    ConceptScheme,
+    Individual,
+    PropertyDefinition,
+    Relationship,
+    Taxonomy,
+)
+from domain.ontology.value_objects import (
+    DataPropertyValue,
+    ExternalReference,
+    LexicalSense,
+    NodeType,
+    OntologyMapping,
+    Status,
 )
 
 
@@ -360,9 +364,7 @@ def map_domain_to_orm(
             taxonomy_id=entity.taxonomy_id,
             parent_class_id=entity.parent_class_id,
             structural_property_id=entity.structural_property_id,
-            external_references=serialize_external_references(
-                entity.external_references
-            ),
+            external_references=serialize_external_references(entity.external_references),
             lexical_senses=serialize_lexical_senses(entity.lexical_senses),
             data_properties=serialize_data_properties(entity.data_properties),
             embedding=_serialize_embedding(entity.embedding),
@@ -373,9 +375,7 @@ def map_domain_to_orm(
             **common_args,
             node_type=NodeType.INDIVIDUAL,
             data_properties=serialize_data_properties(entity.data_properties),
-            external_references=serialize_external_references(
-                entity.external_references
-            ),
+            external_references=serialize_external_references(entity.external_references),
         )
 
     elif isinstance(entity, PropertyDefinition):

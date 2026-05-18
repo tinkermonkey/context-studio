@@ -15,14 +15,14 @@ from __future__ import annotations
 import json
 import logging
 from datetime import datetime, timezone
-from typing import Optional, Sequence, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Sequence
 from uuid import uuid4
 
 from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode
 
 from domain.versioning.entities import ChangeEvent
-from domain.versioning.value_objects import SyncResult, ChangeOperation, SyncStatus
+from domain.versioning.value_objects import ChangeOperation, SyncResult, SyncStatus
 
 if TYPE_CHECKING:
     from domain.versioning.ports import ChangeRepository
@@ -82,9 +82,7 @@ class S3SyncAdapter:
             import boto3
             import botocore.exceptions
         except ImportError:
-            _logger.error(
-                "boto3 is required for S3 sync adapter. Install with: pip install boto3"
-            )
+            _logger.error("boto3 is required for S3 sync adapter. Install with: pip install boto3")
             raise
 
         self._bucket = bucket
@@ -244,9 +242,9 @@ class S3SyncAdapter:
                             if len(parts) >= 3:
                                 try:
                                     date_str = parts[-2]
-                                    file_date = datetime.strptime(
-                                        date_str, "%Y-%m-%d"
-                                    ).replace(tzinfo=timezone.utc)
+                                    file_date = datetime.strptime(date_str, "%Y-%m-%d").replace(
+                                        tzinfo=timezone.utc
+                                    )
                                     # Only skip if file date is before the date part of since
                                     # (file_date is at midnight, so compare dates not times)
                                     if file_date.date() < since.date():
@@ -254,7 +252,7 @@ class S3SyncAdapter:
                                 except (ValueError, IndexError):
                                     # When since is provided, skip S3 objects with unparseable date paths
                                     _logger.warning(
-                                        "Skipping S3 object with unparseable date path (key=%s)",
+                                        "Skipping S3 object with unparseable date path" " (key=%s)",
                                         key,
                                     )
                                     continue
@@ -262,9 +260,7 @@ class S3SyncAdapter:
 
                         # Download the file
                         try:
-                            response = self._s3_client.get_object(
-                                Bucket=self._bucket, Key=key
-                            )
+                            response = self._s3_client.get_object(Bucket=self._bucket, Key=key)
                             content = response["Body"].read().decode("utf-8")
                         except (OSError, self._client_error) as e:
                             error_msg = f"Failed to download S3 object {key}: {e}"

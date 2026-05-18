@@ -4,8 +4,8 @@ Integration tests for SQLiteInterchangeRepository.
 Tests round-trip persistence of ImportRun entities.
 """
 
-import sys
 import os
+import sys
 import uuid
 from datetime import datetime, timezone
 
@@ -13,22 +13,20 @@ import pytest
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
+from adapters.persistence.sqlite.models import Base
 from domain.interchange.entities import (
     ImportRun,
     ImportRunStatus,
 )
 from domain.interchange.value_objects import (
-    SerializationScope,
-    SerializationScopeType,
-    SerializationFormat,
     MatchKind,
     ResolutionKind,
+    SerializationFormat,
+    SerializationScope,
+    SerializationScopeType,
 )
 
 
@@ -159,9 +157,7 @@ class TestImportRunPersistence:
             scope=scope,
         )
 
-        import_run.add_resolution(
-            MatchKind.EXTERNAL_REFERENCE, "entity-1", ResolutionKind.MERGE
-        )
+        import_run.add_resolution(MatchKind.EXTERNAL_REFERENCE, "entity-1", ResolutionKind.MERGE)
         import_run.add_resolution(MatchKind.TITLE, "entity-2", ResolutionKind.SKIP)
 
         repository.create(import_run)

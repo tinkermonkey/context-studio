@@ -17,14 +17,26 @@ from datetime import datetime, timezone
 from types import MappingProxyType
 from uuid import uuid4
 
-from domain.ontology.ports import OntologyRepository, EmbeddingService
-from domain.ports import EventPublisher
+from domain.ontology.ports import EmbeddingService, OntologyRepository
 from domain.pipeline.ports import LLMProvider
+from domain.ports import EventPublisher
+
 from . import layers
-from .entities import ExtractedEntity, ExtractionResult, ExtractionRun, ExtractionRunStatus, TripleExtractionResult
+from .entities import (
+    ExtractedEntity,
+    ExtractionResult,
+    ExtractionRun,
+    ExtractionRunStatus,
+    TripleExtractionResult,
+)
 from .events import ExtractionCompleted
 from .exceptions import ExtractionError
-from .ports import NLPProcessor, ReferenceSource, ExtractionRepository, ExtractionRunRepository
+from .ports import (
+    ExtractionRepository,
+    ExtractionRunRepository,
+    NLPProcessor,
+    ReferenceSource,
+)
 from .value_objects import ExtractionLayerResult, LayerInput, LayerOutput
 
 _logger = logging.getLogger(__name__)
@@ -76,7 +88,7 @@ class ExtractionService:
         """
         if not 0.0 <= similarity_threshold <= 1.0:
             raise ValueError(
-                f"similarity_threshold must be between 0.0 and 1.0, got {similarity_threshold}"
+                "similarity_threshold must be between 0.0 and 1.0, got" f" {similarity_threshold}"
             )
         self._ontology_repo = ontology_repo
         self._embedding_service = embedding_service
@@ -500,9 +512,7 @@ Ontology: {ontology.title if hasattr(ontology, 'title') else str(ontology)}"""
             triples = []
             for triple_data in triples_data:
                 try:
-                    triple = self._build_triple_from_llm_output(
-                        triple_data, text, ontology_id
-                    )
+                    triple = self._build_triple_from_llm_output(triple_data, text, ontology_id)
                     triples.append(triple)
                 except Exception as e:
                     _logger.warning(f"Failed to parse triple: {e}")
@@ -514,9 +524,7 @@ Ontology: {ontology.title if hasattr(ontology, 'title') else str(ontology)}"""
             _logger.error(f"Failed to parse LLM JSON response: {e}")
             return []
 
-    def _build_triple_from_llm_output(
-        self, triple_data: dict, text: str, ontology_id: str
-    ) -> dict:
+    def _build_triple_from_llm_output(self, triple_data: dict, text: str, ontology_id: str) -> dict:
         """
         Build a triple dict from LLM-extracted data.
 
@@ -554,9 +562,7 @@ Ontology: {ontology.title if hasattr(ontology, 'title') else str(ontology)}"""
 
         # Build predicate
         predicate = {
-            "property_definition_id": predicate_data.get(
-                "property_definition_id", ""
-            ),
+            "property_definition_id": predicate_data.get("property_definition_id", ""),
             "label": predicate_data.get("label", ""),
         }
 
@@ -628,7 +634,8 @@ Ontology: {ontology.title if hasattr(ontology, 'title') else str(ontology)}"""
             self._extraction_repo.save_extraction_result(result)
         except Exception as exc:
             _logger.error(
-                "Failed to persist extraction result %s: %s: %s. Result will still be returned to caller.",
+                "Failed to persist extraction result %s: %s: %s. Result will still be"
+                " returned to caller.",
                 result_id,
                 type(exc).__name__,
                 str(exc),
@@ -722,9 +729,7 @@ Ontology: {ontology.title if hasattr(ontology, 'title') else str(ontology)}"""
             )
 
             # Return empty output so subsequent layers can continue
-            return LayerOutput(
-                entities=tuple(), metadata=MappingProxyType({"error": error_msg})
-            )
+            return LayerOutput(entities=tuple(), metadata=MappingProxyType({"error": error_msg}))
 
     def _deduplicate(self, entities: list[ExtractedEntity]) -> list[ExtractedEntity]:
         """
@@ -799,9 +804,7 @@ Ontology: {ontology.title if hasattr(ontology, 'title') else str(ontology)}"""
                     used_indices.add(j)
                     continue
 
-                label_similarity = self._normalized_similarity(
-                    entity.label, other.label
-                )
+                label_similarity = self._normalized_similarity(entity.label, other.label)
 
                 if label_similarity >= self._similarity_threshold:
                     # Mark as used; higher-priority entity is kept

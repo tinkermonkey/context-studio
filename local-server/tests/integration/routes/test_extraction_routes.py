@@ -14,37 +14,34 @@ Tests verify the full extraction workflow with:
 These tests exercise the complete stack: routes → domain service → adapters → database.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(
-    os.path.dirname(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    )
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 )
 
-import pytest
 import tempfile
+from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
-from datetime import datetime
 
+import pytest
+from fastapi import FastAPI, status
+from fastapi.testclient import TestClient
+from pydantic import ValidationError
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from fastapi import FastAPI, status
-from fastapi.testclient import TestClient
-
-from domain.extraction.services import ExtractionService
-from domain.ontology.entities import Taxonomy, ConceptScheme, Class
-from adapters.persistence.sqlite.models import Base
-from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
-from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.events.in_process import InProcessEventPublisher
+from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
+from adapters.persistence.sqlite.models import Base
+from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.web.extraction_routes import router
 from adapters.web.schemas.extraction import ExtractTripleResponse
-from pydantic import ValidationError
+from domain.extraction.services import ExtractionService
+from domain.ontology.entities import Class, ConceptScheme, Taxonomy
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
@@ -132,10 +129,17 @@ def extraction_repository(session_factory):
 
 @pytest.fixture
 def extraction_service(
-    populated_repository, embedding_service, event_publisher, extraction_repository, session_factory
+    populated_repository,
+    embedding_service,
+    event_publisher,
+    extraction_repository,
+    session_factory,
 ):
     """Create ExtractionService with fake adapters."""
-    from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunRepository
+    from adapters.persistence.sqlite.extraction_run_repo import (
+        SQLiteExtractionRunRepository,
+    )
+
     extraction_run_repo = SQLiteExtractionRunRepository(session_factory)
 
     service = ExtractionService(
@@ -278,9 +282,7 @@ class TestExtractionRoutes:
 
     def test_extract_deduplicates_entities(self, client):
         """POST /api/extract deduplicates similar entities across layers."""
-        response = client.post(
-            "/api/extract", json={"text": "SQLite database SQLite engine."}
-        )
+        response = client.post("/api/extract", json={"text": "SQLite database SQLite engine."})
         assert response.status_code == status.HTTP_200_OK
         # If deduplication works, similar entities should be merged
 
@@ -481,9 +483,7 @@ class TestTripleExtraction:
             "object_class": classes[1],
         }
 
-    def test_extract_triples_valid_request_returns_200(
-        self, client, ontology_with_individuals
-    ):
+    def test_extract_triples_valid_request_returns_200(self, client, ontology_with_individuals):
         """POST /api/extraction/extract returns 200 with valid input."""
         response = client.post(
             "/api/extraction/extract",
@@ -526,9 +526,7 @@ class TestTripleExtraction:
         assert isinstance(body["warnings"], list)
         assert isinstance(body["metadata"], dict)
 
-    def test_extract_triples_response_metadata_structure(
-        self, client, ontology_with_individuals
-    ):
+    def test_extract_triples_response_metadata_structure(self, client, ontology_with_individuals):
         """POST /api/extraction/extract response metadata has correct structure."""
         response = client.post(
             "/api/extraction/extract",
@@ -559,9 +557,7 @@ class TestTripleExtraction:
         # Verify model matches request
         assert metadata["model"] == "gpt-4"
 
-    def test_extract_triples_with_empty_text_returns_422(
-        self, client, ontology_with_individuals
-    ):
+    def test_extract_triples_with_empty_text_returns_422(self, client, ontology_with_individuals):
         """POST /api/extraction/extract with empty text returns 422 (Pydantic validation)."""
         response = client.post(
             "/api/extraction/extract",
@@ -675,13 +671,9 @@ class TestTripleExtraction:
             # Verify provenance offsets are valid
             assert provenance["text_offset_start"] >= 0
             assert provenance["text_offset_end"] >= provenance["text_offset_start"]
-            assert provenance["text_offset_end"] <= len(
-                "The database stores information."
-            )
+            assert provenance["text_offset_end"] <= len("The database stores information.")
 
-    def test_extract_triples_confidence_values_valid(
-        self, client, ontology_with_individuals
-    ):
+    def test_extract_triples_confidence_values_valid(self, client, ontology_with_individuals):
         """All returned triple confidence values are in [0.0, 1.0]."""
         response = client.post(
             "/api/extraction/extract",
@@ -703,9 +695,7 @@ class TestTripleExtraction:
             assert isinstance(triple["confidence"], (int, float))
             assert 0.0 <= triple["confidence"] <= 1.0
 
-    def test_extract_triples_object_kind_values_valid(
-        self, client, ontology_with_individuals
-    ):
+    def test_extract_triples_object_kind_values_valid(self, client, ontology_with_individuals):
         """All returned triple object kind values are valid."""
         response = client.post(
             "/api/extraction/extract",
@@ -727,9 +717,7 @@ class TestTripleExtraction:
             obj = triple["object"]
             assert obj["kind"] in ["individual", "class", "literal"]
 
-    def test_extract_triples_subject_kind_values_valid(
-        self, client, ontology_with_individuals
-    ):
+    def test_extract_triples_subject_kind_values_valid(self, client, ontology_with_individuals):
         """All returned triple subject kind values are valid."""
         response = client.post(
             "/api/extraction/extract",
@@ -780,9 +768,7 @@ class TestTripleExtraction:
             assert provenance["text_offset_start"] <= provenance["text_offset_end"]
 
             # Raw text should match the specified offsets
-            extracted_text = text[
-                provenance["text_offset_start"] : provenance["text_offset_end"]
-            ]
+            extracted_text = text[provenance["text_offset_start"] : provenance["text_offset_end"]]
             assert provenance["raw"] == extracted_text
 
     def test_extract_triples_with_long_text(self, client, ontology_with_individuals):
@@ -830,9 +816,7 @@ class TestTripleExtraction:
         except ValidationError as e:
             pytest.fail(f"Response failed schema validation: {e}")
 
-    def test_extract_triples_with_different_models(
-        self, client, ontology_with_individuals
-    ):
+    def test_extract_triples_with_different_models(self, client, ontology_with_individuals):
         """POST /api/extraction/extract works regardless of model."""
         models = ["gpt-4", "claude-opus", "gpt-3.5-turbo"]
 
@@ -851,9 +835,7 @@ class TestTripleExtraction:
             )
             assert response.status_code == status.HTTP_200_OK
 
-    def test_extract_triples_temperature_variation(
-        self, client, ontology_with_individuals
-    ):
+    def test_extract_triples_temperature_variation(self, client, ontology_with_individuals):
         """POST /api/extraction/extract works regardless of temperature."""
         temperatures = [0.0, 0.5, 1.0, 1.5, 2.0]
 
@@ -872,9 +854,7 @@ class TestTripleExtraction:
             )
             assert response.status_code == status.HTTP_200_OK
 
-    def test_extract_triples_returns_200_ok(
-        self, client, ontology_with_individuals
-    ):
+    def test_extract_triples_returns_200_ok(self, client, ontology_with_individuals):
         """POST /api/extraction/extract returns 200 OK."""
         response = client.post(
             "/api/extraction/extract",
@@ -909,7 +889,10 @@ class TestTripleExtraction:
         assert response.status_code == status.HTTP_200_OK
 
         # Verify ExtractionRun record exists in database
-        from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunRepository
+        from adapters.persistence.sqlite.extraction_run_repo import (
+            SQLiteExtractionRunRepository,
+        )
+
         extraction_run_repo = SQLiteExtractionRunRepository(session_factory)
         runs = extraction_run_repo.list_extraction_runs()
         assert len(runs) > 0
@@ -917,7 +900,10 @@ class TestTripleExtraction:
         assert run.status.value == "completed"
 
     @pytest.mark.skip(
-        reason="batch_run_id correlation and change_events integration not yet implemented — see #695"
+        reason=(
+            "batch_run_id correlation and change_events integration not yet implemented"
+            " — see #695"
+        )
     )
     def test_extract_triples_batch_run_id_in_change_events(
         self, client, ontology_with_individuals, extraction_repository

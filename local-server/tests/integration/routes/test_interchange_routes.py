@@ -17,32 +17,30 @@ Focus areas:
 - 404 handling for non-existent resources
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(
-    os.path.dirname(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    )
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 )
 
-import pytest
 import json
-from io import BytesIO
 from datetime import datetime
+from io import BytesIO
 from uuid import uuid4
 
+import pytest
 from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 
+from adapters.web.interchange_routes import router
 from domain.interchange.entities import ImportRun, ImportRunStatus
 from domain.interchange.value_objects import (
+    ImportPlan,
+    SerializationFormat,
     SerializationScope,
     SerializationScopeType,
-    SerializationFormat,
-    ImportPlan,
 )
-from adapters.web.interchange_routes import router
 from tests.fakes.fake_interchange_repository import FakeInterchangeRepository
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 
@@ -63,9 +61,7 @@ class FakeDeserializer:
         self.interchange_repo = interchange_repo
         self.format = format or SerializationFormat.SKOS
 
-    def deserialize(
-        self, source: bytes, dry_run: bool = True, resolutions: list | None = None
-    ):
+    def deserialize(self, source: bytes, dry_run: bool = True, resolutions: list | None = None):
         """Return a minimal ImportPlan."""
         plan = ImportPlan(
             conflicts=(),
@@ -87,7 +83,8 @@ class FakeDeserializer:
                 format=self.format,
                 source_uri="test.skos",
                 source_hash="abc123",
-                scope=plan.scope or SerializationScope(
+                scope=plan.scope
+                or SerializationScope(
                     scope_type=SerializationScopeType.WHOLE_GRAPH,
                 ),
                 resolutions=[],
@@ -357,6 +354,7 @@ class TestImportEndpoint:
 
     def test_import_dry_run_false_returns_import_run(self, client, monkeypatch):
         """Import with dry_run=false returns ImportRunResponse."""
+
         def get_deserializer(fmt, onto_repo, int_repo):
             return FakeDeserializer(int_repo, format=fmt)
 
@@ -537,6 +535,7 @@ class TestImportEndpoint:
 
         # Mock MAX_UPLOAD_SIZE for testing
         import adapters.web.interchange_routes as routes_module
+
         original_max = routes_module.MAX_UPLOAD_SIZE
 
         try:
@@ -568,6 +567,7 @@ class TestImportEndpoint:
         # This would be too large in real usage, so we'll use a smaller test version
         # by mocking MAX_UPLOAD_SIZE for this test
         import adapters.web.interchange_routes as routes_module
+
         original_max = routes_module.MAX_UPLOAD_SIZE
 
         try:
@@ -595,6 +595,7 @@ class TestImportEndpoint:
 
         # Mock MAX_UPLOAD_SIZE for testing
         import adapters.web.interchange_routes as routes_module
+
         original_max = routes_module.MAX_UPLOAD_SIZE
 
         try:
@@ -973,9 +974,7 @@ class TestGetChangeEventsEndpoint:
                 },
             )
 
-        response = client.get(
-            f"/api/v1/interchange/runs/{run.id}/change-events?offset=1&limit=2"
-        )
+        response = client.get(f"/api/v1/interchange/runs/{run.id}/change-events?offset=1&limit=2")
 
         data = response.json()
         assert data["offset"] == 1
@@ -1025,9 +1024,7 @@ class TestGetChangeEventsEndpoint:
             },
         )
 
-        response = client.get(
-            f"/api/v1/interchange/runs/{run.id}/change-events?entity_type=Class"
-        )
+        response = client.get(f"/api/v1/interchange/runs/{run.id}/change-events?entity_type=Class")
 
         data = response.json()
         assert data["total"] == 1
@@ -1075,17 +1072,13 @@ class TestGetChangeEventsEndpoint:
             },
         )
 
-        response = client.get(
-            f"/api/v1/interchange/runs/{run.id}/change-events?change_type=update"
-        )
+        response = client.get(f"/api/v1/interchange/runs/{run.id}/change-events?change_type=update")
 
         data = response.json()
         assert data["total"] == 1
         assert data["items"][0]["operation"] == "update"
 
-    def test_get_change_events_combined_filters_and_pagination(
-        self, client, interchange_repo
-    ):
+    def test_get_change_events_combined_filters_and_pagination(self, client, interchange_repo):
         """Change events endpoint handles combined filters and pagination."""
         run = ImportRun(
             id=str(uuid4()),

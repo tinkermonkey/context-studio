@@ -8,17 +8,21 @@ the ontology entities.
 import logging
 from typing import Optional, Sequence
 
-from sqlalchemy import select, func, update
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 
-from domain.admin.entities import Dataset, DatasetMetrics
-from domain.admin.exceptions import DatasetNotFoundError
 from adapters.persistence.sqlite.models import (
     Dataset as DatasetModel,
+)
+from adapters.persistence.sqlite.models import (
     OntologyEntity,
+)
+from adapters.persistence.sqlite.models import (
     Relationship as RelationshipModel,
 )
+from domain.admin.entities import Dataset, DatasetMetrics
+from domain.admin.exceptions import DatasetNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -183,18 +187,14 @@ class SQLiteDatasetRepository:
             with self.session_factory() as session:
                 # Deactivate all other datasets
                 session.execute(
-                    update(DatasetModel)
-                    .where(DatasetModel.is_active)
-                    .values(is_active=False)
+                    update(DatasetModel).where(DatasetModel.is_active).values(is_active=False)
                 )
                 # Activate the target dataset
                 dataset_row = session.execute(
                     select(DatasetModel).where(DatasetModel.id == dataset_id)
                 ).scalar_one_or_none()
                 if dataset_row is None:
-                    raise DatasetNotFoundError(
-                        f"Dataset with ID {dataset_id} not found"
-                    )
+                    raise DatasetNotFoundError(f"Dataset with ID {dataset_id} not found")
                 dataset_row.is_active = True
                 session.commit()
                 return self._to_domain(dataset_row)
@@ -220,29 +220,39 @@ class SQLiteDatasetRepository:
         try:
             with self.session_factory() as session:
                 # Count by node_type discriminator
-                taxonomies = session.scalar(
-                    select(func.count(OntologyEntity.id)).where(
-                        OntologyEntity.node_type == "taxonomy"
+                taxonomies = (
+                    session.scalar(
+                        select(func.count(OntologyEntity.id)).where(
+                            OntologyEntity.node_type == "taxonomy"
+                        )
                     )
-                ) or 0
-                schemes = session.scalar(
-                    select(func.count(OntologyEntity.id)).where(
-                        OntologyEntity.node_type == "concept_scheme"
+                    or 0
+                )
+                schemes = (
+                    session.scalar(
+                        select(func.count(OntologyEntity.id)).where(
+                            OntologyEntity.node_type == "concept_scheme"
+                        )
                     )
-                ) or 0
-                classes = session.scalar(
-                    select(func.count(OntologyEntity.id)).where(
-                        OntologyEntity.node_type == "class"
+                    or 0
+                )
+                classes = (
+                    session.scalar(
+                        select(func.count(OntologyEntity.id)).where(
+                            OntologyEntity.node_type == "class"
+                        )
                     )
-                ) or 0
-                individuals = session.scalar(
-                    select(func.count(OntologyEntity.id)).where(
-                        OntologyEntity.node_type == "individual"
+                    or 0
+                )
+                individuals = (
+                    session.scalar(
+                        select(func.count(OntologyEntity.id)).where(
+                            OntologyEntity.node_type == "individual"
+                        )
                     )
-                ) or 0
-                relationships = session.scalar(
-                    select(func.count(RelationshipModel.id))
-                ) or 0
+                    or 0
+                )
+                relationships = session.scalar(select(func.count(RelationshipModel.id))) or 0
 
             return DatasetMetrics(
                 layers_count=taxonomies,

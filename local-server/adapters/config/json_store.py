@@ -57,9 +57,7 @@ class JSONFileConfigStore:
                 llm=settings.llm.model_dump(),
                 nlp=settings.nlp if settings.nlp else {},
                 embedding=settings.embedding if settings.embedding else {},
-                reference_sources=(
-                    settings.reference.model_dump() if settings.reference else {}
-                ),
+                reference_sources=(settings.reference.model_dump() if settings.reference else {}),
                 sync=settings.sync.model_dump() if settings.sync else None,
             )
         except (RuntimeError, AttributeError, TypeError) as e:
@@ -109,9 +107,7 @@ class JSONFileConfigStore:
             for section_name, section_updates in updates.items():
                 if hasattr(current_config, section_name):
                     current_section = getattr(current_config, section_name)
-                    if isinstance(current_section, dict) and isinstance(
-                        section_updates, dict
-                    ):
+                    if isinstance(current_section, dict) and isinstance(section_updates, dict):
                         current_section.update(section_updates)
                     else:
                         setattr(current_config, section_name, section_updates)
@@ -150,19 +146,11 @@ class JSONFileConfigStore:
                 logging=default_settings.logging.model_dump(),
                 llm=default_settings.llm.model_dump(),
                 nlp=default_settings.nlp if default_settings.nlp else {},
-                embedding=(
-                    default_settings.embedding if default_settings.embedding else {}
-                ),
+                embedding=(default_settings.embedding if default_settings.embedding else {}),
                 reference_sources=(
-                    default_settings.reference.model_dump()
-                    if default_settings.reference
-                    else {}
+                    default_settings.reference.model_dump() if default_settings.reference else {}
                 ),
-                sync=(
-                    default_settings.sync.model_dump()
-                    if default_settings.sync
-                    else None
-                ),
+                sync=(default_settings.sync.model_dump() if default_settings.sync else None),
             )
 
             # Preserve credentials from current config for each section

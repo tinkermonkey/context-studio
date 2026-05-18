@@ -6,26 +6,25 @@ that all conflicts have resolutions before committing imports.
 These tests ensure the ValueError guards prevent partial commits.
 """
 
-import sys
 import os
+import sys
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest
+
+from adapters.interchange.graphml import GraphMLDeserializer
+from adapters.interchange.owl import OWLDeserializer
+from adapters.interchange.skos import SKOSDeserializer
 from domain.interchange.entities import ResolutionRecord
 from domain.interchange.value_objects import (
+    ImportConflict,
     MatchKind,
     ResolutionKind,
     SerializationFormat,
-    ImportConflict,
 )
-from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 from tests.fakes.fake_interchange_repository import FakeInterchangeRepository
-from adapters.interchange.skos import SKOSDeserializer
-from adapters.interchange.owl import OWLDeserializer
-from adapters.interchange.graphml import GraphMLDeserializer
+from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 
 
 class TestSKOSAdapterResolutionValidation:

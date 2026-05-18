@@ -5,8 +5,8 @@ Immutable dataclasses representing immutable values in the extraction domain.
 """
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 from types import MappingProxyType
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from domain.extraction.entities import ExtractedEntity

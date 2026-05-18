@@ -5,9 +5,9 @@ Tests the repository implementation against an in-memory SQLite database,
 verifying CRUD operations, querying, and data round-tripping.
 """
 
-import sys
-import os
 import dataclasses
+import os
+import sys
 from datetime import datetime, timezone
 from uuid import uuid4
 
@@ -16,15 +16,13 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 # Ensure local-server root is in path
-sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from domain.pipeline.entities import PipelineConfiguration, Execution
 from adapters.persistence.sqlite.operations.models import (
     OperationsBase,
 )
 from adapters.persistence.sqlite.pipeline_repo import SQLitePipelineRepository
+from domain.pipeline.entities import Execution, PipelineConfiguration
 
 
 @pytest.fixture
@@ -113,12 +111,12 @@ class TestPipelineRepositoryConfigCRUD:
         assert retrieved.version == sample_config.version
         assert retrieved.enabled == sample_config.enabled
         # Compare timestamps without timezone (SQLite doesn't preserve tz info)
-        assert retrieved.created_at.replace(
+        assert retrieved.created_at.replace(tzinfo=None) == sample_config.created_at.replace(
             tzinfo=None
-        ) == sample_config.created_at.replace(tzinfo=None)
-        assert retrieved.last_updated.replace(
+        )
+        assert retrieved.last_updated.replace(tzinfo=None) == sample_config.last_updated.replace(
             tzinfo=None
-        ) == sample_config.last_updated.replace(tzinfo=None)
+        )
 
     def test_get_config_returns_none_for_missing_id(self, repo):
         """Test that get_config returns None for non-existent ID."""
@@ -445,9 +443,9 @@ class TestPipelineRepositoryExecutionTracking:
         assert retrieved.status == sample_execution.status
         assert retrieved.error_message == sample_execution.error_message
         # Compare timestamps without timezone (SQLite doesn't preserve tz info)
-        assert retrieved.timestamp.replace(
+        assert retrieved.timestamp.replace(tzinfo=None) == sample_execution.timestamp.replace(
             tzinfo=None
-        ) == sample_execution.timestamp.replace(tzinfo=None)
+        )
 
     def test_get_all_executions_excludes_orphaned_executions(
         self, repo, sample_config, sample_execution

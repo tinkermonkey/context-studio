@@ -5,32 +5,31 @@ These tests verify entity behavior in isolation — no infrastructure,
 no fakes, just dataclass invariants and methods.
 """
 
-import sys
 import os
+import sys
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+from types import MappingProxyType
 
 import pytest
 
 from domain.ontology.entities import (
-    Taxonomy,
-    ConceptScheme,
     Class,
+    ConceptScheme,
     Individual,
-    Relationship,
     PropertyDefinition,
+    Relationship,
+    Taxonomy,
 )
 from domain.ontology.value_objects import (
+    DataPropertyValue,
     ExternalReference,
     LexicalSense,
-    DataPropertyValue,
+    NodeType,
     OntologyMapping,
     SearchCriteria,
-    NodeType,
 )
-from types import MappingProxyType
 
 
 class TestExternalReference:
@@ -133,9 +132,7 @@ class TestDataPropertyValue:
 
     def test_data_property_value_with_datatype(self):
         """Create a data property value with datatype."""
-        prop = DataPropertyValue(
-            property_identifier="age", value=5, datatype="xsd:integer"
-        )
+        prop = DataPropertyValue(property_identifier="age", value=5, datatype="xsd:integer")
         assert prop.datatype == "xsd:integer"
 
     def test_data_property_value_with_different_types(self):
@@ -196,9 +193,7 @@ class TestConceptScheme:
 
     def test_concept_scheme_creation(self):
         """Create a concept scheme."""
-        scheme = ConceptScheme(
-            id="scheme-1", taxonomy_id="tax-1", title="Animal Classification"
-        )
+        scheme = ConceptScheme(id="scheme-1", taxonomy_id="tax-1", title="Animal Classification")
         assert scheme.id == "scheme-1"
         assert scheme.taxonomy_id == "tax-1"
         assert scheme.title == "Animal Classification"
@@ -232,9 +227,7 @@ class TestClass:
 
     def test_class_creation(self):
         """Create a class."""
-        cls = Class(
-            id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog"
-        )
+        cls = Class(id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
         assert cls.id == "class-1"
         assert cls.concept_scheme_id == "scheme-1"
         assert cls.taxonomy_id == "tax-1"
@@ -281,34 +274,26 @@ class TestClass:
 
     def test_class_rename(self):
         """Rename a class."""
-        cls = Class(
-            id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog"
-        )
+        cls = Class(id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
         cls.rename("Canine")
         assert cls.title == "Canine"
 
     def test_class_rename_empty_raises(self):
         """Rename with empty string raises ValueError."""
-        cls = Class(
-            id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog"
-        )
+        cls = Class(id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
         with pytest.raises(ValueError, match="Title cannot be empty"):
             cls.rename("")
 
     def test_class_add_subclass_of(self):
         """Add a parent class."""
-        cls = Class(
-            id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog"
-        )
+        cls = Class(id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
         assert cls.parent_class_id is None
         cls.add_subclass_of("class-0")
         assert cls.parent_class_id == "class-0"
 
     def test_class_add_subclass_of_self_raises(self):
         """Add self as parent raises ValueError."""
-        cls = Class(
-            id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog"
-        )
+        cls = Class(id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
         with pytest.raises(ValueError, match="A class cannot be its own parent"):
             cls.add_subclass_of("class-1")
 
@@ -380,38 +365,28 @@ class TestIndividual:
 
     def test_individual_creation_multiple_classes(self):
         """Create an individual with multiple parent classes."""
-        ind = Individual(
-            id="ind-1", class_ids=["class-1", "class-2"], title="PostgreSQL"
-        )
+        ind = Individual(id="ind-1", class_ids=["class-1", "class-2"], title="PostgreSQL")
         assert ind.class_ids == ["class-1", "class-2"]
         assert len(ind.class_ids) == 2
 
     def test_individual_creation_with_description(self):
         """Create an individual with description."""
-        ind = Individual(
-            id="ind-1", class_ids=["class-1"], title="Fido", description="My pet dog"
-        )
+        ind = Individual(id="ind-1", class_ids=["class-1"], title="Fido", description="My pet dog")
         assert ind.description == "My pet dog"
 
     def test_individual_creation_with_data_properties(self):
         """Create an individual with data property values."""
         props = [
-            DataPropertyValue(
-                property_identifier="age", value=5, datatype="xsd:integer"
-            ),
+            DataPropertyValue(property_identifier="age", value=5, datatype="xsd:integer"),
             DataPropertyValue(property_identifier="name", value="Fido"),
         ]
-        ind = Individual(
-            id="ind-1", class_ids=["class-1"], title="Fido", data_properties=props
-        )
+        ind = Individual(id="ind-1", class_ids=["class-1"], title="Fido", data_properties=props)
         assert len(ind.data_properties) == 2
         assert ind.data_properties[0].value == 5
 
     def test_individual_no_classes_raises(self):
         """Create an individual with no parent classes raises ValueError."""
-        with pytest.raises(
-            ValueError, match="Individual must have at least one parent class"
-        ):
+        with pytest.raises(ValueError, match="Individual must have at least one parent class"):
             Individual(id="ind-1", class_ids=[], title="Fido")
 
     def test_individual_rename(self):
@@ -448,9 +423,7 @@ class TestIndividual:
 
     def test_remove_parent_class(self):
         """Remove a parent class from an individual."""
-        ind = Individual(
-            id="ind-1", class_ids=["class-1", "class-2"], title="PostgreSQL"
-        )
+        ind = Individual(id="ind-1", class_ids=["class-1", "class-2"], title="PostgreSQL")
         ind.remove_parent_class("class-2")
         assert ind.class_ids == ["class-1"]
         assert ind.last_modified is not None
@@ -479,24 +452,18 @@ class TestIndividual:
     def test_reorder_parent_classes_empty_raises(self):
         """Reordering with empty list raises ValueError."""
         ind = Individual(id="ind-1", class_ids=["class-1"], title="PostgreSQL")
-        with pytest.raises(
-            ValueError, match="Individual must have at least one parent class"
-        ):
+        with pytest.raises(ValueError, match="Individual must have at least one parent class"):
             ind.reorder_parent_classes([])
 
     def test_reorder_parent_classes_duplicates_raises(self):
         """Reordering with duplicate classes raises ValueError."""
-        ind = Individual(
-            id="ind-1", class_ids=["class-1", "class-2"], title="PostgreSQL"
-        )
+        ind = Individual(id="ind-1", class_ids=["class-1", "class-2"], title="PostgreSQL")
         with pytest.raises(ValueError, match="contains duplicates"):
             ind.reorder_parent_classes(["class-1", "class-1"])
 
     def test_reorder_parent_classes_mismatch_raises(self):
         """Reordering with different classes raises ValueError."""
-        ind = Individual(
-            id="ind-1", class_ids=["class-1", "class-2"], title="PostgreSQL"
-        )
+        ind = Individual(id="ind-1", class_ids=["class-1", "class-2"], title="PostgreSQL")
         with pytest.raises(ValueError, match="must contain exactly the same classes"):
             ind.reorder_parent_classes(["class-1", "class-3"])
 

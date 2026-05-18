@@ -5,17 +5,16 @@ Tests cover entity construction, field initialization, and dataclass behavior
 for PipelineConfiguration and Execution.
 """
 
-import sys
 import os
+import sys
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-import pytest
 from datetime import datetime, timezone
 
-from domain.pipeline.entities import PipelineConfiguration, Execution
+import pytest
+
+from domain.pipeline.entities import Execution, PipelineConfiguration
 
 
 @pytest.fixture
@@ -294,16 +293,12 @@ class TestExecution:
 
     def test_execution_error_status_without_message_raises(self, make_execution):
         """Execution raises ValueError if status='error' but error_message is None."""
-        with pytest.raises(
-            ValueError, match="error_message must be set when status is 'error'"
-        ):
+        with pytest.raises(ValueError, match="error_message must be set when status is 'error'"):
             make_execution(status="error", error_message=None)
 
     def test_execution_error_status_with_empty_message_raises(self, make_execution):
         """Execution raises ValueError if status='error' with empty error_message."""
-        with pytest.raises(
-            ValueError, match="error_message must be set when status is 'error'"
-        ):
+        with pytest.raises(ValueError, match="error_message must be set when status is 'error'"):
             make_execution(status="error", error_message="")
 
     def test_execution_timeout_status_without_message_allowed(self, make_execution):

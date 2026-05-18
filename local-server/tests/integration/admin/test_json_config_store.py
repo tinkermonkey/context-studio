@@ -5,17 +5,15 @@ Tests the adapter's ability to load, convert, and save configuration
 using actual file I/O with a temporary config file.
 """
 
-import sys
-import os
-import tempfile
 import json
+import os
+import sys
+import tempfile
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from config import ConfigurationManager
 from adapters.config.json_store import JSONFileConfigStore
+from config import ConfigurationManager
 from domain.admin.entities import AppConfiguration
 
 

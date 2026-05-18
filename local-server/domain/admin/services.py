@@ -13,21 +13,21 @@ from datetime import datetime, timezone
 from types import MappingProxyType
 from typing import Optional
 
-from .entities import SystemHealth, BackgroundTask, AppConfiguration, Dataset
-from .value_objects import (
-    BackgroundTaskStatus,
-    SystemHealthStatus,
-    DatabaseHealth,
-    ServiceMetrics,
-    ComponentStatus,
-    BackgroundTaskSummary,
-)
-from .ports import MetricsCollector, ConfigurationStore, DatasetRepository
+from .entities import AppConfiguration, BackgroundTask, Dataset, SystemHealth
 from .exceptions import (
-    TaskNotFoundError,
+    ActiveDatasetError,
     ConfigurationError,
     DatasetNotFoundError,
-    ActiveDatasetError,
+    TaskNotFoundError,
+)
+from .ports import ConfigurationStore, DatasetRepository, MetricsCollector
+from .value_objects import (
+    BackgroundTaskStatus,
+    BackgroundTaskSummary,
+    ComponentStatus,
+    DatabaseHealth,
+    ServiceMetrics,
+    SystemHealthStatus,
 )
 
 
@@ -74,12 +74,8 @@ class AdminService:
         # Initialize defaults for safe fallback on any component failure
         db_health = DatabaseHealth(connected=False, issues=())
         service_metrics = ServiceMetrics(uptime_seconds=0.0, llm_providers_available=())
-        embedding_status = ComponentStatus(
-            available=False, details="Health check not performed"
-        )
-        nlp_status = ComponentStatus(
-            available=False, details="Health check not performed"
-        )
+        embedding_status = ComponentStatus(available=False, details="Health check not performed")
+        nlp_status = ComponentStatus(available=False, details="Health check not performed")
         task_summary = BackgroundTaskSummary(by_status=MappingProxyType({}))
 
         # Call each port method with individual error handling
@@ -95,9 +91,7 @@ class AdminService:
             service_metrics = self._metrics.get_service_metrics()
         except Exception as e:
             service_metrics_error = str(e)
-            service_metrics = ServiceMetrics(
-                uptime_seconds=0.0, llm_providers_available=()
-            )
+            service_metrics = ServiceMetrics(uptime_seconds=0.0, llm_providers_available=())
 
         try:
             embedding_status = self._metrics.get_embedding_model_status()
@@ -256,14 +250,13 @@ class AdminService:
         # Get the current section value
         section_value = getattr(config, section, None)
         if section_value is None:
-            raise ConfigurationError(
-                f"Configuration section '{section}' is not configured"
-            )
+            raise ConfigurationError(f"Configuration section '{section}' is not configured")
 
         # Validate that section_value is a dict before attempting to update
         if not isinstance(section_value, dict):
             raise ConfigurationError(
-                f"Configuration section '{section}' is not a dictionary (got {type(section_value).__name__})"
+                f"Configuration section '{section}' is not a dictionary (got"
+                f" {type(section_value).__name__})"
             )
 
         # Update the section with the provided updates
@@ -347,9 +340,7 @@ class AdminService:
             InvalidStateTransitionError: If the status transition is invalid
         """
         task = self.get_task(task_id)
-        task.transition_to(
-            status, datetime.now(timezone.utc), error=error, result=result
-        )
+        task.transition_to(status, datetime.now(timezone.utc), error=error, result=result)
         return task
 
     def create_dataset(

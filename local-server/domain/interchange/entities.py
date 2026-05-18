@@ -11,7 +11,12 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from .value_objects import SerializationScope, ResolutionKind, MatchKind, SerializationFormat
+from .value_objects import (
+    MatchKind,
+    ResolutionKind,
+    SerializationFormat,
+    SerializationScope,
+)
 
 
 class ImportRunStatus(str, Enum):
@@ -140,9 +145,7 @@ class ImportRun:
             ImportRunStatus.FAILED,
             ImportRunStatus.ROLLED_BACK,
         ):
-            raise ValueError(
-                f"Cannot transition {self.status} to COMMITTED (terminal state)"
-            )
+            raise ValueError(f"Cannot transition {self.status} to COMMITTED (terminal state)")
         object.__setattr__(self, "status", ImportRunStatus.COMMITTED)
 
     def mark_failed(self) -> None:
@@ -157,9 +160,7 @@ class ImportRun:
             ImportRunStatus.FAILED,
             ImportRunStatus.ROLLED_BACK,
         ):
-            raise ValueError(
-                f"Cannot transition {self.status} to FAILED (terminal state)"
-            )
+            raise ValueError(f"Cannot transition {self.status} to FAILED (terminal state)")
         object.__setattr__(self, "status", ImportRunStatus.FAILED)
 
     def mark_rolled_back(self) -> None:
@@ -174,9 +175,7 @@ class ImportRun:
             ImportRunStatus.FAILED,
             ImportRunStatus.ROLLED_BACK,
         ):
-            raise ValueError(
-                f"Cannot transition {self.status} to ROLLED_BACK (terminal state)"
-            )
+            raise ValueError(f"Cannot transition {self.status} to ROLLED_BACK (terminal state)")
         object.__setattr__(self, "status", ImportRunStatus.ROLLED_BACK)
 
     def add_resolution(
@@ -201,9 +200,7 @@ class ImportRun:
             ImportRunStatus.FAILED,
             ImportRunStatus.ROLLED_BACK,
         ):
-            raise ValueError(
-                f"Cannot add resolution to {self.status} import run (terminal state)"
-            )
+            raise ValueError(f"Cannot add resolution to {self.status} import run (terminal state)")
         self._resolutions.append(
             ResolutionRecord(
                 match_kind=match_kind,
@@ -228,7 +225,7 @@ class ImportRun:
             ImportRunStatus.ROLLED_BACK,
         ):
             raise ValueError(
-                f"Cannot add affected entity to {self.status} import run (terminal state)"
+                f"Cannot add affected entity to {self.status} import run (terminal" " state)"
             )
         if entity_id not in tuple(self._affected_entity_ids):
             self._affected_entity_ids.append(entity_id)

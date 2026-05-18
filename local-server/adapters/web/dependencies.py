@@ -33,16 +33,16 @@ from typing import cast
 from fastapi import Request
 from sqlalchemy.orm import Session
 
-from domain.ontology.services import OntologyService
-from domain.ontology.ports import OntologyRepository
-from domain.interchange.ports import BatchRunRepository
-from domain.graph.services import GraphAnalysisService
-from domain.extraction.services import ExtractionService
+from adapters.persistence.sqlite.connection import DatabaseManager
+from domain.admin.services import AdminService
 from domain.extraction.ports import ReferenceSource
+from domain.extraction.services import ExtractionService
+from domain.graph.services import GraphAnalysisService
+from domain.interchange.ports import BatchRunRepository
+from domain.ontology.ports import OntologyRepository
+from domain.ontology.services import OntologyService
 from domain.pipeline.services import PipelineService
 from domain.versioning.services import VersioningService
-from domain.admin.services import AdminService
-from adapters.persistence.sqlite.connection import DatabaseManager
 from utils.async_executor import run_sync_in_executor
 
 
@@ -158,9 +158,7 @@ async def get_local_db_session(request: Request) -> AsyncGenerator[Session, None
     Raises:
         RuntimeError: If DatabaseManager is not initialized in app.state
     """
-    db_manager = cast(
-        DatabaseManager | None, getattr(request.app.state, "db_manager", None)
-    )
+    db_manager = cast(DatabaseManager | None, getattr(request.app.state, "db_manager", None))
     if db_manager is None:
         raise RuntimeError("DatabaseManager not initialized in app.state")
 
@@ -189,9 +187,7 @@ async def get_operations_db_session(request: Request) -> AsyncGenerator[Session,
     Raises:
         RuntimeError: If DatabaseManager is not initialized in app.state
     """
-    db_manager = cast(
-        DatabaseManager | None, getattr(request.app.state, "db_manager", None)
-    )
+    db_manager = cast(DatabaseManager | None, getattr(request.app.state, "db_manager", None))
     if db_manager is None:
         raise RuntimeError("DatabaseManager not initialized in app.state")
 

@@ -13,9 +13,9 @@ except ImportError:
 from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode
 
-from domain.extraction.ports import NLPResult, NLPEntity
-from utils.logger import get_logger
+from domain.extraction.ports import NLPEntity, NLPResult
 from utils.async_executor import run_sync_in_executor
+from utils.logger import get_logger
 
 logger = get_logger(__name__)
 tracer = trace.get_tracer(__name__)
@@ -83,7 +83,8 @@ class SpacyNLPProcessor:
             try:
                 if not self.is_ready():
                     logger.warning(
-                        f"NLP processor not ready. Returning empty results for text: {text[:100]}"
+                        "NLP processor not ready. Returning empty results for text:"
+                        f" {text[:100]}"
                     )
                     return NLPResult(tokens=[], entities=[], noun_chunks=[], language="unknown")
 
@@ -94,7 +95,10 @@ class SpacyNLPProcessor:
                 noun_chunks = [chunk.text for chunk in doc.noun_chunks]
 
                 return NLPResult(
-                    tokens=tokens, entities=entities, noun_chunks=noun_chunks, language="en"
+                    tokens=tokens,
+                    entities=entities,
+                    noun_chunks=noun_chunks,
+                    language="en",
                 )
             except Exception as e:
                 span.set_status(Status(StatusCode.ERROR))
@@ -119,7 +123,8 @@ class SpacyNLPProcessor:
             try:
                 if not self.is_ready():
                     logger.warning(
-                        f"NLP processor not ready. Returning empty entities for text: {text[:100]}"
+                        "NLP processor not ready. Returning empty entities for text:"
+                        f" {text[:100]}"
                     )
                     return []
 

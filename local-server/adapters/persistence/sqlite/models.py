@@ -16,23 +16,23 @@ Design Notes:
 """
 
 from datetime import datetime, timezone
-from typing import Any, Dict, Tuple, Optional
+from typing import Any, Dict, Optional, Tuple
 
 from sqlalchemy import (
-    Column,
-    String,
-    Text,
-    Integer,
-    Float,
-    Boolean,
-    DateTime,
-    ForeignKey,
-    UniqueConstraint,
-    CheckConstraint,
-    Index,
     JSON,
+    Boolean,
+    CheckConstraint,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
     LargeBinary,
     PrimaryKeyConstraint,
+    String,
+    Text,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import declarative_base
 
@@ -82,7 +82,7 @@ class OntologyEntity(Base):  # type: ignore[valid-type,misc]
         String(20),
         nullable=False,
         index=True,
-        doc="Discriminator: taxonomy, concept_scheme, class, individual, property_definition",
+        doc=("Discriminator: taxonomy, concept_scheme, class, individual," " property_definition"),
     )
     title = Column(String(255), nullable=False, index=True)
     description = Column(Text, nullable=True)
@@ -195,16 +195,15 @@ class OntologyEntity(Base):  # type: ignore[valid-type,misc]
     # Constraints
     __table_args__ = (
         CheckConstraint(
-            "node_type IN ('taxonomy', 'concept_scheme', 'class', 'individual', 'property_definition')",
+            "node_type IN ('taxonomy', 'concept_scheme', 'class', 'individual',"
+            " 'property_definition')",
             name="check_valid_node_type",
         ),
         Index("idx_node_type_title", "node_type", "title"),
     )
 
     def __repr__(self) -> str:
-        return (
-            f"<OntologyEntity(id={self.id}, type={self.node_type}, title={self.title})>"
-        )
+        return f"<OntologyEntity(id={self.id}, type={self.node_type}, title={self.title})>"
 
 
 class IndividualClass(Base):  # type: ignore[valid-type,misc]
@@ -240,7 +239,7 @@ class IndividualClass(Base):  # type: ignore[valid-type,misc]
     position = Column(
         Integer,
         nullable=False,
-        doc="Zero-based position in the ordered list (determines inheritance precedence)",
+        doc=("Zero-based position in the ordered list (determines inheritance" " precedence)"),
     )
 
     __table_args__ = (
@@ -249,7 +248,10 @@ class IndividualClass(Base):  # type: ignore[valid-type,misc]
     )
 
     def __repr__(self) -> str:
-        return f"<IndividualClass(individual_id={self.individual_id}, class_id={self.class_id}, position={self.position})>"
+        return (
+            f"<IndividualClass(individual_id={self.individual_id},"
+            f" class_id={self.class_id}, position={self.position})>"
+        )
 
 
 class Relationship(Base):  # type: ignore[valid-type,misc]
@@ -311,7 +313,7 @@ class Relationship(Base):  # type: ignore[valid-type,misc]
     )
 
     def __repr__(self) -> str:
-        return f"<Relationship(id={self.id}, source={self.source_id}, target={self.target_id})>"
+        return f"<Relationship(id={self.id}, source={self.source_id}," f" target={self.target_id})>"
 
 
 class PropertyDefinition(Base):  # type: ignore[valid-type,misc]
@@ -354,9 +356,7 @@ class PropertyDefinition(Base):  # type: ignore[valid-type,misc]
     )
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
-    ontology_mapping = Column(
-        JSON, nullable=True, doc="JSON mapping to external ontologies"
-    )
+    ontology_mapping = Column(JSON, nullable=True, doc="JSON mapping to external ontologies")
     is_relevant = Column(
         Integer,
         nullable=True,
@@ -405,9 +405,7 @@ class ChangeEvent(Base):  # type: ignore[valid-type,misc]
     __tablename__ = "change_events"
 
     id = Column(String(36), primary_key=True, nullable=False)
-    entity_id = Column(
-        String(36), nullable=False, index=True, doc="Entity that changed"
-    )
+    entity_id = Column(String(36), nullable=False, index=True, doc="Entity that changed")
     entity_type = Column(
         String(20),
         nullable=False,
@@ -422,9 +420,7 @@ class ChangeEvent(Base):  # type: ignore[valid-type,misc]
     previous_state = Column(
         JSON, nullable=True, doc="JSON snapshot before change (null for create)"
     )
-    new_state = Column(
-        JSON, nullable=False, doc="JSON snapshot after change (null for delete)"
-    )
+    new_state = Column(JSON, nullable=False, doc="JSON snapshot after change (null for delete)")
     timestamp = Column(
         DateTime(timezone=True),
         nullable=False,
@@ -432,12 +428,8 @@ class ChangeEvent(Base):  # type: ignore[valid-type,misc]
         index=True,
         doc="UTC timestamp of the change",
     )
-    user_id = Column(
-        String(36), nullable=True, doc="Optional ID of user who made the change"
-    )
-    change_reason = Column(
-        Text, nullable=True, doc="Optional explanation of the change"
-    )
+    user_id = Column(String(36), nullable=True, doc="Optional ID of user who made the change")
+    change_reason = Column(Text, nullable=True, doc="Optional explanation of the change")
     changeset_id = Column(
         String(36),
         nullable=True,
@@ -465,7 +457,10 @@ class ChangeEvent(Base):  # type: ignore[valid-type,misc]
     )
 
     def __repr__(self) -> str:
-        return f"<ChangeEvent(id={self.id}, entity_id={self.entity_id}, operation={self.operation})>"
+        return (
+            f"<ChangeEvent(id={self.id}, entity_id={self.entity_id},"
+            f" operation={self.operation})>"
+        )
 
 
 class ExtractionResult(Base):  # type: ignore[valid-type,misc]
@@ -492,13 +487,19 @@ class ExtractionResult(Base):  # type: ignore[valid-type,misc]
         JSON,
         nullable=False,
         default=list,
-        doc="JSON list of {id, label, entity_type, source_layer, confidence, uri, description, properties}",
+        doc=(
+            "JSON list of {id, label, entity_type, source_layer, confidence, uri,"
+            " description, properties}"
+        ),
     )
     layers_executed = Column(
         JSON,
         nullable=False,
         default=list,
-        doc="JSON list of {layer_number, layer_name, entities_found, duration_ms, success, error_message}",
+        doc=(
+            "JSON list of {layer_number, layer_name, entities_found, duration_ms,"
+            " success, error_message}"
+        ),
     )
     total_duration_ms = Column(
         Integer,
@@ -517,7 +518,10 @@ class ExtractionResult(Base):  # type: ignore[valid-type,misc]
     __table_args__ = (Index("idx_created_at", "created_at"),)
 
     def __repr__(self) -> str:
-        return f"<ExtractionResult(id={self.id}, text_len={len(self.text or '')}, entities={len(self.extracted_entities or [])})>"
+        return (
+            f"<ExtractionResult(id={self.id}, text_len={len(self.text or '')},"
+            f" entities={len(self.extracted_entities or [])})>"
+        )
 
 
 class EntityVersion(Base):  # type: ignore[valid-type,misc]
@@ -628,7 +632,10 @@ class ChangesetEvent(Base):  # type: ignore[valid-type,misc]
     )
 
     def __repr__(self) -> str:
-        return f"<ChangesetEvent(changeset_id={self.changeset_id}, change_event_id={self.change_event_id})>"
+        return (
+            f"<ChangesetEvent(changeset_id={self.changeset_id},"
+            f" change_event_id={self.change_event_id})>"
+        )
 
 
 class Proposal(Base):  # type: ignore[valid-type,misc]
@@ -668,7 +675,7 @@ class Proposal(Base):  # type: ignore[valid-type,misc]
     __table_args__ = ()
 
     def __repr__(self) -> str:
-        return f"<Proposal(id={self.id}, changeset_id={self.changeset_id}, state={self.state})>"
+        return f"<Proposal(id={self.id}, changeset_id={self.changeset_id}," f" state={self.state})>"
 
 
 class ConflictResolution(Base):  # type: ignore[valid-type,misc]
@@ -702,7 +709,10 @@ class ConflictResolution(Base):  # type: ignore[valid-type,misc]
     __table_args__ = ()
 
     def __repr__(self) -> str:
-        return f"<ConflictResolution(proposal_id={self.proposal_id}, entity_id={self.entity_id}, field_name={self.field_name})>"
+        return (
+            f"<ConflictResolution(proposal_id={self.proposal_id},"
+            f" entity_id={self.entity_id}, field_name={self.field_name})>"
+        )
 
 
 class BatchRun(Base):  # type: ignore[valid-type,misc]
@@ -735,9 +745,7 @@ class BatchRun(Base):  # type: ignore[valid-type,misc]
         index=True,
         doc="UTC timestamp of run initiation",
     )
-    created_by = Column(
-        String(36), nullable=True, doc="Optional ID of user who initiated the run"
-    )
+    created_by = Column(String(36), nullable=True, doc="Optional ID of user who initiated the run")
     status = Column(
         String(20),
         nullable=False,
@@ -762,9 +770,7 @@ class BatchRun(Base):  # type: ignore[valid-type,misc]
         "polymorphic_on": run_type,
     }
     __table_args__ = (
-        CheckConstraint(
-            "run_type IN ('import', 'extraction')", name="check_valid_run_type"
-        ),
+        CheckConstraint("run_type IN ('import', 'extraction')", name="check_valid_run_type"),
         Index("idx_run_type_status", "run_type", "status"),
     )
 
@@ -806,23 +812,15 @@ class ImportRun(BatchRun):
         nullable=False,
         doc="Format of imported file (skos, owl, graphml, etc.)",
     )
-    source_uri = Column(
-        Text, nullable=True, doc="Optional URI or filename of the import source"
-    )
-    source_hash = Column(
-        String(64), nullable=False, doc="SHA256 hash of the imported bytes"
-    )
+    source_uri = Column(Text, nullable=True, doc="Optional URI or filename of the import source")
+    source_hash = Column(String(64), nullable=False, doc="SHA256 hash of the imported bytes")
     scope_type = Column(
         String(20),
         nullable=False,
         doc="Type of scope (whole_graph, taxonomy, scheme, entity_set)",
     )
-    scope_taxonomy_id = Column(
-        String(36), nullable=True, doc="For taxonomy scope, the taxonomy ID"
-    )
-    scope_scheme_id = Column(
-        String(36), nullable=True, doc="For scheme scope, the scheme ID"
-    )
+    scope_taxonomy_id = Column(String(36), nullable=True, doc="For taxonomy scope, the taxonomy ID")
+    scope_scheme_id = Column(String(36), nullable=True, doc="For scheme scope, the scheme ID")
     scope_include_descendants = Column(
         Boolean,
         nullable=False,
@@ -835,9 +833,7 @@ class ImportRun(BatchRun):
         default=list,
         doc="For entity_set scope, JSON list of entity IDs",
     )
-    resolutions = Column(
-        JSON, nullable=False, default=list, doc="JSON list of applied resolutions"
-    )
+    resolutions = Column(JSON, nullable=False, default=list, doc="JSON list of applied resolutions")
 
     __mapper_args__: Dict[str, Any] = {
         "polymorphic_identity": "import",
@@ -891,9 +887,7 @@ class ExtractionRun(BatchRun):
     temperature = Column(Float, nullable=False, doc="Sampling temperature (0.0–2.0)")
     tokens_used = Column(Integer, nullable=False, doc="Total tokens consumed")
     duration_ms = Column(Integer, nullable=False, doc="Total execution time (ms)")
-    triples_extracted = Column(
-        Integer, nullable=False, doc="Count of triples returned by API"
-    )
+    triples_extracted = Column(Integer, nullable=False, doc="Count of triples returned by API")
     triples_committed = Column(
         Integer, nullable=False, doc="Count of triples persisted after review"
     )
@@ -987,7 +981,7 @@ class GroundingWorkflow(Base):  # type: ignore[valid-type,misc,assignment]
     )
 
     def __repr__(self) -> str:
-        return f"<GroundingWorkflow(id={self.id}, title={self.title}, status={self.status})>"
+        return f"<GroundingWorkflow(id={self.id}, title={self.title}," f" status={self.status})>"
 
 
 class WorkflowRun(Base):  # type: ignore[valid-type,misc,assignment]
@@ -1043,7 +1037,9 @@ class WorkflowRun(Base):  # type: ignore[valid-type,misc,assignment]
     )
 
     def __repr__(self) -> str:
-        return f"<WorkflowRun(id={self.id}, workflow_id={self.workflow_id}, status={self.status})>"
+        return (
+            f"<WorkflowRun(id={self.id}, workflow_id={self.workflow_id}," f" status={self.status})>"
+        )
 
 
 class Dataset(Base):  # type: ignore[valid-type,misc]

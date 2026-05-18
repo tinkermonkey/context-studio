@@ -4,19 +4,18 @@ Tests measure health check execution, configuration management,
 and background task lifecycle operations.
 """
 
-import sys
 import os
+import sys
 import time
+
 import pytest
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from domain.admin.services import AdminService
 from domain.admin.value_objects import BackgroundTaskStatus
-from tests.fakes.fake_metrics_collector import FakeMetricsCollector
 from tests.fakes.fake_configuration_store import FakeConfigurationStore
+from tests.fakes.fake_metrics_collector import FakeMetricsCollector
 
 
 def _setup_admin_context() -> AdminService:
@@ -50,7 +49,8 @@ def test_bulk_health_checks(num_checks: int, max_time: float) -> None:
     elapsed = time.perf_counter() - start
 
     print(
-        f"\nBulk health checks ({num_checks} checks): {elapsed:.4f}s ({num_checks / elapsed:.1f} checks/sec)"
+        f"\nBulk health checks ({num_checks} checks): {elapsed:.4f}s"
+        f" ({num_checks / elapsed:.1f} checks/sec)"
     )
     assert elapsed < max_time
 
@@ -74,7 +74,8 @@ def test_database_health_checks(num_checks: int, max_time: float) -> None:
     elapsed = time.perf_counter() - start
 
     print(
-        f"\nDatabase health checks ({num_checks} checks): {elapsed:.4f}s ({num_checks / elapsed:.1f} checks/sec)"
+        f"\nDatabase health checks ({num_checks} checks): {elapsed:.4f}s"
+        f" ({num_checks / elapsed:.1f} checks/sec)"
     )
     assert elapsed < max_time
 
@@ -98,7 +99,8 @@ def test_service_metrics_retrieval(num_checks: int, max_time: float) -> None:
     elapsed = time.perf_counter() - start
 
     print(
-        f"\nService metrics retrieval ({num_checks} calls): {elapsed:.4f}s ({num_checks / elapsed:.1f} calls/sec)"
+        f"\nService metrics retrieval ({num_checks} calls): {elapsed:.4f}s"
+        f" ({num_checks / elapsed:.1f} calls/sec)"
     )
     assert elapsed < max_time
 
@@ -122,7 +124,8 @@ def test_bulk_register_tasks(num_tasks: int, max_time: float) -> None:
     elapsed = time.perf_counter() - start
 
     print(
-        f"\nRegister background tasks ({num_tasks} tasks): {elapsed:.4f}s ({num_tasks / elapsed:.1f} tasks/sec)"
+        f"\nRegister background tasks ({num_tasks} tasks): {elapsed:.4f}s"
+        f" ({num_tasks / elapsed:.1f} tasks/sec)"
     )
     assert elapsed < max_time
 
@@ -184,7 +187,8 @@ def test_update_task_status(num_updates: int, max_time: float) -> None:
     elapsed = time.perf_counter() - start
 
     print(
-        f"\nUpdate task status ({num_updates} updates): {elapsed:.4f}s ({num_updates / elapsed:.1f} updates/sec)"
+        f"\nUpdate task status ({num_updates} updates): {elapsed:.4f}s"
+        f" ({num_updates / elapsed:.1f} updates/sec)"
     )
     assert elapsed < max_time
 
@@ -204,13 +208,12 @@ def test_bulk_configuration_updates(num_updates: int, max_time: float) -> None:
 
     start = time.perf_counter()
     for i in range(num_updates):
-        service.update_configuration(
-            section="embedding", updates={"model_name": f"model-{i % 3}"}
-        )
+        service.update_configuration(section="embedding", updates={"model_name": f"model-{i % 3}"})
     elapsed = time.perf_counter() - start
 
     print(
-        f"\nBulk configuration updates ({num_updates} updates): {elapsed:.4f}s ({num_updates / elapsed:.1f} updates/sec)"
+        f"\nBulk configuration updates ({num_updates} updates): {elapsed:.4f}s"
+        f" ({num_updates / elapsed:.1f} updates/sec)"
     )
     assert elapsed < max_time
 
@@ -234,6 +237,7 @@ def test_get_configuration(num_retrievals: int, max_time: float) -> None:
     elapsed = time.perf_counter() - start
 
     print(
-        f"\nGet configuration ({num_retrievals} calls): {elapsed:.4f}s ({num_retrievals / elapsed:.1f} calls/sec)"
+        f"\nGet configuration ({num_retrievals} calls): {elapsed:.4f}s"
+        f" ({num_retrievals / elapsed:.1f} calls/sec)"
     )
     assert elapsed < max_time

@@ -11,33 +11,30 @@ Tests verify the full pipeline configuration and execution workflow with:
 These tests exercise the complete stack: routes → domain service → adapters → database.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(
-    os.path.dirname(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    )
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 )
 
-import pytest
 import tempfile
 import time
 from pathlib import Path
 from uuid import uuid4
 
+import pytest
+from fastapi import FastAPI, status
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from fastapi import FastAPI, status
-from fastapi.testclient import TestClient
-
-from domain.pipeline.services import PipelineService
-from domain.pipeline.exceptions import LayerExecutionError
+from adapters.events.in_process import InProcessEventPublisher
 from adapters.persistence.sqlite.operations.models import OperationsBase
 from adapters.persistence.sqlite.pipeline_repo import SQLitePipelineRepository
-from adapters.events.in_process import InProcessEventPublisher
 from adapters.web.pipeline_routes import router
+from domain.pipeline.exceptions import LayerExecutionError
+from domain.pipeline.services import PipelineService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 
 
@@ -338,9 +335,7 @@ class TestPipelineRoutes:
         pipeline_id = create_response.json()["id"]
 
         # Update the pipeline
-        response = client.put(
-            f"/api/pipelines/{pipeline_id}", json={"title": "New Title"}
-        )
+        response = client.put(f"/api/pipelines/{pipeline_id}", json={"title": "New Title"})
         new_version = response.json()["version"]
 
         # Version should increment
@@ -872,7 +867,8 @@ class TestListAllPipelineExecutions:
         # Execute pipeline 3 times
         for i in range(3):
             client.post(
-                f"/api/pipelines/{pipeline_id}/execute", json={"input_text": f"Test {i}"}
+                f"/api/pipelines/{pipeline_id}/execute",
+                json={"input_text": f"Test {i}"},
             )
 
         # List with offset=0, limit=2
@@ -913,7 +909,8 @@ class TestListAllPipelineExecutions:
         # Execute pipeline 5 times
         for i in range(5):
             client.post(
-                f"/api/pipelines/{pipeline_id}/execute", json={"input_text": f"Test {i}"}
+                f"/api/pipelines/{pipeline_id}/execute",
+                json={"input_text": f"Test {i}"},
             )
 
         # List with limit=3
@@ -942,9 +939,7 @@ class TestListAllPipelineExecutions:
         pipeline_id = create_response.json()["id"]
 
         # Execute pipeline (should succeed)
-        client.post(
-            f"/api/pipelines/{pipeline_id}/execute", json={"input_text": "Test"}
-        )
+        client.post(f"/api/pipelines/{pipeline_id}/execute", json={"input_text": "Test"})
 
         # List with status_filter=success filter
         response = client.get("/api/pipelines/executions?status_filter=success")
@@ -979,9 +974,7 @@ class TestListAllPipelineExecutions:
         pipeline_id = create_response.json()["id"]
 
         # Execute the pipeline
-        client.post(
-            f"/api/pipelines/{pipeline_id}/execute", json={"input_text": "Test"}
-        )
+        client.post(f"/api/pipelines/{pipeline_id}/execute", json={"input_text": "Test"})
 
         # List all executions
         response = client.get("/api/pipelines/executions")
@@ -1014,7 +1007,8 @@ class TestListAllPipelineExecutions:
         exec_ids = []
         for i in range(2):
             response = client.post(
-                f"/api/pipelines/{pipeline_id}/execute", json={"input_text": f"Test {i}"}
+                f"/api/pipelines/{pipeline_id}/execute",
+                json={"input_text": f"Test {i}"},
             )
             exec_ids.append(response.json()["id"])
             time.sleep(0.01)  # Small delay to ensure different timestamps
@@ -1050,7 +1044,6 @@ class TestFlavorRoutes:
         assert body["step_count"] == 1
         assert body["created_at"] is not None
         assert body["last_updated"] is not None
-
 
     def test_list_flavors(self, client):
         """GET /api/pipelines/flavors returns all flavors."""

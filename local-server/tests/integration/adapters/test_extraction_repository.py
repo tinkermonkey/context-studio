@@ -8,28 +8,26 @@ Tests verify persistence of extraction results with:
 - Data integrity through save/load cycles
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(
-    os.path.dirname(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    )
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 )
 
-import pytest
 import tempfile
-from pathlib import Path
 from datetime import datetime, timezone
+from pathlib import Path
 from uuid import uuid4
 
+import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from domain.extraction.entities import ExtractionResult, ExtractedEntity
-from domain.extraction.value_objects import ExtractionLayerResult
-from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
+from adapters.persistence.sqlite.models import Base
+from domain.extraction.entities import ExtractedEntity, ExtractionResult
+from domain.extraction.value_objects import ExtractionLayerResult
 
 
 @pytest.fixture
@@ -220,9 +218,7 @@ class TestGetExtractionResult:
 
         assert len(retrieved.layers_executed) == len(saved.layers_executed)
 
-        for retrieved_layer, saved_layer in zip(
-            retrieved.layers_executed, saved.layers_executed
-        ):
+        for retrieved_layer, saved_layer in zip(retrieved.layers_executed, saved.layers_executed):
             assert retrieved_layer.layer_number == saved_layer.layer_number
             assert retrieved_layer.layer_name == saved_layer.layer_name
             assert retrieved_layer.entities_found == saved_layer.entities_found

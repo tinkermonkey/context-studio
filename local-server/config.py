@@ -2,13 +2,14 @@
 Configuration settings for the Context Studio Local Server.
 """
 
-import os
 import json
 import logging
-from typing import Optional, List
-from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
+import os
 from enum import Enum
+from typing import List, Optional
+
 from dotenv import load_dotenv
+from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
 # Configure a dedicated logger for config module to avoid circular dependencies
 _config_logger = logging.getLogger(__name__)
@@ -42,17 +43,14 @@ class TelemetryProtocol(str, Enum):
 class TelemetryConfig(BaseModel):
     """Telemetry configuration section"""
 
-    enabled: bool = Field(
-        default=False, description="Enable telemetry export to OTLP collector"
-    )
+    enabled: bool = Field(default=False, description="Enable telemetry export to OTLP collector")
     service_name: str = Field(
         default="context-studio-backend", description="Service name for telemetry"
     )
-    service_version: str = Field(
-        default="1.0.0", description="Service version for telemetry"
-    )
+    service_version: str = Field(default="1.0.0", description="Service version for telemetry")
     environment: str = Field(
-        default="development", description="Deployment environment (development, staging, production)"
+        default="development",
+        description="Deployment environment (development, staging, production)",
     )
     otlp_endpoint_grpc: str = Field(
         default="http://localhost:4317", description="OTLP gRPC collector endpoint"
@@ -63,12 +61,8 @@ class TelemetryConfig(BaseModel):
     protocol: TelemetryProtocol = Field(
         default=TelemetryProtocol.GRPC, description="OTLP transport protocol"
     )
-    export_logs: bool = Field(
-        default=True, description="Enable log export to OTLP collector"
-    )
-    export_traces: bool = Field(
-        default=True, description="Enable trace export to OTLP collector"
-    )
+    export_logs: bool = Field(default=True, description="Enable log export to OTLP collector")
+    export_traces: bool = Field(default=True, description="Enable trace export to OTLP collector")
     sample_rate: float = Field(
         default=1.0,
         ge=0.0,
@@ -88,9 +82,7 @@ class ServerConfig(BaseModel):
 class DatabaseConfig(BaseModel):
     """Database configuration section"""
 
-    local_db_path: str = Field(
-        default="./local.db", description="Main workspace database path"
-    )
+    local_db_path: str = Field(default="./local.db", description="Main workspace database path")
     operations_db_path: str = Field(
         default="./operations.db", description="Operations database path"
     )
@@ -100,9 +92,7 @@ class LoggingConfig(BaseModel):
     """Logging configuration section"""
 
     log_level: LogLevel = Field(default=LogLevel.INFO, description="Log level")
-    max_bytes: int = Field(
-        default=10 * 1024 * 1024, description="Max log file size in bytes"
-    )
+    max_bytes: int = Field(default=10 * 1024 * 1024, description="Max log file size in bytes")
     backup_count: int = Field(default=5, description="Number of backup log files")
 
 
@@ -150,13 +140,9 @@ class S3Config(BaseModel):
     """S3 synchronization configuration section"""
 
     s3_bucket: Optional[str] = Field(default=None, description="S3 bucket name")
-    s3_prefix: Optional[str] = Field(
-        default=None, description="S3 key prefix for changes"
-    )
+    s3_prefix: Optional[str] = Field(default=None, description="S3 key prefix for changes")
     s3_access_key: Optional[str] = Field(default=None, description="AWS access key ID")
-    s3_secret_key: Optional[str] = Field(
-        default=None, description="AWS secret access key"
-    )
+    s3_secret_key: Optional[str] = Field(default=None, description="AWS secret access key")
     s3_region: Optional[str] = Field(default="us-east-1", description="AWS region")
 
 
@@ -173,9 +159,7 @@ class SyncConfig(BaseModel):
         default=SyncAdapterType.NONE,
         description="Sync adapter type: 's3', 'duckdb', or 'none'",
     )
-    s3: Optional[S3Config] = Field(
-        default=None, description="S3-specific configuration"
-    )
+    s3: Optional[S3Config] = Field(default=None, description="S3-specific configuration")
     duckdb: Optional[DuckDBConfig] = Field(
         default=None, description="DuckDB-specific configuration"
     )
@@ -224,13 +208,9 @@ class Settings(BaseModel):
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
     llm: LLMConfig = Field(default_factory=LLMConfig)
     nlp: dict = Field(default_factory=dict, description="NLP pipeline configuration")
-    embedding: dict = Field(
-        default_factory=dict, description="Embedding model configuration"
-    )
+    embedding: dict = Field(default_factory=dict, description="Embedding model configuration")
     reference: ReferenceConfig = Field(default_factory=ReferenceConfig)
-    sync: Optional[SyncConfig] = Field(
-        default=None, description="Synchronization configuration"
-    )
+    sync: Optional[SyncConfig] = Field(default=None, description="Synchronization configuration")
     telemetry: TelemetryConfig = Field(default_factory=TelemetryConfig)
 
 
@@ -251,36 +231,36 @@ class ConfigurationManager:
                 with open(self.config_file, "r") as f:
                     config_data = json.load(f)
                 self.settings = Settings(**config_data)
-                _config_logger.info(
-                    f"Successfully loaded configuration from {self.config_file}"
-                )
+                _config_logger.info(f"Successfully loaded configuration from {self.config_file}")
             except json.JSONDecodeError as e:
                 _config_logger.error(
-                    f"Failed to parse {self.config_file}: Invalid JSON at line {e.lineno}, "
-                    f"column {e.colno}. {e.msg}. Using default configuration. "
-                    f"Fix the file and reload the application."
+                    f"Failed to parse {self.config_file}: Invalid JSON at line"
+                    f" {e.lineno}, column {e.colno}. {e.msg}. Using default"
+                    " configuration. Fix the file and reload the application."
                 )
                 self.settings = Settings()
             except ValidationError as e:
                 _config_logger.error(
-                    f"Configuration validation failed: Invalid values in {self.config_file}. "
-                    f"Errors: {e.errors()}. Using default configuration."
+                    "Configuration validation failed: Invalid values in"
+                    f" {self.config_file}. Errors: {e.errors()}. Using default"
+                    " configuration."
                 )
                 self.settings = Settings()
             except PermissionError as e:
                 _config_logger.error(
-                    f"Permission denied reading {self.config_file}: {e}. Using default configuration."
+                    f"Permission denied reading {self.config_file}: {e}. Using default"
+                    " configuration."
                 )
                 self.settings = Settings()
             except OSError as e:
                 _config_logger.error(
-                    f"I/O error reading {self.config_file}: {e}. Using default configuration."
+                    f"I/O error reading {self.config_file}: {e}. Using default" " configuration."
                 )
                 self.settings = Settings()
             except Exception as e:
                 _config_logger.error(
-                    f"Unexpected error loading configuration from {self.config_file}: {type(e).__name__}: {e}. "
-                    f"Using default configuration."
+                    f"Unexpected error loading configuration from {self.config_file}:"
+                    f" {type(e).__name__}: {e}. Using default configuration."
                 )
                 self.settings = Settings()
         else:
@@ -301,14 +281,10 @@ class ConfigurationManager:
                 os.makedirs(config_dir, exist_ok=True)
             with open(self.config_file, "w") as f:
                 json.dump(self.settings.model_dump(), f, indent=2)
-            _config_logger.info(
-                f"Successfully saved configuration to {self.config_file}"
-            )
+            _config_logger.info(f"Successfully saved configuration to {self.config_file}")
             return True
         except PermissionError as e:
-            _config_logger.error(
-                f"Permission denied writing to {self.config_file}: {e}"
-            )
+            _config_logger.error(f"Permission denied writing to {self.config_file}: {e}")
             return False
         except FileNotFoundError as e:
             _config_logger.error(f"Configuration file path not found: {e}")
@@ -318,12 +294,14 @@ class ConfigurationManager:
             return False
         except TypeError as e:
             _config_logger.error(
-                f"Failed to serialize configuration: {e}. Configuration contains non-serializable objects."
+                f"Failed to serialize configuration: {e}. Configuration contains"
+                " non-serializable objects."
             )
             return False
         except Exception as e:
             _config_logger.error(
-                f"Unexpected error saving configuration to {self.config_file}: {type(e).__name__}: {e}"
+                f"Unexpected error saving configuration to {self.config_file}:"
+                f" {type(e).__name__}: {e}"
             )
             return False
 

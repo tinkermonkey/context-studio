@@ -4,21 +4,20 @@ Tests measure changeset creation, proposal workflow, and change event recording
 performance at multiple scales.
 """
 
-import sys
 import os
+import sys
 import time
-import pytest
 from uuid import uuid4
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+import pytest
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from domain.versioning.services import VersioningService
 from domain.versioning.value_objects import ChangeOperation
 from tests.fakes.fake_change_repository import FakeChangeRepository
-from tests.fakes.fake_sync_target import FakeSyncTarget
 from tests.fakes.fake_event_publisher import FakeEventPublisher
+from tests.fakes.fake_sync_target import FakeSyncTarget
 
 
 def _setup_versioning_context() -> tuple[VersioningService, FakeChangeRepository]:
@@ -56,7 +55,8 @@ def test_bulk_create_changesets(num_changesets: int, max_time: float) -> None:
     elapsed = time.perf_counter() - start
 
     print(
-        f"\nBulk create changesets ({num_changesets} changesets): {elapsed:.4f}s ({num_changesets / elapsed:.1f} changesets/sec)"
+        f"\nBulk create changesets ({num_changesets} changesets): {elapsed:.4f}s"
+        f" ({num_changesets / elapsed:.1f} changesets/sec)"
     )
     assert elapsed < max_time
 
@@ -87,7 +87,8 @@ def test_bulk_record_changes(num_changes: int, max_time: float) -> None:
     elapsed = time.perf_counter() - start
 
     print(
-        f"\nBulk record changes ({num_changes} changes): {elapsed:.4f}s ({num_changes / elapsed:.1f} changes/sec)"
+        f"\nBulk record changes ({num_changes} changes): {elapsed:.4f}s"
+        f" ({num_changes / elapsed:.1f} changes/sec)"
     )
     assert elapsed < max_time
 
@@ -122,7 +123,8 @@ def test_proposal_workflow(num_changesets: int, max_time: float) -> None:
     elapsed = time.perf_counter() - start
 
     print(
-        f"\nProposal workflow ({num_changesets} proposals): {elapsed:.4f}s ({num_changesets / elapsed:.1f} proposals/sec)"
+        f"\nProposal workflow ({num_changesets} proposals): {elapsed:.4f}s"
+        f" ({num_changesets / elapsed:.1f} proposals/sec)"
     )
     assert elapsed < max_time
 

@@ -5,15 +5,13 @@ Tests the AppConfigurationResponse.from_domain() method to verify
 that API keys are properly masked in responses.
 """
 
-import sys
 import os
+import sys
 
 # Add local-server root to path for imports
 sys.path.insert(
     0,
-    os.path.dirname(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    ),
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
 )
 
 from adapters.web.schemas.admin import AppConfigurationResponse

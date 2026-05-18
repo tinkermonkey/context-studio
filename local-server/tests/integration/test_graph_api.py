@@ -11,37 +11,34 @@ Tests verify the full graph analysis workflow with:
 These tests exercise the complete stack: routes → domain service → adapters → database.
 """
 
-import sys
 import os
+import sys
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-import pytest
 import tempfile
 from pathlib import Path
 from uuid import uuid4
 
+import pytest
+from fastapi import FastAPI, status
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from fastapi import FastAPI, status
-from fastapi.testclient import TestClient
-
+from adapters.graph.networkx_engine import NetworkXGraphEngine
+from adapters.graph.rdflib_engine import RDFLibQueryEngine
+from adapters.persistence.sqlite.models import Base
+from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+from adapters.web.graph_routes import router
 from domain.graph.services import GraphAnalysisService
 from domain.ontology.entities import (
     Class,
-    Taxonomy,
     ConceptScheme,
-    Relationship,
     PropertyDefinition,
+    Relationship,
+    Taxonomy,
 )
-from adapters.persistence.sqlite.models import Base
-from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
-from adapters.graph.networkx_engine import NetworkXGraphEngine
-from adapters.graph.rdflib_engine import RDFLibQueryEngine
-from adapters.web.graph_routes import router
 
 
 @pytest.fixture
@@ -75,9 +72,7 @@ def repository(session_factory):
 def populated_repository(repository):
     """Populate repository with test data."""
     # Create taxonomy
-    tax = Taxonomy(
-        id=str(uuid4()), title="Integration Test Taxonomy", description="Test"
-    )
+    tax = Taxonomy(id=str(uuid4()), title="Integration Test Taxonomy", description="Test")
     repository.save_taxonomy(tax)
 
     # Create concept scheme
@@ -235,9 +230,7 @@ class TestGraphMetricsIntegration:
         assert isinstance(data["connected_components"], int)
         assert data["connected_components"] > 0
 
-    def test_metrics_centrality_scores_include_all_nodes(
-        self, client, populated_repository
-    ):
+    def test_metrics_centrality_scores_include_all_nodes(self, client, populated_repository):
         """Centrality scores should include all entity types."""
         response = client.get("/api/graph/metrics")
         assert response.status_code == status.HTTP_200_OK
@@ -318,9 +311,7 @@ class TestPathFindingIntegration:
 class TestCentralityIntegration:
     """Integration tests for centrality computation with real algorithms."""
 
-    def test_centrality_algorithms_return_valid_scores(
-        self, client, populated_repository
-    ):
+    def test_centrality_algorithms_return_valid_scores(self, client, populated_repository):
         """All centrality algorithms return valid scores for all entity types."""
         algorithms = ["betweenness", "pagerank", "closeness", "degree"]
 
@@ -411,25 +402,19 @@ class TestNeighborsIntegration:
 
             if node_with_out:
                 # Test "out" direction
-                response = client.get(
-                    f"/api/graph/nodes/{node_with_out}/neighbors?direction=out"
-                )
+                response = client.get(f"/api/graph/nodes/{node_with_out}/neighbors?direction=out")
                 assert response.status_code == status.HTTP_200_OK
                 data = response.json()
                 assert data["direction"] == "out"
 
                 # Test "in" direction
-                response = client.get(
-                    f"/api/graph/nodes/{node_with_out}/neighbors?direction=in"
-                )
+                response = client.get(f"/api/graph/nodes/{node_with_out}/neighbors?direction=in")
                 assert response.status_code == status.HTTP_200_OK
                 data = response.json()
                 assert data["direction"] == "in"
 
                 # Test "both" direction (default)
-                response = client.get(
-                    f"/api/graph/nodes/{node_with_out}/neighbors?direction=both"
-                )
+                response = client.get(f"/api/graph/nodes/{node_with_out}/neighbors?direction=both")
                 assert response.status_code == status.HTTP_200_OK
                 data = response.json()
                 assert data["direction"] == "both"
@@ -577,9 +562,7 @@ class TestErrorHandlingIntegration:
 
     def test_422_for_invalid_parameters(self, client):
         """Invalid parameters return 422 Unprocessable Entity."""
-        response = client.get(
-            "/api/graph/paths/all?source_id=a&target_id=b&max_depth=100"
-        )
+        response = client.get("/api/graph/paths/all?source_id=a&target_id=b&max_depth=100")
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_422_for_missing_required_fields(self, client):

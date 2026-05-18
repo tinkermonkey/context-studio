@@ -5,21 +5,20 @@ Tests the four-layer extraction pipeline, deduplication logic, error handling,
 and configuration options.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(
-    os.path.dirname(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    )
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 )
 
-import pytest
 from unittest.mock import Mock
 
-from domain.extraction.services import ExtractionService
+import pytest
+
 from domain.extraction.entities import ExtractedEntity, ExtractionResult
 from domain.extraction.exceptions import ExtractionError
+from domain.extraction.services import ExtractionService
 
 
 class FakeOntologyRepository:
@@ -448,9 +447,7 @@ class TestExtractionServiceDeduplication:
 class TestExtractionServicePersistence:
     """Test persistence and error handling."""
 
-    def test_extraction_returns_result_even_if_persistence_fails(
-        self, service_with_fakes
-    ):
+    def test_extraction_returns_result_even_if_persistence_fails(self, service_with_fakes):
         """Test that extraction returns result even if persistence fails."""
         service = service_with_fakes["service"]
         extraction_repo = service_with_fakes["extraction_repo"]
@@ -466,24 +463,18 @@ class TestExtractionServicePersistence:
         result = service.extract("Test text with Apple in it")
 
         assert isinstance(result, ExtractionResult)
-        assert (
-            len(result.extracted_entities) > 0
-        )  # Has entities despite persistence failure
+        assert len(result.extracted_entities) > 0  # Has entities despite persistence failure
         # Event should still be published
         assert len(service_with_fakes["event_publisher"].published_events) > 0
 
-    def test_extraction_event_published_even_if_persistence_fails(
-        self, service_with_fakes
-    ):
+    def test_extraction_event_published_even_if_persistence_fails(self, service_with_fakes):
         """Test that completion event is published even if persistence fails."""
         service = service_with_fakes["service"]
         extraction_repo = service_with_fakes["extraction_repo"]
         event_publisher = service_with_fakes["event_publisher"]
 
         # Make persistence fail
-        extraction_repo.save_extraction_result = Mock(
-            side_effect=RuntimeError("DB error")
-        )
+        extraction_repo.save_extraction_result = Mock(side_effect=RuntimeError("DB error"))
 
         # Run extraction
         service.extract("Test text")
@@ -492,13 +483,9 @@ class TestExtractionServicePersistence:
         assert len(event_publisher.published_events) > 0
         from domain.extraction.events import ExtractionCompleted
 
-        assert any(
-            isinstance(e, ExtractionCompleted) for e in event_publisher.published_events
-        )
+        assert any(isinstance(e, ExtractionCompleted) for e in event_publisher.published_events)
 
-    def test_analyze_text_returns_result_even_if_persistence_fails(
-        self, service_with_fakes
-    ):
+    def test_analyze_text_returns_result_even_if_persistence_fails(self, service_with_fakes):
         """Test that analyze_text returns result even if persistence fails."""
         service = service_with_fakes["service"]
         extraction_repo = service_with_fakes["extraction_repo"]
@@ -524,11 +511,7 @@ class TestExtractionServicePersistence:
             side_effect=RuntimeError("Database connection failed")
         )
 
-        entities = [
-            DomainEntity(
-                label="Apple", entity_type="ORG", source_layer=1, confidence=0.9
-            )
-        ]
+        entities = [DomainEntity(label="Apple", entity_type="ORG", source_layer=1, confidence=0.9)]
         result = service.enrich_from_references("Apple is a tech company", entities)
 
         assert isinstance(result, ExtractionResult)

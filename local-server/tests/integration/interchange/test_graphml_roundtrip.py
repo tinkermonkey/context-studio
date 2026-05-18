@@ -8,38 +8,35 @@ Tests the adapter against a real in-memory SQLite database to verify:
 - Layout coordinates ignored on import without error
 """
 
-import sys
 import os
+import sys
 import uuid
 
-sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from adapters.interchange.graphml import GraphMLDeserializer, GraphMLSerializer
+from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
+from adapters.persistence.sqlite.models import Base
+from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+from domain.interchange.value_objects import (
+    MatchKind,
+    ResolutionKind,
+    SerializationScope,
+    SerializationScopeType,
+)
 from domain.ontology.entities import (
-    Taxonomy,
-    ConceptScheme,
     Class,
+    ConceptScheme,
     Individual,
     PropertyDefinition,
     Relationship,
+    Taxonomy,
 )
 from domain.ontology.value_objects import ExternalReference
-from domain.interchange.value_objects import (
-    SerializationScope,
-    SerializationScopeType,
-    MatchKind,
-    ResolutionKind,
-)
-
-from adapters.persistence.sqlite.models import Base
-from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
-from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
-from adapters.interchange.graphml import GraphMLSerializer, GraphMLDeserializer
 
 
 @pytest.fixture
@@ -234,9 +231,7 @@ class TestGraphMLEmptyDatabaseRoundTrip:
         assert "Cat" in exported_str
         assert "Mammal" in exported_str
 
-    def test_import_creates_import_plan_with_no_conflicts(
-        self, ontology_repo, sample_data
-    ):
+    def test_import_creates_import_plan_with_no_conflicts(self, ontology_repo, sample_data):
         """Test importing against an empty database produces valid plan with no conflicts."""
         # Export
         serializer = GraphMLSerializer(ontology_repo)
@@ -289,11 +284,7 @@ class TestGraphMLEmptyDatabaseRoundTrip:
         original_properties = ontology_repo.list_property_definitions()
 
         imported_class_count = len(
-            [
-                e
-                for e in deserializer.incoming_entities.values()
-                if e.get("type") == "class"
-            ]
+            [e for e in deserializer.incoming_entities.values() if e.get("type") == "class"]
         )
         imported_scheme_count = len(
             [
@@ -303,18 +294,10 @@ class TestGraphMLEmptyDatabaseRoundTrip:
             ]
         )
         imported_taxonomy_count = len(
-            [
-                e
-                for e in deserializer.incoming_entities.values()
-                if e.get("type") == "taxonomy"
-            ]
+            [e for e in deserializer.incoming_entities.values() if e.get("type") == "taxonomy"]
         )
         imported_individual_count = len(
-            [
-                e
-                for e in deserializer.incoming_entities.values()
-                if e.get("type") == "individual"
-            ]
+            [e for e in deserializer.incoming_entities.values() if e.get("type") == "individual"]
         )
         imported_property_count = len(
             [
@@ -359,11 +342,7 @@ class TestGraphMLMultiClassIndividual:
 
         # Verify that Fido's class ordering is preserved in the incoming entities
         fido_incoming = next(
-            (
-                e
-                for e in deserializer.incoming_entities.values()
-                if e.get("title") == "Fido"
-            ),
+            (e for e in deserializer.incoming_entities.values() if e.get("title") == "Fido"),
             None,
         )
         assert fido_incoming is not None
@@ -374,20 +353,21 @@ class TestGraphMLMultiClassIndividual:
 
     def test_individual_class_order_missing_produces_warning(self, ontology_repo):
         """Test that missing class_order produces a warning."""
-        import networkx as nx
         import io
+
+        import networkx as nx
 
         # Create GraphML with missing class_order using networkx
         G = nx.MultiDiGraph()
         G.add_node(
             "class1",
             kind="class",
-            **{"cs:title": "TestClass", "cs:description": "A test class"}
+            **{"cs:title": "TestClass", "cs:description": "A test class"},
         )
         G.add_node(
             "individual1",
             kind="individual",
-            **{"cs:title": "TestIndividual", "cs:description": "A test individual"}
+            **{"cs:title": "TestIndividual", "cs:description": "A test individual"},
         )
         G.add_edge("individual1", "class1", kind="class_membership")
 
@@ -438,11 +418,7 @@ class TestGraphMLExternalReferences:
 
         # Verify external references were extracted
         dog_incoming = next(
-            (
-                e
-                for e in deserializer.incoming_entities.values()
-                if e.get("title") == "Dog"
-            ),
+            (e for e in deserializer.incoming_entities.values() if e.get("title") == "Dog"),
             None,
         )
         assert dog_incoming is not None
@@ -473,11 +449,7 @@ class TestGraphMLExternalReferences:
 
         # Verify Fido's external references
         fido_incoming = next(
-            (
-                e
-                for e in deserializer.incoming_entities.values()
-                if e.get("title") == "Fido"
-            ),
+            (e for e in deserializer.incoming_entities.values() if e.get("title") == "Fido"),
             None,
         )
         assert fido_incoming is not None
@@ -497,8 +469,9 @@ class TestGraphMLExternalReferences:
         4. Reimport into Context Studio
         5. Verify external_references survive
         """
-        import networkx as nx
         import io
+
+        import networkx as nx
 
         # Export from Context Studio
         serializer = GraphMLSerializer(ontology_repo)
@@ -531,11 +504,7 @@ class TestGraphMLExternalReferences:
         # Verify external_references survive through the round-trip
         # Check Dog's external references (DBpedia and Wikidata)
         dog_incoming = next(
-            (
-                e
-                for e in deserializer.incoming_entities.values()
-                if e.get("title") == "Dog"
-            ),
+            (e for e in deserializer.incoming_entities.values() if e.get("title") == "Dog"),
             None,
         )
         assert dog_incoming is not None
@@ -551,11 +520,7 @@ class TestGraphMLExternalReferences:
 
         # Verify Individual's external references survive
         fido_incoming = next(
-            (
-                e
-                for e in deserializer.incoming_entities.values()
-                if e.get("title") == "Fido"
-            ),
+            (e for e in deserializer.incoming_entities.values() if e.get("title") == "Fido"),
             None,
         )
         assert fido_incoming is not None
@@ -567,15 +532,16 @@ class TestGraphMLExternalReferences:
 
     def test_malformed_external_references_in_class_raises_error(self):
         """Test that malformed external references JSON in Class causes deserialization to fail."""
-        import networkx as nx
         import io
+
+        import networkx as nx
 
         # Create GraphML with malformed JSON in external_references
         G = nx.MultiDiGraph()
         G.add_node(
             "scheme1",
             kind="concept_scheme",
-            **{"cs:title": "TestScheme", "cs:description": "A test scheme"}
+            **{"cs:title": "TestScheme", "cs:description": "A test scheme"},
         )
         G.add_node(
             "class1",
@@ -583,8 +549,8 @@ class TestGraphMLExternalReferences:
             **{
                 "cs:title": "TestClass",
                 "cs:description": "A test class",
-                "cs:external_references": '{"invalid json'  # Malformed JSON
-            }
+                "cs:external_references": '{"invalid json',  # Malformed JSON
+            },
         )
         G.add_edge("scheme1", "class1", kind="has_class")
 
@@ -609,15 +575,16 @@ class TestGraphMLExternalReferences:
 
     def test_missing_external_reference_field_raises_error(self):
         """Test that missing required field in external reference causes deserialization to fail."""
-        import networkx as nx
         import io
+
+        import networkx as nx
 
         # Create GraphML with missing required field in external reference
         G = nx.MultiDiGraph()
         G.add_node(
             "scheme1",
             kind="concept_scheme",
-            **{"cs:title": "TestScheme", "cs:description": "A test scheme"}
+            **{"cs:title": "TestScheme", "cs:description": "A test scheme"},
         )
         G.add_node(
             "class1",
@@ -625,8 +592,10 @@ class TestGraphMLExternalReferences:
             **{
                 "cs:title": "TestClass",
                 "cs:description": "A test class",
-                "cs:external_references": '[{"source": "dbpedia", "identifier": "Test"}]'  # Missing 'uri'
-            }
+                "cs:external_references": (  # Missing 'uri'
+                    '[{"source": "dbpedia", "identifier": "Test"}]'
+                ),
+            },
         )
         G.add_edge("scheme1", "class1", kind="has_class")
 
@@ -647,19 +616,23 @@ class TestGraphMLExternalReferences:
         with pytest.raises(ValueError) as exc_info:
             deserializer.deserialize(graphml_bytes, dry_run=True)
 
-        assert "missing required field" in str(exc_info.value).lower() or "uri" in str(exc_info.value).lower()
+        assert (
+            "missing required field" in str(exc_info.value).lower()
+            or "uri" in str(exc_info.value).lower()
+        )
 
     def test_malformed_external_references_in_individual_raises_error(self):
         """Test that malformed external references JSON in Individual causes deserialization to fail."""
-        import networkx as nx
         import io
+
+        import networkx as nx
 
         # Create GraphML with malformed JSON in individual's external_references
         G = nx.MultiDiGraph()
         G.add_node(
             "class1",
             kind="class",
-            **{"cs:title": "TestClass", "cs:description": "A test class"}
+            **{"cs:title": "TestClass", "cs:description": "A test class"},
         )
         G.add_node(
             "individual1",
@@ -667,8 +640,8 @@ class TestGraphMLExternalReferences:
             **{
                 "cs:title": "TestIndividual",
                 "cs:description": "A test individual",
-                "cs:external_references": '[{"invalid"'  # Malformed JSON
-            }
+                "cs:external_references": '[{"invalid"',  # Malformed JSON
+            },
         )
         G.add_edge("individual1", "class1", kind="class_membership", **{"cs:class_order": "0"})
 
@@ -695,9 +668,7 @@ class TestGraphMLExternalReferences:
 class TestGraphMLIdempotentReimport:
     """Test that reimporting produces idempotent results."""
 
-    def test_reimport_with_matching_external_references(
-        self, ontology_repo, sample_data
-    ):
+    def test_reimport_with_matching_external_references(self, ontology_repo, sample_data):
         """Test that reimporting entities with matching external refs detects conflicts."""
         # Export
         serializer = GraphMLSerializer(ontology_repo)
@@ -761,20 +732,21 @@ class TestGraphMLLayoutCoordinates:
 
     def test_layout_coordinates_ignored_without_error(self):
         """Test that x, y coordinates are silently ignored on import."""
-        import networkx as nx
         import io
+
+        import networkx as nx
 
         # Create GraphML with layout coordinates using networkx
         G = nx.MultiDiGraph()
         G.add_node(
             "tax1",
             kind="taxonomy",
-            **{"cs:title": "TestTax", "x": "100.5", "y": "200.5"}
+            **{"cs:title": "TestTax", "x": "100.5", "y": "200.5"},
         )
         G.add_node(
             "scheme1",
             kind="concept_scheme",
-            **{"cs:title": "TestScheme", "x": "300", "y": "400"}
+            **{"cs:title": "TestScheme", "x": "300", "y": "400"},
         )
         G.add_edge("tax1", "scheme1", kind="has_scheme")
 
@@ -795,7 +767,5 @@ class TestGraphMLLayoutCoordinates:
         # Should not raise exception and should not have x/y in warnings
         assert plan is not None
         # x, y should not produce warnings since they're in the ignored set
-        coord_warnings = [
-            w for w in plan.warnings if "x" in w.lower() or "y" in w.lower()
-        ]
+        coord_warnings = [w for w in plan.warnings if "x" in w.lower() or "y" in w.lower()]
         assert len(coord_warnings) == 0

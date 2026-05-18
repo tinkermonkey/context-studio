@@ -4,33 +4,31 @@ Integration tests for SQLiteChangeRepository.
 Tests against in-memory SQLite database to verify all persistence operations.
 """
 
-import sys
 import os
-from datetime import datetime, timezone, timedelta
+import sys
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 # Add local-server root to path for imports
-sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
+from adapters.persistence.sqlite.models import Base
 from domain.versioning.entities import (
-    EntityVersion,
     Changeset,
+    EntityVersion,
     Proposal,
 )
-from domain.versioning.value_objects import (
-    ChangeState,
-    ChangeOperation,
-    ProposalState,
-    EntityVersionState,
-)
 from domain.versioning.exceptions import VersionNotFoundError
+from domain.versioning.value_objects import (
+    ChangeOperation,
+    ChangeState,
+    EntityVersionState,
+    ProposalState,
+)
 
 
 @pytest.fixture
@@ -550,9 +548,7 @@ class TestMarkProcessedOperations:
 class TestAtomicUpdateOperations:
     """Test atomic update operations for changesets and proposals."""
 
-    def test_update_changeset_and_proposal_on_submit_persists_both(
-        self, repository
-    ) -> None:
+    def test_update_changeset_and_proposal_on_submit_persists_both(self, repository) -> None:
         """Test that both changeset and proposal are persisted in one operation."""
         # Create and persist a changeset
         changeset = Changeset(
@@ -593,9 +589,7 @@ class TestAtomicUpdateOperations:
         assert retrieved_prop is not None
         assert retrieved_prop.state == ProposalState.OPEN
 
-    def test_atomic_update_changeset_and_proposal_updates_both(
-        self, repository
-    ) -> None:
+    def test_atomic_update_changeset_and_proposal_updates_both(self, repository) -> None:
         """Test that both entities are updated atomically on approve/reject/merge."""
         # Create and persist both entities
         changeset = Changeset(

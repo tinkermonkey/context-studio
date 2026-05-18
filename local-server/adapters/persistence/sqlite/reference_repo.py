@@ -3,7 +3,7 @@
 import sqlite3
 from pathlib import Path
 
-from domain.extraction.ports import ReferenceResult, ReferenceRelation
+from domain.extraction.ports import ReferenceRelation, ReferenceResult
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -139,9 +139,7 @@ class LocalReferenceRepository:
 
                 return results
         except Exception as e:
-            logger.error(
-                "Local reference search failed for '%s': %s", term, e, exc_info=True
-            )
+            logger.error("Local reference search failed for '%s': %s", term, e, exc_info=True)
             raise
 
     def get_relations(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
@@ -189,9 +187,7 @@ class LocalReferenceRepository:
             )
             raise
 
-    def import_reference(
-        self, uri: str, label: str, description: str | None, source: str
-    ) -> None:
+    def import_reference(self, uri: str, label: str, description: str | None, source: str) -> None:
         """
         Import a single reference into the database.
 

@@ -15,44 +15,45 @@ from typing import Literal
 from uuid import uuid4
 
 from domain.ports import EventPublisher
+
 from .entities import (
-    Taxonomy,
-    ConceptScheme,
     Class,
-    Relationship,
-    PropertyDefinition,
+    ConceptScheme,
     Individual,
+    PropertyDefinition,
+    Relationship,
+    Taxonomy,
 )
-from .value_objects import DataPropertyValue, Status
 from .events import (
-    TaxonomyCreated,
-    TaxonomyUpdated,
-    TaxonomyDeleted,
-    SchemeCreated,
-    SchemeUpdated,
-    SchemeDeleted,
     ClassCreated,
-    ClassUpdated,
     ClassDeleted,
     ClassMoved,
-    RelationshipCreated,
-    RelationshipDeleted,
-    PropertyDefinitionCreated,
-    PropertyDefinitionUpdated,
-    PropertyDefinitionDeleted,
+    ClassUpdated,
     ConceptSchemeUpdated,
     GraphInvalidated,
     IndividualCreated,
-    IndividualUpdated,
     IndividualDeleted,
+    IndividualUpdated,
+    PropertyDefinitionCreated,
+    PropertyDefinitionDeleted,
+    PropertyDefinitionUpdated,
+    RelationshipCreated,
+    RelationshipDeleted,
+    SchemeCreated,
+    SchemeDeleted,
+    SchemeUpdated,
+    TaxonomyCreated,
+    TaxonomyDeleted,
+    TaxonomyUpdated,
 )
 from .exceptions import (
-    EntityNotFoundError,
     CircularReferenceError,
     DuplicateEntityError,
+    EntityNotFoundError,
     OntologyError,
 )
-from .ports import OntologyRepository, EmbeddingService
+from .ports import EmbeddingService, OntologyRepository
+from .value_objects import DataPropertyValue, Status
 
 _logger = logging.getLogger(__name__)
 
@@ -179,7 +180,11 @@ class OntologyService:
             List of Taxonomy entities
         """
         return self._repository.list_taxonomies(
-            limit=limit, offset=offset, sort_by=sort_by, sort_order=sort_order, query=query
+            limit=limit,
+            offset=offset,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            query=query,
         )
 
     def count_taxonomies(self, query: str | None = None) -> int:
@@ -230,9 +235,7 @@ class OntologyService:
                 raise ValueError("Title cannot be empty")
             existing = self._repository.list_taxonomies(limit=None)
             if any(t.id != taxonomy_id and t.title == title for t in existing):
-                raise DuplicateEntityError(
-                    f"Taxonomy with title '{title}' already exists"
-                )
+                raise DuplicateEntityError(f"Taxonomy with title '{title}' already exists")
             taxonomy.title = title
 
         if description is not None:
@@ -314,9 +317,7 @@ class OntologyService:
         # Check for duplicate title (excluding the current taxonomy)
         existing = self._repository.list_taxonomies(limit=None)
         if any(t.title == new_title and t.id != taxonomy_id for t in existing):
-            raise DuplicateEntityError(
-                f"Taxonomy with title '{new_title}' already exists"
-            )
+            raise DuplicateEntityError(f"Taxonomy with title '{new_title}' already exists")
 
         # Guard against no-op updates
         if new_title == taxonomy.title:
@@ -368,7 +369,7 @@ class OntologyService:
         schemes = self._repository.list_concept_schemes(taxonomy_id=taxonomy_id, limit=None)
         if schemes:
             raise OntologyError(
-                f"Cannot delete taxonomy {taxonomy_id}: it has {len(schemes)} concept scheme(s)"
+                f"Cannot delete taxonomy {taxonomy_id}: it has {len(schemes)} concept" " scheme(s)"
             )
 
         self._repository.delete_taxonomy(taxonomy_id)
@@ -426,8 +427,8 @@ class OntologyService:
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
-                "Event handlers failed for TaxonomyUpdated publish (taxonomy_id=%s): %s. "
-                "Taxonomy is published but audit trail may have gaps.",
+                "Event handlers failed for TaxonomyUpdated publish (taxonomy_id=%s):"
+                " %s. Taxonomy is published but audit trail may have gaps.",
                 taxonomy_id,
                 handler_names,
             )
@@ -632,11 +633,9 @@ class OntologyService:
         existing_schemes = self._repository.list_concept_schemes(
             taxonomy_id=scheme.taxonomy_id, limit=None
         )
-        if any(
-            s.title == new_title and s.id != concept_scheme_id for s in existing_schemes
-        ):
+        if any(s.title == new_title and s.id != concept_scheme_id for s in existing_schemes):
             raise DuplicateEntityError(
-                f"ConceptScheme with title '{new_title}' already exists in this taxonomy"
+                f"ConceptScheme with title '{new_title}' already exists in this" " taxonomy"
             )
 
         # Guard against no-op updates
@@ -690,7 +689,8 @@ class OntologyService:
         classes = self._repository.list_classes(concept_scheme_id=concept_scheme_id, limit=None)
         if classes:
             raise OntologyError(
-                f"Cannot delete concept scheme {concept_scheme_id}: it has {len(classes)} class(es)"
+                f"Cannot delete concept scheme {concept_scheme_id}: it has"
+                f" {len(classes)} class(es)"
             )
 
         self._repository.delete_concept_scheme(concept_scheme_id)
@@ -756,9 +756,7 @@ class OntologyService:
             concept_scheme_id=concept_scheme_id, limit=None
         )
         if any(c.title == title for c in existing_classes):
-            raise DuplicateEntityError(
-                f"Class with title '{title}' already exists in this scheme"
-            )
+            raise DuplicateEntityError(f"Class with title '{title}' already exists in this scheme")
 
         # Validate parent class if provided
         if parent_class_id is not None:
@@ -767,9 +765,7 @@ class OntologyService:
                 raise EntityNotFoundError("Class", parent_class_id)
             # Verify parent is in the same scheme
             if parent_class.concept_scheme_id != concept_scheme_id:
-                raise ValueError(
-                    f"Parent class {parent_class_id} is not in the same scheme"
-                )
+                raise ValueError(f"Parent class {parent_class_id} is not in the same scheme")
 
         class_id = str(uuid4())
 
@@ -988,7 +984,7 @@ class OntologyService:
         individuals = self._repository.list_individuals(class_id=class_id, limit=None)
         if individuals:
             raise OntologyError(
-                f"Cannot delete class {class_id}: it has {len(individuals)} individual(s)"
+                f"Cannot delete class {class_id}: it has {len(individuals)}" " individual(s)"
             )
 
         # Find and delete all relationships where this class is source or target
@@ -1009,8 +1005,9 @@ class OntologyService:
             if failures:
                 handler_names = ", ".join(name for name, _ in failures)
                 _logger.warning(
-                    "Event handlers failed for RelationshipDeleted (relationship_id=%s): %s. "
-                    "Relationship is deleted but audit trail may have gaps.",
+                    "Event handlers failed for RelationshipDeleted"
+                    " (relationship_id=%s): %s. Relationship is deleted but audit trail"
+                    " may have gaps.",
                     relationship.id,
                     handler_names,
                 )
@@ -1096,9 +1093,7 @@ class OntologyService:
             if new_parent is None:
                 raise EntityNotFoundError("Class", new_parent_id)
             if new_parent.concept_scheme_id != cls.concept_scheme_id:
-                raise ValueError(
-                    f"Parent class {new_parent_id} is not in the same scheme"
-                )
+                raise ValueError(f"Parent class {new_parent_id} is not in the same scheme")
 
             # Traverse ancestor chain of new_parent_id looking for class_id
             current_id: str | None = new_parent_id
@@ -1110,9 +1105,7 @@ class OntologyService:
                         current_id,
                     )
                 if ancestor.id == class_id:
-                    raise CircularReferenceError(
-                        "Move would create a circular reference"
-                    )
+                    raise CircularReferenceError("Move would create a circular reference")
                 current_id = ancestor.parent_class_id
 
         # Safe to proceed
@@ -1187,8 +1180,9 @@ class OntologyService:
 
         if cls.taxonomy_id != target_scheme.taxonomy_id:
             raise ValueError(
-                f"Cannot move class to scheme in different taxonomy. "
-                f"Class taxonomy: {cls.taxonomy_id}, target scheme taxonomy: {target_scheme.taxonomy_id}"
+                "Cannot move class to scheme in different taxonomy. Class taxonomy:"
+                f" {cls.taxonomy_id}, target scheme taxonomy:"
+                f" {target_scheme.taxonomy_id}"
             )
 
         # Capture old scheme ID before mutation
@@ -1265,9 +1259,7 @@ class OntologyService:
             source_individual = self._repository.get_individual(source_id)
             if source_individual:
                 # Get taxonomy from first parent class
-                individual_class = self._repository.get_class(
-                    source_individual.class_ids[0]
-                )
+                individual_class = self._repository.get_class(source_individual.class_ids[0])
                 if individual_class:
                     taxonomy_id = individual_class.taxonomy_id
             else:
@@ -1289,9 +1281,9 @@ class OntologyService:
         )
         if existing_relationships:
             raise DuplicateEntityError(
-                f"A relationship with triple (source_id={source_id}, "
-                f"target_id={target_id}, property_definition_id={property_definition_id}) "
-                "already exists"
+                f"A relationship with triple (source_id={source_id},"
+                f" target_id={target_id},"
+                f" property_definition_id={property_definition_id}) already exists"
             )
 
         relationship_id = str(uuid4())
@@ -1314,8 +1306,8 @@ class OntologyService:
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
-                "Event handlers failed for RelationshipCreated (relationship_id=%s): %s. "
-                "Relationship is created but audit trail may have gaps.",
+                "Event handlers failed for RelationshipCreated (relationship_id=%s):"
+                " %s. Relationship is created but audit trail may have gaps.",
                 relationship_id,
                 handler_names,
             )
@@ -1442,8 +1434,8 @@ class OntologyService:
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
-                "Event handlers failed for RelationshipDeleted (relationship_id=%s): %s. "
-                "Relationship is deleted but audit trail may have gaps.",
+                "Event handlers failed for RelationshipDeleted (relationship_id=%s):"
+                " %s. Relationship is deleted but audit trail may have gaps.",
                 relationship_id,
                 handler_names,
             )
@@ -1460,9 +1452,7 @@ class OntologyService:
             # Try source as an Individual - resolve its parent class to find taxonomy
             source_individual = self._repository.get_individual(relationship.source_id)
             if source_individual and source_individual.class_ids:
-                individual_class = self._repository.get_class(
-                    source_individual.class_ids[0]
-                )
+                individual_class = self._repository.get_class(source_individual.class_ids[0])
                 if individual_class:
                     taxonomy_id = individual_class.taxonomy_id
 
@@ -1473,13 +1463,9 @@ class OntologyService:
                 taxonomy_id = target_class.taxonomy_id
             else:
                 # Try target as an Individual - resolve its parent class to find taxonomy
-                target_individual = self._repository.get_individual(
-                    relationship.target_id
-                )
+                target_individual = self._repository.get_individual(relationship.target_id)
                 if target_individual and target_individual.class_ids:
-                    individual_class = self._repository.get_class(
-                        target_individual.class_ids[0]
-                    )
+                    individual_class = self._repository.get_class(target_individual.class_ids[0])
                     if individual_class:
                         taxonomy_id = individual_class.taxonomy_id
 
@@ -1500,9 +1486,10 @@ class OntologyService:
                 )
         else:
             _logger.warning(
-                "Could not determine taxonomy for relationship deletion (relationship_id=%s): "
-                "source_id=%s and target_id=%s could not be resolved. "
-                "Graph cache may be stale. Consider investigating deleted classes or individuals.",
+                "Could not determine taxonomy for relationship deletion"
+                " (relationship_id=%s): source_id=%s and target_id=%s could not be"
+                " resolved. Graph cache may be stale. Consider investigating deleted"
+                " classes or individuals.",
                 relationship_id,
                 relationship.source_id,
                 relationship.target_id,
@@ -1547,9 +1534,7 @@ class OntologyService:
                 f"PropertyDefinition with identifier '{identifier}' already exists"
             )
         if any(p.title == title for p in existing_props):
-            raise DuplicateEntityError(
-                f"PropertyDefinition with title '{title}' already exists"
-            )
+            raise DuplicateEntityError(f"PropertyDefinition with title '{title}' already exists")
 
         property_id = str(uuid4())
         now = datetime.now(timezone.utc)
@@ -1573,8 +1558,8 @@ class OntologyService:
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
-                "Event handlers failed for PropertyDefinitionCreated (property_id=%s): %s. "
-                "Property definition is created but audit trail may have gaps.",
+                "Event handlers failed for PropertyDefinitionCreated (property_id=%s):"
+                " %s. Property definition is created but audit trail may have gaps.",
                 property_id,
                 handler_names,
             )
@@ -1640,9 +1625,7 @@ class OntologyService:
 
         # Create new property definition with provided title
         if not title or not title.strip():
-            raise ValueError(
-                "Title cannot be empty when creating a new property definition"
-            )
+            raise ValueError("Title cannot be empty when creating a new property definition")
 
         return self.create_property_definition(
             identifier=identifier,
@@ -1752,8 +1735,8 @@ class OntologyService:
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
-                "Event handlers failed for PropertyDefinitionUpdated (property_id=%s): %s. "
-                "Property definition is updated but audit trail may have gaps.",
+                "Event handlers failed for PropertyDefinitionUpdated (property_id=%s):"
+                " %s. Property definition is updated but audit trail may have gaps.",
                 property_id,
                 handler_names,
             )
@@ -1779,7 +1762,8 @@ class OntologyService:
         relationships = self._repository.list_relationships(property_id=property_id, limit=None)
         if relationships:
             raise OntologyError(
-                f"PropertyDefinition '{property_id}' is in use by {len(relationships)} relationship(s)"
+                f"PropertyDefinition '{property_id}' is in use by {len(relationships)}"
+                " relationship(s)"
             )
 
         self._repository.delete_property_definition(property_id)
@@ -1794,8 +1778,8 @@ class OntologyService:
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
-                "Event handlers failed for PropertyDefinitionDeleted (property_id=%s): %s. "
-                "Property definition is deleted but audit trail may have gaps.",
+                "Event handlers failed for PropertyDefinitionDeleted (property_id=%s):"
+                " %s. Property definition is deleted but audit trail may have gaps.",
                 property_id,
                 handler_names,
             )
@@ -1833,11 +1817,9 @@ class OntologyService:
             existing_schemes = self._repository.list_concept_schemes(
                 taxonomy_id=scheme.taxonomy_id, limit=None
             )
-            if any(
-                s.id != concept_scheme_id and s.title == title for s in existing_schemes
-            ):
+            if any(s.id != concept_scheme_id and s.title == title for s in existing_schemes):
                 raise DuplicateEntityError(
-                    f"ConceptScheme with title '{title}' already exists in this taxonomy"
+                    f"ConceptScheme with title '{title}' already exists in this" " taxonomy"
                 )
             scheme.title = title
 
@@ -1856,8 +1838,8 @@ class OntologyService:
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
-                "Event handlers failed for ConceptSchemeUpdated (concept_scheme_id=%s): %s. "
-                "Scheme is updated but audit trail may have gaps.",
+                "Event handlers failed for ConceptSchemeUpdated (concept_scheme_id=%s):"
+                " %s. Scheme is updated but audit trail may have gaps.",
                 concept_scheme_id,
                 handler_names,
             )
@@ -1931,7 +1913,7 @@ class OntologyService:
             existing = self._repository.list_individuals(class_id=class_id, limit=None)
             if any(ind.title == title for ind in existing):
                 raise DuplicateEntityError(
-                    f"Individual with title '{title}' already exists in class '{class_id}'"
+                    f"Individual with title '{title}' already exists in class" f" '{class_id}'"
                 )
 
         individual_id = str(uuid4())
@@ -2056,12 +2038,10 @@ class OntologyService:
                 # Check uniqueness within each parent class
                 for class_id in individual.class_ids:
                     existing = self._repository.list_individuals(class_id=class_id, limit=None)
-                    if any(
-                        ind.title == title and ind.id != individual_id
-                        for ind in existing
-                    ):
+                    if any(ind.title == title and ind.id != individual_id for ind in existing):
                         raise DuplicateEntityError(
-                            f"Individual with title '{title}' already exists in class '{class_id}'"
+                            f"Individual with title '{title}' already exists in class"
+                            f" '{class_id}'"
                         )
                 individual.title = title
 
@@ -2164,8 +2144,9 @@ class OntologyService:
             if failures:
                 handler_names = ", ".join(name for name, _ in failures)
                 _logger.warning(
-                    "Event handlers failed for RelationshipDeleted (relationship_id=%s): %s. "
-                    "Relationship is deleted but audit trail may have gaps.",
+                    "Event handlers failed for RelationshipDeleted"
+                    " (relationship_id=%s): %s. Relationship is deleted but audit trail"
+                    " may have gaps.",
                     relationship.id,
                     handler_names,
                 )
@@ -2244,7 +2225,8 @@ class OntologyService:
         existing = self._repository.list_individuals(class_id=class_id, limit=None)
         if any(ind.title == individual.title for ind in existing):
             raise DuplicateEntityError(
-                f"Individual with title '{individual.title}' already exists in class '{class_id}'"
+                f"Individual with title '{individual.title}' already exists in class"
+                f" '{class_id}'"
             )
 
         # Capture old state for event (before mutation)
@@ -2289,9 +2271,7 @@ class OntologyService:
 
         return individual
 
-    def remove_class_from_individual(
-        self, individual_id: str, class_id: str
-    ) -> Individual:
+    def remove_class_from_individual(self, individual_id: str, class_id: str) -> Individual:
         """
         Remove a parent class from an individual.
 
@@ -2354,9 +2334,9 @@ class OntologyService:
                 )
         else:
             _logger.warning(
-                "Could not determine taxonomy for class removal (individual_id=%s, class_id=%s): "
-                "class could not be resolved. "
-                "Graph cache may be stale. Consider investigating deleted classes.",
+                "Could not determine taxonomy for class removal (individual_id=%s,"
+                " class_id=%s): class could not be resolved. Graph cache may be stale."
+                " Consider investigating deleted classes.",
                 individual_id,
                 class_id,
             )

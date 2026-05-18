@@ -7,24 +7,22 @@ Tests verify:
 - Structural subtyping works (implementations don't need to inherit)
 """
 
-import sys
 import os
+import sys
 from datetime import datetime, timezone
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from domain.ports import EventPublisher
+from domain.ontology.entities import Taxonomy
+from domain.ontology.events import ClassCreated
 from domain.ontology.ports import (
     EmbeddingService,
     OntologyRepository,
 )
-from domain.ontology.events import ClassCreated
-from domain.ontology.entities import Taxonomy
-from tests.fakes.fake_ontology_repository import FakeOntologyRepository
+from domain.ports import EventPublisher
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_event_publisher import FakeEventPublisher
+from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 
 
 class TestOntologyRepositoryProtocol:
@@ -76,9 +74,7 @@ class TestOntologyRepositoryProtocol:
         ]
         repo = FakeOntologyRepository()
         for method_name in expected_methods:
-            assert hasattr(
-                repo, method_name
-            ), f"Repository missing method: {method_name}"
+            assert hasattr(repo, method_name), f"Repository missing method: {method_name}"
 
     def test_ontology_repository_fake_taxonomy_operations(self):
         """FakeOntologyRepository implements taxonomy operations."""

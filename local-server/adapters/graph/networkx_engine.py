@@ -8,10 +8,11 @@ cycle detection for directed graphs.
 
 from __future__ import annotations
 
-import networkx as nx
 from typing import Any, Sequence
 
-from domain.graph.exceptions import NodeNotFoundError, CommunityDetectionError
+import networkx as nx
+
+from domain.graph.exceptions import CommunityDetectionError, NodeNotFoundError
 
 
 class NetworkXGraphEngine:
@@ -53,9 +54,7 @@ class NetworkXGraphEngine:
         for edge in edges:
             source_id = edge["source_id"]
             target_id = edge["target_id"]
-            edge_attrs = {
-                k: v for k, v in edge.items() if k not in ("source_id", "target_id")
-            }
+            edge_attrs = {k: v for k, v in edge.items() if k not in ("source_id", "target_id")}
             self._graph.add_edge(source_id, target_id, **edge_attrs)
 
     def node_count(self) -> int:
@@ -94,9 +93,7 @@ class NetworkXGraphEngine:
             # No path exists between the two nodes
             return None
 
-    def all_paths(
-        self, source_id: str, target_id: str, max_depth: int = 5
-    ) -> list[list[str]]:
+    def all_paths(self, source_id: str, target_id: str, max_depth: int = 5) -> list[list[str]]:
         """
         Find all simple paths between two nodes up to a maximum depth.
 
@@ -121,9 +118,7 @@ class NetworkXGraphEngine:
         try:
             # cutoff parameter in nx.all_simple_paths means paths with length <= cutoff edges
             # max_depth is the max number of edges, so we pass it directly as cutoff
-            paths = nx.all_simple_paths(
-                self._graph, source_id, target_id, cutoff=max_depth
-            )
+            paths = nx.all_simple_paths(self._graph, source_id, target_id, cutoff=max_depth)
             return [list(path) for path in paths]
         except nx.NetworkXNoPath:
             # No paths exist between the two nodes
@@ -215,9 +210,7 @@ class NetworkXGraphEngine:
             elif algorithm == "label_propagation":
                 # Label propagation requires an undirected graph
                 undirected_graph = self._graph.to_undirected()
-                label_communities = nx.community.label_propagation_communities(
-                    undirected_graph
-                )
+                label_communities = nx.community.label_propagation_communities(undirected_graph)
                 return list(label_communities)
             else:
                 raise ValueError(f"Unknown community detection algorithm: {algorithm}")
@@ -242,9 +235,7 @@ class NetworkXGraphEngine:
         subgraph_instance._graph = nx.DiGraph(subgraph_view)
         return subgraph_instance
 
-    def neighbors(
-        self, node_id: str, direction: str = "both", depth: int = 1
-    ) -> set[str]:
+    def neighbors(self, node_id: str, direction: str = "both", depth: int = 1) -> set[str]:
         """
         Get all neighbors of a node up to a specified depth with optional directional filtering.
 

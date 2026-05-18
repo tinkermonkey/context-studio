@@ -10,32 +10,38 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional, cast
 
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 
 from adapters.persistence.sqlite.models import (
     ChangeEvent,
-    EntityVersion,
     Changeset,
     ChangesetEvent,
-    Proposal,
     ConflictResolution,
+    EntityVersion,
+    Proposal,
 )
 from domain.versioning.entities import (
     ChangeEvent as DomainChangeEvent,
-    EntityVersion as DomainEntityVersion,
+)
+from domain.versioning.entities import (
     Changeset as DomainChangeset,
+)
+from domain.versioning.entities import (
+    EntityVersion as DomainEntityVersion,
+)
+from domain.versioning.entities import (
     Proposal as DomainProposal,
 )
-from domain.versioning.value_objects import (
-    ChangeState,
-    ProposalState,
-    ChangeOperation,
-    EntityVersionState,
-    ChangeHistoryResult,
-)
 from domain.versioning.exceptions import VersionNotFoundError
+from domain.versioning.value_objects import (
+    ChangeHistoryResult,
+    ChangeOperation,
+    ChangeState,
+    EntityVersionState,
+    ProposalState,
+)
 
 
 class SQLiteChangeRepository:
@@ -153,9 +159,7 @@ class SQLiteChangeRepository:
             total_count = session.execute(count_query).scalar() or 0
 
             # Apply ordering and limit to get paginated results
-            paginated_query = base_query.order_by(ChangeEvent.timestamp.desc()).limit(
-                limit
-            )
+            paginated_query = base_query.order_by(ChangeEvent.timestamp.desc()).limit(limit)
             orm_events = session.execute(paginated_query).scalars().all()
 
             events = [self._to_domain_change_event(e) for e in orm_events]
@@ -218,9 +222,7 @@ class SQLiteChangeRepository:
         except VersionNotFoundError:
             raise
         except SQLAlchemyError as e:
-            raise RuntimeError(
-                f"Failed to mark change events as processed: {str(e)}"
-            ) from e
+            raise RuntimeError(f"Failed to mark change events as processed: {str(e)}") from e
 
     def delete_changes(self, event_ids: list[str]) -> None:
         """
@@ -289,11 +291,7 @@ class SQLiteChangeRepository:
         """
         try:
             with self.session_factory() as session:
-                query = (
-                    select(func.count())
-                    .select_from(ChangeEvent)
-                    .where(~ChangeEvent.processed)
-                )
+                query = select(func.count()).select_from(ChangeEvent).where(~ChangeEvent.processed)
                 count = session.scalar(query)
                 return count or 0
         except SQLAlchemyError as e:
@@ -327,9 +325,7 @@ class SQLiteChangeRepository:
         except SQLAlchemyError as e:
             raise RuntimeError(f"Failed to save entity version: {str(e)}") from e
 
-    def get_version(
-        self, entity_id: str, version: int
-    ) -> Optional[DomainEntityVersion]:
+    def get_version(self, entity_id: str, version: int) -> Optional[DomainEntityVersion]:
         """
         Retrieve a specific version of an entity.
 
@@ -467,10 +463,7 @@ class SQLiteChangeRepository:
         """
         with self.session_factory() as session:
             orm_changesets = (
-                session.query(Changeset)
-                .order_by(Changeset.created_at.desc())
-                .limit(limit)
-                .all()
+                session.query(Changeset).order_by(Changeset.created_at.desc()).limit(limit).all()
             )
             return [self._to_domain_changeset(cs, session) for cs in orm_changesets]
 
@@ -701,9 +694,7 @@ class SQLiteChangeRepository:
         except VersionNotFoundError:
             raise
         except SQLAlchemyError as e:
-            raise RuntimeError(
-                f"Failed to update changeset and proposal: {str(e)}"
-            ) from e
+            raise RuntimeError(f"Failed to update changeset and proposal: {str(e)}") from e
 
     def atomic_update_on_merge(
         self,
@@ -792,9 +783,7 @@ class SQLiteChangeRepository:
             processed=cast(bool, orm_event.processed),
         )
 
-    def _to_domain_entity_version(
-        self, orm_version: EntityVersion
-    ) -> DomainEntityVersion:
+    def _to_domain_entity_version(self, orm_version: EntityVersion) -> DomainEntityVersion:
         """Convert ORM EntityVersion to domain entity."""
         return DomainEntityVersion(
             entity_id=cast(str, orm_version.entity_id),
@@ -805,9 +794,7 @@ class SQLiteChangeRepository:
             parent_version=cast(Optional[int], orm_version.parent_version),
         )
 
-    def _to_domain_changeset(
-        self, orm_changeset: Changeset, session: Session
-    ) -> DomainChangeset:
+    def _to_domain_changeset(self, orm_changeset: Changeset, session: Session) -> DomainChangeset:
         """Convert ORM Changeset to domain entity."""
         # Get event IDs for this changeset
         query = select(ChangesetEvent.change_event_id).where(
@@ -875,9 +862,7 @@ class SQLiteChangeRepository:
         except SQLAlchemyError as e:
             raise RuntimeError(f"Failed to save conflict resolutions: {str(e)}") from e
 
-    def get_conflict_resolutions(
-        self, proposal_id: str
-    ) -> dict[str, dict[str, object]]:
+    def get_conflict_resolutions(self, proposal_id: str) -> dict[str, dict[str, object]]:
         """
         Retrieve persisted conflict resolutions for a proposal.
 
@@ -888,9 +873,7 @@ class SQLiteChangeRepository:
             Dict mapping entity_id -> {field_name: resolved_value}
         """
         with self.session_factory() as session:
-            query = select(ConflictResolution).where(
-                ConflictResolution.proposal_id == proposal_id
-            )
+            query = select(ConflictResolution).where(ConflictResolution.proposal_id == proposal_id)
             resolutions = session.execute(query).scalars().all()
 
             result: dict[str, dict[str, object]] = {}

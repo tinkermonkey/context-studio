@@ -1,11 +1,9 @@
 """Integration tests for reference source adapters."""
 
-import sys
 import os
+import sys
 
-sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest
 
@@ -275,8 +273,8 @@ class TestCachedReferenceSourceIntegration:
         import tempfile
         from pathlib import Path
 
-        from adapters.reference.conceptnet import ConceptNetSource
         from adapters.reference.cache import CachedReferenceSource
+        from adapters.reference.conceptnet import ConceptNetSource
 
         with tempfile.TemporaryDirectory() as tmpdir:
             cache_db = Path(tmpdir) / "cache.db"
@@ -301,8 +299,8 @@ class TestCachedReferenceSourceIntegration:
         import tempfile
         from pathlib import Path
 
-        from adapters.reference.schema_org import SchemaOrgSource
         from adapters.reference.cache import CachedReferenceSource
+        from adapters.reference.schema_org import SchemaOrgSource
 
         with tempfile.TemporaryDirectory() as tmpdir:
             cache_db = Path(tmpdir) / "cache.db"

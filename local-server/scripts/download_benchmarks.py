@@ -14,22 +14,25 @@ Usage:
     python scripts/download_benchmarks.py --dataset text2kg-bench/dbpedia-webnlg
 """
 
+import argparse
+import json
 import os
 import sys
-import json
-import argparse
 from pathlib import Path
 
 # Ensure local-server is in the path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from datasets import load_dataset  # type: ignore[import-untyped]
+
 from utils.logger import get_logger
 
 _logger = get_logger(__name__)
 
 
-def download_benchmark_dataset(dataset_name: str, split: str = "test", output_dir: str | None = None) -> Path:
+def download_benchmark_dataset(
+    dataset_name: str, split: str = "test", output_dir: str | None = None
+) -> Path:
     """
     Download a benchmark dataset from HuggingFace.
 
@@ -89,9 +92,7 @@ def download_benchmark_dataset(dataset_name: str, split: str = "test", output_di
 
 def main():
     """Command-line interface for downloading benchmark datasets."""
-    parser = argparse.ArgumentParser(
-        description="Download benchmark datasets from HuggingFace"
-    )
+    parser = argparse.ArgumentParser(description="Download benchmark datasets from HuggingFace")
     parser.add_argument(
         "--dataset",
         type=str,

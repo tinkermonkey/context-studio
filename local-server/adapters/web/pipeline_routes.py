@@ -26,33 +26,32 @@ No business logic lives here—all validation and constraints are in the domain 
 Error handling translates domain exceptions to appropriate HTTP responses.
 """
 
-from typing import Optional, cast, Literal
+from typing import Literal, Optional, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from domain.pipeline.services import PipelineService
-from domain.pipeline.entities import PipelineFlavor
-from domain.pipeline.exceptions import (
-    PipelineNotFoundError,
-    PipelineError,
-    LayerExecutionError,
-)
-from utils.logger import get_logger
-from utils.async_executor import run_sync_in_executor
-
 from adapters.web.dependencies import get_pipeline_service
+from adapters.web.schemas.ontology import ListResponse
 from adapters.web.schemas.pipeline import (
-    PipelineConfigurationCreate,
-    PipelineConfigurationUpdate,
-    PipelineConfigurationResponse,
-    PipelineExecuteRequest,
     ExecutionResponse,
     ExecutionWithPipelineResponse,
+    PipelineConfigurationCreate,
+    PipelineConfigurationResponse,
+    PipelineConfigurationUpdate,
+    PipelineExecuteRequest,
     PipelineFlavorCreateRequest,
-    PipelineFlavorUpdateRequest,
     PipelineFlavorResponse,
+    PipelineFlavorUpdateRequest,
 )
-from adapters.web.schemas.ontology import ListResponse
+from domain.pipeline.entities import PipelineFlavor
+from domain.pipeline.exceptions import (
+    LayerExecutionError,
+    PipelineError,
+    PipelineNotFoundError,
+)
+from domain.pipeline.services import PipelineService
+from utils.async_executor import run_sync_in_executor
+from utils.logger import get_logger
 
 router = APIRouter(prefix="/api", tags=["pipeline"])
 
@@ -159,9 +158,7 @@ async def list_pipeline_configurations(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.get(
-    "/pipelines/executions", response_model=ListResponse[ExecutionWithPipelineResponse]
-)
+@router.get("/pipelines/executions", response_model=ListResponse[ExecutionWithPipelineResponse])
 async def list_all_pipeline_executions(
     status_filter: Optional[Literal["success", "error", "timeout"]] = Query(
         None, description="Optional status filter (success, error, timeout)"
@@ -204,9 +201,7 @@ async def list_all_pipeline_executions(
                 tokens_in=item.execution.tokens_in,
                 tokens_out=item.execution.tokens_out,
                 duration_ms=item.execution.duration_ms,
-                status=cast(
-                    Literal["success", "error", "timeout"], item.execution.status
-                ),
+                status=cast(Literal["success", "error", "timeout"], item.execution.status),
                 error_message=item.execution.error_message,
                 timestamp=item.execution.timestamp,
             )
@@ -486,9 +481,7 @@ async def execute_pipeline(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.get(
-    "/pipelines/{pipeline_id}/executions", response_model=list[ExecutionResponse]
-)
+@router.get("/pipelines/{pipeline_id}/executions", response_model=list[ExecutionResponse])
 async def get_pipeline_executions(
     pipeline_id: str,
     service: PipelineService = Depends(get_pipeline_service),
@@ -509,9 +502,7 @@ async def get_pipeline_executions(
         HTTPException: 404 if configuration not found
     """
     try:
-        executions = await run_sync_in_executor(
-            service.list_executions, pipeline_id, limit=50
-        )
+        executions = await run_sync_in_executor(service.list_executions, pipeline_id, limit=50)
         return [ExecutionResponse.model_validate(e) for e in executions]
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)

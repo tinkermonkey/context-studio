@@ -9,36 +9,33 @@ Tests the adapter against a real in-memory SQLite database to verify:
 - External references preservation
 """
 
-import sys
 import os
+import sys
 import uuid
 
-sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from domain.ontology.entities import (
-    Taxonomy,
-    ConceptScheme,
-    Class,
-    Individual,
-    PropertyDefinition,
-    Relationship,
-)
-from domain.ontology.value_objects import ExternalReference
+from adapters.interchange.owl import OWLDeserializer, OWLSerializer
+from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
+from adapters.persistence.sqlite.models import Base
+from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.interchange.value_objects import (
     SerializationScope,
     SerializationScopeType,
 )
-
-from adapters.persistence.sqlite.models import Base
-from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
-from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
-from adapters.interchange.owl import OWLSerializer, OWLDeserializer
+from domain.ontology.entities import (
+    Class,
+    ConceptScheme,
+    Individual,
+    PropertyDefinition,
+    Relationship,
+    Taxonomy,
+)
+from domain.ontology.value_objects import ExternalReference
 
 
 @pytest.fixture
@@ -245,9 +242,7 @@ class TestOWLEmptyDatabaseRoundTrip:
 
         assert exported is not None
         assert isinstance(exported, bytes)
-        exported_str = (
-            exported.decode("utf-8") if isinstance(exported, bytes) else exported
-        )
+        exported_str = exported.decode("utf-8") if isinstance(exported, bytes) else exported
 
         # Verify OWL structure in serialized output
         assert "owl" in exported_str.lower()
@@ -261,9 +256,7 @@ class TestOWLEmptyDatabaseRoundTrip:
         scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
         exported = serializer.serialize(scope)
 
-        exported_str = (
-            exported.decode("utf-8") if isinstance(exported, bytes) else exported
-        )
+        exported_str = exported.decode("utf-8") if isinstance(exported, bytes) else exported
         assert "dbpedia.org" in exported_str
         assert "wikidata.org" in exported_str
 
@@ -312,7 +305,9 @@ class TestOWLEmptyDatabaseRoundTrip:
         # Count entities in both
         original_classes = ontology_repo.list_classes()
         original_class_count = len(list(original_classes))
-        imported_class_count = len([e for e in deserializer.incoming_entities.values() if e.get('type') == 'class'])
+        imported_class_count = len(
+            [e for e in deserializer.incoming_entities.values() if e.get("type") == "class"]
+        )
 
         # Should have exact same structure (no duplicates on roundtrip)
         assert imported_class_count == original_class_count
@@ -331,8 +326,7 @@ class TestOWLEmptyDatabaseRoundTrip:
                 )
                 for orig_ref in original_class.external_references:
                     assert any(
-                        r["source"] == orig_ref.source
-                        and r["identifier"] == orig_ref.identifier
+                        r["source"] == orig_ref.source and r["identifier"] == orig_ref.identifier
                         for r in matching_incoming["external_references"]
                     )
 
@@ -352,9 +346,7 @@ class TestOWLIdempotentReimport:
         deserializer.deserialize(exported, dry_run=True)
 
         # The plan should match entities by UUID or external reference
-        original_dog = next(
-            (c for c in ontology_repo.list_classes() if c.title == "Dog"), None
-        )
+        original_dog = next((c for c in ontology_repo.list_classes() if c.title == "Dog"), None)
         assert original_dog is not None
 
         # Should find matching entity in incoming with same UUID

@@ -11,39 +11,36 @@ Tests verify the graph analysis workflow with:
 These tests exercise the complete stack: routes → domain service → adapters → database.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(
-    os.path.dirname(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    )
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 )
 
-import pytest
 import tempfile
 from pathlib import Path
 from uuid import uuid4
 
+import pytest
+from fastapi import FastAPI, status
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from fastapi import FastAPI, status
-from fastapi.testclient import TestClient
-
+from adapters.graph.networkx_engine import NetworkXGraphEngine
+from adapters.graph.rdflib_engine import RDFLibQueryEngine
+from adapters.persistence.sqlite.models import Base
+from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+from adapters.web.graph_routes import router
 from domain.graph.services import GraphAnalysisService
 from domain.ontology.entities import (
     Class,
-    Taxonomy,
     ConceptScheme,
-    Relationship,
     PropertyDefinition,
+    Relationship,
+    Taxonomy,
 )
-from adapters.persistence.sqlite.models import Base
-from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
-from adapters.graph.networkx_engine import NetworkXGraphEngine
-from adapters.graph.rdflib_engine import RDFLibQueryEngine
-from adapters.web.graph_routes import router
 
 
 @pytest.fixture
@@ -77,9 +74,7 @@ def repository(session_factory):
 def populated_repository(repository):
     """Populate repository with test data."""
     # Create taxonomy
-    tax = Taxonomy(
-        id=str(uuid4()), title="Integration Test Taxonomy", description="Test"
-    )
+    tax = Taxonomy(id=str(uuid4()), title="Integration Test Taxonomy", description="Test")
     repository.save_taxonomy(tax)
 
     # Create concept scheme
@@ -288,9 +283,7 @@ class TestPathFinding:
     def test_shortest_path_returns_200(self, client, populated_repository):
         """GET /api/graph/paths/shortest returns 200."""
         classes = list(populated_repository.list_classes())
-        assert (
-            len(classes) >= 2
-        ), "populated_repository fixture must contain at least 2 classes"
+        assert len(classes) >= 2, "populated_repository fixture must contain at least 2 classes"
         response = client.get(
             f"/api/graph/paths/shortest?source_id={classes[0].id}&target_id={classes[1].id}"
         )
@@ -299,9 +292,7 @@ class TestPathFinding:
     def test_all_paths_returns_200(self, client, populated_repository):
         """GET /api/graph/paths/all returns 200."""
         classes = list(populated_repository.list_classes())
-        assert (
-            len(classes) >= 2
-        ), "populated_repository fixture must contain at least 2 classes"
+        assert len(classes) >= 2, "populated_repository fixture must contain at least 2 classes"
         response = client.get(
             f"/api/graph/paths/all?source_id={classes[0].id}&target_id={classes[1].id}"
         )
@@ -311,9 +302,7 @@ class TestPathFinding:
 
     def test_shortest_path_nonexistent_node_returns_404(self, client):
         """GET /api/graph/paths/shortest returns 404 for nonexistent nodes."""
-        response = client.get(
-            f"/api/graph/paths/shortest?source_id={uuid4()}&target_id={uuid4()}"
-        )
+        response = client.get(f"/api/graph/paths/shortest?source_id={uuid4()}&target_id={uuid4()}")
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
@@ -375,18 +364,14 @@ class TestNeighbors:
     def test_neighbors_returns_200(self, client, populated_repository):
         """GET /api/graph/nodes/{id}/neighbors returns 200."""
         classes = list(populated_repository.list_classes())
-        assert (
-            len(classes) > 0
-        ), "populated_repository fixture must contain at least 1 class"
+        assert len(classes) > 0, "populated_repository fixture must contain at least 1 class"
         response = client.get(f"/api/graph/nodes/{classes[0].id}/neighbors")
         assert response.status_code == status.HTTP_200_OK
 
     def test_neighbors_response_structure(self, client, populated_repository):
         """GET /api/graph/nodes/{id}/neighbors response has correct structure."""
         classes = list(populated_repository.list_classes())
-        assert (
-            len(classes) > 0
-        ), "populated_repository fixture must contain at least 1 class"
+        assert len(classes) > 0, "populated_repository fixture must contain at least 1 class"
         response = client.get(f"/api/graph/nodes/{classes[0].id}/neighbors")
         body = response.json()
 
@@ -404,28 +389,18 @@ class TestNeighbors:
     def test_neighbors_depth_parameter_respected(self, client, populated_repository):
         """GET /api/graph/nodes/{id}/neighbors respects the depth parameter."""
         classes = list(populated_repository.list_classes())
-        assert (
-            len(classes) > 0
-        ), "populated_repository fixture must contain at least 1 class"
+        assert len(classes) > 0, "populated_repository fixture must contain at least 1 class"
 
         # Get neighbors with depth=1 and depth=2
-        response_depth1 = client.get(
-            f"/api/graph/nodes/{classes[0].id}/neighbors?depth=1"
-        )
-        response_depth2 = client.get(
-            f"/api/graph/nodes/{classes[0].id}/neighbors?depth=2"
-        )
+        response_depth1 = client.get(f"/api/graph/nodes/{classes[0].id}/neighbors?depth=1")
+        response_depth2 = client.get(f"/api/graph/nodes/{classes[0].id}/neighbors?depth=2")
 
         assert response_depth1.status_code == status.HTTP_200_OK
         assert response_depth2.status_code == status.HTTP_200_OK
 
         # Depth 2 should return a superset of depth 1 neighbors
-        neighbors1 = set(
-            response_depth1.json()["incoming"] + response_depth1.json()["outgoing"]
-        )
-        neighbors2 = set(
-            response_depth2.json()["incoming"] + response_depth2.json()["outgoing"]
-        )
+        neighbors1 = set(response_depth1.json()["incoming"] + response_depth1.json()["outgoing"])
+        neighbors2 = set(response_depth2.json()["incoming"] + response_depth2.json()["outgoing"])
 
         assert neighbors1.issubset(neighbors2)
 
@@ -436,9 +411,7 @@ class TestCycleCheck:
     def test_cycle_check_returns_200(self, client, populated_repository):
         """POST /api/graph/cycle-check returns 200."""
         classes = list(populated_repository.list_classes())
-        assert (
-            len(classes) >= 2
-        ), "populated_repository fixture must contain at least 2 classes"
+        assert len(classes) >= 2, "populated_repository fixture must contain at least 2 classes"
         response = client.post(
             "/api/graph/cycle-check",
             json={
@@ -451,9 +424,7 @@ class TestCycleCheck:
     def test_cycle_check_response_structure(self, client, populated_repository):
         """POST /api/graph/cycle-check response has correct structure."""
         classes = list(populated_repository.list_classes())
-        assert (
-            len(classes) >= 2
-        ), "populated_repository fixture must contain at least 2 classes"
+        assert len(classes) >= 2, "populated_repository fixture must contain at least 2 classes"
         response = client.post(
             "/api/graph/cycle-check",
             json={
@@ -489,9 +460,7 @@ class TestSPARQL:
 
     def test_sparql_invalid_query_returns_400(self, client):
         """POST /api/graph/sparql returns 400 with invalid query."""
-        response = client.post(
-            "/api/graph/sparql", json={"query": "INVALID SPARQL QUERY"}
-        )
+        response = client.post("/api/graph/sparql", json={"query": "INVALID SPARQL QUERY"})
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
@@ -532,18 +501,14 @@ class TestSubgraph:
     def test_subgraph_returns_200(self, client, populated_repository):
         """GET /api/graph/subgraph returns 200."""
         classes = list(populated_repository.list_classes())
-        assert (
-            len(classes) > 0
-        ), "populated_repository fixture must contain at least 1 class"
+        assert len(classes) > 0, "populated_repository fixture must contain at least 1 class"
         response = client.get(f"/api/graph/subgraph?nodes={classes[0].id}")
         assert response.status_code == status.HTTP_200_OK
 
     def test_subgraph_response_structure(self, client, populated_repository):
         """GET /api/graph/subgraph response has correct structure."""
         classes = list(populated_repository.list_classes())
-        assert (
-            len(classes) > 0
-        ), "populated_repository fixture must contain at least 1 class"
+        assert len(classes) > 0, "populated_repository fixture must contain at least 1 class"
         response = client.get(f"/api/graph/subgraph?nodes={classes[0].id}")
         body = response.json()
 
@@ -555,18 +520,14 @@ class TestSubgraph:
     def test_node_subgraph_returns_200(self, client, populated_repository):
         """GET /api/graph/nodes/{id}/subgraph returns 200."""
         classes = list(populated_repository.list_classes())
-        assert (
-            len(classes) > 0
-        ), "populated_repository fixture must contain at least 1 class"
+        assert len(classes) > 0, "populated_repository fixture must contain at least 1 class"
         response = client.get(f"/api/graph/nodes/{classes[0].id}/subgraph")
         assert response.status_code == status.HTTP_200_OK
 
     def test_node_subgraph_response_structure(self, client, populated_repository):
         """GET /api/graph/nodes/{id}/subgraph response has correct structure."""
         classes = list(populated_repository.list_classes())
-        assert (
-            len(classes) > 0
-        ), "populated_repository fixture must contain at least 1 class"
+        assert len(classes) > 0, "populated_repository fixture must contain at least 1 class"
         response = client.get(f"/api/graph/nodes/{classes[0].id}/subgraph")
         body = response.json()
 

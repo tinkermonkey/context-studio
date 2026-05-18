@@ -5,22 +5,21 @@ These tests verify pipeline configuration CRUD operations, execution recording,
 event publishing, and error handling in isolation using fake ports.
 """
 
-import sys
 import os
+import sys
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-import pytest
 import time
 
+import pytest
+
 from domain.pipeline.events import PipelineExecuted
-from domain.pipeline.services import PipelineService
 from domain.pipeline.exceptions import PipelineNotFoundError
-from tests.fakes.fake_pipeline_repository import FakePipelineRepository
-from tests.fakes.fake_llm_provider import FakeLLMProvider
+from domain.pipeline.services import PipelineService
 from tests.fakes.fake_event_publisher import FakeEventPublisher
+from tests.fakes.fake_llm_provider import FakeLLMProvider
+from tests.fakes.fake_pipeline_repository import FakePipelineRepository
 
 
 class TestPipelineServiceConfigurationCRUD:

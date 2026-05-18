@@ -187,9 +187,7 @@ class PipelineRepository(Protocol):
         """
         ...
 
-    def get_executions(
-        self, pipeline_config_id: str, limit: int = 50
-    ) -> list[Execution]:
+    def get_executions(self, pipeline_config_id: str, limit: int = 50) -> list[Execution]:
         """
         Retrieve execution history for a pipeline configuration.
 

@@ -5,23 +5,22 @@ centrality calculations at multiple graph sizes (100, 500, 1000, 5000 nodes).
 Tests exercise the domain GraphAnalysisService through its ports.
 """
 
-import sys
 import os
+import sys
 import time
-import pytest
 from uuid import uuid4
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+import pytest
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from domain.graph.services import GraphAnalysisService
 from domain.ontology.entities import (
-    Taxonomy,
-    ConceptScheme,
     Class,
-    Relationship,
+    ConceptScheme,
     PropertyDefinition,
+    Relationship,
+    Taxonomy,
 )
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 
@@ -50,16 +49,12 @@ def _setup_graph_service(
 
     # Create taxonomy and concept scheme
     taxonomy = Taxonomy(id=str(uuid4()), title="Test Taxonomy")
-    scheme = ConceptScheme(
-        id=str(uuid4()), title="Test Scheme", taxonomy_id=taxonomy.id
-    )
+    scheme = ConceptScheme(id=str(uuid4()), title="Test Scheme", taxonomy_id=taxonomy.id)
     repository.save_taxonomy(taxonomy)
     repository.save_concept_scheme(scheme)
 
     # Create a property definition for relationships
-    prop_def = PropertyDefinition(
-        id=str(uuid4()), identifier="relates_to", title="Relates To"
-    )
+    prop_def = PropertyDefinition(id=str(uuid4()), identifier="relates_to", title="Relates To")
     repository.save_property_definition(prop_def)
 
     # Create classes

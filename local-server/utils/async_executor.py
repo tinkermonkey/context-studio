@@ -8,15 +8,13 @@ for tracing and other context-aware operations.
 
 import asyncio
 import contextvars
-from typing import Callable, TypeVar, Any, ParamSpec
+from typing import Any, Callable, ParamSpec, TypeVar
 
 P = ParamSpec("P")
 T = TypeVar("T")
 
 
-def run_sync_in_executor(
-    func: Callable[P, T], *args: Any, **kwargs: Any
-) -> asyncio.Future[T]:
+def run_sync_in_executor(func: Callable[P, T], *args: Any, **kwargs: Any) -> asyncio.Future[T]:
     """
     Run a synchronous function in the default thread pool executor with context propagation.
 

@@ -8,14 +8,14 @@ explicitly inherit from these protocols.
 
 from __future__ import annotations
 
-from typing import Protocol, Any, Sequence, Optional
+from typing import Any, Optional, Protocol, Sequence
 
 from .entities import AppConfiguration, Dataset, DatasetMetrics
 from .value_objects import (
+    BackgroundTaskSummary,
+    ComponentStatus,
     DatabaseHealth,
     ServiceMetrics,
-    ComponentStatus,
-    BackgroundTaskSummary,
 )
 
 

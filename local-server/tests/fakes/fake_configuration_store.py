@@ -1,13 +1,11 @@
 """Fake in-memory implementation of ConfigurationStore for testing."""
 
 import copy
-import sys
 import os
+import sys
 from typing import Optional
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from domain.admin.entities import AppConfiguration
 from domain.admin.value_objects import CREDENTIAL_FIELD_NAMES
@@ -89,9 +87,7 @@ class FakeConfigurationStore:
         for section_name, section_updates in updates.items():
             if hasattr(updated_config, section_name):
                 current_section = getattr(updated_config, section_name)
-                if isinstance(current_section, dict) and isinstance(
-                    section_updates, dict
-                ):
+                if isinstance(current_section, dict) and isinstance(section_updates, dict):
                     current_section.update(section_updates)
                 else:
                     setattr(updated_config, section_name, section_updates)

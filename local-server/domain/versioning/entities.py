@@ -7,11 +7,11 @@ from datetime import datetime
 from typing import Any, Optional
 
 from domain.versioning.value_objects import (
-    ChangeState,
-    ProposalState,
     ChangeOperation,
+    ChangeState,
     EntityVersionState,
     MergeStrategy,
+    ProposalState,
 )
 
 

@@ -3,8 +3,8 @@ Tests for the OTLP log handler.
 """
 
 import logging
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
@@ -23,14 +23,16 @@ class MockLogger:
         # Handle OTel LogRecord (from SDK's LoggingHandler translation)
         attributes = record.attributes or {}
 
-        self.logged_messages.append({
-            "message": record.body,
-            "severity_text": record.severity_text,
-            "severity_number": record.severity_number,
-            "trace_id": record.trace_id,
-            "span_id": record.span_id,
-            "attributes": attributes
-        })
+        self.logged_messages.append(
+            {
+                "message": record.body,
+                "severity_text": record.severity_text,
+                "severity_number": record.severity_number,
+                "trace_id": record.trace_id,
+                "span_id": record.span_id,
+                "attributes": attributes,
+            }
+        )
 
 
 class MockLoggerProvider:

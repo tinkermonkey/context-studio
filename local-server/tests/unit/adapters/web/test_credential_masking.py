@@ -8,14 +8,12 @@ Tests the credential masking logic directly, including:
 - Deep copy behavior (original not modified)
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(
     0,
-    os.path.dirname(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    ),
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
 )
 
 from adapters.web.schemas.admin import _mask_credentials
@@ -224,11 +222,7 @@ class TestMaskCredentialsFunction:
 
     def test_masks_deeply_nested_credentials(self):
         """Test masking credentials in deeply nested structures."""
-        section = {
-            "level1": {
-                "level2": {"openai_api_key": "sk-test1234567890", "model": "gpt-4"}
-            }
-        }
+        section = {"level1": {"level2": {"openai_api_key": "sk-test1234567890", "model": "gpt-4"}}}
 
         result = _mask_credentials(section)
 

@@ -19,8 +19,8 @@ from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode
 
 from domain.pipeline.ports import LLMResponse
-from utils.logger import get_logger
 from utils.async_executor import run_sync_in_executor
+from utils.logger import get_logger
 
 logger = get_logger(__name__)
 tracer = trace.get_tracer(__name__)

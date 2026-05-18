@@ -2,9 +2,9 @@
 
 import httpx
 
-from domain.extraction.ports import ReferenceResult, ReferenceRelation
-from utils.logger import get_logger
+from domain.extraction.ports import ReferenceRelation, ReferenceResult
 from utils.async_executor import run_sync_in_executor
+from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -119,16 +119,15 @@ class ConceptNetSource:
             return []
         except httpx.HTTPStatusError as e:
             logger.warning(
-                f"ConceptNet HTTP {e.response.status_code} error during search for '{term}': {e}"
+                f"ConceptNet HTTP {e.response.status_code} error during search for"
+                f" '{term}': {e}"
             )
             return []
         except httpx.HTTPError as e:
             logger.warning(f"ConceptNet HTTP error during search for '{term}': {e}")
             return []
         except ValueError as e:
-            logger.warning(
-                f"ConceptNet JSON parse error during search for '{term}': {e}"
-            )
+            logger.warning(f"ConceptNet JSON parse error during search for '{term}': {e}")
             return []
 
     def get_relations(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
@@ -179,24 +178,19 @@ class ConceptNetSource:
             logger.warning(f"ConceptNet get_relations timed out for '{uri}': {e}")
             return []
         except httpx.NetworkError as e:
-            logger.warning(
-                f"ConceptNet network error during get_relations for '{uri}': {e}"
-            )
+            logger.warning(f"ConceptNet network error during get_relations for '{uri}': {e}")
             return []
         except httpx.HTTPStatusError as e:
             logger.warning(
-                f"ConceptNet HTTP {e.response.status_code} error during get_relations for '{uri}': {e}"
+                f"ConceptNet HTTP {e.response.status_code} error during get_relations"
+                f" for '{uri}': {e}"
             )
             return []
         except httpx.HTTPError as e:
-            logger.warning(
-                f"ConceptNet HTTP error during get_relations for '{uri}': {e}"
-            )
+            logger.warning(f"ConceptNet HTTP error during get_relations for '{uri}': {e}")
             return []
         except ValueError as e:
-            logger.warning(
-                f"ConceptNet JSON parse error during get_relations for '{uri}': {e}"
-            )
+            logger.warning(f"ConceptNet JSON parse error during get_relations for '{uri}': {e}")
             return []
 
     async def is_available_async(self) -> bool:
@@ -225,9 +219,7 @@ class ConceptNetSource:
         """
         return await run_sync_in_executor(self.search, term, limit)
 
-    async def get_relations_async(
-        self, uri: str, limit: int = 10
-    ) -> list[ReferenceRelation]:
+    async def get_relations_async(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
         """
         Get relationships connected to a URI in ConceptNet (async version).
 

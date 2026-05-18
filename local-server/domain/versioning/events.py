@@ -71,8 +71,6 @@ class SyncCompleted(DomainEvent):
 
         super().__post_init__()
         if not isinstance(self.direction, SyncDirection):
-            raise ValueError(
-                "SyncCompleted event requires direction to be a valid SyncDirection"
-            )
+            raise ValueError("SyncCompleted event requires direction to be a valid SyncDirection")
         if self.completed_at is None:
             raise ValueError("SyncCompleted event requires completed_at timestamp")

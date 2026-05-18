@@ -6,44 +6,42 @@ reference prevention, embedding generation and updates, event emission, and
 constraints enforcement. Uses in-memory fakes with zero infrastructure imports.
 """
 
-import sys
 import os
+import sys
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from unittest.mock import MagicMock
 
 import pytest
 
 import domain.ontology.services
-from domain.ontology.services import OntologyService
 from domain.ontology.events import (
-    TaxonomyCreated,
-    TaxonomyUpdated,
-    TaxonomyDeleted,
-    SchemeCreated,
-    SchemeUpdated,
-    SchemeDeleted,
     ClassCreated,
-    ClassUpdated,
     ClassDeleted,
     ClassMoved,
+    ClassUpdated,
+    GraphInvalidated,
+    PropertyDefinitionCreated,
     RelationshipCreated,
     RelationshipDeleted,
-    PropertyDefinitionCreated,
-    GraphInvalidated,
+    SchemeCreated,
+    SchemeDeleted,
+    SchemeUpdated,
+    TaxonomyCreated,
+    TaxonomyDeleted,
+    TaxonomyUpdated,
 )
 from domain.ontology.exceptions import (
-    EntityNotFoundError,
     CircularReferenceError,
     DuplicateEntityError,
+    EntityNotFoundError,
     OntologyError,
 )
-from tests.fakes.fake_ontology_repository import FakeOntologyRepository
+from domain.ontology.services import OntologyService
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_event_publisher import FakeEventPublisher
+from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 
 
 @pytest.fixture
@@ -202,9 +200,7 @@ class TestRenameTaxonomy:
         """Renaming to same title is a no-op and returns unchanged entity."""
         tax = service.create_taxonomy(title="Biology")
         # Get the initial count of TaxonomyUpdated events (should be 0 at this point)
-        initial_update_count = len(
-            service._event_publisher.get_events_of_type(TaxonomyUpdated)
-        )
+        initial_update_count = len(service._event_publisher.get_events_of_type(TaxonomyUpdated))
 
         renamed = service.rename_taxonomy(taxonomy_id=tax.id, new_title="Biology")
         assert renamed.title == "Biology"
@@ -288,9 +284,7 @@ class TestRenameScheme:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
 
-        renamed = service.rename_scheme(
-            concept_scheme_id=scheme.id, new_title="Animal Kingdom"
-        )
+        renamed = service.rename_scheme(concept_scheme_id=scheme.id, new_title="Animal Kingdom")
         assert renamed.title == "Animal Kingdom"
 
         # Verify it was saved
@@ -328,9 +322,7 @@ class TestRenameScheme:
         scheme2 = service.create_scheme(taxonomy_id=tax2.id, title="Compounds")
 
         # This should succeed because Elements is in a different taxonomy
-        renamed = service.rename_scheme(
-            concept_scheme_id=scheme2.id, new_title="Elements"
-        )
+        renamed = service.rename_scheme(concept_scheme_id=scheme2.id, new_title="Elements")
         assert renamed.title == "Elements"
 
     def test_rename_scheme_empty_title_raises(self, service):
@@ -354,13 +346,9 @@ class TestRenameScheme:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         # Get the initial count of SchemeUpdated events (should be 0 at this point)
-        initial_update_count = len(
-            service._event_publisher.get_events_of_type(SchemeUpdated)
-        )
+        initial_update_count = len(service._event_publisher.get_events_of_type(SchemeUpdated))
 
-        renamed = service.rename_scheme(
-            concept_scheme_id=scheme.id, new_title="Animals"
-        )
+        renamed = service.rename_scheme(concept_scheme_id=scheme.id, new_title="Animals")
         assert renamed.title == "Animals"
 
         # No event should be emitted for no-op
@@ -528,9 +516,7 @@ class TestUpdateClass:
         """Update class title regenerates embedding."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        cls = service.create_class(
-            concept_scheme_id=scheme.id, title="Dog", description="Canine"
-        )
+        cls = service.create_class(concept_scheme_id=scheme.id, title="Dog", description="Canine")
         old_embedding = cls.embedding
 
         updated = service.update_class(class_id=cls.id, title="Canine")
@@ -566,9 +552,7 @@ class TestUpdateClass:
         """Update class with both title and description changed regenerates embedding once."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        cls = service.create_class(
-            concept_scheme_id=scheme.id, title="Dog", description="Canine"
-        )
+        cls = service.create_class(concept_scheme_id=scheme.id, title="Dog", description="Canine")
         old_embedding = cls.embedding
         old_timestamp = cls.last_modified
 
@@ -595,9 +579,7 @@ class TestUpdateClass:
         """Update class with no title/description change does not regenerate embedding or emit event."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        cls = service.create_class(
-            concept_scheme_id=scheme.id, title="Dog", description="Canine"
-        )
+        cls = service.create_class(concept_scheme_id=scheme.id, title="Dog", description="Canine")
         old_embedding = cls.embedding
 
         # Call with empty update (no title, no description)
@@ -644,9 +626,7 @@ class TestMoveClass:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         mammal = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
-        dog = service.create_class(
-            concept_scheme_id=scheme.id, title="Dog", parent_class_id=None
-        )
+        dog = service.create_class(concept_scheme_id=scheme.id, title="Dog", parent_class_id=None)
 
         moved = service.move_class(class_id=dog.id, new_parent_id=mammal.id)
         assert moved.parent_class_id == mammal.id
@@ -686,9 +666,7 @@ class TestMoveClass:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         a = service.create_class(concept_scheme_id=scheme.id, title="A")
-        b = service.create_class(
-            concept_scheme_id=scheme.id, title="B", parent_class_id=a.id
-        )
+        b = service.create_class(concept_scheme_id=scheme.id, title="B", parent_class_id=a.id)
 
         # Try to move A under B, which would create B→A→B
         with pytest.raises(CircularReferenceError, match="circular reference"):
@@ -699,12 +677,8 @@ class TestMoveClass:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         a = service.create_class(concept_scheme_id=scheme.id, title="A")
-        b = service.create_class(
-            concept_scheme_id=scheme.id, title="B", parent_class_id=a.id
-        )
-        c = service.create_class(
-            concept_scheme_id=scheme.id, title="C", parent_class_id=b.id
-        )
+        b = service.create_class(concept_scheme_id=scheme.id, title="B", parent_class_id=a.id)
+        c = service.create_class(concept_scheme_id=scheme.id, title="C", parent_class_id=b.id)
 
         # Try to move A under C, which would create C→A→B→C
         with pytest.raises(CircularReferenceError, match="circular reference"):
@@ -758,9 +732,7 @@ class TestMoveClass:
         class_moved_events = service._event_publisher.get_events_of_type(ClassMoved)
         assert len(class_moved_events) == 0
 
-        invalidation_events = service._event_publisher.get_events_of_type(
-            GraphInvalidated
-        )
+        invalidation_events = service._event_publisher.get_events_of_type(GraphInvalidated)
         assert len(invalidation_events) == 0
 
     def test_move_class_to_root_current_parent_is_noop(self, service):
@@ -782,9 +754,7 @@ class TestMoveClass:
         class_moved_events = service._event_publisher.get_events_of_type(ClassMoved)
         assert len(class_moved_events) == 0
 
-        invalidation_events = service._event_publisher.get_events_of_type(
-            GraphInvalidated
-        )
+        invalidation_events = service._event_publisher.get_events_of_type(GraphInvalidated)
         assert len(invalidation_events) == 0
 
     def test_move_class_corrupted_hierarchy_raises(self, service):
@@ -792,12 +762,8 @@ class TestMoveClass:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         a = service.create_class(concept_scheme_id=scheme.id, title="A")
-        b = service.create_class(
-            concept_scheme_id=scheme.id, title="B", parent_class_id=a.id
-        )
-        c = service.create_class(
-            concept_scheme_id=scheme.id, title="C", parent_class_id=b.id
-        )
+        b = service.create_class(concept_scheme_id=scheme.id, title="B", parent_class_id=a.id)
+        c = service.create_class(concept_scheme_id=scheme.id, title="C", parent_class_id=b.id)
 
         # Corrupt the hierarchy by manually setting B's parent to a nonexistent class
         # (simulating data corruption)
@@ -821,9 +787,7 @@ class TestMoveClassToScheme:
         scheme2 = service.create_scheme(taxonomy_id=tax.id, title="Organisms")
         cls = service.create_class(concept_scheme_id=scheme1.id, title="Dog")
 
-        moved = service.move_class_to_scheme(
-            class_id=cls.id, target_scheme_id=scheme2.id
-        )
+        moved = service.move_class_to_scheme(class_id=cls.id, target_scheme_id=scheme2.id)
         assert moved.concept_scheme_id == scheme2.id
 
         # Verify event was emitted
@@ -840,9 +804,7 @@ class TestMoveClassToScheme:
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
 
         with pytest.raises(EntityNotFoundError, match="Class"):
-            service.move_class_to_scheme(
-                class_id="nonexistent", target_scheme_id=scheme.id
-            )
+            service.move_class_to_scheme(class_id="nonexistent", target_scheme_id=scheme.id)
 
     def test_move_class_to_scheme_scheme_not_found_raises(self, service):
         """Move class to nonexistent scheme raises EntityNotFoundError."""
@@ -851,9 +813,7 @@ class TestMoveClassToScheme:
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
 
         with pytest.raises(EntityNotFoundError, match="ConceptScheme"):
-            service.move_class_to_scheme(
-                class_id=cls.id, target_scheme_id="nonexistent"
-            )
+            service.move_class_to_scheme(class_id=cls.id, target_scheme_id="nonexistent")
 
     def test_move_class_to_scheme_cross_taxonomy_raises(self, service):
         """Move class to scheme in different taxonomy raises ValueError."""
@@ -876,9 +836,7 @@ class TestMoveClassToScheme:
         service._event_publisher.clear()
 
         # Move class to its current scheme
-        moved = service.move_class_to_scheme(
-            class_id=cls.id, target_scheme_id=scheme.id
-        )
+        moved = service.move_class_to_scheme(class_id=cls.id, target_scheme_id=scheme.id)
         assert moved.concept_scheme_id == scheme.id
 
         # Verify event was still emitted (even though it's a no-op semantically)
@@ -917,9 +875,7 @@ class TestDeleteClass:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         parent = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
-        service.create_class(
-            concept_scheme_id=scheme.id, title="Dog", parent_class_id=parent.id
-        )
+        service.create_class(concept_scheme_id=scheme.id, title="Dog", parent_class_id=parent.id)
 
         with pytest.raises(OntologyError, match="has.*subclass"):
             service.delete_class(class_id=parent.id)
@@ -951,9 +907,7 @@ class TestDeleteClass:
             service.get_relationship(rel.id)
 
         # Verify RelationshipDeleted event was emitted
-        rel_delete_events = service._event_publisher.get_events_of_type(
-            RelationshipDeleted
-        )
+        rel_delete_events = service._event_publisher.get_events_of_type(RelationshipDeleted)
         assert len(rel_delete_events) == 1
         assert rel_delete_events[0].relationship_id == rel.id
         assert rel_delete_events[0].source_id == dog.id
@@ -982,9 +936,7 @@ class TestDeleteClass:
             service.get_relationship(rel.id)
 
         # Verify RelationshipDeleted event was emitted
-        rel_delete_events = service._event_publisher.get_events_of_type(
-            RelationshipDeleted
-        )
+        rel_delete_events = service._event_publisher.get_events_of_type(RelationshipDeleted)
         assert len(rel_delete_events) == 1
         assert rel_delete_events[0].relationship_id == rel.id
         assert rel_delete_events[0].source_id == dog.id
@@ -999,9 +951,7 @@ class TestDeleteClass:
         mammal = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
         animal = service.create_class(concept_scheme_id=scheme.id, title="Animal")
         prop1 = service.create_property_definition(identifier="is_a", title="Is A")
-        prop2 = service.create_property_definition(
-            identifier="part_of", title="Part Of"
-        )
+        prop2 = service.create_property_definition(identifier="part_of", title="Part Of")
 
         rel1 = service.create_relationship(
             source_id=dog.id,
@@ -1024,9 +974,7 @@ class TestDeleteClass:
             service.get_relationship(rel2.id)
 
         # Verify two RelationshipDeleted events were emitted
-        rel_delete_events = service._event_publisher.get_events_of_type(
-            RelationshipDeleted
-        )
+        rel_delete_events = service._event_publisher.get_events_of_type(RelationshipDeleted)
         assert len(rel_delete_events) == 2
         rel_ids = {e.relationship_id for e in rel_delete_events}
         assert rel1.id in rel_ids
@@ -1128,9 +1076,7 @@ class TestCreateRelationship:
                 property_definition_id=prop.id,
             )
 
-    def test_create_relationship_with_valid_entities_emits_correct_taxonomy_id(
-        self, service
-    ):
+    def test_create_relationship_with_valid_entities_emits_correct_taxonomy_id(self, service):
         """Create relationship correctly uses source class's taxonomy for graph invalidation."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
@@ -1146,9 +1092,7 @@ class TestCreateRelationship:
 
         # Verify GraphInvalidated event has the correct taxonomy_id from source
         graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)
-        graph_invalid_from_rel = [
-            e for e in graph_events if e.reason == "relationship_created"
-        ]
+        graph_invalid_from_rel = [e for e in graph_events if e.reason == "relationship_created"]
         assert len(graph_invalid_from_rel) == 1
         assert graph_invalid_from_rel[0].taxonomy_id == tax.id
 
@@ -1208,9 +1152,7 @@ class TestDeleteRelationship:
         graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)
         assert len(graph_events) >= 1
         # Find the one from delete (not from create_relationship)
-        delete_graph_events = [
-            e for e in graph_events if e.reason == "relationship_deleted"
-        ]
+        delete_graph_events = [e for e in graph_events if e.reason == "relationship_deleted"]
         assert len(delete_graph_events) == 1
         assert delete_graph_events[0].taxonomy_id == tax.id
 
@@ -1244,9 +1186,7 @@ class TestDeleteRelationship:
 
         # Verify GraphInvalidated event uses target class's taxonomy
         graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)
-        delete_graph_events = [
-            e for e in graph_events if e.reason == "relationship_deleted"
-        ]
+        delete_graph_events = [e for e in graph_events if e.reason == "relationship_deleted"]
         assert len(delete_graph_events) == 1
         # Should use target's taxonomy since source is missing
         assert delete_graph_events[0].taxonomy_id == tax.id
@@ -1269,9 +1209,7 @@ class TestDeleteRelationship:
         service._repository.delete_class(mammal.id)
 
         # Get current count of GraphInvalidated events before deletion
-        existing_graph_events = service._event_publisher.get_events_of_type(
-            GraphInvalidated
-        )
+        existing_graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)
         existing_count = len(
             [e for e in existing_graph_events if e.reason == "relationship_deleted"]
         )
@@ -1285,9 +1223,7 @@ class TestDeleteRelationship:
 
         # Verify no new GraphInvalidated event was emitted (since taxonomy couldn't be determined)
         graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)
-        delete_graph_events = [
-            e for e in graph_events if e.reason == "relationship_deleted"
-        ]
+        delete_graph_events = [e for e in graph_events if e.reason == "relationship_deleted"]
         assert len(delete_graph_events) == existing_count
 
     def test_delete_relationship_with_individual_source(self, service):
@@ -1298,9 +1234,7 @@ class TestDeleteRelationship:
         mammal_class = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
 
         # Create an individual as the source
-        individual = service.create_individual(
-            class_ids=animal_class.id, title="Fluffy"
-        )
+        individual = service.create_individual(class_ids=animal_class.id, title="Fluffy")
 
         prop = service.create_property_definition(identifier="is_a", title="Is A")
         rel = service.create_relationship(
@@ -1317,9 +1251,7 @@ class TestDeleteRelationship:
 
         # Verify GraphInvalidated event uses the Individual's parent class taxonomy
         graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)
-        delete_graph_events = [
-            e for e in graph_events if e.reason == "relationship_deleted"
-        ]
+        delete_graph_events = [e for e in graph_events if e.reason == "relationship_deleted"]
         assert len(delete_graph_events) == 1
         assert delete_graph_events[0].taxonomy_id == tax.id
 
@@ -1348,9 +1280,7 @@ class TestDeleteRelationship:
 
         # Verify GraphInvalidated event uses the Individual's parent class taxonomy
         graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)
-        delete_graph_events = [
-            e for e in graph_events if e.reason == "relationship_deleted"
-        ]
+        delete_graph_events = [e for e in graph_events if e.reason == "relationship_deleted"]
         assert len(delete_graph_events) == 1
         assert delete_graph_events[0].taxonomy_id == tax.id
 
@@ -1361,14 +1291,10 @@ class TestDeleteRelationship:
         animal_class = service.create_class(concept_scheme_id=scheme.id, title="Animal")
 
         # Create individuals for both source and target
-        individual1 = service.create_individual(
-            class_ids=animal_class.id, title="Fluffy"
-        )
+        individual1 = service.create_individual(class_ids=animal_class.id, title="Fluffy")
         individual2 = service.create_individual(class_ids=animal_class.id, title="Fido")
 
-        prop = service.create_property_definition(
-            identifier="related_to", title="Related To"
-        )
+        prop = service.create_property_definition(identifier="related_to", title="Related To")
         rel = service.create_relationship(
             source_id=individual1.id,
             target_id=individual2.id,
@@ -1383,15 +1309,11 @@ class TestDeleteRelationship:
 
         # Verify GraphInvalidated event uses the taxonomy
         graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)
-        delete_graph_events = [
-            e for e in graph_events if e.reason == "relationship_deleted"
-        ]
+        delete_graph_events = [e for e in graph_events if e.reason == "relationship_deleted"]
         assert len(delete_graph_events) == 1
         assert delete_graph_events[0].taxonomy_id == tax.id
 
-    def test_delete_relationship_with_individual_source_deleted_parent_class(
-        self, service
-    ):
+    def test_delete_relationship_with_individual_source_deleted_parent_class(self, service):
         """Delete relationship where source Individual's parent class is deleted uses target class taxonomy."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
@@ -1399,9 +1321,7 @@ class TestDeleteRelationship:
         mammal_class = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
 
         # Create an individual
-        individual = service.create_individual(
-            class_ids=animal_class.id, title="Fluffy"
-        )
+        individual = service.create_individual(class_ids=animal_class.id, title="Fluffy")
 
         prop = service.create_property_definition(identifier="is_a", title="Is A")
         rel = service.create_relationship(
@@ -1422,9 +1342,7 @@ class TestDeleteRelationship:
 
         # Verify GraphInvalidated event uses target class taxonomy
         graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)
-        delete_graph_events = [
-            e for e in graph_events if e.reason == "relationship_deleted"
-        ]
+        delete_graph_events = [e for e in graph_events if e.reason == "relationship_deleted"]
         assert len(delete_graph_events) == 1
         assert delete_graph_events[0].taxonomy_id == tax.id
 
@@ -1438,14 +1356,10 @@ class TestDeleteRelationship:
         mammal_class = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
 
         # Create individuals for both source and target
-        individual1 = service.create_individual(
-            class_ids=animal_class.id, title="Fluffy"
-        )
+        individual1 = service.create_individual(class_ids=animal_class.id, title="Fluffy")
         individual2 = service.create_individual(class_ids=mammal_class.id, title="Fido")
 
-        prop = service.create_property_definition(
-            identifier="related_to", title="Related To"
-        )
+        prop = service.create_property_definition(identifier="related_to", title="Related To")
         rel = service.create_relationship(
             source_id=individual1.id,
             target_id=individual2.id,
@@ -1457,9 +1371,7 @@ class TestDeleteRelationship:
         service._repository.delete_class(mammal_class.id)
 
         # Get current count before deletion
-        existing_graph_events = service._event_publisher.get_events_of_type(
-            GraphInvalidated
-        )
+        existing_graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)
         existing_count = len(
             [e for e in existing_graph_events if e.reason == "relationship_deleted"]
         )
@@ -1476,15 +1388,15 @@ class TestDeleteRelationship:
 
         # Verify no new GraphInvalidated event was emitted
         graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)
-        delete_graph_events = [
-            e for e in graph_events if e.reason == "relationship_deleted"
-        ]
+        delete_graph_events = [e for e in graph_events if e.reason == "relationship_deleted"]
         assert len(delete_graph_events) == existing_count
 
         # Verify warning was logged
         warning_calls = [
-            call for call in logger_mock.warning.call_args_list
-            if call[0] and "Could not determine taxonomy for relationship deletion" in str(call[0][0])
+            call
+            for call in logger_mock.warning.call_args_list
+            if call[0]
+            and "Could not determine taxonomy for relationship deletion" in str(call[0][0])
         ]
         assert warning_calls
 
@@ -1655,9 +1567,7 @@ class TestGetOrCreatePropertyDefinitionByIdentifier:
                 title=None,
             )
 
-    def test_get_or_create_duplicate_title_with_different_identifier_raises(
-        self, service
-    ):
+    def test_get_or_create_duplicate_title_with_different_identifier_raises(self, service):
         """Creating with duplicate title but different identifier raises DuplicateEntityError."""
         service.get_or_create_property_definition_by_identifier(
             identifier="is_a",
@@ -1790,9 +1700,7 @@ class TestGetAndListOperations:
         animal = service.create_class(concept_scheme_id=scheme.id, title="Animal")
 
         prop_is_a = service.create_property_definition(identifier="is_a", title="Is A")
-        prop_part_of = service.create_property_definition(
-            identifier="part_of", title="Part Of"
-        )
+        prop_part_of = service.create_property_definition(identifier="part_of", title="Part Of")
 
         # Create relationships with different property descriptions
         rel1 = service.create_relationship(
@@ -1819,9 +1727,7 @@ class TestGetAndListOperations:
     def test_list_property_definitions(self, service):
         """List all property descriptions."""
         prop1 = service.create_property_definition(identifier="is_a", title="Is A")
-        prop2 = service.create_property_definition(
-            identifier="part_of", title="Part Of"
-        )
+        prop2 = service.create_property_definition(identifier="part_of", title="Part Of")
         props = service.list_property_definitions()
         assert len(props) == 2
         assert any(p.id == prop1.id for p in props)
@@ -1830,15 +1736,11 @@ class TestGetAndListOperations:
     def test_list_property_definitions_filtered_by_is_relevant(self, service):
         """List property descriptions filtered by is_relevant flag."""
         # Create properties with different relevance states
-        prop_relevant = service.create_property_definition(
-            identifier="is_a", title="Is A"
-        )
+        prop_relevant = service.create_property_definition(identifier="is_a", title="Is A")
         prop_relevant.is_relevant = True
         service._repository.save_property_definition(prop_relevant)
 
-        prop_irrelevant = service.create_property_definition(
-            identifier="part_of", title="Part Of"
-        )
+        prop_irrelevant = service.create_property_definition(identifier="part_of", title="Part Of")
         prop_irrelevant.is_relevant = False
         service._repository.save_property_definition(prop_irrelevant)
 
@@ -1883,9 +1785,7 @@ class TestCreateIndividual:
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
 
-        individual = service.create_individual(
-            cls.id, title="Fido", description="A friendly dog"
-        )
+        individual = service.create_individual(cls.id, title="Fido", description="A friendly dog")
         assert individual.title == "Fido"
         assert individual.description == "A friendly dog"
 
@@ -2028,13 +1928,9 @@ class TestUpdateIndividual:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
-        individual = service.create_individual(
-            cls.id, title="Fido", description="Old desc"
-        )
+        individual = service.create_individual(cls.id, title="Fido", description="Old desc")
 
-        updated = service.update_individual(
-            individual.id, title="Buddy", description="New desc"
-        )
+        updated = service.update_individual(individual.id, title="Buddy", description="New desc")
         assert updated.title == "Buddy"
         assert updated.description == "New desc"
 
@@ -2096,9 +1992,7 @@ class TestDeleteIndividual:
         with pytest.raises(EntityNotFoundError, match="Individual"):
             service.delete_individual("nonexistent")
 
-    def test_delete_individual_cleans_up_orphaned_relationships_as_source(
-        self, service
-    ):
+    def test_delete_individual_cleans_up_orphaned_relationships_as_source(self, service):
         """Delete individual cleans up relationships where it is the source."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
@@ -2122,18 +2016,14 @@ class TestDeleteIndividual:
             service.get_relationship(rel.id)
 
         # Verify RelationshipDeleted event was emitted
-        rel_delete_events = service._event_publisher.get_events_of_type(
-            RelationshipDeleted
-        )
+        rel_delete_events = service._event_publisher.get_events_of_type(RelationshipDeleted)
         assert len(rel_delete_events) == 1
         assert rel_delete_events[0].relationship_id == rel.id
         assert rel_delete_events[0].source_id == fido.id
         assert rel_delete_events[0].target_id == animal_ind.id
         assert rel_delete_events[0].property_definition_id == prop.id
 
-    def test_delete_individual_cleans_up_orphaned_relationships_as_target(
-        self, service
-    ):
+    def test_delete_individual_cleans_up_orphaned_relationships_as_target(self, service):
         """Delete individual cleans up relationships where it is the target."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
@@ -2157,9 +2047,7 @@ class TestDeleteIndividual:
             service.get_relationship(rel.id)
 
         # Verify RelationshipDeleted event was emitted
-        rel_delete_events = service._event_publisher.get_events_of_type(
-            RelationshipDeleted
-        )
+        rel_delete_events = service._event_publisher.get_events_of_type(RelationshipDeleted)
         assert len(rel_delete_events) == 1
         assert rel_delete_events[0].relationship_id == rel.id
         assert rel_delete_events[0].source_id == fido.id
@@ -2175,9 +2063,7 @@ class TestDeleteIndividual:
         fido = service.create_individual(dog_class.id, title="Fido")
         buddy = service.create_individual(dog_class.id, title="Buddy")
         animal_ind = service.create_individual(mammal_class.id, title="Animal")
-        prop1 = service.create_property_definition(
-            identifier="is_friend_of", title="Is Friend Of"
-        )
+        prop1 = service.create_property_definition(identifier="is_friend_of", title="Is Friend Of")
         prop2 = service.create_property_definition(identifier="is_a", title="Is A")
 
         rel1 = service.create_relationship(
@@ -2201,9 +2087,7 @@ class TestDeleteIndividual:
             service.get_relationship(rel2.id)
 
         # Verify both RelationshipDeleted events were emitted
-        rel_delete_events = service._event_publisher.get_events_of_type(
-            RelationshipDeleted
-        )
+        rel_delete_events = service._event_publisher.get_events_of_type(RelationshipDeleted)
         assert len(rel_delete_events) == 2
         rel_ids = {event.relationship_id for event in rel_delete_events}
         assert rel_ids == {rel1.id, rel2.id}
@@ -2277,9 +2161,7 @@ class TestPaginationSortingAndSearch:
         service.create_scheme(tax.id, title="Apple")
         service.create_scheme(tax.id, title="Mango")
 
-        results = service.list_concept_schemes(
-            limit=None, sort_by="title", sort_order="asc"
-        )
+        results = service.list_concept_schemes(limit=None, sort_by="title", sort_order="asc")
         titles = [s.title for s in results]
         assert titles == ["Apple", "Mango", "Zebra"]
 
@@ -2303,9 +2185,7 @@ class TestPaginationSortingAndSearch:
         class3 = service.create_class(scheme.id, title="Class 3")
         class4 = service.create_class(scheme.id, title="Class 4")
 
-        prop = service.create_property_definition(
-            identifier="related_to", title="Related To"
-        )
+        prop = service.create_property_definition(identifier="related_to", title="Related To")
 
         service.create_relationship(class1.id, class2.id, prop.id)
         service.create_relationship(class1.id, class3.id, prop.id)
@@ -2326,17 +2206,13 @@ class TestPaginationSortingAndSearch:
         class3 = service.create_class(scheme.id, title="Class 3")
         class4 = service.create_class(scheme.id, title="Class 4")
 
-        prop = service.create_property_definition(
-            identifier="related_to", title="Related To"
-        )
+        prop = service.create_property_definition(identifier="related_to", title="Related To")
 
         rel1 = service.create_relationship(class1.id, class2.id, prop.id)
         rel2 = service.create_relationship(class1.id, class3.id, prop.id)
         rel3 = service.create_relationship(class1.id, class4.id, prop.id)
 
-        results_asc = service.list_relationships(
-            limit=None, sort_by="created_at", sort_order="asc"
-        )
+        results_asc = service.list_relationships(limit=None, sort_by="created_at", sort_order="asc")
         ids_asc = [r.id for r in results_asc]
         assert ids_asc == [rel1.id, rel2.id, rel3.id]
 
@@ -2358,9 +2234,7 @@ class TestPaginationSortingAndSearch:
         service.create_property_definition(identifier="a_prop", title="Apple")
         service.create_property_definition(identifier="m_prop", title="Mango")
 
-        results = service.list_property_definitions(
-            limit=None, sort_by="title", sort_order="asc"
-        )
+        results = service.list_property_definitions(limit=None, sort_by="title", sort_order="asc")
         titles = [p.title for p in results]
         assert titles == ["Apple", "Mango", "Zebra"]
 
@@ -2403,9 +2277,7 @@ class TestPaginationSortingAndSearch:
         class2 = service.create_class(scheme.id, title="Class 2")
         class3 = service.create_class(scheme.id, title="Class 3")
 
-        prop = service.create_property_definition(
-            identifier="related_to", title="Related To"
-        )
+        prop = service.create_property_definition(identifier="related_to", title="Related To")
 
         service.create_relationship(class1.id, class2.id, prop.id)
         service.create_relationship(class1.id, class3.id, prop.id)

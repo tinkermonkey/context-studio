@@ -12,31 +12,31 @@ without modifying domain code.
 
 from typing import Optional
 
-from domain.ports import ChangeRecordPort
-from domain.interchange.services import get_current_batch_run_id
 from domain.extraction.events import ExtractionCompleted
-from domain.pipeline.events import PipelineExecuted
+from domain.interchange.services import get_current_batch_run_id
 from domain.ontology.events import (
-    TaxonomyCreated,
-    SchemeCreated,
     ClassCreated,
-    ClassUpdated,
     ClassDeleted,
     ClassMoved,
-    RelationshipCreated,
-    RelationshipDeleted,
-    PropertyDefinitionCreated,
-    PropertyDefinitionUpdated,
-    PropertyDefinitionDeleted,
-    TaxonomyUpdated,
-    TaxonomyDeleted,
-    SchemeUpdated,
-    SchemeDeleted,
+    ClassUpdated,
     ConceptSchemeUpdated,
     IndividualCreated,
-    IndividualUpdated,
     IndividualDeleted,
+    IndividualUpdated,
+    PropertyDefinitionCreated,
+    PropertyDefinitionDeleted,
+    PropertyDefinitionUpdated,
+    RelationshipCreated,
+    RelationshipDeleted,
+    SchemeCreated,
+    SchemeDeleted,
+    SchemeUpdated,
+    TaxonomyCreated,
+    TaxonomyDeleted,
+    TaxonomyUpdated,
 )
+from domain.pipeline.events import PipelineExecuted
+from domain.ports import ChangeRecordPort
 from domain.versioning.value_objects import ChangeOperation
 from utils.logger import get_logger
 
@@ -306,7 +306,9 @@ class ChangeEventRecorder:
             previous_state={
                 "parent_id": event.old_parent_id,
             },
-            change_reason=f"Class moved from parent {event.old_parent_id} to {event.new_parent_id}",
+            change_reason=(
+                f"Class moved from parent {event.old_parent_id} to" f" {event.new_parent_id}"
+            ),
         )
 
     def on_property_definition_updated(self, event: PropertyDefinitionUpdated) -> None:

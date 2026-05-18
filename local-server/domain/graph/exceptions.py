@@ -40,7 +40,8 @@ class InvalidAlgorithmError(GraphError):
         self.algorithm = algorithm
         self.valid_algorithms = valid_algorithms
         super().__init__(
-            f"Algorithm '{algorithm}' is not valid. Valid algorithms: {', '.join(valid_algorithms)}"
+            f"Algorithm '{algorithm}' is not valid. Valid algorithms:"
+            f" {', '.join(valid_algorithms)}"
         )
 
 

@@ -46,9 +46,7 @@ class DomainEvent:
         """
         # Auto-populate aggregate_id from subclass field if configured
         if self._aggregate_id_field and not self.aggregate_id:
-            object.__setattr__(
-                self, "aggregate_id", getattr(self, self._aggregate_id_field)
-            )
+            object.__setattr__(self, "aggregate_id", getattr(self, self._aggregate_id_field))
 
         # Validate that all string fields (including aggregate_id) are non-empty
         for field_name, _ in self.__dataclass_fields__.items():

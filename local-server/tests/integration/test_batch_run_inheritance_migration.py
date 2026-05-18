@@ -8,22 +8,28 @@ Tests verify:
 - Both run types are queryable from the base BatchRun table
 """
 
-import sys
-import os
-from uuid import uuid4
-from datetime import datetime, timezone
-import tempfile
 import json
+import os
+import sys
+import tempfile
+from datetime import datetime, timezone
+from uuid import uuid4
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../"))
 
 import pytest
-from sqlalchemy import create_engine, text, inspect
-from sqlalchemy.orm import sessionmaker
-from alembic.config import Config
 from alembic.command import upgrade
+from alembic.config import Config
+from sqlalchemy import create_engine, inspect, text
+from sqlalchemy.orm import sessionmaker
 
-from adapters.persistence.sqlite.models import Base, BatchRun, ImportRun, ExtractionRun, ChangeEvent
+from adapters.persistence.sqlite.models import (
+    Base,
+    BatchRun,
+    ChangeEvent,
+    ExtractionRun,
+    ImportRun,
+)
 
 
 @pytest.fixture
@@ -446,9 +452,9 @@ class TestPolymorphicQueries:
         session.commit()
 
         # Query completed/pending runs
-        completed_runs = session.query(BatchRun).filter(
-            BatchRun.status.in_(["committed", "completed"])
-        ).all()
+        completed_runs = (
+            session.query(BatchRun).filter(BatchRun.status.in_(["committed", "completed"])).all()
+        )
         assert len(completed_runs) == 2
 
         pending_runs = session.query(BatchRun).filter_by(status="pending").all()
@@ -608,7 +614,6 @@ class TestChangeEventBatchRunForeignKey:
             assert event.batch_run_id == run_id
 
 
-
 class TestMixedBatchRunScenarios:
     """Tests for realistic mixed scenarios with multiple run types."""
 
@@ -680,9 +685,9 @@ class TestMixedBatchRunScenarios:
         assert len(extractions) == 2
 
         # Verify status filtering across types
-        completed = session.query(BatchRun).filter(
-            BatchRun.status.in_(["committed", "completed"])
-        ).all()
+        completed = (
+            session.query(BatchRun).filter(BatchRun.status.in_(["committed", "completed"])).all()
+        )
         assert len(completed) == 2
 
         failed = session.query(BatchRun).filter_by(status="failed").all()
@@ -703,10 +708,12 @@ class TestMigrationDataSurvival:
         """
         with tempfile.TemporaryDirectory() as tmpdir:
             db_path = os.path.join(tmpdir, "test.db")
-            alembic_cfg = Config(os.path.join(
-                os.path.dirname(__file__),
-                "../../adapters/persistence/sqlite/alembic.ini"
-            ))
+            alembic_cfg = Config(
+                os.path.join(
+                    os.path.dirname(__file__),
+                    "../../adapters/persistence/sqlite/alembic.ini",
+                )
+            )
             alembic_cfg.set_main_option("sqlalchemy.url", f"sqlite:///{db_path}")
 
             # Start fresh and upgrade to the revision before batch_runs migration
@@ -755,13 +762,21 @@ class TestMigrationDataSurvival:
             ]
 
             for run_data in test_runs:
-                session.execute(text("""
+                session.execute(
+                    text("""
                     INSERT INTO import_runs
-                    (id, created_at, created_by, status, affected_entity_ids, format, source_uri, source_hash,
-                     scope_type, scope_taxonomy_id, scope_scheme_id, scope_include_descendants, scope_entity_ids, resolutions)
-                    VALUES (:id, :created_at, :created_by, :status, :affected_entity_ids, :format, :source_uri, :source_hash,
-                            :scope_type, :scope_taxonomy_id, :scope_scheme_id, :scope_include_descendants, :scope_entity_ids, :resolutions)
-                """), run_data)
+                    (id, created_at, created_by, status,
+                     affected_entity_ids, format, source_uri, source_hash,
+                     scope_type, scope_taxonomy_id, scope_scheme_id,
+                     scope_include_descendants, scope_entity_ids, resolutions)
+                    VALUES
+                    (:id, :created_at, :created_by, :status,
+                     :affected_entity_ids, :format, :source_uri, :source_hash,
+                     :scope_type, :scope_taxonomy_id, :scope_scheme_id,
+                     :scope_include_descendants, :scope_entity_ids, :resolutions)
+                """),
+                    run_data,
+                )
 
             session.commit()
             session.close()
@@ -769,7 +784,9 @@ class TestMigrationDataSurvival:
             # Verify data was inserted
             engine2 = create_engine(f"sqlite:///{db_path}")
             session2 = sessionmaker(bind=engine2)()
-            pre_migration_count = session2.execute(text("SELECT COUNT(*) FROM import_runs")).scalar()
+            pre_migration_count = session2.execute(
+                text("SELECT COUNT(*) FROM import_runs")
+            ).scalar()
             assert pre_migration_count == 2
             session2.close()
 
@@ -782,17 +799,17 @@ class TestMigrationDataSurvival:
             session3 = SessionLocal3()
 
             # Verify batch_runs table has the migrated data
-            batch_runs = session3.execute(text(
-                "SELECT id, status, run_type FROM batch_runs WHERE run_type = 'import'"
-            )).fetchall()
+            batch_runs = session3.execute(
+                text("SELECT id, status, run_type FROM batch_runs WHERE run_type =" " 'import'")
+            ).fetchall()
             assert len(batch_runs) == 2
             for run in batch_runs:
                 assert run[2] == "import"  # run_type
 
             # Verify import_runs table still has the data (via joined-table FK)
-            import_runs = session3.execute(text(
-                "SELECT COUNT(*) FROM import_runs WHERE format = 'skos'"
-            )).scalar()
+            import_runs = session3.execute(
+                text("SELECT COUNT(*) FROM import_runs WHERE format = 'skos'")
+            ).scalar()
             assert import_runs == 1
 
             # Verify we can query through the ORM with the new schema
@@ -834,10 +851,12 @@ class TestMigrationDataSurvival:
         """
         with tempfile.TemporaryDirectory() as tmpdir:
             db_path = os.path.join(tmpdir, "test.db")
-            alembic_cfg = Config(os.path.join(
-                os.path.dirname(__file__),
-                "../../adapters/persistence/sqlite/alembic.ini"
-            ))
+            alembic_cfg = Config(
+                os.path.join(
+                    os.path.dirname(__file__),
+                    "../../adapters/persistence/sqlite/alembic.ini",
+                )
+            )
             alembic_cfg.set_main_option("sqlalchemy.url", f"sqlite:///{db_path}")
 
             # Start at pre-migration schema
@@ -852,43 +871,54 @@ class TestMigrationDataSurvival:
             event_id = str(uuid4())
 
             # Insert ImportRun
-            session.execute(text("""
+            session.execute(
+                text("""
                 INSERT INTO import_runs
-                (id, created_at, created_by, status, affected_entity_ids, format, source_uri, source_hash,
-                 scope_type, scope_taxonomy_id, scope_scheme_id, scope_include_descendants, scope_entity_ids, resolutions)
-                VALUES (:id, :created_at, :created_by, :status, :affected_entity_ids, :format, :source_uri, :source_hash,
-                        :scope_type, :scope_taxonomy_id, :scope_scheme_id, :scope_include_descendants, :scope_entity_ids, :resolutions)
-            """), {
-                "id": import_run_id,
-                "created_at": now,
-                "created_by": "user1",
-                "status": "pending",
-                "affected_entity_ids": json.dumps(["e1"]),
-                "format": "skos",
-                "source_uri": None,
-                "source_hash": "hash",
-                "scope_type": "whole_graph",
-                "scope_taxonomy_id": None,
-                "scope_scheme_id": None,
-                "scope_include_descendants": False,
-                "scope_entity_ids": None,
-                "resolutions": json.dumps({}),
-            })
+                (id, created_at, created_by, status,
+                 affected_entity_ids, format, source_uri, source_hash,
+                 scope_type, scope_taxonomy_id, scope_scheme_id,
+                 scope_include_descendants, scope_entity_ids, resolutions)
+                VALUES
+                (:id, :created_at, :created_by, :status,
+                 :affected_entity_ids, :format, :source_uri, :source_hash,
+                 :scope_type, :scope_taxonomy_id, :scope_scheme_id,
+                 :scope_include_descendants, :scope_entity_ids, :resolutions)
+            """),
+                {
+                    "id": import_run_id,
+                    "created_at": now,
+                    "created_by": "user1",
+                    "status": "pending",
+                    "affected_entity_ids": json.dumps(["e1"]),
+                    "format": "skos",
+                    "source_uri": None,
+                    "source_hash": "hash",
+                    "scope_type": "whole_graph",
+                    "scope_taxonomy_id": None,
+                    "scope_scheme_id": None,
+                    "scope_include_descendants": False,
+                    "scope_entity_ids": None,
+                    "resolutions": json.dumps({}),
+                },
+            )
 
             # Insert ChangeEvent with import_run_id
-            session.execute(text("""
+            session.execute(
+                text("""
                 INSERT INTO change_events
                 (id, entity_id, entity_type, operation, new_state, timestamp, import_run_id)
                 VALUES (:id, :entity_id, :entity_type, :operation, :new_state, :timestamp, :import_run_id)
-            """), {
-                "id": event_id,
-                "entity_id": "e1",
-                "entity_type": "class",
-                "operation": "create",
-                "new_state": '{"title": "Test"}',
-                "timestamp": now,
-                "import_run_id": import_run_id,
-            })
+            """),
+                {
+                    "id": event_id,
+                    "entity_id": "e1",
+                    "entity_type": "class",
+                    "operation": "create",
+                    "new_state": '{"title": "Test"}',
+                    "timestamp": now,
+                    "import_run_id": import_run_id,
+                },
+            )
 
             session.commit()
             session.close()
@@ -901,9 +931,10 @@ class TestMigrationDataSurvival:
             SessionLocal2 = sessionmaker(bind=engine2)
             session2 = SessionLocal2()
 
-            event = session2.execute(text(
-                "SELECT batch_run_id FROM change_events WHERE id = :id"
-            ), {"id": event_id}).fetchone()
+            event = session2.execute(
+                text("SELECT batch_run_id FROM change_events WHERE id = :id"),
+                {"id": event_id},
+            ).fetchone()
 
             assert event is not None
             assert event[0] == import_run_id

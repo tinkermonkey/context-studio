@@ -1,13 +1,12 @@
 """Fake in-memory implementation of ExtractionRunRepository for testing."""
 
-import sys
 import os
+import sys
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from typing import Sequence
+
 from domain.extraction.entities import ExtractionRun
 
 

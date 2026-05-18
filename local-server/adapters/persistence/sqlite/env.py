@@ -1,11 +1,9 @@
 import sys
-from pathlib import Path
 from logging.config import fileConfig
-
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from pathlib import Path
 
 from alembic import context
+from sqlalchemy import engine_from_config, pool
 
 # Ensure local-server root is in path for imports
 local_server_root = Path(__file__).parent.parent.parent.parent
@@ -24,9 +22,7 @@ x_args = context.get_x_argument(as_dictionary=True)
 
 if x_args.get("db") == "operations":
     # For operations database, only include operations migrations
-    config.set_main_option(
-        "version_locations", str(sqlite_dir / "operations" / "versions")
-    )
+    config.set_main_option("version_locations", str(sqlite_dir / "operations" / "versions"))
     operations_db_url = x_args.get("operations_db_url") or "sqlite:///./operations.db"
     config.set_main_option("sqlalchemy.url", operations_db_url)
 

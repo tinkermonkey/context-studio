@@ -5,8 +5,8 @@ Tests persistence of Dataset entities, error handling for database operations,
 and integration with domain exception mapping.
 """
 
-import sys
 import os
+import sys
 import uuid
 from datetime import datetime, timezone
 
@@ -14,12 +14,10 @@ import pytest
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.dataset_repo import SQLiteDatasetRepository
+from adapters.persistence.sqlite.models import Base
 from domain.admin.entities import Dataset, DatasetMetrics
 from domain.admin.exceptions import DatasetNotFoundError
 
@@ -185,9 +183,7 @@ class TestActiveDataset:
         retrieved_first = repository.get_dataset(sample_dataset.id)
         assert retrieved_first.is_active is False
 
-    def test_set_active_dataset_nonexistent_raises_error(
-        self, repository, sample_dataset
-    ):
+    def test_set_active_dataset_nonexistent_raises_error(self, repository, sample_dataset):
         """
         Setting nonexistent dataset as active raises DatasetNotFoundError with message.
 

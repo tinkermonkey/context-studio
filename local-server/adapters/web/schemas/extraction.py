@@ -30,24 +30,14 @@ class ExtractedEntitySchema(BaseModel):
     id: str = Field(..., description="Unique identifier for the entity")
     label: str = Field(..., description="The extracted entity label/name")
     entity_type: str = Field(..., description="Classification of the entity")
-    source_layer: int = Field(
-        ..., description="Which layer extracted this entity (0-3)"
-    )
-    confidence: float = Field(
-        ..., ge=0.0, le=1.0, description="Confidence score from 0.0 to 1.0"
-    )
-    uri: Optional[str] = Field(
-        None, description="Optional URI to external knowledge base"
-    )
-    description: Optional[str] = Field(
-        None, description="Optional description of the entity"
-    )
+    source_layer: int = Field(..., description="Which layer extracted this entity (0-3)")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score from 0.0 to 1.0")
+    uri: Optional[str] = Field(None, description="Optional URI to external knowledge base")
+    description: Optional[str] = Field(None, description="Optional description of the entity")
     matched_class_id: Optional[str] = Field(
         None, description="ID of matched ontology class, if any"
     )
-    properties: dict = Field(
-        default_factory=dict, description="Optional metadata key-value pairs"
-    )
+    properties: dict = Field(default_factory=dict, description="Optional metadata key-value pairs")
 
 
 class ExtractionLayerResultSchema(BaseModel):
@@ -57,14 +47,10 @@ class ExtractionLayerResultSchema(BaseModel):
 
     layer_number: int = Field(..., description="Layer index (0-3)")
     layer_name: str = Field(..., description="Human-readable name of the layer")
-    entities_found: int = Field(
-        ..., description="Count of entities extracted by this layer"
-    )
+    entities_found: int = Field(..., description="Count of entities extracted by this layer")
     duration_ms: int = Field(..., description="Execution time in milliseconds")
     success: bool = Field(..., description="Whether layer completed successfully")
-    error_message: Optional[str] = Field(
-        None, description="Error message if layer failed"
-    )
+    error_message: Optional[str] = Field(None, description="Error message if layer failed")
 
 
 class ExtractionResultSchema(BaseModel):
@@ -80,12 +66,8 @@ class ExtractionResultSchema(BaseModel):
     layers_executed: list[ExtractionLayerResultSchema] = Field(
         default_factory=list, description="Execution details for each layer that ran"
     )
-    total_duration_ms: int = Field(
-        ..., description="Total extraction time in milliseconds"
-    )
-    created_at: str = Field(
-        ..., description="ISO 8601 timestamp when extraction completed"
-    )
+    total_duration_ms: int = Field(..., description="Total extraction time in milliseconds")
+    created_at: str = Field(..., description="ISO 8601 timestamp when extraction completed")
 
 
 class ExtractRequest(BaseModel):
@@ -136,12 +118,10 @@ class ExtractTripleOptions(BaseModel):
 class ExtractTripleRequest(BaseModel):
     """Request to extract triples from text scoped to an ontology."""
 
-    text: str = Field(
-        ..., min_length=1, description="Source text to extract triples from"
-    )
+    text: str = Field(..., min_length=1, description="Source text to extract triples from")
     ontology_id: str = Field(
         ...,
-        description="ID of the ontology scoping extraction to specific classes/individuals",
+        description=("ID of the ontology scoping extraction to specific classes/individuals"),
     )
     options: ExtractTripleOptions = Field(
         ..., description="Extraction options (model, temperature, etc.)"
@@ -164,7 +144,8 @@ class TripleProvenance(BaseModel):
         """Ensure text_offset_end >= text_offset_start."""
         if self.text_offset_end < self.text_offset_start:
             raise ValueError(
-                f"text_offset_end ({self.text_offset_end}) must be >= text_offset_start ({self.text_offset_start})"
+                f"text_offset_end ({self.text_offset_end}) must be >= text_offset_start"
+                f" ({self.text_offset_start})"
             )
         return self
 
@@ -218,11 +199,11 @@ class ExtractedTriple(BaseModel):
     subject: SubjectNode
     predicate: PredicateNode
     object: Union[ObjectNodeIndividual, ObjectNodeClass, ObjectNodeLiteral] = Field(
-        ..., discriminator="kind", description="Object node discriminated by 'kind' field"
+        ...,
+        discriminator="kind",
+        description="Object node discriminated by 'kind' field",
     )
-    confidence: float = Field(
-        ..., ge=0.0, le=1.0, description="Confidence score (0.0–1.0)"
-    )
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score (0.0–1.0)")
     provenance: TripleProvenance = Field(
         ..., description="Provenance linking triple to source text"
     )
@@ -239,13 +220,9 @@ class ExtractionMetadata(BaseModel):
 class ExtractTripleResponse(BaseModel):
     """Response containing extracted triples."""
 
-    triples: list[ExtractedTriple] = Field(
-        ..., description="List of extracted triples"
-    )
+    triples: list[ExtractedTriple] = Field(..., description="List of extracted triples")
     warnings: list[str] = Field(
         default_factory=list,
         description="Warnings (e.g., confidence out of range, invalid provenance)",
     )
-    metadata: ExtractionMetadata = Field(
-        ..., description="Metadata about the extraction operation"
-    )
+    metadata: ExtractionMetadata = Field(..., description="Metadata about the extraction operation")

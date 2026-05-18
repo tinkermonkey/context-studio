@@ -11,11 +11,11 @@ and LLM Pipeline services.
 
 from typing import Literal
 
-from adapters.llm.openai_provider import OpenAIProvider
 from adapters.llm.anthropic_provider import AnthropicProvider
+from adapters.llm.openai_provider import OpenAIProvider
 from domain.pipeline.ports import LLMProvider, LLMResponse
-from utils.logger import get_logger
 from utils.async_executor import run_sync_in_executor
+from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -46,7 +46,8 @@ class LLMProviderRouter:
 
         if not openai_api_key and not anthropic_api_key:
             raise ValueError(
-                "At least one LLM provider API key must be configured (openai_api_key or anthropic_api_key)"
+                "At least one LLM provider API key must be configured (openai_api_key"
+                " or anthropic_api_key)"
             )
 
         if openai_api_key:
@@ -75,9 +76,7 @@ class LLMProviderRouter:
             error_details = "; ".join(
                 f"{name}: {type(e).__name__}: {e}" for name, e in init_errors.items()
             )
-            raise ValueError(
-                f"No LLM providers could be initialized. Errors: {error_details}"
-            )
+            raise ValueError(f"No LLM providers could be initialized. Errors: {error_details}")
 
     def complete(
         self,

@@ -5,18 +5,18 @@ Provides persistence for pipeline configurations and execution records in operat
 Handles domain-to-ORM mapping, session management, and query logic.
 """
 
-from typing import Optional, cast, Literal
 from datetime import datetime
+from typing import Literal, Optional, cast
 
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session, sessionmaker
 
-from domain.pipeline.entities import PipelineConfiguration, Execution, PipelineFlavor
-from domain.pipeline.ports import ExecutionWithTitle
 from adapters.persistence.sqlite.operations.models import (
-    PipelineConfigurationModel,
     ExecutionModel,
+    PipelineConfigurationModel,
     PipelineFlavorModel,
 )
+from domain.pipeline.entities import Execution, PipelineConfiguration, PipelineFlavor
+from domain.pipeline.ports import ExecutionWithTitle
 
 
 class SQLitePipelineRepository:
@@ -128,9 +128,7 @@ class SQLitePipelineRepository:
             session.commit()
             return execution
 
-    def get_executions(
-        self, pipeline_config_id: str, limit: int = 50
-    ) -> list[Execution]:
+    def get_executions(self, pipeline_config_id: str, limit: int = 50) -> list[Execution]:
         """
         Retrieve execution history for a pipeline configuration.
 

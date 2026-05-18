@@ -57,9 +57,7 @@ class PipelineConfiguration:
     def __post_init__(self) -> None:
         """Validate pipeline configuration invariants."""
         if self.provider not in ("openai", "anthropic"):
-            raise ValueError(
-                f"provider must be 'openai' or 'anthropic', got '{self.provider}'"
-            )
+            raise ValueError(f"provider must be 'openai' or 'anthropic', got '{self.provider}'")
         if self.version < 1:
             raise ValueError(f"version must be >= 1, got {self.version}")
         if self.seed is not None and self.seed < 0:
@@ -116,9 +114,7 @@ class Execution:
         if self.tokens_out < 0:
             raise ValueError(f"tokens_out must be non-negative, got {self.tokens_out}")
         if self.duration_ms < 0:
-            raise ValueError(
-                f"duration_ms must be non-negative, got {self.duration_ms}"
-            )
+            raise ValueError(f"duration_ms must be non-negative, got {self.duration_ms}")
         if self.status == "error" and not self.error_message:
             raise ValueError("error_message must be set when status is 'error'")
 

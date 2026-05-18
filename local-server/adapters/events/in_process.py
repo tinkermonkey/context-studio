@@ -32,9 +32,7 @@ class InProcessEventPublisher:
 
     def __init__(self) -> None:
         """Initialize the event publisher with empty handler registry."""
-        self._handlers: dict[type[DomainEvent], list[Callable[[DomainEvent], None]]] = (
-            {}
-        )
+        self._handlers: dict[type[DomainEvent], list[Callable[[DomainEvent], None]]] = {}
 
     def publish(self, event: DomainEvent) -> list[tuple[str, Exception]]:
         """
@@ -70,8 +68,9 @@ class InProcessEventPublisher:
                     except Exception as e:
                         handler_name = getattr(handler, "__name__", repr(handler))
                         logger.error(
-                            f"Handler {handler_name} raised exception while processing "
-                            f"event {event_type.__name__} (id: {event.event_id}): {type(e).__name__}: {str(e)}",
+                            f"Handler {handler_name} raised exception while processing"
+                            f" event {event_type.__name__} (id: {event.event_id}):"
+                            f" {type(e).__name__}: {str(e)}",
                             exc_info=True,
                         )
                         failures.append((handler_name, e))

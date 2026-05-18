@@ -11,7 +11,7 @@ Implementations do not inherit from the protocol; they implement the interface s
 
 from __future__ import annotations
 
-from typing import Protocol, Sequence, Literal
+from typing import Literal, Protocol, Sequence
 
 from .entities import (
     Class,
@@ -361,9 +361,7 @@ class OntologyRepository(Protocol):
         """
         ...
 
-    def get_property_definition_by_identifier(
-        self, identifier: str
-    ) -> PropertyDefinition | None:
+    def get_property_definition_by_identifier(self, identifier: str) -> PropertyDefinition | None:
         """
         Retrieve a property definition by its machine-readable identifier.
 
@@ -510,9 +508,7 @@ class OntologyRepository(Protocol):
     # Bulk operations
     def get_all_entities_and_relationships(
         self,
-    ) -> tuple[
-        Sequence[Taxonomy | ConceptScheme | Class | Individual], Sequence[Relationship]
-    ]:
+    ) -> tuple[Sequence[Taxonomy | ConceptScheme | Class | Individual], Sequence[Relationship]]:
         """
         Retrieve all entities and relationships for graph building.
 

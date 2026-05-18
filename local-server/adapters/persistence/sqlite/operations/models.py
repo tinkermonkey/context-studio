@@ -8,7 +8,7 @@ This module contains ORM models for:
 Models are defined here and serve as the source of truth for Alembic migrations.
 """
 
-from sqlalchemy import Column, String, Integer, Boolean, DateTime, Text, JSON, Index
+from sqlalchemy import JSON, Boolean, Column, DateTime, Index, Integer, String, Text
 from sqlalchemy.orm import declarative_base
 
 OperationsBase = declarative_base()  # type: ignore[valid-type]
@@ -89,9 +89,7 @@ class ExecutionModel(OperationsBase):  # type: ignore[valid-type,misc]
     timestamp = Column(DateTime, nullable=False, index=True)
 
     # Index for common query patterns: list executions for a config ordered by timestamp
-    __table_args__ = (
-        Index("ix_executions_config_timestamp", "pipeline_config_id", "timestamp"),
-    )
+    __table_args__ = (Index("ix_executions_config_timestamp", "pipeline_config_id", "timestamp"),)
 
 
 class PipelineFlavorModel(OperationsBase):  # type: ignore[valid-type,misc]

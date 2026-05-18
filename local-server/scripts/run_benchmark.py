@@ -68,22 +68,23 @@ Cross-dataset comparison generates:
 - httpx: For API calls
 """
 
+import argparse
+import json
 import os
 import sys
-import json
-import argparse
-from pathlib import Path
-from datetime import datetime, timezone
-from typing import Any
 import time
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
 
 # Ensure local-server is in the path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import httpx
 from datasets import load_dataset  # type: ignore[import-untyped]
-from utils.logger import get_logger
+
 from scripts import compare_benchmarks
+from utils.logger import get_logger
 
 _logger = get_logger(__name__)
 
@@ -174,9 +175,7 @@ def load_dataset_from_jsonl(dataset_name: str, split: str = "test") -> list[dict
                     samples.append(json.loads(line))
                 except json.JSONDecodeError as e:
                     raise json.JSONDecodeError(
-                        f"Invalid JSON at line {line_num}: {e.msg}",
-                        e.doc,
-                        e.pos
+                        f"Invalid JSON at line {line_num}: {e.msg}", e.doc, e.pos
                     ) from e
 
     _logger.info(f"Loaded {len(samples)} samples from local JSONL")
@@ -255,8 +254,7 @@ def estimate_cost(
     total_input_tokens = num_samples * avg_input_tokens
     total_output_tokens = num_samples * avg_output_tokens
 
-    cost = (total_input_tokens / 1000 * rates["input"] +
-            total_output_tokens / 1000 * rates["output"])
+    cost = total_input_tokens / 1000 * rates["input"] + total_output_tokens / 1000 * rates["output"]
 
     return cost
 
@@ -382,7 +380,7 @@ def extract_triples_http(
             raise httpx.HTTPStatusError(
                 f"Extraction API returned {response.status_code}: {error_detail}",
                 request=response.request,
-                response=response
+                response=response,
             )
 
         data = response.json()
@@ -479,11 +477,7 @@ def compute_metrics(
         if (true_positives + false_negatives) > 0
         else 0.0
     )
-    f1 = (
-        2 * precision * recall / (precision + recall)
-        if (precision + recall) > 0
-        else 0.0
-    )
+    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0.0
 
     # Conformance: check for required fields and valid confidence scores
     valid_count = 0
@@ -539,7 +533,10 @@ def run_benchmark(
             _logger.error(f"Failed to load dataset: {e}")
             _logger.error("Dataset may not be available yet or may be private.")
             _logger.error(f"Check: https://huggingface.co/datasets/{dataset_name}")
-            _logger.info(f"To avoid repeated downloads, run: python scripts/download_benchmarks.py --dataset {dataset_name}")
+            _logger.info(
+                "To avoid repeated downloads, run: python"
+                f" scripts/download_benchmarks.py --dataset {dataset_name}"
+            )
             raise
     else:
         _logger.info(f"Loaded {len(samples)} samples from cache")
@@ -569,9 +566,12 @@ def run_benchmark(
 
         # Filter samples for this ontology
         ontology_samples = [
-            s for s in samples
-            if (s.get("ontology") == ontology or
-                (isinstance(s.get("ontologies"), list) and ontology in s["ontologies"]))
+            s
+            for s in samples
+            if (
+                s.get("ontology") == ontology
+                or (isinstance(s.get("ontologies"), list) and ontology in s["ontologies"])
+            )
         ]
 
         if not ontology_samples:
@@ -611,8 +611,8 @@ def run_benchmark(
                     result.model = model_used
 
                 # Compute metrics
-                precision, recall, f1, conformance, false_positives, num_predicted = compute_metrics(
-                    pred_triples, gold_triples
+                precision, recall, f1, conformance, false_positives, num_predicted = (
+                    compute_metrics(pred_triples, gold_triples)
                 )
                 precision_scores.append(precision)
                 recall_scores.append(recall)
@@ -631,8 +631,8 @@ def run_benchmark(
                 _logger.error(error_msg)
                 if consecutive_failures >= failure_threshold:
                     _logger.error(
-                        f"API failure threshold reached ({failure_threshold} consecutive failures), "
-                        f"aborting benchmark for {ontology}"
+                        f"API failure threshold reached ({failure_threshold}"
+                        f" consecutive failures), aborting benchmark for {ontology}"
                     )
                     break
             except (ValueError, json.JSONDecodeError) as e:
@@ -643,8 +643,8 @@ def run_benchmark(
                 _logger.error(error_msg)
                 if consecutive_failures >= failure_threshold:
                     _logger.error(
-                        f"Parse failure threshold reached ({failure_threshold} consecutive failures), "
-                        f"aborting benchmark for {ontology}"
+                        f"Parse failure threshold reached ({failure_threshold}"
+                        f" consecutive failures), aborting benchmark for {ontology}"
                     )
                     break
             except Exception as e:
@@ -655,8 +655,8 @@ def run_benchmark(
                 _logger.error(error_msg, exc_info=True)
                 if consecutive_failures >= failure_threshold:
                     _logger.error(
-                        f"Unexpected error threshold reached ({failure_threshold} consecutive failures), "
-                        f"aborting benchmark for {ontology}"
+                        f"Unexpected error threshold reached ({failure_threshold}"
+                        f" consecutive failures), aborting benchmark for {ontology}"
                     )
                     break
 
@@ -752,18 +752,20 @@ def save_markdown_report(results: dict[str, Any], output_path: str) -> Path:
             f"${result['cost_usd']:.2f} |"
         )
 
-    lines.extend([
-        "",
-        "## Metrics Explanation",
-        "",
-        "- **Precision:** Proportion of predicted triples that match ground truth",
-        "- **Recall:** Proportion of ground truth triples that were predicted",
-        "- **F1:** Harmonic mean of precision and recall",
-        "- **Conformance:** Proportion of triples with valid format and confidence (0-1)",
-        "",
-        "---",
-        f"*Generated by Text2KGBench harness on {datetime.now(timezone.utc).isoformat()}*",
-    ])
+    lines.extend(
+        [
+            "",
+            "## Metrics Explanation",
+            "",
+            "- **Precision:** Proportion of predicted triples that match ground truth",
+            "- **Recall:** Proportion of ground truth triples that were predicted",
+            "- **F1:** Harmonic mean of precision and recall",
+            ("- **Conformance:** Proportion of triples with valid format and" " confidence (0-1)"),
+            "",
+            "---",
+            ("*Generated by Text2KGBench harness on" f" {datetime.now(timezone.utc).isoformat()}*"),
+        ]
+    )
 
     with open(output_file, "w") as f:
         f.write("\n".join(lines))
@@ -817,9 +819,7 @@ def generate_comparison_from_current(
 
 def main():
     """Command-line interface for benchmark harness."""
-    parser = argparse.ArgumentParser(
-        description="Run Text2KGBench benchmark harness"
-    )
+    parser = argparse.ArgumentParser(description="Run Text2KGBench benchmark harness")
     parser.add_argument(
         "--dataset",
         type=str,
@@ -830,13 +830,13 @@ def main():
         "--pipeline",
         type=str,
         default="configs/extraction-default.json",
-        help="Path to extraction pipeline config (default: configs/extraction-default.json)",
+        help=("Path to extraction pipeline config (default:" " configs/extraction-default.json)"),
     )
     parser.add_argument(
         "--out",
         type=str,
         default=None,
-        help="Output path for JSON report (default: reports/{dataset_abbrev}-YYYY-MM-DD.json)",
+        help=("Output path for JSON report (default:" " reports/{dataset_abbrev}-YYYY-MM-DD.json)"),
     )
     parser.add_argument(
         "--max-cost",

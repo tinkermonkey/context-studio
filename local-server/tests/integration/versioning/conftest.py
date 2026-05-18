@@ -5,21 +5,20 @@ Provides common database, repository, and service fixtures used across
 all versioning integration tests.
 """
 
-import pytest
 import tempfile
 from pathlib import Path
 
+import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
-
-from domain.versioning.services import VersioningService
-from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
+from adapters.persistence.sqlite.models import Base
 from adapters.sync.noop_sync import NoOpSyncTarget
 from adapters.web.versioning_routes import router
+from domain.versioning.services import VersioningService
 from tests.fakes.fake_event_publisher import FakeEventPublisher
 
 
