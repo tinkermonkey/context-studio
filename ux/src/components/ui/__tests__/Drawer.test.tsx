@@ -329,10 +329,9 @@ describe("Drawer", () => {
         </Drawer>,
       );
       const backdrop = container.querySelector(".drawer-backdrop");
-      if (backdrop) {
-        await user.click(backdrop);
-        expect(onClose).toHaveBeenCalled();
-      }
+      expect(backdrop).toBeInTheDocument();
+      await user.click(backdrop!);
+      expect(onClose).toHaveBeenCalled();
     });
   });
 });

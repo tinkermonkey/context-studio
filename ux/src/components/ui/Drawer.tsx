@@ -1,5 +1,5 @@
 import { type ReactNode } from "react";
-import { Loader, CheckCircle, AlertCircle } from "lucide-react";
+import { Loader, CheckCircle, AlertCircle, X } from "lucide-react";
 import { Drawer as HeimdallDrawer } from "@tinkermonkey/heimdall-ui";
 import { formatTimeAgo } from "@/utils/dateFormatting";
 import { Button } from "./Button";
@@ -96,9 +96,7 @@ export function Drawer({
       <div className="drawer-head">
         {headerContent}
         <button className="drawer-close" onClick={onClose} aria-label="Close drawer">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M1 1L13 13M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
+          <X size={14} />
         </button>
       </div>
       <div className="drawer-body">{children}</div>
