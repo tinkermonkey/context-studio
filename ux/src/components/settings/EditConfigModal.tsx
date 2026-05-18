@@ -127,7 +127,6 @@ export function EditConfigModal({
       title={title}
       size={section === "llmprovider" ? "lg" : "md"}
       footer={footer}
-      testId="edit-config-modal"
     >
       <div className="stack-lg">
         {errors._form && <div className="form-error">{errors._form}</div>}

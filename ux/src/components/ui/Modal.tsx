@@ -1,62 +1,54 @@
-import { type ReactNode, useEffect } from "react";
-import { X } from "lucide-react";
-import { useKeyboardShortcut } from "@/hooks/useKeyboardShortcut";
+import { Modal as HeimdallModal } from "@tinkermonkey/heimdall-ui";
+import type { ReactNode } from "react";
 
 type ModalSize = "sm" | "md" | "lg";
 
 interface ModalProps {
   open: boolean;
   onClose: () => void;
-  title: ReactNode;
+  title?: ReactNode;
   subtitle?: string;
   size?: ModalSize;
   children: ReactNode;
   footer?: ReactNode;
-  testId?: string;
+  className?: string;
 }
 
 export function Modal({
   open,
-  onClose,
+  size,
+  className = "",
   title,
   subtitle,
-  size = "md",
+  onClose,
   children,
   footer,
-  testId,
 }: ModalProps) {
-  useKeyboardShortcut({ key: "Escape", onKeydown: onClose, enabled: open });
+  const sizeClass = size ? `modal-${size}` : "modal-md";
+  const combinedClassName = [sizeClass, className].filter(Boolean).join(" ");
 
-  useEffect(() => {
-    if (open) document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [open]);
-
-  if (!open) return null;
+  // Convert title to string for Heimdall, or render as ReactNode in children
+  const titleString = typeof title === "string" ? title : undefined;
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div
-        className={`modal modal-${size}`}
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal
-        data-testid={testId}
-      >
-        <div className="modal-head">
-          <div className="modal-head-text">
-            <div className="modal-title">{title}</div>
-            {subtitle && <div className="modal-sub">{subtitle}</div>}
-          </div>
-          <button className="modal-x" onClick={onClose} type="button" aria-label="Close">
-            <X size={14} />
-          </button>
-        </div>
-        <div className="modal-body">{children}</div>
-        {footer && <div className="modal-foot">{footer}</div>}
-      </div>
-    </div>
+    <HeimdallModal
+      isOpen={open}
+      onClose={onClose}
+      title={titleString}
+      subtitle={subtitle}
+      className={combinedClassName}
+      footer={footer}
+    >
+      {typeof title !== "string" && title ? (
+        <>
+          <div style={{ marginBottom: "12px" }}>{title}</div>
+          {children}
+        </>
+      ) : (
+        children
+      )}
+    </HeimdallModal>
   );
 }
+
+export default Modal;

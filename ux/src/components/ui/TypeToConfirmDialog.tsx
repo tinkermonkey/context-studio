@@ -25,22 +25,27 @@ export function TypeToConfirmDialog({
   isLoading = false,
 }: TypeToConfirmDialogProps) {
   const [input, setInput] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
   const isConfirmed = input === confirmText;
+  const isDisabled = isLoading || isProcessing || !isConfirmed;
 
   const handleConfirm = async () => {
     if (isConfirmed) {
+      setIsProcessing(true);
       try {
         await onConfirm();
         setInput("");
         onClose();
       } catch {
         // Error is handled by the consumer's error handling
+      } finally {
+        setIsProcessing(false);
       }
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && isConfirmed) {
+    if (e.key === "Enter" && isConfirmed && !isDisabled) {
       handleConfirm();
     }
   };
@@ -57,7 +62,7 @@ export function TypeToConfirmDialog({
         variant="ghost"
         size="sm"
         onClick={handleClose}
-        disabled={isLoading}
+        disabled={isLoading || isProcessing}
         data-testid="type-confirm-cancel"
       >
         Cancel
@@ -66,7 +71,7 @@ export function TypeToConfirmDialog({
         variant="danger"
         size="sm"
         onClick={handleConfirm}
-        disabled={!isConfirmed || isLoading}
+        disabled={isDisabled}
         data-testid="type-confirm-button"
       >
         {confirmLabel}

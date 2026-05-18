@@ -80,6 +80,196 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
       ),
     );
   },
+  Modal: React.forwardRef(
+    ({ isOpen, onClose, title, subtitle, children, footer, className = "", ...props }: any, ref: any) => {
+      React.useEffect(() => {
+        if (isOpen) {
+          document.body.style.overflow = "hidden";
+        }
+        return () => {
+          document.body.style.overflow = "";
+        };
+      }, [isOpen]);
+
+      React.useEffect(() => {
+        if (!isOpen) return;
+        const handleEscape = (e: KeyboardEvent) => {
+          if (e.key === "Escape") {
+            onClose();
+          }
+        };
+        document.addEventListener("keydown", handleEscape);
+        return () => {
+          document.removeEventListener("keydown", handleEscape);
+        };
+      }, [isOpen, onClose]);
+
+      if (!isOpen) return null;
+      const handleBackdropClick = (e: React.MouseEvent) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      };
+      return React.createElement(
+        "div",
+        { className: "modal-backdrop", onClick: handleBackdropClick, ...props, ref },
+        React.createElement(
+          "div",
+          { className: ["modal", className].filter(Boolean).join(" "), role: "dialog", "aria-modal": "true" },
+          title &&
+            React.createElement(
+              "div",
+              { className: "modal-head" },
+              React.createElement("div", { className: "modal-head-text" }, React.createElement("div", { className: "modal-title" }, title), subtitle && React.createElement("div", { className: "modal-sub" }, subtitle)),
+              React.createElement("button", { className: "modal-x", onClick: onClose, "aria-label": "Close", type: "button" }, "✕"),
+            ),
+          React.createElement("div", { className: "modal-body" }, children),
+          footer && React.createElement("div", { className: "modal-foot" }, footer),
+        ),
+      );
+    },
+  ),
+  ConfirmDialog: React.forwardRef(
+    ({ isOpen, onClose, onConfirm, title, message, confirmLabel = "Confirm", cancelLabel = "Cancel", variant = "primary", ...props }: any, ref: any) => {
+      if (!isOpen) return null;
+      return React.createElement(
+        "div",
+        { className: "modal-backdrop", onClick: onClose, ...props, ref },
+        React.createElement(
+          "div",
+          { className: "modal", role: "dialog", "aria-modal": "true" },
+          React.createElement(
+            "div",
+            { className: "modal__header" },
+            React.createElement("div", { className: "modal__title" }, title),
+            React.createElement("button", { className: "modal__close", onClick: onClose, "aria-label": "Close" }, "✕"),
+          ),
+          React.createElement("div", { className: "modal__body" }, message),
+          React.createElement(
+            "div",
+            { className: "modal__footer" },
+            React.createElement("button", { className: "btn btn--ghost", onClick: onClose }, cancelLabel),
+            React.createElement("button", { className: `btn btn--${variant}`, onClick: onConfirm }, confirmLabel),
+          ),
+        ),
+      );
+    },
+  ),
+  Drawer: React.forwardRef(
+    ({ isOpen, onClose, title, children, ...props }: any, ref: any) => {
+      if (!isOpen) return null;
+      return React.createElement(
+        "aside",
+        { className: "drawer", ...props, ref },
+        React.createElement(
+          "div",
+          { className: "drawer-head" },
+          React.createElement("span", { className: "title" }, title),
+          React.createElement(
+            "div",
+            { className: "drawer-actions" },
+            React.createElement("button", { className: "modal-x", onClick: onClose, "aria-label": "Close drawer", type: "button" }, "✕"),
+          ),
+        ),
+        React.createElement("div", { className: "drawer-body" }, children),
+      );
+    },
+  ),
+  Chip: React.forwardRef(
+    ({ variant = "neutral", form = "default", className = "", children, ...props }: any, ref: any) =>
+      React.createElement(
+        "span",
+        {
+          ref,
+          className: ["chip", `chip--${variant}`, `chip--${form}`, className]
+            .filter(Boolean)
+            .join(" "),
+          ...props,
+        },
+        children,
+      ),
+  ),
+  Badge: React.forwardRef(
+    ({ color = "neutral", className = "", children, ...props }: any, ref: any) =>
+      React.createElement(
+        "span",
+        {
+          ref,
+          className: ["badge", `badge--${color}`, className].filter(Boolean).join(" "),
+          ...props,
+        },
+        children,
+      ),
+  ),
+  StatusBadge: React.forwardRef(
+    ({ color = "neutral", className = "", children, ...props }: any, ref: any) =>
+      React.createElement(
+        "div",
+        {
+          ref,
+          className: ["status-badge", `status-badge--${color}`, className]
+            .filter(Boolean)
+            .join(" "),
+          ...props,
+        },
+        children,
+      ),
+  ),
+  Panel: React.forwardRef(
+    ({ title, subtitle, footer, children, bordered = false, className = "", ...props }: any, ref: any) =>
+      React.createElement(
+        "div",
+        {
+          ref,
+          className: ["panel", bordered && "panel--bordered", className]
+            .filter(Boolean)
+            .join(" "),
+          ...props,
+        },
+        title &&
+          React.createElement(
+            "div",
+            { className: "panel__header" },
+            React.createElement("div", { className: "panel__title" }, title),
+            subtitle && React.createElement("div", { className: "panel__subtitle" }, subtitle),
+          ),
+        React.createElement("div", { className: "panel__body" }, children),
+        footer && React.createElement("div", { className: "panel__footer" }, footer),
+      ),
+  ),
+  StatTile: React.forwardRef(
+    ({ label, value, color = "cyan", className = "", ...props }: any, ref: any) =>
+      React.createElement(
+        "div",
+        {
+          ref,
+          className: ["stat", `stat--${color}`, className].filter(Boolean).join(" "),
+          ...props,
+        },
+        React.createElement("div", { className: "stat__label" }, label),
+        React.createElement("div", { className: "stat__value" }, value),
+      ),
+  ),
+  TabBar: React.forwardRef(
+    ({ tabs, activeTabId, onSelectTab, className = "", ...props }: any, ref: any) =>
+      React.createElement(
+        "div",
+        { ref, className: ["tabbar", className].filter(Boolean).join(" "), role: "tablist", ...props },
+        tabs.map((tab: any) =>
+          React.createElement(
+            "button",
+            {
+              key: tab.id,
+              className: ["tab", activeTabId === tab.id ? "active" : ""].filter(Boolean).join(" "),
+              onClick: () => onSelectTab(tab.id),
+              role: "tab",
+              "aria-selected": activeTabId === tab.id,
+            },
+            tab.label,
+          ),
+        ),
+      ),
+  ),
   Sidebar: ({ children, onCollapse, ..._props }: any) =>
     React.createElement("div", { "data-testid": "heimdall-sidebar" }, [
       React.createElement(
@@ -97,6 +287,10 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
     React.createElement("div", { "data-testid": "heimdall-statusbar" }, children),
   CommandPalette: ({ children, ..._props }: any) =>
     React.createElement("div", { "data-testid": "heimdall-command-palette" }, children),
+  Icon: ({ name, ...props }: any) =>
+    React.createElement("span", { "data-icon": name, ...props }, name),
+  NavItem: ({ icon, label, ...props }: any) =>
+    React.createElement("div", { className: "nav-item", ...props }, label),
 }));
 
 // Mock window.scrollTo to avoid jsdom "Not implemented" errors
