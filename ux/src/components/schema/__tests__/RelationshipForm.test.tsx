@@ -7,8 +7,22 @@ import type { components } from "@/api/types";
 describe("RelationshipForm", () => {
   const mockOnSubmit = vi.fn();
   const mockClasses: components["schemas"]["ClassResponse"][] = [
-    { id: "class-1", title: "Class 1", concept_scheme_id: "scheme-1", taxonomy_id: "tax-1", version: 1, status: "draft" },
-    { id: "class-2", title: "Class 2", concept_scheme_id: "scheme-1", taxonomy_id: "tax-1", version: 1, status: "draft" },
+    {
+      id: "class-1",
+      title: "Class 1",
+      concept_scheme_id: "scheme-1",
+      taxonomy_id: "tax-1",
+      version: 1,
+      status: "draft",
+    },
+    {
+      id: "class-2",
+      title: "Class 2",
+      concept_scheme_id: "scheme-1",
+      taxonomy_id: "tax-1",
+      version: 1,
+      status: "draft",
+    },
   ];
   const mockProperties: components["schemas"]["PropertyDefinitionResponse"][] = [
     { id: "prop-1", identifier: "prop_1", title: "Property 1", version: 1, status: "draft" },

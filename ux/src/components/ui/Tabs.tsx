@@ -15,11 +15,6 @@ interface TabsProps {
 
 export function Tabs({ tabs, active, onChange, className }: TabsProps) {
   return (
-    <HeimdallTabBar
-      tabs={tabs}
-      activeTabId={active}
-      onSelectTab={onChange}
-      className={className}
-    />
+    <HeimdallTabBar tabs={tabs} activeTabId={active} onSelectTab={onChange} className={className} />
   );
 }

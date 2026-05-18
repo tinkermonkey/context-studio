@@ -162,7 +162,9 @@ describe("PropertyDefinitionForm", () => {
   it("renders form with proper field structure and attributes", () => {
     render(<PropertyDefinitionForm onSubmit={mockOnSubmit} />);
 
-    const identifierInput = screen.getByTestId("property-definition-identifier-input") as HTMLInputElement;
+    const identifierInput = screen.getByTestId(
+      "property-definition-identifier-input",
+    ) as HTMLInputElement;
     const titleInput = screen.getByTestId("property-definition-title-input") as HTMLInputElement;
 
     expect(identifierInput.type).toBe("text");
@@ -179,7 +181,9 @@ describe("PropertyDefinitionForm", () => {
     await user.type(identifierInput, "Invalid-ID");
     fireEvent.click(submitButton);
 
-    expect(await screen.findByText("Identifier must be lowercase with underscores only")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Identifier must be lowercase with underscores only"),
+    ).toBeInTheDocument();
   });
 
   it("clears identifier error on onChange after failed validation", async () => {
@@ -227,7 +231,9 @@ describe("PropertyDefinitionForm", () => {
 
     render(<PropertyDefinitionForm initialData={initialData} onSubmit={mockOnSubmit} />);
 
-    const identifierInput = screen.getByTestId("property-definition-identifier-input") as HTMLInputElement;
+    const identifierInput = screen.getByTestId(
+      "property-definition-identifier-input",
+    ) as HTMLInputElement;
     expect(identifierInput.disabled).toBe(true);
   });
 });

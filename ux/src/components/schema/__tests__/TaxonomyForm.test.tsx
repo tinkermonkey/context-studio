@@ -75,7 +75,9 @@ describe("TaxonomyForm", () => {
     render(<TaxonomyForm onSubmit={mockOnSubmit} />);
 
     const titleInput = screen.getByTestId("taxonomy-title-input") as HTMLInputElement;
-    const descriptionInput = screen.getByTestId("taxonomy-description-input") as HTMLTextAreaElement;
+    const descriptionInput = screen.getByTestId(
+      "taxonomy-description-input",
+    ) as HTMLTextAreaElement;
 
     expect(titleInput.type).toBe("text");
     expect(descriptionInput.tagName).toBe("TEXTAREA");

@@ -25,8 +25,22 @@ describe("GroundingWorkflowForm", () => {
     vi.mocked(hooks.useClasses).mockReturnValue({
       data: {
         items: [
-          { id: "class-1", title: "Class 1", concept_scheme_id: "scheme-1", taxonomy_id: "tax-1", version: 1, status: "draft" },
-          { id: "class-2", title: "Class 2", concept_scheme_id: "scheme-1", taxonomy_id: "tax-1", version: 1, status: "draft" },
+          {
+            id: "class-1",
+            title: "Class 1",
+            concept_scheme_id: "scheme-1",
+            taxonomy_id: "tax-1",
+            version: 1,
+            status: "draft",
+          },
+          {
+            id: "class-2",
+            title: "Class 2",
+            concept_scheme_id: "scheme-1",
+            taxonomy_id: "tax-1",
+            version: 1,
+            status: "draft",
+          },
         ],
       },
     } as any);
