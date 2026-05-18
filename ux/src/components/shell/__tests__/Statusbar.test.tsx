@@ -16,10 +16,10 @@ vi.mock("@/stores/executionStore", () => ({
 }));
 
 vi.mock("@tinkermonkey/heimdall-ui", () => ({
-  Statusbar: ({ left, right }: any) => (
+  Statusbar: (props: any) => (
     <div data-testid="heimdall-statusbar">
-      <div data-testid="statusbar-left">{left}</div>
-      <div data-testid="statusbar-right">{right}</div>
+      <div data-testid="statusbar-left">{props.left}</div>
+      <div data-testid="statusbar-right">{props.right}</div>
     </div>
   ),
 }));
@@ -311,7 +311,6 @@ describe("Statusbar", () => {
 
     it("renders check circle icon for local environment", () => {
       render(<Statusbar />);
-      const right = screen.getByTestId("statusbar-right");
       const localText = screen.getByText("local");
       const icon = localText.parentElement?.querySelector("svg");
       expect(icon).toBeInTheDocument();
