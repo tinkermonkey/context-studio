@@ -6,12 +6,19 @@ import {
   Cpu,
   BookOpen,
   Settings,
-  ChevronRight,
-  ChevronLeft,
-  ChevronDown,
 } from "lucide-react";
+import { Sidebar as HeimdallSidebar } from "@tinkermonkey/heimdall-ui";
+import { useSidebarStore } from "@/stores/sidebar";
 
-const NAV_TREE = [
+interface NavItemDef {
+  id: string;
+  label: string;
+  icon?: typeof LayoutDashboard;
+  path?: string;
+  children?: Array<{ id: string; label: string; path: string }>;
+}
+
+const NAV_TREE: NavItemDef[] = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/app" },
   {
     id: "schema",
@@ -54,113 +61,86 @@ const NAV_TREE = [
     ],
   },
   { id: "settings", label: "Settings", icon: Settings, path: "/app/settings" },
-] as const;
+];
 
 interface SidebarProps {
-  collapsed: boolean;
-  onToggle: () => void;
+  collapsed?: boolean;
+  onToggle?: () => void;
 }
 
-export function Sidebar({ collapsed, onToggle }: SidebarProps) {
+export function Sidebar({ collapsed: collapsedProp, onToggle }: SidebarProps = {}) {
   const navigate = useNavigate();
   const { location } = useRouterState();
+  const { collapsed: collapsedStore, toggleCollapsed } = useSidebarStore();
   const pathname = location.pathname;
 
-  function isParentActive(id: string) {
-    return pathname.startsWith(`/app/${id}`);
+  const collapsed = collapsedProp !== undefined ? collapsedProp : collapsedStore;
+  const handleToggle = onToggle !== undefined ? onToggle : toggleCollapsed;
+
+  function getActiveItemId(): string | undefined {
+    for (const item of NAV_TREE) {
+      if (item.path && pathname === item.path) {
+        return item.id;
+      }
+      if (item.children) {
+        const child = item.children.find((c) => c.path === pathname);
+        if (child) {
+          return child.id;
+        }
+      }
+    }
+    return undefined;
   }
 
-  function isLeafActive(path: string) {
-    // Exact match only — prevents /app matching /app/schema etc.
-    return pathname === path;
+  function getHeimdallIconName(lucideIcon: typeof LayoutDashboard | undefined): string | undefined {
+    if (!lucideIcon) return undefined;
+    const iconMap: Record<string, string> = {
+      "LayoutDashboard": "dashboard",
+      "Network": "schema",
+      "Database": "data",
+      "Cpu": "pipeline",
+      "BookOpen": "link",
+      "Settings": "settings",
+    };
+    return iconMap[lucideIcon.name || ""] as any;
   }
+
+  const sections = [
+    {
+      title: "Navigation",
+      items: NAV_TREE.map((item) => ({
+        id: item.id,
+        label: item.label,
+        icon: getHeimdallIconName(item.icon) as any,
+        children: item.children?.map((child) => ({ id: child.id, label: child.label })),
+      })),
+    },
+  ] as any;
+
+  const handleSelectItem = (itemId: string) => {
+    const item = NAV_TREE.find((i) => i.id === itemId);
+    if (item) {
+      if (item.path) {
+        navigate({ to: item.path });
+      } else if (item.children) {
+        navigate({ to: item.children[0].path });
+      }
+    } else {
+      const child = NAV_TREE.flatMap((i) => i.children || []).find((c) => c.id === itemId);
+      if (child) {
+        navigate({ to: child.path });
+      }
+    }
+  };
 
   return (
-    <aside data-testid="sidebar" className={`shell-rail ${collapsed ? "collapsed" : ""}`}>
-      <div className="brand-row">
-        <div className="brand-mark" aria-hidden="true" />
-        {!collapsed && (
-          <div className="brand-name">
-            Context Studio<span>v0.1.0 · local</span>
-          </div>
-        )}
-        <button
-          className="rail-collapse"
-          data-testid="sidebar-toggle"
-          onClick={onToggle}
-          aria-label="Toggle sidebar"
-          type="button"
-        >
-          {collapsed ? <ChevronRight size={11} /> : <ChevronLeft size={11} />}
-        </button>
-      </div>
-
-      <div className="nav-section">
-        {NAV_TREE.map((item) => {
-          const Icon = item.icon;
-          const hasChildren = "children" in item;
-          const parentActive = hasChildren ? isParentActive(item.id) : false;
-          const leafActive = !hasChildren && isLeafActive(item.path);
-
-          return (
-            <div key={item.id}>
-              <div
-                className={`nav-item${parentActive ? "active-parent" : ""}${leafActive ? "active" : ""}`}
-                onClick={() => {
-                  if (!hasChildren) {
-                    navigate({ to: item.path });
-                  } else {
-                    navigate({ to: item.children[0].path });
-                  }
-                }}
-                title={collapsed ? item.label : undefined}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => e.key === "Enter" && e.currentTarget.click()}
-              >
-                <Icon size={16} />
-                {!collapsed && <span className="nav-label">{item.label}</span>}
-                {hasChildren &&
-                  !collapsed &&
-                  (parentActive ? (
-                    <ChevronDown size={12} className="ml-auto" />
-                  ) : (
-                    <ChevronRight size={12} className="ml-auto" />
-                  ))}
-              </div>
-
-              {hasChildren && parentActive && !collapsed && (
-                <div className="nav-sub">
-                  {item.children.map((child) => (
-                    <div
-                      key={child.id}
-                      className={`nav-item${isLeafActive(child.path) ? "active" : ""}`}
-                      onClick={() => navigate({ to: child.path })}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => e.key === "Enter" && e.currentTarget.click()}
-                    >
-                      <span className="nav-label">{child.label}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="rail-footer">
-        <div className="rail-user">
-          <div className="avatar">CS</div>
-          {!collapsed && (
-            <div className="rail-user-info">
-              <div className="n">Local User</div>
-              <div className="e">local · main</div>
-            </div>
-          )}
-        </div>
-      </div>
-    </aside>
+    <HeimdallSidebar
+      data-testid="sidebar"
+      sections={sections}
+      activeItemId={getActiveItemId()}
+      collapsed={collapsed}
+      onCollapse={handleToggle}
+      onSelectItem={handleSelectItem}
+    />
   );
 }
