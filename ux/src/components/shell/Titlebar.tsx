@@ -1,5 +1,5 @@
 import { Folder, ChevronDown, Search } from "lucide-react";
-import { Titlebar as HeimdallTitlebar, AppTitle } from "@tinkermonkey/heimdall-ui";
+import { Titlebar as HeimdallTitlebar } from "@tinkermonkey/heimdall-ui";
 import { useCommandPaletteStore } from "@/stores/commandPalette";
 
 interface TitlebarProps {

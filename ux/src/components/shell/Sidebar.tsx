@@ -1,29 +1,22 @@
+import { useEffect, useRef } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
-import {
-  LayoutDashboard,
-  Network,
-  Database,
-  Cpu,
-  BookOpen,
-  Settings,
-} from "lucide-react";
 import { Sidebar as HeimdallSidebar } from "@tinkermonkey/heimdall-ui";
 import { useSidebarStore } from "@/stores/sidebar";
 
 interface NavItemDef {
   id: string;
   label: string;
-  icon?: typeof LayoutDashboard;
+  heimdallIcon?: string;
   path?: string;
   children?: Array<{ id: string; label: string; path: string }>;
 }
 
 const NAV_TREE: NavItemDef[] = [
-  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/app" },
+  { id: "dashboard", label: "Dashboard", heimdallIcon: "dashboard", path: "/app" },
   {
     id: "schema",
     label: "Schema",
-    icon: Network,
+    heimdallIcon: "schema",
     children: [
       { id: "taxonomies", label: "Taxonomies", path: "/app/schema/taxonomies" },
       { id: "schemes", label: "Concept schemes", path: "/app/schema/schemes" },
@@ -35,7 +28,7 @@ const NAV_TREE: NavItemDef[] = [
   {
     id: "data",
     label: "Data",
-    icon: Database,
+    heimdallIcon: "data",
     children: [
       { id: "individuals", label: "Individuals", path: "/app/data/individuals" },
       { id: "datasets", label: "Datasets", path: "/app/data/datasets" },
@@ -44,7 +37,7 @@ const NAV_TREE: NavItemDef[] = [
   {
     id: "pipelines",
     label: "Pipelines",
-    icon: Cpu,
+    heimdallIcon: "pipeline",
     children: [
       { id: "pipelines-all", label: "All pipelines", path: "/app/pipelines" },
       { id: "pipelines-runs", label: "Run history", path: "/app/pipelines/runs" },
@@ -54,13 +47,13 @@ const NAV_TREE: NavItemDef[] = [
   {
     id: "reference",
     label: "External Reference",
-    icon: BookOpen,
+    heimdallIcon: "link",
     children: [
       { id: "ref-sources", label: "Sources", path: "/app/reference/sources" },
       { id: "ref-grounding", label: "Grounding workflows", path: "/app/reference/workflows" },
     ],
   },
-  { id: "settings", label: "Settings", icon: Settings, path: "/app/settings" },
+  { id: "settings", label: "Settings", heimdallIcon: "settings", path: "/app/settings" },
 ];
 
 interface SidebarProps {
@@ -72,10 +65,20 @@ export function Sidebar({ collapsed: collapsedProp, onToggle }: SidebarProps = {
   const navigate = useNavigate();
   const { location } = useRouterState();
   const { collapsed: collapsedStore, toggleCollapsed } = useSidebarStore();
+  const sidebarRef = useRef<HTMLDivElement>(null);
   const pathname = location.pathname;
 
   const collapsed = collapsedProp !== undefined ? collapsedProp : collapsedStore;
   const handleToggle = onToggle !== undefined ? onToggle : toggleCollapsed;
+
+  useEffect(() => {
+    if (sidebarRef.current) {
+      const toggleButton = sidebarRef.current.querySelector("button[title*='toggle'], button[title*='collapse']") as HTMLElement;
+      if (toggleButton) {
+        toggleButton.setAttribute("data-testid", "sidebar-toggle");
+      }
+    }
+  }, []);
 
   function getActiveItemId(): string | undefined {
     for (const item of NAV_TREE) {
@@ -92,26 +95,13 @@ export function Sidebar({ collapsed: collapsedProp, onToggle }: SidebarProps = {
     return undefined;
   }
 
-  function getHeimdallIconName(lucideIcon: typeof LayoutDashboard | undefined): string | undefined {
-    if (!lucideIcon) return undefined;
-    const iconMap: Record<string, string> = {
-      "LayoutDashboard": "dashboard",
-      "Network": "schema",
-      "Database": "data",
-      "Cpu": "pipeline",
-      "BookOpen": "link",
-      "Settings": "settings",
-    };
-    return iconMap[lucideIcon.name || ""] as any;
-  }
-
   const sections = [
     {
       title: "Navigation",
       items: NAV_TREE.map((item) => ({
         id: item.id,
         label: item.label,
-        icon: getHeimdallIconName(item.icon) as any,
+        icon: item.heimdallIcon,
         children: item.children?.map((child) => ({ id: child.id, label: child.label })),
       })),
     },
@@ -134,13 +124,14 @@ export function Sidebar({ collapsed: collapsedProp, onToggle }: SidebarProps = {
   };
 
   return (
-    <HeimdallSidebar
-      data-testid="sidebar"
-      sections={sections}
-      activeItemId={getActiveItemId()}
-      collapsed={collapsed}
-      onCollapse={handleToggle}
-      onSelectItem={handleSelectItem}
-    />
+    <div ref={sidebarRef} data-testid="sidebar" className={collapsed ? "collapsed" : ""}>
+      <HeimdallSidebar
+        sections={sections}
+        activeItemId={getActiveItemId()}
+        collapsed={collapsed}
+        onCollapse={handleToggle}
+        onSelectItem={handleSelectItem}
+      />
+    </div>
   );
 }
