@@ -187,6 +187,106 @@ describe("ErrorBanner", () => {
     });
   });
 
+  describe("CSS classes and data-testid attributes", () => {
+    it("applies error-banner class in full mode", () => {
+      const mockError = new Error("Test error");
+      const mockRetry = vi.fn();
+
+      const { container } = render(
+        <ErrorBanner error={mockError} onRetry={mockRetry} message="Failed to load data" />,
+      );
+
+      const banner = container.querySelector("[data-testid='error-banner']");
+      expect(banner).toHaveClass("error-banner");
+    });
+
+    it("applies error-banner-compact class in compact mode", () => {
+      const mockError = new Error("Test error");
+      const mockRetry = vi.fn();
+
+      const { container } = render(
+        <ErrorBanner error={mockError} onRetry={mockRetry} message="Failed to load data" compact />,
+      );
+
+      const banner = container.querySelector("[data-testid='error-banner-compact']");
+      expect(banner).toHaveClass("error-banner-compact");
+    });
+
+    it("has data-testid attribute on root container in full mode", () => {
+      const mockError = new Error("Test error");
+      const mockRetry = vi.fn();
+
+      const { container } = render(
+        <ErrorBanner error={mockError} onRetry={mockRetry} message="Failed to load data" />,
+      );
+
+      const banner = container.querySelector("[data-testid='error-banner']");
+      expect(banner).toBeInTheDocument();
+      expect(banner?.getAttribute("data-testid")).toBe("error-banner");
+    });
+
+    it("has data-testid attribute on root container in compact mode", () => {
+      const mockError = new Error("Test error");
+      const mockRetry = vi.fn();
+
+      const { container } = render(
+        <ErrorBanner error={mockError} onRetry={mockRetry} message="Failed to load data" compact />,
+      );
+
+      const banner = container.querySelector("[data-testid='error-banner-compact']");
+      expect(banner).toBeInTheDocument();
+      expect(banner?.getAttribute("data-testid")).toBe("error-banner-compact");
+    });
+
+    it("has data-testid on logs button in full mode", () => {
+      const mockError = new Error("Test error");
+      const mockRetry = vi.fn();
+
+      const { container } = render(
+        <ErrorBanner error={mockError} onRetry={mockRetry} message="Failed to load data" />,
+      );
+
+      const logsBtn = container.querySelector("[data-testid='error-banner-logs-btn']");
+      expect(logsBtn).toBeInTheDocument();
+    });
+
+    it("has data-testid on retry button in full mode", () => {
+      const mockError = new Error("Test error");
+      const mockRetry = vi.fn();
+
+      const { container } = render(
+        <ErrorBanner error={mockError} onRetry={mockRetry} message="Failed to load data" />,
+      );
+
+      const retryBtn = container.querySelector("[data-testid='error-banner-retry-btn']");
+      expect(retryBtn).toBeInTheDocument();
+    });
+
+    it("has role alert on root container in full mode", () => {
+      const mockError = new Error("Test error");
+      const mockRetry = vi.fn();
+
+      const { container } = render(
+        <ErrorBanner error={mockError} onRetry={mockRetry} message="Failed to load data" />,
+      );
+
+      const banner = container.querySelector("[data-testid='error-banner']");
+      expect(banner).toHaveAttribute("role", "alert");
+    });
+
+    it("has role alert on root container in compact mode", () => {
+      const mockError = new Error("Test error");
+      const mockRetry = vi.fn();
+
+      const { container } = render(
+        <ErrorBanner error={mockError} onRetry={mockRetry} message="Failed to load data" compact />,
+      );
+
+      const banner = container.querySelector("[data-testid='error-banner-compact']");
+      expect(banner).toHaveAttribute("role", "alert");
+    });
+  });
+
   describe("clipboard copy behavior", () => {
     it("logs button is clickable in compact mode", () => {
       const mockError = new Error("Test error");

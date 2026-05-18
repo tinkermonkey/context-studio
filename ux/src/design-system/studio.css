@@ -2259,15 +2259,6 @@ select.input {
   font-family: var(--mono);
 }
 
-.error-banner {
-  padding: var(--space-3);
-  background: rgb(var(--rose-50));
-  border-radius: var(--radius-sm);
-  color: rgb(var(--rose-700));
-  font-size: var(--text-sm);
-  border: 1px solid rgb(var(--rose-200));
-}
-
 /* ============= Dark canvas mode ============= */
 /* Token redefinitions are now handled by Heimdall's tokens.css and app-overrides.css */
 body.dark-canvas {
@@ -2445,7 +2436,7 @@ body.dark-canvas .topbar-search input {
 .error-banner-error-text {
   font-size: var(--text-xs);
   color: rgb(var(--status-rose-deep, var(--rose-700)));
-  font-family: var(--font-mono);
+  font-family: var(--mono);
 }
 
 .error-banner-actions {

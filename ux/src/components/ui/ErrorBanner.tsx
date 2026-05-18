@@ -31,7 +31,7 @@ export function ErrorBanner({
 
   if (compact) {
     return (
-      <div className="error-banner-compact" data-testid="error-banner-compact">
+      <div className="error-banner-compact" data-testid="error-banner-compact" role="alert">
         <AlertCircle size={16} className="error-banner-icon" />
         <span className="error-banner-message compact">{message}</span>
         <div className="error-banner-actions compact">
@@ -63,7 +63,7 @@ export function ErrorBanner({
   }
 
   return (
-    <div className="error-banner" data-testid="error-banner">
+    <div className="error-banner" data-testid="error-banner" role="alert">
       <AlertCircle size={18} className="error-banner-icon" />
       <div className="error-banner-content">
         <div className="error-banner-message">{message}</div>

@@ -69,6 +69,20 @@ selectors:
     component: components/ui/Toast.tsx
     description: Action button in toast with undo callback
 
+  # ErrorBanner
+  - selector: error-banner
+    component: components/ui/ErrorBanner.tsx
+    description: Error banner root container in full mode
+  - selector: error-banner-compact
+    component: components/ui/ErrorBanner.tsx
+    description: Error banner root container in compact mode
+  - selector: error-banner-logs-btn
+    component: components/ui/ErrorBanner.tsx
+    description: Button to copy daemon log path in error banner
+  - selector: error-banner-retry-btn
+    component: components/ui/ErrorBanner.tsx
+    description: Button to retry the failed operation in error banner
+
   # Drawer
   - selector: drawer-autosave-status
     component: components/ui/Drawer.tsx
