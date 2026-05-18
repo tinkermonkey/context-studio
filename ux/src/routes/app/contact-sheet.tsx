@@ -58,13 +58,6 @@ interface MockEntity {
   description?: string;
 }
 
-interface DemoTableRow {
-  name: string;
-  type: "Class" | "Individual" | "Relation";
-  status: "active" | "draft";
-  count: string;
-}
-
 export default function ContactSheet() {
   const [modalOpen, setModalOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);

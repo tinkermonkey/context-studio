@@ -371,8 +371,8 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
         rowKey = "id",
         selectable = true,
         selectedRows = [],
-        onSelectRows,
-        onSort,
+        _onSelectRows,
+        _onSort,
         className = "",
         ...props
       }: any,
