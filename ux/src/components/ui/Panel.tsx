@@ -20,36 +20,24 @@ export function Panel({
   className,
   ...rest
 }: PanelProps) {
-  if (actions) {
-    return (
-      <div className={className} {...rest}>
-        <HeimdallPanel
-          title={title}
-          subtitle={subtitle}
-          footer={
-            <div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}>
-              <div />
-              <div>{actions}</div>
-            </div>
-          }
-          bordered={bordered}
-        >
-          {children}
-        </HeimdallPanel>
-      </div>
-    );
-  }
+  const showCustomHeader = actions && title;
 
   return (
-    <HeimdallPanel
-      title={title}
-      subtitle={subtitle}
-      footer={footer}
-      bordered={bordered}
-      className={className}
-      {...rest}
-    >
-      {children}
-    </HeimdallPanel>
+    <div className={className} {...rest}>
+      {showCustomHeader && (
+        <div className="panel-header-with-actions">
+          <div>{title}</div>
+          <div>{actions}</div>
+        </div>
+      )}
+      <HeimdallPanel
+        title={showCustomHeader ? undefined : title}
+        subtitle={subtitle}
+        footer={footer}
+        bordered={bordered}
+      >
+        {children}
+      </HeimdallPanel>
+    </div>
   );
 }

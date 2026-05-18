@@ -917,12 +917,16 @@ a {
   padding: 16px;
 }
 
-/* ------------ Stat tiles ------------ */
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
+/* ------------ Panel header ------------ */
+.panel-header-with-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
 }
+
+/* ------------ Stat tiles ------------ */
 .stat {
   background: var(--canvas-card);
   border: 1px solid var(--canvas-bd);

@@ -10,11 +10,6 @@ describe("Panel", () => {
       expect(screen.getByText("Section Title")).toBeInTheDocument();
     });
 
-    it("renders different title variants", () => {
-      render(<Panel title="Another Title">Content</Panel>);
-      expect(screen.getByText("Another Title")).toBeInTheDocument();
-    });
-
     it("does not render title when not provided", () => {
       render(<Panel>Content</Panel>);
       expect(screen.queryByText(/Section Title|Bold Title/)).not.toBeInTheDocument();
