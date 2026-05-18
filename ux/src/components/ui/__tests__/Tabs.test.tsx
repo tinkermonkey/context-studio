@@ -18,15 +18,6 @@ describe("Tabs", () => {
       expect(screen.getByText("Tab 2")).toBeInTheDocument();
       expect(screen.getByText("Tab 3")).toBeInTheDocument();
     });
-
-    it("renders element labels", () => {
-      const tabsWithElements = [
-        { id: "tab-1", label: <strong>Bold</strong> },
-        { id: "tab-2", label: "Tab 2" },
-      ];
-      render(<Tabs tabs={tabsWithElements} active="tab-1" onChange={vi.fn()} />);
-      expect(screen.getByText("Bold")).toBeInTheDocument();
-    });
   });
 
   describe("accessibility", () => {

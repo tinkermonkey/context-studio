@@ -1,9 +1,8 @@
-import type { ReactNode } from "react";
 import { TabBar as HeimdallTabBar } from "@tinkermonkey/heimdall-ui";
 
 interface Tab {
   id: string;
-  label: ReactNode;
+  label: string;
   count?: number;
 }
 
