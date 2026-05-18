@@ -29,7 +29,7 @@ export function Titlebar({
     <div className="titlebar-actions">
       <button
         className="titlebar-btn"
-        onClick={openPalette}
+        onClick={() => openPalette()}
         type="button"
         title="Command palette (⌘K)"
       >

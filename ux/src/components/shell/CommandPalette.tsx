@@ -1,20 +1,25 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { CommandPalette as HeimdallCommandPalette, type Command } from "@tinkermonkey/heimdall-ui";
 import { useCommandPaletteStore } from "@/stores/commandPalette";
 import { useKeyboardShortcut } from "@/hooks/useKeyboardShortcut";
 
 export function CommandPalette() {
-  const { open, actions, closePalette, togglePalette } = useCommandPaletteStore();
-  const [query, setQuery] = useState("");
+  const { open, query, actions, closePalette, togglePalette, setQuery } = useCommandPaletteStore();
+  const paletteRef = useRef<HTMLDivElement>(null);
 
   useKeyboardShortcut({ key: "k", modifiers: ["meta"], onKeydown: togglePalette });
   useKeyboardShortcut({ key: "Escape", onKeydown: closePalette, enabled: open });
 
   useEffect(() => {
-    if (open) {
-      setQuery("");
+    if (open && query && paletteRef.current) {
+      const input = paletteRef.current.querySelector(
+        ".command-palette__input"
+      ) as HTMLInputElement | null;
+      if (input) {
+        input.value = query;
+      }
     }
-  }, [open]);
+  }, [open, query]);
 
   const filtered = useMemo(() => {
     if (!query.trim()) return actions;
@@ -40,7 +45,7 @@ export function CommandPalette() {
   );
 
   return (
-    <div data-testid="command-palette">
+    <div data-testid="command-palette" ref={paletteRef}>
       <HeimdallCommandPalette
         isOpen={open}
         onClose={closePalette}

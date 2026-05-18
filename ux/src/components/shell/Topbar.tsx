@@ -30,17 +30,21 @@ export function Topbar() {
 
   const breadcrumbs = crumbs.map((label) => ({ label }));
 
+  const handleSearch = (query: string) => {
+    openPalette(query);
+  };
+
   return (
     <HeimdallTopbar
       breadcrumbs={breadcrumbs}
       searchPlaceholder="Search or run command…"
-      onSearch={openPalette}
+      onSearch={handleSearch}
     >
       <div className="topbar-actions">
         <button
           className="topbar-palette"
           data-testid="topbar-palette-button"
-          onClick={openPalette}
+          onClick={() => openPalette()}
           type="button"
         >
           <Search size={14} />
