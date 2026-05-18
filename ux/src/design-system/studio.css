@@ -2265,9 +2265,6 @@ select.input {
 
 /* ============= Dark canvas mode ============= */
 /* Token redefinitions are now handled by Heimdall's tokens.css and app-overrides.css */
-body.dark-canvas {
-  /* Canvas colors are automatically redefined by app-overrides.css */
-}
 body.dark-canvas table.t tr:hover td {
   background: rgba(255, 255, 255, 0.03);
 }
