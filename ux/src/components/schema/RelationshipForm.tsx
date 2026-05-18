@@ -26,6 +26,7 @@ export function RelationshipForm({
   const [sourceError, setSourceError] = useState<string>();
   const [targetError, setTargetError] = useState<string>();
   const [typeError, setTypeError] = useState<string>();
+  const [formError, setFormError] = useState<string>();
 
   const validateFields = (): boolean => {
     let isValid = true;
@@ -61,16 +62,32 @@ export function RelationshipForm({
       return;
     }
 
-    await onSubmit({
-      source_id: sourceId,
-      target_id: targetId,
-      relationship_type: relationshipType,
-    });
+    try {
+      setFormError(undefined);
+      await onSubmit({
+        source_id: sourceId,
+        target_id: targetId,
+        relationship_type: relationshipType,
+      });
+    } catch (error) {
+      setFormError(
+        error instanceof Error ? error.message : "Failed to create relationship"
+      );
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} data-testid="relationship-form">
       <div className="stack-lg">
+        {formError && (
+          <div
+            className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm"
+            role="alert"
+            data-testid="relationship-form-error"
+          >
+            {formError}
+          </div>
+        )}
         <Field label="Source Class" required error={sourceError}>
           <select
             value={sourceId}

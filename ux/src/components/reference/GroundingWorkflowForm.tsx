@@ -19,6 +19,7 @@ export function GroundingWorkflowForm({ onSubmit, isLoading }: GroundingWorkflow
   const [titleError, setTitleError] = useState<string>();
   const [sourceError, setSourceError] = useState<string>();
   const [scopeError, setScopeError] = useState<string>();
+  const [formError, setFormError] = useState<string>();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const dropdownContainerRef = useRef<HTMLDivElement>(null);
 
@@ -112,16 +113,32 @@ export function GroundingWorkflowForm({ onSubmit, isLoading }: GroundingWorkflow
       return;
     }
 
-    await onSubmit({
-      title,
-      source,
-      class_scope: selectedClassIds,
-    });
+    try {
+      setFormError(undefined);
+      await onSubmit({
+        title,
+        source,
+        class_scope: selectedClassIds,
+      });
+    } catch (error) {
+      setFormError(
+        error instanceof Error ? error.message : "Failed to create workflow"
+      );
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} data-testid="grounding-workflow-form">
       <div className="stack-lg">
+        {formError && (
+          <div
+            className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm"
+            role="alert"
+            data-testid="grounding-workflow-form-error"
+          >
+            {formError}
+          </div>
+        )}
         <Field label="Workflow Name" required error={titleError}>
           <Input
             type="text"

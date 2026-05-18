@@ -14,6 +14,7 @@ export function SchemeForm({ onSubmit, isLoading }: SchemeFormProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [titleError, setTitleError] = useState<string>();
+  const [formError, setFormError] = useState<string>();
 
   const validateTitle = (value: string): boolean => {
     if (!value.trim()) {
@@ -35,15 +36,31 @@ export function SchemeForm({ onSubmit, isLoading }: SchemeFormProps) {
       return;
     }
 
-    await onSubmit({
-      title,
-      description: description || null,
-    });
+    try {
+      setFormError(undefined);
+      await onSubmit({
+        title,
+        description: description || null,
+      });
+    } catch (error) {
+      setFormError(
+        error instanceof Error ? error.message : "Failed to create scheme"
+      );
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} data-testid="scheme-form">
       <div className="stack-lg">
+        {formError && (
+          <div
+            className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm"
+            role="alert"
+            data-testid="scheme-form-error"
+          >
+            {formError}
+          </div>
+        )}
         <Field label="Title" required error={titleError}>
           <Input
             type="text"

@@ -27,6 +27,7 @@ export function PropertyDefinitionForm({
   const [description, setDescription] = useState(initialData?.description || "");
   const [identifierError, setIdentifierError] = useState<string>();
   const [titleError, setTitleError] = useState<string>();
+  const [formError, setFormError] = useState<string>();
 
   const validateIdentifier = (value: string): boolean => {
     if (!value) {
@@ -65,23 +66,39 @@ export function PropertyDefinitionForm({
       return;
     }
 
-    if (initialData) {
-      await onSubmit({
-        title,
-        description: description || null,
-      } as PropertyDefinitionUpdateRequest);
-    } else {
-      await onSubmit({
-        identifier,
-        title,
-        description: description || null,
-      } as PropertyDefinitionCreateRequest);
+    try {
+      setFormError(undefined);
+      if (initialData) {
+        await onSubmit({
+          title,
+          description: description || null,
+        } as PropertyDefinitionUpdateRequest);
+      } else {
+        await onSubmit({
+          identifier,
+          title,
+          description: description || null,
+        } as PropertyDefinitionCreateRequest);
+      }
+    } catch (error) {
+      setFormError(
+        error instanceof Error ? error.message : "Failed to save property"
+      );
     }
   };
 
   return (
     <form onSubmit={handleSubmit} data-testid="property-definition-form">
       <div className="stack-lg">
+        {formError && (
+          <div
+            className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm"
+            role="alert"
+            data-testid="property-definition-form-error"
+          >
+            {formError}
+          </div>
+        )}
         <Field label="Identifier (snake_case)" required error={identifierError}>
           <Input
             type="text"

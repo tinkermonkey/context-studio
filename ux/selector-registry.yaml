@@ -178,6 +178,9 @@ selectors:
   - selector: property-definition-form
     component: components/schema/PropertyDefinitionForm.tsx
     description: Form for creating/editing property definitions
+  - selector: property-definition-form-error
+    component: components/schema/PropertyDefinitionForm.tsx
+    description: Error banner displayed when property definition form submission fails
   - selector: property-definition-identifier-input
     component: components/schema/PropertyDefinitionForm.tsx
     description: Snake-case identifier input field
@@ -287,6 +290,9 @@ selectors:
   - selector: taxonomy-form
     component: components/schema/TaxonomyForm.tsx
     description: Form for creating new taxonomy
+  - selector: taxonomy-form-error
+    component: components/schema/TaxonomyForm.tsx
+    description: Error banner displayed when taxonomy form submission fails
   - selector: taxonomy-title-input
     component: components/schema/TaxonomyForm.tsx
     description: Title input field in taxonomy form
@@ -301,6 +307,9 @@ selectors:
   - selector: class-form
     component: components/schema/ClassForm.tsx
     description: Form for creating a new class
+  - selector: class-form-error
+    component: components/schema/ClassForm.tsx
+    description: Error banner displayed when class form submission fails
   - selector: class-title-input
     component: components/schema/ClassForm.tsx
     description: Title input field in class creation form
@@ -315,6 +324,9 @@ selectors:
   - selector: relationship-form
     component: components/schema/RelationshipForm.tsx
     description: Form for creating a new relationship
+  - selector: relationship-form-error
+    component: components/schema/RelationshipForm.tsx
+    description: Error banner displayed when relationship form submission fails
   - selector: relationship-source-select
     component: components/schema/RelationshipForm.tsx
     description: Source class selector in relationship creation form
@@ -409,6 +421,9 @@ selectors:
   - selector: scheme-form
     component: components/schema/SchemeForm.tsx
     description: Form for creating new concept scheme
+  - selector: scheme-form-error
+    component: components/schema/SchemeForm.tsx
+    description: Error banner displayed when scheme form submission fails
   - selector: scheme-title-input
     component: components/schema/SchemeForm.tsx
     description: Title input field in scheme form
@@ -1058,6 +1073,9 @@ selectors:
   - selector: grounding-workflow-form
     component: components/reference/GroundingWorkflowForm.tsx
     description: Form for creating/editing grounding workflows
+  - selector: grounding-workflow-form-error
+    component: components/reference/GroundingWorkflowForm.tsx
+    description: Error banner displayed when grounding workflow form submission fails
   - selector: workflow-title-input
     component: components/reference/GroundingWorkflowForm.tsx
     description: Workflow name input field
