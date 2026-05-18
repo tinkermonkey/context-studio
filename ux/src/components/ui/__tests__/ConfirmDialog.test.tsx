@@ -343,7 +343,7 @@ describe("ConfirmDialog", () => {
           }),
       );
 
-      const { rerender } = render(
+      render(
         <ConfirmDialog
           open={true}
           onClose={vi.fn()}
