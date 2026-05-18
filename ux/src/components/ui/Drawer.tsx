@@ -85,7 +85,7 @@ export function Drawer({
     >
       <div className="drawer-head">
         {headerContent}
-        <button className="drawer-close" onClick={onClose} aria-label="Close drawer">
+        <button type="button" className="drawer-close" onClick={onClose} aria-label="Close drawer">
           <X size={14} />
         </button>
       </div>
