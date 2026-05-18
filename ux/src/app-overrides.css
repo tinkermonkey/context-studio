@@ -7,6 +7,12 @@
   /* Accent color override: cyan (#22d3ee = rgb(34, 211, 238)) */
   --accent-primary: 34 211 238;
 
+  /* Token aliases for backward compatibility with graph.css and other styles */
+  --accent-cyan-deep: var(--accent-primary-deep);
+  --accent-cyan: var(--accent-primary);
+  --accent-rose: var(--status-rose);
+  --mono: var(--font-mono);
+
   /* Domain taxonomy colors (used for classes, taxonomies, pipelines) */
   --dom-life: #34d399;
   --dom-climate: #fbbf24;
