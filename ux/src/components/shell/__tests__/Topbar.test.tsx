@@ -16,13 +16,17 @@ vi.mock("@/stores/canvas", () => ({
 }));
 
 vi.mock("@tinkermonkey/heimdall-ui", () => ({
-  Topbar: ({ breadcrumbs, children }: any) => (
+  Topbar: ({ breadcrumbs, children, onSearch }: any) => (
     <div data-testid="heimdall-topbar">
       <div data-testid="breadcrumbs">
         {breadcrumbs.map((crumb: any, idx: number) => (
           <span key={idx}>{crumb.label}</span>
         ))}
       </div>
+      <input
+        data-testid="heimdall-search-input"
+        onChange={(e) => onSearch(e.target.value)}
+      />
       <div data-testid="topbar-children">{children}</div>
     </div>
   ),
@@ -120,6 +124,13 @@ describe("Topbar", () => {
       const searchButton = screen.getByTestId("topbar-palette-button");
       fireEvent.click(searchButton);
       expect(mockOpenPalette).toHaveBeenCalled();
+    });
+
+    it("passes query to openPalette when search input is used", () => {
+      render(<Topbar />);
+      const searchInput = screen.getByTestId("heimdall-search-input");
+      fireEvent.change(searchInput, { target: { value: "test query" } });
+      expect(mockOpenPalette).toHaveBeenCalledWith("test query");
     });
 
     it("renders search button with correct text", () => {
