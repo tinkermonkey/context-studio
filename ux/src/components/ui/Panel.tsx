@@ -20,14 +20,14 @@ export function Panel({
   className,
   ...rest
 }: PanelProps) {
-  const showCustomHeader = actions && title;
+  const showCustomHeader = !!actions;
 
   return (
     <div className={className} {...rest}>
       {showCustomHeader && (
         <div className="panel-header-with-actions">
-          <div>{title}</div>
-          <div>{actions}</div>
+          {title && <div>{title}</div>}
+          {actions && <div>{actions}</div>}
         </div>
       )}
       <HeimdallPanel

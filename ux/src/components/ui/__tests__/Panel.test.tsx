@@ -34,6 +34,24 @@ describe("Panel", () => {
       );
       expect(screen.getByTestId("action")).toBeInTheDocument();
     });
+
+    it("renders actions without title", () => {
+      render(
+        <Panel actions={<button>Action</button>}>
+          Content
+        </Panel>,
+      );
+      expect(screen.getByRole("button", { name: "Action" })).toBeInTheDocument();
+    });
+
+    it("renders action element without title", () => {
+      render(
+        <Panel actions={<span data-testid="action">Action</span>}>
+          Content
+        </Panel>,
+      );
+      expect(screen.getByTestId("action")).toBeInTheDocument();
+    });
   });
 
   describe("content", () => {
