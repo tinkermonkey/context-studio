@@ -2,16 +2,16 @@
 Integration tests for telemetry setup including log handling.
 """
 
-import sys
-import os
 import logging
+import os
+import sys
 from unittest.mock import Mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from config import TelemetryConfig, TelemetryProtocol
 from adapters.telemetry import setup_telemetry
 from adapters.telemetry.log_bridge import OTLPLogHandler
+from config import TelemetryConfig, TelemetryProtocol
 
 
 def test_telemetry_disabled_no_log_exporter():

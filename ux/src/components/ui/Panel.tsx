@@ -1,22 +1,43 @@
-import type { ReactNode } from "react";
+import type { ReactNode, HTMLAttributes } from "react";
+import { Panel as HeimdallPanel } from "@tinkermonkey/heimdall-ui";
 
-interface PanelProps {
-  title?: ReactNode;
+interface PanelProps extends HTMLAttributes<HTMLDivElement> {
+  title?: string;
+  subtitle?: string;
   actions?: ReactNode;
+  footer?: ReactNode;
+  bordered?: boolean;
   children: ReactNode;
-  className?: string;
 }
 
-export function Panel({ title, actions, children, className = "" }: PanelProps) {
+export function Panel({
+  title,
+  subtitle,
+  actions,
+  footer,
+  bordered,
+  children,
+  className,
+  ...rest
+}: PanelProps) {
+  const showCustomHeader = !!actions;
+
   return (
-    <div className={`panel ${className}`}>
-      {title && (
-        <div className="panel-head">
-          <span className="panel-title">{title}</span>
-          {actions}
+    <div className={className} {...rest}>
+      {showCustomHeader && (
+        <div className="panel-header-with-actions">
+          {title && <div>{title}</div>}
+          {actions && <div>{actions}</div>}
         </div>
       )}
-      <div className="panel-body">{children}</div>
+      <HeimdallPanel
+        title={showCustomHeader ? undefined : title}
+        subtitle={subtitle}
+        footer={footer}
+        bordered={bordered}
+      >
+        {children}
+      </HeimdallPanel>
     </div>
   );
 }

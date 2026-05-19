@@ -14,8 +14,8 @@ from typing import TYPE_CHECKING, Optional
 from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode
 
-from utils.logger import get_logger
 from utils.async_executor import run_sync_in_executor
+from utils.logger import get_logger
 
 if TYPE_CHECKING:
     from sentence_transformers import SentenceTransformer
@@ -62,10 +62,11 @@ class SentenceTransformerEmbedding:
                 logger.info("SentenceTransformer model loaded successfully")
             except ImportError:
                 logger.error(
-                    "sentence-transformers not installed. Install with: pip install sentence-transformers"
+                    "sentence-transformers not installed. Install with: pip install"
+                    " sentence-transformers"
                 )
                 raise RuntimeError(
-                    "SentenceTransformer model not available. Install sentence-transformers."
+                    "SentenceTransformer model not available. Install" " sentence-transformers."
                 )
             except Exception as e:
                 logger.error(f"Failed to load SentenceTransformer model: {e}")
@@ -155,9 +156,7 @@ class SentenceTransformerEmbedding:
             similarity_score = cosine_similarity(arr_a, arr_b)[0, 0]
             return float(similarity_score)
         except ImportError:
-            logger.error(
-                "scikit-learn not installed. Install with: pip install scikit-learn"
-            )
+            logger.error("scikit-learn not installed. Install with: pip install scikit-learn")
             raise RuntimeError("Similarity computation requires scikit-learn")
         except Exception as e:
             logger.error(f"Failed to compute similarity: {e}")
@@ -216,9 +215,7 @@ class SentenceTransformerEmbedding:
         """
         return await run_sync_in_executor(self.embed_batch, texts)
 
-    async def similarity_async(
-        self, embedding_a: list[float], embedding_b: list[float]
-    ) -> float:
+    async def similarity_async(self, embedding_a: list[float], embedding_b: list[float]) -> float:
         """
         Compute similarity between two embeddings (async version).
 

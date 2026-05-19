@@ -4,7 +4,10 @@ import { setActiveSpan } from "./context";
 interface RouterLike {
   subscribe(
     event: "onBeforeLoad",
-    callback: (event: { toLocation?: { pathname: string }; fromLocation?: { pathname: string } }) => void
+    callback: (event: {
+      toLocation?: { pathname: string };
+      fromLocation?: { pathname: string };
+    }) => void,
   ): void;
   subscribe(event: "onLoad", callback: () => void): void;
 }

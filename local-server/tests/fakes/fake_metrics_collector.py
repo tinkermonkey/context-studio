@@ -1,20 +1,18 @@
 """Fake in-memory implementation of MetricsCollector for testing."""
 
-import sys
 import os
+import sys
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from types import MappingProxyType
 from typing import Optional
 
 from domain.admin.value_objects import (
+    BackgroundTaskSummary,
+    ComponentStatus,
     DatabaseHealth,
     ServiceMetrics,
-    ComponentStatus,
-    BackgroundTaskSummary,
 )
 
 
@@ -44,7 +42,8 @@ class FakeMetricsCollector:
 
         Args:
             database_health: Optional DatabaseHealth. If None, defaults to connected.
-            service_metrics: Optional ServiceMetrics. If None, defaults to 0 uptime and no providers.
+            service_metrics: Optional ServiceMetrics. If None, defaults to 0 uptime and no
+            providers.
             embedding_status: Optional ComponentStatus. If None, defaults to available.
             nlp_status: Optional ComponentStatus. If None, defaults to available.
             task_summary: Optional BackgroundTaskSummary. If None, defaults to 0 tasks.
@@ -54,9 +53,7 @@ class FakeMetricsCollector:
             nlp_status_error: Optional Exception to raise from get_nlp_pipeline_status().
             task_summary_error: Optional Exception to raise from get_background_task_summary().
         """
-        self._database_health = database_health or DatabaseHealth(
-            connected=True, issues=()
-        )
+        self._database_health = database_health or DatabaseHealth(connected=True, issues=())
         self._service_metrics = service_metrics or ServiceMetrics(
             uptime_seconds=0.0, llm_providers_available=()
         )
@@ -66,9 +63,7 @@ class FakeMetricsCollector:
         self._nlp_status = nlp_status or ComponentStatus(
             available=True, details="NLP pipeline ready"
         )
-        self._task_summary = task_summary or BackgroundTaskSummary(
-            by_status=MappingProxyType({})
-        )
+        self._task_summary = task_summary or BackgroundTaskSummary(by_status=MappingProxyType({}))
         self._database_health_error = database_health_error
         self._service_metrics_error = service_metrics_error
         self._embedding_status_error = embedding_status_error

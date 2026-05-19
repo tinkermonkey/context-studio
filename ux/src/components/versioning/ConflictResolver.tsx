@@ -55,7 +55,7 @@ function ConflictRow({
       className="conflict-row"
       style={{
         padding: "12px 16px",
-        borderBottom: "1px solid var(--canvas-bd)",
+        borderBottom: "1px solid var(--canvas-border)",
         display: "grid",
         gridTemplateColumns: "150px 1fr 1fr 1fr 120px",
         gap: "12px",
@@ -134,7 +134,7 @@ function ConflictRow({
               flex: 1,
               padding: "4px 8px",
               fontSize: "12px",
-              border: "1px solid var(--canvas-bd)",
+              border: "1px solid var(--canvas-border)",
               borderRadius: "var(--radius-sm, 4px)",
               backgroundColor: "var(--canvas-bg)",
               color: "var(--canvas-fg)",
@@ -216,7 +216,7 @@ function ConflictGroup({
   return (
     <div
       data-testid={`conflict-group-${entityId}`}
-      style={{ borderBottom: "1px solid var(--canvas-bd)" }}
+      style={{ borderBottom: "1px solid var(--canvas-border)" }}
     >
       <div
         onClick={() => setIsExpanded(!isExpanded)}
@@ -274,7 +274,7 @@ function ConflictGroup({
               display: "grid",
               gridTemplateColumns: "150px 1fr 1fr 1fr 120px",
               gap: "12px",
-              borderBottom: "1px solid var(--canvas-bd)",
+              borderBottom: "1px solid var(--canvas-border)",
               backgroundColor: "var(--canvas-bg)",
               fontSize: "11px",
               fontWeight: 600,
@@ -517,7 +517,7 @@ export function ConflictResolver({ proposalId, onResolved }: ConflictResolverPro
         style={{
           flex: 1,
           overflow: "auto",
-          border: "1px solid var(--canvas-bd)",
+          border: "1px solid var(--canvas-border)",
           borderRadius: "var(--radius-md, 6px)",
         }}
       >

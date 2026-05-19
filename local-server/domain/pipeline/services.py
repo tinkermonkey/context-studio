@@ -11,14 +11,15 @@ from __future__ import annotations
 import logging
 import time
 from datetime import datetime, timezone
-from typing import cast, Literal
+from typing import Literal, cast
 from uuid import uuid4
 
 from domain.ports import EventPublisher
+
 from .entities import Execution, PipelineConfiguration, PipelineFlavor
-from .ports import PipelineRepository, LLMProvider, ExecutionWithTitle, FlavorRepository
 from .events import PipelineExecuted
 from .exceptions import PipelineNotFoundError
+from .ports import ExecutionWithTitle, FlavorRepository, LLMProvider, PipelineRepository
 
 _logger = logging.getLogger(__name__)
 
@@ -179,15 +180,14 @@ class PipelineService:
             id=existing.id,
             pipeline=existing.pipeline,
             title=title if title is not None else existing.title,
-            provider=cast(Literal["openai", "anthropic"], provider if provider is not None else existing.provider),
+            provider=cast(
+                Literal["openai", "anthropic"],
+                provider if provider is not None else existing.provider,
+            ),
             model=model if model is not None else existing.model,
             config=config if config is not None else existing.config,
-            system_prompt=(
-                system_prompt if system_prompt is not None else existing.system_prompt
-            ),
-            user_prompt=(
-                user_prompt if user_prompt is not None else existing.user_prompt
-            ),
+            system_prompt=(system_prompt if system_prompt is not None else existing.system_prompt),
+            user_prompt=(user_prompt if user_prompt is not None else existing.user_prompt),
             version=existing.version + 1,
             enabled=enabled if enabled is not None else existing.enabled,
             created_at=existing.created_at,
@@ -252,9 +252,7 @@ class PipelineService:
         Returns:
             Tuple of (list of ExecutionWithTitle objects, total count)
         """
-        return self._pipeline_repo.get_all_executions(
-            status=status, limit=limit, offset=offset
-        )
+        return self._pipeline_repo.get_all_executions(status=status, limit=limit, offset=offset)
 
     def execute_pipeline(self, config_id: str, input_text: str) -> Execution:
         """
@@ -480,7 +478,7 @@ class PipelineService:
         updated = PipelineFlavor(
             id=existing.id,
             name=name if name is not None else existing.name,
-            description=description if description is not None else existing.description,
+            description=(description if description is not None else existing.description),
             steps=steps if steps is not None else existing.steps,
             created_at=existing.created_at,
             last_updated=datetime.now(timezone.utc),

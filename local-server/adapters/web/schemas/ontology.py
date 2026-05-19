@@ -25,7 +25,7 @@ These schemas handle serialization/deserialization between HTTP and domain model
 """
 
 from datetime import datetime
-from typing import Optional, Any, TypeVar, Generic, Literal
+from typing import Any, Generic, Literal, Optional, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -45,9 +45,7 @@ class TaxonomyCreateRequest(BaseModel):
 class TaxonomyUpdateRequest(BaseModel):
     """Request to update a taxonomy."""
 
-    title: Optional[str] = Field(
-        None, description="New title for the taxonomy", min_length=1
-    )
+    title: Optional[str] = Field(None, description="New title for the taxonomy", min_length=1)
     description: Optional[str] = Field(None, description="New description")
 
 
@@ -74,12 +72,8 @@ class TaxonomyResponse(BaseModel):
     title: str = Field(..., description="Display name")
     description: Optional[str] = Field(None, description="Optional description")
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
-    last_modified: Optional[datetime] = Field(
-        None, description="Last modification timestamp"
-    )
-    version: int = Field(
-        default=1, description="Version number for optimistic concurrency control"
-    )
+    last_modified: Optional[datetime] = Field(None, description="Last modification timestamp")
+    version: int = Field(default=1, description="Version number for optimistic concurrency control")
     status: Literal["draft", "published"] = Field(
         default="draft", description="Publication status (draft or published)"
     )
@@ -91,9 +85,7 @@ class TaxonomyResponse(BaseModel):
 class ConceptSchemeCreateRequest(BaseModel):
     """Request to create a new concept scheme."""
 
-    title: str = Field(
-        ..., description="Display name for the concept scheme", min_length=1
-    )
+    title: str = Field(..., description="Display name for the concept scheme", min_length=1)
     description: Optional[str] = Field(None, description="Optional longer description")
 
 
@@ -114,12 +106,8 @@ class ConceptSchemeResponse(BaseModel):
     title: str = Field(..., description="Display name")
     description: Optional[str] = Field(None, description="Optional description")
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
-    last_modified: Optional[datetime] = Field(
-        None, description="Last modification timestamp"
-    )
-    version: int = Field(
-        default=1, description="Version number for optimistic concurrency control"
-    )
+    last_modified: Optional[datetime] = Field(None, description="Last modification timestamp")
+    version: int = Field(default=1, description="Version number for optimistic concurrency control")
     status: Literal["draft", "published"] = Field(
         default="draft", description="Publication status (draft or published)"
     )
@@ -131,14 +119,10 @@ class ConceptSchemeResponse(BaseModel):
 class ExternalReferenceRequest(BaseModel):
     """Request to add an external reference."""
 
-    source: str = Field(
-        ..., description="Source of the reference (e.g., 'dbpedia', 'wikidata')"
-    )
+    source: str = Field(..., description="Source of the reference (e.g., 'dbpedia', 'wikidata')")
     identifier: str = Field(..., description="External identifier")
     uri: Optional[str] = Field(None, description="URI to external resource")
-    metadata: Optional[dict[str, Any]] = Field(
-        None, description="Source-specific metadata"
-    )
+    metadata: Optional[dict[str, Any]] = Field(None, description="Source-specific metadata")
 
 
 class LexicalSenseRequest(BaseModel):
@@ -146,18 +130,14 @@ class LexicalSenseRequest(BaseModel):
 
     label: str = Field(..., description="The sense label or term")
     language_code: str = Field(..., description="ISO 639-1 language code")
-    sense_type: str = Field(
-        ..., description="Type of sense (e.g., 'synset', 'word_sense')"
-    )
+    sense_type: str = Field(..., description="Type of sense (e.g., 'synset', 'word_sense')")
 
 
 class DataPropertyValueRequest(BaseModel):
     """Request to add a data property value."""
 
     property_identifier: str = Field(..., description="Property identifier")
-    value: str | int | float | bool | None = Field(
-        ..., description="Value of the property"
-    )
+    value: str | int | float | bool | None = Field(..., description="Value of the property")
     datatype: Optional[str] = Field(
         None, description="Type of the value (e.g., 'xsd:string', 'xsd:integer')"
     )
@@ -192,9 +172,7 @@ class ExternalReferenceResponse(BaseModel):
     source: str = Field(..., description="Source of the reference")
     identifier: str = Field(..., description="External identifier")
     uri: Optional[str] = Field(None, description="External URI")
-    metadata: Optional[dict[str, Any]] = Field(
-        None, description="Source-specific metadata"
-    )
+    metadata: Optional[dict[str, Any]] = Field(None, description="Source-specific metadata")
 
 
 class LexicalSenseResponse(BaseModel):
@@ -209,9 +187,7 @@ class DataPropertyValueResponse(BaseModel):
     """Response containing data property value."""
 
     property_identifier: str = Field(..., description="Property identifier")
-    value: str | int | float | bool | None = Field(
-        ..., description="Value of the property"
-    )
+    value: str | int | float | bool | None = Field(..., description="Value of the property")
     datatype: Optional[str] = Field(None, description="Type of the value")
 
 
@@ -232,16 +208,10 @@ class ClassResponse(BaseModel):
     external_references: list[ExternalReferenceResponse] = Field(default_factory=list)
     lexical_senses: list[LexicalSenseResponse] = Field(default_factory=list)
     data_properties: list[DataPropertyValueResponse] = Field(default_factory=list)
-    embedding: Optional[list[float]] = Field(
-        None, description="Optional semantic embedding"
-    )
+    embedding: Optional[list[float]] = Field(None, description="Optional semantic embedding")
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
-    last_modified: Optional[datetime] = Field(
-        None, description="Last modification timestamp"
-    )
-    version: int = Field(
-        default=1, description="Version number for optimistic concurrency control"
-    )
+    last_modified: Optional[datetime] = Field(None, description="Last modification timestamp")
+    version: int = Field(default=1, description="Version number for optimistic concurrency control")
     status: Literal["draft", "published"] = Field(
         default="draft", description="Publication status (draft or published)"
     )
@@ -281,9 +251,7 @@ class RelationshipResponse(BaseModel):
 class PropertyDefinitionCreateRequest(BaseModel):
     """Request to create a new property definition."""
 
-    identifier: str = Field(
-        ..., description="Machine-readable identifier", min_length=1
-    )
+    identifier: str = Field(..., description="Machine-readable identifier", min_length=1)
     title: str = Field(..., description="Display name for the property", min_length=1)
     description: Optional[str] = Field(None, description="Optional longer description")
 
@@ -306,15 +274,11 @@ class PropertyDefinitionResponse(BaseModel):
     description: Optional[str] = Field(None, description="Optional description")
     is_relevant: Optional[bool] = Field(
         None,
-        description="Relevance flag (None=not evaluated, True=relevant, False=irrelevant)",
+        description=("Relevance flag (None=not evaluated, True=relevant, False=irrelevant)"),
     )
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
-    last_modified: Optional[datetime] = Field(
-        None, description="Last modification timestamp"
-    )
-    version: int = Field(
-        default=1, description="Version number for optimistic concurrency control"
-    )
+    last_modified: Optional[datetime] = Field(None, description="Last modification timestamp")
+    version: int = Field(default=1, description="Version number for optimistic concurrency control")
     status: Literal["draft", "published"] = Field(
         default="draft", description="Publication status (draft or published)"
     )
@@ -351,9 +315,7 @@ class IndividualCreateRequest(BaseModel):
 class IndividualUpdateRequest(BaseModel):
     """Request to update an individual."""
 
-    title: Optional[str] = Field(
-        None, description="New title for the individual", min_length=1
-    )
+    title: Optional[str] = Field(None, description="New title for the individual", min_length=1)
     description: Optional[str] = Field(None, description="New description")
 
 
@@ -369,12 +331,8 @@ class IndividualResponse(BaseModel):
     data_properties: list[DataPropertyValueResponse] = Field(default_factory=list)
     external_references: list[ExternalReferenceResponse] = Field(default_factory=list)
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
-    last_modified: Optional[datetime] = Field(
-        None, description="Last modification timestamp"
-    )
-    version: int = Field(
-        default=1, description="Version number for optimistic concurrency control"
-    )
+    last_modified: Optional[datetime] = Field(None, description="Last modification timestamp")
+    version: int = Field(default=1, description="Version number for optimistic concurrency control")
     status: Literal["draft", "published"] = Field(
         default="draft", description="Publication status (draft or published)"
     )
@@ -415,6 +373,4 @@ class ErrorResponse(BaseModel):
     """Error response."""
 
     detail: str = Field(..., description="Error message")
-    error_code: Optional[str] = Field(
-        None, description="Error code for client handling"
-    )
+    error_code: Optional[str] = Field(None, description="Error code for client handling")

@@ -5,13 +5,11 @@ Supports all CRUD operations for Taxonomies, ConceptSchemes, and Classes.
 Individual operations are deferred to Phase 2 and raise NotImplementedError.
 """
 
-import sys
 import os
+import sys
 from typing import Any
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from uuid import uuid4
 
@@ -60,20 +58,18 @@ class FakeOntologyRepository:
         if sort_by == "title":
             results.sort(key=lambda t: t.title, reverse=(sort_order == "desc"))
         elif sort_by == "created_at" and hasattr(results[0] if results else None, "created_at"):
-            results.sort(key=lambda t: getattr(t, "created_at", ""), reverse=(sort_order == "desc"))
+            results.sort(
+                key=lambda t: getattr(t, "created_at", ""),
+                reverse=(sort_order == "desc"),
+            )
 
         end = None if limit is None else offset + limit
         return results[offset:end]
 
     def save_taxonomy(self, taxonomy: Taxonomy) -> Taxonomy:
         for existing_taxonomy in self._taxonomies.values():
-            if (
-                existing_taxonomy.title == taxonomy.title
-                and existing_taxonomy.id != taxonomy.id
-            ):
-                raise DuplicateEntityError(
-                    f"Taxonomy with title '{taxonomy.title}' already exists"
-                )
+            if existing_taxonomy.title == taxonomy.title and existing_taxonomy.id != taxonomy.id:
+                raise DuplicateEntityError(f"Taxonomy with title '{taxonomy.title}' already exists")
         self._taxonomies[taxonomy.id] = taxonomy
         return taxonomy
 
@@ -108,7 +104,10 @@ class FakeOntologyRepository:
         if sort_by == "title":
             results.sort(key=lambda s: s.title, reverse=(sort_order == "desc"))
         elif sort_by == "created_at" and hasattr(results[0] if results else None, "created_at"):
-            results.sort(key=lambda s: getattr(s, "created_at", ""), reverse=(sort_order == "desc"))
+            results.sort(
+                key=lambda s: getattr(s, "created_at", ""),
+                reverse=(sort_order == "desc"),
+            )
 
         end = None if limit is None else offset + limit
         return results[offset:end]
@@ -121,7 +120,7 @@ class FakeOntologyRepository:
                 and existing_scheme.taxonomy_id == scheme.taxonomy_id
             ):
                 raise DuplicateEntityError(
-                    f"ConceptScheme with title '{scheme.title}' already exists in this taxonomy"
+                    f"ConceptScheme with title '{scheme.title}' already exists in this" " taxonomy"
                 )
         self._schemes[scheme.id] = scheme
         return scheme
@@ -165,9 +164,7 @@ class FakeOntologyRepository:
             ]
 
         if criteria.concept_scheme_id:
-            results = [
-                c for c in results if c.concept_scheme_id == criteria.concept_scheme_id
-            ]
+            results = [c for c in results if c.concept_scheme_id == criteria.concept_scheme_id]
 
         if criteria.taxonomy_id:
             results = [c for c in results if c.taxonomy_id == criteria.taxonomy_id]
@@ -195,9 +192,7 @@ class FakeOntologyRepository:
     def count_classes(self, concept_scheme_id: str | None = None) -> int:
         if concept_scheme_id:
             return sum(
-                1
-                for c in self._classes.values()
-                if c.concept_scheme_id == concept_scheme_id
+                1 for c in self._classes.values() if c.concept_scheme_id == concept_scheme_id
             )
         return len(self._classes)
 
@@ -245,7 +240,10 @@ class FakeOntologyRepository:
             results = [r for r in results if r.property_definition_id == property_id]
 
         if sort_by == "created_at" and hasattr(results[0] if results else None, "created_at"):
-            results.sort(key=lambda r: getattr(r, "created_at", ""), reverse=(sort_order == "desc"))
+            results.sort(
+                key=lambda r: getattr(r, "created_at", ""),
+                reverse=(sort_order == "desc"),
+            )
 
         end = None if limit is None else offset + limit
         return results[offset:end]
@@ -280,9 +278,7 @@ class FakeOntologyRepository:
     def get_property_definition(self, property_id: str) -> PropertyDefinition | None:
         return self._property_definitions.get(property_id)
 
-    def get_property_definition_by_identifier(
-        self, identifier: str
-    ) -> PropertyDefinition | None:
+    def get_property_definition_by_identifier(self, identifier: str) -> PropertyDefinition | None:
         for prop in self._property_definitions.values():
             if prop.identifier == identifier:
                 return prop
@@ -308,7 +304,10 @@ class FakeOntologyRepository:
         if sort_by == "title":
             results.sort(key=lambda p: p.title, reverse=(sort_order == "desc"))
         elif sort_by == "created_at" and hasattr(results[0] if results else None, "created_at"):
-            results.sort(key=lambda p: getattr(p, "created_at", ""), reverse=(sort_order == "desc"))
+            results.sort(
+                key=lambda p: getattr(p, "created_at", ""),
+                reverse=(sort_order == "desc"),
+            )
 
         end = None if limit is None else offset + limit
         return results[offset:end]
@@ -374,9 +373,11 @@ class FakeOntologyRepository:
             The saved Individual
 
         Raises:
-            DuplicateEntityError: If an individual with this title already exists in any of the classes
+            DuplicateEntityError: If an individual with this title already exists in any of the
+            classes
         """
-        # Check for duplicate title within each of the individual's classes (excluding the individual being updated)
+        # Check for duplicate title within each of the individual's classes
+        # (excluding the individual being updated)
         for class_id in individual.class_ids:
             for existing in self._individuals.values():
                 if (
@@ -385,7 +386,8 @@ class FakeOntologyRepository:
                     and existing.id != individual.id
                 ):
                     raise DuplicateEntityError(
-                        f"Individual with title '{individual.title}' already exists in class '{class_id}'"
+                        f"Individual with title '{individual.title}' already exists in"
+                        f" class '{class_id}'"
                     )
         self._individuals[individual.id] = individual
         return individual

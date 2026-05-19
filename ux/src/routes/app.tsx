@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { createFileRoute, Outlet, useNavigate, redirect } from "@tanstack/react-router";
-import { Sidebar } from "@/components/shell/Sidebar";
-import { Topbar } from "@/components/shell/Topbar";
-import { Statusbar } from "@/components/shell/Statusbar";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import { useCommandPaletteStore } from "@/stores/commandPalette";
 import { useCommandPaletteActions } from "@/hooks/useCommandPaletteActions";
 import { createStaticPaletteActions } from "@/config/staticPaletteActions";
 import { getWorkspacePath } from "@/lib/workspaceStorage";
+import { Sidebar } from "@/components/shell/Sidebar";
+import { Topbar } from "@/components/shell/Topbar";
+import { Statusbar } from "@/components/shell/Statusbar";
+import { Titlebar } from "@/components/shell/Titlebar";
+import { useCommandPaletteStore } from "@/stores/commandPalette";
 
 export const Route = createFileRoute("/app")({
   beforeLoad: () => {
@@ -117,12 +118,13 @@ function AppShell() {
   }, [registerActions, unregisterActions]);
 
   return (
-    <div className="desktop-frame">
-      <div className={`app-shell ${collapsed ? "collapsed" : ""}`}>
+    <div className="shell-layout">
+      <Titlebar />
+      <div className="shell-layout__main">
         <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((v) => !v)} />
-        <div className="workspace">
+        <div className="shell-layout__content">
           <Topbar />
-          <div className="canvas-area">
+          <div className="shell-layout__canvas">
             <div className="canvas-scroll">
               <div className="canvas-inner">
                 <ErrorBoundary>
@@ -131,9 +133,9 @@ function AppShell() {
               </div>
             </div>
           </div>
-          <Statusbar />
         </div>
       </div>
+      <Statusbar />
     </div>
   );
 }

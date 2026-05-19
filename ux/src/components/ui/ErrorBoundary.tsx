@@ -55,20 +55,20 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
               padding: "var(--space-6)",
               maxWidth: "500px",
               textAlign: "center",
-              background: "var(--canvas-bg-1)",
-              border: "1px solid var(--canvas-border)",
+              background: "rgb(var(--canvas-surface))",
+              border: "1px solid rgb(var(--canvas-border))",
               borderRadius: "var(--radius-md)",
             }}
           >
-            <h1 style={{ marginBottom: "var(--space-3)", color: "var(--semantic-error)" }}>
+            <h1 style={{ marginBottom: "var(--space-3)", color: "rgb(var(--status-error))" }}>
               Something went wrong
             </h1>
             <p
               style={{
                 marginBottom: "var(--space-4)",
-                color: "var(--canvas-fg-2)",
+                color: "rgb(var(--canvas-fg-2))",
                 fontSize: "var(--text-sm)",
-                fontFamily: "monospace",
+                fontFamily: "var(--font-mono)",
                 wordBreak: "break-word",
               }}
             >

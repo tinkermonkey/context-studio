@@ -1,0 +1,62 @@
+:root {
+  /* ---- Semantic Color Palettes (Tailwind-aligned) ---- */
+  /* Rose colors for error states */
+  --rose-50: 253 242 247;
+  --rose-200: 251 207 232;
+  --rose-500: 244 63 94;
+  --rose-700: 190 18 60;
+
+  /* Amber colors for warning states */
+  --amber-400: 251 191 36;
+
+  /* ---- Domain-Specific Taxonomy Colors ---- */
+  --dom-life: rgb(76 175 80);
+  --dom-climate: rgb(33 150 243);
+  --dom-software: rgb(156 39 176);
+  --dom-default: rgb(158 158 158);
+
+  /* ---- Canvas Layout Classes ---- */
+  --space-canvas-inner: 2rem;
+
+  /* ---- Accent Color Overrides (FR-9: pin accent-primary to cyan; explicit override prevents Heimdall drift) ---- */
+  --accent-primary: 34 211 238;
+
+  /* ---- Legacy Accent Color Aliases (map to Heimdall semantic colors with rgb() wrapper) ---- */
+  --accent-cyan: rgb(var(--accent-primary));
+  --accent-cyan-deep: rgb(var(--accent-primary-deep));
+  --accent-cyan-2: rgb(var(--accent-primary-hover));
+  --accent-amber: rgb(var(--status-amber));
+  --accent-rose: rgb(var(--status-rose));
+  --accent-violet: rgb(var(--status-violet));
+  --accent-emerald: rgb(var(--status-emerald));
+
+  /* ---- Canvas Surface ---- */
+  --canvas-bg-3: rgb(243 244 246);
+  --canvas-fg: rgb(var(--canvas-fg-1));
+  --canvas-fg-4: rgb(107 114 128);
+
+  /* ---- Canvas Border (map to Heimdall tokens with rgb() wrapper) ---- */
+  --canvas-bd: rgb(var(--canvas-border));
+  --canvas-bd-2: rgb(var(--canvas-border-strong));
+
+  /* ---- Shell Surface ---- */
+  --shell-bg-2: rgb(39 46 56);
+  --shell-surface-2: rgb(55 65 81);
+  --shell-fg: rgb(var(--shell-fg-1));
+  --shell-border: rgb(var(--canvas-border));
+  --shell-border-2: rgb(75 85 99);
+
+  /* ---- Typography Aliases ---- */
+  --mono: var(--font-mono);
+
+  /* ---- Error Styling ---- */
+  --error-fg: rgb(190 18 60);
+}
+
+body.dark-canvas {
+  /* Dark canvas inherits Heimdall's dark redefinitions automatically */
+  --canvas-bg-3: rgb(39 46 56);
+  --canvas-fg-4: rgb(75 85 99);
+  --shell-bg-2: rgb(55 65 81);
+  --shell-surface-2: rgb(75 85 99);
+}

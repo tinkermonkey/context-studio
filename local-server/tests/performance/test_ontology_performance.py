@@ -4,19 +4,18 @@ Tests measure bulk insert throughput, list/search response time, and update thro
 at multiple entity counts (100, 500, 1000) using both fake and real embedding adapters.
 """
 
-import sys
 import os
+import sys
 import time
+
 import pytest
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from domain.ontology.services import OntologyService
-from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_event_publisher import FakeEventPublisher
+from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 
 
 def _setup_ontology_context() -> tuple[OntologyService, FakeOntologyRepository]:
@@ -42,9 +41,7 @@ def _create_test_taxonomy_and_scheme(service: OntologyService) -> tuple[str, str
         Tuple of (taxonomy_id, scheme_id)
     """
     taxonomy = service.create_taxonomy("Test Taxonomy", "Test description")
-    scheme = service.create_scheme(
-        taxonomy.id, "Test Scheme", "Test scheme description"
-    )
+    scheme = service.create_scheme(taxonomy.id, "Test Scheme", "Test scheme description")
     return taxonomy.id, scheme.id
 
 
@@ -68,7 +65,8 @@ def test_bulk_insert_fake_embedding(num_classes: int, max_time: float) -> None:
     elapsed = time.perf_counter() - start
 
     print(
-        f"\nBulk insert ({num_classes} classes, fake embedding): {elapsed:.4f}s ({num_classes / elapsed:.1f} classes/sec)"
+        f"\nBulk insert ({num_classes} classes, fake embedding): {elapsed:.4f}s"
+        f" ({num_classes / elapsed:.1f} classes/sec)"
     )
     assert elapsed < max_time
 
@@ -130,7 +128,8 @@ def test_update_classes(num_classes: int, max_time: float) -> None:
     elapsed = time.perf_counter() - start
 
     print(
-        f"\nUpdate classes ({num_classes} entities): {elapsed:.4f}s ({num_classes / elapsed:.1f} updates/sec)"
+        f"\nUpdate classes ({num_classes} entities): {elapsed:.4f}s"
+        f" ({num_classes / elapsed:.1f} updates/sec)"
     )
     assert elapsed < max_time
 
@@ -160,6 +159,7 @@ def test_bulk_insert_100_classes_real_embedding() -> None:
     elapsed = time.perf_counter() - start
 
     print(
-        f"\nBulk insert (100 classes, real embedding): {elapsed:.4f}s ({100 / elapsed:.1f} classes/sec)"
+        f"\nBulk insert (100 classes, real embedding): {elapsed:.4f}s"
+        f" ({100 / elapsed:.1f} classes/sec)"
     )
     assert elapsed < 30.0

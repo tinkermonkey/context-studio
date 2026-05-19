@@ -12,7 +12,7 @@ describe("Drawer", () => {
           Content
         </Drawer>,
       );
-      expect(container.querySelector(".drawer")).not.toBeInTheDocument();
+      expect(container.querySelector(".drawer-backdrop")).not.toBeInTheDocument();
     });
 
     it("renders when open is true", () => {
@@ -21,7 +21,7 @@ describe("Drawer", () => {
           Content
         </Drawer>,
       );
-      expect(container.querySelector(".drawer")).toBeInTheDocument();
+      expect(container.querySelector(".drawer-backdrop")).toBeInTheDocument();
     });
 
     it("toggles visibility when open prop changes", () => {
@@ -31,7 +31,7 @@ describe("Drawer", () => {
         </Drawer>,
       );
 
-      expect(container.querySelector(".drawer")).not.toBeInTheDocument();
+      expect(container.querySelector(".drawer-backdrop")).not.toBeInTheDocument();
 
       rerender(
         <Drawer open={true} onClose={vi.fn()} title="Drawer">
@@ -39,18 +39,20 @@ describe("Drawer", () => {
         </Drawer>,
       );
 
-      expect(container.querySelector(".drawer")).toBeInTheDocument();
+      expect(container.querySelector(".drawer-backdrop")).toBeInTheDocument();
     });
   });
 
   describe("CSS class styling", () => {
-    it("applies drawer class", () => {
+    it("applies drawer container with proper classes", () => {
       const { container } = render(
         <Drawer open={true} onClose={vi.fn()} title="Drawer">
           Content
         </Drawer>,
       );
-      expect(container.querySelector(".drawer")).toBeInTheDocument();
+      // Heimdall's Drawer should be present with role='dialog'
+      const drawer = container.querySelector("[role='dialog']");
+      expect(drawer).toBeInTheDocument();
     });
 
     it("renders drawer-head", () => {
@@ -100,13 +102,13 @@ describe("Drawer", () => {
       expect(container.querySelector(".drawer-actions")).toBeInTheDocument();
     });
 
-    it("renders close button with modal-x class", () => {
+    it("renders close button with drawer-close class", () => {
       const { container } = render(
         <Drawer open={true} onClose={vi.fn()} title="Title">
           Content
         </Drawer>,
       );
-      expect(container.querySelector(".modal-x")).toBeInTheDocument();
+      expect(container.querySelector(".drawer-close")).toBeInTheDocument();
     });
 
     it("close button has aria-label", () => {
@@ -206,8 +208,8 @@ describe("Drawer", () => {
         </Drawer>,
       );
       const button = screen.getByTestId("drawer-revert-button");
-      expect(button).toHaveClass("btn-ghost");
-      expect(button).toHaveClass("btn-sm");
+      expect(button).toHaveClass("btn--ghost");
+      expect(button).toHaveClass("btn--sm");
     });
 
     it("calls onRevert when revert button clicked", async () => {
@@ -260,8 +262,8 @@ describe("Drawer", () => {
         </Drawer>,
       );
       const button = screen.getByTestId("drawer-delete-button");
-      expect(button).toHaveClass("btn-danger");
-      expect(button).toHaveClass("btn-sm");
+      expect(button).toHaveClass("btn--danger");
+      expect(button).toHaveClass("btn--sm");
     });
 
     it("calls onDelete when delete button clicked", async () => {
@@ -315,6 +317,20 @@ describe("Drawer", () => {
       );
       const closeBtn = screen.getByLabelText("Close drawer");
       await user.click(closeBtn);
+      expect(onClose).toHaveBeenCalled();
+    });
+
+    it("calls onClose when backdrop is clicked", async () => {
+      const onClose = vi.fn();
+      const user = userEvent.setup();
+      const { container } = render(
+        <Drawer open={true} onClose={onClose} title="Drawer">
+          Content
+        </Drawer>,
+      );
+      const backdrop = container.querySelector(".drawer-backdrop");
+      expect(backdrop).toBeInTheDocument();
+      await user.click(backdrop!);
       expect(onClose).toHaveBeenCalled();
     });
   });

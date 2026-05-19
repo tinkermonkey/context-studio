@@ -81,7 +81,7 @@ function SyncStatusCard({
       }}
     >
       <div>
-        <div style={{ padding: "16px", borderBottom: "1px solid var(--canvas-bd)" }}>
+        <div style={{ padding: "16px", borderBottom: "1px solid var(--canvas-border)" }}>
           <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "8px" }}>{title}</div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             {getStatusChip(status)}
@@ -125,7 +125,7 @@ function SyncStatusCard({
         </div>
       </div>
 
-      <div style={{ padding: "12px 16px", borderTop: "1px solid var(--canvas-bd)" }}>
+      <div style={{ padding: "12px 16px", borderTop: "1px solid var(--canvas-border)" }}>
         {isLoading ? (
           <div
             style={{

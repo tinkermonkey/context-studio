@@ -170,6 +170,9 @@ export function SchemeDrawer({ scheme, taxonomyName, onClose }: SchemeDrawerProp
         message={deleteMessage}
         confirmLabel={schemesCopy.delete.confirmButton}
         onConfirm={handleDelete}
+        onError={(error) => {
+          toast("error", `Delete failed: ${error.message}`);
+        }}
         danger
         isLoading={deleteMutation.isPending}
         data-testid="scheme-delete-confirm"

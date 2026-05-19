@@ -4,9 +4,9 @@ from adapters.reference.exceptions import (
     ReferenceSourceError,
     ReferenceSourceParseError,
 )
-from domain.extraction.ports import ReferenceResult, ReferenceRelation
-from utils.logger import get_logger
+from domain.extraction.ports import ReferenceRelation, ReferenceResult
 from utils.async_executor import run_sync_in_executor
+from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -143,14 +143,10 @@ class SchemaOrgSource:
             return results
         except KeyError as e:
             logger.error(f"schema.org malformed definition structure for '{term}': {e}")
-            raise ReferenceSourceParseError(
-                "schema.org vocabulary has malformed definition"
-            ) from e
+            raise ReferenceSourceParseError("schema.org vocabulary has malformed definition") from e
         except Exception as e:
             logger.error(f"Unexpected error during schema.org search for '{term}': {e}")
-            raise ReferenceSourceError(
-                "Unexpected error during schema.org search"
-            ) from e
+            raise ReferenceSourceError("Unexpected error during schema.org search") from e
 
     def get_relations(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
         """
@@ -187,12 +183,8 @@ class SchemaOrgSource:
 
             return relations
         except Exception as e:
-            logger.error(
-                f"Unexpected error during schema.org get_relations for '{uri}': {e}"
-            )
-            raise ReferenceSourceError(
-                "Unexpected error during schema.org get_relations"
-            ) from e
+            logger.error(f"Unexpected error during schema.org get_relations for '{uri}': {e}")
+            raise ReferenceSourceError("Unexpected error during schema.org get_relations") from e
 
     async def is_available_async(self) -> bool:
         """
@@ -223,9 +215,7 @@ class SchemaOrgSource:
         """
         return await run_sync_in_executor(self.search, term, limit)
 
-    async def get_relations_async(
-        self, uri: str, limit: int = 10
-    ) -> list[ReferenceRelation]:
+    async def get_relations_async(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
         """
         Get relationships connected to a URI in schema.org (async version).
 

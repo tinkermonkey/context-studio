@@ -1,6 +1,6 @@
 import { type ReactNode } from "react";
-import { X, Loader, CheckCircle, AlertCircle } from "lucide-react";
-import { useKeyboardShortcut } from "@/hooks/useKeyboardShortcut";
+import { Loader, CheckCircle, AlertCircle, X } from "lucide-react";
+import { Drawer as HeimdallDrawer } from "@tinkermonkey/heimdall-ui";
 import { formatTimeAgo } from "@/utils/dateFormatting";
 import { Button } from "./Button";
 
@@ -31,59 +31,65 @@ export function Drawer({
   lastSavedAt,
   headerAction,
 }: DrawerProps) {
-  useKeyboardShortcut({ key: "Escape", onKeydown: onClose, enabled: open });
+  const hasAutosaveStatus = autosaveState && autosaveState !== "idle";
+  const hasRevert = isDirty && onRevert;
+  const hasDelete = onDelete;
 
-  if (!open) return null;
+  const headerContent = (
+    <>
+      <div className="title">{title}</div>
+      <div className="drawer-actions">
+        {headerAction}
+        {hasAutosaveStatus && (
+          <div className="drawer-autosave-status" data-testid="drawer-autosave-status">
+            {autosaveState === "saving" && (
+              <>
+                <Loader size={14} className="spin" />
+                <span className="autosave-label">Saving…</span>
+              </>
+            )}
+            {autosaveState === "saved" && lastSavedAt && (
+              <>
+                <CheckCircle size={14} className="autosave-icon-saved" />
+                <span className="autosave-label">Saved {formatTimeAgo(lastSavedAt)}</span>
+              </>
+            )}
+            {autosaveState === "error" && (
+              <>
+                <AlertCircle size={14} className="autosave-icon-error" />
+                <span className="autosave-label">Save failed</span>
+              </>
+            )}
+          </div>
+        )}
+        {hasRevert && (
+          <Button variant="ghost" size="sm" onClick={onRevert} data-testid="drawer-revert-button">
+            Revert
+          </Button>
+        )}
+        {hasDelete && (
+          <Button variant="danger" size="sm" onClick={onDelete} data-testid="drawer-delete-button">
+            Delete
+          </Button>
+        )}
+      </div>
+    </>
+  );
 
   return (
-    <aside className="drawer">
+    <HeimdallDrawer
+      isOpen={open}
+      onClose={onClose}
+      position="right"
+      className="drawer--context-studio"
+    >
       <div className="drawer-head">
-        <span className="title">{title}</span>
-        <div className="drawer-actions">
-          {headerAction}
-          {autosaveState && autosaveState !== "idle" && (
-            <div className="drawer-autosave-status" data-testid="drawer-autosave-status">
-              {autosaveState === "saving" && (
-                <>
-                  <Loader size={14} className="spin" />
-                  <span className="autosave-label">Saving…</span>
-                </>
-              )}
-              {autosaveState === "saved" && lastSavedAt && (
-                <>
-                  <CheckCircle size={14} className="autosave-icon-saved" />
-                  <span className="autosave-label">Saved {formatTimeAgo(lastSavedAt)}</span>
-                </>
-              )}
-              {autosaveState === "error" && (
-                <>
-                  <AlertCircle size={14} className="autosave-icon-error" />
-                  <span className="autosave-label">Save failed</span>
-                </>
-              )}
-            </div>
-          )}
-          {isDirty && onRevert && (
-            <Button variant="ghost" size="sm" onClick={onRevert} data-testid="drawer-revert-button">
-              Revert
-            </Button>
-          )}
-          {onDelete && (
-            <Button
-              variant="danger"
-              size="sm"
-              onClick={onDelete}
-              data-testid="drawer-delete-button"
-            >
-              Delete
-            </Button>
-          )}
-          <button className="modal-x" onClick={onClose} type="button" aria-label="Close drawer">
-            <X size={14} />
-          </button>
-        </div>
+        {headerContent}
+        <button type="button" className="drawer-close" onClick={onClose} aria-label="Close drawer">
+          <X size={14} />
+        </button>
       </div>
       <div className="drawer-body">{children}</div>
-    </aside>
+    </HeimdallDrawer>
   );
 }

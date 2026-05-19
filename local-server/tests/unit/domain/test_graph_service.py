@@ -7,40 +7,39 @@ subgraph extraction, and RDF/SPARQL operations. Uses in-memory fakes with
 zero infrastructure imports.
 """
 
-import sys
 import os
+import sys
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-import pytest
 from uuid import uuid4
 
-from domain.graph.services import GraphAnalysisService
+import pytest
+
 from domain.graph.entities import (
-    KnowledgeGraph,
     GraphMetrics,
+    KnowledgeGraph,
     PathResult,
     SubgraphResult,
 )
 from domain.graph.exceptions import (
     GraphError,
     InvalidAlgorithmError,
-    SPARQLValidationError,
     NodeNotFoundError,
+    SPARQLValidationError,
 )
+from domain.graph.services import GraphAnalysisService
 from domain.ontology.entities import (
     Class,
-    Taxonomy,
     ConceptScheme,
-    Relationship,
-    PropertyDefinition,
     Individual,
+    PropertyDefinition,
+    Relationship,
+    Taxonomy,
 )
 from domain.ontology.events import GraphInvalidated
-from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 from tests.fakes.fake_graph_engine import FakeGraphEngine
+from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 from tests.fakes.fake_semantic_query_engine import FakeSemanticQueryEngine
 
 
@@ -332,9 +331,7 @@ class TestPathFinding:
         # Relationships should be populated from edge property definitions
         assert isinstance(result.relationships, list)
         assert len(result.relationships) == 1  # One edge in the path
-        assert (
-            result.relationships[0] == "is a"
-        )  # Property definition title from fixture
+        assert result.relationships[0] == "is a"  # Property definition title from fixture
 
     def test_find_shortest_path_not_exists(self, service):
         """find_shortest_path raises NodeNotFoundError when nodes don't exist."""
@@ -515,9 +512,7 @@ class TestNeighbors:
         all_class_ids = {cls.id for cls in classes}
         assert result.issubset(all_class_ids)
 
-    def test_get_neighbors_invalid_direction_raises_error(
-        self, service, repository_with_data
-    ):
+    def test_get_neighbors_invalid_direction_raises_error(self, service, repository_with_data):
         """get_neighbors raises InvalidAlgorithmError for invalid direction."""
         svc, _, _ = service
         classes = repository_with_data.list_classes()
@@ -575,9 +570,7 @@ class TestCycleDetection:
 class TestSubgraphExtraction:
     """Tests for subgraph extraction."""
 
-    def test_extract_subgraph_returns_knowledge_graph(
-        self, service, repository_with_data
-    ):
+    def test_extract_subgraph_returns_knowledge_graph(self, service, repository_with_data):
         """extract_subgraph returns KnowledgeGraph with valid counts."""
         svc, _, _ = service
         classes = repository_with_data.list_classes()
@@ -613,9 +606,7 @@ class TestSubgraphExtraction:
         assert result.node_count >= len(node_ids)
         assert result.edge_count >= 0
 
-    def test_extract_subgraph_by_depth_returns_subgraph_result(
-        self, service, repository_with_data
-    ):
+    def test_extract_subgraph_by_depth_returns_subgraph_result(self, service, repository_with_data):
         """extract_subgraph_by_depth returns SubgraphResult with depth information."""
         svc, _, _ = service
         classes = repository_with_data.list_classes()
@@ -629,9 +620,7 @@ class TestSubgraphExtraction:
         assert isinstance(result.edge_count, int)
         assert result.node_count >= 1  # At least the center node
 
-    def test_extract_subgraph_by_depth_includes_center_node(
-        self, service, repository_with_data
-    ):
+    def test_extract_subgraph_by_depth_includes_center_node(self, service, repository_with_data):
         """extract_subgraph_by_depth includes the center node in the subgraph."""
         svc, _, _ = service
         classes = repository_with_data.list_classes()
@@ -651,9 +640,7 @@ class TestSubgraphExtraction:
         with pytest.raises(NodeNotFoundError):
             svc.extract_subgraph_by_depth("nonexistent-node-id", depth=1)
 
-    def test_extract_subgraph_by_depth_includes_node_ids(
-        self, service, repository_with_data
-    ):
+    def test_extract_subgraph_by_depth_includes_node_ids(self, service, repository_with_data):
         """extract_subgraph_by_depth includes actual node IDs in result."""
         svc, _, _ = service
         classes = repository_with_data.list_classes()
@@ -665,9 +652,7 @@ class TestSubgraphExtraction:
         assert center_id in result.node_ids
         assert len(result.node_ids) == result.node_count
 
-    def test_extract_subgraph_by_depth_includes_edge_ids(
-        self, service, repository_with_data
-    ):
+    def test_extract_subgraph_by_depth_includes_edge_ids(self, service, repository_with_data):
         """extract_subgraph_by_depth includes actual edge IDs in result."""
         svc, _, _ = service
         classes = repository_with_data.list_classes()
@@ -720,9 +705,7 @@ class TestSubgraphExtraction:
         assert result.node_count == len(result.node_ids)
         assert result.edge_count == len(result.edge_ids)
 
-    def test_extract_subgraph_by_depth_edge_ids_valid_tuples(
-        self, service, repository_with_data
-    ):
+    def test_extract_subgraph_by_depth_edge_ids_valid_tuples(self, service, repository_with_data):
         """edge_ids are valid (source, target) tuples with both endpoints in node_ids."""
         svc, _, _ = service
         classes = repository_with_data.list_classes()
@@ -767,9 +750,7 @@ class TestMetrics:
         # Should have some centrality scores
         assert isinstance(result.centrality, dict)
 
-    def test_get_metrics_connected_components_calculation(
-        self, service, repository_with_data
-    ):
+    def test_get_metrics_connected_components_calculation(self, service, repository_with_data):
         """get_metrics computes connected components correctly."""
         svc, _, _ = service
         result = svc.get_metrics()
@@ -858,9 +839,7 @@ class TestRDFOperations:
         svc, _, _ = service
         classes = repository_with_data.list_classes()
         assert len(classes) > 0
-        triples = svc.get_triples(
-            subject=classes[0].id, predicate="rdf:type", object="owl:Class"
-        )
+        triples = svc.get_triples(subject=classes[0].id, predicate="rdf:type", object="owl:Class")
         assert isinstance(triples, list)
 
     def test_execute_sparql_rejects_insert(self, service):
@@ -1065,10 +1044,9 @@ class TestIndividualGraphIntegration:
 
         graph = service.build_graph()
 
-        # Graph should have nodes (at minimum: 1 taxonomy + 1 scheme + 2 classes + 2 individuals = 6+)
-        assert (
-            graph.node_count >= 6
-        ), f"Expected at least 6 nodes, got {graph.node_count}"
+        # Graph should have nodes (at minimum: 1 taxonomy + 1 scheme + 2
+        # classes + 2 individuals = 6+)
+        assert graph.node_count >= 6, f"Expected at least 6 nodes, got {graph.node_count}"
 
         # Get degree distribution to verify individuals are in the graph
         degrees = service.get_degree_distribution()
@@ -1078,9 +1056,7 @@ class TestIndividualGraphIntegration:
         # All individuals should be nodes in the graph with specific IDs
         individual_ids = [ind.id for ind in individuals]
         for ind_id in individual_ids:
-            assert (
-                ind_id in degrees
-            ), f"Individual {ind_id} must be in graph degree distribution"
+            assert ind_id in degrees, f"Individual {ind_id} must be in graph degree distribution"
 
         # Verify node count includes the individuals
         actual_individual_ids = [ind.id for ind in individuals]
@@ -1099,18 +1075,14 @@ class TestIndividualGraphIntegration:
         graph = service.build_graph()
 
         # Should have edges from relationships
-        assert (
-            graph.edge_count > 0
-        ), "Graph should have at least one edge from the relationship"
+        assert graph.edge_count > 0, "Graph should have at least one edge from the relationship"
 
         # Get relationships and individuals
         relationships = repository_with_individuals.list_relationships()
         individuals = repository_with_individuals.list_individuals()
 
         # Verify test setup
-        assert (
-            len(relationships) == 1
-        ), "Test fixture should create exactly 1 relationship"
+        assert len(relationships) == 1, "Test fixture should create exactly 1 relationship"
         assert len(individuals) == 2, "Test fixture should create exactly 2 individuals"
 
         # Get the relationship and verify its endpoints
@@ -1120,21 +1092,13 @@ class TestIndividualGraphIntegration:
 
         # Verify both endpoints exist in the graph
         degrees = service.get_degree_distribution()
-        assert (
-            rel.source_id in degrees
-        ), f"Relationship source {rel.source_id} must be in graph"
-        assert (
-            rel.target_id in degrees
-        ), f"Relationship target {rel.target_id} must be in graph"
+        assert rel.source_id in degrees, f"Relationship source {rel.source_id} must be in graph"
+        assert rel.target_id in degrees, f"Relationship target {rel.target_id} must be in graph"
 
         # The source and target should have non-zero degree (at least 1 edge each)
         # due to the relationship between them
-        assert (
-            degrees[rel.source_id] >= 1
-        ), f"Source node {rel.source_id} should have degree >= 1"
-        assert (
-            degrees[rel.target_id] >= 1
-        ), f"Target node {rel.target_id} should have degree >= 1"
+        assert degrees[rel.source_id] >= 1, f"Source node {rel.source_id} should have degree >= 1"
+        assert degrees[rel.target_id] >= 1, f"Target node {rel.target_id} should have degree >= 1"
 
     def test_individual_node_type_classification(self, repository_with_individuals):
         """Graph correctly classifies individuals by node type."""
@@ -1148,15 +1112,11 @@ class TestIndividualGraphIntegration:
         graph = service.build_graph()
 
         # Verify graph was built successfully
-        assert (
-            graph.node_count >= 6
-        ), f"Expected at least 6 nodes, got {graph.node_count}"
+        assert graph.node_count >= 6, f"Expected at least 6 nodes, got {graph.node_count}"
         assert not service._graph_stale, "Graph should not be stale after build"
 
         # Get all entities from repository
-        entities, relationships = (
-            repository_with_individuals.get_all_entities_and_relationships()
-        )
+        entities, relationships = repository_with_individuals.get_all_entities_and_relationships()
 
         # Should have exactly 2 individuals in the entities list
         individuals = [e for e in entities if isinstance(e, Individual)]
@@ -1165,9 +1125,10 @@ class TestIndividualGraphIntegration:
         # Verify the node type mapping works correctly for each individual
         for individual in individuals:
             node_type = service._derive_node_type(individual)
-            assert (
-                node_type == "individual"
-            ), f"Individual {individual.id} should have node type 'individual', got {node_type}"
+            assert node_type == "individual", (
+                f"Individual {individual.id} should have node type 'individual', got"
+                f" {node_type}"
+            )
             # Also verify the individual is in the graph
             degrees = service.get_degree_distribution()
             assert (
@@ -1214,9 +1175,7 @@ class TestIndividualGraphIntegration:
         # Verify all individuals and classes are nodes
         for ind in individuals:
             assert ind.id in in_degrees, f"Individual {ind.id} should be in graph nodes"
-            assert (
-                ind.id in out_degrees
-            ), f"Individual {ind.id} should be in graph nodes"
+            assert ind.id in out_degrees, f"Individual {ind.id} should be in graph nodes"
         for cls in classes:
             assert cls.id in in_degrees, f"Class {cls.id} should be in graph nodes"
             assert cls.id in out_degrees, f"Class {cls.id} should be in graph nodes"
@@ -1226,15 +1185,18 @@ class TestIndividualGraphIntegration:
         # - individual2 should have out-degree 2: 2 class edges
         # - class1 should have in-degree 2: individual1 and individual2 point to it
         # - class2 should have in-degree 1: individual2 points to it
-        assert (
-            out_degrees[individual1.id] == 2
-        ), f"Individual1 out-degree should be 2 (→class1 synthesized + →individual2 explicit), got {out_degrees[individual1.id]}"
-        assert (
-            out_degrees[individual2.id] == 2
-        ), f"Individual2 out-degree should be 2 (→class1 + →class2 synthesized), got {out_degrees[individual2.id]}"
-        assert (
-            in_degrees[class1.id] == 2
-        ), f"Class1 in-degree should be 2 (←individual1 + ←individual2), got {in_degrees[class1.id]}"
+        assert out_degrees[individual1.id] == 2, (
+            "Individual1 out-degree should be 2 (→class1 synthesized + →individual2"
+            f" explicit), got {out_degrees[individual1.id]}"
+        )
+        assert out_degrees[individual2.id] == 2, (
+            "Individual2 out-degree should be 2 (→class1 + →class2 synthesized), got"
+            f" {out_degrees[individual2.id]}"
+        )
+        assert in_degrees[class1.id] == 2, (
+            "Class1 in-degree should be 2 (←individual1 + ←individual2), got"
+            f" {in_degrees[class1.id]}"
+        )
         assert (
             in_degrees[class2.id] == 1
         ), f"Class2 in-degree should be 1 (←individual2), got {in_degrees[class2.id]}"
@@ -1247,9 +1209,7 @@ class TestIndividualGraphIntegration:
             service.build_graph().edge_count == 4
         ), "Graph should have exactly 4 edges (3 synthesized + 1 explicit)"
 
-    def test_individuals_rdf_class_membership_synthesis(
-        self, repository_with_individuals
-    ):
+    def test_individuals_rdf_class_membership_synthesis(self, repository_with_individuals):
         """RDF graph includes synthesized class-membership edges from individuals.
 
         The _ensure_rdf() method synthesizes class-membership edges from
@@ -1290,15 +1250,17 @@ class TestIndividualGraphIntegration:
         # - its class (class1) via synthesized edge
         # - individual2 via explicit relationship
         # So at least 2 triples (may be more if type triples are included)
-        assert (
-            len(triples_ind1) >= 1
-        ), f"Individual1 should have at least 1 triple for synthesized class edge, got {len(triples_ind1)}: {triples_ind1}"
+        assert len(triples_ind1) >= 1, (
+            "Individual1 should have at least 1 triple for synthesized class edge, got"
+            f" {len(triples_ind1)}: {triples_ind1}"
+        )
 
         # Verify that get_triples for individual2 includes edges to both classes
         triples_ind2 = service.get_triples(subject=str(individual2.id))
-        assert (
-            len(triples_ind2) >= 2
-        ), f"Individual2 should have at least 2 triples (→class1 + →class2), got {len(triples_ind2)}: {triples_ind2}"
+        assert len(triples_ind2) >= 2, (
+            "Individual2 should have at least 2 triples (→class1 + →class2), got"
+            f" {len(triples_ind2)}: {triples_ind2}"
+        )
 
         # Verify specific synthesized edges exist by checking triples
         # Individual1 should have a triple with class1 as object

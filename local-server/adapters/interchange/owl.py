@@ -11,7 +11,8 @@ Mapping strategy:
 - Individual → owl:NamedIndividual (with rdf:type indicating class membership)
 - PropertyDefinition → owl:ObjectProperty
 - Relationship → RDF triple using the property predicate
-- external_references → LOCAL:externalReferences (JSON-encoded full object with source/identifier/uri)
+- external_references → LOCAL:externalReferences (JSON-encoded full object with
+source/identifier/uri)
   - Backwards compatible with legacy owl:sameAs format (heuristically reconstructed on import)
 """
 
@@ -20,36 +21,36 @@ from __future__ import annotations
 import hashlib
 import json
 import uuid
-from typing import Optional, Dict, Any, cast
-
-from rdflib import Graph, Namespace, URIRef, Literal, RDF, RDFS
-from rdflib.term import Node
-from rdflib.exceptions import ParserError
+from typing import Any, Dict, Optional, cast
 from xml.sax import SAXParseException
 
-from utils.logger import get_logger
-from domain.interchange.ports import OntologySerializer, OntologyDeserializer
+from rdflib import RDF, RDFS, Graph, Literal, Namespace, URIRef
+from rdflib.exceptions import ParserError
+from rdflib.term import Node
+
+from adapters.interchange.persistence_helpers import persist_incoming_entities
 from domain.interchange.entities import ResolutionRecord
+from domain.interchange.ports import OntologyDeserializer, OntologySerializer
 from domain.interchange.services import ImportRunService
 from domain.interchange.value_objects import (
-    SerializationScope,
-    SerializationScopeType,
-    ImportPlan,
     ImportConflict,
+    ImportPlan,
     MatchKind,
     ResolutionKind,
     SerializationFormat,
+    SerializationScope,
+    SerializationScopeType,
 )
 from domain.ontology.entities import (
-    Taxonomy,
-    ConceptScheme,
     Class,
+    ConceptScheme,
     Individual,
     PropertyDefinition,
     Relationship,
+    Taxonomy,
 )
 from domain.ontology.value_objects import ExternalReference
-from adapters.interchange.persistence_helpers import persist_incoming_entities
+from utils.logger import get_logger
 
 # RDF Namespaces
 OWL = Namespace("http://www.w3.org/2002/07/owl#")
@@ -185,13 +186,18 @@ class OWLSerializer(OntologySerializer):
 
         Args:
             scheme_id: The concept scheme ID
-            include_descendants: If True, include classes within the scheme; if False, only serialize the scheme itself
+            include_descendants: If True, include classes within the scheme; if False, only
+            serialize the scheme itself
         """
         scheme = self.ontology_repo.get_concept_scheme(scheme_id)
         if not scheme:
             raise ValueError(f"Concept scheme not found: {scheme_id}")
 
-        self._add_concept_scheme_to_graph(scheme, include_parent_taxonomy=True, include_descendants=include_descendants)
+        self._add_concept_scheme_to_graph(
+            scheme,
+            include_parent_taxonomy=True,
+            include_descendants=include_descendants,
+        )
 
     def _serialize_entity_set(self, entity_ids: Optional[tuple[str, ...]]) -> None:
         """Serialize a specified set of entities."""
@@ -219,7 +225,9 @@ class OWLSerializer(OntologySerializer):
             individual = self.ontology_repo.get_individual(entity_id)
             if individual:
                 if self.split_mode:
-                    logger.warning(f"Entity {entity_id} is an Individual, skipped in TBox-only (split) mode")
+                    logger.warning(
+                        f"Entity {entity_id} is an Individual, skipped in TBox-only" " (split) mode"
+                    )
                 else:
                     self._add_individual_to_graph(individual)
                 continue
@@ -229,7 +237,10 @@ class OWLSerializer(OntologySerializer):
                 self._add_property_to_graph(prop)
                 continue
 
-            logger.warning(f"Entity {entity_id} does not match any known type during OWL serialization; skipping")
+            logger.warning(
+                f"Entity {entity_id} does not match any known type during OWL"
+                " serialization; skipping"
+            )
 
     def _add_taxonomy_to_graph(self, taxonomy: Taxonomy) -> None:
         """Add a taxonomy and its descendants to the graph."""
@@ -247,14 +258,18 @@ class OWLSerializer(OntologySerializer):
             self._add_concept_scheme_to_graph(scheme, include_parent_taxonomy=True)
 
     def _add_concept_scheme_to_graph(
-        self, scheme: ConceptScheme, include_parent_taxonomy: bool = True, include_descendants: bool = True
+        self,
+        scheme: ConceptScheme,
+        include_parent_taxonomy: bool = True,
+        include_descendants: bool = True,
     ) -> None:
         """Add a concept scheme and optionally its classes to the graph.
 
         Args:
             scheme: The concept scheme to add
             include_parent_taxonomy: If True, add link to parent taxonomy
-            include_descendants: If True, add classes within the scheme; if False, only add the scheme itself
+            include_descendants: If True, add classes within the scheme; if False, only add the
+            scheme itself
         """
         if self.graph is None:
             raise RuntimeError("Graph not initialized")
@@ -345,7 +360,8 @@ class OWLSerializer(OntologySerializer):
     def _add_external_reference_to_graph(
         self, entity_uri: URIRef, ext_ref: ExternalReference
     ) -> None:
-        """Add an external reference to an entity using LOCAL:externalReferences JSON for faithful round-tripping."""
+        """Add an external reference to an entity using LOCAL:externalReferences JSON for faithful
+        round-tripping."""
         if self.graph is None:
             raise RuntimeError("Graph not initialized")
         # Store full external reference object as JSON for faithful round-tripping
@@ -393,7 +409,12 @@ class OWLDeserializer(OntologyDeserializer):
         self.incoming_entities: Dict[str, Dict[str, Any]] = {}
         self.warnings: list[str] = []
 
-    def deserialize(self, source: bytes | str, dry_run: bool = True, resolutions: list[ResolutionRecord] | None = None) -> ImportPlan:
+    def deserialize(
+        self,
+        source: bytes | str,
+        dry_run: bool = True,
+        resolutions: list[ResolutionRecord] | None = None,
+    ) -> ImportPlan:
         """
         Deserialize OWL data and produce an import plan.
 
@@ -425,7 +446,14 @@ class OWLDeserializer(OntologyDeserializer):
                     self.graph = Graph()  # Reset graph for each format attempt
                     self.graph.parse(data=source_bytes, format=fmt)
                     break
-                except (ValueError, TypeError, UnicodeDecodeError, SyntaxError, ParserError, SAXParseException) as e:
+                except (
+                    ValueError,
+                    TypeError,
+                    UnicodeDecodeError,
+                    SyntaxError,
+                    ParserError,
+                    SAXParseException,
+                ) as e:
                     # These are format-related parsing errors; try next format
                     format_errors.append((fmt, e))
                     continue
@@ -433,9 +461,7 @@ class OWLDeserializer(OntologyDeserializer):
                 # All formats failed - build error message from all attempts
                 if format_errors:
                     error_parts = [f"{fmt}: {str(e)}" for fmt, e in format_errors]
-                    error_msg = "Failed to parse OWL RDF in any format. " + "; ".join(
-                        error_parts
-                    )
+                    error_msg = "Failed to parse OWL RDF in any format. " + "; ".join(error_parts)
                     raise ValueError(error_msg) from format_errors[-1][1]
 
             # Process taxonomies first (ConceptSchemes without dct:isPartOf)
@@ -526,7 +552,11 @@ class OWLDeserializer(OntologyDeserializer):
         for conflict in conflicts:
             entity_id = conflict.incoming["id"]
             if entity_id not in resolution_map:
-                default_str = conflict.default_resolution.value if conflict.default_resolution else "none — user must choose"
+                default_str = (
+                    conflict.default_resolution.value
+                    if conflict.default_resolution
+                    else "none — user must choose"
+                )
                 raise ValueError(
                     f"Conflict for entity {entity_id} ({conflict.match_kind.value}) "
                     f"requires resolution before commit (default: {default_str})"
@@ -581,9 +611,7 @@ class OWLDeserializer(OntologyDeserializer):
                 # This is a concept scheme
                 self._process_concept_scheme_entity(scheme_uri, is_taxonomy=False)
 
-    def _process_concept_scheme_entity(
-        self, scheme_uri: Node, is_taxonomy: bool
-    ) -> None:
+    def _process_concept_scheme_entity(self, scheme_uri: Node, is_taxonomy: bool) -> None:
         """Process a SKOS ConceptScheme (Taxonomy or ConceptScheme)."""
         # Skip if already processed
         if str(scheme_uri) in self._entity_map:
@@ -591,7 +619,10 @@ class OWLDeserializer(OntologyDeserializer):
 
         title = self._get_label(scheme_uri)
         if not title:
-            self.warnings.append(f"ConceptScheme/Taxonomy {scheme_uri} has no label (rdfs:label or skos:prefLabel)")
+            self.warnings.append(
+                f"ConceptScheme/Taxonomy {scheme_uri} has no label (rdfs:label or"
+                " skos:prefLabel)"
+            )
             return
 
         # Try to extract ID from LOCAL namespace URI
@@ -651,7 +682,8 @@ class OWLDeserializer(OntologyDeserializer):
         if parent_class_uri:
             parent_class_id = self._entity_map.get(str(parent_class_uri))
 
-        # Extract external references from LOCAL:externalReferences JSON (primary) or owl:sameAs (legacy)
+        # Extract external references from LOCAL:externalReferences JSON
+        # (primary) or owl:sameAs (legacy)
         external_references = self._extract_external_references_as_dicts(class_uri)
 
         # Get concept scheme from skos:inScheme
@@ -679,7 +711,9 @@ class OWLDeserializer(OntologyDeserializer):
 
         title = self._get_label(ind_uri)
         if not title:
-            self.warnings.append(f"NamedIndividual {ind_uri} has no label (rdfs:label or skos:prefLabel)")
+            self.warnings.append(
+                f"NamedIndividual {ind_uri} has no label (rdfs:label or skos:prefLabel)"
+            )
             return
 
         description = self._get_first_string(ind_uri, RDFS.comment)
@@ -728,7 +762,8 @@ class OWLDeserializer(OntologyDeserializer):
             self.warnings.append(f"NamedIndividual {ind_uri} has no class memberships (rdf:type)")
             return
 
-        # Extract external references from LOCAL:externalReferences JSON (primary) or owl:sameAs (legacy)
+        # Extract external references from LOCAL:externalReferences JSON
+        # (primary) or owl:sameAs (legacy)
         external_references = self._extract_external_references_as_dicts(ind_uri)
 
         self.incoming_entities[entity_id] = {
@@ -787,19 +822,22 @@ class OWLDeserializer(OntologyDeserializer):
 
                 if not source_id:
                     self.warnings.append(
-                        f"Relationship source {source_uri} not found in entity map; relationship skipped"
+                        f"Relationship source {source_uri} not found in entity map;"
+                        " relationship skipped"
                     )
                     continue
 
                 if not target_id:
                     self.warnings.append(
-                        f"Relationship target {target_uri} not found in entity map; relationship skipped"
+                        f"Relationship target {target_uri} not found in entity map;"
+                        " relationship skipped"
                     )
                     continue
 
                 if not prop_id:
                     self.warnings.append(
-                        f"Relationship property {prop_uri} not found in entity map; relationship skipped"
+                        f"Relationship property {prop_uri} not found in entity map;"
+                        " relationship skipped"
                     )
                     continue
 
@@ -812,10 +850,9 @@ class OWLDeserializer(OntologyDeserializer):
                     "property_definition_id": prop_id,
                 }
 
-    def _extract_external_references_as_dicts(
-        self, entity_uri: Node
-    ) -> list[Dict[str, Any]]:
-        """Extract external references from LOCAL:externalReferences JSON (primary) or owl:sameAs (legacy)."""
+    def _extract_external_references_as_dicts(self, entity_uri: Node) -> list[Dict[str, Any]]:
+        """Extract external references from LOCAL:externalReferences JSON (primary) or owl:sameAs
+        (legacy)."""
         refs = []
 
         if self.graph is not None:
@@ -832,7 +869,7 @@ class OWLDeserializer(OntologyDeserializer):
                     )
                 except (json.JSONDecodeError, TypeError):
                     self.warnings.append(
-                        f"Entity {entity_uri} has malformed LOCAL:externalReferences JSON"
+                        f"Entity {entity_uri} has malformed LOCAL:externalReferences" " JSON"
                     )
 
             # If no JSON references found, fall back to legacy owl:sameAs format
@@ -854,7 +891,8 @@ class OWLDeserializer(OntologyDeserializer):
 
     def _parse_uri_for_reference(self, uri_str: str) -> tuple[str, str]:
         """Parse a URI to extract source and identifier for external references."""
-        # Handle common patterns like http://dbpedia.org/resource/Dog or https://www.wikidata.org/wiki/Q144
+        # Handle common patterns like http://dbpedia.org/resource/Dog
+        # or https://www.wikidata.org/wiki/Q144
         if "#" in uri_str:
             source, identifier = uri_str.rsplit("#", 1)
             # Extract domain from full URL
@@ -886,7 +924,8 @@ class OWLDeserializer(OntologyDeserializer):
         else:
             domain = uri_part
 
-        # Get the main domain name (e.g., 'dbpedia' from 'dbpedia.org', 'wikidata' from 'wikidata.org')
+        # Get the main domain name (e.g., 'dbpedia' from 'dbpedia.org',
+        # 'wikidata' from 'wikidata.org')
         if "." in domain:
             domain = domain.split(".")[0]
 
@@ -949,8 +988,10 @@ class OWLDeserializer(OntologyDeserializer):
                 # Try to find existing entity by external reference
                 for ext_ref in external_references:
                     existing_by_ref = self._find_by_external_reference(
-                        ext_ref["source"], ext_ref["identifier"],
-                        classes_cache, individuals_cache
+                        ext_ref["source"],
+                        ext_ref["identifier"],
+                        classes_cache,
+                        individuals_cache,
                     )
                     if existing_by_ref:
                         existing_entity = existing_by_ref
@@ -974,9 +1015,7 @@ class OWLDeserializer(OntologyDeserializer):
                             existing_entity = existing_by_uuid.id
                             match_kind = MatchKind.UUID
                         else:
-                            existing_by_uuid = self.ontology_repo.get_individual(
-                                entity_id
-                            )
+                            existing_by_uuid = self.ontology_repo.get_individual(entity_id)
                             if existing_by_uuid:
                                 existing_entity = existing_by_uuid.id
                                 match_kind = MatchKind.UUID
@@ -1012,8 +1051,7 @@ class OWLDeserializer(OntologyDeserializer):
         return conflicts
 
     def _find_by_external_reference(
-        self, source: str, identifier: str,
-        classes_cache=None, individuals_cache=None
+        self, source: str, identifier: str, classes_cache=None, individuals_cache=None
     ) -> Optional[str]:
         """Find an existing entity by external reference using cached lists."""
         # Use cached lists if provided, otherwise fetch from repository
@@ -1034,13 +1072,9 @@ class OWLDeserializer(OntologyDeserializer):
 
         return None
 
-    def _find_class_by_title(
-        self, title: str, concept_scheme_id: Optional[str]
-    ) -> Optional[Class]:
+    def _find_class_by_title(self, title: str, concept_scheme_id: Optional[str]) -> Optional[Class]:
         """Find an existing class by title (and optional scheme)."""
-        all_classes = self.ontology_repo.list_classes(
-            concept_scheme_id=concept_scheme_id
-        )
+        all_classes = self.ontology_repo.list_classes(concept_scheme_id=concept_scheme_id)
         for class_entity in all_classes:
             if class_entity.title == title:
                 return class_entity

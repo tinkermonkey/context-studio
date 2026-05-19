@@ -13,13 +13,12 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from .entities import ImportRun, ResolutionRecord
-from .value_objects import SerializationScope, SerializationFormat
 from .ports import BatchRunRepository
+from .value_objects import SerializationFormat, SerializationScope
 
-# Context variable for tracking the current batch run ID (import or extraction) across async boundaries
-_batch_run_context: ContextVar[Optional[str]] = ContextVar(
-    "batch_run_id", default=None
-)
+# Context variable for tracking the current batch run ID (import or
+# extraction) across async boundaries
+_batch_run_context: ContextVar[Optional[str]] = ContextVar("batch_run_id", default=None)
 
 
 def get_current_batch_run_id() -> Optional[str]:
@@ -122,7 +121,8 @@ class ImportRunService:
             The updated ImportRun
 
         Raises:
-            ValueError: If the run is already in a terminal state (COMMITTED, FAILED, or ROLLED_BACK)
+            ValueError: If the run is already in a terminal state (COMMITTED, FAILED, or
+            ROLLED_BACK)
         """
         import_run.mark_committed()
         return import_run

@@ -10,15 +10,14 @@ Tests verify:
 - ValueError is raised when all configured providers fail to initialize
 """
 
-import sys
 import os
-import pytest
+import sys
 from unittest.mock import Mock, patch
 
+import pytest
+
 sys.path.append(
-    os.path.dirname(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    )
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 )
 
 from adapters.llm.provider_router import LLMProviderRouter
@@ -77,9 +76,7 @@ class TestLLMProviderRouter:
         with pytest.raises(ValueError) as exc_info:
             LLMProviderRouter()
 
-        assert "At least one LLM provider API key must be configured" in str(
-            exc_info.value
-        )
+        assert "At least one LLM provider API key must be configured" in str(exc_info.value)
 
     @patch("adapters.llm.provider_router.OpenAIProvider")
     def test_router_init_with_valid_openai_key(self, mock_openai_class):

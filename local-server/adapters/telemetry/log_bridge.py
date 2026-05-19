@@ -10,13 +10,13 @@ for non-blocking, batched log export.
 """
 
 import logging
-from typing import Optional, TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 from opentelemetry import trace
 
 if TYPE_CHECKING:
-    from opentelemetry.sdk._logs import LoggingHandler as BaseOTLPLogHandler
     from opentelemetry.sdk._logs import LoggerProvider as LoggerProviderType
+    from opentelemetry.sdk._logs import LoggingHandler as BaseOTLPLogHandler
 else:
     BaseOTLPLogHandler: Any = None
 
@@ -70,9 +70,9 @@ class OTLPLogHandler(BaseOTLPLogHandler):
             # Only inject trace_id and span_id if inside an active span with valid trace
             if span_context and span_context.is_valid:
                 # Add trace context to record attributes
-                if not hasattr(record, 'trace_id'):
+                if not hasattr(record, "trace_id"):
                     record.trace_id = format(span_context.trace_id, "032x")
-                if not hasattr(record, 'span_id'):
+                if not hasattr(record, "span_id"):
                     record.span_id = format(span_context.span_id, "016x")
 
             # Call parent's emit to handle the actual OTLP export
@@ -80,5 +80,3 @@ class OTLPLogHandler(BaseOTLPLogHandler):
         except Exception:
             # Fail gracefully — do not let logging errors crash the app
             self.handleError(record)
-
-

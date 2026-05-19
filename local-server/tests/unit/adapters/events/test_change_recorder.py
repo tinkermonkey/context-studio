@@ -1,38 +1,39 @@
 """Unit tests for ChangeEventRecorder."""
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../../"))
 
 from unittest.mock import Mock
+
 import pytest
 
+from adapters.events.change_recorder import ChangeEventRecorder
 from domain.extraction.events import ExtractionCompleted
-from domain.pipeline.events import PipelineExecuted
+from domain.interchange.services import set_batch_run_context
 from domain.ontology.events import (
-    TaxonomyCreated,
-    TaxonomyUpdated,
-    TaxonomyDeleted,
-    SchemeCreated,
-    SchemeUpdated,
-    SchemeDeleted,
     ClassCreated,
-    ClassUpdated,
     ClassDeleted,
     ClassMoved,
-    RelationshipCreated,
-    RelationshipDeleted,
-    PropertyDefinitionCreated,
-    PropertyDefinitionUpdated,
-    PropertyDefinitionDeleted,
+    ClassUpdated,
     ConceptSchemeUpdated,
     IndividualCreated,
-    IndividualUpdated,
     IndividualDeleted,
+    IndividualUpdated,
+    PropertyDefinitionCreated,
+    PropertyDefinitionDeleted,
+    PropertyDefinitionUpdated,
+    RelationshipCreated,
+    RelationshipDeleted,
+    SchemeCreated,
+    SchemeDeleted,
+    SchemeUpdated,
+    TaxonomyCreated,
+    TaxonomyDeleted,
+    TaxonomyUpdated,
 )
-from adapters.events.change_recorder import ChangeEventRecorder
-from domain.interchange.services import set_batch_run_context
+from domain.pipeline.events import PipelineExecuted
 
 
 @pytest.fixture
@@ -72,9 +73,7 @@ class TestChangeEventRecorder:
         assert call_args.kwargs["new_state"]["duration_ms"] == 1250.5
         assert call_args.kwargs["batch_run_id"] is None
 
-    def test_on_extraction_completed_propagates_batch_run_id(
-        self, recorder, mock_change_repo
-    ):
+    def test_on_extraction_completed_propagates_batch_run_id(self, recorder, mock_change_repo):
         """Test that batch_run_id is propagated from context to record_change."""
         batch_run_id = "batch-789"
         set_batch_run_context(batch_run_id)
@@ -94,9 +93,7 @@ class TestChangeEventRecorder:
         finally:
             set_batch_run_context(None)
 
-    def test_on_extraction_completed_propagates_exception(
-        self, recorder, mock_change_repo
-    ):
+    def test_on_extraction_completed_propagates_exception(self, recorder, mock_change_repo):
         """Test that repo exceptions propagate to the event publisher."""
         set_batch_run_context(None)
         mock_change_repo.record_change.side_effect = RuntimeError("DB error")
@@ -133,9 +130,7 @@ class TestChangeEventRecorder:
         assert call_args.kwargs["new_state"]["status"] == "success"
         assert call_args.kwargs["batch_run_id"] is None
 
-    def test_on_pipeline_executed_propagates_batch_run_id(
-        self, recorder, mock_change_repo
-    ):
+    def test_on_pipeline_executed_propagates_batch_run_id(self, recorder, mock_change_repo):
         """Test that batch_run_id is propagated from context to record_change."""
         batch_run_id = "batch-999"
         set_batch_run_context(batch_run_id)
@@ -155,9 +150,7 @@ class TestChangeEventRecorder:
         finally:
             set_batch_run_context(None)
 
-    def test_on_pipeline_executed_propagates_exception(
-        self, recorder, mock_change_repo
-    ):
+    def test_on_pipeline_executed_propagates_exception(self, recorder, mock_change_repo):
         """Test that repo exceptions propagate to the event publisher."""
         set_batch_run_context(None)
         mock_change_repo.record_change.side_effect = RuntimeError("DB error")
@@ -176,9 +169,7 @@ class TestChangeEventRecorder:
 class TestOntologyHandlers:
     """Tests for ontology event handlers."""
 
-    def test_record_helper_calls_repo_with_correct_args(
-        self, recorder, mock_change_repo
-    ):
+    def test_record_helper_calls_repo_with_correct_args(self, recorder, mock_change_repo):
         """Test that _record helper passes arguments correctly to repo."""
         # Reset context to ensure no batch_run_id is set
         set_batch_run_context(None)
@@ -225,9 +216,7 @@ class TestOntologyHandlers:
         finally:
             set_batch_run_context(None)
 
-    def test_record_helper_converts_none_new_state_to_empty_dict(
-        self, recorder, mock_change_repo
-    ):
+    def test_record_helper_converts_none_new_state_to_empty_dict(self, recorder, mock_change_repo):
         """Test that _record helper converts None new_state to empty dict."""
         set_batch_run_context(None)
         mock_change_repo.record_change.return_value = "change-123"

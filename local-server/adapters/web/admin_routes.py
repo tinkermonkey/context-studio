@@ -19,28 +19,29 @@ when calling synchronous domain service methods.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from domain.admin.services import AdminService
-from domain.admin.exceptions import (
-    ConfigurationError,
-    TaskNotFoundError,
-    AdminError,
-    DatasetNotFoundError,
-    ActiveDatasetError,
-)
+
 from adapters.web.dependencies import get_admin_service
 from adapters.web.schemas.admin import (
-    SystemHealthResponse,
-    DatabaseHealthResponse,
-    ServiceMetricsResponse,
-    ComponentStatusResponse,
-    BackgroundTaskSummaryResponse,
     AppConfigurationResponse,
-    ConfigSectionUpdateRequest,
     BackgroundTaskResponse,
-    DatasetResponse,
+    BackgroundTaskSummaryResponse,
+    ComponentStatusResponse,
+    ConfigSectionUpdateRequest,
+    DatabaseHealthResponse,
     DatasetCreateRequest,
+    DatasetResponse,
     DatasetUpdateRequest,
+    ServiceMetricsResponse,
+    SystemHealthResponse,
 )
+from domain.admin.exceptions import (
+    ActiveDatasetError,
+    AdminError,
+    ConfigurationError,
+    DatasetNotFoundError,
+    TaskNotFoundError,
+)
+from domain.admin.services import AdminService
 from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
 
@@ -171,9 +172,7 @@ async def get_embedding_status(
         HTTPException: 500 for internal errors
     """
     try:
-        component_status = await run_sync_in_executor(
-            service.get_embedding_model_status
-        )
+        component_status = await run_sync_in_executor(service.get_embedding_model_status)
         return ComponentStatusResponse.model_validate(component_status)
     except Exception as exc:
         status_code, message = _handle_admin_error(exc)
@@ -278,9 +277,7 @@ async def update_configuration(
         HTTPException 400: If the section does not exist
     """
     try:
-        config = await run_sync_in_executor(
-            service.update_configuration, section, request.updates
-        )
+        config = await run_sync_in_executor(service.update_configuration, section, request.updates)
         return AppConfigurationResponse.from_domain(config)
     except Exception as exc:
         status_code, message = _handle_admin_error(exc)

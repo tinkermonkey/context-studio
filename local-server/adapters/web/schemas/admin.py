@@ -18,10 +18,11 @@ API key masking is applied at serialization time in AppConfigurationResponse.
 """
 
 import copy
-from typing import Optional, Any, Literal
 from datetime import datetime
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
+
 from domain.admin.entities import AppConfiguration
 from domain.admin.value_objects import (
     CREDENTIAL_FIELD_NAMES,
@@ -68,24 +69,18 @@ class SystemHealthResponse(BaseModel):
         ..., description='Overall health status: "healthy", "degraded", or "unhealthy"'
     )
     database_connected: bool = Field(..., description="Whether database is accessible")
-    nlp_pipeline_ready: bool = Field(
-        ..., description="Whether spaCy NLP model is loaded and ready"
-    )
+    nlp_pipeline_ready: bool = Field(..., description="Whether spaCy NLP model is loaded and ready")
     embedding_model_loaded: bool = Field(
         ..., description="Whether embedding model is loaded in memory"
     )
     llm_providers_available: list[str] = Field(
         default_factory=list, description="List of available LLM provider names"
     )
-    uptime_seconds: float = Field(
-        ..., description="System uptime in seconds since startup"
-    )
+    uptime_seconds: float = Field(..., description="System uptime in seconds since startup")
     issues: list[str] = Field(
         default_factory=list, description="List of identified health issues (if any)"
     )
-    checked_at: datetime = Field(
-        ..., description="Timestamp when health check was performed"
-    )
+    checked_at: datetime = Field(..., description="Timestamp when health check was performed")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -104,9 +99,7 @@ class DatabaseHealthResponse(BaseModel):
 class ServiceMetricsResponse(BaseModel):
     """Response containing service-level metrics."""
 
-    uptime_seconds: float = Field(
-        ..., description="System uptime in seconds since startup"
-    )
+    uptime_seconds: float = Field(..., description="System uptime in seconds since startup")
     llm_providers_available: list[str] = Field(
         default_factory=list, description="List of available LLM provider names"
     )
@@ -118,9 +111,7 @@ class ComponentStatusResponse(BaseModel):
     """Response containing individual component status."""
 
     available: bool = Field(..., description="Whether the component is available/ready")
-    details: str = Field(
-        default="", description="Human-readable detail about component status"
-    )
+    details: str = Field(default="", description="Human-readable detail about component status")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -136,9 +127,7 @@ class BackgroundTaskSummaryResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     @classmethod
-    def from_domain(
-        cls, summary: BackgroundTaskSummary
-    ) -> "BackgroundTaskSummaryResponse":
+    def from_domain(cls, summary: BackgroundTaskSummary) -> "BackgroundTaskSummaryResponse":
         """
         Convert domain BackgroundTaskSummary to response, converting enum keys to strings.
 
@@ -161,9 +150,7 @@ class BackgroundTaskSummaryResponse(BaseModel):
 class ConfigSectionUpdateRequest(BaseModel):
     """Request to update a configuration section."""
 
-    updates: dict = Field(
-        ..., description="Dictionary of key-value pairs to update in the section"
-    )
+    updates: dict = Field(..., description="Dictionary of key-value pairs to update in the section")
 
 
 class AppConfigurationResponse(BaseModel):
@@ -217,9 +204,7 @@ class BackgroundTaskResponse(BaseModel):
     completed_at: Optional[datetime] = Field(
         default=None, description="Timestamp when task finished"
     )
-    error: Optional[str] = Field(
-        default=None, description="Error message if task failed"
-    )
+    error: Optional[str] = Field(default=None, description="Error message if task failed")
     result: Optional[dict] = Field(
         default=None, description="Result data if task completed successfully"
     )

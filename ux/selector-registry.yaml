@@ -45,25 +45,25 @@ selectors:
   # Command Palette
   - selector: command-palette
     component: components/shell/CommandPalette.tsx
-    description: Root command palette dialog overlay
+    description: Root command palette wrapper
   - selector: command-palette-backdrop
     component: components/shell/CommandPalette.tsx
-    description: Clickable backdrop overlay that closes the palette
+    description: Semi-transparent backdrop overlay that closes palette when clicked
   - selector: command-palette-input
     component: components/shell/CommandPalette.tsx
-    description: Search/command input field in the palette
+    description: Search input field in command palette header
   - selector: command-palette-results
     component: components/shell/CommandPalette.tsx
-    description: Results container displaying filtered command items
+    description: Container for command palette results list
   - selector: command-palette-empty-state
     component: components/shell/CommandPalette.tsx
-    description: Empty state message shown when no results match the query
+    description: Empty state message shown when no commands match query
   - selector: command-palette-item-*
     component: components/shell/CommandPalette.tsx
-    description: Individual command palette item button (pattern matches item-{actionId})
+    description: Individual command item button with dynamic ID suffix (pattern matches command-palette-item-{actionId})
   - selector: command-palette-esc-button
     component: components/shell/CommandPalette.tsx
-    description: Esc key indicator button in the palette input row
+    description: Keyboard hint button for Esc key in palette input row
 
   # Sidebar
   - selector: sidebar
@@ -72,11 +72,34 @@ selectors:
   - selector: sidebar-toggle
     component: components/shell/Sidebar.tsx
     description: Button that collapses or expands the sidebar
+  - selector: sidebar-item-*
+    component: components/shell/Sidebar.tsx
+    description: Navigation item button with dynamic ID suffix (top-level or child items)
 
   # Toast
+  - selector: toast-*
+    component: components/ui/Toast.tsx
+    description: Toast wrapper container with dynamic ID suffix
+  - selector: toast-content-*
+    component: components/ui/Toast.tsx
+    description: Toast content element with dynamic ID suffix
   - selector: toast-action-*
     component: components/ui/Toast.tsx
     description: Action button in toast with undo callback
+
+  # ErrorBanner
+  - selector: error-banner
+    component: components/ui/ErrorBanner.tsx
+    description: Error banner root container in full mode
+  - selector: error-banner-compact
+    component: components/ui/ErrorBanner.tsx
+    description: Error banner root container in compact mode
+  - selector: error-banner-logs-btn
+    component: components/ui/ErrorBanner.tsx
+    description: Button to copy daemon log path in error banner
+  - selector: error-banner-retry-btn
+    component: components/ui/ErrorBanner.tsx
+    description: Button to retry the failed operation in error banner
 
   # Drawer
   - selector: drawer-autosave-status
@@ -155,6 +178,9 @@ selectors:
   - selector: property-definition-form
     component: components/schema/PropertyDefinitionForm.tsx
     description: Form for creating/editing property definitions
+  - selector: property-definition-form-error
+    component: components/schema/PropertyDefinitionForm.tsx
+    description: Error banner displayed when property definition form submission fails
   - selector: property-definition-identifier-input
     component: components/schema/PropertyDefinitionForm.tsx
     description: Snake-case identifier input field
@@ -264,6 +290,9 @@ selectors:
   - selector: taxonomy-form
     component: components/schema/TaxonomyForm.tsx
     description: Form for creating new taxonomy
+  - selector: taxonomy-form-error
+    component: components/schema/TaxonomyForm.tsx
+    description: Error banner displayed when taxonomy form submission fails
   - selector: taxonomy-title-input
     component: components/schema/TaxonomyForm.tsx
     description: Title input field in taxonomy form
@@ -278,6 +307,9 @@ selectors:
   - selector: class-form
     component: components/schema/ClassForm.tsx
     description: Form for creating a new class
+  - selector: class-form-error
+    component: components/schema/ClassForm.tsx
+    description: Error banner displayed when class form submission fails
   - selector: class-title-input
     component: components/schema/ClassForm.tsx
     description: Title input field in class creation form
@@ -292,6 +324,9 @@ selectors:
   - selector: relationship-form
     component: components/schema/RelationshipForm.tsx
     description: Form for creating a new relationship
+  - selector: relationship-form-error
+    component: components/schema/RelationshipForm.tsx
+    description: Error banner displayed when relationship form submission fails
   - selector: relationship-source-select
     component: components/schema/RelationshipForm.tsx
     description: Source class selector in relationship creation form
@@ -386,6 +421,9 @@ selectors:
   - selector: scheme-form
     component: components/schema/SchemeForm.tsx
     description: Form for creating new concept scheme
+  - selector: scheme-form-error
+    component: components/schema/SchemeForm.tsx
+    description: Error banner displayed when scheme form submission fails
   - selector: scheme-title-input
     component: components/schema/SchemeForm.tsx
     description: Title input field in scheme form
@@ -963,6 +1001,9 @@ selectors:
   - selector: flavor-submit-button
     component: components/pipeline/FlavorForm.tsx
     description: Submit button in flavor form
+  - selector: flavor-form-error
+    component: components/pipeline/FlavorForm.tsx
+    description: Error banner displayed when flavor form submission fails
   - selector: flavor-drawer
     component: components/pipeline/FlavorDrawer.tsx
     description: Drawer panel showing flavor details
@@ -986,6 +1027,9 @@ selectors:
   - selector: action-2
     component: components/schema/__tests__/SchemaTable.test.tsx
     description: Action element in SchemaTable test fixture
+  - selector: heimdall-command-palette
+    component: components/shell/__tests__/CommandPalette.test.tsx
+    description: Mock Heimdall CommandPalette component in unit test fixture
 
   # Reference Sources Page
   - selector: reference-sources-page
@@ -1029,6 +1073,9 @@ selectors:
   - selector: grounding-workflow-form
     component: components/reference/GroundingWorkflowForm.tsx
     description: Form for creating/editing grounding workflows
+  - selector: grounding-workflow-form-error
+    component: components/reference/GroundingWorkflowForm.tsx
+    description: Error banner displayed when grounding workflow form submission fails
   - selector: workflow-title-input
     component: components/reference/GroundingWorkflowForm.tsx
     description: Workflow name input field

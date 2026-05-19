@@ -15,12 +15,11 @@ Response schemas:
 """
 
 from datetime import datetime
-from typing import Optional, Any, List, Literal
+from typing import Any, List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from domain.interchange.value_objects import ChangeOperation
-
 
 # ==================== Serialization Scope Schemas ====================
 
@@ -33,9 +32,7 @@ class SerializationScopeRequest(BaseModel):
     )
     taxonomy_id: Optional[str] = Field(None, description="Taxonomy ID for taxonomy scope")
     scheme_id: Optional[str] = Field(None, description="Scheme ID for scheme scope")
-    include_descendants: bool = Field(
-        False, description="Include descendants for scheme scope"
-    )
+    include_descendants: bool = Field(False, description="Include descendants for scheme scope")
     entity_ids: Optional[List[str]] = Field(None, description="Entity IDs for entity_set scope")
 
 
@@ -60,7 +57,10 @@ class ExportRequest(BaseModel):
     )
     scope: SerializationScopeRequest = Field(..., description="What to export")
     split_mode: bool = Field(
-        False, description="For OWL format: if true, export only TBox (schema) without ABox (individuals)"
+        False,
+        description=(
+            "For OWL format: if true, export only TBox (schema) without ABox" " (individuals)"
+        ),
     )
 
 
@@ -101,13 +101,9 @@ class ImportPlanResponse(BaseModel):
     conflicts: List[ImportConflictResponse] = Field(
         default_factory=list, description="Detected conflicts"
     )
-    new_entity_count: int = Field(
-        ..., description="Number of new entities to be created"
-    )
+    new_entity_count: int = Field(..., description="Number of new entities to be created")
     import_run_id: Optional[str] = Field(None, description="Prospective import run ID")
-    warnings: List[str] = Field(
-        default_factory=list, description="Warning messages"
-    )
+    warnings: List[str] = Field(default_factory=list, description="Warning messages")
     source_hash: Optional[str] = Field(None, description="SHA256 hash of imported bytes")
     scope: Optional[SerializationScopeResponse] = Field(None, description="Import scope")
 
@@ -158,5 +154,3 @@ class InterchangeChangeEventResponse(BaseModel):
     previous_state: Optional[dict[str, Any]] = Field(
         None, description="Previous state before change"
     )
-
-

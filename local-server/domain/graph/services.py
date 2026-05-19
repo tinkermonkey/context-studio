@@ -118,9 +118,7 @@ class GraphAnalysisService:
                 "source_id": str(rel.source_id),
                 "target_id": str(rel.target_id),
                 "property_definition_id": (
-                    str(rel.property_definition_id)
-                    if rel.property_definition_id
-                    else None
+                    str(rel.property_definition_id) if rel.property_definition_id else None
                 ),
             }
             edges.append(edge_dict)
@@ -176,9 +174,7 @@ class GraphAnalysisService:
                 "source_id": str(rel.source_id),
                 "target_id": str(rel.target_id),
                 "property_definition_id": (
-                    str(rel.property_definition_id)
-                    if rel.property_definition_id
-                    else None
+                    str(rel.property_definition_id) if rel.property_definition_id else None
                 ),
             }
             edges.append(edge_dict)
@@ -301,9 +297,7 @@ class GraphAnalysisService:
 
         # Compute average degree and degree distribution
         degree_dist = self._graph_engine.degree_distribution()
-        avg_degree = (
-            sum(degree_dist.values()) / len(degree_dist) if degree_dist else 0.0
-        )
+        avg_degree = sum(degree_dist.values()) / len(degree_dist) if degree_dist else 0.0
 
         # Count connected components using graph engine
         connected_components = self._graph_engine.connected_components()
@@ -442,16 +436,16 @@ class GraphAnalysisService:
         self._ensure_graph()
         return self._graph_engine.communities(algorithm)
 
-    def get_neighbors(
-        self, node_id: str, direction: str = "both", depth: int = 1
-    ) -> set[str]:
+    def get_neighbors(self, node_id: str, direction: str = "both", depth: int = 1) -> set[str]:
         """
         Get all neighbors of a node up to a specified depth with optional directional filtering.
 
         Args:
             node_id: ID of the node
-            direction: Direction of traversal: "in" (predecessors), "out" (successors), or "both" (default)
-            depth: Maximum distance from center node (default 1). Depth 1 returns immediate neighbors,
+            direction: Direction of traversal: "in" (predecessors), "out" (successors), or "both"
+            (default)
+            depth: Maximum distance from center node (default 1). Depth 1 returns immediate
+            neighbors,
                    depth 2 returns two hops away, etc.
 
         Returns:
@@ -557,9 +551,7 @@ class GraphAnalysisService:
             edge_count=subgraph.edge_count(),
         )
 
-    def extract_subgraph_by_depth(
-        self, center_node_id: str, depth: int
-    ) -> SubgraphResult:
+    def extract_subgraph_by_depth(self, center_node_id: str, depth: int) -> SubgraphResult:
         """
         Extract a subgraph containing a center node and all nodes within a specified depth.
 
@@ -572,7 +564,8 @@ class GraphAnalysisService:
             depth: Maximum distance from center node (must be >= 1)
 
         Returns:
-            SubgraphResult containing the center node ID, node IDs, edge IDs, counts, depth, and extraction timestamp
+            SubgraphResult containing the center node ID, node IDs, edge IDs, counts, depth, and
+            extraction timestamp
 
         Raises:
             NodeNotFoundError: If the center node does not exist in the graph
@@ -589,9 +582,7 @@ class GraphAnalysisService:
 
         # Get all nodes within the specified depth
         # neighbors() with depth=N returns all nodes within N hops (excluding the center node)
-        neighborhood = self._graph_engine.neighbors(
-            center_node_id, direction="both", depth=depth
-        )
+        neighborhood = self._graph_engine.neighbors(center_node_id, direction="both", depth=depth)
 
         # Create the subgraph with the center node plus all nodes in the neighborhood
         subgraph_nodes = {center_node_id} | neighborhood
@@ -673,9 +664,7 @@ class GraphAnalysisService:
         self._graph_stale = True
         self._rdf_stale = True
 
-    def _get_path_relationships(
-        self, path: list[str], prop_def_map: dict[str, str]
-    ) -> list[str]:
+    def _get_path_relationships(self, path: list[str], prop_def_map: dict[str, str]) -> list[str]:
         """
         Get relationship labels for all edges in a path.
 

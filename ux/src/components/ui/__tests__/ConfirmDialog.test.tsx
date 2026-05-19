@@ -17,6 +17,7 @@ describe("ConfirmDialog", () => {
           title="Delete Item?"
           message="This action cannot be undone."
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -32,6 +33,7 @@ describe("ConfirmDialog", () => {
           title="Delete Item?"
           message="This action cannot be undone."
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -46,6 +48,7 @@ describe("ConfirmDialog", () => {
           title="Confirm"
           message="Are you sure?"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -63,6 +66,7 @@ describe("ConfirmDialog", () => {
           confirmLabel="Delete Forever"
           cancelLabel="Nope"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -79,11 +83,32 @@ describe("ConfirmDialog", () => {
           message="Are you sure?"
           danger={true}
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
       const confirmButton = screen.getByTestId("confirm-dialog-confirm");
-      expect(confirmButton).toHaveClass("btn-danger");
+      expect(confirmButton).toHaveClass("btn--danger");
+    });
+
+    it("disables confirm button when isConfirmDisabled is true", () => {
+      render(
+        <ConfirmDialog
+          open={true}
+          onClose={vi.fn()}
+          title="Confirm"
+          message="Are you sure?"
+          onConfirm={vi.fn()}
+          onError={vi.fn()}
+          isConfirmDisabled={true}
+        />,
+      );
+
+      const confirmButton = screen.getByTestId("confirm-dialog-confirm");
+      const cancelButton = screen.getByTestId("confirm-dialog-cancel");
+
+      expect(confirmButton).toBeDisabled();
+      expect(cancelButton).not.toBeDisabled();
     });
   });
 
@@ -100,6 +125,7 @@ describe("ConfirmDialog", () => {
           title="Confirm"
           message="Are you sure?"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -118,6 +144,7 @@ describe("ConfirmDialog", () => {
           title="Confirm"
           message="Are you sure?"
           onConfirm={onConfirm}
+          onError={vi.fn()}
         />,
       );
 
@@ -138,6 +165,7 @@ describe("ConfirmDialog", () => {
           title="Confirm"
           message="Are you sure?"
           onConfirm={onConfirm}
+          onError={vi.fn()}
         />,
       );
 
@@ -160,6 +188,7 @@ describe("ConfirmDialog", () => {
           title="Confirm"
           message="Are you sure?"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -176,6 +205,7 @@ describe("ConfirmDialog", () => {
           title="Confirm"
           message="Are you sure?"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
           isLoading={true}
         />,
       );
@@ -203,6 +233,7 @@ describe("ConfirmDialog", () => {
           title="Confirm"
           message="Are you sure?"
           onConfirm={onConfirm}
+          onError={vi.fn()}
         />,
       );
 
@@ -212,6 +243,138 @@ describe("ConfirmDialog", () => {
       await waitFor(() => {
         expect(onClose).toHaveBeenCalled();
       });
+    });
+
+    it("calls onError when onConfirm rejects with Error", async () => {
+      const error = new Error("Operation failed");
+      const onConfirm = vi.fn().mockRejectedValue(error);
+      const onError = vi.fn();
+      const onClose = vi.fn();
+
+      render(
+        <ConfirmDialog
+          open={true}
+          onClose={onClose}
+          title="Confirm"
+          message="Are you sure?"
+          onConfirm={onConfirm}
+          onError={onError}
+        />,
+      );
+
+      const confirmButton = screen.getByTestId("confirm-dialog-confirm");
+      await userEvent.click(confirmButton);
+
+      await waitFor(() => {
+        expect(onError).toHaveBeenCalledWith(error);
+      });
+
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it("wraps non-Error thrown values in Error and calls onError", async () => {
+      const onConfirm = vi.fn().mockRejectedValue("string error");
+      const onError = vi.fn();
+
+      render(
+        <ConfirmDialog
+          open={true}
+          onClose={vi.fn()}
+          title="Confirm"
+          message="Are you sure?"
+          onConfirm={onConfirm}
+          onError={onError}
+        />,
+      );
+
+      const confirmButton = screen.getByTestId("confirm-dialog-confirm");
+      await userEvent.click(confirmButton);
+
+      await waitFor(() => {
+        expect(onError).toHaveBeenCalled();
+        const calledError = onError.mock.calls[0][0];
+        expect(calledError).toBeInstanceOf(Error);
+        expect(calledError.message).toBe("string error");
+      });
+    });
+
+    it("keeps dialog open when onError is called", async () => {
+      const onConfirm = vi.fn().mockRejectedValue(new Error("Operation failed"));
+      const onError = vi.fn();
+
+      render(
+        <ConfirmDialog
+          open={true}
+          onClose={vi.fn()}
+          title="Confirm Action"
+          message="Are you sure?"
+          onConfirm={onConfirm}
+          onError={onError}
+        />,
+      );
+
+      const confirmButton = screen.getByTestId("confirm-dialog-confirm");
+      await userEvent.click(confirmButton);
+
+      await waitFor(() => {
+        expect(onError).toHaveBeenCalled();
+      });
+
+      expect(screen.getByText("Confirm Action")).toBeInTheDocument();
+    });
+
+    it("does not close dialog when onConfirm fails", async () => {
+      const onConfirm = vi.fn().mockRejectedValue(new Error("Operation failed"));
+      const onError = vi.fn();
+      const onClose = vi.fn();
+
+      render(
+        <ConfirmDialog
+          open={true}
+          onClose={onClose}
+          title="Confirm"
+          message="Are you sure?"
+          onConfirm={onConfirm}
+          onError={onError}
+        />,
+      );
+
+      const confirmButton = screen.getByTestId("confirm-dialog-confirm");
+      await userEvent.click(confirmButton);
+
+      await waitFor(() => {
+        expect(onError).toHaveBeenCalled();
+      });
+
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it("disables both buttons during async operation", async () => {
+      const onConfirm = vi.fn().mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            setTimeout(resolve, 100);
+          }),
+      );
+
+      render(
+        <ConfirmDialog
+          open={true}
+          onClose={vi.fn()}
+          title="Confirm"
+          message="Are you sure?"
+          onConfirm={onConfirm}
+          onError={vi.fn()}
+        />,
+      );
+
+      const confirmButton = screen.getByTestId("confirm-dialog-confirm");
+      const cancelButton = screen.getByTestId("confirm-dialog-cancel");
+
+      await userEvent.click(confirmButton);
+
+      expect(confirmButton).toBeDisabled();
+      expect(cancelButton).toBeDisabled();
     });
   });
 });

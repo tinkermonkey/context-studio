@@ -21,29 +21,28 @@ from typing import cast
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from adapters.web.dependencies import get_extraction_service
+from adapters.web.schemas.extraction import (
+    AnalyzeTextRequest,
+    EnrichFromReferencesRequest,
+    ExtractedEntitySchema,
+    ExtractedTriple,
+    ExtractionLayerResultSchema,
+    ExtractionMetadata,
+    ExtractionResultSchema,
+    ExtractRequest,
+    ExtractTripleRequest,
+    ExtractTripleResponse,
+)
 from domain.extraction.entities import ExtractedEntity
-from domain.extraction.services import ExtractionService
 from domain.extraction.exceptions import (
     ExtractionError,
     InvalidInputError,
     LayerExecutionError,
 )
-from utils.logger import get_logger
+from domain.extraction.services import ExtractionService
 from utils.async_executor import run_sync_in_executor
-
-from adapters.web.dependencies import get_extraction_service
-from adapters.web.schemas.extraction import (
-    AnalyzeTextRequest,
-    EnrichFromReferencesRequest,
-    ExtractRequest,
-    ExtractionResultSchema,
-    ExtractedEntitySchema,
-    ExtractionLayerResultSchema,
-    ExtractTripleRequest,
-    ExtractTripleResponse,
-    ExtractedTriple,
-    ExtractionMetadata,
-)
+from utils.logger import get_logger
 
 router = APIRouter(prefix="/api", tags=["extraction"])
 
@@ -125,9 +124,7 @@ def _to_schema(result) -> ExtractionResultSchema:
 # ==================== Extraction Endpoints ====================
 
 
-@router.post(
-    "/extract", response_model=ExtractionResultSchema, status_code=status.HTTP_200_OK
-)
+@router.post("/extract", response_model=ExtractionResultSchema, status_code=status.HTTP_200_OK)
 async def extract_entities(
     request: ExtractRequest,
     service: ExtractionService = Depends(get_extraction_service),

@@ -6,11 +6,12 @@ to provide automatic spans without code changes.
 """
 
 import logging
+
 from fastapi import FastAPI
-from sqlalchemy.engine import Engine
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+from sqlalchemy.engine import Engine
 
 _logger = logging.getLogger(__name__)
 

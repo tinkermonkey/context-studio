@@ -4,25 +4,23 @@ Unit tests for versioning domain entities.
 Tests entity invariants and state machine transitions.
 """
 
-import sys
 import os
+import sys
 from datetime import datetime, timezone
 
 import pytest
 
 # Add local-server root to path for imports
-sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from domain.versioning.entities import (
     Changeset,
-    ConflictReport,
     Conflict,
+    ConflictReport,
     Proposal,
 )
 from domain.versioning.exceptions import ChangesetStateError, ProposalStateError
-from domain.versioning.value_objects import ChangeState, ProposalState, MergeStrategy
+from domain.versioning.value_objects import ChangeState, MergeStrategy, ProposalState
 
 
 class TestChangesetStateTransitions:
@@ -257,7 +255,8 @@ class TestConflictReport:
         assert not report.all_resolved
 
     def test_conflict_resolved_to_none_with_strategy(self) -> None:
-        """Test that is_resolved is true when resolved_value is None but resolution_strategy is set."""
+        """Test that is_resolved is true when resolved_value is None but resolution_strategy is
+        set."""
         conflict = Conflict(
             entity_id="entity1",
             entity_type="class",

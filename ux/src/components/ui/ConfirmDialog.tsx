@@ -1,16 +1,20 @@
-import { Modal } from "./Modal";
-import { Button } from "./Button";
+import { useState } from "react";
+import { Modal as HeimdallModal, Button as HeimdallButton } from "@tinkermonkey/heimdall-ui";
+import type { ReactNode } from "react";
 
 interface ConfirmDialogProps {
   open: boolean;
   onClose: () => void;
   title: string;
-  message: string;
+  message: ReactNode;
   confirmLabel?: string;
   cancelLabel?: string;
   danger?: boolean;
   onConfirm: () => void | Promise<void>;
+  onError: (error: Error) => void;
+  onConfirmButtonRef?: React.MutableRefObject<(() => Promise<void>) | null>;
   isLoading?: boolean;
+  isConfirmDisabled?: boolean;
 }
 
 export function ConfirmDialog({
@@ -22,46 +26,59 @@ export function ConfirmDialog({
   cancelLabel = "Cancel",
   danger = false,
   onConfirm,
+  onError,
+  onConfirmButtonRef,
   isLoading = false,
+  isConfirmDisabled = false,
 }: ConfirmDialogProps) {
+  const [isProcessing, setIsProcessing] = useState(false);
+
   const handleConfirm = async () => {
+    if (isProcessing) return;
+    setIsProcessing(true);
     try {
       await onConfirm();
       onClose();
-    } catch {
-      // Error is handled by the consumer's error handling
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      onError(err);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  const footer = (
-    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-      <span style={{ flex: 1 }} />
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={onClose}
-        disabled={isLoading}
-        data-testid="confirm-dialog-cancel"
-      >
-        {cancelLabel}
-      </Button>
-      <Button
-        variant={danger ? "danger" : "primary"}
-        size="sm"
-        onClick={handleConfirm}
-        disabled={isLoading}
-        data-testid="confirm-dialog-confirm"
-      >
-        {confirmLabel}
-      </Button>
-    </div>
-  );
+  if (onConfirmButtonRef) {
+    onConfirmButtonRef.current = handleConfirm;
+  }
+
+  const isConfirmDisabledState = isProcessing || isLoading || isConfirmDisabled;
+  const isCancelDisabled = isProcessing || isLoading;
 
   return (
-    <Modal open={open} onClose={onClose} title={title} size="sm" footer={footer}>
-      <div style={{ color: "var(--canvas-fg-2)", lineHeight: 1.5 }} data-testid="confirm-dialog">
+    <HeimdallModal isOpen={open} onClose={onClose} title={title}>
+      <div className="confirm-dialog__message" data-testid="confirm-dialog">
         {message}
       </div>
-    </Modal>
+      <div className="confirm-dialog__footer">
+        <HeimdallButton
+          variant="ghost"
+          size="sm"
+          onClick={onClose}
+          disabled={isCancelDisabled}
+          data-testid="confirm-dialog-cancel"
+        >
+          {cancelLabel}
+        </HeimdallButton>
+        <HeimdallButton
+          variant={danger ? "danger" : "primary"}
+          size="sm"
+          onClick={handleConfirm}
+          disabled={isConfirmDisabledState}
+          data-testid="confirm-dialog-confirm"
+        >
+          {confirmLabel}
+        </HeimdallButton>
+      </div>
+    </HeimdallModal>
   );
 }

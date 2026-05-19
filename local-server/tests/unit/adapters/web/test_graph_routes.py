@@ -22,24 +22,23 @@ Tests verify:
 - Edge cases (nonexistent nodes, invalid algorithms)
 """
 
-import sys
 import os
+import sys
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+from uuid import uuid4
 
 import pytest
-from uuid import uuid4
 from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 
-from domain.graph.services import GraphAnalysisService
-from domain.ontology.entities import Class, Taxonomy, ConceptScheme, Relationship
-from tests.fakes.fake_ontology_repository import FakeOntologyRepository
-from tests.fakes.fake_graph_engine import FakeGraphEngine
-from tests.fakes.fake_semantic_query_engine import FakeSemanticQueryEngine
 from adapters.web.graph_routes import router
+from domain.graph.services import GraphAnalysisService
+from domain.ontology.entities import Class, ConceptScheme, Relationship, Taxonomy
+from tests.fakes.fake_graph_engine import FakeGraphEngine
+from tests.fakes.fake_ontology_repository import FakeOntologyRepository
+from tests.fakes.fake_semantic_query_engine import FakeSemanticQueryEngine
 
 
 @pytest.fixture
@@ -272,9 +271,7 @@ class TestAllPathsEndpoint:
 
     def test_all_paths_returns_empty_for_nonexistent(self, client):
         """GET /paths/all returns empty list when nodes don't exist."""
-        response = client.get(
-            "/api/graph/paths/all?source_id=nonexistent1&target_id=nonexistent2"
-        )
+        response = client.get("/api/graph/paths/all?source_id=nonexistent1&target_id=nonexistent2")
         # Fake engine returns empty list, real engine might return 404
         assert response.status_code in [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND]
 
@@ -353,7 +350,8 @@ class TestNeighborsEndpoint:
         assert response.status_code == status.HTTP_200_OK
 
     def test_neighbors_response_structure(self, client, repository_with_data):
-        """GET /nodes/{node_id}/neighbors response contains node_id, direction, incoming, outgoing."""
+        """GET /nodes/{node_id}/neighbors response contains node_id, direction, incoming,
+        outgoing."""
         classes = repository_with_data.list_classes()
         response = client.get(f"/api/graph/nodes/{classes[0].id}/neighbors")
         assert response.status_code == status.HTTP_200_OK
@@ -385,14 +383,10 @@ class TestNeighborsEndpoint:
         # Fake engine returns empty set, implementation detail
         assert response.status_code in [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND]
 
-    def test_neighbors_invalid_direction_returns_422(
-        self, client, repository_with_data
-    ):
+    def test_neighbors_invalid_direction_returns_422(self, client, repository_with_data):
         """GET /nodes/{node_id}/neighbors with invalid direction returns 422."""
         classes = repository_with_data.list_classes()
-        response = client.get(
-            f"/api/graph/nodes/{classes[0].id}/neighbors?direction=invalid"
-        )
+        response = client.get(f"/api/graph/nodes/{classes[0].id}/neighbors?direction=invalid")
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_neighbors_with_depth_parameter(self, client, repository_with_data):
@@ -412,9 +406,7 @@ class TestNeighborsEndpoint:
         response = client.get(f"/api/graph/nodes/{classes[0].id}/neighbors?depth=0")
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    def test_neighbors_depth_exceeds_max_returns_422(
-        self, client, repository_with_data
-    ):
+    def test_neighbors_depth_exceeds_max_returns_422(self, client, repository_with_data):
         """GET /nodes/{node_id}/neighbors with depth>10 returns 422 validation error."""
         classes = repository_with_data.list_classes()
         response = client.get(f"/api/graph/nodes/{classes[0].id}/neighbors?depth=11")
@@ -572,23 +564,17 @@ class TestRDFTriplesEndpoint:
 
     def test_rdf_triples_with_subject_filter(self, client):
         """GET /rdf/triples accepts subject filter."""
-        response = client.get(
-            "/api/graph/rdf/triples?subject=http://example.org/subject1"
-        )
+        response = client.get("/api/graph/rdf/triples?subject=http://example.org/subject1")
         assert response.status_code == status.HTTP_200_OK
 
     def test_rdf_triples_with_predicate_filter(self, client):
         """GET /rdf/triples accepts predicate filter."""
-        response = client.get(
-            "/api/graph/rdf/triples?predicate=http://example.org/predicate1"
-        )
+        response = client.get("/api/graph/rdf/triples?predicate=http://example.org/predicate1")
         assert response.status_code == status.HTTP_200_OK
 
     def test_rdf_triples_with_object_filter(self, client):
         """GET /rdf/triples accepts object filter."""
-        response = client.get(
-            "/api/graph/rdf/triples?object=http://example.org/object1"
-        )
+        response = client.get("/api/graph/rdf/triples?object=http://example.org/object1")
         assert response.status_code == status.HTTP_200_OK
 
     def test_rdf_triples_with_all_filters(self, client):

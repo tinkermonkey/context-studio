@@ -1,11 +1,9 @@
 """Fake implementation of ReferenceSource for testing."""
 
-import sys
 import os
+import sys
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from domain.extraction.ports import ReferenceRelation, ReferenceResult
 
@@ -116,9 +114,7 @@ class FakeReferenceSource:
         """
         return self.search(term, limit)
 
-    async def get_relations_async(
-        self, uri: str, limit: int = 10
-    ) -> list[ReferenceRelation]:
+    async def get_relations_async(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
         """
         Async get relationships connected to a URI.
 

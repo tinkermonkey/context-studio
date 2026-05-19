@@ -5,13 +5,11 @@ This test verifies that when a changeset is merged, entity versions are created
 and can be queried via the API endpoints.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(
-    os.path.dirname(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    )
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 )
 
 from fastapi import status
@@ -22,9 +20,7 @@ from domain.versioning.value_objects import ChangeOperation
 class TestMergeVersionsIntegration:
     """Integration tests for entity version creation on merge."""
 
-    def test_merge_creates_entity_version_from_single_create_event(
-        self, client, change_repository
-    ):
+    def test_merge_creates_entity_version_from_single_create_event(self, client, change_repository):
         """Test that merging a changeset with a CREATE event creates an entity version."""
         # Record a CREATE change event
         event_id = change_repository.record_change(
@@ -42,17 +38,13 @@ class TestMergeVersionsIntegration:
         changeset_id = create_response.json()["id"]
 
         client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
-        submit_response = client.post(
-            f"/api/v1/versioning/changesets/{changeset_id}/submit"
-        )
+        submit_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
         proposal_id = submit_response.json()["id"]
 
         client.post(f"/api/v1/versioning/proposals/{proposal_id}/approve")
 
         # Merge the proposal
-        merge_response = client.post(
-            f"/api/v1/versioning/proposals/{proposal_id}/merge"
-        )
+        merge_response = client.post(f"/api/v1/versioning/proposals/{proposal_id}/merge")
         assert merge_response.status_code == status.HTTP_200_OK
         merge_data = merge_response.json()
         assert merge_data["events_applied"] == 1
@@ -71,7 +63,8 @@ class TestMergeVersionsIntegration:
         assert version["snapshot"]["description"] == "A test entity"
 
     def test_merge_creates_multiple_entity_versions(self, client, change_repository):
-        """Test that merging a changeset with updates to multiple entities creates multiple versions."""
+        """Test that merging a changeset with updates to multiple entities creates multiple
+        versions."""
         # Record changes to two different entities
         event_id_1 = change_repository.record_change(
             entity_id="entity-1",
@@ -97,17 +90,13 @@ class TestMergeVersionsIntegration:
         changeset_id = create_response.json()["id"]
 
         client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
-        submit_response = client.post(
-            f"/api/v1/versioning/changesets/{changeset_id}/submit"
-        )
+        submit_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
         proposal_id = submit_response.json()["id"]
 
         client.post(f"/api/v1/versioning/proposals/{proposal_id}/approve")
 
         # Merge the proposal
-        merge_response = client.post(
-            f"/api/v1/versioning/proposals/{proposal_id}/merge"
-        )
+        merge_response = client.post(f"/api/v1/versioning/proposals/{proposal_id}/merge")
         assert merge_response.status_code == status.HTTP_200_OK
 
         # Query versions for entity-1
@@ -129,7 +118,8 @@ class TestMergeVersionsIntegration:
     def test_merge_with_conflicts_creates_entity_version_with_resolutions(
         self, client, change_repository
     ):
-        """Test that merging with resolved conflicts creates entity versions with resolved values."""
+        """Test that merging with resolved conflicts creates entity versions with resolved
+        values."""
         # Record conflicting changes
         event_id_1 = change_repository.record_change(
             entity_id="entity-1",
@@ -157,9 +147,7 @@ class TestMergeVersionsIntegration:
         changeset_id = create_response.json()["id"]
 
         client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
-        submit_response = client.post(
-            f"/api/v1/versioning/changesets/{changeset_id}/submit"
-        )
+        submit_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
         proposal_id = submit_response.json()["id"]
 
         client.post(f"/api/v1/versioning/proposals/{proposal_id}/approve")
@@ -176,9 +164,7 @@ class TestMergeVersionsIntegration:
         assert all(c["is_resolved"] for c in auto_resolve_data["conflicts"])
 
         # Merge the proposal
-        merge_response = client.post(
-            f"/api/v1/versioning/proposals/{proposal_id}/merge"
-        )
+        merge_response = client.post(f"/api/v1/versioning/proposals/{proposal_id}/merge")
         assert merge_response.status_code == status.HTTP_200_OK
         merge_data = merge_response.json()
         assert merge_data["conflicts_resolved"] == 1
@@ -194,9 +180,7 @@ class TestMergeVersionsIntegration:
         version = versions[0]
         assert version["snapshot"]["name"] == "new2"  # incoming_value wins
 
-    def test_query_specific_entity_version_by_version_number(
-        self, client, change_repository
-    ):
+    def test_query_specific_entity_version_by_version_number(self, client, change_repository):
         """Test querying a specific version by version number."""
         # Record a CREATE change
         event_id = change_repository.record_change(
@@ -214,9 +198,7 @@ class TestMergeVersionsIntegration:
         changeset_id = create_response.json()["id"]
 
         client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
-        submit_response = client.post(
-            f"/api/v1/versioning/changesets/{changeset_id}/submit"
-        )
+        submit_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
         proposal_id = submit_response.json()["id"]
 
         client.post(f"/api/v1/versioning/proposals/{proposal_id}/approve")
@@ -232,9 +214,7 @@ class TestMergeVersionsIntegration:
         assert version["state"] == "active"
         assert version["snapshot"]["name"] == "Entity 1"
 
-    def test_merge_delete_operation_creates_archived_version(
-        self, client, change_repository
-    ):
+    def test_merge_delete_operation_creates_archived_version(self, client, change_repository):
         """Test that deleting an entity creates an ARCHIVED version."""
         # Record a CREATE, then a DELETE
         event_id_1 = change_repository.record_change(
@@ -262,17 +242,13 @@ class TestMergeVersionsIntegration:
         changeset_id = create_response.json()["id"]
 
         client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
-        submit_response = client.post(
-            f"/api/v1/versioning/changesets/{changeset_id}/submit"
-        )
+        submit_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
         proposal_id = submit_response.json()["id"]
 
         client.post(f"/api/v1/versioning/proposals/{proposal_id}/approve")
 
         # Merge the proposal
-        merge_response = client.post(
-            f"/api/v1/versioning/proposals/{proposal_id}/merge"
-        )
+        merge_response = client.post(f"/api/v1/versioning/proposals/{proposal_id}/merge")
         assert merge_response.status_code == status.HTTP_200_OK
         merge_data = merge_response.json()
         assert merge_data["events_applied"] == 2

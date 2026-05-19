@@ -5,8 +5,8 @@ Verifies that change events produced inside an import operation are
 automatically linked to the import run via the correlation context.
 """
 
-import sys
 import os
+import sys
 from uuid import uuid4
 
 import pytest
@@ -15,19 +15,19 @@ from sqlalchemy.orm import sessionmaker
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../"))
 
-from adapters.persistence.sqlite.models import Base
-from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.events.change_recorder import ChangeEventRecorder
 from adapters.events.in_process import InProcessEventPublisher
+from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
+from adapters.persistence.sqlite.models import Base
 from domain.interchange.services import (
     ImportRunService,
-    set_import_run_context,
     get_current_batch_run_id,
+    set_import_run_context,
 )
 from domain.interchange.value_objects import (
+    SerializationFormat,
     SerializationScope,
     SerializationScopeType,
-    SerializationFormat,
 )
 from domain.ontology.services import OntologyService
 from domain.versioning.value_objects import ChangeOperation
@@ -144,9 +144,7 @@ def test_change_events_inside_import_have_batch_run_id(change_repo):
         retrieved_events = change_repo.get_changes(limit=10).events
         assert len(retrieved_events) > 0
         # Check that at least one event has the batch_run_id
-        events_with_import_run = [
-            e for e in retrieved_events if e.batch_run_id == import_run.id
-        ]
+        events_with_import_run = [e for e in retrieved_events if e.batch_run_id == import_run.id]
         assert len(events_with_import_run) > 0
     finally:
         # Clear the context

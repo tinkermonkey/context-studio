@@ -19,8 +19,8 @@ from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode
 
 from domain.pipeline.ports import LLMResponse
-from utils.logger import get_logger
 from utils.async_executor import run_sync_in_executor
+from utils.logger import get_logger
 
 logger = get_logger(__name__)
 tracer = trace.get_tracer(__name__)
@@ -76,7 +76,8 @@ class AnthropicProvider:
             max_tokens: Maximum tokens to generate
             response_format: Optional JSON schema for structured output (not used by Anthropic)
             timeout: Request timeout in seconds (passed to Anthropic client)
-            seed: Optional random seed for reproducible generation (passed to Anthropic API if supported)
+            seed: Optional random seed for reproducible generation (passed to Anthropic API if
+            supported)
 
         Returns:
             LLMResponse with generated content and metadata
@@ -85,9 +86,7 @@ class AnthropicProvider:
             RuntimeError: If Anthropic client is not initialized or API call fails
         """
         if self._client is None:
-            raise RuntimeError(
-                "Anthropic client not initialized — package not installed"
-            )
+            raise RuntimeError("Anthropic client not initialized — package not installed")
 
         if not self.is_model_available(model):
             raise ValueError(f"Model {model} is not available from Anthropic provider")
@@ -181,7 +180,8 @@ class AnthropicProvider:
             max_tokens: Maximum tokens to generate
             response_format: Optional JSON schema for structured output (not used by Anthropic)
             timeout: Request timeout in seconds (passed to Anthropic client)
-            seed: Optional random seed for reproducible generation (passed to Anthropic API if supported)
+            seed: Optional random seed for reproducible generation (passed to Anthropic API if
+            supported)
 
         Returns:
             LLMResponse with generated content and metadata

@@ -6,14 +6,15 @@ Handles graceful failure when the collector is unreachable.
 """
 
 import logging
-from typing import Optional, TYPE_CHECKING, cast
-from opentelemetry.sdk.trace.export import SpanExporter
+from typing import TYPE_CHECKING, Optional, cast
+
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter as GRPCSpanExporter,
 )
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     OTLPSpanExporter as HTTPSpanExporter,
 )
+from opentelemetry.sdk.trace.export import SpanExporter
 
 if TYPE_CHECKING:
     from opentelemetry.sdk._logs.export import LogExporter
@@ -26,6 +27,7 @@ try:
         OTLPLogExporter as HTTPLogExporter,
     )
     from opentelemetry.sdk._logs.export import LogExporter
+
     OTLP_LOG_EXPORT_AVAILABLE = True
 except ImportError:
     OTLP_LOG_EXPORT_AVAILABLE = False
@@ -60,9 +62,7 @@ def create_span_exporter(
             exporter = GRPCSpanExporter(endpoint=grpc_endpoint, timeout=5)
         return exporter
     except Exception as e:
-        _logger.warning(
-            f"Failed to create span exporter: {e}. Spans will not be exported."
-        )
+        _logger.warning(f"Failed to create span exporter: {e}. Spans will not be exported.")
         return None
 
 
@@ -82,8 +82,9 @@ def create_log_exporter(
     """
     if not OTLP_LOG_EXPORT_AVAILABLE:
         _logger.warning(
-            "OTLP log export not available; logs will not be exported to OTLP. "
-            "Install opentelemetry-exporter-otlp-proto-grpc or opentelemetry-exporter-otlp-proto-http."
+            "OTLP log export not available; logs will not be exported to OTLP. Install"
+            " opentelemetry-exporter-otlp-proto-grpc or"
+            " opentelemetry-exporter-otlp-proto-http."
         )
         return None
 
@@ -100,7 +101,5 @@ def create_log_exporter(
             exporter = cast("LogExporter", GRPCLogExporter(endpoint=grpc_endpoint, timeout=5))
         return exporter
     except Exception as e:
-        _logger.warning(
-            f"Failed to create log exporter: {e}. Logs will not be exported to OTLP."
-        )
+        _logger.warning(f"Failed to create log exporter: {e}. Logs will not be exported to OTLP.")
         return None

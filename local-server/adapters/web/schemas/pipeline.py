@@ -13,7 +13,7 @@ These schemas handle serialization/deserialization between HTTP and domain model
 """
 
 from datetime import datetime
-from typing import Optional, Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -24,27 +24,17 @@ class PipelineConfigurationCreate(BaseModel):
     pipeline: str = Field(
         ..., description="Pipeline identifier/slug for categorization", min_length=1
     )
-    title: str = Field(
-        ..., description="Human-readable title for the pipeline", min_length=1
-    )
-    provider: str = Field(
-        ..., description="LLM provider name (openai, anthropic)", min_length=1
-    )
-    model: str = Field(
-        ..., description="Model identifier (e.g., gpt-4, claude-opus)", min_length=1
-    )
-    config: dict = Field(
-        default_factory=dict, description="Provider-specific configuration"
-    )
+    title: str = Field(..., description="Human-readable title for the pipeline", min_length=1)
+    provider: str = Field(..., description="LLM provider name (openai, anthropic)", min_length=1)
+    model: str = Field(..., description="Model identifier (e.g., gpt-4, claude-opus)", min_length=1)
+    config: dict = Field(default_factory=dict, description="Provider-specific configuration")
     system_prompt: str = Field(
         ..., description="System prompt to guide model behavior", min_length=1
     )
     user_prompt: str = Field(
         ..., description="User message template with {text} placeholder", min_length=1
     )
-    enabled: bool = Field(
-        default=True, description="Whether this configuration is active"
-    )
+    enabled: bool = Field(default=True, description="Whether this configuration is active")
 
 
 class PipelineConfigurationUpdate(BaseModel):
@@ -54,12 +44,8 @@ class PipelineConfigurationUpdate(BaseModel):
     provider: Optional[str] = Field(None, description="Updated provider", min_length=1)
     model: Optional[str] = Field(None, description="Updated model", min_length=1)
     config: Optional[dict] = Field(None, description="Updated configuration")
-    system_prompt: Optional[str] = Field(
-        None, description="Updated system prompt", min_length=1
-    )
-    user_prompt: Optional[str] = Field(
-        None, description="Updated user prompt", min_length=1
-    )
+    system_prompt: Optional[str] = Field(None, description="Updated system prompt", min_length=1)
+    user_prompt: Optional[str] = Field(None, description="Updated user prompt", min_length=1)
     enabled: Optional[bool] = Field(None, description="Updated enabled status")
 
 
@@ -73,9 +59,7 @@ class PipelineConfigurationResponse(BaseModel):
     title: str = Field(..., description="Human-readable title")
     provider: str = Field(..., description="LLM provider name")
     model: str = Field(..., description="Model identifier")
-    config: dict = Field(
-        default_factory=dict, description="Provider-specific configuration"
-    )
+    config: dict = Field(default_factory=dict, description="Provider-specific configuration")
     system_prompt: str = Field(..., description="System prompt")
     user_prompt: str = Field(..., description="User message template")
     version: int = Field(..., description="Configuration version number")
@@ -96,9 +80,7 @@ class ExecutionResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: str = Field(..., description="Unique identifier for this execution")
-    pipeline_config_id: str = Field(
-        ..., description="ID of the executed PipelineConfiguration"
-    )
+    pipeline_config_id: str = Field(..., description="ID of the executed PipelineConfiguration")
     output_text: str = Field(..., description="The generated response from the LLM")
     provider: str = Field(..., description="LLM provider that executed the request")
     model: str = Field(..., description="Model that generated the response")
@@ -108,9 +90,7 @@ class ExecutionResponse(BaseModel):
     status: Literal["success", "error", "timeout"] = Field(
         ..., description="Completion status (success, error, timeout)"
     )
-    error_message: Optional[str] = Field(
-        None, description="Error description if applicable"
-    )
+    error_message: Optional[str] = Field(None, description="Error description if applicable")
     timestamp: datetime = Field(..., description="ISO 8601 execution timestamp")
 
 
@@ -120,9 +100,7 @@ class ExecutionWithPipelineResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: str = Field(..., description="Unique identifier for this execution")
-    pipeline_config_id: str = Field(
-        ..., description="ID of the executed PipelineConfiguration"
-    )
+    pipeline_config_id: str = Field(..., description="ID of the executed PipelineConfiguration")
     pipeline_title: str = Field(
         ..., description="Title of the pipeline configuration that was executed"
     )
@@ -135,9 +113,7 @@ class ExecutionWithPipelineResponse(BaseModel):
     status: Literal["success", "error", "timeout"] = Field(
         ..., description="Completion status (success, error, timeout)"
     )
-    error_message: Optional[str] = Field(
-        None, description="Error description if applicable"
-    )
+    error_message: Optional[str] = Field(None, description="Error description if applicable")
     timestamp: datetime = Field(..., description="ISO 8601 execution timestamp")
 
 
@@ -145,9 +121,7 @@ class PipelineFlavorCreateRequest(BaseModel):
     """Request to create a new pipeline flavor."""
 
     name: str = Field(..., description="Name of the flavor", min_length=1)
-    description: str = Field(
-        ..., description="Description of the flavor", min_length=1
-    )
+    description: str = Field(..., description="Description of the flavor", min_length=1)
     steps: list[dict] = Field(
         default_factory=list,
         description="List of configuration step definitions",
@@ -158,9 +132,7 @@ class PipelineFlavorUpdateRequest(BaseModel):
     """Request to update a pipeline flavor."""
 
     name: Optional[str] = Field(None, description="Updated name", min_length=1)
-    description: Optional[str] = Field(
-        None, description="Updated description", min_length=1
-    )
+    description: Optional[str] = Field(None, description="Updated description", min_length=1)
     steps: Optional[list[dict]] = Field(
         None,
         description="Updated steps",

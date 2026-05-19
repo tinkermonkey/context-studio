@@ -12,20 +12,19 @@ Run with: pytest -m reference or pytest -m llm
 Deselect with: pytest -m "not reference" -m "not llm"
 """
 
-import sys
 import os
+import sys
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest
-from adapters.reference.conceptnet import ConceptNetSource
-from adapters.reference.dbpedia import DBpediaSource
-from adapters.reference.wikidata import WikidataSource
-from adapters.reference.schema_org import SchemaOrgSource
+
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
+from adapters.reference.conceptnet import ConceptNetSource
+from adapters.reference.dbpedia import DBpediaSource
+from adapters.reference.schema_org import SchemaOrgSource
+from adapters.reference.wikidata import WikidataSource
 
 # Import LLM providers with fallback support
 try:

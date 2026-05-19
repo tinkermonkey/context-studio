@@ -9,9 +9,9 @@ from typing import Literal, overload
 from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode
 
-from domain.extraction.ports import ReferenceSource, ReferenceResult, ReferenceRelation
-from utils.logger import get_logger
+from domain.extraction.ports import ReferenceRelation, ReferenceResult, ReferenceSource
 from utils.async_executor import run_sync_in_executor
+from utils.logger import get_logger
 
 logger = get_logger(__name__)
 tracer = trace.get_tracer(__name__)
@@ -210,9 +210,7 @@ class CachedReferenceSource(ReferenceSource):
         """
         return await run_sync_in_executor(self.search, term, limit)
 
-    async def get_relations_async(
-        self, uri: str, limit: int = 10
-    ) -> list[ReferenceRelation]:
+    async def get_relations_async(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
         """
         Get relationships for a URI asynchronously, using cache if available.
 
@@ -380,7 +378,7 @@ class CachedReferenceSource(ReferenceSource):
 
             with sqlite3.connect(self._cache_db_path) as conn:
                 conn.execute(
-                    f"INSERT OR REPLACE INTO {table} (key, value, cached_at) VALUES (?, ?, ?)",
+                    f"INSERT OR REPLACE INTO {table} (key, value, cached_at) VALUES (?," " ?, ?)",
                     (key, value_json, cached_at),
                 )
                 conn.commit()

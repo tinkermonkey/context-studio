@@ -11,32 +11,29 @@ Tests verify the ontology management workflow with:
 These tests exercise the complete stack: routes → domain service → adapters → database.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(
-    os.path.dirname(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    )
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 )
 
-import pytest
 import tempfile
 from pathlib import Path
 from uuid import uuid4
 
+import pytest
+from fastapi import FastAPI, status
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from fastapi import FastAPI, status
-from fastapi.testclient import TestClient
-
-from domain.ontology.services import OntologyService
-from adapters.persistence.sqlite.models import Base
-from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.events.in_process import InProcessEventPublisher
+from adapters.persistence.sqlite.models import Base
+from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.web.ontology_routes import router
+from domain.ontology.services import OntologyService
 
 
 @pytest.fixture
@@ -137,9 +134,7 @@ class TestTaxonomyCRUD:
 
     def test_get_taxonomy_returns_200(self, client):
         """GET /api/taxonomies/{id} returns 200 with taxonomy."""
-        create_response = client.post(
-            "/api/taxonomies", json={"title": "Get Test Taxonomy"}
-        )
+        create_response = client.post("/api/taxonomies", json={"title": "Get Test Taxonomy"})
         taxonomy_id = create_response.json()["id"]
 
         response = client.get(f"/api/taxonomies/{taxonomy_id}")
@@ -155,9 +150,7 @@ class TestTaxonomyCRUD:
 
     def test_update_taxonomy_returns_200(self, client):
         """PUT /api/taxonomies/{id} returns 200 with updated taxonomy."""
-        create_response = client.post(
-            "/api/taxonomies", json={"title": "Update Test Taxonomy"}
-        )
+        create_response = client.post("/api/taxonomies", json={"title": "Update Test Taxonomy"})
         taxonomy_id = create_response.json()["id"]
 
         response = client.put(
@@ -171,9 +164,7 @@ class TestTaxonomyCRUD:
 
     def test_delete_taxonomy_returns_204(self, client):
         """DELETE /api/taxonomies/{id} returns 204."""
-        create_response = client.post(
-            "/api/taxonomies", json={"title": "Delete Test Taxonomy"}
-        )
+        create_response = client.post("/api/taxonomies", json={"title": "Delete Test Taxonomy"})
         taxonomy_id = create_response.json()["id"]
 
         response = client.delete(f"/api/taxonomies/{taxonomy_id}")
@@ -229,9 +220,7 @@ class TestConceptSchemeCRUD:
         tax_response = client.post("/api/taxonomies", json={"title": "Test Taxonomy"})
         taxonomy_id = tax_response.json()["id"]
 
-        client.post(
-            f"/api/taxonomies/{taxonomy_id}/schemes", json={"title": "Test Scheme"}
-        )
+        client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={"title": "Test Scheme"})
 
         response = client.get("/api/schemes")
         assert response.status_code == status.HTTP_200_OK
@@ -265,9 +254,7 @@ class TestConceptSchemeCRUD:
         )
         scheme_id = scheme_response.json()["id"]
 
-        response = client.put(
-            f"/api/schemes/{scheme_id}", json={"title": "Updated Scheme Title"}
-        )
+        response = client.put(f"/api/schemes/{scheme_id}", json={"title": "Updated Scheme Title"})
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
         assert body["title"] == "Updated Scheme Title"
@@ -300,9 +287,7 @@ class TestClassCRUD:
         )
         scheme_id = scheme_response.json()["id"]
 
-        response = client.post(
-            f"/api/schemes/{scheme_id}/classes", json={"title": "Test Class"}
-        )
+        response = client.post(f"/api/schemes/{scheme_id}/classes", json={"title": "Test Class"})
         assert response.status_code == status.HTTP_201_CREATED
 
     def test_create_class_response_structure(self, client):
@@ -378,9 +363,7 @@ class TestClassCRUD:
         )
         class_id = class_response.json()["id"]
 
-        response = client.put(
-            f"/api/classes/{class_id}", json={"title": "Updated Class Title"}
-        )
+        response = client.put(f"/api/classes/{class_id}", json={"title": "Updated Class Title"})
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
         assert body["title"] == "Updated Class Title"
@@ -605,12 +588,8 @@ class TestPropertyDefinitionCRUD:
 
     def test_list_properties_returns_200(self, client):
         """GET /api/properties returns 200 with list response."""
-        client.post(
-            "/api/properties", json={"identifier": "prop1", "title": "Property 1"}
-        )
-        client.post(
-            "/api/properties", json={"identifier": "prop2", "title": "Property 2"}
-        )
+        client.post("/api/properties", json={"identifier": "prop1", "title": "Property 1"})
+        client.post("/api/properties", json={"identifier": "prop2", "title": "Property 2"})
 
         response = client.get("/api/properties")
         assert response.status_code == status.HTTP_200_OK
@@ -709,9 +688,7 @@ class TestAutoCreatePropertyDefinition:
         # Verify title is derived correctly: snake_case becomes Title Case
         assert prop_data["title"] == "Auto Created Type"
 
-    def test_create_relationship_with_existing_property_definition_reuses_it(
-        self, client
-    ):
+    def test_create_relationship_with_existing_property_definition_reuses_it(self, client):
         """Create relationship reuses existing property definition instead of creating new one."""
         # Create a property definition explicitly
         prop_response = client.post(
@@ -772,9 +749,7 @@ class TestAutoCreatePropertyDefinition:
         # Create 4 classes
         class_ids = []
         for i in range(4):
-            resp = client.post(
-                f"/api/schemes/{scheme_id}/classes", json={"title": f"Class {i+1}"}
-            )
+            resp = client.post(f"/api/schemes/{scheme_id}/classes", json={"title": f"Class {i+1}"})
             class_ids.append(resp.json()["id"])
 
         # Create first relationship
@@ -807,9 +782,7 @@ class TestAutoCreatePropertyDefinition:
         # Verify only one property definition was created
         props_response = client.get("/api/properties")
         matching_props = [
-            p
-            for p in props_response.json()["items"]
-            if p["identifier"] == "idempotent_type"
+            p for p in props_response.json()["items"] if p["identifier"] == "idempotent_type"
         ]
         assert len(matching_props) == 1
         assert matching_props[0]["id"] == property_id_1
@@ -865,9 +838,7 @@ class TestIndividualCRUD:
     @pytest.fixture
     def individual_test_class(self, client):
         """Create a taxonomy, scheme, and class for individual tests."""
-        tax_response = client.post(
-            "/api/taxonomies", json={"title": "Individual Test Taxonomy"}
-        )
+        tax_response = client.post("/api/taxonomies", json={"title": "Individual Test Taxonomy"})
         taxonomy_id = tax_response.json()["id"]
 
         scheme_response = client.post(
@@ -919,9 +890,7 @@ class TestIndividualCRUD:
         assert "created_at" in body
         assert body["version"] == 1
 
-    def test_create_individual_with_multiple_classes(
-        self, client, individual_test_class
-    ):
+    def test_create_individual_with_multiple_classes(self, client, individual_test_class):
         """POST /api/individuals with multiple classes."""
         # Create a second class
         class2_response = client.post(
@@ -1009,9 +978,7 @@ class TestIndividualCRUD:
             },
         )
 
-        response = client.get(
-            f"/api/individuals?class_id={individual_test_class['class_id']}"
-        )
+        response = client.get(f"/api/individuals?class_id={individual_test_class['class_id']}")
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
         assert body["total"] > 0
@@ -1123,9 +1090,7 @@ class TestIndividualCRUD:
         )
         individual_id = individual_response.json()["id"]
 
-        response = client.delete(
-            f"/api/individuals/{individual_id}/classes/{class2_id}"
-        )
+        response = client.delete(f"/api/individuals/{individual_id}/classes/{class2_id}")
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
         # Verify class was removed
@@ -1228,9 +1193,7 @@ class TestIndividualCRUD:
         assert reorder_response.status_code == status.HTTP_200_OK
 
         # Get inherited properties
-        properties_response = client.get(
-            f"/api/individuals/{individual_id}/inherited-properties"
-        )
+        properties_response = client.get(f"/api/individuals/{individual_id}/inherited-properties")
         assert properties_response.status_code == status.HTTP_200_OK
 
         # Delete individual

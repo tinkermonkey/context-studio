@@ -13,17 +13,16 @@ Tests verify:
 - Entity deduplication across layers
 """
 
-import sys
 import os
+import sys
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+from datetime import datetime
+from uuid import uuid4
 
 import pytest
-from datetime import datetime
 from fastapi import status
-from uuid import uuid4
 
 
 @pytest.mark.e2e
@@ -77,7 +76,8 @@ class TestExtractionWorkflow:
         Extraction executes all 4 layers.
 
         Asserts:
-        - Response includes results from Layer 0 (KG), Layer 1 (LLM), Layer 2 (NLP), Layer 3 (Reference)
+        - Response includes results from Layer 0 (KG), Layer 1 (LLM), Layer 2 (NLP), Layer 3
+        (Reference)
         """
         response = e2e_client.post(
             "/api/extract", json={"text": "SQLite is an embedded relational database."}
@@ -114,7 +114,6 @@ class TestExtractionWorkflow:
             assert isinstance(layer["entities_found"], int)
             assert isinstance(layer["duration_ms"], int)
             assert isinstance(layer["success"], bool)
-
 
     def test_extract_total_duration_positive(self, e2e_client):
         """
@@ -455,7 +454,6 @@ class TestReferenceEnrichment:
 class TestExtractionDeduplication:
     """Tests for entity deduplication across layers."""
 
-
     def test_extract_maintains_unique_entities(self, e2e_client):
         """
         Extraction maintains unique entities from different sources.
@@ -468,7 +466,10 @@ class TestExtractionDeduplication:
         response = e2e_client.post(
             "/api/extract",
             json={
-                "text": "Python is a programming language. Postgres is a database. Java is another language."
+                "text": (
+                    "Python is a programming language. Postgres is a database. Java is"
+                    " another language."
+                )
             },
         )
         assert response.status_code == status.HTTP_200_OK

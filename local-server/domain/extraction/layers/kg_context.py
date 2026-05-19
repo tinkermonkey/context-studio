@@ -8,9 +8,9 @@ to provide context for subsequent extraction layers.
 import logging
 from types import MappingProxyType
 
-from domain.ontology.entities import Class, Individual
 from domain.extraction.entities import ExtractedEntity
 from domain.extraction.value_objects import LayerOutput
+from domain.ontology.entities import Class, Individual
 
 _logger = logging.getLogger(__name__)
 

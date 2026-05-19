@@ -7,17 +7,17 @@ community detection, and subgraph extraction.
 """
 
 from .entities import (
-    KnowledgeGraph,
     GraphMetrics,
+    KnowledgeGraph,
     PathResult,
     SubgraphResult,
 )
 from .exceptions import (
-    GraphError,
-    NodeNotFoundError,
-    InvalidAlgorithmError,
-    SPARQLValidationError,
     CommunityDetectionError,
+    GraphError,
+    InvalidAlgorithmError,
+    NodeNotFoundError,
+    SPARQLValidationError,
 )
 from .ports import (
     GraphEngine,

@@ -11,8 +11,10 @@ Mapping strategy:
 - Class.parent_class_id → skos:broader (and inverse skos:narrower)
 - Class.title → skos:prefLabel
 - Class.description → skos:definition
-- external_references → LOCAL:externalReferences (JSON-encoded full object with source/identifier/uri)
-  - Backwards compatible with legacy dct:source + skos:exactMatch format (heuristically reconstructed on import)
+- external_references → LOCAL:externalReferences (JSON-encoded full object with
+source/identifier/uri)
+  - Backwards compatible with legacy dct:source + skos:exactMatch format (heuristically
+  reconstructed on import)
 """
 
 from __future__ import annotations
@@ -20,35 +22,35 @@ from __future__ import annotations
 import hashlib
 import json
 import uuid
-from typing import Optional, Dict, Any
-
-from rdflib import Graph, Namespace, URIRef, Literal, RDF, OWL
-from rdflib.term import Node
-from rdflib.exceptions import ParserError
+from typing import Any, Dict, Optional
 from xml.sax import SAXParseException
 
-from utils.logger import get_logger
-from domain.interchange.ports import OntologySerializer, OntologyDeserializer
+from rdflib import OWL, RDF, Graph, Literal, Namespace, URIRef
+from rdflib.exceptions import ParserError
+from rdflib.term import Node
+
+from adapters.interchange.persistence_helpers import persist_incoming_entities
 from domain.interchange.entities import ResolutionRecord
+from domain.interchange.ports import OntologyDeserializer, OntologySerializer
 from domain.interchange.services import ImportRunService
 from domain.interchange.value_objects import (
-    SerializationScope,
-    SerializationScopeType,
-    ImportPlan,
     ImportConflict,
+    ImportPlan,
     MatchKind,
     ResolutionKind,
     SerializationFormat,
+    SerializationScope,
+    SerializationScopeType,
 )
 from domain.ontology.entities import (
-    Taxonomy,
-    ConceptScheme,
     Class,
+    ConceptScheme,
     Individual,
     PropertyDefinition,
+    Taxonomy,
 )
 from domain.ontology.value_objects import ExternalReference
-from adapters.interchange.persistence_helpers import persist_incoming_entities
+from utils.logger import get_logger
 
 # RDF Namespaces
 SKOS = Namespace("http://www.w3.org/2004/02/skos/core#")
@@ -151,13 +153,18 @@ class SKOSSerializer(OntologySerializer):
 
         Args:
             scheme_id: The concept scheme ID
-            include_descendants: If True, include classes within the scheme; if False, only serialize the scheme itself
+            include_descendants: If True, include classes within the scheme; if False, only
+            serialize the scheme itself
         """
         scheme = self.ontology_repo.get_concept_scheme(scheme_id)
         if not scheme:
             raise ValueError(f"Concept scheme not found: {scheme_id}")
 
-        self._add_concept_scheme_to_graph(scheme, include_parent_taxonomy=True, include_descendants=include_descendants)
+        self._add_concept_scheme_to_graph(
+            scheme,
+            include_parent_taxonomy=True,
+            include_descendants=include_descendants,
+        )
 
     def _serialize_entity_set(self, entity_ids: Optional[tuple[str, ...]]) -> None:
         """Serialize a specified set of entities."""
@@ -192,7 +199,8 @@ class SKOSSerializer(OntologySerializer):
                 continue
 
             logger.warning(
-                f"Entity {entity_id} does not match any known type during SKOS serialization; skipping"
+                f"Entity {entity_id} does not match any known type during SKOS"
+                " serialization; skipping"
             )
 
     def _add_taxonomy_to_graph(self, taxonomy: Taxonomy) -> None:
@@ -212,14 +220,18 @@ class SKOSSerializer(OntologySerializer):
             self._add_concept_scheme_to_graph(scheme, include_parent_taxonomy=True)
 
     def _add_concept_scheme_to_graph(
-        self, scheme: ConceptScheme, include_parent_taxonomy: bool = True, include_descendants: bool = True
+        self,
+        scheme: ConceptScheme,
+        include_parent_taxonomy: bool = True,
+        include_descendants: bool = True,
     ) -> None:
         """Add a concept scheme and optionally its classes to the graph.
 
         Args:
             scheme: The concept scheme to add
             include_parent_taxonomy: If True, add link to parent taxonomy
-            include_descendants: If True, add classes within the scheme; if False, only add the scheme itself
+            include_descendants: If True, add classes within the scheme; if False, only add the
+            scheme itself
         """
         if self.graph is None:
             raise RuntimeError("Graph not initialized")
@@ -248,9 +260,7 @@ class SKOSSerializer(OntologySerializer):
         self.graph.add((class_uri, RDF.type, SKOS.Concept))
         self.graph.add((class_uri, SKOS.prefLabel, Literal(class_entity.title)))
         if class_entity.description:
-            self.graph.add(
-                (class_uri, SKOS.definition, Literal(class_entity.description))
-            )
+            self.graph.add((class_uri, SKOS.definition, Literal(class_entity.description)))
 
         # Link to concept scheme
         scheme_uri = self._entity_uri(class_entity.concept_scheme_id)
@@ -297,9 +307,7 @@ class SKOSSerializer(OntologySerializer):
         if prop.description:
             self.graph.add((prop_uri, SKOS.definition, Literal(prop.description)))
 
-    def _add_external_reference(
-        self, subject_uri: URIRef, ext_ref: ExternalReference
-    ) -> None:
+    def _add_external_reference(self, subject_uri: URIRef, ext_ref: ExternalReference) -> None:
         """
         Add external references in multiple formats for round-tripping and backwards compatibility.
 
@@ -405,7 +413,14 @@ class SKOSDeserializer(OntologyDeserializer):
                     self.graph = Graph()
                     self.graph.parse(data=source_bytes, format=fmt)
                     break
-                except (ValueError, TypeError, UnicodeDecodeError, SyntaxError, ParserError, SAXParseException) as e:
+                except (
+                    ValueError,
+                    TypeError,
+                    UnicodeDecodeError,
+                    SyntaxError,
+                    ParserError,
+                    SAXParseException,
+                ) as e:
                     # These are format-related parsing errors; try next format
                     format_errors.append((fmt, e))
                     continue
@@ -413,9 +428,7 @@ class SKOSDeserializer(OntologyDeserializer):
                 # All formats failed - build error message from all attempts
                 if format_errors:
                     error_parts = [f"{fmt}: {str(e)}" for fmt, e in format_errors]
-                    error_msg = "Failed to parse SKOS RDF in any format. " + "; ".join(
-                        error_parts
-                    )
+                    error_msg = "Failed to parse SKOS RDF in any format. " + "; ".join(error_parts)
                     raise ValueError(error_msg) from format_errors[-1][1]
 
             # Extract entities from RDF
@@ -491,7 +504,11 @@ class SKOSDeserializer(OntologyDeserializer):
         for conflict in conflicts:
             entity_id = conflict.incoming["id"]
             if entity_id not in resolution_map:
-                default_str = conflict.default_resolution.value if conflict.default_resolution else "none — user must choose"
+                default_str = (
+                    conflict.default_resolution.value
+                    if conflict.default_resolution
+                    else "none — user must choose"
+                )
                 raise ValueError(
                     f"Conflict for entity {entity_id} ({conflict.match_kind.value}) "
                     f"requires resolution before commit (default: {default_str})"
@@ -636,9 +653,7 @@ class SKOSDeserializer(OntologyDeserializer):
                     }
                 )
             except (json.JSONDecodeError, TypeError):
-                self.warnings.append(
-                    f"Class {uri} has malformed LOCAL:externalReferences JSON"
-                )
+                self.warnings.append(f"Class {uri} has malformed LOCAL:externalReferences JSON")
 
         # If no JSON references found, fall back to legacy dct:source and skos:exactMatch
         if not external_references:
@@ -699,7 +714,7 @@ class SKOSDeserializer(OntologyDeserializer):
         for predicate in unhandled:
             if list(self.graph.objects(uri, predicate)):
                 self.warnings.append(
-                    f"Concept {uri} has unhandled predicate {predicate}; value(s) ignored"
+                    f"Concept {uri} has unhandled predicate {predicate}; value(s)" " ignored"
                 )
 
     def _uri_to_id(self, uri: Node) -> Optional[str]:
@@ -733,9 +748,7 @@ class SKOSDeserializer(OntologyDeserializer):
 
         return entity_id
 
-    def _parse_external_reference_uri(
-        self, uri_str: str
-    ) -> tuple[Optional[str], Optional[str]]:
+    def _parse_external_reference_uri(self, uri_str: str) -> tuple[Optional[str], Optional[str]]:
         """
         Parse an external reference URI to extract source name and identifier.
 
@@ -841,9 +854,7 @@ class SKOSDeserializer(OntologyDeserializer):
 
         return conflicts
 
-    def _find_by_external_reference(
-        self, source: str, identifier: str
-    ) -> Optional[str]:
+    def _find_by_external_reference(self, source: str, identifier: str) -> Optional[str]:
         """Find an existing entity by external reference (searches classes and individuals)."""
         if self._classes_cache is None:
             self._classes_cache = self.ontology_repo.list_classes()
@@ -864,13 +875,9 @@ class SKOSDeserializer(OntologyDeserializer):
 
         return None
 
-    def _find_class_by_title(
-        self, title: str, concept_scheme_id: Optional[str]
-    ) -> Optional[Class]:
+    def _find_class_by_title(self, title: str, concept_scheme_id: Optional[str]) -> Optional[Class]:
         """Find an existing class by title (and optional scheme)."""
-        all_classes = self.ontology_repo.list_classes(
-            concept_scheme_id=concept_scheme_id
-        )
+        all_classes = self.ontology_repo.list_classes(concept_scheme_id=concept_scheme_id)
         for class_entity in all_classes:
             if class_entity.title == title:
                 return class_entity

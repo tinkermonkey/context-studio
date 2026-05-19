@@ -6,22 +6,20 @@ multi-source enrichment, and NLP processing. Uses in-memory fakes with zero
 infrastructure imports.
 """
 
-import sys
 import os
+import sys
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest
 
 from domain.extraction import layers
 from domain.extraction.entities import ExtractedEntity
-from domain.extraction.value_objects import LayerInput
 from domain.extraction.ports import NLPEntity, ReferenceResult
-from domain.pipeline.ports import LLMResponse
+from domain.extraction.value_objects import LayerInput
 from domain.ontology.entities import Class
 from domain.ontology.value_objects import ExternalReference
+from domain.pipeline.ports import LLMResponse
 
 # ============================================================================
 # Fakes for Layer 0 (KG Context)
@@ -177,9 +175,7 @@ class FakeNLPProcessor:
 class FakeReferenceSource:
     """Fake reference source with configurable results."""
 
-    def __init__(
-        self, source_name_val="TestSource", results_map=None, should_fail=False
-    ):
+    def __init__(self, source_name_val="TestSource", results_map=None, should_fail=False):
         self._source_name = source_name_val
         self.results_map = results_map or {}
         self.should_fail = should_fail
@@ -433,7 +429,10 @@ class TestLayer1LLMExtract:
         # But this malformed response won't parse as valid JSON array
         # Let's use a properly formatted array with nested structures
 
-        json_response = '[{"label": "Apple", "type": "ORG", "confidence": 0.95, "properties": ["tag1", "tag2"]}]'
+        json_response = (
+            '[{"label": "Apple", "type": "ORG", "confidence": 0.95, "properties":'
+            ' ["tag1", "tag2"]}]'
+        )
         input_data = LayerInput(text="Test text", existing_entities=[])
         output = layers.llm_extract.execute(input_data, FakeLLMProvider(json_response))
 
@@ -458,7 +457,9 @@ class TestLayer1LLMExtract:
 
     def test_llm_extract_with_text_before_json(self):
         """JSON preceded by text is extracted correctly."""
-        json_response = 'Here are the entities:\n[{"label": "Apple", "type": "ORG", "confidence": 0.95}]'
+        json_response = (
+            'Here are the entities:\n[{"label": "Apple", "type": "ORG", "confidence":' " 0.95}]"
+        )
         input_data = LayerInput(text="Test text", existing_entities=[])
         output = layers.llm_extract.execute(input_data, FakeLLMProvider(json_response))
 
@@ -586,9 +587,7 @@ class TestLayer2NLPGapFilling:
         """Deduplication normalizes whitespace."""
         prior_entity = ExtractedEntity(label="Apple Inc.", entity_type="ORG")
         nlp_entities = [
-            NLPEntity(
-                text="  Apple Inc.  ", label="ORG", start=0, end=14, confidence=0.8
-            ),
+            NLPEntity(text="  Apple Inc.  ", label="ORG", start=0, end=14, confidence=0.8),
         ]
         input_data = LayerInput(
             text="  Apple Inc.  company",
@@ -779,9 +778,7 @@ class TestLayer3ReferenceEnrichment:
         )
 
         # First source raises, second source returns a valid result
-        failing_source = FakeReferenceSource(
-            source_name_val="FailingSource", should_fail=True
-        )
+        failing_source = FakeReferenceSource(source_name_val="FailingSource", should_fail=True)
         working_source = FakeReferenceSource(
             source_name_val="WorkingSource",
             results_map={"Apple": [ref_result]},

@@ -13,12 +13,10 @@ Tests verify:
 - Graceful responses on empty graphs
 """
 
-import sys
 import os
+import sys
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest
 from fastapi import status
@@ -37,18 +35,14 @@ def create_test_taxonomy_with_classes(e2e_client, num_classes=2, unique_id=""):
     tax_response = e2e_client.post(
         "/api/taxonomies", json={"title": f"Test Taxonomy {unique_suffix}"}
     )
-    assert (
-        tax_response.status_code == 201
-    ), f"Failed to create taxonomy: {tax_response.text}"
+    assert tax_response.status_code == 201, f"Failed to create taxonomy: {tax_response.text}"
     taxonomy_id = tax_response.json()["id"]
 
     scheme_response = e2e_client.post(
         f"/api/taxonomies/{taxonomy_id}/schemes",
         json={"title": f"Test Scheme {unique_suffix}"},
     )
-    assert (
-        scheme_response.status_code == 201
-    ), f"Failed to create scheme: {scheme_response.text}"
+    assert scheme_response.status_code == 201, f"Failed to create scheme: {scheme_response.text}"
     scheme_id = scheme_response.json()["id"]
 
     class_ids = []
@@ -61,9 +55,7 @@ def create_test_taxonomy_with_classes(e2e_client, num_classes=2, unique_id=""):
                 **({"parent_class_id": parent_id} if parent_id else {}),
             },
         )
-        assert (
-            class_response.status_code == 201
-        ), f"Failed to create class: {class_response.text}"
+        assert class_response.status_code == 201, f"Failed to create class: {class_response.text}"
         class_id = class_response.json()["id"]
         class_ids.append(class_id)
         parent_id = class_id
@@ -84,9 +76,7 @@ class TestGraphConstruction:
         - Response contains node count, edge count, last_built timestamp
         """
         # Setup: Create ontology entities first
-        tax_response = e2e_client.post(
-            "/api/taxonomies", json={"title": "Graph Test Taxonomy"}
-        )
+        tax_response = e2e_client.post("/api/taxonomies", json={"title": "Graph Test Taxonomy"})
         taxonomy_id = tax_response.json()["id"]
 
         scheme_response = e2e_client.post(
@@ -150,9 +140,7 @@ class TestGraphMetrics:
         - Response includes density, average_degree, connected_components, degree_distribution
         """
         # Setup: Create ontology with relationships
-        tax_response = e2e_client.post(
-            "/api/taxonomies", json={"title": "Metrics Test Taxonomy"}
-        )
+        tax_response = e2e_client.post("/api/taxonomies", json={"title": "Metrics Test Taxonomy"})
         taxonomy_id = tax_response.json()["id"]
 
         scheme_response = e2e_client.post(
@@ -223,9 +211,7 @@ class TestDegreeDistribution:
         - Response contains distribution mapping and computed_at
         """
         # Setup
-        tax_response = e2e_client.post(
-            "/api/taxonomies", json={"title": "Degree Test Taxonomy"}
-        )
+        tax_response = e2e_client.post("/api/taxonomies", json={"title": "Degree Test Taxonomy"})
         taxonomy_id = tax_response.json()["id"]
 
         scheme_response = e2e_client.post(

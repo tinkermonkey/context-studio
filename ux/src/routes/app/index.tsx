@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Network, Layers, GitBranch, Cpu, Plus } from "lucide-react";
 import { StatTile } from "@/components/ui/StatTile";
+import { StatGrid } from "@/components/ui/StatGrid";
 import { Panel } from "@/components/ui/Panel";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
@@ -135,8 +136,7 @@ export function Dashboard() {
         message="Could not load taxonomies"
         compact
       />
-      <div
-        className="stat-grid"
+      <StatGrid
         style={{
           marginBottom: "var(--space-6)",
           marginTop: taxonomiesError ? "var(--space-4)" : 0,
@@ -170,7 +170,7 @@ export function Dashboard() {
           color="emerald"
           sub={`${pipelines?.filter((p) => p.enabled).length ?? 0} enabled`}
         />
-      </div>
+      </StatGrid>
 
       {/* Two-column layout */}
       <div className="grid-2" style={{ marginBottom: "var(--space-6)" }}>

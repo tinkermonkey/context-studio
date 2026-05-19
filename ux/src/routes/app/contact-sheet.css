@@ -17,7 +17,7 @@
   color: var(--canvas-fg-3);
   margin-bottom: var(--space-4);
   padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--canvas-bd);
+  border-bottom: 1px solid var(--canvas-border);
 }
 
 /* ------------ Row styling ------------ */
@@ -147,7 +147,7 @@
 .contact-sheet-schema-drawer-demo {
   margin-top: var(--space-6);
   padding: var(--space-4);
-  border: 1px dashed var(--canvas-bd);
+  border: 1px dashed var(--canvas-border);
   border-radius: 8px;
 }
 

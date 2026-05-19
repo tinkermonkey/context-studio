@@ -11,12 +11,10 @@ Tests verify:
 - Delete cascade behavior
 """
 
-import sys
 import os
+import sys
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest
 from fastapi import status
@@ -377,9 +375,7 @@ class TestPipelineValidation:
         config_id = create_response.json()["id"]
 
         # Execute with empty input
-        response = e2e_client.post(
-            f"/api/pipelines/{config_id}/execute", json={"input_text": ""}
-        )
+        response = e2e_client.post(f"/api/pipelines/{config_id}/execute", json={"input_text": ""})
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 

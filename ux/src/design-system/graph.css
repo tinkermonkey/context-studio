@@ -6,8 +6,8 @@
   --graph-grid: rgba(15, 23, 42, 0.045);
   --graph-edge: #cbd5e1;
   --graph-edge-strong: #94a3b8;
-  --graph-edge-hot: var(--accent-cyan-deep);
-  --graph-edge-irrelevant: var(--accent-rose);
+  --graph-edge-hot: rgb(var(--accent-primary-deep));
+  --graph-edge-irrelevant: rgb(var(--status-rose));
   --graph-cluster-life-bg: rgba(52, 211, 153, 0.06);
   --graph-cluster-life-bd: rgba(52, 211, 153, 0.3);
   --graph-cluster-climate-bg: rgba(251, 191, 36, 0.06);
@@ -35,7 +35,7 @@ body.dark-canvas {
 .graph-canvas {
   position: relative;
   background: var(--graph-bg);
-  border: 1px solid var(--canvas-bd);
+  border: 1px solid var(--canvas-border);
   border-radius: 10px;
   overflow: hidden;
   cursor: grab;
@@ -132,7 +132,7 @@ body.dark-canvas {
 /* Edge labels */
 .graph-edge-label rect {
   fill: var(--graph-bg);
-  stroke: var(--canvas-bd);
+  stroke: var(--canvas-border);
   stroke-width: 1;
 }
 .graph-edge-label text {
@@ -155,7 +155,7 @@ body.dark-canvas {
 
 body.dark-canvas .graph-edge-label rect {
   fill: var(--canvas-card);
-  stroke: var(--canvas-bd);
+  stroke: var(--canvas-border);
 }
 body.dark-canvas .graph-edge-label text {
   fill: var(--canvas-fg-2);
@@ -172,7 +172,7 @@ body.dark-canvas .graph-edge-label.is-hot text {
 .graph-node {
   position: absolute;
   background: var(--canvas-card);
-  border: 1px solid var(--canvas-bd-2);
+  border: 1px solid var(--canvas-border-strong);
   font-family: var(--font-sans);
   font-size: 12px;
   color: var(--canvas-fg-1);
@@ -247,13 +247,13 @@ body.dark-canvas .graph-node.selected {
   padding: 1px 5px;
   border-radius: 2px;
   background: var(--canvas-bg-2);
-  border: 1px solid var(--canvas-bd);
+  border: 1px solid var(--canvas-border);
   flex: none;
 }
 .graph-node[data-kind="individual"] .graph-node-kind {
   color: var(--accent-cyan-deep);
-  background: rgba(34, 211, 238, 0.08);
-  border-color: rgba(34, 211, 238, 0.25);
+  background: rgba(var(--accent-primary) / 0.08);
+  border-color: rgba(var(--accent-primary) / 0.25);
 }
 
 /* ============ Floating legend (top-left) ============ */
@@ -262,7 +262,7 @@ body.dark-canvas .graph-node.selected {
   top: 14px;
   left: 14px;
   background: var(--canvas-card);
-  border: 1px solid var(--canvas-bd);
+  border: 1px solid var(--canvas-border);
   border-radius: 8px;
   padding: 10px 12px;
   display: flex;
@@ -330,14 +330,14 @@ body.dark-canvas .graph-node.selected {
   font-size: 9.5px;
   font-weight: 600;
   background: var(--canvas-bg-2);
-  border: 1px solid var(--canvas-bd);
+  border: 1px solid var(--canvas-border);
   color: var(--canvas-fg-3);
   flex: none;
 }
 .graph-legend .gl-pill.ind {
   color: var(--accent-cyan-deep);
-  background: rgba(34, 211, 238, 0.08);
-  border-color: rgba(34, 211, 238, 0.25);
+  background: rgba(var(--accent-primary) / 0.08);
+  border-color: rgba(var(--accent-primary) / 0.25);
 }
 .graph-legend .gl-line {
   width: 22px;
@@ -346,7 +346,7 @@ body.dark-canvas .graph-node.selected {
   flex: none;
 }
 .graph-legend .gl-line.dashed {
-  border-top: 1.25px dashed var(--accent-rose);
+  border-top: 1.25px dashed rgb(var(--status-rose));
 }
 
 /* ============ Toolbars ============ */
@@ -354,7 +354,7 @@ body.dark-canvas .graph-node.selected {
   position: absolute;
   z-index: 10;
   background: var(--canvas-card);
-  border: 1px solid var(--canvas-bd);
+  border: 1px solid var(--canvas-border);
   border-radius: 8px;
   padding: 8px 10px;
   display: flex;
@@ -394,7 +394,7 @@ body.dark-canvas .graph-node.selected {
   font-size: 11px;
   padding: 4px 8px;
   border-radius: 4px;
-  border: 1px solid var(--canvas-bd-2);
+  border: 1px solid var(--canvas-border-strong);
   background: var(--canvas-bg-2);
   color: var(--canvas-fg-1);
   cursor: pointer;
@@ -424,7 +424,7 @@ body.dark-canvas .gt-chip.irrelevant {
   font-size: 10px;
   color: var(--canvas-fg-3);
   background: var(--canvas-card);
-  border: 1px solid var(--canvas-bd);
+  border: 1px solid var(--canvas-border);
   padding: 0 5px;
   border-radius: 2px;
   min-width: 18px;
@@ -448,7 +448,7 @@ body.dark-canvas .gt-chip.irrelevant {
   gap: 4px;
 }
 .gt-group.zoom {
-  border: 1px solid var(--canvas-bd);
+  border: 1px solid var(--canvas-border);
   border-radius: 6px;
   padding: 2px;
   background: var(--canvas-bg-2);
@@ -478,7 +478,7 @@ body.dark-canvas .gt-chip.irrelevant {
 .gt-btn.on {
   color: var(--canvas-fg-1);
   background: var(--canvas-bg-2);
-  border-color: var(--canvas-bd-2);
+  border-color: var(--canvas-border-strong);
 }
 .gt-btn.icon {
   width: 28px;
@@ -507,7 +507,7 @@ body.dark-canvas .gt-chip.irrelevant {
 /* ============ Inspector (right rail) ============ */
 .graph-inspector {
   background: var(--canvas-card);
-  border: 1px solid var(--canvas-bd);
+  border: 1px solid var(--canvas-border);
   border-radius: 10px;
   display: flex;
   flex-direction: column;
@@ -523,7 +523,7 @@ body.dark-canvas .gt-chip.irrelevant {
 
 .gi-head {
   padding: 14px 16px 12px;
-  border-bottom: 1px solid var(--canvas-bd);
+  border-bottom: 1px solid var(--canvas-border);
 }
 .gi-head-eyebrow {
   display: flex;
@@ -622,7 +622,7 @@ body.dark-canvas .gt-chip.irrelevant {
   align-items: center;
   height: 24px;
   padding: 0 8px 0 6px;
-  border: 1px solid var(--canvas-bd);
+  border: 1px solid var(--canvas-border);
   border-radius: 4px;
   background: var(--canvas-card);
   color: var(--canvas-fg-1);
@@ -661,7 +661,7 @@ body.dark-canvas .gt-chip.irrelevant {
 .view-toggle {
   display: inline-flex;
   background: var(--canvas-bg-2);
-  border: 1px solid var(--canvas-bd);
+  border: 1px solid var(--canvas-border);
   border-radius: 6px;
   padding: 2px;
   height: 34px;
@@ -683,7 +683,7 @@ body.dark-canvas .gt-chip.irrelevant {
 .view-toggle button.on {
   background: var(--canvas-card);
   color: var(--canvas-fg-1);
-  border-color: var(--canvas-bd-2);
+  border-color: var(--canvas-border-strong);
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
 }
 .view-toggle button svg {
@@ -796,7 +796,7 @@ body.dark-canvas .gt-chip.irrelevant {
   gap: 4px;
   padding: 4px 8px;
   background: var(--canvas-bg-2);
-  border: 1px solid var(--canvas-bd);
+  border: 1px solid var(--canvas-border);
   border-radius: 4px;
   font-size: 11px;
   font-family: var(--font-sans);

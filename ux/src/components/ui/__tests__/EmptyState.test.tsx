@@ -111,8 +111,8 @@ describe("EmptyState", () => {
     it("applies primary variant and sm size to action button", () => {
       render(<EmptyState title="No items" action={{ label: "Create", onClick: vi.fn() }} />);
       const button = screen.getByRole("button", { name: "Create" });
-      expect(button).toHaveClass("btn-primary");
-      expect(button).toHaveClass("btn-sm");
+      expect(button).toHaveClass("btn--primary");
+      expect(button).toHaveClass("btn--sm");
     });
 
     it("applies empty-state-action class", () => {

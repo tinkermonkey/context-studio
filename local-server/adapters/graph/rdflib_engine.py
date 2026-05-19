@@ -10,10 +10,10 @@ from __future__ import annotations
 import re
 from typing import Any, Sequence
 
-from rdflib import Graph, Namespace, URIRef, Literal
-from rdflib.namespace import RDF, RDFS
-from rdflib.exceptions import ParserError
 from pyparsing.exceptions import ParseException
+from rdflib import Graph, Literal, Namespace, URIRef
+from rdflib.exceptions import ParserError
+from rdflib.namespace import RDF, RDFS
 
 from domain.graph.exceptions import SPARQLValidationError
 
@@ -50,7 +50,8 @@ class RDFLibQueryEngine:
         Args:
             nodes: Sequence of ontology entity dictionaries (Taxonomy, ConceptScheme, Class, etc.)
             edges: Sequence of relationship dictionaries linking entities
-            property_definitions: Sequence of property definition dictionaries for relationship types
+            property_definitions: Sequence of property definition dictionaries for relationship
+            types
         """
         # Clear any existing graph
         self._graph = Graph()
@@ -220,16 +221,12 @@ class RDFLibQueryEngine:
         else:
             # Try to match as URIRef first
             object_uri = URIRef(object)
-            for s, p, o in self._graph.triples(
-                (subject_uri, predicate_uri, object_uri)
-            ):
+            for s, p, o in self._graph.triples((subject_uri, predicate_uri, object_uri)):
                 results.append((str(s), str(p), str(o)))
 
             # Then try to match as Literal
             object_literal = Literal(object)
-            for s, p, o in self._graph.triples(
-                (subject_uri, predicate_uri, object_literal)
-            ):
+            for s, p, o in self._graph.triples((subject_uri, predicate_uri, object_literal)):
                 # Check if this triple is already in results to avoid duplicates
                 triple_str = (str(s), str(p), str(o))
                 if triple_str not in results:

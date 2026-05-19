@@ -62,9 +62,7 @@ class FakeInterchangeRepository:
         Returns:
             List of ImportRun entities sorted by creation time (newest first)
         """
-        sorted_runs = sorted(
-            self.runs.values(), key=lambda r: r.created_at, reverse=True
-        )
+        sorted_runs = sorted(self.runs.values(), key=lambda r: r.created_at, reverse=True)
         return sorted_runs[offset : offset + limit]
 
     def list_by_status(

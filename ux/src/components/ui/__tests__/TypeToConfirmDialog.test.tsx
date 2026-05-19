@@ -18,6 +18,7 @@ describe("TypeToConfirmDialog", () => {
           message="This action is permanent."
           confirmText="delete"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -34,6 +35,7 @@ describe("TypeToConfirmDialog", () => {
           message="Sure?"
           confirmText="delete"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -49,6 +51,7 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -64,6 +67,7 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -81,6 +85,7 @@ describe("TypeToConfirmDialog", () => {
           confirmText="delete"
           confirmLabel="Remove Permanently"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -101,10 +106,11 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
-      const confirmButton = screen.getByTestId("type-confirm-button");
+      const confirmButton = screen.getByTestId("confirm-dialog-confirm");
       expect(confirmButton).toBeDisabled();
     });
 
@@ -117,11 +123,12 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
       const input = screen.getByTestId("type-confirm-input");
-      const confirmButton = screen.getByTestId("type-confirm-button");
+      const confirmButton = screen.getByTestId("confirm-dialog-confirm");
 
       expect(confirmButton).toBeDisabled();
 
@@ -139,11 +146,12 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
       const input = screen.getByTestId("type-confirm-input");
-      const confirmButton = screen.getByTestId("type-confirm-button");
+      const confirmButton = screen.getByTestId("confirm-dialog-confirm");
 
       await userEvent.type(input, "wrong");
 
@@ -159,11 +167,12 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
       const input = screen.getByTestId("type-confirm-input");
-      const confirmButton = screen.getByTestId("type-confirm-button");
+      const confirmButton = screen.getByTestId("confirm-dialog-confirm");
 
       await userEvent.type(input, "delet");
 
@@ -179,11 +188,12 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
       const input = screen.getByTestId("type-confirm-input");
-      const confirmButton = screen.getByTestId("type-confirm-button");
+      const confirmButton = screen.getByTestId("confirm-dialog-confirm");
 
       await userEvent.type(input, "delete");
       expect(confirmButton).not.toBeDisabled();
@@ -207,10 +217,11 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
-      const cancelButton = screen.getByTestId("type-confirm-cancel");
+      const cancelButton = screen.getByTestId("confirm-dialog-cancel");
       await userEvent.click(cancelButton);
 
       expect(onClose).toHaveBeenCalledOnce();
@@ -226,6 +237,7 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -234,7 +246,7 @@ describe("TypeToConfirmDialog", () => {
 
       expect(input.value).toBe("delete");
 
-      const cancelButton = screen.getByTestId("type-confirm-cancel");
+      const cancelButton = screen.getByTestId("confirm-dialog-cancel");
       await userEvent.click(cancelButton);
 
       // Input should be cleared
@@ -251,13 +263,14 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={onConfirm}
+          onError={vi.fn()}
         />,
       );
 
       const input = screen.getByTestId("type-confirm-input");
       await userEvent.type(input, "delete");
 
-      const confirmButton = screen.getByTestId("type-confirm-button");
+      const confirmButton = screen.getByTestId("confirm-dialog-confirm");
       await userEvent.click(confirmButton);
 
       expect(onConfirm).toHaveBeenCalledOnce();
@@ -273,10 +286,11 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={onConfirm}
+          onError={vi.fn()}
         />,
       );
 
-      const confirmButton = screen.getByTestId("type-confirm-button");
+      const confirmButton = screen.getByTestId("confirm-dialog-confirm");
       // Button is disabled, so click should be ignored
       await userEvent.click(confirmButton);
 
@@ -295,13 +309,14 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={onConfirm}
+          onError={vi.fn()}
         />,
       );
 
       const input = screen.getByTestId("type-confirm-input");
       await userEvent.type(input, "delete");
 
-      const confirmButton = screen.getByTestId("type-confirm-button");
+      const confirmButton = screen.getByTestId("confirm-dialog-confirm");
       await userEvent.click(confirmButton);
 
       await waitFor(() => {
@@ -321,6 +336,7 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
         />,
       );
 
@@ -341,6 +357,7 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={onConfirm}
+          onError={vi.fn()}
         />,
       );
 
@@ -366,6 +383,7 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={onConfirm}
+          onError={vi.fn()}
         />,
       );
 
@@ -386,13 +404,14 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={onConfirm}
+          onError={vi.fn()}
         />,
       );
 
       const input = screen.getByTestId("type-confirm-input") as HTMLInputElement;
       await userEvent.type(input, "delete");
 
-      const confirmButton = screen.getByTestId("type-confirm-button");
+      const confirmButton = screen.getByTestId("confirm-dialog-confirm");
       await userEvent.click(confirmButton);
 
       await waitFor(() => {
@@ -412,12 +431,13 @@ describe("TypeToConfirmDialog", () => {
           message="Type 'delete' to confirm"
           confirmText="delete"
           onConfirm={vi.fn()}
+          onError={vi.fn()}
           isLoading={true}
         />,
       );
 
-      const cancelButton = screen.getByTestId("type-confirm-cancel");
-      const confirmButton = screen.getByTestId("type-confirm-button");
+      const cancelButton = screen.getByTestId("confirm-dialog-cancel");
+      const confirmButton = screen.getByTestId("confirm-dialog-confirm");
 
       expect(cancelButton).toBeDisabled();
       expect(confirmButton).toBeDisabled();

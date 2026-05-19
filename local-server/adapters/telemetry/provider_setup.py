@@ -6,22 +6,23 @@ Configures TracerProvider, LoggerProvider, and Resource with proper sampling and
 
 import logging
 import socket
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace.sampling import TraceIdRatioBased
 from opentelemetry.trace import set_tracer_provider
 
 try:
     from opentelemetry.sdk._logs import LoggerProvider
     from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
+
     LOGGING_SDK_AVAILABLE = True
 except ImportError:
     LOGGING_SDK_AVAILABLE = False
 
-from adapters.telemetry.exporters import create_span_exporter, create_log_exporter
+from adapters.telemetry.exporters import create_log_exporter, create_span_exporter
 
 if TYPE_CHECKING:
     from opentelemetry.sdk._logs import LoggerProvider as LoggerProviderType
@@ -100,15 +101,11 @@ class TelemetryProvider:
                     self.protocol, self.otlp_endpoint_grpc, self.otlp_endpoint_http
                 )
                 if span_exporter:
-                    batch_processor = BatchSpanProcessor(
-                        span_exporter, schedule_delay_millis=5000
-                    )
+                    batch_processor = BatchSpanProcessor(span_exporter, schedule_delay_millis=5000)
                     tracer_provider.add_span_processor(batch_processor)
                     _logger.info("Span exporter configured with batch processor")
                 else:
-                    _logger.warning(
-                        "Span exporter creation failed; spans will not be exported"
-                    )
+                    _logger.warning("Span exporter creation failed; spans will not be exported")
 
             set_tracer_provider(tracer_provider)
             self.tracer_provider = tracer_provider
@@ -130,8 +127,9 @@ class TelemetryProvider:
             if self.export_logs:
                 if not LOGGING_SDK_AVAILABLE:
                     _logger.warning(
-                        "OpenTelemetry logging SDK not available; logs will not be exported. "
-                        "Ensure opentelemetry-sdk is installed with logging support."
+                        "OpenTelemetry logging SDK not available; logs will not be"
+                        " exported. Ensure opentelemetry-sdk is installed with logging"
+                        " support."
                     )
                     return False
 
@@ -140,16 +138,14 @@ class TelemetryProvider:
                 )
                 if not log_exporter:
                     _logger.warning(
-                        "Log exporter creation failed; logs will not be exported to OTLP"
+                        "Log exporter creation failed; logs will not be exported to" " OTLP"
                     )
                     return False
 
                 resource = self._create_resource()
                 logger_provider = LoggerProvider(resource=resource)
 
-                batch_processor = BatchLogRecordProcessor(
-                    log_exporter, schedule_delay_millis=5000
-                )
+                batch_processor = BatchLogRecordProcessor(log_exporter, schedule_delay_millis=5000)
                 logger_provider.add_log_record_processor(batch_processor)
 
                 self.logger_provider = logger_provider

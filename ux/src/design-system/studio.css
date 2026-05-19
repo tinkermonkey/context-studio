@@ -57,14 +57,36 @@ a {
   border-radius: 999px;
 }
 
-/* ------------ Desktop frame ------------ */
-.desktop-frame {
+/* ------------ Shell Layout ------------ */
+.shell-layout {
+  display: flex;
+  flex-direction: column;
   height: 100vh;
   width: 100vw;
   background: var(--shell-bg);
+  overflow: hidden;
+}
+
+.shell-layout__main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.shell-layout__content {
   display: flex;
   flex-direction: column;
+  flex: 1;
   overflow: hidden;
+}
+
+.shell-layout__canvas {
+  flex: 1;
+  overflow: hidden;
+  background: var(--canvas-bg);
+  color: var(--canvas-fg-1);
+  position: relative;
+  min-height: 0;
 }
 
 /* ------------ Titlebar ------------ */
@@ -199,31 +221,20 @@ a {
   border-radius: 3px;
 }
 
-/* ------------ App shell grid ------------ */
-.app-shell {
-  display: grid;
-  grid-template-columns: 256px 1fr;
-  grid-template-rows: 1fr;
-  min-height: 0;
-  flex: 1;
-  overflow: hidden;
-}
-.app-shell.collapsed {
-  grid-template-columns: 64px 1fr;
-}
-
 /* ------------ Sidebar ------------ */
 .shell-rail {
   background: var(--shell-bg-2);
   border-right: 1px solid var(--shell-border);
   display: flex;
   flex-direction: column;
+  width: 256px;
   height: 100%;
   min-height: 0;
   overflow-y: auto;
   position: relative;
   scrollbar-width: thin;
   scrollbar-color: var(--shell-border-2) transparent;
+  flex: none;
 }
 .brand-row {
   display: flex;
@@ -275,6 +286,10 @@ a {
   margin-top: 1px;
   font-family: var(--mono);
 }
+.shell-rail.collapsed {
+  width: 64px;
+}
+
 .collapsed .brand-name,
 .collapsed .nav-label,
 .collapsed .nav-section-label,
@@ -479,15 +494,6 @@ a {
   display: none;
 }
 
-/* ------------ Workspace area ------------ */
-.workspace {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  background: var(--shell-bg);
-  overflow: hidden;
-}
-
 /* ------------ Topbar ------------ */
 .topbar {
   height: 52px;
@@ -639,16 +645,6 @@ a {
   background: var(--accent-cyan);
 }
 
-/* ------------ Canvas ------------ */
-.canvas-area {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-  border-top-left-radius: 8px;
-  background: var(--canvas-bg);
-  color: var(--canvas-fg-1);
-  position: relative;
-}
 .canvas-scroll {
   overflow: auto;
   height: 100%;
@@ -742,6 +738,24 @@ a {
 }
 .status-pulse.running::after {
   background: var(--accent-cyan);
+}
+.status-pulse.error {
+  background: rgb(var(--rose-500));
+}
+.status-pulse.error::after {
+  background: rgb(var(--rose-500));
+}
+.status-pulse.warning {
+  background: rgb(var(--amber-400));
+}
+.status-pulse.warning::after {
+  background: rgb(var(--amber-400));
+}
+.status-pulse.idle {
+  background: rgb(var(--canvas-fg-3));
+}
+.status-pulse.idle::after {
+  background: rgb(var(--canvas-fg-3));
 }
 
 /* ------------ Page layout ------------ */
@@ -899,12 +913,16 @@ a {
   padding: 16px;
 }
 
-/* ------------ Stat tiles ------------ */
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
+/* ------------ Panel header ------------ */
+.panel-header-with-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
 }
+
+/* ------------ Stat tiles ------------ */
 .stat {
   background: var(--canvas-card);
   border: 1px solid var(--canvas-bd);
@@ -1204,6 +1222,17 @@ select.input {
   position: sticky;
   top: 16px;
 }
+.drawer--context-studio {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  background: rgb(var(--canvas-surface));
+  border: 1px solid rgb(var(--canvas-border));
+  border-radius: 0;
+}
+.drawer--context-studio .drawer__body {
+  padding: 0;
+}
 .drawer-head {
   padding: 14px 16px;
   border-bottom: 1px solid var(--canvas-bd);
@@ -1244,6 +1273,30 @@ select.input {
 }
 .spin {
   animation: spin 1s linear infinite;
+}
+.drawer-close {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-md);
+  background: transparent;
+  border: 1px solid transparent;
+  color: rgb(var(--canvas-fg-2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background 80ms ease-out,
+    color 80ms ease-out;
+  padding: 0;
+  flex-shrink: 0;
+}
+.drawer-close:hover {
+  background: rgb(var(--canvas-card));
+  color: rgb(var(--canvas-fg-1));
+}
+.drawer-close:focus-visible {
+  box-shadow: var(--focus-ring);
 }
 .drawer-body {
   padding: 14px 16px;
@@ -2098,6 +2151,25 @@ select.input {
   gap: 6px;
 }
 
+.mb-sm {
+  margin-bottom: 12px;
+}
+
+.type-confirm-message {
+  color: var(--canvas-fg-2);
+  line-height: 1.5;
+}
+
+.type-confirm-text {
+  font-family: var(--mono);
+  background: var(--canvas-bg-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--canvas-fg);
+  word-break: break-all;
+}
+
 .dropdown-popover {
   position: absolute;
   top: 100%;
@@ -2217,24 +2289,13 @@ select.input {
   overflow: auto;
   font-size: var(--text-xs);
   line-height: 1.5;
-  color: var(--rose-500, #f43f5e);
+  color: rgb(var(--rose-500));
   max-height: 200px;
   font-family: var(--mono);
 }
 
 /* ============= Dark canvas mode ============= */
-body.dark-canvas {
-  --canvas-bg: #14191f;
-  --canvas-bg-2: #1b222a;
-  --canvas-card: #1b222a;
-  --canvas-bd: #2a323c;
-  --canvas-bd-2: #3a4452;
-  --canvas-fg: #e6edf3;
-  --canvas-fg-1: #e6edf3;
-  --canvas-fg-2: #b0bac5;
-  --canvas-fg-3: #7e8a98;
-  --canvas-fg-4: #5a6573;
-}
+/* Token redefinitions are now handled by Heimdall's tokens.css and app-overrides.css */
 body.dark-canvas table.t tr:hover td {
   background: rgba(255, 255, 255, 0.03);
 }
@@ -2347,9 +2408,6 @@ body.dark-canvas .input:focus {
   border-color: var(--accent-cyan);
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent-cyan) 15%, transparent);
 }
-body.dark-canvas .canvas-area::-webkit-scrollbar-thumb {
-  background: var(--canvas-bd-2);
-}
 body.dark-canvas .topbar {
   background: var(--shell-bg);
 }
@@ -2358,6 +2416,105 @@ body.dark-canvas .topbar-ico:hover {
 }
 body.dark-canvas .topbar-search input {
   background: rgba(0, 0, 0, 0.25);
+}
+
+/* ------------ Error Banner ------------ */
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: rgb(var(--semantic-rose-bg, var(--rose-50)));
+  border: 1px solid rgb(var(--semantic-rose-border, var(--rose-200)));
+}
+
+.error-banner-compact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  background: rgb(var(--semantic-rose-bg, var(--rose-50)));
+  border: 1px solid rgb(var(--semantic-rose-border, var(--rose-200)));
+}
+
+.error-banner-icon {
+  color: rgb(var(--status-rose, var(--rose-500)));
+  flex-shrink: 0;
+}
+
+.error-banner-content {
+  flex: 1;
+}
+
+.error-banner-message {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: rgb(var(--status-rose-deep, var(--rose-700)));
+  margin-bottom: 4px;
+}
+
+.error-banner-message.compact {
+  font-size: var(--text-xs);
+  margin-bottom: 0;
+}
+
+.error-banner-error-text {
+  font-size: var(--text-xs);
+  color: rgb(var(--status-rose-deep, var(--rose-700)));
+  font-family: var(--mono);
+}
+
+.error-banner-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.error-banner-actions.compact {
+  gap: 4px;
+}
+
+.error-banner-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgb(var(--semantic-rose-border, var(--rose-200)));
+  color: rgb(var(--status-rose-deep, var(--rose-700)));
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+  background: rgb(var(--semantic-rose-bg, var(--rose-50)));
+}
+
+.error-banner-btn:hover {
+  background: rgb(var(--semantic-rose-border, var(--rose-200)));
+}
+
+.error-banner-btn.compact {
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: var(--text-xs);
+  border-radius: var(--radius-sm);
+  background: transparent;
+}
+
+.error-banner-btn.compact:hover {
+  background: rgb(var(--semantic-rose-bg, var(--rose-50)));
+}
+
+.error-banner-btn-primary {
+  background: rgb(var(--status-rose, var(--rose-500)));
+  border-color: rgb(var(--status-rose-deep, var(--rose-700)));
+  color: white;
+}
+
+.error-banner-btn-primary:hover {
+  background: rgb(var(--status-rose-deep, var(--rose-700)));
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -9,3 +9,8 @@ description = "Local-first knowledge graph application"
 
 [tool.setuptools.packages.find]
 include = ["domain*", "adapters*", "utils*"]
+
+[tool.black]
+line-length = 100
+preview = true
+target-version = ['py311']

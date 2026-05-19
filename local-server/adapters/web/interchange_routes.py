@@ -15,37 +15,54 @@ Each endpoint is a thin adapter that:
 Note: Export returns binary data (Blob); import accepts multipart form data.
 """
 
-from typing import Optional, Union
 import json
+from typing import Optional, Union
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status as http_status, UploadFile, File, Form
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    UploadFile,
+)
+from fastapi import (
+    status as http_status,
+)
 from fastapi.responses import StreamingResponse
 
-from domain.interchange.value_objects import SerializationScope, SerializationScopeType, SerializationFormat, ChangeEvent, ResolutionKind, MatchKind
-from domain.interchange.entities import ImportRunStatus, ResolutionRecord
-from domain.interchange.ports import BatchRunRepository
-from domain.ontology.ports import OntologyRepository
-from utils.logger import get_logger
-from utils.async_executor import run_sync_in_executor
-
+from adapters.interchange.graphml import GraphMLDeserializer, GraphMLSerializer
+from adapters.interchange.owl import OWLDeserializer, OWLSerializer
+from adapters.interchange.skos import SKOSDeserializer, SKOSSerializer
 from adapters.web.dependencies import (
-    get_ontology_repo,
     get_interchange_repo,
+    get_ontology_repo,
 )
 from adapters.web.schemas.interchange import (
     ExportRequest,
-    SerializationScopeRequest,
+    ImportConflictResponse,
     ImportPlanResponse,
     ImportRunResponse,
     InterchangeChangeEventResponse,
-    ImportConflictResponse,
     ResolutionRecordResponse,
+    SerializationScopeRequest,
     SerializationScopeResponse,
 )
 from adapters.web.schemas.ontology import ListResponse
-from adapters.interchange.skos import SKOSSerializer, SKOSDeserializer
-from adapters.interchange.owl import OWLSerializer, OWLDeserializer
-from adapters.interchange.graphml import GraphMLSerializer, GraphMLDeserializer
+from domain.interchange.entities import ImportRunStatus, ResolutionRecord
+from domain.interchange.ports import BatchRunRepository
+from domain.interchange.value_objects import (
+    ChangeEvent,
+    MatchKind,
+    ResolutionKind,
+    SerializationFormat,
+    SerializationScope,
+    SerializationScopeType,
+)
+from domain.ontology.ports import OntologyRepository
+from utils.async_executor import run_sync_in_executor
+from utils.logger import get_logger
 
 router = APIRouter(prefix="/api/v1/interchange", tags=["interchange"])
 
@@ -58,7 +75,11 @@ MAX_UPLOAD_SIZE = 500 * 1024 * 1024
 # ==================== Helper Functions ====================
 
 
-def _get_serializer(format: SerializationFormat, ontology_repo: OntologyRepository, split_mode: bool = False):
+def _get_serializer(
+    format: SerializationFormat,
+    ontology_repo: OntologyRepository,
+    split_mode: bool = False,
+):
     """Get the appropriate serializer for the format."""
     if format == SerializationFormat.SKOS:
         return SKOSSerializer(ontology_repo)
@@ -86,7 +107,9 @@ def _get_deserializer(
         raise ValueError(f"Unsupported format: {format}")
 
 
-def _scope_request_to_domain(scope_req: SerializationScopeRequest) -> SerializationScope:
+def _scope_request_to_domain(
+    scope_req: SerializationScopeRequest,
+) -> SerializationScope:
     """Convert SerializationScopeRequest to domain SerializationScope."""
     # Pydantic validates Literal["whole_graph", "taxonomy", "scheme", "entity_set"] at schema level
     scope_type = SerializationScopeType(scope_req.scope_type)
@@ -119,7 +142,9 @@ def _conflict_to_response(conflict) -> ImportConflictResponse:
         match_kind=conflict.match_kind.value,
         incoming=conflict.incoming,
         existing=conflict.existing,
-        default_resolution=conflict.default_resolution.value if conflict.default_resolution else None,
+        default_resolution=(
+            conflict.default_resolution.value if conflict.default_resolution else None
+        ),
         available_resolutions=[r.value for r in conflict.available_resolutions],
     )
 
@@ -205,17 +230,13 @@ async def export_ontology(
         serializer = _get_serializer(enum_format, ontology_repo, split_mode=request.split_mode)
 
         # Serialize in executor to avoid blocking
-        data = await run_sync_in_executor(
-            lambda: serializer.serialize(scope)
-        )
+        data = await run_sync_in_executor(lambda: serializer.serialize(scope))
 
         # Return as binary file
         return StreamingResponse(
             iter([data]),
             media_type="application/octet-stream",
-            headers={
-                "Content-Disposition": f'attachment; filename="export.{request.format}"'
-            },
+            headers={"Content-Disposition": f'attachment; filename="export.{request.format}"'},
         )
 
     except ValueError as e:
@@ -237,7 +258,9 @@ async def import_ontology(
     format: str = Form(..., description="Import format"),
     file: UploadFile = File(..., description="File to import"),
     dry_run: str = Form("true", description="If 'true', returns plan without committing"),
-    resolutions: Optional[str] = Form(None, description="JSON-encoded conflict resolutions to apply on commit"),
+    resolutions: Optional[str] = Form(
+        None, description="JSON-encoded conflict resolutions to apply on commit"
+    ),
     ontology_repo: OntologyRepository = Depends(get_ontology_repo),
     interchange_repo: BatchRunRepository = Depends(get_interchange_repo),
 ) -> Union[ImportPlanResponse, ImportRunResponse]:
@@ -275,15 +298,25 @@ async def import_ontology(
                         # Validate that all required fields are present
                         if not isinstance(res, dict):
                             raise ValueError(f"Expected dict, got {type(res).__name__}")
-                        if "match_kind" not in res or "entity_id" not in res or "resolution_chosen" not in res:
-                            raise ValueError("Missing required fields: match_kind, entity_id, resolution_chosen")
+                        if (
+                            "match_kind" not in res
+                            or "entity_id" not in res
+                            or "resolution_chosen" not in res
+                        ):
+                            raise ValueError(
+                                "Missing required fields: match_kind, entity_id,"
+                                " resolution_chosen"
+                            )
 
                         # Validate that the resolution type is supported
                         resolution_kind = ResolutionKind(res["resolution_chosen"])
-                        if resolution_kind not in (ResolutionKind.SKIP, ResolutionKind.ABORT):
+                        if resolution_kind not in (
+                            ResolutionKind.SKIP,
+                            ResolutionKind.ABORT,
+                        ):
                             raise ValueError(
-                                f"Resolution '{resolution_kind.value}' is not yet supported. "
-                                f"Supported resolutions: skip, abort"
+                                f"Resolution '{resolution_kind.value}' is not yet"
+                                " supported. Supported resolutions: skip, abort"
                             )
 
                         # Convert to ResolutionRecord
@@ -318,7 +351,10 @@ async def import_ontology(
             if total_size > MAX_UPLOAD_SIZE:
                 raise HTTPException(
                     status_code=http_status.HTTP_413_CONTENT_TOO_LARGE,
-                    detail=f"File size exceeds maximum allowed size of {MAX_UPLOAD_SIZE // (1024 * 1024)} MB",
+                    detail=(
+                        "File size exceeds maximum allowed size of"
+                        f" {MAX_UPLOAD_SIZE // (1024 * 1024)} MB"
+                    ),
                 )
             chunks.append(chunk)
         content = b"".join(chunks)
@@ -329,7 +365,10 @@ async def import_ontology(
         except ValueError:
             raise HTTPException(
                 status_code=http_status.HTTP_400_BAD_REQUEST,
-                detail=f"Unsupported format: {format}. Supported formats: {', '.join(f.value for f in SerializationFormat)}",
+                detail=(
+                    f"Unsupported format: {format}. Supported formats:"
+                    f" {', '.join(f.value for f in SerializationFormat)}"
+                ),
             )
 
         # Validate format with serializer
@@ -343,7 +382,9 @@ async def import_ontology(
 
         # Deserialize in executor to avoid blocking
         import_plan = await run_sync_in_executor(
-            lambda: deserializer.deserialize(content, dry_run=is_dry_run, resolutions=parsed_resolutions)
+            lambda: deserializer.deserialize(
+                content, dry_run=is_dry_run, resolutions=parsed_resolutions
+            )
         )
 
         # Return appropriate response
@@ -360,9 +401,7 @@ async def import_ontology(
             )
 
             if not import_run:
-                raise RuntimeError(
-                    f"ImportRun {import_plan.import_run_id} not found after commit"
-                )
+                raise RuntimeError(f"ImportRun {import_plan.import_run_id} not found after commit")
 
             # Pass warnings from the commit operation to the response
             return _import_run_to_response(import_run, warnings=list(import_plan.warnings))
@@ -424,9 +463,7 @@ async def list_import_runs(
             runs = await run_sync_in_executor(
                 lambda: interchange_repo.list_all(limit=limit, offset=offset)
             )
-            total = await run_sync_in_executor(
-                lambda: interchange_repo.count_all()
-            )
+            total = await run_sync_in_executor(lambda: interchange_repo.count_all())
 
         return ListResponse(
             items=[_import_run_to_response(r) for r in runs],
@@ -468,9 +505,7 @@ async def get_import_run(
         HTTPException: If run not found or query fails
     """
     try:
-        import_run = await run_sync_in_executor(
-            lambda: interchange_repo.get(run_id)
-        )
+        import_run = await run_sync_in_executor(lambda: interchange_repo.get(run_id))
 
         if not import_run:
             raise HTTPException(
@@ -493,7 +528,10 @@ async def get_import_run(
 # ==================== Change Events Endpoints ====================
 
 
-@router.get("/runs/{run_id}/change-events", response_model=ListResponse[InterchangeChangeEventResponse])
+@router.get(
+    "/runs/{run_id}/change-events",
+    response_model=ListResponse[InterchangeChangeEventResponse],
+)
 async def get_run_change_events(
     run_id: str,
     interchange_repo: BatchRunRepository = Depends(get_interchange_repo),
@@ -521,9 +559,7 @@ async def get_run_change_events(
     """
     try:
         # Verify run exists
-        import_run = await run_sync_in_executor(
-            lambda: interchange_repo.get(run_id)
-        )
+        import_run = await run_sync_in_executor(lambda: interchange_repo.get(run_id))
 
         if not import_run:
             raise HTTPException(
@@ -539,13 +575,9 @@ async def get_run_change_events(
         # Apply filters if provided
         filtered_events = events
         if entity_type:
-            filtered_events = [
-                e for e in filtered_events if e.entity_type == entity_type
-            ]
+            filtered_events = [e for e in filtered_events if e.entity_type == entity_type]
         if change_type:
-            filtered_events = [
-                e for e in filtered_events if e.operation == change_type
-            ]
+            filtered_events = [e for e in filtered_events if e.operation == change_type]
 
         # Apply pagination
         paginated_events = filtered_events[offset : offset + limit]

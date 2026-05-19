@@ -11,15 +11,14 @@ Key responsibilities:
 """
 
 from datetime import datetime, timezone
-from typing import Sequence
+from typing import Sequence, cast
 
-from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy import desc
-
-from domain.extraction.entities import ExtractionResult, ExtractedEntity
-from domain.extraction.value_objects import ExtractionLayerResult
+from sqlalchemy.orm import Session, sessionmaker
 
 from adapters.persistence.sqlite.models import ExtractionResult as ExtractionResultORM
+from domain.extraction.entities import ExtractedEntity, ExtractionResult
+from domain.extraction.value_objects import ExtractionLayerResult
 
 
 class SQLiteExtractionRepository:
@@ -203,7 +202,7 @@ class SQLiteExtractionRepository:
                 description=entity_data.get("description"),  # type: ignore[assignment]
                 properties=entity_data.get("properties", {}),  # type: ignore[assignment]
             )
-            for entity_data in (orm_result.extracted_entities or [])  # type: ignore[union-attr]
+            for entity_data in orm_result.extracted_entities or []  # type: ignore[union-attr]
         ]
 
         # Reconstruct layer results from JSON
@@ -216,15 +215,16 @@ class SQLiteExtractionRepository:
                 success=layer_data.get("success", False),  # type: ignore[assignment]
                 error_message=layer_data.get("error_message"),  # type: ignore[assignment]
             )
-            for layer_data in (orm_result.layers_executed or [])  # type: ignore[union-attr]
+            for layer_data in orm_result.layers_executed or []  # type: ignore[union-attr]
         ]
 
         # Create domain entity
+        created_at = cast(datetime, orm_result.created_at) or datetime.now(timezone.utc)
         return ExtractionResult(
             id=orm_result.id or "",  # type: ignore[arg-type]
             text=orm_result.text or "",  # type: ignore[arg-type]
             extracted_entities=extracted_entities,
             layers_executed=layers_executed,
             total_duration_ms=orm_result.total_duration_ms or 0,  # type: ignore[arg-type]
-            created_at=orm_result.created_at or datetime.now(timezone.utc),  # type: ignore[arg-type]
+            created_at=created_at,
         )

@@ -6,16 +6,14 @@ capture and log event publishing failures, ensuring operators have visibility
 into audit trail gaps.
 """
 
-import sys
 import os
+import sys
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+from adapters.events.in_process import InProcessEventPublisher
 from domain.extraction.events import ExtractionCompleted
 from domain.pipeline.events import PipelineExecuted
-from adapters.events.in_process import InProcessEventPublisher
 
 
 class TestExtractionServiceEventHandlerFailures:
@@ -57,9 +55,7 @@ class TestPipelineServiceEventHandlerFailures:
         publisher.subscribe(PipelineExecuted, failing_handler)
 
         # Publish an event directly to verify the failure is captured
-        event = PipelineExecuted(
-            execution_id="exec_1", pipeline_id="pipe_1", status="success"
-        )
+        event = PipelineExecuted(execution_id="exec_1", pipeline_id="pipe_1", status="success")
         failures = publisher.publish(event)
 
         # Verify that the failure was captured

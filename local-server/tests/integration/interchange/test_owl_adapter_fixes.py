@@ -8,34 +8,32 @@ Tests the following issues:
 - Split mode for TBox/ABox separation
 """
 
-import sys
 import os
+import sys
 from datetime import datetime, timezone
 
-sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from domain.ontology.entities import (
-    Taxonomy,
-    ConceptScheme,
-    Class,
-    Individual,
-)
-from domain.ontology.value_objects import ExternalReference
-from domain.interchange.value_objects import (
-    SerializationScope,
-    SerializationScopeType,
-    MatchKind,
-)
+from adapters.interchange.owl import OWLDeserializer, OWLSerializer
+from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
-from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
-from adapters.interchange.owl import OWLSerializer, OWLDeserializer
+from domain.interchange.value_objects import (
+    MatchKind,
+    SerializationScope,
+    SerializationScopeType,
+)
+from domain.ontology.entities import (
+    Class,
+    ConceptScheme,
+    Individual,
+    Taxonomy,
+)
+from domain.ontology.value_objects import ExternalReference
 
 
 @pytest.fixture
@@ -246,7 +244,10 @@ local:class-2-no-label a owl:Class ;
 
         # Should have warnings about dropped relationships
         warning_text = " ".join(plan.warnings)
-        assert "relationship" in warning_text.lower() or "not found in entity map" in warning_text.lower()
+        assert (
+            "relationship" in warning_text.lower()
+            or "not found in entity map" in warning_text.lower()
+        )
 
 
 class TestOWLAdapterErrorHandling:
@@ -292,7 +293,9 @@ class TestOWLAdapterConflictDetection:
         # Should detect conflicts for the existing entities
         assert any(cid in conflict_ids for cid in ["tax-1", "scheme-1", "class-1", "individual-1"])
 
-    def test_conflict_cascade_external_reference(self, db_engine, session_factory, interchange_repo):
+    def test_conflict_cascade_external_reference(
+        self, db_engine, session_factory, interchange_repo
+    ):
         """Test that external references have priority in conflict detection cascade."""
         repo = SQLiteOntologyRepository(session_factory)
 
@@ -325,7 +328,11 @@ class TestOWLAdapterConflictDetection:
             description="A class with external reference",
             parent_class_id=None,
             external_references=[
-                ExternalReference(source="dbpedia", identifier="Dog", uri="http://dbpedia.org/resource/Dog")
+                ExternalReference(
+                    source="dbpedia",
+                    identifier="Dog",
+                    uri="http://dbpedia.org/resource/Dog",
+                )
             ],
             created_at=datetime.now(timezone.utc),
             last_modified=datetime.now(timezone.utc),
@@ -362,7 +369,7 @@ class TestOWLAdapterSplitMode:
 
         # Serialize in split mode
         turtle_bytes = serializer.serialize(scope)
-        turtle_str = turtle_bytes.decode('utf-8')
+        turtle_str = turtle_bytes.decode("utf-8")
 
         # In split mode, should not include the individual (by label or NamedIndividual)
         assert "Test Individual" not in turtle_str
@@ -378,7 +385,7 @@ class TestOWLAdapterSplitMode:
 
         # Serialize in normal mode
         turtle_bytes = serializer.serialize(scope)
-        turtle_str = turtle_bytes.decode('utf-8')
+        turtle_str = turtle_bytes.decode("utf-8")
 
         # In normal mode, should include both class and individual
         assert "Test Class" in turtle_str

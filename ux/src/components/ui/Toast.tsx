@@ -1,5 +1,5 @@
 import { useState, useCallback, createContext, useContext, ReactNode } from "react";
-import { CheckCircle, AlertCircle, AlertTriangle, Info, X } from "lucide-react";
+import { Toast as HeimdallToast, type ToastVariant } from "@tinkermonkey/heimdall-ui";
 import { Button } from "./Button";
 
 type ToastType = "success" | "error" | "warning" | "info";
@@ -65,20 +65,26 @@ interface ToastProps {
 }
 
 function Toast({ item, onDismiss }: ToastProps) {
-  const iconMap = {
-    success: <CheckCircle size={13} />,
-    error: <AlertCircle size={13} />,
-    warning: <AlertTriangle size={13} />,
-    info: <Info size={13} />,
+  const variantMap: Record<ToastType, ToastVariant> = {
+    success: "success",
+    error: "error",
+    warning: "warning",
+    info: "info",
   };
 
+  const variant = variantMap[item.type];
+
   return (
-    <div className={`toast toast-${item.type}`}>
-      <div className="toast-mark">{iconMap[item.type]}</div>
-      <div className="toast-body">
-        <div className="toast-title">{item.title}</div>
-        {item.sub && <div className="toast-sub">{item.sub}</div>}
-      </div>
+    <div data-testid={`toast-${item.id}`} className="toast-wrapper">
+      <HeimdallToast
+        isOpen={true}
+        onClose={() => onDismiss(item.id)}
+        title={item.title}
+        subtitle={item.sub}
+        variant={variant}
+        duration={0}
+        data-testid={`toast-content-${item.id}`}
+      />
       {item.action && (
         <Button
           variant="ghost"
@@ -89,14 +95,6 @@ function Toast({ item, onDismiss }: ToastProps) {
           {item.action.label}
         </Button>
       )}
-      <button
-        className="toast-x"
-        onClick={() => onDismiss(item.id)}
-        type="button"
-        aria-label="Dismiss"
-      >
-        <X size={12} />
-      </button>
     </div>
   );
 }

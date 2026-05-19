@@ -11,13 +11,13 @@ Usage:
       --baseline reports/baseline-comparison.json
 """
 
+import argparse
+import json
 import os
 import sys
-import json
-import argparse
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
-from datetime import datetime, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -91,9 +91,14 @@ def print_metric_diff(
     delta, direction = compute_delta(current, baseline)
 
     if is_cost:
-        print(f"  {metric_name:20s} ${baseline:7.2f} → ${current:7.2f} ({direction} ${delta:+7.2f})")
+        print(
+            f"  {metric_name:20s} ${baseline:7.2f} → ${current:7.2f} ({direction}"
+            f" ${delta:+7.2f})"
+        )
     else:
-        print(f"  {metric_name:20s} {baseline:7.4f} → {current:7.4f} ({direction} {delta:+7.4f})")
+        print(
+            f"  {metric_name:20s} {baseline:7.4f} → {current:7.4f} ({direction}" f" {delta:+7.4f})"
+        )
 
 
 def print_summary_diff(
@@ -127,7 +132,9 @@ def print_summary_diff(
         return
 
     aggregate_current = current.get("aggregate_stats", {}).get("by_dataset", {})
-    aggregate_baseline = baseline.get("aggregate_stats", {}).get("by_dataset", {}) if baseline else {}
+    aggregate_baseline = (
+        baseline.get("aggregate_stats", {}).get("by_dataset", {}) if baseline else {}
+    )
 
     for dataset in datasets:
         print(f"\n📊 Dataset: {dataset}")
@@ -201,7 +208,10 @@ def print_summary_diff(
             if f1_delta > 0.05:
                 print(f"✅ F1 improved by {f1_delta:+.4f} — likely ready to promote")
             elif f1_delta > 0:
-                print(f"⚠️  F1 improved by {f1_delta:+.4f} — marginal improvement, check for regressions")
+                print(
+                    f"⚠️  F1 improved by {f1_delta:+.4f} — marginal improvement, check"
+                    " for regressions"
+                )
             elif f1_delta > -0.05:
                 print(f"⚠️  F1 declined by {abs(f1_delta):.4f} — investigate regression")
             else:
@@ -238,7 +248,9 @@ def print_json_diff(
 
     datasets = current.get("datasets", [])
     aggregate_current = current.get("aggregate_stats", {}).get("by_dataset", {})
-    aggregate_baseline = baseline.get("aggregate_stats", {}).get("by_dataset", {}) if baseline else {}
+    aggregate_baseline = (
+        baseline.get("aggregate_stats", {}).get("by_dataset", {}) if baseline else {}
+    )
 
     for dataset in datasets:
         current_stats = aggregate_current.get(dataset, {})
@@ -267,12 +279,17 @@ def print_json_diff(
             "delta": (
                 {
                     "f1": current_f1 - baseline_f1,
-                    "precision": current_stats.get("avg_precision", 0.0)
-                    - baseline_stats.get("avg_precision", 0.0),
-                    "recall": current_stats.get("avg_recall", 0.0)
-                    - baseline_stats.get("avg_recall", 0.0),
-                    "cost_usd": current_stats.get("total_cost_usd", 0.0)
-                    - baseline_stats.get("total_cost_usd", 0.0),
+                    "precision": (
+                        current_stats.get("avg_precision", 0.0)
+                        - baseline_stats.get("avg_precision", 0.0)
+                    ),
+                    "recall": (
+                        current_stats.get("avg_recall", 0.0) - baseline_stats.get("avg_recall", 0.0)
+                    ),
+                    "cost_usd": (
+                        current_stats.get("total_cost_usd", 0.0)
+                        - baseline_stats.get("total_cost_usd", 0.0)
+                    ),
                 }
                 if baseline_stats
                 else None
@@ -291,9 +308,7 @@ def print_json_diff(
 
 def main():
     """Command-line interface for benchmark diffing."""
-    parser = argparse.ArgumentParser(
-        description="Diff current benchmark results against baseline"
-    )
+    parser = argparse.ArgumentParser(description="Diff current benchmark results against baseline")
     parser.add_argument(
         "--current",
         type=str,
@@ -332,7 +347,9 @@ def main():
         # Load baseline if it exists
         baseline = load_comparison(args.baseline)
         if not baseline:
-            _logger.info(f"No baseline found at {args.baseline} — running in baseline-establishment mode")
+            _logger.info(
+                f"No baseline found at {args.baseline} — running in" " baseline-establishment mode"
+            )
     except json.JSONDecodeError as e:
         _logger.error(f"Invalid JSON in baseline comparison file: {e}", exc_info=True)
         return 1
@@ -350,7 +367,9 @@ def main():
     print("\n📋 AGENT-READABLE METADATA\n")
     datasets = current.get("datasets", [])
     aggregate_current = current.get("aggregate_stats", {}).get("by_dataset", {})
-    aggregate_baseline = baseline.get("aggregate_stats", {}).get("by_dataset", {}) if baseline else {}
+    aggregate_baseline = (
+        baseline.get("aggregate_stats", {}).get("by_dataset", {}) if baseline else {}
+    )
 
     all_improvements = []
     all_regressions = []

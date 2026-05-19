@@ -5,15 +5,14 @@ Tests cover entity construction, field initialization, and dataclass behavior
 for ExtractedEntity, ExtractionResult, and ProcessingMetrics, including validation of invariants.
 """
 
-import sys
 import os
+import sys
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+from datetime import datetime, timezone
 
 import pytest
-from datetime import datetime, timezone
 
 from domain.extraction.entities import (
     ExtractedEntity,
@@ -436,9 +435,7 @@ class TestProcessingMetrics:
 
     def test_processing_metrics_invalid_negative_relationships(self):
         """ProcessingMetrics raises ValueError if relationships_found is negative."""
-        with pytest.raises(
-            ValueError, match="relationships_found must be non-negative"
-        ):
+        with pytest.raises(ValueError, match="relationships_found must be non-negative"):
             ProcessingMetrics(
                 layer_name="Test",
                 duration_ms=100,

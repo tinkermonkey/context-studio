@@ -9,8 +9,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
 from types import MappingProxyType
+from typing import Any
 
 
 class NodeType(str, Enum):

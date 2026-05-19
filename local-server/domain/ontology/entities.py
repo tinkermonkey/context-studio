@@ -113,7 +113,8 @@ class Class:
         title: Display name for the class
         description: Optional longer description
         parent_class_id: Optional ID of the parent class for hierarchy
-        structural_property_id: Optional ID of the primary structural relationship property definition
+        structural_property_id: Optional ID of the primary structural relationship property
+        definition
         external_references: List of references to external knowledge bases
         lexical_senses: List of word sense disambiguation entries
         data_properties: List of data property values on this class
@@ -259,7 +260,8 @@ class Individual:
             raise ValueError(f"Class {class_id} is not a parent of this individual")
         if len(self.class_ids) == 1:
             raise ValueError(
-                "Cannot remove the last parent class; Individual must have at least one parent class"
+                "Cannot remove the last parent class; Individual must have at least one"
+                " parent class"
             )
         self.class_ids.remove(class_id)
         self.last_modified = datetime.now(timezone.utc)

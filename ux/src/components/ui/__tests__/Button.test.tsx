@@ -12,34 +12,34 @@ describe("Button", () => {
 
     it("applies primary variant class", () => {
       render(<Button variant="primary">Click me</Button>);
-      expect(screen.getByRole("button")).toHaveClass("btn-primary");
+      expect(screen.getByRole("button")).toHaveClass("btn--primary");
     });
 
-    it("applies accent variant class", () => {
-      render(<Button variant="accent">Click me</Button>);
-      expect(screen.getByRole("button")).toHaveClass("btn-accent");
+    it("applies secondary variant class", () => {
+      render(<Button variant="secondary">Click me</Button>);
+      expect(screen.getByRole("button")).toHaveClass("btn--secondary");
     });
 
-    it("applies ghost variant class by default", () => {
-      render(<Button>Click me</Button>);
-      expect(screen.getByRole("button")).toHaveClass("btn-ghost");
+    it("applies ghost variant class", () => {
+      render(<Button variant="ghost">Click me</Button>);
+      expect(screen.getByRole("button")).toHaveClass("btn--ghost");
     });
 
     it("applies danger variant class", () => {
       render(<Button variant="danger">Delete</Button>);
-      expect(screen.getByRole("button")).toHaveClass("btn-danger");
+      expect(screen.getByRole("button")).toHaveClass("btn--danger");
     });
 
-    it("applies icon variant class", () => {
-      render(<Button variant="icon">✕</Button>);
-      expect(screen.getByRole("button")).toHaveClass("btn-icon");
+    it("defaults to primary variant", () => {
+      render(<Button>Click me</Button>);
+      expect(screen.getByRole("button")).toHaveClass("btn--primary");
     });
   });
 
   describe("size modifiers", () => {
-    it("applies btn-sm class when size is sm", () => {
+    it("applies btn--sm class when size is sm", () => {
       render(<Button size="sm">Small</Button>);
-      expect(screen.getByRole("button")).toHaveClass("btn-sm");
+      expect(screen.getByRole("button")).toHaveClass("btn--sm");
     });
 
     it("applies both variant and size classes together", () => {
@@ -50,8 +50,8 @@ describe("Button", () => {
       );
       const btn = screen.getByRole("button");
       expect(btn).toHaveClass("btn");
-      expect(btn).toHaveClass("btn-primary");
-      expect(btn).toHaveClass("btn-sm");
+      expect(btn).toHaveClass("btn--primary");
+      expect(btn).toHaveClass("btn--sm");
     });
   });
 

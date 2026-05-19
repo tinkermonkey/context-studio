@@ -1,20 +1,18 @@
 """Unit tests for CachedReferenceSource decorator."""
 
-import sys
 import os
+import sys
 import tempfile
 from pathlib import Path
 
 sys.path.insert(
     0,
-    os.path.dirname(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    ),
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
 )
 
 
-from domain.extraction.ports import ReferenceResult, ReferenceRelation
 from adapters.reference.cache import CachedReferenceSource
+from domain.extraction.ports import ReferenceRelation, ReferenceResult
 
 
 class FakeReferenceSource:
@@ -65,9 +63,7 @@ class FakeReferenceSource:
         """Async search implementation."""
         return self.search(term, limit)
 
-    async def get_relations_async(
-        self, uri: str, limit: int = 10
-    ) -> list[ReferenceRelation]:
+    async def get_relations_async(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
         """Async get relations implementation."""
         return self.get_relations(uri, limit)
 

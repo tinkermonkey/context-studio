@@ -4,22 +4,20 @@ Unit tests for interchange value objects.
 Tests invariants and discriminator validity for SerializationScope and ImportConflict.
 """
 
-import sys
 import os
+import sys
 
 import pytest
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from domain.interchange.value_objects import (
-    SerializationScope,
-    SerializationScopeType,
     ImportConflict,
     ImportPlan,
     MatchKind,
     ResolutionKind,
+    SerializationScope,
+    SerializationScopeType,
 )
 
 
@@ -171,9 +169,7 @@ class TestImportConflictDefaultResolution:
 
     def test_external_reference_defaults_to_merge(self):
         """EXTERNAL_REFERENCE matches default to MERGE."""
-        resolution = ImportConflict.derive_default_resolution(
-            MatchKind.EXTERNAL_REFERENCE
-        )
+        resolution = ImportConflict.derive_default_resolution(MatchKind.EXTERNAL_REFERENCE)
         assert resolution == ResolutionKind.MERGE
 
     def test_uuid_has_no_default(self):
@@ -188,13 +184,15 @@ class TestImportConflictDefaultResolution:
 
     def test_unhandled_match_kind_raises(self):
         """derive_default_resolution raises ValueError for unhandled MatchKind."""
+
         # Create a mock match_kind that doesn't match any case
         # This would happen if a new MatchKind is added without updating derive_default_resolution
         class UnhandledMatchKind:
             def __str__(self):
                 return "unhandled_kind"
 
-        # We can't easily test this without refactoring, so we'll ensure the function handles all known kinds
+        # We can't easily test this without refactoring, so we'll ensure
+        # the function handles all known kinds
         for kind in MatchKind:
             resolution = ImportConflict.derive_default_resolution(kind)
             assert resolution is None or isinstance(resolution, ResolutionKind)
@@ -259,7 +257,9 @@ class TestImportConflictValidation:
 
     def test_invalid_conflict_default_not_in_available(self):
         """ImportConflict raises ValueError if default_resolution not in available_resolutions."""
-        with pytest.raises(ValueError, match="default_resolution.*must be in available_resolutions"):
+        with pytest.raises(
+            ValueError, match="default_resolution.*must be in available_resolutions"
+        ):
             ImportConflict(
                 match_kind=MatchKind.EXTERNAL_REFERENCE,
                 incoming={"id": "incoming-1"},

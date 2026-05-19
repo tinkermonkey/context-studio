@@ -7,9 +7,9 @@ from typing import Optional, Protocol, Sequence
 
 from domain.versioning.entities import ChangeEvent, Changeset, EntityVersion, Proposal
 from domain.versioning.value_objects import (
-    SyncResult,
-    ChangeOperation,
     ChangeHistoryResult,
+    ChangeOperation,
+    SyncResult,
     SyncStatus,
 )
 
@@ -225,9 +225,7 @@ class ChangeRepository(Protocol):
         """
         ...
 
-    def get_conflict_resolutions(
-        self, proposal_id: str
-    ) -> dict[str, dict[str, object]]:
+    def get_conflict_resolutions(self, proposal_id: str) -> dict[str, dict[str, object]]:
         """
         Retrieve persisted conflict resolutions for a proposal.
 

@@ -7,28 +7,26 @@ Tests service methods for managing import run lifecycle, including:
 - Context variable management for correlation tracking
 """
 
-import sys
 import os
+import sys
 from datetime import datetime, timezone
 
 import pytest
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+from domain.interchange.entities import ImportRunStatus, ResolutionRecord
 from domain.interchange.services import (
     ImportRunService,
     get_current_import_run_id,
     set_import_run_context,
 )
-from domain.interchange.entities import ImportRunStatus, ResolutionRecord
 from domain.interchange.value_objects import (
-    SerializationScope,
-    SerializationScopeType,
-    SerializationFormat,
     MatchKind,
     ResolutionKind,
+    SerializationFormat,
+    SerializationScope,
+    SerializationScopeType,
 )
 from tests.fakes.fake_interchange_repository import FakeInterchangeRepository
 
@@ -378,7 +376,8 @@ class TestImportRunServiceCreateWithResolutionsAndPersist:
     """Test ImportRunService.create_with_resolutions_and_persist method."""
 
     def test_create_with_resolutions_without_repo(self):
-        """create_with_resolutions_and_persist creates ImportRun without persisting when repo is None."""
+        """create_with_resolutions_and_persist creates ImportRun without persisting when repo is
+        None."""
         service = ImportRunService()
         scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
         resolutions = [
@@ -507,7 +506,11 @@ class TestImportRunServiceCreateWithResolutionsAndPersist:
         service = ImportRunService()
         scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
 
-        for format_type in [SerializationFormat.SKOS, SerializationFormat.OWL, SerializationFormat.GRAPHML]:
+        for format_type in [
+            SerializationFormat.SKOS,
+            SerializationFormat.OWL,
+            SerializationFormat.GRAPHML,
+        ]:
             run = service.create_with_resolutions_and_persist(
                 format=format_type,
                 source_hash=f"hash_{format_type.value}",

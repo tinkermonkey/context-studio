@@ -49,7 +49,8 @@ class ChangeRecordPort(Protocol):
             user_id: Optional user ID
             change_reason: Optional explanation
             changeset_id: Optional changeset reference
-            batch_run_id: Optional ID of the batch run (import or extraction) that triggered this change
+            batch_run_id: Optional ID of the batch run (import or extraction) that triggered this
+            change
 
         Returns:
             The ID of the recorded change event

@@ -5,42 +5,40 @@ Tests the change history queries, changeset lifecycle, and proposal workflow
 using FakeChangeRepository.
 """
 
-import sys
 import os
-from datetime import datetime, timezone, timedelta
+import sys
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
 # Add local-server root to path for imports
-sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from domain.versioning.services import VersioningService
 from domain.versioning.entities import (
-    EntityVersion,
-    Proposal,
     ChangeEvent,
     Conflict,
     ConflictReport,
+    EntityVersion,
+    Proposal,
 )
 from domain.versioning.events import ChangesetMerged, SyncCompleted
 from domain.versioning.exceptions import (
-    VersionNotFoundError,
     ChangesetStateError,
     ConflictResolutionError,
+    VersionNotFoundError,
 )
+from domain.versioning.services import VersioningService
 from domain.versioning.value_objects import (
-    ChangeState,
     ChangeOperation,
-    ProposalState,
-    SyncResult,
+    ChangeState,
     EntityVersionState,
     MergeStrategy,
+    ProposalState,
+    SyncResult,
 )
 from tests.fakes.fake_change_repository import FakeChangeRepository
-from tests.fakes.fake_sync_target import FakeSyncTarget
 from tests.fakes.fake_event_publisher import FakeEventPublisher
+from tests.fakes.fake_sync_target import FakeSyncTarget
 
 # ============================================================================
 # Fixtures
@@ -93,7 +91,8 @@ class TestListChangesets:
         assert result == []
 
     def test_list_changesets_returns_all_when_under_limit(
-        self, service: VersioningService,
+        self,
+        service: VersioningService,
     ) -> None:
         """Test list_changesets returns all changesets when count < limit."""
         cs1 = service.create_changeset("Changeset 1")
@@ -108,7 +107,8 @@ class TestListChangesets:
         assert any(cs.id == cs3.id for cs in result)
 
     def test_list_changesets_respects_limit(
-        self, service: VersioningService,
+        self,
+        service: VersioningService,
     ) -> None:
         """Test list_changesets respects the limit parameter."""
         for i in range(10):
@@ -119,7 +119,8 @@ class TestListChangesets:
         assert len(result) == 5
 
     def test_list_changesets_ordered_by_created_at_desc(
-        self, service: VersioningService,
+        self,
+        service: VersioningService,
     ) -> None:
         """Test list_changesets returns changesets ordered by created_at desc."""
         import time
@@ -139,7 +140,8 @@ class TestListChangesets:
         assert result[2].id == cs1.id
 
     def test_list_changesets_with_default_limit(
-        self, service: VersioningService,
+        self,
+        service: VersioningService,
     ) -> None:
         """Test list_changesets uses default limit of 100."""
         for i in range(50):
@@ -150,7 +152,8 @@ class TestListChangesets:
         assert len(result) == 50
 
     def test_list_changesets_limit_zero(
-        self, service: VersioningService,
+        self,
+        service: VersioningService,
     ) -> None:
         """Test list_changesets with limit=0 returns empty list."""
         service.create_changeset("Changeset 1")
@@ -363,14 +366,10 @@ class TestChangesetLifecycle:
         assert changeset.created_at is not None
         assert changeset.updated_at is not None
 
-    def test_create_changeset_with_description(
-        self, service: VersioningService
-    ) -> None:
+    def test_create_changeset_with_description(self, service: VersioningService) -> None:
         """Test creating a changeset with a description."""
         description = "This is a test changeset"
-        changeset = service.create_changeset(
-            name="Test changeset", description=description
-        )
+        changeset = service.create_changeset(name="Test changeset", description=description)
 
         assert changeset.description == description
 
@@ -418,9 +417,7 @@ class TestChangesetLifecycle:
         staged = service.stage_changeset(changeset.id)
         assert staged.state == ChangeState.STAGED
 
-    def test_stage_changeset_updates_timestamp(
-        self, service: VersioningService
-    ) -> None:
+    def test_stage_changeset_updates_timestamp(self, service: VersioningService) -> None:
         """Test that staging a changeset updates its timestamp."""
         changeset = service.create_changeset(name="Test changeset")
 
@@ -472,9 +469,7 @@ class TestChangesetLifecycle:
         with pytest.raises(VersionNotFoundError):
             service.submit_proposal("nonexistent-id")
 
-    def test_submit_proposal_not_staged_raises(
-        self, service: VersioningService
-    ) -> None:
+    def test_submit_proposal_not_staged_raises(self, service: VersioningService) -> None:
         """Test that submitting a proposal from WORKING state raises error."""
         changeset = service.create_changeset(name="Test changeset")
         # Don't stage it
@@ -561,9 +556,7 @@ class TestApplyChangeset:
         assert updated_changeset is not None
         assert updated_changeset.state == ChangeState.PROPOSED
 
-    def test_apply_changeset_already_proposed_raises(
-        self, service: VersioningService
-    ) -> None:
+    def test_apply_changeset_already_proposed_raises(self, service: VersioningService) -> None:
         """Test that applying an already-proposed changeset raises ChangesetStateError."""
         changeset = service.create_changeset(name="Test changeset")
         service.apply_changeset(changeset.id)
@@ -756,9 +749,7 @@ class TestProposalWorkflow:
         with pytest.raises(VersionNotFoundError):
             service.merge_proposal("nonexistent-id")
 
-    def test_merge_proposal_not_approved_raises(
-        self, service: VersioningService
-    ) -> None:
+    def test_merge_proposal_not_approved_raises(self, service: VersioningService) -> None:
         """Test that merging a non-approved proposal raises error."""
         changeset = service.create_changeset(name="Test changeset")
         service.stage_changeset(changeset.id)
@@ -1039,9 +1030,7 @@ class TestConflictDetection:
         assert "name" in field_names
         assert "description" in field_names
 
-    def test_detect_conflicts_proposal_not_found(
-        self, service: VersioningService
-    ) -> None:
+    def test_detect_conflicts_proposal_not_found(self, service: VersioningService) -> None:
         """Test conflict detection with non-existent proposal."""
         with pytest.raises(VersionNotFoundError):
             service.detect_conflicts("nonexistent-proposal-id")
@@ -1153,9 +1142,7 @@ class TestAutoResolveConflicts:
         proposal = service.submit_proposal(changeset.id)
 
         # Call auto_resolve_and_persist (the method under test)
-        report = service.auto_resolve_and_persist(
-            proposal.id, MergeStrategy.LAST_WRITE_WINS
-        )
+        report = service.auto_resolve_and_persist(proposal.id, MergeStrategy.LAST_WRITE_WINS)
 
         # Verify the report shows conflicts detected and resolved
         assert report.has_conflicts is True
@@ -1219,16 +1206,12 @@ class TestAutoResolveConflicts:
             new_state={"name": "Entity1"},
         )
 
-        changeset = service.create_changeset(
-            name="Clean changeset", event_ids=[event_id]
-        )
+        changeset = service.create_changeset(name="Clean changeset", event_ids=[event_id])
         service.stage_changeset(changeset.id)
         proposal = service.submit_proposal(changeset.id)
 
         # Call auto_resolve_and_persist (should handle no-conflict case)
-        report = service.auto_resolve_and_persist(
-            proposal.id, MergeStrategy.LAST_WRITE_WINS
-        )
+        report = service.auto_resolve_and_persist(proposal.id, MergeStrategy.LAST_WRITE_WINS)
 
         # Should report no conflicts
         assert report.has_conflicts is False
@@ -1243,9 +1226,7 @@ class TestAutoResolveConflicts:
 class TestMergeStrategies:
     """Test different merge strategies for conflict resolution."""
 
-    def test_auto_resolve_last_write_wins_strategy(
-        self, service: VersioningService
-    ) -> None:
+    def test_auto_resolve_last_write_wins_strategy(self, service: VersioningService) -> None:
         """Test auto_resolve with LAST_WRITE_WINS strategy uses incoming_value."""
         report = ConflictReport(proposal_id="test-proposal")
         report.conflicts = [
@@ -1271,9 +1252,7 @@ class TestMergeStrategies:
         assert resolved.conflicts[0].resolved_value == "incoming_name"
         assert resolved.conflicts[1].resolved_value == "incoming_desc"
 
-    def test_auto_resolve_base_value_wins_strategy(
-        self, service: VersioningService
-    ) -> None:
+    def test_auto_resolve_base_value_wins_strategy(self, service: VersioningService) -> None:
         """Test auto_resolve with BASE_VALUE_WINS strategy uses base_value."""
         report = ConflictReport(proposal_id="test-proposal")
         report.conflicts = [
@@ -1498,9 +1477,7 @@ class TestManualConflictResolution:
         proposal = service.submit_proposal(changeset.id)
         service.approve_proposal(proposal.id)
 
-        resolutions: dict[str, dict[str, object]] = {
-            "entity1": {"name": "resolved_name"}
-        }
+        resolutions: dict[str, dict[str, object]] = {"entity1": {"name": "resolved_name"}}
 
         report = service.resolve_conflicts(proposal.id, resolutions)
 
@@ -1574,9 +1551,7 @@ class TestManualConflictResolution:
         service.approve_proposal(proposal.id)
 
         # Try to resolve with wrong entity ID
-        resolutions: dict[str, dict[str, object]] = {
-            "wrong_entity": {"name": "resolved_name"}
-        }
+        resolutions: dict[str, dict[str, object]] = {"wrong_entity": {"name": "resolved_name"}}
 
         with pytest.raises(ConflictResolutionError):
             service.resolve_conflicts(proposal.id, resolutions)
@@ -1627,9 +1602,7 @@ class TestMergeWithConflictDetection:
             new_state={"name": "Entity1"},
         )
 
-        changeset = service.create_changeset(
-            name="Clean changeset", event_ids=[event_id]
-        )
+        changeset = service.create_changeset(name="Clean changeset", event_ids=[event_id])
         service.stage_changeset(changeset.id)
         proposal = service.submit_proposal(changeset.id)
         service.approve_proposal(proposal.id)
@@ -1906,9 +1879,7 @@ class TestSyncMethods:
 
             def push(self, events):
                 now = datetime.now(timezone.utc)
-                return SyncResult(
-                    pushed=0, pulled=0, errors=(), started_at=now, completed_at=now
-                )
+                return SyncResult(pushed=0, pulled=0, errors=(), started_at=now, completed_at=now)
 
             def is_configured(self):
                 return True
@@ -1984,9 +1955,7 @@ class TestSyncMethods:
 
             def push(self, events):
                 now = datetime.now(timezone.utc)
-                return SyncResult(
-                    pushed=0, pulled=0, errors=(), started_at=now, completed_at=now
-                )
+                return SyncResult(pushed=0, pulled=0, errors=(), started_at=now, completed_at=now)
 
             def is_configured(self):
                 return True
@@ -2087,7 +2056,8 @@ class TestSyncStatusErrorHandling:
     def test_get_sync_status_is_configured_error(
         self, repo: FakeChangeRepository, event_publisher: FakeEventPublisher
     ) -> None:
-        """Test that is_configured errors degrade to is_configured=False and set is_degraded=True."""
+        """Test that is_configured errors degrade to is_configured=False and set
+        is_degraded=True."""
 
         class FailingConfigSyncTarget(FakeSyncTarget):
             def is_configured(self) -> bool:
@@ -2106,9 +2076,7 @@ class TestSyncStatusErrorHandling:
         assert status.unprocessed_count == repo.count_unprocessed()
         assert status.is_degraded is True
 
-    def test_get_sync_status_both_errors(
-        self, event_publisher: FakeEventPublisher
-    ) -> None:
+    def test_get_sync_status_both_errors(self, event_publisher: FakeEventPublisher) -> None:
         """Test that both count_unprocessed and is_configured errors degrade gracefully."""
 
         class FailingCountRepository(FakeChangeRepository):
@@ -2212,9 +2180,7 @@ class TestEntityVersionCreationOnMerge:
         )
 
         # Create and merge a changeset with both events
-        changeset = service.create_changeset(
-            "Test Changeset", event_ids=[event_id_1, event_id_2]
-        )
+        changeset = service.create_changeset("Test Changeset", event_ids=[event_id_1, event_id_2])
         service.stage_changeset(changeset.id)
         proposal = service.submit_proposal(changeset.id)
         service.approve_proposal(proposal.id)
@@ -2427,9 +2393,7 @@ class TestEntityVersionCreationOnMerge:
             new_state={"field": "value2"},
         )
 
-        changeset = service.create_changeset(
-            "Conflicting", event_ids=[event_id_1, event_id_2]
-        )
+        changeset = service.create_changeset("Conflicting", event_ids=[event_id_1, event_id_2])
         service.stage_changeset(changeset.id)
         proposal = service.submit_proposal(changeset.id)
         service.approve_proposal(proposal.id)
@@ -2456,9 +2420,7 @@ class TestEntityVersionCreationOnMerge:
                 operation=ChangeOperation.UPDATE if i > 0 else ChangeOperation.CREATE,
                 new_state={"version": i + 1},
             )
-            changeset = service.create_changeset(
-                f"Change {i + 1}", event_ids=[event_id]
-            )
+            changeset = service.create_changeset(f"Change {i + 1}", event_ids=[event_id])
             service.stage_changeset(changeset.id)
             proposal = service.submit_proposal(changeset.id)
             service.approve_proposal(proposal.id)

@@ -4,24 +4,23 @@ Tests measure end-to-end extraction time at multiple text lengths (100, 500, 200
 using both fake and real NLP adapters.
 """
 
-import sys
 import os
+import sys
 import time
+
 import pytest
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from domain.extraction.services import ExtractionService
 from domain.extraction.ports import NLPProcessor
-from tests.fakes.fake_ontology_repository import FakeOntologyRepository
+from domain.extraction.services import ExtractionService
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
-from tests.fakes.fake_llm_provider import FakeLLMProvider
-from tests.fakes.fake_nlp_processor import FakeNLPProcessor
+from tests.fakes.fake_event_publisher import FakeEventPublisher
 from tests.fakes.fake_extraction_repository import FakeExtractionRepository
 from tests.fakes.fake_extraction_run_repo import FakeExtractionRunRepository
-from tests.fakes.fake_event_publisher import FakeEventPublisher
+from tests.fakes.fake_llm_provider import FakeLLMProvider
+from tests.fakes.fake_nlp_processor import FakeNLPProcessor
+from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 from tests.fakes.fake_reference_source import FakeReferenceSource
 
 

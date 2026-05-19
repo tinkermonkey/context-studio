@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 from typing import Protocol
 
 from .entities import ImportRun, ImportRunStatus, ResolutionRecord
-from .value_objects import SerializationScope, ImportPlan, ChangeEvent
+from .value_objects import ChangeEvent, ImportPlan, SerializationScope
 
 
 class OntologySerializer(ABC):
@@ -46,7 +46,12 @@ class OntologyDeserializer(ABC):
     """
 
     @abstractmethod
-    def deserialize(self, source: bytes | str, dry_run: bool = True, resolutions: list[ResolutionRecord] | None = None) -> ImportPlan:
+    def deserialize(
+        self,
+        source: bytes | str,
+        dry_run: bool = True,
+        resolutions: list[ResolutionRecord] | None = None,
+    ) -> ImportPlan:
         """
         Deserialize ontology data and produce an import plan.
 
@@ -54,7 +59,8 @@ class OntologyDeserializer(ABC):
             source: Serialized ontology as bytes or string
             dry_run: If True, returns ImportPlan without persisting.
                      If False, commits changes and returns ImportPlan with ImportRun.
-            resolutions: Optional list of user-chosen ResolutionRecord objects to apply when committing.
+            resolutions: Optional list of user-chosen ResolutionRecord objects to apply when
+            committing.
 
         Returns:
             ImportPlan describing what the import would/did do

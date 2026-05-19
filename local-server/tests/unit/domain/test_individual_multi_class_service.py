@@ -5,26 +5,24 @@ Tests the service layer operations for managing class membership and
 property attribute inheritance with first-class-wins conflict resolution.
 """
 
-import sys
 import os
+import sys
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest
 
-from domain.ontology.value_objects import DataPropertyValue
-from domain.ontology.services import OntologyService
-from domain.ontology.exceptions import EntityNotFoundError, DuplicateEntityError
 from domain.ontology.events import (
     IndividualCreated,
-    IndividualUpdated,
     IndividualDeleted,
+    IndividualUpdated,
 )
-from tests.fakes.fake_ontology_repository import FakeOntologyRepository
+from domain.ontology.exceptions import DuplicateEntityError, EntityNotFoundError
+from domain.ontology.services import OntologyService
+from domain.ontology.value_objects import DataPropertyValue
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_event_publisher import FakeEventPublisher
+from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 
 
 @pytest.fixture
@@ -51,9 +49,7 @@ def sample_ontology(service):
         "Database System",
         description="A system for data storage and retrieval",
     )
-    class2 = svc.create_class(
-        scheme.id, "SQL Dialect", description="A SQL database implementation"
-    )
+    class2 = svc.create_class(scheme.id, "SQL Dialect", description="A SQL database implementation")
     class3 = svc.create_class(
         scheme.id, "Open Source Software", description="Software with open source code"
     )
@@ -160,9 +156,7 @@ class TestIndividualMultiClassOperations:
         svc, repo, tax, scheme, class1, class2, class3 = sample_ontology
 
         ind = svc.create_individual([class1.id, class2.id, class3.id], "PostgreSQL")
-        updated = svc.reorder_individual_classes(
-            ind.id, [class3.id, class1.id, class2.id]
-        )
+        updated = svc.reorder_individual_classes(ind.id, [class3.id, class1.id, class2.id])
 
         assert updated.class_ids == [class3.id, class1.id, class2.id]
 
@@ -192,9 +186,7 @@ class TestIndividualMultiClassOperations:
         assert any(p.property_identifier == "version" for p in props)
         assert any(p.property_identifier == "license" for p in props)
 
-    def test_get_individual_properties_multiple_classes_no_conflict(
-        self, sample_ontology
-    ):
+    def test_get_individual_properties_multiple_classes_no_conflict(self, sample_ontology):
         """Get properties for individual with multiple classes, no property conflicts."""
         svc, repo, tax, scheme, class1, class2, class3 = sample_ontology
 
@@ -269,9 +261,7 @@ class TestIndividualMultiClassOperations:
         prop = next(p for p in props if p.property_identifier == "release_type")
         assert prop.value == "stable"
 
-    def test_get_individual_properties_nonexistent_individual_raises(
-        self, sample_ontology
-    ):
+    def test_get_individual_properties_nonexistent_individual_raises(self, sample_ontology):
         """Get properties for nonexistent individual raises EntityNotFoundError."""
         svc, repo, tax, scheme, class1, class2, class3 = sample_ontology
 

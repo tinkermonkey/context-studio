@@ -49,9 +49,7 @@ class ReferenceResultSchema(BaseModel):
     uri: str = Field(..., description="Unique URI for this resource")
     label: str = Field(..., description="Human-readable label")
     description: Optional[str] = Field(None, description="Optional description")
-    confidence: float = Field(
-        1.0, ge=0.0, le=1.0, description="Confidence score (0.0-1.0)"
-    )
+    confidence: float = Field(1.0, ge=0.0, le=1.0, description="Confidence score (0.0-1.0)")
     source: str = Field(..., description="Reference source name")
 
 
@@ -151,7 +149,11 @@ class GroundingWorkflowCreate(BaseModel):
     """Request to create a new grounding workflow."""
 
     title: str = Field(..., description="Human-readable workflow name", min_length=1)
-    source: str = Field(..., description="External knowledge source name (e.g. 'ConceptNet', 'schema.org')", min_length=1)
+    source: str = Field(
+        ...,
+        description="External knowledge source name (e.g. 'ConceptNet', 'schema.org')",
+        min_length=1,
+    )
     class_scope: list[str] = Field(
         default_factory=list,
         description="List of class IDs or names to scope enrichment",
@@ -164,7 +166,9 @@ class GroundingWorkflowUpdate(BaseModel):
 
     title: Optional[str] = Field(None, description="Human-readable workflow name", min_length=1)
     source: Optional[str] = Field(None, description="External knowledge source name")
-    class_scope: Optional[list[str]] = Field(None, description="List of class IDs or names to scope enrichment")
+    class_scope: Optional[list[str]] = Field(
+        None, description="List of class IDs or names to scope enrichment"
+    )
     status: Optional[str] = Field(None, description="Workflow status: active, inactive, error")
     description: Optional[str] = Field(None, description="Optional description")
 
@@ -184,7 +188,9 @@ class GroundingWorkflowResponse(BaseModel):
     )
     status: str = Field(..., description="Workflow status: active, inactive, error")
     last_run: Optional[str] = Field(None, description="ISO 8601 timestamp of most recent run")
-    last_run_record_count: Optional[int] = Field(None, description="Record count from most recent run")
+    last_run_record_count: Optional[int] = Field(
+        None, description="Record count from most recent run"
+    )
 
 
 class WorkflowRunResponse(BaseModel):

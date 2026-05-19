@@ -4,19 +4,18 @@ Tests measure pipeline configuration CRUD throughput, execution tracking,
 and list operations at multiple configuration counts (10, 50, 100).
 """
 
-import sys
 import os
+import sys
 import time
+
 import pytest
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from domain.pipeline.services import PipelineService
-from tests.fakes.fake_pipeline_repository import FakePipelineRepository
-from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_event_publisher import FakeEventPublisher
+from tests.fakes.fake_llm_provider import FakeLLMProvider
+from tests.fakes.fake_pipeline_repository import FakePipelineRepository
 
 
 def _setup_pipeline_context() -> tuple[PipelineService, FakePipelineRepository]:
@@ -64,7 +63,8 @@ def test_bulk_create_pipeline_configs(num_configs: int, max_time: float) -> None
     elapsed = time.perf_counter() - start
 
     print(
-        f"\nBulk create pipeline configs ({num_configs} configs): {elapsed:.4f}s ({num_configs / elapsed:.1f} configs/sec)"
+        f"\nBulk create pipeline configs ({num_configs} configs): {elapsed:.4f}s"
+        f" ({num_configs / elapsed:.1f} configs/sec)"
     )
     assert elapsed < max_time
 
@@ -140,7 +140,8 @@ def test_update_pipeline_configs(num_configs: int, max_time: float) -> None:
     elapsed = time.perf_counter() - start
 
     print(
-        f"\nUpdate pipeline configs ({num_configs} configs): {elapsed:.4f}s ({num_configs / elapsed:.1f} updates/sec)"
+        f"\nUpdate pipeline configs ({num_configs} configs): {elapsed:.4f}s"
+        f" ({num_configs / elapsed:.1f} updates/sec)"
     )
     assert elapsed < max_time
 
@@ -153,9 +154,7 @@ def test_update_pipeline_configs(num_configs: int, max_time: float) -> None:
         (10, 50, 0.1),
     ],
 )
-def test_execute_pipelines(
-    num_configs: int, num_executions: int, max_time: float
-) -> None:
+def test_execute_pipelines(num_configs: int, num_executions: int, max_time: float) -> None:
     """Measure throughput of executing pipelines."""
     service, _ = _setup_pipeline_context()
 
@@ -180,7 +179,8 @@ def test_execute_pipelines(
     elapsed = time.perf_counter() - start
 
     print(
-        f"\nExecute pipelines ({num_executions} executions across {num_configs} configs): {elapsed:.4f}s ({num_executions / elapsed:.1f} executions/sec)"
+        f"\nExecute pipelines ({num_executions} executions across {num_configs}"
+        f" configs): {elapsed:.4f}s ({num_executions / elapsed:.1f} executions/sec)"
     )
     assert elapsed < max_time
 
@@ -218,6 +218,7 @@ def test_delete_pipeline_configs(num_configs: int, max_time: float) -> None:
     elapsed = time.perf_counter() - start
 
     print(
-        f"\nDelete pipeline configs ({num_configs} configs): {elapsed:.4f}s ({num_configs / elapsed:.1f} deletes/sec)"
+        f"\nDelete pipeline configs ({num_configs} configs): {elapsed:.4f}s"
+        f" ({num_configs / elapsed:.1f} deletes/sec)"
     )
     assert elapsed < max_time

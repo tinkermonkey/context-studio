@@ -7,16 +7,17 @@ for FastAPI, SQLAlchemy, and httpx. Integrates into the app lifespan.
 
 import logging
 from typing import Optional
+
 from fastapi import FastAPI
 from sqlalchemy.engine import Engine
 
-from config import TelemetryConfig
-from adapters.telemetry.provider_setup import TelemetryProvider
 from adapters.telemetry.instrumentors import (
     instrument_fastapi,
-    instrument_sqlalchemy,
     instrument_httpx,
+    instrument_sqlalchemy,
 )
+from adapters.telemetry.provider_setup import TelemetryProvider
+from config import TelemetryConfig
 
 _logger = logging.getLogger(__name__)
 

@@ -1,12 +1,10 @@
 """Fake in-memory implementation of EventPublisher for testing."""
 
-import sys
 import os
+import sys
 from typing import Callable, TypeVar, cast
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from domain.events import DomainEvent
 from utils.logger import get_logger
@@ -25,9 +23,7 @@ class FakeEventPublisher:
 
     def __init__(self) -> None:
         self._events: list[DomainEvent] = []
-        self._handlers: dict[type[DomainEvent], list[Callable[[DomainEvent], None]]] = (
-            {}
-        )
+        self._handlers: dict[type[DomainEvent], list[Callable[[DomainEvent], None]]] = {}
 
     def publish(self, event: DomainEvent) -> list[tuple[str, Exception]]:
         """
@@ -51,8 +47,9 @@ class FakeEventPublisher:
             except Exception as e:
                 handler_name = getattr(handler, "__name__", repr(handler))
                 logger.error(
-                    f"Handler {handler_name} raised exception while processing "
-                    f"event {event_type.__name__} (id: {event.event_id}): {type(e).__name__}: {str(e)}",
+                    f"Handler {handler_name} raised exception while processing event"
+                    f" {event_type.__name__} (id: {event.event_id}):"
+                    f" {type(e).__name__}: {str(e)}",
                     exc_info=True,
                 )
                 failures.append((handler_name, e))
@@ -79,9 +76,7 @@ class FakeEventPublisher:
         Returns:
             List of events of the specified type with proper type preservation.
         """
-        return cast(
-            list[EventT], [e for e in self._events if isinstance(e, event_type)]
-        )
+        return cast(list[EventT], [e for e in self._events if isinstance(e, event_type)])
 
     def clear(self) -> None:
         self._events.clear()

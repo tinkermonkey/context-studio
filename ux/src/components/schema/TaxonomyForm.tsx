@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Input, Textarea } from "@/components/ui/Input";
+import { Input, Textarea, Field } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import type { components } from "@/api/types";
 
@@ -14,6 +14,7 @@ export function TaxonomyForm({ onSubmit, isLoading }: TaxonomyFormProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [titleError, setTitleError] = useState<string>();
+  const [formError, setFormError] = useState<string>();
 
   const validateTitle = (value: string): boolean => {
     if (!value.trim()) {
@@ -30,39 +31,47 @@ export function TaxonomyForm({ onSubmit, isLoading }: TaxonomyFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(undefined);
 
     if (!validateTitle(title)) {
       return;
     }
 
-    await onSubmit({
-      title,
-      description: description || null,
-    });
+    try {
+      await onSubmit({
+        title,
+        description: description || null,
+      });
+    } catch (error) {
+      setFormError(
+        error instanceof Error ? error.message : "Failed to create taxonomy"
+      );
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} data-testid="taxonomy-form">
       <div className="stack-lg">
-        <div>
-          <label className="form-group-label">Title</label>
+        {formError && (
+          <div className="error-banner" role="alert" data-testid="taxonomy-form-error">
+            {formError}
+          </div>
+        )}
+        <Field label="Title" required error={titleError}>
           <Input
             type="text"
             placeholder="Taxonomy name"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              setTitleError(undefined);
+            }}
             onBlur={handleTitleBlur}
             data-testid="taxonomy-title-input"
           />
-          {titleError && (
-            <div style={{ color: "var(--rose-600)", fontSize: "var(--text-xs)", marginTop: "4px" }}>
-              {titleError}
-            </div>
-          )}
-        </div>
+        </Field>
 
-        <div>
-          <label className="form-group-label">Description (optional)</label>
+        <Field label="Description (optional)">
           <Textarea
             placeholder="Optional description"
             value={description}
@@ -70,7 +79,7 @@ export function TaxonomyForm({ onSubmit, isLoading }: TaxonomyFormProps) {
             data-testid="taxonomy-description-input"
             rows={4}
           />
-        </div>
+        </Field>
 
         <Button
           type="submit"

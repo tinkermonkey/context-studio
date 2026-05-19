@@ -11,22 +11,26 @@ Tests each mapping rule to ensure correct serialization and deserialization:
 - external_references ↔ dct:source + skos:exactMatch
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(
     0,
-    os.path.dirname(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    ),
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
 )
 
-from rdflib import Graph, Namespace, RDF, OWL
+from rdflib import OWL, RDF, Graph, Namespace
 
-from domain.ontology.entities import Taxonomy, ConceptScheme, Class, Individual, PropertyDefinition
-from domain.ontology.value_objects import ExternalReference
-from domain.interchange.value_objects import SerializationScope, SerializationScopeType
 from adapters.interchange.skos import SKOSSerializer
+from domain.interchange.value_objects import SerializationScope, SerializationScopeType
+from domain.ontology.entities import (
+    Class,
+    ConceptScheme,
+    Individual,
+    PropertyDefinition,
+    Taxonomy,
+)
+from domain.ontology.value_objects import ExternalReference
 
 SKOS = Namespace("http://www.w3.org/2004/02/skos/core#")
 DCT = Namespace("http://purl.org/dc/terms/")
@@ -63,9 +67,7 @@ class FakeOntologyRepo:
     def list_classes(self, concept_scheme_id=None, **kwargs):
         if concept_scheme_id is None:
             return list(self.classes.values())
-        return [
-            c for c in self.classes.values() if c.concept_scheme_id == concept_scheme_id
-        ]
+        return [c for c in self.classes.values() if c.concept_scheme_id == concept_scheme_id]
 
     def get_individual(self, individual_id):
         return self.individuals.get(individual_id)

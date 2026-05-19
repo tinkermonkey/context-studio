@@ -1,20 +1,35 @@
-import type { ReactNode } from "react";
-
-type StatColor = "cyan" | "violet" | "amber" | "emerald";
+import { ReactNode } from "react";
+import { StatTile as HeimdallStatTile, type StatColor } from "@tinkermonkey/heimdall-ui";
 
 interface StatTileProps {
   label: string;
-  value: ReactNode;
+  value: string | number | ReactNode;
   color?: StatColor;
   sub?: string;
+  className?: string;
 }
 
-export function StatTile({ label, value, color = "cyan", sub }: StatTileProps) {
+export function StatTile({ label, value, color = "cyan", sub, className }: StatTileProps) {
+  const isReactNode = typeof value === "object" || typeof value === "undefined";
+
+  if (!sub && !isReactNode) {
+    return (
+      <HeimdallStatTile
+        label={label}
+        value={value as string | number}
+        color={color}
+        className={className}
+      />
+    );
+  }
+
   return (
-    <div className="stat" data-color={color}>
-      <div className="label">{label}</div>
-      <div className="num">{value}</div>
-      {sub && <div className="meta">{sub}</div>}
+    <div className={["stat-tile", `stat-tile--${color}`, className].filter(Boolean).join(" ")}>
+      <div className="stat-tile__label">{label}</div>
+      <div className="stat-tile__value">{value}</div>
+      <div className="stat-tile__meta">
+        <span className="stat-tile__label-secondary">{sub}</span>
+      </div>
     </div>
   );
 }

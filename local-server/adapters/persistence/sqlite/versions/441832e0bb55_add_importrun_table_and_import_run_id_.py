@@ -6,8 +6,8 @@ Create Date: 2026-05-03 10:42:43.342376
 
 """
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "441832e0bb55"
@@ -39,9 +39,7 @@ def upgrade() -> None:
 
     # Add import_run_id column to change_events using batch mode for SQLite
     with op.batch_alter_table("change_events", schema=None) as batch_op:
-        batch_op.add_column(
-            sa.Column("import_run_id", sa.String(length=36), nullable=True)
-        )
+        batch_op.add_column(sa.Column("import_run_id", sa.String(length=36), nullable=True))
         batch_op.create_foreign_key(
             "fk_change_events_import_run_id",
             "import_runs",

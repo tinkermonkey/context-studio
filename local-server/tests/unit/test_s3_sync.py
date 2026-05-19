@@ -5,10 +5,11 @@ Tests cover ClientError handling in push(), pull() (both inner and outer blocks)
 and get_sync_status() methods, as well as normal operation flows.
 """
 
-import sys
 import os
+import sys
 from datetime import datetime, timezone
 from unittest.mock import Mock
+
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
@@ -72,9 +73,7 @@ class TestS3SyncAdapterClientErrorHandling:
         """Test that pull() raises RuntimeError when get_object raises ClientError."""
         # Mock paginator and list response
         mock_paginator = Mock()
-        mock_page = {
-            "Contents": [{"Key": "test-prefix/changes/2026-01-15/uuid-1.jsonl"}]
-        }
+        mock_page = {"Contents": [{"Key": "test-prefix/changes/2026-01-15/uuid-1.jsonl"}]}
         mock_paginator.paginate.return_value = [mock_page]
         adapter._s3_client.get_paginator.return_value = mock_paginator
 
@@ -102,9 +101,7 @@ class TestS3SyncAdapterClientErrorHandling:
         """Test that pull() raises RuntimeError when JSON parsing fails."""
         # Mock paginator and list response
         mock_paginator = Mock()
-        mock_page = {
-            "Contents": [{"Key": "test-prefix/changes/2026-01-15/uuid-1.jsonl"}]
-        }
+        mock_page = {"Contents": [{"Key": "test-prefix/changes/2026-01-15/uuid-1.jsonl"}]}
         mock_paginator.paginate.return_value = [mock_page]
         adapter._s3_client.get_paginator.return_value = mock_paginator
 
@@ -117,7 +114,8 @@ class TestS3SyncAdapterClientErrorHandling:
             adapter.pull()
 
     def test_get_sync_status_raises_runtime_error_on_client_error(self, adapter):
-        """Test that get_sync_status() raises RuntimeError when list_objects_v2 raises ClientError."""
+        """Test that get_sync_status() raises RuntimeError when list_objects_v2 raises
+        ClientError."""
         # Mock paginator to raise ClientError on paginate
         mock_paginator = Mock()
         mock_paginator.paginate.side_effect = MockClientError(
@@ -157,15 +155,19 @@ class TestS3SyncAdapterClientErrorHandling:
         """Test successful pull operation with valid JSON."""
         # Mock paginator and list response
         mock_paginator = Mock()
-        mock_page = {
-            "Contents": [{"Key": "test-prefix/changes/2026-01-15/uuid-1.jsonl"}]
-        }
+        mock_page = {"Contents": [{"Key": "test-prefix/changes/2026-01-15/uuid-1.jsonl"}]}
         mock_paginator.paginate.return_value = [mock_page]
         adapter._s3_client.get_paginator.return_value = mock_paginator
 
         # Mock get_object to return valid JSON
         mock_response = {"Body": Mock()}
-        json_data = '{"id": "event-1", "entity_id": "entity-1", "entity_type": "TaxonomyEntity", "operation": "create", "timestamp": "2026-01-15T12:00:00+00:00", "processed": false, "user_id": "user-1", "change_reason": "Test change", "new_state": {"name": "Test"}, "previous_state": null}'
+        json_data = (
+            '{"id": "event-1", "entity_id": "entity-1", "entity_type":'
+            ' "TaxonomyEntity", "operation": "create", "timestamp":'
+            ' "2026-01-15T12:00:00+00:00", "processed": false, "user_id": "user-1",'
+            ' "change_reason": "Test change", "new_state": {"name": "Test"},'
+            ' "previous_state": null}'
+        )
         mock_response["Body"].read.return_value = json_data.encode("utf-8")
         adapter._s3_client.get_object.return_value = mock_response
 

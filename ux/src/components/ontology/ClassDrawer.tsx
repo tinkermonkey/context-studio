@@ -295,6 +295,9 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
         confirmText={classData.title}
         confirmLabel={classesCopy.delete.confirmButton}
         onConfirm={handleDelete}
+        onError={(error) => {
+          toast("error", `Delete failed: ${error.message}`);
+        }}
         isLoading={deleteMutation.isPending}
         data-testid="class-delete-confirm"
       />

@@ -47,7 +47,7 @@ def execute(input: LayerInput, nlp: NLPProcessor) -> LayerOutput:
     # can distinguish this error from "no entities found in text"
     if not nlp.is_ready():
         raise NLPProcessorNotReadyError(
-            "NLP processor is not ready. Model may not be installed or initialization failed."
+            "NLP processor is not ready. Model may not be installed or initialization" " failed."
         )
 
     # Extract entities using NLP
