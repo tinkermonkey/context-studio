@@ -53,6 +53,7 @@ __pycache__/
 
 # Test outputs
 ux/test_output.txt
+ux/test_results.txt
 ux/test-results/
 ux/coverage/
 ux/e2e/reports/
