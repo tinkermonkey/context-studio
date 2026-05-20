@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { PageHeader as HeimdallPageHeader } from "@tinkermonkey/heimdall-ui";
 
-interface PageHeaderProps {
+interface PageHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
   eyebrow: string;
   title: string;
   subtitle?: string;
@@ -17,6 +17,7 @@ export function PageHeader({
   idChip,
   actions,
   className,
+  ...rest
 }: PageHeaderProps) {
   return (
     <HeimdallPageHeader
@@ -28,6 +29,7 @@ export function PageHeader({
       className={className}
       data-testid="page-header"
       role="banner"
+      {...rest}
     />
   );
 }

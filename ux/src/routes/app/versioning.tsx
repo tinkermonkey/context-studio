@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { useToasts } from "@/components/ui/Toast";
 import { TabBar } from "@tinkermonkey/heimdall-ui";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { ChangesetPanel } from "@/components/versioning/ChangesetPanel";
 import { SyncStatusPanel } from "@/components/versioning/SyncStatus";
 import { ConflictResolver } from "@/components/versioning/ConflictResolver";
@@ -33,12 +34,11 @@ export function VersioningPage() {
 
   return (
     <div data-testid="versioning-page">
-      <div className="page-head">
-        <div>
-          <h1>{COPY.versioningPageTitle}</h1>
-          <p className="subtitle">{COPY.versioningPageSubtitle}</p>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Collaboration"
+        title={COPY.versioningPageTitle}
+        subtitle={COPY.versioningPageSubtitle}
+      />
 
       <TabBar tabs={tabs} activeTabId={activeTab} onSelectTab={setActiveTab} />
 

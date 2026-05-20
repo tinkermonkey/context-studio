@@ -1561,65 +1561,6 @@ select.input {
   font-feature-settings: "tnum";
 }
 
-/* ------------ Activity list ------------ */
-.activity-list {
-  display: flex;
-  flex-direction: column;
-}
-.activity-item {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--canvas-bd);
-}
-.activity-item:last-child {
-  border-bottom: none;
-}
-.activity-item .d {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  margin-top: 5px;
-  background: var(--canvas-fg-4);
-  flex: none;
-}
-.activity-item.create .d {
-  background: var(--accent-emerald);
-}
-.activity-item.update .d {
-  background: var(--accent-cyan-2);
-}
-.activity-item.delete .d {
-  background: var(--accent-rose);
-}
-.activity-item.run .d {
-  background: var(--accent-violet);
-}
-.activity-item .content {
-  flex: 1;
-  min-width: 0;
-}
-.activity-item .head {
-  font-size: 13px;
-  color: var(--canvas-fg-1);
-}
-.activity-item .head b {
-  font-weight: 600;
-}
-.activity-item .meta-line {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--canvas-fg-3);
-  margin-top: 2px;
-}
-.activity-item .when {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--canvas-fg-3);
-  white-space: nowrap;
-}
-
 /* ------------ Quick-access tiles ------------ */
 .qa-grid {
   display: grid;

@@ -14,6 +14,7 @@ import { Button, TextInput as Input, TextArea as Textarea, Select, TabBar, StatG
 import { Chip } from "@/components/ui/Chip";
 import { Modal } from "@/components/ui/Modal";
 import { Drawer } from "@/components/ui/Drawer";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { StatTile } from "@/components/ui/StatTile";
 import { Panel } from "@/components/ui/Panel";
 import { useToasts } from "@/components/ui/Toast";
@@ -100,12 +101,11 @@ export default function ContactSheet() {
 
   return (
     <div>
-      <div className="page-head contact-sheet-page-head">
-        <div>
-          <h1>Contact Sheet</h1>
-          <p>Design system component gallery — for visual validation only</p>
-        </div>
-        <div className="page-actions">
+      <PageHeader
+        eyebrow="Design System"
+        title="Contact Sheet"
+        subtitle="Design system component gallery — for visual validation only"
+        actions={
           <Button
             variant="ghost"
             onClick={toggleDarkCanvas}
@@ -113,8 +113,8 @@ export default function ContactSheet() {
           >
             {darkCanvas ? "Light canvas" : "Dark canvas"}
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* ── Buttons ── */}
       <Section title="Buttons" testid="contact-sheet-buttons">

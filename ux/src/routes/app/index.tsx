@@ -14,7 +14,6 @@ import { useClasses } from "@/api/hooks/ontology";
 import { useIndividuals } from "@/api/hooks/ontology";
 import { usePipelines } from "@/api/hooks/pipeline";
 import { useChanges } from "@/api/hooks/versioning";
-import { formatRelativeTime } from "@/utils/formatters";
 
 export const Route = createFileRoute("/app/")({
   component: Dashboard,

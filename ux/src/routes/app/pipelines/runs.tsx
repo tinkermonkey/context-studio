@@ -7,6 +7,7 @@ import { useAllPipelineExecutions } from "@/api/hooks/pipeline";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { SchemaTable } from "@/components/schema/SchemaTable";
 
 
@@ -180,9 +181,10 @@ function RunsPageContent() {
 
     content = (
       <>
-        <div className="page-head">
-          <h1>{COPY.RUN_HISTORY_PAGE_TITLE}</h1>
-        </div>
+        <PageHeader
+          eyebrow="Pipelines"
+          title={COPY.RUN_HISTORY_PAGE_TITLE}
+        />
 
         <div className="stack runs-filter-bar">
           <Input
