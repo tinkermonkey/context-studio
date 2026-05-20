@@ -121,7 +121,8 @@ export function GraphPage() {
                   selectedNodeId && data
                     ? {
                         id: selectedNodeId,
-                        title: data.nodes.find((n) => n.id === selectedNodeId)?.label ?? selectedNodeId,
+                        title:
+                          data.nodes.find((n) => n.id === selectedNodeId)?.label ?? selectedNodeId,
                         kind: data.nodes.find((n) => n.id === selectedNodeId)?.kind,
                         description: COPY.SELECTED_NODE_DETAILS,
                       }
