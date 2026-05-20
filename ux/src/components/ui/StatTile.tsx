@@ -12,7 +12,7 @@ interface StatTileProps {
 }
 
 export function StatTile({ label, value, color = "cyan", sub, className }: StatTileProps) {
-  const isReactNode = isValidElement(value);
+  const isReactNode = value == null || isValidElement(value);
 
   if (!sub && !isReactNode) {
     return (
