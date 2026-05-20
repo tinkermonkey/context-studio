@@ -237,12 +237,15 @@ describe("GraphCanvas", () => {
       );
 
       expect(mockGraphCanvas).toHaveBeenCalled();
-      const callArgs = vi.mocked(mockGraphCanvas).mock.calls[0][0];
-      expect(callArgs.edges[0]).toEqual({
-        id: "edge-1",
-        sourceId: "node-1",
-        targetId: "node-2",
-      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const callArgs = (mockGraphCanvas as any).mock.calls[0][0];
+      expect(callArgs.edges).toEqual([
+        {
+          id: "edge-1",
+          sourceId: "node-1",
+          targetId: "node-2",
+        },
+      ]);
     });
 
     it("should call toast on validation error", () => {
