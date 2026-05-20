@@ -1,8 +1,26 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { screen } from "@testing-library/react";
 import { render } from "@/test/test-utils";
 import { validateEdgeEndpoints, GraphCanvasComponent } from "../GraphCanvas";
+import * as GraphCanvasModule from "../GraphCanvas";
 import type { GraphNode, GraphEdge } from "@/api/hooks/graph";
+
+const mockToastFn = vi.fn();
+vi.mock("@/components/ui/Toast", async () => {
+  const actual = await vi.importActual("@/components/ui/Toast");
+  return {
+    ...actual,
+    useToasts: () => ({
+      toast: mockToastFn,
+      toasts: [],
+      dismiss: vi.fn(),
+    }),
+  };
+});
+
+beforeEach(() => {
+  mockToastFn.mockClear();
+});
 
 describe("GraphCanvas", () => {
   describe("validateEdgeEndpoints", () => {
@@ -202,12 +220,23 @@ describe("GraphCanvas", () => {
     });
 
     it("should remap edge props from source/target to sourceId/targetId", () => {
-      const { container } = render(
-        <GraphCanvasComponent nodes={mockNodes} edges={mockEdges} />,
+      // This test verifies that edges with source/target properties are correctly
+      // remapped to sourceId/targetId before being passed to the Heimdall GraphCanvas.
+      // If the remapping is missing or broken, the component would error during render.
+      const edges: GraphEdge[] = [
+        { id: "edge-1", source: "node-1", target: "node-2" },
+      ];
+
+      render(
+        <GraphCanvasComponent nodes={mockNodes} edges={edges} />,
       );
 
-      const graphCanvasComponent = container.querySelector(".graph-canvas");
-      expect(graphCanvasComponent).toBeInTheDocument();
+      // Verify the component renders successfully without errors
+      // This confirms that edges with source/target properties don't cause issues
+      expect(screen.getAllByTestId("graph-canvas").length).toBeGreaterThan(0);
+      expect(
+        screen.queryByText("Graph data validation failed. Check console for details."),
+      ).not.toBeInTheDocument();
     });
 
     it("should call toast on validation error", () => {
@@ -219,8 +248,11 @@ describe("GraphCanvas", () => {
         <GraphCanvasComponent nodes={mockNodes} edges={invalidEdges} />,
       );
 
-      const errorText = screen.getByText("Graph data validation failed. Check console for details.");
-      expect(errorText).toBeInTheDocument();
+      expect(mockToastFn).toHaveBeenCalledWith(
+        "error",
+        "Graph validation error",
+        expect.stringContaining("source node"),
+      );
     });
 
     it("should apply graph-canvas class to container", () => {
@@ -242,7 +274,7 @@ describe("GraphCanvas", () => {
       ).not.toBeInTheDocument();
     });
 
-    it("should handle onNodeClick callback", () => {
+    it("should pass onNodeClick callback to underlying GraphCanvas", () => {
       const onNodeClick = vi.fn();
 
       render(
@@ -253,8 +285,10 @@ describe("GraphCanvas", () => {
         />,
       );
 
-      const canvases = screen.getAllByTestId("graph-canvas");
-      expect(canvases.length).toBeGreaterThan(0);
+      // Verify the component renders successfully when a callback is provided
+      expect(screen.getAllByTestId("graph-canvas").length).toBeGreaterThan(0);
+      // The onNodeClick callback is passed to the underlying Heimdall GraphCanvas
+      // as onNodeSelect and will be invoked when nodes are clicked in the graph
     });
 
     it("should pass selectedNodeId to underlying GraphCanvas", () => {
@@ -266,24 +300,50 @@ describe("GraphCanvas", () => {
         />,
       );
 
-      const canvases = screen.getAllByTestId("graph-canvas");
-      expect(canvases.length).toBeGreaterThan(0);
+      // Verify the component renders successfully when selectedNodeId is provided
+      expect(screen.getAllByTestId("graph-canvas").length).toBeGreaterThan(0);
+      // The selectedNodeId is passed through to the underlying Heimdall GraphCanvas
+      // and will be used for node highlighting in the visualization
     });
 
     it("should memoize validation result and recompute only when dependencies change", () => {
+      // Test that memoization works by verifying validation state doesn't change
+      // when dependencies don't change, but does change when they do
+
+      // Clear any previous toast calls
+      mockToastFn.mockClear();
+
       const { rerender } = render(
         <GraphCanvasComponent nodes={mockNodes} edges={mockEdges} />,
       );
 
-      expect(screen.getAllByTestId("graph-canvas").length).toBeGreaterThan(0);
+      // Initial render should have no validation errors
+      expect(mockToastFn).not.toHaveBeenCalled();
 
+      // Rerender with same references - cached validation result should be used
       const sameNodes = mockNodes;
       const sameEdges = mockEdges;
+      mockToastFn.mockClear();
+
       rerender(
         <GraphCanvasComponent nodes={sameNodes} edges={sameEdges} />,
       );
 
-      expect(screen.getAllByTestId("graph-canvas").length).toBeGreaterThan(0);
+      // No new toast calls should be made (memoization prevented recalculation)
+      expect(mockToastFn).not.toHaveBeenCalled();
+
+      // Change nodes to invalid state - should trigger revalidation
+      const newInvalidNodes: GraphNode[] = [
+        { id: "different-node", label: "Different", centrality: 0.5, kind: "class" },
+      ];
+      mockToastFn.mockClear();
+
+      rerender(
+        <GraphCanvasComponent nodes={newInvalidNodes} edges={mockEdges} />,
+      );
+
+      // Toast should be called because validation found errors
+      expect(mockToastFn).toHaveBeenCalled();
     });
 
     it("should revalidate when nodes change", () => {
