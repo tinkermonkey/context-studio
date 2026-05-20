@@ -28,9 +28,7 @@ describe("GraphCanvas", () => {
         { id: "node-2", label: "Node 2", centrality: 0.6, kind: "class" },
       ];
 
-      const edges: GraphEdge[] = [
-        { id: "edge-1", source: "node-missing", target: "node-2" },
-      ];
+      const edges: GraphEdge[] = [{ id: "edge-1", source: "node-missing", target: "node-2" }];
 
       const result = validateEdgeEndpoints(nodes, edges);
 
@@ -46,9 +44,7 @@ describe("GraphCanvas", () => {
         { id: "node-2", label: "Node 2", centrality: 0.6, kind: "class" },
       ];
 
-      const edges: GraphEdge[] = [
-        { id: "edge-1", source: "node-1", target: "node-missing" },
-      ];
+      const edges: GraphEdge[] = [{ id: "edge-1", source: "node-1", target: "node-missing" }];
 
       const result = validateEdgeEndpoints(nodes, edges);
 
@@ -95,9 +91,7 @@ describe("GraphCanvas", () => {
     it("should handle empty nodes array", () => {
       const nodes: GraphNode[] = [];
 
-      const edges: GraphEdge[] = [
-        { id: "edge-1", source: "node-1", target: "node-2" },
-      ];
+      const edges: GraphEdge[] = [{ id: "edge-1", source: "node-1", target: "node-2" }];
 
       const result = validateEdgeEndpoints(nodes, edges);
 
@@ -130,9 +124,7 @@ describe("GraphCanvas", () => {
         { id: "node-a", label: "Node A", centrality: 0.5, kind: "class" },
       ];
 
-      const edges: GraphEdge[] = [
-        { id: "edge-xy", source: "node-missing-x", target: "node-a" },
-      ];
+      const edges: GraphEdge[] = [{ id: "edge-xy", source: "node-missing-x", target: "node-a" }];
 
       const result = validateEdgeEndpoints(nodes, edges);
 

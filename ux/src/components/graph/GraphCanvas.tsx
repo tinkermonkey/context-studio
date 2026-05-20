@@ -20,14 +20,10 @@ export const validateEdgeEndpoints = (
 
   edges.forEach((edge) => {
     if (!nodeIds.has(edge.source)) {
-      errors.push(
-        `Edge ${edge.id}: source node "${edge.source}" not found in nodes array`,
-      );
+      errors.push(`Edge ${edge.id}: source node "${edge.source}" not found in nodes array`);
     }
     if (!nodeIds.has(edge.target)) {
-      errors.push(
-        `Edge ${edge.id}: target node "${edge.target}" not found in nodes array`,
-      );
+      errors.push(`Edge ${edge.id}: target node "${edge.target}" not found in nodes array`);
     }
   });
 
@@ -44,10 +40,7 @@ export const GraphCanvasComponent = ({
   selectedNodeId,
 }: GraphCanvasComponentProps) => {
   const { toast } = useToasts();
-  const validation = useMemo(
-    () => validateEdgeEndpoints(nodes, edges),
-    [nodes, edges],
-  );
+  const validation = useMemo(() => validateEdgeEndpoints(nodes, edges), [nodes, edges]);
 
   useEffect(() => {
     if (!validation.valid) {
