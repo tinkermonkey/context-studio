@@ -49,7 +49,7 @@ export const GraphCanvasComponent = ({
       });
       console.error("Graph validation errors:", validation.errors);
     }
-  }, [validation.errors, toast]);
+  }, [validation.valid, toast]);
 
   if (!validation.valid) {
     return (
@@ -87,7 +87,7 @@ export const GraphCanvasComponent = ({
         }))}
         selectedNodeId={selectedNodeId}
         onNodeSelect={onNodeClick}
-        layout="manual"
+        layout="force"
       />
     </div>
   );

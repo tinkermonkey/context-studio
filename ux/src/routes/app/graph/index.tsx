@@ -10,7 +10,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { TabBar, Button } from "@tinkermonkey/heimdall-ui";
+import { TabBar, Button, GraphInspector } from "@tinkermonkey/heimdall-ui";
 import { COPY } from "./-copy";
 import "@/design-system/graph.css";
 
@@ -125,19 +125,21 @@ export function GraphPage() {
               </div>
             ) : (
               <div className="panel" id="panel-node">
-                {selectedNodeId ? (
-                  <div>
-                    <div className="gi-head">
-                      <div className="gi-title">{selectedNodeId}</div>
-                      <div className="gi-id">{COPY.NODE_ID_LABEL}</div>
-                    </div>
-                    <div className="gi-body">
-                      <p className="gi-desc">{COPY.SELECTED_NODE_DETAILS}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="empty">{COPY.NO_NODE_SELECTED}</div>
-                )}
+                <GraphInspector
+                  node={
+                    selectedNodeId && data
+                      ? {
+                          id: selectedNodeId,
+                          title: selectedNodeId,
+                          kind: data.nodes.find((n) => n.id === selectedNodeId)?.kind,
+                          description: COPY.SELECTED_NODE_DETAILS,
+                        }
+                      : null
+                  }
+                  relationships={[]}
+                  onNodeSelect={setSelectedNodeId}
+                  emptyStateText={COPY.NO_NODE_SELECTED}
+                />
               </div>
             )}
           </aside>
