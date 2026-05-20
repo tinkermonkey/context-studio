@@ -1,3 +1,4 @@
+import { TextInput as Input, Button } from "@tinkermonkey/heimdall-ui";
 import { useState, useMemo } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ColumnDef } from "@tanstack/react-table";
@@ -7,8 +8,8 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SchemaTable } from "@/components/schema/SchemaTable";
-import { TextInput as Input } from "@tinkermonkey/heimdall-ui";
-import { Button } from "@tinkermonkey/heimdall-ui";
+
+
 import { Chip } from "@/components/ui/Chip";
 import { getStatusColor } from "@/utils/statusColorUtils";
 import { COPY } from "./-copy";

@@ -1,6 +1,7 @@
+import { TextInput as Input, TextArea as Textarea, Select, Button } from "@tinkermonkey/heimdall-ui";
 import { useState, useRef } from "react";
-import { TextInput as Input, TextArea as Textarea, Select } from "@tinkermonkey/heimdall-ui";
-import { Button } from "@tinkermonkey/heimdall-ui";
+
+
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
 import type { components } from "@/api/types";

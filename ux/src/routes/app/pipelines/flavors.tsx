@@ -1,3 +1,4 @@
+import { Button, TextInput as Input } from "@tinkermonkey/heimdall-ui";
 import { useState, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { ColumnDef } from "@tanstack/react-table";
@@ -5,8 +6,8 @@ import { Plus } from "lucide-react";
 import { useFlavors, useCreateFlavor, useDeleteFlavor } from "@/api/hooks/flavor";
 import { SchemaTable } from "@/components/schema/SchemaTable";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
-import { Button } from "@tinkermonkey/heimdall-ui";
-import { TextInput as Input } from "@tinkermonkey/heimdall-ui";
+
+
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";

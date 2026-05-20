@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { TextInput as Input, TextArea as Textarea, Field } from "@tinkermonkey/heimdall-ui";
-import { Button } from "@tinkermonkey/heimdall-ui";
+import { TextInput as Input, TextArea as Textarea, Field, Button } from "@tinkermonkey/heimdall-ui";
 import type { components } from "@/api/types";
 
 type ClassCreateRequest = components["schemas"]["ClassCreateRequest"];
