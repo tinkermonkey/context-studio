@@ -1,5 +1,5 @@
 import { GraphCanvas } from "@tinkermonkey/heimdall-ui";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import type { GraphNode, GraphEdge } from "@/api/hooks/graph";
 import "@/design-system/graph.css";
 import { useToasts } from "@/components/ui/Toast";
@@ -44,7 +44,10 @@ export const GraphCanvasComponent = ({
   selectedNodeId,
 }: GraphCanvasComponentProps) => {
   const { toast } = useToasts();
-  const validation = validateEdgeEndpoints(nodes, edges);
+  const validation = useMemo(
+    () => validateEdgeEndpoints(nodes, edges),
+    [nodes, edges],
+  );
 
   useEffect(() => {
     if (!validation.valid) {
