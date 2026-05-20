@@ -659,7 +659,8 @@ export interface paths {
      *         Created IndividualResponse
      *
      *     Raises:
-     *         HTTPException: 400 if invalid or invariant violated, 404 if class not found, 409 if title exists
+     *         HTTPException: 400 if invalid or invariant violated, 404 if class not found, 409 if title
+     *         exists
      */
     post: operations["create_individual_api_individuals_post"];
     delete?: never;
@@ -888,10 +889,13 @@ export interface paths {
      *         service: GraphAnalysisService from dependency injection
      *
      *     Returns:
-     *         GraphMetricsResponse containing density, average degree, connected components, degree distribution, centrality scores, communities, algorithm, and computed timestamp
+     *         GraphMetricsResponse containing density, average degree, connected
+     *         components, degree distribution, centrality scores, communities,
+     *         algorithm, and computed timestamp
      *
      *     Raises:
-     *         HTTPException: 400 if algorithm is invalid or community detection fails, 422 if graph error occurs
+     *         HTTPException: 400 if algorithm is invalid or community detection fails, 422 if graph error
+     *         occurs
      */
     get: operations["get_metrics_api_graph_metrics_get"];
     put?: never;
@@ -1047,7 +1051,8 @@ export interface paths {
      *         CommunitiesResponse containing detected communities as lists of node IDs
      *
      *     Raises:
-     *         HTTPException: 400 if algorithm is not recognized or community detection fails, 422 if graph error occurs
+     *         HTTPException: 400 if algorithm is not recognized or community detection fails, 422 if graph
+     *         error occurs
      */
     get: operations["get_communities_api_graph_communities_get"];
     put?: never;
@@ -1079,7 +1084,8 @@ export interface paths {
      *         NeighborsResponse containing lists of incoming and outgoing neighbors
      *
      *     Raises:
-     *         HTTPException: 404 if node is not found, 400 if direction is invalid, 422 if graph error occurs
+     *         HTTPException: 404 if node is not found, 400 if direction is invalid, 422 if graph error
+     *         occurs
      */
     get: operations["get_neighbors_api_graph_nodes__node_id__neighbors_get"];
     put?: never;
@@ -1112,7 +1118,8 @@ export interface paths {
      *         SubgraphDataResponse containing the nodes and edges in the subgraph
      *
      *     Raises:
-     *         HTTPException: 404 if any node is not found, 400 if nodes parameter is invalid, 422 if graph error occurs
+     *         HTTPException: 404 if any node is not found, 400 if nodes parameter is invalid, 422 if graph
+     *         error occurs
      */
     get: operations["get_subgraph_api_graph_subgraph_get"];
     put?: never;
@@ -1146,7 +1153,8 @@ export interface paths {
      *         SubgraphResultResponse containing center node ID, subgraph data, and depth
      *
      *     Raises:
-     *         HTTPException: 404 if center node is not found, 400 if depth is invalid, 422 if graph error occurs
+     *         HTTPException: 404 if center node is not found, 400 if depth is invalid, 422 if graph error
+     *         occurs
      */
     get: operations["get_subgraph_by_depth_api_graph_nodes__node_id__subgraph_get"];
     put?: never;
@@ -2426,7 +2434,8 @@ export interface paths {
      *         MergeResultResponse with details of the merge operation
      *
      *     Raises:
-     *         HTTPException: 404 if not found, 409 for invalid state or unresolved conflicts, 500 for internal errors
+     *         HTTPException: 404 if not found, 409 for invalid state or unresolved conflicts, 500 for
+     *         internal errors
      */
     post: operations["merge_proposal_api_v1_versioning_proposals__proposal_id__merge_post"];
     delete?: never;

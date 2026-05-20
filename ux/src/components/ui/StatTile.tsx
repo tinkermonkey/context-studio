@@ -1,4 +1,4 @@
-import { ReactNode, isValidElement } from "react";
+import { ReactNode } from "react";
 import { StatTile as HeimdallStatTile, type StatusColor } from "@tinkermonkey/heimdall-ui";
 
 type StatColor = Extract<StatusColor, "cyan" | "violet" | "amber" | "emerald">;
@@ -12,13 +12,13 @@ interface StatTileProps {
 }
 
 export function StatTile({ label, value, color = "cyan", sub, className }: StatTileProps) {
-  const isReactNode = value == null || isValidElement(value);
+  const isStringOrNumber = typeof value === "string" || typeof value === "number";
 
-  if (!sub && !isReactNode) {
+  if (!sub && isStringOrNumber) {
     return (
       <HeimdallStatTile
         label={label}
-        value={value as string | number}
+        value={value}
         color={color}
         className={className}
       />
