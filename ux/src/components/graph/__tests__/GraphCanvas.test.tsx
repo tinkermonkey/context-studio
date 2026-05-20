@@ -4,7 +4,11 @@ import { render } from "@/test/test-utils";
 import { validateEdgeEndpoints, GraphCanvasComponent } from "../GraphCanvas";
 import type { GraphNode, GraphEdge } from "@/api/hooks/graph";
 
-const mockToastFn = vi.fn();
+const { mockToastFn, mockGraphCanvas } = vi.hoisted(() => ({
+  mockToastFn: vi.fn(),
+  mockGraphCanvas: vi.fn(() => null),
+}));
+
 vi.mock("@/components/ui/Toast", async () => {
   const actual = await vi.importActual("@/components/ui/Toast");
   return {
@@ -17,8 +21,13 @@ vi.mock("@/components/ui/Toast", async () => {
   };
 });
 
+vi.mock("@tinkermonkey/heimdall-ui", () => ({
+  GraphCanvas: mockGraphCanvas,
+}));
+
 beforeEach(() => {
   mockToastFn.mockClear();
+  mockGraphCanvas.mockClear();
 });
 
 describe("GraphCanvas", () => {
@@ -227,10 +236,13 @@ describe("GraphCanvas", () => {
         <GraphCanvasComponent nodes={mockNodes} edges={edges} />,
       );
 
-      expect(screen.getAllByTestId("graph-canvas").length).toBeGreaterThan(0);
-      expect(
-        screen.queryByText("Graph data validation failed. Check console for details."),
-      ).not.toBeInTheDocument();
+      expect(mockGraphCanvas).toHaveBeenCalled();
+      const callArgs = vi.mocked(mockGraphCanvas).mock.calls[0][0];
+      expect(callArgs.edges[0]).toEqual({
+        id: "edge-1",
+        sourceId: "node-1",
+        targetId: "node-2",
+      });
     });
 
     it("should call toast on validation error", () => {
