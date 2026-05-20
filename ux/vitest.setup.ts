@@ -487,11 +487,11 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
       children,
     ]),
   Topbar: ({ children, ..._props }: any) =>
-    React.createElement("div", { "data-testid": "heimdall-topbar" }, children),
+    React.createElement("div", {}, children),
   Titlebar: ({ children, ..._props }: any) =>
-    React.createElement("div", { "data-testid": "heimdall-titlebar" }, children),
+    React.createElement("div", {}, children),
   Statusbar: ({ children, ..._props }: any) =>
-    React.createElement("div", { "data-testid": "heimdall-statusbar" }, children),
+    React.createElement("div", {}, children),
   CommandPalette: ({ children, ..._props }: any) =>
     React.createElement("div", { "data-testid": "heimdall-command-palette" }, children),
   Icon: ({ name, ...props }: any) =>

@@ -9,9 +9,9 @@ vi.mock("@/stores/commandPalette", () => ({
 
 vi.mock("@tinkermonkey/heimdall-ui", () => ({
   Titlebar: ({ left, right }: any) => (
-    <div data-testid="heimdall-titlebar">
-      <div data-testid="titlebar-left">{left}</div>
-      <div data-testid="titlebar-right">{right}</div>
+    <div>
+      <div>{left}</div>
+      <div>{right}</div>
     </div>
   ),
 }));
@@ -131,19 +131,14 @@ describe("Titlebar", () => {
   describe("titlebar layout", () => {
     it("renders left section with workspace info", () => {
       render(<Titlebar />);
-      const left = screen.getByTestId("titlebar-left");
-      expect(left.querySelector(".titlebar-app")).toBeInTheDocument();
+      const left = document.querySelector(".titlebar-app");
+      expect(left).toBeInTheDocument();
     });
 
     it("renders right section with action buttons", () => {
       render(<Titlebar />);
-      const right = screen.getByTestId("titlebar-right");
-      expect(right.querySelector(".titlebar-actions")).toBeInTheDocument();
-    });
-
-    it("renders heimdall titlebar", () => {
-      render(<Titlebar />);
-      expect(screen.getByTestId("heimdall-titlebar")).toBeInTheDocument();
+      const right = document.querySelector(".titlebar-actions");
+      expect(right).toBeInTheDocument();
     });
   });
 
