@@ -1588,7 +1588,7 @@
           "ontology"
         ],
         "summary": "Create Individual",
-        "description": "Create a new individual instance of one or more classes.\n\nArgs:\n    request: IndividualCreateRequest with class_ids and title\n    service: OntologyService from dependency injection\n\nReturns:\n    Created IndividualResponse\n\nRaises:\n    HTTPException: 400 if invalid or invariant violated, 404 if class not found, 409 if title exists",
+        "description": "Create a new individual instance of one or more classes.\n\nArgs:\n    request: IndividualCreateRequest with class_ids and title\n    service: OntologyService from dependency injection\n\nReturns:\n    Created IndividualResponse\n\nRaises:\n    HTTPException: 400 if invalid or invariant violated, 404 if class not found, 409 if title\n    exists",
         "operationId": "create_individual_api_individuals_post",
         "requestBody": {
           "required": true,
@@ -2049,7 +2049,7 @@
           "graph"
         ],
         "summary": "Get Metrics",
-        "description": "Get structural metrics for the entire graph.\n\nArgs:\n    algorithm: Centrality algorithm to use (betweenness, pagerank, closeness, degree)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    GraphMetricsResponse containing density, average degree, connected components, degree distribution, centrality scores, communities, algorithm, and computed timestamp\n\nRaises:\n    HTTPException: 400 if algorithm is invalid or community detection fails, 422 if graph error occurs",
+        "description": "Get structural metrics for the entire graph.\n\nArgs:\n    algorithm: Centrality algorithm to use (betweenness, pagerank, closeness, degree)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    GraphMetricsResponse containing density, average degree, connected\n    components, degree distribution, centrality scores, communities,\n    algorithm, and computed timestamp\n\nRaises:\n    HTTPException: 400 if algorithm is invalid or community detection fails, 422 if graph error\n    occurs",
         "operationId": "get_metrics_api_graph_metrics_get",
         "parameters": [
           {
@@ -2293,7 +2293,7 @@
           "graph"
         ],
         "summary": "Get Communities",
-        "description": "Partition the graph into communities using the specified algorithm.\n\nArgs:\n    algorithm: Name of the community detection algorithm (louvain, label_propagation)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    CommunitiesResponse containing detected communities as lists of node IDs\n\nRaises:\n    HTTPException: 400 if algorithm is not recognized or community detection fails, 422 if graph error occurs",
+        "description": "Partition the graph into communities using the specified algorithm.\n\nArgs:\n    algorithm: Name of the community detection algorithm (louvain, label_propagation)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    CommunitiesResponse containing detected communities as lists of node IDs\n\nRaises:\n    HTTPException: 400 if algorithm is not recognized or community detection fails, 422 if graph\n    error occurs",
         "operationId": "get_communities_api_graph_communities_get",
         "parameters": [
           {
@@ -2339,7 +2339,7 @@
           "graph"
         ],
         "summary": "Get Neighbors",
-        "description": "Get all neighbors of a node up to a specified depth with optional directional filtering.\n\nArgs:\n    node_id: ID of the queried node\n    direction: Direction of traversal (in, out, or both)\n    depth: Maximum distance from center node (minimum 1, maximum 10, default 1)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    NeighborsResponse containing lists of incoming and outgoing neighbors\n\nRaises:\n    HTTPException: 404 if node is not found, 400 if direction is invalid, 422 if graph error occurs",
+        "description": "Get all neighbors of a node up to a specified depth with optional directional filtering.\n\nArgs:\n    node_id: ID of the queried node\n    direction: Direction of traversal (in, out, or both)\n    depth: Maximum distance from center node (minimum 1, maximum 10, default 1)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    NeighborsResponse containing lists of incoming and outgoing neighbors\n\nRaises:\n    HTTPException: 404 if node is not found, 400 if direction is invalid, 422 if graph error\n    occurs",
         "operationId": "get_neighbors_api_graph_nodes__node_id__neighbors_get",
         "parameters": [
           {
@@ -2413,7 +2413,7 @@
           "graph"
         ],
         "summary": "Get Subgraph",
-        "description": "Extract a subgraph containing the specified nodes and all edges between them.\n\nThis endpoint extracts a subgraph from a pre-computed list of node IDs.\nFor depth-based neighborhood extraction, use GET /nodes/{node_id}/subgraph instead.\n\nArgs:\n    nodes: Comma-separated list of node IDs (e.g., \"id1,id2,id3\")\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    SubgraphDataResponse containing the nodes and edges in the subgraph\n\nRaises:\n    HTTPException: 404 if any node is not found, 400 if nodes parameter is invalid, 422 if graph error occurs",
+        "description": "Extract a subgraph containing the specified nodes and all edges between them.\n\nThis endpoint extracts a subgraph from a pre-computed list of node IDs.\nFor depth-based neighborhood extraction, use GET /nodes/{node_id}/subgraph instead.\n\nArgs:\n    nodes: Comma-separated list of node IDs (e.g., \"id1,id2,id3\")\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    SubgraphDataResponse containing the nodes and edges in the subgraph\n\nRaises:\n    HTTPException: 404 if any node is not found, 400 if nodes parameter is invalid, 422 if graph\n    error occurs",
         "operationId": "get_subgraph_api_graph_subgraph_get",
         "parameters": [
           {
@@ -2458,7 +2458,7 @@
           "graph"
         ],
         "summary": "Get Subgraph By Depth",
-        "description": "Extract a subgraph containing a center node and all nodes within a specified depth (FR-9).\n\nThis implements depth-based subgraph extraction where depth 1 returns the center node\nand its immediate neighbors, depth 2 returns two hops away, etc.\n\nArgs:\n    node_id: ID of the center node\n    depth: Maximum distance from center node (minimum 1, maximum 10, default 1)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    SubgraphResultResponse containing center node ID, subgraph data, and depth\n\nRaises:\n    HTTPException: 404 if center node is not found, 400 if depth is invalid, 422 if graph error occurs",
+        "description": "Extract a subgraph containing a center node and all nodes within a specified depth (FR-9).\n\nThis implements depth-based subgraph extraction where depth 1 returns the center node\nand its immediate neighbors, depth 2 returns two hops away, etc.\n\nArgs:\n    node_id: ID of the center node\n    depth: Maximum distance from center node (minimum 1, maximum 10, default 1)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    SubgraphResultResponse containing center node ID, subgraph data, and depth\n\nRaises:\n    HTTPException: 404 if center node is not found, 400 if depth is invalid, 422 if graph error\n    occurs",
         "operationId": "get_subgraph_by_depth_api_graph_nodes__node_id__subgraph_get",
         "parameters": [
           {
@@ -4541,7 +4541,7 @@
           "versioning"
         ],
         "summary": "Merge Proposal",
-        "description": "Merge an approved proposal.\n\nDetects conflicts using any stored resolutions, and blocks the merge\nif unresolved conflicts exist. Transitions the changeset from APPROVED\nto MERGED.\n\nArgs:\n    proposal_id: ID of the proposal to merge\n    service: VersioningService from dependency injection\n\nReturns:\n    MergeResultResponse with details of the merge operation\n\nRaises:\n    HTTPException: 404 if not found, 409 for invalid state or unresolved conflicts, 500 for internal errors",
+        "description": "Merge an approved proposal.\n\nDetects conflicts using any stored resolutions, and blocks the merge\nif unresolved conflicts exist. Transitions the changeset from APPROVED\nto MERGED.\n\nArgs:\n    proposal_id: ID of the proposal to merge\n    service: VersioningService from dependency injection\n\nReturns:\n    MergeResultResponse with details of the merge operation\n\nRaises:\n    HTTPException: 404 if not found, 409 for invalid state or unresolved conflicts, 500 for\n    internal errors",
         "operationId": "merge_proposal_api_v1_versioning_proposals__proposal_id__merge_post",
         "parameters": [
           {
