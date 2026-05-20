@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Network, Layers, GitBranch, Cpu, Plus } from "lucide-react";
 import { StatTile } from "@/components/ui/StatTile";
-import { StatGrid } from "@tinkermonkey/heimdall-ui";
+import { StatGrid, ActivityTimeline, type ActivityEvent } from "@tinkermonkey/heimdall-ui";
 import { Panel } from "@/components/ui/Panel";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { HierarchyTree } from "@/components/ontology/HierarchyTree";
@@ -19,16 +20,16 @@ export const Route = createFileRoute("/app/")({
   component: Dashboard,
 });
 
-function changeOperationColor(op: string): string {
+function mapOperationToEventType(op: string): "create" | "update" | "delete" | "run" {
   switch (op) {
     case "create":
-      return "#22D3EE";
+      return "create";
     case "update":
-      return "#A78BFA";
+      return "update";
     case "delete":
-      return "#F87171";
+      return "delete";
     default:
-      return "var(--canvas-fg-3)";
+      return "run";
   }
 }
 
@@ -109,25 +110,39 @@ export function Dashboard() {
   if (isEmptyState) {
     return (
       <div>
-        <div className="page-head">
-          <div>
-            <h1>Dashboard</h1>
-            <p className="subtitle">Knowledge graph overview</p>
-          </div>
-        </div>
+        <PageHeader
+          eyebrow="Main"
+          title="Dashboard"
+          subtitle="Knowledge graph overview"
+        />
         <EmptyState />
       </div>
     );
   }
 
+  const activityEvents: ActivityEvent[] =
+    !changesError && changesData?.events
+      ? changesData.events.slice(0, 8).map((event) => {
+          const stateTitle =
+            typeof event.new_state?.title === "string"
+              ? event.new_state.title
+              : event.entity_id;
+          return {
+            id: event.id,
+            type: mapOperationToEventType(event.operation),
+            subject: `${event.operation} ${event.entity_type}: ${stateTitle}`,
+            timestamp: event.timestamp,
+          };
+        })
+      : [];
+
   return (
     <div>
-      <div className="page-head">
-        <div>
-          <h1>Dashboard</h1>
-          <p className="subtitle">Knowledge graph overview</p>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Main"
+        title="Dashboard"
+        subtitle="Knowledge graph overview"
+      />
 
       {/* Stat grid */}
       <ErrorBanner
@@ -194,41 +209,11 @@ export function Dashboard() {
                     />
                   ))}
                 </div>
-              ) : !changesData?.events.length ? (
-                <p style={{ fontSize: "var(--text-sm)", color: "var(--canvas-fg-3)", margin: 0 }}>
-                  No recent changes.
-                </p>
               ) : (
-                <div className="activity-list">
-                  {changesData.events.slice(0, 8).map((event) => {
-                    const stateTitle =
-                      typeof event.new_state?.title === "string"
-                        ? event.new_state.title
-                        : event.entity_id;
-                    return (
-                      <div key={event.id} className="activity-item">
-                        <span
-                          className="activity-dot"
-                          style={{ background: changeOperationColor(event.operation) }}
-                        />
-                        <div>
-                          <div style={{ fontSize: "var(--text-sm)", color: "var(--canvas-fg)" }}>
-                            {event.operation} {event.entity_type}
-                          </div>
-                          <div
-                            style={{
-                              fontSize: "var(--text-xs)",
-                              color: "var(--canvas-fg-3)",
-                              fontFamily: "var(--mono)",
-                            }}
-                          >
-                            {stateTitle} · {formatRelativeTime(event.timestamp)}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                <ActivityTimeline
+                  events={activityEvents}
+                  emptyState="No recent changes."
+                />
               )}
             </>
           )}

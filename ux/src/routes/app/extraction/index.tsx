@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useExtract, useNlpAnalysis, useEnrichFromReferences } from "@/api/hooks/extraction";
 import { useToasts } from "@/components/ui/Toast";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { ExtractionInput } from "@/components/extraction/ExtractionInput";
 import { ExtractionResultPanel } from "@/components/extraction/ExtractionResultPanel";
 import { EntityReviewPanel } from "@/components/extraction/EntityReviewPanel";
@@ -107,12 +108,11 @@ export function ExtractionPage() {
 
   return (
     <div data-testid="extraction-page">
-      <div className="page-head">
-        <div>
-          <h1>{COPY.PAGE_TITLE}</h1>
-          <p className="subtitle">{COPY.PAGE_SUBTITLE}</p>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Processing"
+        title={COPY.PAGE_TITLE}
+        subtitle={COPY.PAGE_SUBTITLE}
+      />
 
       <div
         style={{

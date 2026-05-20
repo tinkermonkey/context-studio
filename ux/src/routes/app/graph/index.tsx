@@ -6,10 +6,11 @@ import { GraphCanvasComponent } from "@/components/graph/GraphCanvas";
 import { MetricsPanel } from "@/components/graph/MetricsPanel";
 import { PathFinder } from "@/components/graph/PathFinder";
 import { SparqlEditor } from "@/components/graph/SparqlEditor";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { TabBar } from "@tinkermonkey/heimdall-ui";
+import { TabBar, Button } from "@tinkermonkey/heimdall-ui";
 import { COPY } from "./-copy";
 import "@/design-system/graph.css";
 
@@ -30,30 +31,33 @@ export function GraphPage() {
 
   return (
     <div data-testid="graph-page">
-      <div className="page-head">
-        <div>
-          <h1>{COPY.PAGE_TITLE}</h1>
-          <p className="subtitle">{COPY.PAGE_SUBTITLE}</p>
-        </div>
-        <button
-          className="btn btn-primary"
-          onClick={() => graphVisualization.mutate()}
-          disabled={isLoading}
-          aria-busy={isLoading}
-        >
-          {isLoading ? (
-            <>
-              <RotateCw size={16} className="animate-spin" />
-              {COPY.BUILDING_GRAPH_BUTTON}
-            </>
-          ) : (
-            <>
-              <RotateCw size={16} />
-              {COPY.BUILD_GRAPH_BUTTON}
-            </>
-          )}
-        </button>
-      </div>
+      <PageHeader
+        eyebrow="Knowledge Graph"
+        title={COPY.PAGE_TITLE}
+        subtitle={COPY.PAGE_SUBTITLE}
+        actions={
+          <Button
+            variant="primary"
+            size="md"
+            onClick={() => graphVisualization.mutate()}
+            disabled={isLoading}
+            aria-busy={isLoading}
+            data-testid="build-graph-button"
+          >
+            {isLoading ? (
+              <>
+                <RotateCw size={16} className="animate-spin" />
+                {COPY.BUILDING_GRAPH_BUTTON}
+              </>
+            ) : (
+              <>
+                <RotateCw size={16} />
+                {COPY.BUILD_GRAPH_BUTTON}
+              </>
+            )}
+          </Button>
+        }
+      />
 
       {error && (
         <ErrorBanner
