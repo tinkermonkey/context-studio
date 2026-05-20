@@ -4,6 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { MoreVertical, ChevronDown } from "lucide-react";
 import { Button } from "@tinkermonkey/heimdall-ui";
 import { Modal } from "@/components/ui/Modal";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -354,16 +355,19 @@ function RelationshipsPageWrapper() {
 
   return (
     <div className="stack">
-      <div className="flex-between">
-        <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>Relationships</h1>
-        <Button
-          variant="primary"
-          onClick={() => setShowCreateModal(true)}
-          data-testid="relationship-add-button"
-        >
-          + Add relationship
-        </Button>
-      </div>
+      <PageHeader
+        eyebrow="Schema"
+        title="Relationships"
+        actions={
+          <Button
+            variant="primary"
+            onClick={() => setShowCreateModal(true)}
+            data-testid="relationship-add-button"
+          >
+            + Add relationship
+          </Button>
+        }
+      />
       <div data-testid="relationships-content">
         <RelationshipsPageContent
           classesById={classesById}

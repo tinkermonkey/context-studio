@@ -5,6 +5,7 @@ import { MoreVertical } from "lucide-react";
 import { useToasts } from "@/components/ui/Toast";
 import { Button } from "@tinkermonkey/heimdall-ui";
 import { Modal } from "@/components/ui/Modal";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -166,16 +167,19 @@ function PropertiesPageWrapper() {
 
   return (
     <div className="stack">
-      <div className="flex-between">
-        <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>Property Definitions</h1>
-        <Button
-          variant="primary"
-          onClick={() => setShowCreateModal(true)}
-          data-testid="property-add-button"
-        >
-          + Add property
-        </Button>
-      </div>
+      <PageHeader
+        eyebrow="Schema"
+        title="Property Definitions"
+        actions={
+          <Button
+            variant="primary"
+            onClick={() => setShowCreateModal(true)}
+            data-testid="property-add-button"
+          >
+            + Add property
+          </Button>
+        }
+      />
       <div data-testid="properties-content">
         <PropertiesPageContent onCreateClick={() => setShowCreateModal(true)} />
       </div>

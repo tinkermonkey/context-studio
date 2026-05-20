@@ -5,6 +5,7 @@ import { MoreVertical } from "lucide-react";
 import { useToasts } from "@/components/ui/Toast";
 import { Button } from "@tinkermonkey/heimdall-ui";
 import { Modal } from "@/components/ui/Modal";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -280,9 +281,10 @@ function ClassesPageWrapper() {
 
   return (
     <div className="stack">
-      <div className="flex-between">
-        <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>Classes</h1>
-        <div className="row">
+      <PageHeader
+        eyebrow="Schema"
+        title="Classes"
+        actions={
           <Button
             variant="primary"
             onClick={() => setShowCreateModal(true)}
@@ -290,8 +292,8 @@ function ClassesPageWrapper() {
           >
             + New class
           </Button>
-        </div>
-      </div>
+        }
+      />
       <div data-testid="classes-content">
         <ClassesPageContent
           onCreateClick={() => setShowCreateModal(true)}
