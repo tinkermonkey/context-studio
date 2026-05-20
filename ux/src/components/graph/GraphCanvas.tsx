@@ -1,4 +1,4 @@
-import { GraphCanvas } from "reagraph";
+import { GraphCanvas } from "@tinkermonkey/heimdall-ui";
 import type { GraphNode, GraphEdge } from "@/api/hooks/graph";
 import "@/design-system/graph.css";
 
@@ -15,12 +15,6 @@ export const GraphCanvasComponent = ({
   onNodeClick,
   selectedNodeId,
 }: GraphCanvasComponentProps) => {
-  const getDomainColor = (nodeId: string) => {
-    const hash = nodeId.charCodeAt(0) % 3;
-    const colors = ["#34d399", "#fbbf24", "#818cf8"];
-    return colors[hash];
-  };
-
   return (
     <div
       data-testid="graph-canvas"
@@ -32,19 +26,17 @@ export const GraphCanvasComponent = ({
         nodes={nodes.map((node) => ({
           id: node.id,
           label: node.label,
-          size: Math.max(20, Math.min(50, 20 + node.centrality * 30)),
-          fill: getDomainColor(node.id),
-          stroke: selectedNodeId === node.id ? "#22d3ee" : "#cbd5e1",
-          strokeWidth: selectedNodeId === node.id ? 3 : 1,
+          kind: node.kind,
+          domainColor: node.domainColor,
         }))}
         edges={edges.map((edge) => ({
           id: edge.id,
-          source: edge.source,
-          target: edge.target,
+          sourceId: edge.source,
+          targetId: edge.target,
         }))}
-        onNodeClick={(node) => {
-          onNodeClick?.(node.id);
-        }}
+        selectedNodeId={selectedNodeId}
+        onNodeSelect={onNodeClick}
+        layout="manual"
       />
     </div>
   );

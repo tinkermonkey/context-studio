@@ -12,13 +12,31 @@ vi.mock("@/components/ui/Toast", () => ({
   }),
 }));
 
+// Mock the GraphCanvas component
+vi.mock("@/components/graph/GraphCanvas", () => ({
+  GraphCanvasComponent: ({ nodes, edges, selectedNodeId, onNodeSelect }: any) => (
+    <div
+      data-testid="graph-canvas"
+      role="region"
+      aria-label="Graph visualization canvas"
+    >
+      {nodes.length > 0 && <div>Graph with {nodes.length} nodes</div>}
+    </div>
+  ),
+}));
+
 describe("Graph Page", () => {
   const mockGraphData = {
     nodes: [
-      { id: "node-1", label: "Node 1", centrality: 0.5 },
-      { id: "node-2", label: "Node 2", centrality: 0.3 },
+      { id: "node-1", label: "Node 1", centrality: 0.5, kind: undefined, domainColor: "#34d399" },
+      { id: "node-2", label: "Node 2", centrality: 0.3, kind: undefined, domainColor: "#fbbf24" },
     ],
     edges: [{ id: "edge-1", source: "node-1", target: "node-2" }],
+    metadata: {
+      nodeCount: 2,
+      edgeCount: 1,
+      timestamp: new Date().toISOString(),
+    },
   };
 
   beforeEach(() => {
