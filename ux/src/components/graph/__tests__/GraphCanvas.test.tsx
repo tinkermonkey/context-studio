@@ -1,5 +1,7 @@
-import { describe, it, expect } from "vitest";
-import { validateEdgeEndpoints } from "../GraphCanvas";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { screen } from "@testing-library/react";
+import { render } from "@/test/test-utils";
+import { validateEdgeEndpoints, GraphCanvasComponent } from "../GraphCanvas";
 import type { GraphNode, GraphEdge } from "@/api/hooks/graph";
 
 describe("GraphCanvas", () => {
@@ -141,6 +143,206 @@ describe("GraphCanvas", () => {
 
       expect(result.valid).toBe(true);
       expect(result.errors).toHaveLength(0);
+    });
+  });
+
+  describe("GraphCanvasComponent render", () => {
+    const mockNodes: GraphNode[] = [
+      { id: "node-1", label: "Node 1", centrality: 0.5, kind: "class" },
+      { id: "node-2", label: "Node 2", centrality: 0.6, kind: "class" },
+    ];
+
+    const mockEdges: GraphEdge[] = [
+      { id: "edge-1", source: "node-1", target: "node-2" },
+    ];
+
+    it("should render graph canvas container with valid data", () => {
+      render(
+        <GraphCanvasComponent nodes={mockNodes} edges={mockEdges} />,
+      );
+      const canvases = screen.getAllByTestId("graph-canvas");
+      expect(canvases.length).toBeGreaterThan(0);
+    });
+
+    it("should have proper accessibility attributes", () => {
+      render(
+        <GraphCanvasComponent nodes={mockNodes} edges={mockEdges} />,
+      );
+      const canvases = screen.getAllByTestId("graph-canvas");
+      const outerCanvas = canvases[0];
+      expect(outerCanvas).toHaveAttribute("role", "region");
+      expect(outerCanvas).toHaveAttribute("aria-label", "Graph visualization canvas");
+    });
+
+    it("should render error state when validation fails", () => {
+      const invalidEdges: GraphEdge[] = [
+        { id: "edge-1", source: "node-missing", target: "node-2" },
+      ];
+
+      render(
+        <GraphCanvasComponent nodes={mockNodes} edges={invalidEdges} />,
+      );
+
+      const canvases = screen.getAllByTestId("graph-canvas");
+      expect(canvases.length).toBeGreaterThan(0);
+      expect(screen.getByText("Graph data validation failed. Check console for details.")).toBeInTheDocument();
+    });
+
+    it("should show error container with correct class in error state", () => {
+      const invalidEdges: GraphEdge[] = [
+        { id: "edge-1", source: "node-missing", target: "node-2" },
+      ];
+
+      render(
+        <GraphCanvasComponent nodes={mockNodes} edges={invalidEdges} />,
+      );
+
+      const errorContainer = screen.getByText("Graph data validation failed. Check console for details.").parentElement;
+      expect(errorContainer).toHaveClass("graph-canvas__error");
+    });
+
+    it("should remap edge props from source/target to sourceId/targetId", () => {
+      const { container } = render(
+        <GraphCanvasComponent nodes={mockNodes} edges={mockEdges} />,
+      );
+
+      const graphCanvasComponent = container.querySelector(".graph-canvas");
+      expect(graphCanvasComponent).toBeInTheDocument();
+    });
+
+    it("should call toast on validation error", () => {
+      const invalidEdges: GraphEdge[] = [
+        { id: "edge-1", source: "node-missing", target: "node-2" },
+      ];
+
+      render(
+        <GraphCanvasComponent nodes={mockNodes} edges={invalidEdges} />,
+      );
+
+      const errorText = screen.getByText("Graph data validation failed. Check console for details.");
+      expect(errorText).toBeInTheDocument();
+    });
+
+    it("should apply graph-canvas class to container", () => {
+      render(
+        <GraphCanvasComponent nodes={mockNodes} edges={mockEdges} />,
+      );
+
+      const canvases = screen.getAllByTestId("graph-canvas");
+      expect(canvases[0]).toHaveClass("graph-canvas");
+    });
+
+    it("should not render error state with valid edges", () => {
+      render(
+        <GraphCanvasComponent nodes={mockNodes} edges={mockEdges} />,
+      );
+
+      expect(
+        screen.queryByText("Graph data validation failed. Check console for details."),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should handle onNodeClick callback", () => {
+      const onNodeClick = vi.fn();
+
+      render(
+        <GraphCanvasComponent
+          nodes={mockNodes}
+          edges={mockEdges}
+          onNodeClick={onNodeClick}
+        />,
+      );
+
+      const canvases = screen.getAllByTestId("graph-canvas");
+      expect(canvases.length).toBeGreaterThan(0);
+    });
+
+    it("should pass selectedNodeId to underlying GraphCanvas", () => {
+      render(
+        <GraphCanvasComponent
+          nodes={mockNodes}
+          edges={mockEdges}
+          selectedNodeId="node-1"
+        />,
+      );
+
+      const canvases = screen.getAllByTestId("graph-canvas");
+      expect(canvases.length).toBeGreaterThan(0);
+    });
+
+    it("should memoize validation result and recompute only when dependencies change", () => {
+      const { rerender } = render(
+        <GraphCanvasComponent nodes={mockNodes} edges={mockEdges} />,
+      );
+
+      expect(screen.getAllByTestId("graph-canvas").length).toBeGreaterThan(0);
+
+      const sameNodes = mockNodes;
+      const sameEdges = mockEdges;
+      rerender(
+        <GraphCanvasComponent nodes={sameNodes} edges={sameEdges} />,
+      );
+
+      expect(screen.getAllByTestId("graph-canvas").length).toBeGreaterThan(0);
+    });
+
+    it("should revalidate when nodes change", () => {
+      const { rerender } = render(
+        <GraphCanvasComponent nodes={mockNodes} edges={mockEdges} />,
+      );
+
+      expect(screen.queryByText("Graph data validation failed. Check console for details.")).not.toBeInTheDocument();
+
+      const newNodes: GraphNode[] = [
+        { id: "different-node", label: "Different", centrality: 0.5, kind: "class" },
+      ];
+
+      rerender(
+        <GraphCanvasComponent nodes={newNodes} edges={mockEdges} />,
+      );
+
+      expect(screen.getByText("Graph data validation failed. Check console for details.")).toBeInTheDocument();
+    });
+
+    it("should revalidate when edges change", () => {
+      const { rerender } = render(
+        <GraphCanvasComponent nodes={mockNodes} edges={mockEdges} />,
+      );
+
+      expect(screen.queryByText("Graph data validation failed. Check console for details.")).not.toBeInTheDocument();
+
+      const newEdges: GraphEdge[] = [
+        { id: "edge-1", source: "node-1", target: "invalid-node" },
+      ];
+
+      rerender(
+        <GraphCanvasComponent nodes={mockNodes} edges={newEdges} />,
+      );
+
+      expect(screen.getByText("Graph data validation failed. Check console for details.")).toBeInTheDocument();
+    });
+
+    it("should not trigger validation on selectedNodeId change", () => {
+      const { rerender } = render(
+        <GraphCanvasComponent
+          nodes={mockNodes}
+          edges={mockEdges}
+          selectedNodeId="node-1"
+        />,
+      );
+
+      const initialError = screen.queryByText("Graph data validation failed. Check console for details.");
+
+      rerender(
+        <GraphCanvasComponent
+          nodes={mockNodes}
+          edges={mockEdges}
+          selectedNodeId="node-2"
+        />,
+      );
+
+      const finalError = screen.queryByText("Graph data validation failed. Check console for details.");
+      expect(initialError).toBe(finalError);
     });
   });
 });

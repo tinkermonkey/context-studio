@@ -128,4 +128,62 @@ describe("Heimdall Button", () => {
       expect(screen.getByRole("button")).toHaveAttribute("type", "reset");
     });
   });
+
+  describe("variant prop", () => {
+    it("applies primary variant class", () => {
+      render(<Button variant="primary">Primary</Button>);
+      const button = screen.getByRole("button");
+      expect(button).toHaveClass("btn");
+      expect(button).toHaveClass("btn--primary");
+    });
+
+    it("applies secondary variant class", () => {
+      render(<Button variant="secondary">Secondary</Button>);
+      const button = screen.getByRole("button");
+      expect(button).toHaveClass("btn");
+      expect(button).toHaveClass("btn--secondary");
+    });
+
+    it("applies ghost variant class", () => {
+      render(<Button variant="ghost">Ghost</Button>);
+      const button = screen.getByRole("button");
+      expect(button).toHaveClass("btn");
+      expect(button).toHaveClass("btn--ghost");
+    });
+
+    it("applies danger variant class", () => {
+      render(<Button variant="danger">Delete</Button>);
+      const button = screen.getByRole("button");
+      expect(button).toHaveClass("btn");
+      expect(button).toHaveClass("btn--danger");
+    });
+
+    it("defaults to primary variant when not specified", () => {
+      render(<Button>Default</Button>);
+      const button = screen.getByRole("button");
+      expect(button).toHaveClass("btn--primary");
+    });
+
+    it("applies size class along with variant", () => {
+      render(
+        <Button variant="secondary" size="sm">
+          Small Secondary
+        </Button>,
+      );
+      const button = screen.getByRole("button");
+      expect(button).toHaveClass("btn--secondary");
+      expect(button).toHaveClass("btn--sm");
+    });
+
+    it("combines variant class with custom className", () => {
+      render(
+        <Button variant="ghost" className="custom-ghost">
+          Ghost Custom
+        </Button>,
+      );
+      const button = screen.getByRole("button");
+      expect(button).toHaveClass("btn--ghost");
+      expect(button).toHaveClass("custom-ghost");
+    });
+  });
 });
