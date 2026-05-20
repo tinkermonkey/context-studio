@@ -108,39 +108,29 @@ export function GraphPage() {
             {activeTab === "metrics" ? (
               <MetricsPanel />
             ) : activeTab === "path" ? (
-              <div
-                className="panel"
-                id="panel-path"
-                style={{ padding: "14px 16px", overflowY: "auto" }}
-              >
+              <div className="gi-body">
                 <PathFinder onNodeSelect={setSelectedNodeId} />
               </div>
             ) : activeTab === "sparql" ? (
-              <div
-                className="panel"
-                id="panel-sparql"
-                style={{ padding: "14px 16px", overflowY: "auto" }}
-              >
+              <div className="gi-body">
                 <SparqlEditor />
               </div>
             ) : (
-              <div className="panel" id="panel-node">
-                <GraphInspector
-                  node={
-                    selectedNodeId && data
-                      ? {
-                          id: selectedNodeId,
-                          title: selectedNodeId,
-                          kind: data.nodes.find((n) => n.id === selectedNodeId)?.kind,
-                          description: COPY.SELECTED_NODE_DETAILS,
-                        }
-                      : null
-                  }
-                  relationships={[]}
-                  onNodeSelect={setSelectedNodeId}
-                  emptyStateText={COPY.NO_NODE_SELECTED}
-                />
-              </div>
+              <GraphInspector
+                node={
+                  selectedNodeId && data
+                    ? {
+                        id: selectedNodeId,
+                        title: data.nodes.find((n) => n.id === selectedNodeId)?.label ?? selectedNodeId,
+                        kind: data.nodes.find((n) => n.id === selectedNodeId)?.kind,
+                        description: COPY.SELECTED_NODE_DETAILS,
+                      }
+                    : null
+                }
+                relationships={[]}
+                onNodeSelect={setSelectedNodeId}
+                emptyStateText={COPY.NO_NODE_SELECTED}
+              />
             )}
           </aside>
         </div>

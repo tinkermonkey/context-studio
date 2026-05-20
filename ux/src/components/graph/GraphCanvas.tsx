@@ -49,7 +49,7 @@ export const GraphCanvasComponent = ({
       });
       console.error("Graph validation errors:", validation.errors);
     }
-  }, [validation.valid, toast]);
+  }, [validation, toast]);
 
   if (!validation.valid) {
     return (
