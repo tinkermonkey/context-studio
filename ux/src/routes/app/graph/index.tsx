@@ -119,13 +119,17 @@ export function GraphPage() {
               <GraphInspector
                 node={
                   selectedNodeId && data
-                    ? {
-                        id: selectedNodeId,
-                        title:
-                          data.nodes.find((n) => n.id === selectedNodeId)?.label ?? selectedNodeId,
-                        kind: data.nodes.find((n) => n.id === selectedNodeId)?.kind,
-                        description: COPY.SELECTED_NODE_DETAILS,
-                      }
+                    ? (() => {
+                        const selectedNode = data.nodes.find((n) => n.id === selectedNodeId);
+                        return selectedNode
+                          ? {
+                              id: selectedNode.id,
+                              title: selectedNode.label,
+                              kind: selectedNode.kind,
+                              description: COPY.SELECTED_NODE_DETAILS,
+                            }
+                          : null;
+                      })()
                     : null
                 }
                 relationships={[]}

@@ -47,6 +47,7 @@ export function useGraphVisualization() {
   const queryClient = useQueryClient();
 
   const getDomainColor = (nodeId: string) => {
+    if (!nodeId) return "#818cf8";
     const hash = nodeId.charCodeAt(0) % 3;
     const colors = ["#34d399", "#fbbf24", "#818cf8"];
     return colors[hash];
