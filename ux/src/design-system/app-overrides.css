@@ -10,7 +10,7 @@
   --amber-400: 251 191 36;
 
   /* Violet colors for graph visualization */
-  --violet-500: 168 85 247;
+  --violet-500: rgb(168 85 247);
 
   /* ---- Domain-Specific Taxonomy Colors (not provided by Heimdall) ---- */
   --dom-life: rgb(52 211 153);
@@ -47,20 +47,9 @@
   --canvas-bd: rgb(var(--canvas-border));
   --canvas-bd-2: rgb(var(--canvas-border-strong));
 
-  /* ---- Graph-Specific Colors ---- */
-  --graph-bg: rgb(255 255 255);
-  --graph-cluster-life-bg: rgba(52 211 153 / 0.08);
-  --graph-cluster-life-bd: rgb(52 211 153);
-  --graph-cluster-climate-bg: rgba(251 191 36 / 0.08);
-  --graph-cluster-climate-bd: rgb(251 191 36);
-  --graph-cluster-software-bg: rgba(129 140 248 / 0.08);
-  --graph-cluster-software-bd: rgb(129 140 248);
-  --graph-edge: rgb(229 233 238);
-  --graph-edge-strong: rgb(214 220 227);
-  --graph-grid: rgb(243 244 246);
-  --cyan-600: rgb(8 145 178);
 
   /* ---- Shell Surface ---- */
+  --shell-bg-2: rgb(19 32 58);
   --shell-surface-2: rgb(36 55 99);
   --shell-fg: rgb(var(--shell-fg-1));
   --shell-border: rgb(var(--canvas-border));
@@ -76,7 +65,9 @@
 body.dark-canvas {
   /* Dark canvas inherits Heimdall's dark redefinitions automatically */
   --canvas-bg-3: rgb(39 46 56);
+  --canvas-bg-tertiary: rgb(55 65 81);
   --canvas-fg-4: rgb(75 85 99);
+  --text-secondary: rgb(156 163 175);
   --graph-bg: rgb(20 24 34);
   --graph-grid: rgb(31 41 57);
   --graph-edge: rgb(42 50 60);
