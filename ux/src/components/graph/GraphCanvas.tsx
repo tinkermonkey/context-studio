@@ -1,6 +1,7 @@
 import { GraphCanvas } from "@tinkermonkey/heimdall-ui";
 import type { GraphNode, GraphEdge } from "@/api/hooks/graph";
 import "@/design-system/graph.css";
+import { useToasts } from "@/components/ui/Toast";
 
 interface GraphCanvasComponentProps {
   nodes: GraphNode[];
@@ -9,12 +10,68 @@ interface GraphCanvasComponentProps {
   selectedNodeId?: string;
 }
 
+const validateEdgeEndpoints = (
+  nodes: GraphNode[],
+  edges: GraphEdge[],
+): { valid: boolean; errors: string[] } => {
+  const errors: string[] = [];
+  const nodeIds = new Set(nodes.map((n) => n.id));
+
+  edges.forEach((edge) => {
+    if (!nodeIds.has(edge.source)) {
+      errors.push(
+        `Edge ${edge.id}: source node "${edge.source}" not found in nodes array`,
+      );
+    }
+    if (!nodeIds.has(edge.target)) {
+      errors.push(
+        `Edge ${edge.id}: target node "${edge.target}" not found in nodes array`,
+      );
+    }
+  });
+
+  return {
+    valid: errors.length === 0,
+    errors,
+  };
+};
+
 export const GraphCanvasComponent = ({
   nodes,
   edges,
   onNodeClick,
   selectedNodeId,
 }: GraphCanvasComponentProps) => {
+  const { toast } = useToasts();
+  const validation = validateEdgeEndpoints(nodes, edges);
+
+  if (!validation.valid) {
+    validation.errors.forEach((error) => {
+      toast("error", "Graph validation error", error);
+    });
+
+    return (
+      <div
+        data-testid="graph-canvas"
+        className="graph-canvas"
+        role="region"
+        aria-label="Graph visualization canvas"
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "100%",
+            color: "var(--canvas-fg-2)",
+          }}
+        >
+          <p>Graph data validation failed. Check console for details.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       data-testid="graph-canvas"
