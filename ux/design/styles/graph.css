@@ -649,18 +649,18 @@ body.dark-canvas .cyan-text {
   width: 3px;
   height: 12px;
   border-radius: 1px;
-  background: var(--dom-default);
+  background: rgb(var(--dom-default));
   margin-right: 6px;
   flex: none;
 }
 .gi-rel-target[data-domain="life"] .swatch {
-  background: var(--dom-life);
+  background: rgb(var(--dom-life));
 }
 .gi-rel-target[data-domain="climate"] .swatch {
-  background: var(--dom-climate);
+  background: rgb(var(--dom-climate));
 }
 .gi-rel-target[data-domain="software"] .swatch {
-  background: var(--dom-software);
+  background: rgb(var(--dom-software));
 }
 
 .empty-mini {

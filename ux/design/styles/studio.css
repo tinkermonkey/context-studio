@@ -2221,13 +2221,13 @@ table.t .row-actions {
   border-radius: 1px;
 }
 .hero-tree .h-node[data-d="climate"] .sw {
-  background: var(--dom-climate);
+  background: rgb(var(--dom-climate));
 }
 .hero-tree .h-node[data-d="life"] .sw {
-  background: var(--dom-life);
+  background: rgb(var(--dom-life));
 }
 .hero-tree .h-node[data-d="sw"] .sw {
-  background: var(--dom-software);
+  background: rgb(var(--dom-software));
 }
 .hero-tree .h-desc {
   color: var(--shell-fg-3);
