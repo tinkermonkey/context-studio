@@ -621,6 +621,16 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
       },
       `Graph with ${nodes.length} nodes and ${edges.length} edges`,
     ),
+  GraphInspector: ({ node, className = "", ...props }: any) =>
+    React.createElement(
+      "div",
+      {
+        className: ["graph-inspector", className].filter(Boolean).join(" "),
+        "data-testid": "graph-inspector",
+        ...props,
+      },
+      node ? `Inspector for ${node.id}` : "No node selected",
+    ),
 }));
 
 // Mock window.scrollTo to avoid jsdom "Not implemented" errors
