@@ -12,6 +12,9 @@
   /* Violet colors for graph visualization */
   --violet-500: rgb(168 85 247);
 
+  /* Cyan colors for specialized UI elements */
+  --cyan-600: rgb(8 145 178);
+
   /* ---- Domain-Specific Taxonomy Colors (not provided by Heimdall) ---- */
   --dom-life: rgb(52 211 153);
   --dom-climate: rgb(251 191 36);
@@ -68,10 +71,6 @@ body.dark-canvas {
   --canvas-bg-tertiary: rgb(55 65 81);
   --canvas-fg-4: rgb(75 85 99);
   --text-secondary: rgb(156 163 175);
-  --graph-bg: rgb(20 24 34);
-  --graph-grid: rgb(31 41 57);
-  --graph-edge: rgb(42 50 60);
-  --graph-edge-strong: rgb(58 68 82);
   --graph-cluster-life-bg: rgba(52 211 153 / 0.12);
   --graph-cluster-climate-bg: rgba(251 191 36 / 0.12);
   --graph-cluster-software-bg: rgba(129 140 248 / 0.12);
