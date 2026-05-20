@@ -29,6 +29,10 @@ export function GraphPage() {
 
   const hasData = data && data.nodes.length > 0;
 
+  const selectedNode = selectedNodeId && data
+    ? data.nodes.find((n) => n.id === selectedNodeId) ?? null
+    : null;
+
   return (
     <div data-testid="graph-page">
       <PageHeader
@@ -118,18 +122,13 @@ export function GraphPage() {
             ) : (
               <GraphInspector
                 node={
-                  selectedNodeId && data
-                    ? (() => {
-                        const selectedNode = data.nodes.find((n) => n.id === selectedNodeId);
-                        return selectedNode
-                          ? {
-                              id: selectedNode.id,
-                              title: selectedNode.label,
-                              kind: selectedNode.kind,
-                              description: COPY.SELECTED_NODE_DETAILS,
-                            }
-                          : null;
-                      })()
+                  selectedNode
+                    ? {
+                        id: selectedNode.id,
+                        title: selectedNode.label,
+                        kind: selectedNode.kind,
+                        description: COPY.SELECTED_NODE_DETAILS,
+                      }
                     : null
                 }
                 relationships={[]}
