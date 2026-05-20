@@ -1,4 +1,5 @@
 import { GraphCanvas } from "@tinkermonkey/heimdall-ui";
+import { useEffect } from "react";
 import type { GraphNode, GraphEdge } from "@/api/hooks/graph";
 import "@/design-system/graph.css";
 import { useToasts } from "@/components/ui/Toast";
@@ -10,7 +11,7 @@ interface GraphCanvasComponentProps {
   selectedNodeId?: string;
 }
 
-const validateEdgeEndpoints = (
+export const validateEdgeEndpoints = (
   nodes: GraphNode[],
   edges: GraphEdge[],
 ): { valid: boolean; errors: string[] } => {
@@ -45,11 +46,16 @@ export const GraphCanvasComponent = ({
   const { toast } = useToasts();
   const validation = validateEdgeEndpoints(nodes, edges);
 
-  if (!validation.valid) {
-    validation.errors.forEach((error) => {
-      toast("error", "Graph validation error", error);
-    });
+  useEffect(() => {
+    if (!validation.valid) {
+      validation.errors.forEach((error) => {
+        toast("error", "Graph validation error", error);
+      });
+      console.error("Graph validation errors:", validation.errors);
+    }
+  }, [validation.errors, toast]);
 
+  if (!validation.valid) {
     return (
       <div
         data-testid="graph-canvas"
@@ -57,15 +63,7 @@ export const GraphCanvasComponent = ({
         role="region"
         aria-label="Graph visualization canvas"
       >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            height: "100%",
-            color: "var(--canvas-fg-2)",
-          }}
-        >
+        <div className="graph-canvas__error">
           <p>Graph data validation failed. Check console for details.</p>
         </div>
       </div>

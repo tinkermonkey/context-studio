@@ -44,6 +44,14 @@ body.dark-canvas {
   cursor: grabbing;
 }
 
+.graph-canvas__error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--canvas-fg-2);
+}
+
 .graph-grid {
   position: absolute;
   inset: 0;
