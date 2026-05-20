@@ -173,10 +173,8 @@ describe("Heimdall TabBar", () => {
       const tabsWithElements = [
         { id: "tab-1", label: <strong>Bold Label</strong> },
         { id: "tab-2", label: "Tab 2" },
-      ];
-      render(
-        <TabBar tabs={tabsWithElements} activeTabId="tab-1" onSelectTab={vi.fn()} />,
-      );
+      ] as any[];
+      render(<TabBar tabs={tabsWithElements} activeTabId="tab-1" onSelectTab={vi.fn()} />);
       expect(screen.getByText("Bold Label")).toBeInTheDocument();
     });
   });

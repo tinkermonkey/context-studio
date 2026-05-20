@@ -93,9 +93,8 @@ describe("Heimdall Button", () => {
       expect(onClick).toHaveBeenCalled();
     });
 
-    it("does not call onClick when disabled", async () => {
+    it("does not call onClick when disabled", () => {
       const onClick = vi.fn();
-      const user = userEvent.setup();
       render(
         <Button disabled onClick={onClick}>
           Click me
