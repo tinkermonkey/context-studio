@@ -1,0 +1,3099 @@
+
+> context-studio-ux@0.0.0 test
+> vitest run
+
+
+ RUN  v1.6.1 /workspace/ux
+
+ ✓ src/api/services/__tests__/reference.test.ts  (25 tests) 152ms
+ ✓ src/api/services/__tests__/admin.test.ts  (27 tests) 183ms
+ ✓ src/api/services/__tests__/versioning.test.ts  (26 tests) 156ms
+ ✓ src/components/ui/__tests__/ErrorBanner.test.tsx  (23 tests) 428ms
+ ✓ src/api/services/__tests__/ontology.test.ts  (79 tests) 549ms
+ ❯ src/routes/app/pipelines/__tests__/index.test.tsx  (15 tests | 2 failed) 629ms
+   ❯ src/routes/app/pipelines/__tests__/index.test.tsx > Pipelines Page > page structure > renders page title when pipelines are loaded
+     → Unable to find an accessible element with the role "heading"
+
+Here are the accessible roles:
+
+  banner:
+
+  Name "":
+  [36m<div[39m
+    [33mclass[39m=[32m"page-header"[39m
+    [33mdata-testid[39m=[32m"page-header"[39m
+    [33mrole[39m=[32m"banner"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  button:
+
+  Name "New Pipeline":
+  [36m<button[39m
+    [33mclass[39m=[32m"btn btn--primary btn--md"[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtitle[39m=[32m"Pipeline creation is not yet implemented"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Run pipeline":
+  [36m<button[39m
+    [33maria-label[39m=[32m"Run pipeline"[39m
+    [33mclass[39m=[32m"btn btn--ghost btn--sm"[39m
+    [33mdata-testid[39m=[32m"run-pipeline-btn"[39m
+    [33mtitle[39m=[32m"Run pipeline"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  textbox:
+
+  Name "":
+  [36m<input[39m
+    [33mclass[39m=[32m"text-input"[39m
+    [33mdata-testid[39m=[32m"pipelines-search-input"[39m
+    [33mplaceholder[39m=[32m"Search by name, provider, or model…"[39m
+    [33mtype[39m=[32m"text"[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  radiogroup:
+
+  Name "Filter pipelines by status":
+  [36m<div[39m
+    [33maria-label[39m=[32m"Filter pipelines by status"[39m
+    [33mrole[39m=[32m"radiogroup"[39m
+    [33mstyle[39m=[32m"display: flex; gap: var(--space-2);"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  radio:
+
+  Name "All":
+  [36m<button[39m
+    [33maria-checked[39m=[32m"true"[39m
+    [33mclass[39m=[32m"status-filter-chip"[39m
+    [33mdata-active[39m=[32m"true"[39m
+    [33mdata-testid[39m=[32m"status-filter-all"[39m
+    [33mrole[39m=[32m"radio"[39m
+  [36m/>[39m
+
+  Name "Enabled":
+  [36m<button[39m
+    [33maria-checked[39m=[32m"false"[39m
+    [33mclass[39m=[32m"status-filter-chip"[39m
+    [33mdata-active[39m=[32m"false"[39m
+    [33mdata-testid[39m=[32m"status-filter-enabled"[39m
+    [33mrole[39m=[32m"radio"[39m
+  [36m/>[39m
+
+  Name "Disabled":
+  [36m<button[39m
+    [33maria-checked[39m=[32m"false"[39m
+    [33mclass[39m=[32m"status-filter-chip"[39m
+    [33mdata-active[39m=[32m"false"[39m
+    [33mdata-testid[39m=[32m"status-filter-disabled"[39m
+    [33mrole[39m=[32m"radio"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  status:
+
+  Name "Pipeline status: idle":
+  [36m<div[39m
+    [33maria-label[39m=[32m"Pipeline status: idle"[39m
+    [33mclass[39m=[32m"chip gray "[39m
+    [33mdata-testid[39m=[32m"pipeline-status-chip"[39m
+    [33mrole[39m=[32m"status"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div[39m
+    [33mid[39m=[32m"root"[39m
+  [36m/>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mdata-testid[39m=[32m"pipelines-page"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"page-header"[39m
+        [33mdata-testid[39m=[32m"page-header"[39m
+        [33mrole[39m=[32m"banner"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"page-header__eyebrow"[39m
+        [36m>[39m
+          [0mProcessing[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"page-header__title"[39m
+        [36m>[39m
+          [0mPipelines[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"page-header__actions"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"btn btn--primary btn--md"[39m
+            [33mdisabled[39m=[32m""[39m
+            [33mtitle[39m=[32m"Pipeline creation is not yet implemented"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-plus"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"16"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"16"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M5 12h14"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M12 5v14"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+            [0mNew Pipeline[0m
+          [36m</button>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"stack"[39m
+        [33mstyle[39m=[32m"margin-bottom: var(--space-6);"[39m
+      [36m>[39m
+        [36m<input[39m
+          [33mclass[39m=[32m"text-input"[39m
+          [33mdata-testid[39m=[32m"pipelines-search-input"[39m
+          [33mplaceholder[39m=[32m"Search by name, provider, or model…"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+        [36m<div[39m
+          [33maria-label[39m=[32m"Filter pipelines by status"[39m
+          [33mrole[39m=[32m"radiogroup"[39m
+          [33mstyle[39m=[32m"display: flex; gap: var(--space-2);"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33maria-checked[39m=[32m"true"[39m
+            [33mclass[39m=[32m"status-filter-chip"[39m
+            [33mdata-active[39m=[32m"true"[39m
+            [33mdata-testid[39m=[32m"status-filter-all"[39m
+            [33mrole[39m=[32m"radio"[39m
+          [36m>[39m
+            [0mAll[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33maria-checked[39m=[32m"false"[39m
+            [33mclass[39m=[32m"status-filter-chip"[39m
+            [33mdata-active[39m=[32m"false"[39m
+            [33mdata-testid[39m=[32m"status-filter-enabled"[39m
+            [33mrole[39m=[32m"radio"[39m
+          [36m>[39m
+            [0mEnabled[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33maria-checked[39m=[32m"false"[39m
+            [33mclass[39m=[32m"status-filter-chip"[39m
+            [33mdata-active[39m=[32m"false"[39m
+            [33mdata-testid[39m=[32m"status-filter-disabled"[39m
+            [33mrole[39m=[32m"radio"[39m
+          [36m>[39m
+            [0mDisabled[0m
+          [36m</button>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"grid-2"[39m
+        [33mdata-testid[39m=[32m"pipelines-grid"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"pipeline-card"[39m
+          [33mdata-testid[39m=[32m"pipeline-card-pipeline-1"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"pipeline-card-head"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mstyle[39m=[32m"display: flex; align-items: center; gap: var(--space-2); min-width: 0;"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-cpu"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"16"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mstyle[39m=[32m"color: var(--accent-violet, #7c3aed); flex-shrink: 0;"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"16"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 20v2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 2v2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M17 20v2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M17 2v2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M2 12h2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M2 17h2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M2 7h2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M20 12h2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M20 17h2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M20 7h2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M7 20v2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M7 2v2"[39m
+                [36m/>[39m
+                [36m<rect[39m
+                  [33mheight[39m=[32m"16"[39m
+                  [33mrx[39m=[32m"2"[39m
+                  [33mwidth[39m=[32m"16"[39m
+                  [33mx[39m=[32m"4"[39m
+                  [33my[39m=[32m"4"[39m
+                [36m/>[39m
+                [36m<rect[39m
+                  [33mheight[39m=[32m"8"[39m
+                  [33mrx[39m=[32m"1"[39m
+                  [33mwidth[39m=[32m"8"[39m
+                  [33mx[39m=[32m"8"[39m
+                  [33my[39m=[32m"8"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"name"[39m
+              [36m>[39m
+                [0mText Extraction Pipeline[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"pipeline-card-actions"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-label[39m=[32m"Run pipeline"[39m
+                [33mclass[39m=[32m"btn btn--ghost btn--sm"[39m
+                [33mdata-testid[39m=[32m"run-pipeline-btn"[39m
+                [33mtitle[39m=[32m"Run pipeline"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-play"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"16"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"16"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<polygon[39m
+                    [33mpoints[39m=[32m"6 3 20 12 6 21 6 3"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</button>[39m
+              [36m<div[39m
+                [33maria-label[39m=[32m"Pipeline status: idle"[39m
+                [33mclass[39m=[32m"chip gray "[39m
+                [33mdata-testid[39m=[32m"pipeline-status-chip"[39m
+                [33mrole[39m=[32m"status"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"dot"[39m
+                [36m/>[39m
+                [0midle[0m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"pipeline-card-flow"[39m
+          [36m>[39m
+            [36m<span>[39m
+              [0mopenai[0m
+            [36m</span>[39m
+            [36m<span>[39m
+              [0m·[0m
+            [36m</span>[39m
+            [36m<span>[39m
+              [0mgpt-4[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"pipeline-card-foot"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mstyle[39m=[32m"color: var(--canvas-fg-4, var(--canvas-fg-3));"[39m
+            [36m>[39m
+              [0mNo runs yet[0m
+            [36m</span>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+   ❯ src/routes/app/pipelines/__tests__/index.test.tsx > Pipelines Page > accessibility and styling > page title renders as heading level 1 when pipelines exist
+     → Unable to find an accessible element with the role "heading"
+
+Here are the accessible roles:
+
+  banner:
+
+  Name "":
+  [36m<div[39m
+    [33mclass[39m=[32m"page-header"[39m
+    [33mdata-testid[39m=[32m"page-header"[39m
+    [33mrole[39m=[32m"banner"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  button:
+
+  Name "New Pipeline":
+  [36m<button[39m
+    [33mclass[39m=[32m"btn btn--primary btn--md"[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtitle[39m=[32m"Pipeline creation is not yet implemented"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Run pipeline":
+  [36m<button[39m
+    [33maria-label[39m=[32m"Run pipeline"[39m
+    [33mclass[39m=[32m"btn btn--ghost btn--sm"[39m
+    [33mdata-testid[39m=[32m"run-pipeline-btn"[39m
+    [33mtitle[39m=[32m"Run pipeline"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  textbox:
+
+  Name "":
+  [36m<input[39m
+    [33mclass[39m=[32m"text-input"[39m
+    [33mdata-testid[39m=[32m"pipelines-search-input"[39m
+    [33mplaceholder[39m=[32m"Search by name, provider, or model…"[39m
+    [33mtype[39m=[32m"text"[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  radiogroup:
+
+  Name "Filter pipelines by status":
+  [36m<div[39m
+    [33maria-label[39m=[32m"Filter pipelines by status"[39m
+    [33mrole[39m=[32m"radiogroup"[39m
+    [33mstyle[39m=[32m"display: flex; gap: var(--space-2);"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  radio:
+
+  Name "All":
+  [36m<button[39m
+    [33maria-checked[39m=[32m"true"[39m
+    [33mclass[39m=[32m"status-filter-chip"[39m
+    [33mdata-active[39m=[32m"true"[39m
+    [33mdata-testid[39m=[32m"status-filter-all"[39m
+    [33mrole[39m=[32m"radio"[39m
+  [36m/>[39m
+
+  Name "Enabled":
+  [36m<button[39m
+    [33maria-checked[39m=[32m"false"[39m
+    [33mclass[39m=[32m"status-filter-chip"[39m
+    [33mdata-active[39m=[32m"false"[39m
+    [33mdata-testid[39m=[32m"status-filter-enabled"[39m
+    [33mrole[39m=[32m"radio"[39m
+  [36m/>[39m
+
+  Name "Disabled":
+  [36m<button[39m
+    [33maria-checked[39m=[32m"false"[39m
+    [33mclass[39m=[32m"status-filter-chip"[39m
+    [33mdata-active[39m=[32m"false"[39m
+    [33mdata-testid[39m=[32m"status-filter-disabled"[39m
+    [33mrole[39m=[32m"radio"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  status:
+
+  Name "Pipeline status: idle":
+  [36m<div[39m
+    [33maria-label[39m=[32m"Pipeline status: idle"[39m
+    [33mclass[39m=[32m"chip gray "[39m
+    [33mdata-testid[39m=[32m"pipeline-status-chip"[39m
+    [33mrole[39m=[32m"status"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div[39m
+    [33mid[39m=[32m"root"[39m
+  [36m/>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mdata-testid[39m=[32m"pipelines-page"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"page-header"[39m
+        [33mdata-testid[39m=[32m"page-header"[39m
+        [33mrole[39m=[32m"banner"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"page-header__eyebrow"[39m
+        [36m>[39m
+          [0mProcessing[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"page-header__title"[39m
+        [36m>[39m
+          [0mPipelines[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"page-header__actions"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"btn btn--primary btn--md"[39m
+            [33mdisabled[39m=[32m""[39m
+            [33mtitle[39m=[32m"Pipeline creation is not yet implemented"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-plus"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"16"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"16"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M5 12h14"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M12 5v14"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+            [0mNew Pipeline[0m
+          [36m</button>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"stack"[39m
+        [33mstyle[39m=[32m"margin-bottom: var(--space-6);"[39m
+      [36m>[39m
+        [36m<input[39m
+          [33mclass[39m=[32m"text-input"[39m
+          [33mdata-testid[39m=[32m"pipelines-search-input"[39m
+          [33mplaceholder[39m=[32m"Search by name, provider, or model…"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+        [36m<div[39m
+          [33maria-label[39m=[32m"Filter pipelines by status"[39m
+          [33mrole[39m=[32m"radiogroup"[39m
+          [33mstyle[39m=[32m"display: flex; gap: var(--space-2);"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33maria-checked[39m=[32m"true"[39m
+            [33mclass[39m=[32m"status-filter-chip"[39m
+            [33mdata-active[39m=[32m"true"[39m
+            [33mdata-testid[39m=[32m"status-filter-all"[39m
+            [33mrole[39m=[32m"radio"[39m
+          [36m>[39m
+            [0mAll[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33maria-checked[39m=[32m"false"[39m
+            [33mclass[39m=[32m"status-filter-chip"[39m
+            [33mdata-active[39m=[32m"false"[39m
+            [33mdata-testid[39m=[32m"status-filter-enabled"[39m
+            [33mrole[39m=[32m"radio"[39m
+          [36m>[39m
+            [0mEnabled[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33maria-checked[39m=[32m"false"[39m
+            [33mclass[39m=[32m"status-filter-chip"[39m
+            [33mdata-active[39m=[32m"false"[39m
+            [33mdata-testid[39m=[32m"status-filter-disabled"[39m
+            [33mrole[39m=[32m"radio"[39m
+          [36m>[39m
+            [0mDisabled[0m
+          [36m</button>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"grid-2"[39m
+        [33mdata-testid[39m=[32m"pipelines-grid"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"pipeline-card"[39m
+          [33mdata-testid[39m=[32m"pipeline-card-pipeline-1"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"pipeline-card-head"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mstyle[39m=[32m"display: flex; align-items: center; gap: var(--space-2); min-width: 0;"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-cpu"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"16"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mstyle[39m=[32m"color: var(--accent-violet, #7c3aed); flex-shrink: 0;"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"16"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 20v2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 2v2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M17 20v2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M17 2v2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M2 12h2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M2 17h2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M2 7h2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M20 12h2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M20 17h2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M20 7h2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M7 20v2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M7 2v2"[39m
+                [36m/>[39m
+                [36m<rect[39m
+                  [33mheight[39m=[32m"16"[39m
+                  [33mrx[39m=[32m"2"[39m
+                  [33mwidth[39m=[32m"16"[39m
+                  [33mx[39m=[32m"4"[39m
+                  [33my[39m=[32m"4"[39m
+                [36m/>[39m
+                [36m<rect[39m
+                  [33mheight[39m=[32m"8"[39m
+                  [33mrx[39m=[32m"1"[39m
+                  [33mwidth[39m=[32m"8"[39m
+                  [33mx[39m=[32m"8"[39m
+                  [33my[39m=[32m"8"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"name"[39m
+              [36m>[39m
+                [0mText Extraction Pipeline[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"pipeline-card-actions"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-label[39m=[32m"Run pipeline"[39m
+                [33mclass[39m=[32m"btn btn--ghost btn--sm"[39m
+                [33mdata-testid[39m=[32m"run-pipeline-btn"[39m
+                [33mtitle[39m=[32m"Run pipeline"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-play"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"16"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"16"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<polygon[39m
+                    [33mpoints[39m=[32m"6 3 20 12 6 21 6 3"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</button>[39m
+              [36m<div[39m
+                [33maria-label[39m=[32m"Pipeline status: idle"[39m
+                [33mclass[39m=[32m"chip gray "[39m
+                [33mdata-testid[39m=[32m"pipeline-status-chip"[39m
+                [33mrole[39m=[32m"status"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"dot"[39m
+                [36m/>[39m
+                [0midle[0m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"pipeline-card-flow"[39m
+          [36m>[39m
+            [36m<span>[39m
+              [0mopenai[0m
+            [36m</span>[39m
+            [36m<span>[39m
+              [0m·[0m
+            [36m</span>[39m
+            [36m<span>[39m
+              [0mgpt-4[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"pipeline-card-foot"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mstyle[39m=[32m"color: var(--canvas-fg-4, var(--canvas-fg-3));"[39m
+            [36m>[39m
+              [0mNo runs yet[0m
+            [36m</span>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ✓ src/routes/app/data/__tests__/-individuals-detail.test.tsx  (12 tests) 908ms
+ ✓ src/components/extraction/__tests__/EntityReviewPanel.test.tsx  (26 tests) 957ms
+ ✓ src/routes/app/__tests__/dashboard.test.tsx  (8 tests) 1030ms
+ ❯ src/routes/app/extraction/__tests__/extraction.test.tsx  (22 tests | 2 failed) 1084ms
+   ❯ src/routes/app/extraction/__tests__/extraction.test.tsx > Extraction Page > page structure > renders page title
+     → Unable to find an accessible element with the role "heading"
+
+Here are the accessible roles:
+
+  banner:
+
+  Name "":
+  [36m<div[39m
+    [33mclass[39m=[32m"page-header"[39m
+    [33mdata-testid[39m=[32m"page-header"[39m
+    [33mrole[39m=[32m"banner"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  textbox:
+
+  Name "":
+  [36m<textarea[39m
+    [33mclass[39m=[32m"text-area"[39m
+    [33mplaceholder[39m=[32m"Paste text here to extract entities, relationships, and embeddings..."[39m
+    [33mrows[39m=[32m"8"[39m
+    [33mstyle[39m=[32m"resize: vertical;"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  button:
+
+  Name "Extract":
+  [36m<button[39m
+    [33maria-busy[39m=[32m"false"[39m
+    [33mclass[39m=[32m"btn btn--primary btn--md"[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mstyle[39m=[32m"width: 100%;"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Upload a file (.txt, .md, .pdf) to extract entities":
+  [36m<button[39m
+    [33maria-label[39m=[32m"Upload a file (.txt, .md, .pdf) to extract entities"[39m
+    [33mclass[39m=[32m"btn btn-ghost"[39m
+    [33mstyle[39m=[32m"width: 100%; cursor: pointer;"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Show raw JSON":
+  [36m<button[39m
+    [33maria-controls[39m=[32m"extraction-panel-kg-context-json"[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33mclass[39m=[32m"btn btn-icon"[39m
+    [33mstyle[39m=[32m"padding: 4px; display: flex; align-items: center;"[39m
+    [33mtitle[39m=[32m"Show raw JSON"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Show raw JSON":
+  [36m<button[39m
+    [33maria-controls[39m=[32m"extraction-panel-llm-extraction-json"[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33mclass[39m=[32m"btn btn-icon"[39m
+    [33mstyle[39m=[32m"padding: 4px; display: flex; align-items: center;"[39m
+    [33mtitle[39m=[32m"Show raw JSON"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Show raw JSON":
+  [36m<button[39m
+    [33maria-controls[39m=[32m"extraction-panel-nlp-gap-fill-json"[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33mclass[39m=[32m"btn btn-icon"[39m
+    [33mstyle[39m=[32m"padding: 4px; display: flex; align-items: center;"[39m
+    [33mtitle[39m=[32m"Show raw JSON"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Show raw JSON":
+  [36m<button[39m
+    [33maria-controls[39m=[32m"extraction-panel-reference-enrichment-json"[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33mclass[39m=[32m"btn btn-icon"[39m
+    [33mstyle[39m=[32m"padding: 4px; display: flex; align-items: center;"[39m
+    [33mtitle[39m=[32m"Show raw JSON"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div[39m
+    [33mid[39m=[32m"root"[39m
+  [36m/>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mdata-testid[39m=[32m"extraction-page"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"page-header"[39m
+        [33mdata-testid[39m=[32m"page-header"[39m
+        [33mrole[39m=[32m"banner"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"page-header__eyebrow"[39m
+        [36m>[39m
+          [0mProcessing[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"page-header__title"[39m
+        [36m>[39m
+          [0mEntity Extraction[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"page-header__subtitle"[39m
+        [36m>[39m
+          [0mExtract entities, relationships, and embeddings from text[0m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mstyle[39m=[32m"display: grid; grid-template-columns: 380px 1fr; gap: 20px; min-height: calc(100vh - 180px);"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mstyle[39m=[32m"display: flex; flex-direction: column; gap: 12px; overflow: hidden;"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"panel"[39m
+            [33mdata-testid[39m=[32m"extraction-input"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"panel-head"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"panel-title"[39m
+              [36m>[39m
+                [0mInput[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"panel-body"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mstyle[39m=[32m"display: flex; flex-direction: column; gap: 12px;"[39m
+              [36m>[39m
+                [36m<textarea[39m
+                  [33mclass[39m=[32m"text-area"[39m
+                  [33mplaceholder[39m=[32m"Paste text here to extract entities, relationships, and embeddings..."[39m
+                  [33mrows[39m=[32m"8"[39m
+                  [33mstyle[39m=[32m"resize: vertical;"[39m
+                [36m/>[39m
+                [36m<div[39m
+                  [33mstyle[39m=[32m"display: flex; justify-content: space-between; align-items: center; font-size: var(--text-sm); color: var(--canvas-fg-2);"[39m
+                [36m>[39m
+                  [36m<span>[39m
+                    [0m0[0m
+                    [0m [0m
+                    [0mcharacters[0m
+                  [36m</span>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mstyle[39m=[32m"display: flex; gap: 8px; flex-direction: column;"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33maria-busy[39m=[32m"false"[39m
+                    [33mclass[39m=[32m"btn btn--primary btn--md"[39m
+                    [33mdisabled[39m=[32m""[39m
+                    [33mstyle[39m=[32m"width: 100%;"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mExtract[0m
+                  [36m</button>[39m
+                  [36m<button[39m
+                    [33maria-label[39m=[32m"Upload a file (.txt, .md, .pdf) to extract entities"[39m
+                    [33mclass[39m=[32m"btn btn-ghost"[39m
+                    [33mstyle[39m=[32m"width: 100%; cursor: pointer;"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [36m<svg[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"lucide lucide-upload"[39m
+                      [33mfill[39m=[32m"none"[39m
+                      [33mheight[39m=[32m"16"[39m
+                      [33mstroke[39m=[32m"currentColor"[39m
+                      [33mstroke-linecap[39m=[32m"round"[39m
+                      [33mstroke-linejoin[39m=[32m"round"[39m
+                      [33mstroke-width[39m=[32m"2"[39m
+                      [33mstyle[39m=[32m"margin-right: 8px;"[39m
+                      [33mviewBox[39m=[32m"0 0 24 24"[39m
+                      [33mwidth[39m=[32m"16"[39m
+                      [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                    [36m>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"M12 3v12"[39m
+                      [36m/>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"m17 8-5-5-5 5"[39m
+                      [36m/>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"[39m
+                      [36m/>[39m
+                    [36m</svg>[39m
+                    [0mOr upload a file (.txt, .md, .pdf)[0m
+                  [36m</button>[39m
+                  [36m<input[39m
+                    [33maccept[39m=[32m".txt,.md,.pdf"[39m
+                    [33mstyle[39m=[32m"display: none;"[39m
+                    [33mtype[39m=[32m"file"[39m
+                  [36m/>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mstyle[39m=[32m"display: flex; flex-direction: column; gap: 12px; overflow: auto;"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mdata-testid[39m=[32m"extraction-panel-kg-context"[39m
+          [36m>[39m
+            [36m<div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"panel-header-with-actions"[39m
+              [36m>[39m
+                [36m<div>[39m
+                  [0mKG Context[0m
+                [36m</div>[39m
+                [36m<div>[39m
+                  [36m<button[39m
+                    [33maria-controls[39m=[32m"extraction-panel-kg-context-json"[39m
+                    [33maria-expanded[39m=[32m"false"[39m
+                    [33mclass[39m=[32m"btn btn-icon"[39m
+                    [33mstyle[39m=[32m"padding: 4px; display: flex; align-items: center;"[39m
+                    [33mtitle[39m=[32m"Show raw JSON"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [36m<svg[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"lucide lucide-chevron-down"[39m
+                      [33mfill[39m=[32m"none"[39m
+                      [33mheight[39m=[32m"16"[39m
+                      [33mstroke[39m=[32m"currentColor"[39m
+                      [33mstroke-linecap[39m=[32m"round"[39m
+                      [33mstroke-linejoin[39m=[32m"round"[39m
+                      [33mstroke-width[39m=[32m"2"[39m
+                      [33mstyle[39m=[32m"transform: rotate(0deg); transition: transform 200ms;"[39m
+                      [33mviewBox[39m=[32m"0 0 24 24"[39m
+                      [33mwidth[39m=[32m"16"[39m
+                      [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                    [36m>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"m6 9 6 6 6-6"[39m
+                      [36m/>[39m
+                    [36m</svg>[39m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"panel"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"panel__body"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mid[39m=[32m"extraction-panel-kg-context-json"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"padding: 12px; color: var(--canvas-fg-2);"[39m
+                    [36m>[39m
+                      [0mNo entities extracted[0m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mdata-testid[39m=[32m"extraction-panel-llm-extraction"[39m
+          [36m>[39m
+            [36m<div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"panel-header-with-actions"[39m
+              [36m>[39m
+                [36m<div>[39m
+                  [0mLLM Extraction[0m
+                [36m</div>[39m
+                [36m<div>[39m
+                  [36m<button[39m
+                    [33maria-controls[39m=[32m"extraction-panel-llm-extraction-json"[39m
+                    [33maria-expanded[39m=[32m"false"[39m
+                    [33mclass[39m=[32m"btn btn-icon"[39m
+                    [33mstyle[39m=[32m"padding: 4px; display: flex; align-items: center;"[39m
+                    [33mtitle[39m=[32m"Show raw JSON"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [36m<svg[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"lucide lucide-chevron-down"[39m
+                      [33mfill[39m=[32m"none"[39m
+                      [33mheight[39m=[32m"16"[39m
+                      [33mstroke[39m=[32m"currentColor"[39m
+                      [33mstroke-linecap[39m=[32m"round"[39m
+                      [33mstroke-linejoin[39m=[32m"round"[39m
+                      [33mstroke-width[39m=[32m"2"[39m
+                      [33mstyle[39m=[32m"transform: rotate(0deg); transition: transform 200ms;"[39m
+                      [33mviewBox[39m=[32m"0 0 24 24"[39m
+                      [33mwidth[39m=[32m"16"[39m
+                      [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                    [36m>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"m6 9 6 6 6-6"[39m
+                      [36m/>[39m
+                    [36m</svg>[39m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"panel"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"panel__body"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mid[39m=[32m"extraction-panel-llm-extraction-json"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"padding: 12px; color: var(--canvas-fg-2);"[39m
+                    [36m>[39m
+                      [0mNo entities extracted[0m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mdata-testid[39m=[32m"extraction-panel-nlp-gap-fill"[39m
+          [36m>[39m
+            [36m<div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"panel-header-with-actions"[39m
+              [36m>[39m
+                [36m<div>[39m
+                  [0mNLP Gap Fill[0m
+                [36m</div>[39m
+                [36m<div>[39m
+                  [36m<button[39m
+                    [33maria-controls[39m=[32m"extraction-panel-nlp-gap-fill-json"[39m
+                    [33maria-expanded[39m=[32m"false"[39m
+                    [33mclass[39m=[32m"btn btn-icon"[39m
+                    [33mstyle[39m=[32m"padding: 4px; display: flex; align-items: center;"[39m
+                    [33mtitle[39m=[32m"Show raw JSON"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [36m<svg[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"lucide lucide-chevron-down"[39m
+                      [33mfill[39m=[32m"none"[39m
+                      [33mheight[39m=[32m"16"[39m
+                      [33mstroke[39m=[32m"currentColor"[39m
+                      [33mstroke-linecap[39m=[32m"round"[39m
+                      [33mstroke-linejoin[39m=[32m"round"[39m
+                      [33mstroke-width[39m=[32m"2"[39m
+                      [33mstyle[39m=[32m"transform: rotate(0deg); transition: transform 200ms;"[39m
+                      [33mviewBox[39m=[32m"0 0 24 24"[39m
+                      [33mwidth[39m=[32m"16"[39m
+                      [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                    [36m>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"m6 9 6 6 6-6"[39m
+                      [36m/>[39m
+                    [36m</svg>[39m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"panel"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"panel__body"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mid[39m=[32m"extraction-panel-nlp-gap-fill-json"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"padding: 12px; color: var(--canvas-fg-2);"[39m
+                    [36m>[39m
+                      [0mNo entities extracted[0m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mdata-testid[39m=[32m"extraction-panel-reference-enrichment"[39m
+          [36m>[39m
+            [36m<div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"panel-header-with-actions"[39m
+              [36m>[39m
+                [36m<div>[39m
+                  [0mReference Enrichment[0m
+                [36m</div>[39m
+                [36m<div>[39m
+                  [36m<button[39m
+                    [33maria-controls[39m=[32m"extraction-panel-reference-enrichment-json"[39m
+                    [33maria-expanded[39m=[32m"false"[39m
+                    [33mclass[39m=[32m"btn btn-icon"[39m
+                    [33mstyle[39m=[32m"padding: 4px; display: flex; align-items: center;"[39m
+                    [33mtitle[39m=[32m"Show raw JSON"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [36m<svg[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"lucide lucide-chevron-down"[39m
+                      [33mfill[39m=[32m"none"[39m
+                      [33mheight[39m=[32m"16"[39m
+                      [33mstroke[39m=[32m"currentColor"[39m
+                      [33mstroke-linecap[39m=[32m"round"[39m
+                      [33mstroke-linejoin[39m=[32m"round"[39m
+                      [33mstroke-width[39m=[32m"2"[39m
+                      [33mstyle[39m=[32m"transform: rotate(0deg); transition: transform 200ms;"[39m
+                      [33mviewBox[39m=[32m"0 0 24 24"[39m
+                      [33mwidth[39m=[32m"16"[39m
+                      [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                    [36m>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"m6 9 6 6 6-6"[39m
+                      [36m/>[39m
+                    [36m</svg>[39m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"panel"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"panel__body"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mid[39m=[32m"extraction-panel-reference-enrichment-json"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"padding: 12px; color: var(--canvas-fg-2);"[39m
+                    [36m>[39m
+                      [0mNo entities extracted[0m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+   ❯ src/routes/app/extraction/__tests__/extraction.test.tsx > Extraction Page > accessibility and styling > page title has correct heading level for document structure
+     → Unable to find an accessible element with the role "heading"
+
+Here are the accessible roles:
+
+  banner:
+
+  Name "":
+  [36m<div[39m
+    [33mclass[39m=[32m"page-header"[39m
+    [33mdata-testid[39m=[32m"page-header"[39m
+    [33mrole[39m=[32m"banner"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  textbox:
+
+  Name "":
+  [36m<textarea[39m
+    [33mclass[39m=[32m"text-area"[39m
+    [33mplaceholder[39m=[32m"Paste text here to extract entities, relationships, and embeddings..."[39m
+    [33mrows[39m=[32m"8"[39m
+    [33mstyle[39m=[32m"resize: vertical;"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  button:
+
+  Name "Extract":
+  [36m<button[39m
+    [33maria-busy[39m=[32m"false"[39m
+    [33mclass[39m=[32m"btn btn--primary btn--md"[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mstyle[39m=[32m"width: 100%;"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Upload a file (.txt, .md, .pdf) to extract entities":
+  [36m<button[39m
+    [33maria-label[39m=[32m"Upload a file (.txt, .md, .pdf) to extract entities"[39m
+    [33mclass[39m=[32m"btn btn-ghost"[39m
+    [33mstyle[39m=[32m"width: 100%; cursor: pointer;"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Show raw JSON":
+  [36m<button[39m
+    [33maria-controls[39m=[32m"extraction-panel-kg-context-json"[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33mclass[39m=[32m"btn btn-icon"[39m
+    [33mstyle[39m=[32m"padding: 4px; display: flex; align-items: center;"[39m
+    [33mtitle[39m=[32m"Show raw JSON"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Show raw JSON":
+  [36m<button[39m
+    [33maria-controls[39m=[32m"extraction-panel-llm-extraction-json"[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33mclass[39m=[32m"btn btn-icon"[39m
+    [33mstyle[39m=[32m"padding: 4px; display: flex; align-items: center;"[39m
+    [33mtitle[39m=[32m"Show raw JSON"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Show raw JSON":
+  [36m<button[39m
+    [33maria-controls[39m=[32m"extraction-panel-nlp-gap-fill-json"[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33mclass[39m=[32m"btn btn-icon"[39m
+    [33mstyle[39m=[32m"padding: 4px; display: flex; align-items: center;"[39m
+    [33mtitle[39m=[32m"Show raw JSON"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Show raw JSON":
+  [36m<button[39m
+    [33maria-controls[39m=[32m"extraction-panel-reference-enrichment-json"[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33mclass[39m=[32m"btn btn-icon"[39m
+    [33mstyle[39m=[32m"padding: 4px; display: flex; align-items: center;"[39m
+    [33mtitle[39m=[32m"Show raw JSON"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div[39m
+    [33mid[39m=[32m"root"[39m
+  [36m/>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mdata-testid[39m=[32m"extraction-page"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"page-header"[39m
+        [33mdata-testid[39m=[32m"page-header"[39m
+        [33mrole[39m=[32m"banner"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"page-header__eyebrow"[39m
+        [36m>[39m
+          [0mProcessing[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"page-header__title"[39m
+        [36m>[39m
+          [0mEntity Extraction[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"page-header__subtitle"[39m
+        [36m>[39m
+          [0mExtract entities, relationships, and embeddings from text[0m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mstyle[39m=[32m"display: grid; grid-template-columns: 380px 1fr; gap: 20px; min-height: calc(100vh - 180px);"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mstyle[39m=[32m"display: flex; flex-direction: column; gap: 12px; overflow: hidden;"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"panel"[39m
+            [33mdata-testid[39m=[32m"extraction-input"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"panel-head"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"panel-title"[39m
+              [36m>[39m
+                [0mInput[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"panel-body"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mstyle[39m=[32m"display: flex; flex-direction: column; gap: 12px;"[39m
+              [36m>[39m
+                [36m<textarea[39m
+                  [33mclass[39m=[32m"text-area"[39m
+                  [33mplaceholder[39m=[32m"Paste text here to extract entities, relationships, and embeddings..."[39m
+                  [33mrows[39m=[32m"8"[39m
+                  [33mstyle[39m=[32m"resize: vertical;"[39m
+                [36m/>[39m
+                [36m<div[39m
+                  [33mstyle[39m=[32m"display: flex; justify-content: space-between; align-items: center; font-size: var(--text-sm); color: var(--canvas-fg-2);"[39m
+                [36m>[39m
+                  [36m<span>[39m
+                    [0m0[0m
+                    [0m [0m
+                    [0mcharacters[0m
+                  [36m</span>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mstyle[39m=[32m"display: flex; gap: 8px; flex-direction: column;"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33maria-busy[39m=[32m"false"[39m
+                    [33mclass[39m=[32m"btn btn--primary btn--md"[39m
+                    [33mdisabled[39m=[32m""[39m
+                    [33mstyle[39m=[32m"width: 100%;"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mExtract[0m
+                  [36m</button>[39m
+                  [36m<button[39m
+                    [33maria-label[39m=[32m"Upload a file (.txt, .md, .pdf) to extract entities"[39m
+                    [33mclass[39m=[32m"btn btn-ghost"[39m
+                    [33mstyle[39m=[32m"width: 100%; cursor: pointer;"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [36m<svg[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"lucide lucide-upload"[39m
+                      [33mfill[39m=[32m"none"[39m
+                      [33mheight[39m=[32m"16"[39m
+                      [33mstroke[39m=[32m"currentColor"[39m
+                      [33mstroke-linecap[39m=[32m"round"[39m
+                      [33mstroke-linejoin[39m=[32m"round"[39m
+                      [33mstroke-width[39m=[32m"2"[39m
+                      [33mstyle[39m=[32m"margin-right: 8px;"[39m
+                      [33mviewBox[39m=[32m"0 0 24 24"[39m
+                      [33mwidth[39m=[32m"16"[39m
+                      [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                    [36m>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"M12 3v12"[39m
+                      [36m/>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"m17 8-5-5-5 5"[39m
+                      [36m/>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"[39m
+                      [36m/>[39m
+                    [36m</svg>[39m
+                    [0mOr upload a file (.txt, .md, .pdf)[0m
+                  [36m</button>[39m
+                  [36m<input[39m
+                    [33maccept[39m=[32m".txt,.md,.pdf"[39m
+                    [33mstyle[39m=[32m"display: none;"[39m
+                    [33mtype[39m=[32m"file"[39m
+                  [36m/>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mstyle[39m=[32m"display: flex; flex-direction: column; gap: 12px; overflow: auto;"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mdata-testid[39m=[32m"extraction-panel-kg-context"[39m
+          [36m>[39m
+            [36m<div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"panel-header-with-actions"[39m
+              [36m>[39m
+                [36m<div>[39m
+                  [0mKG Context[0m
+                [36m</div>[39m
+                [36m<div>[39m
+                  [36m<button[39m
+                    [33maria-controls[39m=[32m"extraction-panel-kg-context-json"[39m
+                    [33maria-expanded[39m=[32m"false"[39m
+                    [33mclass[39m=[32m"btn btn-icon"[39m
+                    [33mstyle[39m=[32m"padding: 4px; display: flex; align-items: center;"[39m
+                    [33mtitle[39m=[32m"Show raw JSON"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [36m<svg[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"lucide lucide-chevron-down"[39m
+                      [33mfill[39m=[32m"none"[39m
+                      [33mheight[39m=[32m"16"[39m
+                      [33mstroke[39m=[32m"currentColor"[39m
+                      [33mstroke-linecap[39m=[32m"round"[39m
+                      [33mstroke-linejoin[39m=[32m"round"[39m
+                      [33mstroke-width[39m=[32m"2"[39m
+                      [33mstyle[39m=[32m"transform: rotate(0deg); transition: transform 200ms;"[39m
+                      [33mviewBox[39m=[32m"0 0 24 24"[39m
+                      [33mwidth[39m=[32m"16"[39m
+                      [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                    [36m>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"m6 9 6 6 6-6"[39m
+                      [36m/>[39m
+                    [36m</svg>[39m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"panel"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"panel__body"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mid[39m=[32m"extraction-panel-kg-context-json"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"padding: 12px; color: var(--canvas-fg-2);"[39m
+                    [36m>[39m
+                      [0mNo entities extracted[0m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mdata-testid[39m=[32m"extraction-panel-llm-extraction"[39m
+          [36m>[39m
+            [36m<div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"panel-header-with-actions"[39m
+              [36m>[39m
+                [36m<div>[39m
+                  [0mLLM Extraction[0m
+                [36m</div>[39m
+                [36m<div>[39m
+                  [36m<button[39m
+                    [33maria-controls[39m=[32m"extraction-panel-llm-extraction-json"[39m
+                    [33maria-expanded[39m=[32m"false"[39m
+                    [33mclass[39m=[32m"btn btn-icon"[39m
+                    [33mstyle[39m=[32m"padding: 4px; display: flex; align-items: center;"[39m
+                    [33mtitle[39m=[32m"Show raw JSON"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [36m<svg[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"lucide lucide-chevron-down"[39m
+                      [33mfill[39m=[32m"none"[39m
+                      [33mheight[39m=[32m"16"[39m
+                      [33mstroke[39m=[32m"currentColor"[39m
+                      [33mstroke-linecap[39m=[32m"round"[39m
+                      [33mstroke-linejoin[39m=[32m"round"[39m
+                      [33mstroke-width[39m=[32m"2"[39m
+                      [33mstyle[39m=[32m"transform: rotate(0deg); transition: transform 200ms;"[39m
+                      [33mviewBox[39m=[32m"0 0 24 24"[39m
+                      [33mwidth[39m=[32m"16"[39m
+                      [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                    [36m>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"m6 9 6 6 6-6"[39m
+                      [36m/>[39m
+                    [36m</svg>[39m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"panel"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"panel__body"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mid[39m=[32m"extraction-panel-llm-extraction-json"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"padding: 12px; color: var(--canvas-fg-2);"[39m
+                    [36m>[39m
+                      [0mNo entities extracted[0m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mdata-testid[39m=[32m"extraction-panel-nlp-gap-fill"[39m
+          [36m>[39m
+            [36m<div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"panel-header-with-actions"[39m
+              [36m>[39m
+                [36m<div>[39m
+                  [0mNLP Gap Fill[0m
+                [36m</div>[39m
+                [36m<div>[39m
+                  [36m<button[39m
+                    [33maria-controls[39m=[32m"extraction-panel-nlp-gap-fill-json"[39m
+                    [33maria-expanded[39m=[32m"false"[39m
+                    [33mclass[39m=[32m"btn btn-icon"[39m
+                    [33mstyle[39m=[32m"padding: 4px; display: flex; align-items: center;"[39m
+                    [33mtitle[39m=[32m"Show raw JSON"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [36m<svg[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"lucide lucide-chevron-down"[39m
+                      [33mfill[39m=[32m"none"[39m
+                      [33mheight[39m=[32m"16"[39m
+                      [33mstroke[39m=[32m"currentColor"[39m
+                      [33mstroke-linecap[39m=[32m"round"[39m
+                      [33mstroke-linejoin[39m=[32m"round"[39m
+                      [33mstroke-width[39m=[32m"2"[39m
+                      [33mstyle[39m=[32m"transform: rotate(0deg); transition: transform 200ms;"[39m
+                      [33mviewBox[39m=[32m"0 0 24 24"[39m
+                      [33mwidth[39m=[32m"16"[39m
+                      [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                    [36m>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"m6 9 6 6 6-6"[39m
+                      [36m/>[39m
+                    [36m</svg>[39m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"panel"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"panel__body"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mid[39m=[32m"extraction-panel-nlp-gap-fill-json"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"padding: 12px; color: var(--canvas-fg-2);"[39m
+                    [36m>[39m
+                      [0mNo entities extracted[0m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mdata-testid[39m=[32m"extraction-panel-reference-enrichment"[39m
+          [36m>[39m
+            [36m<div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"panel-header-with-actions"[39m
+              [36m>[39m
+                [36m<div>[39m
+                  [0mReference Enrichment[0m
+                [36m</div>[39m
+                [36m<div>[39m
+                  [36m<button[39m
+                    [33maria-controls[39m=[32m"extraction-panel-reference-enrichment-json"[39m
+                    [33maria-expanded[39m=[32m"false"[39m
+                    [33mclass[39m=[32m"btn btn-icon"[39m
+                    [33mstyle[39m=[32m"padding: 4px; display: flex; align-items: center;"[39m
+                    [33mtitle[39m=[32m"Show raw JSON"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [36m<svg[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"lucide lucide-chevron-down"[39m
+                      [33mfill[39m=[32m"none"[39m
+                      [33mheight[39m=[32m"16"[39m
+                      [33mstroke[39m=[32m"currentColor"[39m
+                      [33mstroke-linecap[39m=[32m"round"[39m
+                      [33mstroke-linejoin[39m=[32m"round"[39m
+                      [33mstroke-width[39m=[32m"2"[39m
+                      [33mstyle[39m=[32m"transform: rotate(0deg); transition: transform 200ms;"[39m
+                      [33mviewBox[39m=[32m"0 0 24 24"[39m
+                      [33mwidth[39m=[32m"16"[39m
+                      [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                    [36m>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"m6 9 6 6 6-6"[39m
+                      [36m/>[39m
+                    [36m</svg>[39m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"panel"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"panel__body"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mid[39m=[32m"extraction-panel-reference-enrichment-json"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"padding: 12px; color: var(--canvas-fg-2);"[39m
+                    [36m>[39m
+                      [0mNo entities extracted[0m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ✓ src/components/pipeline/__tests__/PipelineDetailPanel.test.tsx  (23 tests) 1305ms
+ ✓ src/components/ontology/__tests__/IndividualEditor.test.tsx  (19 tests) 1629ms
+ ✓ src/routes/app/data/__tests__/-individuals.test.tsx  (17 tests) 1651ms
+ ✓ src/routes/app/data/__tests__/-datasets.test.tsx  (23 tests) 1665ms
+ ❯ src/routes/app/__tests__/settings.test.tsx  (13 tests | 1 failed) 1847ms
+   ❯ src/routes/app/__tests__/settings.test.tsx > Settings Page > page structure > displays page title and subtitle
+     → Unable to find role="heading"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div[39m
+    [33mid[39m=[32m"root"[39m
+  [36m/>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mdata-testid[39m=[32m"settings-page"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"page-header"[39m
+        [33mdata-testid[39m=[32m"page-header"[39m
+        [33mrole[39m=[32m"banner"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"page-header__eyebrow"[39m
+        [36m>[39m
+          [0mAdministration[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"page-header__title"[39m
+        [36m>[39m
+          [0mSettings[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"page-header__subtitle"[39m
+        [36m>[39m
+          [0mConfigure application settings and external integrations[0m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"config-grid"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33maria-label[39m=[32m"Workspace"[39m
+          [33mclass[39m=[32m"config-tile"[39m
+          [33mdata-testid[39m=[32m"config-tile-workspace"[39m
+          [33mrole[39m=[32m"region"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"head"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"icon"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-folder"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"18"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"18"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"config-tile-content"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"title"[39m
+              [36m>[39m
+                [0mWorkspace[0m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"desc"[39m
+              [36m>[39m
+                [0mWorkspace configuration[0m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"meta"[39m
+          [36m>[39m
+            [36m<span>[39m
+              [0mUnnamed[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"config-tile-actions"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33maria-label[39m=[32m"Edit Workspace"[39m
+              [33mclass[39m=[32m"btn btn--ghost btn--sm"[39m
+              [33mdata-testid[39m=[32m"config-tile-workspace-button"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0mEdit[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33maria-label[39m=[32m"LLM Provider"[39m
+          [33mclass[39m=[32m"config-tile"[39m
+          [33mdata-testid[39m=[32m"config-tile-llm"[39m
+          [33mrole[39m=[32m"region"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"head"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"icon"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-cpu"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"18"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"18"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 20v2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 2v2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M17 20v2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M17 2v2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M2 12h2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M2 17h2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M2 7h2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M20 12h2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M20 17h2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M20 7h2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M7 20v2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M7 2v2"[39m
+                [36m/>[39m
+                [36m<rect[39m
+                  [33mheight[39m=[32m"16"[39m
+                  [33mrx[39m=[32m"2"[39m
+                  [33mwidth[39m=[32m"16"[39m
+                  [33mx[39m=[32m"4"[39m
+                  [33my[39m=[32m"4"[39m
+                [36m/>[39m
+                [36m<rect[39m
+                  [33mheight[39m=[32m"8"[39m
+                  [33mrx[39m=[32m"1"[39m
+                  [33mwidth[39m=[32m"8"[39m
+                  [33mx[39m=[32m"8"[39m
+                  [33my[39m=[32m"8"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"config-tile-content"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"title"[39m
+              [36m>[39m
+                [0mLLM Provider[0m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"desc"[39m
+              [36m>[39m
+                [0mLanguage model configuration[0m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"meta"[39m
+          [36m>[39m
+            [36m<span>[39m
+              [0mNot configured[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"config-tile-actions"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33maria-label[39m=[32m"Edit LLM Provider"[39m
+              [33mclass[39m=[32m"btn btn--ghost btn--sm"[39m
+              [33mdata-testid[39m=[32m"config-tile-llm-button"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0mEdit[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33maria-label[39m=[32m"Embedding Model"[39m
+          [33mclass[39m=[32m"config-tile"[39m
+          [33mdata-testid[39m=[32m"config-tile-embedding"[39m
+          [33mrole[39m=[32m"region"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"head"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"icon"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-layers"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"18"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"18"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"config-tile-content"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"title"[39m
+              [36m>[39m
+                [0mEmbedding Model[0m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"desc"[39m
+              [36m>[39m
+                [0mVector embedding configuration[0m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"meta"[39m
+          [36m>[39m
+            [36m<span>[39m
+              [0mNot configured[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"config-tile-actions"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33maria-label[39m=[32m"Edit Embedding Model"[39m
+              [33mclass[39m=[32m"btn btn--ghost btn--sm"[39m
+              [33mdata-testid[39m=[32m"config-tile-embedding-button"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0mEdit[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33maria-label[39m=[32m"NLP Model"[39m
+          [33mclass[39m=[32m"config-tile"[39m
+          [33mdata-testid[39m=[32m"config-tile-nlp"[39m
+          [33mrole[39m=[32m"region"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"head"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"icon"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-type"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"18"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"18"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 4v16"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M9 20h6"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"config-tile-content"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"title"[39m
+              [36m>[39m
+                [0mNLP Model[0m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"desc"[39m
+              [36m>[39m
+                [0mNatural language processing[0m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"meta"[39m
+          [36m>[39m
+            [36m<span>[39m
+              [0mNot configured[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"config-tile-actions"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33maria-label[39m=[32m"Edit NLP Model"[39m
+              [33mclass[39m=[32m"btn btn--ghost btn--sm"[39m
+              [33mdata-testid[39m=[32m"config-tile-nlp-button"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0mEdit[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33maria-label[39m=[32m"Reference Sources"[39m
+          [33mclass[39m=[32m"config-tile"[39m
+          [33mdata-testid[39m=[32m"config-tile-reference-sources"[39m
+          [33mrole[39m=[32m"region"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"head"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"icon"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-database"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"18"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"18"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<ellipse[39m
+                  [33mcx[39m=[32m"12"[39m
+                  [33mcy[39m=[32m"5"[39m
+                  [33mrx[39m=[32m"9"[39m
+                  [33mry[39m=[32m"3"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M3 5V19A9 3 0 0 0 21 19V5"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M3 12A9 3 0 0 0 21 12"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"config-tile-content"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"title"[39m
+              [36m>[39m
+                [0mReference Sources[0m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"desc"[39m
+              [36m>[39m
+                [0mManage knowledge sources[0m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"meta"[39m
+          [36m>[39m
+            [36m<span>[39m
+              [0m0 source(s) configured[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"config-tile-actions"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33maria-label[39m=[32m"Manage Reference Sources"[39m
+              [33mclass[39m=[32m"btn btn--ghost btn--sm"[39m
+              [33mdata-testid[39m=[32m"config-tile-reference-sources-button"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0mManage[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33maria-label[39m=[32m"Sync Target"[39m
+          [33mclass[39m=[32m"config-tile"[39m
+          [33mdata-testid[39m=[32m"config-tile-sync"[39m
+          [33mrole[39m=[32m"region"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"head"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"icon"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-refresh-cw"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"18"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"18"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M21 3v5h-5"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M8 16H3v5"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"config-tile-content"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"title"[39m
+              [36m>[39m
+                [0mSync Target[0m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"desc"[39m
+              [36m>[39m
+                [0mRemote synchronization[0m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"meta"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mstyle[39m=[32m"color: var(--canvas-fg-3);"[39m
+            [36m>[39m
+              [0mNot configured[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"config-tile-actions"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33maria-label[39m=[32m"Edit Sync Target"[39m
+              [33mclass[39m=[32m"btn btn--ghost btn--sm"[39m
+              [33mdata-testid[39m=[32m"config-tile-sync-button"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0mEdit[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div[39m
+      [33mid[39m=[32m"root"[39m
+    [36m/>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mdata-testid[39m=[32m"settings-page"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"page-header"[39m
+          [33mdata-testid[39m=[32m"page-header"[39m
+          [33mrole[39m=[32m"banner"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"page-header__eyebrow"[39m
+          [36m>[39m
+            [0mAdministration[0m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"page-header__title"[39m
+          [36m>[39m
+            [0mSettings[0m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"page-header__subtitle"[39m
+          [36m>[39m
+            [0mConfigure application settings and external integrations[0m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"config-grid"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33maria-label[39m=[32m"Workspace"[39m
+            [33mclass[39m=[32m"config-tile"[39m
+            [33mdata-testid[39m=[32m"config-tile-workspace"[39m
+            [33mrole[39m=[32m"region"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"head"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"icon"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-folder"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"18"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"18"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"config-tile-content"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"title"[39m
+                [36m>[39m
+                  [0mWorkspace[0m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"desc"[39m
+                [36m>[39m
+                  [0mWorkspace configuration[0m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"meta"[39m
+            [36m>[39m
+              [36m<span>[39m
+                [0mUnnamed[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"config-tile-actions"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-label[39m=[32m"Edit Workspace"[39m
+                [33mclass[39m=[32m"btn btn--ghost btn--sm"[39m
+                [33mdata-testid[39m=[32m"config-tile-workspace-button"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [0mEdit[0m
+              [36m</button>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33maria-label[39m=[32m"LLM Provider"[39m
+            [33mclass[39m=[32m"config-tile"[39m
+            [33mdata-testid[39m=[32m"config-tile-llm"[39m
+            [33mrole[39m=[32m"region"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"head"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"icon"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-cpu"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"18"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"18"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M12 20v2"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M12 2v2"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M17 20v2"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M17 2v2"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M2 12h2"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M2 17h2"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M2 7h2"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M20 12h2"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M20 17h2"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M20 7h2"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M7 20v2"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M7 2v2"[39m
+                  [36m/>[39m
+                  [36m<rect[39m
+                    [33mheight[39m=[32m"16"[39m
+                    [33mrx[39m=[32m"2"[39m
+                    [33mwidth[39m=[32m"16"[39m
+                    [33mx[39m=[32m"4"[39m
+                    [33my[39m=[32m"4"[39m
+                  [36m/>[39m
+                  [36m<rect[39m
+                    [33mheight[39m=[32m"8"[39m
+                    [33mrx[39m=[32m"1"[39m
+                    [33mwidth[39m=[32m"8"[39m
+                    [33mx[39m=[32m"8"[39m
+                    [33my[39m=[32m"8"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"config-tile-content"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"title"[39m
+                [36m>[39m
+                  [0mLLM Provider[0m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"desc"[39m
+                [36m>[39m
+                  [0mLanguage model configuration[0m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"meta"[39m
+            [36m>[39m
+              [36m<span>[39m
+                [0mNot configured[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"config-tile-actions"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-label[39m=[32m"Edit LLM Provider"[39m
+                [33mclass[39m=[32m"btn btn--ghost btn--sm"[39m
+                [33mdata-testid[39m=[32m"config-tile-llm-button"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [0mEdit[0m
+              [36m</button>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33maria-label[39m=[32m"Embedding Model"[39m
+            [33mclass[39m=[32m"config-tile"[39m
+            [33mdata-testid[39m=[32m"config-tile-embedding"[39m
+            [33mrole[39m=[32m"region"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"head"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"icon"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-layers"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"18"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"18"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"config-tile-content"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"title"[39m
+                [36m>[39m
+                  [0mEmbedding Model[0m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"desc"[39m
+                [36m>[39m
+                  [0mVector embedding configuration[0m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"meta"[39m
+            [36m>[39m
+              [36m<span>[39m
+                [0mNot configured[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"config-tile-actions"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-label[39m=[32m"Edit Embedding Model"[39m
+                [33mclass[39m=[32m"btn btn--ghost btn--sm"[39m
+                [33mdata-testid[39m=[32m"config-tile-embedding-button"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [0mEdit[0m
+              [36m</button>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33maria-label[39m=[32m"NLP Model"[39m
+            [33mclass[39m=[32m"config-tile"[39m
+            [33mdata-testid[39m=[32m"config-tile-nlp"[39m
+            [33mrole[39m=[32m"region"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"head"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"icon"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-type"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"18"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"18"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M12 4v16"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M9 20h6"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"config-tile-content"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"title"[39m
+                [36m>[39m
+                  [0mNLP Model[0m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"desc"[39m
+                [36m>[39m
+                  [0mNatural language processing[0m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"meta"[39m
+            [36m>[39m
+              [36m<span>[39m
+                [0mNot configured[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"config-tile-actions"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-label[39m=[32m"Edit NLP Model"[39m
+                [33mclass[39m=[32m"btn btn--ghost btn--sm"[39m
+                [33mdata-testid[39m=[32m"config-tile-nlp-button"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [0mEdit[0m
+              [36m</button>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33maria-label[39m=[32m"Reference Sources"[39m
+            [33mclass[39m=[32m"config-tile"[39m
+            [33mdata-testid[39m=[32m"config-tile-reference-sources"[39m
+            [33mrole[39m=[32m"region"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"head"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"icon"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-database"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"18"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"18"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<ellipse[39m
+                    [33mcx[39m=[32m"12"[39m
+                    [33mcy[39m=[32m"5"[39m
+                    [33mrx[39m=[32m"9"[39m
+                    [33mry[39m=[32m"3"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M3 5V19A9 3 0 0 0 21 19V5"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M3 12A9 3 0 0 0 21 12"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"config-tile-content"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"title"[39m
+                [36m>[39m
+                  [0mReference Sources[0m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"desc"[39m
+                [36m>[39m
+                  [0mManage knowledge sources[0m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"meta"[39m
+            [36m>[39m
+              [36m<span>[39m
+                [0m0 source(s) configured[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"config-tile-actions"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-label[39m=[32m"Manage Reference Sources"[39m
+                [33mclass[39m=[32m"btn btn--ghost btn--sm"[39m
+                [33mdata-testid[39m=[32m"config-tile-reference-sources-button"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [0mManage[0m
+              [36m</button>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33maria-label[39m=[32m"Sync Target"[39m
+            [33mclass[39m=[32m"config-tile"[39m
+            [33mdata-testid[39m=[32m"config-tile-sync"[39m
+            [33mrole[39m=[32m"region"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"head"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"icon"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-refresh-cw"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"18"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"18"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M21 3v5h-5"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M8 16H3v5"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"config-tile-content"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"title"[39m
+                [36m>[39m
+                  [0mSync Target[0m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"desc"[39m
+                [36m>[39m
+                  [0mRemote synchronization[0m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"meta"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mstyle[39m=[32m"color: var(--canvas-fg-3);"[39m
+              [36m>[39m
+                [0mNot configured[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"config-tile-actions"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-label[39m=[32m"Edit Sync Target"[39m
+                [33mclass[39m=[32m"btn btn--ghost btn--sm"[39m
+                [33mdata-testid[39m=[32m"config-tile-sync-button"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [0mEdit[0m
+              [36m</button>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ✓ src/components/shell/__tests__/Statusbar.test.tsx  (30 tests) 343ms
+ ✓ src/components/ontology/__tests__/HierarchyTree.test.tsx  (28 tests) 741ms
+ ✓ src/components/ui/__tests__/TypeToConfirmDialog.test.tsx  (20 tests) 1115ms
+ ✓ src/components/ui/__tests__/Drawer.test.tsx  (29 tests) 454ms
+ ✓ src/components/pipeline/__tests__/PipelineCard.test.tsx  (17 tests) 404ms
+ ✓ src/components/ui/__tests__/ConfirmDialog.test.tsx  (17 tests) 586ms
+ ✓ src/components/shell/__tests__/CommandPalette.test.tsx  (13 tests) 106ms
+ ✓ src/api/services/__tests__/pipeline.test.ts  (19 tests) 218ms
+ ✓ src/hooks/__tests__/useUndoDelete.test.tsx  (15 tests) 111ms
+ ✓ src/components/ui/__tests__/Modal.test.tsx  (28 tests) 451ms
+ ✓ src/routes/app/schema/__tests__/-relationships.test.tsx  (8 tests) 1058ms
+ ✓ src/routes/app/reference/__tests__/workflows.test.tsx  (12 tests) 843ms
+ ✓ src/components/ontology/__tests__/IndividualDrawer.mutations.test.tsx  (8 tests) 2057ms
+ ✓ src/routes/app/schema/__tests__/-classes.test.tsx  (10 tests) 1097ms
+ ✓ src/components/ui/__tests__/Toast.test.tsx  (12 tests) 246ms
+ ✓ src/components/schema/__tests__/PropertyDefinitionForm.test.tsx  (14 tests) 1501ms
+ ✓ src/components/shell/__tests__/Topbar.test.tsx  (18 tests) 258ms
+ ❯ src/routes/app/graph/__tests__/graph.test.tsx  (11 tests | 1 failed) 571ms
+   ❯ src/routes/app/graph/__tests__/graph.test.tsx > Graph Page > accessibility and styling > page title renders as heading level 1
+     → Unable to find an accessible element with the role "heading"
+
+Here are the accessible roles:
+
+  banner:
+
+  Name "":
+  [36m<div[39m
+    [33mclass[39m=[32m"page-header"[39m
+    [33mdata-testid[39m=[32m"page-header"[39m
+    [33mrole[39m=[32m"banner"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  button:
+
+  Name "Build Graph":
+  [36m<button[39m
+    [33maria-busy[39m=[32m"false"[39m
+    [33mclass[39m=[32m"btn btn--primary btn--md"[39m
+    [33mdata-testid[39m=[32m"build-graph-button"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  region:
+
+  Name "Graph visualization canvas":
+  [36m<div[39m
+    [33maria-label[39m=[32m"Graph visualization canvas"[39m
+    [33mdata-testid[39m=[32m"graph-canvas"[39m
+    [33mrole[39m=[32m"region"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  complementary:
+
+  Name "Inspector panel":
+  [36m<aside[39m
+    [33maria-label[39m=[32m"Inspector panel"[39m
+    [33mclass[39m=[32m"graph-inspector"[39m
+    [33mrole[39m=[32m"complementary"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  tablist:
+
+  Name "":
+  [36m<div[39m
+    [33mclass[39m=[32m"tabbar"[39m
+    [33mrole[39m=[32m"tablist"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  tab:
+
+  Name "Metrics":
+  [36m<button[39m
+    [33maria-selected[39m=[32m"true"[39m
+    [33mclass[39m=[32m"tab active"[39m
+    [33mrole[39m=[32m"tab"[39m
+  [36m/>[39m
+
+  Name "Path Finder":
+  [36m<button[39m
+    [33maria-selected[39m=[32m"false"[39m
+    [33mclass[39m=[32m"tab"[39m
+    [33mrole[39m=[32m"tab"[39m
+  [36m/>[39m
+
+  Name "SPARQL Query":
+  [36m<button[39m
+    [33maria-selected[39m=[32m"false"[39m
+    [33mclass[39m=[32m"tab"[39m
+    [33mrole[39m=[32m"tab"[39m
+  [36m/>[39m
+
+  Name "Node Inspector":
+  [36m<button[39m
+    [33maria-selected[39m=[32m"false"[39m
+    [33mclass[39m=[32m"tab"[39m
+    [33mrole[39m=[32m"tab"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div[39m
+    [33mid[39m=[32m"root"[39m
+  [36m/>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mdata-testid[39m=[32m"graph-page"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"page-header"[39m
+        [33mdata-testid[39m=[32m"page-header"[39m
+        [33mrole[39m=[32m"banner"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"page-header__eyebrow"[39m
+        [36m>[39m
+          [0mKnowledge Graph[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"page-header__title"[39m
+        [36m>[39m
+          [0mGraph Visualization[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"page-header__subtitle"[39m
+        [36m>[39m
+          [0mExplore your knowledge graph[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"page-header__actions"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33maria-busy[39m=[32m"false"[39m
+            [33mclass[39m=[32m"btn btn--primary btn--md"[39m
+            [33mdata-testid[39m=[32m"build-graph-button"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-rotate-cw"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"16"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"16"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M21 3v5h-5"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+            [0mBuild Graph[0m
+          [36m</button>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"graph-shell"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33maria-label[39m=[32m"Graph visualization canvas"[39m
+          [33mdata-testid[39m=[32m"graph-canvas"[39m
+          [33mrole[39m=[32m"region"[39m
+        [36m>[39m
+          [36m<div>[39m
+            [0mGraph with [0m
+            [0m2[0m
+            [0m nodes[0m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<aside[39m
+          [33maria-label[39m=[32m"Inspector panel"[39m
+          [33mclass[39m=[32m"graph-inspector"[39m
+          [33mrole[39m=[32m"complementary"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"tabbar"[39m
+            [33mrole[39m=[32m"tablist"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33maria-selected[39m=[32m"true"[39m
+              [33mclass[39m=[32m"tab active"[39m
+              [33mrole[39m=[32m"tab"[39m
+            [36m>[39m
+              [0mMetrics[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-selected[39m=[32m"false"[39m
+              [33mclass[39m=[32m"tab"[39m
+              [33mrole[39m=[32m"tab"[39m
+            [36m>[39m
+              [0mPath Finder[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-selected[39m=[32m"false"[39m
+              [33mclass[39m=[32m"tab"[39m
+              [33mrole[39m=[32m"tab"[39m
+            [36m>[39m
+              [0mSPARQL Query[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-selected[39m=[32m"false"[39m
+              [33mclass[39m=[32m"tab"[39m
+              [33mrole[39m=[32m"tab"[39m
+            [36m>[39m
+              [0mNode Inspector[0m
+            [36m</button>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mdata-testid[39m=[32m"graph-metrics-panel"[39m
+            [33mid[39m=[32m"panel-metrics"[39m
+          [36m>[39m
+            [36m<div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"panel"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"panel__header"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"panel__title"[39m
+                  [36m>[39m
+                    [0mGraph Metrics[0m
+                  [36m</div>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"panel__body"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"panel-body"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mclass[39m=[32m"grid-2"[39m
+                    [36m>[39m
+                      [36m<div[39m
+                        [33mdata-testid[39m=[32m"graph-metrics-node-count"[39m
+                      [36m>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"stat-tile stat-tile--cyan"[39m
+                        [36m>[39m
+                          [36m<div[39m
+                            [33mclass[39m=[32m"stat-tile__label"[39m
+                          [36m>[39m
+                            [0mNode Count[0m
+                          [36m</div>[39m
+                          [36m<div[39m
+                            [33mclass[39m=[32m"stat-tile__value"[39m
+                          [36m>[39m
+                            [0m1[0m
+                          [36m</div>[39m
+                        [36m</div>[39m
+                      [36m</div>[39m
+                      [36m<div[39m
+                        [33mdata-testid[39m=[32m"graph-metrics-edge-count"[39m
+                      [36m>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"stat-tile stat-tile--violet"[39m
+                        [36m>[39m
+                          [36m<div[39m
+                            [33mclass[39m=[32m"stat-tile__label"[39m
+                          [36m>[39m
+                            [0mEdge Count[0m
+                          [36m</div>[39m
+                          [36m<div[39m
+                            [33mclass[39m=[32m"stat-tile__value"[39m
+                          [36m>[39m
+                            [0m1[0m
+                          [36m</div>[39m
+                        [36m</div>[39m
+                      [36m</div>[39m
+                      [36m<div[39m
+                        [33mdata-testid[39m=[32m"graph-metrics-community-count"[39m
+                      [36m>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"stat-tile stat-tile--amber"[39m
+                        [36m>[39m
+                          [36m<div[39m
+                            [33mclass[39m=[32m"stat-tile__label"[39m
+                          [36m>[39m
+                            [0mCommunities[0m
+                          [36m</div>[39m
+                          [36m<div[39m
+                            [33mclass[39m=[32m"stat-tile__value"[39m
+                          [36m>[39m
+                            [0m0[0m
+                          [36m</div>[39m
+                          [36m<div[39m
+                            [33mclass[39m=[32m"stat-tile__meta"[39m
+                          [36m>[39m
+                            [36m<span[39m
+                              [33mclass[39m=[32m"stat-tile__label-secondary"[39m
+                            [36m>[39m
+                              [0mlouvain[0m
+                            [36m</span>[39m
+                          [36m</div>[39m
+                        [36m</div>[39m
+                      [36m</div>[39m
+                      [36m<div[39m
+                        [33mdata-testid[39m=[32m"graph-metrics-avg-degree"[39m
+                      [36m>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"stat-tile stat-tile--emerald"[39m
+                        [36m>[39m
+                          [36m<div[39m
+                            [33mclass[39m=[32m"stat-tile__label"[39m
+                          [36m>[39m
+                            [0mAvg Degree[0m
+                          [36m</div>[39m
+                          [36m<div[39m
+                            [33mclass[39m=[32m"stat-tile__value"[39m
+                          [36m>[39m
+                            [0m1.00[0m
+                          [36m</div>[39m
+                        [36m</div>[39m
+                      [36m</div>[39m
+                    [36m</div>[39m
+                    [36m<div[39m
+                      [33mclass[39m=[32m"metrics-section"[39m
+                    [36m>[39m
+                      [36m<div[39m
+                        [33mclass[39m=[32m"metrics-section-title"[39m
+                      [36m>[39m
+                        [0mTop Centrality Nodes[0m
+                      [36m</div>[39m
+                      [36m<div[39m
+                        [33mclass[39m=[32m"centrality-list"[39m
+                        [33mdata-testid[39m=[32m"graph-metrics-centrality-list"[39m
+                      [36m>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"centrality-row"[39m
+                        [36m>[39m
+                          [36m<span[39m
+                            [33mclass[39m=[32m"centrality-index"[39m
+                          [36m>[39m
+                            [0m1[0m
+                            [0m.[0m
+                          [36m</span>[39m
+                          [36m<span[39m
+                            [33mclass[39m=[32m"centrality-node-id"[39m
+                            [33mtitle[39m=[32m"node-1"[39m
+                          [36m>[39m
+                            [0mnode-1[0m
+                          [36m</span>[39m
+                          [36m<span[39m
+                            [33mclass[39m=[32m"centrality-score"[39m
+                          [36m>[39m
+                            [0m0.800[0m
+                          [36m</span>[39m
+                        [36m</div>[39m
+                      [36m</div>[39m
+                    [36m</div>[39m
+                    [36m<div[39m
+                      [33mclass[39m=[32m"metrics-section"[39m
+                    [36m>[39m
+                      [36m<div[39m
+                        [33mclass[39m=[32m"metrics-section-title"[39m
+                      [36m>[39m
+                        [0mDegree Distribution[0m
+                      [36m</div>[39m
+                      [36m<div[39m
+                        [33mclass[39m=[32m"degree-chart"[39m
+                        [33mdata-testid[39m=[32m"graph-metrics-degree-distribution"[39m
+                      [36m>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"degree-bar-container"[39m
+                        [36m>[39m
+                          [36m<div[39m
+                            [33mclass[39m=[32m"degree-bar"[39m
+                            [33mstyle[39m=[32m"height: 100px;"[39m
+                            [33mtitle[39m=[32m"Degree 2: 1 nodes"[39m
+                          [36m/>[39m
+                          [36m<span[39m
+                            [33mclass[39m=[32m"degree-label"[39m
+                          [36m>[39m
+                            [0m2[0m
+                          [36m</span>[39m
+                        [36m</div>[39m
+                      [36m</div>[39m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</aside>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ✓ src/components/schema/__tests__/RelationshipForm.test.tsx  (10 tests) 613ms
+ ✓ src/routes/app/schema/__tests__/-properties.test.tsx  (10 tests) 927ms
+ ✓ src/routes/app/reference/__tests__/sources.test.tsx  (9 tests) 654ms
+ ✓ src/components/reference/__tests__/GroundingWorkflowForm.test.tsx  (11 tests) 1902ms
+ ✓ src/components/schema/__tests__/SchemaPageLayout.test.tsx  (16 tests) 187ms
+ ✓ src/components/pipeline/__tests__/FlavorForm.test.tsx  (14 tests) 1552ms
+ ✓ src/routes/app/settings/__tests__/settings.test.tsx  (10 tests) 467ms
+ ✓ src/api/services/__tests__/graph.test.ts  (12 tests) 112ms
+ ✓ src/components/schema/__tests__/SchemaTable.test.tsx  (19 tests) 504ms
+ ✓ src/api/services/__tests__/extraction.test.ts  (9 tests) 116ms
+ ✓ src/components/ui/__tests__/EmptyState.test.tsx  (20 tests) 242ms
+ ✓ src/routes/app/schema/__tests__/-schemes.test.tsx  (8 tests) 1158ms
+ ✓ src/routes/app/schema/__tests__/-taxonomies.test.tsx  (8 tests) 872ms
+ ✓ src/components/shell/__tests__/Titlebar.test.tsx  (20 tests) 287ms
+ ✓ src/components/ui/__tests__/Skeleton.test.tsx  (17 tests) 93ms
+ ✓ src/components/shell/__tests__/Sidebar.test.tsx  (12 tests) 181ms
+ ✓ src/components/schema/__tests__/FilterBar.test.tsx  (15 tests) 503ms
+ ✓ src/hooks/__tests__/useKeyboardShortcut.test.tsx  (10 tests) 69ms
+ ✓ src/utils/formatters.test.ts  (16 tests) 20ms
+ ✓ src/components/ui/__tests__/StatTile.test.tsx  (15 tests) 112ms
+ ✓ src/components/schema/__tests__/ClassForm.test.tsx  (12 tests) 722ms
+ ✓ src/components/ui/__tests__/Chip.test.tsx  (13 tests) 129ms
+ ✓ src/components/ui/__tests__/Panel.test.tsx  (12 tests) 339ms
+ ✓ src/utils/dateFormatting.test.ts  (4 tests) 24ms
+ ✓ src/api/utils/queryClient.test.ts  (6 tests) 29ms
+ ✓ src/components/ui/__tests__/ErrorBoundary.test.tsx  (10 tests) 362ms
+ ✓ src/components/schema/__tests__/TaxonomyForm.test.tsx  (9 tests) 634ms
+ ✓ src/components/schema/__tests__/SchemeForm.test.tsx  (9 tests) 717ms
+ ✓ src/api/services/__tests__/simple.test.ts  (2 tests) 33ms
+ ✓ src/utils/statusColorUtils.test.ts  (4 tests) 7ms
+ ✓ src/routes/app/versioning/__tests__/versioning.test.tsx  (6 tests) 530ms
+ ↓ src/hooks/__tests__/useCommandPaletteActions.test.tsx  (1 test | 1 skipped)
+ ↓ src/hooks/__tests__/useDebounce.test.tsx  (1 test | 1 skipped)
+ ✓ src/hooks/__tests__/useAutosave.test.tsx  (15 tests) 9455ms
+
+ Test Files  4 failed | 61 passed | 2 skipped (67)
+      Tests  6 failed | 1024 passed | 2 skipped (1032)
+   Start at  02:18:51
+   Duration  13.16s (transform 5.10s, setup 13.13s, collect 27.67s, tests 49.88s, environment 40.44s, prepare 9.14s)
+
