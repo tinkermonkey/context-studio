@@ -28,7 +28,6 @@ export function PageHeader({
       actions={actions}
       className={className}
       data-testid="page-header"
-      role="banner"
       {...rest}
     />
   );

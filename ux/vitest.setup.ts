@@ -597,7 +597,6 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
           ref,
           className: ["page-header", className].filter(Boolean).join(" "),
           "data-testid": "page-header",
-          role: "banner",
           ...props,
         },
         eyebrow && React.createElement("div", { className: "page-header__eyebrow" }, eyebrow),
