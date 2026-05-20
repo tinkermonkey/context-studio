@@ -1330,18 +1330,18 @@ select.input {
   width: 3px;
   height: 16px;
   border-radius: 1px;
-  background: var(--dom-default);
+  background: rgb(var(--dom-default));
   margin-right: 8px;
   flex: none;
 }
 .kg-node[data-domain="life"] .swatch {
-  background: var(--dom-life);
+  background: rgb(var(--dom-life));
 }
 .kg-node[data-domain="climate"] .swatch {
-  background: var(--dom-climate);
+  background: rgb(var(--dom-climate));
 }
 .kg-node[data-domain="software"] .swatch {
-  background: var(--dom-software);
+  background: rgb(var(--dom-software));
 }
 .kg-node:hover {
   border-color: var(--canvas-bd-2);

@@ -223,18 +223,18 @@ body.dark-canvas .graph-node.selected {
   width: 3px;
   height: 16px;
   border-radius: 1px;
-  background: var(--dom-default);
+  background: rgb(var(--dom-default));
   margin-right: 7px;
   flex: none;
 }
 .graph-node[data-domain="life"] .swatch {
-  background: var(--dom-life);
+  background: rgb(var(--dom-life));
 }
 .graph-node[data-domain="climate"] .swatch {
-  background: var(--dom-climate);
+  background: rgb(var(--dom-climate));
 }
 .graph-node[data-domain="software"] .swatch {
-  background: var(--dom-software);
+  background: rgb(var(--dom-software));
 }
 
 .graph-node-title {
@@ -314,13 +314,13 @@ body.dark-canvas .graph-node.selected {
   flex: none;
 }
 .graph-legend .dot.dom-life {
-  background: var(--dom-life);
+  background: rgb(var(--dom-life));
 }
 .graph-legend .dot.dom-climate {
-  background: var(--dom-climate);
+  background: rgb(var(--dom-climate));
 }
 .graph-legend .dot.dom-software {
-  background: var(--dom-software);
+  background: rgb(var(--dom-software));
 }
 .graph-legend .gl-count {
   margin-left: auto;
@@ -509,7 +509,7 @@ body.dark-canvas .gt-chip.irrelevant {
   background: var(--canvas-fg-4);
 }
 .gt-btn .dot.dom-software {
-  background: var(--dom-software);
+  background: rgb(var(--dom-software));
 }
 
 /* ============ Inspector (right rail) ============ */
@@ -634,7 +634,7 @@ body.dark-canvas .gt-chip.irrelevant {
 
 .centrality-score {
   font-weight: 500;
-  color: var(--cyan-600);
+  color: rgb(var(--cyan-600));
   margin-left: 0.5rem;
 }
 
@@ -656,7 +656,7 @@ body.dark-canvas .gt-chip.irrelevant {
 
 .degree-bar {
   width: 100%;
-  background: var(--violet-500);
+  background: rgb(var(--violet-500));
   border-radius: var(--radius-sm, 4px);
   min-height: 2px;
 }
