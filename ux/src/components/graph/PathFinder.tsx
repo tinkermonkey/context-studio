@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
-import { Input } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
+import { TextInput as Input } from "@tinkermonkey/heimdall-ui";
+import { Button } from "@tinkermonkey/heimdall-ui";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { useShortestPath } from "@/api/hooks/graph";
 import { COPY } from "@/routes/app/graph/-copy";

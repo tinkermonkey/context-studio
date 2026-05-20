@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
-import { Input, Field } from "@/components/ui/Input";
+import { Button } from "@tinkermonkey/heimdall-ui";
+import { TextInput as Input, Field } from "@tinkermonkey/heimdall-ui";
 import type { components } from "@/api/types";
 
 type PipelineFlavorCreateRequest = components["schemas"]["PipelineFlavorCreateRequest"];

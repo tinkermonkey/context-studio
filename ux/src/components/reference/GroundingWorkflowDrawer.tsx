@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@tinkermonkey/heimdall-ui";
 import { Chip } from "@/components/ui/Chip";
 import { useToasts } from "@/components/ui/Toast";
 import { Skeleton } from "@/components/ui/Skeleton";

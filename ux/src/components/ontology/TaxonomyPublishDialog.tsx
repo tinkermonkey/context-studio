@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
-import { Textarea } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
+import { TextArea as Textarea } from "@tinkermonkey/heimdall-ui";
+import { Button } from "@tinkermonkey/heimdall-ui";
 import { useToasts } from "@/components/ui/Toast";
 import { usePublishTaxonomy, usePublishDiffStats } from "@/api/hooks/ontology/useTaxonomies";
 import type { components } from "@/api/types";

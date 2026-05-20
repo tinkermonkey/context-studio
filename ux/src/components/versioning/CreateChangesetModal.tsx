@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Modal } from "@/components/ui/Modal";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import { Button } from "@tinkermonkey/heimdall-ui";
+import { TextInput as Input } from "@tinkermonkey/heimdall-ui";
 import { COPY } from "@/routes/app/versioning/copy";
 import type { TextareaHTMLAttributes } from "react";
 

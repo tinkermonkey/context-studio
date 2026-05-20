@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
-import { Textarea } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
+import { TextArea as Textarea } from "@tinkermonkey/heimdall-ui";
+import { Button } from "@tinkermonkey/heimdall-ui";
 import { useSparqlQuery } from "@/api/hooks/graph";
 import { COPY } from "@/routes/app/graph/-copy";
 

@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
-import { Input, Textarea } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
+import { TextInput as Input, TextArea as Textarea } from "@tinkermonkey/heimdall-ui";
+import { Button } from "@tinkermonkey/heimdall-ui";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { individualsCopy } from "@/routes/app/data/individuals/-copy";
 import type { components } from "@/api/types";

@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
+import { TextInput as Input } from "@tinkermonkey/heimdall-ui";
 import { ConfirmDialog } from "./ConfirmDialog";
-import { Input } from "./Input";
 
 interface TypeToConfirmDialogProps {
   open: boolean;

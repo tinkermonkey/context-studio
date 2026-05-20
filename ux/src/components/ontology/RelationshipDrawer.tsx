@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Drawer } from "@/components/ui/Drawer";
-import { Input } from "@/components/ui/Input";
+import { TextInput as Input } from "@tinkermonkey/heimdall-ui";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useDeleteRelationship } from "@/api/hooks/ontology/useRelationships";
 import { useToasts } from "@/components/ui/Toast";

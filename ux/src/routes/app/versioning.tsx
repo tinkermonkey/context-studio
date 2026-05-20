@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { useToasts } from "@/components/ui/Toast";
-import { Tabs } from "@/components/ui/Tabs";
+import { TabBar } from "@tinkermonkey/heimdall-ui";
 import { ChangesetPanel } from "@/components/versioning/ChangesetPanel";
 import { SyncStatusPanel } from "@/components/versioning/SyncStatus";
 import { ConflictResolver } from "@/components/versioning/ConflictResolver";
@@ -40,7 +40,7 @@ export function VersioningPage() {
         </div>
       </div>
 
-      <Tabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
+      <TabBar tabs={tabs} activeTabId={activeTab} onSelectTab={setActiveTab} />
 
       {activeTab === "changesets" && (
         <ChangesetPanel

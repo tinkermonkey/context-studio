@@ -1,5 +1,5 @@
 import React, { ReactNode } from "react";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@tinkermonkey/heimdall-ui";
 import { getActiveSpan } from "@/telemetry";
 
 interface ErrorBoundaryProps {

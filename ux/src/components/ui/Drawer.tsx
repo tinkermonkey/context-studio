@@ -1,8 +1,7 @@
 import { type ReactNode } from "react";
 import { Loader, CheckCircle, AlertCircle, X } from "lucide-react";
-import { Drawer as HeimdallDrawer } from "@tinkermonkey/heimdall-ui";
+import { Drawer as HeimdallDrawer, Button } from "@tinkermonkey/heimdall-ui";
 import { formatTimeAgo } from "@/utils/dateFormatting";
-import { Button } from "./Button";
 
 type AutosaveState = "idle" | "saving" | "saved" | "error";
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Input, Textarea, Field } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
+import { TextInput as Input, TextArea as Textarea, Field } from "@tinkermonkey/heimdall-ui";
+import { Button } from "@tinkermonkey/heimdall-ui";
 import type { components } from "@/api/types";
 
 type PropertyDefinitionCreateRequest = components["schemas"]["PropertyDefinitionCreateRequest"];

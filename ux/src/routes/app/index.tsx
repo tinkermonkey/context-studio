@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Network, Layers, GitBranch, Cpu, Plus } from "lucide-react";
 import { StatTile } from "@/components/ui/StatTile";
-import { StatGrid } from "@/components/ui/StatGrid";
+import { StatGrid } from "@tinkermonkey/heimdall-ui";
 import { Panel } from "@/components/ui/Panel";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";

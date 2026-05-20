@@ -10,14 +10,14 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus, Trash2, Edit2, ExternalLink, Globe, Cpu, GitMerge, Database } from "lucide-react";
 import { ColumnDef } from "@tanstack/react-table";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@tinkermonkey/heimdall-ui";
 import { Chip } from "@/components/ui/Chip";
-import { Input, Textarea, Select } from "@/components/ui/Input";
+import { TextInput as Input, TextArea as Textarea, Select } from "@tinkermonkey/heimdall-ui";
 import { Modal } from "@/components/ui/Modal";
 import { Drawer } from "@/components/ui/Drawer";
-import { Tabs } from "@/components/ui/Tabs";
+import { TabBar } from "@tinkermonkey/heimdall-ui";
 import { StatTile } from "@/components/ui/StatTile";
-import { StatGrid } from "@/components/ui/StatGrid";
+import { StatGrid } from "@tinkermonkey/heimdall-ui";
 import { Panel } from "@/components/ui/Panel";
 import { Table } from "@tinkermonkey/heimdall-ui";
 import { useToasts } from "@/components/ui/Toast";
@@ -184,15 +184,14 @@ export default function ContactSheet() {
 
       {/* ── Tabs ── */}
       <Section title="Tabs" testid="contact-sheet-tabs">
-        <Tabs
-          tabs={[
+        <TabBar tabs={[
             { id: "overview", label: "Overview" },
             { id: "properties", label: "Properties" },
             { id: "relationships", label: "Relationships" },
             { id: "history", label: "History" },
           ]}
-          active={activeTab}
-          onChange={setActiveTab}
+          activeTabId={activeTab}
+          onSelectTab={setActiveTab}
         />
         <div className="contact-sheet-tab-content">
           Active tab: <strong>{activeTab}</strong>

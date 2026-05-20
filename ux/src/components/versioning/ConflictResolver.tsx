@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@tinkermonkey/heimdall-ui";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useProposalConflicts, useResolveConflicts } from "@/api/hooks/versioning";
 import { useIndividuals, useTaxonomies, useClasses } from "@/api/hooks/ontology";

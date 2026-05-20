@@ -1,4 +1,4 @@
-import { Input } from "@/components/ui/Input";
+import { TextInput as Input } from "@tinkermonkey/heimdall-ui";
 import { Chip } from "@/components/ui/Chip";
 import { X } from "lucide-react";
 

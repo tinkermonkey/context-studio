@@ -9,7 +9,7 @@ import { SparqlEditor } from "@/components/graph/SparqlEditor";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { Tabs } from "@/components/ui/Tabs";
+import { TabBar } from "@tinkermonkey/heimdall-ui";
 import { COPY } from "./-copy";
 import "@/design-system/graph.css";
 
@@ -91,15 +91,14 @@ export function GraphPage() {
             selectedNodeId={selectedNodeId}
           />
           <aside className="graph-inspector" role="complementary" aria-label="Inspector panel">
-            <Tabs
-              tabs={[
+            <TabBar tabs={[
                 { id: "metrics", label: COPY.METRICS_TAB },
                 { id: "path", label: COPY.PATH_FINDER_TAB },
                 { id: "sparql", label: COPY.SPARQL_QUERY_TAB },
                 { id: "node", label: COPY.NODE_INSPECTOR_TAB },
               ]}
-              active={activeTab}
-              onChange={setActiveTab}
+              activeTabId={activeTab}
+              onSelectTab={setActiveTab}
             />
             {activeTab === "metrics" ? (
               <MetricsPanel />

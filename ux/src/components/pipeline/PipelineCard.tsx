@@ -2,7 +2,7 @@ import type { components } from "@/api/types";
 import { Cpu, Play, Loader } from "lucide-react";
 import { usePipelineExecutions, useExecutePipeline } from "@/api/hooks/pipeline";
 import { formatRelativeTime, formatDuration } from "@/utils/formatters";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@tinkermonkey/heimdall-ui";
 import { useToasts } from "@/components/ui/Toast";
 import { useExecutionStore } from "@/stores/executionStore";
 import { COPY } from "@/routes/app/pipelines/-copy";

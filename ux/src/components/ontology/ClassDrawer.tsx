@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Drawer } from "@/components/ui/Drawer";
-import { Input, Textarea, Select } from "@/components/ui/Input";
+import { TextInput as Input, TextArea as Textarea, Select } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { useUpdateClass, useDeleteClass, useMoveClass } from "@/api/hooks/ontology/useClasses";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
