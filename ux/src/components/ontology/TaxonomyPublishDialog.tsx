@@ -2,7 +2,6 @@ import { TextArea as Textarea, Button } from "@tinkermonkey/heimdall-ui";
 import { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 
-
 import { useToasts } from "@/components/ui/Toast";
 import { usePublishTaxonomy, usePublishDiffStats } from "@/api/hooks/ontology/useTaxonomies";
 import type { components } from "@/api/types";

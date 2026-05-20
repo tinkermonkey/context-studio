@@ -42,9 +42,7 @@ export function ClassForm({ onSubmit, isLoading }: ClassFormProps) {
         description: description || null,
       });
     } catch (error) {
-      setFormError(
-        error instanceof Error ? error.message : "Failed to create class"
-      );
+      setFormError(error instanceof Error ? error.message : "Failed to create class");
     }
   };
 

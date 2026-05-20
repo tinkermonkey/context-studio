@@ -108,11 +108,7 @@ export function ExtractionPage() {
 
   return (
     <div data-testid="extraction-page">
-      <PageHeader
-        eyebrow="Processing"
-        title={COPY.PAGE_TITLE}
-        subtitle={COPY.PAGE_SUBTITLE}
-      />
+      <PageHeader eyebrow="Processing" title={COPY.PAGE_TITLE} subtitle={COPY.PAGE_SUBTITLE} />
 
       <div
         style={{

@@ -15,11 +15,7 @@ vi.mock("@/components/ui/Toast", () => ({
 // Mock the GraphCanvas component
 vi.mock("@/components/graph/GraphCanvas", () => ({
   GraphCanvasComponent: ({ nodes, _edges, _selectedNodeId, _onNodeSelect }: any) => (
-    <div
-      data-testid="graph-canvas"
-      role="region"
-      aria-label="Graph visualization canvas"
-    >
+    <div data-testid="graph-canvas" role="region" aria-label="Graph visualization canvas">
       {nodes.length > 0 && <div>Graph with {nodes.length} nodes</div>}
     </div>
   ),

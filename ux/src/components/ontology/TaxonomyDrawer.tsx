@@ -2,7 +2,6 @@ import { TextInput as Input, TextArea as Textarea, Button } from "@tinkermonkey/
 import { useState, useEffect, useRef } from "react";
 import { Drawer } from "@/components/ui/Drawer";
 
-
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useUpdateTaxonomy, useDeleteTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
 import { useAutosave } from "@/hooks/useAutosave";

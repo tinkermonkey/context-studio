@@ -579,18 +579,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
       }),
   ),
   PageHeader: React.forwardRef(
-    (
-      {
-        eyebrow,
-        title,
-        subtitle,
-        idChip,
-        actions,
-        className = "",
-        ...props
-      }: any,
-      ref: any,
-    ) =>
+    ({ eyebrow, title, subtitle, idChip, actions, className = "", ...props }: any, ref: any) =>
       React.createElement(
         "div",
         {
@@ -606,12 +595,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
         actions && React.createElement("div", { className: "page-header__actions" }, actions),
       ),
   ),
-  ActivityTimeline: ({
-    events = [],
-    emptyState,
-    className = "",
-    ...props
-  }: any) =>
+  ActivityTimeline: ({ events = [], emptyState, className = "", ...props }: any) =>
     React.createElement(
       "div",
       {
@@ -628,7 +612,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
             ),
           )
         : emptyState &&
-          React.createElement("div", { className: "activity-timeline__empty" }, emptyState),
+            React.createElement("div", { className: "activity-timeline__empty" }, emptyState),
     ),
   GraphCanvas: ({ nodes = [], edges = [], className = "", ...props }: any) =>
     React.createElement(

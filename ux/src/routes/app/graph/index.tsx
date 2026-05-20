@@ -95,7 +95,8 @@ export function GraphPage() {
             selectedNodeId={selectedNodeId}
           />
           <aside className="graph-inspector" role="complementary" aria-label="Inspector panel">
-            <TabBar tabs={[
+            <TabBar
+              tabs={[
                 { id: "metrics", label: COPY.METRICS_TAB },
                 { id: "path", label: COPY.PATH_FINDER_TAB },
                 { id: "sparql", label: COPY.SPARQL_QUERY_TAB },

@@ -1,7 +1,6 @@
 import { Button, Field } from "@tinkermonkey/heimdall-ui";
 import { useState } from "react";
 
-
 import type { components } from "@/api/types";
 
 type RelationshipCreateRequest = components["schemas"]["RelationshipCreateRequest"];
@@ -71,9 +70,7 @@ export function RelationshipForm({
         relationship_type: relationshipType,
       });
     } catch (error) {
-      setFormError(
-        error instanceof Error ? error.message : "Failed to create relationship"
-      );
+      setFormError(error instanceof Error ? error.message : "Failed to create relationship");
     }
   };
 

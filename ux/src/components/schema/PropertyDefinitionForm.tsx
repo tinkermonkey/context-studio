@@ -1,7 +1,6 @@
 import { TextInput as Input, TextArea as Textarea, Field, Button } from "@tinkermonkey/heimdall-ui";
 import { useState } from "react";
 
-
 import type { components } from "@/api/types";
 
 type PropertyDefinitionCreateRequest = components["schemas"]["PropertyDefinitionCreateRequest"];
@@ -82,9 +81,7 @@ export function PropertyDefinitionForm({
         } as PropertyDefinitionCreateRequest);
       }
     } catch (error) {
-      setFormError(
-        error instanceof Error ? error.message : "Failed to save property"
-      );
+      setFormError(error instanceof Error ? error.message : "Failed to save property");
     }
   };
 

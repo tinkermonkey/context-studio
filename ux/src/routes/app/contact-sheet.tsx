@@ -10,7 +10,15 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus, Trash2, Edit2, ExternalLink, Globe, Cpu, GitMerge, Database } from "lucide-react";
 import { ColumnDef } from "@tanstack/react-table";
-import { Button, TextInput as Input, TextArea as Textarea, Select, TabBar, StatGrid, Table } from "@tinkermonkey/heimdall-ui";
+import {
+  Button,
+  TextInput as Input,
+  TextArea as Textarea,
+  Select,
+  TabBar,
+  StatGrid,
+  Table,
+} from "@tinkermonkey/heimdall-ui";
 import { Chip } from "@/components/ui/Chip";
 import { Modal } from "@/components/ui/Modal";
 import { Drawer } from "@/components/ui/Drawer";
@@ -180,7 +188,8 @@ export default function ContactSheet() {
 
       {/* ── Tabs ── */}
       <Section title="Tabs" testid="contact-sheet-tabs">
-        <TabBar tabs={[
+        <TabBar
+          tabs={[
             { id: "overview", label: "Overview" },
             { id: "properties", label: "Properties" },
             { id: "relationships", label: "Relationships" },
@@ -261,13 +270,7 @@ export default function ContactSheet() {
                 label: "Type",
                 render: (value) => (
                   <Chip
-                    color={
-                      value === "Class"
-                        ? "violet"
-                        : value === "Individual"
-                          ? "cyan"
-                          : "amber"
-                    }
+                    color={value === "Class" ? "violet" : value === "Individual" ? "cyan" : "amber"}
                   >
                     {value}
                   </Chip>
@@ -296,9 +299,30 @@ export default function ContactSheet() {
               },
             ]}
             data={[
-              { id: "1", name: "PhotosyntheticOrganism", type: "Class", status: "active", count: "42", action: null },
-              { id: "2", name: "Arabidopsis thaliana", type: "Individual", status: "active", count: "—", action: null },
-              { id: "3", name: "hasSubclass", type: "Relation", status: "draft", count: "18", action: null },
+              {
+                id: "1",
+                name: "PhotosyntheticOrganism",
+                type: "Class",
+                status: "active",
+                count: "42",
+                action: null,
+              },
+              {
+                id: "2",
+                name: "Arabidopsis thaliana",
+                type: "Individual",
+                status: "active",
+                count: "—",
+                action: null,
+              },
+              {
+                id: "3",
+                name: "hasSubclass",
+                type: "Relation",
+                status: "draft",
+                count: "18",
+                action: null,
+              },
             ]}
             rowKey="id"
             className="t"

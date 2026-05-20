@@ -2,7 +2,6 @@ import { TextArea as Textarea, Button } from "@tinkermonkey/heimdall-ui";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 
-
 import { useSparqlQuery } from "@/api/hooks/graph";
 import { COPY } from "@/routes/app/graph/-copy";
 

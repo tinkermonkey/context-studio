@@ -109,11 +109,7 @@ export function Dashboard() {
   if (isEmptyState) {
     return (
       <div>
-        <PageHeader
-          eyebrow="Main"
-          title="Dashboard"
-          subtitle="Knowledge graph overview"
-        />
+        <PageHeader eyebrow="Main" title="Dashboard" subtitle="Knowledge graph overview" />
         <EmptyState />
       </div>
     );
@@ -123,9 +119,7 @@ export function Dashboard() {
     !changesError && changesData?.events
       ? changesData.events.slice(0, 8).map((event) => {
           const stateTitle =
-            typeof event.new_state?.title === "string"
-              ? event.new_state.title
-              : event.entity_id;
+            typeof event.new_state?.title === "string" ? event.new_state.title : event.entity_id;
           return {
             id: event.id,
             type: mapOperationToEventType(event.operation),
@@ -137,11 +131,7 @@ export function Dashboard() {
 
   return (
     <div>
-      <PageHeader
-        eyebrow="Main"
-        title="Dashboard"
-        subtitle="Knowledge graph overview"
-      />
+      <PageHeader eyebrow="Main" title="Dashboard" subtitle="Knowledge graph overview" />
 
       {/* Stat grid */}
       <ErrorBanner
@@ -209,10 +199,7 @@ export function Dashboard() {
                   ))}
                 </div>
               ) : (
-                <ActivityTimeline
-                  events={activityEvents}
-                  emptyState="No recent changes."
-                />
+                <ActivityTimeline events={activityEvents} emptyState="No recent changes." />
               )}
             </>
           )}

@@ -50,7 +50,6 @@
   --canvas-bd: rgb(var(--canvas-border));
   --canvas-bd-2: rgb(var(--canvas-border-strong));
 
-
   /* ---- Shell Surface ---- */
   --shell-bg-2: rgb(19 32 58);
   --shell-surface-2: rgb(36 55 99);

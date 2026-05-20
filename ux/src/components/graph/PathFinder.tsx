@@ -2,7 +2,6 @@ import { TextInput as Input, Button } from "@tinkermonkey/heimdall-ui";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 
-
 import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { useShortestPath } from "@/api/hooks/graph";
 import { COPY } from "@/routes/app/graph/-copy";

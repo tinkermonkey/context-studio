@@ -4,7 +4,6 @@ import { Copy, Play, Loader } from "lucide-react";
 import { usePipelineExecutions, useUpdatePipeline, useExecutePipeline } from "@/api/hooks/pipeline";
 import { Drawer } from "@/components/ui/Drawer";
 
-
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useAutosave } from "@/hooks/useAutosave";
 import { useToasts } from "@/components/ui/Toast";

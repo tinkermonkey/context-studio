@@ -1,7 +1,6 @@
 import { TextInput as Input, Field, Button } from "@tinkermonkey/heimdall-ui";
 import { useState, useRef, useEffect } from "react";
 
-
 import { Chip } from "@/components/ui/Chip";
 import { useReferenceStatus, useClasses } from "@/api/hooks";
 import type { GroundingWorkflowCreate } from "@/api/types/manual/grounding";
@@ -122,9 +121,7 @@ export function GroundingWorkflowForm({ onSubmit, isLoading }: GroundingWorkflow
         class_scope: selectedClassIds,
       });
     } catch (error) {
-      setFormError(
-        error instanceof Error ? error.message : "Failed to create workflow"
-      );
+      setFormError(error instanceof Error ? error.message : "Failed to create workflow");
     }
   };
 

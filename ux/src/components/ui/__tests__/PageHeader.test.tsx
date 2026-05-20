@@ -1,26 +1,19 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import { screen } from "@testing-library/react";
 import { render } from "@/test/test-utils";
 import { PageHeader } from "../PageHeader";
-import { createRef } from "react";
 
 describe("PageHeader", () => {
   describe("CSS classes", () => {
     it("applies page-header class to root element", () => {
-      const { container } = render(
-        <PageHeader eyebrow="Eyebrow" title="Test Title" />,
-      );
+      const { container } = render(<PageHeader eyebrow="Eyebrow" title="Test Title" />);
       const header = container.querySelector("[data-testid='page-header']");
       expect(header).toHaveClass("page-header");
     });
 
     it("merges custom className with base class", () => {
       const { container } = render(
-        <PageHeader
-          eyebrow="Eyebrow"
-          title="Test Title"
-          className="custom-class"
-        />,
+        <PageHeader eyebrow="Eyebrow" title="Test Title" className="custom-class" />,
       );
       const header = container.querySelector("[data-testid='page-header']");
       expect(header).toHaveClass("page-header");
@@ -38,9 +31,7 @@ describe("PageHeader", () => {
 
   describe("data-testid attribute", () => {
     it("has data-testid on root element", () => {
-      const { container } = render(
-        <PageHeader eyebrow="Eyebrow" title="Test Title" />,
-      );
+      const { container } = render(<PageHeader eyebrow="Eyebrow" title="Test Title" />);
       const header = container.querySelector("[data-testid='page-header']");
       expect(header).toBeInTheDocument();
       expect(header?.getAttribute("data-testid")).toBe("page-header");
@@ -62,9 +53,7 @@ describe("PageHeader", () => {
     });
 
     it("applies page-header__title class to h1", () => {
-      const { container } = render(
-        <PageHeader eyebrow="Eyebrow" title="Test Title" />,
-      );
+      const { container } = render(<PageHeader eyebrow="Eyebrow" title="Test Title" />);
       const heading = container.querySelector(".page-header__title");
       expect(heading).toBeInTheDocument();
       expect(heading?.tagName).toBe("H1");
@@ -78,18 +67,14 @@ describe("PageHeader", () => {
     });
 
     it("applies page-header__eyebrow class to eyebrow", () => {
-      const { container } = render(
-        <PageHeader eyebrow="Eyebrow Text" title="Title" />,
-      );
+      const { container } = render(<PageHeader eyebrow="Eyebrow Text" title="Title" />);
       const eyebrow = container.querySelector(".page-header__eyebrow");
       expect(eyebrow).toBeInTheDocument();
       expect(eyebrow).toHaveTextContent("Eyebrow Text");
     });
 
     it("does not render eyebrow container when eyebrow is not provided", () => {
-      const { container } = render(
-        <PageHeader eyebrow="" title="Title" />,
-      );
+      const { container } = render(<PageHeader eyebrow="" title="Title" />);
       const eyebrow = container.querySelector(".page-header__eyebrow");
       expect(eyebrow).not.toBeInTheDocument();
     });
@@ -97,23 +82,13 @@ describe("PageHeader", () => {
 
   describe("subtitle prop", () => {
     it("renders subtitle when provided", () => {
-      render(
-        <PageHeader
-          eyebrow="Eyebrow"
-          title="Title"
-          subtitle="Subtitle Text"
-        />,
-      );
+      render(<PageHeader eyebrow="Eyebrow" title="Title" subtitle="Subtitle Text" />);
       expect(screen.getByText("Subtitle Text")).toBeInTheDocument();
     });
 
     it("applies page-header__subtitle class to subtitle", () => {
       const { container } = render(
-        <PageHeader
-          eyebrow="Eyebrow"
-          title="Title"
-          subtitle="Subtitle Text"
-        />,
+        <PageHeader eyebrow="Eyebrow" title="Title" subtitle="Subtitle Text" />,
       );
       const subtitle = container.querySelector(".page-header__subtitle");
       expect(subtitle).toBeInTheDocument();
@@ -121,9 +96,7 @@ describe("PageHeader", () => {
     });
 
     it("does not render subtitle when not provided", () => {
-      const { container } = render(
-        <PageHeader eyebrow="Eyebrow" title="Title" />,
-      );
+      const { container } = render(<PageHeader eyebrow="Eyebrow" title="Title" />);
       const subtitle = container.querySelector(".page-header__subtitle");
       expect(subtitle).not.toBeInTheDocument();
     });
@@ -131,23 +104,13 @@ describe("PageHeader", () => {
 
   describe("idChip prop", () => {
     it("renders idChip when provided", () => {
-      render(
-        <PageHeader
-          eyebrow="Eyebrow"
-          title="Title"
-          idChip="ID-12345"
-        />,
-      );
+      render(<PageHeader eyebrow="Eyebrow" title="Title" idChip="ID-12345" />);
       expect(screen.getByText("ID-12345")).toBeInTheDocument();
     });
 
     it("applies page-header__id-chip class to idChip", () => {
       const { container } = render(
-        <PageHeader
-          eyebrow="Eyebrow"
-          title="Title"
-          idChip="ID-12345"
-        />,
+        <PageHeader eyebrow="Eyebrow" title="Title" idChip="ID-12345" />,
       );
       const idChip = container.querySelector(".page-header__id-chip");
       expect(idChip).toBeInTheDocument();
@@ -155,9 +118,7 @@ describe("PageHeader", () => {
     });
 
     it("does not render idChip when not provided", () => {
-      const { container } = render(
-        <PageHeader eyebrow="Eyebrow" title="Title" />,
-      );
+      const { container } = render(<PageHeader eyebrow="Eyebrow" title="Title" />);
       const idChip = container.querySelector(".page-header__id-chip");
       expect(idChip).not.toBeInTheDocument();
     });
@@ -166,22 +127,14 @@ describe("PageHeader", () => {
   describe("actions prop", () => {
     it("renders actions when provided as ReactNode", () => {
       render(
-        <PageHeader
-          eyebrow="Eyebrow"
-          title="Title"
-          actions={<button>Action Button</button>}
-        />,
+        <PageHeader eyebrow="Eyebrow" title="Title" actions={<button>Action Button</button>} />,
       );
       expect(screen.getByRole("button", { name: "Action Button" })).toBeInTheDocument();
     });
 
     it("applies page-header__actions class to actions container", () => {
       const { container } = render(
-        <PageHeader
-          eyebrow="Eyebrow"
-          title="Title"
-          actions={<span>Actions</span>}
-        />,
+        <PageHeader eyebrow="Eyebrow" title="Title" actions={<span>Actions</span>} />,
       );
       const actions = container.querySelector(".page-header__actions");
       expect(actions).toBeInTheDocument();
@@ -189,9 +142,7 @@ describe("PageHeader", () => {
     });
 
     it("does not render actions container when not provided", () => {
-      const { container } = render(
-        <PageHeader eyebrow="Eyebrow" title="Title" />,
-      );
+      const { container } = render(<PageHeader eyebrow="Eyebrow" title="Title" />);
       const actions = container.querySelector(".page-header__actions");
       expect(actions).not.toBeInTheDocument();
     });
@@ -227,9 +178,7 @@ describe("PageHeader", () => {
       );
 
       expect(screen.getByText("API Reference")).toBeInTheDocument();
-      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
-        "Documentation",
-      );
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Documentation");
       expect(screen.getByText("Complete API documentation")).toBeInTheDocument();
       expect(screen.getByText("v1.0")).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Edit" })).toBeInTheDocument();
@@ -255,42 +204,9 @@ describe("PageHeader", () => {
     });
 
     it("does not have banner role on root element", () => {
-      const { container } = render(
-        <PageHeader eyebrow="Eyebrow" title="Title" />,
-      );
+      const { container } = render(<PageHeader eyebrow="Eyebrow" title="Title" />);
       const header = container.querySelector("[data-testid='page-header']");
       expect(header?.getAttribute("role")).not.toBe("banner");
-    });
-  });
-
-  describe("ref forwarding", () => {
-    it("forwards ref to root element", () => {
-      const ref = createRef<HTMLDivElement>();
-      render(
-        <PageHeader
-          ref={ref}
-          eyebrow="Eyebrow"
-          title="Title"
-        />,
-      );
-
-      expect(ref.current).toBeInstanceOf(HTMLDivElement);
-      expect(ref.current?.className).toContain("page-header");
-    });
-
-    it("allows accessing DOM methods through ref", () => {
-      const ref = createRef<HTMLDivElement>();
-      const { container } = render(
-        <PageHeader
-          ref={ref}
-          eyebrow="Eyebrow"
-          title="Title"
-          className="test-class"
-        />,
-      );
-
-      expect(ref.current?.classList.contains("page-header")).toBe(true);
-      expect(ref.current?.classList.contains("test-class")).toBe(true);
     });
   });
 

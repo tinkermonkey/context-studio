@@ -10,7 +10,6 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SchemaTable } from "@/components/schema/SchemaTable";
 
-
 import { Chip } from "@/components/ui/Chip";
 import { getStatusColor } from "@/utils/statusColorUtils";
 import { COPY } from "./-copy";
@@ -181,10 +180,7 @@ function RunsPageContent() {
 
     content = (
       <>
-        <PageHeader
-          eyebrow="Pipelines"
-          title={COPY.RUN_HISTORY_PAGE_TITLE}
-        />
+        <PageHeader eyebrow="Pipelines" title={COPY.RUN_HISTORY_PAGE_TITLE} />
 
         <div className="stack runs-filter-bar">
           <Input

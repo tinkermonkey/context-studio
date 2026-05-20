@@ -98,8 +98,6 @@ body.dark-canvas {
   pointer-events: none;
 }
 
-
-
 /* ============ Floating legend (top-left) ============ */
 .graph-legend {
   position: absolute;
