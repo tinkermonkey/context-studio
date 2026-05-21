@@ -369,7 +369,7 @@ a {
   top: 6px;
   bottom: 6px;
   width: 2px;
-  background: rgb(var(--accent-primary));
+  background: rgb(var(--status-cyan));
   border-radius: 0 2px 2px 0;
 }
 .nav-item svg {
@@ -389,7 +389,7 @@ a {
   color: rgb(var(--shell-fg-3));
 }
 .nav-item.active .nav-count {
-  color: rgb(var(--accent-primary));
+  color: rgb(var(--status-cyan));
 }
 .nav-item.active-parent {
   color: rgb(var(--shell-fg-1));
@@ -442,7 +442,7 @@ a {
   height: 12px;
   transform: translateY(-50%);
   width: 1px;
-  background: rgb(var(--accent-primary));
+  background: rgb(var(--status-cyan));
 }
 
 .rail-footer {
@@ -571,7 +571,7 @@ a {
   align-items: center;
   gap: 8px;
   margin-left: auto;
-  width: 320px;
+  width: 260px;
   height: 30px;
   padding: 0 10px;
   background: rgb(var(--shell-bg));
@@ -2562,4 +2562,16 @@ body.dark-canvas .diff-added {
   align-items: center;
   gap: var(--space-2);
   flex-shrink: 0;
+}
+
+/* ------------ Stat grid 4-col override (keep 4 cols down to 1024px) ------------ */
+@media (max-width: 1400px) {
+  .stat-grid--cols-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+@media (max-width: 1024px) {
+  .stat-grid--cols-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
