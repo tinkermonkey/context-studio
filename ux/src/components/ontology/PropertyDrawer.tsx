@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Drawer } from "@/components/ui/Drawer";
-import { Input, Textarea } from "@/components/ui/Input";
+import { TextInput as Input, TextArea as Textarea } from "@tinkermonkey/heimdall-ui";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useUpdateProperty, useDeleteProperty } from "@/api/hooks/ontology/useProperties";
 import { useAutosave } from "@/hooks/useAutosave";

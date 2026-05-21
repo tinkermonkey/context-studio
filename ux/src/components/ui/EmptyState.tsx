@@ -1,5 +1,5 @@
 import { type ReactNode } from "react";
-import { Button } from "./Button";
+import { Button } from "@tinkermonkey/heimdall-ui";
 
 interface EmptyStateProps {
   icon?: ReactNode;

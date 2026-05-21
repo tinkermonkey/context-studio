@@ -1,3 +1,4 @@
+import { Button, TextInput as Input } from "@tinkermonkey/heimdall-ui";
 import { useState, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { ColumnDef } from "@tanstack/react-table";
@@ -5,12 +6,12 @@ import { Plus } from "lucide-react";
 import { useFlavors, useCreateFlavor, useDeleteFlavor } from "@/api/hooks/flavor";
 import { SchemaTable } from "@/components/schema/SchemaTable";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Modal } from "@/components/ui/Modal";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { FlavorForm } from "@/components/pipeline/FlavorForm";
 import { FlavorDrawer } from "@/components/pipeline/FlavorDrawer";
 import { COPY } from "./-copy";
@@ -148,17 +149,20 @@ function FlavorsContent() {
         }
       >
         <div data-testid="flavors-content" className="stack">
-          <div className="page-head">
-            <h1>{COPY.FLAVORS_PAGE_TITLE}</h1>
-            <Button
-              variant="primary"
-              onClick={() => setShowCreateModal(true)}
-              data-testid="flavor-add-button"
-            >
-              <Plus size={16} style={{ marginRight: "4px" }} />
-              {COPY.NEW_FLAVOR_BUTTON}
-            </Button>
-          </div>
+          <PageHeader
+            eyebrow="Pipelines"
+            title={COPY.FLAVORS_PAGE_TITLE}
+            actions={
+              <Button
+                variant="primary"
+                onClick={() => setShowCreateModal(true)}
+                data-testid="flavor-add-button"
+              >
+                <Plus size={16} style={{ marginRight: "4px" }} />
+                {COPY.NEW_FLAVOR_BUTTON}
+              </Button>
+            }
+          />
 
           <Input
             type="text"

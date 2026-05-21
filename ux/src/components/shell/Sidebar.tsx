@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { Menu } from "lucide-react";
-import { NavItem } from "@tinkermonkey/heimdall-ui";
-import type { IconName } from "@tinkermonkey/heimdall-ui";
+import { NavItem, type IconName } from "@tinkermonkey/heimdall-ui";
 
 interface NavItemPath {
   id: string;

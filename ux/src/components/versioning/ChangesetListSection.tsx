@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@tinkermonkey/heimdall-ui";
 import { useChangesets, useApplyChangeset } from "@/api/hooks/versioning";
 import { useToasts } from "@/components/ui/Toast";
 import { formatRelativeTime } from "@/utils/formatters";

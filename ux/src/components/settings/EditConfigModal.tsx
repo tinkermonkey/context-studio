@@ -1,7 +1,8 @@
+import { TextInput as Input, Select, Button } from "@tinkermonkey/heimdall-ui";
 import { useState, useEffect, useRef } from "react";
-import { Input, Select } from "@/components/ui/Input";
+
 import { Modal } from "@/components/ui/Modal";
-import { Button } from "@/components/ui/Button";
+
 import { COPY } from "@/routes/app/settings/copy";
 
 export interface ConfigField {

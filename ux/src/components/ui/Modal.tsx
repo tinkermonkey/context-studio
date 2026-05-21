@@ -44,7 +44,7 @@ export function Modal({
       {typeof title !== "string" && title ? (
         <>
           <div className="mb-sm">{title}</div>
-          {subtitle && <div className="text-secondary text-sm mb-md">{subtitle}</div>}
+          {subtitle && <div className="text-secondary mb-md text-sm">{subtitle}</div>}
           {children}
         </>
       ) : (

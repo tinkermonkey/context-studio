@@ -1,5 +1,5 @@
 import type { HTMLAttributes, ReactNode } from "react";
-import { Chip as HeimdallChip, type ChipVariant } from "@tinkermonkey/heimdall-ui";
+import { Chip as HeimdallChip, type StatusColor } from "@tinkermonkey/heimdall-ui";
 
 type ChipColor = "cyan" | "amber" | "violet" | "emerald" | "rose" | "gray";
 
@@ -10,7 +10,7 @@ interface ChipProps extends HTMLAttributes<HTMLSpanElement> {
 }
 
 export function Chip({ color, children, className = "", ...rest }: ChipProps) {
-  const variantMap: Record<ChipColor, ChipVariant> = {
+  const variantMap: Record<ChipColor, StatusColor> = {
     cyan: "cyan",
     amber: "amber",
     violet: "violet",

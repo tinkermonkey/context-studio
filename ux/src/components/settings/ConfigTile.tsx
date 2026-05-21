@@ -1,5 +1,5 @@
 import { LucideIcon } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@tinkermonkey/heimdall-ui";
 
 interface ConfigTileProps {
   icon: LucideIcon;

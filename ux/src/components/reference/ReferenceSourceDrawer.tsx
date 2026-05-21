@@ -1,5 +1,5 @@
 import { Drawer } from "@/components/ui/Drawer";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@tinkermonkey/heimdall-ui";
 import { Chip } from "@/components/ui/Chip";
 import { useToasts } from "@/components/ui/Toast";
 import { useReferenceStatus } from "@/api/hooks/reference";

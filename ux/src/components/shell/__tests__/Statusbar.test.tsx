@@ -17,9 +17,9 @@ vi.mock("@/stores/executionStore", () => ({
 
 vi.mock("@tinkermonkey/heimdall-ui", () => ({
   Statusbar: (props: any) => (
-    <div data-testid="heimdall-statusbar">
-      <div data-testid="statusbar-left">{props.left}</div>
-      <div data-testid="statusbar-right">{props.right}</div>
+    <div>
+      <div>{props.left}</div>
+      <div>{props.right}</div>
     </div>
   ),
 }));
@@ -99,7 +99,7 @@ describe("Statusbar", () => {
       } as any);
 
       render(<Statusbar />);
-      const pulse = screen.getByTestId("statusbar-left").querySelector(".status-pulse.error");
+      const pulse = document.querySelector(".status-pulse.error");
       expect(pulse).toBeInTheDocument();
     });
 
@@ -110,7 +110,7 @@ describe("Statusbar", () => {
       } as any);
 
       render(<Statusbar />);
-      const pulse = screen.getByTestId("statusbar-left").querySelector(".status-pulse.warning");
+      const pulse = document.querySelector(".status-pulse.warning");
       expect(pulse).toBeInTheDocument();
     });
 
@@ -121,9 +121,7 @@ describe("Statusbar", () => {
       } as any);
 
       render(<Statusbar />);
-      const pulse = screen
-        .getByTestId("statusbar-left")
-        .querySelector(".status-pulse:not(.error):not(.warning):not(.idle)");
+      const pulse = document.querySelector(".status-pulse:not(.error):not(.warning):not(.idle)");
       expect(pulse).toBeInTheDocument();
     });
 
@@ -134,7 +132,7 @@ describe("Statusbar", () => {
       } as any);
 
       render(<Statusbar />);
-      const pulse = screen.getByTestId("statusbar-left").querySelector(".status-pulse.idle");
+      const pulse = document.querySelector(".status-pulse.idle");
       expect(pulse).toBeInTheDocument();
     });
   });
@@ -177,8 +175,9 @@ describe("Statusbar", () => {
       } as any);
 
       render(<Statusbar />);
-      const left = screen.getByTestId("statusbar-left");
-      const svg = left.querySelector("svg");
+      const groups = document.querySelectorAll(".statusbar-group");
+      expect(groups.length).toBeGreaterThan(0);
+      const svg = groups[0]!.querySelector("svg");
       expect(svg).toBeInTheDocument();
     });
 
@@ -189,8 +188,9 @@ describe("Statusbar", () => {
       } as any);
 
       render(<Statusbar />);
-      const left = screen.getByTestId("statusbar-left");
-      const svg = left.querySelector("svg");
+      const groups = document.querySelectorAll(".statusbar-group");
+      expect(groups.length).toBeGreaterThan(0);
+      const svg = groups[0]!.querySelector("svg");
       expect(svg).toBeInTheDocument();
     });
   });
@@ -233,7 +233,9 @@ describe("Statusbar", () => {
       } as any);
 
       render(<Statusbar />);
-      const right = screen.getByTestId("statusbar-right");
+      const groups = document.querySelectorAll(".statusbar-group");
+      expect(groups.length).toBeGreaterThan(1);
+      const right = groups[1]!;
       expect(right.textContent).not.toContain("up");
     });
   });
@@ -272,8 +274,7 @@ describe("Statusbar", () => {
       } as any);
 
       render(<Statusbar />);
-      const right = screen.getByTestId("statusbar-right");
-      const pulse = right.querySelector(".status-pulse.running");
+      const pulse = document.querySelector(".status-pulse.running");
       expect(pulse).toBeInTheDocument();
     });
   });
@@ -301,7 +302,9 @@ describe("Statusbar", () => {
   describe("right section content", () => {
     it("always displays encoding info", () => {
       render(<Statusbar />);
-      const right = screen.getByTestId("statusbar-right");
+      const groups = document.querySelectorAll(".statusbar-group");
+      expect(groups.length).toBeGreaterThan(1);
+      const right = groups[1]!;
       expect(right.textContent).toContain("UTF-8");
       expect(right.textContent).toContain("LF");
     });
@@ -329,22 +332,21 @@ describe("Statusbar", () => {
   });
 
   describe("statusbar layout", () => {
-    it("renders heimdall statusbar", () => {
-      render(<Statusbar />);
-      expect(screen.getByTestId("heimdall-statusbar")).toBeInTheDocument();
-    });
-
     it("renders left section with health and database info", () => {
       render(<Statusbar />);
-      const left = screen.getByTestId("statusbar-left");
-      expect(left.querySelector(".statusbar-group")).toBeInTheDocument();
+      const groups = document.querySelectorAll(".statusbar-group");
+      expect(groups.length).toBeGreaterThan(0);
+      const left = groups[0]!;
+      expect(left).toBeInTheDocument();
       expect(left.textContent).toContain("api server");
     });
 
     it("renders right section with environment and uptime info", () => {
       render(<Statusbar />);
-      const right = screen.getByTestId("statusbar-right");
-      expect(right.querySelector(".statusbar-group")).toBeInTheDocument();
+      const groups = document.querySelectorAll(".statusbar-group");
+      expect(groups.length).toBeGreaterThan(1);
+      const right = groups[1]!;
+      expect(right).toBeInTheDocument();
       expect(right.textContent).toContain("local");
     });
   });

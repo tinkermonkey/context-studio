@@ -10,16 +10,21 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus, Trash2, Edit2, ExternalLink, Globe, Cpu, GitMerge, Database } from "lucide-react";
 import { ColumnDef } from "@tanstack/react-table";
-import { Button } from "@/components/ui/Button";
+import {
+  Button,
+  TextInput as Input,
+  TextArea as Textarea,
+  Select,
+  TabBar,
+  StatGrid,
+  Table,
+} from "@tinkermonkey/heimdall-ui";
 import { Chip } from "@/components/ui/Chip";
-import { Input, Textarea, Select } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { Drawer } from "@/components/ui/Drawer";
-import { Tabs } from "@/components/ui/Tabs";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { StatTile } from "@/components/ui/StatTile";
-import { StatGrid } from "@/components/ui/StatGrid";
 import { Panel } from "@/components/ui/Panel";
-import { Table } from "@tinkermonkey/heimdall-ui";
 import { useToasts } from "@/components/ui/Toast";
 import { useCanvasStore } from "@/stores/canvas";
 import { SchemaTable } from "@/components/schema/SchemaTable";
@@ -104,12 +109,11 @@ export default function ContactSheet() {
 
   return (
     <div>
-      <div className="page-head contact-sheet-page-head">
-        <div>
-          <h1>Contact Sheet</h1>
-          <p>Design system component gallery — for visual validation only</p>
-        </div>
-        <div className="page-actions">
+      <PageHeader
+        eyebrow="Design System"
+        title="Contact Sheet"
+        subtitle="Design system component gallery — for visual validation only"
+        actions={
           <Button
             variant="ghost"
             onClick={toggleDarkCanvas}
@@ -117,8 +121,8 @@ export default function ContactSheet() {
           >
             {darkCanvas ? "Light canvas" : "Dark canvas"}
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* ── Buttons ── */}
       <Section title="Buttons" testid="contact-sheet-buttons">
@@ -184,15 +188,15 @@ export default function ContactSheet() {
 
       {/* ── Tabs ── */}
       <Section title="Tabs" testid="contact-sheet-tabs">
-        <Tabs
+        <TabBar
           tabs={[
             { id: "overview", label: "Overview" },
             { id: "properties", label: "Properties" },
             { id: "relationships", label: "Relationships" },
             { id: "history", label: "History" },
           ]}
-          active={activeTab}
-          onChange={setActiveTab}
+          activeTabId={activeTab}
+          onSelectTab={setActiveTab}
         />
         <div className="contact-sheet-tab-content">
           Active tab: <strong>{activeTab}</strong>
@@ -266,13 +270,7 @@ export default function ContactSheet() {
                 label: "Type",
                 render: (value) => (
                   <Chip
-                    color={
-                      value === "Class"
-                        ? "violet"
-                        : value === "Individual"
-                          ? "cyan"
-                          : "amber"
-                    }
+                    color={value === "Class" ? "violet" : value === "Individual" ? "cyan" : "amber"}
                   >
                     {value}
                   </Chip>
@@ -301,9 +299,30 @@ export default function ContactSheet() {
               },
             ]}
             data={[
-              { id: "1", name: "PhotosyntheticOrganism", type: "Class", status: "active", count: "42", action: null },
-              { id: "2", name: "Arabidopsis thaliana", type: "Individual", status: "active", count: "—", action: null },
-              { id: "3", name: "hasSubclass", type: "Relation", status: "draft", count: "18", action: null },
+              {
+                id: "1",
+                name: "PhotosyntheticOrganism",
+                type: "Class",
+                status: "active",
+                count: "42",
+                action: null,
+              },
+              {
+                id: "2",
+                name: "Arabidopsis thaliana",
+                type: "Individual",
+                status: "active",
+                count: "—",
+                action: null,
+              },
+              {
+                id: "3",
+                name: "hasSubclass",
+                type: "Relation",
+                status: "draft",
+                count: "18",
+                action: null,
+              },
             ]}
             rowKey="id"
             className="t"

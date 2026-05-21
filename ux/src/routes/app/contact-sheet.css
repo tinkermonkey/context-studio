@@ -32,24 +32,6 @@
   flex-wrap: wrap;
 }
 
-/* ------------ Page layout ------------ */
-.contact-sheet-page-head {
-  margin-bottom: var(--space-8);
-}
-
-.contact-sheet-page-head h1 {
-  font-size: var(--text-2xl);
-  font-weight: 700;
-  color: var(--canvas-fg);
-  margin: 0;
-}
-
-.contact-sheet-page-head p {
-  font-size: var(--text-sm);
-  color: var(--canvas-fg-3);
-  margin-top: 4px;
-}
-
 /* ------------ Form container ------------ */
 .contact-sheet-form-container {
   max-width: 480px;

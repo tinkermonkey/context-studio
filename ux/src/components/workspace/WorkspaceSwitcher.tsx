@@ -1,8 +1,8 @@
+import { TextInput as Input, Button } from "@tinkermonkey/heimdall-ui";
 import { useState } from "react";
 import { Database, FolderOpen, Plus, GitBranch } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
-import { Input } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
+
 import { useConfig } from "@/api/hooks/admin/useConfig";
 
 interface WorkspaceSwitcherProps {

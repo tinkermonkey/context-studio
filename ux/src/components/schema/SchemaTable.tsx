@@ -11,7 +11,7 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@tinkermonkey/heimdall-ui";
 import { Skeleton } from "@/components/ui/Skeleton";
 
 interface SchemaTableProps<T extends { id: string }> {

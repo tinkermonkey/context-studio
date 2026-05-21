@@ -6,10 +6,11 @@ import { GraphCanvasComponent } from "@/components/graph/GraphCanvas";
 import { MetricsPanel } from "@/components/graph/MetricsPanel";
 import { PathFinder } from "@/components/graph/PathFinder";
 import { SparqlEditor } from "@/components/graph/SparqlEditor";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { Tabs } from "@/components/ui/Tabs";
+import { TabBar, Button, GraphInspector } from "@tinkermonkey/heimdall-ui";
 import { COPY } from "./-copy";
 import "@/design-system/graph.css";
 
@@ -28,32 +29,39 @@ export function GraphPage() {
 
   const hasData = data && data.nodes.length > 0;
 
+  const selectedNode = selectedNodeId && data
+    ? data.nodes.find((n) => n.id === selectedNodeId) ?? null
+    : null;
+
   return (
     <div data-testid="graph-page">
-      <div className="page-head">
-        <div>
-          <h1>{COPY.PAGE_TITLE}</h1>
-          <p className="subtitle">{COPY.PAGE_SUBTITLE}</p>
-        </div>
-        <button
-          className="btn btn-primary"
-          onClick={() => graphVisualization.mutate()}
-          disabled={isLoading}
-          aria-busy={isLoading}
-        >
-          {isLoading ? (
-            <>
-              <RotateCw size={16} className="animate-spin" />
-              {COPY.BUILDING_GRAPH_BUTTON}
-            </>
-          ) : (
-            <>
-              <RotateCw size={16} />
-              {COPY.BUILD_GRAPH_BUTTON}
-            </>
-          )}
-        </button>
-      </div>
+      <PageHeader
+        eyebrow="Knowledge Graph"
+        title={COPY.PAGE_TITLE}
+        subtitle={COPY.PAGE_SUBTITLE}
+        actions={
+          <Button
+            variant="primary"
+            size="md"
+            onClick={() => graphVisualization.mutate()}
+            disabled={isLoading}
+            aria-busy={isLoading}
+            data-testid="build-graph-button"
+          >
+            {isLoading ? (
+              <>
+                <RotateCw size={16} className="animate-spin" />
+                {COPY.BUILDING_GRAPH_BUTTON}
+              </>
+            ) : (
+              <>
+                <RotateCw size={16} />
+                {COPY.BUILD_GRAPH_BUTTON}
+              </>
+            )}
+          </Button>
+        }
+      />
 
       {error && (
         <ErrorBanner
@@ -91,50 +99,42 @@ export function GraphPage() {
             selectedNodeId={selectedNodeId}
           />
           <aside className="graph-inspector" role="complementary" aria-label="Inspector panel">
-            <Tabs
+            <TabBar
               tabs={[
                 { id: "metrics", label: COPY.METRICS_TAB },
                 { id: "path", label: COPY.PATH_FINDER_TAB },
                 { id: "sparql", label: COPY.SPARQL_QUERY_TAB },
                 { id: "node", label: COPY.NODE_INSPECTOR_TAB },
               ]}
-              active={activeTab}
-              onChange={setActiveTab}
+              activeTabId={activeTab}
+              onSelectTab={setActiveTab}
             />
             {activeTab === "metrics" ? (
               <MetricsPanel />
             ) : activeTab === "path" ? (
-              <div
-                className="panel"
-                id="panel-path"
-                style={{ padding: "14px 16px", overflowY: "auto" }}
-              >
+              <div className="gi-body">
                 <PathFinder onNodeSelect={setSelectedNodeId} />
               </div>
             ) : activeTab === "sparql" ? (
-              <div
-                className="panel"
-                id="panel-sparql"
-                style={{ padding: "14px 16px", overflowY: "auto" }}
-              >
+              <div className="gi-body">
                 <SparqlEditor />
               </div>
             ) : (
-              <div className="panel" id="panel-node">
-                {selectedNodeId ? (
-                  <div>
-                    <div className="gi-head">
-                      <div className="gi-title">{selectedNodeId}</div>
-                      <div className="gi-id">{COPY.NODE_ID_LABEL}</div>
-                    </div>
-                    <div className="gi-body">
-                      <p className="gi-desc">{COPY.SELECTED_NODE_DETAILS}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="empty">{COPY.NO_NODE_SELECTED}</div>
-                )}
-              </div>
+              <GraphInspector
+                node={
+                  selectedNode
+                    ? {
+                        id: selectedNode.id,
+                        title: selectedNode.label,
+                        kind: selectedNode.kind,
+                        description: COPY.SELECTED_NODE_DETAILS,
+                      }
+                    : null
+                }
+                relationships={[]}
+                onNodeSelect={setSelectedNodeId}
+                emptyStateText={COPY.NO_NODE_SELECTED}
+              />
             )}
           </aside>
         </div>

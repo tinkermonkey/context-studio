@@ -1,7 +1,7 @@
+import { TextInput as Input, TextArea as Textarea, Button } from "@tinkermonkey/heimdall-ui";
 import { useState, useEffect, useRef } from "react";
 import { Drawer } from "@/components/ui/Drawer";
-import { Input, Textarea } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
+
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useUpdateTaxonomy, useDeleteTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
 import { useAutosave } from "@/hooks/useAutosave";

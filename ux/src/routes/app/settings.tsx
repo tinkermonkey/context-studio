@@ -5,6 +5,7 @@ import { useConfig, useUpdateConfig } from "@/api/hooks/admin";
 import { useToasts } from "@/components/ui/Toast";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { ConfigTile } from "@/components/settings/ConfigTile";
 import { EditConfigModal, type ConfigField } from "@/components/settings/EditConfigModal";
 import { COPY } from "./settings/copy";
@@ -35,7 +36,7 @@ export function SettingsPage() {
   if (isLoading) {
     return (
       <div data-testid="settings-page">
-        <div className="page-head">
+        <div style={{ marginBottom: "24px" }}>
           <Skeleton height={60} width={400} />
           <Skeleton height={20} width={300} style={{ marginTop: "8px" }} />
         </div>
@@ -51,10 +52,11 @@ export function SettingsPage() {
   if (error) {
     return (
       <div data-testid="settings-page">
-        <div className="page-head">
-          <h1>{COPY.settingsPageTitle}</h1>
-          <p>{COPY.settingsPageSubtitle}</p>
-        </div>
+        <PageHeader
+          eyebrow="Administration"
+          title={COPY.settingsPageTitle}
+          subtitle={COPY.settingsPageSubtitle}
+        />
         <ErrorBanner error={error} onRetry={refetch} message="Failed to load settings" />
       </div>
     );
@@ -189,12 +191,11 @@ export function SettingsPage() {
   return (
     <div data-testid="settings-page">
       {/* Page Header */}
-      <div className="page-head">
-        <div>
-          <h1>{COPY.settingsPageTitle}</h1>
-          <p>{COPY.settingsPageSubtitle}</p>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Administration"
+        title={COPY.settingsPageTitle}
+        subtitle={COPY.settingsPageSubtitle}
+      />
 
       {/* Config Tiles Grid */}
       <div className="config-grid">

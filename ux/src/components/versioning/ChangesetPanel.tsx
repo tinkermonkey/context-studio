@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@tinkermonkey/heimdall-ui";
 import { useChanges, useCreateChangeset } from "@/api/hooks/versioning";
 import { useToasts } from "@/components/ui/Toast";
 import { PendingChangesList } from "./PendingChangesList";

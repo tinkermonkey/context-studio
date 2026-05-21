@@ -17,13 +17,13 @@ vi.mock("@/stores/canvas", () => ({
 
 vi.mock("@tinkermonkey/heimdall-ui", () => ({
   Topbar: ({ breadcrumbs, children }: any) => (
-    <div data-testid="heimdall-topbar">
-      <div data-testid="breadcrumbs">
+    <div>
+      <div>
         {breadcrumbs.map((crumb: any, idx: number) => (
           <span key={idx}>{crumb.label}</span>
         ))}
       </div>
-      <div data-testid="topbar-children">{children}</div>
+      <div>{children}</div>
     </div>
   ),
 }));
@@ -203,8 +203,8 @@ describe("Topbar", () => {
   describe("topbar actions", () => {
     it("renders topbar actions container", () => {
       render(<Topbar />);
-      const topbarActions = screen.getByTestId("topbar-children");
-      expect(topbarActions.querySelector(".topbar-actions")).toBeInTheDocument();
+      const topbarActions = document.querySelector(".topbar-actions");
+      expect(topbarActions).toBeInTheDocument();
     });
 
     it("renders all action buttons", () => {

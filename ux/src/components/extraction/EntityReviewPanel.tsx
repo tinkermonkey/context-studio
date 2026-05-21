@@ -4,7 +4,7 @@ import { useCreateClass, useClasses, useSchemes } from "@/api/hooks/ontology";
 import { useToasts } from "@/components/ui/Toast";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { Panel } from "@/components/ui/Panel";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@tinkermonkey/heimdall-ui";
 import { Chip } from "@/components/ui/Chip";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { formatConfidence } from "@/utils/formatters";

@@ -949,18 +949,18 @@ table.t .row-actions {
   width: 3px;
   height: 16px;
   border-radius: 1px;
-  background: var(--dom-default);
+  background: rgb(var(--dom-default));
   margin-right: 8px;
   flex: none;
 }
 .kg-node[data-domain="life"] .swatch {
-  background: var(--dom-life);
+  background: rgb(var(--dom-life));
 }
 .kg-node[data-domain="climate"] .swatch {
-  background: var(--dom-climate);
+  background: rgb(var(--dom-climate));
 }
 .kg-node[data-domain="software"] .swatch {
-  background: var(--dom-software);
+  background: rgb(var(--dom-software));
 }
 .kg-node .caret {
   margin-left: 6px;
@@ -2221,13 +2221,13 @@ table.t .row-actions {
   border-radius: 1px;
 }
 .hero-tree .h-node[data-d="climate"] .sw {
-  background: var(--dom-climate);
+  background: rgb(var(--dom-climate));
 }
 .hero-tree .h-node[data-d="life"] .sw {
-  background: var(--dom-life);
+  background: rgb(var(--dom-life));
 }
 .hero-tree .h-node[data-d="sw"] .sw {
-  background: var(--dom-software);
+  background: rgb(var(--dom-software));
 }
 .hero-tree .h-desc {
   color: var(--shell-fg-3);

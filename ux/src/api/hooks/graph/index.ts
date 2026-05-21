@@ -6,6 +6,8 @@ export interface GraphNode {
   id: string;
   label: string;
   centrality: number;
+  kind?: string;
+  domainColor?: string;
 }
 
 export interface GraphEdge {
@@ -43,6 +45,13 @@ export function useGraphMetrics(algorithm?: string) {
 
 export function useGraphVisualization() {
   const queryClient = useQueryClient();
+
+  const getDomainColor = (nodeId: string) => {
+    if (!nodeId) return "#818cf8";
+    const hash = nodeId.charCodeAt(0) % 3;
+    const colors = ["#34d399", "#fbbf24", "#818cf8"];
+    return colors[hash];
+  };
 
   return useMutation({
     mutationFn: async (): Promise<GraphVisualizationData> => {
@@ -94,6 +103,8 @@ export function useGraphVisualization() {
           id,
           label: id,
           centrality: metrics.centrality[id],
+          kind: undefined,
+          domainColor: getDomainColor(id),
         })),
         edges: subgraph.edges.map(([source, target]) => ({
           id: `${source}-${target}`,

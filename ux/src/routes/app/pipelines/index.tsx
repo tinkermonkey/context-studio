@@ -1,10 +1,11 @@
+import { Button, TextInput as Input } from "@tinkermonkey/heimdall-ui";
 import { useState, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { usePipelines, useAllPipelineExecutions } from "@/api/hooks/pipeline";
 import { PipelineCard } from "@/components/pipeline/PipelineCard";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import { PageHeader } from "@/components/ui/PageHeader";
+
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -114,13 +115,16 @@ export function PipelinesContent() {
 
   return (
     <div data-testid="pipelines-page">
-      <div className="page-head">
-        <h1>{COPY.PIPELINES_PAGE_TITLE}</h1>
-        <Button variant="primary" disabled title="Pipeline creation is not yet implemented">
-          <Plus size={16} style={{ marginRight: "4px" }} />
-          {COPY.NEW_PIPELINE_BUTTON}
-        </Button>
-      </div>
+      <PageHeader
+        eyebrow="Processing"
+        title={COPY.PIPELINES_PAGE_TITLE}
+        actions={
+          <Button variant="primary" disabled title="Pipeline creation is not yet implemented">
+            <Plus size={16} />
+            {COPY.NEW_PIPELINE_BUTTON}
+          </Button>
+        }
+      />
 
       <div className="stack" style={{ marginBottom: "var(--space-6)" }}>
         <Input

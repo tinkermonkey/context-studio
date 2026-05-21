@@ -1,3 +1,4 @@
+import { TextInput as Input, Button } from "@tinkermonkey/heimdall-ui";
 import { useState, useMemo } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ColumnDef } from "@tanstack/react-table";
@@ -6,9 +7,9 @@ import { useAllPipelineExecutions } from "@/api/hooks/pipeline";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { SchemaTable } from "@/components/schema/SchemaTable";
-import { Input } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
+
 import { Chip } from "@/components/ui/Chip";
 import { getStatusColor } from "@/utils/statusColorUtils";
 import { COPY } from "./-copy";
@@ -179,9 +180,7 @@ function RunsPageContent() {
 
     content = (
       <>
-        <div className="page-head">
-          <h1>{COPY.RUN_HISTORY_PAGE_TITLE}</h1>
-        </div>
+        <PageHeader eyebrow="Pipelines" title={COPY.RUN_HISTORY_PAGE_TITLE} />
 
         <div className="stack runs-filter-bar">
           <Input

@@ -9,17 +9,26 @@
   /* Amber colors for warning states */
   --amber-400: 251 191 36;
 
-  /* ---- Domain-Specific Taxonomy Colors ---- */
-  --dom-life: rgb(76 175 80);
-  --dom-climate: rgb(33 150 243);
-  --dom-software: rgb(156 39 176);
-  --dom-default: rgb(158 158 158);
+  /* Violet colors for graph visualization */
+  --violet-500: 168 85 247;
+
+  /* Cyan colors for specialized UI elements */
+  --cyan-600: 8 145 178;
+
+  /* ---- Domain-Specific Taxonomy Colors (stored as bare RGB triplets for use with rgb(var()) pattern) ---- */
+  --dom-life: 52 211 153;
+  --dom-climate: 251 191 36;
+  --dom-software: 129 140 248;
+  --dom-default: 34 211 238;
 
   /* ---- Canvas Layout Classes ---- */
   --space-canvas-inner: 2rem;
 
   /* ---- Accent Color Overrides (FR-9: pin accent-primary to cyan; explicit override prevents Heimdall drift) ---- */
+  /* Heimdall v0.2.0 defines accent-primary as amber; we override to cyan */
   --accent-primary: 34 211 238;
+  --accent-primary-hover: 6 182 212;
+  --accent-primary-deep: 14 126 163;
 
   /* ---- Legacy Accent Color Aliases (map to Heimdall semantic colors with rgb() wrapper) ---- */
   --accent-cyan: rgb(var(--accent-primary));
@@ -32,19 +41,21 @@
 
   /* ---- Canvas Surface ---- */
   --canvas-bg-3: rgb(243 244 246);
+  --canvas-bg-tertiary: rgb(229 233 238);
   --canvas-fg: rgb(var(--canvas-fg-1));
-  --canvas-fg-4: rgb(107 114 128);
+  --canvas-fg-4: rgb(148 163 184);
+  --text-secondary: rgb(107 114 128);
 
-  /* ---- Canvas Border (map to Heimdall tokens with rgb() wrapper) ---- */
+  /* ---- Canvas Border (alias Heimdall canvas-border to canvas-bd for compatibility) ---- */
   --canvas-bd: rgb(var(--canvas-border));
   --canvas-bd-2: rgb(var(--canvas-border-strong));
 
   /* ---- Shell Surface ---- */
-  --shell-bg-2: rgb(39 46 56);
-  --shell-surface-2: rgb(55 65 81);
+  --shell-bg-2: rgb(19 32 58);
+  --shell-surface-2: rgb(36 55 99);
   --shell-fg: rgb(var(--shell-fg-1));
   --shell-border: rgb(var(--canvas-border));
-  --shell-border-2: rgb(75 85 99);
+  --shell-border-2: rgb(42 58 92);
 
   /* ---- Typography Aliases ---- */
   --mono: var(--font-mono);
@@ -56,7 +67,13 @@
 body.dark-canvas {
   /* Dark canvas inherits Heimdall's dark redefinitions automatically */
   --canvas-bg-3: rgb(39 46 56);
+  --canvas-bg-tertiary: rgb(55 65 81);
   --canvas-fg-4: rgb(75 85 99);
-  --shell-bg-2: rgb(55 65 81);
-  --shell-surface-2: rgb(75 85 99);
+  --text-secondary: rgb(156 163 175);
+  --graph-cluster-life-bg: rgba(52 211 153 / 0.12);
+  --graph-cluster-climate-bg: rgba(251 191 36 / 0.12);
+  --graph-cluster-software-bg: rgba(129 140 248 / 0.12);
+  --shell-surface-2: rgb(55 80 140);
+  --shell-border: rgb(var(--canvas-border));
+  --shell-border-2: rgb(58 68 82);
 }

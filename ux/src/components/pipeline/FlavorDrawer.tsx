@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@tinkermonkey/heimdall-ui";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useToasts } from "@/components/ui/Toast";
 import type { components } from "@/api/types";

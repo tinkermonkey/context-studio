@@ -1,6 +1,6 @@
+import { TextInput as Input, TextArea as Textarea, Field, Button } from "@tinkermonkey/heimdall-ui";
 import { useState } from "react";
-import { Input, Textarea, Field } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
+
 import type { components } from "@/api/types";
 
 type ConceptSchemeCreateRequest = components["schemas"]["ConceptSchemeCreateRequest"];
@@ -43,9 +43,7 @@ export function SchemeForm({ onSubmit, isLoading }: SchemeFormProps) {
         description: description || null,
       });
     } catch (error) {
-      setFormError(
-        error instanceof Error ? error.message : "Failed to create scheme"
-      );
+      setFormError(error instanceof Error ? error.message : "Failed to create scheme");
     }
   };
 

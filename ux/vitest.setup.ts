@@ -486,12 +486,9 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
       ),
       children,
     ]),
-  Topbar: ({ children, ..._props }: any) =>
-    React.createElement("div", { "data-testid": "heimdall-topbar" }, children),
-  Titlebar: ({ children, ..._props }: any) =>
-    React.createElement("div", { "data-testid": "heimdall-titlebar" }, children),
-  Statusbar: ({ children, ..._props }: any) =>
-    React.createElement("div", { "data-testid": "heimdall-statusbar" }, children),
+  Topbar: ({ children, ..._props }: any) => React.createElement("div", {}, children),
+  Titlebar: ({ children, ..._props }: any) => React.createElement("div", {}, children),
+  Statusbar: ({ children, ..._props }: any) => React.createElement("div", {}, children),
   CommandPalette: ({ children, ..._props }: any) =>
     React.createElement("div", { "data-testid": "heimdall-command-palette" }, children),
   Icon: ({ name, ...props }: any) =>
@@ -578,6 +575,62 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
         ...props,
       }),
   ),
+  PageHeader: React.forwardRef(
+    ({ eyebrow, title, subtitle, idChip, actions, className = "", ...props }: any, ref: any) =>
+      React.createElement(
+        "div",
+        {
+          ref,
+          className: ["page-header", className].filter(Boolean).join(" "),
+          "data-testid": "page-header",
+          ...props,
+        },
+        eyebrow && React.createElement("div", { className: "page-header__eyebrow" }, eyebrow),
+        title && React.createElement("h1", { className: "page-header__title" }, title),
+        subtitle && React.createElement("div", { className: "page-header__subtitle" }, subtitle),
+        idChip && React.createElement("div", { className: "page-header__id-chip" }, idChip),
+        actions && React.createElement("div", { className: "page-header__actions" }, actions),
+      ),
+  ),
+  ActivityTimeline: ({ events = [], emptyState, className = "", ...props }: any) =>
+    React.createElement(
+      "div",
+      {
+        className: ["activity-timeline", className].filter(Boolean).join(" "),
+        "data-testid": "activity-timeline",
+        ...props,
+      },
+      events.length > 0
+        ? events.map((event: any, index: number) =>
+            React.createElement(
+              "div",
+              { key: index, className: "activity-timeline__item" },
+              event.label || event.type,
+            ),
+          )
+        : emptyState &&
+            React.createElement("div", { className: "activity-timeline__empty" }, emptyState),
+    ),
+  GraphCanvas: ({ nodes = [], edges = [], className = "", ...props }: any) =>
+    React.createElement(
+      "div",
+      {
+        className: ["graph-canvas", className].filter(Boolean).join(" "),
+        "data-testid": "graph-canvas",
+        ...props,
+      },
+      `Graph with ${nodes.length} nodes and ${edges.length} edges`,
+    ),
+  GraphInspector: ({ node, className = "", ...props }: any) =>
+    React.createElement(
+      "div",
+      {
+        className: ["graph-inspector", className].filter(Boolean).join(" "),
+        "data-testid": "graph-inspector",
+        ...props,
+      },
+      node ? `Inspector for ${node.id}` : "No node selected",
+    ),
 }));
 
 // Mock window.scrollTo to avoid jsdom "Not implemented" errors

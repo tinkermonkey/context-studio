@@ -1,7 +1,7 @@
+import { TextArea as Textarea, Button } from "@tinkermonkey/heimdall-ui";
 import { useRef, useState } from "react";
 import { Upload } from "lucide-react";
-import { Textarea } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
+
 import { useToasts } from "@/components/ui/Toast";
 import { COPY } from "@/routes/app/extraction/-copy";
 

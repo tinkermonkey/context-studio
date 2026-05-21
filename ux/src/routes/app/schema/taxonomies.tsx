@@ -3,8 +3,9 @@ import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router"
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreVertical } from "lucide-react";
 import { useToasts } from "@/components/ui/Toast";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@tinkermonkey/heimdall-ui";
 import { Modal } from "@/components/ui/Modal";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -236,21 +237,24 @@ function TaxonomiesPageWrapper() {
 
   return (
     <div className="stack">
-      <div className="flex-between">
-        <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>Taxonomies</h1>
-        <div className="row">
-          <Button variant="ghost" onClick={() => {}} data-testid="taxonomy-import-button">
-            Import
-          </Button>
-          <Button
-            variant="primary"
-            onClick={() => setShowCreateModal(true)}
-            data-testid="taxonomy-add-button"
-          >
-            + New taxonomy
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Schema"
+        title="Taxonomies"
+        actions={
+          <div className="row" style={{ gap: "var(--space-2)" }}>
+            <Button variant="ghost" onClick={() => {}} data-testid="taxonomy-import-button">
+              Import
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => setShowCreateModal(true)}
+              data-testid="taxonomy-add-button"
+            >
+              + New taxonomy
+            </Button>
+          </div>
+        }
+      />
       <div data-testid="taxonomies-content">
         <TaxonomiesPageContent
           onCreateClick={() => setShowCreateModal(true)}

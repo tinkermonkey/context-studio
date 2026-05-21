@@ -1,6 +1,5 @@
 import { useState, useCallback, createContext, useContext, ReactNode } from "react";
-import { Toast as HeimdallToast, type ToastVariant } from "@tinkermonkey/heimdall-ui";
-import { Button } from "./Button";
+import { Toast as HeimdallToast, Button, type ToastVariant } from "@tinkermonkey/heimdall-ui";
 
 type ToastType = "success" | "error" | "warning" | "info";
 

@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef, Fragment } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { Drawer } from "@/components/ui/Drawer";
-import { Input, Textarea } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
+import { TextInput as Input, TextArea as Textarea, Button } from "@tinkermonkey/heimdall-ui";
 import { Panel } from "@/components/ui/Panel";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
