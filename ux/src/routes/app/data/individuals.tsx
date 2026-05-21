@@ -145,7 +145,7 @@ function IndividualsPageContent({
                   key={classId}
                   style={{
                     backgroundColor: "var(--canvas-bg-2)",
-                    color: "var(--canvas-fg)",
+                    color: "rgb(var(--canvas-fg-1))",
                     padding: "4px 8px",
                     borderRadius: "4px",
                     fontSize: "var(--text-xs)",

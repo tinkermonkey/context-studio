@@ -165,7 +165,7 @@ export function PendingChangesList({
             <span
               style={{
                 fontSize: "13px",
-                color: "var(--canvas-fg)",
+                color: "rgb(var(--canvas-fg-1))",
                 whiteSpace: "nowrap",
                 overflow: "hidden",
                 textOverflow: "ellipsis",

@@ -212,7 +212,7 @@ export function IndividualEditor({
                   left: 0,
                   right: 0,
                   background: "var(--canvas-bg)",
-                  border: "1px solid var(--canvas-fg-4)",
+                  border: "1px solid rgb(var(--canvas-fg-4))",
                   borderRadius: "var(--radius-sm)",
                   marginTop: "4px",
                   zIndex: 10,
@@ -236,8 +236,8 @@ export function IndividualEditor({
                       cursor: "pointer",
                       textAlign: "left",
                       fontSize: "var(--text-sm)",
-                      color: "var(--canvas-fg)",
-                      borderBottom: "1px solid var(--canvas-fg-4)",
+                      color: "rgb(var(--canvas-fg-1))",
+                      borderBottom: "1px solid rgb(var(--canvas-fg-4))",
                     }}
                     data-testid={`individual-class-option-${cls.id}`}
                   >

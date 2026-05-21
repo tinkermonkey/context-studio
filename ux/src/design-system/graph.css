@@ -6,7 +6,7 @@
   --graph-grid: rgba(15, 23, 42, 0.045);
   --graph-edge: #cbd5e1;
   --graph-edge-strong: #94a3b8;
-  --graph-edge-hot: rgb(var(--accent-primary-deep));
+  --graph-edge-hot: rgb(var(--status-cyan-deep));
   --graph-edge-irrelevant: rgb(var(--status-rose));
   --graph-cluster-life-bg: rgba(52, 211, 153, 0.06);
   --graph-cluster-life-bd: rgba(52, 211, 153, 0.3);
@@ -35,7 +35,7 @@ body.dark-canvas {
 .graph-canvas {
   position: relative;
   background: var(--graph-bg);
-  border: 1px solid var(--canvas-border);
+  border: 1px solid rgb(var(--canvas-border));
   border-radius: 10px;
   overflow: hidden;
   cursor: grab;
@@ -49,7 +49,7 @@ body.dark-canvas {
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: var(--canvas-fg-2);
+  color: rgb(var(--canvas-fg-2));
 }
 
 .graph-grid {
@@ -98,10 +98,10 @@ body.dark-canvas {
   stroke: var(--graph-cluster-software-bd);
 }
 .graph-cluster-label {
-  font-family: var(--mono);
+  font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.18em;
-  fill: var(--canvas-fg-3);
+  fill: rgb(var(--canvas-fg-3));
   font-weight: 500;
   pointer-events: none;
 }
@@ -140,14 +140,14 @@ body.dark-canvas {
 /* Edge labels */
 .graph-edge-label rect {
   fill: var(--graph-bg);
-  stroke: var(--canvas-border);
+  stroke: rgb(var(--canvas-border));
   stroke-width: 1;
 }
 .graph-edge-label text {
-  font-family: var(--mono);
+  font-family: var(--font-mono);
   font-size: 10.5px;
   font-weight: 500;
-  fill: var(--canvas-fg-2);
+  fill: rgb(var(--canvas-fg-2));
   text-anchor: middle;
   dominant-baseline: middle;
   pointer-events: none;
@@ -162,11 +162,11 @@ body.dark-canvas {
 }
 
 body.dark-canvas .graph-edge-label rect {
-  fill: var(--canvas-card);
-  stroke: var(--canvas-border);
+  fill: rgb(var(--canvas-card));
+  stroke: rgb(var(--canvas-border));
 }
 body.dark-canvas .graph-edge-label text {
-  fill: var(--canvas-fg-2);
+  fill: rgb(var(--canvas-fg-2));
 }
 body.dark-canvas .graph-edge-label.is-hot rect {
   fill: var(--accent-cyan);
@@ -179,11 +179,11 @@ body.dark-canvas .graph-edge-label.is-hot text {
 /* ============ Nodes ============ */
 .graph-node {
   position: absolute;
-  background: var(--canvas-card);
+  background: rgb(var(--canvas-card));
   border: 1px solid var(--canvas-border-strong);
   font-family: var(--font-sans);
   font-size: 12px;
-  color: var(--canvas-fg-1);
+  color: rgb(var(--canvas-fg-1));
   display: inline-flex;
   align-items: center;
   padding: 0 8px 0 6px;
@@ -199,20 +199,20 @@ body.dark-canvas .graph-edge-label.is-hot text {
   z-index: 2;
 }
 .graph-node:hover {
-  border-color: var(--accent-cyan-deep);
+  border-color: rgb(var(--accent-primary));
   box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
   z-index: 3;
 }
 .graph-node.selected {
-  border-color: var(--accent-cyan-deep);
+  border-color: rgb(var(--accent-primary));
   box-shadow:
-    0 0 0 2px var(--accent-cyan),
+    0 0 0 2px rgb(var(--accent-primary)),
     0 4px 10px rgba(15, 23, 42, 0.1);
   z-index: 4;
 }
 body.dark-canvas .graph-node.selected {
   box-shadow:
-    0 0 0 2px var(--accent-cyan),
+    0 0 0 2px rgb(var(--accent-primary)),
     0 4px 10px rgba(0, 0, 0, 0.5);
 }
 .graph-node.is-orphan {
@@ -246,22 +246,22 @@ body.dark-canvas .graph-node.selected {
 }
 
 .graph-node-kind {
-  font-family: var(--mono);
+  font-family: var(--font-mono);
   font-size: 9.5px;
   font-weight: 600;
   letter-spacing: 0.05em;
-  color: var(--canvas-fg-3);
+  color: rgb(var(--canvas-fg-3));
   margin-left: 7px;
   padding: 1px 5px;
   border-radius: 2px;
-  background: var(--canvas-bg-2);
-  border: 1px solid var(--canvas-border);
+  background: rgb(var(--canvas-bg-2));
+  border: 1px solid rgb(var(--canvas-border));
   flex: none;
 }
 .graph-node[data-kind="individual"] .graph-node-kind {
   color: var(--accent-cyan-deep);
-  background: rgba(var(--accent-primary) / 0.08);
-  border-color: rgba(var(--accent-primary) / 0.25);
+  background: rgba(var(--status-cyan) / 0.08);
+  border-color: rgba(var(--status-cyan) / 0.25);
 }
 
 /* ============ Floating legend (top-left) ============ */
@@ -269,15 +269,15 @@ body.dark-canvas .graph-node.selected {
   position: absolute;
   top: 14px;
   left: 14px;
-  background: var(--canvas-card);
-  border: 1px solid var(--canvas-border);
+  background: rgb(var(--canvas-card));
+  border: 1px solid rgb(var(--canvas-border));
   border-radius: 8px;
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   font-size: 12px;
-  color: var(--canvas-fg-1);
+  color: rgb(var(--canvas-fg-1));
   min-width: 168px;
   z-index: 10;
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
@@ -288,11 +288,11 @@ body.dark-canvas .graph-node.selected {
   gap: 4px;
 }
 .graph-legend .gl-label {
-  font-family: var(--mono);
+  font-family: var(--font-mono);
   font-size: 9.5px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--canvas-fg-3);
+  color: rgb(var(--canvas-fg-3));
   font-weight: 500;
   margin-bottom: 2px;
 }
@@ -310,7 +310,7 @@ body.dark-canvas .graph-node.selected {
   width: 8px;
   height: 8px;
   border-radius: 999px;
-  background: var(--canvas-fg-3);
+  background: rgb(var(--canvas-fg-3));
   flex: none;
 }
 .graph-legend .dot.dom-life {
@@ -324,9 +324,9 @@ body.dark-canvas .graph-node.selected {
 }
 .graph-legend .gl-count {
   margin-left: auto;
-  font-family: var(--mono);
+  font-family: var(--font-mono);
   font-size: 10.5px;
-  color: var(--canvas-fg-3);
+  color: rgb(var(--canvas-fg-3));
 }
 .graph-legend .gl-pill {
   display: inline-grid;
@@ -334,18 +334,18 @@ body.dark-canvas .graph-node.selected {
   width: 16px;
   height: 16px;
   border-radius: 3px;
-  font-family: var(--mono);
+  font-family: var(--font-mono);
   font-size: 9.5px;
   font-weight: 600;
-  background: var(--canvas-bg-2);
-  border: 1px solid var(--canvas-border);
-  color: var(--canvas-fg-3);
+  background: rgb(var(--canvas-bg-2));
+  border: 1px solid rgb(var(--canvas-border));
+  color: rgb(var(--canvas-fg-3));
   flex: none;
 }
 .graph-legend .gl-pill.ind {
   color: var(--accent-cyan-deep);
-  background: rgba(var(--accent-primary) / 0.08);
-  border-color: rgba(var(--accent-primary) / 0.25);
+  background: rgba(var(--status-cyan) / 0.08);
+  border-color: rgba(var(--status-cyan) / 0.25);
 }
 .graph-legend .gl-line {
   width: 22px;
@@ -361,8 +361,8 @@ body.dark-canvas .graph-node.selected {
 .graph-toolbar {
   position: absolute;
   z-index: 10;
-  background: var(--canvas-card);
-  border: 1px solid var(--canvas-border);
+  background: rgb(var(--canvas-card));
+  border: 1px solid rgb(var(--canvas-border));
   border-radius: 8px;
   padding: 8px 10px;
   display: flex;
@@ -380,11 +380,11 @@ body.dark-canvas .graph-node.selected {
   padding: 10px 12px;
 }
 .graph-toolbar.predicates .gt-label {
-  font-family: var(--mono);
+  font-family: var(--font-mono);
   font-size: 9.5px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--canvas-fg-3);
+  color: rgb(var(--canvas-fg-3));
   font-weight: 500;
 }
 .graph-toolbar.predicates .gt-chips {
@@ -398,21 +398,21 @@ body.dark-canvas .graph-node.selected {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-family: var(--mono);
+  font-family: var(--font-mono);
   font-size: 11px;
   padding: 4px 8px;
   border-radius: 4px;
   border: 1px solid var(--canvas-border-strong);
-  background: var(--canvas-bg-2);
-  color: var(--canvas-fg-1);
+  background: rgb(var(--canvas-bg-2));
+  color: rgb(var(--canvas-fg-1));
   cursor: pointer;
   transition:
     opacity 0.1s,
     background 0.1s;
 }
 .gt-chip:hover {
-  background: var(--canvas-card);
-  border-color: var(--accent-cyan-deep);
+  background: rgb(var(--canvas-card));
+  border-color: rgb(var(--accent-primary));
 }
 .gt-chip.off {
   opacity: 0.4;
@@ -430,9 +430,9 @@ body.dark-canvas .gt-chip.irrelevant {
 }
 .gt-chip-n {
   font-size: 10px;
-  color: var(--canvas-fg-3);
-  background: var(--canvas-card);
-  border: 1px solid var(--canvas-border);
+  color: rgb(var(--canvas-fg-3));
+  background: rgb(var(--canvas-card));
+  border: 1px solid rgb(var(--canvas-border));
   padding: 0 5px;
   border-radius: 2px;
   min-width: 18px;
@@ -456,10 +456,10 @@ body.dark-canvas .gt-chip.irrelevant {
   gap: 4px;
 }
 .gt-group.zoom {
-  border: 1px solid var(--canvas-border);
+  border: 1px solid rgb(var(--canvas-border));
   border-radius: 6px;
   padding: 2px;
-  background: var(--canvas-bg-2);
+  background: rgb(var(--canvas-bg-2));
 }
 .gt-spacer {
   flex: 1;
@@ -473,26 +473,26 @@ body.dark-canvas .gt-chip.irrelevant {
   font-size: 12px;
   font-weight: 500;
   background: transparent;
-  color: var(--canvas-fg-2);
+  color: rgb(var(--canvas-fg-2));
   border: 1px solid transparent;
   border-radius: 5px;
   cursor: pointer;
   white-space: nowrap;
 }
 .gt-btn:hover {
-  color: var(--canvas-fg-1);
-  background: var(--canvas-bg-2);
+  color: rgb(var(--canvas-fg-1));
+  background: rgb(var(--canvas-bg-2));
 }
 .gt-btn.on {
-  color: var(--canvas-fg-1);
-  background: var(--canvas-bg-2);
+  color: rgb(var(--canvas-fg-1));
+  background: rgb(var(--canvas-bg-2));
   border-color: var(--canvas-border-strong);
 }
 .gt-btn.icon {
   width: 28px;
   padding: 0;
   justify-content: center;
-  font-family: var(--mono);
+  font-family: var(--font-mono);
   font-size: 13px;
   font-weight: 600;
 }
@@ -506,7 +506,7 @@ body.dark-canvas .gt-chip.irrelevant {
   width: 7px;
   height: 7px;
   border-radius: 999px;
-  background: var(--canvas-fg-4);
+  background: rgb(var(--canvas-fg-4));
 }
 .gt-btn .dot.dom-software {
   background: rgb(var(--dom-software));
@@ -514,8 +514,8 @@ body.dark-canvas .gt-chip.irrelevant {
 
 /* ============ Inspector (right rail) ============ */
 .graph-inspector {
-  background: var(--canvas-card);
-  border: 1px solid var(--canvas-border);
+  background: rgb(var(--canvas-card));
+  border: 1px solid rgb(var(--canvas-border));
   border-radius: 10px;
   display: flex;
   flex-direction: column;
@@ -525,7 +525,7 @@ body.dark-canvas .gt-chip.irrelevant {
   flex: 1;
   display: grid;
   place-items: center;
-  color: var(--canvas-fg-3);
+  color: rgb(var(--canvas-fg-3));
   font-size: 12.5px;
 }
 
@@ -539,8 +539,8 @@ body.dark-canvas .gt-chip.irrelevant {
 /* ============ View toggle (table / graph) ============ */
 .view-toggle {
   display: inline-flex;
-  background: var(--canvas-bg-2);
-  border: 1px solid var(--canvas-border);
+  background: rgb(var(--canvas-bg-2));
+  border: 1px solid rgb(var(--canvas-border));
   border-radius: 6px;
   padding: 2px;
   height: 34px;
@@ -556,12 +556,12 @@ body.dark-canvas .gt-chip.irrelevant {
   background: transparent;
   border: 1px solid transparent;
   border-radius: 4px;
-  color: var(--canvas-fg-2);
+  color: rgb(var(--canvas-fg-2));
   cursor: pointer;
 }
 .view-toggle button.on {
-  background: var(--canvas-card);
-  color: var(--canvas-fg-1);
+  background: rgb(var(--canvas-card));
+  color: rgb(var(--canvas-fg-1));
   border-color: var(--canvas-border-strong);
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
 }
@@ -580,7 +580,7 @@ body.dark-canvas .gt-chip.irrelevant {
   font-size: 0.875rem;
   font-weight: 500;
   margin-bottom: 0.75rem;
-  color: var(--canvas-fg-1);
+  color: rgb(var(--canvas-fg-1));
 }
 
 .metrics-empty-state {
@@ -625,7 +625,7 @@ body.dark-canvas .gt-chip.irrelevant {
 
 .centrality-node-id {
   flex: 1;
-  font-family: var(--mono);
+  font-family: var(--font-mono);
   font-size: 0.6875rem;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -674,18 +674,18 @@ body.dark-canvas .gt-chip.irrelevant {
   align-items: center;
   gap: 4px;
   padding: 4px 8px;
-  background: var(--canvas-bg-2);
-  border: 1px solid var(--canvas-border);
+  background: rgb(var(--canvas-bg-2));
+  border: 1px solid rgb(var(--canvas-border));
   border-radius: 4px;
   font-size: 11px;
   font-family: var(--font-sans);
-  color: var(--canvas-fg-1);
+  color: rgb(var(--canvas-fg-1));
   cursor: pointer;
   transition: all 0.1s;
   white-space: nowrap;
 }
 .node-badge:hover {
-  border-color: var(--accent-cyan-deep);
-  background: var(--canvas-card);
+  border-color: rgb(var(--accent-primary));
+  background: rgb(var(--canvas-card));
   box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
 }

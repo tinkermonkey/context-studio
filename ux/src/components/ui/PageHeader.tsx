@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { PageHeader as HeimdallPageHeader } from "@tinkermonkey/heimdall-ui";
 
 interface PageHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
   eyebrow: string;
@@ -20,15 +19,18 @@ export function PageHeader({
   ...rest
 }: PageHeaderProps) {
   return (
-    <HeimdallPageHeader
-      eyebrow={eyebrow}
-      title={title}
-      subtitle={subtitle}
-      idChip={idChip}
-      actions={actions}
-      className={className}
+    <div
       data-testid="page-header"
+      className={["page-header", className].filter(Boolean).join(" ")}
       {...rest}
-    />
+    >
+      <div className="page-header__meta">
+        {eyebrow && <span className="page-header__eyebrow">{eyebrow}</span>}
+        <h1 className="page-header__title">{title}</h1>
+        {subtitle && <p className="page-header__subtitle">{subtitle}</p>}
+        {idChip && <span className="page-header__id-chip">{idChip}</span>}
+      </div>
+      {actions && <div className="page-header__actions">{actions}</div>}
+    </div>
   );
 }

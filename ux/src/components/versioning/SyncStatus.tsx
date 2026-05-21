@@ -97,7 +97,7 @@ function SyncStatusCard({
               <span
                 style={{
                   fontSize: "12px",
-                  fontFamily: "var(--mono)",
+                  fontFamily: "var(--font-mono)",
                   color: "var(--canvas-fg-2)",
                 }}
               >
@@ -114,7 +114,7 @@ function SyncStatusCard({
               <span
                 style={{
                   fontSize: "12px",
-                  fontFamily: "var(--mono)",
+                  fontFamily: "var(--font-mono)",
                   color: "var(--canvas-fg-2)",
                 }}
               >
@@ -296,7 +296,7 @@ export function SyncStatusPanel({ onConflictDetected }: SyncStatusPanelProps) {
         </div>
         <div
           style={{
-            fontFamily: "var(--mono)",
+            fontFamily: "var(--font-mono)",
             color: "var(--canvas-fg-2)",
             wordBreak: "break-all",
           }}

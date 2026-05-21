@@ -67,7 +67,7 @@ export function TaxonomyPublishDialog({
         <div
           style={{
             padding: "var(--space-2)",
-            backgroundColor: "var(--canvas-fg-4)",
+            backgroundColor: "rgb(var(--canvas-fg-4))",
             borderRadius: "4px",
             fontSize: "var(--text-xs)",
             color: "var(--canvas-fg-3)",

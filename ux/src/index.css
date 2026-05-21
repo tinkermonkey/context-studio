@@ -1,3 +1,6 @@
+/* Establish layer priority: tailwind reset < tailwind theme < tailwind utilities < heimdall components < app overrides */
+@layer properties, theme, base, components, utilities, heimdall, app, graph;
+
 @import "@tinkermonkey/heimdall-ui/css" layer(heimdall);
 @import "./design-system/app-overrides.css" layer(app);
 @import "./design-system/studio.css" layer(app);

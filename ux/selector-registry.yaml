@@ -1318,6 +1318,26 @@ selectors:
   - selector: build-graph-button
     component: routes/app/graph/index.tsx
     description: Button to build or rebuild the knowledge graph visualization
+  - selector: node-inspector
+    component: routes/app/graph/index.tsx
+    description: Node detail panel shown in the graph inspector when the node tab is active
+
+  # Heimdall unit test fixtures (test-only components rendered directly in tests)
+  - selector: test-button
+    component: components/ui/__tests__/HeimdallButton.test.tsx
+    description: Test fixture — Button rendered with a known testid in unit test
+  - selector: test-input
+    component: components/ui/__tests__/HeimdallInput.test.tsx
+    description: Test fixture — TextInput rendered with a known testid in unit test
+  - selector: test-textarea
+    component: components/ui/__tests__/HeimdallInput.test.tsx
+    description: Test fixture — TextArea rendered with a known testid in unit test
+  - selector: test-select
+    component: components/ui/__tests__/HeimdallInput.test.tsx
+    description: Test fixture — Select rendered with a known testid in unit test
+  - selector: test-tabbar
+    component: components/ui/__tests__/HeimdallTabBar.test.tsx
+    description: Test fixture — TabBar rendered with a known testid in unit test
 
   # Miscellaneous
   - selector: create-toast-btn

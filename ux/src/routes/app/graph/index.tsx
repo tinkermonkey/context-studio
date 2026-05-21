@@ -10,7 +10,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { TabBar, Button, GraphInspector } from "@tinkermonkey/heimdall-ui";
+import { TabBar, Button } from "@tinkermonkey/heimdall-ui";
 import { COPY } from "./-copy";
 import "@/design-system/graph.css";
 
@@ -120,21 +120,19 @@ export function GraphPage() {
                 <SparqlEditor />
               </div>
             ) : (
-              <GraphInspector
-                node={
-                  selectedNode
-                    ? {
-                        id: selectedNode.id,
-                        title: selectedNode.label,
-                        kind: selectedNode.kind,
-                        description: COPY.SELECTED_NODE_DETAILS,
-                      }
-                    : null
-                }
-                relationships={[]}
-                onNodeSelect={setSelectedNodeId}
-                emptyStateText={COPY.NO_NODE_SELECTED}
-              />
+              <div className="gi-body" data-testid="node-inspector">
+                {selectedNode ? (
+                  <div className="gi-node-detail">
+                    <p className="gi-node-kind">{selectedNode.kind}</p>
+                    <p className="gi-node-label">{selectedNode.label}</p>
+                    <p className="gi-node-description">{COPY.SELECTED_NODE_DETAILS}</p>
+                  </div>
+                ) : (
+                  <div className="graph-inspector empty">
+                    <span>{COPY.NO_NODE_SELECTED}</span>
+                  </div>
+                )}
+              </div>
             )}
           </aside>
         </div>

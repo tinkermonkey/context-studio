@@ -1,5 +1,7 @@
 import { ReactNode } from "react";
-import { StatTile as HeimdallStatTile, type StatusColor } from "@tinkermonkey/heimdall-ui";
+import { StatTile as HeimdallStatTile } from "@tinkermonkey/heimdall-ui";
+
+type StatusColor = "cyan" | "violet" | "amber" | "emerald";
 
 type StatColor = Extract<StatusColor, "cyan" | "violet" | "amber" | "emerald">;
 

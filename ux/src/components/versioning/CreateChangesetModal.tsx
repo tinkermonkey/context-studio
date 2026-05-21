@@ -79,7 +79,7 @@ export function CreateChangesetModal({
             style={{
               fontSize: "12px",
               fontWeight: 500,
-              color: "var(--canvas-fg)",
+              color: "rgb(var(--canvas-fg-1))",
               margin: 0,
             }}
             htmlFor="changeset-name"
@@ -109,7 +109,7 @@ export function CreateChangesetModal({
             style={{
               fontSize: "12px",
               fontWeight: 500,
-              color: "var(--canvas-fg)",
+              color: "rgb(var(--canvas-fg-1))",
               margin: 0,
             }}
             htmlFor="changeset-description"

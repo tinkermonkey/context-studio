@@ -137,7 +137,7 @@ function ConflictRow({
               border: "1px solid var(--canvas-border)",
               borderRadius: "var(--radius-sm, 4px)",
               backgroundColor: "var(--canvas-bg)",
-              color: "var(--canvas-fg)",
+              color: "rgb(var(--canvas-fg-1))",
             }}
             autoFocus
             aria-label={`Edit resolution for ${conflict.field_name}`}

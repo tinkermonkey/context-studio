@@ -159,10 +159,10 @@ export function GroundingWorkflowForm({ onSubmit, isLoading }: GroundingWorkflow
             style={{
               width: "100%",
               padding: "var(--space-2) var(--space-3)",
-              border: "1px solid var(--canvas-fg-4)",
+              border: "1px solid rgb(var(--canvas-fg-4))",
               borderRadius: "var(--radius-sm)",
               backgroundColor: "var(--canvas-bg)",
-              color: "var(--canvas-fg)",
+              color: "rgb(var(--canvas-fg-1))",
               fontSize: "inherit",
             }}
             data-testid="workflow-source-select"
@@ -245,7 +245,7 @@ export function GroundingWorkflowForm({ onSubmit, isLoading }: GroundingWorkflow
                     left: 0,
                     right: 0,
                     background: "var(--canvas-bg)",
-                    border: "1px solid var(--canvas-fg-4)",
+                    border: "1px solid rgb(var(--canvas-fg-4))",
                     borderRadius: "var(--radius-sm)",
                     marginTop: "4px",
                     zIndex: 10,
@@ -269,7 +269,7 @@ export function GroundingWorkflowForm({ onSubmit, isLoading }: GroundingWorkflow
                         cursor: "pointer",
                         textAlign: "left",
                         fontSize: "var(--text-sm)",
-                        borderBottom: "1px solid var(--canvas-fg-4)",
+                        borderBottom: "1px solid rgb(var(--canvas-fg-4))",
                       }}
                       data-testid={`workflow-scope-option-${cls.id}`}
                     >

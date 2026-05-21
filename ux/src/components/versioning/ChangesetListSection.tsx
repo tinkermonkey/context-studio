@@ -158,7 +158,7 @@ export function ChangesetListSection({
             }}
           >
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: "13px", fontWeight: 500, color: "var(--canvas-fg)" }}>
+              <div style={{ fontSize: "13px", fontWeight: 500, color: "rgb(var(--canvas-fg-1))" }}>
                 {changeset.name}
               </div>
               {changeset.description && (
@@ -171,7 +171,7 @@ export function ChangesetListSection({
             <div
               style={{
                 fontSize: "12px",
-                fontFamily: "var(--mono)",
+                fontFamily: "var(--font-mono)",
                 color: "var(--canvas-fg-2)",
                 textAlign: "center",
               }}
@@ -220,7 +220,7 @@ export function ChangesetListSection({
                     style={{
                       fontSize: "11px",
                       color: "var(--canvas-fg-3)",
-                      fontFamily: "var(--mono)",
+                      fontFamily: "var(--font-mono)",
                     }}
                   >
                     {changeset.event_ids && changeset.event_ids.length > 0

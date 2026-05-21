@@ -10,7 +10,7 @@
 }
 
 .contact-sheet-section h2 {
-  font-family: var(--mono);
+  font-family: var(--font-mono);
   font-size: var(--text-xs);
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -141,12 +141,12 @@
 
 /* ------------ Table row styles ------------ */
 .contact-sheet-table-mono {
-  font-family: var(--mono);
+  font-family: var(--font-mono);
   font-size: var(--text-xs);
 }
 
 .contact-sheet-table-mono-col {
-  font-family: var(--mono);
+  font-family: var(--font-mono);
 }
 
 /* ------------ Tooltip/description text ------------ */
@@ -165,7 +165,7 @@
 
 .contact-sheet-kv-label {
   color: var(--canvas-fg-3);
-  font-family: var(--mono);
+  font-family: var(--font-mono);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -176,7 +176,7 @@
 }
 
 .contact-sheet-kv-value-mono {
-  font-family: var(--mono);
+  font-family: var(--font-mono);
   font-size: 11px;
 }
 

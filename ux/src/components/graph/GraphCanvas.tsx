@@ -1,4 +1,4 @@
-import { GraphCanvas } from "@tinkermonkey/heimdall-ui";
+import { GraphCanvas } from "reagraph";
 import { useEffect, useMemo } from "react";
 import type { GraphNode, GraphEdge } from "@/api/hooks/graph";
 import "@/design-system/graph.css";
@@ -77,17 +77,14 @@ export const GraphCanvasComponent = ({
         nodes={nodes.map((node) => ({
           id: node.id,
           label: node.label,
-          kind: node.kind,
-          domainColor: node.domainColor,
+          fill: node.domainColor,
         }))}
         edges={edges.map((edge) => ({
           id: edge.id,
-          sourceId: edge.source,
-          targetId: edge.target,
+          source: edge.source,
+          target: edge.target,
         }))}
-        selectedNodeId={selectedNodeId}
-        onNodeSelect={onNodeClick}
-        layout="force"
+        onNodeClick={(node) => onNodeClick?.(node.id)}
       />
     </div>
   );

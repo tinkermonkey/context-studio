@@ -196,7 +196,7 @@ function RelationshipsPageContent({
               style={{
                 padding: "6px 8px",
                 borderRadius: "4px",
-                border: "1px solid var(--canvas-fg-4, #e5e7eb)",
+                border: "1px solid rgb(var(--canvas-fg-4))",
                 backgroundColor: "var(--canvas-bg, #ffffff)",
                 cursor: "pointer",
                 fontSize: "var(--text-sm)",
@@ -232,7 +232,7 @@ function RelationshipsPageContent({
               style={{
                 padding: "6px 8px",
                 borderRadius: "4px",
-                border: "1px solid var(--canvas-fg-4, #e5e7eb)",
+                border: "1px solid rgb(var(--canvas-fg-4))",
                 backgroundColor: "var(--canvas-bg, #ffffff)",
                 cursor: "pointer",
                 fontSize: "var(--text-sm)",

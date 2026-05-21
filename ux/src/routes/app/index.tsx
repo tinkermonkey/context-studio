@@ -1,7 +1,65 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Network, Layers, GitBranch, Cpu, Plus } from "lucide-react";
 import { StatTile } from "@/components/ui/StatTile";
-import { StatGrid, ActivityTimeline, type ActivityEvent } from "@tinkermonkey/heimdall-ui";
+import { StatGrid } from "@tinkermonkey/heimdall-ui";
+
+interface ActivityEvent {
+  id: string;
+  type: "create" | "update" | "delete" | "run";
+  subject: string;
+  timestamp: string;
+}
+
+function ActivityTimeline({ events, emptyState }: { events: ActivityEvent[]; emptyState: string }) {
+  if (events.length === 0) {
+    return (
+      <p
+        data-testid="activity-timeline-empty"
+        style={{ fontSize: "var(--text-sm)", color: "var(--canvas-fg-3)", margin: 0 }}
+      >
+        {emptyState}
+      </p>
+    );
+  }
+  return (
+    <ul data-testid="activity-timeline" style={{ listStyle: "none", margin: 0, padding: 0 }}>
+      {events.map((event) => (
+        <li
+          key={event.id}
+          data-testid={`activity-event-${event.id}`}
+          style={{ display: "flex", gap: "var(--space-3)", alignItems: "flex-start", padding: "6px 0" }}
+        >
+          <span
+            data-testid={`activity-dot-${event.type}`}
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              marginTop: 5,
+              flexShrink: 0,
+              background:
+                event.type === "create"
+                  ? "var(--accent-emerald, #10b981)"
+                  : event.type === "delete"
+                    ? "var(--rose-400, #fb7185)"
+                    : event.type === "run"
+                      ? "var(--accent-cyan, #22d3ee)"
+                      : "var(--accent-amber, #fbbf24)",
+            }}
+          />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p data-testid="activity-subject" style={{ margin: 0, fontSize: "var(--text-sm)", color: "rgb(var(--canvas-fg-1))" }}>
+              {event.subject}
+            </p>
+            <time data-testid="activity-timestamp" style={{ fontSize: "var(--text-xs)", color: "var(--canvas-fg-3)" }}>
+              {new Date(event.timestamp).toLocaleString()}
+            </time>
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
 import { Panel } from "@/components/ui/Panel";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -237,7 +295,7 @@ export function Dashboard() {
                   <dt
                     key={`${k}-k`}
                     style={{
-                      fontFamily: "var(--mono)",
+                      fontFamily: "var(--font-mono)",
                       fontSize: "11px",
                       color: "var(--canvas-fg-3)",
                       textTransform: "uppercase",
@@ -251,14 +309,14 @@ export function Dashboard() {
                     key={`${k}-v`}
                     style={{
                       margin: 0,
-                      fontFamily: "var(--mono)",
+                      fontFamily: "var(--font-mono)",
                       fontSize: "13px",
                       color:
                         v === "connected" || v === "ready" || v === "loaded"
                           ? "var(--accent-emerald, #10b981)"
                           : v === "unavailable" || v === "not loaded"
                             ? "var(--rose-400, #fb7185)"
-                            : "var(--canvas-fg)",
+                            : "rgb(var(--canvas-fg-1))",
                     }}
                   >
                     {v}
@@ -330,7 +388,7 @@ export function Dashboard() {
                 style={{
                   fontSize: "var(--text-sm)",
                   fontWeight: 600,
-                  color: "var(--canvas-fg)",
+                  color: "rgb(var(--canvas-fg-1))",
                 }}
               >
                 Active Pipelines

@@ -1,5 +1,7 @@
 import type { HTMLAttributes, ReactNode } from "react";
-import { Chip as HeimdallChip, type StatusColor } from "@tinkermonkey/heimdall-ui";
+import { Chip as HeimdallChip } from "@tinkermonkey/heimdall-ui";
+
+type StatusColor = "emerald" | "amber" | "rose" | "cyan" | "violet" | "neutral";
 
 type ChipColor = "cyan" | "amber" | "violet" | "emerald" | "rose" | "gray";
 

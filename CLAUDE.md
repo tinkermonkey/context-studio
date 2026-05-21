@@ -309,6 +309,38 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 - When API signatures change, run `npm run generate-types` to regenerate API types, then update hooks and services
 - **CSS design reference**: `ux/design/styles/` is the source of truth for the design system. When porting CSS, verify `body.dark-canvas` rule counts match between the reference and `src/design-system/studio.css` — this is the most common source of drift.
 
+### CSS Architecture
+
+#### Cascade Layer Ordering
+
+`src/index.css` declares an explicit layer order at the top that **must be preserved**:
+
+```css
+@layer properties, theme, base, components, utilities, heimdall, app, graph;
+```
+
+This ensures Heimdall component styles and app overrides win over Tailwind's base reset. The order matters because CSS cascade layers registered later have higher priority. If Tailwind's `@layer base` (which resets `border: 0px solid` on all elements) is registered after `heimdall`, it will override every Heimdall component border, background, and shadow. Always keep the explicit `@layer` declaration as the first rule in `index.css`.
+
+#### Heimdall Token Usage
+
+Heimdall CSS variables store **raw RGB channel values** (e.g., `--canvas-fg-1: 11 18 32`), not complete color values. They **must** be wrapped in `rgb()` to produce valid CSS:
+
+```css
+/* correct */
+color: rgb(var(--canvas-fg-1));
+background: rgb(var(--canvas-bg));
+border: 1px solid rgb(var(--canvas-border));
+
+/* broken — produces invalid CSS: "color: 11 18 32" */
+color: var(--canvas-fg-1);
+```
+
+This applies to all shell and canvas tokens (`--shell-bg`, `--canvas-fg-*`, `--canvas-border`, `--canvas-border-strong`, `--accent-primary`, `--status-*`, etc.). The only tokens that are already rgb()-wrapped and can be used directly are the aliases defined in `app-overrides.css` (e.g., `--accent-cyan`, `--accent-amber`).
+
+#### Heimdall Accent Color
+
+Heimdall's native `--accent-primary` is **amber** (`#fbbf24`). The app's cyan palette is exposed via `--status-cyan` and aliased as `--accent-cyan` in `app-overrides.css`. Do not assume `--accent-primary` is cyan — use the explicit alias when you want cyan.
+
 ### API Client Architecture
 
 - Prefer type-safe clients generated from OpenAPI specs
