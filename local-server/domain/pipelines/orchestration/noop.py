@@ -11,7 +11,7 @@ Exercises:
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from typing import Any
+from typing import Any, cast
 
 from domain.pipeline.ports import LLMProvider
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
@@ -67,33 +67,34 @@ class NoOpPipelineOrchestrator(PipelineOrchestrator):
         Returns:
             Updated state with result and metrics
         """
+        noop_state = cast(NoOpPipelineState, state)
         # Step 1: Initialize
-        state = replace(
-            state,
+        noop_state = replace(
+            noop_state,
             current_status="running",
             steps_completed=["initialize"],
         )
 
         # Step 2: Process (no-op)
-        state = replace(
-            state,
-            steps_completed=(state.steps_completed or []) + ["process"],
+        noop_state = replace(
+            noop_state,
+            steps_completed=(noop_state.steps_completed or []) + ["process"],
         )
 
         # Step 3: Finalize
         result = {
             "status": "completed",
             "message": "No-op pipeline completed successfully",
-            "input_echo": state.input_data,
+            "input_echo": noop_state.input_data,
             "step_count": 2,
-            "steps": state.steps_completed or [],
+            "steps": noop_state.steps_completed or [],
         }
 
-        state = replace(
-            state,
+        noop_state = replace(
+            noop_state,
             current_status="completed",
             result=result,
-            steps_completed=(state.steps_completed or []) + ["finalize"],
+            steps_completed=(noop_state.steps_completed or []) + ["finalize"],
         )
 
-        return state
+        return noop_state

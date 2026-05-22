@@ -155,7 +155,12 @@ class PipelineImplementationRegistry:
 
         return decorator
 
-    def register_impl(self, pipeline_type: PipelineType, impl_id: str, impl_class: type[Any]) -> None:
+    def register_impl(
+        self,
+        pipeline_type: PipelineType,
+        impl_id: str,
+        impl_class: type[Any],
+    ) -> None:
         """
         Register an implementation class.
 

@@ -7,7 +7,7 @@ all pipeline types. Uses SQLAlchemy ORM for database access.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy.orm import Session
 
@@ -43,6 +43,9 @@ from domain.pipelines.entities import (
     SchemaGroundingRun as DomainSchemaGroundingRun,
 )
 from utils.logger import get_logger
+
+if TYPE_CHECKING:
+    from domain.pipelines.ports import ChangeEventDictList, PipelineRunList
 
 logger = get_logger(__name__)
 
@@ -92,7 +95,7 @@ class PipelineRepository:
             pipeline_type: Type of pipeline
             implementation_id: Implementation identifier
             configuration_ref: Configuration reference
-            specific_data: Type-specific fields (e.g., source_text_hash for IndividualExtractionRun)
+            specific_data: Type-specific fields (e.g., source_text_hash)
 
         Returns:
             Domain entity (specific subclass per pipeline_type)
@@ -104,7 +107,7 @@ class PipelineRepository:
         if not orm_class:
             raise ValueError(f"Unknown pipeline type: {pipeline_type.value}")
 
-        kwargs = {
+        kwargs: dict[str, Any] = {
             "id": batch_run_id,  # In joined-table inheritance, id IS the FK
             "pipeline_type": pipeline_type.value,
             "implementation_id": implementation_id,
@@ -140,7 +143,7 @@ class PipelineRepository:
             return self._orm_to_domain(orm_obj)
         return None
 
-    def list(self) -> list[DomainPipelineRun]:
+    def list(self) -> "PipelineRunList":
         """
         List all pipeline runs.
 
@@ -150,7 +153,7 @@ class PipelineRepository:
         orm_objs = self._session.query(PipelineRun).all()
         return [self._orm_to_domain(obj) for obj in orm_objs]
 
-    def list_by_status(self, status: PipelineRunStatus) -> list[DomainPipelineRun]:
+    def list_by_status(self, status: PipelineRunStatus) -> "PipelineRunList":
         """
         List all pipeline runs with a specific status.
 
@@ -165,7 +168,7 @@ class PipelineRepository:
         ).all()
         return [self._orm_to_domain(obj) for obj in orm_objs]
 
-    def list_by_type(self, pipeline_type: PipelineType) -> list[DomainPipelineRun]:
+    def list_by_type(self, pipeline_type: PipelineType) -> "PipelineRunList":
         """
         List all pipeline runs of a specific type.
 
@@ -194,7 +197,7 @@ class PipelineRepository:
         orm_obj = self._session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
         if not orm_obj:
             return False
-        orm_obj.status = status.value
+        orm_obj.status = status.value  # type: ignore[assignment]
         self._session.flush()
         logger.info(f"Updated pipeline run status: {run_id} → {status.value}")
         return True
@@ -223,17 +226,17 @@ class PipelineRepository:
             return False
 
         if input_summary is not None:
-            orm_obj.input_summary = input_summary
+            orm_obj.input_summary = input_summary  # type: ignore[assignment]
         if output_summary is not None:
-            orm_obj.output_summary = output_summary
+            orm_obj.output_summary = output_summary  # type: ignore[assignment]
         if llm_metadata is not None:
-            orm_obj.llm_metadata = llm_metadata
+            orm_obj.llm_metadata = llm_metadata  # type: ignore[assignment]
 
         self._session.flush()
         logger.info(f"Updated pipeline run summaries: {run_id}")
         return True
 
-    def get_change_events_for_run(self, run_id: str) -> list[dict[str, Any]]:
+    def get_change_events_for_run(self, run_id: str) -> "ChangeEventDictList":
         """
         Get all change_events correlated with a pipeline run via batch_run_id.
 
@@ -270,7 +273,7 @@ class PipelineRepository:
             Domain entity (specific subclass per type)
         """
         # Common attributes for all pipeline runs
-        common = {
+        common: dict[str, Any] = {
             "id": orm_obj.id,
             "batch_run_id": orm_obj.id,  # In joined-table inheritance, they're the same
             "implementation_id": orm_obj.implementation_id,
@@ -284,34 +287,34 @@ class PipelineRepository:
         # Dispatch based on ORM type
         if isinstance(orm_obj, IndividualExtractionRun):
             return DomainIndividualExtractionRun(
-                **common,
+                **common,  # type: ignore[arg-type]
                 pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
-                source_text_hash=orm_obj.source_text_hash,
-                source_document_uri=orm_obj.source_document_uri,
+                source_text_hash=orm_obj.source_text_hash,  # type: ignore[arg-type]
+                source_document_uri=orm_obj.source_document_uri,  # type: ignore[arg-type]
             )
         elif isinstance(orm_obj, SchemaExtractionRun):
             return DomainSchemaExtractionRun(
-                **common,
+                **common,  # type: ignore[arg-type]
                 pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             )
         elif isinstance(orm_obj, SchemaGroundingRun):
             return DomainSchemaGroundingRun(
-                **common,
+                **common,  # type: ignore[arg-type]
                 pipeline_type=PipelineType.SCHEMA_NODE_GROUNDING,
             )
         elif isinstance(orm_obj, SchemaDefinitionRefinementRun):
             return DomainSchemaDefinitionRefinementRun(
-                **common,
+                **common,  # type: ignore[arg-type]
                 pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
             )
         elif isinstance(orm_obj, SchemaConnectionRefinementRun):
             return DomainSchemaConnectionRefinementRun(
-                **common,
+                **common,  # type: ignore[arg-type]
                 pipeline_type=PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,
             )
         else:
             # Fallback for unknown types (should not happen in practice)
             return DomainPipelineRun(
-                **common,
+                **common,  # type: ignore[arg-type]
                 pipeline_type=PipelineType(orm_obj.pipeline_type),
             )

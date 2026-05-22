@@ -12,6 +12,9 @@ from typing import Any, Protocol
 
 from .entities import PipelineRun, PipelineRunStatus, PipelineType
 
+PipelineRunList = list[PipelineRun]
+ChangeEventDictList = list[dict[str, Any]]
+
 
 class PipelineRunRepository(Protocol):
     """
@@ -56,7 +59,7 @@ class PipelineRunRepository(Protocol):
         """
         ...
 
-    def list(self) -> list[PipelineRun]:
+    def list(self) -> PipelineRunList:
         """
         List all pipeline runs.
 
@@ -65,7 +68,7 @@ class PipelineRunRepository(Protocol):
         """
         ...
 
-    def list_by_status(self, status: PipelineRunStatus) -> list[PipelineRun]:
+    def list_by_status(self, status: PipelineRunStatus) -> PipelineRunList:
         """
         List all pipeline runs with a specific status.
 
@@ -77,7 +80,7 @@ class PipelineRunRepository(Protocol):
         """
         ...
 
-    def list_by_type(self, pipeline_type: PipelineType) -> list[PipelineRun]:
+    def list_by_type(self, pipeline_type: PipelineType) -> PipelineRunList:
         """
         List all pipeline runs of a specific type.
 
@@ -123,7 +126,7 @@ class PipelineRunRepository(Protocol):
         """
         ...
 
-    def get_change_events_for_run(self, run_id: str) -> list[dict[str, Any]]:
+    def get_change_events_for_run(self, run_id: str) -> ChangeEventDictList:
         """
         Get all change_events correlated with a pipeline run via batch_run_id.
 

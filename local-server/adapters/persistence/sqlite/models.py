@@ -773,8 +773,9 @@ class BatchRun(Base):  # type: ignore[valid-type,misc]
     }
     __table_args__ = (
         CheckConstraint(
-            "run_type IN ('import', 'extraction', 'individual_extraction', 'schema_extraction', "
-            "'schema_node_grounding', 'schema_node_definition_refinement', 'schema_node_connection_refinement')",
+            "run_type IN ('import', 'extraction', 'individual_extraction', "
+            "'schema_extraction', 'schema_node_grounding', "
+            "'schema_node_definition_refinement', 'schema_node_connection_refinement')",
             name="check_valid_run_type",
         ),
         Index("idx_run_type_status", "run_type", "status"),
@@ -1033,7 +1034,7 @@ class IndividualExtractionRun(PipelineRun):
     def __repr__(self) -> str:
         return (
             f"<IndividualExtractionRun(id={self.id},"
-            f" hash={self.source_text_hash[:8]}, status={self.status})>"
+            f" hash={self.source_text_hash[:8]}, status={self.status})>"  # type: ignore[index]
         )
 
 

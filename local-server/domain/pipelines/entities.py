@@ -59,7 +59,8 @@ class PipelineRun:
         input_summary: JSON dict with input metadata (small)
         output_summary: JSON dict with output counts and metrics
         llm_metadata: JSON dict with model, tokens_used, duration_ms
-        status: Current status (pending | running | completed | failed | reviewed | committed | abandoned)
+        status: Current status (pending | running | completed | failed | reviewed |
+            committed | abandoned)
     """
 
     id: str = field(default_factory=lambda: str(uuid4()))
@@ -71,39 +72,6 @@ class PipelineRun:
     output_summary: dict = field(default_factory=dict)
     llm_metadata: dict = field(default_factory=dict)
     status: PipelineRunStatus = PipelineRunStatus.PENDING
-
-    @staticmethod
-    def create(
-        id: str,
-        batch_run_id: str,
-        pipeline_type: PipelineType,
-        implementation_id: str,
-        configuration_ref: str,
-    ) -> PipelineRun:
-        """
-        Create a new PipelineRun with status=PENDING.
-
-        Args:
-            id: Unique identifier (UUID string)
-            batch_run_id: FK to batch_runs.id
-            pipeline_type: Type of pipeline
-            implementation_id: Registered implementation identifier
-            configuration_ref: Versioned configuration reference
-
-        Returns:
-            New PipelineRun with status=PENDING, empty summaries
-        """
-        return PipelineRun(
-            id=id,
-            batch_run_id=batch_run_id,
-            pipeline_type=pipeline_type,
-            implementation_id=implementation_id,
-            configuration_ref=configuration_ref,
-            input_summary={},
-            output_summary={},
-            llm_metadata={},
-            status=PipelineRunStatus.PENDING,
-        )
 
 
 @dataclass(frozen=True)
@@ -125,15 +93,16 @@ class IndividualExtractionRun(PipelineRun):
     source_text_hash: str = ""
     source_document_uri: str | None = None
 
-    @staticmethod
+    @classmethod
     def create(
+        cls,
         id: str,
         batch_run_id: str,
         implementation_id: str,
         configuration_ref: str,
         source_text_hash: str,
         source_document_uri: str | None = None,
-    ) -> IndividualExtractionRun:
+    ) -> "IndividualExtractionRun":
         """
         Create a new IndividualExtractionRun with status=PENDING.
 
@@ -148,7 +117,7 @@ class IndividualExtractionRun(PipelineRun):
         Returns:
             New IndividualExtractionRun with status=PENDING
         """
-        return IndividualExtractionRun(
+        return cls(
             id=id,
             batch_run_id=batch_run_id,
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
@@ -174,15 +143,16 @@ class SchemaExtractionRun(PipelineRun):
         All pipeline-shared fields
     """
 
-    @staticmethod
+    @classmethod
     def create(
+        cls,
         id: str,
         batch_run_id: str,
         implementation_id: str,
         configuration_ref: str,
-    ) -> SchemaExtractionRun:
+    ) -> "SchemaExtractionRun":
         """Create a new SchemaExtractionRun with status=PENDING."""
-        return SchemaExtractionRun(
+        return cls(
             id=id,
             batch_run_id=batch_run_id,
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
@@ -206,15 +176,16 @@ class SchemaGroundingRun(PipelineRun):
         All pipeline-shared fields
     """
 
-    @staticmethod
+    @classmethod
     def create(
+        cls,
         id: str,
         batch_run_id: str,
         implementation_id: str,
         configuration_ref: str,
-    ) -> SchemaGroundingRun:
+    ) -> "SchemaGroundingRun":
         """Create a new SchemaGroundingRun with status=PENDING."""
-        return SchemaGroundingRun(
+        return cls(
             id=id,
             batch_run_id=batch_run_id,
             pipeline_type=PipelineType.SCHEMA_NODE_GROUNDING,
@@ -238,15 +209,16 @@ class SchemaDefinitionRefinementRun(PipelineRun):
         All pipeline-shared fields
     """
 
-    @staticmethod
+    @classmethod
     def create(
+        cls,
         id: str,
         batch_run_id: str,
         implementation_id: str,
         configuration_ref: str,
-    ) -> SchemaDefinitionRefinementRun:
+    ) -> "SchemaDefinitionRefinementRun":
         """Create a new SchemaDefinitionRefinementRun with status=PENDING."""
-        return SchemaDefinitionRefinementRun(
+        return cls(
             id=id,
             batch_run_id=batch_run_id,
             pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
@@ -270,15 +242,16 @@ class SchemaConnectionRefinementRun(PipelineRun):
         All pipeline-shared fields
     """
 
-    @staticmethod
+    @classmethod
     def create(
+        cls,
         id: str,
         batch_run_id: str,
         implementation_id: str,
         configuration_ref: str,
-    ) -> SchemaConnectionRefinementRun:
+    ) -> "SchemaConnectionRefinementRun":
         """Create a new SchemaConnectionRefinementRun with status=PENDING."""
-        return SchemaConnectionRefinementRun(
+        return cls(
             id=id,
             batch_run_id=batch_run_id,
             pipeline_type=PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,

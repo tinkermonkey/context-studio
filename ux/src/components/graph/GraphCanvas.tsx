@@ -37,7 +37,7 @@ export const GraphCanvasComponent = ({
   nodes,
   edges,
   onNodeClick,
-  selectedNodeId,
+  selectedNodeId: _selectedNodeId,
 }: GraphCanvasComponentProps) => {
   const { toast } = useToasts();
   const validation = useMemo(() => validateEdgeEndpoints(nodes, edges), [nodes, edges]);
