@@ -81,8 +81,8 @@ export const GraphCanvasComponent = ({
         }))}
         edges={edges.map((edge) => ({
           id: edge.id,
-          source: edge.source,
-          target: edge.target,
+          sourceId: edge.source,
+          targetId: edge.target,
         }))}
         onNodeClick={(node) => onNodeClick?.(node.id)}
       />

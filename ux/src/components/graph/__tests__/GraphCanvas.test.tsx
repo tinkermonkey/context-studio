@@ -21,7 +21,7 @@ vi.mock("@/components/ui/Toast", async () => {
   };
 });
 
-vi.mock("@tinkermonkey/heimdall-ui", () => ({
+vi.mock("reagraph", () => ({
   GraphCanvas: mockGraphCanvas,
 }));
 

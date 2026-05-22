@@ -73,6 +73,40 @@ class PipelineRun:
     llm_metadata: dict = field(default_factory=dict)
     status: PipelineRunStatus = PipelineRunStatus.PENDING
 
+    @classmethod
+    def create(
+        cls,
+        id: str,
+        batch_run_id: str,
+        pipeline_type: PipelineType,
+        implementation_id: str,
+        configuration_ref: str,
+    ) -> "PipelineRun":
+        """
+        Create a new PipelineRun with status=PENDING.
+
+        Args:
+            id: Unique identifier (UUID string)
+            batch_run_id: FK to batch_runs.id
+            pipeline_type: Type of pipeline
+            implementation_id: Implementation identifier
+            configuration_ref: Configuration reference
+
+        Returns:
+            New PipelineRun with status=PENDING
+        """
+        return cls(
+            id=id,
+            batch_run_id=batch_run_id,
+            pipeline_type=pipeline_type,
+            implementation_id=implementation_id,
+            configuration_ref=configuration_ref,
+            input_summary={},
+            output_summary={},
+            llm_metadata={},
+            status=PipelineRunStatus.PENDING,
+        )
+
 
 @dataclass(frozen=True)
 class IndividualExtractionRun(PipelineRun):

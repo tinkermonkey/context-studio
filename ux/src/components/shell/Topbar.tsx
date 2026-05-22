@@ -67,32 +67,34 @@ export function Topbar() {
           </span>
         ))}
       </div>
-      <button
-        className="topbar-palette"
-        data-testid="topbar-palette-button"
-        onClick={() => openPalette()}
-        type="button"
-      >
-        <Search size={14} />
-        <span>Search or run command…</span>
-        <span className="kbd">⌘K</span>
-      </button>
-      <button
-        className="topbar-ico"
-        type="button"
-        data-testid="dark-mode-toggle"
-        onClick={toggleDarkCanvas}
-        title={darkCanvas ? "Switch to light canvas" : "Switch to dark canvas"}
-        aria-pressed={darkCanvas}
-      >
-        {darkCanvas ? <Sun size={16} /> : <Moon size={16} />}
-      </button>
-      <button className="topbar-ico" type="button" title="Activity">
-        <Bell size={16} />
-      </button>
-      <button className="topbar-ico" type="button" title="Documentation">
-        <FileText size={16} />
-      </button>
+      <div className="topbar-actions">
+        <button
+          className="topbar-palette"
+          data-testid="topbar-palette-button"
+          onClick={() => openPalette()}
+          type="button"
+        >
+          <Search size={14} />
+          <span>Search or run command…</span>
+          <span className="kbd">⌘K</span>
+        </button>
+        <button
+          className="topbar-ico"
+          type="button"
+          data-testid="dark-mode-toggle"
+          onClick={toggleDarkCanvas}
+          title={darkCanvas ? "Switch to light canvas" : "Switch to dark canvas"}
+          aria-pressed={darkCanvas}
+        >
+          {darkCanvas ? <Sun size={16} /> : <Moon size={16} />}
+        </button>
+        <button className="topbar-ico" type="button" title="Activity">
+          <Bell size={16} />
+        </button>
+        <button className="topbar-ico" type="button" title="Documentation">
+          <FileText size={16} />
+        </button>
+      </div>
       <span className="env-pill">
         <span className="dot" />
         main
