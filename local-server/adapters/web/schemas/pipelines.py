@@ -2,17 +2,22 @@
 Pydantic schemas for the Pipeline Orchestration bounded context.
 
 Request schemas (for POST/PUT):
-- IndividualExtractionRunRequest
-- SchemaExtractionRunRequest
-- SchemaGroundingRunRequest
-- SchemaDefinitionRefinementRunRequest
-- SchemaConnectionRefinementRunRequest
+- IndividualExtractionRunRequest — Per-type request; documented for Wave B per-type implementation
+- SchemaExtractionRunRequest — Per-type request; documented for Wave B per-type implementation
+- SchemaGroundingRunRequest — Per-type request; documented for Wave B per-type implementation
+- SchemaDefinitionRefinementRunRequest — Per-type request; documented for Wave B per-type implementation
+- SchemaConnectionRefinementRunRequest — Per-type request; documented for Wave B per-type implementation
 
 Response schemas (for GET/returns):
 - PipelineRunResponse
 - PipelineTypeResponse
 - ImplementationResponse
 - ConfigurationResponse
+
+Per-type request schemas are defined for forward compatibility and documentation of expected inputs
+per pipeline type. They are actively used in per-type implementation sub-issues. The generic
+PipelineRunRequest is used in the Wave B generic endpoint; type-specific fields are refined
+in later sub-issues.
 
 These schemas handle serialization/deserialization between HTTP and domain models.
 """
