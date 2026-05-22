@@ -74,11 +74,6 @@ from domain.extraction.ports import ReferenceSource
 from domain.extraction.services import ExtractionService
 from domain.graph.services import GraphAnalysisService
 from domain.interchange.services import ImportRunService
-from domain.pipelines.registry import (
-    PipelineConfigurationRegistry,
-    PipelineImplementationRegistry,
-    PipelineTypeRegistry,
-)
 from domain.ontology.events import (
     ClassCreated,
     ClassDeleted,
@@ -106,6 +101,11 @@ from domain.ontology.events import (
 from domain.ontology.services import OntologyService
 from domain.pipeline.events import PipelineExecuted
 from domain.pipeline.services import PipelineService
+from domain.pipelines.registry import (
+    PipelineConfigurationRegistry,
+    PipelineImplementationRegistry,
+    PipelineTypeRegistry,
+)
 from domain.versioning.events import ChangesetMerged, SyncCompleted
 from domain.versioning.ports import SyncTarget
 from domain.versioning.services import VersioningService
