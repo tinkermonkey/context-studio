@@ -13,6 +13,7 @@ from typing import Literal
 
 from adapters.llm.anthropic_provider import AnthropicProvider
 from adapters.llm.openai_provider import OpenAIProvider
+from adapters.llm.openrouter_provider import OpenRouterProvider
 from domain.pipeline.ports import LLMProvider, LLMResponse
 from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
@@ -30,13 +31,19 @@ class LLMProviderRouter:
     is raised if all configured providers fail to initialize.
     """
 
-    def __init__(self, openai_api_key: str = "", anthropic_api_key: str = "") -> None:
+    def __init__(
+        self,
+        openai_api_key: str = "",
+        anthropic_api_key: str = "",
+        openrouter_api_key: str = "",
+    ) -> None:
         """
         Initialize the LLM provider router with API keys.
 
         Args:
             openai_api_key: OpenAI API key (optional)
             anthropic_api_key: Anthropic API key (optional)
+            openrouter_api_key: OpenRouter API key (optional)
 
         Raises:
             ValueError: If no API keys are provided or all configured providers fail to initialize
@@ -44,10 +51,10 @@ class LLMProviderRouter:
         self._providers: dict[str, LLMProvider] = {}
         init_errors: dict[str, Exception] = {}
 
-        if not openai_api_key and not anthropic_api_key:
+        if not openai_api_key and not anthropic_api_key and not openrouter_api_key:
             raise ValueError(
-                "At least one LLM provider API key must be configured (openai_api_key"
-                " or anthropic_api_key)"
+                "At least one LLM provider API key must be configured (openai_api_key,"
+                " anthropic_api_key, or openrouter_api_key)"
             )
 
         if openai_api_key:
@@ -69,6 +76,17 @@ class LLMProviderRouter:
                 init_errors["anthropic"] = e
                 logger.error(
                     f"Failed to initialize Anthropic provider: {type(e).__name__}: {e}",
+                    exc_info=True,
+                )
+
+        if openrouter_api_key:
+            try:
+                self._providers["openrouter"] = OpenRouterProvider(openrouter_api_key)
+                logger.info("OpenRouter provider initialized")
+            except Exception as e:
+                init_errors["openrouter"] = e
+                logger.error(
+                    f"Failed to initialize OpenRouter provider: {type(e).__name__}: {e}",
                     exc_info=True,
                 )
 

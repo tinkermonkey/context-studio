@@ -1,421 +1,272 @@
 """
-SQLite adapter implementation of PipelineRepository for the Pipeline Management bounded context.
+Repository for PipelineRun persistence and retrieval.
 
-Provides persistence for pipeline configurations and execution records in operations.db.
-Handles domain-to-ORM mapping, session management, and query logic.
+Implements CRUD operations and queries for pipeline execution records across
+all pipeline types. Uses SQLAlchemy ORM for database access.
 """
 
-from datetime import datetime
-from typing import Literal, Optional, cast
+from __future__ import annotations
 
-from sqlalchemy.orm import Session, sessionmaker
+from datetime import datetime, timezone
+from typing import Any
+from uuid import uuid4
 
-from adapters.persistence.sqlite.operations.models import (
-    ExecutionModel,
-    PipelineConfigurationModel,
-    PipelineFlavorModel,
+from sqlalchemy.orm import Session
+
+from adapters.persistence.sqlite.models import (
+    ChangeEvent,
+    IndividualExtractionRun,
+    PipelineRun,
+    SchemaConnectionRefinementRun,
+    SchemaDefinitionRefinementRun,
+    SchemaExtractionRun,
+    SchemaGroundingRun,
 )
-from domain.pipeline.entities import Execution, PipelineConfiguration, PipelineFlavor
-from domain.pipeline.ports import ExecutionWithTitle
+from domain.pipelines.entities import IndividualExtractionRun as DomainIndividualExtractionRun
+from domain.pipelines.entities import PipelineRun as DomainPipelineRun
+from domain.pipelines.entities import PipelineRunStatus, PipelineType
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
+
+# Map domain type to ORM class
+_PIPELINE_TYPE_TO_ORM = {
+    PipelineType.INDIVIDUAL_EXTRACTION: IndividualExtractionRun,
+    PipelineType.SCHEMA_EXTRACTION: SchemaExtractionRun,
+    PipelineType.SCHEMA_NODE_GROUNDING: SchemaGroundingRun,
+    PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT: SchemaDefinitionRefinementRun,
+    PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT: SchemaConnectionRefinementRun,
+}
 
 
-class SQLitePipelineRepository:
+class PipelineRepository:
     """
-    SQLite implementation of the PipelineRepository port for operations.db.
+    Repository for PipelineRun persistence and retrieval.
 
-    Manages persistence of pipeline configurations and execution records.
+    Handles all data access for pipeline runs, including creation, updates,
+    status queries, and change_events correlation.
     """
 
-    def __init__(self, session_factory: sessionmaker) -> None:
+    def __init__(self, session: Session) -> None:
         """
-        Initialize the repository with a SQLAlchemy session factory.
+        Initialize repository with database session.
 
         Args:
-            session_factory: SQLAlchemy sessionmaker configured for operations.db
+            session: SQLAlchemy database session
         """
-        self.session_factory = session_factory
+        self._session = session
 
-    def _get_session(self) -> Session:
-        """
-        Create and return a new isolated session.
-
-        Returns:
-            SQLAlchemy Session instance
-        """
-        return self.session_factory()
-
-    def get_config(self, config_id: str) -> Optional[PipelineConfiguration]:
-        """
-        Retrieve a pipeline configuration by ID.
-
-        Args:
-            config_id: Unique identifier of the configuration
-
-        Returns:
-            PipelineConfiguration if found, None otherwise
-        """
-        with self.session_factory() as session:
-            row = session.get(PipelineConfigurationModel, str(config_id))
-            return self._to_domain_config(row) if row else None
-
-    def list_configs(self, enabled_only: bool = False) -> list[PipelineConfiguration]:
-        """
-        List all pipeline configurations.
-
-        Args:
-            enabled_only: If True, return only enabled configurations (default False)
-
-        Returns:
-            List of PipelineConfiguration objects
-        """
-        with self.session_factory() as session:
-            query = session.query(PipelineConfigurationModel)
-            if enabled_only:
-                query = query.filter_by(enabled=True)
-            rows = query.all()
-            return [self._to_domain_config(row) for row in rows]
-
-    def save_config(self, config: PipelineConfiguration) -> PipelineConfiguration:
-        """
-        Create or update a pipeline configuration.
-
-        If the configuration's ID already exists, it is updated.
-        Otherwise, a new configuration is created.
-
-        Args:
-            config: PipelineConfiguration to save
-
-        Returns:
-            The saved PipelineConfiguration
-        """
-        with self.session_factory() as session:
-            model = self._to_model_config(config)
-            session.merge(model)
-            session.commit()
-            return config
-
-    def delete_config(self, config_id: str) -> bool:
-        """
-        Delete a pipeline configuration by ID.
-
-        Args:
-            config_id: Unique identifier of the configuration to delete
-
-        Returns:
-            True if deletion was successful, False if configuration was not found
-        """
-        with self.session_factory() as session:
-            row = session.get(PipelineConfigurationModel, str(config_id))
-            if not row:
-                return False
-            session.delete(row)
-            session.commit()
-            return True
-
-    def record_execution(self, execution: Execution) -> Execution:
-        """
-        Record a pipeline execution.
-
-        Args:
-            execution: Execution record to store
-
-        Returns:
-            The recorded Execution
-        """
-        with self.session_factory() as session:
-            model = self._to_model_execution(execution)
-            session.add(model)
-            session.commit()
-            return execution
-
-    def get_executions(self, pipeline_config_id: str, limit: int = 50) -> list[Execution]:
-        """
-        Retrieve execution history for a pipeline configuration.
-
-        Results are returned in reverse chronological order (most recent first).
-
-        Args:
-            pipeline_config_id: ID of the pipeline configuration
-            limit: Maximum number of execution records to return (default 50)
-
-        Returns:
-            List of Execution objects, up to limit
-        """
-        with self.session_factory() as session:
-            rows = (
-                session.query(ExecutionModel)
-                .filter_by(pipeline_config_id=str(pipeline_config_id))
-                .order_by(ExecutionModel.timestamp.desc())  # type: ignore[attr-defined]
-                .limit(limit)
-                .all()
-            )
-            return [self._to_domain_execution(row) for row in rows]
-
-    def get_all_executions(
+    def create(
         self,
-        status: str | None = None,
-        limit: int = 100,
-        offset: int = 0,
-    ) -> tuple[list[ExecutionWithTitle], int]:
+        batch_run_id: str,
+        pipeline_type: PipelineType,
+        implementation_id: str,
+        configuration_ref: str,
+        specific_data: dict[str, Any] | None = None,
+    ) -> DomainPipelineRun:
         """
-        Retrieve execution history across all pipeline configurations with pagination.
+        Create a new pipeline run and persist it.
 
-        Results are returned in reverse chronological order (most recent first).
-        Performs a JOIN with PipelineConfigurationModel to fetch pipeline titles.
-        Only includes executions whose pipeline configurations exist (INNER JOIN).
+        In joined-table inheritance, the PipelineRun.id IS the FK to batch_runs.id.
+        This method assumes the batch_run already exists.
 
         Args:
-            status: Optional status filter ("success", "error", "timeout")
-            limit: Maximum number of execution records to return
-            offset: Number of execution records to skip for pagination
+            batch_run_id: ID of the existing batch_run (becomes PipelineRun.id)
+            pipeline_type: Type of pipeline
+            implementation_id: Implementation identifier
+            configuration_ref: Configuration reference
+            specific_data: Type-specific fields (e.g., source_text_hash for IndividualExtractionRun)
 
         Returns:
-            Tuple of:
-            - List of ExecutionWithTitle objects (combining executions with their pipeline titles)
-            - Total count of all matching executions (for pagination)
+            Domain entity (specific subclass per pipeline_type)
+
+        Raises:
+            ValueError: If pipeline_type is invalid
         """
-        with self.session_factory() as session:
-            # Count query must use the same JOIN to exclude orphan executions
-            count_query = session.query(ExecutionModel).join(
-                PipelineConfigurationModel,
-                ExecutionModel.pipeline_config_id == PipelineConfigurationModel.id,
-            )
-            if status:
-                count_query = count_query.filter(ExecutionModel.status == status)
-            total = count_query.count()
+        orm_class = _PIPELINE_TYPE_TO_ORM.get(pipeline_type)
+        if not orm_class:
+            raise ValueError(f"Unknown pipeline type: {pipeline_type.value}")
 
-            query = session.query(  # type: ignore[call-overload]
-                ExecutionModel,
-                PipelineConfigurationModel.title,
-            ).join(
-                PipelineConfigurationModel,
-                ExecutionModel.pipeline_config_id == PipelineConfigurationModel.id,
-            )
+        kwargs = {
+            "id": batch_run_id,  # In joined-table inheritance, id IS the FK
+            "pipeline_type": pipeline_type.value,
+            "implementation_id": implementation_id,
+            "configuration_ref": configuration_ref,
+            "input_summary": {},
+            "output_summary": {},
+            "llm_metadata": {},
+        }
 
-            if status:
-                query = query.filter(ExecutionModel.status == status)
+        # Add type-specific fields
+        if specific_data:
+            kwargs.update(specific_data)
 
-            rows = (
-                query.order_by(ExecutionModel.timestamp.desc())  # type: ignore[attr-defined]
-                .offset(offset)
-                .limit(limit)
-                .all()
-            )
+        orm_obj = orm_class(**kwargs)
+        self._session.add(orm_obj)
+        self._session.flush()
 
-            results = [
-                ExecutionWithTitle(
-                    execution=self._to_domain_execution(row[0]),
-                    pipeline_title=row[1],
-                )
-                for row in rows
-            ]
+        logger.info(f"Created pipeline run: {batch_run_id} ({pipeline_type.value})")
+        return self._orm_to_domain(orm_obj)
 
-            return results, total
+    def get(self, run_id: str) -> DomainPipelineRun | None:
+        """
+        Retrieve a pipeline run by ID.
 
-    def _to_domain_config(
+        Args:
+            run_id: Pipeline run ID
+
+        Returns:
+            Domain entity if found, None otherwise
+        """
+        orm_obj = self._session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
+        if orm_obj:
+            return self._orm_to_domain(orm_obj)
+        return None
+
+    def list_by_status(self, status: PipelineRunStatus) -> list[DomainPipelineRun]:
+        """
+        List all pipeline runs with a specific status.
+
+        Args:
+            status: PipelineRunStatus to filter by
+
+        Returns:
+            List of domain entities
+        """
+        orm_objs = self._session.query(PipelineRun).filter(
+            PipelineRun.status == status.value
+        ).all()
+        return [self._orm_to_domain(obj) for obj in orm_objs]
+
+    def list_by_type(self, pipeline_type: PipelineType) -> list[DomainPipelineRun]:
+        """
+        List all pipeline runs of a specific type.
+
+        Args:
+            pipeline_type: PipelineType to filter by
+
+        Returns:
+            List of domain entities
+        """
+        orm_objs = self._session.query(PipelineRun).filter(
+            PipelineRun.pipeline_type == pipeline_type.value
+        ).all()
+        return [self._orm_to_domain(obj) for obj in orm_objs]
+
+    def update_status(self, run_id: str, status: PipelineRunStatus) -> bool:
+        """
+        Update a pipeline run's status.
+
+        Args:
+            run_id: Pipeline run ID
+            status: New status
+
+        Returns:
+            True if updated, False if not found
+        """
+        orm_obj = self._session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
+        if not orm_obj:
+            return False
+        orm_obj.status = status.value
+        self._session.flush()
+        logger.info(f"Updated pipeline run status: {run_id} → {status.value}")
+        return True
+
+    def update_summaries(
         self,
-        row: PipelineConfigurationModel,
-    ) -> PipelineConfiguration:
+        run_id: str,
+        input_summary: dict[str, Any] | None = None,
+        output_summary: dict[str, Any] | None = None,
+        llm_metadata: dict[str, Any] | None = None,
+    ) -> bool:
         """
-        Convert ORM model to domain entity for PipelineConfiguration.
+        Update pipeline run summaries and metadata.
 
         Args:
-            row: SQLAlchemy ORM model instance
+            run_id: Pipeline run ID
+            input_summary: Input metadata dict
+            output_summary: Output counts/metrics dict
+            llm_metadata: LLM metadata dict
 
         Returns:
-            Domain PipelineConfiguration entity
+            True if updated, False if not found
         """
-        return PipelineConfiguration(
-            id=cast(str, row.id),
-            pipeline=cast(str, row.pipeline),
-            title=cast(str, row.title),
-            provider=cast(Literal["openai", "anthropic"], row.provider),
-            model=cast(str, row.model),
-            config=dict(row.config) if row.config else {},
-            system_prompt=cast(str, row.system_prompt),
-            user_prompt=cast(str, row.user_prompt),
-            version=cast(int, row.version),
-            enabled=cast(bool, row.enabled),
-            created_at=cast(datetime, row.created_at),
-            last_updated=cast(datetime, row.last_updated),
-            seed=cast(int | None, row.seed),
-        )
+        orm_obj = self._session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
+        if not orm_obj:
+            return False
 
-    def _to_model_config(
-        self,
-        config: PipelineConfiguration,
-    ) -> PipelineConfigurationModel:
+        if input_summary is not None:
+            orm_obj.input_summary = input_summary
+        if output_summary is not None:
+            orm_obj.output_summary = output_summary
+        if llm_metadata is not None:
+            orm_obj.llm_metadata = llm_metadata
+
+        self._session.flush()
+        logger.info(f"Updated pipeline run summaries: {run_id}")
+        return True
+
+    def get_change_events_for_run(self, run_id: str) -> list[dict[str, Any]]:
         """
-        Convert domain entity to ORM model for PipelineConfiguration.
+        Get all change_events correlated with a pipeline run via batch_run_id.
 
         Args:
-            config: Domain PipelineConfiguration entity
+            run_id: Pipeline run ID (which is also the batch_run_id)
 
         Returns:
-            SQLAlchemy ORM model instance
+            List of change_event dicts with entity_type, entity_id, operation, etc.
         """
-        return PipelineConfigurationModel(
-            id=str(config.id),
-            pipeline=config.pipeline,
-            title=config.title,
-            provider=config.provider,
-            model=config.model,
-            config=config.config,
-            system_prompt=config.system_prompt,
-            user_prompt=config.user_prompt,
-            version=config.version,
-            enabled=config.enabled,
-            created_at=config.created_at,
-            last_updated=config.last_updated,
-            seed=config.seed,
-        )
+        events = self._session.query(ChangeEvent).filter(
+            ChangeEvent.batch_run_id == run_id
+        ).all()
 
-    def _to_domain_execution(self, row: ExecutionModel) -> Execution:
+        return [
+            {
+                "id": e.id,
+                "entity_type": e.entity_type,
+                "entity_id": e.entity_id,
+                "operation": e.operation,
+                "timestamp": e.timestamp.isoformat() if e.timestamp else None,
+                "batch_run_id": e.batch_run_id,
+            }
+            for e in events
+        ]
+
+    def _orm_to_domain(self, orm_obj: PipelineRun) -> DomainPipelineRun:
         """
-        Convert ORM model to domain entity for Execution.
+        Convert ORM object to domain entity.
 
         Args:
-            row: SQLAlchemy ORM model instance
+            orm_obj: SQLAlchemy ORM object
 
         Returns:
-            Domain Execution entity
+            Domain entity (specific subclass per type)
         """
-        return Execution(
-            id=cast(str, row.id),
-            pipeline_config_id=cast(str, row.pipeline_config_id),
-            input_text=cast(str, row.input_text) or "",
-            output_text=cast(str, row.output_text) or "",
-            provider=cast(str, row.provider) or "",
-            model=cast(str, row.model) or "",
-            tokens_in=cast(int, row.tokens_in),
-            tokens_out=cast(int, row.tokens_out),
-            duration_ms=cast(int, row.duration_ms),
-            status=cast(Literal["success", "error", "timeout"], row.status),
-            error_message=cast(str | None, row.error_message),
-            timestamp=cast(datetime, row.timestamp),
-        )
-
-    def _to_model_execution(self, execution: Execution) -> ExecutionModel:
-        """
-        Convert domain entity to ORM model for Execution.
-
-        Args:
-            execution: Domain Execution entity
-
-        Returns:
-            SQLAlchemy ORM model instance
-        """
-        return ExecutionModel(
-            id=str(execution.id),
-            pipeline_config_id=str(execution.pipeline_config_id),
-            input_text=execution.input_text,
-            output_text=execution.output_text,
-            provider=execution.provider,
-            model=execution.model,
-            tokens_in=execution.tokens_in,
-            tokens_out=execution.tokens_out,
-            duration_ms=execution.duration_ms,
-            status=execution.status,
-            error_message=execution.error_message,
-            timestamp=execution.timestamp,
-        )
-
-    def get_flavor(self, flavor_id: str) -> Optional[PipelineFlavor]:
-        """
-        Retrieve a pipeline flavor by ID.
-
-        Args:
-            flavor_id: Unique identifier of the flavor
-
-        Returns:
-            PipelineFlavor if found, None otherwise
-        """
-        with self.session_factory() as session:
-            row = session.get(PipelineFlavorModel, str(flavor_id))
-            return self._to_domain_flavor(row) if row else None
-
-    def list_flavors(self) -> list[PipelineFlavor]:
-        """
-        List all pipeline flavors.
-
-        Returns:
-            List of PipelineFlavor objects
-        """
-        with self.session_factory() as session:
-            rows = session.query(PipelineFlavorModel).all()
-            return [self._to_domain_flavor(row) for row in rows]
-
-    def save_flavor(self, flavor: PipelineFlavor) -> PipelineFlavor:
-        """
-        Create or update a pipeline flavor.
-
-        If the flavor's ID already exists, it is updated.
-        Otherwise, a new flavor is created.
-
-        Args:
-            flavor: PipelineFlavor to save
-
-        Returns:
-            The saved PipelineFlavor
-        """
-        with self.session_factory() as session:
-            model = self._to_model_flavor(flavor)
-            session.merge(model)
-            session.commit()
-            return flavor
-
-    def delete_flavor(self, flavor_id: str) -> bool:
-        """
-        Delete a pipeline flavor by ID.
-
-        Args:
-            flavor_id: Unique identifier of the flavor to delete
-
-        Returns:
-            True if deletion was successful, False if flavor was not found
-        """
-        with self.session_factory() as session:
-            row = session.get(PipelineFlavorModel, str(flavor_id))
-            if not row:
-                return False
-            session.delete(row)
-            session.commit()
-            return True
-
-    def _to_domain_flavor(self, row: PipelineFlavorModel) -> PipelineFlavor:
-        """
-        Convert ORM model to domain entity for PipelineFlavor.
-
-        Args:
-            row: SQLAlchemy ORM model instance
-
-        Returns:
-            Domain PipelineFlavor entity
-        """
-        return PipelineFlavor(
-            id=cast(str, row.id),
-            name=cast(str, row.name),
-            description=cast(str, row.description),
-            steps=list(row.steps) if row.steps else [],
-            created_at=cast(datetime, row.created_at),
-            last_updated=cast(datetime, row.last_updated),
-        )
-
-    def _to_model_flavor(self, flavor: PipelineFlavor) -> PipelineFlavorModel:
-        """
-        Convert domain entity to ORM model for PipelineFlavor.
-
-        Args:
-            flavor: Domain PipelineFlavor entity
-
-        Returns:
-            SQLAlchemy ORM model instance
-        """
-        return PipelineFlavorModel(
-            id=str(flavor.id),
-            name=flavor.name,
-            description=flavor.description,
-            steps=flavor.steps,
-            created_at=flavor.created_at,
-            last_updated=flavor.last_updated,
-        )
+        # Dispatch based on pipeline_type
+        if isinstance(orm_obj, IndividualExtractionRun):
+            return DomainIndividualExtractionRun(
+                id=orm_obj.id,
+                batch_run_id=orm_obj.id,  # In joined-table inheritance, they're the same
+                pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+                implementation_id=orm_obj.implementation_id,
+                configuration_ref=orm_obj.configuration_ref,
+                input_summary=orm_obj.input_summary or {},
+                output_summary=orm_obj.output_summary or {},
+                llm_metadata=orm_obj.llm_metadata or {},
+                status=PipelineRunStatus(orm_obj.status),
+                source_text_hash=orm_obj.source_text_hash,
+                source_document_uri=orm_obj.source_document_uri,
+            )
+        else:
+            # Generic PipelineRun for other types (at this stage, mostly empty)
+            return DomainPipelineRun(
+                id=orm_obj.id,
+                batch_run_id=orm_obj.id,  # In joined-table inheritance, they're the same
+                pipeline_type=PipelineType(orm_obj.pipeline_type),
+                implementation_id=orm_obj.implementation_id,
+                configuration_ref=orm_obj.configuration_ref,
+                input_summary=orm_obj.input_summary or {},
+                output_summary=orm_obj.output_summary or {},
+                llm_metadata=orm_obj.llm_metadata or {},
+                status=PipelineRunStatus(orm_obj.status),
+            )

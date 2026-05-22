@@ -772,7 +772,11 @@ class BatchRun(Base):  # type: ignore[valid-type,misc]
         "polymorphic_on": run_type,
     }
     __table_args__ = (
-        CheckConstraint("run_type IN ('import', 'extraction')", name="check_valid_run_type"),
+        CheckConstraint(
+            "run_type IN ('import', 'extraction', 'individual_extraction', 'schema_extraction', "
+            "'schema_node_grounding', 'schema_node_definition_refinement', 'schema_node_connection_refinement')",
+            name="check_valid_run_type",
+        ),
         Index("idx_run_type_status", "run_type", "status"),
     )
 
@@ -912,6 +916,232 @@ class ExtractionRun(BatchRun):
 
     def __repr__(self) -> str:
         return f"<ExtractionRun(id={self.id}, model={self.model}, status={self.status})>"
+
+
+class PipelineRun(BatchRun):
+    """
+    Base class for pipeline execution records.
+
+    Intermediate joined-table between BatchRun and per-type pipeline subclasses.
+    Carries pipeline-shared fields that all pipeline types use.
+
+    Uses joined-table inheritance from BatchRun with discriminator run_type='pipeline'.
+
+    Attributes:
+        id: UUID as string, primary key (FK to batch_runs.id)
+        pipeline_type: Type of pipeline (individual_extraction | schema_extraction | ...)
+        implementation_id: Reference to registered implementation
+        configuration_ref: Versioned configuration reference (immutable once set)
+        input_summary: JSON dict with input metadata (small)
+        output_summary: JSON dict with output counts and metrics
+        llm_metadata: JSON dict with model, tokens_used, duration_ms
+    """
+
+    __tablename__ = "pipeline_runs"
+
+    id = Column(
+        String(36),
+        ForeignKey("batch_runs.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+    pipeline_type = Column(
+        String(50),
+        nullable=False,
+        doc="Pipeline type discriminator (individual_extraction | schema_extraction | ...)",
+    )
+    implementation_id = Column(
+        String(100),
+        nullable=False,
+        doc="Reference to registered implementation",
+    )
+    configuration_ref = Column(
+        String(255),
+        nullable=False,
+        doc="Versioned configuration reference (immutable once set)",
+    )
+    input_summary = Column(
+        JSON,
+        nullable=False,
+        default=dict,
+        doc="Input metadata (small JSON dict)",
+    )
+    output_summary = Column(
+        JSON,
+        nullable=False,
+        default=dict,
+        doc="Output counts and metrics (JSON dict)",
+    )
+    llm_metadata = Column(
+        JSON,
+        nullable=False,
+        default=dict,
+        doc="LLM metadata: model, tokens_used, duration_ms (JSON dict)",
+    )
+
+    __mapper_args__: Dict[str, Any] = {
+        "polymorphic_abstract": True,
+    }
+    __table_args__: Tuple[Any, ...] = (
+        Index("idx_pipeline_impl_id", "implementation_id"),
+    )
+
+    def __repr__(self) -> str:
+        return f"<PipelineRun(id={self.id}, type={self.pipeline_type}, status={self.status})>"
+
+
+class IndividualExtractionRun(PipelineRun):
+    """
+    Extraction of RDF triples from individual text documents.
+
+    Migrated from Wave A's ExtractionRun; maintains backward compatibility
+    with extraction configurations and results.
+
+    Uses joined-table inheritance from PipelineRun with discriminator
+    run_type='individual_extraction'.
+
+    Attributes:
+        id: UUID as string, primary key (FK to pipeline_runs.id)
+        source_text_hash: SHA256 hash of extracted-from text (audit)
+        source_document_uri: Optional URI or filename of the source document
+    """
+
+    __tablename__ = "individual_extraction_runs"
+
+    id = Column(
+        String(36),
+        ForeignKey("pipeline_runs.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+    source_text_hash = Column(
+        String(64),
+        nullable=False,
+        doc="SHA256 hash of source text (audit only)",
+    )
+    source_document_uri = Column(
+        Text,
+        nullable=True,
+        doc="Optional URI or filename of the source document",
+    )
+
+    __mapper_args__: Dict[str, Any] = {
+        "polymorphic_identity": "individual_extraction",
+    }
+
+    def __repr__(self) -> str:
+        return (
+            f"<IndividualExtractionRun(id={self.id},"
+            f" hash={self.source_text_hash[:8]}, status={self.status})>"
+        )
+
+
+class SchemaExtractionRun(PipelineRun):
+    """
+    Schema-level extraction operations.
+
+    Uses joined-table inheritance from PipelineRun with discriminator
+    pipeline_type='schema_extraction'.
+
+    Per-type fields: (none at this stage; added in concrete implementation)
+    """
+
+    __tablename__ = "schema_extraction_runs"
+
+    id = Column(
+        String(36),
+        ForeignKey("pipeline_runs.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+
+    __mapper_args__: Dict[str, Any] = {
+        "polymorphic_identity": "schema_extraction",
+    }
+
+    def __repr__(self) -> str:
+        return f"<SchemaExtractionRun(id={self.id}, status={self.status})>"
+
+
+class SchemaGroundingRun(PipelineRun):
+    """
+    Schema node grounding operations.
+
+    Uses joined-table inheritance from PipelineRun with discriminator
+    run_type='schema_node_grounding'.
+
+    Per-type fields: (none at this stage; added in concrete implementation)
+    """
+
+    __tablename__ = "schema_node_grounding_runs"
+
+    id = Column(
+        String(36),
+        ForeignKey("pipeline_runs.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+
+    __mapper_args__: Dict[str, Any] = {
+        "polymorphic_identity": "schema_node_grounding",
+    }
+
+    def __repr__(self) -> str:
+        return f"<SchemaGroundingRun(id={self.id}, status={self.status})>"
+
+
+class SchemaDefinitionRefinementRun(PipelineRun):
+    """
+    Schema node definition refinement operations.
+
+    Uses joined-table inheritance from PipelineRun with discriminator
+    run_type='schema_node_definition_refinement'.
+
+    Per-type fields: (none at this stage; added in concrete implementation)
+    """
+
+    __tablename__ = "schema_node_definition_refinement_runs"
+
+    id = Column(
+        String(36),
+        ForeignKey("pipeline_runs.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+
+    __mapper_args__: Dict[str, Any] = {
+        "polymorphic_identity": "schema_node_definition_refinement",
+    }
+
+    def __repr__(self) -> str:
+        return f"<SchemaDefinitionRefinementRun(id={self.id}, status={self.status})>"
+
+
+class SchemaConnectionRefinementRun(PipelineRun):
+    """
+    Schema node connection refinement operations.
+
+    Uses joined-table inheritance from PipelineRun with discriminator
+    run_type='schema_node_connection_refinement'.
+
+    Per-type fields: (none at this stage; added in concrete implementation)
+    """
+
+    __tablename__ = "schema_node_connection_refinement_runs"
+
+    id = Column(
+        String(36),
+        ForeignKey("pipeline_runs.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+
+    __mapper_args__: Dict[str, Any] = {
+        "polymorphic_identity": "schema_node_connection_refinement",
+    }
+
+    def __repr__(self) -> str:
+        return f"<SchemaConnectionRefinementRun(id={self.id}, status={self.status})>"
 
 
 class GroundingWorkflow(Base):  # type: ignore[valid-type,misc,assignment]
