@@ -190,9 +190,11 @@ RUN python3 -c "import importlib.metadata; importlib.metadata.version('types-net
     python3 -c "import importlib.metadata; importlib.metadata.version('pyarrow-stubs'); print('pyarrow-stubs OK')" && \
     python3 -c "import importlib.metadata; importlib.metadata.version('boto3-stubs'); print('boto3-stubs OK')"
 
-# Verify heimdall-ui is installed with dist built
+# Verify key frontend packages are installed
 RUN test -f /workspace/context-studio/ux/node_modules/@tinkermonkey/heimdall-ui/dist/index.js && \
-    echo "heimdall-ui OK"
+    echo "heimdall-ui OK" && \
+    test -d /workspace/context-studio/ux/node_modules/reagraph && \
+    echo "reagraph OK"
 
 # Verify stashed tarball is available for runtime patching
 RUN test -f /opt/heimdall-ui.tgz && echo "heimdall-ui tarball stashed OK"
