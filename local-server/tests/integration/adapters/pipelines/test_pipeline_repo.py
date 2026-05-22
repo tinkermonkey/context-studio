@@ -17,7 +17,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from adapters.persistence.sqlite.models import Base, ChangeEvent
-from adapters.persistence.sqlite.pipeline_repo import PipelineRepository
+from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 
 
@@ -149,6 +149,32 @@ class TestPipelineRepositoryQuery:
         schemas = repo.list_by_type(PipelineType.SCHEMA_EXTRACTION)
         schema_ids = [r.id for r in schemas]
         assert schema_run.id in schema_ids
+
+    def test_list_all_runs(self, db_session):
+        """Test listing all pipeline runs."""
+        repo = PipelineRepository(db_session)
+
+        run1 = repo.create(
+            batch_run_id=str(uuid4()),
+            pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+            implementation_id="impl-1",
+            configuration_ref="config-1",
+            specific_data={"source_text_hash": "hash1"},
+        )
+
+        run2 = repo.create(
+            batch_run_id=str(uuid4()),
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            implementation_id="impl-2",
+            configuration_ref="config-2",
+        )
+
+        # List all runs
+        all_runs = repo.list()
+        assert len(all_runs) >= 2
+        run_ids = [r.id for r in all_runs]
+        assert run1.id in run_ids
+        assert run2.id in run_ids
 
 
 class TestPipelineRepositoryUpdate:
