@@ -15,6 +15,7 @@ not rolled back.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from enum import Enum
 from uuid import uuid4
 
@@ -61,6 +62,7 @@ class PipelineRun:
         llm_metadata: JSON dict with model, tokens_used, duration_ms
         status: Current status (pending | running | completed | failed | reviewed |
             committed | abandoned)
+        created_at: UTC timestamp of run creation
     """
 
     id: str = field(default_factory=lambda: str(uuid4()))
@@ -72,6 +74,7 @@ class PipelineRun:
     output_summary: dict = field(default_factory=dict)
     llm_metadata: dict = field(default_factory=dict)
     status: PipelineRunStatus = PipelineRunStatus.PENDING
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     @classmethod
     def create(
@@ -81,6 +84,7 @@ class PipelineRun:
         pipeline_type: PipelineType,
         implementation_id: str,
         configuration_ref: str,
+        created_at: datetime | None = None,
     ) -> "PipelineRun":
         """
         Create a new PipelineRun with status=PENDING.
@@ -91,6 +95,7 @@ class PipelineRun:
             pipeline_type: Type of pipeline
             implementation_id: Implementation identifier
             configuration_ref: Configuration reference
+            created_at: UTC timestamp (defaults to now)
 
         Returns:
             New PipelineRun with status=PENDING
@@ -105,6 +110,7 @@ class PipelineRun:
             output_summary={},
             llm_metadata={},
             status=PipelineRunStatus.PENDING,
+            created_at=created_at or datetime.now(timezone.utc),
         )
 
 
@@ -136,6 +142,7 @@ class IndividualExtractionRun(PipelineRun):
         configuration_ref: str,
         source_text_hash: str,
         source_document_uri: str | None = None,
+        created_at: datetime | None = None,
     ) -> "IndividualExtractionRun":
         """
         Create a new IndividualExtractionRun with status=PENDING.
@@ -147,6 +154,7 @@ class IndividualExtractionRun(PipelineRun):
             configuration_ref: Configuration reference
             source_text_hash: SHA256 hash of source text
             source_document_uri: Optional document URI
+            created_at: UTC timestamp (defaults to now)
 
         Returns:
             New IndividualExtractionRun with status=PENDING
@@ -163,6 +171,7 @@ class IndividualExtractionRun(PipelineRun):
             status=PipelineRunStatus.PENDING,
             source_text_hash=source_text_hash,
             source_document_uri=source_document_uri,
+            created_at=created_at or datetime.now(timezone.utc),
         )
 
 
@@ -184,6 +193,7 @@ class SchemaExtractionRun(PipelineRun):
         batch_run_id: str,
         implementation_id: str,
         configuration_ref: str,
+        created_at: datetime | None = None,
     ) -> "SchemaExtractionRun":
         """Create a new SchemaExtractionRun with status=PENDING."""
         return cls(
@@ -196,6 +206,7 @@ class SchemaExtractionRun(PipelineRun):
             output_summary={},
             llm_metadata={},
             status=PipelineRunStatus.PENDING,
+            created_at=created_at or datetime.now(timezone.utc),
         )
 
 
@@ -217,6 +228,7 @@ class SchemaGroundingRun(PipelineRun):
         batch_run_id: str,
         implementation_id: str,
         configuration_ref: str,
+        created_at: datetime | None = None,
     ) -> "SchemaGroundingRun":
         """Create a new SchemaGroundingRun with status=PENDING."""
         return cls(
@@ -229,6 +241,7 @@ class SchemaGroundingRun(PipelineRun):
             output_summary={},
             llm_metadata={},
             status=PipelineRunStatus.PENDING,
+            created_at=created_at or datetime.now(timezone.utc),
         )
 
 
@@ -250,6 +263,7 @@ class SchemaDefinitionRefinementRun(PipelineRun):
         batch_run_id: str,
         implementation_id: str,
         configuration_ref: str,
+        created_at: datetime | None = None,
     ) -> "SchemaDefinitionRefinementRun":
         """Create a new SchemaDefinitionRefinementRun with status=PENDING."""
         return cls(
@@ -262,6 +276,7 @@ class SchemaDefinitionRefinementRun(PipelineRun):
             output_summary={},
             llm_metadata={},
             status=PipelineRunStatus.PENDING,
+            created_at=created_at or datetime.now(timezone.utc),
         )
 
 
@@ -283,6 +298,7 @@ class SchemaConnectionRefinementRun(PipelineRun):
         batch_run_id: str,
         implementation_id: str,
         configuration_ref: str,
+        created_at: datetime | None = None,
     ) -> "SchemaConnectionRefinementRun":
         """Create a new SchemaConnectionRefinementRun with status=PENDING."""
         return cls(
@@ -295,4 +311,5 @@ class SchemaConnectionRefinementRun(PipelineRun):
             output_summary={},
             llm_metadata={},
             status=PipelineRunStatus.PENDING,
+            created_at=created_at or datetime.now(timezone.utc),
         )

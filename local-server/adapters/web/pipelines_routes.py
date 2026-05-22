@@ -19,6 +19,7 @@ No business logic lives here—all validation and constraints are in the domain 
 Error handling translates domain exceptions to appropriate HTTP responses.
 """
 
+from datetime import datetime, timezone
 from typing import Optional
 from uuid import uuid4
 
@@ -70,7 +71,7 @@ def _to_response(run: PipelineRun) -> PipelineRunResponse:
             "output_summary": run.output_summary,
             "llm_metadata": run.llm_metadata,
             "status": run.status.value,
-            "created_at": None,
+            "created_at": run.created_at,
             "updated_at": None,
         }
     )
@@ -298,6 +299,8 @@ async def list_pipeline_runs(
     pipeline_type: Optional[str] = Query(None, description="Filter by pipeline type"),
     status: Optional[str] = Query(None, description="Filter by status"),
     implementation_id: Optional[str] = Query(None, description="Filter by implementation ID"),
+    start_date: Optional[str] = Query(None, description="Filter by start date (ISO 8601 format)"),
+    end_date: Optional[str] = Query(None, description="Filter by end date (ISO 8601 format)"),
     limit: int = Query(100, ge=1, le=500, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     request: Request = None,
@@ -311,6 +314,8 @@ async def list_pipeline_runs(
         pipeline_type: Filter by pipeline type (optional)
         status: Filter by status (pending, running, completed, failed, etc.)
         implementation_id: Filter by implementation ID (optional)
+        start_date: Filter by start date (ISO 8601 format, optional)
+        end_date: Filter by end date (ISO 8601 format, optional)
         limit: Maximum number of results (1-500, default 100)
         offset: Number of results to skip for pagination (default 0)
         request: FastAPI request (for service access)
@@ -350,6 +355,32 @@ async def list_pipeline_runs(
 
     if implementation_id:
         filtered_runs = [r for r in filtered_runs if r.implementation_id == implementation_id]
+
+    if start_date:
+        try:
+            start_dt = datetime.fromisoformat(start_date)
+            # Normalize to naive UTC for consistent comparison with naive DB values
+            if start_dt.tzinfo is not None:
+                start_dt = start_dt.astimezone(timezone.utc).replace(tzinfo=None)
+            filtered_runs = [r for r in filtered_runs if r.created_at.replace(tzinfo=None) >= start_dt]
+        except ValueError:
+            raise HTTPException(
+                status_code=http_status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid start_date format: {start_date} (use ISO 8601)",
+            )
+
+    if end_date:
+        try:
+            end_dt = datetime.fromisoformat(end_date)
+            # Normalize to naive UTC for consistent comparison with naive DB values
+            if end_dt.tzinfo is not None:
+                end_dt = end_dt.astimezone(timezone.utc).replace(tzinfo=None)
+            filtered_runs = [r for r in filtered_runs if r.created_at.replace(tzinfo=None) <= end_dt]
+        except ValueError:
+            raise HTTPException(
+                status_code=http_status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid end_date format: {end_date} (use ISO 8601)",
+            )
 
     # Pagination
     total = len(filtered_runs)

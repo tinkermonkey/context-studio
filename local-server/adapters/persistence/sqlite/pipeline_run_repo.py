@@ -317,6 +317,7 @@ class PipelineRepository:
             "output_summary": orm_obj.output_summary or {},
             "llm_metadata": orm_obj.llm_metadata or {},
             "status": PipelineRunStatus(orm_obj.status),
+            "created_at": orm_obj.created_at,
         }
 
         # Dispatch based on ORM type

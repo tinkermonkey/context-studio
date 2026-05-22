@@ -113,6 +113,58 @@ GenericPipelineRunRequest = Union[
 ]
 
 
+class IndividualExtractionOutput(BaseModel):
+    """Per-type output schema for individual_extraction with provenance and confidence."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    text_offset_start: Optional[int] = Field(None, description="Character offset start of extracted match")
+    text_offset_end: Optional[int] = Field(None, description="Character offset end of extracted match")
+    source_uri: Optional[str] = Field(None, description="URI or identifier of source document")
+    raw_match: Optional[str] = Field(None, description="Raw matched text from source")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score for extraction (0.0-1.0)")
+
+
+class SchemaExtractionOutput(BaseModel):
+    """Per-type output schema for schema_extraction with provenance and confidence."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    source_uri: Optional[str] = Field(None, description="URI or identifier of source document")
+    raw_match: Optional[str] = Field(None, description="Raw matched text from source")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score for extraction (0.0-1.0)")
+
+
+class SchemaGroundingOutput(BaseModel):
+    """Per-type output schema for schema_node_grounding with provenance and confidence."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    source_uri: Optional[str] = Field(None, description="URI of grounding source")
+    raw_match: Optional[str] = Field(None, description="Raw grounding match")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score for grounding (0.0-1.0)")
+
+
+class SchemaDefinitionRefinementOutput(BaseModel):
+    """Per-type output schema for schema_node_definition_refinement with provenance and confidence."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    source_uri: Optional[str] = Field(None, description="URI of refinement source")
+    raw_match: Optional[str] = Field(None, description="Raw refinement text")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score for refinement (0.0-1.0)")
+
+
+class SchemaConnectionRefinementOutput(BaseModel):
+    """Per-type output schema for schema_node_connection_refinement with provenance and confidence."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    source_uri: Optional[str] = Field(None, description="URI of refinement source")
+    raw_match: Optional[str] = Field(None, description="Raw refinement text")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score for refinement (0.0-1.0)")
+
+
 class PipelineRunResponse(BaseModel):
     """Response containing a PipelineRun."""
 

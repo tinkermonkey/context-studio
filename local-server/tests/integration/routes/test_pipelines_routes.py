@@ -25,6 +25,7 @@ from sqlalchemy.orm import sessionmaker
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.web.pipelines_routes import router
+from domain.pipelines.entities import PipelineType
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
@@ -226,3 +227,261 @@ class TestPipelineRunEndpoints:
         """GET /api/pipelines/runs/{run_id} with missing run returns 404."""
         response = client.get(f"/api/pipelines/runs/{uuid4()}")
         assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_create_run_with_valid_config_succeeds(self, client, registries):
+        """POST /api/pipelines/{type}/run with valid config succeeds."""
+        # Register a dummy implementation and configuration
+        class DummyImpl:
+            pass
+
+        registries["implementation_registry"].register_impl(
+            PipelineType.SCHEMA_EXTRACTION, "default", DummyImpl
+        )
+        registries["config_registry"].register(
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            "default",
+            {"model": "test-model", "batch_size": 32},
+        )
+
+        response = client.post(
+            "/api/pipelines/schema_extraction/run",
+            json={
+                "documents": ["doc1", "doc2"],
+                "implementation_id": "default",
+                "configuration_ref": "default",
+            },
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+
+        body = response.json()
+        assert "id" in body
+        assert body["pipeline_type"] == "schema_extraction"
+        assert body["implementation_id"] == "default"
+        assert body["configuration_ref"] == "default"
+        assert body["status"] == "pending"
+        assert body["created_at"] is not None
+
+    def test_create_and_retrieve_run(self, client, registries):
+        """POST creates a run, GET retrieves it with matching structure."""
+        # Register implementation and configuration
+        class DummyImpl:
+            pass
+
+        registries["implementation_registry"].register_impl(
+            PipelineType.SCHEMA_EXTRACTION, "default", DummyImpl
+        )
+        registries["config_registry"].register(
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            "default",
+            {"model": "test-model"},
+        )
+
+        # Create a run
+        create_response = client.post(
+            "/api/pipelines/schema_extraction/run",
+            json={
+                "documents": ["doc1", "doc2"],
+                "implementation_id": "default",
+                "configuration_ref": "default",
+            },
+        )
+        assert create_response.status_code == status.HTTP_201_CREATED
+        created_run = create_response.json()
+        run_id = created_run["id"]
+
+        # Retrieve the run
+        get_response = client.get(f"/api/pipelines/runs/{run_id}")
+        assert get_response.status_code == status.HTTP_200_OK
+        retrieved_run = get_response.json()
+
+        # Verify structure matches
+        assert retrieved_run["id"] == created_run["id"]
+        assert retrieved_run["pipeline_type"] == created_run["pipeline_type"]
+        assert retrieved_run["implementation_id"] == created_run["implementation_id"]
+        assert retrieved_run["configuration_ref"] == created_run["configuration_ref"]
+        assert retrieved_run["status"] == created_run["status"]
+        assert retrieved_run["created_at"] == created_run["created_at"]
+
+    def test_list_runs_includes_created_run(self, client, registries):
+        """GET /api/pipelines/runs includes newly created run."""
+        # Register implementation and configuration
+        class DummyImpl:
+            pass
+
+        registries["implementation_registry"].register_impl(
+            PipelineType.SCHEMA_EXTRACTION, "default", DummyImpl
+        )
+        registries["config_registry"].register(
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            "default",
+            {"model": "test-model"},
+        )
+
+        # Create a run
+        create_response = client.post(
+            "/api/pipelines/schema_extraction/run",
+            json={
+                "documents": ["doc1", "doc2"],
+                "implementation_id": "default",
+                "configuration_ref": "default",
+            },
+        )
+        created_run = create_response.json()
+        run_id = created_run["id"]
+
+        # List runs
+        list_response = client.get("/api/pipelines/runs")
+        assert list_response.status_code == status.HTTP_200_OK
+        body = list_response.json()
+
+        # Verify run is in the list
+        assert body["total"] == 1
+        assert len(body["items"]) == 1
+        assert body["items"][0]["id"] == run_id
+
+    def test_list_runs_filters_by_pipeline_type(self, client, registries):
+        """GET /api/pipelines/runs?pipeline_type=... filters correctly."""
+        # Register implementations and configurations for two types
+        class DummyImpl:
+            pass
+
+        registries["implementation_registry"].register_impl(
+            PipelineType.SCHEMA_EXTRACTION, "default", DummyImpl
+        )
+        registries["implementation_registry"].register_impl(
+            PipelineType.SCHEMA_NODE_GROUNDING, "default", DummyImpl
+        )
+        registries["config_registry"].register(
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            "default",
+            {"model": "test-model"},
+        )
+        registries["config_registry"].register(
+            PipelineType.SCHEMA_NODE_GROUNDING,
+            "default",
+            "default",
+            {"model": "test-model"},
+        )
+
+        # Create runs of both types
+        client.post(
+            "/api/pipelines/schema_extraction/run",
+            json={
+                "documents": ["doc1", "doc2"],
+                "implementation_id": "default",
+                "configuration_ref": "default",
+            },
+        )
+        client.post(
+            "/api/pipelines/schema_node_grounding/run",
+            json={
+                "nodes": [{"id": "node1"}],
+                "sources": ["source1"],
+                "implementation_id": "default",
+                "configuration_ref": "default",
+            },
+        )
+
+        # Filter by schema_extraction
+        response = client.get("/api/pipelines/runs?pipeline_type=schema_extraction")
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert body["total"] == 1
+        assert body["items"][0]["pipeline_type"] == "schema_extraction"
+
+    def test_list_runs_filters_by_date_range(self, client, registries):
+        """GET /api/pipelines/runs with date range filters correctly."""
+        from datetime import datetime, timezone, timedelta
+        from urllib.parse import urlencode
+
+        # Register implementation and configuration
+        class DummyImpl:
+            pass
+
+        registries["implementation_registry"].register_impl(
+            PipelineType.SCHEMA_EXTRACTION, "default", DummyImpl
+        )
+        registries["config_registry"].register(
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            "default",
+            {"model": "test-model"},
+        )
+
+        # Create a run
+        client.post(
+            "/api/pipelines/schema_extraction/run",
+            json={
+                "documents": ["doc1", "doc2"],
+                "implementation_id": "default",
+                "configuration_ref": "default",
+            },
+        )
+
+        # Test with date range that includes the run
+        now = datetime.now(timezone.utc)
+        start = (now - timedelta(hours=1)).isoformat()
+        end = (now + timedelta(hours=1)).isoformat()
+
+        params = urlencode({"start_date": start, "end_date": end})
+        response = client.get(f"/api/pipelines/runs?{params}")
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert body["total"] == 1
+
+        # Test with date range that excludes the run (future dates)
+        start_future = (now + timedelta(hours=1)).isoformat()
+        end_future = (now + timedelta(hours=2)).isoformat()
+
+        params_future = urlencode({"start_date": start_future, "end_date": end_future})
+        response = client.get(f"/api/pipelines/runs?{params_future}")
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert body["total"] == 0
+
+    def test_create_run_response_contains_all_required_fields(self, client, registries):
+        """POST /api/pipelines/run response contains all required fields."""
+        # Register implementation and configuration
+        class DummyImpl:
+            pass
+
+        registries["implementation_registry"].register_impl(
+            PipelineType.SCHEMA_EXTRACTION, "default", DummyImpl
+        )
+        registries["config_registry"].register(
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            "default",
+            {"model": "test-model"},
+        )
+
+        response = client.post(
+            "/api/pipelines/schema_extraction/run",
+            json={
+                "documents": ["doc1", "doc2"],
+                "implementation_id": "default",
+                "configuration_ref": "default",
+            },
+        )
+        body = response.json()
+
+        # Verify all required fields are present
+        required_fields = [
+            "id",
+            "batch_run_id",
+            "pipeline_type",
+            "implementation_id",
+            "configuration_ref",
+            "input_summary",
+            "output_summary",
+            "llm_metadata",
+            "status",
+            "created_at",
+            "updated_at",
+        ]
+        for field in required_fields:
+            assert field in body, f"Missing field: {field}"
