@@ -924,8 +924,9 @@ class PipelineRun(BatchRun):
 
     Intermediate joined-table between BatchRun and per-type pipeline subclasses.
     Carries pipeline-shared fields that all pipeline types use.
-
-    Uses joined-table inheritance from BatchRun with discriminator run_type='pipeline'.
+    Uses joined-table inheritance from BatchRun (polymorphic_abstract=True).
+    Concrete subclasses define their own polymorphic_identity values
+    (e.g., individual_extraction, schema_extraction).
 
     Attributes:
         id: UUID as string, primary key (FK to batch_runs.id)

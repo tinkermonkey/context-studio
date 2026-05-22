@@ -12,6 +12,7 @@ from domain.pipelines.entities import (
     IndividualExtractionRun,
     PipelineRun,
     PipelineRunStatus,
+    PipelineType,
     SchemaConnectionRefinementRun,
     SchemaDefinitionRefinementRun,
     SchemaExtractionRun,
@@ -21,6 +22,7 @@ from domain.pipelines.entities import (
 __all__ = [
     "PipelineRun",
     "PipelineRunStatus",
+    "PipelineType",
     "IndividualExtractionRun",
     "SchemaExtractionRun",
     "SchemaGroundingRun",

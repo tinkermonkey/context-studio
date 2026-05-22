@@ -1,21 +1,11 @@
-"""Simplify PipelineRun inheritance - use run_type for pipeline type discrimination
+"""Update batch_runs CHECK constraint for pipeline run types
 
 Revision ID: 99ba9cc55512
-Revises: 787b97be9400
-Create Date: 2026-05-22 22:24:00.000000
+Revises: 01e4a27284f4
+Create Date: 2026-05-22 22:20:00.000000
 
-This migration simplifies the polymorphic inheritance of PipelineRun by using
-run_type directly for pipeline type discrimination instead of a intermediate
-'pipeline' value. This aligns better with SQLAlchemy's polymorphic inheritance.
-
-The new run_type values are:
-- 'import' (for ImportRun)
-- 'extraction' (for ExtractionRun, kept for backward compat)
-- 'individual_extraction' (for IndividualExtractionRun)
-- 'schema_extraction' (for SchemaExtractionRun)
-- 'schema_node_grounding' (for SchemaGroundingRun)
-- 'schema_node_definition_refinement' (for SchemaDefinitionRefinementRun)
-- 'schema_node_connection_refinement' (for SchemaConnectionRefinementRun)
+Combines constraint updates for pipeline run types (individual_extraction, schema_extraction,
+etc.) in a single table rebuild operation instead of multiple sequential rebuilds.
 """
 from alembic import op
 import sqlalchemy as sa
@@ -23,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '99ba9cc55512'
-down_revision = '787b97be9400'
+down_revision = '01e4a27284f4'
 branch_labels = None
 depends_on = None
 

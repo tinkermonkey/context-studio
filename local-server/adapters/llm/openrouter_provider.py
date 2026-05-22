@@ -16,6 +16,7 @@ from __future__ import annotations
 import hashlib
 import json
 import time
+from collections import OrderedDict
 from typing import Literal
 
 import httpx
@@ -25,20 +26,18 @@ from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-# Cache for LLM responses keyed by (prompt_hash, model, temperature)
-_response_cache: dict[str, LLMResponse] = {}
-
 
 class OpenRouterProvider:
     """
     LLM provider adapter for OpenRouter API.
 
     Routes requests to any OpenRouter-available model. Supports response
-    caching keyed by (prompt_hash, model, temperature).
+    caching keyed by (prompt_hash, model, temperature) with a bounded LRU cache.
     """
 
     BASE_URL = "https://openrouter.ai/api/v1"
     DEFAULT_MODEL = "google/gemini-3-flash-preview"
+    CACHE_MAX_SIZE = 1000  # Maximum number of cached responses
 
     def __init__(self, api_key: str = "") -> None:
         """
@@ -68,6 +67,8 @@ class OpenRouterProvider:
             },
             timeout=60.0,
         )
+        # Bounded LRU cache: OrderedDict with max size to prevent unbounded growth
+        self._response_cache: OrderedDict[str, LLMResponse] = OrderedDict()
 
     def complete(
         self,
@@ -106,9 +107,11 @@ class OpenRouterProvider:
         """
         # Check cache
         cache_key = self._make_cache_key(system_prompt, user_prompt, model, temperature)
-        if cache_key in _response_cache:
+        if cache_key in self._response_cache:
             logger.debug(f"Cache hit for model {model}")
-            return _response_cache[cache_key]
+            # Move to end for LRU ordering
+            self._response_cache.move_to_end(cache_key)
+            return self._response_cache[cache_key]
 
         # Prepare request
         messages = [
@@ -159,8 +162,11 @@ class OpenRouterProvider:
                 model=model,
             )
 
-            # Cache result
-            _response_cache[cache_key] = llm_response
+            # Cache result with LRU eviction
+            if len(self._response_cache) >= self.CACHE_MAX_SIZE:
+                # Remove oldest entry (first item in OrderedDict)
+                self._response_cache.popitem(last=False)
+            self._response_cache[cache_key] = llm_response
             return llm_response
 
         except httpx.HTTPStatusError as e:
@@ -231,6 +237,5 @@ class OpenRouterProvider:
 
     def clear_cache(self) -> None:
         """Clear the response cache."""
-        global _response_cache
-        _response_cache.clear()
+        self._response_cache.clear()
         logger.info("OpenRouter response cache cleared")

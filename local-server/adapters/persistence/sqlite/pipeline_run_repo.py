@@ -1,0 +1,307 @@
+"""
+Repository for PipelineRun persistence and retrieval.
+
+Implements CRUD operations and queries for pipeline execution records across
+all pipeline types. Uses SQLAlchemy ORM for database access.
+"""
+
+from __future__ import annotations
+
+from datetime import datetime, timezone
+from typing import Any
+from uuid import uuid4
+
+from sqlalchemy.orm import Session
+
+from adapters.persistence.sqlite.models import (
+    ChangeEvent,
+    IndividualExtractionRun,
+    PipelineRun,
+    SchemaConnectionRefinementRun,
+    SchemaDefinitionRefinementRun,
+    SchemaExtractionRun,
+    SchemaGroundingRun,
+)
+from domain.pipelines.entities import (
+    IndividualExtractionRun as DomainIndividualExtractionRun,
+    PipelineRun as DomainPipelineRun,
+    PipelineRunStatus,
+    PipelineType,
+    SchemaConnectionRefinementRun as DomainSchemaConnectionRefinementRun,
+    SchemaDefinitionRefinementRun as DomainSchemaDefinitionRefinementRun,
+    SchemaExtractionRun as DomainSchemaExtractionRun,
+    SchemaGroundingRun as DomainSchemaGroundingRun,
+)
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
+
+# Map domain type to ORM class
+_PIPELINE_TYPE_TO_ORM = {
+    PipelineType.INDIVIDUAL_EXTRACTION: IndividualExtractionRun,
+    PipelineType.SCHEMA_EXTRACTION: SchemaExtractionRun,
+    PipelineType.SCHEMA_NODE_GROUNDING: SchemaGroundingRun,
+    PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT: SchemaDefinitionRefinementRun,
+    PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT: SchemaConnectionRefinementRun,
+}
+
+
+class PipelineRepository:
+    """
+    Repository for PipelineRun persistence and retrieval.
+
+    Handles all data access for pipeline runs, including creation, updates,
+    status queries, and change_events correlation.
+    """
+
+    def __init__(self, session: Session) -> None:
+        """
+        Initialize repository with database session.
+
+        Args:
+            session: SQLAlchemy database session
+        """
+        self._session = session
+
+    def create(
+        self,
+        batch_run_id: str,
+        pipeline_type: PipelineType,
+        implementation_id: str,
+        configuration_ref: str,
+        specific_data: dict[str, Any] | None = None,
+    ) -> DomainPipelineRun:
+        """
+        Create a new pipeline run and persist it.
+
+        In joined-table inheritance, the PipelineRun.id IS the FK to batch_runs.id.
+        This method assumes the batch_run already exists.
+
+        Args:
+            batch_run_id: ID of the existing batch_run (becomes PipelineRun.id)
+            pipeline_type: Type of pipeline
+            implementation_id: Implementation identifier
+            configuration_ref: Configuration reference
+            specific_data: Type-specific fields (e.g., source_text_hash for IndividualExtractionRun)
+
+        Returns:
+            Domain entity (specific subclass per pipeline_type)
+
+        Raises:
+            ValueError: If pipeline_type is invalid
+        """
+        orm_class = _PIPELINE_TYPE_TO_ORM.get(pipeline_type)
+        if not orm_class:
+            raise ValueError(f"Unknown pipeline type: {pipeline_type.value}")
+
+        kwargs = {
+            "id": batch_run_id,  # In joined-table inheritance, id IS the FK
+            "pipeline_type": pipeline_type.value,
+            "implementation_id": implementation_id,
+            "configuration_ref": configuration_ref,
+            "input_summary": {},
+            "output_summary": {},
+            "llm_metadata": {},
+        }
+
+        # Add type-specific fields
+        if specific_data:
+            kwargs.update(specific_data)
+
+        orm_obj = orm_class(**kwargs)
+        self._session.add(orm_obj)
+        self._session.flush()
+
+        logger.info(f"Created pipeline run: {batch_run_id} ({pipeline_type.value})")
+        return self._orm_to_domain(orm_obj)
+
+    def get(self, run_id: str) -> DomainPipelineRun | None:
+        """
+        Retrieve a pipeline run by ID.
+
+        Args:
+            run_id: Pipeline run ID
+
+        Returns:
+            Domain entity if found, None otherwise
+        """
+        orm_obj = self._session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
+        if orm_obj:
+            return self._orm_to_domain(orm_obj)
+        return None
+
+    def list(self) -> list[DomainPipelineRun]:
+        """
+        List all pipeline runs.
+
+        Returns:
+            List of all domain entities
+        """
+        orm_objs = self._session.query(PipelineRun).all()
+        return [self._orm_to_domain(obj) for obj in orm_objs]
+
+    def list_by_status(self, status: PipelineRunStatus) -> list[DomainPipelineRun]:
+        """
+        List all pipeline runs with a specific status.
+
+        Args:
+            status: PipelineRunStatus to filter by
+
+        Returns:
+            List of domain entities
+        """
+        orm_objs = self._session.query(PipelineRun).filter(
+            PipelineRun.status == status.value
+        ).all()
+        return [self._orm_to_domain(obj) for obj in orm_objs]
+
+    def list_by_type(self, pipeline_type: PipelineType) -> list[DomainPipelineRun]:
+        """
+        List all pipeline runs of a specific type.
+
+        Args:
+            pipeline_type: PipelineType to filter by
+
+        Returns:
+            List of domain entities
+        """
+        orm_objs = self._session.query(PipelineRun).filter(
+            PipelineRun.pipeline_type == pipeline_type.value
+        ).all()
+        return [self._orm_to_domain(obj) for obj in orm_objs]
+
+    def update_status(self, run_id: str, status: PipelineRunStatus) -> bool:
+        """
+        Update a pipeline run's status.
+
+        Args:
+            run_id: Pipeline run ID
+            status: New status
+
+        Returns:
+            True if updated, False if not found
+        """
+        orm_obj = self._session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
+        if not orm_obj:
+            return False
+        orm_obj.status = status.value
+        self._session.flush()
+        logger.info(f"Updated pipeline run status: {run_id} → {status.value}")
+        return True
+
+    def update_summaries(
+        self,
+        run_id: str,
+        input_summary: dict[str, Any] | None = None,
+        output_summary: dict[str, Any] | None = None,
+        llm_metadata: dict[str, Any] | None = None,
+    ) -> bool:
+        """
+        Update pipeline run summaries and metadata.
+
+        Args:
+            run_id: Pipeline run ID
+            input_summary: Input metadata dict
+            output_summary: Output counts/metrics dict
+            llm_metadata: LLM metadata dict
+
+        Returns:
+            True if updated, False if not found
+        """
+        orm_obj = self._session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
+        if not orm_obj:
+            return False
+
+        if input_summary is not None:
+            orm_obj.input_summary = input_summary
+        if output_summary is not None:
+            orm_obj.output_summary = output_summary
+        if llm_metadata is not None:
+            orm_obj.llm_metadata = llm_metadata
+
+        self._session.flush()
+        logger.info(f"Updated pipeline run summaries: {run_id}")
+        return True
+
+    def get_change_events_for_run(self, run_id: str) -> list[dict[str, Any]]:
+        """
+        Get all change_events correlated with a pipeline run via batch_run_id.
+
+        Args:
+            run_id: Pipeline run ID (which is also the batch_run_id)
+
+        Returns:
+            List of change_event dicts with entity_type, entity_id, operation, etc.
+        """
+        events = self._session.query(ChangeEvent).filter(
+            ChangeEvent.batch_run_id == run_id
+        ).all()
+
+        return [
+            {
+                "id": e.id,
+                "entity_type": e.entity_type,
+                "entity_id": e.entity_id,
+                "operation": e.operation,
+                "timestamp": e.timestamp.isoformat() if e.timestamp else None,
+                "batch_run_id": e.batch_run_id,
+            }
+            for e in events
+        ]
+
+    def _orm_to_domain(self, orm_obj: PipelineRun) -> DomainPipelineRun:
+        """
+        Convert ORM object to domain entity.
+
+        Args:
+            orm_obj: SQLAlchemy ORM object
+
+        Returns:
+            Domain entity (specific subclass per type)
+        """
+        # Common attributes for all pipeline runs
+        common = {
+            "id": orm_obj.id,
+            "batch_run_id": orm_obj.id,  # In joined-table inheritance, they're the same
+            "implementation_id": orm_obj.implementation_id,
+            "configuration_ref": orm_obj.configuration_ref,
+            "input_summary": orm_obj.input_summary or {},
+            "output_summary": orm_obj.output_summary or {},
+            "llm_metadata": orm_obj.llm_metadata or {},
+            "status": PipelineRunStatus(orm_obj.status),
+        }
+
+        # Dispatch based on ORM type
+        if isinstance(orm_obj, IndividualExtractionRun):
+            return DomainIndividualExtractionRun(
+                **common,
+                pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+                source_text_hash=orm_obj.source_text_hash,
+                source_document_uri=orm_obj.source_document_uri,
+            )
+        elif isinstance(orm_obj, SchemaExtractionRun):
+            return DomainSchemaExtractionRun(
+                **common,
+                pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            )
+        elif isinstance(orm_obj, SchemaGroundingRun):
+            return DomainSchemaGroundingRun(
+                **common,
+                pipeline_type=PipelineType.SCHEMA_NODE_GROUNDING,
+            )
+        elif isinstance(orm_obj, SchemaDefinitionRefinementRun):
+            return DomainSchemaDefinitionRefinementRun(
+                **common,
+                pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
+            )
+        elif isinstance(orm_obj, SchemaConnectionRefinementRun):
+            return DomainSchemaConnectionRefinementRun(
+                **common,
+                pipeline_type=PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,
+            )
+        else:
+            # Fallback for unknown types (should not happen in practice)
+            return DomainPipelineRun(
+                **common,
+                pipeline_type=PipelineType(orm_obj.pipeline_type),
+            )
