@@ -8,8 +8,6 @@ Combines constraint updates for pipeline run types (individual_extraction, schem
 etc.) in a single table rebuild operation instead of multiple sequential rebuilds.
 """
 from alembic import op
-import sqlalchemy as sa
-
 
 # revision identifiers, used by Alembic.
 revision = '99ba9cc55512'

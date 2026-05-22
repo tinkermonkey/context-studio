@@ -5,13 +5,14 @@ Tests persistence and retrieval of pipeline runs in SQLite.
 Tests change_events correlation with batch_run_id.
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
 
 from datetime import datetime, timezone
 from uuid import uuid4
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker

@@ -10,16 +10,16 @@ This smoke test ensures the pipeline framework is wired correctly
 before implementing concrete pipeline types.
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
 
-import asyncio
 import pytest
-from domain.pipelines.entities import PipelineRunStatus, PipelineType
-from domain.pipelines.orchestration.noop import NoOpPipelineOrchestrator, NoOpPipelineState
+
 from domain.pipeline.ports import LLMResponse
+from domain.pipelines.entities import PipelineType
+from domain.pipelines.orchestration.noop import NoOpPipelineOrchestrator, NoOpPipelineState
 
 
 class MockLLMProvider:

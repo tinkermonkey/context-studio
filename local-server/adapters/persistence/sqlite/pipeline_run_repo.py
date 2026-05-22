@@ -7,9 +7,7 @@ all pipeline types. Uses SQLAlchemy ORM for database access.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from typing import Any
-from uuid import uuid4
 
 from sqlalchemy.orm import Session
 
@@ -24,12 +22,24 @@ from adapters.persistence.sqlite.models import (
 )
 from domain.pipelines.entities import (
     IndividualExtractionRun as DomainIndividualExtractionRun,
+)
+from domain.pipelines.entities import (
     PipelineRun as DomainPipelineRun,
+)
+from domain.pipelines.entities import (
     PipelineRunStatus,
     PipelineType,
+)
+from domain.pipelines.entities import (
     SchemaConnectionRefinementRun as DomainSchemaConnectionRefinementRun,
+)
+from domain.pipelines.entities import (
     SchemaDefinitionRefinementRun as DomainSchemaDefinitionRefinementRun,
+)
+from domain.pipelines.entities import (
     SchemaExtractionRun as DomainSchemaExtractionRun,
+)
+from domain.pipelines.entities import (
     SchemaGroundingRun as DomainSchemaGroundingRun,
 )
 from utils.logger import get_logger

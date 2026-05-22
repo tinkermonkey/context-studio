@@ -5,12 +5,13 @@ Tests immutability, status transitions, and invariants for PipelineRun
 and its per-type subclasses.
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
 
 import pytest
+
 from domain.pipelines.entities import (
     IndividualExtractionRun,
     PipelineRun,

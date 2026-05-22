@@ -16,9 +16,8 @@ For now, the constraint is updated in the SQLAlchemy model; new inserts will val
 via the ORM, and the database constraint is loosened by the next migration.
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = '01e4a27284f4'

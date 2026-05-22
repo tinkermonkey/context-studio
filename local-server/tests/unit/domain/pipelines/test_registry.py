@@ -5,18 +5,19 @@ Tests registry invariants: no duplicate registration, immutable configurations,
 type enumeration.
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
 
 import pytest
+
+from domain.pipelines.entities import PipelineType
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
     PipelineTypeRegistry,
 )
-from domain.pipelines.entities import PipelineType
 
 
 class TestPipelineTypeRegistry:
@@ -147,7 +148,7 @@ class TestPipelineConfigurationRegistry:
             "extraction-default",
             config1,
         )
-        v2 = registry.register(
+        registry.register(
             PipelineType.INDIVIDUAL_EXTRACTION,
             "impl-default",
             "extraction-default",

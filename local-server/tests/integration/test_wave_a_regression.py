@@ -6,15 +6,15 @@ Verifies that:
 2. IndividualExtractionRun (migrated from ExtractionRun) produces correct change_event lineage
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
-from datetime import datetime, timezone
 
 import pytest
 from sqlalchemy import create_engine

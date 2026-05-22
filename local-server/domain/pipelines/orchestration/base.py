@@ -12,8 +12,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any
 
-from domain.pipelines.entities import PipelineRun, PipelineType
 from domain.pipeline.ports import LLMProvider, LLMResponse
+from domain.pipelines.entities import PipelineType
 
 
 @dataclass
