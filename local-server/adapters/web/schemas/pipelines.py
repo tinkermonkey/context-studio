@@ -127,5 +127,5 @@ class PipelineRunResponse(BaseModel):
     output_summary: dict[str, Any] = Field(default_factory=dict, description="Output counts/metrics")
     llm_metadata: dict[str, Any] = Field(default_factory=dict, description="LLM execution metadata")
     status: str = Field(..., description="Current status")
-    created_at: Optional[datetime] = Field(None, description="Creation timestamp")
-    updated_at: Optional[datetime] = Field(None, description="Last update timestamp")
+    created_at: Optional[datetime] = Field(None, description="Creation timestamp (reserved for future use)")
+    updated_at: Optional[datetime] = Field(None, description="Last update timestamp (reserved for future use)")
