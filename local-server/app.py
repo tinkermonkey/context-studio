@@ -42,6 +42,7 @@ from adapters.persistence.sqlite.extraction_run_repo import (
 from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.pipeline_repo import SQLitePipelineRepository
+from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.reference.cache import CachedReferenceSource
 from adapters.reference.conceptnet import ConceptNetSource
 from adapters.reference.dbpedia import DBpediaSource
@@ -62,6 +63,7 @@ from adapters.web.interchange_routes import router as interchange_router
 # Import routes
 from adapters.web.ontology_routes import router as ontology_router
 from adapters.web.pipeline_routes import router as pipeline_router
+from adapters.web.pipelines_routes import router as pipelines_router
 from adapters.web.reference_routes import router as reference_router
 from adapters.web.versioning_routes import router as versioning_router
 from config import SyncAdapterType, get_config_manager, get_settings
@@ -72,6 +74,11 @@ from domain.extraction.ports import ReferenceSource
 from domain.extraction.services import ExtractionService
 from domain.graph.services import GraphAnalysisService
 from domain.interchange.services import ImportRunService
+from domain.pipelines.registry import (
+    PipelineConfigurationRegistry,
+    PipelineImplementationRegistry,
+    PipelineTypeRegistry,
+)
 from domain.ontology.events import (
     ClassCreated,
     ClassDeleted,
@@ -180,7 +187,14 @@ async def lifespan(app: FastAPI):
 
         operations_session_factory = db_manager.get_operations_session_factory()
         pipeline_repo = SQLitePipelineRepository(operations_session_factory)
-        logger.info("PipelineRepository created")
+        pipeline_run_repo = PipelineRepository(local_session_factory)
+        logger.info("PipelineRepository and PipelineRunRepository created")
+
+        # Initialize pipeline registries (currently empty—implementations/configs added at startup)
+        implementation_registry = PipelineImplementationRegistry()
+        config_registry = PipelineConfigurationRegistry()
+        type_registry = PipelineTypeRegistry()
+        logger.info("Pipeline registries initialized")
 
         # Embedding service
         embedding_service = SentenceTransformerEmbedding(model_name="all-MiniLM-L12-v2")
@@ -499,6 +513,12 @@ async def lifespan(app: FastAPI):
         app.state.interchange_repo = interchange_repo
         app.state.import_run_service = import_run_service
 
+        # Store pipeline run repo and registries for generic pipeline endpoints
+        app.state.pipeline_run_repo = pipeline_run_repo
+        app.state.implementation_registry = implementation_registry
+        app.state.config_registry = config_registry
+        app.state.type_registry = type_registry
+
         # Store adapters needed for health checks
         app.state.nlp_processor = nlp_processor
         app.state.llm_router = llm_router
@@ -552,6 +572,7 @@ app.include_router(ontology_router)
 app.include_router(graph_router)
 app.include_router(extraction_router)
 app.include_router(pipeline_router)
+app.include_router(pipelines_router)
 app.include_router(reference_router)
 app.include_router(versioning_router)
 app.include_router(admin_router)

@@ -1,0 +1,126 @@
+"""
+Pydantic schemas for the Pipeline Orchestration bounded context.
+
+Request schemas (for POST/PUT):
+- IndividualExtractionRunRequest
+- SchemaExtractionRunRequest
+- SchemaGroundingRunRequest
+- SchemaDefinitionRefinementRunRequest
+- SchemaConnectionRefinementRunRequest
+
+Response schemas (for GET/returns):
+- PipelineRunResponse
+- PipelineTypeResponse
+- ImplementationResponse
+- ConfigurationResponse
+
+These schemas handle serialization/deserialization between HTTP and domain models.
+"""
+
+from datetime import datetime
+from typing import Any, Literal, Optional, Union
+
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class PipelineTypeResponse(BaseModel):
+    """Response containing pipeline type metadata."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    pipeline_type: str = Field(..., description="Pipeline type identifier")
+    description: str = Field(..., description="Human-readable description")
+    input_contract: dict[str, Any] = Field(..., description="Expected input schema")
+    output_contract: dict[str, Any] = Field(..., description="Expected output schema")
+
+
+class ImplementationResponse(BaseModel):
+    """Response containing implementation metadata."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str = Field(..., description="Implementation identifier")
+    pipeline_type: str = Field(..., description="Pipeline type for this implementation")
+
+
+class ConfigurationResponse(BaseModel):
+    """Response containing configuration metadata."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    config_ref: str = Field(..., description="Configuration reference slug")
+    version: int = Field(..., description="Configuration version number")
+    config: dict[str, Any] = Field(..., description="Configuration data")
+
+
+class PipelineRunRequest(BaseModel):
+    """Base request to invoke a pipeline (polymorphic)."""
+
+    implementation_id: str = Field(
+        default="default", description="Implementation identifier (defaults to 'default')"
+    )
+    configuration_ref: str = Field(
+        default="default", description="Configuration reference (defaults to 'default')"
+    )
+
+
+class IndividualExtractionRunRequest(PipelineRunRequest):
+    """Request to invoke individual_extraction pipeline."""
+
+    text: str = Field(..., min_length=1, description="Source text to extract from")
+    ontology_id: str = Field(..., min_length=1, description="Target ontology ID")
+
+
+class SchemaExtractionRunRequest(PipelineRunRequest):
+    """Request to invoke schema_extraction pipeline."""
+
+    documents: list[str] = Field(..., min_length=1, description="Source documents")
+    scope: Optional[str] = Field(None, description="Extraction scope (optional)")
+
+
+class SchemaGroundingRunRequest(PipelineRunRequest):
+    """Request to invoke schema_node_grounding pipeline."""
+
+    nodes: list[dict[str, Any]] = Field(..., min_length=1, description="Schema nodes to ground")
+    sources: list[str] = Field(..., min_length=1, description="External knowledge sources")
+
+
+class SchemaDefinitionRefinementRunRequest(PipelineRunRequest):
+    """Request to invoke schema_node_definition_refinement pipeline."""
+
+    nodes: list[dict[str, Any]] = Field(..., min_length=1, description="Schema nodes to refine")
+    context: Optional[str] = Field(None, description="Additional context (optional)")
+
+
+class SchemaConnectionRefinementRunRequest(PipelineRunRequest):
+    """Request to invoke schema_node_connection_refinement pipeline."""
+
+    edges: list[dict[str, Any]] = Field(..., min_length=1, description="Edges (connections) to refine")
+    strategy: Optional[str] = Field(None, description="Refinement strategy (optional)")
+
+
+GenericPipelineRunRequest = Union[
+    IndividualExtractionRunRequest,
+    SchemaExtractionRunRequest,
+    SchemaGroundingRunRequest,
+    SchemaDefinitionRefinementRunRequest,
+    SchemaConnectionRefinementRunRequest,
+]
+
+
+class PipelineRunResponse(BaseModel):
+    """Response containing a PipelineRun."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str = Field(..., description="Unique run ID")
+    batch_run_id: str = Field(..., description="Batch run FK")
+    pipeline_type: str = Field(..., description="Pipeline type (discriminator)")
+    implementation_id: str = Field(..., description="Implementation ID")
+    configuration_ref: str = Field(..., description="Configuration reference")
+    input_summary: dict[str, Any] = Field(default_factory=dict, description="Input metadata")
+    output_summary: dict[str, Any] = Field(default_factory=dict, description="Output counts/metrics")
+    llm_metadata: dict[str, Any] = Field(default_factory=dict, description="LLM execution metadata")
+    status: str = Field(..., description="Current status")
+    created_at: Optional[datetime] = Field(None, description="Creation timestamp")
+    updated_at: Optional[datetime] = Field(None, description="Last update timestamp")

@@ -7,9 +7,9 @@ all pipeline types. Uses SQLAlchemy ORM for database access.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, sessionmaker
 
 from adapters.persistence.sqlite.models import (
     ChangeEvent,
@@ -67,14 +67,14 @@ class PipelineRepository:
     status queries, and change_events correlation.
     """
 
-    def __init__(self, session: Session) -> None:
+    def __init__(self, session_factory: Callable[[], Session]) -> None:
         """
-        Initialize repository with database session.
+        Initialize repository with session factory.
 
         Args:
-            session: SQLAlchemy database session
+            session_factory: Callable that returns a new SQLAlchemy session
         """
-        self._session = session
+        self._session_factory = session_factory
 
     def create(
         self,
@@ -121,12 +121,16 @@ class PipelineRepository:
         if specific_data:
             kwargs.update(specific_data)
 
-        orm_obj = orm_class(**kwargs)
-        self._session.add(orm_obj)
-        self._session.flush()
-
-        logger.info(f"Created pipeline run: {batch_run_id} ({pipeline_type.value})")
-        return self._orm_to_domain(orm_obj)
+        session = self._session_factory()
+        try:
+            orm_obj = orm_class(**kwargs)
+            session.add(orm_obj)
+            session.flush()
+            result = self._orm_to_domain(orm_obj)
+            logger.info(f"Created pipeline run: {batch_run_id} ({pipeline_type.value})")
+            return result
+        finally:
+            session.close()
 
     def get(self, run_id: str) -> DomainPipelineRun | None:
         """
@@ -138,10 +142,14 @@ class PipelineRepository:
         Returns:
             Domain entity if found, None otherwise
         """
-        orm_obj = self._session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
-        if orm_obj:
-            return self._orm_to_domain(orm_obj)
-        return None
+        session = self._session_factory()
+        try:
+            orm_obj = session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
+            if orm_obj:
+                return self._orm_to_domain(orm_obj)
+            return None
+        finally:
+            session.close()
 
     def list(self) -> "PipelineRunList":
         """
@@ -150,8 +158,12 @@ class PipelineRepository:
         Returns:
             List of all domain entities
         """
-        orm_objs = self._session.query(PipelineRun).all()
-        return [self._orm_to_domain(obj) for obj in orm_objs]
+        session = self._session_factory()
+        try:
+            orm_objs = session.query(PipelineRun).all()
+            return [self._orm_to_domain(obj) for obj in orm_objs]
+        finally:
+            session.close()
 
     def list_by_status(self, status: PipelineRunStatus) -> "PipelineRunList":
         """
@@ -163,10 +175,14 @@ class PipelineRepository:
         Returns:
             List of domain entities
         """
-        orm_objs = self._session.query(PipelineRun).filter(
-            PipelineRun.status == status.value
-        ).all()
-        return [self._orm_to_domain(obj) for obj in orm_objs]
+        session = self._session_factory()
+        try:
+            orm_objs = session.query(PipelineRun).filter(
+                PipelineRun.status == status.value
+            ).all()
+            return [self._orm_to_domain(obj) for obj in orm_objs]
+        finally:
+            session.close()
 
     def list_by_type(self, pipeline_type: PipelineType) -> "PipelineRunList":
         """
@@ -178,10 +194,14 @@ class PipelineRepository:
         Returns:
             List of domain entities
         """
-        orm_objs = self._session.query(PipelineRun).filter(
-            PipelineRun.pipeline_type == pipeline_type.value
-        ).all()
-        return [self._orm_to_domain(obj) for obj in orm_objs]
+        session = self._session_factory()
+        try:
+            orm_objs = session.query(PipelineRun).filter(
+                PipelineRun.pipeline_type == pipeline_type.value
+            ).all()
+            return [self._orm_to_domain(obj) for obj in orm_objs]
+        finally:
+            session.close()
 
     def update_status(self, run_id: str, status: PipelineRunStatus) -> bool:
         """
@@ -194,13 +214,17 @@ class PipelineRepository:
         Returns:
             True if updated, False if not found
         """
-        orm_obj = self._session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
-        if not orm_obj:
-            return False
-        orm_obj.status = status.value  # type: ignore[assignment]
-        self._session.flush()
-        logger.info(f"Updated pipeline run status: {run_id} → {status.value}")
-        return True
+        session = self._session_factory()
+        try:
+            orm_obj = session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
+            if not orm_obj:
+                return False
+            orm_obj.status = status.value  # type: ignore[assignment]
+            session.flush()
+            logger.info(f"Updated pipeline run status: {run_id} → {status.value}")
+            return True
+        finally:
+            session.close()
 
     def update_summaries(
         self,
@@ -221,20 +245,24 @@ class PipelineRepository:
         Returns:
             True if updated, False if not found
         """
-        orm_obj = self._session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
-        if not orm_obj:
-            return False
+        session = self._session_factory()
+        try:
+            orm_obj = session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
+            if not orm_obj:
+                return False
 
-        if input_summary is not None:
-            orm_obj.input_summary = input_summary  # type: ignore[assignment]
-        if output_summary is not None:
-            orm_obj.output_summary = output_summary  # type: ignore[assignment]
-        if llm_metadata is not None:
-            orm_obj.llm_metadata = llm_metadata  # type: ignore[assignment]
+            if input_summary is not None:
+                orm_obj.input_summary = input_summary  # type: ignore[assignment]
+            if output_summary is not None:
+                orm_obj.output_summary = output_summary  # type: ignore[assignment]
+            if llm_metadata is not None:
+                orm_obj.llm_metadata = llm_metadata  # type: ignore[assignment]
 
-        self._session.flush()
-        logger.info(f"Updated pipeline run summaries: {run_id}")
-        return True
+            session.flush()
+            logger.info(f"Updated pipeline run summaries: {run_id}")
+            return True
+        finally:
+            session.close()
 
     def get_change_events_for_run(self, run_id: str) -> "ChangeEventDictList":
         """
@@ -246,21 +274,25 @@ class PipelineRepository:
         Returns:
             List of change_event dicts with entity_type, entity_id, operation, etc.
         """
-        events = self._session.query(ChangeEvent).filter(
-            ChangeEvent.batch_run_id == run_id
-        ).all()
+        session = self._session_factory()
+        try:
+            events = session.query(ChangeEvent).filter(
+                ChangeEvent.batch_run_id == run_id
+            ).all()
 
-        return [
-            {
-                "id": e.id,
-                "entity_type": e.entity_type,
-                "entity_id": e.entity_id,
-                "operation": e.operation,
-                "timestamp": e.timestamp.isoformat() if e.timestamp else None,
-                "batch_run_id": e.batch_run_id,
-            }
-            for e in events
-        ]
+            return [
+                {
+                    "id": e.id,
+                    "entity_type": e.entity_type,
+                    "entity_id": e.entity_id,
+                    "operation": e.operation,
+                    "timestamp": e.timestamp.isoformat() if e.timestamp else None,
+                    "batch_run_id": e.batch_run_id,
+                }
+                for e in events
+            ]
+        finally:
+            session.close()
 
     def _orm_to_domain(self, orm_obj: PipelineRun) -> DomainPipelineRun:
         """
