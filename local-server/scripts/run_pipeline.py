@@ -95,11 +95,16 @@ def main() -> int:
     )
     parser.add_argument(
         "--log-iteration",
-        action="store_true",
-        help="Append execution record to pipeline-iteration-log.md",
+        type=str,
+        default=None,
+        help="Append execution record to the specified log file (default: logs/pipeline-iteration-log.md)",
     )
 
     args = parser.parse_args()
+
+    # Initialize variables with defaults to avoid NameError in exception handler
+    ptype = None
+    input_data = None
 
     try:
         # Validate pipeline type
@@ -176,7 +181,7 @@ def main() -> int:
             print(json.dumps(result, indent=2))
 
         # Log iteration if requested
-        if args.log_iteration:
+        if args.log_iteration is not None:
             _append_iteration_log(
                 ptype=ptype,
                 impl_id=args.implementation,
@@ -184,6 +189,7 @@ def main() -> int:
                 input_data=input_data,
                 result=result,
                 error=None,
+                log_path=args.log_iteration,
             )
 
         return 0
@@ -191,8 +197,8 @@ def main() -> int:
     except Exception as exc:
         _logger.error(f"Pipeline execution failed: {exc}", exc_info=exc)
 
-        # Log the error if iteration logging is enabled
-        if args.log_iteration:
+        # Log the error if iteration logging is enabled and required variables are available
+        if args.log_iteration is not None and ptype is not None and input_data is not None:
             try:
                 _append_iteration_log(
                     ptype=ptype,
@@ -201,6 +207,7 @@ def main() -> int:
                     input_data=input_data,
                     result=None,
                     error=str(exc),
+                    log_path=args.log_iteration,
                 )
             except Exception as log_exc:
                 _logger.error(f"Failed to log iteration: {log_exc}")
@@ -215,9 +222,10 @@ def _append_iteration_log(
     input_data: dict,
     result: dict | None,
     error: str | None,
+    log_path: str | None = None,
 ) -> None:
     """
-    Append execution record to pipeline-iteration-log.md.
+    Append execution record to the iteration log.
 
     Args:
         ptype: Pipeline type
@@ -226,15 +234,17 @@ def _append_iteration_log(
         input_data: Input payload
         result: Output payload (None if error occurred)
         error: Error message (None if successful)
+        log_path: Path to log file (default: logs/pipeline-iteration-log.md)
     """
-    log_dir = Path(__file__).parent.parent / "logs"
-    log_dir.mkdir(parents=True, exist_ok=True)
+    if log_path is None:
+        log_path = str(Path(__file__).parent.parent / "logs" / "pipeline-iteration-log.md")
 
-    log_path = log_dir / "pipeline-iteration-log.md"
+    log_path_obj = Path(log_path)
+    log_path_obj.parent.mkdir(parents=True, exist_ok=True)
 
     # Create header if file doesn't exist
-    if not log_path.exists():
-        with open(log_path, "w") as f:
+    if not log_path_obj.exists():
+        with open(log_path_obj, "w") as f:
             f.write("# Pipeline Iteration Log\n\n")
             f.write("Append-only execution log for pipeline iterations during development.\n")
             f.write("Organized by pipeline type.\n\n")
@@ -261,10 +271,10 @@ def _append_iteration_log(
     entry_parts.append("\n---\n")
 
     # Append to log
-    with open(log_path, "a") as f:
+    with open(log_path_obj, "a") as f:
         f.writelines(entry_parts)
 
-    _logger.info(f"Appended iteration log to {log_path}")
+    _logger.info(f"Appended iteration log to {log_path_obj}")
 
 
 if __name__ == "__main__":

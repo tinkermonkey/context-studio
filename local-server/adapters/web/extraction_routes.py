@@ -266,7 +266,7 @@ async def extract_triples(
     [DEPRECATED] Extract RDF triples from text, scoped to a specific ontology.
 
     **This endpoint is maintained for backward compatibility with Wave A code.**
-    **New code should use POST /api/pipelines/individual-extraction/run instead.**
+    **New code should use POST /api/pipelines/individual_extraction/run instead.**
 
     This endpoint uses an LLM to extract subject-predicate-object triples
     from the input text, linking them to classes and individuals from a

@@ -126,6 +126,7 @@ class PipelineRepository:
             orm_obj = orm_class(**kwargs)
             session.add(orm_obj)
             session.flush()
+            session.commit()
             result = self._orm_to_domain(orm_obj)
             logger.info(f"Created pipeline run: {batch_run_id} ({pipeline_type.value})")
             return result
@@ -221,6 +222,7 @@ class PipelineRepository:
                 return False
             orm_obj.status = status.value  # type: ignore[assignment]
             session.flush()
+            session.commit()
             logger.info(f"Updated pipeline run status: {run_id} → {status.value}")
             return True
         finally:
@@ -259,6 +261,7 @@ class PipelineRepository:
                 orm_obj.llm_metadata = llm_metadata  # type: ignore[assignment]
 
             session.flush()
+            session.commit()
             logger.info(f"Updated pipeline run summaries: {run_id}")
             return True
         finally:

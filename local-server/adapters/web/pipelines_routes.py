@@ -20,6 +20,7 @@ Error handling translates domain exceptions to appropriate HTTP responses.
 """
 
 from typing import Optional
+from uuid import uuid4
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 from fastapi import status as http_status
@@ -45,24 +46,34 @@ router = APIRouter(prefix="/api/pipelines", tags=["pipelines"])
 _logger = get_logger(__name__)
 
 
-# ==================== Error Handler Utilities ====================
+# ==================== Response Mapping ====================
 
 
-def _handle_domain_error(exc: Exception) -> tuple[int, str]:
+def _to_response(run: PipelineRun) -> PipelineRunResponse:
     """
-    Map domain exceptions to HTTP status codes and error messages.
+    Convert a domain PipelineRun to a response schema.
 
     Args:
-        exc: The domain exception
+        run: Domain PipelineRun entity
 
     Returns:
-        Tuple of (status_code, error_message)
+        PipelineRunResponse for JSON serialization
     """
-    if isinstance(exc, ValueError):
-        return (http_status.HTTP_400_BAD_REQUEST, str(exc))
-    else:
-        _logger.error(f"Unexpected error in pipelines endpoint: {exc}", exc_info=exc)
-        return (http_status.HTTP_500_INTERNAL_SERVER_ERROR, "An unexpected error occurred")
+    return PipelineRunResponse.model_validate(
+        {
+            "id": run.id,
+            "batch_run_id": run.batch_run_id,
+            "pipeline_type": run.pipeline_type.value,
+            "implementation_id": run.implementation_id,
+            "configuration_ref": run.configuration_ref,
+            "input_summary": run.input_summary,
+            "output_summary": run.output_summary,
+            "llm_metadata": run.llm_metadata,
+            "status": run.status.value,
+            "created_at": None,
+            "updated_at": None,
+        }
+    )
 
 
 # ==================== Pipeline Type Enumeration ====================
@@ -238,28 +249,15 @@ async def run_pipeline(
         )
 
     # Create pipeline run in pending state
+    run_id = str(uuid4())
     run = repo.create(
-        batch_run_id="",  # No batch context for direct CLI invocations; filled by callers
+        batch_run_id=run_id,
         pipeline_type=ptype,
         implementation_id=request_body.implementation_id,
         configuration_ref=request_body.configuration_ref,
     )
 
-    return PipelineRunResponse.model_validate(
-        {
-            "id": run.id,
-            "batch_run_id": run.batch_run_id,
-            "pipeline_type": run.pipeline_type.value,
-            "implementation_id": run.implementation_id,
-            "configuration_ref": run.configuration_ref,
-            "input_summary": run.input_summary,
-            "output_summary": run.output_summary,
-            "llm_metadata": run.llm_metadata,
-            "status": run.status.value,
-            "created_at": None,
-            "updated_at": None,
-        }
-    )
+    return _to_response(run)
 
 
 # ==================== Pipeline Run Retrieval ====================
@@ -292,21 +290,7 @@ async def get_pipeline_run(
             detail=f"Pipeline run not found: {run_id}",
         )
 
-    return PipelineRunResponse.model_validate(
-        {
-            "id": run.id,
-            "batch_run_id": run.batch_run_id,
-            "pipeline_type": run.pipeline_type.value,
-            "implementation_id": run.implementation_id,
-            "configuration_ref": run.configuration_ref,
-            "input_summary": run.input_summary,
-            "output_summary": run.output_summary,
-            "llm_metadata": run.llm_metadata,
-            "status": run.status.value,
-            "created_at": None,
-            "updated_at": None,
-        }
-    )
+    return _to_response(run)
 
 
 @router.get("/runs", response_model=ListResponse[PipelineRunResponse])
@@ -371,23 +355,6 @@ async def list_pipeline_runs(
     total = len(filtered_runs)
     paginated_runs = filtered_runs[offset : offset + limit]
 
-    responses = [
-        PipelineRunResponse.model_validate(
-            {
-                "id": run.id,
-                "batch_run_id": run.batch_run_id,
-                "pipeline_type": run.pipeline_type.value,
-                "implementation_id": run.implementation_id,
-                "configuration_ref": run.configuration_ref,
-                "input_summary": run.input_summary,
-                "output_summary": run.output_summary,
-                "llm_metadata": run.llm_metadata,
-                "status": run.status.value,
-                "created_at": None,
-                "updated_at": None,
-            }
-        )
-        for run in paginated_runs
-    ]
+    responses = [_to_response(run) for run in paginated_runs]
 
     return ListResponse(items=responses, total=total, limit=limit, offset=offset)
