@@ -10,7 +10,7 @@ Usage:
         --output /path/to/output.json \\
         [--implementation default] \\
         [--dry-run] \\
-        [--log-iteration]
+        [--log-iteration <log_path>]
 
 Examples:
     # Run individual extraction
@@ -19,7 +19,7 @@ Examples:
         --config extraction-default \\
         --input examples/input.json \\
         --output /tmp/output.json \\
-        --log-iteration
+        --log-iteration logs/my-iteration-log.md
 
     # Dry-run to validate configuration
     python -m local_server.scripts.run_pipeline \\
