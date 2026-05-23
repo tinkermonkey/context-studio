@@ -11,17 +11,27 @@ from unittest.mock import Mock
 from adapters.web.orchestrator_factory import create_orchestrator, create_pipeline_state
 from domain.pipeline.ports import LLMProvider
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
-from domain.pipelines.individual_extraction.orchestrator import IndividualExtractionOrchestrator
-from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
-from domain.pipelines.orchestration.noop import NoOpPipelineOrchestrator
-from domain.pipelines.schema_extraction.orchestrator import SchemaExtractionOrchestrator
+from domain.pipelines.individual_extraction.orchestrator import (
+    IndividualExtractionOrchestrator,
+    IndividualExtractionState,
+)
+from domain.pipelines.orchestration.noop import NoOpPipelineOrchestrator, NoOpPipelineState
+from domain.pipelines.schema_extraction.orchestrator import (
+    SchemaExtractionOrchestrator,
+    SchemaExtractionState,
+)
 from domain.pipelines.schema_node_connection_refinement.orchestrator import (
     ConnectionRefinementOrchestrator,
+    ConnectionRefinementState,
 )
 from domain.pipelines.schema_node_definition_refinement.orchestrator import (
     DefinitionRefinementOrchestrator,
+    DefinitionRefinementState,
 )
-from domain.pipelines.schema_node_grounding.orchestrator import SchemaGroundingOrchestrator
+from domain.pipelines.schema_node_grounding.orchestrator import (
+    SchemaGroundingOrchestrator,
+    SchemaGroundingState,
+)
 
 
 @pytest.fixture
@@ -71,6 +81,7 @@ class TestCreateOrchestratorNoOp:
         )
 
         assert isinstance(orchestrator, NoOpPipelineOrchestrator)
+        assert orchestrator._llm_provider is mock_llm_provider
 
     def test_creates_noop_orchestrator_ignores_services(self, mock_llm_provider, mock_extraction_service):
         """Test that NoOpPipelineOrchestrator ignores extra services."""
@@ -83,6 +94,7 @@ class TestCreateOrchestratorNoOp:
         )
 
         assert isinstance(orchestrator, NoOpPipelineOrchestrator)
+        assert orchestrator._llm_provider is mock_llm_provider
 
 
 class TestCreateOrchestratorIndividualExtraction:
@@ -103,6 +115,8 @@ class TestCreateOrchestratorIndividualExtraction:
         )
 
         assert isinstance(orchestrator, IndividualExtractionOrchestrator)
+        assert orchestrator._llm_provider is mock_llm_provider
+        assert orchestrator._extraction_service is mock_extraction_service
 
     def test_raises_value_error_when_extraction_service_missing(self, mock_llm_provider):
         """Test that ValueError is raised when extraction_service is missing."""
@@ -153,6 +167,7 @@ class TestCreateOrchestratorSchemaExtraction:
         )
 
         assert isinstance(orchestrator, SchemaExtractionOrchestrator)
+        assert orchestrator._llm_provider is mock_llm_provider
 
     def test_creates_schema_extraction_ignores_services(
         self,
@@ -169,6 +184,7 @@ class TestCreateOrchestratorSchemaExtraction:
         )
 
         assert isinstance(orchestrator, SchemaExtractionOrchestrator)
+        assert orchestrator._llm_provider is mock_llm_provider
 
 
 class TestCreateOrchestratorSchemaGrounding:
@@ -193,6 +209,10 @@ class TestCreateOrchestratorSchemaGrounding:
         )
 
         assert isinstance(orchestrator, SchemaGroundingOrchestrator)
+        assert orchestrator._llm_provider is mock_llm_provider
+        assert orchestrator._grounding_adapter is mock_grounding_adapter
+        assert orchestrator._scorer is mock_scorer
+        assert orchestrator._config == {}
 
     def test_creates_with_optional_grounding_config(
         self,
@@ -215,6 +235,10 @@ class TestCreateOrchestratorSchemaGrounding:
         )
 
         assert isinstance(orchestrator, SchemaGroundingOrchestrator)
+        assert orchestrator._llm_provider is mock_llm_provider
+        assert orchestrator._grounding_adapter is mock_grounding_adapter
+        assert orchestrator._scorer is mock_scorer
+        assert orchestrator._config == config
 
     def test_creates_with_empty_grounding_config_default(
         self,
@@ -235,6 +259,7 @@ class TestCreateOrchestratorSchemaGrounding:
         )
 
         assert isinstance(orchestrator, SchemaGroundingOrchestrator)
+        assert orchestrator._config == {}
 
     def test_raises_value_error_when_grounding_adapter_missing(
         self,
@@ -329,6 +354,10 @@ class TestCreateOrchestratorDefinitionRefinement:
         )
 
         assert isinstance(orchestrator, DefinitionRefinementOrchestrator)
+        assert orchestrator._llm_provider is mock_llm_provider
+        assert orchestrator._traversal._ontology is mock_ontology_repo
+        assert orchestrator._traversal._extraction is None
+        assert orchestrator._config == {}
 
     def test_creates_with_optional_extraction_repo(
         self,
@@ -349,6 +378,8 @@ class TestCreateOrchestratorDefinitionRefinement:
         )
 
         assert isinstance(orchestrator, DefinitionRefinementOrchestrator)
+        assert orchestrator._traversal._ontology is mock_ontology_repo
+        assert orchestrator._traversal._extraction is mock_extraction_repo
 
     def test_creates_with_optional_refinement_config(
         self,
@@ -369,6 +400,7 @@ class TestCreateOrchestratorDefinitionRefinement:
         )
 
         assert isinstance(orchestrator, DefinitionRefinementOrchestrator)
+        assert orchestrator._config == config
 
     def test_creates_with_empty_refinement_config_default(
         self,
@@ -385,6 +417,7 @@ class TestCreateOrchestratorDefinitionRefinement:
         )
 
         assert isinstance(orchestrator, DefinitionRefinementOrchestrator)
+        assert orchestrator._config == {}
 
     def test_raises_value_error_when_ontology_repo_missing(self, mock_llm_provider):
         """Test that ValueError is raised when ontology_repo is missing."""
@@ -429,6 +462,10 @@ class TestCreateOrchestratorConnectionRefinement:
         )
 
         assert isinstance(orchestrator, ConnectionRefinementOrchestrator)
+        assert orchestrator._llm_provider is mock_llm_provider
+        assert orchestrator._traversal._ontology is mock_ontology_repo
+        assert orchestrator._traversal._extraction is None
+        assert orchestrator._config == {}
 
     def test_creates_with_optional_extraction_repo(
         self,
@@ -449,6 +486,8 @@ class TestCreateOrchestratorConnectionRefinement:
         )
 
         assert isinstance(orchestrator, ConnectionRefinementOrchestrator)
+        assert orchestrator._traversal._ontology is mock_ontology_repo
+        assert orchestrator._traversal._extraction is mock_extraction_repo
 
     def test_creates_with_optional_refinement_config(
         self,
@@ -469,6 +508,7 @@ class TestCreateOrchestratorConnectionRefinement:
         )
 
         assert isinstance(orchestrator, ConnectionRefinementOrchestrator)
+        assert orchestrator._config == config
 
     def test_creates_with_empty_refinement_config_default(
         self,
@@ -485,6 +525,7 @@ class TestCreateOrchestratorConnectionRefinement:
         )
 
         assert isinstance(orchestrator, ConnectionRefinementOrchestrator)
+        assert orchestrator._config == {}
 
     def test_raises_value_error_when_ontology_repo_missing(self, mock_llm_provider):
         """Test that ValueError is raised when ontology_repo is missing."""
@@ -558,6 +599,7 @@ class TestCreatePipelineStateNoOp:
             llm_provider=mock_llm_provider,
         )
 
+        assert isinstance(state, NoOpPipelineState)
         assert state.run_id == "run-123"
         assert state.pipeline_type == PipelineType.NO_OP
         assert state.input_data == input_data
@@ -580,6 +622,7 @@ class TestCreatePipelineStateSchemaExtraction:
             llm_provider=mock_llm_provider,
         )
 
+        assert isinstance(state, SchemaExtractionState)
         assert state.run_id == "run-456"
         assert state.pipeline_type == PipelineType.SCHEMA_EXTRACTION
         assert state.input_data == input_data
@@ -602,6 +645,7 @@ class TestCreatePipelineStateSchemaNodeGrounding:
             llm_provider=mock_llm_provider,
         )
 
+        assert isinstance(state, SchemaGroundingState)
         assert state.run_id == "run-789"
         assert state.pipeline_type == PipelineType.SCHEMA_NODE_GROUNDING
         assert state.input_data == input_data
@@ -624,6 +668,7 @@ class TestCreatePipelineStateDefinitionRefinement:
             llm_provider=mock_llm_provider,
         )
 
+        assert isinstance(state, DefinitionRefinementState)
         assert state.run_id == "run-101"
         assert state.pipeline_type == PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT
         assert state.input_data == input_data
@@ -646,6 +691,7 @@ class TestCreatePipelineStateConnectionRefinement:
             llm_provider=mock_llm_provider,
         )
 
+        assert isinstance(state, ConnectionRefinementState)
         assert state.run_id == "run-202"
         assert state.pipeline_type == PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT
         assert state.input_data == input_data
@@ -668,12 +714,31 @@ class TestCreatePipelineStateIndividualExtraction:
             llm_provider=mock_llm_provider,
         )
 
+        assert isinstance(state, IndividualExtractionState)
         assert state.run_id == "run-303"
         assert state.pipeline_type == PipelineType.INDIVIDUAL_EXTRACTION
         assert state.input_data == input_data
         assert state.current_status == PipelineRunStatus.PENDING
         assert state.llm_provider is mock_llm_provider
         assert state.result is None
+
+
+class TestCreatePipelineStateUnknownType:
+    """Test create_pipeline_state with unknown pipeline type."""
+
+    def test_returns_none_for_unknown_pipeline_type(self, mock_llm_provider):
+        """Test that unknown pipeline type returns None (implicit behavior)."""
+        class UnknownPipelineType:
+            pass
+
+        result = create_pipeline_state(
+            run_id="run-test",
+            pipeline_type=UnknownPipelineType(),  # type: ignore
+            input_data={},
+            llm_provider=mock_llm_provider,
+        )
+
+        assert result is None
 
 
 class TestCreatePipelineStateCommonBehavior:
