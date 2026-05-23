@@ -443,23 +443,24 @@ class ExtractionService:
 
             self._extraction_run_repo.update_extraction_run(run)
 
-            # Publish completion event (with batch_run_id still in context)
-            # This allows the change event recorder to capture batch_run_id
-            failures = self._event_publisher.publish(
-                ExtractionCompleted(
-                    result_id=run_id,
-                    entity_count=triples_extracted,
-                    duration_ms=duration_ms,
+            # Publish completion event only on successful extraction
+            # (with batch_run_id still in context for change event recording)
+            if run_status == ExtractionRunStatus.COMPLETED:
+                failures = self._event_publisher.publish(
+                    ExtractionCompleted(
+                        result_id=run_id,
+                        entity_count=triples_extracted,
+                        duration_ms=duration_ms,
+                    )
                 )
-            )
-            if failures:
-                handler_names = ", ".join(name for name, _ in failures)
-                _logger.warning(
-                    "Event handlers failed for ExtractionCompleted (result_id=%s): %s. "
-                    "Extraction result is returned but audit trail may have gaps.",
-                    run_id,
-                    handler_names,
-                )
+                if failures:
+                    handler_names = ", ".join(name for name, _ in failures)
+                    _logger.warning(
+                        "Event handlers failed for ExtractionCompleted (result_id=%s): %s. "
+                        "Extraction result is returned but audit trail may have gaps.",
+                        run_id,
+                        handler_names,
+                    )
 
         finally:
             # Always clear the correlation context after extraction

@@ -536,8 +536,8 @@ class TestTripleExtraction:
         return service
 
     @pytest.fixture
-    def client(self, extraction_service, event_publisher, session_factory):
-        """Create a TestClient with extraction service and event handlers registered."""
+    def client_with_change_recorder(self, extraction_service, event_publisher, session_factory):
+        """Create a TestClient with extraction service and change event handlers registered."""
         from adapters.events.change_recorder import ChangeEventRecorder
         from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 
@@ -973,10 +973,10 @@ class TestTripleExtraction:
         assert run.status.value == "completed"
 
     def test_extract_triples_batch_run_id_in_change_events(
-        self, client, ontology_with_individuals, extraction_run_repository, interchange_repository
+        self, client_with_change_recorder, ontology_with_individuals, extraction_run_repository, interchange_repository
     ):
         """Extraction run correctly populates batch_run_id in change_events."""
-        response = client.post(
+        response = client_with_change_recorder.post(
             "/api/extraction/extract",
             json={
                 "text": "Test text for triple extraction.",
