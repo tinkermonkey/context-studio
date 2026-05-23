@@ -547,6 +547,7 @@ class TestTripleExtraction:
 
         # Subscribe event handlers to the event publisher
         from domain.extraction.events import ExtractionCompleted
+
         event_publisher.subscribe(ExtractionCompleted, change_recorder.on_extraction_completed)
 
         # Create FastAPI app with extraction service
@@ -973,7 +974,11 @@ class TestTripleExtraction:
         assert run.status.value == "completed"
 
     def test_extract_triples_batch_run_id_in_change_events(
-        self, client_with_change_recorder, ontology_with_individuals, extraction_run_repository, interchange_repository
+        self,
+        client_with_change_recorder,
+        ontology_with_individuals,
+        extraction_run_repository,
+        interchange_repository,
     ):
         """Extraction run correctly populates batch_run_id in change_events."""
         response = client_with_change_recorder.post(
