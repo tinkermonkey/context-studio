@@ -31,14 +31,4 @@ def get_default_config() -> dict:
             "semantic_similarity": 0.4,
         },
         "top_n": 10,
-        "type_compatibility": {
-            "Class": {
-                "preferred_result_types": ["dbpedia:Resource", "skos:Concept"],
-                "preferred_patterns": ["entity", "concept", "class"],
-            },
-            "PropertyDefinition": {
-                "preferred_property_types": ["owl:ObjectProperty", "rdf:Property"],
-                "avoid_patterns": ["datatype", "literal"],
-            },
-        },
     }

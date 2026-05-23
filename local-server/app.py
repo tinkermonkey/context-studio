@@ -302,7 +302,6 @@ async def lifespan(app: FastAPI):
         register_schema_node_grounding(
             impl_registry=implementation_registry,
             config_registry=config_registry,
-            orchestrator=grounding_orchestrator,
         )
         logger.info("Schema node grounding pipeline registered")
 

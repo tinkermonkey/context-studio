@@ -17,7 +17,6 @@ from domain.pipelines.registry import (
 def register_schema_node_grounding(
     impl_registry: PipelineImplementationRegistry | None = None,
     config_registry: PipelineConfigurationRegistry | None = None,
-    orchestrator: SchemaGroundingOrchestrator | None = None,
 ) -> None:
     """
     Register the default schema node grounding implementation and configurations.
@@ -29,21 +28,13 @@ def register_schema_node_grounding(
     Args:
         impl_registry: PipelineImplementationRegistry instance (optional)
         config_registry: PipelineConfigurationRegistry instance (optional)
-        orchestrator: Pre-built SchemaGroundingOrchestrator instance (for testing)
     """
     if impl_registry is not None:
-        if orchestrator is not None:
-            impl_registry.register_impl(
-                PipelineType.SCHEMA_NODE_GROUNDING,
-                "default",
-                orchestrator.__class__,
-            )
-        else:
-            impl_registry.register_impl(
-                PipelineType.SCHEMA_NODE_GROUNDING,
-                "default",
-                SchemaGroundingOrchestrator,
-            )
+        impl_registry.register_impl(
+            PipelineType.SCHEMA_NODE_GROUNDING,
+            "default",
+            SchemaGroundingOrchestrator,
+        )
 
     if config_registry is not None:
         config_registry.register(

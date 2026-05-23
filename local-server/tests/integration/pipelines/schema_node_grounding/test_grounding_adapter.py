@@ -60,7 +60,6 @@ class TestGroundingAdapter:
 
         candidates = await adapter.query_sources(
             label="person",
-            node_type=NodeType.CLASS,
             sources=["DBpedia", "ConceptNet"],
         )
 
@@ -75,7 +74,6 @@ class TestGroundingAdapter:
 
         candidates = await adapter.query_sources(
             label="person",
-            node_type=NodeType.CLASS,
             sources=["DBpedia"],
         )
 

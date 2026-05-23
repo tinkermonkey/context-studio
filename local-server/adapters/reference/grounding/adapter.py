@@ -49,7 +49,6 @@ class GroundingAdapter:
     async def query_sources(
         self,
         label: str,
-        node_type: NodeType | None = None,
         sources: list[str] | None = None,
     ) -> list[GroundingCandidate]:
         """
@@ -60,7 +59,6 @@ class GroundingAdapter:
 
         Args:
             label: Schema node label to find candidates for
-            node_type: Type of node (Class or PropertyDefinition)
             sources: List of source names to query (default: all)
 
         Returns:
@@ -78,7 +76,7 @@ class GroundingAdapter:
                 continue
 
             source = self._sources[source_name]
-            queries.append(self._query_single_source(label, source_name, source, node_type))
+            queries.append(self._query_single_source(label, source_name, source))
 
         if not queries:
             return []
@@ -99,7 +97,6 @@ class GroundingAdapter:
         label: str,
         source_name: str,
         source: Any,
-        node_type: NodeType | None = None,
     ) -> list[GroundingCandidate]:
         """
         Query a single source for candidates.
@@ -108,16 +105,15 @@ class GroundingAdapter:
             label: Search label
             source_name: Name of source
             source: Source adapter instance
-            node_type: Type of node
 
         Returns:
             List of normalized GroundingCandidate objects
         """
         try:
             if source_name == "DBpedia":
-                return await self._query_dbpedia(label, source, node_type)
+                return await self._query_dbpedia(label, source)
             elif source_name == "ConceptNet":
-                return await self._query_conceptnet(label, source, node_type)
+                return await self._query_conceptnet(label, source)
             else:
                 logger.warning(f"No query handler for source: {source_name}")
                 return []
@@ -126,7 +122,7 @@ class GroundingAdapter:
             return []
 
     async def _query_dbpedia(
-        self, label: str, source: DBpediaSource, node_type: NodeType | None = None
+        self, label: str, source: DBpediaSource
     ) -> list[GroundingCandidate]:
         """Query DBpedia for entities matching label."""
         results = await source.search_async(label, limit=10)
@@ -139,7 +135,7 @@ class GroundingAdapter:
                     label=result.label,
                     description=result.description,
                     source="DBpedia",
-                    source_score=0.8,
+                    source_score=result.confidence,
                     types=None,
                 )
             )
@@ -147,7 +143,7 @@ class GroundingAdapter:
         return candidates
 
     async def _query_conceptnet(
-        self, label: str, source: ConceptNetSource, node_type: NodeType | None = None
+        self, label: str, source: ConceptNetSource
     ) -> list[GroundingCandidate]:
         """Query ConceptNet for concepts matching label."""
         results = await source.search_async(label, limit=10)
@@ -160,7 +156,7 @@ class GroundingAdapter:
                     label=result.label,
                     description=result.description,
                     source="ConceptNet",
-                    source_score=0.7,
+                    source_score=result.confidence,
                     types=None,
                 )
             )
