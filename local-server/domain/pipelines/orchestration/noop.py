@@ -3,7 +3,7 @@ No-op pipeline implementation for testing the framework end-to-end.
 
 Exercises:
 - Pipeline type/implementation registration
-- LangGraph state machine construction
+- Pipeline execution framework
 - PipelineRun persistence
 - change_events linkage
 """
@@ -35,7 +35,7 @@ class NoOpPipelineOrchestrator(PipelineOrchestrator):
     """
     Minimal orchestrator that exercises the framework without domain logic.
 
-    State machine:
+    Execution flow:
     1. Initialize — set up state
     2. Process — simulate work (no LLM call)
     3. Finalize — populate result and metrics
@@ -47,7 +47,7 @@ class NoOpPipelineOrchestrator(PipelineOrchestrator):
 
     def build_graph(self) -> Any:
         """
-        Build LangGraph state graph.
+        Build and return the pipeline execution graph.
 
         For now, returns None (would be used by execute() in full impl).
         """

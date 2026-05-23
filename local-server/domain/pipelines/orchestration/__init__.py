@@ -1,5 +1,5 @@
 """
-LangGraph orchestration for pipeline execution.
+Orchestration for pipeline execution.
 
-Base classes and helpers for wiring pipeline state machines.
+Base classes and helpers for executing pipelines.
 """

@@ -3,7 +3,7 @@ LLM Pipeline Management bounded context.
 
 Responsible for:
 - Pipeline type definitions and registry
-- Pipeline execution orchestration (LangGraph wiring)
+- Pipeline execution orchestration
 - Unified LLM client abstraction (OpenRouter-backed)
 - Pipeline run tracking and persistence
 """

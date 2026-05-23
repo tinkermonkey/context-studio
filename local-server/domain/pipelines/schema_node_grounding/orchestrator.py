@@ -72,14 +72,13 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
         self._grounding_adapter = grounding_adapter
         self._scorer = scorer
         self._config = config or {}
-        self._graph = None
 
     def build_graph(self) -> Any:
         """
-        Build and return the LangGraph state graph.
+        Build and return the pipeline execution graph.
 
         For this single-node implementation, returns None.
-        Multi-node upgrade path: create StateGraph with dispatch,
+        Multi-node upgrade path: create graph with dispatch,
         normalization, scoring, ranking nodes.
 
         Returns:

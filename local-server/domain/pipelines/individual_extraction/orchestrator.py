@@ -70,14 +70,13 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
         """
         super().__init__(llm_provider)
         self._extraction_service = extraction_service
-        self._graph = None
 
     def build_graph(self) -> Any:
         """
-        Build and return the LangGraph state graph.
+        Build and return the pipeline execution graph.
 
         For this single-node implementation, the graph is minimal.
-        Returns None for now; can be extended to LangGraph if needed.
+        Returns None for now; can be extended if needed.
 
         Returns:
             None (single-node execution, no explicit graph)

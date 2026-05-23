@@ -66,7 +66,7 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
 
     def build_graph(self) -> Any:
         """
-        Build and return the LangGraph state graph.
+        Build and return the pipeline execution graph.
 
         For this single-node implementation, returns None.
 
