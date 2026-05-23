@@ -260,34 +260,16 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
             error_type = "parse" if isinstance(exc, json.JSONDecodeError) else "structure"
             _logger.warning(
                 f"Failed to {error_type} LLM response for node {neighborhood.class_label}: {exc}. "
-                f"Falling back to raw response.",
+                f"No candidates generated.",
                 exc_info=True,
             )
-            candidates = [
-                {
-                    "definition": response.content,
-                    "rationale": f"Generated via LLM ({error_type} failed)",
-                    "sources_used": ["llm"],
-                    "confidence": 0.3,
-                }
-            ]
+            candidates = []
         except Exception as exc:
             _logger.error(
                 f"Unexpected error parsing LLM response for node {neighborhood.class_label}: {exc}",
                 exc_info=True,
             )
             raise
-
-        # Ensure we have at least 2 candidates
-        while len(candidates) < 2:
-            candidates.append(
-                {
-                    "definition": f"Variant {len(candidates) + 1}: {current_definition}",
-                    "rationale": "Placeholder variant",
-                    "sources_used": ["current"],
-                    "confidence": 0.1,
-                }
-            )
 
         # Limit to 3 candidates
         return candidates[:3]

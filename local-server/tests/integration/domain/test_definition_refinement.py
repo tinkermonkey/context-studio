@@ -161,10 +161,11 @@ class TestDefinitionRefinementOrchestrator:
         result_state = asyncio.run(orchestrator.execute(state))
 
         assert result_state.current_status == "completed"
-        assert len(result_state.candidates) >= 1
+        assert len(result_state.candidates) == 1
+        assert result_state.candidates[0]["definition"] == "A human"
 
     def test_handles_malformed_llm_response(self, sample_class, session_factory):
-        """Should fallback gracefully when LLM response is not valid JSON."""
+        """Should handle gracefully when LLM response is not valid JSON."""
         repo = SQLiteOntologyRepository(session_factory=session_factory)
         traversal = SchemaNeighborhoodTraversal(ontology_repo=repo)
 
@@ -187,6 +188,6 @@ class TestDefinitionRefinementOrchestrator:
         result_state = asyncio.run(orchestrator.execute(state))
 
         assert result_state.current_status == "completed"
-        # Should have at least a fallback candidate with the raw response
-        assert len(result_state.candidates) >= 1
-        assert result_state.candidates[0]["confidence"] <= 0.5
+        # Should return no candidates when parsing fails (no fabrication)
+        assert result_state.candidates == []
+        assert result_state.result["total_candidates"] == 0

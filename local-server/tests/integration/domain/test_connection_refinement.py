@@ -165,8 +165,9 @@ class TestConnectionRefinementOrchestrator:
         result_state = asyncio.run(orchestrator.execute(state))
 
         assert result_state.current_status == "completed"
-        # Should have at least a default empty delta
-        assert isinstance(result_state.deltas, list)
+        # Should have no deltas (no fabrication)
+        assert result_state.deltas == []
+        assert result_state.result["total_deltas"] == 0
 
     def test_limits_deltas_to_max(self, sample_classes, session_factory):
         """Should limit deltas to max (5)."""
@@ -249,7 +250,7 @@ class TestConnectionRefinementOrchestrator:
         assert len(result_state.deltas) >= 1
 
     def test_handles_malformed_llm_response(self, sample_classes, session_factory):
-        """Should fallback gracefully when LLM response is not valid JSON."""
+        """Should handle gracefully when LLM response is not valid JSON."""
         repo = SQLiteOntologyRepository(session_factory=session_factory)
         traversal = SchemaNeighborhoodTraversal(ontology_repo=repo)
 
@@ -272,6 +273,6 @@ class TestConnectionRefinementOrchestrator:
         result_state = asyncio.run(orchestrator.execute(state))
 
         assert result_state.current_status == "completed"
-        # Should have at least a fallback delta with the raw response
-        assert len(result_state.deltas) >= 1
-        assert result_state.deltas[0]["confidence"] <= 0.5
+        # Should return no deltas when parsing fails (no fabrication)
+        assert result_state.deltas == []
+        assert result_state.result["total_deltas"] == 0

@@ -289,19 +289,5 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
             )
             raise
 
-        # Ensure we have at least 1 delta
-        if not deltas:
-            deltas = [
-                {
-                    "operation": "add",
-                    "subject": "",
-                    "predicate": "",
-                    "object": "",
-                    "rationale": "No deltas proposed",
-                    "sources_cited": [],
-                    "confidence": 0.0,
-                }
-            ]
-
         # Limit to 5 deltas
         return deltas[:5]
