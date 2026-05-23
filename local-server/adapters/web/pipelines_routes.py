@@ -323,16 +323,48 @@ async def run_pipeline(
             detail=f"Configuration not found: {request_body.configuration_ref}",
         )
 
-    # Create pipeline run in pending state
+    # Create pipeline run ID (but don't persist yet)
     run_id = str(uuid4())
 
+    # Extract input data from request body (now includes type-specific fields)
+    input_data = request_body.model_dump()
+
+    # Prepare services for orchestrator instantiation
+    services = {
+        "extraction_service": getattr(request.app.state, "extraction_service", None),
+        "ontology_repo": getattr(request.app.state, "ontology_repo", None),
+        "extraction_repo": getattr(request.app.state, "extraction_repo", None),
+        "grounding_adapter": getattr(request.app.state, "grounding_adapter", None),
+        "scorer": getattr(request.app.state, "grounding_scorer", None),
+        "grounding_config": _get_grounding_config(config_version.config),
+        "refinement_config": config_version.config,
+    }
+
+    # Instantiate orchestrator with dependencies (validates input schema early)
+    try:
+        orchestrator = create_orchestrator(
+            orchestrator_class=impl_class,
+            llm_provider=llm_provider,
+            services=services,
+        )
+    except ValueError as e:
+        exc = PipelineInputError(f"Failed to instantiate orchestrator: {str(e)}")
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message) from e
+
+    # Create initial state for execution
+    state = create_pipeline_state(
+        run_id=run_id,
+        pipeline_type=ptype,
+        input_data=input_data,
+        llm_provider=llm_provider,
+    )
+
+    # Persist pipeline run to database only after validation succeeds
     # Prepare type-specific data
     specific_data: dict[str, Any] = {}
     if ptype == PipelineType.INDIVIDUAL_EXTRACTION:
-        # Extract text from raw request body since PipelineRunRequest base class
-        # doesn't include type-specific fields (Pydantic drops extra fields)
-        raw_body = await request.json()
-        text = raw_body.get("text", "")
+        text = input_data.get("text", "")
         source_text_hash = sha256(text.encode()).hexdigest()
         specific_data["source_text_hash"] = source_text_hash
 
@@ -347,40 +379,6 @@ async def run_pipeline(
     except PipelineStorageError as e:
         status_code, message = _handle_domain_error(e)
         raise HTTPException(status_code=status_code, detail=message) from e
-
-    # Prepare services for orchestrator instantiation
-    services = {
-        "extraction_service": getattr(request.app.state, "extraction_service", None),
-        "ontology_repo": getattr(request.app.state, "ontology_repo", None),
-        "extraction_repo": getattr(request.app.state, "extraction_repo", None),
-        "grounding_adapter": getattr(request.app.state, "grounding_adapter", None),
-        "scorer": getattr(request.app.state, "grounding_scorer", None),
-        "grounding_config": _get_grounding_config(config_version.config),
-        "refinement_config": config_version.config,
-    }
-
-    # Instantiate orchestrator with dependencies
-    try:
-        orchestrator = create_orchestrator(
-            orchestrator_class=impl_class,
-            llm_provider=llm_provider,
-            services=services,
-        )
-    except ValueError as e:
-        exc = PipelineInputError(f"Failed to instantiate orchestrator: {str(e)}")
-        status_code, message = _handle_domain_error(exc)
-        raise HTTPException(status_code=status_code, detail=message) from e
-
-    # Extract input data from request body (type-specific fields)
-    input_data = request_body.model_dump()
-
-    # Create initial state for execution
-    state = create_pipeline_state(
-        run_id=run_id,
-        pipeline_type=ptype,
-        input_data=input_data,
-        llm_provider=llm_provider,
-    )
 
     # Execute the pipeline
     try:

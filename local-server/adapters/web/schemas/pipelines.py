@@ -63,6 +63,8 @@ class ConfigurationResponse(BaseModel):
 class PipelineRunRequest(BaseModel):
     """Base request to invoke a pipeline (polymorphic)."""
 
+    model_config = ConfigDict(extra="allow")
+
     implementation_id: str = Field(
         default="default", description="Implementation identifier (defaults to 'default')"
     )
