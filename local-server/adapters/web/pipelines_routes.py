@@ -331,8 +331,9 @@ async def run_pipeline(
         result_state = await orchestrator.execute(state)
 
         # Log any parse warnings from the execution
-        if hasattr(result_state, "parse_warnings") and result_state.parse_warnings:
-            for warning in result_state.parse_warnings:
+        parse_warnings = getattr(result_state, "parse_warnings", [])
+        if parse_warnings:
+            for warning in parse_warnings:
                 _logger.warning(
                     f"Parse warning in {warning.get('stage', 'unknown')} for run {run_id}: "
                     f"{warning.get('error', 'unknown error')}. "

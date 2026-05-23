@@ -360,6 +360,8 @@ Return JSON:
         # Parse connections
         try:
             parsed = json.loads(response.content)
+            if not isinstance(parsed, dict):
+                raise AttributeError(f"Expected dict, got {type(parsed).__name__}")
 
             # Process relationships
             for rel in parsed.get("relationships", []):
@@ -387,7 +389,7 @@ Return JSON:
                     provenance=provenance,
                 )
                 properties.append(prop_def)
-        except json.JSONDecodeError as e:
+        except (json.JSONDecodeError, AttributeError) as e:
             # Record warning but continue with empty connections
             warning = {
                 "stage": "connection_proposal",
@@ -444,6 +446,8 @@ Return JSON:
         disambiguated = list(state.candidate_classes)
         try:
             parsed = json.loads(response.content)
+            if not isinstance(parsed, dict):
+                raise AttributeError(f"Expected dict, got {type(parsed).__name__}")
 
             for ambig in parsed.get("ambiguous_terms", []):
                 term = ambig.get("term", "")
@@ -474,7 +478,7 @@ Return JSON:
                         + disambiguated_candidates
                         + disambiguated[original_idx + 1 :]
                     )
-        except json.JSONDecodeError as e:
+        except (json.JSONDecodeError, AttributeError) as e:
             # Record warning but continue without disambiguation
             warning = {
                 "stage": "disambiguation",

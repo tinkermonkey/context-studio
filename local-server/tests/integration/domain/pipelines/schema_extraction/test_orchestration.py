@@ -23,9 +23,15 @@ from tests.fixtures.schema_extraction_fixtures import get_fixtures
 class MockLLMProvider:
     """Mock LLM provider for testing with JSON responses."""
 
-    def __init__(self):
-        """Initialize with predefined responses."""
+    def __init__(self, fail_stage=None):
+        """
+        Initialize with predefined responses.
+
+        Args:
+            fail_stage: Optional stage name to inject parsing failures (for testing error handling)
+        """
         self.call_count = 0
+        self.fail_stage = fail_stage
 
     def complete(
         self,
@@ -43,30 +49,15 @@ class MockLLMProvider:
 
         self.call_count += 1
 
-        # Dispatch based on system prompt first, then specific user_prompt patterns
+        # Determine which stage this is to inject failures if needed
+        stage = None
         if "disambiguation" in system_prompt.lower():
-            # Stage 6: Disambiguation - handle multi-sense terms
-            content = (
-                '{"ambiguous_terms": '
-                '[{"term": "Service", "senses": '
-                '["Microservice instance", "Web service", "Business service"], '
-                '"rationale": "Service has multiple meanings in different contexts"}]'
-                "}"
-            )
+            stage = "disambiguation"
         elif (
             "relationships and properties" in user_prompt.lower()
             and "For these candidate classes" in user_prompt
         ):
-            # Stage 5: Connection proposal - more specific to avoid matching definition context
-            content = (
-                '{"relationships": '
-                '[{"subject": "Microservice", "predicate": "subclass_of", '
-                '"object": "Service", "confidence": 0.9}], '
-                '"properties": '
-                '[{"name": "communicates_with", "domain": "Microservice", '
-                '"range": "Service", "confidence": 0.8}]'
-                "}"
-            )
+            stage = "connection_proposal"
         elif (
             "Extract" in system_prompt
             or (
@@ -74,11 +65,49 @@ class MockLLMProvider:
                 and "candidate" in system_prompt.lower()
             )
         ):
-            # Stage 2: Candidate identification
-            content = '["Microservice", "API Gateway", "Service", "Message Queue"]'
+            stage = "candidate_identification"
         else:
-            # Stage 4: Definition synthesis (default - all other stages get definition string)
-            content = "A definition of the requested term in the context."
+            stage = "definition_synthesis"
+
+        # Inject failures for specific stages if requested
+        if self.fail_stage == stage:
+            # Return invalid JSON for the requested stage
+            if stage == "candidate_identification":
+                content = "not valid json at all!!!"
+            elif stage == "connection_proposal":
+                content = '["this", "is", "a", "list"]'  # Valid JSON but wrong shape (list instead of dict)
+            elif stage == "disambiguation":
+                content = "invalid json response"  # Truly invalid JSON
+            else:
+                content = "invalid json"
+        else:
+            # Normal responses for working stages
+            if stage == "disambiguation":
+                # Stage 6: Disambiguation - handle multi-sense terms
+                content = (
+                    '{"ambiguous_terms": '
+                    '[{"term": "Service", "senses": '
+                    '["Microservice instance", "Web service", "Business service"], '
+                    '"rationale": "Service has multiple meanings in different contexts"}]'
+                    "}"
+                )
+            elif stage == "connection_proposal":
+                # Stage 5: Connection proposal - more specific to avoid matching definition context
+                content = (
+                    '{"relationships": '
+                    '[{"subject": "Microservice", "predicate": "subclass_of", '
+                    '"object": "Service", "confidence": 0.9}], '
+                    '"properties": '
+                    '[{"name": "communicates_with", "domain": "Microservice", '
+                    '"range": "Service", "confidence": 0.8}]'
+                    "}"
+                )
+            elif stage == "candidate_identification":
+                # Stage 2: Candidate identification
+                content = '["Microservice", "API Gateway", "Service", "Message Queue"]'
+            else:
+                # Stage 4: Definition synthesis (default - all other stages get definition string)
+                content = "A definition of the requested term in the context."
 
         return LLMResponse(
             content=content,
@@ -414,6 +443,144 @@ async def test_schema_extraction_corpus_service_multisense_fixture():
         assert "kind" in candidate
         assert "confidence" in candidate
         assert 0.0 <= candidate["confidence"] <= 1.0
+
+
+@pytest.mark.asyncio
+async def test_parse_warnings_candidate_identification_invalid_json():
+    """Test that parse_warnings is populated when candidate_identification returns invalid JSON."""
+    llm_provider = MockLLMProvider(fail_stage="candidate_identification")
+    orchestrator = SchemaExtractionOrchestrator(llm_provider)
+
+    fixtures = get_fixtures()
+    source_text = fixtures["microservices"]
+
+    state = SchemaExtractionState(
+        run_id="run-parse-fail-candidates",
+        pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+        input_data={
+            "text": source_text,
+            "model": "google/gemini-3-flash-preview",
+        },
+    )
+
+    result_state = await orchestrator.execute(state)
+
+    # Verify execution completed
+    assert result_state.current_status == "completed"
+
+    # Verify parse_warnings is populated
+    assert result_state.parse_warnings
+    warning = result_state.parse_warnings[0]
+    assert warning["stage"] == "candidate_identification"
+    assert "JSON parse error" in warning["error"]
+    assert warning["fallback_action"] == "regex extraction"
+
+    # Verify regex fallback was used (will extract all-caps phrases)
+    assert len(result_state.candidate_concepts) > 0
+
+
+@pytest.mark.asyncio
+async def test_parse_warnings_connection_proposal_invalid_json():
+    """Test that parse_warnings is populated when connection_proposal returns invalid JSON."""
+    llm_provider = MockLLMProvider(fail_stage="connection_proposal")
+    orchestrator = SchemaExtractionOrchestrator(llm_provider)
+
+    fixtures = get_fixtures()
+    source_text = fixtures["microservices"]
+
+    state = SchemaExtractionState(
+        run_id="run-parse-fail-connections",
+        pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+        input_data={
+            "text": source_text,
+            "model": "google/gemini-3-flash-preview",
+        },
+    )
+
+    result_state = await orchestrator.execute(state)
+
+    # Verify execution completed
+    assert result_state.current_status == "completed"
+
+    # Verify parse_warnings contains connection_proposal failure
+    connection_warnings = [w for w in result_state.parse_warnings if w["stage"] == "connection_proposal"]
+    assert len(connection_warnings) > 0
+    warning = connection_warnings[0]
+    assert "JSON parse error" in warning["error"]
+    assert warning["fallback_action"] == "no connections extracted"
+
+    # Verify connections are empty but execution continues
+    assert result_state.proposed_connections == []
+    assert result_state.current_status == "completed"
+
+
+@pytest.mark.asyncio
+async def test_parse_warnings_disambiguation_invalid_json():
+    """Test that parse_warnings is populated when disambiguation returns invalid JSON."""
+    llm_provider = MockLLMProvider(fail_stage="disambiguation")
+    orchestrator = SchemaExtractionOrchestrator(llm_provider)
+
+    fixtures = get_fixtures()
+    source_text = fixtures["microservices"]
+
+    state = SchemaExtractionState(
+        run_id="run-parse-fail-disamb",
+        pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+        input_data={
+            "text": source_text,
+            "model": "google/gemini-3-flash-preview",
+        },
+    )
+
+    result_state = await orchestrator.execute(state)
+
+    # Verify execution completed
+    assert result_state.current_status == "completed"
+
+    # Verify parse_warnings contains disambiguation failure
+    disamb_warnings = [w for w in result_state.parse_warnings if w["stage"] == "disambiguation"]
+    assert len(disamb_warnings) > 0
+    warning = disamb_warnings[0]
+    assert "JSON parse error" in warning["error"]
+    assert warning["fallback_action"] == "skipping disambiguation"
+
+    # Verify candidates are preserved but disambiguation didn't happen
+    assert len(result_state.candidate_classes) > 0
+    assert result_state.current_status == "completed"
+
+
+@pytest.mark.asyncio
+async def test_parse_warnings_structure():
+    """Test that parse_warnings have the correct structure."""
+    llm_provider = MockLLMProvider(fail_stage="candidate_identification")
+    orchestrator = SchemaExtractionOrchestrator(llm_provider)
+
+    fixtures = get_fixtures()
+    source_text = fixtures["microservices"]
+
+    state = SchemaExtractionState(
+        run_id="run-warning-structure",
+        pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+        input_data={
+            "text": source_text,
+            "model": "google/gemini-3-flash-preview",
+        },
+    )
+
+    result_state = await orchestrator.execute(state)
+
+    # Verify warning structure
+    if result_state.parse_warnings:
+        for warning in result_state.parse_warnings:
+            assert isinstance(warning, dict)
+            assert "stage" in warning
+            assert "error" in warning
+            assert "response_preview" in warning
+            assert "fallback_action" in warning
+            assert isinstance(warning["stage"], str)
+            assert isinstance(warning["error"], str)
+            assert isinstance(warning["response_preview"], str)
+            assert isinstance(warning["fallback_action"], str)
 
 
 if __name__ == "__main__":
