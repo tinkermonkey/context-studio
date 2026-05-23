@@ -635,7 +635,7 @@ class SQLiteOntologyRepository:
                 orm_entity.parent_class_id = cls.parent_class_id  # type: ignore[assignment]
                 orm_entity.concept_scheme_id = cls.concept_scheme_id  # type: ignore[assignment]
                 structural_property_id = cls.structural_property_id
-                orm_entity.structural_property_id = structural_property_id
+                orm_entity.structural_property_id = structural_property_id  # type: ignore[assignment]
                 orm_entity.external_references = (
                     mapped_orm.external_references
                 )
@@ -868,9 +868,7 @@ class SQLiteOntologyRepository:
                 # Update existing
                 mapped_orm = map_domain_to_orm(individual)
                 orm_entity.title = individual.title  # type: ignore[assignment]
-                orm_entity.description = (
-                    individual.description
-                )  # type: ignore[assignment]
+                orm_entity.description = individual.description  # type: ignore[assignment]
                 orm_entity.data_properties = (
                     mapped_orm.data_properties
                 )  # type: ignore[assignment]
@@ -1168,24 +1166,18 @@ class SQLiteOntologyRepository:
                 )
                 if prop_def_orm_maybe:
                     prop_def_orm_maybe.title = prop.title  # type: ignore[assignment]
-                    prop_def_orm_maybe.description = (
-                        prop.description
-                    )  # type: ignore[assignment]
-                    prop_def_orm_maybe.identifier = (
-                        prop.identifier
-                    )  # type: ignore[assignment]
-                    prop_def_orm_maybe.ontology_mapping = (
+                    prop_def_orm_maybe.description = prop.description  # type: ignore[assignment]
+                    prop_def_orm_maybe.identifier = prop.identifier  # type: ignore[assignment]
+                    prop_def_orm_maybe.ontology_mapping = (  # type: ignore[assignment]
                         mapped_orm.ontology_mapping
-                    )  # type: ignore[assignment]
-                    prop_def_orm_maybe.is_relevant = (
-                        prop.is_relevant
-                    )  # type: ignore[assignment]
+                    )
+                    prop_def_orm_maybe.is_relevant = prop.is_relevant  # type: ignore[assignment]
                     prop_def_orm_maybe.last_modified = (
-                        datetime.now(timezone.utc)
-                    )  # type: ignore[assignment]
+                        datetime.now(timezone.utc)  # type: ignore[assignment]
+                    )
                     prop_def_orm_maybe.version = (
-                        prop_def_orm_maybe.version + 1
-                    )  # type: ignore[assignment]
+                        prop_def_orm_maybe.version + 1  # type: ignore[assignment]
+                    )
 
             session.commit()
             return cast(PropertyDefinition, map_orm_to_domain(orm_entity))
@@ -1383,9 +1375,7 @@ class SQLiteOntologyRepository:
                 # Update: only update the timestamp field, everything else is immutable
                 orm_rel.source_id = rel.source_id  # type: ignore[assignment]
                 orm_rel.target_id = rel.target_id  # type: ignore[assignment]
-                orm_rel.property_definition_id = (
-                    rel.property_definition_id
-                )  # type: ignore[assignment]
+                orm_rel.property_definition_id = rel.property_definition_id  # type: ignore[assignment]
 
             session.commit()
             return map_relationship_orm_to_domain(orm_rel)
