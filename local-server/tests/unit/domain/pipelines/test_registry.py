@@ -26,7 +26,7 @@ class TestPipelineTypeRegistry:
     def test_list_all_types(self):
         """Test listing all pipeline types."""
         types = PipelineTypeRegistry.list_types()
-        assert len(types) == 5
+        assert len(types) == 6
         type_names = [t.pipeline_type for t in types]
         assert PipelineType.INDIVIDUAL_EXTRACTION in type_names
         assert PipelineType.SCHEMA_EXTRACTION in type_names

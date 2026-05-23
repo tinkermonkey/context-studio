@@ -2,7 +2,7 @@
 Pipeline registries for type, implementation, and configuration discovery.
 
 Three registries enable runtime enumeration and instantiation:
-1. PipelineTypeRegistry — enumerates the five pipeline types with input/output contracts
+1. PipelineTypeRegistry — enumerates the six pipeline types with input/output contracts
 2. PipelineImplementationRegistry — maps (type, impl_id) → implementation class
 3. PipelineConfigurationRegistry — maps (type, impl_id, config_ref) → configuration object
    (versioned; once referenced by a run, the version is immutable)
@@ -38,7 +38,7 @@ class PipelineTypeRegistry:
     """
     Registry of all pipeline types.
 
-    Enumerates the five pipeline types with their input/output contracts.
+    Enumerates the six pipeline types with their input/output contracts.
     Discoverable at runtime by UX listing endpoints and script harness.
     """
 
