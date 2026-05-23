@@ -1,0 +1,37 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="_shared.css"></head>
+<body><div class="card shell" style="padding:0;background:#0F1729;">
+
+<style>
+.pulse{position:relative;display:inline-block;width:8px;height:8px;border-radius:50%;}
+.pulse.sm{width:6px;height:6px;}
+.pulse::before{content:'';position:absolute;inset:0;border-radius:50%;background:inherit;opacity:0.55;animation:pl 1.6s ease-out infinite;}
+@keyframes pl{0%{transform:scale(.6);opacity:.55}100%{transform:scale(1.6);opacity:0}}
+</style>
+
+<div style="height:26px;background:#13203A;border-top:1px solid #1E2A44;display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:#6E7A87;font-size:11.5px;font-family:Inter;">
+  <div style="display:flex;align-items:center;gap:0;">
+    <div style="display:inline-flex;align-items:center;gap:6px;"><span class="pulse" style="background:#22C55E;"></span><span>graph daemon</span><span style="font-family:'JetBrains Mono',monospace;color:#A6B1BD;">:7474</span></div>
+    <div style="width:1px;height:12px;background:#2A3A5C;margin:0 14px;"></div>
+    <div style="display:inline-flex;align-items:center;gap:6px;">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#6E7A87" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 9 6 21 6"/><path d="M3 12 9 18 21 18"/><circle cx="3" cy="12" r="2"/></svg>
+      <span style="font-family:'JetBrains Mono',monospace;color:#A6B1BD;">20 cls · 267 ind · 9 rel</span>
+    </div>
+    <div style="width:1px;height:12px;background:#2A3A5C;margin:0 14px;"></div>
+    <div style="display:inline-flex;align-items:center;gap:6px;"><span class="pulse sm" style="background:#F59E0B;"></span><span style="font-family:'JetBrains Mono',monospace;color:#A6B1BD;">pubmed_genes</span><span>·</span><span style="font-family:'JetBrains Mono',monospace;color:#A6B1BD;">38%</span></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:0;">
+    <div style="display:inline-flex;align-items:center;gap:6px;"><span>cpu</span><span style="font-family:'JetBrains Mono',monospace;color:#A6B1BD;">14%</span></div>
+    <div style="width:1px;height:12px;background:#2A3A5C;margin:0 14px;"></div>
+    <div style="display:inline-flex;align-items:center;gap:6px;"><span>mem</span><span style="font-family:'JetBrains Mono',monospace;color:#A6B1BD;">423 MB</span></div>
+    <div style="width:1px;height:12px;background:#2A3A5C;margin:0 14px;"></div>
+    <div style="display:inline-flex;align-items:center;gap:6px;">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+      <span>synced 2m ago</span>
+    </div>
+  </div>
+</div>
+
+<div style="padding:14px 16px 18px;color:#6E7A87;font-size:11.5px;">26px tall · shell-bg-2 fill · 12×1 dividers between items · pulse for live signals. Each group ≤ 4 items.</div>
+
+</div></body></html>

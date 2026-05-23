@@ -1,0 +1,68 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="_shared.css"></head>
+<body><div class="card" style="padding:0;background:#0B1426;">
+
+<div style="position:relative;height:340px;background:#1B2949;background-image:radial-gradient(circle at top left, rgba(251,191,36,0.05), transparent 50%), radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px);background-size:auto, 24px 24px;overflow:hidden;">
+
+  <!-- toolbar (top-left) -->
+  <div style="position:absolute;top:12px;left:12px;display:flex;gap:2px;padding:4px;background:rgba(11,20,38,0.65);border:1px solid #243763;border-radius:6px;backdrop-filter:blur(6px);">
+    <button style="width:26px;height:26px;background:rgba(251,191,36,0.12);color:#FBBF24;border:0;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="9" r="2"/><circle cx="19" cy="9" r="2"/><circle cx="12" cy="19" r="2"/><path d="M7 9h10"/><path d="M6 11l5 6"/><path d="M18 11l-5 6"/></svg>
+    </button>
+    <button style="width:26px;height:26px;background:transparent;color:#A6B1BD;border:0;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+    </button>
+    <button style="width:26px;height:26px;background:transparent;color:#A6B1BD;border:0;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg>
+    </button>
+    <button style="width:26px;height:26px;background:transparent;color:#A6B1BD;border:0;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+    </button>
+  </div>
+
+  <!-- legend (top-right) -->
+  <div style="position:absolute;top:14px;right:14px;display:flex;flex-direction:column;gap:4px;padding:8px 10px;background:rgba(11,20,38,0.65);border:1px solid #243763;border-radius:4px;backdrop-filter:blur(6px);">
+    <div style="display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#A6B1BD;"><span style="width:8px;height:2px;background:#10B981;border-radius:1px;"></span>life</div>
+    <div style="display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#A6B1BD;"><span style="width:8px;height:2px;background:#F59E0B;border-radius:1px;"></span>climate</div>
+    <div style="display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#A6B1BD;"><span style="width:8px;height:2px;background:#818CF8;border-radius:1px;"></span>software</div>
+  </div>
+
+  <!-- nodes + edges -->
+  <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;" viewBox="0 0 660 340">
+    <defs>
+      <marker id="ah" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#475569"/></marker>
+    </defs>
+    <line x1="200" y1="105" x2="200" y2="190" stroke="#475569" stroke-width="1.2" opacity="0.7" marker-end="url(#ah)"/>
+    <line x1="280" y1="118" x2="370" y2="215" stroke="#475569" stroke-width="1.2" opacity="0.7" stroke-dasharray="3 3" marker-end="url(#ah)"/>
+  </svg>
+
+  <!-- node 1, selected -->
+  <div style="position:absolute;top:90px;left:80px;width:220px;height:36px;border:1px solid #FBBF24;background:rgba(251,191,36,0.12);border-radius:6px;display:flex;align-items:center;gap:10px;padding:0 12px;">
+    <span style="width:3px;height:20px;background:#10B981;border-radius:1px;"></span>
+    <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;color:#FBBF24;">Cell</span>
+    <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#A6B1BD;margin-left:auto;">cls_cell</span>
+  </div>
+  <!-- node 2 -->
+  <div style="position:absolute;top:190px;left:80px;width:220px;height:36px;border:1px solid #243763;background:#1B2949;border-radius:6px;display:flex;align-items:center;gap:10px;padding:0 12px;">
+    <span style="width:3px;height:20px;background:#10B981;border-radius:1px;"></span>
+    <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;color:#E6EDF3;">Organelle</span>
+  </div>
+  <!-- node 3 -->
+  <div style="position:absolute;top:215px;left:340px;width:220px;height:36px;border:1px solid #243763;background:#1B2949;border-radius:6px;display:flex;align-items:center;gap:10px;padding:0 12px;">
+    <span style="width:3px;height:20px;background:#818CF8;border-radius:1px;"></span>
+    <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;color:#E6EDF3;">Annotation</span>
+  </div>
+
+  <!-- minimap -->
+  <div style="position:absolute;bottom:14px;right:14px;width:160px;height:90px;background:rgba(11,20,38,0.75);border:1px solid #243763;border-radius:4px;backdrop-filter:blur(6px);padding:6px;">
+    <div style="position:relative;width:100%;height:100%;">
+      <div style="position:absolute;top:14px;left:12px;width:36px;height:6px;background:#FBBF24;border-radius:1px;"></div>
+      <div style="position:absolute;top:34px;left:12px;width:36px;height:6px;background:#475569;border-radius:1px;"></div>
+      <div style="position:absolute;top:46px;left:64px;width:36px;height:6px;background:#475569;border-radius:1px;"></div>
+      <div style="position:absolute;top:0;right:0;width:50px;height:38px;border:1px solid rgba(251,191,36,0.5);border-radius:2px;"></div>
+    </div>
+  </div>
+
+</div>
+
+</div></body></html>
