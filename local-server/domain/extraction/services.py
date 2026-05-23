@@ -17,6 +17,7 @@ from datetime import datetime, timezone
 from types import MappingProxyType
 from uuid import uuid4
 
+from domain.interchange.services import set_import_run_context
 from domain.ontology.ports import EmbeddingService, OntologyRepository
 from domain.pipeline.ports import LLMProvider
 from domain.ports import EventPublisher
@@ -381,6 +382,9 @@ class ExtractionService:
         # Save initial run record
         self._extraction_run_repo.save_extraction_run(run)
 
+        # Set correlation context so change events are linked to this extraction run
+        set_import_run_context(run_id)
+
         start_time = time.time()
         triples_extracted = 0
         triples_committed = 0
@@ -419,6 +423,10 @@ class ExtractionService:
             extracted_triples = []
             run_status = ExtractionRunStatus.FAILED
             warnings.append(f"Extraction failed: {str(exc)}")
+
+        finally:
+            # Always clear the correlation context after extraction
+            set_import_run_context(None)
 
         # Update run record
         duration_ms = int((time.time() - start_time) * 1000)

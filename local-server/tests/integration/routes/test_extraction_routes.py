@@ -894,12 +894,6 @@ class TestTripleExtraction:
         run = runs[-1]  # Most recent run
         assert run.status.value == "completed"
 
-    @pytest.mark.skip(
-        reason=(
-            "batch_run_id correlation and change_events integration not yet implemented"
-            " — see #695"
-        )
-    )
     def test_extract_triples_batch_run_id_in_change_events(
         self, client, ontology_with_individuals, extraction_repository
     ):
