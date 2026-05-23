@@ -58,12 +58,8 @@ class MockLLMProvider:
             and "For these candidate classes" in user_prompt
         ):
             stage = "connection_proposal"
-        elif (
-            "Extract" in system_prompt
-            or (
-                "extract" in system_prompt.lower()
-                and "candidate" in system_prompt.lower()
-            )
+        elif "Extract" in system_prompt or (
+            "extract" in system_prompt.lower() and "candidate" in system_prompt.lower()
         ):
             stage = "candidate_identification"
         else:
@@ -75,7 +71,8 @@ class MockLLMProvider:
             if stage == "candidate_identification":
                 content = "not valid json at all!!!"
             elif stage == "connection_proposal":
-                content = '["this", "is", "a", "list"]'  # Valid JSON but wrong shape (list instead of dict)
+                # Valid JSON but wrong shape (list instead of dict)
+                content = '["this", "is", "a", "list"]'
             elif stage == "disambiguation":
                 content = "invalid json response"  # Truly invalid JSON
             else:
@@ -169,9 +166,7 @@ async def test_schema_extraction_microservices_fixture():
             assert isinstance(
                 definition, str
             ), f"proposed_definition must be a string, got {type(definition)}"
-            assert len(definition) > 0, (
-                "proposed_definition must not be empty for classes"
-            )
+            assert len(definition) > 0, "proposed_definition must not be empty for classes"
             # Verify it's not a JSON object (should be human-readable text)
             assert not definition.strip().startswith(
                 "{"
@@ -273,16 +268,14 @@ async def test_schema_extraction_disambiguation():
 
     # Look for disambiguated terms (marked with rationale)
     disambiguated_candidates = [
-        c
-        for c in result_state.result["candidates"]
-        if c.get("disambiguation_rationale")
+        c for c in result_state.result["candidates"] if c.get("disambiguation_rationale")
     ]
 
     # Verify the acceptance criterion: multi-sense disambiguation works
     # MockLLMProvider is deterministic and returns disambiguation data for "Service"
-    assert len(disambiguated_candidates) > 0, (
-        "Should have disambiguated candidates for multi-sense terms"
-    )
+    assert (
+        len(disambiguated_candidates) > 0
+    ), "Should have disambiguated candidates for multi-sense terms"
 
     for candidate in disambiguated_candidates:
         assert "disambiguation_rationale" in candidate
@@ -503,7 +496,9 @@ async def test_parse_warnings_connection_proposal_invalid_json():
     assert result_state.current_status == "completed"
 
     # Verify parse_warnings contains connection_proposal failure
-    connection_warnings = [w for w in result_state.parse_warnings if w["stage"] == "connection_proposal"]
+    connection_warnings = [
+        w for w in result_state.parse_warnings if w["stage"] == "connection_proposal"
+    ]
     assert len(connection_warnings) > 0
     warning = connection_warnings[0]
     assert "JSON parse error" in warning["error"]
