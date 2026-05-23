@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 from types import MappingProxyType
 from uuid import uuid4
 
-from domain.interchange.services import set_import_run_context
+from domain.interchange.services import set_batch_run_context
 from domain.ontology.ports import EmbeddingService, OntologyRepository
 from domain.pipeline.ports import LLMProvider
 from domain.ports import EventPublisher
@@ -383,7 +383,7 @@ class ExtractionService:
         self._extraction_run_repo.save_extraction_run(run)
 
         # Set correlation context so change events are linked to this extraction run
-        set_import_run_context(run_id)
+        set_batch_run_context(run_id)
 
         start_time = time.time()
         triples_extracted = 0
@@ -426,7 +426,7 @@ class ExtractionService:
 
         finally:
             # Always clear the correlation context after extraction
-            set_import_run_context(None)
+            set_batch_run_context(None)
 
         # Update run record
         duration_ms = int((time.time() - start_time) * 1000)

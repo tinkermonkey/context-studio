@@ -226,5 +226,5 @@ class SQLiteExtractionRunRepository:
                 int(orm_run.triples_committed) if orm_run.triples_committed is not None else 0
             ),
             status=status,
-            batch_run_id=str(orm_run.id) if orm_run.id else None,
+            batch_run_id=None,
         )
