@@ -6,6 +6,7 @@ change events using Parquet files with date partitioning.
 """
 
 import json
+import os
 import shutil
 import tempfile
 from datetime import datetime, timedelta, timezone
