@@ -58,6 +58,9 @@ class MockLLMProvider:
             and "For these candidate classes" in user_prompt
         ):
             stage = "connection_proposal"
+        elif "Return a JSON object mapping each label" in system_prompt:
+            # Stage 4: Batched definition synthesis
+            stage = "definition_synthesis"
         elif "Extract" in system_prompt or (
             "extract" in system_prompt.lower() and "candidate" in system_prompt.lower()
         ):
@@ -89,7 +92,7 @@ class MockLLMProvider:
                     "}"
                 )
             elif stage == "connection_proposal":
-                # Stage 5: Connection proposal - more specific to avoid matching definition context
+                # Stage 5: Connection proposal
                 content = (
                     '{"relationships": '
                     '[{"subject": "Microservice", "predicate": "subclass_of", '
@@ -103,8 +106,25 @@ class MockLLMProvider:
                 # Stage 2: Candidate identification
                 content = '["Microservice", "API Gateway", "Service", "Message Queue"]'
             else:
-                # Stage 4: Definition synthesis (default - all other stages get definition string)
-                content = "A definition of the requested term in the context."
+                # Stage 4: Batched definition synthesis — return JSON dict of label → definition
+                content = (
+                    '{"Microservice": "A small, independent service that handles a specific business capability.", '
+                    '"API Gateway": "A server that acts as an intermediary between clients and backend services.", '
+                    '"Service": "An independent unit of functionality exposed over a network interface.", '
+                    '"Message Queue": "A mechanism for asynchronous inter-service communication that decouples producers and consumers.", '
+                    '"Database": "A structured collection of data organized for efficient retrieval and storage.", '
+                    '"Table": "A database structure that stores data in rows and columns with a defined schema.", '
+                    '"Primary Key": "A column or set of columns that uniquely identifies each row in a table.", '
+                    '"Foreign Key": "A column that references the primary key of another table to enforce referential integrity.", '
+                    '"Index": "A data structure that improves the speed of data retrieval operations on a table.", '
+                    '"Query": "A request to retrieve or manipulate data within a database.", '
+                    '"Transaction": "A sequence of database operations executed as a single atomic unit.", '
+                    '"Semantic Web": "A framework for representing data with explicit meaning to enable machine understanding.", '
+                    '"Ontology": "A formal representation of knowledge within a domain, defining classes and relationships.", '
+                    '"RDF": "Resource Description Framework, a standard model for data interchange on the web.", '
+                    '"Resource": "An entity or concept identified by a URI within the Semantic Web.", '
+                    '"Property": "A characteristic or relationship attribute that describes a resource."}'
+                )
 
         return LLMResponse(
             content=content,
@@ -587,18 +607,19 @@ async def test_parse_warnings_structure():
 
     result_state = await orchestrator.execute(state)
 
-    # Verify warning structure
+    # Verify warning structure — stage, error, fallback_action are mandatory;
+    # response_preview is only present on LLM parse-failure warnings
     if result_state.parse_warnings:
         for warning in result_state.parse_warnings:
             assert isinstance(warning, dict)
             assert "stage" in warning
             assert "error" in warning
-            assert "response_preview" in warning
             assert "fallback_action" in warning
             assert isinstance(warning["stage"], str)
             assert isinstance(warning["error"], str)
-            assert isinstance(warning["response_preview"], str)
             assert isinstance(warning["fallback_action"], str)
+            if "response_preview" in warning:
+                assert isinstance(warning["response_preview"], str)
 
 
 @pytest.mark.asyncio
@@ -641,6 +662,163 @@ async def test_schema_extraction_whitespace_documents_raises():
 
     with pytest.raises(PipelineInputError, match="documents is required"):
         await orchestrator.execute(state)
+
+
+@pytest.mark.asyncio
+async def test_parse_warnings_definition_synthesis_invalid_json():
+    """All candidates fall back when definition_synthesis returns invalid JSON; warning recorded."""
+    llm_provider = MockLLMProvider(fail_stage="definition_synthesis")
+    orchestrator = SchemaExtractionOrchestrator(llm_provider)
+
+    fixtures = get_fixtures()
+    source_text = fixtures["microservices"]
+
+    state = SchemaExtractionState(
+        run_id="run-parse-fail-definitions",
+        pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+        input_data={
+            "documents": [source_text],
+            "model": "google/gemini-3-flash-preview",
+        },
+    )
+
+    result_state = await orchestrator.execute(state)
+
+    assert result_state.current_status == "completed"
+
+    # Warning must be recorded for the failed parse
+    defn_warnings = [w for w in result_state.parse_warnings if w["stage"] == "definition_synthesis"]
+    assert len(defn_warnings) > 0
+    assert "JSON parse error" in defn_warnings[0]["error"]
+    assert defn_warnings[0]["fallback_action"] == "generic definition per candidate"
+
+    # Every candidate must still have a non-empty definition (the fallback template)
+    for candidate in result_state.result["candidates"]:
+        if candidate["kind"] == "class":
+            assert isinstance(candidate["proposed_definition"], str)
+            assert len(candidate["proposed_definition"]) > 0
+
+
+@pytest.mark.asyncio
+async def test_parse_warnings_definition_synthesis_missing_keys():
+    """Warning is recorded for labels absent from the LLM definition dict."""
+
+    class PartialDefinitionLLM(MockLLMProvider):
+        """Returns definitions for only the first candidate label."""
+
+        def complete(self, system_prompt, user_prompt, model, **kwargs):
+            from domain.pipeline.ports import LLMResponse
+
+            self.call_count += 1
+            if "Return a JSON object mapping each label" in system_prompt:
+                # Only define "Microservice"; all other labels will be missing
+                content = '{"Microservice": "A small, independent service."}'
+            elif "disambiguation" in system_prompt.lower():
+                content = '{"ambiguous_terms": []}'
+            elif "relationships and properties" in user_prompt.lower():
+                content = '{"relationships": [], "properties": []}'
+            else:
+                content = '["Microservice", "API Gateway", "Service"]'
+            return LLMResponse(
+                content=content, tokens_in=5, tokens_out=10,
+                duration_ms=5, finish_reason="stop", model=model,
+            )
+
+        async def complete_async(self, **kwargs):
+            return self.complete(**kwargs)
+
+    llm_provider = PartialDefinitionLLM()
+    orchestrator = SchemaExtractionOrchestrator(llm_provider)
+
+    fixtures = get_fixtures()
+    state = SchemaExtractionState(
+        run_id="run-partial-definitions",
+        pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+        input_data={
+            "documents": [fixtures["microservices"]],
+            "model": "google/gemini-3-flash-preview",
+        },
+    )
+
+    result_state = await orchestrator.execute(state)
+
+    assert result_state.current_status == "completed"
+
+    # A warning must be recorded listing the missing labels
+    defn_warnings = [w for w in result_state.parse_warnings if w["stage"] == "definition_synthesis"]
+    assert len(defn_warnings) > 0
+    warning = defn_warnings[0]
+    assert "missing" in warning["error"].lower()
+    assert "missing_labels" in warning
+    assert len(warning["missing_labels"]) > 0
+
+    # The missing labels get generic fallback definitions, not empty strings
+    class_candidates = [c for c in result_state.result["candidates"] if c["kind"] == "class"]
+    for candidate in class_candidates:
+        assert len(candidate["proposed_definition"]) > 0
+
+
+@pytest.mark.asyncio
+async def test_connection_proposal_skips_incomplete_relationships():
+    """Relationships missing subject or object are skipped, not added with empty refs."""
+
+    class IncompleteRelLLM(MockLLMProvider):
+        """Returns one valid and one incomplete relationship."""
+
+        def complete(self, system_prompt, user_prompt, model, **kwargs):
+            from domain.pipeline.ports import LLMResponse
+
+            self.call_count += 1
+            if "Return a JSON object mapping each label" in system_prompt:
+                content = '{"Microservice": "A small service.", "Service": "A service unit."}'
+            elif "disambiguation" in system_prompt.lower():
+                content = '{"ambiguous_terms": []}'
+            elif "relationships and properties" in user_prompt.lower():
+                # One valid relationship, one missing subject, one missing object
+                content = (
+                    '{"relationships": ['
+                    '{"subject": "Microservice", "predicate": "subclass_of", "object": "Service", "confidence": 0.9},'
+                    '{"predicate": "related_to", "object": "Service"},'
+                    '{"subject": "Microservice", "predicate": "related_to"}'
+                    '], "properties": []}'
+                )
+            else:
+                content = '["Microservice", "Service"]'
+            return LLMResponse(
+                content=content, tokens_in=5, tokens_out=10,
+                duration_ms=5, finish_reason="stop", model=model,
+            )
+
+        async def complete_async(self, **kwargs):
+            return self.complete(**kwargs)
+
+    llm_provider = IncompleteRelLLM()
+    orchestrator = SchemaExtractionOrchestrator(llm_provider)
+
+    fixtures = get_fixtures()
+    state = SchemaExtractionState(
+        run_id="run-incomplete-rels",
+        pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+        input_data={
+            "documents": [fixtures["microservices"]],
+            "model": "google/gemini-3-flash-preview",
+        },
+    )
+
+    result_state = await orchestrator.execute(state)
+
+    assert result_state.current_status == "completed"
+
+    connections = result_state.result["connections"]
+    # Only the one complete relationship should be present
+    assert len(connections) == 1
+    assert connections[0]["subject_ref"] == "Microservice"
+    assert connections[0]["object_ref"] == "Service"
+
+    # No connection should have an empty subject_ref or object_ref
+    for conn in connections:
+        assert conn["subject_ref"] != ""
+        assert conn["object_ref"] != ""
 
 
 if __name__ == "__main__":

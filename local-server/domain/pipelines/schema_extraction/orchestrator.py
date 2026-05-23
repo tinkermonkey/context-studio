@@ -6,12 +6,12 @@ with provenance, confidence scores, and disambiguation rationale.
 
 Execution flow (7 stages):
 1. Text ingestion — normalize, chunk if needed
-2. Candidate concept identification — extract noun phrases/technical terms
+2. Candidate concept identification — extract noun phrases/technical terms (per chunk, merged)
 3. Classification — match against existing schema or mark as new
-4. Definition synthesis — generate/refine definitions
+4. Definition synthesis — generate definitions in one batched LLM call
 5. Connection proposal — suggest relationships and properties
 6. Disambiguation — handle multi-sense terms with separate candidates
-7. Confidence scoring — assign confidence in [0, 1]
+7. Confidence scoring — clamp confidence to [0, 1]
 """
 
 from __future__ import annotations
@@ -25,6 +25,8 @@ from domain.pipeline.exceptions import PipelineExecutionError, PipelineInputErro
 from domain.pipeline.ports import LLMProvider
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
+
+_MAX_CHUNK_CHARS = 8000
 
 
 @dataclass
@@ -117,9 +119,16 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
     Transitions are deterministic (no branching on LLM output).
     """
 
-    def __init__(self, llm_provider: LLMProvider) -> None:
-        """Initialize orchestrator with LLM provider."""
+    def __init__(self, llm_provider: LLMProvider, ontology_repo=None) -> None:
+        """
+        Initialize orchestrator with LLM provider and optional ontology repo.
+
+        Args:
+            llm_provider: LLM provider for completions
+            ontology_repo: Optional OntologyRepository for existing-schema classification
+        """
         super().__init__(llm_provider)
+        self._ontology_repo = ontology_repo
 
     def build_graph(self) -> Any:
         """
@@ -201,17 +210,77 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
 
         return schema_state
 
+    # ------------------------------------------------------------------
+    # Stage helpers
+    # ------------------------------------------------------------------
+
+    def _chunk_text(self, text: str, max_chars: int = _MAX_CHUNK_CHARS) -> list[str]:
+        """
+        Split text into chunks of at most max_chars on sentence boundaries.
+
+        Args:
+            text: Text to split
+            max_chars: Maximum characters per chunk
+
+        Returns:
+            List of text chunks; always at least one element
+        """
+        if len(text) <= max_chars:
+            return [text]
+
+        sentences = re.split(r"(?<=[.!?])\s+", text)
+        chunks: list[str] = []
+        current: list[str] = []
+        current_len = 0
+
+        for sentence in sentences:
+            if current_len + len(sentence) > max_chars and current:
+                chunks.append(" ".join(current))
+                current = [sentence]
+                current_len = len(sentence)
+            else:
+                current.append(sentence)
+                current_len += len(sentence)
+
+        if current:
+            chunks.append(" ".join(current))
+
+        return chunks if chunks else [text]
+
+    def _compute_confidence(self, label: str, source_text: str) -> float:
+        """
+        Compute evidence-based confidence for a candidate label.
+
+        Factors: provenance presence (0.4) + term frequency capped at 0.4 + base 0.2.
+
+        Args:
+            label: Candidate label to score
+            source_text: Original source text
+
+        Returns:
+            Confidence in [0.2, 1.0]
+        """
+        provenance_found = bool(self._find_provenance(label, source_text))
+        term_freq = len(re.findall(re.escape(label), source_text, re.IGNORECASE))
+        return min(
+            1.0,
+            0.2
+            + (0.4 if provenance_found else 0.0)
+            + min(0.4, term_freq * 0.1),
+        )
+
+    # ------------------------------------------------------------------
+    # Stages
+    # ------------------------------------------------------------------
+
     async def _stage_text_ingestion(self, state: SchemaExtractionState) -> SchemaExtractionState:
         """
         Stage 1: Normalize text and chunk if needed.
 
-        Removes extra whitespace, preserves offsets.
+        Removes extra whitespace; splits into max-8000-char chunks on sentence boundaries.
         """
-        # Normalize whitespace
         normalized = re.sub(r"\s+", " ", state.source_text).strip()
-
-        # For MVP, treat entire text as single chunk
-        chunks = [normalized]
+        chunks = self._chunk_text(normalized)
 
         return replace(
             state,
@@ -224,66 +293,97 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         self, state: SchemaExtractionState
     ) -> SchemaExtractionState:
         """
-        Stage 2: Identify candidate concepts (noun phrases, technical terms).
+        Stage 2: Identify candidate concepts per chunk; merge and deduplicate results.
 
-        Uses LLM to extract candidate class labels from text.
+        Calls LLM once per chunk; deduplicates case-insensitively across chunks.
+        Falls back to regex extraction on JSON parse failure.
         """
-        if not state.normalized_text:
+        if not state.text_chunks:
             return replace(
                 state,
                 steps_completed=state.steps_completed + ["candidate_identification"],
             )
 
-        # Ask LLM to identify candidate concepts
-        system_prompt = """You are an expert in ontology design and schema extraction.
-Extract candidate classes and key terms from the text. Return a JSON array of candidate labels.
-Be precise and extract technical/domain terms, not generic words."""
-
-        user_prompt = f"""Extract candidate classes and technical terms from this text:
-
-{state.normalized_text}
-
-Return a JSON array of strings (labels only). Example: ["Microservice", "Message Queue",
-"API Gateway"]"""
-
-        response = await self._call_llm(
-            system_prompt=system_prompt,
-            user_prompt=user_prompt,
-            model=state.input_data.get("model", "google/gemini-3-flash-preview"),
-            temperature=0.0,
+        system_prompt = (
+            "You are an expert in ontology design and schema extraction. "
+            "Extract candidate classes and key terms from the text. Return a JSON array of candidate labels. "
+            "Be precise and extract technical/domain terms, not generic words."
         )
 
-        # Parse LLM response
-        candidates = []
-        try:
-            parsed = json.loads(response.content)
-            if isinstance(parsed, list):
-                candidates = [str(c).strip() for c in parsed if c]
-        except json.JSONDecodeError as e:
-            # Record warning and fall back to regex extraction
-            warning = {
-                "stage": "candidate_identification",
-                "error": f"JSON parse error: {str(e)}",
-                "response_preview": response.content[:200],
-                "fallback_action": "regex extraction",
-            }
-            state = replace(state, parse_warnings=state.parse_warnings + [warning])
-            # Fallback: extract all-caps words as candidates
-            candidates = re.findall(r"\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b", state.normalized_text)
+        seen: set[str] = set()
+        all_candidates: list[str] = []
+
+        for chunk in state.text_chunks:
+            user_prompt = (
+                f"Extract candidate classes and technical terms from this text:\n\n{chunk}\n\n"
+                'Return a JSON array of strings (labels only). Example: ["Microservice", "Message Queue", "API Gateway"]'
+            )
+
+            response = await self._call_llm(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                model=state.input_data.get("model", "google/gemini-3-flash-preview"),
+                temperature=0.0,
+            )
+
+            chunk_candidates: list[str] = []
+            try:
+                parsed = json.loads(response.content)
+                if isinstance(parsed, list):
+                    chunk_candidates = [s for c in parsed if (s := str(c).strip())]
+            except json.JSONDecodeError as e:
+                warning = {
+                    "stage": "candidate_identification",
+                    "error": f"JSON parse error: {str(e)}",
+                    "response_preview": response.content[:200],
+                    "fallback_action": "regex extraction",
+                }
+                state = replace(state, parse_warnings=state.parse_warnings + [warning])
+                chunk_candidates = re.findall(
+                    r"\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b", chunk
+                )
+
+            # Merge with global dedup (case-insensitive, keep first occurrence)
+            for candidate in chunk_candidates:
+                key = candidate.lower()
+                if key not in seen:
+                    seen.add(key)
+                    all_candidates.append(candidate)
 
         return replace(
             state,
-            candidate_concepts=candidates,
+            candidate_concepts=all_candidates,
             steps_completed=state.steps_completed + ["candidate_identification"],
         )
 
     async def _stage_classification(self, state: SchemaExtractionState) -> SchemaExtractionState:
         """
-        Stage 3: Classify each candidate as new or existing in target schema.
+        Stage 3: Classify each candidate as existing (True) or new (False).
 
-        For MVP, mark all as new (existing_schema integration is out of scope).
+        If ontology_id is provided and an ontology_repo is wired in, fetches existing
+        class labels and marks candidates that already exist. Otherwise marks all as new.
         """
-        classified = {concept: False for concept in state.candidate_concepts}
+        existing_labels: set[str] = set()
+
+        ontology_id = state.input_data.get("ontology_id")
+        if ontology_id and self._ontology_repo is not None:
+            try:
+                classes = self._ontology_repo.list_classes(limit=None)
+                existing_labels = {cls.label.lower() for cls in classes}
+            except Exception as e:
+                state = replace(
+                    state,
+                    parse_warnings=state.parse_warnings + [{
+                        "stage": "classification",
+                        "error": f"ontology lookup failed: {e}",
+                        "fallback_action": "all candidates marked as new",
+                    }],
+                )
+
+        classified = {
+            concept: concept.lower() in existing_labels
+            for concept in state.candidate_concepts
+        }
 
         return replace(
             state,
@@ -295,44 +395,79 @@ Return a JSON array of strings (labels only). Example: ["Microservice", "Message
         self, state: SchemaExtractionState
     ) -> SchemaExtractionState:
         """
-        Stage 4: Generate definitions for candidate classes.
+        Stage 4: Generate definitions for all candidates in a single batched LLM call.
 
-        Uses LLM to create precise, concise definitions.
+        Confidence is evidence-based: provenance presence + term frequency rather than
+        a hardcoded constant.
         """
         if not state.candidate_concepts:
             return replace(state, steps_completed=state.steps_completed + ["definition_synthesis"])
 
-        candidates = []
+        labels = state.candidate_concepts
+        label_list = ", ".join(f'"{l}"' for l in labels)
+        example = ", ".join(f'"{l}": "definition..."' for l in labels[:2])
 
-        for concept in state.candidate_concepts:
-            system_prompt = """You are an expert in ontology definition writing.
-Create a precise, concise definition (1-2 sentences) for a class in a technical ontology."""
+        system_prompt = (
+            "You are an expert in ontology definition writing. "
+            "Return a JSON object mapping each label to its definition (1-2 sentences). "
+            "Only output the JSON object, nothing else."
+        )
+        user_prompt = (
+            f"Define these classes for a technical ontology.\n\n"
+            f"Labels: {', '.join(labels)}\n\n"
+            f"Context: {state.normalized_text[:3000]}\n\n"
+            f"Return JSON: {{{example}, ...}}"
+        )
 
-            user_prompt = f"""Define this class for a technical ontology:
+        response = await self._call_llm(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            model=state.input_data.get("model", "google/gemini-3-flash-preview"),
+            temperature=0.0,
+            max_tokens=1000,
+        )
 
-Class: {concept}
-Context: {state.normalized_text}
+        definitions_dict: dict[str, str] = {}
+        try:
+            parsed = json.loads(response.content)
+            if isinstance(parsed, dict):
+                definitions_dict = {k: str(v) for k, v in parsed.items()}
+            else:
+                raise ValueError(f"Expected dict, got {type(parsed).__name__}")
+        except (json.JSONDecodeError, ValueError) as e:
+            warning = {
+                "stage": "definition_synthesis",
+                "error": f"JSON parse error: {str(e)}",
+                "response_preview": response.content[:200],
+                "fallback_action": "generic definition per candidate",
+            }
+            state = replace(state, parse_warnings=state.parse_warnings + [warning])
 
-Provide a definition (1-2 sentences) suitable for an ontology."""
-
-            response = await self._call_llm(
-                system_prompt=system_prompt,
-                user_prompt=user_prompt,
-                model=state.input_data.get("model", "google/gemini-3-flash-preview"),
-                temperature=0.0,
-                max_tokens=200,
+        missing_keys = [c for c in labels if c not in definitions_dict]
+        if missing_keys:
+            state = replace(
+                state,
+                parse_warnings=state.parse_warnings + [{
+                    "stage": "definition_synthesis",
+                    "error": f"LLM response missing {len(missing_keys)} label(s)",
+                    "missing_labels": missing_keys,
+                    "fallback_action": "generic definition per missing candidate",
+                }],
             )
 
-            # Find provenance in original text
+        candidates: list[CandidateClass] = []
+        for concept in labels:
+            definition = definitions_dict.get(concept) or f"{concept}: a domain concept."
             provenance = self._find_provenance(concept, state.source_text)
-
-            candidate = CandidateClass(
-                label=concept,
-                proposed_definition=response.content.strip(),
-                confidence=0.8,
-                provenance=provenance,
+            confidence = self._compute_confidence(concept, state.source_text)
+            candidates.append(
+                CandidateClass(
+                    label=concept,
+                    proposed_definition=definition,
+                    confidence=confidence,
+                    provenance=provenance,
+                )
             )
-            candidates.append(candidate)
 
         return replace(
             state,
@@ -346,37 +481,38 @@ Provide a definition (1-2 sentences) suitable for an ontology."""
         """
         Stage 5: Propose connections between candidates.
 
-        Identifies subclass-of relationships and property definitions.
+        Connection provenance is assembled from subject and object provenance separately,
+        not from the predicate string.
         """
         if not state.candidate_classes:
             return replace(state, steps_completed=state.steps_completed + ["connection_proposal"])
 
-        connections = []
-        properties = []
+        connections: list[CandidateConnection] = []
+        properties: list[CandidatePropertyDefinition] = []
 
-        # Extract candidate properties from text
-        system_prompt = """You are an expert in ontology design.
-Identify relationships and properties between the given classes.
-Return a JSON object with "relationships" and "properties" arrays."""
+        system_prompt = (
+            "You are an expert in ontology design. "
+            "Identify relationships and properties between the given classes. "
+            'Return a JSON object with "relationships" and "properties" arrays.'
+        )
 
         labels = [c.label for c in state.candidate_classes]
-        user_prompt = f"""For these candidate classes, identify relationships and properties:
-
-Classes: {', '.join(labels)}
-
-Context: {state.normalized_text}
-
-Return JSON:
-{{
-  "relationships": [
-    {{"subject": "Class1", "predicate": "subclass_of", "object": "Class2", "confidence": 0.8}},
-    ...
-  ],
-  "properties": [
-    {{"name": "Property1", "domain": "Class1", "range": "Class2", "confidence": 0.7}},
-    ...
-  ]
-}}"""
+        user_prompt = (
+            f"For these candidate classes, identify relationships and properties:\n\n"
+            f"Classes: {', '.join(labels)}\n\n"
+            f"Context: {state.normalized_text}\n\n"
+            "Return JSON:\n"
+            "{\n"
+            '  "relationships": [\n'
+            '    {"subject": "Class1", "predicate": "subclass_of", "object": "Class2", "confidence": 0.8},\n'
+            "    ...\n"
+            "  ],\n"
+            '  "properties": [\n'
+            '    {"name": "Property1", "domain": "Class1", "range": "Class2", "confidence": 0.7},\n'
+            "    ...\n"
+            "  ]\n"
+            "}"
+        )
 
         response = await self._call_llm(
             system_prompt=system_prompt,
@@ -386,28 +522,29 @@ Return JSON:
             max_tokens=500,
         )
 
-        # Parse connections
         try:
             parsed = json.loads(response.content)
             if not isinstance(parsed, dict):
                 raise AttributeError(f"Expected dict, got {type(parsed).__name__}")
 
-            # Process relationships
             for rel in parsed.get("relationships", []):
+                subject = rel.get("subject", "")
+                obj = rel.get("object", "")
+                if not subject or not obj:
+                    continue
+                # Compose provenance from subject + object, not from the predicate string
                 provenance = self._find_provenance(
-                    f"{rel.get('subject')} {rel.get('predicate')} {rel.get('object')}",
-                    state.source_text,
-                )
+                    subject, state.source_text
+                ) + self._find_provenance(obj, state.source_text)
                 conn = CandidateConnection(
-                    subject_ref=rel.get("subject", ""),
+                    subject_ref=subject,
                     predicate=rel.get("predicate", ""),
-                    object_ref=rel.get("object", ""),
+                    object_ref=obj,
                     confidence=rel.get("confidence", 0.5),
                     provenance=provenance,
                 )
                 connections.append(conn)
 
-            # Process properties
             for prop in parsed.get("properties", []):
                 provenance = self._find_provenance(prop.get("name", ""), state.source_text)
                 prop_def = CandidatePropertyDefinition(
@@ -419,7 +556,6 @@ Return JSON:
                 )
                 properties.append(prop_def)
         except (json.JSONDecodeError, AttributeError) as e:
-            # Record warning but continue with empty connections
             warning = {
                 "stage": "connection_proposal",
                 "error": f"JSON parse error: {str(e)}",
@@ -438,30 +574,28 @@ Return JSON:
     async def _stage_disambiguation(self, state: SchemaExtractionState) -> SchemaExtractionState:
         """
         Stage 6: Handle multi-sense terms by creating separate candidates with rationale.
-
-        For each candidate, check if it has multiple senses and create disambiguated entries.
         """
         if not state.candidate_classes:
             return replace(state, steps_completed=state.steps_completed + ["disambiguation"])
 
-        # Ask LLM to identify ambiguous terms
-        system_prompt = """You are an expert in word sense disambiguation.
-Identify if any of the given terms have multiple meanings or senses in the context.
-Return a JSON object with ambiguous terms and their senses."""
+        system_prompt = (
+            "You are an expert in word sense disambiguation. "
+            "Identify if any of the given terms have multiple meanings or senses in the context. "
+            "Return a JSON object with ambiguous terms and their senses."
+        )
 
         labels = [c.label for c in state.candidate_classes]
-        user_prompt = f"""Check these terms for multiple senses:
-
-Terms: {', '.join(labels)}
-
-Context: {state.normalized_text}
-
-Return JSON:
-{{
-  "ambiguous_terms": [
-    {{"term": "Term1", "senses": ["Sense A", "Sense B"], "rationale": "Explanation"}}
-  ]
-}}"""
+        user_prompt = (
+            f"Check these terms for multiple senses:\n\n"
+            f"Terms: {', '.join(labels)}\n\n"
+            f"Context: {state.normalized_text}\n\n"
+            "Return JSON:\n"
+            "{\n"
+            '  "ambiguous_terms": [\n'
+            '    {"term": "Term1", "senses": ["Sense A", "Sense B"], "rationale": "Explanation"}\n'
+            "  ]\n"
+            "}"
+        )
 
         response = await self._call_llm(
             system_prompt=system_prompt,
@@ -471,7 +605,6 @@ Return JSON:
             max_tokens=500,
         )
 
-        # Parse and create disambiguated candidates
         disambiguated = list(state.candidate_classes)
         try:
             parsed = json.loads(response.content)
@@ -483,12 +616,11 @@ Return JSON:
                 senses = ambig.get("senses", [])
                 rationale = ambig.get("rationale", "")
 
-                # Find the original candidate and replace with disambiguated versions
-                original_idx = next((i for i, c in enumerate(disambiguated) if c.label == term), -1)
+                original_idx = next(
+                    (i for i, c in enumerate(disambiguated) if c.label == term), -1
+                )
                 if original_idx >= 0 and len(senses) > 1:
                     original = disambiguated[original_idx]
-
-                    # Create separate candidate for each sense
                     disambiguated_candidates = []
                     for i, sense in enumerate(senses):
                         new_label = f"{term} ({sense})" if sense else term
@@ -501,14 +633,12 @@ Return JSON:
                         )
                         disambiguated_candidates.append(candidate)
 
-                    # Replace original with disambiguated versions
                     disambiguated = (
                         disambiguated[:original_idx]
                         + disambiguated_candidates
                         + disambiguated[original_idx + 1 :]
                     )
         except (json.JSONDecodeError, AttributeError) as e:
-            # Record warning but continue without disambiguation
             warning = {
                 "stage": "disambiguation",
                 "error": f"JSON parse error: {str(e)}",
@@ -527,21 +657,16 @@ Return JSON:
         self, state: SchemaExtractionState
     ) -> SchemaExtractionState:
         """
-        Stage 7: Assign and refine confidence scores for all candidates.
-
-        Ensures all candidates and connections have confidence in [0, 1].
+        Stage 7: Clamp all confidence scores to [0, 1].
         """
-        # Create new instances with normalized confidence scores
         normalized_classes = [
             replace(candidate, confidence=max(0.0, min(1.0, candidate.confidence)))
             for candidate in state.candidate_classes
         ]
-
         normalized_properties = [
             replace(prop, confidence=max(0.0, min(1.0, prop.confidence)))
             for prop in state.candidate_properties
         ]
-
         normalized_connections = [
             replace(conn, confidence=max(0.0, min(1.0, conn.confidence)))
             for conn in state.proposed_connections
@@ -558,8 +683,6 @@ Return JSON:
     async def _stage_finalize(self, state: SchemaExtractionState) -> SchemaExtractionState:
         """
         Stage 8: Finalize and prepare output.
-
-        Converts candidates to result dict.
         """
         candidates = []
         candidates.extend([c.to_dict() for c in state.candidate_classes])
@@ -593,9 +716,10 @@ Return JSON:
         Returns:
             List of provenance dicts with offsets and raw excerpt
         """
-        provenance = []
+        if not text:
+            return []
 
-        # Case-insensitive search for the text
+        provenance = []
         pattern = re.escape(text)
         for match in re.finditer(pattern, source, re.IGNORECASE):
             start = match.start()

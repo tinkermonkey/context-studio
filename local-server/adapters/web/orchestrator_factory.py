@@ -65,6 +65,7 @@ def create_orchestrator(
     elif orchestrator_class == SchemaExtractionOrchestrator:
         return SchemaExtractionOrchestrator(
             llm_provider=llm_provider,
+            ontology_repo=services.get("ontology_repo"),
         )
 
     elif orchestrator_class == SchemaGroundingOrchestrator:
