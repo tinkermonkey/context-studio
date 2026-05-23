@@ -5,7 +5,6 @@ Includes both hand-authored fixtures for controlled testing and corpus-derived f
 that validate against real-world terminology with multi-sense disambiguation.
 """
 
-import json
 from pathlib import Path
 
 
