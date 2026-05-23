@@ -10,8 +10,8 @@
     "Kleppmann's DDIA: Chapter glossaries used for reference",
     "CNCF Glossary: CC BY 4.0"
   ],
-  "build_timestamp": "2026-05-23T03:57:29.363205",
-  "term_count": 82,
+  "build_timestamp": "2026-05-23T04:12:19.136706+00:00",
+  "term_count": 101,
   "terms": [
     {
       "id": "microservice",
@@ -148,7 +148,7 @@
     {
       "id": "partitioning",
       "surface_label": "Partitioning",
-      "sense_count": 1,
+      "sense_count": 2,
       "source": "Distributed systems literature"
     },
     {
@@ -418,7 +418,7 @@
     {
       "id": "consistency",
       "surface_label": "Consistency",
-      "sense_count": 1,
+      "sense_count": 3,
       "source": "Distributed systems theory"
     },
     {
@@ -504,6 +504,120 @@
       "surface_label": "TLS",
       "sense_count": 1,
       "source": "Network security terminology"
+    },
+    {
+      "id": "service",
+      "surface_label": "Service",
+      "sense_count": 3,
+      "source": "Distributed systems and architecture patterns"
+    },
+    {
+      "id": "paxos",
+      "surface_label": "Paxos",
+      "sense_count": 1,
+      "source": "Distributed systems algorithms"
+    },
+    {
+      "id": "raft",
+      "surface_label": "Raft",
+      "sense_count": 1,
+      "source": "Distributed systems algorithms"
+    },
+    {
+      "id": "byzantine_fault_tolerance",
+      "surface_label": "Byzantine Fault Tolerance",
+      "sense_count": 1,
+      "source": "Distributed systems theory"
+    },
+    {
+      "id": "soa",
+      "surface_label": "Service-Oriented Architecture (SOA)",
+      "sense_count": 1,
+      "source": "Enterprise architecture patterns"
+    },
+    {
+      "id": "reverse_proxy",
+      "surface_label": "Reverse Proxy",
+      "sense_count": 1,
+      "source": "Web infrastructure patterns"
+    },
+    {
+      "id": "base",
+      "surface_label": "BASE",
+      "sense_count": 1,
+      "source": "Distributed systems theory"
+    },
+    {
+      "id": "event_sourcing",
+      "surface_label": "Event Sourcing",
+      "sense_count": 1,
+      "source": "Architecture patterns"
+    },
+    {
+      "id": "reliability",
+      "surface_label": "Reliability",
+      "sense_count": 1,
+      "source": "Systems reliability engineering"
+    },
+    {
+      "id": "uptime",
+      "surface_label": "Uptime",
+      "sense_count": 1,
+      "source": "Operations and SLA terminology"
+    },
+    {
+      "id": "web_service",
+      "surface_label": "Web Service",
+      "sense_count": 1,
+      "source": "Web architecture"
+    },
+    {
+      "id": "immutability",
+      "surface_label": "Immutability",
+      "sense_count": 1,
+      "source": "Data structures and design patterns"
+    },
+    {
+      "id": "idempotency",
+      "surface_label": "Idempotency",
+      "sense_count": 1,
+      "source": "Distributed systems patterns"
+    },
+    {
+      "id": "circuit_breaker_pattern",
+      "surface_label": "Circuit Breaker Pattern",
+      "sense_count": 1,
+      "source": "Resilience patterns"
+    },
+    {
+      "id": "eventual_delivery",
+      "surface_label": "Eventual Delivery",
+      "sense_count": 1,
+      "source": "Distributed systems guarantees"
+    },
+    {
+      "id": "gossip_protocol",
+      "surface_label": "Gossip Protocol",
+      "sense_count": 1,
+      "source": "Distributed systems protocols"
+    },
+    {
+      "id": "peer_to_peer",
+      "surface_label": "Peer-to-Peer (P2P)",
+      "sense_count": 1,
+      "source": "Network architecture patterns"
+    },
+    {
+      "id": "back_pressure",
+      "surface_label": "Back Pressure",
+      "sense_count": 1,
+      "source": "Stream processing and messaging patterns"
+    },
+    {
+      "id": "flow_control",
+      "surface_label": "Flow Control",
+      "sense_count": 1,
+      "source": "Network and system design"
     }
   ]
 }

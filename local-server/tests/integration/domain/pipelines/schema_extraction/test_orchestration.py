@@ -306,5 +306,115 @@ async def test_schema_extraction_all_fixtures():
             assert step in result_state.steps_completed
 
 
+@pytest.mark.asyncio
+async def test_schema_extraction_corpus_consensus_distributed_fixture():
+    """Test schema extraction on corpus-derived consensus and distributed systems fixture."""
+    llm_provider = MockLLMProvider()
+    orchestrator = SchemaExtractionOrchestrator(llm_provider)
+
+    fixtures = get_fixtures()
+    # Skip if corpus fixture not available
+    if "consensus_distributed" not in fixtures:
+        pytest.skip("Corpus fixture not available")
+
+    source_text = fixtures["consensus_distributed"]
+
+    state = SchemaExtractionState(
+        run_id="run-corpus-consensus",
+        pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+        input_data={
+            "text": source_text,
+            "model": "google/gemini-3-flash-preview",
+        },
+    )
+
+    result_state = await orchestrator.execute(state)
+
+    # Verify execution completed
+    assert result_state.current_status == "completed"
+    assert result_state.result is not None
+
+    # Verify candidates were extracted
+    assert "candidates" in result_state.result
+    assert len(result_state.result["candidates"]) > 0
+
+    # Verify candidate structure
+    for candidate in result_state.result["candidates"]:
+        assert "kind" in candidate
+        assert candidate["kind"] in ["class", "property_definition"]
+        assert "label" in candidate
+        assert "confidence" in candidate
+        assert 0.0 <= candidate["confidence"] <= 1.0
+
+
+@pytest.mark.asyncio
+async def test_schema_extraction_corpus_microservices_api_fixture():
+    """Test schema extraction on corpus-derived microservices API fixture."""
+    llm_provider = MockLLMProvider()
+    orchestrator = SchemaExtractionOrchestrator(llm_provider)
+
+    fixtures = get_fixtures()
+    # Skip if corpus fixture not available
+    if "microservices_api" not in fixtures:
+        pytest.skip("Corpus fixture not available")
+
+    source_text = fixtures["microservices_api"]
+
+    state = SchemaExtractionState(
+        run_id="run-corpus-microservices-api",
+        pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+        input_data={
+            "text": source_text,
+            "model": "google/gemini-3-flash-preview",
+        },
+    )
+
+    result_state = await orchestrator.execute(state)
+
+    # Verify execution completed
+    assert result_state.current_status == "completed"
+    assert result_state.result is not None
+    assert "candidates" in result_state.result
+
+
+@pytest.mark.asyncio
+async def test_schema_extraction_corpus_service_multisense_fixture():
+    """Test multi-sense disambiguation on corpus-derived service fixture."""
+    llm_provider = MockLLMProvider()
+    orchestrator = SchemaExtractionOrchestrator(llm_provider)
+
+    fixtures = get_fixtures()
+    # Skip if corpus fixture not available
+    if "service_multisense" not in fixtures:
+        pytest.skip("Corpus fixture not available")
+
+    source_text = fixtures["service_multisense"]
+
+    state = SchemaExtractionState(
+        run_id="run-corpus-service-multisense",
+        pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+        input_data={
+            "text": source_text,
+            "model": "google/gemini-3-flash-preview",
+        },
+    )
+
+    result_state = await orchestrator.execute(state)
+
+    # Verify execution completed
+    assert result_state.current_status == "completed"
+    assert result_state.result is not None
+
+    # Verify multi-sense handling
+    candidates = result_state.result["candidates"]
+    assert len(candidates) > 0
+
+    # Look for candidates that have multi-sense indicators
+    for candidate in candidates:
+        assert "kind" in candidate
+        assert "confidence" in candidate
+        assert 0.0 <= candidate["confidence"] <= 1.0
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

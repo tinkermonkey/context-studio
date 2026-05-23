@@ -18,7 +18,7 @@ The script is idempotent and can be re-run to regenerate the corpus.
 import json
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -294,11 +294,15 @@ DICTIONARY_TERMS = [
         "surface_label": "Partitioning",
         "senses": [
             {
-                "definition": "The process of dividing data across multiple nodes based on partition keys",
+                "definition": "In databases: the process of dividing data across multiple nodes based on partition keys",
                 "context": "Enables scaling and parallel processing; must handle rebalancing when partitions change"
+            },
+            {
+                "definition": "In networks: a split in communication between groups of nodes, preventing message delivery",
+                "context": "Network partition; system must handle split-brain scenarios and eventual reconciliation"
             }
         ],
-        "cross_references": ["sharding", "horizontal_scaling"],
+        "cross_references": ["sharding", "horizontal_scaling", "partition_tolerance"],
         "source": "Distributed systems literature"
     },
     {
@@ -834,11 +838,19 @@ DICTIONARY_TERMS = [
         "surface_label": "Consistency",
         "senses": [
             {
-                "definition": "The guarantee that data in a system is in a valid state according to defined rules",
-                "context": "Can be strong (immediate) or eventual (delayed); fundamental to data integrity"
+                "definition": "In ACID transactions: the property that data transitions from one valid state to another, maintaining integrity constraints",
+                "context": "Database transactions; enforced through constraints, triggers, and application logic"
+            },
+            {
+                "definition": "In distributed systems: eventual consistency model where all nodes eventually converge to the same state",
+                "context": "Trade-off in distributed systems; chosen when availability is prioritized over immediate consistency"
+            },
+            {
+                "definition": "In CAP theorem: the guarantee that all nodes see the same version of data at the same time",
+                "context": "One of three properties; cannot be simultaneously achieved with partition tolerance and availability"
             }
         ],
-        "cross_references": ["eventual_consistency", "acid"],
+        "cross_references": ["eventual_consistency", "acid", "cap_theorem"],
         "source": "Distributed systems theory"
     },
     {
@@ -862,7 +874,7 @@ DICTIONARY_TERMS = [
                 "context": "Critical for handling retries in distributed systems without side effects"
             }
         ],
-        "cross_references": ["retry", "reliability"],
+        "cross_references": ["retry", "idempotency"],
         "source": "Distributed systems patterns"
     },
     {
@@ -1009,6 +1021,242 @@ DICTIONARY_TERMS = [
         "cross_references": ["encryption", "security"],
         "source": "Network security terminology"
     },
+    {
+        "id": "service",
+        "surface_label": "Service",
+        "senses": [
+            {
+                "definition": "In microservices: a small, independently deployable unit of functionality",
+                "context": "Core building block of microservices architecture; owns data and implements a business capability"
+            },
+            {
+                "definition": "In SOA: a software module exposing business functionality through well-defined interfaces",
+                "context": "Service-oriented architecture; emphasizes reusability and composition"
+            },
+            {
+                "definition": "In web services: a network-accessible application providing specific functionality",
+                "context": "Can be REST, SOAP, gRPC, or other protocols; consumers communicate over networks"
+            }
+        ],
+        "cross_references": ["microservice", "soa", "web_service"],
+        "source": "Distributed systems and architecture patterns"
+    },
+    {
+        "id": "paxos",
+        "surface_label": "Paxos",
+        "senses": [
+            {
+                "definition": "A consensus algorithm that enables a distributed system to agree on a single value despite failures",
+                "context": "Foundational algorithm for state machine replication; tolerates asynchronous networks and node failures"
+            }
+        ],
+        "cross_references": ["consensus", "raft", "byzantine_fault_tolerance"],
+        "source": "Distributed systems algorithms"
+    },
+    {
+        "id": "raft",
+        "surface_label": "Raft",
+        "senses": [
+            {
+                "definition": "A consensus algorithm designed for understandability, implementing state machine replication",
+                "context": "Simpler alternative to Paxos; used in etcd, Consul, and other distributed systems"
+            }
+        ],
+        "cross_references": ["consensus", "paxos", "leader_follower"],
+        "source": "Distributed systems algorithms"
+    },
+    {
+        "id": "byzantine_fault_tolerance",
+        "surface_label": "Byzantine Fault Tolerance",
+        "senses": [
+            {
+                "definition": "The ability of a distributed system to continue operating correctly even when some nodes behave arbitrarily (Byzantine failures)",
+                "context": "Required for systems without trust; necessary for blockchain and multi-stakeholder systems"
+            }
+        ],
+        "cross_references": ["consensus", "fault_tolerance"],
+        "source": "Distributed systems theory"
+    },
+    {
+        "id": "soa",
+        "surface_label": "Service-Oriented Architecture (SOA)",
+        "senses": [
+            {
+                "definition": "An architectural approach where applications are composed of loosely coupled, coarse-grained services",
+                "context": "Predecessor to microservices; services are larger, often spanning multiple business domains"
+            }
+        ],
+        "cross_references": ["microservice", "service", "api_gateway"],
+        "source": "Enterprise architecture patterns"
+    },
+    {
+        "id": "reverse_proxy",
+        "surface_label": "Reverse Proxy",
+        "senses": [
+            {
+                "definition": "A server that intercepts client requests and forwards them to backend servers, returning responses to clients",
+                "context": "Used for load balancing, caching, SSL termination, and request routing"
+            }
+        ],
+        "cross_references": ["api_gateway", "load_balancing"],
+        "source": "Web infrastructure patterns"
+    },
+    {
+        "id": "base",
+        "surface_label": "BASE",
+        "senses": [
+            {
+                "definition": "A consistency model emphasizing Basically Available, Soft state, and Eventually consistent",
+                "context": "Alternative to ACID; suitable for distributed systems trading immediate consistency for availability"
+            }
+        ],
+        "cross_references": ["eventual_consistency", "acid"],
+        "source": "Distributed systems theory"
+    },
+    {
+        "id": "event_sourcing",
+        "surface_label": "Event Sourcing",
+        "senses": [
+            {
+                "definition": "An architectural pattern where state changes are captured as immutable events in an event log",
+                "context": "Enables temporal queries, auditing, and reconstruction of system state at any point in time"
+            }
+        ],
+        "cross_references": ["event_driven", "immutability"],
+        "source": "Architecture patterns"
+    },
+    {
+        "id": "reliability",
+        "surface_label": "Reliability",
+        "senses": [
+            {
+                "definition": "The probability that a system performs its required function for a specified time period under stated conditions",
+                "context": "Measured as MTBF (mean time between failures) or MTTF (mean time to failure)"
+            }
+        ],
+        "cross_references": ["fault_tolerance", "resilience"],
+        "source": "Systems reliability engineering"
+    },
+    {
+        "id": "uptime",
+        "surface_label": "Uptime",
+        "senses": [
+            {
+                "definition": "The percentage of time a system is operational and available, typically measured as nines (99.9%, 99.99%)",
+                "context": "SLA target; downtime is inverse (100% - uptime); guides infrastructure investment"
+            }
+        ],
+        "cross_references": ["high_availability", "reliability"],
+        "source": "Operations and SLA terminology"
+    },
+    {
+        "id": "web_service",
+        "surface_label": "Web Service",
+        "senses": [
+            {
+                "definition": "A software application accessible over HTTP/HTTPS that provides functionality to other applications",
+                "context": "Can use SOAP, REST, GraphQL, or other protocols; enables integration across organizations"
+            }
+        ],
+        "cross_references": ["api", "rest_api", "service"],
+        "source": "Web architecture"
+    },
+    {
+        "id": "immutability",
+        "surface_label": "Immutability",
+        "senses": [
+            {
+                "definition": "The property that data cannot be changed once created; new versions must be created instead",
+                "context": "Enables simpler reasoning about state; used in event sourcing and functional programming"
+            }
+        ],
+        "cross_references": ["event_sourcing"],
+        "source": "Data structures and design patterns"
+    },
+    {
+        "id": "idempotency",
+        "surface_label": "Idempotency",
+        "senses": [
+            {
+                "definition": "The property that multiple identical requests produce the same result as a single request",
+                "context": "Critical for handling retries safely; enables at-least-once delivery semantics"
+            }
+        ],
+        "cross_references": ["idempotence", "retry"],
+        "source": "Distributed systems patterns"
+    },
+    {
+        "id": "circuit_breaker_pattern",
+        "surface_label": "Circuit Breaker Pattern",
+        "senses": [
+            {
+                "definition": "A design pattern preventing repeated requests to a failing service by temporarily blocking calls",
+                "context": "States: closed (normal), open (blocking), half-open (testing); prevents cascading failures"
+            }
+        ],
+        "cross_references": ["circuit_breaker", "resilience"],
+        "source": "Resilience patterns"
+    },
+    {
+        "id": "eventual_delivery",
+        "surface_label": "Eventual Delivery",
+        "senses": [
+            {
+                "definition": "A guarantee that a message sent by one process will eventually be received by another",
+                "context": "Weaker than reliable delivery; achievable in asynchronous systems without perfect synchronization"
+            }
+        ],
+        "cross_references": ["asynchronous_communication", "message_queue"],
+        "source": "Distributed systems guarantees"
+    },
+    {
+        "id": "gossip_protocol",
+        "surface_label": "Gossip Protocol",
+        "senses": [
+            {
+                "definition": "A peer-to-peer communication pattern where each node shares information with a random subset of peers",
+                "context": "Eventually consistent; used for distributed consensus, failure detection, and state propagation"
+            }
+        ],
+        "cross_references": ["peer_to_peer", "eventual_consistency"],
+        "source": "Distributed systems protocols"
+    },
+    {
+        "id": "peer_to_peer",
+        "surface_label": "Peer-to-Peer (P2P)",
+        "senses": [
+            {
+                "definition": "A distributed architecture where nodes act as both clients and servers, communicating directly",
+                "context": "No central server; enables decentralized systems for file sharing, blockchain, and collaborative computing"
+            }
+        ],
+        "cross_references": ["distributed_system", "gossip_protocol"],
+        "source": "Network architecture patterns"
+    },
+    {
+        "id": "back_pressure",
+        "surface_label": "Back Pressure",
+        "senses": [
+            {
+                "definition": "A mechanism to slow down or halt the rate of data production when a consumer cannot keep up",
+                "context": "Prevents buffer overflows and resource exhaustion; essential for flow control in streaming systems"
+            }
+        ],
+        "cross_references": ["rate_limiting", "flow_control"],
+        "source": "Stream processing and messaging patterns"
+    },
+    {
+        "id": "flow_control",
+        "surface_label": "Flow Control",
+        "senses": [
+            {
+                "definition": "Managing the rate and volume of data transferred between components to prevent overload",
+                "context": "Critical for system stability; includes windowing, buffering, and back pressure mechanisms"
+            }
+        ],
+        "cross_references": ["back_pressure", "rate_limiting"],
+        "source": "Network and system design"
+    },
 ]
 
 
@@ -1044,7 +1292,7 @@ def build_dictionary_corpus(output_dir: str) -> None:
             "Kleppmann's DDIA: Chapter glossaries used for reference",
             "CNCF Glossary: CC BY 4.0"
         ],
-        "build_timestamp": datetime.utcnow().isoformat(),
+        "build_timestamp": datetime.now(timezone.utc).isoformat(),
         "term_count": len(DICTIONARY_TERMS),
         "terms": [
             {

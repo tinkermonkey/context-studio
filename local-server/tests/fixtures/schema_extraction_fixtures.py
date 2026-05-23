@@ -1,9 +1,26 @@
 """
-Hand-authored fixtures for Schema Extraction pipeline testing.
+Fixtures for Schema Extraction pipeline testing.
 
-These fixtures test multi-sense terms, cross-references, and provenance tracking.
-They are curated samples covering key extraction scenarios.
+Includes both hand-authored fixtures for controlled testing and corpus-derived fixtures
+that validate against real-world terminology with multi-sense disambiguation.
 """
+
+import json
+from pathlib import Path
+
+
+def _load_corpus_fixture(fixture_name: str) -> str:
+    """Load a corpus-derived fixture from the fixtures directory."""
+    fixture_path = (
+        Path(__file__).parent.parent
+        / "integration"
+        / "fixtures"
+        / "pipelines"
+        / "schema_extraction"
+        / f"{fixture_name}.txt"
+    )
+    with open(fixture_path, "r") as f:
+        return f.read()
 
 
 def get_microservices_text() -> str:
@@ -80,11 +97,30 @@ def get_fixtures() -> dict[str, str]:
     """
     Return all test fixtures as a dictionary.
 
+    Includes hand-authored fixtures and corpus-derived fixtures.
+
     Returns:
         Dict mapping fixture name to text content
     """
-    return {
+    fixtures = {
         "microservices": get_microservices_text(),
         "database": get_database_text(),
         "semantic_web": get_semantic_web_text(),
     }
+
+    # Add corpus-derived fixtures
+    try:
+        fixtures["consensus_distributed"] = _load_corpus_fixture(
+            "fixture_consensus_distributed"
+        )
+        fixtures["microservices_api"] = _load_corpus_fixture(
+            "fixture_microservices_api"
+        )
+        fixtures["service_multisense"] = _load_corpus_fixture(
+            "fixture_service_multisense"
+        )
+    except FileNotFoundError:
+        # If corpus fixtures don't exist yet, continue with just hand-authored ones
+        pass
+
+    return fixtures

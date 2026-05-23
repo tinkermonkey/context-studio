@@ -595,6 +595,124 @@ class TestCrossPaperConsistency:
         assert "paper_2" in fixture_names
         assert "paper_5" in fixture_names
 
+    def test_corpus_derived_fixtures_loaded(self):
+        """Verify corpus-derived fixtures are available."""
+        fixtures = load_all_fixtures()
+        fixture_names = [f["name"] for f in fixtures]
+
+        # Check for corpus-derived fixtures
+        expected_corpus_fixtures = [
+            "cloud_provisioning_paper",
+            "crdt_networks_paper",
+            "kubernetes_energy_monitoring",
+        ]
+
+        for fixture_name in expected_corpus_fixtures:
+            assert fixture_name in fixture_names, (
+                f"Corpus-derived fixture '{fixture_name}' not found in {fixture_names}"
+            )
+
+
+class TestCorpusDerivedFixtures:
+    """Test individual extraction with corpus-derived fixtures."""
+
+    def test_corpus_cloud_provisioning_extraction(
+        self, extraction_service, ontology_repo
+    ):
+        """Extract from corpus-derived cloud provisioning paper fixture."""
+        llm_provider = FakeLLMProvider()
+        orchestrator = IndividualExtractionOrchestrator(
+            llm_provider=llm_provider,
+            extraction_service=extraction_service,
+        )
+
+        ontologies = ontology_repo.list_taxonomies()
+        ontology_id = ontologies[0].id
+
+        fixture = load_fixture("fixture_cloud_provisioning_paper")
+        state = IndividualExtractionState(
+            run_id=str(uuid4()),
+            pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+            input_data={
+                "text": fixture["source_text"],
+                "ontology_id": ontology_id,
+                "model": "claude-opus-4-7",
+                "temperature": 0.0,
+            },
+        )
+
+        result_state = asyncio.run(orchestrator.execute(state))
+
+        # Verify extraction completed successfully
+        assert result_state.current_status == "completed"
+        assert result_state.source_text_hash != ""
+        assert result_state.extracted_triples is not None
+        assert isinstance(result_state.extracted_triples, list)
+
+    def test_corpus_crdt_networks_extraction(
+        self, extraction_service, ontology_repo
+    ):
+        """Extract from corpus-derived CRDT networks paper fixture."""
+        llm_provider = FakeLLMProvider()
+        orchestrator = IndividualExtractionOrchestrator(
+            llm_provider=llm_provider,
+            extraction_service=extraction_service,
+        )
+
+        ontologies = ontology_repo.list_taxonomies()
+        ontology_id = ontologies[0].id
+
+        fixture = load_fixture("fixture_crdt_networks_paper")
+        state = IndividualExtractionState(
+            run_id=str(uuid4()),
+            pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+            input_data={
+                "text": fixture["source_text"],
+                "ontology_id": ontology_id,
+                "model": "claude-opus-4-7",
+                "temperature": 0.0,
+            },
+        )
+
+        result_state = asyncio.run(orchestrator.execute(state))
+
+        # Verify extraction completed successfully
+        assert result_state.current_status == "completed"
+        assert result_state.source_text_hash != ""
+        assert result_state.extracted_triples is not None
+
+    def test_corpus_kubernetes_energy_extraction(
+        self, extraction_service, ontology_repo
+    ):
+        """Extract from corpus-derived Kubernetes energy monitoring fixture."""
+        llm_provider = FakeLLMProvider()
+        orchestrator = IndividualExtractionOrchestrator(
+            llm_provider=llm_provider,
+            extraction_service=extraction_service,
+        )
+
+        ontologies = ontology_repo.list_taxonomies()
+        ontology_id = ontologies[0].id
+
+        fixture = load_fixture("fixture_kubernetes_energy_monitoring")
+        state = IndividualExtractionState(
+            run_id=str(uuid4()),
+            pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+            input_data={
+                "text": fixture["source_text"],
+                "ontology_id": ontology_id,
+                "model": "claude-opus-4-7",
+                "temperature": 0.0,
+            },
+        )
+
+        result_state = asyncio.run(orchestrator.execute(state))
+
+        # Verify extraction completed successfully
+        assert result_state.current_status == "completed"
+        assert result_state.source_text_hash != ""
+        assert result_state.extracted_triples is not None
+
 
 class TestIndividualExtractionRunPersistence:
     """Test IndividualExtractionRun persistence with correct fields."""

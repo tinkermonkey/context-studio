@@ -16,16 +16,11 @@ import json
 import os
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-try:
-    import arxiv
-except ImportError:
-    print("arxiv package not found. Installing...")
-    os.system(f"{sys.executable} -m pip install arxiv")
-    import arxiv
+import arxiv
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -42,7 +37,7 @@ def fetch_arxiv_papers(
     Args:
         categories: List of ArXiv category codes (e.g., ['cs.DC', 'cs.SE'])
         date_from: Start date for papers (YYYY-MM-DD format)
-        max_papers: Maximum number of papers to fetch
+        max_papers: Maximum number of papers to fetch (total across all categories)
         delay_between_requests: Delay in seconds between requests (respect rate limits)
 
     Returns:
@@ -54,23 +49,28 @@ def fetch_arxiv_papers(
     # Build separate queries for each category to avoid API issues
     client = arxiv.Client()
 
-    for category in categories:
-        if len(papers) >= max_papers:
-            break
+    # Parse date_from for ArXiv query
+    # ArXiv format: submittedDate:[202001010000 TO 202012312359]
+    date_from_arxiv = date_from.replace("-", "")
+    date_query_suffix = f"AND submittedDate:[{date_from_arxiv}010000 TO 9999123123]"
 
-        # Use simple category query
-        query = f"cat:{category}"
+    papers_per_category = max_papers // len(categories)
+
+    for category in categories:
+        # Use simple category query with date filtering
+        query = f"cat:{category} {date_query_suffix}"
         print(f"Fetching papers from {category}...")
 
         search = arxiv.Search(
             query=query,
             sort_by=arxiv.SortCriterion.SubmittedDate,
             sort_order=arxiv.SortOrder.Descending,
-            max_results=max_papers
+            max_results=papers_per_category
         )
 
+        category_papers = 0
         for paper in client.results(search):
-            if len(papers) >= max_papers:
+            if category_papers >= papers_per_category:
                 break
 
             paper_data = {
@@ -84,10 +84,11 @@ def fetch_arxiv_papers(
                 "arxiv_url": paper.entry_id,
             }
             papers.append(paper_data)
+            category_papers += 1
             request_count += 1
 
             # Respect rate limits
-            if request_count < max_papers and len(papers) < max_papers:
+            if request_count % 3 == 0:
                 time.sleep(delay_between_requests)
 
     return papers
@@ -146,7 +147,7 @@ def build_arxiv_corpus(output_dir: str, max_papers: int = 20) -> None:
         "description_cs_dc": "Computer Systems - Distributed, Parallel, and Cluster Computing",
         "description_cs_se": "Computer Science - Software Engineering",
         "date_from": "2018-01-01",
-        "build_timestamp": datetime.utcnow().isoformat(),
+        "build_timestamp": datetime.now(timezone.utc).isoformat(),
         "paper_count": len(papers),
         "license": "ArXiv content is freely available for non-commercial research use",
         "papers": [
