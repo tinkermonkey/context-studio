@@ -101,6 +101,7 @@ from domain.ontology.events import (
 from domain.ontology.services import OntologyService
 from domain.pipeline.events import PipelineExecuted
 from domain.pipeline.services import PipelineService
+from domain.pipelines.individual_extraction import register_individual_extraction
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
@@ -265,6 +266,13 @@ async def lifespan(app: FastAPI):
             extraction_run_repo=extraction_run_repo,
         )
         logger.info("ExtractionService created and wired with adapters")
+
+        # Register individual extraction pipeline implementation
+        register_individual_extraction(
+            impl_registry=implementation_registry,
+            config_registry=config_registry,
+        )
+        logger.info("Individual extraction pipeline registered")
 
         pipeline_service = PipelineService(
             pipeline_repo=pipeline_repo,
