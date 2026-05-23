@@ -4,7 +4,7 @@ Schema Extraction pipeline orchestrator.
 Analyzes text to extract schema structure: candidate Classes and PropertyDefinitions
 with provenance, confidence scores, and disambiguation rationale.
 
-State machine (7 stages):
+Execution flow (7 stages):
 1. Text ingestion — normalize, chunk if needed
 2. Candidate concept identification — extract noun phrases/technical terms
 3. Classification — match against existing schema or mark as new
@@ -111,9 +111,9 @@ class SchemaExtractionState(PipelineState):
 
 class SchemaExtractionOrchestrator(PipelineOrchestrator):
     """
-    Orchestrator for schema extraction using a 7-stage LangGraph state machine.
+    Orchestrator for schema extraction using a 7-stage execution flow.
 
-    Each stage is a node that processes the state and produces candidates or connections.
+    Each stage processes the state sequentially and produces candidates or connections.
     Transitions are deterministic (no branching on LLM output).
     """
 
@@ -123,9 +123,9 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
 
     def build_graph(self) -> Any:
         """
-        Build LangGraph state graph.
+        Build pipeline execution graph.
 
-        For now, returns None (execution uses explicit stage methods).
+        Returns None; execution uses explicit stage methods.
         """
         return None
 

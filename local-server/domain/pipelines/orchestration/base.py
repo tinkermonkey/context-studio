@@ -1,8 +1,8 @@
 """
-Base classes for LangGraph-based pipeline orchestration.
+Base classes for pipeline orchestration.
 
-Provides scaffolding that per-type implementations subclass to wire their
-state machines. Concrete shapes are decided per-implementation;
+Provides scaffolding that per-type implementations subclass to define their
+execution flow. Concrete shapes are decided per-implementation;
 this module provides the structure only.
 """
 
@@ -19,9 +19,9 @@ from domain.pipelines.entities import PipelineRunStatus, PipelineType
 @dataclass
 class PipelineState:
     """
-    LangGraph state for a pipeline execution.
+    State for a pipeline execution.
 
-    Represents the state object passed between graph nodes.
+    Represents the state object passed through pipeline execution stages.
     Subclasses extend with type-specific state fields.
 
     Attributes:
@@ -47,8 +47,8 @@ class PipelineOrchestrator(ABC):
     """
     Abstract base for pipeline orchestration implementations.
 
-    Subclasses define the LangGraph state machine for their pipeline type
-    and implement execution logic.
+    Subclasses define the execution flow for their pipeline type
+    and implement the execute method.
     """
 
     def __init__(self, llm_provider: LLMProvider) -> None:
@@ -59,15 +59,14 @@ class PipelineOrchestrator(ABC):
             llm_provider: Port implementation for LLM completions
         """
         self._llm_provider = llm_provider
-        self._graph = None  # Subclasses set this via langgraph.StateGraph
 
     @abstractmethod
     def build_graph(self) -> Any:
         """
-        Build and return the LangGraph state graph.
+        Build and return the pipeline execution graph.
 
         Returns:
-            Compiled LangGraph graph
+            Pipeline execution graph (implementation-specific)
         """
         ...
 
