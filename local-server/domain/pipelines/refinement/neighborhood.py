@@ -22,9 +22,9 @@ class ClassNeighborhood:
     class_id: str
     class_label: str
     parent_class: Class | None = None
-    sibling_classes: list[Class] = None
-    child_classes: list[Class] = None
-    property_definitions: list[PropertyDefinition] = None
+    sibling_classes: list[Class] | None = None
+    child_classes: list[Class] | None = None
+    property_definitions: list[PropertyDefinition] | None = None
 
     def __post_init__(self) -> None:
         """Initialize default empty lists."""
@@ -44,7 +44,7 @@ class PropertyNeighborhood:
     property_label: str
     domain_neighborhood: ClassNeighborhood | None = None
     range_neighborhood: ClassNeighborhood | None = None
-    sibling_properties: list[PropertyDefinition] = None
+    sibling_properties: list[PropertyDefinition] | None = None
 
     def __post_init__(self) -> None:
         """Initialize default empty list."""

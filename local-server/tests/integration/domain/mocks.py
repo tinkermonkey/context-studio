@@ -11,7 +11,7 @@ class MockLLMProvider:
 
     def __init__(self, response: str = ""):
         self.response = response
-        self.calls = []
+        self.calls: list[dict[str, str | float | int]] = []
 
     def complete(
         self,
