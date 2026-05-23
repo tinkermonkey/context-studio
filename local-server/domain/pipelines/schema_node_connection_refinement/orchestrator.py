@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from domain.pipeline.ports import LLMProvider
+from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
 from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 
@@ -108,7 +109,7 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
 
         state.scope_id = scope_id
         state.current_connections = current_connections
-        state.current_status = "running"
+        state.current_status = PipelineRunStatus.RUNNING
 
         try:
             # Step 1: Assemble current state
@@ -124,7 +125,7 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
             )
             state.deltas = deltas
 
-            state.current_status = "completed"
+            state.current_status = PipelineRunStatus.COMPLETED
             state.result = {
                 "scope_id": scope_id,
                 "scope_label": state.scope_label,
@@ -144,7 +145,7 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
             }
 
         except Exception as exc:
-            state.current_status = "failed"
+            state.current_status = PipelineRunStatus.FAILED
             state.errors.append(str(exc))
             state.result = {
                 "scope_id": scope_id,

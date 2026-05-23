@@ -14,6 +14,7 @@ from dataclasses import dataclass, replace
 from typing import Any, cast
 
 from domain.pipeline.ports import LLMProvider
+from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
 
 
@@ -71,7 +72,7 @@ class NoOpPipelineOrchestrator(PipelineOrchestrator):
         # Step 1: Initialize
         noop_state = replace(
             noop_state,
-            current_status="running",
+            current_status=PipelineRunStatus.RUNNING,
             steps_completed=["initialize"],
         )
 
@@ -92,7 +93,7 @@ class NoOpPipelineOrchestrator(PipelineOrchestrator):
 
         noop_state = replace(
             noop_state,
-            current_status="completed",
+            current_status=PipelineRunStatus.COMPLETED,
             result=result,
             steps_completed=(noop_state.steps_completed or []) + ["finalize"],
         )

@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from domain.pipeline.ports import LLMProvider
+from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
 from domain.pipelines.schema_node_grounding.scoring import (
     GroundingScorer,
@@ -120,7 +121,7 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
         state.node_label = node_label
         state.node_type = NodeType(node_type_str) if node_type_str else NodeType.CLASS
         state.sources = sources or ["DBpedia", "ConceptNet"]
-        state.current_status = "running"
+        state.current_status = PipelineRunStatus.RUNNING
 
         try:
             candidates = await self._grounding_adapter.query_sources(
@@ -130,7 +131,7 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
 
             if not candidates:
                 state.groundings = []
-                state.current_status = "completed"
+                state.current_status = PipelineRunStatus.COMPLETED
                 state.result = {
                     "groundings": [],
                     "total_candidates_evaluated": 0,
@@ -144,7 +145,7 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
             top_n = self._config.get("top_n", 10)
             state.groundings = scored_candidates[:top_n]
 
-            state.current_status = "completed"
+            state.current_status = PipelineRunStatus.COMPLETED
             state.result = {
                 "groundings": [
                     {
@@ -161,7 +162,7 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
             }
 
         except Exception as exc:
-            state.current_status = "failed"
+            state.current_status = PipelineRunStatus.FAILED
             state.errors.append(str(exc))
             state.result = {
                 "groundings": [],

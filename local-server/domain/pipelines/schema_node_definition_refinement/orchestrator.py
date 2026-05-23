@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from domain.pipeline.ports import LLMProvider
+from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
 from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 
@@ -107,7 +108,7 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
 
         state.node_id = node_id
         state.current_definition = current_definition
-        state.current_status = "running"
+        state.current_status = PipelineRunStatus.RUNNING
 
         try:
             # Step 1: Assemble context
@@ -123,7 +124,7 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
             )
             state.candidates = candidates
 
-            state.current_status = "completed"
+            state.current_status = PipelineRunStatus.COMPLETED
             state.result = {
                 "node_id": node_id,
                 "node_label": state.node_label,
@@ -140,7 +141,7 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
             }
 
         except Exception as exc:
-            state.current_status = "failed"
+            state.current_status = PipelineRunStatus.FAILED
             state.errors.append(str(exc))
             state.result = {
                 "node_id": node_id,

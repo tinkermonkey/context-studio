@@ -11,7 +11,6 @@ level, but the schema definition is updated to String(50) for documentation
 and cross-database compatibility.
 
 """
-from alembic import op
 
 
 # revision identifiers, used by Alembic.

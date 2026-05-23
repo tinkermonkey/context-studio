@@ -22,6 +22,7 @@ from dataclasses import dataclass, field, replace
 from typing import Any, cast
 
 from domain.pipeline.ports import LLMProvider
+from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
 
 
@@ -143,7 +144,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         # Extract source text from input
         source_text = schema_state.input_data.get("text", "")
         schema_state = replace(
-            schema_state, source_text=source_text, current_status="running"
+            schema_state, source_text=source_text, current_status=PipelineRunStatus.RUNNING
         )
 
         # Stage 1: Text ingestion
@@ -558,7 +559,7 @@ Return JSON:
         return replace(
             state,
             result=result,
-            current_status="completed",
+            current_status=PipelineRunStatus.COMPLETED,
             steps_completed=state.steps_completed + ["finalize"],
         )
 

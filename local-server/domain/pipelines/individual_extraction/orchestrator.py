@@ -17,6 +17,7 @@ from typing import Any
 
 from domain.extraction.services import ExtractionService
 from domain.pipeline.ports import LLMProvider
+from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
 
 
@@ -131,7 +132,7 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
         state.ontology_id = ontology_id
         state.model = model
         state.temperature = temperature
-        state.current_status = "running"
+        state.current_status = PipelineRunStatus.RUNNING
 
         try:
             # Call extraction service
@@ -154,10 +155,10 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
                 "metadata": result.metadata,
             }
 
-            state.current_status = "completed"
+            state.current_status = PipelineRunStatus.COMPLETED
 
         except Exception as exc:
-            state.current_status = "failed"
+            state.current_status = PipelineRunStatus.FAILED
             state.warnings.append(f"Extraction error: {str(exc)}")
             state.result = {
                 "triples": [],
