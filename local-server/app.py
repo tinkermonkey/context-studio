@@ -108,6 +108,13 @@ from domain.pipelines.registry import (
     PipelineImplementationRegistry,
     PipelineTypeRegistry,
 )
+from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
+from domain.pipelines.schema_node_connection_refinement import (
+    register_schema_node_connection_refinement,
+)
+from domain.pipelines.schema_node_definition_refinement import (
+    register_schema_node_definition_refinement,
+)
 from domain.pipelines.schema_node_grounding import register_schema_node_grounding
 from domain.pipelines.schema_node_grounding.orchestrator import SchemaGroundingOrchestrator
 from domain.pipelines.schema_node_grounding.scoring import GroundingScorer
@@ -303,6 +310,24 @@ async def lifespan(app: FastAPI):
             config_registry=config_registry,
         )
         logger.info("Schema node grounding pipeline registered")
+
+        # Register definition and connection refinement pipelines
+        traversal = SchemaNeighborhoodTraversal(
+            ontology_repo=ontology_repo,
+            extraction_repo=None,  # Optional extraction usage repository
+        )
+
+        register_schema_node_definition_refinement(
+            impl_registry=implementation_registry,
+            config_registry=config_registry,
+        )
+        logger.info("Schema node definition refinement pipeline registered")
+
+        register_schema_node_connection_refinement(
+            impl_registry=implementation_registry,
+            config_registry=config_registry,
+        )
+        logger.info("Schema node connection refinement pipeline registered")
 
         pipeline_service = PipelineService(
             pipeline_repo=pipeline_repo,
