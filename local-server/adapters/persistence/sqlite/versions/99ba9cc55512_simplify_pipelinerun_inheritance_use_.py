@@ -29,7 +29,8 @@ def upgrade() -> None:
             run_type TEXT NOT NULL,
             CHECK (run_type IN ('import', 'extraction', 'individual_extraction',
                 'schema_extraction', 'schema_node_grounding',
-                'schema_node_definition_refinement', 'schema_node_connection_refinement'))
+                'schema_node_definition_refinement', 'schema_node_connection_refinement',
+                'no_op'))
         )
     """)
 
