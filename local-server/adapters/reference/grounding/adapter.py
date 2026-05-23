@@ -8,7 +8,7 @@ matching a schema node label. Handles parallel queries and response normalizatio
 from __future__ import annotations
 
 import asyncio
-from typing import Any
+from typing import Any, cast
 
 from adapters.reference.conceptnet import ConceptNetSource
 from adapters.reference.dbpedia import DBpediaSource
@@ -83,12 +83,12 @@ class GroundingAdapter:
 
         results = await asyncio.gather(*queries, return_exceptions=True)
 
-        candidates = []
+        candidates: list[GroundingCandidate] = []
         for result in results:
             if isinstance(result, Exception):
                 logger.warning(f"Source query failed: {result}")
                 continue
-            candidates.extend(result)
+            candidates.extend(cast(list[GroundingCandidate], result))
 
         return candidates
 

@@ -3,7 +3,10 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+_test_file = os.path.abspath(__file__)
+_test_dir = os.path.dirname(_test_file)
+_root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(_test_dir))))
+sys.path.insert(0, _root_dir)
 
 from unittest.mock import AsyncMock
 
