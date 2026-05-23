@@ -106,11 +106,6 @@ class SchemaExtractionState(PipelineState):
     proposed_connections: list[CandidateConnection] = field(default_factory=list)
     steps_completed: list[str] = field(default_factory=list)
 
-    def __post_init__(self) -> None:
-        """Initialize mutable defaults."""
-        if self.steps_completed is None:
-            object.__setattr__(self, "steps_completed", [])
-
 
 class SchemaExtractionOrchestrator(PipelineOrchestrator):
     """
