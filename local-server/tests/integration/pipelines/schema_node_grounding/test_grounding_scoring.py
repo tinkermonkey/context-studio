@@ -2,7 +2,7 @@
 
 import os
 import sys
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
@@ -170,3 +170,43 @@ class TestGroundingScorer:
         scored = await scorer.score_candidates(candidates, "person")
 
         assert scored[0].match_confidence >= 0.7
+
+    @pytest.mark.asyncio
+    async def test_error_callback_invoked_on_embedding_service_error(self):
+        """Test error_callback is called when embedding service raises."""
+        # Create embedding service that raises
+        mock_embedding_service = AsyncMock()
+        test_error = ValueError("Embedding service failed")
+        mock_embedding_service.similarity = AsyncMock(side_effect=test_error)
+
+        # Create mock error callback
+        error_callback = Mock()
+
+        scorer = GroundingScorer(
+            embedding_service=mock_embedding_service,
+            error_callback=error_callback,
+        )
+
+        candidates = [
+            GroundingCandidate(
+                uri="http://example.com/person",
+                label="Person",
+                description="A human being",
+                source="DBpedia",
+                source_score=0.8,
+            ),
+        ]
+
+        # Score candidates with embedding service error
+        scored = await scorer.score_candidates(candidates, "person", NodeType.CLASS)
+
+        # Verify error_callback was invoked with correct arguments
+        error_callback.assert_called_once()
+        call_args = error_callback.call_args[0]
+        assert call_args[0] == "person"  # node_label
+        assert call_args[1] == "Person"  # candidate_label
+        assert call_args[2] is test_error  # exception
+
+        # Verify scoring proceeded with semantic_sim = 0.0
+        assert len(scored) == 1
+        assert scored[0].semantic_similarity_score == 0.0

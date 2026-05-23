@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, Callable
 
 
 class NodeType(str, Enum):
@@ -159,7 +159,7 @@ class GroundingScorer:
         self,
         weights: dict[str, float] | None = None,
         embedding_service: Any = None,
-        error_callback: Any = None,
+        error_callback: Callable[[str, str, Exception], None] | None = None,
     ) -> None:
         """
         Initialize the scorer.
@@ -170,7 +170,8 @@ class GroundingScorer:
                 - label_match: Weight for label matching (default 0.3)
                 - semantic_similarity: Weight for semantic similarity (default 0.4)
             embedding_service: Optional service for computing embedding similarity
-            error_callback: Optional callable(node_label, candidate_label, error) for error reporting
+            error_callback: Optional synchronous callable(node_label, candidate_label, error)
+                for error reporting when embedding similarity fails. Must be synchronous.
         """
         default_weights = {
             "source_score": 0.3,
