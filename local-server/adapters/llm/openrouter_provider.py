@@ -6,7 +6,7 @@ to multiple LLM providers through a single API. Supports hundreds of models
 including OpenAI GPT, Anthropic Claude, Meta Llama, and others.
 
 Configuration:
-    API key: OPENROUTER_API_KEY environment variable or config.json
+    API key: config.json (llm.openrouter_api_key)
     Base URL: https://openrouter.ai/api/v1
     Default model: google/gemini-3-flash-preview
 """
@@ -31,32 +31,30 @@ class OpenRouterProvider:
     LLM provider adapter for OpenRouter API.
 
     Routes requests to any OpenRouter-available model. Supports response
-    caching keyed by (prompt_hash, model, temperature) with a bounded LRU cache.
+    caching keyed by (prompt_hash, model, temperature, max_tokens, response_format)
+    with a bounded LRU cache.
     """
 
     BASE_URL = "https://openrouter.ai/api/v1"
     DEFAULT_MODEL = "google/gemini-3-flash-preview"
     CACHE_MAX_SIZE = 1000  # Maximum number of cached responses
 
-    def __init__(self, api_key: str = "") -> None:
+    def __init__(self, api_key: str) -> None:
         """
         Initialize OpenRouter provider.
 
         Args:
-            api_key: OpenRouter API key. If empty, attempts to read from
-                    OPENROUTER_API_KEY environment variable.
+            api_key: OpenRouter API key from configuration.
 
         Raises:
-            ValueError: If no API key is available
+            ValueError: If API key is empty
         """
-        import os
-
-        self._api_key = api_key or os.getenv("OPENROUTER_API_KEY", "")
-        if not self._api_key:
+        if not api_key:
             raise ValueError(
-                "OpenRouter API key not configured. Set OPENROUTER_API_KEY environment"
-                " variable or pass api_key parameter."
+                "OpenRouter API key not configured. Provide openrouter_api_key in"
+                " config.json under the llm section."
             )
+        self._api_key = api_key
         self._client = httpx.Client(
             base_url=self.BASE_URL,
             headers={
@@ -83,8 +81,8 @@ class OpenRouterProvider:
         """
         Request a completion from OpenRouter.
 
-        Uses (prompt_hash, model, temperature) caching. Cache invalidates
-        on configuration version change (handled by caller).
+        Uses (prompt_hash, model, temperature, max_tokens, response_format) caching.
+        Cache invalidates on configuration version change (handled by caller).
 
         Args:
             system_prompt: System context for the model
@@ -105,7 +103,9 @@ class OpenRouterProvider:
             httpx.TimeoutException: If request times out
         """
         # Check cache
-        cache_key = self._make_cache_key(system_prompt, user_prompt, model, temperature)
+        cache_key = self._make_cache_key(
+            system_prompt, user_prompt, model, temperature, max_tokens, response_format
+        )
         if cache_key in self._response_cache:
             logger.debug(f"Cache hit for model {model}")
             # Move to end for LRU ordering
@@ -214,25 +214,37 @@ class OpenRouterProvider:
         return []
 
     def _make_cache_key(
-        self, system_prompt: str, user_prompt: str, model: str, temperature: float
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        model: str,
+        temperature: float,
+        max_tokens: int,
+        response_format: Literal["json", "text"] | None,
     ) -> str:
         """
         Generate cache key from prompt and model parameters.
 
-        Combines (prompt_hash, model, temperature) to avoid cache collisions.
+        Combines (prompt_hash, model, temperature, max_tokens, response_format)
+        to avoid cache collisions. Including max_tokens and response_format is
+        critical: identical prompts with different max_tokens produce different
+        results (e.g., definitions vs connections in schema extraction).
 
         Args:
             system_prompt: System prompt
             user_prompt: User prompt
             model: Model identifier
             temperature: Sampling temperature
+            max_tokens: Maximum tokens to generate
+            response_format: Optional response format specification
 
         Returns:
             Cache key string
         """
         combined = f"{system_prompt}||{user_prompt}"
         prompt_hash = hashlib.sha256(combined.encode()).hexdigest()[:16]
-        return f"{prompt_hash}:{model}:{temperature}"
+        format_str = response_format or "text"
+        return f"{prompt_hash}:{model}:{temperature}:{max_tokens}:{format_str}"
 
     def clear_cache(self) -> None:
         """Clear the response cache."""
