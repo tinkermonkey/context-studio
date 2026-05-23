@@ -12,8 +12,7 @@ Tests verify:
 - Response parsing and token counting
 """
 
-import hashlib
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import httpx
 import pytest
@@ -62,7 +61,11 @@ class TestOpenRouterCacheKey:
         return OpenRouterProvider(api_key="test-key")
 
     def test_cache_key_includes_all_parameters(self):
-        """Cache key includes system_prompt, user_prompt, model, temperature, max_tokens, and response_format."""
+        """Cache key includes all request parameters.
+
+        Verifies: system_prompt, user_prompt, model, temperature, max_tokens,
+        and response_format.
+        """
         provider = self.create_provider()
 
         key1 = provider._make_cache_key(
