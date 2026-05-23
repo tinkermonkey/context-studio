@@ -102,16 +102,15 @@ from domain.ontology.events import (
 from domain.ontology.services import OntologyService
 from domain.pipeline.events import PipelineExecuted
 from domain.pipeline.services import PipelineService
-from domain.pipeline.ports import LLMProvider
 from domain.pipelines.individual_extraction import register_individual_extraction
-from domain.pipelines.schema_node_grounding import register_schema_node_grounding
-from domain.pipelines.schema_node_grounding.orchestrator import SchemaGroundingOrchestrator
-from domain.pipelines.schema_node_grounding.scoring import GroundingScorer
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
     PipelineTypeRegistry,
 )
+from domain.pipelines.schema_node_grounding import register_schema_node_grounding
+from domain.pipelines.schema_node_grounding.orchestrator import SchemaGroundingOrchestrator
+from domain.pipelines.schema_node_grounding.scoring import GroundingScorer
 from domain.versioning.events import ChangesetMerged, SyncCompleted
 from domain.versioning.ports import SyncTarget
 from domain.versioning.services import VersioningService
@@ -293,7 +292,7 @@ async def lifespan(app: FastAPI):
                 "semantic_similarity": 0.4,
             },
         }
-        grounding_orchestrator = SchemaGroundingOrchestrator(
+        SchemaGroundingOrchestrator(
             llm_provider=llm_router,
             grounding_adapter=grounding_adapter,
             scorer=grounding_scorer,

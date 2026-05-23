@@ -1,18 +1,20 @@
 """Tests for grounding scoring logic."""
 
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
-import pytest
 from unittest.mock import AsyncMock
+
+import pytest
 
 from domain.pipelines.schema_node_grounding.scoring import (
     GroundingCandidate,
     GroundingScorer,
     NodeType,
-    compute_label_match_score,
     build_match_rationale,
+    compute_label_match_score,
 )
 
 

@@ -1,15 +1,17 @@
 """Tests for grounding adapter."""
 
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from adapters.reference.grounding import GroundingAdapter
 from domain.extraction.ports import ReferenceResult
-from domain.pipelines.schema_node_grounding.scoring import GroundingCandidate, NodeType
+from domain.pipelines.schema_node_grounding.scoring import GroundingCandidate
 
 
 class TestGroundingAdapter:

@@ -12,7 +12,7 @@ from typing import Any
 
 from adapters.reference.conceptnet import ConceptNetSource
 from adapters.reference.dbpedia import DBpediaSource
-from domain.pipelines.schema_node_grounding.scoring import GroundingCandidate, NodeType
+from domain.pipelines.schema_node_grounding.scoring import GroundingCandidate
 from utils.logger import get_logger
 
 logger = get_logger(__name__)

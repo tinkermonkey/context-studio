@@ -1,17 +1,20 @@
 """End-to-end tests for schema node grounding pipeline."""
 
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
 
+import pytest
+
 from domain.pipelines.entities import PipelineType
-from domain.pipelines.orchestration.base import PipelineState
 from domain.pipelines.schema_node_grounding.orchestrator import SchemaGroundingOrchestrator
-from domain.pipelines.schema_node_grounding.scoring import GroundingCandidate, GroundingScorer, NodeType
-from adapters.reference.grounding import GroundingAdapter
+from domain.pipelines.schema_node_grounding.scoring import (
+    GroundingCandidate,
+    GroundingScorer,
+)
 
 
 class TestE2ESchemaNodeGrounding:

@@ -6,12 +6,12 @@ and configurations with the pipeline registries.
 """
 
 from domain.pipelines.entities import PipelineType
-from domain.pipelines.schema_node_grounding.configurations.default import get_default_config
-from domain.pipelines.schema_node_grounding.orchestrator import SchemaGroundingOrchestrator
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
 )
+from domain.pipelines.schema_node_grounding.configurations.default import get_default_config
+from domain.pipelines.schema_node_grounding.orchestrator import SchemaGroundingOrchestrator
 
 
 def register_schema_node_grounding(
