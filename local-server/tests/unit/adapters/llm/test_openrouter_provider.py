@@ -603,6 +603,79 @@ class TestOpenRouterCompletion:
 
 
 @pytest.mark.llm
+class TestOpenRouterAsyncCompletion:
+    """Tests for async completion requests."""
+
+    @staticmethod
+    def create_provider():
+        """Create a provider for testing."""
+        return OpenRouterProvider(api_key="test-key")
+
+    @pytest.mark.asyncio
+    async def test_complete_async_returns_awaitable(self):
+        """complete_async returns a coroutine that resolves to LLMResponse."""
+        provider = self.create_provider()
+        provider._client = Mock(spec=httpx.Client)
+
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "choices": [
+                {
+                    "message": {"content": "Async response"},
+                    "finish_reason": "stop",
+                }
+            ],
+            "usage": {"prompt_tokens": 10, "completion_tokens": 20},
+        }
+        provider._client.post.return_value = mock_response
+
+        # complete_async should be awaitable
+        result = await provider.complete_async(
+            system_prompt="You are helpful",
+            user_prompt="What is 2+2?",
+            model="gpt-4",
+            temperature=0.5,
+            max_tokens=200,
+        )
+
+        assert isinstance(result, LLMResponse)
+        assert result.content == "Async response"
+        assert result.tokens_in == 10
+        assert result.tokens_out == 20
+
+    @pytest.mark.asyncio
+    async def test_complete_async_delegates_to_complete(self):
+        """complete_async delegates to complete method."""
+        provider = self.create_provider()
+        provider._client = Mock(spec=httpx.Client)
+
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "choices": [
+                {
+                    "message": {"content": "response"},
+                    "finish_reason": "stop",
+                }
+            ],
+            "usage": {"prompt_tokens": 10, "completion_tokens": 20},
+        }
+        provider._client.post.return_value = mock_response
+
+        await provider.complete_async(
+            system_prompt="system",
+            user_prompt="user",
+            model="gpt-4",
+            temperature=0.5,
+            max_tokens=200,
+        )
+
+        # Verify HTTP call was made via complete()
+        assert provider._client.post.call_count == 1
+
+
+@pytest.mark.llm
 class TestOpenRouterErrorHandling:
     """Tests for error handling."""
 
@@ -738,14 +811,36 @@ class TestOpenRouterModelAvailability:
         """Create a provider for testing."""
         return OpenRouterProvider(api_key="test-key")
 
-    def test_is_model_available_returns_true_for_any_non_empty_string(self):
-        """is_model_available returns True for any non-empty model string."""
+    def test_is_model_available_accepts_valid_model_identifiers(self):
+        """is_model_available accepts identifiers matching the valid format regex."""
         provider = self.create_provider()
 
         assert provider.is_model_available("gpt-4") is True
         assert provider.is_model_available("claude-opus-4-7") is True
+        assert provider.is_model_available("google/gemini-3-flash-preview") is True
         assert provider.is_model_available("custom-model") is True
         assert provider.is_model_available("x") is True
+        assert provider.is_model_available("model_name") is True
+        assert provider.is_model_available("model:v1") is True
+        assert provider.is_model_available("model.name") is True
+
+    def test_is_model_available_rejects_whitespace_only_strings(self):
+        """is_model_available rejects strings that are only whitespace."""
+        provider = self.create_provider()
+
+        assert provider.is_model_available("   ") is False
+        assert provider.is_model_available("\t") is False
+        assert provider.is_model_available("\n") is False
+
+    def test_is_model_available_rejects_invalid_special_characters(self):
+        """is_model_available rejects strings with invalid special characters."""
+        provider = self.create_provider()
+
+        assert provider.is_model_available("model name") is False
+        assert provider.is_model_available("model;rm -rf") is False
+        assert provider.is_model_available("model@host") is False
+        assert provider.is_model_available("model#tag") is False
+        assert provider.is_model_available("model$var") is False
 
     def test_is_model_available_returns_false_for_empty_string(self):
         """is_model_available returns False for empty string."""

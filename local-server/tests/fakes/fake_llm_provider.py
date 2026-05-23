@@ -97,6 +97,44 @@ class FakeLLMProvider:
         """
         return model in self.available_models
 
+    async def complete_async(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        model: str,
+        temperature: float = 0.0,
+        max_tokens: int = 2000,
+        response_format: Literal["json", "text"] | None = None,
+        timeout: float | None = None,
+        seed: int | None = None,
+    ) -> LLMResponse:
+        """
+        Request a completion from the fake LLM (async version).
+
+        Args:
+            system_prompt: System prompt
+            user_prompt: User message
+            model: Model identifier
+            temperature: Sampling temperature
+            max_tokens: Maximum tokens
+            response_format: Optional response format
+            timeout: Request timeout in seconds
+            seed: Optional random seed
+
+        Returns:
+            LLMResponse with canned content and token counts
+        """
+        return self.complete(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            response_format=response_format,
+            timeout=timeout,
+            seed=seed,
+        )
+
     def list_available_models(self) -> list[str]:
         """
         Get list of available models.
