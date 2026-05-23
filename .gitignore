@@ -1,11 +1,4 @@
-.claude/**
-!.claude/agents/
-!.claude/agents/**
-!.claude/commands/
-!.claude/commands/**
-!.claude/skills/
-!.claude/skills/**
-.serena/
+.claude/settings.local.json
 .vscode/
 .mcp.json
 PRPs/
@@ -16,7 +9,12 @@ build_test_env/
 **/.dr/
 .claude_prompt_*.txt
 
+# MacOS system files
+**/.DS_Store
+
+
 # Local server
+local-server/datafiles/*.db*
 local-server/datafiles/e2e-test/
 local-server/datafiles/validation/dictionary/terms/
 local-server/datafiles/validation/arxiv/papers/*/body.txt
