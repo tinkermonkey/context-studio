@@ -204,7 +204,10 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         Uses LLM to extract candidate class labels from text.
         """
         if not state.normalized_text:
-            return replace(state, steps_completed=state.steps_completed + ["candidate_identification"])
+            return replace(
+                state,
+                steps_completed=state.steps_completed + ["candidate_identification"],
+            )
 
         # Ask LLM to identify candidate concepts
         system_prompt = """You are an expert in ontology design and schema extraction.
@@ -215,7 +218,8 @@ Be precise and extract technical/domain terms, not generic words."""
 
 {state.normalized_text}
 
-Return a JSON array of strings (labels only). Example: ["Microservice", "Message Queue", "API Gateway"]"""
+Return a JSON array of strings (labels only). Example: ["Microservice", "Message Queue",
+"API Gateway"]"""
 
         response = self._call_llm(
             system_prompt=system_prompt,
@@ -254,7 +258,9 @@ Return a JSON array of strings (labels only). Example: ["Microservice", "Message
             steps_completed=state.steps_completed + ["classification"],
         )
 
-    async def _stage_definition_synthesis(self, state: SchemaExtractionState) -> SchemaExtractionState:
+    async def _stage_definition_synthesis(
+        self, state: SchemaExtractionState
+    ) -> SchemaExtractionState:
         """
         Stage 4: Generate definitions for candidate classes.
 
@@ -301,7 +307,9 @@ Provide a definition (1-2 sentences) suitable for an ontology."""
             steps_completed=state.steps_completed + ["definition_synthesis"],
         )
 
-    async def _stage_connection_proposal(self, state: SchemaExtractionState) -> SchemaExtractionState:
+    async def _stage_connection_proposal(
+        self, state: SchemaExtractionState
+    ) -> SchemaExtractionState:
         """
         Stage 5: Propose connections between candidates.
 
@@ -464,7 +472,9 @@ Return JSON:
             steps_completed=state.steps_completed + ["disambiguation"],
         )
 
-    async def _stage_confidence_scoring(self, state: SchemaExtractionState) -> SchemaExtractionState:
+    async def _stage_confidence_scoring(
+        self, state: SchemaExtractionState
+    ) -> SchemaExtractionState:
         """
         Stage 7: Assign and refine confidence scores for all candidates.
 
