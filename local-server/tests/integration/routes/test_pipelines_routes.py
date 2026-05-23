@@ -7,6 +7,7 @@ and pipeline run management via REST API.
 
 import tempfile
 from pathlib import Path
+from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
@@ -23,6 +24,8 @@ from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
 )
+from domain.pipelines.schema_extraction.orchestrator import SchemaExtractionOrchestrator
+from domain.pipelines.schema_node_grounding.orchestrator import SchemaGroundingOrchestrator
 
 
 @pytest.fixture
@@ -74,6 +77,7 @@ def client(pipeline_run_repo, registries):
     app.state.pipeline_run_repo = pipeline_run_repo
     app.state.implementation_registry = registries["implementation_registry"]
     app.state.config_registry = registries["config_registry"]
+    app.state.llm_router = MagicMock()
 
     return TestClient(app)
 
@@ -224,12 +228,8 @@ class TestPipelineRunEndpoints:
     def test_create_run_with_valid_config_succeeds(self, client, registries):
         """POST /api/pipelines/{type}/run with valid config succeeds."""
 
-        # Register a dummy implementation and configuration
-        class DummyImpl:
-            pass
-
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", DummyImpl
+            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
         )
         registries["config_registry"].register(
             PipelineType.SCHEMA_EXTRACTION,
@@ -253,18 +253,15 @@ class TestPipelineRunEndpoints:
         assert body["pipeline_type"] == "schema_extraction"
         assert body["implementation_id"] == "default"
         assert body["configuration_ref"] == "default"
-        assert body["status"] == "pending"
+        assert body["status"] == "completed"
         assert body["created_at"] is not None
 
     def test_create_and_retrieve_run(self, client, registries):
         """POST creates a run, GET retrieves it with matching structure."""
 
         # Register implementation and configuration
-        class DummyImpl:
-            pass
-
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", DummyImpl
+            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
         )
         registries["config_registry"].register(
             PipelineType.SCHEMA_EXTRACTION,
@@ -303,11 +300,8 @@ class TestPipelineRunEndpoints:
         """GET /api/pipelines/runs includes newly created run."""
 
         # Register implementation and configuration
-        class DummyImpl:
-            pass
-
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", DummyImpl
+            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
         )
         registries["config_registry"].register(
             PipelineType.SCHEMA_EXTRACTION,
@@ -342,14 +336,11 @@ class TestPipelineRunEndpoints:
         """GET /api/pipelines/runs?pipeline_type=... filters correctly."""
 
         # Register implementations and configurations for two types
-        class DummyImpl:
-            pass
-
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", DummyImpl
+            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
         )
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_NODE_GROUNDING, "default", DummyImpl
+            PipelineType.SCHEMA_NODE_GROUNDING, "default", SchemaGroundingOrchestrator
         )
         registries["config_registry"].register(
             PipelineType.SCHEMA_EXTRACTION,
@@ -396,11 +387,8 @@ class TestPipelineRunEndpoints:
         from urllib.parse import urlencode
 
         # Register implementation and configuration
-        class DummyImpl:
-            pass
-
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", DummyImpl
+            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
         )
         registries["config_registry"].register(
             PipelineType.SCHEMA_EXTRACTION,
@@ -444,11 +432,8 @@ class TestPipelineRunEndpoints:
         """POST /api/pipelines/run response contains all required fields."""
 
         # Register implementation and configuration
-        class DummyImpl:
-            pass
-
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", DummyImpl
+            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
         )
         registries["config_registry"].register(
             PipelineType.SCHEMA_EXTRACTION,

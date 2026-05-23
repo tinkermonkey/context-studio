@@ -192,7 +192,10 @@ def main() -> int:
         # Create a simple LLM provider (using Anthropic by default)
         settings = get_settings()
         if not settings.llm.anthropic_api_key:
-            _logger.error("Anthropic API key not configured in config.json or ANTHROPIC_API_KEY env var")
+            _logger.error(
+                "Anthropic API key not configured in config.json or "
+                "ANTHROPIC_API_KEY env var"
+            )
             return 1
         llm_provider = AnthropicProvider(api_key=settings.llm.anthropic_api_key)
 
