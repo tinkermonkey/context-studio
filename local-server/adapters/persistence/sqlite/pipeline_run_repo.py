@@ -165,7 +165,8 @@ class PipelineRepository:
             raise PipelineStorageError("Failed to create pipeline run") from e
         except OperationalError as e:
             session.rollback()
-            logger.error(f"Database operational error when creating pipeline run {batch_run_id}: {e}")
+            msg = f"Database operational error when creating pipeline run {batch_run_id}: {e}"
+            logger.error(msg)
             raise PipelineStorageError("Failed to create pipeline run") from e
         except SQLAlchemyError as e:
             session.rollback()

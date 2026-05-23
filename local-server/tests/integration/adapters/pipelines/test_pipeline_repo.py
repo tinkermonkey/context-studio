@@ -291,7 +291,8 @@ class TestPipelineRepositoryErrorHandling:
         batch_id = str(uuid4())
 
         # Mock session.commit to raise IntegrityError
-        with patch.object(db_session, 'commit', side_effect=IntegrityError("constraint", "params", "orig")):
+        error = IntegrityError("constraint", "params", "orig")
+        with patch.object(db_session, 'commit', side_effect=error):
             with pytest.raises(PipelineStorageError, match="Failed to create pipeline run"):
                 repo.create(
                     batch_run_id=batch_id,
@@ -307,7 +308,8 @@ class TestPipelineRepositoryErrorHandling:
         batch_id = str(uuid4())
 
         # Mock session.commit to raise OperationalError
-        with patch.object(db_session, 'commit', side_effect=OperationalError("statement", "params", "orig")):
+        error = OperationalError("statement", "params", "orig")
+        with patch.object(db_session, 'commit', side_effect=error):
             with pytest.raises(PipelineStorageError, match="Failed to create pipeline run"):
                 repo.create(
                     batch_run_id=batch_id,
@@ -348,7 +350,8 @@ class TestPipelineRepositoryErrorHandling:
         )
 
         # Mock session.commit to raise IntegrityError
-        with patch.object(db_session, 'commit', side_effect=IntegrityError("constraint", "params", "orig")):
+        error = IntegrityError("constraint", "params", "orig")
+        with patch.object(db_session, 'commit', side_effect=error):
             with pytest.raises(PipelineStorageError, match="Failed to update pipeline run status"):
                 repo.update_status(run.id, PipelineRunStatus.RUNNING)
 
@@ -367,8 +370,10 @@ class TestPipelineRepositoryErrorHandling:
         )
 
         # Mock session.commit to raise OperationalError
-        with patch.object(db_session, 'commit', side_effect=OperationalError("statement", "params", "orig")):
-            with pytest.raises(PipelineStorageError, match="Failed to update pipeline run summaries"):
+        error = OperationalError("statement", "params", "orig")
+        with patch.object(db_session, 'commit', side_effect=error):
+            expected_msg = "Failed to update pipeline run summaries"
+            with pytest.raises(PipelineStorageError, match=expected_msg):
                 repo.update_summaries(
                     run.id,
                     output_summary={"result": "data"},
