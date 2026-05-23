@@ -1820,13 +1820,16 @@ export interface paths {
      *     - schema_node_definition_refinement: requires nodes, optional context
      *     - schema_node_connection_refinement: requires edges, optional strategy
      *
+     *     Creates a pipeline run, executes it with the registered implementation,
+     *     and returns the run with execution results.
+     *
      *     Args:
      *         pipeline_type: The pipeline type (e.g., individual_extraction)
      *         request_body: Type-specific request payload
      *         request: FastAPI request (for service access)
      *
      *     Returns:
-     *         PipelineRunResponse with the created PipelineRun
+     *         PipelineRunResponse with the executed PipelineRun
      *
      *     Raises:
      *         HTTPException: 400 for invalid input, 404 for missing config/impl, 500 for execution errors
@@ -1860,6 +1863,43 @@ export interface paths {
      *         HTTPException: 404 if run not found
      */
     get: operations["get_pipeline_run_api_pipelines_runs__run_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/runs/{run_id}/candidates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Pipeline Candidates
+     * @description Retrieve candidates from a completed pipeline run.
+     *
+     *     Extracts the full candidate list with provenance and confidence scores
+     *     from the pipeline run's output. The structure of candidates depends on
+     *     the pipeline type:
+     *     - schema_node_grounding: returns groundings with URI, label, confidence
+     *     - schema_node_definition_refinement: returns definition candidates
+     *     - schema_node_connection_refinement: returns connection candidates
+     *
+     *     Args:
+     *         run_id: The pipeline run ID
+     *         request: FastAPI request (for service access)
+     *
+     *     Returns:
+     *         List of CandidateResponse objects with full provenance and confidence
+     *
+     *     Raises:
+     *         HTTPException: 404 if run not found, 400 if run has no candidates
+     */
+    get: operations["get_pipeline_candidates_api_pipelines_runs__run_id__candidates_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -3476,6 +3516,49 @@ export interface components {
        * @description JSON-encoded conflict resolutions to apply on commit
        */
       resolutions?: string | null;
+    };
+    /**
+     * CandidateResponse
+     * @description Response containing a single candidate from a pipeline run.
+     *
+     *     Represents a candidate result from pipeline execution with full provenance
+     *     and confidence information. Structure adapts based on pipeline type but
+     *     maintains a consistent interface.
+     */
+    CandidateResponse: {
+      /**
+       * Uri
+       * @description Candidate URI or identifier
+       */
+      uri: string;
+      /**
+       * Label
+       * @description Human-readable candidate label
+       */
+      label: string;
+      /**
+       * Description
+       * @description Candidate description or definition
+       * @default
+       */
+      description: string;
+      /**
+       * Source
+       * @description Source or database where candidate originates
+       * @default
+       */
+      source: string;
+      /**
+       * Confidence
+       * @description Confidence score (0.0-1.0)
+       */
+      confidence: number;
+      /**
+       * Provenance
+       * @description Rationale or provenance for the candidate
+       * @default
+       */
+      provenance: string;
     };
     /**
      * CentralityResponse
@@ -9241,6 +9324,37 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["PipelineRunResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_pipeline_candidates_api_pipelines_runs__run_id__candidates_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CandidateResponse"][];
         };
       };
       /** @description Validation Error */
