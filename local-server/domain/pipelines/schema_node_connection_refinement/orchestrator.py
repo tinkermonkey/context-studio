@@ -9,6 +9,7 @@ external groundings, and extraction examples.
 from __future__ import annotations
 
 import json
+import logging
 import re
 from dataclasses import dataclass, field
 from typing import Any
@@ -16,6 +17,8 @@ from typing import Any
 from domain.pipeline.ports import LLMProvider
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
 from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -270,19 +273,26 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
                 if not isinstance(d["confidence"], (int, float)):
                     d["confidence"] = 0.5
 
-        except Exception:
-            # Fallback: return a single delta with the response as rationale
-            deltas = [
-                {
-                    "operation": "add",
-                    "subject": "",
-                    "predicate": "",
-                    "object": "",
-                    "rationale": response.content,
-                    "sources_cited": ["llm"],
-                    "confidence": 0.3,
-                }
-            ]
+        except json.JSONDecodeError as exc:
+            logger.warning(
+                f"Failed to parse LLM response as JSON for node {neighborhood.class_label}: {exc}. "
+                f"Response content: {response.content[:200]}. No deltas proposed.",
+                exc_info=True,
+            )
+            deltas = []
+        except (KeyError, TypeError, ValueError) as exc:
+            logger.warning(
+                f"Unexpected structure in LLM response for node {neighborhood.class_label}: {exc}. "
+                f"Expected array or dict with 'deltas' key. No deltas proposed.",
+                exc_info=True,
+            )
+            deltas = []
+        except Exception as exc:
+            logger.error(
+                f"Unexpected error parsing LLM response for node {neighborhood.class_label}: {exc}",
+                exc_info=True,
+            )
+            raise
 
         # Ensure we have at least 1 delta
         if not deltas:

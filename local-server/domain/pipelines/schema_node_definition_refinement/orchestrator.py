@@ -9,6 +9,7 @@ siblings, properties) and extraction examples. Uses LLM to generate
 from __future__ import annotations
 
 import json
+import logging
 import re
 from dataclasses import dataclass, field
 from typing import Any
@@ -16,6 +17,8 @@ from typing import Any
 from domain.pipeline.ports import LLMProvider
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
 from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -252,16 +255,40 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
                 if not isinstance(c["confidence"], (int, float)):
                     c["confidence"] = 0.5
 
-        except Exception:
-            # Fallback: return a single candidate with the response as definition
+        except json.JSONDecodeError as exc:
+            logger.warning(
+                f"Failed to parse LLM response as JSON for node {neighborhood.class_label}: {exc}. "
+                f"Response content: {response.content[:200]}. Falling back to raw response.",
+                exc_info=True,
+            )
             candidates = [
                 {
                     "definition": response.content,
-                    "rationale": "Generated via LLM",
+                    "rationale": "Generated via LLM (parsing failed)",
                     "sources_used": ["llm"],
                     "confidence": 0.3,
                 }
             ]
+        except (KeyError, TypeError, ValueError) as exc:
+            logger.warning(
+                f"Unexpected structure in LLM response for node {neighborhood.class_label}: {exc}. "
+                f"Expected array or dict with 'definitions' key. Falling back to raw response.",
+                exc_info=True,
+            )
+            candidates = [
+                {
+                    "definition": response.content,
+                    "rationale": "Generated via LLM (structure parsing failed)",
+                    "sources_used": ["llm"],
+                    "confidence": 0.3,
+                }
+            ]
+        except Exception as exc:
+            logger.error(
+                f"Unexpected error parsing LLM response for node {neighborhood.class_label}: {exc}",
+                exc_info=True,
+            )
+            raise
 
         # Ensure we have at least 2 candidates
         while len(candidates) < 2:
