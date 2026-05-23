@@ -52,6 +52,26 @@ _logger = get_logger(__name__)
 # ==================== Helper Functions ====================
 
 
+def _handle_repository_error(exc: Exception) -> tuple[int, str]:
+    """
+    Map repository exceptions to HTTP status codes and error messages.
+
+    Converts RuntimeError from database operations to appropriate HTTP responses,
+    suppressing internal database details.
+
+    Args:
+        exc: The repository exception
+
+    Returns:
+        Tuple of (HTTP status code, error message for client)
+    """
+    if isinstance(exc, RuntimeError):
+        if "database" in str(exc).lower():
+            return (http_status.HTTP_500_INTERNAL_SERVER_ERROR, "Database operation failed")
+    _logger.error(f"Unexpected repository error: {exc}", exc_info=exc)
+    return (http_status.HTTP_500_INTERNAL_SERVER_ERROR, "An unexpected error occurred")
+
+
 def _get_grounding_config(config: dict[str, Any]) -> dict[str, Any]:
     """
     Extract grounding-specific configuration.
@@ -284,12 +304,16 @@ async def run_pipeline(
 
     # Create pipeline run in pending state
     run_id = str(uuid4())
-    repo.create(
-        batch_run_id=run_id,
-        pipeline_type=ptype,
-        implementation_id=request_body.implementation_id,
-        configuration_ref=request_body.configuration_ref,
-    )
+    try:
+        repo.create(
+            batch_run_id=run_id,
+            pipeline_type=ptype,
+            implementation_id=request_body.implementation_id,
+            configuration_ref=request_body.configuration_ref,
+        )
+    except RuntimeError as e:
+        status_code, message = _handle_repository_error(e)
+        raise HTTPException(status_code=status_code, detail=message) from e
 
     try:
         # Prepare services for orchestrator instantiation
@@ -343,12 +367,16 @@ async def run_pipeline(
 
         # Update run with execution results
         output_summary = result_state.result or {}
-        repo.update_summaries(
-            run_id=run_id,
-            output_summary=output_summary,
-            llm_metadata={},
-        )
-        repo.update_status(run_id, PipelineRunStatus.COMPLETED)
+        try:
+            repo.update_summaries(
+                run_id=run_id,
+                output_summary=output_summary,
+                llm_metadata={},
+            )
+            repo.update_status(run_id, PipelineRunStatus.COMPLETED)
+        except RuntimeError as e:
+            status_code, message = _handle_repository_error(e)
+            raise HTTPException(status_code=status_code, detail=message) from e
 
         # Fetch updated run for response
         updated_run = repo.get(run_id)
@@ -362,12 +390,15 @@ async def run_pipeline(
     except Exception as exc:
         # Update run with error status
         _logger.error(f"Pipeline execution failed for run {run_id}: {exc}", exc_info=exc)
-        repo.update_status(run_id, PipelineRunStatus.FAILED)
-        repo.update_summaries(run_id=run_id, output_summary={"error": str(exc)})
+        try:
+            repo.update_status(run_id, PipelineRunStatus.FAILED)
+            repo.update_summaries(run_id=run_id, output_summary={"error": str(exc)})
+        except RuntimeError as db_err:
+            _logger.error(f"Failed to update run status after execution error: {db_err}")
 
         raise HTTPException(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Pipeline execution failed: {str(exc)}",
+            detail="Pipeline execution failed",
         )
 
 
