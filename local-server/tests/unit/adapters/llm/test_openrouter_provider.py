@@ -18,6 +18,7 @@ import httpx
 import pytest
 
 from adapters.llm.openrouter_provider import OpenRouterProvider
+from domain.pipeline.exceptions import PipelineExternalServiceError
 from domain.pipeline.ports import LLMResponse
 
 
@@ -698,17 +699,19 @@ class TestOpenRouterErrorHandling:
         assert "OpenRouter API error: 500" in str(exc_info.value)
 
     def test_complete_handles_timeout(self):
-        """Complete re-raises httpx.TimeoutException."""
+        """Complete wraps httpx.TimeoutException in PipelineExternalServiceError."""
         provider = self.create_provider_with_mock_client()
 
         provider._client.post.side_effect = httpx.TimeoutException("Request timeout")
 
-        with pytest.raises(httpx.TimeoutException):
+        with pytest.raises(PipelineExternalServiceError) as exc_info:
             provider.complete(
                 system_prompt="sys",
                 user_prompt="user",
                 model="gpt-4",
             )
+
+        assert "TimeoutException" in str(exc_info.value)
 
     def test_complete_handles_unexpected_error(self):
         """Complete wraps unexpected errors in RuntimeError."""

@@ -100,8 +100,9 @@ class OpenRouterProvider:
             LLMResponse with generated content and metadata
 
         Raises:
-            ValueError: If model is invalid or API error occurs
-            httpx.TimeoutException: If request times out
+            ValueError: If model is invalid or API key is unauthorized
+            RuntimeError: For other HTTP errors
+            PipelineExternalServiceError: If request times out or connection fails
         """
         # Check cache
         cache_key = self._make_cache_key(

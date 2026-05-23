@@ -34,6 +34,9 @@ from domain.pipelines.registry import (
 from domain.pipelines.schema_extraction.orchestrator import SchemaExtractionOrchestrator
 from domain.pipelines.schema_node_grounding.orchestrator import SchemaGroundingOrchestrator
 
+# Constant for mocking the orchestrator creation function
+ORCHESTRATOR_PATCH_PATH = "adapters.web.pipelines_routes.create_orchestrator"
+
 
 @pytest.fixture
 def temp_local_db():
@@ -534,7 +537,7 @@ class TestPipelineErrorHandling:
         mock_orchestrator.execute.side_effect = PipelineInputError("Invalid documents format")
 
         # Patch create_orchestrator to return our mock
-        with patch("adapters.web.pipelines_routes.create_orchestrator", return_value=mock_orchestrator):
+        with patch(ORCHESTRATOR_PATCH_PATH, return_value=mock_orchestrator):
             response = client.post(
                 "/api/pipelines/schema_extraction/run",
                 json={
@@ -569,7 +572,7 @@ class TestPipelineErrorHandling:
         )
 
         # Patch create_orchestrator to return our mock
-        with patch("adapters.web.pipelines_routes.create_orchestrator", return_value=mock_orchestrator):
+        with patch(ORCHESTRATOR_PATCH_PATH, return_value=mock_orchestrator):
             response = client.post(
                 "/api/pipelines/schema_extraction/run",
                 json={
@@ -599,12 +602,10 @@ class TestPipelineErrorHandling:
 
         # Mock orchestrator to raise PipelineExecutionError
         mock_orchestrator = AsyncMock()
-        mock_orchestrator.execute.side_effect = PipelineExecutionError(
-            "Internal logic failed"
-        )
+        mock_orchestrator.execute.side_effect = PipelineExecutionError("Internal logic failed")
 
         # Patch create_orchestrator to return our mock
-        with patch("adapters.web.pipelines_routes.create_orchestrator", return_value=mock_orchestrator):
+        with patch(ORCHESTRATOR_PATCH_PATH, return_value=mock_orchestrator):
             response = client.post(
                 "/api/pipelines/schema_extraction/run",
                 json={
@@ -637,7 +638,7 @@ class TestPipelineErrorHandling:
         mock_orchestrator.execute.side_effect = PipelineError("Generic pipeline error")
 
         # Patch create_orchestrator to return our mock
-        with patch("adapters.web.pipelines_routes.create_orchestrator", return_value=mock_orchestrator):
+        with patch(ORCHESTRATOR_PATCH_PATH, return_value=mock_orchestrator):
             response = client.post(
                 "/api/pipelines/schema_extraction/run",
                 json={
@@ -682,7 +683,7 @@ class TestPipelineErrorHandling:
         mock_orchestrator.execute.return_value = mock_state
 
         # Patch create_orchestrator to return our mock
-        with patch("adapters.web.pipelines_routes.create_orchestrator", return_value=mock_orchestrator):
+        with patch(ORCHESTRATOR_PATCH_PATH, return_value=mock_orchestrator):
             response = client.post(
                 "/api/pipelines/schema_extraction/run",
                 json={
