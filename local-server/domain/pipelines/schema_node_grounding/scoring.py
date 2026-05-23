@@ -159,6 +159,7 @@ class GroundingScorer:
         self,
         weights: dict[str, float] | None = None,
         embedding_service: Any = None,
+        error_callback: Any = None,
     ) -> None:
         """
         Initialize the scorer.
@@ -169,6 +170,7 @@ class GroundingScorer:
                 - label_match: Weight for label matching (default 0.3)
                 - semantic_similarity: Weight for semantic similarity (default 0.4)
             embedding_service: Optional service for computing embedding similarity
+            error_callback: Optional callable(node_label, candidate_label, error) for error reporting
         """
         default_weights = {
             "source_score": 0.3,
@@ -177,6 +179,7 @@ class GroundingScorer:
         }
         self._weights = {**default_weights, **(weights or {})}
         self._embedding_service = embedding_service
+        self._error_callback = error_callback
 
     async def score_candidates(
         self,
@@ -206,7 +209,9 @@ class GroundingScorer:
                     semantic_sim = await self._embedding_service.similarity(
                         node_label, candidate.description or candidate.label
                     )
-                except Exception:
+                except Exception as e:
+                    if self._error_callback:
+                        self._error_callback(node_label, candidate.label, e)
                     semantic_sim = 0.0
 
             combined_score = (

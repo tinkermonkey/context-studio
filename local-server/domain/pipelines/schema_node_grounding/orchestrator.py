@@ -125,7 +125,6 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
         try:
             candidates = await self._grounding_adapter.query_sources(
                 label=node_label,
-                node_type=state.node_type,
                 sources=state.sources,
             )
 

@@ -298,7 +298,17 @@ async def lifespan(app: FastAPI):
             dbpedia=DBpediaSource(),
             conceptnet=ConceptNetSource(base_url=settings.reference.conceptnet_base_url),
         )
-        grounding_scorer = GroundingScorer(embedding_service=embedding_service)
+
+        def log_embedding_error(node_label: str, candidate_label: str, error: Exception) -> None:
+            logger.warning(
+                f"Failed to compute embedding similarity for '{node_label}' vs '{candidate_label}': {error}. "
+                f"Semantic similarity score set to 0.0 (40% of grounding confidence)"
+            )
+
+        grounding_scorer = GroundingScorer(
+            embedding_service=embedding_service,
+            error_callback=log_embedding_error,
+        )
         grounding_config = {
             "top_n": 10,
             "weights": {
