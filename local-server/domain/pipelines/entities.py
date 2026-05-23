@@ -134,7 +134,7 @@ class IndividualExtractionRun(PipelineRun):
     source_document_uri: str | None = None
 
     @classmethod
-    def create(
+    def create(  # type: ignore[override]
         cls,
         id: str,
         batch_run_id: str,
@@ -187,7 +187,7 @@ class SchemaExtractionRun(PipelineRun):
     """
 
     @classmethod
-    def create(
+    def create(  # type: ignore[override]
         cls,
         id: str,
         batch_run_id: str,
@@ -222,7 +222,7 @@ class SchemaGroundingRun(PipelineRun):
     """
 
     @classmethod
-    def create(
+    def create(  # type: ignore[override]
         cls,
         id: str,
         batch_run_id: str,
@@ -257,7 +257,7 @@ class SchemaDefinitionRefinementRun(PipelineRun):
     """
 
     @classmethod
-    def create(
+    def create(  # type: ignore[override]
         cls,
         id: str,
         batch_run_id: str,
@@ -292,7 +292,7 @@ class SchemaConnectionRefinementRun(PipelineRun):
     """
 
     @classmethod
-    def create(
+    def create(  # type: ignore[override]
         cls,
         id: str,
         batch_run_id: str,

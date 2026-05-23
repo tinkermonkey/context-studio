@@ -97,7 +97,7 @@ def main() -> int:
         "--log-iteration",
         type=str,
         default=None,
-        help="Append execution record to the specified log file (default: logs/pipeline-iteration-log.md)",
+        help="Append execution record to log file (default: logs/pipeline-iteration-log.md)",
     )
 
     args = parser.parse_args()

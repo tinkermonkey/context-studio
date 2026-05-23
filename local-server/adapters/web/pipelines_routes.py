@@ -106,7 +106,7 @@ async def list_pipeline_types() -> list[PipelineTypeResponse]:
 )
 async def list_implementations(
     pipeline_type: str,
-    request: Request = None,
+    request: Request,
 ) -> list[ImplementationResponse]:
     """
     List all registered implementations for a pipeline type.
@@ -144,7 +144,7 @@ async def list_implementations(
 async def list_configurations(
     pipeline_type: str,
     impl_id: str,
-    request: Request = None,
+    request: Request,
 ) -> list[ConfigurationResponse]:
     """
     List all configurations for a pipeline type and implementation.
@@ -199,8 +199,8 @@ async def list_configurations(
 )
 async def run_pipeline(
     pipeline_type: str,
+    request: Request,
     request_body: PipelineRunRequest = Body(...),
-    request: Request = None,
 ) -> PipelineRunResponse:
     """
     Invoke a pipeline by type.
@@ -271,7 +271,7 @@ async def run_pipeline(
 @router.get("/runs/{run_id}", response_model=PipelineRunResponse)
 async def get_pipeline_run(
     run_id: str,
-    request: Request = None,
+    request: Request,
 ) -> PipelineRunResponse:
     """
     Fetch a PipelineRun by ID.
@@ -300,6 +300,7 @@ async def get_pipeline_run(
 
 @router.get("/runs", response_model=ListResponse[PipelineRunResponse])
 async def list_pipeline_runs(
+    request: Request,
     pipeline_type: Optional[str] = Query(None, description="Filter by pipeline type"),
     status: Optional[str] = Query(None, description="Filter by status"),
     implementation_id: Optional[str] = Query(None, description="Filter by implementation ID"),
@@ -307,7 +308,6 @@ async def list_pipeline_runs(
     end_date: Optional[str] = Query(None, description="Filter by end date (ISO 8601 format)"),
     limit: int = Query(100, ge=1, le=500, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
-    request: Request = None,
 ) -> ListResponse[PipelineRunResponse]:
     """
     List pipeline runs with optional filtering.

@@ -130,7 +130,7 @@ class TestPipelineImplementationEndpoints:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_list_implementations_no_implementations_returns_empty_list(self, client):
-        """GET /api/pipelines/types/{type}/implementations returns empty list when none registered."""
+        """GET implementations endpoint returns empty list when none registered."""
         response = client.get("/api/pipelines/types/individual_extraction/implementations")
         assert response.status_code == status.HTTP_200_OK
         body = response.json()

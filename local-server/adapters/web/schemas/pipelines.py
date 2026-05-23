@@ -5,8 +5,10 @@ Request schemas (for POST/PUT):
 - IndividualExtractionRunRequest — Per-type request; documented for Wave B per-type implementation
 - SchemaExtractionRunRequest — Per-type request; documented for Wave B per-type implementation
 - SchemaGroundingRunRequest — Per-type request; documented for Wave B per-type implementation
-- SchemaDefinitionRefinementRunRequest — Per-type request; documented for Wave B per-type implementation
-- SchemaConnectionRefinementRunRequest — Per-type request; documented for Wave B per-type implementation
+- SchemaDefinitionRefinementRunRequest — Per-type request; documented for Wave B
+  per-type implementation
+- SchemaConnectionRefinementRunRequest — Per-type request; documented for Wave B
+  per-type implementation
 
 Response schemas (for GET/returns):
 - PipelineRunResponse
@@ -14,10 +16,10 @@ Response schemas (for GET/returns):
 - ImplementationResponse
 - ConfigurationResponse
 
-Per-type request schemas are defined for forward compatibility and documentation of expected inputs
-per pipeline type. They are actively used in per-type implementation sub-issues. The generic
-PipelineRunRequest is used in the Wave B generic endpoint; type-specific fields are refined
-in later sub-issues.
+Per-type request schemas are defined for forward compatibility and documentation of
+expected inputs per pipeline type. They are actively used in per-type implementation
+sub-issues. The generic PipelineRunRequest is used in the Wave B generic endpoint;
+type-specific fields are refined in later sub-issues.
 
 These schemas handle serialization/deserialization between HTTP and domain models.
 """
@@ -158,7 +160,10 @@ class SchemaGroundingOutput(BaseModel):
 
 
 class SchemaDefinitionRefinementOutput(BaseModel):
-    """Per-type output schema for schema_node_definition_refinement with provenance and confidence."""
+    """Per-type output schema for schema_node_definition_refinement.
+
+    Includes provenance and confidence.
+    """
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -170,7 +175,10 @@ class SchemaDefinitionRefinementOutput(BaseModel):
 
 
 class SchemaConnectionRefinementOutput(BaseModel):
-    """Per-type output schema for schema_node_connection_refinement with provenance and confidence."""
+    """Per-type output schema for schema_node_connection_refinement.
+
+    Includes provenance and confidence.
+    """
 
     model_config = ConfigDict(from_attributes=True)
 
