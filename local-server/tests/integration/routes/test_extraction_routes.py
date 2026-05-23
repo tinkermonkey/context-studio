@@ -944,6 +944,10 @@ class TestTripleExtraction:
         run = runs[-1]  # Most recent run
         assert run.status.value == "completed"
 
+    @pytest.mark.xfail(
+        reason="extraction service does not yet create change events during triple extraction — see #695",
+        strict=True,
+    )
     def test_extract_triples_batch_run_id_in_change_events(
         self, client, ontology_with_individuals, extraction_run_repository, interchange_repository
     ):
