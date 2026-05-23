@@ -2,12 +2,6 @@
 
 import os
 import sys
-
-_test_file = os.path.abspath(__file__)
-_test_dir = os.path.dirname(_test_file)
-_root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(_test_dir))))
-sys.path.insert(0, _root_dir)
-
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -21,6 +15,11 @@ from domain.pipelines.schema_node_grounding.scoring import (
     GroundingCandidate,
     ScoredCandidate,
 )
+
+_test_file = os.path.abspath(__file__)
+_test_dir = os.path.dirname(_test_file)
+_root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(_test_dir))))
+sys.path.insert(0, _root_dir)
 
 
 class TestSchemaGroundingOrchestrator:
