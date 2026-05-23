@@ -21,6 +21,7 @@ import re
 from dataclasses import dataclass, field, replace
 from typing import Any, cast
 
+from domain.pipeline.exceptions import PipelineExecutionError, PipelineInputError
 from domain.pipeline.ports import LLMProvider
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
@@ -137,38 +138,64 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
 
         Returns:
             Updated state with candidates, connections, and confidence scores
+
+        Raises:
+            PipelineInputError: If required inputs are missing or invalid
+            PipelineExecutionError: If pipeline execution fails
         """
         schema_state = cast(SchemaExtractionState, state)
 
-        # Extract source text from input
-        source_text = schema_state.input_data.get("text", "")
+        # Extract documents from input
+        documents = schema_state.input_data.get("documents", [])
+        if not documents or not any(doc.strip() for doc in documents if isinstance(doc, str)):
+            exc = PipelineInputError("documents is required and must contain at least one non-empty document")
+            schema_state = replace(
+                schema_state, current_status=PipelineRunStatus.FAILED, result={"error": str(exc)}
+            )
+            raise exc
+
+        # Concatenate documents into single source text for processing
+        source_text = " ".join(doc for doc in documents if isinstance(doc, str))
+
         schema_state = replace(
             schema_state, source_text=source_text, current_status=PipelineRunStatus.RUNNING
         )
 
-        # Stage 1: Text ingestion
-        schema_state = await self._stage_text_ingestion(schema_state)
+        try:
+            # Stage 1: Text ingestion
+            schema_state = await self._stage_text_ingestion(schema_state)
 
-        # Stage 2: Candidate concept identification
-        schema_state = await self._stage_candidate_identification(schema_state)
+            # Stage 2: Candidate concept identification
+            schema_state = await self._stage_candidate_identification(schema_state)
 
-        # Stage 3: Classification
-        schema_state = await self._stage_classification(schema_state)
+            # Stage 3: Classification
+            schema_state = await self._stage_classification(schema_state)
 
-        # Stage 4: Definition synthesis
-        schema_state = await self._stage_definition_synthesis(schema_state)
+            # Stage 4: Definition synthesis
+            schema_state = await self._stage_definition_synthesis(schema_state)
 
-        # Stage 5: Connection proposal
-        schema_state = await self._stage_connection_proposal(schema_state)
+            # Stage 5: Connection proposal
+            schema_state = await self._stage_connection_proposal(schema_state)
 
-        # Stage 6: Disambiguation
-        schema_state = await self._stage_disambiguation(schema_state)
+            # Stage 6: Disambiguation
+            schema_state = await self._stage_disambiguation(schema_state)
 
-        # Stage 7: Confidence scoring
-        schema_state = await self._stage_confidence_scoring(schema_state)
+            # Stage 7: Confidence scoring
+            schema_state = await self._stage_confidence_scoring(schema_state)
 
-        # Finalize
-        schema_state = await self._stage_finalize(schema_state)
+            # Finalize
+            schema_state = await self._stage_finalize(schema_state)
+
+        except PipelineExecutionError:
+            schema_state = replace(schema_state, current_status=PipelineRunStatus.FAILED)
+            raise
+        except Exception as exc:
+            schema_state = replace(
+                schema_state,
+                current_status=PipelineRunStatus.FAILED,
+                result={"error": str(exc)},
+            )
+            raise PipelineExecutionError(f"Schema extraction failed: {str(exc)}") from exc
 
         return schema_state
 

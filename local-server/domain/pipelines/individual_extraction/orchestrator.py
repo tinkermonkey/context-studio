@@ -16,6 +16,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from domain.extraction.services import ExtractionService
+from domain.pipeline.exceptions import PipelineExecutionError, PipelineInputError
 from domain.pipeline.ports import LLMProvider
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
@@ -120,11 +121,11 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
 
         # Validate required inputs
         if not text or not text.strip():
-            raise ValueError("text is required and cannot be empty")
+            raise PipelineInputError("text is required and cannot be empty")
         if not ontology_id:
-            raise ValueError("ontology_id is required")
+            raise PipelineInputError("ontology_id is required")
         if not model:
-            raise ValueError("model is required")
+            raise PipelineInputError("model is required")
 
         # Update state with input data
         state.source_text = text

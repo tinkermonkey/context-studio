@@ -14,6 +14,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
+from domain.pipeline.exceptions import PipelineExecutionError, PipelineInputError
 from domain.pipeline.ports import LLMProvider
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
@@ -105,7 +106,7 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
         extraction_usages = state.input_data.get("extraction_usages", [])
 
         if not scope_id:
-            raise ValueError("scope_id is required and cannot be empty")
+            raise PipelineInputError("scope_id is required and cannot be empty")
 
         state.scope_id = scope_id
         state.current_connections = current_connections

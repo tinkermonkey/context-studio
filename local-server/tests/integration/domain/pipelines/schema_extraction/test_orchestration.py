@@ -158,7 +158,7 @@ async def test_schema_extraction_microservices_fixture():
         run_id="run-001",
         pipeline_type=PipelineType.SCHEMA_EXTRACTION,
         input_data={
-            "text": source_text,
+            "documents": [source_text],
             "model": "google/gemini-3-flash-preview",
         },
     )
@@ -209,7 +209,7 @@ async def test_schema_extraction_provenance_tracking():
         run_id="run-002",
         pipeline_type=PipelineType.SCHEMA_EXTRACTION,
         input_data={
-            "text": source_text,
+            "documents": [source_text],
             "model": "google/gemini-3-flash-preview",
         },
     )
@@ -249,7 +249,7 @@ async def test_schema_extraction_confidence_bounds():
             run_id=f"run-conf-{fixture_name}",
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             input_data={
-                "text": source_text,
+                "documents": [source_text],
                 "model": "google/gemini-3-flash-preview",
             },
         )
@@ -282,7 +282,7 @@ async def test_schema_extraction_disambiguation():
         run_id="run-disamb",
         pipeline_type=PipelineType.SCHEMA_EXTRACTION,
         input_data={
-            "text": source_text,
+            "documents": [source_text],
             "model": "google/gemini-3-flash-preview",
         },
     )
@@ -318,7 +318,7 @@ async def test_schema_extraction_all_fixtures():
             run_id=f"run-{fixture_name}",
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             input_data={
-                "text": source_text,
+                "documents": [source_text],
                 "model": "google/gemini-3-flash-preview",
             },
         )
@@ -368,7 +368,7 @@ async def test_schema_extraction_corpus_consensus_distributed_fixture():
         run_id="run-corpus-consensus",
         pipeline_type=PipelineType.SCHEMA_EXTRACTION,
         input_data={
-            "text": source_text,
+            "documents": [source_text],
             "model": "google/gemini-3-flash-preview",
         },
     )
@@ -409,7 +409,7 @@ async def test_schema_extraction_corpus_microservices_api_fixture():
         run_id="run-corpus-microservices-api",
         pipeline_type=PipelineType.SCHEMA_EXTRACTION,
         input_data={
-            "text": source_text,
+            "documents": [source_text],
             "model": "google/gemini-3-flash-preview",
         },
     )
@@ -439,7 +439,7 @@ async def test_schema_extraction_corpus_service_multisense_fixture():
         run_id="run-corpus-service-multisense",
         pipeline_type=PipelineType.SCHEMA_EXTRACTION,
         input_data={
-            "text": source_text,
+            "documents": [source_text],
             "model": "google/gemini-3-flash-preview",
         },
     )
@@ -474,7 +474,7 @@ async def test_parse_warnings_candidate_identification_invalid_json():
         run_id="run-parse-fail-candidates",
         pipeline_type=PipelineType.SCHEMA_EXTRACTION,
         input_data={
-            "text": source_text,
+            "documents": [source_text],
             "model": "google/gemini-3-flash-preview",
         },
     )
@@ -508,7 +508,7 @@ async def test_parse_warnings_connection_proposal_invalid_json():
         run_id="run-parse-fail-connections",
         pipeline_type=PipelineType.SCHEMA_EXTRACTION,
         input_data={
-            "text": source_text,
+            "documents": [source_text],
             "model": "google/gemini-3-flash-preview",
         },
     )
@@ -545,7 +545,7 @@ async def test_parse_warnings_disambiguation_invalid_json():
         run_id="run-parse-fail-disamb",
         pipeline_type=PipelineType.SCHEMA_EXTRACTION,
         input_data={
-            "text": source_text,
+            "documents": [source_text],
             "model": "google/gemini-3-flash-preview",
         },
     )
@@ -580,7 +580,7 @@ async def test_parse_warnings_structure():
         run_id="run-warning-structure",
         pipeline_type=PipelineType.SCHEMA_EXTRACTION,
         input_data={
-            "text": source_text,
+            "documents": [source_text],
             "model": "google/gemini-3-flash-preview",
         },
     )

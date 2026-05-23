@@ -83,11 +83,18 @@ def client(pipeline_run_repo, registries):
     app = FastAPI()
     app.include_router(router)
 
+    # Create an async mock LLM router for orchestrators
+    mock_llm_router = AsyncMock()
+    # Mock the complete_async method to return a response
+    mock_response = MagicMock()
+    mock_response.content = '[]'  # Default to empty list for JSON responses
+    mock_llm_router.complete_async.return_value = mock_response
+
     # Store in app.state for route handlers
     app.state.pipeline_run_repo = pipeline_run_repo
     app.state.implementation_registry = registries["implementation_registry"]
     app.state.config_registry = registries["config_registry"]
-    app.state.llm_router = MagicMock()
+    app.state.llm_router = mock_llm_router
 
     return TestClient(app)
 

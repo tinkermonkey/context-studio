@@ -14,6 +14,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
+from domain.pipeline.exceptions import PipelineExecutionError, PipelineInputError
 from domain.pipeline.ports import LLMProvider
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
@@ -104,7 +105,7 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
         extraction_usages = state.input_data.get("extraction_usages", [])
 
         if not node_id:
-            raise ValueError("node_id is required and cannot be empty")
+            raise PipelineInputError("node_id is required and cannot be empty")
 
         state.node_id = node_id
         state.current_definition = current_definition

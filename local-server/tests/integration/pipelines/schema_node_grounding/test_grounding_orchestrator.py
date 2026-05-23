@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from domain.pipeline.exceptions import PipelineInputError
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.schema_node_grounding.orchestrator import (
     SchemaGroundingOrchestrator,
@@ -142,7 +143,7 @@ class TestSchemaGroundingOrchestrator:
             input_data={"node_type": "Class"},
         )
 
-        with pytest.raises(ValueError, match="node_label is required"):
+        with pytest.raises(PipelineInputError, match="node_label is required"):
             await orchestrator.execute(state)
 
     @pytest.mark.asyncio

@@ -11,6 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from domain.pipeline.exceptions import PipelineExecutionError, PipelineInputError
 from domain.pipeline.ports import LLMProvider
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
@@ -116,7 +117,7 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
         sources = state.input_data.get("sources", [])
 
         if not node_label:
-            raise ValueError("node_label is required and cannot be empty")
+            raise PipelineInputError("node_label is required and cannot be empty")
 
         state.node_label = node_label
         state.node_type = NodeType(node_type_str) if node_type_str else NodeType.CLASS
