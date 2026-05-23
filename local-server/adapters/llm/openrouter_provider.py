@@ -20,6 +20,7 @@ from typing import Literal
 
 import httpx
 
+from domain.pipeline.exceptions import PipelineExternalServiceError
 from domain.pipeline.ports import LLMResponse
 from utils.logger import get_logger
 
@@ -178,8 +179,10 @@ class OpenRouterProvider:
             else:
                 logger.error(f"OpenRouter API error: {e.response.status_code} {e.response.text}")
                 raise RuntimeError(f"OpenRouter API error: {e.response.status_code}")
-        except httpx.TimeoutException:
-            raise
+        except (httpx.TimeoutException, httpx.ConnectError) as e:
+            raise PipelineExternalServiceError(
+                f"External service error: {type(e).__name__}: {str(e)}"
+            ) from e
         except Exception as e:
             logger.error(f"Unexpected error calling OpenRouter: {e}", exc_info=True)
             raise RuntimeError(f"Unexpected error: {type(e).__name__}: {e}")

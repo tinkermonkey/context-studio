@@ -24,7 +24,6 @@ from hashlib import sha256
 from typing import Any, Optional
 from uuid import uuid4
 
-import httpx
 from fastapi import APIRouter, Body, HTTPException, Query, Request
 from fastapi import status as http_status
 
@@ -386,17 +385,14 @@ async def run_pipeline(
     # Execute the pipeline
     try:
         result_state = await orchestrator.execute(state)
-    except (httpx.TimeoutException, httpx.ConnectError) as e:
-        exc = PipelineExternalServiceError(f"External service timeout or connection failed: {str(e)}")
+    except PipelineError as exc:
         status_code, message = _handle_domain_error(exc)
         try:
             repo.update_status(run_id, PipelineRunStatus.FAILED)
             repo.update_summaries(run_id=run_id, output_summary={"error": message})
         except PipelineStorageError as db_err:
             _logger.error(f"Failed to update run status after execution error: {db_err}")
-        raise HTTPException(status_code=status_code, detail=message) from e
-    except PipelineError:
-        raise
+        raise HTTPException(status_code=status_code, detail=message) from exc
     except Exception as exc:
         domain_exc = PipelineExecutionError(f"Unexpected orchestrator failure: {str(exc)}")
         status_code, message = _handle_domain_error(domain_exc)
@@ -409,7 +405,7 @@ async def run_pipeline(
 
     # Update run with execution results (including any parse warnings)
     output_summary = result_state.result or {}
-    parse_warnings = getattr(result_state, "parse_warnings", [])
+    parse_warnings = result_state.parse_warnings
     if parse_warnings:
         output_summary["warnings"] = parse_warnings
         for warning in parse_warnings:
@@ -434,7 +430,11 @@ async def run_pipeline(
     # Fetch updated run for response
     updated_run = repo.get(run_id)
     if updated_run is None:
-        raise RuntimeError(f"Failed to retrieve updated run: {run_id}")
+        _logger.error(f"Failed to retrieve updated run: {run_id}")
+        raise HTTPException(
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve pipeline run after execution",
+        )
 
     return _to_response(updated_run)
 

@@ -106,7 +106,6 @@ class SchemaExtractionState(PipelineState):
     candidate_properties: list[CandidatePropertyDefinition] = field(default_factory=list)
     proposed_connections: list[CandidateConnection] = field(default_factory=list)
     steps_completed: list[str] = field(default_factory=list)
-    parse_warnings: list[dict[str, str]] = field(default_factory=list)
 
 
 class SchemaExtractionOrchestrator(PipelineOrchestrator):

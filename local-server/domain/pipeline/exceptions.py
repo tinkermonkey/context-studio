@@ -28,18 +28,18 @@ class PipelineStorageError(PipelineError):
 
 
 class PipelineInputError(PipelineError):
-    """Raised for invalid or malformed input (maps to HTTP 400)."""
+    """Raised when pipeline input is invalid or malformed."""
 
     pass
 
 
 class PipelineExternalServiceError(PipelineError):
-    """Raised for external service failures like timeouts (maps to HTTP 503)."""
+    """Raised when an external service fails (timeouts, connection errors)."""
 
     pass
 
 
 class PipelineExecutionError(PipelineError):
-    """Raised for internal orchestrator logic failures (maps to HTTP 500)."""
+    """Raised when internal orchestrator logic fails unexpectedly."""
 
     pass
