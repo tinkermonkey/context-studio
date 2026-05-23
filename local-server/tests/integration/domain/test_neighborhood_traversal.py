@@ -5,67 +5,14 @@ Tests the SchemaNeighborhoodTraversal utility for extracting class and
 property neighborhoods with various levels of context.
 """
 
-import tempfile
-from pathlib import Path
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
-from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.ontology.entities import Class, ConceptScheme, PropertyDefinition, Taxonomy
-from domain.ontology.services import OntologyService
 from domain.ontology.value_objects import Status
 from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
-from domain.ports import EventPublisher
-
-
-class DummyEventPublisher(EventPublisher):
-    """Dummy event publisher for testing."""
-
-    def publish(self, event):
-        pass
-
-
-class DummyEmbeddingService:
-    """Dummy embedding service for testing."""
-
-    def embed(self, text: str) -> list[float]:
-        return [0.0] * 384
-
-
-@pytest.fixture
-def temp_db():
-    """Create a temporary SQLite database."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        db_path = Path(tmpdir) / "test.db"
-        db_url = f"sqlite:///{db_path}"
-        engine = create_engine(db_url)
-        Base.metadata.create_all(engine)
-        yield db_url
-
-
-@pytest.fixture
-def session_factory(temp_db):
-    """Create a session factory."""
-    engine = create_engine(temp_db)
-    SessionLocal = sessionmaker(bind=engine)
-    return SessionLocal
-
-
-@pytest.fixture
-def ontology_service(session_factory):
-    """Create an ontology service with repositories."""
-    repo = SQLiteOntologyRepository(session_factory=session_factory)
-    embedding_svc = DummyEmbeddingService()
-    event_pub = DummyEventPublisher()
-    return OntologyService(
-        repository=repo,
-        embedding_service=embedding_svc,
-        event_publisher=event_pub,
-    )
 
 
 @pytest.fixture

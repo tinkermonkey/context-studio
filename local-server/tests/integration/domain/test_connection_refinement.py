@@ -114,8 +114,6 @@ class TestConnectionRefinementOrchestrator:
             llm_provider=llm,
         )
 
-        import asyncio
-
         with pytest.raises(ValueError, match="scope_id is required"):
             asyncio.run(orchestrator.execute(state))
 
@@ -138,8 +136,6 @@ class TestConnectionRefinementOrchestrator:
             },
             llm_provider=llm,
         )
-
-        import asyncio
 
         with pytest.raises(ValueError, match="Class not found"):
             asyncio.run(orchestrator.execute(state))
