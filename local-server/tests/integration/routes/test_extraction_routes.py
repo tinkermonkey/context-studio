@@ -14,6 +14,7 @@ Tests verify the full extraction workflow with:
 These tests exercise the complete stack: routes → domain service → adapters → database.
 """
 
+import json
 import tempfile
 from datetime import datetime
 from pathlib import Path
@@ -492,6 +493,41 @@ class TestTripleExtraction:
             "object_class": classes[1],
         }
 
+    @pytest.fixture
+    def extraction_service(self, populated_repository, embedding_service, event_publisher, extraction_repository, session_factory):
+        """Override extraction service to use LLM provider that returns triples."""
+        from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunRepository
+
+        extraction_run_repo = SQLiteExtractionRunRepository(session_factory)
+
+        # Configure LLM provider to return triples that will create change events
+        triple_response = {
+            "triples": [
+                {
+                    "subject": {"label": "database", "type": "entity"},
+                    "predicate": {"label": "stores", "type": "relation"},
+                    "object": {"label": "information", "type": "entity"},
+                    "confidence": 0.95,
+                    "provenance": {
+                        "text_offset_start": 0,
+                        "text_offset_end": 10,
+                    }
+                }
+            ]
+        }
+
+        service = ExtractionService(
+            ontology_repo=populated_repository,
+            embedding_service=embedding_service,
+            llm=FakeLLMProvider(response_content=json.dumps(triple_response)),
+            nlp=FakeNLPProcessor(),
+            reference_sources=[FakeReferenceSource()],
+            event_publisher=event_publisher,
+            extraction_repo=extraction_repository,
+            extraction_run_repo=extraction_run_repo,
+        )
+        return service
+
     def test_extract_triples_valid_request_returns_200(self, client, ontology_with_individuals):
         """POST /api/extraction/extract returns 200 with valid input."""
         response = client.post(
@@ -938,10 +974,12 @@ class TestTripleExtraction:
         # Verify change_events for this extraction run have batch_run_id populated
         # The batch_run_id on change_events should point to the extraction run
         change_events = interchange_repository.get_change_events_for_run(run.id)
-        # At minimum, we expect the ExtractionRun itself to be recorded as a change event
-        # when it's created, or other entities created during extraction
-        # If no change events exist, that's acceptable (no entities were extracted/committed)
-        # But when change events do exist, they must have batch_run_id set
+        # Precondition: extraction should produce at least one change event
+        # If this fails, the test setup (LLM provider response) may not be returning entities
+        assert len(change_events) > 0, (
+            "No change events found for extraction run. "
+            "The LLM provider may not be configured to return entities."
+        )
         for event in change_events:
             assert event.batch_run_id == run.id, (
                 f"Change event {event.id} has batch_run_id={event.batch_run_id}, "
