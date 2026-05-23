@@ -535,6 +535,27 @@ class TestTripleExtraction:
         )
         return service
 
+    @pytest.fixture
+    def client(self, extraction_service, event_publisher, session_factory):
+        """Create a TestClient with extraction service and event handlers registered."""
+        from adapters.events.change_recorder import ChangeEventRecorder
+        from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
+
+        # Set up event handlers
+        change_repo = SQLiteChangeRepository(session_factory)
+        change_recorder = ChangeEventRecorder(change_repo)
+
+        # Subscribe event handlers to the event publisher
+        from domain.extraction.events import ExtractionCompleted
+        event_publisher.subscribe(ExtractionCompleted, change_recorder.on_extraction_completed)
+
+        # Create FastAPI app with extraction service
+        app = FastAPI()
+        app.include_router(router)
+        app.state.extraction_service = extraction_service
+
+        return TestClient(app)
+
     def test_extract_triples_valid_request_returns_200(self, client, ontology_with_individuals):
         """POST /api/extraction/extract returns 200 with valid input."""
         response = client.post(
@@ -951,13 +972,6 @@ class TestTripleExtraction:
         run = runs[-1]  # Most recent run
         assert run.status.value == "completed"
 
-    @pytest.mark.xfail(
-        reason=(
-            "extraction service does not yet create change events during triple extraction "
-            "— see #695"
-        ),
-        strict=True,
-    )
     def test_extract_triples_batch_run_id_in_change_events(
         self, client, ontology_with_individuals, extraction_run_repository, interchange_repository
     ):

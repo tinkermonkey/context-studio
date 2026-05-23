@@ -393,58 +393,77 @@ class ExtractionService:
         run_status = ExtractionRunStatus.COMPLETED
 
         try:
-            # Get ontology to validate it exists
-            ontology = self._ontology_repo.get_taxonomy(ontology_id)
-            if not ontology:
-                raise ValueError(f"Ontology {ontology_id} not found")
+            try:
+                # Get ontology to validate it exists
+                ontology = self._ontology_repo.get_taxonomy(ontology_id)
+                if not ontology:
+                    raise ValueError(f"Ontology {ontology_id} not found")
 
-            # Call LLM to extract triples
-            system_prompt, user_prompt = self._build_triple_extraction_prompt(text, ontology)
-            llm_response = self._llm.complete(
-                system_prompt=system_prompt,
-                user_prompt=user_prompt,
-                model=model,
-                temperature=temperature,
-                max_tokens=8000,
-                response_format="json",
+                # Call LLM to extract triples
+                system_prompt, user_prompt = self._build_triple_extraction_prompt(text, ontology)
+                llm_response = self._llm.complete(
+                    system_prompt=system_prompt,
+                    user_prompt=user_prompt,
+                    model=model,
+                    temperature=temperature,
+                    max_tokens=8000,
+                    response_format="json",
+                )
+                tokens_used = llm_response.tokens_in + llm_response.tokens_out
+
+                # Parse LLM response
+                extracted_triples = self._parse_triple_extraction_response(
+                    llm_response.content, text, ontology_id
+                )
+                triples_extracted = len(extracted_triples)
+                triples_committed = triples_extracted
+
+            except Exception as exc:
+                _logger.error(f"Triple extraction failed: {exc}", exc_info=exc)
+                tokens_used = 0
+                extracted_triples = []
+                run_status = ExtractionRunStatus.FAILED
+                warnings.append(f"Extraction failed: {str(exc)}")
+
+            # Update run record
+            duration_ms = int((time.time() - start_time) * 1000)
+            run = ExtractionRun(
+                id=run.id,
+                source_document_uri=run.source_document_uri,
+                source_text_hash=run.source_text_hash,
+                pipeline_config_ref=run.pipeline_config_ref,
+                model=run.model,
+                temperature=run.temperature,
+                tokens_used=tokens_used,
+                duration_ms=duration_ms,
+                triples_extracted=triples_extracted,
+                triples_committed=triples_committed,
+                status=run_status,
             )
-            tokens_used = llm_response.tokens_in + llm_response.tokens_out
 
-            # Parse LLM response
-            extracted_triples = self._parse_triple_extraction_response(
-                llm_response.content, text, ontology_id
+            self._extraction_run_repo.update_extraction_run(run)
+
+            # Publish completion event (with batch_run_id still in context)
+            # This allows the change event recorder to capture batch_run_id
+            failures = self._event_publisher.publish(
+                ExtractionCompleted(
+                    result_id=run_id,
+                    entity_count=triples_extracted,
+                    duration_ms=duration_ms,
+                )
             )
-            triples_extracted = len(extracted_triples)
-            triples_committed = triples_extracted
-
-        except Exception as exc:
-            _logger.error(f"Triple extraction failed: {exc}", exc_info=exc)
-            tokens_used = 0
-            extracted_triples = []
-            run_status = ExtractionRunStatus.FAILED
-            warnings.append(f"Extraction failed: {str(exc)}")
+            if failures:
+                handler_names = ", ".join(name for name, _ in failures)
+                _logger.warning(
+                    "Event handlers failed for ExtractionCompleted (result_id=%s): %s. "
+                    "Extraction result is returned but audit trail may have gaps.",
+                    run_id,
+                    handler_names,
+                )
 
         finally:
             # Always clear the correlation context after extraction
             set_batch_run_context(None)
-
-        # Update run record
-        duration_ms = int((time.time() - start_time) * 1000)
-        run = ExtractionRun(
-            id=run.id,
-            source_document_uri=run.source_document_uri,
-            source_text_hash=run.source_text_hash,
-            pipeline_config_ref=run.pipeline_config_ref,
-            model=run.model,
-            temperature=run.temperature,
-            tokens_used=tokens_used,
-            duration_ms=duration_ms,
-            triples_extracted=triples_extracted,
-            triples_committed=triples_committed,
-            status=run_status,
-        )
-
-        self._extraction_run_repo.update_extraction_run(run)
 
         return TripleExtractionResult(
             triples=extracted_triples,
