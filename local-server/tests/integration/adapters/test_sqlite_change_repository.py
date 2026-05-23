@@ -1,15 +1,14 @@
 """Integration tests for SQLiteChangeRepository."""
 
-import os
-import sys
 import uuid
 from datetime import datetime, timezone
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.models import (
-
     Base,
     ChangeEvent,
     Changeset,

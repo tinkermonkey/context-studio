@@ -1,8 +1,7 @@
 """Fake in-memory implementation of EventPublisher for testing."""
 
-import os
-import sys
 from typing import Callable, TypeVar, cast
+
 from domain.events import DomainEvent
 from utils.logger import get_logger
 

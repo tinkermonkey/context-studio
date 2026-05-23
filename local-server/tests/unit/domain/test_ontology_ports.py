@@ -7,13 +7,11 @@ Tests verify:
 - Structural subtyping works (implementations don't need to inherit)
 """
 
-import os
-import sys
 from datetime import datetime, timezone
+
 from domain.ontology.entities import Taxonomy
 from domain.ontology.events import ClassCreated
 from domain.ontology.ports import (
-
     EmbeddingService,
     OntologyRepository,
 )

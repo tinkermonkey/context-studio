@@ -5,12 +5,10 @@ Tests registry invariants: no duplicate registration, immutable configurations,
 type enumeration.
 """
 
-import os
-import sys
 import pytest
+
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.registry import (
-
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
     PipelineTypeRegistry,

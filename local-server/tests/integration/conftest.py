@@ -8,15 +8,15 @@ Provides common infrastructure for all integration tests:
 - LLM mock fixtures
 """
 
-import os
-import sys
+import socket as socket_module
 import tempfile
 from pathlib import Path
-import socket as socket_module
 from unittest.mock import patch
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 from adapters.persistence.sqlite.models import Base
 
 _original_socket = socket_module.socket

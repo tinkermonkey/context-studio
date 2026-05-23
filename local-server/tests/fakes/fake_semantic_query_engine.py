@@ -4,9 +4,8 @@ Provides a simple in-memory semantic/RDF query engine for unit testing.
 Stores triples and provides minimal implementations of RDF operations.
 """
 
-import os
-import sys
 from typing import Any
+
 
 class FakeSemanticQueryEngine:
     """In-memory implementation of SemanticQueryEngine protocol for unit testing."""

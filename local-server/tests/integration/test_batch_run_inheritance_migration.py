@@ -10,17 +10,17 @@ Tests verify:
 
 import json
 import os
-import sys
 import tempfile
 from datetime import datetime, timezone
 from uuid import uuid4
+
 import pytest
 from alembic.command import upgrade
 from alembic.config import Config
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import sessionmaker
-from adapters.persistence.sqlite.models import (
 
+from adapters.persistence.sqlite.models import (
     Base,
     BatchRun,
     ChangeEvent,

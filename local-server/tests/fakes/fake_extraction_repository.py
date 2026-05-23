@@ -1,9 +1,9 @@
 """Fake in-memory implementation of ExtractionRepository for testing."""
 
-import os
-import sys
 from typing import Sequence
+
 from domain.extraction.entities import ExtractionResult
+
 
 class FakeExtractionRepository:
     """In-memory repository for extraction results."""

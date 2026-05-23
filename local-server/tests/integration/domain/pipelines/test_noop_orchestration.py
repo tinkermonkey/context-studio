@@ -10,12 +10,12 @@ This smoke test ensures the pipeline framework is wired correctly
 before implementing concrete pipeline types.
 """
 
-import os
-import sys
 import pytest
+
 from domain.pipeline.ports import LLMResponse
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.orchestration.noop import NoOpPipelineOrchestrator, NoOpPipelineState
+
 
 class MockLLMProvider:
     """Mock LLM provider for testing."""

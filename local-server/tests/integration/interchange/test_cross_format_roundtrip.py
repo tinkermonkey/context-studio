@@ -8,14 +8,14 @@ Tests the three-leg journey: SKOS → OWL → GraphML → final state, verifying
 4. Documented "lossy" fields actually differ as expected
 """
 
-import os
-import sys
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 from adapters.interchange.graphml import GraphMLDeserializer, GraphMLSerializer
 from adapters.interchange.owl import OWLDeserializer, OWLSerializer
 from adapters.interchange.skos import SKOSDeserializer, SKOSSerializer
@@ -24,7 +24,6 @@ from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.interchange.value_objects import SerializationScope, SerializationScopeType
 from domain.ontology.entities import (
-
     Class,
     ConceptScheme,
     Individual,

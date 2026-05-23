@@ -1,8 +1,7 @@
 """Integration tests for reference source adapters."""
 
-import os
-import sys
 import pytest
+
 
 @pytest.mark.reference
 def test_conceptnet_source_search():

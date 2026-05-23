@@ -4,14 +4,15 @@ Tests measure health check execution, configuration management,
 and background task lifecycle operations.
 """
 
-import os
-import sys
 import time
+
 import pytest
+
 from domain.admin.services import AdminService
 from domain.admin.value_objects import BackgroundTaskStatus
 from tests.fakes.fake_configuration_store import FakeConfigurationStore
 from tests.fakes.fake_metrics_collector import FakeMetricsCollector
+
 
 def _setup_admin_context() -> AdminService:
     """Set up admin service with fake dependencies.

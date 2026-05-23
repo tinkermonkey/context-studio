@@ -2,8 +2,7 @@
 
 import hashlib
 import math
-import os
-import sys
+
 
 class FakeEmbeddingService:
     """Deterministic embedding service for unit testing using SHA-256 hashing.

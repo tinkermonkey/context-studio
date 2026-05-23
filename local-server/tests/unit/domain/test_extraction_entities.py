@@ -5,12 +5,11 @@ Tests cover entity construction, field initialization, and dataclass behavior
 for ExtractedEntity, ExtractionResult, and ProcessingMetrics, including validation of invariants.
 """
 
-import os
-import sys
 from datetime import datetime, timezone
-import pytest
-from domain.extraction.entities import (
 
+import pytest
+
+from domain.extraction.entities import (
     ExtractedEntity,
     ExtractionResult,
     ProcessingMetrics,

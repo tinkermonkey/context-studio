@@ -14,10 +14,9 @@ Tests verify:
 - Error cases (duplicate names, missing parents, delete constraints)
 """
 
-import os
-import sys
 import pytest
 from fastapi import status
+
 
 @pytest.mark.e2e
 class TestTaxonomyCRUD:

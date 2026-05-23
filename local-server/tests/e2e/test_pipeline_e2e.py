@@ -11,10 +11,9 @@ Tests verify:
 - Delete cascade behavior
 """
 
-import os
-import sys
 import pytest
 from fastapi import status
+
 
 @pytest.mark.e2e
 class TestPipelineConfigurationCRUD:

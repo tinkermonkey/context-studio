@@ -11,15 +11,13 @@ Tests verify that the new query-building code exercises real SQLite behavior:
 All tests use real in-memory SQLite to expose differences from the fake repository.
 """
 
-import os
-import sys
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.ontology.entities import (
-
     Class,
     ConceptScheme,
     PropertyDefinition,

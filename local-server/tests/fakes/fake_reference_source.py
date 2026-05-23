@@ -1,8 +1,7 @@
 """Fake implementation of ReferenceSource for testing."""
 
-import os
-import sys
 from domain.extraction.ports import ReferenceRelation, ReferenceResult
+
 
 class FakeReferenceSource:
     """Fake reference source that returns deterministic results for testing."""

@@ -13,8 +13,9 @@ Deselect with: pytest -m "not reference" -m "not llm"
 """
 
 import os
-import sys
+
 import pytest
+
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
 from adapters.reference.conceptnet import ConceptNetSource

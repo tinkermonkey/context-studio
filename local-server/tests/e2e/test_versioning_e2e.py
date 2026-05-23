@@ -12,10 +12,9 @@ Tests verify:
 - Conflict detection
 """
 
-import os
-import sys
 import pytest
 from fastapi import status
+
 
 def create_taxonomy_with_changes(e2e_client):
     """

@@ -6,9 +6,8 @@ multi-source enrichment, and NLP processing. Uses in-memory fakes with zero
 infrastructure imports.
 """
 
-import os
-import sys
 import pytest
+
 from domain.extraction import layers
 from domain.extraction.entities import ExtractedEntity
 from domain.extraction.ports import NLPEntity, ReferenceResult

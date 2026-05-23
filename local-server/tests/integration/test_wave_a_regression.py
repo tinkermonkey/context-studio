@@ -6,18 +6,19 @@ Verifies that:
 2. IndividualExtractionRun (migrated from ExtractionRun) produces correct change_event lineage
 """
 
-import os
-import sys
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 from adapters.persistence.sqlite.models import Base, ChangeEvent
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
+
 
 @pytest.fixture
 def temp_db():

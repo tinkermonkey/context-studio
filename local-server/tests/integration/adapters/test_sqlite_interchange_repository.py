@@ -4,17 +4,16 @@ Integration tests for SQLiteInterchangeRepository.
 Tests round-trip persistence of ImportRun entities.
 """
 
-import os
-import sys
 import uuid
 from datetime import datetime, timezone
+
 import pytest
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
+
 from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
 from adapters.persistence.sqlite.models import Base
 from domain.interchange.entities import (
-
     ImportRun,
     ImportRunStatus,
 )

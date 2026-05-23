@@ -4,11 +4,9 @@ Unit tests for interchange value objects.
 Tests invariants and discriminator validity for SerializationScope and ImportConflict.
 """
 
-import os
-import sys
 import pytest
-from domain.interchange.value_objects import (
 
+from domain.interchange.value_objects import (
     ImportConflict,
     ImportPlan,
     MatchKind,

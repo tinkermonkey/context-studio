@@ -4,10 +4,10 @@ Tests measure end-to-end extraction time at multiple text lengths (100, 500, 200
 using both fake and real NLP adapters.
 """
 
-import os
-import sys
 import time
+
 import pytest
+
 from domain.extraction.ports import NLPProcessor
 from domain.extraction.services import ExtractionService
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
@@ -18,6 +18,7 @@ from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 from tests.fakes.fake_reference_source import FakeReferenceSource
+
 
 def _generate_sample_text(num_words: int) -> str:
     """Generate sample text with specified word count.

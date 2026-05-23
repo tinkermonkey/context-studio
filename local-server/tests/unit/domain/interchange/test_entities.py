@@ -4,12 +4,11 @@ Unit tests for interchange domain entities.
 Tests domain invariants and state transitions for ImportRun.
 """
 
-import os
-import sys
 from datetime import datetime, timezone
-import pytest
-from domain.interchange.entities import (
 
+import pytest
+
+from domain.interchange.entities import (
     ImportRun,
     ImportRunStatus,
 )

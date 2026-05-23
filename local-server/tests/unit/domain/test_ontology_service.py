@@ -6,13 +6,12 @@ reference prevention, embedding generation and updates, event emission, and
 constraints enforcement. Uses in-memory fakes with zero infrastructure imports.
 """
 
-import os
-import sys
 from unittest.mock import MagicMock
+
 import pytest
+
 import domain.ontology.services
 from domain.ontology.events import (
-
     ClassCreated,
     ClassDeleted,
     ClassMoved,

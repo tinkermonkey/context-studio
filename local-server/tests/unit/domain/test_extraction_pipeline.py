@@ -12,9 +12,8 @@ These tests use in-memory fakes to test business logic without external dependen
 All tests complete quickly and provide rapid feedback on core extraction logic.
 """
 
-import os
-import sys
 import pytest
+
 from domain.extraction.entities import ExtractedEntity
 from domain.extraction.events import ExtractionCompleted
 from domain.extraction.exceptions import ExtractionError
@@ -27,6 +26,7 @@ from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 from tests.fakes.fake_reference_source import FakeReferenceSource
+
 
 class TestFullExtractionPipeline:
     """Tests for the complete extraction pipeline."""

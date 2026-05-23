@@ -8,7 +8,6 @@ Tests verify:
 - No handlers scenario (event published but no handlers registered)
 """
 
-import sys
 
 
 from adapters.events.in_process import InProcessEventPublisher

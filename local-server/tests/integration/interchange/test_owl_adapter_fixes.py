@@ -8,18 +8,17 @@ Tests the following issues:
 - Split mode for TBox/ABox separation
 """
 
-import os
-import sys
 from datetime import datetime, timezone
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 from adapters.interchange.owl import OWLDeserializer, OWLSerializer
 from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.interchange.value_objects import (
-
     MatchKind,
     SerializationScope,
     SerializationScopeType,

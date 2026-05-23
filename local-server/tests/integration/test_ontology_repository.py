@@ -9,15 +9,13 @@ Tests the adapter against a real in-memory SQLite database to verify:
 - Cascade deletion
 """
 
-import os
-import sys
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.ontology.entities import (
-
     Class,
     ConceptScheme,
     Individual,

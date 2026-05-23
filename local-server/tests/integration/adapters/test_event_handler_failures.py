@@ -6,11 +6,10 @@ capture and log event publishing failures, ensuring operators have visibility
 into audit trail gaps.
 """
 
-import os
-import sys
 from adapters.events.in_process import InProcessEventPublisher
 from domain.extraction.events import ExtractionCompleted
 from domain.pipeline.events import PipelineExecuted
+
 
 class TestExtractionServiceEventHandlerFailures:
     """Test ExtractionService logs event handler failures."""

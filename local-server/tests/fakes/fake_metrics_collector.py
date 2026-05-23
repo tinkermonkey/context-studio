@@ -1,11 +1,9 @@
 """Fake in-memory implementation of MetricsCollector for testing."""
 
-import os
-import sys
 from types import MappingProxyType
 from typing import Optional
-from domain.admin.value_objects import (
 
+from domain.admin.value_objects import (
     BackgroundTaskSummary,
     ComponentStatus,
     DatabaseHealth,

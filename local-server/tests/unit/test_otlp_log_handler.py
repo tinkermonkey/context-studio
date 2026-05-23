@@ -3,9 +3,9 @@ Tests for the OTLP log handler.
 """
 
 import logging
-import os
-import sys
+
 from adapters.telemetry.log_bridge import OTLPLogHandler
+
 
 class MockLogger:
     """Mock OpenTelemetry logger for testing."""

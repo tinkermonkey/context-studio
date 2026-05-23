@@ -9,11 +9,10 @@ Verifies that ontology operations produce change events end-to-end by:
 Tests ensure the complete workflow: domain operation → event → recording.
 """
 
-import os
-import sys
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 from adapters.events.change_recorder import ChangeEventRecorder
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
@@ -21,7 +20,6 @@ from adapters.persistence.sqlite.models import Base, ChangeEvent
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.extraction.events import ExtractionCompleted
 from domain.ontology.events import (
-
     ClassCreated,
     ClassDeleted,
     ClassMoved,

@@ -1,8 +1,7 @@
 """Integration tests for SpacyNLPProcessor."""
 
-import os
-import sys
 import pytest
+
 
 def test_process_returns_empty_result_when_not_ready():
     """Test that process() returns empty result when processor is not ready."""

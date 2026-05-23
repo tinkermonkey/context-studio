@@ -5,13 +5,12 @@ Tests cover immutability, type conversions, and validation for
 LayerInput, LayerOutput, and ExtractionLayerResult.
 """
 
-import os
-import sys
 from types import MappingProxyType
+
 import pytest
+
 from domain.extraction.entities import ExtractedEntity
 from domain.extraction.value_objects import (
-
     ExtractionLayerResult,
     LayerInput,
     LayerOutput,

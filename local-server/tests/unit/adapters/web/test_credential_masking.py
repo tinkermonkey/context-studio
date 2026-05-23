@@ -8,7 +8,6 @@ Tests the credential masking logic directly, including:
 - Deep copy behavior (original not modified)
 """
 
-import sys
 
 
 from adapters.web.schemas.admin import _mask_credentials

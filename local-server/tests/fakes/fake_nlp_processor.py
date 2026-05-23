@@ -1,8 +1,7 @@
 """Fake implementation of NLPProcessor for testing."""
 
-import os
-import sys
 from domain.extraction.ports import NLPEntity, NLPResult
+
 
 class FakeNLPProcessor:
     """Fake NLP processor that returns deterministic results for testing."""

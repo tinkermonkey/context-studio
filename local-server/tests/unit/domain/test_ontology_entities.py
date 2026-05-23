@@ -5,12 +5,11 @@ These tests verify entity behavior in isolation — no infrastructure,
 no fakes, just dataclass invariants and methods.
 """
 
-import os
-import sys
 from types import MappingProxyType
-import pytest
-from domain.ontology.entities import (
 
+import pytest
+
+from domain.ontology.entities import (
     Class,
     ConceptScheme,
     Individual,

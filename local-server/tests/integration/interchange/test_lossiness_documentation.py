@@ -10,7 +10,7 @@ Validates:
 
 import os
 import re
-import sys
+
 import pytest
 
 LOSSINESS_DOC_PATH = os.path.join(

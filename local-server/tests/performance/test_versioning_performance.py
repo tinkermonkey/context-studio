@@ -4,16 +4,17 @@ Tests measure changeset creation, proposal workflow, and change event recording
 performance at multiple scales.
 """
 
-import os
-import sys
 import time
 from uuid import uuid4
+
 import pytest
+
 from domain.versioning.services import VersioningService
 from domain.versioning.value_objects import ChangeOperation
 from tests.fakes.fake_change_repository import FakeChangeRepository
 from tests.fakes.fake_event_publisher import FakeEventPublisher
 from tests.fakes.fake_sync_target import FakeSyncTarget
+
 
 def _setup_versioning_context() -> tuple[VersioningService, FakeChangeRepository]:
     """Set up versioning service with fake dependencies.

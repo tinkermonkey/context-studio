@@ -5,14 +5,13 @@ centrality calculations at multiple graph sizes (100, 500, 1000, 5000 nodes).
 Tests exercise the domain GraphAnalysisService through its ports.
 """
 
-import os
-import sys
 import time
 from uuid import uuid4
+
 import pytest
+
 from domain.graph.services import GraphAnalysisService
 from domain.ontology.entities import (
-
     Class,
     ConceptScheme,
     PropertyDefinition,

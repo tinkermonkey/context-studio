@@ -1,11 +1,11 @@
 """Fake in-memory implementation of ConfigurationStore for testing."""
 
 import copy
-import os
-import sys
 from typing import Optional
+
 from domain.admin.entities import AppConfiguration
 from domain.admin.value_objects import CREDENTIAL_FIELD_NAMES
+
 
 class FakeConfigurationStore:
     """

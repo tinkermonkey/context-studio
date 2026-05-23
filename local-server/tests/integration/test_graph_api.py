@@ -11,16 +11,16 @@ Tests verify the full graph analysis workflow with:
 These tests exercise the complete stack: routes → domain service → adapters → database.
 """
 
-import os
-import sys
 import tempfile
 from pathlib import Path
 from uuid import uuid4
+
 import pytest
 from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 from adapters.graph.networkx_engine import NetworkXGraphEngine
 from adapters.graph.rdflib_engine import RDFLibQueryEngine
 from adapters.persistence.sqlite.models import Base
@@ -28,7 +28,6 @@ from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.web.graph_routes import router
 from domain.graph.services import GraphAnalysisService
 from domain.ontology.entities import (
-
     Class,
     ConceptScheme,
     PropertyDefinition,

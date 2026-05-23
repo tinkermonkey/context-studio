@@ -5,13 +5,14 @@ Tests cover ClientError handling in push(), pull() (both inner and outer blocks)
 and get_sync_status() methods, as well as normal operation flows.
 """
 
-import os
-import sys
 from datetime import datetime, timezone
 from unittest.mock import Mock
+
 import pytest
+
 from domain.versioning.entities import ChangeEvent
 from domain.versioning.value_objects import ChangeOperation
+
 
 class MockClientError(Exception):
     """Mock botocore.exceptions.ClientError for testing."""

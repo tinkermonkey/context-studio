@@ -9,18 +9,17 @@ Tests the adapter against a real in-memory SQLite database to verify:
 - External references preservation
 """
 
-import os
-import sys
 import uuid
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 from adapters.interchange.owl import OWLDeserializer, OWLSerializer
 from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.interchange.value_objects import (
-
     SerializationScope,
     SerializationScopeType,
 )

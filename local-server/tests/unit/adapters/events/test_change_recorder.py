@@ -1,14 +1,13 @@
 """Unit tests for ChangeEventRecorder."""
 
-import os
-import sys
 from unittest.mock import Mock
+
 import pytest
+
 from adapters.events.change_recorder import ChangeEventRecorder
 from domain.extraction.events import ExtractionCompleted
 from domain.interchange.services import set_batch_run_context
 from domain.ontology.events import (
-
     ClassCreated,
     ClassDeleted,
     ClassMoved,

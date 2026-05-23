@@ -5,11 +5,12 @@ Tests cover entity construction, field initialization, and dataclass behavior
 for PipelineConfiguration and Execution.
 """
 
-import os
-import sys
 from datetime import datetime, timezone
+
 import pytest
+
 from domain.pipeline.entities import Execution, PipelineConfiguration
+
 
 @pytest.fixture
 def make_config():

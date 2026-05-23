@@ -13,10 +13,9 @@ Tests verify:
 - Graceful responses on empty graphs
 """
 
-import os
-import sys
 import pytest
 from fastapi import status
+
 
 def create_test_taxonomy_with_classes(e2e_client, num_classes=2, unique_id=""):
     """

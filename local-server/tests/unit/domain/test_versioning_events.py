@@ -8,13 +8,14 @@ Tests verify:
 - Auto-population of aggregate_id
 """
 
-import os
-import sys
 from dataclasses import FrozenInstanceError
 from datetime import datetime, timezone
+
 import pytest
+
 from domain.versioning.events import ChangesetMerged, SyncCompleted
 from domain.versioning.value_objects import SyncDirection
+
 
 class TestChangesetMerged:
     """Tests for ChangesetMerged event."""

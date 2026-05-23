@@ -7,11 +7,12 @@ using actual file I/O with a temporary config file.
 
 import json
 import os
-import sys
 import tempfile
+
 from adapters.config.json_store import JSONFileConfigStore
 from config import ConfigurationManager
 from domain.admin.entities import AppConfiguration
+
 
 def test_load_configuration():
     """Test loading configuration from a JSON file."""

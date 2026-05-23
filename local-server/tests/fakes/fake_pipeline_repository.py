@@ -1,9 +1,8 @@
 """Fake in-memory implementation of PipelineRepository for testing."""
 
-import os
-import sys
 from domain.pipeline.entities import Execution, PipelineConfiguration, PipelineFlavor
 from domain.pipeline.ports import ExecutionWithTitle
+
 
 class FakePipelineRepository:
     """In-memory repository for pipeline configurations and executions."""

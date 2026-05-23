@@ -5,11 +5,9 @@ Tests cover validation and invariants for NLPEntity and ReferenceResult
 which are used in port contracts.
 """
 
-import os
-import sys
 import pytest
-from domain.extraction.ports import (
 
+from domain.extraction.ports import (
     NLPEntity,
     NLPResult,
     ReferenceRelation,

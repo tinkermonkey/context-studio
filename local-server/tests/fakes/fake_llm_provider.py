@@ -1,10 +1,9 @@
 """Fake implementation of LLMProvider for testing."""
 
-import os
-import sys
-from typing import Any
-from typing import Literal
+from typing import Any, Literal
+
 from domain.pipeline.ports import LLMResponse
+
 
 class FakeLLMProvider:
     """Fake LLM provider that returns canned responses for testing."""

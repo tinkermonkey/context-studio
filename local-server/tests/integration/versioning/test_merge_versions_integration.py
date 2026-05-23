@@ -5,7 +5,6 @@ This test verifies that when a changeset is merged, entity versions are created
 and can be queried via the API endpoints.
 """
 
-import sys
 
 
 from fastapi import status

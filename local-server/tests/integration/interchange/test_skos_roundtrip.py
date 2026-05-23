@@ -8,18 +8,18 @@ Tests the adapter against a real in-memory SQLite database to verify:
 """
 
 import os
-import sys
 import uuid
+
 import pytest
 from rdflib import RDF, Graph, Literal, Namespace
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 from adapters.interchange.skos import SKOSDeserializer, SKOSSerializer
 from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.interchange.value_objects import (
-
     MatchKind,
     ResolutionKind,
     SerializationScope,

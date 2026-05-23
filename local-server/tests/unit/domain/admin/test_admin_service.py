@@ -5,14 +5,13 @@ These tests verify system health monitoring, configuration management,
 and background task lifecycle in isolation using fake ports.
 """
 
-import os
-import sys
 from datetime import datetime, timezone
 from types import MappingProxyType
+
 import pytest
+
 from domain.admin.entities import AppConfiguration
 from domain.admin.exceptions import (
-
     ConfigurationError,
     InvalidStateTransitionError,
     TaskNotFoundError,

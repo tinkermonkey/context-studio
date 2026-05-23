@@ -6,9 +6,8 @@ deduplication with string similarity, event emission, and forward-output
 passing between layers. Uses in-memory fakes with zero infrastructure imports.
 """
 
-import os
-import sys
 import pytest
+
 from domain.extraction.entities import ExtractedEntity
 from domain.extraction.events import ExtractionCompleted
 from domain.extraction.exceptions import ExtractionError

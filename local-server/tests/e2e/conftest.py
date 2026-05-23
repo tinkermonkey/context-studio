@@ -6,11 +6,12 @@ Sets up a real FastAPI application with real databases for end-to-end testing.
 
 import json
 import os
-import sys
 import tempfile
 from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
+
 
 @pytest.fixture(scope="module")
 def temp_db_dir():

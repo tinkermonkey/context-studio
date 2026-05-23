@@ -3,12 +3,12 @@ Integration tests for telemetry setup including log handling.
 """
 
 import logging
-import os
-import sys
 from unittest.mock import Mock
+
 from adapters.telemetry import setup_telemetry
 from adapters.telemetry.log_bridge import OTLPLogHandler
 from config import TelemetryConfig, TelemetryProtocol
+
 
 def test_telemetry_disabled_no_log_exporter():
     """Test that logger provider is None when telemetry is disabled."""

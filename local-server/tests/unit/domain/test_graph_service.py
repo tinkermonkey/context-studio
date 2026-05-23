@@ -7,12 +7,11 @@ subgraph extraction, and RDF/SPARQL operations. Uses in-memory fakes with
 zero infrastructure imports.
 """
 
-import os
-import sys
 from uuid import uuid4
-import pytest
-from domain.graph.entities import (
 
+import pytest
+
+from domain.graph.entities import (
     GraphMetrics,
     KnowledgeGraph,
     PathResult,

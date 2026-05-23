@@ -5,11 +5,12 @@ Tests cover entity construction, validation of invariants, and factory method
 for the ExtractionRun first-class domain entity.
 """
 
-import os
-import sys
 from uuid import uuid4
+
 import pytest
+
 from domain.extraction.entities import ExtractionRun, ExtractionRunStatus
+
 
 class TestExtractionRunConstruction:
     """Tests for ExtractionRun construction and field initialization."""

@@ -5,16 +5,17 @@ Tests persistence and retrieval of pipeline runs in SQLite.
 Tests change_events correlation with batch_run_id.
 """
 
-import os
-import sys
 from datetime import datetime, timezone
 from uuid import uuid4
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 from adapters.persistence.sqlite.models import Base, ChangeEvent
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
+
 
 @pytest.fixture
 def db_session():

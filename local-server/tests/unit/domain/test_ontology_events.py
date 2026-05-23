@@ -8,13 +8,12 @@ Tests verify:
 - Empty string validation in __post_init__
 """
 
-import os
-import sys
 from dataclasses import FrozenInstanceError
 from datetime import datetime, timezone
-import pytest
-from domain.ontology.events import (
 
+import pytest
+
+from domain.ontology.events import (
     ClassCreated,
     ClassDeleted,
     ClassMoved,

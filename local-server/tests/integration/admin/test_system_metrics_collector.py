@@ -5,12 +5,13 @@ Tests the adapter's ability to collect system metrics from protocol-typed
 health-check components, without depending on concrete adapter types.
 """
 
-import os
-import sys
 import time
+
 import pytest
 from sqlalchemy import create_engine, text
+
 from adapters.metrics.system_collector import SystemMetricsCollector
+
 
 class FakeHealthCheckableNLP:
     """Fake NLP component implementing HealthCheckableNLP protocol."""

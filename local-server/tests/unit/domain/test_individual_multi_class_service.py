@@ -5,11 +5,9 @@ Tests the service layer operations for managing class membership and
 property attribute inheritance with first-class-wins conflict resolution.
 """
 
-import os
-import sys
 import pytest
-from domain.ontology.events import (
 
+from domain.ontology.events import (
     IndividualCreated,
     IndividualDeleted,
     IndividualUpdated,

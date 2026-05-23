@@ -13,12 +13,13 @@ Tests verify:
 """
 
 import json
-import os
-import sys
 import time
+
 import pytest
 from fastapi import status
+
 from domain.admin.value_objects import BackgroundTaskStatus
+
 
 @pytest.mark.e2e
 class TestHealthCheck:

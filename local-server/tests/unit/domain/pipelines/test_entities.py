@@ -5,11 +5,9 @@ Tests immutability, status transitions, and invariants for PipelineRun
 and its per-type subclasses.
 """
 
-import os
-import sys
 import pytest
-from domain.pipelines.entities import (
 
+from domain.pipelines.entities import (
     IndividualExtractionRun,
     PipelineRun,
     PipelineRunStatus,

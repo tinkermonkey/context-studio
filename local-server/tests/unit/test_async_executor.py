@@ -1,8 +1,9 @@
 import asyncio
-import os
-import sys
+
 import pytest
+
 from utils.async_executor import run_sync_in_executor
+
 
 def blocking_function(a, b, c=None):
     """Test function that blocks."""
