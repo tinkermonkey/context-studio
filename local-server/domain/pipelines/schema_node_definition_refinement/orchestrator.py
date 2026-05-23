@@ -18,7 +18,7 @@ from domain.pipeline.ports import LLMProvider
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
 from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -255,36 +255,23 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
                 if not isinstance(c["confidence"], (int, float)):
                     c["confidence"] = 0.5
 
-        except json.JSONDecodeError as exc:
-            logger.warning(
-                f"Failed to parse LLM response as JSON for node {neighborhood.class_label}: {exc}. "
-                f"Response content: {response.content[:200]}. Falling back to raw response.",
+        except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+            error_type = "parse" if isinstance(exc, json.JSONDecodeError) else "structure"
+            _logger.warning(
+                f"Failed to {error_type} LLM response for node {neighborhood.class_label}: {exc}. "
+                f"Falling back to raw response.",
                 exc_info=True,
             )
             candidates = [
                 {
                     "definition": response.content,
-                    "rationale": "Generated via LLM (parsing failed)",
-                    "sources_used": ["llm"],
-                    "confidence": 0.3,
-                }
-            ]
-        except (KeyError, TypeError, ValueError) as exc:
-            logger.warning(
-                f"Unexpected structure in LLM response for node {neighborhood.class_label}: {exc}. "
-                f"Expected array or dict with 'definitions' key. Falling back to raw response.",
-                exc_info=True,
-            )
-            candidates = [
-                {
-                    "definition": response.content,
-                    "rationale": "Generated via LLM (structure parsing failed)",
+                    "rationale": f"Generated via LLM ({error_type} failed)",
                     "sources_used": ["llm"],
                     "confidence": 0.3,
                 }
             ]
         except Exception as exc:
-            logger.error(
+            _logger.error(
                 f"Unexpected error parsing LLM response for node {neighborhood.class_label}: {exc}",
                 exc_info=True,
             )
