@@ -600,6 +600,10 @@ async def lifespan(app: FastAPI):
         # Store pipeline orchestrators
         app.state.schema_grounding_orchestrator = schema_grounding_orchestrator
 
+        # Store grounding dependencies for orchestrator factory
+        app.state.grounding_adapter = grounding_adapter
+        app.state.grounding_scorer = grounding_scorer
+
         # Store adapters needed for health checks
         app.state.nlp_processor = nlp_processor
         app.state.llm_router = llm_router
