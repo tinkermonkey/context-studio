@@ -270,7 +270,7 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
                 if not isinstance(d["confidence"], (int, float)):
                     d["confidence"] = 0.5
 
-        except Exception as e:
+        except Exception:
             # Fallback: return a single delta with the response as rationale
             deltas = [
                 {

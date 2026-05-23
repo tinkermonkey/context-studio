@@ -5,13 +5,10 @@ Tests the SchemaNeighborhoodTraversal utility for extracting class and
 property neighborhoods with various levels of context.
 """
 
-from uuid import uuid4
 
 import pytest
 
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
-from domain.ontology.entities import Class, ConceptScheme, PropertyDefinition, Taxonomy
-from domain.ontology.value_objects import Status
 from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 
 

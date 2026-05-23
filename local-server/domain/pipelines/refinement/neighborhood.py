@@ -9,9 +9,9 @@ for use by Definition and Connection Refinement pipelines.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import Protocol
 
-from domain.ontology.entities import Class, PropertyDefinition, Relationship
+from domain.ontology.entities import Class, PropertyDefinition
 from domain.ontology.ports import OntologyRepository
 
 

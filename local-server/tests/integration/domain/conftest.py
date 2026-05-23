@@ -12,6 +12,7 @@ from sqlalchemy.orm import sessionmaker
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.ontology.services import OntologyService
+
 from .mocks import DummyEmbeddingService, DummyEventPublisher, MockLLMProvider
 
 # Re-export mock classes for use in tests

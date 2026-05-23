@@ -252,7 +252,7 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
                 if not isinstance(c["confidence"], (int, float)):
                     c["confidence"] = 0.5
 
-        except Exception as e:
+        except Exception:
             # Fallback: return a single candidate with the response as definition
             candidates = [
                 {

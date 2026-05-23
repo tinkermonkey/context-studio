@@ -10,13 +10,14 @@ from uuid import uuid4
 
 import pytest
 
+from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.orchestration.base import PipelineState
 from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 from domain.pipelines.schema_node_definition_refinement.orchestrator import (
     DefinitionRefinementOrchestrator,
 )
-from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+
 from .mocks import MockLLMProvider
 
 
@@ -130,14 +131,14 @@ class TestDefinitionRefinementOrchestrator:
         repo = SQLiteOntologyRepository(session_factory=session_factory)
         traversal = SchemaNeighborhoodTraversal(ontology_repo=repo)
 
-        candidates_json = f"""```json
+        candidates_json = """```json
 [
-  {{
+  {
     "definition": "A human",
     "rationale": "Concise",
     "sources_used": ["llm"],
     "confidence": 0.7
-  }}
+  }
 ]
 ```"""
 
