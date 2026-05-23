@@ -8,10 +8,7 @@ Tests the adapter against a real in-memory SQLite database to verify:
 """
 
 import os
-import sys
 import uuid
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest
 from rdflib import RDF, Graph, Literal, Namespace

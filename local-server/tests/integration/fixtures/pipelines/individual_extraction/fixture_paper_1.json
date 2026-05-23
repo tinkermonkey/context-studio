@@ -1,0 +1,34 @@
+{
+  "name": "paper_1",
+  "description": "Academic paper about distributed systems by John Doe",
+  "source_text": "John Doe is a computer scientist at MIT who researches distributed systems. His work on consensus algorithms has been published in major conferences. John Doe collaborated with researchers at Berkeley to develop new replication techniques.",
+  "expected_entities": [
+    {
+      "id": "john_doe",
+      "label": "John Doe",
+      "type": "Person"
+    },
+    {
+      "id": "mit",
+      "label": "MIT",
+      "type": "Organization"
+    },
+    {
+      "id": "berkeley",
+      "label": "Berkeley",
+      "type": "Organization"
+    }
+  ],
+  "expected_relationships": [
+    {
+      "subject": "john_doe",
+      "predicate": "affiliation",
+      "object": "mit"
+    },
+    {
+      "subject": "john_doe",
+      "predicate": "collaborates_with",
+      "object": "berkeley"
+    }
+  ]
+}

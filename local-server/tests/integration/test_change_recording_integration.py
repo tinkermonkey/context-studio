@@ -9,11 +9,6 @@ Verifies that ontology operations produce change events end-to-end by:
 Tests ensure the complete workflow: domain operation → event → recording.
 """
 
-import os
-import sys
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../"))
-
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker

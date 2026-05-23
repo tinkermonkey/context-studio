@@ -5,13 +5,6 @@ Tests the four-layer extraction pipeline, deduplication logic, error handling,
 and configuration options.
 """
 
-import os
-import sys
-
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-)
-
 from unittest.mock import Mock
 
 import pytest

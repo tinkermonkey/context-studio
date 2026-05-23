@@ -7,11 +7,6 @@ subgraph extraction, and RDF/SPARQL operations. Uses in-memory fakes with
 zero infrastructure imports.
 """
 
-import os
-import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from uuid import uuid4
 
 import pytest

@@ -4,11 +4,7 @@ Provides a simple in-memory semantic/RDF query engine for unit testing.
 Stores triples and provides minimal implementations of RDF operations.
 """
 
-import os
-import sys
 from typing import Any
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 
 class FakeSemanticQueryEngine:

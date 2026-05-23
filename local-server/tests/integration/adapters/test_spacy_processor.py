@@ -1,10 +1,5 @@
 """Integration tests for SpacyNLPProcessor."""
 
-import os
-import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 import pytest
 
 
@@ -86,6 +81,7 @@ def test_extract_entities_populates_text_label_offsets():
 @pytest.mark.nlp
 def test_model_name_is_configured():
     """Test that the model name is correctly configured."""
+
     from adapters.nlp.spacy_processor import SpacyNLPProcessor
 
     assert SpacyNLPProcessor.MODEL_NAME == "en_core_web_sm"

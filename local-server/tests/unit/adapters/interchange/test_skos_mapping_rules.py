@@ -11,13 +11,7 @@ Tests each mapping rule to ensure correct serialization and deserialization:
 - external_references ↔ dct:source + skos:exactMatch
 """
 
-import os
-import sys
 
-sys.path.insert(
-    0,
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
-)
 
 from rdflib import OWL, RDF, Graph, Namespace
 

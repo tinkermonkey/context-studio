@@ -6,11 +6,6 @@ deduplication with string similarity, event emission, and forward-output
 passing between layers. Uses in-memory fakes with zero infrastructure imports.
 """
 
-import os
-import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 import pytest
 
 from domain.extraction.entities import ExtractedEntity

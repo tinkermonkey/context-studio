@@ -17,6 +17,7 @@ from datetime import datetime, timezone
 from types import MappingProxyType
 from uuid import uuid4
 
+from domain.interchange.services import set_batch_run_context
 from domain.ontology.ports import EmbeddingService, OntologyRepository
 from domain.pipeline.ports import LLMProvider
 from domain.ports import EventPublisher
@@ -381,6 +382,9 @@ class ExtractionService:
         # Save initial run record
         self._extraction_run_repo.save_extraction_run(run)
 
+        # Set correlation context so change events are linked to this extraction run
+        set_batch_run_context(run_id)
+
         start_time = time.time()
         triples_extracted = 0
         triples_committed = 0
@@ -389,54 +393,78 @@ class ExtractionService:
         run_status = ExtractionRunStatus.COMPLETED
 
         try:
-            # Get ontology to validate it exists
-            ontology = self._ontology_repo.get_taxonomy(ontology_id)
-            if not ontology:
-                raise ValueError(f"Ontology {ontology_id} not found")
+            try:
+                # Get ontology to validate it exists
+                ontology = self._ontology_repo.get_taxonomy(ontology_id)
+                if not ontology:
+                    raise ValueError(f"Ontology {ontology_id} not found")
 
-            # Call LLM to extract triples
-            system_prompt, user_prompt = self._build_triple_extraction_prompt(text, ontology)
-            llm_response = self._llm.complete(
-                system_prompt=system_prompt,
-                user_prompt=user_prompt,
-                model=model,
-                temperature=temperature,
-                max_tokens=8000,
-                response_format="json",
+                # Call LLM to extract triples
+                system_prompt, user_prompt = self._build_triple_extraction_prompt(text, ontology)
+                llm_response = self._llm.complete(
+                    system_prompt=system_prompt,
+                    user_prompt=user_prompt,
+                    model=model,
+                    temperature=temperature,
+                    max_tokens=8000,
+                    response_format="json",
+                )
+                tokens_used = llm_response.tokens_in + llm_response.tokens_out
+
+                # Parse LLM response
+                extracted_triples = self._parse_triple_extraction_response(
+                    llm_response.content, text, ontology_id
+                )
+                triples_extracted = len(extracted_triples)
+                triples_committed = triples_extracted
+
+            except Exception as exc:
+                _logger.error(f"Triple extraction failed: {exc}", exc_info=exc)
+                tokens_used = 0
+                extracted_triples = []
+                run_status = ExtractionRunStatus.FAILED
+                warnings.append(f"Extraction failed: {str(exc)}")
+
+            # Update run record
+            duration_ms = int((time.time() - start_time) * 1000)
+            run = ExtractionRun(
+                id=run.id,
+                source_document_uri=run.source_document_uri,
+                source_text_hash=run.source_text_hash,
+                pipeline_config_ref=run.pipeline_config_ref,
+                model=run.model,
+                temperature=run.temperature,
+                tokens_used=tokens_used,
+                duration_ms=duration_ms,
+                triples_extracted=triples_extracted,
+                triples_committed=triples_committed,
+                status=run_status,
             )
-            tokens_used = llm_response.tokens_in + llm_response.tokens_out
 
-            # Parse LLM response
-            extracted_triples = self._parse_triple_extraction_response(
-                llm_response.content, text, ontology_id
-            )
-            triples_extracted = len(extracted_triples)
-            triples_committed = triples_extracted
+            self._extraction_run_repo.update_extraction_run(run)
 
-        except Exception as exc:
-            _logger.error(f"Triple extraction failed: {exc}", exc_info=exc)
-            tokens_used = 0
-            extracted_triples = []
-            run_status = ExtractionRunStatus.FAILED
-            warnings.append(f"Extraction failed: {str(exc)}")
+            # Publish completion event only on successful extraction
+            # (with batch_run_id still in context for change event recording)
+            if run_status == ExtractionRunStatus.COMPLETED:
+                failures = self._event_publisher.publish(
+                    ExtractionCompleted(
+                        result_id=run_id,
+                        entity_count=triples_extracted,
+                        duration_ms=duration_ms,
+                    )
+                )
+                if failures:
+                    handler_names = ", ".join(name for name, _ in failures)
+                    _logger.warning(
+                        "Event handlers failed for ExtractionCompleted (result_id=%s): %s. "
+                        "Extraction result is returned but audit trail may have gaps.",
+                        run_id,
+                        handler_names,
+                    )
 
-        # Update run record
-        duration_ms = int((time.time() - start_time) * 1000)
-        run = ExtractionRun(
-            id=run.id,
-            source_document_uri=run.source_document_uri,
-            source_text_hash=run.source_text_hash,
-            pipeline_config_ref=run.pipeline_config_ref,
-            model=run.model,
-            temperature=run.temperature,
-            tokens_used=tokens_used,
-            duration_ms=duration_ms,
-            triples_extracted=triples_extracted,
-            triples_committed=triples_committed,
-            status=run_status,
-        )
-
-        self._extraction_run_repo.update_extraction_run(run)
+        finally:
+            # Always clear the correlation context after extraction
+            set_batch_run_context(None)
 
         return TripleExtractionResult(
             triples=extracted_triples,

@@ -1,0 +1,18 @@
+{
+  "arxiv_id": "2605.22393v1",
+  "title": "Nf-PEAK: Process-Based Energy Attribution for Nextflow Workflows on Kubernetes Clusters",
+  "authors": [
+    "Philipp Thamm",
+    "Somayeh Mohammadi",
+    "Kathleen West",
+    "Knut Reinert",
+    "Lauritz Thamsen",
+    "Ulf Leser"
+  ],
+  "published": "2026-05-21T12:26:47+00:00",
+  "categories": [
+    "cs.DC"
+  ],
+  "pdf_url": "https://arxiv.org/pdf/2605.22393v1",
+  "arxiv_url": "http://arxiv.org/abs/2605.22393v1"
+}

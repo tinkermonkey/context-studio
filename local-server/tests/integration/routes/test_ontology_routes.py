@@ -11,13 +11,6 @@ Tests verify the ontology management workflow with:
 These tests exercise the complete stack: routes → domain service → adapters → database.
 """
 
-import os
-import sys
-
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-)
-
 import tempfile
 from pathlib import Path
 from uuid import uuid4
@@ -28,12 +21,12 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.web.ontology_routes import router
 from domain.ontology.services import OntologyService
+from tests.fakes.fake_embedding_service import FakeEmbeddingService
 
 
 @pytest.fixture
@@ -66,7 +59,7 @@ def repository(session_factory):
 @pytest.fixture
 def embedding_service():
     """Create embedding service for semantic search."""
-    return SentenceTransformerEmbedding(model_name="all-MiniLM-L12-v2")
+    return FakeEmbeddingService()
 
 
 @pytest.fixture

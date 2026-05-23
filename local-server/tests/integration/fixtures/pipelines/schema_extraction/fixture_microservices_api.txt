@@ -1,0 +1,17 @@
+A Microservice is a small, independently deployable software component that implements a specific business capability.
+Microservices work together in a distributed system to build larger applications and enable rapid deployment cycles.
+
+An API Gateway is a server that acts as an intermediary between clients and a collection of backend services.
+The API Gateway routes incoming requests to appropriate services, handles cross-cutting concerns like authentication, rate limiting, and request routing.
+
+Service Discovery allows services to automatically detect and locate other services in a distributed system without hardcoded addresses.
+The Service Registry maintains a catalog of available service instances and their network locations, enabling dynamic service location.
+
+Asynchronous Communication enables loose coupling between services where a sender sends a message and does not wait for an immediate response.
+Message Queues store and manage messages asynchronously between services, decoupling producers from consumers.
+
+A REST API is an API that follows REST principles, using HTTP methods to perform CRUD operations on resources identified by URIs.
+REST APIs enable stateless communication and are the dominant style for web services and microservices communication.
+
+Load Balancing distributes network traffic and computational workload across multiple servers or resources to prevent bottlenecks.
+Horizontal Scaling adds more machines or nodes to a system to increase capacity and distribute load across commodity servers.

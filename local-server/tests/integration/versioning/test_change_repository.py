@@ -4,16 +4,11 @@ Integration tests for SQLiteChangeRepository.
 Tests against in-memory SQLite database to verify all persistence operations.
 """
 
-import os
-import sys
 from datetime import datetime, timedelta, timezone
 
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
-# Add local-server root to path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.models import Base

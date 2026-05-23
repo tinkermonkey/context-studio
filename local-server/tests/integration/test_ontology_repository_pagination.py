@@ -11,13 +11,7 @@ Tests verify that the new query-building code exercises real SQLite behavior:
 All tests use real in-memory SQLite to expose differences from the fake repository.
 """
 
-import os
-import sys
-
 import pytest
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 

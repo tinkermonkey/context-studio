@@ -8,14 +8,10 @@ Tests verify:
 - Auto-population of aggregate_id
 """
 
-import os
-import sys
 from dataclasses import FrozenInstanceError
 from datetime import datetime, timezone
 
 import pytest
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from domain.versioning.events import ChangesetMerged, SyncCompleted
 from domain.versioning.value_objects import SyncDirection

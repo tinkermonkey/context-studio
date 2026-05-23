@@ -14,13 +14,7 @@ Tests verify the full extraction workflow with:
 These tests exercise the complete stack: routes → domain service → adapters → database.
 """
 
-import os
-import sys
-
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-)
-
+import json
 import tempfile
 from datetime import datetime
 from pathlib import Path
@@ -33,15 +27,17 @@ from pydantic import ValidationError
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
+from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunRepository
+from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.web.extraction_routes import router
 from adapters.web.schemas.extraction import ExtractTripleResponse
 from domain.extraction.services import ExtractionService
 from domain.ontology.entities import Class, ConceptScheme, Taxonomy
+from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
@@ -113,7 +109,7 @@ def populated_repository(repository):
 def embedding_service():
     """Create embedding service for semantic search (session-scoped to reduce model load
     overhead)."""
-    return SentenceTransformerEmbedding(model_name="all-MiniLM-L12-v2")
+    return FakeEmbeddingService()
 
 
 @pytest.fixture
@@ -126,6 +122,18 @@ def event_publisher():
 def extraction_repository(session_factory):
     """Create a real SQLiteExtractionRepository with actual persistence."""
     return SQLiteExtractionRepository(session_factory)
+
+
+@pytest.fixture
+def extraction_run_repository(session_factory):
+    """Create a real SQLiteExtractionRunRepository for extraction run queries."""
+    return SQLiteExtractionRunRepository(session_factory)
+
+
+@pytest.fixture
+def interchange_repository(session_factory):
+    """Create a real SQLiteInterchangeRepository for change event queries."""
+    return SQLiteInterchangeRepository(session_factory)
 
 
 @pytest.fixture
@@ -484,6 +492,70 @@ class TestTripleExtraction:
             "subject_class": classes[0],
             "object_class": classes[1],
         }
+
+    @pytest.fixture
+    def extraction_service(
+        self,
+        populated_repository,
+        embedding_service,
+        event_publisher,
+        extraction_repository,
+        session_factory,
+    ):
+        """Override extraction service to use LLM provider that returns triples."""
+        from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunRepository
+
+        extraction_run_repo = SQLiteExtractionRunRepository(session_factory)
+
+        # Configure LLM provider to return triples that will create change events
+        triple_response = {
+            "triples": [
+                {
+                    "subject": {"label": "database", "type": "entity"},
+                    "predicate": {"label": "stores", "type": "relation"},
+                    "object": {"label": "information", "type": "entity"},
+                    "confidence": 0.95,
+                    "provenance": {
+                        "text_offset_start": 0,
+                        "text_offset_end": 10,
+                    },
+                }
+            ]
+        }
+
+        service = ExtractionService(
+            ontology_repo=populated_repository,
+            embedding_service=embedding_service,
+            llm=FakeLLMProvider(response_content=json.dumps(triple_response)),
+            nlp=FakeNLPProcessor(),
+            reference_sources=[FakeReferenceSource()],
+            event_publisher=event_publisher,
+            extraction_repo=extraction_repository,
+            extraction_run_repo=extraction_run_repo,
+        )
+        return service
+
+    @pytest.fixture
+    def client_with_change_recorder(self, extraction_service, event_publisher, session_factory):
+        """Create a TestClient with extraction service and change event handlers registered."""
+        from adapters.events.change_recorder import ChangeEventRecorder
+        from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
+
+        # Set up event handlers
+        change_repo = SQLiteChangeRepository(session_factory)
+        change_recorder = ChangeEventRecorder(change_repo)
+
+        # Subscribe event handlers to the event publisher
+        from domain.extraction.events import ExtractionCompleted
+
+        event_publisher.subscribe(ExtractionCompleted, change_recorder.on_extraction_completed)
+
+        # Create FastAPI app with extraction service
+        app = FastAPI()
+        app.include_router(router)
+        app.state.extraction_service = extraction_service
+
+        return TestClient(app)
 
     def test_extract_triples_valid_request_returns_200(self, client, ontology_with_individuals):
         """POST /api/extraction/extract returns 200 with valid input."""
@@ -901,17 +973,15 @@ class TestTripleExtraction:
         run = runs[-1]  # Most recent run
         assert run.status.value == "completed"
 
-    @pytest.mark.skip(
-        reason=(
-            "batch_run_id correlation and change_events integration not yet implemented"
-            " — see #695"
-        )
-    )
     def test_extract_triples_batch_run_id_in_change_events(
-        self, client, ontology_with_individuals, extraction_repository
+        self,
+        client_with_change_recorder,
+        ontology_with_individuals,
+        extraction_run_repository,
+        interchange_repository,
     ):
-        """Committed triples carry batch_run_id pointing to ExtractionRun's batch_runs row."""
-        response = client.post(
+        """Extraction run correctly populates batch_run_id in change_events."""
+        response = client_with_change_recorder.post(
             "/api/extraction/extract",
             json={
                 "text": "Test text for triple extraction.",
@@ -924,16 +994,27 @@ class TestTripleExtraction:
             },
         )
         assert response.status_code == status.HTTP_200_OK
-        body = response.json()
-        triples = body["triples"]
 
-        # If triples were extracted, verify batch_run_id in change_events
-        if len(triples) > 0:
-            # Get ExtractionRun from repository
-            runs = extraction_repository.list_extraction_runs()
-            assert len(runs) > 0
-            run = runs[-1]
+        # Get ExtractionRun from repository
+        runs = extraction_run_repository.list_extraction_runs()
+        assert len(runs) > 0
+        run = runs[-1]
 
-            # Verify batch_run_id is set on change_events for committed triples
-            # This requires integration with the change event system
-            assert run.batch_run_id is not None
+        # The extraction run itself should have batch_run_id as None
+        # (it represents the operation, not a parent batch)
+        assert run.batch_run_id is None
+
+        # Verify change_events for this extraction run have batch_run_id populated
+        # The batch_run_id on change_events should point to the extraction run
+        change_events = interchange_repository.get_change_events_for_run(run.id)
+        # Precondition: extraction should produce at least one change event
+        # If this fails, the test setup (LLM provider response) may not be returning entities
+        assert len(change_events) > 0, (
+            "No change events found for extraction run. "
+            "The LLM provider may not be configured to return entities."
+        )
+        for event in change_events:
+            assert event.batch_run_id == run.id, (
+                f"Change event {event.id} has batch_run_id={event.batch_run_id}, "
+                f"expected extraction run ID {run.id}"
+            )

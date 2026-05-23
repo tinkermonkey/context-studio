@@ -10,13 +10,6 @@ Tests verify:
 - Proper namespace handling and RDF type assignments
 """
 
-import os
-import sys
-
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-)
-
 import pytest
 
 from adapters.graph.rdflib_engine import RDFLibQueryEngine

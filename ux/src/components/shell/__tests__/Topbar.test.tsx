@@ -5,6 +5,7 @@ import { Topbar } from "../Topbar";
 
 vi.mock("@tanstack/react-router", () => ({
   useRouterState: vi.fn(),
+  useNavigate: vi.fn(),
 }));
 
 vi.mock("@/stores/commandPalette", () => ({
@@ -35,11 +36,14 @@ import * as canvasModule from "@/stores/canvas";
 describe("Topbar", () => {
   const mockOpenPalette = vi.fn();
   const mockToggleDarkCanvas = vi.fn();
+  const mockNavigate = vi.fn();
 
   beforeEach(() => {
     mockOpenPalette.mockClear();
     mockToggleDarkCanvas.mockClear();
+    mockNavigate.mockClear();
 
+    vi.mocked(routerModule.useNavigate).mockReturnValue(mockNavigate);
     vi.mocked(routerModule.useRouterState).mockReturnValue({
       location: { pathname: "/app" },
     } as any);

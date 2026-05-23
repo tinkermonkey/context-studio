@@ -1,0 +1,623 @@
+{
+  "sources": [
+    "Software Engineering Institute (SEI) Glossary",
+    "Martin Kleppmann's 'Designing Data-Intensive Applications'",
+    "CNCF Cloud-Native Glossary",
+    "Common distributed systems and microservices patterns"
+  ],
+  "licenses": [
+    "SEI glossary: CC BY 4.0",
+    "Kleppmann's DDIA: Chapter glossaries used for reference",
+    "CNCF Glossary: CC BY 4.0"
+  ],
+  "build_timestamp": "2026-05-23T04:12:19.136706+00:00",
+  "term_count": 101,
+  "terms": [
+    {
+      "id": "microservice",
+      "surface_label": "Microservice",
+      "sense_count": 1,
+      "source": "CNCF Cloud-Native Glossary"
+    },
+    {
+      "id": "distributed_system",
+      "surface_label": "Distributed System",
+      "sense_count": 1,
+      "source": "Kleppmann, Designing Data-Intensive Applications"
+    },
+    {
+      "id": "consensus",
+      "surface_label": "Consensus",
+      "sense_count": 1,
+      "source": "Distributed systems literature"
+    },
+    {
+      "id": "api_gateway",
+      "surface_label": "API Gateway",
+      "sense_count": 1,
+      "source": "CNCF Cloud-Native Glossary"
+    },
+    {
+      "id": "service_discovery",
+      "surface_label": "Service Discovery",
+      "sense_count": 1,
+      "source": "CNCF Cloud-Native Glossary"
+    },
+    {
+      "id": "service_registry",
+      "surface_label": "Service Registry",
+      "sense_count": 1,
+      "source": "Microservices patterns literature"
+    },
+    {
+      "id": "eventual_consistency",
+      "surface_label": "Eventual Consistency",
+      "sense_count": 1,
+      "source": "Kleppmann, Designing Data-Intensive Applications"
+    },
+    {
+      "id": "partition_tolerance",
+      "surface_label": "Partition Tolerance",
+      "sense_count": 1,
+      "source": "Distributed systems theory"
+    },
+    {
+      "id": "cap_theorem",
+      "surface_label": "CAP Theorem",
+      "sense_count": 1,
+      "source": "Distributed systems theory"
+    },
+    {
+      "id": "load_balancing",
+      "surface_label": "Load Balancing",
+      "sense_count": 1,
+      "source": "CNCF Cloud-Native Glossary"
+    },
+    {
+      "id": "message_queue",
+      "surface_label": "Message Queue",
+      "sense_count": 1,
+      "source": "Microservices patterns literature"
+    },
+    {
+      "id": "asynchronous_communication",
+      "surface_label": "Asynchronous Communication",
+      "sense_count": 1,
+      "source": "CNCF Cloud-Native Glossary"
+    },
+    {
+      "id": "synchronous_communication",
+      "surface_label": "Synchronous Communication",
+      "sense_count": 1,
+      "source": "Software engineering patterns"
+    },
+    {
+      "id": "event_driven",
+      "surface_label": "Event-Driven Architecture",
+      "sense_count": 1,
+      "source": "CNCF Cloud-Native Glossary"
+    },
+    {
+      "id": "publish_subscribe",
+      "surface_label": "Publish-Subscribe",
+      "sense_count": 1,
+      "source": "CNCF Cloud-Native Glossary"
+    },
+    {
+      "id": "topic",
+      "surface_label": "Topic",
+      "sense_count": 1,
+      "source": "Message-oriented middleware terminology"
+    },
+    {
+      "id": "queue",
+      "surface_label": "Queue",
+      "sense_count": 1,
+      "source": "Data structures and messaging systems"
+    },
+    {
+      "id": "replica",
+      "surface_label": "Replica",
+      "sense_count": 1,
+      "source": "Distributed systems literature"
+    },
+    {
+      "id": "replication",
+      "surface_label": "Replication",
+      "sense_count": 1,
+      "source": "Kleppmann, Designing Data-Intensive Applications"
+    },
+    {
+      "id": "leader_follower",
+      "surface_label": "Leader-Follower Replication",
+      "sense_count": 1,
+      "source": "Distributed systems patterns"
+    },
+    {
+      "id": "primary_backup",
+      "surface_label": "Primary-Backup",
+      "sense_count": 1,
+      "source": "Distributed systems patterns"
+    },
+    {
+      "id": "sharding",
+      "surface_label": "Sharding",
+      "sense_count": 1,
+      "source": "Kleppmann, Designing Data-Intensive Applications"
+    },
+    {
+      "id": "partitioning",
+      "surface_label": "Partitioning",
+      "sense_count": 2,
+      "source": "Distributed systems literature"
+    },
+    {
+      "id": "horizontal_scaling",
+      "surface_label": "Horizontal Scaling",
+      "sense_count": 1,
+      "source": "CNCF Cloud-Native Glossary"
+    },
+    {
+      "id": "vertical_scaling",
+      "surface_label": "Vertical Scaling",
+      "sense_count": 1,
+      "source": "Infrastructure terminology"
+    },
+    {
+      "id": "scaling",
+      "surface_label": "Scaling",
+      "sense_count": 1,
+      "source": "Systems design terminology"
+    },
+    {
+      "id": "fault_tolerance",
+      "surface_label": "Fault Tolerance",
+      "sense_count": 1,
+      "source": "Distributed systems literature"
+    },
+    {
+      "id": "high_availability",
+      "surface_label": "High Availability",
+      "sense_count": 1,
+      "source": "CNCF Cloud-Native Glossary"
+    },
+    {
+      "id": "resilience",
+      "surface_label": "Resilience",
+      "sense_count": 1,
+      "source": "Systems design terminology"
+    },
+    {
+      "id": "graceful_degradation",
+      "surface_label": "Graceful Degradation",
+      "sense_count": 1,
+      "source": "Systems design patterns"
+    },
+    {
+      "id": "circuit_breaker",
+      "surface_label": "Circuit Breaker",
+      "sense_count": 1,
+      "source": "Microservices patterns literature"
+    },
+    {
+      "id": "failure_recovery",
+      "surface_label": "Failure Recovery",
+      "sense_count": 1,
+      "source": "Distributed systems terminology"
+    },
+    {
+      "id": "health_check",
+      "surface_label": "Health Check",
+      "sense_count": 1,
+      "source": "CNCF Cloud-Native Glossary"
+    },
+    {
+      "id": "monitoring",
+      "surface_label": "Monitoring",
+      "sense_count": 1,
+      "source": "CNCF Cloud-Native Glossary"
+    },
+    {
+      "id": "observability",
+      "surface_label": "Observability",
+      "sense_count": 1,
+      "source": "Distributed systems operations"
+    },
+    {
+      "id": "tracing",
+      "surface_label": "Distributed Tracing",
+      "sense_count": 1,
+      "source": "CNCF Cloud-Native Glossary"
+    },
+    {
+      "id": "logging",
+      "surface_label": "Logging",
+      "sense_count": 1,
+      "source": "Software engineering practices"
+    },
+    {
+      "id": "metrics",
+      "surface_label": "Metrics",
+      "sense_count": 1,
+      "source": "CNCF Cloud-Native Glossary"
+    },
+    {
+      "id": "latency",
+      "surface_label": "Latency",
+      "sense_count": 1,
+      "source": "Systems performance terminology"
+    },
+    {
+      "id": "throughput",
+      "surface_label": "Throughput",
+      "sense_count": 1,
+      "source": "Systems performance terminology"
+    },
+    {
+      "id": "performance",
+      "surface_label": "Performance",
+      "sense_count": 1,
+      "source": "Systems engineering terminology"
+    },
+    {
+      "id": "containerization",
+      "surface_label": "Containerization",
+      "sense_count": 1,
+      "source": "CNCF Cloud-Native Glossary"
+    },
+    {
+      "id": "container",
+      "surface_label": "Container",
+      "sense_count": 1,
+      "source": "CNCF Cloud-Native Glossary"
+    },
+    {
+      "id": "docker",
+      "surface_label": "Docker",
+      "sense_count": 1,
+      "source": "CNCF Cloud-Native Glossary"
+    },
+    {
+      "id": "image",
+      "surface_label": "Container Image",
+      "sense_count": 1,
+      "source": "Container technology terminology"
+    },
+    {
+      "id": "registry",
+      "surface_label": "Container Registry",
+      "sense_count": 1,
+      "source": "Container technology terminology"
+    },
+    {
+      "id": "orchestration",
+      "surface_label": "Container Orchestration",
+      "sense_count": 1,
+      "source": "CNCF Cloud-Native Glossary"
+    },
+    {
+      "id": "kubernetes",
+      "surface_label": "Kubernetes",
+      "sense_count": 1,
+      "source": "CNCF Cloud-Native Glossary"
+    },
+    {
+      "id": "pod",
+      "surface_label": "Pod",
+      "sense_count": 1,
+      "source": "Kubernetes terminology"
+    },
+    {
+      "id": "deployment",
+      "surface_label": "Deployment",
+      "sense_count": 1,
+      "source": "Deployment and Kubernetes terminology"
+    },
+    {
+      "id": "rolling_update",
+      "surface_label": "Rolling Update",
+      "sense_count": 1,
+      "source": "Deployment strategies"
+    },
+    {
+      "id": "blue_green_deployment",
+      "surface_label": "Blue-Green Deployment",
+      "sense_count": 1,
+      "source": "Deployment strategies"
+    },
+    {
+      "id": "service_mesh",
+      "surface_label": "Service Mesh",
+      "sense_count": 1,
+      "source": "CNCF Cloud-Native Glossary"
+    },
+    {
+      "id": "api",
+      "surface_label": "API",
+      "sense_count": 1,
+      "source": "Software engineering terminology"
+    },
+    {
+      "id": "rest",
+      "surface_label": "REST",
+      "sense_count": 1,
+      "source": "Web services architecture"
+    },
+    {
+      "id": "rest_api",
+      "surface_label": "REST API",
+      "sense_count": 1,
+      "source": "Web services terminology"
+    },
+    {
+      "id": "grpc",
+      "surface_label": "gRPC",
+      "sense_count": 1,
+      "source": "CNCF Cloud-Native Glossary"
+    },
+    {
+      "id": "rpc",
+      "surface_label": "RPC",
+      "sense_count": 1,
+      "source": "Distributed systems terminology"
+    },
+    {
+      "id": "http",
+      "surface_label": "HTTP",
+      "sense_count": 1,
+      "source": "Web protocols"
+    },
+    {
+      "id": "database",
+      "surface_label": "Database",
+      "sense_count": 1,
+      "source": "Data management terminology"
+    },
+    {
+      "id": "relational_database",
+      "surface_label": "Relational Database",
+      "sense_count": 1,
+      "source": "Data management terminology"
+    },
+    {
+      "id": "nosql_database",
+      "surface_label": "NoSQL Database",
+      "sense_count": 1,
+      "source": "CNCF Cloud-Native Glossary"
+    },
+    {
+      "id": "sql",
+      "surface_label": "SQL",
+      "sense_count": 1,
+      "source": "Database terminology"
+    },
+    {
+      "id": "query",
+      "surface_label": "Query",
+      "sense_count": 1,
+      "source": "Database terminology"
+    },
+    {
+      "id": "index",
+      "surface_label": "Index",
+      "sense_count": 1,
+      "source": "Database terminology"
+    },
+    {
+      "id": "transaction",
+      "surface_label": "Transaction",
+      "sense_count": 1,
+      "source": "Database terminology"
+    },
+    {
+      "id": "acid",
+      "surface_label": "ACID",
+      "sense_count": 1,
+      "source": "Database theory"
+    },
+    {
+      "id": "consistency",
+      "surface_label": "Consistency",
+      "sense_count": 3,
+      "source": "Distributed systems theory"
+    },
+    {
+      "id": "availability",
+      "surface_label": "Availability",
+      "sense_count": 1,
+      "source": "Distributed systems theory"
+    },
+    {
+      "id": "idempotence",
+      "surface_label": "Idempotence",
+      "sense_count": 1,
+      "source": "Distributed systems patterns"
+    },
+    {
+      "id": "retry",
+      "surface_label": "Retry",
+      "sense_count": 1,
+      "source": "Reliability patterns"
+    },
+    {
+      "id": "exponential_backoff",
+      "surface_label": "Exponential Backoff",
+      "sense_count": 1,
+      "source": "Distributed systems patterns"
+    },
+    {
+      "id": "rate_limiting",
+      "surface_label": "Rate Limiting",
+      "sense_count": 1,
+      "source": "API and service management"
+    },
+    {
+      "id": "throttling",
+      "surface_label": "Throttling",
+      "sense_count": 1,
+      "source": "Performance management"
+    },
+    {
+      "id": "quota",
+      "surface_label": "Quota",
+      "sense_count": 1,
+      "source": "Multi-tenancy and resource management"
+    },
+    {
+      "id": "caching",
+      "surface_label": "Caching",
+      "sense_count": 1,
+      "source": "Systems performance"
+    },
+    {
+      "id": "cache",
+      "surface_label": "Cache",
+      "sense_count": 1,
+      "source": "Systems terminology"
+    },
+    {
+      "id": "encryption",
+      "surface_label": "Encryption",
+      "sense_count": 1,
+      "source": "Cryptography and security"
+    },
+    {
+      "id": "security",
+      "surface_label": "Security",
+      "sense_count": 1,
+      "source": "Computer security"
+    },
+    {
+      "id": "authentication",
+      "surface_label": "Authentication",
+      "sense_count": 1,
+      "source": "Security terminology"
+    },
+    {
+      "id": "authorization",
+      "surface_label": "Authorization",
+      "sense_count": 1,
+      "source": "Security terminology"
+    },
+    {
+      "id": "tls",
+      "surface_label": "TLS",
+      "sense_count": 1,
+      "source": "Network security terminology"
+    },
+    {
+      "id": "service",
+      "surface_label": "Service",
+      "sense_count": 3,
+      "source": "Distributed systems and architecture patterns"
+    },
+    {
+      "id": "paxos",
+      "surface_label": "Paxos",
+      "sense_count": 1,
+      "source": "Distributed systems algorithms"
+    },
+    {
+      "id": "raft",
+      "surface_label": "Raft",
+      "sense_count": 1,
+      "source": "Distributed systems algorithms"
+    },
+    {
+      "id": "byzantine_fault_tolerance",
+      "surface_label": "Byzantine Fault Tolerance",
+      "sense_count": 1,
+      "source": "Distributed systems theory"
+    },
+    {
+      "id": "soa",
+      "surface_label": "Service-Oriented Architecture (SOA)",
+      "sense_count": 1,
+      "source": "Enterprise architecture patterns"
+    },
+    {
+      "id": "reverse_proxy",
+      "surface_label": "Reverse Proxy",
+      "sense_count": 1,
+      "source": "Web infrastructure patterns"
+    },
+    {
+      "id": "base",
+      "surface_label": "BASE",
+      "sense_count": 1,
+      "source": "Distributed systems theory"
+    },
+    {
+      "id": "event_sourcing",
+      "surface_label": "Event Sourcing",
+      "sense_count": 1,
+      "source": "Architecture patterns"
+    },
+    {
+      "id": "reliability",
+      "surface_label": "Reliability",
+      "sense_count": 1,
+      "source": "Systems reliability engineering"
+    },
+    {
+      "id": "uptime",
+      "surface_label": "Uptime",
+      "sense_count": 1,
+      "source": "Operations and SLA terminology"
+    },
+    {
+      "id": "web_service",
+      "surface_label": "Web Service",
+      "sense_count": 1,
+      "source": "Web architecture"
+    },
+    {
+      "id": "immutability",
+      "surface_label": "Immutability",
+      "sense_count": 1,
+      "source": "Data structures and design patterns"
+    },
+    {
+      "id": "idempotency",
+      "surface_label": "Idempotency",
+      "sense_count": 1,
+      "source": "Distributed systems patterns"
+    },
+    {
+      "id": "circuit_breaker_pattern",
+      "surface_label": "Circuit Breaker Pattern",
+      "sense_count": 1,
+      "source": "Resilience patterns"
+    },
+    {
+      "id": "eventual_delivery",
+      "surface_label": "Eventual Delivery",
+      "sense_count": 1,
+      "source": "Distributed systems guarantees"
+    },
+    {
+      "id": "gossip_protocol",
+      "surface_label": "Gossip Protocol",
+      "sense_count": 1,
+      "source": "Distributed systems protocols"
+    },
+    {
+      "id": "peer_to_peer",
+      "surface_label": "Peer-to-Peer (P2P)",
+      "sense_count": 1,
+      "source": "Network architecture patterns"
+    },
+    {
+      "id": "back_pressure",
+      "surface_label": "Back Pressure",
+      "sense_count": 1,
+      "source": "Stream processing and messaging patterns"
+    },
+    {
+      "id": "flow_control",
+      "surface_label": "Flow Control",
+      "sense_count": 1,
+      "source": "Network and system design"
+    }
+  ]
+}

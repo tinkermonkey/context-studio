@@ -17,14 +17,7 @@ export function StatTile({ label, value, color = "cyan", sub, className }: StatT
   const isStringOrNumber = typeof value === "string" || typeof value === "number";
 
   if (!sub && isStringOrNumber) {
-    return (
-      <HeimdallStatTile
-        label={label}
-        value={value}
-        color={color}
-        className={className}
-      />
-    );
+    return <HeimdallStatTile label={label} value={value} color={color} className={className} />;
   }
 
   return (

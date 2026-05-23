@@ -4,13 +4,9 @@ Tests measure bulk insert throughput, list/search response time, and update thro
 at multiple entity counts (100, 500, 1000) using both fake and real embedding adapters.
 """
 
-import os
-import sys
 import time
 
 import pytest
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from domain.ontology.services import OntologyService
 from tests.fakes.fake_embedding_service import FakeEmbeddingService

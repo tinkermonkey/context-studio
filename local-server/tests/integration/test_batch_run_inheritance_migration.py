@@ -10,12 +10,9 @@ Tests verify:
 
 import json
 import os
-import sys
 import tempfile
 from datetime import datetime, timezone
 from uuid import uuid4
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../"))
 
 import pytest
 from alembic.command import upgrade

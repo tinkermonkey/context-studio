@@ -4,12 +4,7 @@ Unit tests for interchange value objects.
 Tests invariants and discriminator validity for SerializationScope and ImportConflict.
 """
 
-import os
-import sys
-
 import pytest
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from domain.interchange.value_objects import (
     ImportConflict,

@@ -1,0 +1,54 @@
+{
+  "name": "paper_4",
+  "description": "Research on machine learning applications",
+  "source_text": "OpenAI developed GPT-4, a large language model used for natural language processing. OpenAI is based in San Francisco and was founded by Elon Musk and Sam Altman. GPT-4 represents a significant advancement in artificial intelligence research.",
+  "expected_entities": [
+    {
+      "id": "openai",
+      "label": "OpenAI",
+      "type": "Organization"
+    },
+    {
+      "id": "gpt4",
+      "label": "GPT-4",
+      "type": "Technology"
+    },
+    {
+      "id": "san_francisco",
+      "label": "San Francisco",
+      "type": "Location"
+    },
+    {
+      "id": "elon_musk",
+      "label": "Elon Musk",
+      "type": "Person"
+    },
+    {
+      "id": "sam_altman",
+      "label": "Sam Altman",
+      "type": "Person"
+    }
+  ],
+  "expected_relationships": [
+    {
+      "subject": "openai",
+      "predicate": "developed",
+      "object": "gpt4"
+    },
+    {
+      "subject": "openai",
+      "predicate": "located_in",
+      "object": "san_francisco"
+    },
+    {
+      "subject": "elon_musk",
+      "predicate": "founded",
+      "object": "openai"
+    },
+    {
+      "subject": "sam_altman",
+      "predicate": "founded",
+      "object": "openai"
+    }
+  ]
+}

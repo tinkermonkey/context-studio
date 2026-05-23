@@ -8,13 +8,6 @@ Tests verify persistence of extraction results with:
 - Data integrity through save/load cycles
 """
 
-import os
-import sys
-
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-)
-
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path

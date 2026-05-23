@@ -4,14 +4,9 @@ Unit tests for versioning domain entities.
 Tests entity invariants and state machine transitions.
 """
 
-import os
-import sys
 from datetime import datetime, timezone
 
 import pytest
-
-# Add local-server root to path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from domain.versioning.entities import (
     Changeset,

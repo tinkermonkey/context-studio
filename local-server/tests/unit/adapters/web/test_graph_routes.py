@@ -22,11 +22,6 @@ Tests verify:
 - Edge cases (nonexistent nodes, invalid algorithms)
 """
 
-import os
-import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from uuid import uuid4
 
 import pytest

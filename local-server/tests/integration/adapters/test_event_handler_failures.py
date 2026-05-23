@@ -6,11 +6,6 @@ capture and log event publishing failures, ensuring operators have visibility
 into audit trail gaps.
 """
 
-import os
-import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from adapters.events.in_process import InProcessEventPublisher
 from domain.extraction.events import ExtractionCompleted
 from domain.pipeline.events import PipelineExecuted

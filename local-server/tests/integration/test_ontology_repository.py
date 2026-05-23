@@ -9,13 +9,7 @@ Tests the adapter against a real in-memory SQLite database to verify:
 - Cascade deletion
 """
 
-import os
-import sys
-
 import pytest
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 

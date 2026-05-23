@@ -5,15 +5,11 @@ Verifies that change events produced inside an import operation are
 automatically linked to the import run via the correlation context.
 """
 
-import os
-import sys
 from uuid import uuid4
 
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../"))
 
 from adapters.events.change_recorder import ChangeEventRecorder
 from adapters.events.in_process import InProcessEventPublisher

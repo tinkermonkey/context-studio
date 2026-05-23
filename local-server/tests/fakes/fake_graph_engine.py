@@ -5,11 +5,7 @@ Uses plain dictionaries and lists to store nodes and edges, supporting
 all GraphEngine protocol methods with straightforward implementations.
 """
 
-import os
-import sys
 from typing import Any
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from domain.graph.exceptions import NodeNotFoundError
 

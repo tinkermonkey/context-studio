@@ -256,13 +256,17 @@ async def enrich_from_references(
     response_model=ExtractTripleResponse,
     status_code=status.HTTP_200_OK,
     tags=["extraction"],
+    deprecated=True,
 )
 async def extract_triples(
     request: ExtractTripleRequest,
     service: ExtractionService = Depends(get_extraction_service),
 ) -> ExtractTripleResponse:
     """
-    Extract RDF triples from text, scoped to a specific ontology.
+    [DEPRECATED] Extract RDF triples from text, scoped to a specific ontology.
+
+    **This endpoint is maintained for backward compatibility with Wave A code.**
+    **New code should use POST /api/pipelines/individual_extraction/run instead.**
 
     This endpoint uses an LLM to extract subject-predicate-object triples
     from the input text, linking them to classes and individuals from a

@@ -4,13 +4,9 @@ Tests measure end-to-end extraction time at multiple text lengths (100, 500, 200
 using both fake and real NLP adapters.
 """
 
-import os
-import sys
 import time
 
 import pytest
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from domain.extraction.ports import NLPProcessor
 from domain.extraction.services import ExtractionService

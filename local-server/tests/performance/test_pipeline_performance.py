@@ -4,13 +4,9 @@ Tests measure pipeline configuration CRUD throughput, execution tracking,
 and list operations at multiple configuration counts (10, 50, 100).
 """
 
-import os
-import sys
 import time
 
 import pytest
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from domain.pipeline.services import PipelineService
 from tests.fakes.fake_event_publisher import FakeEventPublisher

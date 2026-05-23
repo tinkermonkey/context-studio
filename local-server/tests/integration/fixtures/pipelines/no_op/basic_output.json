@@ -1,0 +1,22 @@
+{
+  "status": "completed",
+  "result": {
+    "status": "completed",
+    "message": "No-op pipeline completed successfully",
+    "input_echo": {
+      "text": "Sample input text for the no-op pipeline",
+      "ontology_id": "test-ontology-123",
+      "pipeline_type": "no_op",
+      "implementation_id": "default",
+      "configuration_ref": "noop-default"
+    },
+    "step_count": 2,
+    "steps": ["initialize", "process", "finalize"]
+  },
+  "metadata": {
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "duration_ms": 0.0,
+    "finish_reason": "stop"
+  }
+}

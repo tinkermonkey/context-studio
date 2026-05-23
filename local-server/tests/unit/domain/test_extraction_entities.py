@@ -5,11 +5,6 @@ Tests cover entity construction, field initialization, and dataclass behavior
 for ExtractedEntity, ExtractionResult, and ProcessingMetrics, including validation of invariants.
 """
 
-import os
-import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from datetime import datetime, timezone
 
 import pytest

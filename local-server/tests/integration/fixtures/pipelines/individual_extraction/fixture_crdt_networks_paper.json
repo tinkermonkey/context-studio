@@ -1,0 +1,65 @@
+{
+  "name": "crdt_networks_paper",
+  "description": "Research paper abstract about relay-based synchronization using CRDTs in opportunistic networks",
+  "source_text": "In Opportunistic Networks (OppNets), the dissemination of information can only rely on transient pairwise radio contacts between mobile devices (peers). Designing distributed applications that can run in such conditions is a challenge, but replicated data types, and in particular Conflict-free Replicated Data Types (CRDTs), can help meet this challenge. A CRDT is inherently replicated data type whose replicas can be updated locally, yet eventually converge thanks to an anti-entropy algorithm that allows all replicas to synchronize in the background. Whether the replicas of a CRDT can actually converge in an OppNet, and how fast they can converge, depend on the occurrence of radio contacts between mobile devices. In this paper we investigate the idea of using mobile relays as a means to boost the convergence of stated-based CRDT replicas in an OppNet. New protocols are presented that allow the synchronization of replicas and relays, and new metrics are defined to observe and characterize the convergence of replicas. Simulation results show that using relays can significantly improve this convergence, and even make it possible in scenarios where the replicas alone would be unable to converge.",
+  "expected_entities": [
+    {
+      "id": "opportunistic_networks",
+      "label": "Opportunistic Networks",
+      "type": "Architecture",
+      "context": "transient pairwise radio contacts"
+    },
+    {
+      "id": "mobile_devices",
+      "label": "Mobile devices",
+      "type": "Hardware",
+      "context": "peers in opportunistic networks"
+    },
+    {
+      "id": "crdt",
+      "label": "Conflict-free Replicated Data Types",
+      "type": "DataStructure",
+      "context": "inherently replicated data types"
+    },
+    {
+      "id": "replicas",
+      "label": "Replicas",
+      "type": "Concept",
+      "context": "updated locally, eventually converge"
+    },
+    {
+      "id": "anti_entropy",
+      "label": "Anti-entropy algorithm",
+      "type": "Algorithm",
+      "context": "synchronize replicas in background"
+    },
+    {
+      "id": "mobile_relays",
+      "label": "Mobile relays",
+      "type": "Architecture",
+      "context": "boost convergence of CRDT replicas"
+    }
+  ],
+  "expected_relationships": [
+    {
+      "subject": "crdt",
+      "predicate": "used_in",
+      "object": "opportunistic_networks"
+    },
+    {
+      "subject": "replicas",
+      "predicate": "uses_algorithm",
+      "object": "anti_entropy"
+    },
+    {
+      "subject": "mobile_relays",
+      "predicate": "improves_convergence_of",
+      "object": "replicas"
+    },
+    {
+      "subject": "mobile_devices",
+      "predicate": "participate_in",
+      "object": "opportunistic_networks"
+    }
+  ]
+}

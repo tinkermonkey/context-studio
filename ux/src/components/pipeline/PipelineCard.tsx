@@ -150,9 +150,7 @@ export function PipelineCard({ pipeline }: PipelineCardProps) {
           </>
         )}
         {!lastExecution && (
-          <span style={{ color: "rgb(var(--canvas-fg-4))" }}>
-            {COPY.NO_PIPELINE_RUNS}
-          </span>
+          <span style={{ color: "rgb(var(--canvas-fg-4))" }}>{COPY.NO_PIPELINE_RUNS}</span>
         )}
       </div>
     </div>

@@ -8,13 +8,9 @@ Tests the three-leg journey: SKOS → OWL → GraphML → final state, verifying
 4. Documented "lossy" fields actually differ as expected
 """
 
-import os
-import sys
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest
 from sqlalchemy import create_engine

@@ -12,11 +12,6 @@ These tests use in-memory fakes to test business logic without external dependen
 All tests complete quickly and provide rapid feedback on core extraction logic.
 """
 
-import os
-import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 import pytest
 
 from domain.extraction.entities import ExtractedEntity

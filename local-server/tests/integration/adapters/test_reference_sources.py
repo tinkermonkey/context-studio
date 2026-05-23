@@ -1,10 +1,5 @@
 """Integration tests for reference source adapters."""
 
-import os
-import sys
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 import pytest
 
 
@@ -40,6 +35,7 @@ def test_conceptnet_source_is_available():
 
 
 @pytest.mark.reference
+@pytest.mark.external_network
 def test_conceptnet_source_gracefully_handles_unavailable():
     """Test ConceptNet search returns empty list when unavailable."""
     from adapters.reference.conceptnet import ConceptNetSource

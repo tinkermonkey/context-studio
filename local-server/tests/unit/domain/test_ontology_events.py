@@ -8,14 +8,10 @@ Tests verify:
 - Empty string validation in __post_init__
 """
 
-import os
-import sys
 from dataclasses import FrozenInstanceError
 from datetime import datetime, timezone
 
 import pytest
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from domain.ontology.events import (
     ClassCreated,

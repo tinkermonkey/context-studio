@@ -1,0 +1,22 @@
+{
+  "arxiv_id": "2605.21603v1",
+  "title": "DynaFlow: Transparent and Flexible Intra-Device Parallelism via Programmable Operator Scheduling",
+  "authors": [
+    "Yi Pan",
+    "Yile Gu",
+    "Jinbin Luo",
+    "Yibo Wu",
+    "Ziren Wang",
+    "Hongtao Zhang",
+    "Ziyi Xu",
+    "Shengkai Lin",
+    "Baris Kasikci",
+    "Stephanie Wang"
+  ],
+  "published": "2026-05-20T18:09:13+00:00",
+  "categories": [
+    "cs.DC"
+  ],
+  "pdf_url": "https://arxiv.org/pdf/2605.21603v1",
+  "arxiv_url": "http://arxiv.org/abs/2605.21603v1"
+}

@@ -1,10 +1,5 @@
 """Fake implementation of ReferenceSource for testing."""
 
-import os
-import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from domain.extraction.ports import ReferenceRelation, ReferenceResult
 
 
@@ -19,6 +14,7 @@ class FakeReferenceSource:
             name: Name of the reference source
             should_fail: If True, raise RuntimeError on search() and get_relations() calls
         """
+
         self._name = name
         self.should_fail = should_fail
         self.call_count = 0

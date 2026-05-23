@@ -1,0 +1,24 @@
+{
+  "name": "paper_2",
+  "description": "Academic paper about fault tolerance by John Doe",
+  "source_text": "John Doe published work on Byzantine fault tolerance in distributed systems. The research was conducted in collaboration with Stanford University. John Doe's contributions to consensus protocol design have influenced industry standards.",
+  "expected_entities": [
+    {
+      "id": "john_doe",
+      "label": "John Doe",
+      "type": "Person"
+    },
+    {
+      "id": "stanford",
+      "label": "Stanford University",
+      "type": "Organization"
+    }
+  ],
+  "expected_relationships": [
+    {
+      "subject": "john_doe",
+      "predicate": "collaborates_with",
+      "object": "stanford"
+    }
+  ]
+}

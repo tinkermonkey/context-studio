@@ -10,15 +10,9 @@ Tests verify:
 - ValueError is raised when all configured providers fail to initialize
 """
 
-import os
-import sys
 from unittest.mock import Mock, patch
 
 import pytest
-
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-)
 
 from adapters.llm.provider_router import LLMProviderRouter
 from domain.pipeline.ports import LLMResponse
@@ -49,6 +43,29 @@ class MockLLMProvider:
             duration_ms=0.0,
             finish_reason="stop",
             model=model,
+        )
+
+    async def complete_async(
+        self,
+        system_prompt,
+        user_prompt,
+        model,
+        temperature=0.0,
+        max_tokens=2000,
+        response_format=None,
+        timeout=None,
+        seed=None,
+    ):
+        """Mock complete_async method."""
+        return self.complete(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            response_format=response_format,
+            timeout=timeout,
+            seed=seed,
         )
 
     def is_model_available(self, model: str) -> bool:

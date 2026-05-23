@@ -6,7 +6,7 @@ import { useToasts } from "@/components/ui/Toast";
 
 interface GraphCanvasComponentProps {
   nodes: GraphNode[];
-  edges: GraphEdge[];
+  edges: Array<{ id: string; source: string; target: string }>;
   onNodeClick?: (nodeId: string) => void;
   selectedNodeId?: string;
 }
@@ -37,7 +37,7 @@ export const GraphCanvasComponent = ({
   nodes,
   edges,
   onNodeClick,
-  selectedNodeId,
+  selectedNodeId: _selectedNodeId,
 }: GraphCanvasComponentProps) => {
   const { toast } = useToasts();
   const validation = useMemo(() => validateEdgeEndpoints(nodes, edges), [nodes, edges]);
@@ -79,11 +79,13 @@ export const GraphCanvasComponent = ({
           label: node.label,
           fill: node.domainColor,
         }))}
-        edges={edges.map((edge) => ({
-          id: edge.id,
-          source: edge.source,
-          target: edge.target,
-        }))}
+        edges={
+          edges.map((edge) => ({
+            id: edge.id,
+            sourceId: edge.source,
+            targetId: edge.target,
+          })) as any
+        }
         onNodeClick={(node) => onNodeClick?.(node.id)}
       />
     </div>

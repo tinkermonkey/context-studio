@@ -4,13 +4,9 @@ Tests measure health check execution, configuration management,
 and background task lifecycle operations.
 """
 
-import os
-import sys
 import time
 
 import pytest
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from domain.admin.services import AdminService
 from domain.admin.value_objects import BackgroundTaskStatus

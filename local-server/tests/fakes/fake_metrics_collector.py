@@ -1,10 +1,5 @@
 """Fake in-memory implementation of MetricsCollector for testing."""
 
-import os
-import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from types import MappingProxyType
 from typing import Optional
 

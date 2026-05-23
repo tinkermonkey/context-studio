@@ -5,11 +5,6 @@ These tests verify pipeline configuration CRUD operations, execution recording,
 event publishing, and error handling in isolation using fake ports.
 """
 
-import os
-import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 import time
 
 import pytest

@@ -5,16 +5,12 @@ Tests persistence of Dataset entities, error handling for database operations,
 and integration with domain exception mapping.
 """
 
-import os
-import sys
 import uuid
 from datetime import datetime, timezone
 
 import pytest
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from adapters.persistence.sqlite.dataset_repo import SQLiteDatasetRepository
 from adapters.persistence.sqlite.models import Base

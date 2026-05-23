@@ -11,11 +11,6 @@ Tests verify the full graph analysis workflow with:
 These tests exercise the complete stack: routes → domain service → adapters → database.
 """
 
-import os
-import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 import tempfile
 from pathlib import Path
 from uuid import uuid4

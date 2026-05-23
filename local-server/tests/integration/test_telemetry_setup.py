@@ -3,11 +3,7 @@ Integration tests for telemetry setup including log handling.
 """
 
 import logging
-import os
-import sys
 from unittest.mock import Mock
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from adapters.telemetry import setup_telemetry
 from adapters.telemetry.log_bridge import OTLPLogHandler

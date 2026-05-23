@@ -1,10 +1,5 @@
 """Fake in-memory implementation of ExtractionRunRepository for testing."""
 
-import os
-import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from typing import Sequence
 
 from domain.extraction.entities import ExtractionRun
@@ -26,6 +21,7 @@ class FakeExtractionRunRepository:
         Returns:
             The saved ExtractionRun
         """
+
         self._runs[run.id] = run
         return run
 

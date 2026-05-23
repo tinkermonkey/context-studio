@@ -35,6 +35,12 @@ selectors:
     description: Git URL input field in the clone workspace modal
 
   # Topbar (Heimdall)
+  - selector: topbar
+    component: components/shell/Topbar.tsx
+    description: Root topbar/navigation header container
+  - selector: workspace-chip
+    component: components/shell/Topbar.tsx
+    description: Current workspace display chip in topbar showing active workspace name
   - selector: dark-mode-toggle
     component: components/shell/Topbar.tsx
     description: Button that toggles the canvas between light and dark mode

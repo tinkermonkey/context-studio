@@ -5,11 +5,7 @@ Tests the adapter's ability to collect system metrics from protocol-typed
 health-check components, without depending on concrete adapter types.
 """
 
-import os
-import sys
 import time
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest
 from sqlalchemy import create_engine, text

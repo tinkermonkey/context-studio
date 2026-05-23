@@ -8,11 +8,7 @@ Tests the following issues:
 - Split mode for TBox/ABox separation
 """
 
-import os
-import sys
 from datetime import datetime, timezone
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest
 from sqlalchemy import create_engine

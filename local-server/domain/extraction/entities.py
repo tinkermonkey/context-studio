@@ -167,6 +167,8 @@ class ExtractionRun:
 
     Attributes:
         id: Unique identifier (UUID as string)
+        batch_run_id: Optional reference to the batch run that produced this extraction
+            (always None on domain entity; not populated from persistence)
         source_document_uri: Optional URI/filename of the source document
         source_text_hash: SHA256 hash of the extracted-from text (audit)
         pipeline_config_ref: Pipeline configuration slug (e.g., "extraction-default")
@@ -192,6 +194,7 @@ class ExtractionRun:
     triples_extracted: int
     triples_committed: int
     status: ExtractionRunStatus
+    batch_run_id: str | None = None
 
     def __post_init__(self) -> None:
         """Validate extraction run invariants."""

@@ -42,9 +42,11 @@ from adapters.persistence.sqlite.extraction_run_repo import (
 from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.pipeline_repo import SQLitePipelineRepository
+from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.reference.cache import CachedReferenceSource
 from adapters.reference.conceptnet import ConceptNetSource
 from adapters.reference.dbpedia import DBpediaSource
+from adapters.reference.grounding import GroundingAdapter
 from adapters.reference.schema_org import SchemaOrgSource
 from adapters.reference.wikidata import WikidataSource
 from adapters.sync.duckdb_sync import DuckDBSyncAdapter
@@ -62,6 +64,7 @@ from adapters.web.interchange_routes import router as interchange_router
 # Import routes
 from adapters.web.ontology_routes import router as ontology_router
 from adapters.web.pipeline_routes import router as pipeline_router
+from adapters.web.pipelines_routes import router as pipelines_router
 from adapters.web.reference_routes import router as reference_router
 from adapters.web.versioning_routes import router as versioning_router
 from config import SyncAdapterType, get_config_manager, get_settings
@@ -99,6 +102,22 @@ from domain.ontology.events import (
 from domain.ontology.services import OntologyService
 from domain.pipeline.events import PipelineExecuted
 from domain.pipeline.services import PipelineService
+from domain.pipelines.individual_extraction import register_individual_extraction
+from domain.pipelines.registry import (
+    PipelineConfigurationRegistry,
+    PipelineImplementationRegistry,
+    PipelineTypeRegistry,
+)
+from domain.pipelines.schema_extraction.bootstrap import register_schema_extraction
+from domain.pipelines.schema_node_connection_refinement import (
+    register_schema_node_connection_refinement,
+)
+from domain.pipelines.schema_node_definition_refinement import (
+    register_schema_node_definition_refinement,
+)
+from domain.pipelines.schema_node_grounding import register_schema_node_grounding
+from domain.pipelines.schema_node_grounding.orchestrator import SchemaGroundingOrchestrator
+from domain.pipelines.schema_node_grounding.scoring import GroundingScorer
 from domain.versioning.events import ChangesetMerged, SyncCompleted
 from domain.versioning.ports import SyncTarget
 from domain.versioning.services import VersioningService
@@ -180,7 +199,14 @@ async def lifespan(app: FastAPI):
 
         operations_session_factory = db_manager.get_operations_session_factory()
         pipeline_repo = SQLitePipelineRepository(operations_session_factory)
-        logger.info("PipelineRepository created")
+        pipeline_run_repo = PipelineRepository(local_session_factory)
+        logger.info("PipelineRepository and PipelineRunRepository created")
+
+        # Initialize pipeline registries (currently empty—implementations/configs added at startup)
+        implementation_registry = PipelineImplementationRegistry()
+        config_registry = PipelineConfigurationRegistry()
+        type_registry = PipelineTypeRegistry()
+        logger.info("Pipeline registries initialized")
 
         # Embedding service
         embedding_service = SentenceTransformerEmbedding(model_name="all-MiniLM-L12-v2")
@@ -190,6 +216,7 @@ async def lifespan(app: FastAPI):
         llm_router = LLMProviderRouter(
             openai_api_key=settings.llm.openai_api_key,
             anthropic_api_key=settings.llm.anthropic_api_key,
+            openrouter_api_key=settings.llm.openrouter_api_key,
         )
         logger.info("LLM provider router created")
 
@@ -251,6 +278,71 @@ async def lifespan(app: FastAPI):
             extraction_run_repo=extraction_run_repo,
         )
         logger.info("ExtractionService created and wired with adapters")
+
+        # Register individual extraction pipeline implementation
+        register_individual_extraction(
+            impl_registry=implementation_registry,
+            config_registry=config_registry,
+        )
+        logger.info("Individual extraction pipeline registered")
+
+        # Register schema extraction pipeline implementation
+        register_schema_extraction(
+            impl_registry=implementation_registry,
+            config_registry=config_registry,
+        )
+        logger.info("Schema extraction pipeline registered")
+
+        # Create schema node grounding orchestrator
+        grounding_adapter = GroundingAdapter(
+            dbpedia=DBpediaSource(),
+            conceptnet=ConceptNetSource(base_url=settings.reference.conceptnet_base_url),
+        )
+
+        def log_embedding_error(node_label: str, candidate_label: str, error: Exception) -> None:
+            logger.warning(
+                f"Failed to compute embedding similarity for '{node_label}' vs "
+                f"'{candidate_label}': {error}. Semantic similarity score set to "
+                f"0.0 (40% of grounding confidence)"
+            )
+
+        grounding_scorer = GroundingScorer(
+            embedding_service=embedding_service,
+            error_callback=log_embedding_error,
+        )
+        grounding_config = {
+            "top_n": 10,
+            "weights": {
+                "source_score": 0.3,
+                "label_match": 0.3,
+                "semantic_similarity": 0.4,
+            },
+        }
+        schema_grounding_orchestrator = SchemaGroundingOrchestrator(
+            llm_provider=llm_router,
+            grounding_adapter=grounding_adapter,
+            scorer=grounding_scorer,
+            config=grounding_config,
+        )
+        register_schema_node_grounding(
+            impl_registry=implementation_registry,
+            config_registry=config_registry,
+        )
+        logger.info("Schema node grounding pipeline registered")
+
+        # Register definition and connection refinement pipelines
+        # Note: traversal dependencies will be injected at orchestrator instantiation time
+        register_schema_node_definition_refinement(
+            impl_registry=implementation_registry,
+            config_registry=config_registry,
+        )
+        logger.info("Schema node definition refinement pipeline registered")
+
+        register_schema_node_connection_refinement(
+            impl_registry=implementation_registry,
+            config_registry=config_registry,
+        )
+        logger.info("Schema node connection refinement pipeline registered")
 
         pipeline_service = PipelineService(
             pipeline_repo=pipeline_repo,
@@ -499,6 +591,19 @@ async def lifespan(app: FastAPI):
         app.state.interchange_repo = interchange_repo
         app.state.import_run_service = import_run_service
 
+        # Store pipeline run repo and registries for generic pipeline endpoints
+        app.state.pipeline_run_repo = pipeline_run_repo
+        app.state.implementation_registry = implementation_registry
+        app.state.config_registry = config_registry
+        app.state.type_registry = type_registry
+
+        # Store pipeline orchestrators
+        app.state.schema_grounding_orchestrator = schema_grounding_orchestrator
+
+        # Store grounding dependencies for orchestrator factory
+        app.state.grounding_adapter = grounding_adapter
+        app.state.grounding_scorer = grounding_scorer
+
         # Store adapters needed for health checks
         app.state.nlp_processor = nlp_processor
         app.state.llm_router = llm_router
@@ -552,6 +657,7 @@ app.include_router(ontology_router)
 app.include_router(graph_router)
 app.include_router(extraction_router)
 app.include_router(pipeline_router)
+app.include_router(pipelines_router)
 app.include_router(reference_router)
 app.include_router(versioning_router)
 app.include_router(admin_router)

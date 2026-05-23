@@ -4,11 +4,6 @@ Unit tests for the PipelineService flavor operations.
 These tests verify flavor CRUD operations using fake ports.
 """
 
-import os
-import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 import pytest
 
 from domain.pipeline.exceptions import PipelineNotFoundError

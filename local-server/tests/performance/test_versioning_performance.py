@@ -4,14 +4,10 @@ Tests measure changeset creation, proposal workflow, and change event recording
 performance at multiple scales.
 """
 
-import os
-import sys
 import time
 from uuid import uuid4
 
 import pytest
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from domain.versioning.services import VersioningService
 from domain.versioning.value_objects import ChangeOperation

@@ -5,11 +5,6 @@ Tests cover entity construction, validation of invariants, and factory method
 for the ExtractionRun first-class domain entity.
 """
 
-import os
-import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from uuid import uuid4
 
 import pytest
