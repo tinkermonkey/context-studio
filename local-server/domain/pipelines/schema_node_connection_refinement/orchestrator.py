@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import logging
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 from domain.pipeline.exceptions import PipelineExecutionError, PipelineInputError
@@ -88,7 +88,8 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
             Updated ConnectionRefinementState with deltas populated
 
         Raises:
-            ValueError: If required input fields are missing
+            PipelineInputError: If required input fields are missing
+            PipelineExecutionError: If pipeline execution fails
         """
         if not isinstance(state, ConnectionRefinementState):
             state = ConnectionRefinementState(
@@ -106,16 +107,23 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
         extraction_usages = state.input_data.get("extraction_usages", [])
 
         if not scope_id:
-            raise PipelineInputError("scope_id is required and cannot be empty")
+            exc = PipelineInputError("scope_id is required and cannot be empty")
+            state = replace(
+                state, current_status=PipelineRunStatus.FAILED, result={"error": str(exc)}
+            )
+            raise exc
 
-        state.scope_id = scope_id
-        state.current_connections = current_connections
-        state.current_status = PipelineRunStatus.RUNNING
+        state = replace(
+            state,
+            scope_id=scope_id,
+            current_connections=current_connections,
+            current_status=PipelineRunStatus.RUNNING,
+        )
 
         try:
             # Step 1: Assemble current state
             neighborhood = self._traversal.get_class_neighborhood(scope_id)
-            state.scope_label = neighborhood.class_label
+            state = replace(state, scope_label=neighborhood.class_label)
 
             # Step 2-5: Propose and rank deltas
             deltas = await self._propose_deltas(
@@ -124,36 +132,40 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
                 groundings,
                 extraction_usages,
             )
-            state.deltas = deltas
+            state = replace(state, deltas=deltas)
 
-            state.current_status = PipelineRunStatus.COMPLETED
-            state.result = {
-                "scope_id": scope_id,
-                "scope_label": state.scope_label,
-                "deltas": [
-                    {
-                        "operation": d["operation"],
-                        "subject": d["subject"],
-                        "predicate": d["predicate"],
-                        "object": d["object"],
-                        "rationale": d["rationale"],
-                        "sources_cited": d["sources_cited"],
-                        "confidence": d["confidence"],
-                    }
-                    for d in deltas
-                ],
-                "total_deltas": len(deltas),
-            }
+            state = replace(
+                state,
+                current_status=PipelineRunStatus.COMPLETED,
+                result={
+                    "scope_id": scope_id,
+                    "scope_label": state.scope_label,
+                    "deltas": [
+                        {
+                            "operation": d["operation"],
+                            "subject": d["subject"],
+                            "predicate": d["predicate"],
+                            "object": d["object"],
+                            "rationale": d["rationale"],
+                            "sources_cited": d["sources_cited"],
+                            "confidence": d["confidence"],
+                        }
+                        for d in deltas
+                    ],
+                    "total_deltas": len(deltas),
+                },
+            )
 
-        except Exception as exc:
-            state.current_status = PipelineRunStatus.FAILED
-            state.errors.append(str(exc))
-            state.result = {
-                "scope_id": scope_id,
-                "deltas": [],
-                "errors": state.errors,
-            }
+        except PipelineExecutionError:
+            state = replace(state, current_status=PipelineRunStatus.FAILED)
             raise
+        except Exception as exc:
+            state = replace(
+                state,
+                current_status=PipelineRunStatus.FAILED,
+                result={"error": str(exc)},
+            )
+            raise PipelineExecutionError(f"Connection refinement failed: {str(exc)}") from exc
 
         return state
 

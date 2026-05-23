@@ -8,7 +8,7 @@ and returns ranked groundings.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 from domain.pipeline.exceptions import PipelineExecutionError, PipelineInputError
@@ -100,7 +100,8 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
             Updated SchemaGroundingState with groundings populated
 
         Raises:
-            ValueError: If required input fields are missing
+            PipelineInputError: If required input fields are missing
+            PipelineExecutionError: If pipeline execution fails
         """
         if not isinstance(state, SchemaGroundingState):
             state = SchemaGroundingState(
@@ -117,12 +118,19 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
         sources = state.input_data.get("sources", [])
 
         if not node_label:
-            raise PipelineInputError("node_label is required and cannot be empty")
+            exc = PipelineInputError("node_label is required and cannot be empty")
+            state = replace(
+                state, current_status=PipelineRunStatus.FAILED, result={"error": str(exc)}
+            )
+            raise exc
 
-        state.node_label = node_label
-        state.node_type = NodeType(node_type_str) if node_type_str else NodeType.CLASS
-        state.sources = sources or ["DBpedia", "ConceptNet"]
-        state.current_status = PipelineRunStatus.RUNNING
+        state = replace(
+            state,
+            node_label=node_label,
+            node_type=NodeType(node_type_str) if node_type_str else NodeType.CLASS,
+            sources=sources or ["DBpedia", "ConceptNet"],
+            current_status=PipelineRunStatus.RUNNING,
+        )
 
         try:
             candidates = await self._grounding_adapter.query_sources(
@@ -131,44 +139,52 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
             )
 
             if not candidates:
-                state.groundings = []
-                state.current_status = PipelineRunStatus.COMPLETED
-                state.result = {
-                    "groundings": [],
-                    "total_candidates_evaluated": 0,
-                }
-                return state
+                return replace(
+                    state,
+                    groundings=[],
+                    current_status=PipelineRunStatus.COMPLETED,
+                    result={
+                        "groundings": [],
+                        "total_candidates_evaluated": 0,
+                    },
+                )
 
             scored_candidates = await self._scorer.score_candidates(
                 candidates, node_label, state.node_type
             )
 
             top_n = self._config.get("top_n", 10)
-            state.groundings = scored_candidates[:top_n]
+            groundings = scored_candidates[:top_n]
 
-            state.current_status = PipelineRunStatus.COMPLETED
-            state.result = {
-                "groundings": [
-                    {
-                        "uri": c.uri,
-                        "label": c.label,
-                        "description": c.description,
-                        "source": c.source,
-                        "match_confidence": c.match_confidence,
-                        "match_rationale": c.match_rationale,
-                    }
-                    for c in state.groundings
-                ],
-                "total_candidates_evaluated": len(scored_candidates),
-            }
+            state = replace(
+                state,
+                groundings=groundings,
+                current_status=PipelineRunStatus.COMPLETED,
+                result={
+                    "groundings": [
+                        {
+                            "uri": c.uri,
+                            "label": c.label,
+                            "description": c.description,
+                            "source": c.source,
+                            "match_confidence": c.match_confidence,
+                            "match_rationale": c.match_rationale,
+                        }
+                        for c in groundings
+                    ],
+                    "total_candidates_evaluated": len(scored_candidates),
+                },
+            )
 
-        except Exception as exc:
-            state.current_status = PipelineRunStatus.FAILED
-            state.errors.append(str(exc))
-            state.result = {
-                "groundings": [],
-                "errors": state.errors,
-            }
+        except PipelineExecutionError:
+            state = replace(state, current_status=PipelineRunStatus.FAILED)
             raise
+        except Exception as exc:
+            state = replace(
+                state,
+                current_status=PipelineRunStatus.FAILED,
+                result={"error": str(exc)},
+            )
+            raise PipelineExecutionError(f"Schema node grounding failed: {str(exc)}") from exc
 
         return state

@@ -12,7 +12,7 @@ the existing extraction service rather than reimplementing extraction logic.
 from __future__ import annotations
 
 import hashlib
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 from domain.extraction.services import ExtractionService
@@ -99,8 +99,8 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
             Updated IndividualExtractionState with extracted triples and metadata
 
         Raises:
-            ValueError: If required input fields are missing
-            ExtractionError: If extraction fails
+            PipelineInputError: If required input fields are missing
+            PipelineExecutionError: If extraction fails
         """
         # Cast to subclass for type checking
         if not isinstance(state, IndividualExtractionState):
@@ -121,19 +121,34 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
 
         # Validate required inputs
         if not text or not text.strip():
-            raise PipelineInputError("text is required and cannot be empty")
+            exc = PipelineInputError("text is required and cannot be empty")
+            state = replace(
+                state, current_status=PipelineRunStatus.FAILED, result={"error": str(exc)}
+            )
+            raise exc
         if not ontology_id:
-            raise PipelineInputError("ontology_id is required")
+            exc = PipelineInputError("ontology_id is required")
+            state = replace(
+                state, current_status=PipelineRunStatus.FAILED, result={"error": str(exc)}
+            )
+            raise exc
         if not model:
-            raise PipelineInputError("model is required")
+            exc = PipelineInputError("model is required")
+            state = replace(
+                state, current_status=PipelineRunStatus.FAILED, result={"error": str(exc)}
+            )
+            raise exc
 
         # Update state with input data
-        state.source_text = text
-        state.source_text_hash = hashlib.sha256(text.encode()).hexdigest()
-        state.ontology_id = ontology_id
-        state.model = model
-        state.temperature = temperature
-        state.current_status = PipelineRunStatus.RUNNING
+        state = replace(
+            state,
+            source_text=text,
+            source_text_hash=hashlib.sha256(text.encode()).hexdigest(),
+            ontology_id=ontology_id,
+            model=model,
+            temperature=temperature,
+            current_status=PipelineRunStatus.RUNNING,
+        )
 
         try:
             # Call extraction service
@@ -145,27 +160,28 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
             )
 
             # Populate result state
-            state.extracted_triples = result.triples
-            state.warnings = result.warnings
-            state.metadata = result.metadata
+            state = replace(
+                state,
+                extracted_triples=result.triples,
+                warnings=result.warnings,
+                metadata=result.metadata,
+                result={
+                    "triples": result.triples,
+                    "warnings": result.warnings,
+                    "metadata": result.metadata,
+                },
+                current_status=PipelineRunStatus.COMPLETED,
+            )
 
-            # Set result for PipelineRun
-            state.result = {
-                "triples": result.triples,
-                "warnings": result.warnings,
-                "metadata": result.metadata,
-            }
-
-            state.current_status = PipelineRunStatus.COMPLETED
-
-        except Exception as exc:
-            state.current_status = PipelineRunStatus.FAILED
-            state.warnings.append(f"Extraction error: {str(exc)}")
-            state.result = {
-                "triples": [],
-                "warnings": state.warnings,
-                "metadata": {},
-            }
+        except PipelineExecutionError:
+            state = replace(state, current_status=PipelineRunStatus.FAILED)
             raise
+        except Exception as exc:
+            state = replace(
+                state,
+                current_status=PipelineRunStatus.FAILED,
+                result={"error": str(exc)},
+            )
+            raise PipelineExecutionError(f"Individual extraction failed: {str(exc)}") from exc
 
         return state

@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import logging
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 from domain.pipeline.exceptions import PipelineExecutionError, PipelineInputError
@@ -87,7 +87,8 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
             Updated DefinitionRefinementState with candidates populated
 
         Raises:
-            ValueError: If required input fields are missing
+            PipelineInputError: If required input fields are missing
+            PipelineExecutionError: If pipeline execution fails
         """
         if not isinstance(state, DefinitionRefinementState):
             state = DefinitionRefinementState(
@@ -105,16 +106,23 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
         extraction_usages = state.input_data.get("extraction_usages", [])
 
         if not node_id:
-            raise PipelineInputError("node_id is required and cannot be empty")
+            exc = PipelineInputError("node_id is required and cannot be empty")
+            state = replace(
+                state, current_status=PipelineRunStatus.FAILED, result={"error": str(exc)}
+            )
+            raise exc
 
-        state.node_id = node_id
-        state.current_definition = current_definition
-        state.current_status = PipelineRunStatus.RUNNING
+        state = replace(
+            state,
+            node_id=node_id,
+            current_definition=current_definition,
+            current_status=PipelineRunStatus.RUNNING,
+        )
 
         try:
             # Step 1: Assemble context
             neighborhood = self._traversal.get_class_neighborhood(node_id)
-            state.node_label = neighborhood.class_label
+            state = replace(state, node_label=neighborhood.class_label)
 
             # Step 2-4: Generate and score candidates
             candidates = await self._generate_candidates(
@@ -123,33 +131,37 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
                 groundings,
                 extraction_usages,
             )
-            state.candidates = candidates
+            state = replace(state, candidates=candidates)
 
-            state.current_status = PipelineRunStatus.COMPLETED
-            state.result = {
-                "node_id": node_id,
-                "node_label": state.node_label,
-                "candidates": [
-                    {
-                        "definition": c["definition"],
-                        "rationale": c["rationale"],
-                        "sources_used": c["sources_used"],
-                        "confidence": c["confidence"],
-                    }
-                    for c in candidates
-                ],
-                "total_candidates": len(candidates),
-            }
+            state = replace(
+                state,
+                current_status=PipelineRunStatus.COMPLETED,
+                result={
+                    "node_id": node_id,
+                    "node_label": state.node_label,
+                    "candidates": [
+                        {
+                            "definition": c["definition"],
+                            "rationale": c["rationale"],
+                            "sources_used": c["sources_used"],
+                            "confidence": c["confidence"],
+                        }
+                        for c in candidates
+                    ],
+                    "total_candidates": len(candidates),
+                },
+            )
 
-        except Exception as exc:
-            state.current_status = PipelineRunStatus.FAILED
-            state.errors.append(str(exc))
-            state.result = {
-                "node_id": node_id,
-                "candidates": [],
-                "errors": state.errors,
-            }
+        except PipelineExecutionError:
+            state = replace(state, current_status=PipelineRunStatus.FAILED)
             raise
+        except Exception as exc:
+            state = replace(
+                state,
+                current_status=PipelineRunStatus.FAILED,
+                result={"error": str(exc)},
+            )
+            raise PipelineExecutionError(f"Definition refinement failed: {str(exc)}") from exc
 
         return state
 

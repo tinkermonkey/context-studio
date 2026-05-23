@@ -601,5 +601,47 @@ async def test_parse_warnings_structure():
             assert isinstance(warning["fallback_action"], str)
 
 
+@pytest.mark.asyncio
+async def test_schema_extraction_empty_documents_raises():
+    """Test that PipelineInputError is raised when documents list is empty."""
+    from domain.pipeline.exceptions import PipelineInputError
+
+    llm_provider = MockLLMProvider()
+    orchestrator = SchemaExtractionOrchestrator(llm_provider)
+
+    state = SchemaExtractionState(
+        run_id="run-empty-documents",
+        pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+        input_data={
+            "documents": [],
+            "model": "google/gemini-3-flash-preview",
+        },
+    )
+
+    with pytest.raises(PipelineInputError, match="documents is required"):
+        await orchestrator.execute(state)
+
+
+@pytest.mark.asyncio
+async def test_schema_extraction_whitespace_documents_raises():
+    """Test that PipelineInputError is raised when all documents are whitespace."""
+    from domain.pipeline.exceptions import PipelineInputError
+
+    llm_provider = MockLLMProvider()
+    orchestrator = SchemaExtractionOrchestrator(llm_provider)
+
+    state = SchemaExtractionState(
+        run_id="run-whitespace-documents",
+        pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+        input_data={
+            "documents": ["   ", "\n\n", "\t\t"],
+            "model": "google/gemini-3-flash-preview",
+        },
+    )
+
+    with pytest.raises(PipelineInputError, match="documents is required"):
+        await orchestrator.execute(state)
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
