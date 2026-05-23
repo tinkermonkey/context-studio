@@ -46,6 +46,7 @@ from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.reference.cache import CachedReferenceSource
 from adapters.reference.conceptnet import ConceptNetSource
 from adapters.reference.dbpedia import DBpediaSource
+from adapters.reference.grounding import GroundingAdapter
 from adapters.reference.schema_org import SchemaOrgSource
 from adapters.reference.wikidata import WikidataSource
 from adapters.sync.duckdb_sync import DuckDBSyncAdapter
@@ -101,7 +102,11 @@ from domain.ontology.events import (
 from domain.ontology.services import OntologyService
 from domain.pipeline.events import PipelineExecuted
 from domain.pipeline.services import PipelineService
+from domain.pipeline.ports import LLMProvider
 from domain.pipelines.individual_extraction import register_individual_extraction
+from domain.pipelines.schema_node_grounding import register_schema_node_grounding
+from domain.pipelines.schema_node_grounding.orchestrator import SchemaGroundingOrchestrator
+from domain.pipelines.schema_node_grounding.scoring import GroundingScorer
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
@@ -273,6 +278,33 @@ async def lifespan(app: FastAPI):
             config_registry=config_registry,
         )
         logger.info("Individual extraction pipeline registered")
+
+        # Create schema node grounding orchestrator
+        grounding_adapter = GroundingAdapter(
+            dbpedia=DBpediaSource(),
+            conceptnet=ConceptNetSource(base_url=settings.reference.conceptnet_base_url),
+        )
+        grounding_scorer = GroundingScorer(embedding_service=embedding_service)
+        grounding_config = {
+            "top_n": 10,
+            "weights": {
+                "source_score": 0.3,
+                "label_match": 0.3,
+                "semantic_similarity": 0.4,
+            },
+        }
+        grounding_orchestrator = SchemaGroundingOrchestrator(
+            llm_provider=llm_router,
+            grounding_adapter=grounding_adapter,
+            scorer=grounding_scorer,
+            config=grounding_config,
+        )
+        register_schema_node_grounding(
+            impl_registry=implementation_registry,
+            config_registry=config_registry,
+            orchestrator=grounding_orchestrator,
+        )
+        logger.info("Schema node grounding pipeline registered")
 
         pipeline_service = PipelineService(
             pipeline_repo=pipeline_repo,
