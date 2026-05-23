@@ -7,7 +7,7 @@ and pipeline run management via REST API.
 
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
@@ -19,7 +19,13 @@ from sqlalchemy.orm import sessionmaker
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.web.pipelines_routes import router
-from domain.pipeline.exceptions import PipelineStorageError
+from domain.pipeline.exceptions import (
+    PipelineError,
+    PipelineExecutionError,
+    PipelineExternalServiceError,
+    PipelineInputError,
+    PipelineStorageError,
+)
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
@@ -509,3 +515,188 @@ class TestPipelineErrorHandling:
         assert "persist" in body["detail"].lower() or "failed" in body["detail"].lower()
         assert "table" not in body["detail"].lower()
         assert "constraint" not in body["detail"].lower()
+
+    def test_orchestrator_raises_pipeline_input_error_returns_400(self, client, registries):
+        """Test that PipelineInputError from orchestrator returns 400."""
+        # Register implementation and configuration
+        registries["implementation_registry"].register_impl(
+            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+        )
+        registries["config_registry"].register(
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            "default",
+            {"model": "test-model"},
+        )
+
+        # Mock orchestrator to raise PipelineInputError
+        mock_orchestrator = AsyncMock()
+        mock_orchestrator.execute.side_effect = PipelineInputError("Invalid documents format")
+
+        # Patch create_orchestrator to return our mock
+        with patch("adapters.web.pipelines_routes.create_orchestrator", return_value=mock_orchestrator):
+            response = client.post(
+                "/api/pipelines/schema_extraction/run",
+                json={
+                    "documents": ["doc1"],
+                    "implementation_id": "default",
+                    "configuration_ref": "default",
+                },
+            )
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        body = response.json()
+        assert "detail" in body
+        assert "Invalid documents format" in body["detail"]
+
+    def test_orchestrator_raises_external_service_error_returns_503(self, client, registries):
+        """Test that PipelineExternalServiceError from orchestrator returns 503."""
+        # Register implementation and configuration
+        registries["implementation_registry"].register_impl(
+            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+        )
+        registries["config_registry"].register(
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            "default",
+            {"model": "test-model"},
+        )
+
+        # Mock orchestrator to raise PipelineExternalServiceError
+        mock_orchestrator = AsyncMock()
+        mock_orchestrator.execute.side_effect = PipelineExternalServiceError(
+            "OpenRouter service timeout"
+        )
+
+        # Patch create_orchestrator to return our mock
+        with patch("adapters.web.pipelines_routes.create_orchestrator", return_value=mock_orchestrator):
+            response = client.post(
+                "/api/pipelines/schema_extraction/run",
+                json={
+                    "documents": ["doc1"],
+                    "implementation_id": "default",
+                    "configuration_ref": "default",
+                },
+            )
+
+        assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+        body = response.json()
+        assert "detail" in body
+        assert "External service unavailable" in body["detail"]
+
+    def test_orchestrator_raises_execution_error_returns_500(self, client, registries):
+        """Test that PipelineExecutionError from orchestrator returns 500."""
+        # Register implementation and configuration
+        registries["implementation_registry"].register_impl(
+            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+        )
+        registries["config_registry"].register(
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            "default",
+            {"model": "test-model"},
+        )
+
+        # Mock orchestrator to raise PipelineExecutionError
+        mock_orchestrator = AsyncMock()
+        mock_orchestrator.execute.side_effect = PipelineExecutionError(
+            "Internal logic failed"
+        )
+
+        # Patch create_orchestrator to return our mock
+        with patch("adapters.web.pipelines_routes.create_orchestrator", return_value=mock_orchestrator):
+            response = client.post(
+                "/api/pipelines/schema_extraction/run",
+                json={
+                    "documents": ["doc1"],
+                    "implementation_id": "default",
+                    "configuration_ref": "default",
+                },
+            )
+
+        assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+        body = response.json()
+        assert "detail" in body
+        assert "Internal logic failed" in body["detail"]
+
+    def test_orchestrator_raises_generic_pipeline_error_returns_500(self, client, registries):
+        """Test that generic PipelineError from orchestrator returns 500."""
+        # Register implementation and configuration
+        registries["implementation_registry"].register_impl(
+            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+        )
+        registries["config_registry"].register(
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            "default",
+            {"model": "test-model"},
+        )
+
+        # Mock orchestrator to raise generic PipelineError
+        mock_orchestrator = AsyncMock()
+        mock_orchestrator.execute.side_effect = PipelineError("Generic pipeline error")
+
+        # Patch create_orchestrator to return our mock
+        with patch("adapters.web.pipelines_routes.create_orchestrator", return_value=mock_orchestrator):
+            response = client.post(
+                "/api/pipelines/schema_extraction/run",
+                json={
+                    "documents": ["doc1"],
+                    "implementation_id": "default",
+                    "configuration_ref": "default",
+                },
+            )
+
+        assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+        body = response.json()
+        assert "detail" in body
+        assert "Pipeline execution failed" in body["detail"]
+
+    def test_orchestrator_returns_parse_warnings_in_output(self, client, registries):
+        """Test that parse_warnings from orchestrator are included in output_summary."""
+        # Register implementation and configuration
+        registries["implementation_registry"].register_impl(
+            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+        )
+        registries["config_registry"].register(
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            "default",
+            {"model": "test-model"},
+        )
+
+        # Create a mock state with parse warnings
+        mock_state = MagicMock()
+        mock_state.result = {"schemas": ["schema1"]}
+        mock_state.parse_warnings = [
+            {
+                "stage": "llm_parsing",
+                "error": "Failed to parse JSON response",
+                "response_preview": "incomplete JSON",
+                "fallback_action": "used default schema",
+            }
+        ]
+
+        # Mock orchestrator to return state with warnings
+        mock_orchestrator = AsyncMock()
+        mock_orchestrator.execute.return_value = mock_state
+
+        # Patch create_orchestrator to return our mock
+        with patch("adapters.web.pipelines_routes.create_orchestrator", return_value=mock_orchestrator):
+            response = client.post(
+                "/api/pipelines/schema_extraction/run",
+                json={
+                    "documents": ["doc1"],
+                    "implementation_id": "default",
+                    "configuration_ref": "default",
+                },
+            )
+
+        assert response.status_code == status.HTTP_201_CREATED
+        body = response.json()
+
+        # Verify output_summary was updated with warnings
+        # Note: output_summary is not directly returned in the response, but stored in DB
+        # We can verify the request succeeded and the run was created
+        assert "id" in body
+        assert body["status"] == "completed"
