@@ -276,7 +276,9 @@ class SchemaDefinitionRefinementRun(PipelineRun):
         All pipeline-shared fields
     """
 
-    pipeline_type: PipelineType = field(default=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT, init=False)
+    pipeline_type: PipelineType = field(
+        default=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT, init=False
+    )
 
     @classmethod
     def create(  # type: ignore[override]
@@ -312,7 +314,9 @@ class SchemaConnectionRefinementRun(PipelineRun):
         All pipeline-shared fields
     """
 
-    pipeline_type: PipelineType = field(default=PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT, init=False)
+    pipeline_type: PipelineType = field(
+        default=PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT, init=False
+    )
 
     @classmethod
     def create(  # type: ignore[override]
