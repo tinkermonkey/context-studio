@@ -1,0 +1,17 @@
+{
+  "arxiv_id": "2605.22331v1",
+  "title": "SepsisAI Orchestrator: A Containerized and Scalable Platform for Deploying AI Models and Real-Time Monitoring in Early Sepsis Detection",
+  "authors": [
+    "Santiago Ospitia",
+    "John Sanabria",
+    "John Garcia-Henao"
+  ],
+  "published": "2026-05-21T11:19:31+00:00",
+  "categories": [
+    "cs.LG",
+    "cs.AI",
+    "cs.DC"
+  ],
+  "pdf_url": "https://arxiv.org/pdf/2605.22331v1",
+  "arxiv_url": "http://arxiv.org/abs/2605.22331v1"
+}

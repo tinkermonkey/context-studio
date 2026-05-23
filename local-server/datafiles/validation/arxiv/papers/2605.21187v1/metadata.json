@@ -1,0 +1,28 @@
+{
+  "arxiv_id": "2605.21187v1",
+  "title": "High-speed Networking for Giga-Scale AI Factories",
+  "authors": [
+    "Sajy Khashab",
+    "Albert Gran Alcoz",
+    "Alon Gal",
+    "Jacky Romano",
+    "Rani Abboud",
+    "Yonatan Piasetzky",
+    "Lior Maman",
+    "Amit Nishry",
+    "Barak Gafni",
+    "Omer Shabtai",
+    "Matty Kadosh",
+    "Dror Goldenberg",
+    "Gilad Shainer",
+    "Mark Silberstein"
+  ],
+  "published": "2026-05-20T13:52:47+00:00",
+  "categories": [
+    "cs.NI",
+    "cs.AI",
+    "cs.DC"
+  ],
+  "pdf_url": "https://arxiv.org/pdf/2605.21187v1",
+  "arxiv_url": "http://arxiv.org/abs/2605.21187v1"
+}

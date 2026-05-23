@@ -1,0 +1,20 @@
+The term Service has multiple meanings in distributed systems and microservices architecture.
+
+A Microservice is a small, independent service that handles a specific business capability.
+Each Microservice should have a single responsibility and be deployed independently.
+Services communicate with each other through well-defined APIs.
+
+In a Service-Oriented Architecture, a Service is a coarse-grained software component that provides business functionality to other services.
+Service Orientation emphasizes loose coupling between services and the ability to reuse services across applications.
+
+A Web Service is a software interface that describes a collection of operations that are network-accessible through standard web protocols.
+A Web Service uses SOAP, REST, or other protocols for communication and enables interoperability between different systems.
+
+Service Mesh is a dedicated infrastructure layer that manages service-to-service communication in a microservices architecture.
+The Service Mesh handles cross-cutting concerns like load balancing, security policies, and observability without modifying individual service code.
+
+Service Discovery allows Services to find and communicate with other Services dynamically without hardcoded dependencies.
+A Service Registry maintains a catalog of available Services and their network locations, enabling dynamic location and failover.
+
+Consistency in distributed systems refers to the guarantee that data is in a valid state according to defined rules.
+Eventual Consistency is a model where all nodes will eventually have the same data, but not necessarily at the same time, enabling high availability.

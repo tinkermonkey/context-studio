@@ -1,0 +1,337 @@
+{
+  "source": "ArXiv API",
+  "categories": [
+    "cs.DC",
+    "cs.SE"
+  ],
+  "description_cs_dc": "Computer Systems - Distributed, Parallel, and Cluster Computing",
+  "description_cs_se": "Computer Science - Software Engineering",
+  "date_from": "2018-01-01",
+  "build_timestamp": "2026-05-23T03:58:16.911840",
+  "paper_count": 20,
+  "license": "ArXiv content is freely available for non-commercial research use",
+  "papers": [
+    {
+      "arxiv_id": "2605.22778v1",
+      "title": "AI-Driven Multi-Region Provisioning for Cloud Services Using Spot Fleets",
+      "authors": [
+        "Javier Fabra",
+        "Enrique Molina-Gim\u00e9nez",
+        "Pedro Garc\u00eda-L\u00f3pez"
+      ],
+      "published": "2026-05-21T17:34:27+00:00",
+      "categories": [
+        "cs.DC"
+      ]
+    },
+    {
+      "arxiv_id": "2605.22661v1",
+      "title": "A Generalized Nash Equilibrium-Seeking Scheme for Trauma Resuscitation",
+      "authors": [
+        "Promise Ekpo",
+        "Angelique Taylor",
+        "Lekan Molu"
+      ],
+      "published": "2026-05-21T16:02:44+00:00",
+      "categories": [
+        "cs.MA",
+        "cs.DC",
+        "cs.GT",
+        "eess.SY"
+      ]
+    },
+    {
+      "arxiv_id": "2605.22491v1",
+      "title": "Relay-Based Synchronization of Replicated Data Types in Opportunistic Networks",
+      "authors": [
+        "Fr\u00e9d\u00e9ric Guidec",
+        "Yves Mah\u00e9o"
+      ],
+      "published": "2026-05-21T13:44:50+00:00",
+      "categories": [
+        "cs.DC",
+        "cs.NI"
+      ]
+    },
+    {
+      "arxiv_id": "2605.22428v1",
+      "title": "Exploiting Multicast for Accelerating Collective Communication",
+      "authors": [
+        "Chao Xu",
+        "Xu Zhang",
+        "Zihang Luo",
+        "Yuyan Wu",
+        "Guoxin Qian",
+        "Yufeng Yao",
+        "Chihyung Wang",
+        "Jingbin Zhou"
+      ],
+      "published": "2026-05-21T12:50:20+00:00",
+      "categories": [
+        "cs.DC"
+      ]
+    },
+    {
+      "arxiv_id": "2605.22426v1",
+      "title": "Monotone Erasure Codes",
+      "authors": [
+        "Vivien Bammert",
+        "Annalisa Cimatti",
+        "Orestis Alpos",
+        "Giuliano Losa",
+        "Christian Cachin"
+      ],
+      "published": "2026-05-21T12:48:05+00:00",
+      "categories": [
+        "cs.IT",
+        "cs.DC"
+      ]
+    },
+    {
+      "arxiv_id": "2605.22416v1",
+      "title": "Asymmetric Virtual Memory Paging for Hybrid Mamba-Transformer Inference",
+      "authors": [
+        "An Xuan Nguyen"
+      ],
+      "published": "2026-05-21T12:37:34+00:00",
+      "categories": [
+        "cs.LG",
+        "cs.DC",
+        "cs.PF"
+      ]
+    },
+    {
+      "arxiv_id": "2605.22393v1",
+      "title": "Nf-PEAK: Process-Based Energy Attribution for Nextflow Workflows on Kubernetes Clusters",
+      "authors": [
+        "Philipp Thamm",
+        "Somayeh Mohammadi",
+        "Kathleen West",
+        "Knut Reinert",
+        "Lauritz Thamsen",
+        "Ulf Leser"
+      ],
+      "published": "2026-05-21T12:26:47+00:00",
+      "categories": [
+        "cs.DC"
+      ]
+    },
+    {
+      "arxiv_id": "2605.22331v1",
+      "title": "SepsisAI Orchestrator: A Containerized and Scalable Platform for Deploying AI Models and Real-Time Monitoring in Early Sepsis Detection",
+      "authors": [
+        "Santiago Ospitia",
+        "John Sanabria",
+        "John Garcia-Henao"
+      ],
+      "published": "2026-05-21T11:19:31+00:00",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "cs.DC"
+      ]
+    },
+    {
+      "arxiv_id": "2605.22039v1",
+      "title": "Secure and Parallel Determinant Computation for Large-Scale Matrices in Edge Environments",
+      "authors": [
+        "Prajwal Panth"
+      ],
+      "published": "2026-05-21T06:23:17+00:00",
+      "categories": [
+        "cs.DC",
+        "cs.AI",
+        "cs.CR",
+        "cs.MS"
+      ]
+    },
+    {
+      "arxiv_id": "2605.22014v1",
+      "title": "LiveR: Fine-Grained Elasticity via Live Reconfiguration for Model Training",
+      "authors": [
+        "Haoyuan Liu",
+        "Kairui Zhou",
+        "Shuyao Qi",
+        "Qinwei Yang",
+        "Shengkai Lin",
+        "Shizhen Zhao",
+        "Wei Zhang"
+      ],
+      "published": "2026-05-21T05:21:51+00:00",
+      "categories": [
+        "cs.DC"
+      ]
+    },
+    {
+      "arxiv_id": "2605.21952v1",
+      "title": "NasZip: Software and Hardware Co-Design to Accelerate Approximate Nearest Neighbor Search with DIMM-Based Near-Data Processing",
+      "authors": [
+        "Cheng Zou",
+        "Shuo Yang",
+        "Chen Nie",
+        "Yu Zou",
+        "Yu He",
+        "Chao Jiang",
+        "Limin Xiao",
+        "Weifeng Zhang",
+        "Zhezhi He"
+      ],
+      "published": "2026-05-21T03:36:27+00:00",
+      "categories": [
+        "cs.AR",
+        "cs.DB",
+        "cs.DC"
+      ]
+    },
+    {
+      "arxiv_id": "2605.21847v1",
+      "title": "CompPow: A Case for Component-level GPU Power Management",
+      "authors": [
+        "Shaizeen Aga",
+        "Mohamed Assem Ibrahim"
+      ],
+      "published": "2026-05-21T00:44:45+00:00",
+      "categories": [
+        "cs.AR",
+        "cs.DC"
+      ]
+    },
+    {
+      "arxiv_id": "2605.21603v1",
+      "title": "DynaFlow: Transparent and Flexible Intra-Device Parallelism via Programmable Operator Scheduling",
+      "authors": [
+        "Yi Pan",
+        "Yile Gu",
+        "Jinbin Luo",
+        "Yibo Wu",
+        "Ziren Wang",
+        "Hongtao Zhang",
+        "Ziyi Xu",
+        "Shengkai Lin",
+        "Baris Kasikci",
+        "Stephanie Wang"
+      ],
+      "published": "2026-05-20T18:09:13+00:00",
+      "categories": [
+        "cs.DC"
+      ]
+    },
+    {
+      "arxiv_id": "2605.21427v1",
+      "title": "PALS: Power-Aware LLM Serving for Mixture-of-Experts Models",
+      "authors": [
+        "Can Hankendi",
+        "Rana Shahout",
+        "Minlan Yu",
+        "Ayse K. Coskun"
+      ],
+      "published": "2026-05-20T17:19:20+00:00",
+      "categories": [
+        "cs.AI",
+        "cs.DC"
+      ]
+    },
+    {
+      "arxiv_id": "2605.21316v1",
+      "title": "Bitcoin's Power Law: Weak Structure, Strong Forecasts",
+      "authors": [
+        "Carlos Baquero",
+        "Raquel Menezes"
+      ],
+      "published": "2026-05-20T15:46:46+00:00",
+      "categories": [
+        "stat.AP",
+        "cs.DC"
+      ]
+    },
+    {
+      "arxiv_id": "2605.21312v1",
+      "title": "Frontier: Towards Comprehensive and Accurate LLM Inference Simulation",
+      "authors": [
+        "Yicheng Feng",
+        "Xin Tan",
+        "Yangtao Deng",
+        "Yimin Jiang",
+        "Yibo Zhu",
+        "Hong Xu"
+      ],
+      "published": "2026-05-20T15:40:18+00:00",
+      "categories": [
+        "cs.DC",
+        "cs.AI",
+        "cs.LG"
+      ]
+    },
+    {
+      "arxiv_id": "2605.21248v1",
+      "title": "Distributed Stochastic Graph Algorithms",
+      "authors": [
+        "Keren Censor-Hillel",
+        "Aditi Dudeja",
+        "George Giakkoupis"
+      ],
+      "published": "2026-05-20T14:38:11+00:00",
+      "categories": [
+        "cs.DS",
+        "cs.DC"
+      ]
+    },
+    {
+      "arxiv_id": "2605.21187v1",
+      "title": "High-speed Networking for Giga-Scale AI Factories",
+      "authors": [
+        "Sajy Khashab",
+        "Albert Gran Alcoz",
+        "Alon Gal",
+        "Jacky Romano",
+        "Rani Abboud",
+        "Yonatan Piasetzky",
+        "Lior Maman",
+        "Amit Nishry",
+        "Barak Gafni",
+        "Omer Shabtai",
+        "Matty Kadosh",
+        "Dror Goldenberg",
+        "Gilad Shainer",
+        "Mark Silberstein"
+      ],
+      "published": "2026-05-20T13:52:47+00:00",
+      "categories": [
+        "cs.NI",
+        "cs.AI",
+        "cs.DC"
+      ]
+    },
+    {
+      "arxiv_id": "2605.21145v1",
+      "title": "Cloud-Native Operation of Roadside Infrastructure Enabling Demand-Driven Collective Perception via V2X",
+      "authors": [
+        "Lukas Zanger",
+        "Fabian Thomsen",
+        "Guido Linden",
+        "Jean-Pierre Busch",
+        "Lennart Reiher",
+        "Lutz Eckstein"
+      ],
+      "published": "2026-05-20T13:18:59+00:00",
+      "categories": [
+        "cs.DC",
+        "cs.AR"
+      ]
+    },
+    {
+      "arxiv_id": "2605.21115v1",
+      "title": "Automated Byzantine-Resilient Clustered Decentralized Federated Learning for Battery Intelligence in Connected EVs",
+      "authors": [
+        "Mouhamed Amine Bouchiha",
+        "Abdelaziz Amara Korba",
+        "Yacine Ghamri-Doudane"
+      ],
+      "published": "2026-05-20T12:47:14+00:00",
+      "categories": [
+        "cs.DC",
+        "cs.LG"
+      ]
+    }
+  ]
+}

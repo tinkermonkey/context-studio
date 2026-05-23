@@ -1,0 +1,65 @@
+{
+  "name": "cloud_provisioning_paper",
+  "description": "Research paper abstract about AI-driven multi-region cloud provisioning using spot instances",
+  "source_text": "Cloud service platforms increasingly rely on elastic infrastructures to support dynamic workloads. Spot instances provide discounted computing resources but introduce uncertainty due to dynamic pricing, resource availability, and interruption risks that vary across geographical regions. In Amazon Web Services, the EC2 Spot Service simplifies fleet provisioning through allocation strategies, but it cannot estimate fleet costs before deployment and restricts provisioning to a single region. This paper presents an AI-driven provisioning service for multi-region spot fleets. The proposed approach combines monitoring of provisioning plans with predictive models to estimate fleet configurations and prices before launch, enabling cost-aware deployment decisions across regions while preserving the operational behavior of the EC2 Spot Service. The system was validated with fleets of up to 1500 vCPUs. Experimental results show a prediction accuracy of 99.79% compared to the EC2 Spot Service and potential cost savings of up to 64% by exploiting regional price variability.",
+  "expected_entities": [
+    {
+      "id": "cloud_service_platforms",
+      "label": "Cloud service platforms",
+      "type": "Technology",
+      "context": "elastic infrastructures"
+    },
+    {
+      "id": "spot_instances",
+      "label": "Spot instances",
+      "type": "Technology",
+      "context": "discounted computing resources"
+    },
+    {
+      "id": "aws",
+      "label": "Amazon Web Services",
+      "type": "Organization",
+      "context": "EC2 Spot Service"
+    },
+    {
+      "id": "ec2_spot_service",
+      "label": "EC2 Spot Service",
+      "type": "Service",
+      "context": "fleet provisioning through allocation strategies"
+    },
+    {
+      "id": "multi_region_fleets",
+      "label": "Multi-region spot fleets",
+      "type": "Architecture",
+      "context": "AI-driven provisioning"
+    },
+    {
+      "id": "predictive_models",
+      "label": "Predictive models",
+      "type": "Technology",
+      "context": "estimate fleet configurations and prices"
+    }
+  ],
+  "expected_relationships": [
+    {
+      "subject": "spot_instances",
+      "predicate": "used_by",
+      "object": "cloud_service_platforms"
+    },
+    {
+      "subject": "ec2_spot_service",
+      "predicate": "owned_by",
+      "object": "aws"
+    },
+    {
+      "subject": "multi_region_fleets",
+      "predicate": "uses_technology",
+      "object": "predictive_models"
+    },
+    {
+      "subject": "multi_region_fleets",
+      "predicate": "improves_upon",
+      "object": "ec2_spot_service"
+    }
+  ]
+}

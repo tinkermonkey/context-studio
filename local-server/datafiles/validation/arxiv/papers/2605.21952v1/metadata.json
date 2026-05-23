@@ -1,0 +1,23 @@
+{
+  "arxiv_id": "2605.21952v1",
+  "title": "NasZip: Software and Hardware Co-Design to Accelerate Approximate Nearest Neighbor Search with DIMM-Based Near-Data Processing",
+  "authors": [
+    "Cheng Zou",
+    "Shuo Yang",
+    "Chen Nie",
+    "Yu Zou",
+    "Yu He",
+    "Chao Jiang",
+    "Limin Xiao",
+    "Weifeng Zhang",
+    "Zhezhi He"
+  ],
+  "published": "2026-05-21T03:36:27+00:00",
+  "categories": [
+    "cs.AR",
+    "cs.DB",
+    "cs.DC"
+  ],
+  "pdf_url": "https://arxiv.org/pdf/2605.21952v1",
+  "arxiv_url": "http://arxiv.org/abs/2605.21952v1"
+}

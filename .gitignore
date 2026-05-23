@@ -17,7 +17,9 @@ build_test_env/
 .claude_prompt_*.txt
 
 # Local server
-local-server/datafiles/
+local-server/datafiles/e2e-test/
+local-server/datafiles/validation/dictionary/terms/
+local-server/datafiles/validation/arxiv/papers/*/body.txt
 local-server/datasets.json
 local-server/downloads/
 local-server/logs/

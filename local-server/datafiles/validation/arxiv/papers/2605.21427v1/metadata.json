@@ -1,0 +1,17 @@
+{
+  "arxiv_id": "2605.21427v1",
+  "title": "PALS: Power-Aware LLM Serving for Mixture-of-Experts Models",
+  "authors": [
+    "Can Hankendi",
+    "Rana Shahout",
+    "Minlan Yu",
+    "Ayse K. Coskun"
+  ],
+  "published": "2026-05-20T17:19:20+00:00",
+  "categories": [
+    "cs.AI",
+    "cs.DC"
+  ],
+  "pdf_url": "https://arxiv.org/pdf/2605.21427v1",
+  "arxiv_url": "http://arxiv.org/abs/2605.21427v1"
+}

@@ -1,0 +1,14 @@
+Consensus is an agreement among multiple processes or nodes in a distributed system on the state of the system.
+Critical mechanisms for maintaining consistency include Paxos and Raft algorithms that ensure all replicas reach the same state.
+
+A Distributed System is a computing system whose components are located on different networked computers that communicate and coordinate their actions by passing messages.
+Multiple autonomous computers working together to achieve a common goal must handle failures and network partitions gracefully.
+
+Partition Tolerance is the ability of a distributed system to continue operating when network partitions occur between nodes.
+The system must handle partial network failures and maintain consistency guarantees even when nodes cannot communicate.
+
+The CAP Theorem states that a distributed system can guarantee at most two of three properties: Consistency, Availability, and Partition tolerance.
+This fundamental principle guides trade-offs in distributed system design and influences choices about replication and failure handling.
+
+Byzantine Fault Tolerance refers to the ability of a system to continue operating correctly even when some nodes are faulty or behave unpredictably.
+This is more challenging than crash fault tolerance and requires consensus algorithms designed to handle adversarial failures.
