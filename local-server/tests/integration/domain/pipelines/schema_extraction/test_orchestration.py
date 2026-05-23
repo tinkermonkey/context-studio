@@ -21,7 +21,6 @@ import pytest
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.schema_extraction.orchestrator import SchemaExtractionOrchestrator, SchemaExtractionState
 from tests.fixtures.schema_extraction_fixtures import get_fixtures
-from tests.fakes.fake_llm_provider import FakeLLMProvider
 
 
 class MockLLMProvider:
@@ -47,9 +46,17 @@ class MockLLMProvider:
 
         self.call_count += 1
 
-        # Return JSON responses appropriate to each stage
-        if "identify" in user_prompt.lower() or "relationships" in user_prompt.lower():
-            # Connection proposal stage - expects JSON with relationships and properties
+        # Dispatch based on system prompt first, then specific user_prompt patterns
+        if "disambiguation" in system_prompt.lower():
+            # Stage 6: Disambiguation - handle multi-sense terms
+            content = (
+                '{"ambiguous_terms": '
+                '[{"term": "Service", "senses": ["Microservice instance", "Web service", "Business service"], '
+                '"rationale": "Service has multiple meanings in different contexts"}]'
+                "}"
+            )
+        elif "relationships and properties" in user_prompt.lower() and "For these candidate classes" in user_prompt:
+            # Stage 5: Connection proposal - more specific to avoid matching definition context
             content = (
                 '{"relationships": '
                 '[{"subject": "Microservice", "predicate": "subclass_of", "object": "Service", "confidence": 0.9}], '
@@ -57,19 +64,11 @@ class MockLLMProvider:
                 '[{"name": "communicates_with", "domain": "Microservice", "range": "Service", "confidence": 0.8}]'
                 "}"
             )
-        elif "candidate" in user_prompt.lower() or "Extract" in system_prompt:
-            # Candidate identification stage - expects JSON array
+        elif "Extract" in system_prompt or "extract" in system_prompt.lower() and "candidate" in system_prompt.lower():
+            # Stage 2: Candidate identification
             content = '["Microservice", "API Gateway", "Service", "Message Queue"]'
-        elif "multiple meanings" in system_prompt or "multiple senses" in system_prompt or "ambiguous" in user_prompt.lower():
-            # Disambiguation stage
-            content = (
-                '{"ambiguous_terms": '
-                '[{"term": "Service", "senses": ["Microservice instance", "Web service", "Business service"], '
-                '"rationale": "Service has multiple meanings in different contexts"}]'
-                "}"
-            )
         else:
-            # Definition synthesis and other stages
+            # Stage 4: Definition synthesis (default - all other stages get definition string)
             content = "A definition of the requested term in the context."
 
         return LLMResponse(
@@ -124,6 +123,15 @@ async def test_schema_extraction_microservices_fixture():
         assert "confidence" in candidate
         assert 0.0 <= candidate["confidence"] <= 1.0
         assert "provenance" in candidate
+
+        # For class candidates, verify proposed_definition is a non-empty string (not JSON)
+        if candidate["kind"] == "class":
+            assert "proposed_definition" in candidate
+            definition = candidate["proposed_definition"]
+            assert isinstance(definition, str), f"proposed_definition must be a string, got {type(definition)}"
+            assert len(definition) > 0, "proposed_definition must not be empty for classes"
+            # Verify it's not a JSON object (should be human-readable text)
+            assert not definition.strip().startswith("{"), "proposed_definition should be text, not JSON"
 
 
 @pytest.mark.asyncio
@@ -226,8 +234,10 @@ async def test_schema_extraction_disambiguation():
         if c.get("disambiguation_rationale")
     ]
 
-    # We may or may not have disambiguated candidates depending on LLM response
-    # Just verify the structure if they exist
+    # Verify the acceptance criterion: multi-sense disambiguation works
+    # MockLLMProvider is deterministic and returns disambiguation data for "Service"
+    assert len(disambiguated_candidates) > 0, "Should have disambiguated candidates for multi-sense terms"
+
     for candidate in disambiguated_candidates:
         assert "disambiguation_rationale" in candidate
         assert isinstance(candidate["disambiguation_rationale"], str)

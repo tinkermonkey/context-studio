@@ -470,18 +470,36 @@ Return JSON:
 
         Ensures all candidates and connections have confidence in [0, 1].
         """
-        # Normalize confidence scores
-        for candidate in state.candidate_classes:
-            candidate.confidence = max(0.0, min(1.0, candidate.confidence))
+        # Create new instances with normalized confidence scores
+        normalized_classes = [
+            replace(
+                candidate,
+                confidence=max(0.0, min(1.0, candidate.confidence))
+            )
+            for candidate in state.candidate_classes
+        ]
 
-        for prop in state.candidate_properties:
-            prop.confidence = max(0.0, min(1.0, prop.confidence))
+        normalized_properties = [
+            replace(
+                prop,
+                confidence=max(0.0, min(1.0, prop.confidence))
+            )
+            for prop in state.candidate_properties
+        ]
 
-        for conn in state.proposed_connections:
-            conn.confidence = max(0.0, min(1.0, conn.confidence))
+        normalized_connections = [
+            replace(
+                conn,
+                confidence=max(0.0, min(1.0, conn.confidence))
+            )
+            for conn in state.proposed_connections
+        ]
 
         return replace(
             state,
+            candidate_classes=normalized_classes,
+            candidate_properties=normalized_properties,
+            proposed_connections=normalized_connections,
             steps_completed=state.steps_completed + ["confidence_scoring"],
         )
 
