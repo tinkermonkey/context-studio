@@ -43,6 +43,19 @@ class PipelineTypeRegistry:
     """
 
     _TYPES = {
+        PipelineType.NO_OP: PipelineTypeDefinition(
+            pipeline_type=PipelineType.NO_OP,
+            description="No-op pipeline for testing framework end-to-end",
+            input_contract={
+                "text": "str (required) — sample input text",
+                "ontology_id": "str (required) — target ontology identifier",
+            },
+            output_contract={
+                "status": "str — completion status",
+                "message": "str — result message",
+                "steps": "list[str] — completed steps",
+            },
+        ),
         PipelineType.INDIVIDUAL_EXTRACTION: PipelineTypeDefinition(
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             description="Extract RDF triples from individual text documents",

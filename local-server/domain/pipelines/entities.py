@@ -35,6 +35,7 @@ class PipelineRunStatus(str, Enum):
 class PipelineType(str, Enum):
     """Enumeration of pipeline types."""
 
+    NO_OP = "no_op"
     INDIVIDUAL_EXTRACTION = "individual_extraction"
     SCHEMA_EXTRACTION = "schema_extraction"
     SCHEMA_NODE_GROUNDING = "schema_node_grounding"
@@ -112,6 +113,23 @@ class PipelineRun:
             status=PipelineRunStatus.PENDING,
             created_at=created_at or datetime.now(timezone.utc),
         )
+
+
+@dataclass(frozen=True)
+class NoOpPipelineRun(PipelineRun):
+    """
+    No-op pipeline execution record for testing.
+
+    Exercises the full pipeline framework without domain logic:
+    - Pipeline type and implementation registration
+    - PipelineRun persistence
+    - change_events linkage with batch_run_id
+
+    This is used in functional tests to verify infrastructure and framework
+    contracts before per-type implementations are added.
+    """
+
+    pipeline_type: PipelineType = field(default=PipelineType.NO_OP, init=False)
 
 
 @dataclass(frozen=True)

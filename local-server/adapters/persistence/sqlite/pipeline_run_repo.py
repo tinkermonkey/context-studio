@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from adapters.persistence.sqlite.models import (
     ChangeEvent,
     IndividualExtractionRun,
+    NoOpPipelineRun,
     PipelineRun,
     SchemaConnectionRefinementRun,
     SchemaDefinitionRefinementRun,
@@ -22,6 +23,9 @@ from adapters.persistence.sqlite.models import (
 )
 from domain.pipelines.entities import (
     IndividualExtractionRun as DomainIndividualExtractionRun,
+)
+from domain.pipelines.entities import (
+    NoOpPipelineRun as DomainNoOpPipelineRun,
 )
 from domain.pipelines.entities import (
     PipelineRun as DomainPipelineRun,
@@ -51,6 +55,7 @@ logger = get_logger(__name__)
 
 # Map domain type to ORM class
 _PIPELINE_TYPE_TO_ORM = {
+    PipelineType.NO_OP: NoOpPipelineRun,
     PipelineType.INDIVIDUAL_EXTRACTION: IndividualExtractionRun,
     PipelineType.SCHEMA_EXTRACTION: SchemaExtractionRun,
     PipelineType.SCHEMA_NODE_GROUNDING: SchemaGroundingRun,
@@ -348,7 +353,11 @@ class PipelineRepository:
         }
 
         # Dispatch based on ORM type
-        if isinstance(orm_obj, IndividualExtractionRun):
+        if isinstance(orm_obj, NoOpPipelineRun):
+            return DomainNoOpPipelineRun(
+                **common,  # type: ignore[arg-type]
+            )
+        elif isinstance(orm_obj, IndividualExtractionRun):
             return DomainIndividualExtractionRun(
                 **common,  # type: ignore[arg-type]
                 pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,

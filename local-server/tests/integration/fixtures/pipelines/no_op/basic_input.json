@@ -1,0 +1,7 @@
+{
+  "text": "Sample input text for the no-op pipeline",
+  "ontology_id": "test-ontology-123",
+  "pipeline_type": "no_op",
+  "implementation_id": "default",
+  "configuration_ref": "noop-default"
+}

@@ -775,7 +775,8 @@ class BatchRun(Base):  # type: ignore[valid-type,misc]
         CheckConstraint(
             "run_type IN ('import', 'extraction', 'individual_extraction', "
             "'schema_extraction', 'schema_node_grounding', "
-            "'schema_node_definition_refinement', 'schema_node_connection_refinement')",
+            "'schema_node_definition_refinement', 'schema_node_connection_refinement', "
+            "'no_op')",
             name="check_valid_run_type",
         ),
         Index("idx_run_type_status", "run_type", "status"),
@@ -988,6 +989,40 @@ class PipelineRun(BatchRun):
 
     def __repr__(self) -> str:
         return f"<PipelineRun(id={self.id}, type={self.pipeline_type}, status={self.status})>"
+
+
+class NoOpPipelineRun(PipelineRun):
+    """
+    No-op pipeline for testing the framework end-to-end.
+
+    Exercises the full pipeline infrastructure without domain logic:
+    - Pipeline type and implementation registration
+    - LangGraph state machine construction
+    - PipelineRun persistence
+    - change_events linkage
+
+    Uses joined-table inheritance from PipelineRun with discriminator
+    run_type='no_op'.
+
+    Attributes:
+        id: UUID as string, primary key (FK to pipeline_runs.id)
+    """
+
+    __tablename__ = "no_op_runs"
+
+    id = Column(
+        String(36),
+        ForeignKey("pipeline_runs.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+
+    __mapper_args__: Dict[str, Any] = {
+        "polymorphic_identity": "no_op",
+    }
+
+    def __repr__(self) -> str:
+        return f"<NoOpPipelineRun(id={self.id}, status={self.status})>"
 
 
 class IndividualExtractionRun(PipelineRun):
