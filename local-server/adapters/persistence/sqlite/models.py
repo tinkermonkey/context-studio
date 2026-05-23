@@ -984,9 +984,7 @@ class PipelineRun(BatchRun):
     __mapper_args__: Dict[str, Any] = {
         "polymorphic_abstract": True,
     }
-    __table_args__: Tuple[Any, ...] = (
-        Index("idx_pipeline_impl_id", "implementation_id"),
-    )
+    __table_args__: Tuple[Any, ...] = (Index("idx_pipeline_impl_id", "implementation_id"),)
 
     def __repr__(self) -> str:
         return f"<PipelineRun(id={self.id}, type={self.pipeline_type}, status={self.status})>"

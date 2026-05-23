@@ -230,6 +230,7 @@ class TestPipelineRunEndpoints:
 
     def test_create_run_with_valid_config_succeeds(self, client, registries):
         """POST /api/pipelines/{type}/run with valid config succeeds."""
+
         # Register a dummy implementation and configuration
         class DummyImpl:
             pass
@@ -264,6 +265,7 @@ class TestPipelineRunEndpoints:
 
     def test_create_and_retrieve_run(self, client, registries):
         """POST creates a run, GET retrieves it with matching structure."""
+
         # Register implementation and configuration
         class DummyImpl:
             pass
@@ -306,6 +308,7 @@ class TestPipelineRunEndpoints:
 
     def test_list_runs_includes_created_run(self, client, registries):
         """GET /api/pipelines/runs includes newly created run."""
+
         # Register implementation and configuration
         class DummyImpl:
             pass
@@ -344,6 +347,7 @@ class TestPipelineRunEndpoints:
 
     def test_list_runs_filters_by_pipeline_type(self, client, registries):
         """GET /api/pipelines/runs?pipeline_type=... filters correctly."""
+
         # Register implementations and configurations for two types
         class DummyImpl:
             pass
@@ -445,6 +449,7 @@ class TestPipelineRunEndpoints:
 
     def test_create_run_response_contains_all_required_fields(self, client, registries):
         """POST /api/pipelines/run response contains all required fields."""
+
         # Register implementation and configuration
         class DummyImpl:
             pass

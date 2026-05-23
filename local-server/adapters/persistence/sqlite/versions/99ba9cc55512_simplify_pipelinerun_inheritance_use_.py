@@ -7,11 +7,12 @@ Create Date: 2026-05-22 22:20:00.000000
 Combines constraint updates for pipeline run types (individual_extraction, schema_extraction,
 etc.) in a single table rebuild operation instead of multiple sequential rebuilds.
 """
+
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = '99ba9cc55512'
-down_revision = '01e4a27284f4'
+revision = "99ba9cc55512"
+down_revision = "01e4a27284f4"
 branch_labels = None
 depends_on = None
 

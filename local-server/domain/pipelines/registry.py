@@ -174,9 +174,7 @@ class PipelineImplementationRegistry:
         """
         key = (pipeline_type, impl_id)
         if key in self._implementations:
-            raise ValueError(
-                f"Implementation already registered: {pipeline_type.value}:{impl_id}"
-            )
+            raise ValueError(f"Implementation already registered: {pipeline_type.value}:{impl_id}")
         self._implementations[key] = impl_class
 
     def get(self, pipeline_type: PipelineType, impl_id: str) -> type[Any] | None:
@@ -235,9 +233,7 @@ class PipelineConfigurationRegistry:
     def __init__(self) -> None:
         """Initialize the configuration registry."""
         # Map: (type, impl_id, config_ref) → list of versions (oldest first)
-        self._configs: dict[
-            tuple[PipelineType, str, str], list[ConfigurationVersion]
-        ] = {}
+        self._configs: dict[tuple[PipelineType, str, str], list[ConfigurationVersion]] = {}
 
     def register(
         self,

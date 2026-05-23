@@ -178,9 +178,7 @@ class PipelineRepository:
         """
         session = self._session_factory()
         try:
-            orm_objs = session.query(PipelineRun).filter(
-                PipelineRun.status == status.value
-            ).all()
+            orm_objs = session.query(PipelineRun).filter(PipelineRun.status == status.value).all()
             return [self._orm_to_domain(obj) for obj in orm_objs]
         finally:
             session.close()
@@ -197,9 +195,11 @@ class PipelineRepository:
         """
         session = self._session_factory()
         try:
-            orm_objs = session.query(PipelineRun).filter(
-                PipelineRun.pipeline_type == pipeline_type.value
-            ).all()
+            orm_objs = (
+                session.query(PipelineRun)
+                .filter(PipelineRun.pipeline_type == pipeline_type.value)
+                .all()
+            )
             return [self._orm_to_domain(obj) for obj in orm_objs]
         finally:
             session.close()
@@ -279,9 +279,7 @@ class PipelineRepository:
         """
         session = self._session_factory()
         try:
-            events = session.query(ChangeEvent).filter(
-                ChangeEvent.batch_run_id == run_id
-            ).all()
+            events = session.query(ChangeEvent).filter(ChangeEvent.batch_run_id == run_id).all()
 
             return [
                 {

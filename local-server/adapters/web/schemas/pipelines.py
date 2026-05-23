@@ -100,7 +100,9 @@ class SchemaDefinitionRefinementRunRequest(PipelineRunRequest):
 class SchemaConnectionRefinementRunRequest(PipelineRunRequest):
     """Request to invoke schema_node_connection_refinement pipeline."""
 
-    edges: list[dict[str, Any]] = Field(..., min_length=1, description="Edges (connections) to refine")
+    edges: list[dict[str, Any]] = Field(
+        ..., min_length=1, description="Edges (connections) to refine"
+    )
     strategy: Optional[str] = Field(None, description="Refinement strategy (optional)")
 
 
@@ -118,11 +120,17 @@ class IndividualExtractionOutput(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    text_offset_start: Optional[int] = Field(None, description="Character offset start of extracted match")
-    text_offset_end: Optional[int] = Field(None, description="Character offset end of extracted match")
+    text_offset_start: Optional[int] = Field(
+        None, description="Character offset start of extracted match"
+    )
+    text_offset_end: Optional[int] = Field(
+        None, description="Character offset end of extracted match"
+    )
     source_uri: Optional[str] = Field(None, description="URI or identifier of source document")
     raw_match: Optional[str] = Field(None, description="Raw matched text from source")
-    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score for extraction (0.0-1.0)")
+    confidence: float = Field(
+        ..., ge=0.0, le=1.0, description="Confidence score for extraction (0.0-1.0)"
+    )
 
 
 class SchemaExtractionOutput(BaseModel):
@@ -132,7 +140,9 @@ class SchemaExtractionOutput(BaseModel):
 
     source_uri: Optional[str] = Field(None, description="URI or identifier of source document")
     raw_match: Optional[str] = Field(None, description="Raw matched text from source")
-    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score for extraction (0.0-1.0)")
+    confidence: float = Field(
+        ..., ge=0.0, le=1.0, description="Confidence score for extraction (0.0-1.0)"
+    )
 
 
 class SchemaGroundingOutput(BaseModel):
@@ -142,7 +152,9 @@ class SchemaGroundingOutput(BaseModel):
 
     source_uri: Optional[str] = Field(None, description="URI of grounding source")
     raw_match: Optional[str] = Field(None, description="Raw grounding match")
-    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score for grounding (0.0-1.0)")
+    confidence: float = Field(
+        ..., ge=0.0, le=1.0, description="Confidence score for grounding (0.0-1.0)"
+    )
 
 
 class SchemaDefinitionRefinementOutput(BaseModel):
@@ -152,7 +164,9 @@ class SchemaDefinitionRefinementOutput(BaseModel):
 
     source_uri: Optional[str] = Field(None, description="URI of refinement source")
     raw_match: Optional[str] = Field(None, description="Raw refinement text")
-    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score for refinement (0.0-1.0)")
+    confidence: float = Field(
+        ..., ge=0.0, le=1.0, description="Confidence score for refinement (0.0-1.0)"
+    )
 
 
 class SchemaConnectionRefinementOutput(BaseModel):
@@ -162,7 +176,9 @@ class SchemaConnectionRefinementOutput(BaseModel):
 
     source_uri: Optional[str] = Field(None, description="URI of refinement source")
     raw_match: Optional[str] = Field(None, description="Raw refinement text")
-    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score for refinement (0.0-1.0)")
+    confidence: float = Field(
+        ..., ge=0.0, le=1.0, description="Confidence score for refinement (0.0-1.0)"
+    )
 
 
 class PipelineRunResponse(BaseModel):
@@ -176,8 +192,14 @@ class PipelineRunResponse(BaseModel):
     implementation_id: str = Field(..., description="Implementation ID")
     configuration_ref: str = Field(..., description="Configuration reference")
     input_summary: dict[str, Any] = Field(default_factory=dict, description="Input metadata")
-    output_summary: dict[str, Any] = Field(default_factory=dict, description="Output counts/metrics")
+    output_summary: dict[str, Any] = Field(
+        default_factory=dict, description="Output counts/metrics"
+    )
     llm_metadata: dict[str, Any] = Field(default_factory=dict, description="LLM execution metadata")
     status: str = Field(..., description="Current status")
-    created_at: Optional[datetime] = Field(None, description="Creation timestamp (reserved for future use)")
-    updated_at: Optional[datetime] = Field(None, description="Last update timestamp (reserved for future use)")
+    created_at: Optional[datetime] = Field(
+        None, description="Creation timestamp (reserved for future use)"
+    )
+    updated_at: Optional[datetime] = Field(
+        None, description="Last update timestamp (reserved for future use)"
+    )

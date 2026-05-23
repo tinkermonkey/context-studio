@@ -142,9 +142,7 @@ def main() -> int:
         # Verify implementation is registered
         impl_class = impl_registry.get(ptype, args.implementation)
         if impl_class is None:
-            _logger.error(
-                f"Implementation not found: {ptype.value}:{args.implementation}"
-            )
+            _logger.error(f"Implementation not found: {ptype.value}:{args.implementation}")
             return 1
         _logger.info(f"Implementation class: {impl_class.__name__}")
 

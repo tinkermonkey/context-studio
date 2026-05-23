@@ -6,7 +6,7 @@ import { useToasts } from "@/components/ui/Toast";
 
 interface GraphCanvasComponentProps {
   nodes: GraphNode[];
-  edges: GraphEdge[];
+  edges: Array<{ id: string; source: string; target: string }>;
   onNodeClick?: (nodeId: string) => void;
   selectedNodeId?: string;
 }
@@ -83,7 +83,7 @@ export const GraphCanvasComponent = ({
           id: edge.id,
           sourceId: edge.source,
           targetId: edge.target,
-        }))}
+        })) as any}
         onNodeClick={(node) => onNodeClick?.(node.id)}
       />
     </div>

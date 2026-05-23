@@ -192,7 +192,11 @@ async def list_configurations(
 # ==================== Pipeline Execution ====================
 
 
-@router.post("/{pipeline_type}/run", response_model=PipelineRunResponse, status_code=http_status.HTTP_201_CREATED)
+@router.post(
+    "/{pipeline_type}/run",
+    response_model=PipelineRunResponse,
+    status_code=http_status.HTTP_201_CREATED,
+)
 async def run_pipeline(
     pipeline_type: str,
     request_body: PipelineRunRequest = Body(...),
@@ -362,7 +366,9 @@ async def list_pipeline_runs(
             # Normalize to naive UTC for consistent comparison with naive DB values
             if start_dt.tzinfo is not None:
                 start_dt = start_dt.astimezone(timezone.utc).replace(tzinfo=None)
-            filtered_runs = [r for r in filtered_runs if r.created_at.replace(tzinfo=None) >= start_dt]
+            filtered_runs = [
+                r for r in filtered_runs if r.created_at.replace(tzinfo=None) >= start_dt
+            ]
         except ValueError:
             raise HTTPException(
                 status_code=http_status.HTTP_400_BAD_REQUEST,
@@ -375,7 +381,9 @@ async def list_pipeline_runs(
             # Normalize to naive UTC for consistent comparison with naive DB values
             if end_dt.tzinfo is not None:
                 end_dt = end_dt.astimezone(timezone.utc).replace(tzinfo=None)
-            filtered_runs = [r for r in filtered_runs if r.created_at.replace(tzinfo=None) <= end_dt]
+            filtered_runs = [
+                r for r in filtered_runs if r.created_at.replace(tzinfo=None) <= end_dt
+            ]
         except ValueError:
             raise HTTPException(
                 status_code=http_status.HTTP_400_BAD_REQUEST,
