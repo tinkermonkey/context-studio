@@ -84,7 +84,7 @@ class PipelineOrchestrator(ABC):
         """
         ...
 
-    def _call_llm(
+    async def _call_llm(
         self,
         system_prompt: str,
         user_prompt: str,
@@ -93,7 +93,7 @@ class PipelineOrchestrator(ABC):
         max_tokens: int = 2000,
     ) -> LLMResponse:
         """
-        Helper to call the LLM provider.
+        Helper to call the LLM provider asynchronously.
 
         Args:
             system_prompt: System context
@@ -107,10 +107,23 @@ class PipelineOrchestrator(ABC):
         """
         if not self._llm_provider:
             raise RuntimeError("LLM provider not initialized")
-        return self._llm_provider.complete(
-            system_prompt=system_prompt,
-            user_prompt=user_prompt,
-            model=model,
-            temperature=temperature,
-            max_tokens=max_tokens,
-        )
+        # Use complete_async if available, otherwise fall back to complete
+        if hasattr(self._llm_provider, "complete_async"):
+            return await self._llm_provider.complete_async(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                model=model,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+        else:
+            # Fallback for providers without async support
+            from utils.async_executor import run_sync_in_executor
+            return await run_sync_in_executor(
+                self._llm_provider.complete,
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                model=model,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )

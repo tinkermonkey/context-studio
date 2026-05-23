@@ -240,7 +240,7 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
             f"Limit to top 3-5 most valuable deltas."
         )
 
-        response = self._call_llm(
+        response = await self._call_llm(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
             model=model,

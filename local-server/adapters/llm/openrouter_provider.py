@@ -14,6 +14,7 @@ Configuration:
 from __future__ import annotations
 
 import hashlib
+import re
 import time
 from collections import OrderedDict
 from typing import Literal
@@ -22,6 +23,7 @@ import httpx
 
 from domain.pipeline.exceptions import PipelineExternalServiceError
 from domain.pipeline.ports import LLMResponse
+from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -192,17 +194,32 @@ class OpenRouterProvider:
         """
         Check if a model is available on OpenRouter.
 
-        For simplicity, assumes any non-empty model string is available
-        (OpenRouter accepts hundreds of models). In production, could
-        fetch the model list from OpenRouter API.
+        Validates that the model string has a reasonable format (provider/model-name
+        or just model-name). OpenRouter supports hundreds of models in these formats.
+        Returns False for obviously invalid identifiers.
 
         Args:
             model: Model identifier
 
         Returns:
-            True if model appears valid, False otherwise
+            True if model appears valid for OpenRouter, False otherwise
         """
-        return bool(model and isinstance(model, str))
+        if not model or not isinstance(model, str):
+            return False
+
+        # Remove whitespace and check if still valid
+        model_clean = model.strip()
+        if not model_clean:
+            return False
+
+        # OpenRouter models are typically in format:
+        # - "provider/model-name" (e.g., "openai/gpt-4", "google/gemini-3-flash-preview")
+        # - "model-name" (sometimes without provider prefix)
+        # Allow alphanumeric, hyphens, underscores, forward slashes, colons, and dots
+        if not re.match(r"^[a-zA-Z0-9._:/-]+$", model_clean):
+            return False
+
+        return True
 
     def list_available_models(self) -> list[str]:
         """
@@ -216,6 +233,52 @@ class OpenRouterProvider:
             Empty list (OpenRouter catalog is dynamic)
         """
         return []
+
+    async def complete_async(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        model: str,
+        temperature: float = 0.0,
+        max_tokens: int = 2000,
+        response_format: Literal["json", "text"] | None = None,
+        timeout: float | None = None,
+        seed: int | None = None,
+    ) -> LLMResponse:
+        """
+        Request a completion from OpenRouter (async version).
+
+        Runs the API call in a thread pool to avoid blocking the event loop.
+
+        Args:
+            system_prompt: System context for the model
+            user_prompt: User message to respond to
+            model: Model identifier (e.g., 'gpt-4', 'claude-opus-4-7')
+            temperature: Sampling temperature (0.0–2.0)
+            max_tokens: Maximum tokens to generate
+            response_format: Optional response format ("json" for JSON output)
+            timeout: Request timeout in seconds
+            seed: Optional random seed for reproducible generation
+
+        Returns:
+            LLMResponse with generated content and metadata
+
+        Raises:
+            ValueError: If model is invalid or API key is unauthorized
+            RuntimeError: For other HTTP errors
+            PipelineExternalServiceError: If request times out or connection fails
+        """
+        return await run_sync_in_executor(
+            self.complete,
+            system_prompt,
+            user_prompt,
+            model,
+            temperature,
+            max_tokens,
+            response_format,
+            timeout,
+            seed,
+        )
 
     def _make_cache_key(
         self,

@@ -217,7 +217,7 @@ Be precise and extract technical/domain terms, not generic words."""
 Return a JSON array of strings (labels only). Example: ["Microservice", "Message Queue",
 "API Gateway"]"""
 
-        response = self._call_llm(
+        response = await self._call_llm(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
             model=state.input_data.get("model", "google/gemini-3-flash-preview"),
@@ -286,7 +286,7 @@ Context: {state.normalized_text}
 
 Provide a definition (1-2 sentences) suitable for an ontology."""
 
-            response = self._call_llm(
+            response = await self._call_llm(
                 system_prompt=system_prompt,
                 user_prompt=user_prompt,
                 model=state.input_data.get("model", "google/gemini-3-flash-preview"),
@@ -349,7 +349,7 @@ Return JSON:
   ]
 }}"""
 
-        response = self._call_llm(
+        response = await self._call_llm(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
             model=state.input_data.get("model", "google/gemini-3-flash-preview"),
@@ -434,7 +434,7 @@ Return JSON:
   ]
 }}"""
 
-        response = self._call_llm(
+        response = await self._call_llm(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
             model=state.input_data.get("model", "google/gemini-3-flash-preview"),

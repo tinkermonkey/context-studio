@@ -50,7 +50,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.events.in_process import InProcessEventPublisher
-from adapters.llm.anthropic_provider import AnthropicProvider
+from adapters.llm.provider_router import LLMProviderRouter
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
 from adapters.persistence.sqlite.connection import DatabaseManager
 from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
@@ -189,15 +189,21 @@ def main() -> int:
             operations_db_url="sqlite:///./operations.db",
         )
 
-        # Create a simple LLM provider (using Anthropic by default)
+        # Initialize LLM provider router with configured API keys
         settings = get_settings()
-        if not settings.llm.anthropic_api_key:
+        try:
+            llm_provider = LLMProviderRouter(
+                openrouter_api_key=settings.llm.openrouter_api_key,
+                anthropic_api_key=settings.llm.anthropic_api_key,
+                openai_api_key=settings.llm.openai_api_key,
+            )
+        except ValueError as e:
             _logger.error(
-                "Anthropic API key not configured in config.json or "
-                "ANTHROPIC_API_KEY env var"
+                f"No LLM provider could be initialized: {e}. "
+                "Please configure at least one LLM provider API key in config.json "
+                "(openrouter_api_key, anthropic_api_key, or openai_api_key)"
             )
             return 1
-        llm_provider = AnthropicProvider(api_key=settings.llm.anthropic_api_key)
 
         # Initialize repositories
         local_session_factory = db_manager.get_local_session_factory()

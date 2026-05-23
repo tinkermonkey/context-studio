@@ -225,7 +225,7 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
             f"'sources_used' (list of input types), 'confidence' (0.0-1.0)."
         )
 
-        response = self._call_llm(
+        response = await self._call_llm(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
             model=model,
