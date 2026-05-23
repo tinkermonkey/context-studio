@@ -6,17 +6,16 @@ Tests verify:
 - Error handling when LLM provider is not initialized
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-import pytest
-from unittest.mock import Mock
 
-from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
-from domain.pipelines.entities import PipelineType, PipelineRunStatus
+import pytest
+
 from domain.pipeline.ports import LLMResponse
+from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 
 
