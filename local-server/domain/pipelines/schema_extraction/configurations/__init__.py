@@ -1,0 +1,1 @@
+"""Schema extraction pipeline configurations."""

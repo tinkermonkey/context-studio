@@ -1,0 +1,1 @@
+"""Schema Extraction pipeline implementation."""

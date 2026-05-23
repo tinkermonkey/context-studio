@@ -32,6 +32,7 @@ from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
 )
+from domain.pipelines.schema_extraction.bootstrap import register_schema_extraction
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 
 
@@ -91,18 +92,20 @@ def event_publisher():
 
 @pytest.fixture
 def impl_registry():
-    """Create initialized implementation registry with no-op pipeline."""
+    """Create initialized implementation registry with no-op and schema extraction pipelines."""
     registry = PipelineImplementationRegistry()
     registry.register_impl(
         PipelineType.NO_OP,
         "default",
         NoOpPipelineOrchestrator,
     )
+    # Register schema extraction
+    register_schema_extraction(registry, None)  # config_registry param will be None here
     return registry
 
 
 @pytest.fixture
-def config_registry():
+def config_registry(impl_registry):
     """Create initialized configuration registry."""
     registry = PipelineConfigurationRegistry()
 
@@ -113,6 +116,9 @@ def config_registry():
         "noop-default",
         {"model": "test-model", "temperature": 0.0},
     )
+
+    # Register schema extraction configurations
+    register_schema_extraction(None, registry)  # impl_registry param will be None here
 
     return registry
 
