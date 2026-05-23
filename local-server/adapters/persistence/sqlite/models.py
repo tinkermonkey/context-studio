@@ -762,7 +762,7 @@ class BatchRun(Base):  # type: ignore[valid-type,misc]
         doc="JSON list of entity IDs affected by this run",
     )
     run_type = Column(
-        String(20),
+        String(50),
         nullable=False,
         index=True,
         doc="Discriminator: import, extraction, etc.",

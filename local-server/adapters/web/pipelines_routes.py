@@ -20,6 +20,7 @@ Error handling translates domain exceptions to appropriate HTTP responses.
 """
 
 from datetime import datetime, timezone
+from hashlib import sha256
 from typing import Any, Optional
 from uuid import uuid4
 
@@ -303,12 +304,21 @@ async def run_pipeline(
 
     # Create pipeline run in pending state
     run_id = str(uuid4())
+
+    # Prepare type-specific data
+    specific_data: dict[str, Any] = {}
+    if ptype == PipelineType.INDIVIDUAL_EXTRACTION:
+        text = getattr(request_body, "text", "")
+        source_text_hash = sha256(text.encode()).hexdigest()
+        specific_data["source_text_hash"] = source_text_hash
+
     try:
         repo.create(
             batch_run_id=run_id,
             pipeline_type=ptype,
             implementation_id=request_body.implementation_id,
             configuration_ref=request_body.configuration_ref,
+            specific_data=specific_data if specific_data else None,
         )
     except PipelineStorageError as e:
         status_code, message = _handle_domain_error(e)

@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from domain.pipeline.ports import LLMProvider, LLMResponse
-from domain.pipelines.entities import PipelineType
+from domain.pipelines.entities import PipelineRunStatus, PipelineType
 
 
 @dataclass
@@ -36,7 +36,7 @@ class PipelineState:
     run_id: str
     pipeline_type: PipelineType
     input_data: dict[str, Any]
-    current_status: str = "pending"
+    current_status: PipelineRunStatus = PipelineRunStatus.PENDING
     llm_provider: LLMProvider | None = None
     result: dict[str, Any] | None = None
 
