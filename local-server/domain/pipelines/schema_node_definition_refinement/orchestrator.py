@@ -8,6 +8,8 @@ siblings, properties) and extraction examples. Uses LLM to generate
 
 from __future__ import annotations
 
+import json
+import re
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -229,13 +231,11 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
 
         candidates = []
         try:
-            import json
-
             content = response.content.strip()
-            if content.startswith("```json"):
-                content = content[7:-3]
-            elif content.startswith("```"):
-                content = content[3:-3]
+            # Remove code fences if present
+            match = re.match(r"^```(?:json)?\n?(.*)\n?```$", content, re.DOTALL)
+            if match:
+                content = match.group(1).strip()
 
             data = json.loads(content)
             if isinstance(data, list):

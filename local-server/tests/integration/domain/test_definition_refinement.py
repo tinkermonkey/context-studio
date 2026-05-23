@@ -4,106 +4,20 @@ Integration tests for Schema Node Definition Refinement pipeline.
 Tests the DefinitionRefinementOrchestrator with mock LLM provider.
 """
 
+import asyncio
 import json
-import tempfile
-from pathlib import Path
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
-from adapters.persistence.sqlite.models import Base
-from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
-from domain.ontology.services import OntologyService
-from domain.pipeline.ports import LLMResponse
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.orchestration.base import PipelineState
 from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 from domain.pipelines.schema_node_definition_refinement.orchestrator import (
     DefinitionRefinementOrchestrator,
 )
-from domain.ports import EventPublisher
-
-
-class MockLLMProvider:
-    """Mock LLM provider for testing."""
-
-    def __init__(self, response: str = ""):
-        self.response = response
-        self.calls = []
-
-    def complete(
-        self,
-        system_prompt: str,
-        user_prompt: str,
-        model: str,
-        temperature: float = 0.0,
-        max_tokens: int = 2000,
-    ) -> LLMResponse:
-        self.calls.append(
-            {
-                "system_prompt": system_prompt,
-                "user_prompt": user_prompt,
-                "model": model,
-                "temperature": temperature,
-                "max_tokens": max_tokens,
-            }
-        )
-        return LLMResponse(
-            content=self.response,
-            tokens_in=50,
-            tokens_out=50,
-            duration_ms=100.0,
-            finish_reason="stop",
-            model=model,
-        )
-
-
-class DummyEventPublisher(EventPublisher):
-    """Dummy event publisher for testing."""
-
-    def publish(self, event):
-        pass
-
-
-class DummyEmbeddingService:
-    """Dummy embedding service for testing."""
-
-    def embed(self, text: str) -> list[float]:
-        return [0.0] * 384
-
-
-@pytest.fixture
-def temp_db():
-    """Create a temporary SQLite database."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        db_path = Path(tmpdir) / "test.db"
-        db_url = f"sqlite:///{db_path}"
-        engine = create_engine(db_url)
-        Base.metadata.create_all(engine)
-        yield db_url
-
-
-@pytest.fixture
-def session_factory(temp_db):
-    """Create a session factory."""
-    engine = create_engine(temp_db)
-    SessionLocal = sessionmaker(bind=engine)
-    return SessionLocal
-
-
-@pytest.fixture
-def ontology_service(session_factory):
-    """Create an ontology service."""
-    repo = SQLiteOntologyRepository(session_factory=session_factory)
-    embedding_svc = DummyEmbeddingService()
-    event_pub = DummyEventPublisher()
-    return OntologyService(
-        repository=repo,
-        embedding_service=embedding_svc,
-        event_publisher=event_pub,
-    )
+from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+from .mocks import MockLLMProvider
 
 
 @pytest.fixture
@@ -161,11 +75,6 @@ class TestDefinitionRefinementOrchestrator:
             llm_provider=llm,
         )
 
-        result_state = orchestrator.execute(state)
-
-        # Use pytest.mark.asyncio if needed, but we can test sync behavior here
-        import asyncio
-
         result_state = asyncio.run(orchestrator.execute(state))
 
         assert result_state.current_status == "completed"
@@ -190,8 +99,6 @@ class TestDefinitionRefinementOrchestrator:
             llm_provider=llm,
         )
 
-        import asyncio
-
         with pytest.raises(ValueError, match="node_id is required"):
             asyncio.run(orchestrator.execute(state))
 
@@ -214,8 +121,6 @@ class TestDefinitionRefinementOrchestrator:
             },
             llm_provider=llm,
         )
-
-        import asyncio
 
         with pytest.raises(ValueError, match="Class not found"):
             asyncio.run(orchestrator.execute(state))
@@ -252,9 +157,35 @@ class TestDefinitionRefinementOrchestrator:
             llm_provider=llm,
         )
 
-        import asyncio
-
         result_state = asyncio.run(orchestrator.execute(state))
 
         assert result_state.current_status == "completed"
         assert len(result_state.candidates) >= 1
+
+    def test_handles_malformed_llm_response(self, sample_class, session_factory):
+        """Should fallback gracefully when LLM response is not valid JSON."""
+        repo = SQLiteOntologyRepository(session_factory=session_factory)
+        traversal = SchemaNeighborhoodTraversal(ontology_repo=repo)
+
+        llm = MockLLMProvider(response="This is not JSON at all")
+        orchestrator = DefinitionRefinementOrchestrator(
+            llm_provider=llm,
+            traversal=traversal,
+        )
+
+        state = PipelineState(
+            run_id=str(uuid4()),
+            pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
+            input_data={
+                "node_id": sample_class.id,
+                "current_definition": "A human being",
+            },
+            llm_provider=llm,
+        )
+
+        result_state = asyncio.run(orchestrator.execute(state))
+
+        assert result_state.current_status == "completed"
+        # Should have at least a fallback candidate with the raw response
+        assert len(result_state.candidates) >= 1
+        assert result_state.candidates[0]["confidence"] <= 0.5

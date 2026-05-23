@@ -4,106 +4,20 @@ Integration tests for Schema Node Connection Refinement pipeline.
 Tests the ConnectionRefinementOrchestrator with mock LLM provider.
 """
 
+import asyncio
 import json
-import tempfile
-from pathlib import Path
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
-from adapters.persistence.sqlite.models import Base
-from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
-from domain.ontology.services import OntologyService
-from domain.pipeline.ports import LLMResponse
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.orchestration.base import PipelineState
 from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 from domain.pipelines.schema_node_connection_refinement.orchestrator import (
     ConnectionRefinementOrchestrator,
 )
-from domain.ports import EventPublisher
-
-
-class MockLLMProvider:
-    """Mock LLM provider for testing."""
-
-    def __init__(self, response: str = ""):
-        self.response = response
-        self.calls = []
-
-    def complete(
-        self,
-        system_prompt: str,
-        user_prompt: str,
-        model: str,
-        temperature: float = 0.0,
-        max_tokens: int = 2000,
-    ) -> LLMResponse:
-        self.calls.append(
-            {
-                "system_prompt": system_prompt,
-                "user_prompt": user_prompt,
-                "model": model,
-                "temperature": temperature,
-                "max_tokens": max_tokens,
-            }
-        )
-        return LLMResponse(
-            content=self.response,
-            tokens_in=50,
-            tokens_out=50,
-            duration_ms=100.0,
-            finish_reason="stop",
-            model=model,
-        )
-
-
-class DummyEventPublisher(EventPublisher):
-    """Dummy event publisher for testing."""
-
-    def publish(self, event):
-        pass
-
-
-class DummyEmbeddingService:
-    """Dummy embedding service for testing."""
-
-    def embed(self, text: str) -> list[float]:
-        return [0.0] * 384
-
-
-@pytest.fixture
-def temp_db():
-    """Create a temporary SQLite database."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        db_path = Path(tmpdir) / "test.db"
-        db_url = f"sqlite:///{db_path}"
-        engine = create_engine(db_url)
-        Base.metadata.create_all(engine)
-        yield db_url
-
-
-@pytest.fixture
-def session_factory(temp_db):
-    """Create a session factory."""
-    engine = create_engine(temp_db)
-    SessionLocal = sessionmaker(bind=engine)
-    return SessionLocal
-
-
-@pytest.fixture
-def ontology_service(session_factory):
-    """Create an ontology service."""
-    repo = SQLiteOntologyRepository(session_factory=session_factory)
-    embedding_svc = DummyEmbeddingService()
-    event_pub = DummyEventPublisher()
-    return OntologyService(
-        repository=repo,
-        embedding_service=embedding_svc,
-        event_publisher=event_pub,
-    )
+from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+from .mocks import MockLLMProvider
 
 
 @pytest.fixture
@@ -175,8 +89,6 @@ class TestConnectionRefinementOrchestrator:
             },
             llm_provider=llm,
         )
-
-        import asyncio
 
         result_state = asyncio.run(orchestrator.execute(state))
 
@@ -253,8 +165,6 @@ class TestConnectionRefinementOrchestrator:
             llm_provider=llm,
         )
 
-        import asyncio
-
         result_state = asyncio.run(orchestrator.execute(state))
 
         assert result_state.current_status == "completed"
@@ -296,9 +206,75 @@ class TestConnectionRefinementOrchestrator:
             llm_provider=llm,
         )
 
-        import asyncio
-
         result_state = asyncio.run(orchestrator.execute(state))
 
         assert result_state.current_status == "completed"
         assert len(result_state.deltas) <= 5
+
+    def test_handles_llm_json_with_code_fence(self, sample_classes, session_factory):
+        """Should parse JSON response with code fence markers."""
+        repo = SQLiteOntologyRepository(session_factory=session_factory)
+        traversal = SchemaNeighborhoodTraversal(ontology_repo=repo)
+
+        deltas_json = f"""```json
+[
+  {{
+    "operation": "add",
+    "subject": "{sample_classes['class1'].id}",
+    "predicate": "related_to",
+    "object": "{sample_classes['class2'].id}",
+    "rationale": "Test delta",
+    "sources_cited": ["test"],
+    "confidence": 0.7
+  }}
+]
+```"""
+
+        llm = MockLLMProvider(response=deltas_json)
+        orchestrator = ConnectionRefinementOrchestrator(
+            llm_provider=llm,
+            traversal=traversal,
+        )
+
+        state = PipelineState(
+            run_id=str(uuid4()),
+            pipeline_type=PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,
+            input_data={
+                "scope_id": sample_classes["class1"].id,
+                "current_connections": [],
+            },
+            llm_provider=llm,
+        )
+
+        result_state = asyncio.run(orchestrator.execute(state))
+
+        assert result_state.current_status == "completed"
+        assert len(result_state.deltas) >= 1
+
+    def test_handles_malformed_llm_response(self, sample_classes, session_factory):
+        """Should fallback gracefully when LLM response is not valid JSON."""
+        repo = SQLiteOntologyRepository(session_factory=session_factory)
+        traversal = SchemaNeighborhoodTraversal(ontology_repo=repo)
+
+        llm = MockLLMProvider(response="This is not JSON at all")
+        orchestrator = ConnectionRefinementOrchestrator(
+            llm_provider=llm,
+            traversal=traversal,
+        )
+
+        state = PipelineState(
+            run_id=str(uuid4()),
+            pipeline_type=PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,
+            input_data={
+                "scope_id": sample_classes["class1"].id,
+                "current_connections": [],
+            },
+            llm_provider=llm,
+        )
+
+        result_state = asyncio.run(orchestrator.execute(state))
+
+        assert result_state.current_status == "completed"
+        # Should have at least a fallback delta with the raw response
+        assert len(result_state.deltas) >= 1
+        assert result_state.deltas[0]["confidence"] <= 0.5

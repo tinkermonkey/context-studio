@@ -108,7 +108,6 @@ from domain.pipelines.registry import (
     PipelineImplementationRegistry,
     PipelineTypeRegistry,
 )
-from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 from domain.pipelines.schema_node_connection_refinement import (
     register_schema_node_connection_refinement,
 )
@@ -312,11 +311,7 @@ async def lifespan(app: FastAPI):
         logger.info("Schema node grounding pipeline registered")
 
         # Register definition and connection refinement pipelines
-        traversal = SchemaNeighborhoodTraversal(
-            ontology_repo=ontology_repo,
-            extraction_repo=None,  # Optional extraction usage repository
-        )
-
+        # Note: traversal dependencies will be injected at orchestrator instantiation time
         register_schema_node_definition_refinement(
             impl_registry=implementation_registry,
             config_registry=config_registry,

@@ -22,5 +22,4 @@ def get_default_config() -> dict:
         "model": "google/gemini-3-flash-preview",
         "temperature": 0.0,
         "max_tokens": 2000,
-        "max_deltas": 5,
     }
