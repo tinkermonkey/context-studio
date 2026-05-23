@@ -494,7 +494,14 @@ class TestTripleExtraction:
         }
 
     @pytest.fixture
-    def extraction_service(self, populated_repository, embedding_service, event_publisher, extraction_repository, session_factory):
+    def extraction_service(
+        self,
+        populated_repository,
+        embedding_service,
+        event_publisher,
+        extraction_repository,
+        session_factory,
+    ):
         """Override extraction service to use LLM provider that returns triples."""
         from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunRepository
 
@@ -511,7 +518,7 @@ class TestTripleExtraction:
                     "provenance": {
                         "text_offset_start": 0,
                         "text_offset_end": 10,
-                    }
+                    },
                 }
             ]
         }
@@ -945,7 +952,10 @@ class TestTripleExtraction:
         assert run.status.value == "completed"
 
     @pytest.mark.xfail(
-        reason="extraction service does not yet create change events during triple extraction — see #695",
+        reason=(
+            "extraction service does not yet create change events during triple extraction "
+            "— see #695"
+        ),
         strict=True,
     )
     def test_extract_triples_batch_run_id_in_change_events(
