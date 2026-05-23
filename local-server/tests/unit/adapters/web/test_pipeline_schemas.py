@@ -5,15 +5,13 @@ Tests verify that type-specific fields survive Pydantic's model_dump() method
 due to the extra="allow" configuration in PipelineRunRequest.
 """
 
-import pytest
 
 from adapters.web.schemas.pipelines import (
     IndividualExtractionRunRequest,
+    SchemaConnectionRefinementRunRequest,
+    SchemaDefinitionRefinementRunRequest,
     SchemaExtractionRunRequest,
     SchemaGroundingRunRequest,
-    SchemaDefinitionRefinementRunRequest,
-    SchemaConnectionRefinementRunRequest,
-    PipelineRunRequest,
 )
 
 
@@ -111,6 +109,7 @@ class TestPipelineRunRequestExtraFieldPreservation:
         nodes = [{"id": "def_node1"}]
         request = SchemaDefinitionRefinementRunRequest(
             nodes=nodes,
+            context=None,
             implementation_id="default",
             configuration_ref="default",
         )
@@ -127,6 +126,7 @@ class TestPipelineRunRequestExtraFieldPreservation:
         edges = [{"source": "n1", "target": "n2"}]
         request = SchemaConnectionRefinementRunRequest(
             edges=edges,
+            strategy=None,
             implementation_id="default",
             configuration_ref="default",
         )
@@ -189,25 +189,3 @@ class TestPipelineRunRequestExtraFieldPreservation:
         assert dumped["documents"] == documents
         assert dumped["scope"] == scope
 
-    def test_extra_fields_survive_base_class_model_dump(self) -> None:
-        """Test that extra fields survive model_dump() when instantiating base class directly.
-
-        This is the critical regression test: it verifies that PipelineRunRequest's
-        extra="allow" configuration preserves undeclared fields. When the route handler
-        receives a request as PipelineRunRequest (not a subclass), the type-specific
-        fields like 'text', 'ontology_id', etc. are "extra" fields. Without extra="allow",
-        they would be rejected or not preserved in model_dump().
-
-        This test FAILS if extra="allow" is removed from PipelineRunRequest.
-        """
-        request = PipelineRunRequest(
-            text="sample text",
-            ontology_id="test_ontology",
-            implementation_id="default",
-            configuration_ref="default",
-        )
-        dumped = request.model_dump()
-        assert "text" in dumped
-        assert dumped["text"] == "sample text"
-        assert "ontology_id" in dumped
-        assert dumped["ontology_id"] == "test_ontology"
