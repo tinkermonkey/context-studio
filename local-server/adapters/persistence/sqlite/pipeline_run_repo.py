@@ -185,6 +185,9 @@ class PipelineRepository:
 
         Returns:
             Domain entity if found, None otherwise
+
+        Raises:
+            PipelineStorageError: If database operation fails
         """
         session = self._get_session()
         try:
@@ -192,6 +195,12 @@ class PipelineRepository:
             if orm_obj:
                 return self._orm_to_domain(orm_obj)
             return None
+        except OperationalError as e:
+            logger.error(f"Database operational error when retrieving pipeline run {run_id}: {e}")
+            raise PipelineStorageError("Failed to retrieve pipeline run") from e
+        except SQLAlchemyError as e:
+            logger.error(f"Database error when retrieving pipeline run {run_id}: {e}")
+            raise PipelineStorageError("Failed to retrieve pipeline run") from e
         finally:
             if self._should_close_session():
                 session.close()
@@ -202,11 +211,20 @@ class PipelineRepository:
 
         Returns:
             List of all domain entities
+
+        Raises:
+            PipelineStorageError: If database operation fails
         """
         session = self._get_session()
         try:
             orm_objs = session.query(PipelineRun).all()
             return [self._orm_to_domain(obj) for obj in orm_objs]
+        except OperationalError as e:
+            logger.error(f"Database operational error when listing pipeline runs: {e}")
+            raise PipelineStorageError("Failed to list pipeline runs") from e
+        except SQLAlchemyError as e:
+            logger.error(f"Database error when listing pipeline runs: {e}")
+            raise PipelineStorageError("Failed to list pipeline runs") from e
         finally:
             if self._should_close_session():
                 session.close()
@@ -220,11 +238,20 @@ class PipelineRepository:
 
         Returns:
             List of domain entities
+
+        Raises:
+            PipelineStorageError: If database operation fails
         """
         session = self._get_session()
         try:
             orm_objs = session.query(PipelineRun).filter(PipelineRun.status == status.value).all()
             return [self._orm_to_domain(obj) for obj in orm_objs]
+        except OperationalError as e:
+            logger.error(f"Database operational error when listing pipeline runs by status {status.value}: {e}")
+            raise PipelineStorageError("Failed to list pipeline runs by status") from e
+        except SQLAlchemyError as e:
+            logger.error(f"Database error when listing pipeline runs by status {status.value}: {e}")
+            raise PipelineStorageError("Failed to list pipeline runs by status") from e
         finally:
             if self._should_close_session():
                 session.close()
@@ -238,6 +265,9 @@ class PipelineRepository:
 
         Returns:
             List of domain entities
+
+        Raises:
+            PipelineStorageError: If database operation fails
         """
         session = self._get_session()
         try:
@@ -247,6 +277,12 @@ class PipelineRepository:
                 .all()
             )
             return [self._orm_to_domain(obj) for obj in orm_objs]
+        except OperationalError as e:
+            logger.error(f"Database operational error when listing pipeline runs by type {pipeline_type.value}: {e}")
+            raise PipelineStorageError("Failed to list pipeline runs by type") from e
+        except SQLAlchemyError as e:
+            logger.error(f"Database error when listing pipeline runs by type {pipeline_type.value}: {e}")
+            raise PipelineStorageError("Failed to list pipeline runs by type") from e
         finally:
             if self._should_close_session():
                 session.close()
@@ -355,6 +391,9 @@ class PipelineRepository:
 
         Returns:
             List of change_event dicts with entity_type, entity_id, operation, etc.
+
+        Raises:
+            PipelineStorageError: If database operation fails
         """
         session = self._get_session()
         try:
@@ -371,6 +410,12 @@ class PipelineRepository:
                 }
                 for e in events
             ]
+        except OperationalError as e:
+            logger.error(f"Database operational error when retrieving change events for run {run_id}: {e}")
+            raise PipelineStorageError("Failed to retrieve change events") from e
+        except SQLAlchemyError as e:
+            logger.error(f"Database error when retrieving change events for run {run_id}: {e}")
+            raise PipelineStorageError("Failed to retrieve change events") from e
         finally:
             if self._should_close_session():
                 session.close()

@@ -73,6 +73,66 @@ class TestPipelineRepositoryCreate:
         assert run.pipeline_type == PipelineType.SCHEMA_EXTRACTION
         assert run.status == PipelineRunStatus.PENDING
 
+    def test_create_noop_run(self, db_session):
+        """Test creating a no-op pipeline run."""
+        repo = PipelineRepository(db_session)
+        batch_id = str(uuid4())
+
+        run = repo.create(
+            batch_run_id=batch_id,
+            pipeline_type=PipelineType.NO_OP,
+            implementation_id="impl-noop",
+            configuration_ref="noop-default",
+        )
+
+        assert run.pipeline_type == PipelineType.NO_OP
+        assert run.status == PipelineRunStatus.PENDING
+
+    def test_create_schema_grounding_run(self, db_session):
+        """Test creating a schema grounding pipeline run."""
+        repo = PipelineRepository(db_session)
+        batch_id = str(uuid4())
+
+        run = repo.create(
+            batch_run_id=batch_id,
+            pipeline_type=PipelineType.SCHEMA_NODE_GROUNDING,
+            implementation_id="impl-grounding",
+            configuration_ref="grounding-default",
+        )
+
+        assert run.pipeline_type == PipelineType.SCHEMA_NODE_GROUNDING
+        assert run.status == PipelineRunStatus.PENDING
+
+    def test_create_schema_definition_refinement_run(self, db_session):
+        """Test creating a schema definition refinement pipeline run."""
+        repo = PipelineRepository(db_session)
+        batch_id = str(uuid4())
+
+        run = repo.create(
+            batch_run_id=batch_id,
+            pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
+            implementation_id="impl-def-refinement",
+            configuration_ref="def-refinement-default",
+        )
+
+        assert run.pipeline_type == PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT
+        assert run.status == PipelineRunStatus.PENDING
+
+    def test_create_schema_connection_refinement_run(self, db_session):
+        """Test creating a schema connection refinement pipeline run."""
+        repo = PipelineRepository(db_session)
+        batch_id = str(uuid4())
+
+        run = repo.create(
+            batch_run_id=batch_id,
+            pipeline_type=PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,
+            implementation_id="impl-conn-refinement",
+            configuration_ref="conn-refinement-default",
+        )
+
+        assert run.pipeline_type == PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT
+        assert run.status == PipelineRunStatus.PENDING
+
 
 class TestPipelineRepositoryQuery:
     """Tests for PipelineRepository query methods."""
@@ -282,6 +342,124 @@ class TestPipelineRepositoryChangeEvents:
         assert "class-456" in event_ids
 
 
+class TestPipelineRepositoryOrmTodomainMapping:
+    """Tests for ORM-to-domain conversion for all pipeline types."""
+
+    def test_orm_to_domain_noop_run(self, db_session):
+        """Test ORM-to-domain mapping for NO_OP pipeline run."""
+        repo = PipelineRepository(db_session)
+        batch_id = str(uuid4())
+
+        created = repo.create(
+            batch_run_id=batch_id,
+            pipeline_type=PipelineType.NO_OP,
+            implementation_id="impl-noop",
+            configuration_ref="noop-config",
+        )
+
+        retrieved = repo.get(created.id)
+        assert retrieved is not None
+        assert retrieved.id == created.id
+        assert retrieved.pipeline_type == PipelineType.NO_OP
+        assert retrieved.implementation_id == "impl-noop"
+        assert retrieved.configuration_ref == "noop-config"
+
+    def test_orm_to_domain_individual_extraction_run(self, db_session):
+        """Test ORM-to-domain mapping for INDIVIDUAL_EXTRACTION pipeline run."""
+        repo = PipelineRepository(db_session)
+        batch_id = str(uuid4())
+
+        created = repo.create(
+            batch_run_id=batch_id,
+            pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+            implementation_id="impl-extraction",
+            configuration_ref="extraction-config",
+            specific_data={
+                "source_text_hash": "hash123",
+                "source_document_uri": "s3://bucket/file.txt",
+            },
+        )
+
+        retrieved = repo.get(created.id)
+        assert retrieved is not None
+        assert retrieved.id == created.id
+        assert retrieved.pipeline_type == PipelineType.INDIVIDUAL_EXTRACTION
+        assert retrieved.source_text_hash == "hash123"
+        assert retrieved.source_document_uri == "s3://bucket/file.txt"
+
+    def test_orm_to_domain_schema_extraction_run(self, db_session):
+        """Test ORM-to-domain mapping for SCHEMA_EXTRACTION pipeline run."""
+        repo = PipelineRepository(db_session)
+        batch_id = str(uuid4())
+
+        created = repo.create(
+            batch_run_id=batch_id,
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            implementation_id="impl-schema",
+            configuration_ref="schema-config",
+        )
+
+        retrieved = repo.get(created.id)
+        assert retrieved is not None
+        assert retrieved.id == created.id
+        assert retrieved.pipeline_type == PipelineType.SCHEMA_EXTRACTION
+        assert retrieved.implementation_id == "impl-schema"
+
+    def test_orm_to_domain_schema_grounding_run(self, db_session):
+        """Test ORM-to-domain mapping for SCHEMA_NODE_GROUNDING pipeline run."""
+        repo = PipelineRepository(db_session)
+        batch_id = str(uuid4())
+
+        created = repo.create(
+            batch_run_id=batch_id,
+            pipeline_type=PipelineType.SCHEMA_NODE_GROUNDING,
+            implementation_id="impl-grounding",
+            configuration_ref="grounding-config",
+        )
+
+        retrieved = repo.get(created.id)
+        assert retrieved is not None
+        assert retrieved.id == created.id
+        assert retrieved.pipeline_type == PipelineType.SCHEMA_NODE_GROUNDING
+        assert retrieved.implementation_id == "impl-grounding"
+
+    def test_orm_to_domain_schema_definition_refinement_run(self, db_session):
+        """Test ORM-to-domain mapping for SCHEMA_NODE_DEFINITION_REFINEMENT pipeline run."""
+        repo = PipelineRepository(db_session)
+        batch_id = str(uuid4())
+
+        created = repo.create(
+            batch_run_id=batch_id,
+            pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
+            implementation_id="impl-def-refinement",
+            configuration_ref="def-refinement-config",
+        )
+
+        retrieved = repo.get(created.id)
+        assert retrieved is not None
+        assert retrieved.id == created.id
+        assert retrieved.pipeline_type == PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT
+        assert retrieved.implementation_id == "impl-def-refinement"
+
+    def test_orm_to_domain_schema_connection_refinement_run(self, db_session):
+        """Test ORM-to-domain mapping for SCHEMA_NODE_CONNECTION_REFINEMENT pipeline run."""
+        repo = PipelineRepository(db_session)
+        batch_id = str(uuid4())
+
+        created = repo.create(
+            batch_run_id=batch_id,
+            pipeline_type=PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,
+            implementation_id="impl-conn-refinement",
+            configuration_ref="conn-refinement-config",
+        )
+
+        retrieved = repo.get(created.id)
+        assert retrieved is not None
+        assert retrieved.id == created.id
+        assert retrieved.pipeline_type == PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT
+        assert retrieved.implementation_id == "impl-conn-refinement"
+
+
 class TestPipelineRepositoryErrorHandling:
     """Tests for error handling in PipelineRepository."""
 
@@ -378,6 +556,87 @@ class TestPipelineRepositoryErrorHandling:
                     run.id,
                     output_summary={"result": "data"},
                 )
+
+    def test_get_raises_storage_error_on_operational_error(self, db_session):
+        """Test that get() catches OperationalError and raises PipelineStorageError."""
+        repo = PipelineRepository(db_session)
+        batch_id = str(uuid4())
+
+        # Create a run first
+        run = repo.create(
+            batch_run_id=batch_id,
+            pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+            implementation_id="impl-default",
+            configuration_ref="config-default",
+            specific_data={"source_text_hash": "hash123"},
+        )
+
+        # Mock session.query to raise OperationalError
+        error = OperationalError("statement", "params", "orig")
+        with patch.object(db_session, 'query', side_effect=error):
+            with pytest.raises(PipelineStorageError, match="Failed to retrieve pipeline run"):
+                repo.get(run.id)
+
+    def test_get_raises_storage_error_on_sqlalchemy_error(self, db_session):
+        """Test that get() catches SQLAlchemyError and raises PipelineStorageError."""
+        repo = PipelineRepository(db_session)
+        batch_id = str(uuid4())
+
+        # Create a run first
+        run = repo.create(
+            batch_run_id=batch_id,
+            pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+            implementation_id="impl-default",
+            configuration_ref="config-default",
+            specific_data={"source_text_hash": "hash123"},
+        )
+
+        # Mock session.query to raise SQLAlchemyError
+        error = SQLAlchemyError("error")
+        with patch.object(db_session, 'query', side_effect=error):
+            with pytest.raises(PipelineStorageError, match="Failed to retrieve pipeline run"):
+                repo.get(run.id)
+
+    def test_list_raises_storage_error_on_operational_error(self, db_session):
+        """Test that list() catches OperationalError and raises PipelineStorageError."""
+        repo = PipelineRepository(db_session)
+
+        # Mock session.query to raise OperationalError
+        error = OperationalError("statement", "params", "orig")
+        with patch.object(db_session, 'query', side_effect=error):
+            with pytest.raises(PipelineStorageError, match="Failed to list pipeline runs"):
+                repo.list()
+
+    def test_list_by_status_raises_storage_error_on_sqlalchemy_error(self, db_session):
+        """Test that list_by_status() catches SQLAlchemyError and raises PipelineStorageError."""
+        repo = PipelineRepository(db_session)
+
+        # Mock session.query to raise SQLAlchemyError
+        error = SQLAlchemyError("error")
+        with patch.object(db_session, 'query', side_effect=error):
+            with pytest.raises(PipelineStorageError, match="Failed to list pipeline runs by status"):
+                repo.list_by_status(PipelineRunStatus.PENDING)
+
+    def test_list_by_type_raises_storage_error_on_operational_error(self, db_session):
+        """Test that list_by_type() catches OperationalError and raises PipelineStorageError."""
+        repo = PipelineRepository(db_session)
+
+        # Mock session.query to raise OperationalError
+        error = OperationalError("statement", "params", "orig")
+        with patch.object(db_session, 'query', side_effect=error):
+            with pytest.raises(PipelineStorageError, match="Failed to list pipeline runs by type"):
+                repo.list_by_type(PipelineType.INDIVIDUAL_EXTRACTION)
+
+    def test_get_change_events_raises_storage_error_on_sqlalchemy_error(self, db_session):
+        """Test that get_change_events_for_run() catches SQLAlchemyError and raises PipelineStorageError."""
+        repo = PipelineRepository(db_session)
+        batch_id = str(uuid4())
+
+        # Mock session.query to raise SQLAlchemyError
+        error = SQLAlchemyError("error")
+        with patch.object(db_session, 'query', side_effect=error):
+            with pytest.raises(PipelineStorageError, match="Failed to retrieve change events"):
+                repo.get_change_events_for_run(batch_id)
 
 
 if __name__ == "__main__":
