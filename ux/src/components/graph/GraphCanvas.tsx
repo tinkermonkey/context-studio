@@ -79,11 +79,13 @@ export const GraphCanvasComponent = ({
           label: node.label,
           fill: node.domainColor,
         }))}
-        edges={edges.map((edge) => ({
-          id: edge.id,
-          sourceId: edge.source,
-          targetId: edge.target,
-        })) as any}
+        edges={
+          edges.map((edge) => ({
+            id: edge.id,
+            sourceId: edge.source,
+            targetId: edge.target,
+          })) as any
+        }
         onNodeClick={(node) => onNodeClick?.(node.id)}
       />
     </div>

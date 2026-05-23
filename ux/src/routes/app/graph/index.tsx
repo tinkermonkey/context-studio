@@ -29,9 +29,8 @@ export function GraphPage() {
 
   const hasData = data && data.nodes.length > 0;
 
-  const selectedNode = selectedNodeId && data
-    ? data.nodes.find((n) => n.id === selectedNodeId) ?? null
-    : null;
+  const selectedNode =
+    selectedNodeId && data ? (data.nodes.find((n) => n.id === selectedNodeId) ?? null) : null;
 
   return (
     <div data-testid="graph-page">

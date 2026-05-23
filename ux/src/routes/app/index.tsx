@@ -27,7 +27,12 @@ function ActivityTimeline({ events, emptyState }: { events: ActivityEvent[]; emp
         <li
           key={event.id}
           data-testid={`activity-event-${event.id}`}
-          style={{ display: "flex", gap: "var(--space-3)", alignItems: "flex-start", padding: "6px 0" }}
+          style={{
+            display: "flex",
+            gap: "var(--space-3)",
+            alignItems: "flex-start",
+            padding: "6px 0",
+          }}
         >
           <span
             data-testid={`activity-dot-${event.type}`}
@@ -48,10 +53,16 @@ function ActivityTimeline({ events, emptyState }: { events: ActivityEvent[]; emp
             }}
           />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p data-testid="activity-subject" style={{ margin: 0, fontSize: "var(--text-sm)", color: "rgb(var(--canvas-fg-1))" }}>
+            <p
+              data-testid="activity-subject"
+              style={{ margin: 0, fontSize: "var(--text-sm)", color: "rgb(var(--canvas-fg-1))" }}
+            >
               {event.subject}
             </p>
-            <time data-testid="activity-timestamp" style={{ fontSize: "var(--text-xs)", color: "var(--canvas-fg-3)" }}>
+            <time
+              data-testid="activity-timestamp"
+              style={{ fontSize: "var(--text-xs)", color: "var(--canvas-fg-3)" }}
+            >
               {new Date(event.timestamp).toLocaleString()}
             </time>
           </div>
