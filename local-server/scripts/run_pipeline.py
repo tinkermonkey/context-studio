@@ -38,20 +38,41 @@ Examples:
 """
 
 import argparse
+import asyncio
 import json
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 # Add local-server to path so we can import domain modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
+from adapters.nlp.spacy_processor import SpacyNLPProcessor
+from adapters.persistence.sqlite.connection import DatabaseManager
+from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
+from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunRepository
+from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+from adapters.reference.cache import CachedReferenceSource
+from adapters.reference.conceptnet import ConceptNetSource
+from adapters.reference.dbpedia import DBpediaSource
+from adapters.reference.grounding import GroundingAdapter
+from adapters.reference.schema_org import SchemaOrgSource
+from adapters.reference.wikidata import WikidataSource
+from domain.extraction.services import ExtractionService
+from domain.llm.providers.anthropic import AnthropicProvider
+from domain.llm.providers.openai_provider import OpenAIProvider
+from domain.llm.providers.openrouter import OpenRouterProvider
+from domain.pipeline.ports import LLMProvider
 from domain.pipelines.entities import PipelineType
+from domain.pipelines.orchestration.base import PipelineState
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
     PipelineTypeRegistry,
 )
+from domain.pipelines.schema_node_grounding.scoring import GroundingScorer
 from utils.logger import get_logger
 
 _logger = get_logger(__name__)
@@ -160,12 +181,93 @@ def main() -> int:
             _logger.info("[DRY-RUN] Configuration validated successfully")
             return 0
 
+        # Initialize database and services for execution
+        _logger.info("Initializing services...")
+        db_manager = DatabaseManager()
+        db_manager.initialize(
+            local_db_url="sqlite:///./local.db",
+            operations_db_url="sqlite:///./operations.db",
+        )
+
+        # Create a simple LLM provider (using Anthropic by default)
+        llm_provider = AnthropicProvider()
+
+        # Initialize repositories
+        local_session_factory = db_manager.get_local_session_factory()
+        ontology_repo = SQLiteOntologyRepository(local_session_factory)
+        extraction_repo = SQLiteExtractionRepository(local_session_factory)
+        extraction_run_repo = SQLiteExtractionRunRepository(local_session_factory)
+
+        # Create services
+        embedding_service = SentenceTransformerEmbedding(model_name="all-MiniLM-L12-v2")
+        nlp_processor = SpacyNLPProcessor()
+        reference_sources = [
+            CachedReferenceSource(ConceptNetSource()),
+            CachedReferenceSource(DBpediaSource()),
+            CachedReferenceSource(WikidataSource()),
+            CachedReferenceSource(SchemaOrgSource()),
+        ]
+
+        extraction_service = ExtractionService(
+            ontology_repo=ontology_repo,
+            embedding_service=embedding_service,
+            llm=llm_provider,
+            nlp=nlp_processor,
+            reference_sources=reference_sources,
+            event_publisher=None,
+            extraction_repo=extraction_repo,
+            extraction_run_repo=extraction_run_repo,
+        )
+
+        # Prepare services dict for orchestrator factory
+        services: dict[str, Any] = {
+            "extraction_service": extraction_service,
+            "ontology_repo": ontology_repo,
+            "extraction_repo": extraction_repo,
+            "grounding_adapter": GroundingAdapter(
+                dbpedia=DBpediaSource(),
+                conceptnet=ConceptNetSource(),
+            ),
+            "scorer": GroundingScorer(embedding_service=embedding_service),
+            "grounding_config": {
+                "top_n": config_version.config.get("top_n", 10),
+                "weights": config_version.config.get("weights", {
+                    "source_score": 0.3,
+                    "label_match": 0.3,
+                    "semantic_similarity": 0.4,
+                }),
+            },
+            "refinement_config": config_version.config,
+        }
+
         # Instantiate and execute implementation
         _logger.info("Instantiating implementation...")
-        impl = impl_class(config=config_version.config)
+        from adapters.web.orchestrator_factory import create_orchestrator
+        orchestrator = create_orchestrator(
+            orchestrator_class=impl_class,
+            pipeline_type=ptype,
+            llm_provider=llm_provider,
+            services=services,
+        )
+
+        # Create pipeline state with input data
+        state = PipelineState(
+            run_id="script-run",
+            pipeline_type=ptype,
+            input_data=input_data,
+            current_status="pending",
+            llm_provider=llm_provider,
+            result=None,
+        )
 
         _logger.info("Executing pipeline...")
-        result = impl.execute(input_data)
+        # Handle both async and sync orchestrators
+        if asyncio.iscoroutinefunction(orchestrator.execute):
+            result_state = asyncio.run(orchestrator.execute(state))
+        else:
+            result_state = orchestrator.execute(state)
+
+        result = result_state.result or {}
 
         # Write output
         if args.output:

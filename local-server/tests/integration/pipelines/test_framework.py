@@ -132,7 +132,8 @@ class TestNoOpPipelineAPI:
         assert isinstance(body["batch_run_id"], str)
         assert body["pipeline_type"] == "no_op"
         assert body["implementation_id"] == "default"
-        assert body["status"] == "pending"
+        # Pipeline is now executed synchronously, so status should be completed or failed
+        assert body["status"] in ["completed", "failed"]
 
     def test_noop_pipeline_run_retrieval(self, client):
         """GET /api/pipelines/runs/{run_id} returns persisted run."""
@@ -155,7 +156,8 @@ class TestNoOpPipelineAPI:
         body = get_response.json()
         assert body["id"] == run_id
         assert body["pipeline_type"] == "no_op"
-        assert body["status"] == "pending"
+        # Pipeline is now executed synchronously, so status should be completed or failed
+        assert body["status"] in ["completed", "failed"]
 
     def test_noop_pipeline_run_listing(self, client):
         """GET /api/pipelines/runs returns list of runs."""

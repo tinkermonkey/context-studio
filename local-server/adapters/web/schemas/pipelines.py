@@ -211,3 +211,25 @@ class PipelineRunResponse(BaseModel):
     updated_at: Optional[datetime] = Field(
         None, description="Last update timestamp (reserved for future use)"
     )
+
+
+class CandidateResponse(BaseModel):
+    """Response containing a single candidate from a pipeline run.
+
+    Represents a candidate result from pipeline execution with full provenance
+    and confidence information. Structure adapts based on pipeline type but
+    maintains a consistent interface.
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    uri: str = Field(..., description="Candidate URI or identifier")
+    label: str = Field(..., description="Human-readable candidate label")
+    description: str = Field(default="", description="Candidate description or definition")
+    source: str = Field(default="", description="Source or database where candidate originates")
+    confidence: float = Field(
+        ..., ge=0.0, le=1.0, description="Confidence score (0.0-1.0)"
+    )
+    provenance: str = Field(
+        default="", description="Rationale or provenance for the candidate"
+    )

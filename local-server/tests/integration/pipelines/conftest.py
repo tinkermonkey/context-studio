@@ -126,7 +126,7 @@ def llm_provider():
 
 
 @pytest.fixture
-def client(pipeline_run_repo, impl_registry, config_registry):
+def client(pipeline_run_repo, impl_registry, config_registry, llm_provider):
     """Create a TestClient with pipeline routes and registries."""
     app = FastAPI()
     app.include_router(router)
@@ -135,5 +135,6 @@ def client(pipeline_run_repo, impl_registry, config_registry):
     app.state.pipeline_run_repo = pipeline_run_repo
     app.state.implementation_registry = impl_registry
     app.state.config_registry = config_registry
+    app.state.llm_router = llm_provider
 
     return TestClient(app)

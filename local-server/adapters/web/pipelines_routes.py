@@ -19,15 +19,18 @@ No business logic lives here—all validation and constraints are in the domain 
 Error handling translates domain exceptions to appropriate HTTP responses.
 """
 
+import asyncio
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Any, Optional
 from uuid import uuid4
 
 from fastapi import APIRouter, Body, HTTPException, Query, Request
 from fastapi import status as http_status
 
+from adapters.web.orchestrator_factory import create_orchestrator
 from adapters.web.schemas.ontology import ListResponse
 from adapters.web.schemas.pipelines import (
+    CandidateResponse,
     ConfigurationResponse,
     ImplementationResponse,
     PipelineRunRequest,
@@ -35,6 +38,7 @@ from adapters.web.schemas.pipelines import (
     PipelineTypeResponse,
 )
 from domain.pipelines.entities import PipelineRun, PipelineRunStatus, PipelineType
+from domain.pipelines.orchestration.base import PipelineState
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
@@ -45,6 +49,129 @@ from utils.logger import get_logger
 router = APIRouter(prefix="/api/pipelines", tags=["pipelines"])
 
 _logger = get_logger(__name__)
+
+
+# ==================== Helper Functions ====================
+
+
+def _create_pipeline_state(
+    run_id: str,
+    pipeline_type: PipelineType,
+    input_data: dict[str, Any],
+    llm_provider: Any,
+) -> PipelineState:
+    """
+    Create a pipeline state for the given pipeline type.
+
+    Different pipeline types may require different state subclasses.
+    This helper creates the appropriate state type based on the pipeline type.
+
+    Args:
+        run_id: Pipeline run ID
+        pipeline_type: Type of pipeline
+        input_data: Input data dict
+        llm_provider: LLM provider instance
+
+    Returns:
+        PipelineState instance (or appropriate subclass)
+    """
+    # Import here to avoid circular dependencies
+    if pipeline_type == PipelineType.NO_OP:
+        from domain.pipelines.orchestration.noop import NoOpPipelineState
+        return NoOpPipelineState(
+            run_id=run_id,
+            pipeline_type=pipeline_type,
+            input_data=input_data,
+            current_status="pending",
+            llm_provider=llm_provider,
+            result=None,
+        )
+    elif pipeline_type == PipelineType.SCHEMA_EXTRACTION:
+        from domain.pipelines.schema_extraction.orchestrator import SchemaExtractionState
+        return SchemaExtractionState(
+            run_id=run_id,
+            pipeline_type=pipeline_type,
+            input_data=input_data,
+            current_status="pending",
+            llm_provider=llm_provider,
+            result=None,
+        )
+    elif pipeline_type == PipelineType.SCHEMA_NODE_GROUNDING:
+        from domain.pipelines.schema_node_grounding.orchestrator import SchemaGroundingState
+        return SchemaGroundingState(
+            run_id=run_id,
+            pipeline_type=pipeline_type,
+            input_data=input_data,
+            current_status="pending",
+            llm_provider=llm_provider,
+            result=None,
+        )
+    elif pipeline_type == PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT:
+        from domain.pipelines.schema_node_definition_refinement.orchestrator import (
+            DefinitionRefinementState,
+        )
+        return DefinitionRefinementState(
+            run_id=run_id,
+            pipeline_type=pipeline_type,
+            input_data=input_data,
+            current_status="pending",
+            llm_provider=llm_provider,
+            result=None,
+        )
+    elif pipeline_type == PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT:
+        from domain.pipelines.schema_node_connection_refinement.orchestrator import (
+            ConnectionRefinementState,
+        )
+        return ConnectionRefinementState(
+            run_id=run_id,
+            pipeline_type=pipeline_type,
+            input_data=input_data,
+            current_status="pending",
+            llm_provider=llm_provider,
+            result=None,
+        )
+    elif pipeline_type == PipelineType.INDIVIDUAL_EXTRACTION:
+        from domain.pipelines.individual_extraction.orchestrator import (
+            IndividualExtractionState,
+        )
+        return IndividualExtractionState(
+            run_id=run_id,
+            pipeline_type=pipeline_type,
+            input_data=input_data,
+            current_status="pending",
+            llm_provider=llm_provider,
+            result=None,
+        )
+    else:
+        # Fallback to base state for unknown types
+        return PipelineState(
+            run_id=run_id,
+            pipeline_type=pipeline_type,
+            input_data=input_data,
+            current_status="pending",
+            llm_provider=llm_provider,
+            result=None,
+        )
+
+
+def _get_grounding_config(config: dict[str, Any]) -> dict[str, Any]:
+    """
+    Extract grounding-specific configuration.
+
+    Args:
+        config: Configuration dict
+
+    Returns:
+        Grounding config dict with top_n and weights
+    """
+    return {
+        "top_n": config.get("top_n", 10),
+        "weights": config.get("weights", {
+            "source_score": 0.3,
+            "label_match": 0.3,
+            "semantic_similarity": 0.4,
+        }),
+    }
 
 
 # ==================== Response Mapping ====================
@@ -212,13 +339,16 @@ async def run_pipeline(
     - schema_node_definition_refinement: requires nodes, optional context
     - schema_node_connection_refinement: requires edges, optional strategy
 
+    Creates a pipeline run, executes it with the registered implementation,
+    and returns the run with execution results.
+
     Args:
         pipeline_type: The pipeline type (e.g., individual_extraction)
         request_body: Type-specific request payload
         request: FastAPI request (for service access)
 
     Returns:
-        PipelineRunResponse with the created PipelineRun
+        PipelineRunResponse with the executed PipelineRun
 
     Raises:
         HTTPException: 400 for invalid input, 404 for missing config/impl, 500 for execution errors
@@ -234,10 +364,11 @@ async def run_pipeline(
     repo = request.app.state.pipeline_run_repo
     impl_registry = request.app.state.implementation_registry
     config_registry = request.app.state.config_registry
+    llm_provider = request.app.state.llm_router
 
     # Verify implementation exists
-    impl = impl_registry.get(ptype, request_body.implementation_id)
-    if impl is None:
+    impl_class = impl_registry.get(ptype, request_body.implementation_id)
+    if impl_class is None:
         raise HTTPException(
             status_code=http_status.HTTP_404_NOT_FOUND,
             detail=f"Implementation not found: {ptype.value}:{request_body.implementation_id}",
@@ -262,7 +393,77 @@ async def run_pipeline(
         configuration_ref=request_body.configuration_ref,
     )
 
-    return _to_response(run)
+    try:
+        # Prepare services for orchestrator instantiation
+        services = {
+            "extraction_service": getattr(request.app.state, "extraction_service", None),
+            "ontology_repo": getattr(request.app.state, "ontology_repo", None),
+            "extraction_repo": getattr(request.app.state, "extraction_repo", None),
+            "grounding_adapter": getattr(request.app.state, "grounding_adapter", None),
+            "scorer": getattr(request.app.state, "grounding_scorer", None),
+            "grounding_config": _get_grounding_config(config_version.config),
+            "refinement_config": config_version.config,
+        }
+
+        # Instantiate orchestrator with dependencies
+        try:
+            orchestrator = create_orchestrator(
+                orchestrator_class=impl_class,
+                pipeline_type=ptype,
+                llm_provider=llm_provider,
+                services=services,
+            )
+        except ValueError as e:
+            raise HTTPException(
+                status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to instantiate orchestrator: {str(e)}",
+            )
+
+        # Extract input data from request body (type-specific fields)
+        input_data = request_body.model_dump()
+
+        # Create initial state for execution
+        # The orchestrator may expect a specific state subclass; we provide the base class
+        # and the orchestrator will cast/extend it as needed
+        state = _create_pipeline_state(
+            run_id=run_id,
+            pipeline_type=ptype,
+            input_data=input_data,
+            llm_provider=llm_provider,
+        )
+
+        # Execute the pipeline (handle both sync and async)
+        if asyncio.iscoroutinefunction(orchestrator.execute):
+            result_state = await orchestrator.execute(state)
+        else:
+            result_state = orchestrator.execute(state)
+
+        # Update run with execution results
+        output_summary = result_state.result or {}
+        repo.update_summaries(
+            run_id=run_id,
+            output_summary=output_summary,
+            llm_metadata={},
+        )
+        repo.update_status(run_id, PipelineRunStatus.COMPLETED)
+
+        # Fetch updated run for response
+        updated_run = repo.get(run_id)
+        if updated_run is None:
+            raise RuntimeError(f"Failed to retrieve updated run: {run_id}")
+
+        return _to_response(updated_run)
+
+    except Exception as exc:
+        # Update run with error status
+        _logger.error(f"Pipeline execution failed for run {run_id}: {exc}", exc_info=exc)
+        repo.update_status(run_id, PipelineRunStatus.FAILED)
+        repo.update_summaries(run_id=run_id, output_summary={"error": str(exc)})
+
+        raise HTTPException(
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Pipeline execution failed: {str(exc)}",
+        )
 
 
 # ==================== Pipeline Run Retrieval ====================
@@ -296,6 +497,83 @@ async def get_pipeline_run(
         )
 
     return _to_response(run)
+
+
+@router.get("/runs/{run_id}/candidates", response_model=list[CandidateResponse])
+async def get_pipeline_candidates(
+    run_id: str,
+    request: Request,
+) -> list[CandidateResponse]:
+    """
+    Retrieve candidates from a completed pipeline run.
+
+    Extracts the full candidate list with provenance and confidence scores
+    from the pipeline run's output. The structure of candidates depends on
+    the pipeline type:
+    - schema_node_grounding: returns groundings with URI, label, confidence
+    - schema_node_definition_refinement: returns definition candidates
+    - schema_node_connection_refinement: returns connection candidates
+
+    Args:
+        run_id: The pipeline run ID
+        request: FastAPI request (for service access)
+
+    Returns:
+        List of CandidateResponse objects with full provenance and confidence
+
+    Raises:
+        HTTPException: 404 if run not found, 400 if run has no candidates
+    """
+    repo = request.app.state.pipeline_run_repo
+    run = repo.get(run_id)
+
+    if run is None:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"Pipeline run not found: {run_id}",
+        )
+
+    # Extract candidates from output_summary based on pipeline type
+    output_summary = run.output_summary or {}
+
+    # Determine which key contains candidates based on pipeline type
+    candidates_key = None
+    candidates_data = []
+
+    if run.pipeline_type == PipelineType.SCHEMA_NODE_GROUNDING:
+        candidates_key = "groundings"
+    elif run.pipeline_type == PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT:
+        candidates_key = "candidates"
+    elif run.pipeline_type == PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT:
+        candidates_key = "candidates"
+    elif run.pipeline_type == PipelineType.INDIVIDUAL_EXTRACTION:
+        candidates_key = "triples"
+
+    if candidates_key and candidates_key in output_summary:
+        candidates_data = output_summary[candidates_key]
+    elif output_summary:
+        raise HTTPException(
+            status_code=http_status.HTTP_400_BAD_REQUEST,
+            detail=f"Pipeline run {run_id} has no candidates or is not a candidate-producing pipeline type",
+        )
+    else:
+        raise HTTPException(
+            status_code=http_status.HTTP_400_BAD_REQUEST,
+            detail=f"Pipeline run {run_id} has not completed or produced no output",
+        )
+
+    # Convert candidate dicts to response schema
+    return [
+        CandidateResponse.model_validate({
+            "uri": cand.get("uri") or cand.get("id") or "",
+            "label": cand.get("label") or cand.get("name") or "",
+            "description": cand.get("description") or "",
+            "source": cand.get("source") or cand.get("source_uri") or "",
+            "confidence": float(cand.get("confidence") or cand.get("match_confidence") or 0.0),
+            "provenance": cand.get("provenance") or cand.get("match_rationale") or "",
+        })
+        for cand in candidates_data
+    ]
 
 
 @router.get("/runs", response_model=ListResponse[PipelineRunResponse])
