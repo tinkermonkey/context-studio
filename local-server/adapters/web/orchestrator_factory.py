@@ -8,7 +8,7 @@ and pipeline states based on pipeline type and available services.
 from typing import Any, Type
 
 from domain.pipeline.ports import LLMProvider
-from domain.pipelines.entities import PipelineType
+from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.individual_extraction.orchestrator import IndividualExtractionOrchestrator
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
 from domain.pipelines.orchestration.noop import NoOpPipelineOrchestrator
@@ -143,7 +143,7 @@ def create_pipeline_state(
             run_id=run_id,
             pipeline_type=pipeline_type,
             input_data=input_data,
-            current_status="pending",
+            current_status=PipelineRunStatus.PENDING,
             llm_provider=llm_provider,
             result=None,
         )
@@ -153,7 +153,7 @@ def create_pipeline_state(
             run_id=run_id,
             pipeline_type=pipeline_type,
             input_data=input_data,
-            current_status="pending",
+            current_status=PipelineRunStatus.PENDING,
             llm_provider=llm_provider,
             result=None,
         )
@@ -163,7 +163,7 @@ def create_pipeline_state(
             run_id=run_id,
             pipeline_type=pipeline_type,
             input_data=input_data,
-            current_status="pending",
+            current_status=PipelineRunStatus.PENDING,
             llm_provider=llm_provider,
             result=None,
         )
@@ -175,7 +175,7 @@ def create_pipeline_state(
             run_id=run_id,
             pipeline_type=pipeline_type,
             input_data=input_data,
-            current_status="pending",
+            current_status=PipelineRunStatus.PENDING,
             llm_provider=llm_provider,
             result=None,
         )
@@ -187,7 +187,7 @@ def create_pipeline_state(
             run_id=run_id,
             pipeline_type=pipeline_type,
             input_data=input_data,
-            current_status="pending",
+            current_status=PipelineRunStatus.PENDING,
             llm_provider=llm_provider,
             result=None,
         )
@@ -199,7 +199,7 @@ def create_pipeline_state(
             run_id=run_id,
             pipeline_type=pipeline_type,
             input_data=input_data,
-            current_status="pending",
+            current_status=PipelineRunStatus.PENDING,
             llm_provider=llm_provider,
             result=None,
         )

@@ -308,7 +308,10 @@ async def run_pipeline(
     # Prepare type-specific data
     specific_data: dict[str, Any] = {}
     if ptype == PipelineType.INDIVIDUAL_EXTRACTION:
-        text = getattr(request_body, "text", "")
+        # Extract text from raw request body since PipelineRunRequest base class
+        # doesn't include type-specific fields (Pydantic drops extra fields)
+        raw_body = await request.json()
+        text = raw_body.get("text", "")
         source_text_hash = sha256(text.encode()).hexdigest()
         specific_data["source_text_hash"] = source_text_hash
 
