@@ -50,9 +50,9 @@ def fetch_arxiv_papers(
     client = arxiv.Client()
 
     # Parse date_from for ArXiv query
-    # ArXiv format: submittedDate:[202001010000 TO 202012312359]
+    # ArXiv format: submittedDate:[YYYYMMDDHHMM TO YYYYMMDDHHMM]
     date_from_arxiv = date_from.replace("-", "")
-    date_query_suffix = f"AND submittedDate:[{date_from_arxiv}010000 TO 9999123123]"
+    date_query_suffix = f"AND submittedDate:[{date_from_arxiv}0000 TO 999912312359]"
 
     papers_per_category = max_papers // len(categories)
 
