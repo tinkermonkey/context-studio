@@ -3,7 +3,7 @@ Orchestrator for schema node definition refinement pipeline.
 
 Refines schema node definitions based on neighborhood context (parent,
 siblings, properties) and extraction examples. Uses LLM to generate
-2-3 candidate refined definitions with rationale citing inputs.
+up to 3 candidate refined definitions with rationale citing inputs.
 """
 
 from __future__ import annotations
@@ -39,7 +39,7 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
 
     Coordinates:
     1. Context assembly — pull neighborhood, groundings, usages
-    2. Variant generation — produce 2-3 candidate definitions via LLM
+    2. Variant generation — produce up to 3 candidate definitions via LLM
     3. Rationale attachment — explain which inputs drove each variant
     4. Confidence scoring — assess confidence in each variant
     """
@@ -160,7 +160,7 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
         extraction_usages: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
         """
-        Generate 2-3 candidate refined definitions.
+        Generate up to 3 candidate refined definitions.
 
         Args:
             neighborhood: ClassNeighborhood context
@@ -169,7 +169,7 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
             extraction_usages: Extraction usage examples (optional)
 
         Returns:
-            List of candidate definitions with rationale and confidence
+            List of candidate definitions with rationale and confidence (0-3 candidates)
         """
         model = self._config.get("model", "google/gemini-3-flash-preview")
         temperature = self._config.get("temperature", 0.0)
