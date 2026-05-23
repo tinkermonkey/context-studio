@@ -1,0 +1,44 @@
+{
+  "name": "paper_3",
+  "description": "Industry whitepaper on cloud infrastructure",
+  "source_text": "Amazon Web Services (AWS) is a cloud computing platform developed by Amazon. AWS provides various services including EC2 and S3. Amazon Web Services competes with Microsoft Azure and Google Cloud Platform.",
+  "expected_entities": [
+    {
+      "id": "aws",
+      "label": "Amazon Web Services",
+      "type": "Organization"
+    },
+    {
+      "id": "amazon",
+      "label": "Amazon",
+      "type": "Organization"
+    },
+    {
+      "id": "azure",
+      "label": "Microsoft Azure",
+      "type": "Organization"
+    },
+    {
+      "id": "gcp",
+      "label": "Google Cloud Platform",
+      "type": "Organization"
+    }
+  ],
+  "expected_relationships": [
+    {
+      "subject": "aws",
+      "predicate": "owned_by",
+      "object": "amazon"
+    },
+    {
+      "subject": "aws",
+      "predicate": "competes_with",
+      "object": "azure"
+    },
+    {
+      "subject": "aws",
+      "predicate": "competes_with",
+      "object": "gcp"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "name": "paper_5",
+  "description": "Collaborative research on consensus protocols",
+  "source_text": "John Doe and researchers from MIT conducted a collaborative study on Byzantine fault tolerance. The team worked with AWS to implement and test their consensus protocol on cloud infrastructure. This research contributed to improvements in distributed system reliability.",
+  "expected_entities": [
+    {
+      "id": "john_doe",
+      "label": "John Doe",
+      "type": "Person"
+    },
+    {
+      "id": "mit",
+      "label": "MIT",
+      "type": "Organization"
+    },
+    {
+      "id": "aws",
+      "label": "Amazon Web Services",
+      "type": "Organization"
+    }
+  ],
+  "expected_relationships": [
+    {
+      "subject": "john_doe",
+      "predicate": "affiliation",
+      "object": "mit"
+    },
+    {
+      "subject": "john_doe",
+      "predicate": "collaborates_with",
+      "object": "aws"
+    },
+    {
+      "subject": "mit",
+      "predicate": "collaborates_with",
+      "object": "aws"
+    }
+  ]
+}
