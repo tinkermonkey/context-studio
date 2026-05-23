@@ -67,14 +67,35 @@ class PipelineRepository:
     status queries, and change_events correlation.
     """
 
-    def __init__(self, session_factory: Callable[[], Session]) -> None:
+    def __init__(self, session_factory: Callable[[], Session] | Session) -> None:
         """
-        Initialize repository with session factory.
+        Initialize repository with session factory or session instance.
 
         Args:
-            session_factory: Callable that returns a new SQLAlchemy session
+            session_factory: Callable that returns a new SQLAlchemy session, or a Session instance
         """
         self._session_factory = session_factory
+        self._owns_session = callable(session_factory)
+
+    def _get_session(self) -> Session:
+        """
+        Get a session, handling both factory and direct session instances.
+
+        Returns:
+            SQLAlchemy Session instance
+        """
+        if callable(self._session_factory):
+            return self._session_factory()
+        return self._session_factory
+
+    def _should_close_session(self) -> bool:
+        """
+        Determine if this repository should close sessions it creates.
+
+        Returns True only if the session was created from a factory (we own it).
+        Returns False if a session was passed directly (caller owns it).
+        """
+        return self._owns_session
 
     def create(
         self,
@@ -121,7 +142,7 @@ class PipelineRepository:
         if specific_data:
             kwargs.update(specific_data)
 
-        session = self._session_factory()
+        session = self._get_session()
         try:
             orm_obj = orm_class(**kwargs)
             session.add(orm_obj)
@@ -131,7 +152,8 @@ class PipelineRepository:
             logger.info(f"Created pipeline run: {batch_run_id} ({pipeline_type.value})")
             return result
         finally:
-            session.close()
+            if self._should_close_session():
+                session.close()
 
     def get(self, run_id: str) -> DomainPipelineRun | None:
         """
@@ -143,14 +165,15 @@ class PipelineRepository:
         Returns:
             Domain entity if found, None otherwise
         """
-        session = self._session_factory()
+        session = self._get_session()
         try:
             orm_obj = session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
             if orm_obj:
                 return self._orm_to_domain(orm_obj)
             return None
         finally:
-            session.close()
+            if self._should_close_session():
+                session.close()
 
     def list(self) -> "PipelineRunList":
         """
@@ -159,12 +182,13 @@ class PipelineRepository:
         Returns:
             List of all domain entities
         """
-        session = self._session_factory()
+        session = self._get_session()
         try:
             orm_objs = session.query(PipelineRun).all()
             return [self._orm_to_domain(obj) for obj in orm_objs]
         finally:
-            session.close()
+            if self._should_close_session():
+                session.close()
 
     def list_by_status(self, status: PipelineRunStatus) -> "PipelineRunList":
         """
@@ -176,12 +200,13 @@ class PipelineRepository:
         Returns:
             List of domain entities
         """
-        session = self._session_factory()
+        session = self._get_session()
         try:
             orm_objs = session.query(PipelineRun).filter(PipelineRun.status == status.value).all()
             return [self._orm_to_domain(obj) for obj in orm_objs]
         finally:
-            session.close()
+            if self._should_close_session():
+                session.close()
 
     def list_by_type(self, pipeline_type: PipelineType) -> "PipelineRunList":
         """
@@ -193,7 +218,7 @@ class PipelineRepository:
         Returns:
             List of domain entities
         """
-        session = self._session_factory()
+        session = self._get_session()
         try:
             orm_objs = (
                 session.query(PipelineRun)
@@ -202,7 +227,8 @@ class PipelineRepository:
             )
             return [self._orm_to_domain(obj) for obj in orm_objs]
         finally:
-            session.close()
+            if self._should_close_session():
+                session.close()
 
     def update_status(self, run_id: str, status: PipelineRunStatus) -> bool:
         """
@@ -215,7 +241,7 @@ class PipelineRepository:
         Returns:
             True if updated, False if not found
         """
-        session = self._session_factory()
+        session = self._get_session()
         try:
             orm_obj = session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
             if not orm_obj:
@@ -226,7 +252,8 @@ class PipelineRepository:
             logger.info(f"Updated pipeline run status: {run_id} → {status.value}")
             return True
         finally:
-            session.close()
+            if self._should_close_session():
+                session.close()
 
     def update_summaries(
         self,
@@ -247,7 +274,7 @@ class PipelineRepository:
         Returns:
             True if updated, False if not found
         """
-        session = self._session_factory()
+        session = self._get_session()
         try:
             orm_obj = session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
             if not orm_obj:
@@ -265,7 +292,8 @@ class PipelineRepository:
             logger.info(f"Updated pipeline run summaries: {run_id}")
             return True
         finally:
-            session.close()
+            if self._should_close_session():
+                session.close()
 
     def get_change_events_for_run(self, run_id: str) -> "ChangeEventDictList":
         """
@@ -277,7 +305,7 @@ class PipelineRepository:
         Returns:
             List of change_event dicts with entity_type, entity_id, operation, etc.
         """
-        session = self._session_factory()
+        session = self._get_session()
         try:
             events = session.query(ChangeEvent).filter(ChangeEvent.batch_run_id == run_id).all()
 
@@ -293,7 +321,8 @@ class PipelineRepository:
                 for e in events
             ]
         finally:
-            session.close()
+            if self._should_close_session():
+                session.close()
 
     def _orm_to_domain(self, orm_obj: PipelineRun) -> DomainPipelineRun:
         """
