@@ -301,8 +301,9 @@ async def lifespan(app: FastAPI):
 
         def log_embedding_error(node_label: str, candidate_label: str, error: Exception) -> None:
             logger.warning(
-                f"Failed to compute embedding similarity for '{node_label}' vs '{candidate_label}': {error}. "
-                f"Semantic similarity score set to 0.0 (40% of grounding confidence)"
+                f"Failed to compute embedding similarity for '{node_label}' vs "
+                f"'{candidate_label}': {error}. Semantic similarity score set to "
+                f"0.0 (40% of grounding confidence)"
             )
 
         grounding_scorer = GroundingScorer(
