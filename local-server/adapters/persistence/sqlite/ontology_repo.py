@@ -635,7 +635,9 @@ class SQLiteOntologyRepository:
                 orm_entity.parent_class_id = cls.parent_class_id  # type: ignore[assignment]
                 orm_entity.concept_scheme_id = cls.concept_scheme_id  # type: ignore[assignment]
                 structural_property_id = cls.structural_property_id
-                orm_entity.structural_property_id = structural_property_id  # type: ignore[assignment]
+                orm_entity.structural_property_id = (
+                    structural_property_id  # type: ignore[assignment]
+                )
                 orm_entity.external_references = (
                     mapped_orm.external_references
                 )
@@ -1375,7 +1377,9 @@ class SQLiteOntologyRepository:
                 # Update: only update the timestamp field, everything else is immutable
                 orm_rel.source_id = rel.source_id  # type: ignore[assignment]
                 orm_rel.target_id = rel.target_id  # type: ignore[assignment]
-                orm_rel.property_definition_id = rel.property_definition_id  # type: ignore[assignment]
+                orm_rel.property_definition_id = (
+                    rel.property_definition_id  # type: ignore[assignment]
+                )
 
             session.commit()
             return map_relationship_orm_to_domain(orm_rel)

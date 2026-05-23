@@ -608,13 +608,14 @@ class TestPipelineRepositoryErrorHandling:
                 repo.list()
 
     def test_list_by_status_raises_storage_error_on_sqlalchemy_error(self, db_session):
-        """Test that list_by_status() catches SQLAlchemyError and raises PipelineStorageError."""
+        """Test list_by_status() catches SQLAlchemyError and raises PipelineStorageError."""
         repo = PipelineRepository(db_session)
 
         # Mock session.query to raise SQLAlchemyError
         error = SQLAlchemyError("error")
         with patch.object(db_session, 'query', side_effect=error):
-            with pytest.raises(PipelineStorageError, match="Failed to list pipeline runs by status"):
+            expected_msg = "Failed to list pipeline runs by status"
+            with pytest.raises(PipelineStorageError, match=expected_msg):
                 repo.list_by_status(PipelineRunStatus.PENDING)
 
     def test_list_by_type_raises_storage_error_on_operational_error(self, db_session):
@@ -628,7 +629,7 @@ class TestPipelineRepositoryErrorHandling:
                 repo.list_by_type(PipelineType.INDIVIDUAL_EXTRACTION)
 
     def test_get_change_events_raises_storage_error_on_sqlalchemy_error(self, db_session):
-        """Test that get_change_events_for_run() catches SQLAlchemyError and raises PipelineStorageError."""
+        """Test get_change_events_for_run() catches SQLAlchemyError and raises error."""
         repo = PipelineRepository(db_session)
         batch_id = str(uuid4())
 

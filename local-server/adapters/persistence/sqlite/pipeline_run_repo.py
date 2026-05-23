@@ -247,10 +247,18 @@ class PipelineRepository:
             orm_objs = session.query(PipelineRun).filter(PipelineRun.status == status.value).all()
             return [self._orm_to_domain(obj) for obj in orm_objs]
         except OperationalError as e:
-            logger.error(f"Database operational error when listing pipeline runs by status {status.value}: {e}")
+            msg = (
+                "Database operational error when listing pipeline runs "
+                f"by status {status.value}: {e}"
+            )
+            logger.error(msg)
             raise PipelineStorageError("Failed to list pipeline runs by status") from e
         except SQLAlchemyError as e:
-            logger.error(f"Database error when listing pipeline runs by status {status.value}: {e}")
+            msg = (
+                "Database error when listing pipeline runs "
+                f"by status {status.value}: {e}"
+            )
+            logger.error(msg)
             raise PipelineStorageError("Failed to list pipeline runs by status") from e
         finally:
             if self._should_close_session():
@@ -278,10 +286,18 @@ class PipelineRepository:
             )
             return [self._orm_to_domain(obj) for obj in orm_objs]
         except OperationalError as e:
-            logger.error(f"Database operational error when listing pipeline runs by type {pipeline_type.value}: {e}")
+            msg = (
+                "Database operational error when listing pipeline runs "
+                f"by type {pipeline_type.value}: {e}"
+            )
+            logger.error(msg)
             raise PipelineStorageError("Failed to list pipeline runs by type") from e
         except SQLAlchemyError as e:
-            logger.error(f"Database error when listing pipeline runs by type {pipeline_type.value}: {e}")
+            msg = (
+                "Database error when listing pipeline runs "
+                f"by type {pipeline_type.value}: {e}"
+            )
+            logger.error(msg)
             raise PipelineStorageError("Failed to list pipeline runs by type") from e
         finally:
             if self._should_close_session():
@@ -411,10 +427,18 @@ class PipelineRepository:
                 for e in events
             ]
         except OperationalError as e:
-            logger.error(f"Database operational error when retrieving change events for run {run_id}: {e}")
+            msg = (
+                "Database operational error when retrieving change events "
+                f"for run {run_id}: {e}"
+            )
+            logger.error(msg)
             raise PipelineStorageError("Failed to retrieve change events") from e
         except SQLAlchemyError as e:
-            logger.error(f"Database error when retrieving change events for run {run_id}: {e}")
+            msg = (
+                "Database error when retrieving change events "
+                f"for run {run_id}: {e}"
+            )
+            logger.error(msg)
             raise PipelineStorageError("Failed to retrieve change events") from e
         finally:
             if self._should_close_session():
