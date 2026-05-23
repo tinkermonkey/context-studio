@@ -203,12 +203,3 @@ def create_pipeline_state(
             llm_provider=llm_provider,
             result=None,
         )
-    else:
-        return PipelineState(
-            run_id=run_id,
-            pipeline_type=pipeline_type,
-            input_data=input_data,
-            current_status="pending",
-            llm_provider=llm_provider,
-            result=None,
-        )

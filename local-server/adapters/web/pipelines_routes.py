@@ -328,11 +328,8 @@ async def run_pipeline(
             llm_provider=llm_provider,
         )
 
-        # Execute the pipeline (handle both sync and async)
-        if asyncio.iscoroutinefunction(orchestrator.execute):
-            result_state = await orchestrator.execute(state)
-        else:
-            result_state = orchestrator.execute(state)
+        # Execute the pipeline
+        result_state = await orchestrator.execute(state)
 
         # Update run with execution results
         output_summary = result_state.result or {}

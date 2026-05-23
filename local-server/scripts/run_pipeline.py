@@ -49,6 +49,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
+from adapters.events.in_process import InProcessEventPublisher
 from adapters.llm.anthropic_provider import AnthropicProvider
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
 from adapters.persistence.sqlite.connection import DatabaseManager
@@ -62,7 +63,9 @@ from adapters.reference.grounding import GroundingAdapter
 from adapters.reference.schema_org import SchemaOrgSource
 from adapters.reference.wikidata import WikidataSource
 from adapters.web.orchestrator_factory import create_orchestrator, create_pipeline_state
+from config import get_settings
 from domain.extraction.services import ExtractionService
+from domain.extraction.ports import ReferenceSource
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
@@ -187,7 +190,11 @@ def main() -> int:
         )
 
         # Create a simple LLM provider (using Anthropic by default)
-        llm_provider = AnthropicProvider()
+        settings = get_settings()
+        if not settings.llm.anthropic_api_key:
+            _logger.error("Anthropic API key not configured in config.json or ANTHROPIC_API_KEY env var")
+            return 1
+        llm_provider = AnthropicProvider(api_key=settings.llm.anthropic_api_key)
 
         # Initialize repositories
         local_session_factory = db_manager.get_local_session_factory()
@@ -198,7 +205,7 @@ def main() -> int:
         # Create services
         embedding_service = SentenceTransformerEmbedding(model_name="all-MiniLM-L12-v2")
         nlp_processor = SpacyNLPProcessor()
-        reference_sources = [
+        reference_sources: list[ReferenceSource] = [
             CachedReferenceSource(ConceptNetSource()),
             CachedReferenceSource(DBpediaSource()),
             CachedReferenceSource(WikidataSource()),
@@ -211,7 +218,7 @@ def main() -> int:
             llm=llm_provider,
             nlp=nlp_processor,
             reference_sources=reference_sources,
-            event_publisher=None,
+            event_publisher=InProcessEventPublisher(),
             extraction_repo=extraction_repo,
             extraction_run_repo=extraction_run_repo,
         )
@@ -254,11 +261,7 @@ def main() -> int:
         )
 
         _logger.info("Executing pipeline...")
-        # Handle both async and sync orchestrators
-        if asyncio.iscoroutinefunction(orchestrator.execute):
-            result_state = asyncio.run(orchestrator.execute(state))
-        else:
-            result_state = orchestrator.execute(state)
+        result_state = asyncio.run(orchestrator.execute(state))
 
         result = result_state.result or {}
 
