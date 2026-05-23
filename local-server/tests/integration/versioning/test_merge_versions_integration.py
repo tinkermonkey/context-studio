@@ -5,12 +5,8 @@ This test verifies that when a changeset is merged, entity versions are created
 and can be queried via the API endpoints.
 """
 
-import os
 import sys
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-)
 
 from fastapi import status
 

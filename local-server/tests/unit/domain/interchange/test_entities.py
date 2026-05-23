@@ -7,12 +7,9 @@ Tests domain invariants and state transitions for ImportRun.
 import os
 import sys
 from datetime import datetime, timezone
-
 import pytest
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from domain.interchange.entities import (
+
     ImportRun,
     ImportRunStatus,
 )

@@ -8,16 +8,13 @@ import os
 import sys
 import uuid
 from datetime import datetime, timezone
-
 import pytest
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
 from adapters.persistence.sqlite.models import Base
 from domain.interchange.entities import (
+
     ImportRun,
     ImportRunStatus,
 )

@@ -9,13 +9,10 @@ import os
 import sys
 import time
 from uuid import uuid4
-
 import pytest
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from domain.graph.services import GraphAnalysisService
 from domain.ontology.entities import (
+
     Class,
     ConceptScheme,
     PropertyDefinition,

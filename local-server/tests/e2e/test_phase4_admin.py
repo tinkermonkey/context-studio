@@ -16,14 +16,9 @@ import json
 import os
 import sys
 import time
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 import pytest
 from fastapi import status
-
 from domain.admin.value_objects import BackgroundTaskStatus
-
 
 @pytest.mark.e2e
 class TestHealthCheck:

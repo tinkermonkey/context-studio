@@ -5,9 +5,6 @@ import math
 import os
 import sys
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
-
 class FakeEmbeddingService:
     """Deterministic embedding service for unit testing using SHA-256 hashing.
 

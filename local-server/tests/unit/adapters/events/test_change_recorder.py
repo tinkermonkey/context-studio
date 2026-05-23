@@ -2,17 +2,13 @@
 
 import os
 import sys
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../../"))
-
 from unittest.mock import Mock
-
 import pytest
-
 from adapters.events.change_recorder import ChangeEventRecorder
 from domain.extraction.events import ExtractionCompleted
 from domain.interchange.services import set_batch_run_context
 from domain.ontology.events import (
+
     ClassCreated,
     ClassDeleted,
     ClassMoved,

@@ -7,16 +7,12 @@ and background task lifecycle in isolation using fake ports.
 
 import os
 import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from datetime import datetime, timezone
 from types import MappingProxyType
-
 import pytest
-
 from domain.admin.entities import AppConfiguration
 from domain.admin.exceptions import (
+
     ConfigurationError,
     InvalidStateTransitionError,
     TaskNotFoundError,

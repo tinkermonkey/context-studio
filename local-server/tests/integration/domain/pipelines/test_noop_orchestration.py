@@ -12,15 +12,10 @@ before implementing concrete pipeline types.
 
 import os
 import sys
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
-
 import pytest
-
 from domain.pipeline.ports import LLMResponse
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.orchestration.noop import NoOpPipelineOrchestrator, NoOpPipelineState
-
 
 class MockLLMProvider:
     """Mock LLM provider for testing."""

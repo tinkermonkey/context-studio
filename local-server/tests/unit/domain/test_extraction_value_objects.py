@@ -7,15 +7,11 @@ LayerInput, LayerOutput, and ExtractionLayerResult.
 
 import os
 import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from types import MappingProxyType
-
 import pytest
-
 from domain.extraction.entities import ExtractedEntity
 from domain.extraction.value_objects import (
+
     ExtractionLayerResult,
     LayerInput,
     LayerOutput,

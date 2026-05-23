@@ -8,13 +8,8 @@ Tests the credential masking logic directly, including:
 - Deep copy behavior (original not modified)
 """
 
-import os
 import sys
 
-sys.path.insert(
-    0,
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
-)
 
 from adapters.web.schemas.admin import _mask_credentials
 

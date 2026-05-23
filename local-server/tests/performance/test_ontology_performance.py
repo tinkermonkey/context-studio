@@ -7,16 +7,11 @@ at multiple entity counts (100, 500, 1000) using both fake and real embedding ad
 import os
 import sys
 import time
-
 import pytest
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from domain.ontology.services import OntologyService
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_event_publisher import FakeEventPublisher
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
-
 
 def _setup_ontology_context() -> tuple[OntologyService, FakeOntologyRepository]:
     """Set up ontology service with fake dependencies.

@@ -13,17 +13,13 @@ All tests use real in-memory SQLite to expose differences from the fake reposito
 
 import os
 import sys
-
 import pytest
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.ontology.entities import (
+
     Class,
     ConceptScheme,
     PropertyDefinition,

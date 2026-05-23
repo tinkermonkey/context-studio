@@ -2,13 +2,8 @@
 
 import os
 import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from typing import Sequence
-
 from domain.extraction.entities import ExtractionResult
-
 
 class FakeExtractionRepository:
     """In-memory repository for extraction results."""
@@ -26,6 +21,7 @@ class FakeExtractionRepository:
         Returns:
             The saved ExtractionResult (may have updated metadata like id or timestamp)
         """
+
         self._results[result.id] = result
         return result
 

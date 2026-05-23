@@ -12,16 +12,11 @@ import os
 import sys
 import tempfile
 from pathlib import Path
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 import socket as socket_module
 from unittest.mock import patch
-
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
 from adapters.persistence.sqlite.models import Base
 
 _original_socket = socket_module.socket

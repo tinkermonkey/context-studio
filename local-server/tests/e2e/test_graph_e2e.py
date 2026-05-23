@@ -15,12 +15,8 @@ Tests verify:
 
 import os
 import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 import pytest
 from fastapi import status
-
 
 def create_test_taxonomy_with_classes(e2e_client, num_classes=2, unique_id=""):
     """

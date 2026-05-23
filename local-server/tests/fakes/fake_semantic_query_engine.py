@@ -8,9 +8,6 @@ import os
 import sys
 from typing import Any
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
-
 class FakeSemanticQueryEngine:
     """In-memory implementation of SemanticQueryEngine protocol for unit testing."""
 

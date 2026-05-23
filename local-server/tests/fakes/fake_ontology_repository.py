@@ -8,12 +8,9 @@ Individual operations are deferred to Phase 2 and raise NotImplementedError.
 import os
 import sys
 from typing import Any
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from uuid import uuid4
-
 from domain.ontology.entities import (
+
     Class,
     ConceptScheme,
     Individual,

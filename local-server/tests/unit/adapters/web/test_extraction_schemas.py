@@ -4,15 +4,6 @@ Unit tests for extraction schemas, specifically TripleProvenance cross-field val
 Tests the TripleProvenance validator to verify that inverted text offsets are rejected.
 """
 
-import os
-import sys
-
-# Add local-server root to path for imports
-sys.path.insert(
-    0,
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
-)
-
 import pytest
 from pydantic import ValidationError
 

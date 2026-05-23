@@ -6,15 +6,10 @@ change events using Parquet files with date partitioning.
 """
 
 import json
-import os
 import shutil
-import sys
 import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-
-# Add parent directory to path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest
 

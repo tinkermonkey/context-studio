@@ -7,12 +7,9 @@ property attribute inheritance with first-class-wins conflict resolution.
 
 import os
 import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 import pytest
-
 from domain.ontology.events import (
+
     IndividualCreated,
     IndividualDeleted,
     IndividualUpdated,

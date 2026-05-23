@@ -3,9 +3,6 @@
 import os
 import sys
 from typing import Callable, TypeVar, cast
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from domain.events import DomainEvent
 from utils.logger import get_logger
 
@@ -37,6 +34,7 @@ class FakeEventPublisher:
             List of tuples (handler_name, exception) for any handlers that failed.
             Empty list if all handlers succeeded.
         """
+
         self._events.append(event)
         event_type = type(event)
         failures: list[tuple[str, Exception]] = []

@@ -16,12 +16,8 @@ Tests verify:
 
 import os
 import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 import pytest
 from fastapi import status
-
 
 @pytest.mark.e2e
 class TestTaxonomyCRUD:

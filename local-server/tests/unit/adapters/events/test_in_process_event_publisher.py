@@ -8,12 +8,8 @@ Tests verify:
 - No handlers scenario (event published but no handlers registered)
 """
 
-import os
 import sys
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-)
 
 from adapters.events.in_process import InProcessEventPublisher
 from domain.events import DomainEvent

@@ -5,13 +5,6 @@ Tests verify the full pipeline type enumeration, implementation discovery,
 and pipeline run management via REST API.
 """
 
-import os
-import sys
-
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-)
-
 import tempfile
 from pathlib import Path
 from uuid import uuid4

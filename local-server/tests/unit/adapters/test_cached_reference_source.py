@@ -1,15 +1,7 @@
 """Unit tests for CachedReferenceSource decorator."""
 
-import os
-import sys
 import tempfile
 from pathlib import Path
-
-sys.path.insert(
-    0,
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
-)
-
 
 from adapters.reference.cache import CachedReferenceSource
 from domain.extraction.ports import ReferenceRelation, ReferenceResult

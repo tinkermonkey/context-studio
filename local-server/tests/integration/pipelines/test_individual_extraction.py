@@ -13,17 +13,12 @@ Tests verify:
 Tests use 5 hand-authored fixtures including multi-paper cross-paper consistency.
 """
 
+import asyncio
+import hashlib
 import json
-import os
-import sys
 import tempfile
 from pathlib import Path
 from uuid import uuid4
-
-base_dir = os.path.dirname(os.path.dirname(os.path.dirname(
-    os.path.dirname(os.path.abspath(__file__))
-)))
-sys.path.append(base_dir)
 
 import pytest
 from fastapi import FastAPI, status
@@ -444,7 +439,6 @@ class TestOrchestratorExecution:
             },
         )
 
-        import asyncio
         result_state = asyncio.run(orchestrator.execute(state))
 
         # Verify state has been populated with results
@@ -500,7 +494,6 @@ class TestOrchestratorExecution:
             },
         )
 
-        import asyncio
         result_state = asyncio.run(orchestrator.execute(state))
 
         # Verify metadata is present
@@ -584,7 +577,6 @@ class TestCrossPaperConsistency:
             },
         )
 
-        import asyncio
         result_state = asyncio.run(orchestrator.execute(state))
 
         # Verify extraction succeeded and text contains expected mentions
@@ -609,8 +601,6 @@ class TestIndividualExtractionRunPersistence:
 
     def test_individual_extraction_run_created_with_source_text_hash(self, pipeline_run_repo):
         """IndividualExtractionRun can be created with source_text_hash field."""
-        import hashlib
-
         batch_run_id = str(uuid4())
         source_text = "John Doe works for ACME Corp."
         source_text_hash = hashlib.sha256(source_text.encode()).hexdigest()
@@ -637,8 +627,6 @@ class TestIndividualExtractionRunPersistence:
         self, pipeline_run_repo, session_factory
     ):
         """IndividualExtractionRun row is persisted and can be retrieved."""
-        import hashlib
-
         batch_run_id = str(uuid4())
         source_text = "Jane Smith researches machine learning."
         source_text_hash = hashlib.sha256(source_text.encode()).hexdigest()
@@ -670,8 +658,6 @@ class TestIndividualExtractionRunPersistence:
 
     def test_multiple_individual_extraction_runs(self, pipeline_run_repo):
         """Multiple IndividualExtractionRuns can be created with different batch IDs."""
-        import hashlib
-
         texts = [
             "John Doe works at MIT.",
             "Jane Smith works at Stanford.",

@@ -8,18 +8,15 @@ automatically linked to the import run via the correlation context.
 import os
 import sys
 from uuid import uuid4
-
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../"))
-
 from adapters.events.change_recorder import ChangeEventRecorder
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.models import Base
 from domain.interchange.services import (
+
     ImportRunService,
     get_current_batch_run_id,
     set_import_run_context,

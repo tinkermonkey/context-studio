@@ -5,14 +5,9 @@ Tests the change history queries, changeset lifecycle, and proposal workflow
 using FakeChangeRepository.
 """
 
-import os
-import sys
 from datetime import datetime, timedelta, timezone
 
 import pytest
-
-# Add local-server root to path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from domain.versioning.entities import (
     ChangeEvent,

@@ -24,22 +24,16 @@ Tests verify:
 
 import os
 import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from uuid import uuid4
-
 import pytest
 from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
-
 from adapters.web.graph_routes import router
 from domain.graph.services import GraphAnalysisService
 from domain.ontology.entities import Class, ConceptScheme, Relationship, Taxonomy
 from tests.fakes.fake_graph_engine import FakeGraphEngine
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 from tests.fakes.fake_semantic_query_engine import FakeSemanticQueryEngine
-
 
 @pytest.fixture
 def repository_with_data():

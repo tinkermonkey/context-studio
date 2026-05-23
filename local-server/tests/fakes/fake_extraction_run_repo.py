@@ -2,13 +2,8 @@
 
 import os
 import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from typing import Sequence
-
 from domain.extraction.entities import ExtractionRun
-
 
 class FakeExtractionRunRepository:
     """In-memory repository for extraction runs."""
@@ -26,6 +21,7 @@ class FakeExtractionRunRepository:
         Returns:
             The saved ExtractionRun
         """
+
         self._runs[run.id] = run
         return run
 

@@ -6,17 +6,12 @@ verifying CRUD operations, querying, and data round-tripping.
 """
 
 import dataclasses
-import os
-import sys
 from datetime import datetime, timezone
 from uuid import uuid4
 
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
-# Ensure local-server root is in path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from adapters.persistence.sqlite.operations.models import (
     OperationsBase,

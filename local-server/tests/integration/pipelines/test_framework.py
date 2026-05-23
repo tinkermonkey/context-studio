@@ -12,14 +12,6 @@ These framework tests establish the patterns and infrastructure for per-type
 tests in sub-issues 4B.5–4B.8.
 """
 
-import os
-import sys
-
-base_dir = os.path.dirname(os.path.dirname(os.path.dirname(
-    os.path.dirname(os.path.abspath(__file__))
-)))
-sys.path.append(base_dir)
-
 import pytest
 from fastapi import status
 

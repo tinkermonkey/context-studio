@@ -10,13 +10,10 @@ Tests service methods for managing import run lifecycle, including:
 import os
 import sys
 from datetime import datetime, timezone
-
 import pytest
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from domain.interchange.entities import ImportRunStatus, ResolutionRecord
 from domain.interchange.services import (
+
     ImportRunService,
     get_current_import_run_id,
     set_import_run_context,

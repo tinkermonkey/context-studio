@@ -8,12 +8,8 @@ Provides common infrastructure for testing the pipeline framework:
 - Event publisher for change event tracking
 """
 
-import os
-import sys
 import tempfile
 from pathlib import Path
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest
 from fastapi import FastAPI

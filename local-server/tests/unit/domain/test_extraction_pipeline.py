@@ -14,11 +14,7 @@ All tests complete quickly and provide rapid feedback on core extraction logic.
 
 import os
 import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 import pytest
-
 from domain.extraction.entities import ExtractedEntity
 from domain.extraction.events import ExtractionCompleted
 from domain.extraction.exceptions import ExtractionError
@@ -31,7 +27,6 @@ from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 from tests.fakes.fake_reference_source import FakeReferenceSource
-
 
 class TestFullExtractionPipeline:
     """Tests for the complete extraction pipeline."""

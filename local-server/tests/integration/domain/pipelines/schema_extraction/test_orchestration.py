@@ -10,12 +10,6 @@ Tests verify:
 - Connection proposal between candidates
 """
 
-import os
-import sys
-
-# Add local-server directory to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../.."))
-
 import pytest
 
 from domain.pipelines.entities import PipelineType

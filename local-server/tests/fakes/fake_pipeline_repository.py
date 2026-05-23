@@ -2,12 +2,8 @@
 
 import os
 import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from domain.pipeline.entities import Execution, PipelineConfiguration, PipelineFlavor
 from domain.pipeline.ports import ExecutionWithTitle
-
 
 class FakePipelineRepository:
     """In-memory repository for pipeline configurations and executions."""
@@ -27,6 +23,7 @@ class FakePipelineRepository:
         Returns:
             PipelineConfiguration if found, None otherwise
         """
+
         return self._configs.get(config_id)
 
     def list_configs(self, enabled_only: bool = False) -> list[PipelineConfiguration]:

@@ -14,16 +14,13 @@ import sys
 import tempfile
 from datetime import datetime, timezone
 from uuid import uuid4
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../"))
-
 import pytest
 from alembic.command import upgrade
 from alembic.config import Config
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import sessionmaker
-
 from adapters.persistence.sqlite.models import (
+
     Base,
     BatchRun,
     ChangeEvent,

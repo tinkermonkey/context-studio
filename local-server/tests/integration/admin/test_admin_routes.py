@@ -10,13 +10,6 @@ Tests verify the full admin API workflow with:
 These tests exercise the complete stack: routes → domain service → adapters.
 """
 
-import os
-import sys
-
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-)
-
 import pytest
 from fastapi import FastAPI, status
 from fastapi.testclient import TestClient

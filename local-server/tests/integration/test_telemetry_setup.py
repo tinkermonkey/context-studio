@@ -6,13 +6,9 @@ import logging
 import os
 import sys
 from unittest.mock import Mock
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from adapters.telemetry import setup_telemetry
 from adapters.telemetry.log_bridge import OTLPLogHandler
 from config import TelemetryConfig, TelemetryProtocol
-
 
 def test_telemetry_disabled_no_log_exporter():
     """Test that logger provider is None when telemetry is disabled."""

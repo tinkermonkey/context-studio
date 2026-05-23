@@ -14,12 +14,8 @@ Tests verify:
 
 import os
 import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 import pytest
 from fastapi import status
-
 
 def create_taxonomy_with_changes(e2e_client):
     """

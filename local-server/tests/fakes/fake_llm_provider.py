@@ -3,13 +3,8 @@
 import os
 import sys
 from typing import Any
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from typing import Literal
-
 from domain.pipeline.ports import LLMResponse
-
 
 class FakeLLMProvider:
     """Fake LLM provider that returns canned responses for testing."""
@@ -30,6 +25,7 @@ class FakeLLMProvider:
             tokens_out: Number of output tokens to report
             should_fail: If True, raise RuntimeError on complete() calls
         """
+
         self.response_content = response_content
         self.tokens_in = tokens_in
         self.tokens_out = tokens_out

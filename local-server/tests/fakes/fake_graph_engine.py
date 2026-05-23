@@ -8,11 +8,7 @@ all GraphEngine protocol methods with straightforward implementations.
 import os
 import sys
 from typing import Any
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from domain.graph.exceptions import NodeNotFoundError
-
 
 class FakeGraphEngine:
     """In-memory implementation of GraphEngine protocol for unit testing."""

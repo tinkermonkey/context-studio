@@ -4,12 +4,8 @@ import copy
 import os
 import sys
 from typing import Optional
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from domain.admin.entities import AppConfiguration
 from domain.admin.value_objects import CREDENTIAL_FIELD_NAMES
-
 
 class FakeConfigurationStore:
     """

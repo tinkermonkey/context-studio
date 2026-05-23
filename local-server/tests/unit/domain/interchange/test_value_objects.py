@@ -6,12 +6,9 @@ Tests invariants and discriminator validity for SerializationScope and ImportCon
 
 import os
 import sys
-
 import pytest
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from domain.interchange.value_objects import (
+
     ImportConflict,
     ImportPlan,
     MatchKind,

@@ -2,11 +2,7 @@
 
 import os
 import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from domain.extraction.ports import NLPEntity, NLPResult
-
 
 class FakeNLPProcessor:
     """Fake NLP processor that returns deterministic results for testing."""
@@ -19,6 +15,7 @@ class FakeNLPProcessor:
             language: Language code to return in results
             should_fail: If True, raise RuntimeError on process() and extract_entities() calls
         """
+
         self.language = language
         self.should_fail = should_fail
         self.call_count = 0

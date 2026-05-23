@@ -8,16 +8,13 @@ These tests ensure the ValueError guards prevent partial commits.
 
 import os
 import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 import pytest
-
 from adapters.interchange.graphml import GraphMLDeserializer
 from adapters.interchange.owl import OWLDeserializer
 from adapters.interchange.skos import SKOSDeserializer
 from domain.interchange.entities import ResolutionRecord
 from domain.interchange.value_objects import (
+
     ImportConflict,
     MatchKind,
     ResolutionKind,

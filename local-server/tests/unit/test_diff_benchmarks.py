@@ -7,11 +7,7 @@ Tests metric delta computation, cost direction logic, and JSON diff generation.
 import os
 import sys
 from io import StringIO
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from scripts.diff_benchmarks import compute_delta, print_json_diff, print_metric_diff
-
 
 class TestComputeDelta:
     """Tests for compute_delta function."""

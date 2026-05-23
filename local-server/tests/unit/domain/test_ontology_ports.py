@@ -10,12 +10,10 @@ Tests verify:
 import os
 import sys
 from datetime import datetime, timezone
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from domain.ontology.entities import Taxonomy
 from domain.ontology.events import ClassCreated
 from domain.ontology.ports import (
+
     EmbeddingService,
     OntologyRepository,
 )

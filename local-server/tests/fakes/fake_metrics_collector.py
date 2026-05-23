@@ -2,13 +2,10 @@
 
 import os
 import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from types import MappingProxyType
 from typing import Optional
-
 from domain.admin.value_objects import (
+
     BackgroundTaskSummary,
     ComponentStatus,
     DatabaseHealth,

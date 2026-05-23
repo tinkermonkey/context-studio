@@ -13,13 +13,6 @@ These tests use fake reference sources and verify:
 - Proper error handling and graceful degradation
 """
 
-import os
-import sys
-
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-)
-
 import pytest
 from fastapi import FastAPI, status
 from fastapi.testclient import TestClient

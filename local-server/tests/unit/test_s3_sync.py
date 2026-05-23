@@ -9,14 +9,9 @@ import os
 import sys
 from datetime import datetime, timezone
 from unittest.mock import Mock
-
 import pytest
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
-
 from domain.versioning.entities import ChangeEvent
 from domain.versioning.value_objects import ChangeOperation
-
 
 class MockClientError(Exception):
     """Mock botocore.exceptions.ClientError for testing."""
