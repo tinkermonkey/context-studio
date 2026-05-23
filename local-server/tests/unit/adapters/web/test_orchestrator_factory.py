@@ -5,8 +5,9 @@ Tests the complete branching logic for all 6 orchestrator types,
 dependency injection, and error handling for missing services.
 """
 
-import pytest
 from unittest.mock import Mock
+
+import pytest
 
 from adapters.web.orchestrator_factory import create_orchestrator, create_pipeline_state
 from domain.pipeline.ports import LLMProvider
@@ -83,7 +84,9 @@ class TestCreateOrchestratorNoOp:
         assert isinstance(orchestrator, NoOpPipelineOrchestrator)
         assert orchestrator._llm_provider is mock_llm_provider
 
-    def test_creates_noop_orchestrator_ignores_services(self, mock_llm_provider, mock_extraction_service):
+    def test_creates_noop_orchestrator_ignores_services(
+        self, mock_llm_provider, mock_extraction_service
+    ):
         """Test that NoOpPipelineOrchestrator ignores extra services."""
         services = {"extraction_service": mock_extraction_service}
 
@@ -728,6 +731,7 @@ class TestCreatePipelineStateUnknownType:
 
     def test_returns_none_for_unknown_pipeline_type(self, mock_llm_provider):
         """Test that unknown pipeline type returns None (implicit behavior)."""
+
         class UnknownPipelineType:
             pass
 
