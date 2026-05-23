@@ -148,7 +148,9 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         # Extract documents from input
         documents = schema_state.input_data.get("documents", [])
         if not documents or not any(doc.strip() for doc in documents if isinstance(doc, str)):
-            exc = PipelineInputError("documents is required and must contain at least one non-empty document")
+            exc = PipelineInputError(
+                "documents is required and must contain at least one non-empty document"
+            )
             schema_state = replace(
                 schema_state, current_status=PipelineRunStatus.FAILED, result={"error": str(exc)}
             )
@@ -531,26 +533,17 @@ Return JSON:
         """
         # Create new instances with normalized confidence scores
         normalized_classes = [
-            replace(
-                candidate,
-                confidence=max(0.0, min(1.0, candidate.confidence))
-            )
+            replace(candidate, confidence=max(0.0, min(1.0, candidate.confidence)))
             for candidate in state.candidate_classes
         ]
 
         normalized_properties = [
-            replace(
-                prop,
-                confidence=max(0.0, min(1.0, prop.confidence))
-            )
+            replace(prop, confidence=max(0.0, min(1.0, prop.confidence)))
             for prop in state.candidate_properties
         ]
 
         normalized_connections = [
-            replace(
-                conn,
-                confidence=max(0.0, min(1.0, conn.confidence))
-            )
+            replace(conn, confidence=max(0.0, min(1.0, conn.confidence)))
             for conn in state.proposed_connections
         ]
 
