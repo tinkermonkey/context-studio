@@ -148,10 +148,37 @@ class OpenRouterProvider:
             response.raise_for_status()
             data = response.json()
 
-            # Parse response
-            choice = data["choices"][0]
-            content = choice["message"]["content"]
+            # Validate response structure
+            if not isinstance(data, dict):
+                raise RuntimeError("OpenRouter response is not a JSON object")
+
+            if "choices" not in data:
+                raise RuntimeError("OpenRouter response missing 'choices' field")
+
+            choices = data["choices"]
+            if not isinstance(choices, list) or len(choices) == 0:
+                raise RuntimeError("OpenRouter response 'choices' is empty or not a list")
+
+            choice = choices[0]
+            if not isinstance(choice, dict) or "message" not in choice:
+                raise RuntimeError("OpenRouter response choice missing 'message' field")
+
+            message = choice["message"]
+            if not isinstance(message, dict) or "content" not in message:
+                raise RuntimeError("OpenRouter response message missing 'content' field")
+
+            content = message["content"]
+
+            if "usage" not in data:
+                raise RuntimeError("OpenRouter response missing 'usage' field")
+
             usage = data["usage"]
+            if not isinstance(usage, dict):
+                raise RuntimeError("OpenRouter response 'usage' is not a JSON object")
+
+            if "prompt_tokens" not in usage or "completion_tokens" not in usage:
+                raise RuntimeError("OpenRouter response usage missing token counts")
+
             tokens_in = usage["prompt_tokens"]
             tokens_out = usage["completion_tokens"]
             finish_reason = choice.get("finish_reason", "stop")

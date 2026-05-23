@@ -129,9 +129,6 @@ class ConceptNetSource:
         except ValueError as e:
             logger.warning(f"ConceptNet JSON parse error during search for '{term}': {e}")
             return []
-        except Exception as e:
-            logger.warning(f"Unexpected error during ConceptNet search for '{term}': {e}")
-            return []
 
     def get_relations(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
         """
@@ -194,9 +191,6 @@ class ConceptNetSource:
             return []
         except ValueError as e:
             logger.warning(f"ConceptNet JSON parse error during get_relations for '{uri}': {e}")
-            return []
-        except Exception as e:
-            logger.warning(f"Unexpected error during ConceptNet get_relations for '{uri}': {e}")
             return []
 
     async def is_available_async(self) -> bool:
