@@ -21,7 +21,6 @@ import pytest
 from fastapi import status
 
 from domain.pipelines.entities import PipelineType
-from domain.pipelines.registry import PipelineConfigurationRegistry, PipelineImplementationRegistry
 
 
 class TestRegistryInvariance:
@@ -76,7 +75,7 @@ class TestRegistryInvariance:
     def test_config_registry_configuration_copy_is_defensive(self, config_registry):
         """Configuration dict is copied; external mutations don't affect registry."""
         config_dict = {"key": "value"}
-        v1 = config_registry.register(
+        config_registry.register(
             PipelineType.NO_OP,
             "default",
             "defensive-copy-test",
