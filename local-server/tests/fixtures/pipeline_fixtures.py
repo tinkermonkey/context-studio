@@ -15,7 +15,7 @@ from typing import Any
 
 def _get_fixtures_dir() -> Path:
     """Get the pipelines fixtures directory."""
-    return Path(__file__).parent / "pipelines"
+    return Path(__file__).parent.parent / "integration" / "fixtures" / "pipelines"
 
 
 def load_fixture(pipeline_type: str, scenario: str) -> dict[str, Any]:

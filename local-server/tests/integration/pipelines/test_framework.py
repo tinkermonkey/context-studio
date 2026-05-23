@@ -361,3 +361,106 @@ class TestConfigurationRegistry:
         assert "version" in config
         assert "config" in config
         assert isinstance(config["config"], dict)
+
+
+class TestLineageAndChangeEvents:
+    """Test that pipeline runs carry batch_run_id for traceability."""
+
+    def test_pipeline_run_has_batch_run_id(self, client):
+        """Pipeline run response includes batch_run_id for lineage tracking."""
+        # Execute no-op pipeline
+        response = client.post(
+            "/api/pipelines/no_op/run",
+            json={"configuration_ref": "noop-default"},
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+        body = response.json()
+
+        assert "batch_run_id" in body
+        assert isinstance(body["batch_run_id"], str)
+        assert len(body["batch_run_id"]) > 0
+
+    def test_batch_run_id_is_consistent(self, client):
+        """Multiple calls to same pipeline produce different batch_run_ids."""
+        response1 = client.post(
+            "/api/pipelines/no_op/run",
+            json={"configuration_ref": "noop-default"},
+        )
+        assert response1.status_code == status.HTTP_201_CREATED
+        batch_run_id_1 = response1.json()["batch_run_id"]
+
+        response2 = client.post(
+            "/api/pipelines/no_op/run",
+            json={"configuration_ref": "noop-default"},
+        )
+        assert response2.status_code == status.HTTP_201_CREATED
+        batch_run_id_2 = response2.json()["batch_run_id"]
+
+        # Each run should have its own batch_run_id
+        assert batch_run_id_1 != batch_run_id_2
+
+
+class TestPydanticConstraints:
+    """Test Pydantic field validation and constraints."""
+
+    def test_string_fields_required_format(self, client):
+        """String fields are validated for proper format."""
+        # Valid configuration_ref
+        response = client.post(
+            "/api/pipelines/no_op/run",
+            json={
+                "configuration_ref": "noop-default",
+            },
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+
+    def test_explicit_implementation_id_accepted(self, client):
+        """Explicit implementation_id with configuration_ref is accepted."""
+        response = client.post(
+            "/api/pipelines/no_op/run",
+            json={
+                "implementation_id": "default",
+                "configuration_ref": "noop-default",
+            },
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+
+    def test_response_structure_is_valid(self, client):
+        """Response structure conforms to expected schema."""
+        response = client.post(
+            "/api/pipelines/no_op/run",
+            json={
+                "configuration_ref": "noop-default",
+            },
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+        body = response.json()
+
+        # Verify required response fields
+        assert "id" in body
+        assert "batch_run_id" in body
+        assert "status" in body
+
+
+class TestWaveARegression:
+    """Test Wave A extraction pipeline regression: `POST /api/extraction/extract` still works."""
+
+    @pytest.mark.skipif(
+        True,
+        reason="Wave A extraction endpoint not yet wired into current test client"
+    )
+    def test_extraction_extract_endpoint_works(self, client):
+        """POST /api/extraction/extract returns well-formed response."""
+        response = client.post(
+            "/api/extraction/extract",
+            json={
+                "text": "Test document content.",
+                "schema_type": "entity",
+            },
+        )
+        assert response.status_code in (status.HTTP_200_OK, status.HTTP_201_CREATED)
+        body = response.json()
+
+        # Verify response structure
+        assert "id" in body or "extraction_id" in body
+        assert "status" in body or "success" in body

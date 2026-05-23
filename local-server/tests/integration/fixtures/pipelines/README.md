@@ -66,7 +66,7 @@ Output fixtures describe the expected structure and key values the pipeline shou
 
 ## Fixture Usage in Tests
 
-Tests load fixtures using utility functions (TODO: implement fixture loader):
+Tests load fixtures using utility functions:
 
 ```python
 from tests.fixtures.pipeline_fixtures import load_fixture, load_expected_output
@@ -88,7 +88,7 @@ All pipeline tests use `FakeLLMProvider` from `tests.fakes.fake_llm_provider` wi
 - No network calls to real LLM services
 - Reproducible behavior for all pipeline types
 
-See `tests/integration/routes/test_pipelines_framework.py` for implementation details.
+See `tests/integration/pipelines/test_framework.py` for implementation details.
 
 ## Network Blocking
 
