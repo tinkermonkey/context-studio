@@ -64,17 +64,6 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
         self._traversal = traversal
         self._config = config or {}
 
-    def build_graph(self) -> Any:
-        """
-        Build and return the pipeline execution graph.
-
-        For this single-node implementation, returns None.
-
-        Returns:
-            None (single-node execution)
-        """
-        return None
-
     async def execute(self, state: PipelineState) -> PipelineState:
         """
         Execute the connection refinement pipeline.

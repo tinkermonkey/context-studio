@@ -12,6 +12,38 @@ from typing import Any, Protocol
 
 from .entities import PipelineRun, PipelineRunStatus, PipelineType
 
+
+class TripleExtractionResult(Protocol):
+    """
+    Result returned by ExtractionPort.extract_triples().
+
+    Matches the shape of domain.extraction.entities.TripleExtractionResult
+    without importing it, breaking the cross-context dependency.
+    """
+
+    triples: list[dict]
+    warnings: list[str]
+    metadata: dict[str, Any]
+
+
+class ExtractionPort(Protocol):
+    """
+    Port describing what the pipelines context needs from the extraction context.
+
+    Decouples IndividualExtractionOrchestrator from the concrete ExtractionService.
+    Any object that exposes extract_triples() with this signature satisfies the protocol.
+    """
+
+    def extract_triples(
+        self,
+        text: str,
+        ontology_id: str,
+        model: str,
+        temperature: float,
+    ) -> TripleExtractionResult:
+        """Extract RDF triples from text scoped to a specific ontology."""
+        ...
+
 PipelineRunList = list[PipelineRun]
 ChangeEventDictList = list[dict[str, Any]]
 

@@ -14,7 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal, Protocol
 
-from .entities import Execution, PipelineConfiguration, PipelineFlavor
+from .entities import Execution, PipelineConfiguration
 
 # ============================================================================
 # Value types used in port contracts
@@ -255,57 +255,3 @@ class PipelineRepository(Protocol):
         ...
 
 
-class FlavorRepository(Protocol):
-    """
-    Port for persisting and retrieving pipeline flavor templates.
-
-    Flavors are reusable templates for creating pipeline configurations.
-    """
-
-    def get_flavor(self, flavor_id: str) -> PipelineFlavor | None:
-        """
-        Retrieve a pipeline flavor by ID.
-
-        Args:
-            flavor_id: Unique identifier of the flavor
-
-        Returns:
-            PipelineFlavor if found, None otherwise
-        """
-        ...
-
-    def list_flavors(self) -> list[PipelineFlavor]:
-        """
-        List all pipeline flavors.
-
-        Returns:
-            List of PipelineFlavor objects
-        """
-        ...
-
-    def save_flavor(self, flavor: PipelineFlavor) -> PipelineFlavor:
-        """
-        Create or update a pipeline flavor.
-
-        If the flavor's ID already exists, it is updated.
-        Otherwise, a new flavor is created.
-
-        Args:
-            flavor: PipelineFlavor to save
-
-        Returns:
-            The saved PipelineFlavor
-        """
-        ...
-
-    def delete_flavor(self, flavor_id: str) -> bool:
-        """
-        Delete a pipeline flavor by ID.
-
-        Args:
-            flavor_id: Unique identifier of the flavor to delete
-
-        Returns:
-            True if deletion was successful, False if flavor was not found
-        """
-        ...

@@ -130,14 +130,6 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         super().__init__(llm_provider)
         self._ontology_repo = ontology_repo
 
-    def build_graph(self) -> Any:
-        """
-        Build pipeline execution graph.
-
-        Returns None; execution uses explicit stage methods.
-        """
-        return None
-
     async def execute(self, state: PipelineState) -> PipelineState:
         """
         Execute the schema extraction pipeline.

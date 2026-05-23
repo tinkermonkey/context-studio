@@ -73,19 +73,6 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
         self._scorer = scorer
         self._config = config or {}
 
-    def build_graph(self) -> Any:
-        """
-        Build and return the pipeline execution graph.
-
-        For this single-node implementation, returns None.
-        Multi-node upgrade path: create graph with dispatch,
-        normalization, scoring, ranking nodes.
-
-        Returns:
-            None (single-node execution)
-        """
-        return None
-
     async def execute(self, state: PipelineState) -> PipelineState:
         """
         Execute the schema node grounding pipeline.

@@ -15,11 +15,11 @@ import hashlib
 from dataclasses import dataclass, field, replace
 from typing import Any
 
-from domain.extraction.services import ExtractionService
 from domain.pipeline.exceptions import PipelineExecutionError, PipelineInputError
 from domain.pipeline.ports import LLMProvider
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
+from domain.pipelines.ports import ExtractionPort
 
 
 @dataclass
@@ -59,29 +59,17 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
     def __init__(
         self,
         llm_provider: LLMProvider,
-        extraction_service: ExtractionService,
+        extraction_service: ExtractionPort,
     ) -> None:
         """
         Initialize the orchestrator.
 
         Args:
             llm_provider: Port implementation for LLM completions
-            extraction_service: Service for extraction logic
+            extraction_service: Port implementation for extraction logic
         """
         super().__init__(llm_provider)
         self._extraction_service = extraction_service
-
-    def build_graph(self) -> Any:
-        """
-        Build and return the pipeline execution graph.
-
-        For this single-node implementation, the graph is minimal.
-        Returns None for now; can be extended if needed.
-
-        Returns:
-            None (single-node execution, no explicit graph)
-        """
-        return None
 
     async def execute(self, state: PipelineState) -> PipelineState:
         """

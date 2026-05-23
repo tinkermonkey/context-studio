@@ -61,16 +61,6 @@ class PipelineOrchestrator(ABC):
         self._llm_provider = llm_provider
 
     @abstractmethod
-    def build_graph(self) -> Any:
-        """
-        Build and return the pipeline execution graph.
-
-        Returns:
-            Pipeline execution graph (implementation-specific)
-        """
-        ...
-
-    @abstractmethod
     async def execute(self, state: PipelineState) -> PipelineState:
         """
         Execute the pipeline with the given state.

@@ -5,11 +5,6 @@ This module implements HTTP endpoints for pipeline configuration and execution:
 - POST   /api/pipelines              → Create pipeline configuration
 - GET    /api/pipelines              → List all configurations
 - GET    /api/pipelines/executions   → Retrieve all execution history (must be before /{id})
-- GET    /api/pipelines/flavors      → Retrieve all flavors (must be before /{id})
-- POST   /api/pipelines/flavors      → Create flavor (must be before /{id})
-- GET    /api/pipelines/flavors/{id} → Retrieve single flavor
-- PUT    /api/pipelines/flavors/{id} → Update flavor
-- DELETE /api/pipelines/flavors/{id} → Delete flavor
 - GET    /api/pipelines/{id}         → Retrieve single configuration
 - PUT    /api/pipelines/{id}         → Update configuration
 - DELETE /api/pipelines/{id}         → Delete configuration
@@ -39,11 +34,7 @@ from adapters.web.schemas.pipeline import (
     PipelineConfigurationResponse,
     PipelineConfigurationUpdate,
     PipelineExecuteRequest,
-    PipelineFlavorCreateRequest,
-    PipelineFlavorResponse,
-    PipelineFlavorUpdateRequest,
 )
-from domain.pipeline.entities import PipelineFlavor
 from domain.pipeline.exceptions import (
     LayerExecutionError,
     PipelineError,
@@ -219,144 +210,6 @@ async def list_all_pipeline_executions(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-# ==================== Pipeline Flavor Endpoints ====================
-
-
-@router.post(
-    "/pipelines/flavors",
-    response_model=PipelineFlavorResponse,
-    status_code=status.HTTP_201_CREATED,
-)
-async def create_pipeline_flavor(
-    request: PipelineFlavorCreateRequest,
-    service: PipelineService = Depends(get_pipeline_service),
-) -> PipelineFlavorResponse:
-    """
-    Create a new pipeline flavor.
-
-    Args:
-        request: PipelineFlavorCreateRequest with flavor details
-        service: PipelineService from dependency injection
-
-    Returns:
-        Created PipelineFlavorResponse with server-generated id
-
-    Raises:
-        HTTPException: 400 if invalid input, 409 if name already exists
-    """
-    try:
-        flavor = await run_sync_in_executor(
-            service.create_flavor,
-            name=request.name,
-            description=request.description,
-            steps=request.steps,
-        )
-        return _flavor_to_response(flavor)
-    except Exception as exc:
-        status_code, message = _handle_domain_error(exc)
-        raise HTTPException(status_code=status_code, detail=message)
-
-
-@router.get("/pipelines/flavors", response_model=list[PipelineFlavorResponse])
-async def list_pipeline_flavors(
-    service: PipelineService = Depends(get_pipeline_service),
-) -> list[PipelineFlavorResponse]:
-    """
-    Retrieve all pipeline flavors.
-
-    Returns:
-        List of PipelineFlavorResponse objects
-    """
-    try:
-        flavors = await run_sync_in_executor(service.list_flavors)
-        return [_flavor_to_response(f) for f in flavors]
-    except Exception as exc:
-        status_code, message = _handle_domain_error(exc)
-        raise HTTPException(status_code=status_code, detail=message)
-
-
-@router.get("/pipelines/flavors/{flavor_id}", response_model=PipelineFlavorResponse)
-async def get_pipeline_flavor(
-    flavor_id: str,
-    service: PipelineService = Depends(get_pipeline_service),
-) -> PipelineFlavorResponse:
-    """
-    Retrieve a pipeline flavor by ID.
-
-    Args:
-        flavor_id: The pipeline flavor ID
-        service: PipelineService from dependency injection
-
-    Returns:
-        PipelineFlavorResponse
-
-    Raises:
-        HTTPException: 404 if not found
-    """
-    try:
-        flavor = await run_sync_in_executor(service.get_flavor, flavor_id)
-        return _flavor_to_response(flavor)
-    except Exception as exc:
-        status_code, message = _handle_domain_error(exc)
-        raise HTTPException(status_code=status_code, detail=message)
-
-
-@router.put("/pipelines/flavors/{flavor_id}", response_model=PipelineFlavorResponse)
-async def update_pipeline_flavor(
-    flavor_id: str,
-    request: PipelineFlavorUpdateRequest,
-    service: PipelineService = Depends(get_pipeline_service),
-) -> PipelineFlavorResponse:
-    """
-    Update a pipeline flavor.
-
-    Args:
-        flavor_id: The pipeline flavor ID
-        request: PipelineFlavorUpdateRequest with optional fields to update
-        service: PipelineService from dependency injection
-
-    Returns:
-        Updated PipelineFlavorResponse
-
-    Raises:
-        HTTPException: 400 if invalid, 404 if not found
-    """
-    try:
-        flavor = await run_sync_in_executor(
-            service.update_flavor,
-            flavor_id=flavor_id,
-            name=request.name,
-            description=request.description,
-            steps=request.steps,
-        )
-        return _flavor_to_response(flavor)
-    except Exception as exc:
-        status_code, message = _handle_domain_error(exc)
-        raise HTTPException(status_code=status_code, detail=message)
-
-
-@router.delete("/pipelines/flavors/{flavor_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_pipeline_flavor(
-    flavor_id: str,
-    service: PipelineService = Depends(get_pipeline_service),
-) -> None:
-    """
-    Delete a pipeline flavor.
-
-    Args:
-        flavor_id: The pipeline flavor ID
-        service: PipelineService from dependency injection
-
-    Raises:
-        HTTPException: 404 if not found
-    """
-    try:
-        await run_sync_in_executor(service.delete_flavor, flavor_id)
-    except Exception as exc:
-        status_code, message = _handle_domain_error(exc)
-        raise HTTPException(status_code=status_code, detail=message)
-
-
 # ==================== Pipeline Configuration Endpoints ====================
 
 
@@ -509,16 +362,3 @@ async def get_pipeline_executions(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-def _flavor_to_response(flavor: PipelineFlavor) -> PipelineFlavorResponse:
-    """Convert domain PipelineFlavor to response schema."""
-    return PipelineFlavorResponse.model_validate(
-        {
-            "id": flavor.id,
-            "name": flavor.name,
-            "description": flavor.description,
-            "steps": flavor.steps,
-            "step_count": flavor.step_count,
-            "created_at": flavor.created_at,
-            "last_updated": flavor.last_updated,
-        }
-    )

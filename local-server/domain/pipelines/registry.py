@@ -241,6 +241,13 @@ class PipelineConfigurationRegistry:
     Configurations are immutable once set. Updates increment the version;
     old versions remain accessible. A PipelineRun references a specific
     version via configuration_ref + the version it used at creation time.
+
+    Design note: configurations are registered programmatically at server startup
+    from the per-type default configuration modules (e.g.
+    domain/pipelines/individual_extraction/configurations/default.py). They are
+    not user-created data and therefore do not need to survive process restarts —
+    the same configurations are re-registered on every startup. The in-memory dict
+    is intentional and correct for this use case.
     """
 
     def __init__(self) -> None:

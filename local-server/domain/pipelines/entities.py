@@ -27,9 +27,6 @@ class PipelineRunStatus(str, Enum):
     RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
-    REVIEWED = "reviewed"
-    COMMITTED = "committed"
-    ABANDONED = "abandoned"
 
 
 class PipelineType(str, Enum):
@@ -77,42 +74,6 @@ class PipelineRun:
     status: PipelineRunStatus = PipelineRunStatus.PENDING
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
-    @classmethod
-    def create(
-        cls,
-        id: str,
-        batch_run_id: str,
-        pipeline_type: PipelineType,
-        implementation_id: str,
-        configuration_ref: str,
-        created_at: datetime | None = None,
-    ) -> "PipelineRun":
-        """
-        Create a new PipelineRun with status=PENDING.
-
-        Args:
-            id: Unique identifier (UUID string)
-            batch_run_id: FK to batch_runs.id
-            pipeline_type: Type of pipeline
-            implementation_id: Implementation identifier
-            configuration_ref: Configuration reference
-            created_at: UTC timestamp (defaults to now)
-
-        Returns:
-            New PipelineRun with status=PENDING
-        """
-        return cls(
-            id=id,
-            batch_run_id=batch_run_id,
-            pipeline_type=pipeline_type,
-            implementation_id=implementation_id,
-            configuration_ref=configuration_ref,
-            input_summary={},
-            output_summary={},
-            llm_metadata={},
-            status=PipelineRunStatus.PENDING,
-            created_at=created_at or datetime.now(timezone.utc),
-        )
 
 
 @dataclass(frozen=True)
@@ -153,7 +114,7 @@ class IndividualExtractionRun(PipelineRun):
     source_document_uri: str | None = None
 
     @classmethod
-    def create(  # type: ignore[override]
+    def create(
         cls,
         id: str,
         batch_run_id: str,
@@ -207,7 +168,7 @@ class SchemaExtractionRun(PipelineRun):
     pipeline_type: PipelineType = field(default=PipelineType.SCHEMA_EXTRACTION, init=False)
 
     @classmethod
-    def create(  # type: ignore[override]
+    def create(
         cls,
         id: str,
         batch_run_id: str,
@@ -243,7 +204,7 @@ class SchemaGroundingRun(PipelineRun):
     pipeline_type: PipelineType = field(default=PipelineType.SCHEMA_NODE_GROUNDING, init=False)
 
     @classmethod
-    def create(  # type: ignore[override]
+    def create(
         cls,
         id: str,
         batch_run_id: str,
@@ -281,7 +242,7 @@ class SchemaDefinitionRefinementRun(PipelineRun):
     )
 
     @classmethod
-    def create(  # type: ignore[override]
+    def create(
         cls,
         id: str,
         batch_run_id: str,
@@ -319,7 +280,7 @@ class SchemaConnectionRefinementRun(PipelineRun):
     )
 
     @classmethod
-    def create(  # type: ignore[override]
+    def create(
         cls,
         id: str,
         batch_run_id: str,

@@ -11,7 +11,7 @@ Exercises:
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from typing import Any, cast
+from typing import cast
 
 from domain.pipeline.ports import LLMProvider
 from domain.pipelines.entities import PipelineRunStatus
@@ -44,14 +44,6 @@ class NoOpPipelineOrchestrator(PipelineOrchestrator):
     def __init__(self, llm_provider: LLMProvider) -> None:
         """Initialize no-op orchestrator."""
         super().__init__(llm_provider)
-
-    def build_graph(self) -> Any:
-        """
-        Build and return the pipeline execution graph.
-
-        For now, returns None (would be used by execute() in full impl).
-        """
-        return None
 
     async def execute(self, state: PipelineState) -> PipelineState:
         """

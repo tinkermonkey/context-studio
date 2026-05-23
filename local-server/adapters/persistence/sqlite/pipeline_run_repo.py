@@ -116,7 +116,8 @@ class PipelineRepository:
         Create a new pipeline run and persist it.
 
         In joined-table inheritance, the PipelineRun.id IS the FK to batch_runs.id.
-        This method assumes the batch_run already exists.
+        SQLAlchemy creates the parent batch_runs row automatically when the subclass
+        ORM object is added to the session — no separate batch_run insert is required.
 
         Args:
             batch_run_id: ID of the existing batch_run (becomes PipelineRun.id)
@@ -137,7 +138,9 @@ class PipelineRepository:
             raise ValueError(f"Unknown pipeline type: {pipeline_type.value}")
 
         kwargs: dict[str, Any] = {
-            "id": batch_run_id,  # In joined-table inheritance, id IS the FK
+            # In joined-table inheritance the subclass PK is also the FK to the parent
+            # table, so the subclass id and the batch_run_id are the same value by design.
+            "id": batch_run_id,
             "pipeline_type": pipeline_type.value,
             "implementation_id": implementation_id,
             "configuration_ref": configuration_ref,

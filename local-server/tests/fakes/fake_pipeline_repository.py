@@ -1,6 +1,6 @@
 """Fake in-memory implementation of PipelineRepository for testing."""
 
-from domain.pipeline.entities import Execution, PipelineConfiguration, PipelineFlavor
+from domain.pipeline.entities import Execution, PipelineConfiguration
 from domain.pipeline.ports import ExecutionWithTitle
 
 
@@ -10,7 +10,6 @@ class FakePipelineRepository:
     def __init__(self) -> None:
         self._configs: dict[str, PipelineConfiguration] = {}
         self._executions: dict[str, list[Execution]] = {}
-        self._flavors: dict[str, PipelineFlavor] = {}
 
     def get_config(self, config_id: str) -> PipelineConfiguration | None:
         """
@@ -140,51 +139,3 @@ class FakePipelineRepository:
 
         return paginated, total
 
-    def get_flavor(self, flavor_id: str) -> PipelineFlavor | None:
-        """
-        Retrieve a pipeline flavor by ID.
-
-        Args:
-            flavor_id: Unique identifier of the flavor
-
-        Returns:
-            PipelineFlavor if found, None otherwise
-        """
-        return self._flavors.get(flavor_id)
-
-    def list_flavors(self) -> list[PipelineFlavor]:
-        """
-        List all pipeline flavors.
-
-        Returns:
-            List of PipelineFlavor objects
-        """
-        return list(self._flavors.values())
-
-    def save_flavor(self, flavor: PipelineFlavor) -> PipelineFlavor:
-        """
-        Create or update a pipeline flavor.
-
-        Args:
-            flavor: PipelineFlavor to save
-
-        Returns:
-            The saved PipelineFlavor
-        """
-        self._flavors[flavor.id] = flavor
-        return flavor
-
-    def delete_flavor(self, flavor_id: str) -> bool:
-        """
-        Delete a pipeline flavor by ID.
-
-        Args:
-            flavor_id: Unique identifier of the flavor
-
-        Returns:
-            True if deleted, False if not found
-        """
-        if flavor_id in self._flavors:
-            del self._flavors[flavor_id]
-            return True
-        return False

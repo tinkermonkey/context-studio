@@ -572,63 +572,77 @@ async def list_pipeline_runs(
     """
     repo = request.app.state.pipeline_run_repo
 
-    # Get all runs; filtering happens in-memory for simplicity
-    all_runs = repo.list()
-
-    # Apply filters
-    filtered_runs = all_runs
+    # Validate and parse filter params before hitting the database
+    ptype: PipelineType | None = None
     if pipeline_type:
         try:
             ptype = PipelineType(pipeline_type)
-            filtered_runs = [r for r in filtered_runs if r.pipeline_type == ptype]
         except ValueError:
             raise HTTPException(
                 status_code=http_status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid pipeline type: {pipeline_type}",
             )
 
+    status_enum: PipelineRunStatus | None = None
     if status:
         try:
             status_enum = PipelineRunStatus(status)
-            filtered_runs = [r for r in filtered_runs if r.status == status_enum]
         except ValueError:
             raise HTTPException(
                 status_code=http_status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid status: {status}",
             )
 
-    if implementation_id:
-        filtered_runs = [r for r in filtered_runs if r.implementation_id == implementation_id]
-
+    start_dt: datetime | None = None
     if start_date:
         try:
             start_dt = datetime.fromisoformat(start_date)
-            # Normalize to naive UTC for consistent comparison with naive DB values
             if start_dt.tzinfo is not None:
                 start_dt = start_dt.astimezone(timezone.utc).replace(tzinfo=None)
-            filtered_runs = [
-                r for r in filtered_runs if r.created_at.replace(tzinfo=None) >= start_dt
-            ]
         except ValueError:
             raise HTTPException(
                 status_code=http_status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid start_date format: {start_date} (use ISO 8601)",
             )
 
+    end_dt: datetime | None = None
     if end_date:
         try:
             end_dt = datetime.fromisoformat(end_date)
-            # Normalize to naive UTC for consistent comparison with naive DB values
             if end_dt.tzinfo is not None:
                 end_dt = end_dt.astimezone(timezone.utc).replace(tzinfo=None)
-            filtered_runs = [
-                r for r in filtered_runs if r.created_at.replace(tzinfo=None) <= end_dt
-            ]
         except ValueError:
             raise HTTPException(
                 status_code=http_status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid end_date format: {end_date} (use ISO 8601)",
             )
+
+    # Delegate type and status filters to the database; apply in-memory only for
+    # fields that don't have a dedicated repository method (implementation_id, dates).
+    if ptype is not None and status_enum is not None:
+        # Start from type-filtered set and apply status filter in memory — avoids
+        # adding a combined query method while keeping both major filters in the DB.
+        by_type = repo.list_by_type(ptype)
+        filtered_runs = [r for r in by_type if r.status == status_enum]
+    elif ptype is not None:
+        filtered_runs = repo.list_by_type(ptype)
+    elif status_enum is not None:
+        filtered_runs = repo.list_by_status(status_enum)
+    else:
+        filtered_runs = repo.list()
+
+    if implementation_id:
+        filtered_runs = [r for r in filtered_runs if r.implementation_id == implementation_id]
+
+    if start_dt is not None:
+        filtered_runs = [
+            r for r in filtered_runs if r.created_at.replace(tzinfo=None) >= start_dt
+        ]
+
+    if end_dt is not None:
+        filtered_runs = [
+            r for r in filtered_runs if r.created_at.replace(tzinfo=None) <= end_dt
+        ]
 
     # Pagination
     total = len(filtered_runs)

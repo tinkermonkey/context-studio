@@ -24,12 +24,13 @@ class TestPipelineRun:
 
     def test_create_pending_run(self):
         """Test creating a new pipeline run with PENDING status."""
-        run = PipelineRun.create(
+        run = PipelineRun(
             id="run-123",
             batch_run_id="batch-456",
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-001",
             configuration_ref="config-default",
+            status=PipelineRunStatus.PENDING,
         )
 
         assert run.id == "run-123"
@@ -44,12 +45,13 @@ class TestPipelineRun:
 
     def test_immutability(self):
         """Test that PipelineRun is immutable (frozen dataclass)."""
-        run = PipelineRun.create(
+        run = PipelineRun(
             id="run-123",
             batch_run_id="batch-456",
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-001",
             configuration_ref="config-default",
+            status=PipelineRunStatus.PENDING,
         )
 
         with pytest.raises(AttributeError):
@@ -171,12 +173,9 @@ class TestPipelineRunStatus:
             PipelineRunStatus.RUNNING,
             PipelineRunStatus.COMPLETED,
             PipelineRunStatus.FAILED,
-            PipelineRunStatus.REVIEWED,
-            PipelineRunStatus.COMMITTED,
-            PipelineRunStatus.ABANDONED,
         ]
 
-        assert len(statuses) == 7
+        assert len(statuses) == 4
         assert all(isinstance(s, PipelineRunStatus) for s in statuses)
 
     def test_status_string_values(self):
@@ -185,9 +184,6 @@ class TestPipelineRunStatus:
         assert PipelineRunStatus.RUNNING.value == "running"
         assert PipelineRunStatus.COMPLETED.value == "completed"
         assert PipelineRunStatus.FAILED.value == "failed"
-        assert PipelineRunStatus.REVIEWED.value == "reviewed"
-        assert PipelineRunStatus.COMMITTED.value == "committed"
-        assert PipelineRunStatus.ABANDONED.value == "abandoned"
 
 
 class TestPipelineType:
