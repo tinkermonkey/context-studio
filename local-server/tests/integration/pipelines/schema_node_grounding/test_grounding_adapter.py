@@ -8,6 +8,7 @@ import pytest
 
 from adapters.reference.grounding import GroundingAdapter
 from domain.extraction.ports import ReferenceResult
+from domain.pipeline.exceptions import PipelineExternalServiceError
 from domain.pipelines.schema_node_grounding.scoring import GroundingCandidate
 
 _test_file = os.path.abspath(__file__)
@@ -123,8 +124,6 @@ class TestGroundingAdapter:
     @pytest.mark.asyncio
     async def test_query_sources_all_sources_fail(self, mock_dbpedia, mock_conceptnet):
         """Test exception raised when all sources fail."""
-        from domain.pipeline.exceptions import PipelineExternalServiceError
-
         mock_dbpedia.search_async = AsyncMock(side_effect=Exception("DBpedia error"))
         mock_conceptnet.search_async = AsyncMock(side_effect=Exception("ConceptNet error"))
         adapter = GroundingAdapter(dbpedia=mock_dbpedia, conceptnet=mock_conceptnet)

@@ -100,7 +100,7 @@ class GroundingAdapter:
                 continue
             candidates.extend(cast(list[GroundingCandidate], result))
 
-        if not candidates and failures:
+        if len(failures) == len(source_names):
             error_details = "; ".join(
                 [f"{name}: {msg}" for name, msg in failures.items()]
             )

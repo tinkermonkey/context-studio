@@ -233,7 +233,7 @@ class GroundingScorer:
             label_match = compute_label_match_score(candidate.label, node_label)
 
             semantic_sim = 0.0
-            has_embedding_score = True
+            has_embedding_score = self._embedding_service is not None
             weights = self._weights.copy()
 
             if self._embedding_service:
@@ -247,6 +247,8 @@ class GroundingScorer:
                     has_embedding_score = False
                     semantic_sim = 0.0
                     weights = self._normalize_weights_without_embedding()
+            else:
+                weights = self._normalize_weights_without_embedding()
 
             combined_score = (
                 weights["source_score"] * candidate.source_score

@@ -213,6 +213,7 @@ class TestGroundingScorer:
         assert scored[0].semantic_similarity_score == 0.0
         assert "semantic similarity unavailable" in scored[0].match_rationale
 
+    @pytest.mark.asyncio
     async def test_weights_normalized_when_embedding_unavailable(self):
         """Test that weights are normalized when embedding service fails."""
         mock_embedding_service = AsyncMock()
