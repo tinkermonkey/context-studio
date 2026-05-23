@@ -917,3 +917,241 @@ class TestOpenRouterClearCache:
         provider.clear_cache()
 
         assert len(provider._response_cache) == 0
+
+
+@pytest.mark.llm
+class TestOpenRouterValidation:
+    """Tests for response structure validation."""
+
+    @staticmethod
+    def create_provider_with_mock_client():
+        """Create a provider with mocked HTTP client."""
+        provider = OpenRouterProvider(api_key="test-key")
+        provider._client = Mock(spec=httpx.Client)
+        return provider
+
+    def test_validation_response_not_dict(self):
+        """Validation raises RuntimeError when response is not a dict."""
+        provider = self.create_provider_with_mock_client()
+
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = "not a dict"
+        provider._client.post.return_value = mock_response
+
+        with pytest.raises(RuntimeError) as exc_info:
+            provider.complete(
+                system_prompt="sys",
+                user_prompt="user",
+                model="gpt-4",
+            )
+
+        assert "OpenRouter response is not a JSON object" in str(exc_info.value)
+
+    def test_validation_missing_choices_field(self):
+        """Validation raises RuntimeError when 'choices' field is missing."""
+        provider = self.create_provider_with_mock_client()
+
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "usage": {"prompt_tokens": 10, "completion_tokens": 20}
+        }
+        provider._client.post.return_value = mock_response
+
+        with pytest.raises(RuntimeError) as exc_info:
+            provider.complete(
+                system_prompt="sys",
+                user_prompt="user",
+                model="gpt-4",
+            )
+
+        assert "OpenRouter response missing 'choices' field" in str(exc_info.value)
+
+    def test_validation_choices_not_list(self):
+        """Validation raises RuntimeError when 'choices' is not a list."""
+        provider = self.create_provider_with_mock_client()
+
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "choices": "not a list",
+            "usage": {"prompt_tokens": 10, "completion_tokens": 20},
+        }
+        provider._client.post.return_value = mock_response
+
+        with pytest.raises(RuntimeError) as exc_info:
+            provider.complete(
+                system_prompt="sys",
+                user_prompt="user",
+                model="gpt-4",
+            )
+
+        assert "OpenRouter response 'choices' is empty or not a list" in str(exc_info.value)
+
+    def test_validation_choices_empty_list(self):
+        """Validation raises RuntimeError when 'choices' list is empty."""
+        provider = self.create_provider_with_mock_client()
+
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "choices": [],
+            "usage": {"prompt_tokens": 10, "completion_tokens": 20},
+        }
+        provider._client.post.return_value = mock_response
+
+        with pytest.raises(RuntimeError) as exc_info:
+            provider.complete(
+                system_prompt="sys",
+                user_prompt="user",
+                model="gpt-4",
+            )
+
+        assert "OpenRouter response 'choices' is empty or not a list" in str(exc_info.value)
+
+    def test_validation_choice_missing_message(self):
+        """Validation raises RuntimeError when choice is missing 'message' field."""
+        provider = self.create_provider_with_mock_client()
+
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "choices": [{"finish_reason": "stop"}],
+            "usage": {"prompt_tokens": 10, "completion_tokens": 20},
+        }
+        provider._client.post.return_value = mock_response
+
+        with pytest.raises(RuntimeError) as exc_info:
+            provider.complete(
+                system_prompt="sys",
+                user_prompt="user",
+                model="gpt-4",
+            )
+
+        assert "OpenRouter response choice missing 'message' field" in str(exc_info.value)
+
+    def test_validation_choice_message_not_dict(self):
+        """Validation raises RuntimeError when 'message' is not a dict."""
+        provider = self.create_provider_with_mock_client()
+
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "choices": [{"message": "not a dict", "finish_reason": "stop"}],
+            "usage": {"prompt_tokens": 10, "completion_tokens": 20},
+        }
+        provider._client.post.return_value = mock_response
+
+        with pytest.raises(RuntimeError) as exc_info:
+            provider.complete(
+                system_prompt="sys",
+                user_prompt="user",
+                model="gpt-4",
+            )
+
+        assert "OpenRouter response message missing 'content' field" in str(exc_info.value)
+
+    def test_validation_message_missing_content(self):
+        """Validation raises RuntimeError when message is missing 'content' field."""
+        provider = self.create_provider_with_mock_client()
+
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "choices": [{"message": {"role": "assistant"}, "finish_reason": "stop"}],
+            "usage": {"prompt_tokens": 10, "completion_tokens": 20},
+        }
+        provider._client.post.return_value = mock_response
+
+        with pytest.raises(RuntimeError) as exc_info:
+            provider.complete(
+                system_prompt="sys",
+                user_prompt="user",
+                model="gpt-4",
+            )
+
+        assert "OpenRouter response message missing 'content' field" in str(exc_info.value)
+
+    def test_validation_missing_usage_field(self):
+        """Validation raises RuntimeError when 'usage' field is missing."""
+        provider = self.create_provider_with_mock_client()
+
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "choices": [{"message": {"content": "response"}, "finish_reason": "stop"}]
+        }
+        provider._client.post.return_value = mock_response
+
+        with pytest.raises(RuntimeError) as exc_info:
+            provider.complete(
+                system_prompt="sys",
+                user_prompt="user",
+                model="gpt-4",
+            )
+
+        assert "OpenRouter response missing 'usage' field" in str(exc_info.value)
+
+    def test_validation_usage_not_dict(self):
+        """Validation raises RuntimeError when 'usage' is not a dict."""
+        provider = self.create_provider_with_mock_client()
+
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "choices": [{"message": {"content": "response"}, "finish_reason": "stop"}],
+            "usage": "not a dict",
+        }
+        provider._client.post.return_value = mock_response
+
+        with pytest.raises(RuntimeError) as exc_info:
+            provider.complete(
+                system_prompt="sys",
+                user_prompt="user",
+                model="gpt-4",
+            )
+
+        assert "OpenRouter response 'usage' is not a JSON object" in str(exc_info.value)
+
+    def test_validation_missing_prompt_tokens(self):
+        """Validation raises RuntimeError when 'prompt_tokens' is missing from usage."""
+        provider = self.create_provider_with_mock_client()
+
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "choices": [{"message": {"content": "response"}, "finish_reason": "stop"}],
+            "usage": {"completion_tokens": 20},
+        }
+        provider._client.post.return_value = mock_response
+
+        with pytest.raises(RuntimeError) as exc_info:
+            provider.complete(
+                system_prompt="sys",
+                user_prompt="user",
+                model="gpt-4",
+            )
+
+        assert "OpenRouter response usage missing token counts" in str(exc_info.value)
+
+    def test_validation_missing_completion_tokens(self):
+        """Validation raises RuntimeError when 'completion_tokens' is missing from usage."""
+        provider = self.create_provider_with_mock_client()
+
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "choices": [{"message": {"content": "response"}, "finish_reason": "stop"}],
+            "usage": {"prompt_tokens": 10},
+        }
+        provider._client.post.return_value = mock_response
+
+        with pytest.raises(RuntimeError) as exc_info:
+            provider.complete(
+                system_prompt="sys",
+                user_prompt="user",
+                model="gpt-4",
+            )
+
+        assert "OpenRouter response usage missing token counts" in str(exc_info.value)

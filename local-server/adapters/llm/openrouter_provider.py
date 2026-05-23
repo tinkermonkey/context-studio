@@ -213,6 +213,8 @@ class OpenRouterProvider:
             raise PipelineExternalServiceError(
                 f"External service error: {type(e).__name__}: {str(e)}"
             ) from e
+        except RuntimeError:
+            raise
         except Exception as e:
             logger.error(f"Unexpected error calling OpenRouter: {e}", exc_info=True)
             raise RuntimeError(f"Unexpected error: {type(e).__name__}: {e}")
