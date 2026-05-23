@@ -6,7 +6,6 @@ Create Date: 2026-05-23 05:14:01.749643
 
 """
 from alembic import op
-import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
@@ -39,6 +38,9 @@ def upgrade() -> None:
 
     # Recreate indices on batch_runs
     op.execute("CREATE INDEX idx_run_type_status ON batch_runs(run_type, status)")
+    op.execute("CREATE INDEX ix_batch_runs_created_at ON batch_runs(created_at)")
+    op.execute("CREATE INDEX ix_batch_runs_status ON batch_runs(status)")
+    op.execute("CREATE INDEX ix_batch_runs_run_type ON batch_runs(run_type)")
 
 
 def downgrade() -> None:
@@ -63,3 +65,6 @@ def downgrade() -> None:
 
     # Recreate indices on batch_runs
     op.execute("CREATE INDEX idx_run_type_status ON batch_runs(run_type, status)")
+    op.execute("CREATE INDEX ix_batch_runs_created_at ON batch_runs(created_at)")
+    op.execute("CREATE INDEX ix_batch_runs_status ON batch_runs(status)")
+    op.execute("CREATE INDEX ix_batch_runs_run_type ON batch_runs(run_type)")
