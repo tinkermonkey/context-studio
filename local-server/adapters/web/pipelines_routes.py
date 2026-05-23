@@ -340,7 +340,7 @@ async def run_pipeline(
         "refinement_config": config_version.config,
     }
 
-    # Instantiate orchestrator with dependencies (validates input schema early)
+    # Instantiate orchestrator with dependencies (validates service dependencies)
     try:
         orchestrator = create_orchestrator(
             orchestrator_class=impl_class,
