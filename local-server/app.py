@@ -108,6 +108,7 @@ from domain.pipelines.registry import (
     PipelineImplementationRegistry,
     PipelineTypeRegistry,
 )
+from domain.pipelines.schema_extraction.bootstrap import register_schema_extraction
 from domain.pipelines.schema_node_connection_refinement import (
     register_schema_node_connection_refinement,
 )
@@ -215,6 +216,7 @@ async def lifespan(app: FastAPI):
         llm_router = LLMProviderRouter(
             openai_api_key=settings.llm.openai_api_key,
             anthropic_api_key=settings.llm.anthropic_api_key,
+            openrouter_api_key=settings.llm.openrouter_api_key,
         )
         logger.info("LLM provider router created")
 
@@ -284,6 +286,13 @@ async def lifespan(app: FastAPI):
         )
         logger.info("Individual extraction pipeline registered")
 
+        # Register schema extraction pipeline implementation
+        register_schema_extraction(
+            impl_registry=implementation_registry,
+            config_registry=config_registry,
+        )
+        logger.info("Schema extraction pipeline registered")
+
         # Create schema node grounding orchestrator
         grounding_adapter = GroundingAdapter(
             dbpedia=DBpediaSource(),
@@ -298,7 +307,7 @@ async def lifespan(app: FastAPI):
                 "semantic_similarity": 0.4,
             },
         }
-        SchemaGroundingOrchestrator(
+        schema_grounding_orchestrator = SchemaGroundingOrchestrator(
             llm_provider=llm_router,
             grounding_adapter=grounding_adapter,
             scorer=grounding_scorer,
@@ -576,6 +585,9 @@ async def lifespan(app: FastAPI):
         app.state.implementation_registry = implementation_registry
         app.state.config_registry = config_registry
         app.state.type_registry = type_registry
+
+        # Store pipeline orchestrators
+        app.state.schema_grounding_orchestrator = schema_grounding_orchestrator
 
         # Store adapters needed for health checks
         app.state.nlp_processor = nlp_processor

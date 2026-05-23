@@ -101,6 +101,7 @@ class LLMConfig(BaseModel):
 
     openai_api_key: str = Field(default="", description="OpenAI API key")
     anthropic_api_key: str = Field(default="", description="Anthropic API key")
+    openrouter_api_key: str = Field(default="", description="OpenRouter API key")
 
     @model_validator(mode="after")
     def apply_env_fallbacks(self) -> "LLMConfig":
@@ -108,6 +109,8 @@ class LLMConfig(BaseModel):
             self.openai_api_key = os.environ.get("OPENAI_API_KEY", "")
         if not self.anthropic_api_key:
             self.anthropic_api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        if not self.openrouter_api_key:
+            self.openrouter_api_key = os.environ.get("OPENROUTER_API_KEY", "")
         return self
 
 
