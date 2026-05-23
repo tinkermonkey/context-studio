@@ -33,7 +33,6 @@ from pydantic import ValidationError
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
 from adapters.persistence.sqlite.models import Base
@@ -42,6 +41,7 @@ from adapters.web.extraction_routes import router
 from adapters.web.schemas.extraction import ExtractTripleResponse
 from domain.extraction.services import ExtractionService
 from domain.ontology.entities import Class, ConceptScheme, Taxonomy
+from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
@@ -113,7 +113,7 @@ def populated_repository(repository):
 def embedding_service():
     """Create embedding service for semantic search (session-scoped to reduce model load
     overhead)."""
-    return SentenceTransformerEmbedding(model_name="all-MiniLM-L12-v2")
+    return FakeEmbeddingService()
 
 
 @pytest.fixture
