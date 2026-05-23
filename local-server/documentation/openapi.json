@@ -3580,7 +3580,7 @@
           "pipelines"
         ],
         "summary": "Run Pipeline",
-        "description": "Invoke a pipeline by type.\n\nThe request body structure depends on the pipeline type. Supported types:\n- individual_extraction: requires text and ontology_id\n- schema_extraction: requires documents, optional scope\n- schema_node_grounding: requires nodes and sources\n- schema_node_definition_refinement: requires nodes, optional context\n- schema_node_connection_refinement: requires edges, optional strategy\n\nArgs:\n    pipeline_type: The pipeline type (e.g., individual_extraction)\n    request_body: Type-specific request payload\n    request: FastAPI request (for service access)\n\nReturns:\n    PipelineRunResponse with the created PipelineRun\n\nRaises:\n    HTTPException: 400 for invalid input, 404 for missing config/impl, 500 for execution errors",
+        "description": "Invoke a pipeline by type.\n\nThe request body structure depends on the pipeline type. Supported types:\n- individual_extraction: requires text and ontology_id\n- schema_extraction: requires documents, optional scope\n- schema_node_grounding: requires nodes and sources\n- schema_node_definition_refinement: requires nodes, optional context\n- schema_node_connection_refinement: requires edges, optional strategy\n\nCreates a pipeline run, executes it with the registered implementation,\nand returns the run with execution results.\n\nArgs:\n    pipeline_type: The pipeline type (e.g., individual_extraction)\n    request_body: Type-specific request payload\n    request: FastAPI request (for service access)\n\nReturns:\n    PipelineRunResponse with the executed PipelineRun\n\nRaises:\n    HTTPException: 400 for invalid input, 404 for missing config/impl, 500 for execution errors",
         "operationId": "run_pipeline_api_pipelines__pipeline_type__run_post",
         "parameters": [
           {
@@ -3653,6 +3653,53 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PipelineRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipelines/runs/{run_id}/candidates": {
+      "get": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Get Pipeline Candidates",
+        "description": "Retrieve candidates from a completed pipeline run.\n\nExtracts the full candidate list with provenance and confidence scores\nfrom the pipeline run's output. The structure of candidates depends on\nthe pipeline type:\n- schema_node_grounding: returns groundings with URI, label, confidence\n- schema_node_definition_refinement: returns definition candidates\n- schema_node_connection_refinement: returns connection candidates\n\nArgs:\n    run_id: The pipeline run ID\n    request: FastAPI request (for service access)\n\nReturns:\n    List of CandidateResponse objects with full provenance and confidence\n\nRaises:\n    HTTPException: 404 if run not found, 400 if run has no candidates",
+        "operationId": "get_pipeline_candidates_api_pipelines_runs__run_id__candidates_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CandidateResponse"
+                  },
+                  "title": "Response Get Pipeline Candidates Api Pipelines Runs  Run Id  Candidates Get"
                 }
               }
             }
@@ -6068,6 +6115,53 @@
           "file"
         ],
         "title": "Body_import_ontology_api_v1_interchange_import_post"
+      },
+      "CandidateResponse": {
+        "properties": {
+          "uri": {
+            "type": "string",
+            "title": "Uri",
+            "description": "Candidate URI or identifier"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Human-readable candidate label"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Candidate description or definition",
+            "default": ""
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "Source or database where candidate originates",
+            "default": ""
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "description": "Confidence score (0.0-1.0)"
+          },
+          "provenance": {
+            "type": "string",
+            "title": "Provenance",
+            "description": "Rationale or provenance for the candidate",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "uri",
+          "label",
+          "confidence"
+        ],
+        "title": "CandidateResponse",
+        "description": "Response containing a single candidate from a pipeline run.\n\nRepresents a candidate result from pipeline execution with full provenance\nand confidence information. Structure adapts based on pipeline type but\nmaintains a consistent interface."
       },
       "CentralityResponse": {
         "properties": {
