@@ -13,6 +13,7 @@ from adapters.web.schemas.pipelines import (
     SchemaGroundingRunRequest,
     SchemaDefinitionRefinementRunRequest,
     SchemaConnectionRefinementRunRequest,
+    PipelineRunRequest,
 )
 
 
@@ -187,3 +188,26 @@ class TestPipelineRunRequestExtraFieldPreservation:
         # Verify values match
         assert dumped["documents"] == documents
         assert dumped["scope"] == scope
+
+    def test_extra_fields_survive_base_class_model_dump(self) -> None:
+        """Test that extra fields survive model_dump() when instantiating base class directly.
+
+        This is the critical regression test: it verifies that PipelineRunRequest's
+        extra="allow" configuration preserves undeclared fields. When the route handler
+        receives a request as PipelineRunRequest (not a subclass), the type-specific
+        fields like 'text', 'ontology_id', etc. are "extra" fields. Without extra="allow",
+        they would be rejected or not preserved in model_dump().
+
+        This test FAILS if extra="allow" is removed from PipelineRunRequest.
+        """
+        request = PipelineRunRequest(
+            text="sample text",
+            ontology_id="test_ontology",
+            implementation_id="default",
+            configuration_ref="default",
+        )
+        dumped = request.model_dump()
+        assert "text" in dumped
+        assert dumped["text"] == "sample text"
+        assert "ontology_id" in dumped
+        assert dumped["ontology_id"] == "test_ontology"
