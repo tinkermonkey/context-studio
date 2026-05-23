@@ -105,6 +105,7 @@ class SchemaExtractionState(PipelineState):
     candidate_properties: list[CandidatePropertyDefinition] = field(default_factory=list)
     proposed_connections: list[CandidateConnection] = field(default_factory=list)
     steps_completed: list[str] = field(default_factory=list)
+    parse_warnings: list[dict[str, str]] = field(default_factory=list)
 
 
 class SchemaExtractionOrchestrator(PipelineOrchestrator):
@@ -229,7 +230,15 @@ Return a JSON array of strings (labels only). Example: ["Microservice", "Message
             parsed = json.loads(response.content)
             if isinstance(parsed, list):
                 candidates = [str(c).strip() for c in parsed if c]
-        except (json.JSONDecodeError, TypeError):
+        except json.JSONDecodeError as e:
+            # Record warning and fall back to regex extraction
+            warning = {
+                "stage": "candidate_identification",
+                "error": f"JSON parse error: {str(e)}",
+                "response_preview": response.content[:200],
+                "fallback_action": "regex extraction",
+            }
+            state = replace(state, parse_warnings=state.parse_warnings + [warning])
             # Fallback: extract all-caps words as candidates
             candidates = re.findall(r"\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b", state.normalized_text)
 
@@ -378,8 +387,15 @@ Return JSON:
                     provenance=provenance,
                 )
                 properties.append(prop_def)
-        except (json.JSONDecodeError, TypeError):
-            pass
+        except json.JSONDecodeError as e:
+            # Record warning but continue with empty connections
+            warning = {
+                "stage": "connection_proposal",
+                "error": f"JSON parse error: {str(e)}",
+                "response_preview": response.content[:200],
+                "fallback_action": "no connections extracted",
+            }
+            state = replace(state, parse_warnings=state.parse_warnings + [warning])
 
         return replace(
             state,
@@ -458,8 +474,15 @@ Return JSON:
                         + disambiguated_candidates
                         + disambiguated[original_idx + 1 :]
                     )
-        except (json.JSONDecodeError, TypeError):
-            pass
+        except json.JSONDecodeError as e:
+            # Record warning but continue without disambiguation
+            warning = {
+                "stage": "disambiguation",
+                "error": f"JSON parse error: {str(e)}",
+                "response_preview": response.content[:200],
+                "fallback_action": "skipping disambiguation",
+            }
+            state = replace(state, parse_warnings=state.parse_warnings + [warning])
 
         return replace(
             state,

@@ -330,6 +330,16 @@ async def run_pipeline(
         # Execute the pipeline
         result_state = await orchestrator.execute(state)
 
+        # Log any parse warnings from the execution
+        if hasattr(result_state, "parse_warnings") and result_state.parse_warnings:
+            for warning in result_state.parse_warnings:
+                _logger.warning(
+                    f"Parse warning in {warning.get('stage', 'unknown')} for run {run_id}: "
+                    f"{warning.get('error', 'unknown error')}. "
+                    f"Response preview: {warning.get('response_preview', 'N/A')}. "
+                    f"Fallback action: {warning.get('fallback_action', 'N/A')}"
+                )
+
         # Update run with execution results
         output_summary = result_state.result or {}
         repo.update_summaries(
