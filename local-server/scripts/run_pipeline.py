@@ -63,7 +63,6 @@ from adapters.reference.schema_org import SchemaOrgSource
 from adapters.reference.wikidata import WikidataSource
 from adapters.web.orchestrator_factory import create_orchestrator, create_pipeline_state
 from domain.extraction.services import ExtractionService
-from domain.pipeline.ports import LLMProvider
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,

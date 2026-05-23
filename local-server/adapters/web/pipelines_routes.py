@@ -38,7 +38,6 @@ from adapters.web.schemas.pipelines import (
     PipelineTypeResponse,
 )
 from domain.pipelines.entities import PipelineRun, PipelineRunStatus, PipelineType
-from domain.pipelines.orchestration.base import PipelineState
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
@@ -286,7 +285,7 @@ async def run_pipeline(
 
     # Create pipeline run in pending state
     run_id = str(uuid4())
-    run = repo.create(
+    repo.create(
         batch_run_id=run_id,
         pipeline_type=ptype,
         implementation_id=request_body.implementation_id,

@@ -7,7 +7,6 @@ and pipeline states based on pipeline type and available services.
 
 from typing import Any, Type
 
-from domain.extraction.services import ExtractionService
 from domain.pipeline.ports import LLMProvider
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.individual_extraction.orchestrator import IndividualExtractionOrchestrator
@@ -22,7 +21,6 @@ from domain.pipelines.schema_node_definition_refinement.orchestrator import (
     DefinitionRefinementOrchestrator,
 )
 from domain.pipelines.schema_node_grounding.orchestrator import SchemaGroundingOrchestrator
-from domain.pipelines.schema_node_grounding.scoring import GroundingScorer
 from utils.logger import get_logger
 
 _logger = get_logger(__name__)
