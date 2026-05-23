@@ -64,8 +64,8 @@ from adapters.reference.schema_org import SchemaOrgSource
 from adapters.reference.wikidata import WikidataSource
 from adapters.web.orchestrator_factory import create_orchestrator, create_pipeline_state
 from config import get_settings
-from domain.extraction.services import ExtractionService
 from domain.extraction.ports import ReferenceSource
+from domain.extraction.services import ExtractionService
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
