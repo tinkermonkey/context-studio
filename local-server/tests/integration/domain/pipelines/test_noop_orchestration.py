@@ -41,6 +41,29 @@ class MockLLMProvider:
             model=model,
         )
 
+    async def complete_async(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        model: str,
+        temperature: float = 0.0,
+        max_tokens: int = 2000,
+        response_format=None,
+        timeout=None,
+        seed=None,
+    ) -> LLMResponse:
+        """Return mock response (async version)."""
+        return self.complete(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            response_format=response_format,
+            timeout=timeout,
+            seed=seed,
+        )
+
     def is_model_available(self, model: str) -> bool:
         return True
 
