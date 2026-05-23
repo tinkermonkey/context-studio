@@ -12,6 +12,7 @@ from typing import Any, cast
 
 from adapters.reference.conceptnet import ConceptNetSource
 from adapters.reference.dbpedia import DBpediaSource
+from domain.pipeline.exceptions import PipelineExternalServiceError
 from domain.pipelines.schema_node_grounding.scoring import GroundingCandidate
 from utils.logger import get_logger
 
@@ -63,12 +64,16 @@ class GroundingAdapter:
 
         Returns:
             List of GroundingCandidate objects from all sources
+
+        Raises:
+            PipelineExternalServiceError: If all queried sources fail
         """
         if not label or not label.strip():
             return []
 
         active_sources = sources or list(self._sources.keys())
         queries = []
+        source_names = []
 
         for source_name in active_sources:
             if source_name not in self._sources:
@@ -77,6 +82,7 @@ class GroundingAdapter:
 
             source = self._sources[source_name]
             queries.append(self._query_single_source(label, source_name, source))
+            source_names.append(source_name)
 
         if not queries:
             return []
@@ -84,11 +90,23 @@ class GroundingAdapter:
         results = await asyncio.gather(*queries, return_exceptions=True)
 
         candidates: list[GroundingCandidate] = []
-        for result in results:
+        failures: dict[str, str] = {}
+
+        for source_name, result in zip(source_names, results):
             if isinstance(result, Exception):
-                logger.warning(f"Source query failed: {result}")
+                error_msg = str(result)
+                logger.warning(f"Source query failed for {source_name}: {error_msg}")
+                failures[source_name] = error_msg
                 continue
             candidates.extend(cast(list[GroundingCandidate], result))
+
+        if not candidates and failures:
+            error_details = "; ".join(
+                [f"{name}: {msg}" for name, msg in failures.items()]
+            )
+            raise PipelineExternalServiceError(
+                f"All grounding sources failed: {error_details}"
+            )
 
         return candidates
 
@@ -108,17 +126,16 @@ class GroundingAdapter:
 
         Returns:
             List of normalized GroundingCandidate objects
+
+        Raises:
+            Exception: If source query fails, propagates to caller for handling
         """
-        try:
-            if source_name == "DBpedia":
-                return await self._query_dbpedia(label, source)
-            elif source_name == "ConceptNet":
-                return await self._query_conceptnet(label, source)
-            else:
-                logger.warning(f"No query handler for source: {source_name}")
-                return []
-        except Exception as e:
-            logger.warning(f"Error querying {source_name}: {e}")
+        if source_name == "DBpedia":
+            return await self._query_dbpedia(label, source)
+        elif source_name == "ConceptNet":
+            return await self._query_conceptnet(label, source)
+        else:
+            logger.warning(f"No query handler for source: {source_name}")
             return []
 
     async def _query_dbpedia(

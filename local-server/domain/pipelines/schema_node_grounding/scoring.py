@@ -56,6 +56,7 @@ class ScoredCandidate:
         semantic_similarity_score: Score from embedding-based similarity [0.0, 1.0]
         match_confidence: Final combined confidence score in [0.0, 1.0]
         match_rationale: Human-readable explanation of score components
+        has_embedding_score: Whether semantic_similarity was successfully computed
     """
 
     uri: str
@@ -67,6 +68,7 @@ class ScoredCandidate:
     semantic_similarity_score: float
     match_confidence: float
     match_rationale: str
+    has_embedding_score: bool = True
 
 
 def compute_label_match_score(candidate_label: str, node_label: str) -> float:
@@ -182,6 +184,32 @@ class GroundingScorer:
         self._embedding_service = embedding_service
         self._error_callback = error_callback
 
+    def _normalize_weights_without_embedding(self) -> dict[str, float]:
+        """
+        Calculate normalized weights when embedding similarity is unavailable.
+
+        When embedding service fails, we exclude the semantic_similarity component
+        and redistribute its weight proportionally among the remaining components
+        to avoid artificially penalizing candidates.
+
+        Returns:
+            Normalized weights dict with semantic_similarity weight redistributed
+        """
+        without_embedding = {
+            "source_score": self._weights["source_score"],
+            "label_match": self._weights["label_match"],
+            "semantic_similarity": 0.0,
+        }
+        total = without_embedding["source_score"] + without_embedding["label_match"]
+        if total == 0:
+            return without_embedding
+
+        return {
+            "source_score": without_embedding["source_score"] / total,
+            "label_match": without_embedding["label_match"] / total,
+            "semantic_similarity": 0.0,
+        }
+
     async def score_candidates(
         self,
         candidates: list[GroundingCandidate],
@@ -205,6 +233,9 @@ class GroundingScorer:
             label_match = compute_label_match_score(candidate.label, node_label)
 
             semantic_sim = 0.0
+            has_embedding_score = True
+            weights = self._weights.copy()
+
             if self._embedding_service:
                 try:
                     semantic_sim = await self._embedding_service.similarity(
@@ -213,15 +244,19 @@ class GroundingScorer:
                 except Exception as e:
                     if self._error_callback:
                         self._error_callback(node_label, candidate.label, e)
+                    has_embedding_score = False
                     semantic_sim = 0.0
+                    weights = self._normalize_weights_without_embedding()
 
             combined_score = (
-                self._weights["source_score"] * candidate.source_score
-                + self._weights["label_match"] * label_match
-                + self._weights["semantic_similarity"] * semantic_sim
+                weights["source_score"] * candidate.source_score
+                + weights["label_match"] * label_match
+                + weights["semantic_similarity"] * semantic_sim
             )
 
             rationale = build_match_rationale(label_match, semantic_sim, candidate.source_score)
+            if not has_embedding_score:
+                rationale += "; semantic similarity unavailable"
 
             scored.append(
                 ScoredCandidate(
@@ -234,6 +269,7 @@ class GroundingScorer:
                     semantic_similarity_score=semantic_sim,
                     match_confidence=min(1.0, combined_score),
                     match_rationale=rationale,
+                    has_embedding_score=has_embedding_score,
                 )
             )
 

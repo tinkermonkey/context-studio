@@ -207,6 +207,43 @@ class TestGroundingScorer:
         assert call_args[1] == "Person"  # candidate_label
         assert call_args[2] is test_error  # exception
 
-        # Verify scoring proceeded with semantic_sim = 0.0
+        # Verify scoring proceeded with has_embedding_score=False
         assert len(scored) == 1
+        assert scored[0].has_embedding_score is False
         assert scored[0].semantic_similarity_score == 0.0
+        assert "semantic similarity unavailable" in scored[0].match_rationale
+
+    async def test_weights_normalized_when_embedding_unavailable(self):
+        """Test that weights are normalized when embedding service fails."""
+        mock_embedding_service = AsyncMock()
+        mock_embedding_service.similarity = AsyncMock(side_effect=ValueError("Service down"))
+
+        scorer = GroundingScorer(
+            weights={
+                "source_score": 0.3,
+                "label_match": 0.3,
+                "semantic_similarity": 0.4,
+            },
+            embedding_service=mock_embedding_service,
+            error_callback=Mock(),
+        )
+
+        # Create candidate with perfect label match
+        candidates = [
+            GroundingCandidate(
+                uri="http://example.com/person",
+                label="person",
+                description="A human being",
+                source="DBpedia",
+                source_score=0.8,
+            ),
+        ]
+
+        scored = await scorer.score_candidates(candidates, "person", NodeType.CLASS)
+
+        # With normalized weights (0.5 each for source_score and label_match):
+        # score = 0.5*0.8 + 0.5*1.0 = 0.4 + 0.5 = 0.9
+        # If weights were NOT normalized (0.3 + 0.3 + 0.4*0):
+        # score = 0.3*0.8 + 0.3*1.0 = 0.24 + 0.3 = 0.54
+        assert scored[0].match_confidence > 0.8
+        assert scored[0].has_embedding_score is False

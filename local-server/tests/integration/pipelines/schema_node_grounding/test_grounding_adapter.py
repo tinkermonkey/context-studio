@@ -106,8 +106,8 @@ class TestGroundingAdapter:
         assert candidates == []
 
     @pytest.mark.asyncio
-    async def test_query_sources_source_exception(self, mock_dbpedia, mock_conceptnet):
-        """Test exception handling when source query fails."""
+    async def test_query_sources_single_source_exception(self, mock_dbpedia, mock_conceptnet):
+        """Test exception handling when one source query fails."""
         mock_dbpedia.search_async = AsyncMock(side_effect=Exception("DBpedia error"))
         adapter = GroundingAdapter(dbpedia=mock_dbpedia, conceptnet=mock_conceptnet)
 
@@ -119,3 +119,20 @@ class TestGroundingAdapter:
         # ConceptNet should succeed even though DBpedia failed
         assert len(candidates) == 1
         assert candidates[0].source == "ConceptNet"
+
+    @pytest.mark.asyncio
+    async def test_query_sources_all_sources_fail(self, mock_dbpedia, mock_conceptnet):
+        """Test exception raised when all sources fail."""
+        from domain.pipeline.exceptions import PipelineExternalServiceError
+
+        mock_dbpedia.search_async = AsyncMock(side_effect=Exception("DBpedia error"))
+        mock_conceptnet.search_async = AsyncMock(side_effect=Exception("ConceptNet error"))
+        adapter = GroundingAdapter(dbpedia=mock_dbpedia, conceptnet=mock_conceptnet)
+
+        with pytest.raises(PipelineExternalServiceError) as exc_info:
+            await adapter.query_sources(
+                label="person",
+                sources=["DBpedia", "ConceptNet"],
+            )
+
+        assert "All grounding sources failed" in str(exc_info.value)
