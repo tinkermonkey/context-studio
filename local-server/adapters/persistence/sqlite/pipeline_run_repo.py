@@ -406,29 +406,24 @@ class PipelineRepository:
         elif isinstance(orm_obj, IndividualExtractionRun):
             return DomainIndividualExtractionRun(
                 **common,  # type: ignore[arg-type]
-                pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
                 source_text_hash=orm_obj.source_text_hash,  # type: ignore[arg-type]
                 source_document_uri=orm_obj.source_document_uri,  # type: ignore[arg-type]
             )
         elif isinstance(orm_obj, SchemaExtractionRun):
             return DomainSchemaExtractionRun(
                 **common,  # type: ignore[arg-type]
-                pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             )
         elif isinstance(orm_obj, SchemaGroundingRun):
             return DomainSchemaGroundingRun(
                 **common,  # type: ignore[arg-type]
-                pipeline_type=PipelineType.SCHEMA_NODE_GROUNDING,
             )
         elif isinstance(orm_obj, SchemaDefinitionRefinementRun):
             return DomainSchemaDefinitionRefinementRun(
                 **common,  # type: ignore[arg-type]
-                pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
             )
         elif isinstance(orm_obj, SchemaConnectionRefinementRun):
             return DomainSchemaConnectionRefinementRun(
                 **common,  # type: ignore[arg-type]
-                pipeline_type=PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,
             )
         else:
             # Fallback for unknown types (should not happen in practice)

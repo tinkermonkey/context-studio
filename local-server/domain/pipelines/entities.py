@@ -148,6 +148,7 @@ class IndividualExtractionRun(PipelineRun):
         All pipeline-shared fields (pipeline_type, implementation_id, configuration_ref, etc.)
     """
 
+    pipeline_type: PipelineType = field(default=PipelineType.INDIVIDUAL_EXTRACTION, init=False)
     source_text_hash: str = ""
     source_document_uri: str | None = None
 
@@ -180,7 +181,6 @@ class IndividualExtractionRun(PipelineRun):
         return cls(
             id=id,
             batch_run_id=batch_run_id,
-            pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id=implementation_id,
             configuration_ref=configuration_ref,
             input_summary={},
@@ -204,6 +204,8 @@ class SchemaExtractionRun(PipelineRun):
         All pipeline-shared fields
     """
 
+    pipeline_type: PipelineType = field(default=PipelineType.SCHEMA_EXTRACTION, init=False)
+
     @classmethod
     def create(  # type: ignore[override]
         cls,
@@ -217,7 +219,6 @@ class SchemaExtractionRun(PipelineRun):
         return cls(
             id=id,
             batch_run_id=batch_run_id,
-            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             implementation_id=implementation_id,
             configuration_ref=configuration_ref,
             input_summary={},
@@ -239,6 +240,8 @@ class SchemaGroundingRun(PipelineRun):
         All pipeline-shared fields
     """
 
+    pipeline_type: PipelineType = field(default=PipelineType.SCHEMA_NODE_GROUNDING, init=False)
+
     @classmethod
     def create(  # type: ignore[override]
         cls,
@@ -252,7 +255,6 @@ class SchemaGroundingRun(PipelineRun):
         return cls(
             id=id,
             batch_run_id=batch_run_id,
-            pipeline_type=PipelineType.SCHEMA_NODE_GROUNDING,
             implementation_id=implementation_id,
             configuration_ref=configuration_ref,
             input_summary={},
@@ -274,6 +276,8 @@ class SchemaDefinitionRefinementRun(PipelineRun):
         All pipeline-shared fields
     """
 
+    pipeline_type: PipelineType = field(default=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT, init=False)
+
     @classmethod
     def create(  # type: ignore[override]
         cls,
@@ -287,7 +291,6 @@ class SchemaDefinitionRefinementRun(PipelineRun):
         return cls(
             id=id,
             batch_run_id=batch_run_id,
-            pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
             implementation_id=implementation_id,
             configuration_ref=configuration_ref,
             input_summary={},
@@ -309,6 +312,8 @@ class SchemaConnectionRefinementRun(PipelineRun):
         All pipeline-shared fields
     """
 
+    pipeline_type: PipelineType = field(default=PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT, init=False)
+
     @classmethod
     def create(  # type: ignore[override]
         cls,
@@ -322,7 +327,6 @@ class SchemaConnectionRefinementRun(PipelineRun):
         return cls(
             id=id,
             batch_run_id=batch_run_id,
-            pipeline_type=PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,
             implementation_id=implementation_id,
             configuration_ref=configuration_ref,
             input_summary={},
