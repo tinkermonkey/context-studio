@@ -1408,7 +1408,11 @@ export interface paths {
     put?: never;
     /**
      * Extract Triples
-     * @description Extract RDF triples from text, scoped to a specific ontology.
+     * @deprecated
+     * @description [DEPRECATED] Extract RDF triples from text, scoped to a specific ontology.
+     *
+     *     **This endpoint is maintained for backward compatibility with Wave A code.**
+     *     **New code should use POST /api/pipelines/individual_extraction/run instead.**
      *
      *     This endpoint uses an LLM to extract subject-predicate-object triples
      *     from the input text, linking them to classes and individuals from a
@@ -1704,6 +1708,196 @@ export interface paths {
      *         HTTPException: 404 if configuration not found
      */
     get: operations["get_pipeline_executions_api_pipelines__pipeline_id__executions_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/types": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Pipeline Types
+     * @description List all registered pipeline types with input/output contracts.
+     *
+     *     Returns:
+     *         List of PipelineTypeResponse objects with type metadata
+     */
+    get: operations["list_pipeline_types_api_pipelines_types_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/types/{pipeline_type}/implementations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Implementations
+     * @description List all registered implementations for a pipeline type.
+     *
+     *     Args:
+     *         pipeline_type: The pipeline type (e.g., individual_extraction)
+     *         request: FastAPI request (for registry access)
+     *
+     *     Returns:
+     *         List of ImplementationResponse objects
+     *
+     *     Raises:
+     *         HTTPException: 400 if pipeline type is invalid
+     */
+    get: operations["list_implementations_api_pipelines_types__pipeline_type__implementations_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/types/{pipeline_type}/implementations/{impl_id}/configurations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Configurations
+     * @description List all configurations for a pipeline type and implementation.
+     *
+     *     Args:
+     *         pipeline_type: The pipeline type
+     *         impl_id: The implementation identifier
+     *         request: FastAPI request (for registry access)
+     *
+     *     Returns:
+     *         List of ConfigurationResponse objects
+     *
+     *     Raises:
+     *         HTTPException: 400 if pipeline type is invalid, 404 if implementation not found
+     */
+    get: operations["list_configurations_api_pipelines_types__pipeline_type__implementations__impl_id__configurations_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/{pipeline_type}/run": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Run Pipeline
+     * @description Invoke a pipeline by type.
+     *
+     *     The request body structure depends on the pipeline type. Supported types:
+     *     - individual_extraction: requires text and ontology_id
+     *     - schema_extraction: requires documents, optional scope
+     *     - schema_node_grounding: requires nodes and sources
+     *     - schema_node_definition_refinement: requires nodes, optional context
+     *     - schema_node_connection_refinement: requires edges, optional strategy
+     *
+     *     Args:
+     *         pipeline_type: The pipeline type (e.g., individual_extraction)
+     *         request_body: Type-specific request payload
+     *         request: FastAPI request (for service access)
+     *
+     *     Returns:
+     *         PipelineRunResponse with the created PipelineRun
+     *
+     *     Raises:
+     *         HTTPException: 400 for invalid input, 404 for missing config/impl, 500 for execution errors
+     */
+    post: operations["run_pipeline_api_pipelines__pipeline_type__run_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/runs/{run_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Pipeline Run
+     * @description Fetch a PipelineRun by ID.
+     *
+     *     Args:
+     *         run_id: The pipeline run ID
+     *         request: FastAPI request (for service access)
+     *
+     *     Returns:
+     *         PipelineRunResponse with the run details
+     *
+     *     Raises:
+     *         HTTPException: 404 if run not found
+     */
+    get: operations["get_pipeline_run_api_pipelines_runs__run_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/runs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Pipeline Runs
+     * @description List pipeline runs with optional filtering.
+     *
+     *     Results are returned in reverse chronological order (most recent first).
+     *
+     *     Args:
+     *         pipeline_type: Filter by pipeline type (optional)
+     *         status: Filter by status (pending, running, completed, failed, etc.)
+     *         implementation_id: Filter by implementation ID (optional)
+     *         start_date: Filter by start date (ISO 8601 format, optional)
+     *         end_date: Filter by end date (ISO 8601 format, optional)
+     *         limit: Maximum number of results (1-500, default 100)
+     *         offset: Number of results to skip for pagination (default 0)
+     *         request: FastAPI request (for service access)
+     *
+     *     Returns:
+     *         Paginated list of PipelineRunResponse objects with total count
+     *
+     *     Raises:
+     *         HTTPException: 400 for invalid filters
+     */
+    get: operations["list_pipeline_runs_api_pipelines_runs_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -3641,6 +3835,29 @@ export interface components {
       };
     };
     /**
+     * ConfigurationResponse
+     * @description Response containing configuration metadata.
+     */
+    ConfigurationResponse: {
+      /**
+       * Config Ref
+       * @description Configuration reference slug
+       */
+      config_ref: string;
+      /**
+       * Version
+       * @description Configuration version number
+       */
+      version: number;
+      /**
+       * Config
+       * @description Configuration data
+       */
+      config: {
+        [key: string]: unknown;
+      };
+    };
+    /**
      * ConflictReportResponse
      * @description Response with conflict detection results
      */
@@ -4546,6 +4763,22 @@ export interface components {
       detail?: components["schemas"]["ValidationError"][];
     };
     /**
+     * ImplementationResponse
+     * @description Response containing implementation metadata.
+     */
+    ImplementationResponse: {
+      /**
+       * Id
+       * @description Implementation identifier
+       */
+      id: string;
+      /**
+       * Pipeline Type
+       * @description Pipeline type for this implementation
+       */
+      pipeline_type: string;
+    };
+    /**
      * ImportConflictResponse
      * @description Represents a conflict detected during import.
      */
@@ -5021,6 +5254,29 @@ export interface components {
        * @description List of items
        */
       items: components["schemas"]["InterchangeChangeEventResponse"][];
+      /**
+       * Total
+       * @description Total number of items
+       */
+      total: number;
+      /**
+       * Limit
+       * @description Limit applied
+       */
+      limit: number;
+      /**
+       * Offset
+       * @description Offset applied
+       */
+      offset: number;
+    };
+    /** ListResponse[PipelineRunResponse] */
+    ListResponse_PipelineRunResponse_: {
+      /**
+       * Items
+       * @description List of items
+       */
+      items: components["schemas"]["PipelineRunResponse"][];
       /**
        * Total
        * @description Total number of items
@@ -5530,6 +5786,121 @@ export interface components {
             [key: string]: unknown;
           }[]
         | null;
+    };
+    /**
+     * PipelineRunRequest
+     * @description Base request to invoke a pipeline (polymorphic).
+     */
+    PipelineRunRequest: {
+      /**
+       * Implementation Id
+       * @description Implementation identifier (defaults to 'default')
+       * @default default
+       */
+      implementation_id: string;
+      /**
+       * Configuration Ref
+       * @description Configuration reference (defaults to 'default')
+       * @default default
+       */
+      configuration_ref: string;
+    };
+    /**
+     * PipelineRunResponse
+     * @description Response containing a PipelineRun.
+     */
+    PipelineRunResponse: {
+      /**
+       * Id
+       * @description Unique run ID
+       */
+      id: string;
+      /**
+       * Batch Run Id
+       * @description Batch run FK
+       */
+      batch_run_id: string;
+      /**
+       * Pipeline Type
+       * @description Pipeline type (discriminator)
+       */
+      pipeline_type: string;
+      /**
+       * Implementation Id
+       * @description Implementation ID
+       */
+      implementation_id: string;
+      /**
+       * Configuration Ref
+       * @description Configuration reference
+       */
+      configuration_ref: string;
+      /**
+       * Input Summary
+       * @description Input metadata
+       */
+      input_summary?: {
+        [key: string]: unknown;
+      };
+      /**
+       * Output Summary
+       * @description Output counts/metrics
+       */
+      output_summary?: {
+        [key: string]: unknown;
+      };
+      /**
+       * Llm Metadata
+       * @description LLM execution metadata
+       */
+      llm_metadata?: {
+        [key: string]: unknown;
+      };
+      /**
+       * Status
+       * @description Current status
+       */
+      status: string;
+      /**
+       * Created At
+       * @description Creation timestamp (reserved for future use)
+       */
+      created_at?: string | null;
+      /**
+       * Updated At
+       * @description Last update timestamp (reserved for future use)
+       */
+      updated_at?: string | null;
+    };
+    /**
+     * PipelineTypeResponse
+     * @description Response containing pipeline type metadata.
+     */
+    PipelineTypeResponse: {
+      /**
+       * Pipeline Type
+       * @description Pipeline type identifier
+       */
+      pipeline_type: string;
+      /**
+       * Description
+       * @description Human-readable description
+       */
+      description: string;
+      /**
+       * Input Contract
+       * @description Expected input schema
+       */
+      input_contract: {
+        [key: string]: unknown;
+      };
+      /**
+       * Output Contract
+       * @description Expected output schema
+       */
+      output_contract: {
+        [key: string]: unknown;
+      };
     };
     /**
      * PredicateNode
@@ -8721,6 +9092,199 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ExecutionResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_pipeline_types_api_pipelines_types_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PipelineTypeResponse"][];
+        };
+      };
+    };
+  };
+  list_implementations_api_pipelines_types__pipeline_type__implementations_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        pipeline_type: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ImplementationResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_configurations_api_pipelines_types__pipeline_type__implementations__impl_id__configurations_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        pipeline_type: string;
+        impl_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ConfigurationResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  run_pipeline_api_pipelines__pipeline_type__run_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        pipeline_type: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PipelineRunRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PipelineRunResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_pipeline_run_api_pipelines_runs__run_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PipelineRunResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_pipeline_runs_api_pipelines_runs_get: {
+    parameters: {
+      query?: {
+        /** @description Filter by pipeline type */
+        pipeline_type?: string | null;
+        /** @description Filter by status */
+        status?: string | null;
+        /** @description Filter by implementation ID */
+        implementation_id?: string | null;
+        /** @description Filter by start date (ISO 8601 format) */
+        start_date?: string | null;
+        /** @description Filter by end date (ISO 8601 format) */
+        end_date?: string | null;
+        /** @description Maximum number of results */
+        limit?: number;
+        /** @description Number of results to skip */
+        offset?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListResponse_PipelineRunResponse_"];
         };
       };
       /** @description Validation Error */
