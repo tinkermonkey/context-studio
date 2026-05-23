@@ -27,7 +27,7 @@ from uuid import uuid4
 from fastapi import APIRouter, Body, HTTPException, Query, Request
 from fastapi import status as http_status
 
-from adapters.web.orchestrator_factory import create_orchestrator
+from adapters.web.orchestrator_factory import create_orchestrator, create_pipeline_state
 from adapters.web.schemas.ontology import ListResponse
 from adapters.web.schemas.pipelines import (
     CandidateResponse,
@@ -52,106 +52,6 @@ _logger = get_logger(__name__)
 
 
 # ==================== Helper Functions ====================
-
-
-def _create_pipeline_state(
-    run_id: str,
-    pipeline_type: PipelineType,
-    input_data: dict[str, Any],
-    llm_provider: Any,
-) -> PipelineState:
-    """
-    Create a pipeline state for the given pipeline type.
-
-    Different pipeline types may require different state subclasses.
-    This helper creates the appropriate state type based on the pipeline type.
-
-    Args:
-        run_id: Pipeline run ID
-        pipeline_type: Type of pipeline
-        input_data: Input data dict
-        llm_provider: LLM provider instance
-
-    Returns:
-        PipelineState instance (or appropriate subclass)
-    """
-    # Import here to avoid circular dependencies
-    if pipeline_type == PipelineType.NO_OP:
-        from domain.pipelines.orchestration.noop import NoOpPipelineState
-        return NoOpPipelineState(
-            run_id=run_id,
-            pipeline_type=pipeline_type,
-            input_data=input_data,
-            current_status="pending",
-            llm_provider=llm_provider,
-            result=None,
-        )
-    elif pipeline_type == PipelineType.SCHEMA_EXTRACTION:
-        from domain.pipelines.schema_extraction.orchestrator import SchemaExtractionState
-        return SchemaExtractionState(
-            run_id=run_id,
-            pipeline_type=pipeline_type,
-            input_data=input_data,
-            current_status="pending",
-            llm_provider=llm_provider,
-            result=None,
-        )
-    elif pipeline_type == PipelineType.SCHEMA_NODE_GROUNDING:
-        from domain.pipelines.schema_node_grounding.orchestrator import SchemaGroundingState
-        return SchemaGroundingState(
-            run_id=run_id,
-            pipeline_type=pipeline_type,
-            input_data=input_data,
-            current_status="pending",
-            llm_provider=llm_provider,
-            result=None,
-        )
-    elif pipeline_type == PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT:
-        from domain.pipelines.schema_node_definition_refinement.orchestrator import (
-            DefinitionRefinementState,
-        )
-        return DefinitionRefinementState(
-            run_id=run_id,
-            pipeline_type=pipeline_type,
-            input_data=input_data,
-            current_status="pending",
-            llm_provider=llm_provider,
-            result=None,
-        )
-    elif pipeline_type == PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT:
-        from domain.pipelines.schema_node_connection_refinement.orchestrator import (
-            ConnectionRefinementState,
-        )
-        return ConnectionRefinementState(
-            run_id=run_id,
-            pipeline_type=pipeline_type,
-            input_data=input_data,
-            current_status="pending",
-            llm_provider=llm_provider,
-            result=None,
-        )
-    elif pipeline_type == PipelineType.INDIVIDUAL_EXTRACTION:
-        from domain.pipelines.individual_extraction.orchestrator import (
-            IndividualExtractionState,
-        )
-        return IndividualExtractionState(
-            run_id=run_id,
-            pipeline_type=pipeline_type,
-            input_data=input_data,
-            current_status="pending",
-            llm_provider=llm_provider,
-            result=None,
-        )
-    else:
-        # Fallback to base state for unknown types
-        return PipelineState(
-            run_id=run_id,
-            pipeline_type=pipeline_type,
-            input_data=input_data,
-            current_status="pending",
-            llm_provider=llm_provider,
-            result=None,
-        )
 
 
 def _get_grounding_config(config: dict[str, Any]) -> dict[str, Any]:
@@ -409,7 +309,6 @@ async def run_pipeline(
         try:
             orchestrator = create_orchestrator(
                 orchestrator_class=impl_class,
-                pipeline_type=ptype,
                 llm_provider=llm_provider,
                 services=services,
             )
@@ -423,9 +322,7 @@ async def run_pipeline(
         input_data = request_body.model_dump()
 
         # Create initial state for execution
-        # The orchestrator may expect a specific state subclass; we provide the base class
-        # and the orchestrator will cast/extend it as needed
-        state = _create_pipeline_state(
+        state = create_pipeline_state(
             run_id=run_id,
             pipeline_type=ptype,
             input_data=input_data,
@@ -454,6 +351,8 @@ async def run_pipeline(
 
         return _to_response(updated_run)
 
+    except HTTPException:
+        raise
     except Exception as exc:
         # Update run with error status
         _logger.error(f"Pipeline execution failed for run {run_id}: {exc}", exc_info=exc)
@@ -548,19 +447,10 @@ async def get_pipeline_candidates(
         candidates_key = "candidates"
     elif run.pipeline_type == PipelineType.INDIVIDUAL_EXTRACTION:
         candidates_key = "triples"
+    # NO_OP and SCHEMA_EXTRACTION pipelines don't produce candidates, return empty list
 
     if candidates_key and candidates_key in output_summary:
         candidates_data = output_summary[candidates_key]
-    elif output_summary:
-        raise HTTPException(
-            status_code=http_status.HTTP_400_BAD_REQUEST,
-            detail=f"Pipeline run {run_id} has no candidates or is not a candidate-producing pipeline type",
-        )
-    else:
-        raise HTTPException(
-            status_code=http_status.HTTP_400_BAD_REQUEST,
-            detail=f"Pipeline run {run_id} has not completed or produced no output",
-        )
 
     # Convert candidate dicts to response schema
     return [

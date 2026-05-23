@@ -49,6 +49,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
+from adapters.llm.anthropic_provider import AnthropicProvider
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
 from adapters.persistence.sqlite.connection import DatabaseManager
 from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
@@ -60,13 +61,10 @@ from adapters.reference.dbpedia import DBpediaSource
 from adapters.reference.grounding import GroundingAdapter
 from adapters.reference.schema_org import SchemaOrgSource
 from adapters.reference.wikidata import WikidataSource
+from adapters.web.orchestrator_factory import create_orchestrator, create_pipeline_state
 from domain.extraction.services import ExtractionService
-from domain.llm.providers.anthropic import AnthropicProvider
-from domain.llm.providers.openai_provider import OpenAIProvider
-from domain.llm.providers.openrouter import OpenRouterProvider
 from domain.pipeline.ports import LLMProvider
 from domain.pipelines.entities import PipelineType
-from domain.pipelines.orchestration.base import PipelineState
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
@@ -242,22 +240,18 @@ def main() -> int:
 
         # Instantiate and execute implementation
         _logger.info("Instantiating implementation...")
-        from adapters.web.orchestrator_factory import create_orchestrator
         orchestrator = create_orchestrator(
             orchestrator_class=impl_class,
-            pipeline_type=ptype,
             llm_provider=llm_provider,
             services=services,
         )
 
         # Create pipeline state with input data
-        state = PipelineState(
+        state = create_pipeline_state(
             run_id="script-run",
             pipeline_type=ptype,
             input_data=input_data,
-            current_status="pending",
             llm_provider=llm_provider,
-            result=None,
         )
 
         _logger.info("Executing pipeline...")

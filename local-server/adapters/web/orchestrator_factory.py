@@ -1,9 +1,8 @@
 """
 Factory for instantiating pipeline orchestrators with proper dependency injection.
 
-This module provides a factory function that instantiates orchestrators
-based on pipeline type and available services. Orchestrators require
-different dependencies depending on their implementation.
+This module provides factory functions that instantiate orchestrators
+and pipeline states based on pipeline type and available services.
 """
 
 from typing import Any, Type
@@ -12,7 +11,7 @@ from domain.extraction.services import ExtractionService
 from domain.pipeline.ports import LLMProvider
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.individual_extraction.orchestrator import IndividualExtractionOrchestrator
-from domain.pipelines.orchestration.base import PipelineOrchestrator
+from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
 from domain.pipelines.orchestration.noop import NoOpPipelineOrchestrator
 from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 from domain.pipelines.schema_extraction.orchestrator import SchemaExtractionOrchestrator
@@ -31,7 +30,6 @@ _logger = get_logger(__name__)
 
 def create_orchestrator(
     orchestrator_class: Type[PipelineOrchestrator],
-    pipeline_type: PipelineType,
     llm_provider: LLMProvider,
     services: dict[str, Any] | None = None,
 ) -> PipelineOrchestrator:
@@ -43,7 +41,6 @@ def create_orchestrator(
 
     Args:
         orchestrator_class: The orchestrator class to instantiate
-        pipeline_type: The pipeline type (for routing logic)
         llm_provider: LLM provider for completions
         services: Dict of available services (extraction_service, grounding_adapter, etc.)
 
@@ -119,3 +116,101 @@ def create_orchestrator(
 
     else:
         raise ValueError(f"Unknown orchestrator class: {orchestrator_class.__name__}")
+
+
+def create_pipeline_state(
+    run_id: str,
+    pipeline_type: PipelineType,
+    input_data: dict[str, Any],
+    llm_provider: Any,
+) -> PipelineState:
+    """
+    Create a pipeline state for the given pipeline type.
+
+    Different pipeline types require different state subclasses.
+    This factory creates the appropriate state type based on the pipeline type.
+
+    Args:
+        run_id: Pipeline run ID
+        pipeline_type: Type of pipeline
+        input_data: Input data dict
+        llm_provider: LLM provider instance
+
+    Returns:
+        PipelineState instance (or appropriate subclass)
+    """
+    if pipeline_type == PipelineType.NO_OP:
+        from domain.pipelines.orchestration.noop import NoOpPipelineState
+        return NoOpPipelineState(
+            run_id=run_id,
+            pipeline_type=pipeline_type,
+            input_data=input_data,
+            current_status="pending",
+            llm_provider=llm_provider,
+            result=None,
+        )
+    elif pipeline_type == PipelineType.SCHEMA_EXTRACTION:
+        from domain.pipelines.schema_extraction.orchestrator import SchemaExtractionState
+        return SchemaExtractionState(
+            run_id=run_id,
+            pipeline_type=pipeline_type,
+            input_data=input_data,
+            current_status="pending",
+            llm_provider=llm_provider,
+            result=None,
+        )
+    elif pipeline_type == PipelineType.SCHEMA_NODE_GROUNDING:
+        from domain.pipelines.schema_node_grounding.orchestrator import SchemaGroundingState
+        return SchemaGroundingState(
+            run_id=run_id,
+            pipeline_type=pipeline_type,
+            input_data=input_data,
+            current_status="pending",
+            llm_provider=llm_provider,
+            result=None,
+        )
+    elif pipeline_type == PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT:
+        from domain.pipelines.schema_node_definition_refinement.orchestrator import (
+            DefinitionRefinementState,
+        )
+        return DefinitionRefinementState(
+            run_id=run_id,
+            pipeline_type=pipeline_type,
+            input_data=input_data,
+            current_status="pending",
+            llm_provider=llm_provider,
+            result=None,
+        )
+    elif pipeline_type == PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT:
+        from domain.pipelines.schema_node_connection_refinement.orchestrator import (
+            ConnectionRefinementState,
+        )
+        return ConnectionRefinementState(
+            run_id=run_id,
+            pipeline_type=pipeline_type,
+            input_data=input_data,
+            current_status="pending",
+            llm_provider=llm_provider,
+            result=None,
+        )
+    elif pipeline_type == PipelineType.INDIVIDUAL_EXTRACTION:
+        from domain.pipelines.individual_extraction.orchestrator import (
+            IndividualExtractionState,
+        )
+        return IndividualExtractionState(
+            run_id=run_id,
+            pipeline_type=pipeline_type,
+            input_data=input_data,
+            current_status="pending",
+            llm_provider=llm_provider,
+            result=None,
+        )
+    else:
+        return PipelineState(
+            run_id=run_id,
+            pipeline_type=pipeline_type,
+            input_data=input_data,
+            current_status="pending",
+            llm_provider=llm_provider,
+            result=None,
+        )

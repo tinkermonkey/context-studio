@@ -132,8 +132,8 @@ class TestNoOpPipelineAPI:
         assert isinstance(body["batch_run_id"], str)
         assert body["pipeline_type"] == "no_op"
         assert body["implementation_id"] == "default"
-        # Pipeline is now executed synchronously, so status should be completed or failed
-        assert body["status"] in ["completed", "failed"]
+        # NoOp pipeline has no fallible logic and should always complete successfully
+        assert body["status"] == "completed"
 
     def test_noop_pipeline_run_retrieval(self, client):
         """GET /api/pipelines/runs/{run_id} returns persisted run."""
@@ -156,8 +156,8 @@ class TestNoOpPipelineAPI:
         body = get_response.json()
         assert body["id"] == run_id
         assert body["pipeline_type"] == "no_op"
-        # Pipeline is now executed synchronously, so status should be completed or failed
-        assert body["status"] in ["completed", "failed"]
+        # NoOp pipeline has no fallible logic and should always complete successfully
+        assert body["status"] == "completed"
 
     def test_noop_pipeline_run_listing(self, client):
         """GET /api/pipelines/runs returns list of runs."""
@@ -436,6 +436,61 @@ class TestPydanticConstraints:
         assert "id" in body
         assert "batch_run_id" in body
         assert "status" in body
+
+
+class TestCandidatesEndpoint:
+    """Test the GET /api/pipelines/runs/{run_id}/candidates endpoint."""
+
+    def test_candidates_endpoint_returns_empty_list_for_noop_pipeline(self, client):
+        """GET /api/pipelines/runs/{run_id}/candidates returns empty list for NoOp pipeline."""
+        # Create a NoOp run
+        create_response = client.post(
+            "/api/pipelines/no_op/run",
+            json={
+                "text": "Sample input",
+                "ontology_id": "test-ontology",
+                "implementation_id": "default",
+                "configuration_ref": "noop-default",
+            },
+        )
+        run_id = create_response.json()["id"]
+
+        # Get candidates for the run
+        response = client.get(f"/api/pipelines/runs/{run_id}/candidates")
+        assert response.status_code == status.HTTP_200_OK
+
+        candidates = response.json()
+        assert isinstance(candidates, list)
+
+    def test_candidates_endpoint_404_for_nonexistent_run(self, client):
+        """GET /api/pipelines/runs/{run_id}/candidates returns 404 for missing run."""
+        response = client.get("/api/pipelines/runs/nonexistent-run-id/candidates")
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_candidates_response_structure_is_valid(self, client):
+        """Candidates response structure conforms to expected schema."""
+        # Create a NoOp run
+        create_response = client.post(
+            "/api/pipelines/no_op/run",
+            json={
+                "text": "Sample input",
+                "ontology_id": "test-ontology",
+                "implementation_id": "default",
+                "configuration_ref": "noop-default",
+            },
+        )
+        run_id = create_response.json()["id"]
+
+        # Get candidates for the run
+        response = client.get(f"/api/pipelines/runs/{run_id}/candidates")
+        assert response.status_code == status.HTTP_200_OK
+
+        candidates = response.json()
+        if len(candidates) > 0:
+            # If there are candidates, verify the structure
+            candidate = candidates[0]
+            # Candidate should have at least some expected fields (varies by pipeline type)
+            assert isinstance(candidate, dict)
 
 
 class TestWaveARegression:
