@@ -36,6 +36,7 @@ from adapters.web.schemas.pipelines import (
     PipelineRunResponse,
     PipelineTypeResponse,
 )
+from domain.pipeline.exceptions import PipelineStorageError
 from domain.pipelines.entities import PipelineRun, PipelineRunStatus, PipelineType
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
@@ -52,24 +53,22 @@ _logger = get_logger(__name__)
 # ==================== Helper Functions ====================
 
 
-def _handle_repository_error(exc: Exception) -> tuple[int, str]:
+def _handle_domain_error(exc: Exception) -> tuple[int, str]:
     """
-    Map repository exceptions to HTTP status codes and error messages.
-
-    Converts RuntimeError from database operations to appropriate HTTP responses,
-    suppressing internal database details.
+    Map domain exceptions to HTTP status codes and error messages.
 
     Args:
-        exc: The repository exception
+        exc: The domain exception
 
     Returns:
-        Tuple of (HTTP status code, error message for client)
+        Tuple of (status_code, error_message)
     """
-    if isinstance(exc, RuntimeError):
-        if "database" in str(exc).lower():
-            return (http_status.HTTP_500_INTERNAL_SERVER_ERROR, "Database operation failed")
-    _logger.error(f"Unexpected repository error: {exc}", exc_info=exc)
-    return (http_status.HTTP_500_INTERNAL_SERVER_ERROR, "An unexpected error occurred")
+    if isinstance(exc, PipelineStorageError):
+        _logger.error(f"Pipeline storage error: {exc}", exc_info=exc)
+        return (http_status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to persist pipeline state")
+    else:
+        _logger.error(f"Unexpected error in pipeline endpoint: {exc}", exc_info=exc)
+        return (http_status.HTTP_500_INTERNAL_SERVER_ERROR, "An unexpected error occurred")
 
 
 def _get_grounding_config(config: dict[str, Any]) -> dict[str, Any]:
@@ -311,8 +310,8 @@ async def run_pipeline(
             implementation_id=request_body.implementation_id,
             configuration_ref=request_body.configuration_ref,
         )
-    except RuntimeError as e:
-        status_code, message = _handle_repository_error(e)
+    except PipelineStorageError as e:
+        status_code, message = _handle_domain_error(e)
         raise HTTPException(status_code=status_code, detail=message) from e
 
     try:
@@ -374,8 +373,8 @@ async def run_pipeline(
                 llm_metadata={},
             )
             repo.update_status(run_id, PipelineRunStatus.COMPLETED)
-        except RuntimeError as e:
-            status_code, message = _handle_repository_error(e)
+        except PipelineStorageError as e:
+            status_code, message = _handle_domain_error(e)
             raise HTTPException(status_code=status_code, detail=message) from e
 
         # Fetch updated run for response
@@ -393,7 +392,7 @@ async def run_pipeline(
         try:
             repo.update_status(run_id, PipelineRunStatus.FAILED)
             repo.update_summaries(run_id=run_id, output_summary={"error": str(exc)})
-        except RuntimeError as db_err:
+        except PipelineStorageError as db_err:
             _logger.error(f"Failed to update run status after execution error: {db_err}")
 
         raise HTTPException(

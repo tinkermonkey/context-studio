@@ -3,17 +3,21 @@ Integration tests for PipelineRepository
 
 Tests persistence and retrieval of pipeline runs in SQLite.
 Tests change_events correlation with batch_run_id.
+Tests error handling for database operations.
 """
 
 from datetime import datetime, timezone
+from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 import pytest
 from sqlalchemy import create_engine
+from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 
 from adapters.persistence.sqlite.models import Base, ChangeEvent
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
+from domain.pipeline.exceptions import PipelineStorageError
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 
 
@@ -276,6 +280,99 @@ class TestPipelineRepositoryChangeEvents:
         event_ids = [e["entity_id"] for e in events]
         assert "class-123" in event_ids
         assert "class-456" in event_ids
+
+
+class TestPipelineRepositoryErrorHandling:
+    """Tests for error handling in PipelineRepository."""
+
+    def test_create_raises_storage_error_on_integrity_error(self, db_session):
+        """Test that IntegrityError is caught and converted to PipelineStorageError."""
+        repo = PipelineRepository(db_session)
+        batch_id = str(uuid4())
+
+        # Mock session.commit to raise IntegrityError
+        with patch.object(db_session, 'commit', side_effect=IntegrityError("constraint", "params", "orig")):
+            with pytest.raises(PipelineStorageError, match="Failed to create pipeline run"):
+                repo.create(
+                    batch_run_id=batch_id,
+                    pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+                    implementation_id="impl-default",
+                    configuration_ref="config-default",
+                    specific_data={"source_text_hash": "hash123"},
+                )
+
+    def test_create_raises_storage_error_on_operational_error(self, db_session):
+        """Test that OperationalError is caught and converted to PipelineStorageError."""
+        repo = PipelineRepository(db_session)
+        batch_id = str(uuid4())
+
+        # Mock session.commit to raise OperationalError
+        with patch.object(db_session, 'commit', side_effect=OperationalError("statement", "params", "orig")):
+            with pytest.raises(PipelineStorageError, match="Failed to create pipeline run"):
+                repo.create(
+                    batch_run_id=batch_id,
+                    pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+                    implementation_id="impl-default",
+                    configuration_ref="config-default",
+                    specific_data={"source_text_hash": "hash123"},
+                )
+
+    def test_create_raises_storage_error_on_sqlalchemy_error(self, db_session):
+        """Test that SQLAlchemyError is caught and converted to PipelineStorageError."""
+        repo = PipelineRepository(db_session)
+        batch_id = str(uuid4())
+
+        # Mock session.commit to raise SQLAlchemyError
+        with patch.object(db_session, 'commit', side_effect=SQLAlchemyError("error")):
+            with pytest.raises(PipelineStorageError, match="Failed to create pipeline run"):
+                repo.create(
+                    batch_run_id=batch_id,
+                    pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+                    implementation_id="impl-default",
+                    configuration_ref="config-default",
+                    specific_data={"source_text_hash": "hash123"},
+                )
+
+    def test_update_status_raises_storage_error_on_integrity_error(self, db_session):
+        """Test that update_status catches IntegrityError and raises PipelineStorageError."""
+        repo = PipelineRepository(db_session)
+        batch_id = str(uuid4())
+
+        # Create a run first
+        run = repo.create(
+            batch_run_id=batch_id,
+            pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+            implementation_id="impl-default",
+            configuration_ref="config-default",
+            specific_data={"source_text_hash": "hash123"},
+        )
+
+        # Mock session.commit to raise IntegrityError
+        with patch.object(db_session, 'commit', side_effect=IntegrityError("constraint", "params", "orig")):
+            with pytest.raises(PipelineStorageError, match="Failed to update pipeline run status"):
+                repo.update_status(run.id, PipelineRunStatus.RUNNING)
+
+    def test_update_summaries_raises_storage_error_on_operational_error(self, db_session):
+        """Test that update_summaries catches OperationalError and raises PipelineStorageError."""
+        repo = PipelineRepository(db_session)
+        batch_id = str(uuid4())
+
+        # Create a run first
+        run = repo.create(
+            batch_run_id=batch_id,
+            pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+            implementation_id="impl-default",
+            configuration_ref="config-default",
+            specific_data={"source_text_hash": "hash123"},
+        )
+
+        # Mock session.commit to raise OperationalError
+        with patch.object(db_session, 'commit', side_effect=OperationalError("statement", "params", "orig")):
+            with pytest.raises(PipelineStorageError, match="Failed to update pipeline run summaries"):
+                repo.update_summaries(
+                    run.id,
+                    output_summary={"result": "data"},
+                )
 
 
 if __name__ == "__main__":

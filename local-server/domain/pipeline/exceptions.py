@@ -19,3 +19,9 @@ class LayerExecutionError(PipelineError):
     """Raised when a pipeline layer execution fails."""
 
     pass
+
+
+class PipelineStorageError(PipelineError):
+    """Raised when a database operation for pipeline runs fails."""
+
+    pass

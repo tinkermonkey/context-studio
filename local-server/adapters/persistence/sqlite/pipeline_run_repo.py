@@ -22,6 +22,7 @@ from adapters.persistence.sqlite.models import (
     SchemaExtractionRun,
     SchemaGroundingRun,
 )
+from domain.pipeline.exceptions import PipelineStorageError
 from domain.pipelines.entities import (
     IndividualExtractionRun as DomainIndividualExtractionRun,
 )
@@ -129,6 +130,7 @@ class PipelineRepository:
 
         Raises:
             ValueError: If pipeline_type is invalid
+            PipelineStorageError: If database operation fails
         """
         orm_class = _PIPELINE_TYPE_TO_ORM.get(pipeline_type)
         if not orm_class:
@@ -159,13 +161,16 @@ class PipelineRepository:
             return result
         except IntegrityError as e:
             session.rollback()
-            raise RuntimeError(f"Failed to create pipeline run: integrity constraint violated") from e
+            logger.error(f"Database integrity error when creating pipeline run {batch_run_id}: {e}")
+            raise PipelineStorageError("Failed to create pipeline run") from e
         except OperationalError as e:
             session.rollback()
-            raise RuntimeError(f"Failed to create pipeline run: database operational error") from e
+            logger.error(f"Database operational error when creating pipeline run {batch_run_id}: {e}")
+            raise PipelineStorageError("Failed to create pipeline run") from e
         except SQLAlchemyError as e:
             session.rollback()
-            raise RuntimeError(f"Failed to create pipeline run: database error") from e
+            logger.error(f"Database error when creating pipeline run {batch_run_id}: {e}")
+            raise PipelineStorageError("Failed to create pipeline run") from e
         finally:
             if self._should_close_session():
                 session.close()
@@ -257,7 +262,7 @@ class PipelineRepository:
             True if updated, False if not found
 
         Raises:
-            RuntimeError: If database operation fails
+            PipelineStorageError: If database operation fails
         """
         session = self._get_session()
         try:
@@ -271,13 +276,16 @@ class PipelineRepository:
             return True
         except IntegrityError as e:
             session.rollback()
-            raise RuntimeError(f"Failed to update pipeline run status: integrity constraint violated") from e
+            logger.error(f"Database integrity error when updating pipeline run {run_id}: {e}")
+            raise PipelineStorageError("Failed to update pipeline run status") from e
         except OperationalError as e:
             session.rollback()
-            raise RuntimeError(f"Failed to update pipeline run status: database operational error") from e
+            logger.error(f"Database operational error when updating pipeline run {run_id}: {e}")
+            raise PipelineStorageError("Failed to update pipeline run status") from e
         except SQLAlchemyError as e:
             session.rollback()
-            raise RuntimeError(f"Failed to update pipeline run status: database error") from e
+            logger.error(f"Database error when updating pipeline run {run_id}: {e}")
+            raise PipelineStorageError("Failed to update pipeline run status") from e
         finally:
             if self._should_close_session():
                 session.close()
@@ -302,7 +310,7 @@ class PipelineRepository:
             True if updated, False if not found
 
         Raises:
-            RuntimeError: If database operation fails
+            PipelineStorageError: If database operation fails
         """
         session = self._get_session()
         try:
@@ -323,13 +331,16 @@ class PipelineRepository:
             return True
         except IntegrityError as e:
             session.rollback()
-            raise RuntimeError(f"Failed to update pipeline run summaries: integrity constraint violated") from e
+            logger.error(f"Database integrity error when updating pipeline run {run_id}: {e}")
+            raise PipelineStorageError("Failed to update pipeline run summaries") from e
         except OperationalError as e:
             session.rollback()
-            raise RuntimeError(f"Failed to update pipeline run summaries: database operational error") from e
+            logger.error(f"Database operational error when updating pipeline run {run_id}: {e}")
+            raise PipelineStorageError("Failed to update pipeline run summaries") from e
         except SQLAlchemyError as e:
             session.rollback()
-            raise RuntimeError(f"Failed to update pipeline run summaries: database error") from e
+            logger.error(f"Database error when updating pipeline run {run_id}: {e}")
+            raise PipelineStorageError("Failed to update pipeline run summaries") from e
         finally:
             if self._should_close_session():
                 session.close()

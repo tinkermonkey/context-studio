@@ -7,7 +7,7 @@ and pipeline run management via REST API.
 
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 import pytest
@@ -19,6 +19,7 @@ from sqlalchemy.orm import sessionmaker
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.web.pipelines_routes import router
+from domain.pipeline.exceptions import PipelineStorageError
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
@@ -468,3 +469,43 @@ class TestPipelineRunEndpoints:
         ]
         for field in required_fields:
             assert field in body, f"Missing field: {field}"
+
+
+class TestPipelineErrorHandling:
+    """Test error handling in pipeline routes."""
+
+    def test_create_returns_500_when_repo_raises_storage_error(self, client, registries):
+        """Test that PipelineStorageError during create returns 500 with generic message."""
+        # Register a test implementation and configuration
+        registries["implementation_registry"].register_impl(
+            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+        )
+        registries["config_registry"].register(
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            "default",
+            {"model": "test-model"},
+        )
+
+        # Mock the repo to raise PipelineStorageError
+        mock_repo = MagicMock(spec=PipelineRepository)
+        mock_repo.create.side_effect = PipelineStorageError("Database error")
+
+        client.app.state.pipeline_run_repo = mock_repo
+
+        response = client.post(
+            "/api/pipelines/schema_extraction/run",
+            json={
+                "documents": ["doc1"],
+                "implementation_id": "default",
+                "configuration_ref": "default",
+            },
+        )
+
+        assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+        body = response.json()
+        assert "detail" in body
+        # Verify the error message is generic and doesn't leak database details
+        assert "persist" in body["detail"].lower() or "failed" in body["detail"].lower()
+        assert "table" not in body["detail"].lower()
+        assert "constraint" not in body["detail"].lower()
