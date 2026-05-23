@@ -17,7 +17,6 @@ from typing import Any
 
 from domain.extraction.services import ExtractionService
 from domain.pipeline.ports import LLMProvider
-from domain.pipelines.entities import PipelineType
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
 
 

@@ -35,7 +35,6 @@ from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.web.extraction_routes import router as extraction_router
-from adapters.web.pipelines_routes import router as pipelines_router
 from domain.extraction.services import ExtractionService
 from domain.ontology.entities import Class, ConceptScheme, Taxonomy
 from domain.pipelines.entities import IndividualExtractionRun, PipelineType
@@ -52,7 +51,6 @@ from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
-
 
 # Fixture loading utilities
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures" / "pipelines" / "individual_extraction"
@@ -628,7 +626,7 @@ class TestIndividualExtractionRunPersistence:
         batch_run_id = str(uuid4())
         source_text = "Jane Smith researches machine learning."
         source_text_hash = hashlib.sha256(source_text.encode()).hexdigest()
-        run_id = str(uuid4())
+        str(uuid4())
 
         # Create and persist a run
         run = pipeline_run_repo.create(

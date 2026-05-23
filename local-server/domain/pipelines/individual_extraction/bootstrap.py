@@ -6,15 +6,15 @@ and configurations with the pipeline registries.
 """
 
 from domain.pipelines.entities import PipelineType
-from domain.pipelines.registry import (
-    PipelineConfigurationRegistry,
-    PipelineImplementationRegistry,
-)
 from domain.pipelines.individual_extraction.configurations.default import (
     get_default_config,
     get_openrouter_config,
 )
 from domain.pipelines.individual_extraction.orchestrator import IndividualExtractionOrchestrator
+from domain.pipelines.registry import (
+    PipelineConfigurationRegistry,
+    PipelineImplementationRegistry,
+)
 
 
 def register_individual_extraction(
