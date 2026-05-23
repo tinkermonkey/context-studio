@@ -20,7 +20,10 @@ import tempfile
 from pathlib import Path
 from uuid import uuid4
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+base_dir = os.path.dirname(os.path.dirname(os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__))
+)))
+sys.path.append(base_dir)
 
 import pytest
 from fastapi import FastAPI, status
@@ -99,7 +102,11 @@ def ontology_repo(session_factory):
     repo = SQLiteOntologyRepository(session_factory)
 
     # Create ontology with classes for testing
-    tax = Taxonomy(id=str(uuid4()), title="Test Ontology", description="Test ontology for extraction")
+    tax = Taxonomy(
+        id=str(uuid4()),
+        title="Test Ontology",
+        description="Test ontology for extraction"
+    )
     repo.save_taxonomy(tax)
 
     scheme = ConceptScheme(
@@ -340,8 +347,10 @@ class TestLegacyExtractionEndpoint:
         assert isinstance(metadata["tokens_used"], int)
         assert isinstance(metadata["duration_ms"], int)
 
-    def test_extract_triples_with_invalid_ontology_returns_200_with_warnings(self, legacy_client):
-        """POST /api/extraction/extract with invalid ontology_id returns 200 with error in warnings."""
+    def test_extract_triples_with_invalid_ontology_returns_200_with_warnings(
+        self, legacy_client
+    ):
+        """POST /api/extraction/extract with invalid ontology_id returns 200."""
         response = legacy_client.post(
             "/api/extraction/extract",
             json={
@@ -504,7 +513,9 @@ class TestOrchestratorExecution:
 class TestCrossPaperConsistency:
     """Test extraction consistency across multiple papers mentioning the same entity."""
 
-    def test_multi_paper_extraction_across_john_doe_fixtures(self, extraction_service, ontology_repo):
+    def test_multi_paper_extraction_across_john_doe_fixtures(
+        self, extraction_service, ontology_repo
+    ):
         """Extract from papers 1, 2, and 5 which all mention John Doe."""
         llm_provider = FakeLLMProvider()
         orchestrator = IndividualExtractionOrchestrator(
@@ -544,8 +555,11 @@ class TestCrossPaperConsistency:
 
         # Verify all extractions completed successfully
         for result in extraction_results:
-            assert result["state"].current_status == "completed", f"Extraction failed for {result['fixture']}"
-            assert len(result["state"].extracted_triples) >= 0, f"No triples extracted from {result['fixture']}"
+            status = result["state"].current_status
+            fixture = result["fixture"]
+            assert status == "completed", f"Extraction failed for {fixture}"
+            triples = result["state"].extracted_triples
+            assert len(triples) >= 0, f"No triples extracted from {fixture}"
 
     def test_multi_paper_fixture_5_integration(self, extraction_service, ontology_repo):
         """Fixture 5 mentions John Doe and other entities from earlier papers."""
@@ -619,8 +633,10 @@ class TestIndividualExtractionRunPersistence:
         assert run.source_document_uri == "test://paper-1.txt"
         assert run.batch_run_id == batch_run_id
 
-    def test_individual_extraction_run_persisted_to_database(self, pipeline_run_repo, session_factory):
-        """IndividualExtractionRun row is persisted to database and can be retrieved."""
+    def test_individual_extraction_run_persisted_to_database(
+        self, pipeline_run_repo, session_factory
+    ):
+        """IndividualExtractionRun row is persisted and can be retrieved."""
         import hashlib
 
         batch_run_id = str(uuid4())

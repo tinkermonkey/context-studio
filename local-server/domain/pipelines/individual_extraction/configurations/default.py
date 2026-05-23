@@ -29,7 +29,10 @@ def get_default_config() -> dict:
         Configuration dict with LLM settings (Anthropic provider)
     """
     config = _load_config_from_file("extraction-default.json")
-    config["description"] = "Default individual extraction pipeline with Anthropic Claude Opus (Wave A compatible)"
+    config["description"] = (
+        "Default individual extraction pipeline with Anthropic Claude Opus "
+        "(Wave A compatible)"
+    )
     return config
 
 
