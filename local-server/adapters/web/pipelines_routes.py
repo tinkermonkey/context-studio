@@ -24,6 +24,7 @@ from hashlib import sha256
 from typing import Any, Optional
 from uuid import uuid4
 
+import httpx
 from fastapi import APIRouter, Body, HTTPException, Query, Request
 from fastapi import status as http_status
 
@@ -37,7 +38,13 @@ from adapters.web.schemas.pipelines import (
     PipelineRunResponse,
     PipelineTypeResponse,
 )
-from domain.pipeline.exceptions import PipelineStorageError
+from domain.pipeline.exceptions import (
+    PipelineError,
+    PipelineExecutionError,
+    PipelineExternalServiceError,
+    PipelineInputError,
+    PipelineStorageError,
+)
 from domain.pipelines.entities import PipelineRun, PipelineRunStatus, PipelineType
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
@@ -67,6 +74,21 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
     if isinstance(exc, PipelineStorageError):
         _logger.error(f"Pipeline storage error: {exc}", exc_info=exc)
         return (http_status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to persist pipeline state")
+    elif isinstance(exc, PipelineInputError):
+        _logger.warning(f"Pipeline input error: {exc}")
+        return (http_status.HTTP_400_BAD_REQUEST, str(exc))
+    elif isinstance(exc, PipelineExternalServiceError):
+        _logger.error(f"External service error: {exc}", exc_info=exc)
+        return (http_status.HTTP_503_SERVICE_UNAVAILABLE, "External service unavailable")
+    elif isinstance(exc, PipelineExecutionError):
+        _logger.error(f"Pipeline execution error: {exc}", exc_info=exc)
+        return (http_status.HTTP_500_INTERNAL_SERVER_ERROR, str(exc))
+    elif isinstance(exc, PipelineError):
+        _logger.error(f"Unexpected pipeline error: {exc}", exc_info=exc)
+        return (http_status.HTTP_500_INTERNAL_SERVER_ERROR, "Pipeline execution failed")
+    elif isinstance(exc, ValueError):
+        _logger.warning(f"Invalid pipeline input: {exc}")
+        return (http_status.HTTP_400_BAD_REQUEST, str(exc))
     else:
         _logger.error(f"Unexpected error in pipeline endpoint: {exc}", exc_info=exc)
         return (http_status.HTTP_500_INTERNAL_SERVER_ERROR, "An unexpected error occurred")
@@ -327,91 +349,94 @@ async def run_pipeline(
         status_code, message = _handle_domain_error(e)
         raise HTTPException(status_code=status_code, detail=message) from e
 
+    # Prepare services for orchestrator instantiation
+    services = {
+        "extraction_service": getattr(request.app.state, "extraction_service", None),
+        "ontology_repo": getattr(request.app.state, "ontology_repo", None),
+        "extraction_repo": getattr(request.app.state, "extraction_repo", None),
+        "grounding_adapter": getattr(request.app.state, "grounding_adapter", None),
+        "scorer": getattr(request.app.state, "grounding_scorer", None),
+        "grounding_config": _get_grounding_config(config_version.config),
+        "refinement_config": config_version.config,
+    }
+
+    # Instantiate orchestrator with dependencies
     try:
-        # Prepare services for orchestrator instantiation
-        services = {
-            "extraction_service": getattr(request.app.state, "extraction_service", None),
-            "ontology_repo": getattr(request.app.state, "ontology_repo", None),
-            "extraction_repo": getattr(request.app.state, "extraction_repo", None),
-            "grounding_adapter": getattr(request.app.state, "grounding_adapter", None),
-            "scorer": getattr(request.app.state, "grounding_scorer", None),
-            "grounding_config": _get_grounding_config(config_version.config),
-            "refinement_config": config_version.config,
-        }
-
-        # Instantiate orchestrator with dependencies
-        try:
-            orchestrator = create_orchestrator(
-                orchestrator_class=impl_class,
-                llm_provider=llm_provider,
-                services=services,
-            )
-        except ValueError as e:
-            raise HTTPException(
-                status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to instantiate orchestrator: {str(e)}",
-            )
-
-        # Extract input data from request body (type-specific fields)
-        input_data = request_body.model_dump()
-
-        # Create initial state for execution
-        state = create_pipeline_state(
-            run_id=run_id,
-            pipeline_type=ptype,
-            input_data=input_data,
+        orchestrator = create_orchestrator(
+            orchestrator_class=impl_class,
             llm_provider=llm_provider,
+            services=services,
         )
+    except ValueError as e:
+        exc = PipelineInputError(f"Failed to instantiate orchestrator: {str(e)}")
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message) from e
 
-        # Execute the pipeline
+    # Extract input data from request body (type-specific fields)
+    input_data = request_body.model_dump()
+
+    # Create initial state for execution
+    state = create_pipeline_state(
+        run_id=run_id,
+        pipeline_type=ptype,
+        input_data=input_data,
+        llm_provider=llm_provider,
+    )
+
+    # Execute the pipeline
+    try:
         result_state = await orchestrator.execute(state)
-
-        # Log any parse warnings from the execution
-        parse_warnings = getattr(result_state, "parse_warnings", [])
-        if parse_warnings:
-            for warning in parse_warnings:
-                _logger.warning(
-                    f"Parse warning in {warning.get('stage', 'unknown')} for run {run_id}: "
-                    f"{warning.get('error', 'unknown error')}. "
-                    f"Response preview: {warning.get('response_preview', 'N/A')}. "
-                    f"Fallback action: {warning.get('fallback_action', 'N/A')}"
-                )
-
-        # Update run with execution results
-        output_summary = result_state.result or {}
+    except (httpx.TimeoutException, httpx.ConnectError) as e:
+        exc = PipelineExternalServiceError(f"External service timeout or connection failed: {str(e)}")
+        status_code, message = _handle_domain_error(exc)
         try:
-            repo.update_summaries(
-                run_id=run_id,
-                output_summary=output_summary,
-                llm_metadata={},
-            )
-            repo.update_status(run_id, PipelineRunStatus.COMPLETED)
-        except PipelineStorageError as e:
-            status_code, message = _handle_domain_error(e)
-            raise HTTPException(status_code=status_code, detail=message) from e
-
-        # Fetch updated run for response
-        updated_run = repo.get(run_id)
-        if updated_run is None:
-            raise RuntimeError(f"Failed to retrieve updated run: {run_id}")
-
-        return _to_response(updated_run)
-
-    except HTTPException:
+            repo.update_status(run_id, PipelineRunStatus.FAILED)
+            repo.update_summaries(run_id=run_id, output_summary={"error": message})
+        except PipelineStorageError as db_err:
+            _logger.error(f"Failed to update run status after execution error: {db_err}")
+        raise HTTPException(status_code=status_code, detail=message) from e
+    except PipelineError:
         raise
     except Exception as exc:
-        # Update run with error status
-        _logger.error(f"Pipeline execution failed for run {run_id}: {exc}", exc_info=exc)
+        domain_exc = PipelineExecutionError(f"Unexpected orchestrator failure: {str(exc)}")
+        status_code, message = _handle_domain_error(domain_exc)
         try:
             repo.update_status(run_id, PipelineRunStatus.FAILED)
             repo.update_summaries(run_id=run_id, output_summary={"error": str(exc)})
         except PipelineStorageError as db_err:
             _logger.error(f"Failed to update run status after execution error: {db_err}")
+        raise HTTPException(status_code=status_code, detail=message) from exc
 
-        raise HTTPException(
-            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Pipeline execution failed",
+    # Update run with execution results (including any parse warnings)
+    output_summary = result_state.result or {}
+    parse_warnings = getattr(result_state, "parse_warnings", [])
+    if parse_warnings:
+        output_summary["warnings"] = parse_warnings
+        for warning in parse_warnings:
+            _logger.warning(
+                f"Parse warning in {warning.get('stage', 'unknown')} for run {run_id}: "
+                f"{warning.get('error', 'unknown error')}. "
+                f"Response preview: {warning.get('response_preview', 'N/A')}. "
+                f"Fallback action: {warning.get('fallback_action', 'N/A')}"
+            )
+
+    try:
+        repo.update_summaries(
+            run_id=run_id,
+            output_summary=output_summary,
+            llm_metadata={},
         )
+        repo.update_status(run_id, PipelineRunStatus.COMPLETED)
+    except PipelineStorageError as e:
+        status_code, message = _handle_domain_error(e)
+        raise HTTPException(status_code=status_code, detail=message) from e
+
+    # Fetch updated run for response
+    updated_run = repo.get(run_id)
+    if updated_run is None:
+        raise RuntimeError(f"Failed to retrieve updated run: {run_id}")
+
+    return _to_response(updated_run)
 
 
 # ==================== Pipeline Run Retrieval ====================
@@ -493,7 +518,7 @@ async def get_pipeline_candidates(
     elif run.pipeline_type == PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT:
         candidates_key = "candidates"
     elif run.pipeline_type == PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT:
-        candidates_key = "candidates"
+        candidates_key = "deltas"
     elif run.pipeline_type == PipelineType.INDIVIDUAL_EXTRACTION:
         candidates_key = "triples"
     # NO_OP and SCHEMA_EXTRACTION pipelines don't produce candidates, return empty list

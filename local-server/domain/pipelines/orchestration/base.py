@@ -9,7 +9,7 @@ this module provides the structure only.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from domain.pipeline.ports import LLMProvider, LLMResponse
@@ -31,6 +31,7 @@ class PipelineState:
         current_status: Current execution status
         llm_provider: Injected LLM provider for completions
         result: Accumulated result (populated as execution progresses)
+        parse_warnings: List of parse/validation warnings encountered during execution
     """
 
     run_id: str
@@ -39,6 +40,7 @@ class PipelineState:
     current_status: PipelineRunStatus = PipelineRunStatus.PENDING
     llm_provider: LLMProvider | None = None
     result: dict[str, Any] | None = None
+    parse_warnings: list[dict[str, Any]] = field(default_factory=list)
 
 
 class PipelineOrchestrator(ABC):
