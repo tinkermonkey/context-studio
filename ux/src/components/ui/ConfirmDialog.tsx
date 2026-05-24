@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Modal as HeimdallModal, Button as HeimdallButton } from "@tinkermonkey/heimdall-ui";
+import { Modal, Button } from "@tinkermonkey/heimdall-ui";
 import type { ReactNode } from "react";
 
 interface ConfirmDialogProps {
@@ -17,6 +17,14 @@ interface ConfirmDialogProps {
   isConfirmDisabled?: boolean;
 }
 
+/**
+ * App-specific confirm dialog that wraps Heimdall Modal and Button with:
+ * - Async operation handling with loading states
+ * - Error handling via onError callback
+ * - Conditional disabling via isLoading/isConfirmDisabled
+ * - Ref support for programmatic confirmation
+ * - Test ID support for button elements
+ */
 export function ConfirmDialog({
   open,
   onClose,
@@ -34,7 +42,7 @@ export function ConfirmDialog({
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleConfirm = async () => {
-    if (isProcessing) return;
+    if (isProcessing || isLoading || isConfirmDisabled) return;
     setIsProcessing(true);
     try {
       await onConfirm();
@@ -54,31 +62,30 @@ export function ConfirmDialog({
   const isConfirmDisabledState = isProcessing || isLoading || isConfirmDisabled;
   const isCancelDisabled = isProcessing || isLoading;
 
+  // Use Heimdall Modal and Button but maintain testid contract for existing tests
   return (
-    <HeimdallModal isOpen={open} onClose={onClose} title={title}>
-      <div className="confirm-dialog__message" data-testid="confirm-dialog">
-        {message}
-      </div>
-      <div className="confirm-dialog__footer">
-        <HeimdallButton
-          variant="ghost"
-          size="sm"
-          onClick={onClose}
-          disabled={isCancelDisabled}
-          data-testid="confirm-dialog-cancel"
-        >
-          {cancelLabel}
-        </HeimdallButton>
-        <HeimdallButton
-          variant={danger ? "danger" : "primary"}
-          size="sm"
-          onClick={handleConfirm}
-          disabled={isConfirmDisabledState}
-          data-testid="confirm-dialog-confirm"
-        >
-          {confirmLabel}
-        </HeimdallButton>
-      </div>
-    </HeimdallModal>
+    <div data-testid="confirm-dialog">
+      <Modal isOpen={open} onClose={isCancelDisabled ? () => {} : onClose} title={title}>
+        <div style={{ marginBottom: "var(--space-4)" }}>{message}</div>
+        <div style={{ display: "flex", gap: "var(--space-2)", justifyContent: "flex-end" }}>
+          <Button
+            variant="ghost"
+            onClick={onClose}
+            disabled={isCancelDisabled}
+            data-testid="confirm-dialog-cancel"
+          >
+            {cancelLabel}
+          </Button>
+          <Button
+            variant={danger ? "danger" : "primary"}
+            onClick={handleConfirm}
+            disabled={isConfirmDisabledState}
+            data-testid="confirm-dialog-confirm"
+          >
+            {confirmLabel}
+          </Button>
+        </div>
+      </Modal>
+    </div>
   );
 }

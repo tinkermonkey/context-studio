@@ -6,7 +6,7 @@
 
 **Preserved throughout**: TanStack Router file routing, React Query hooks, API services, Zustand stores, `data-testid` instrumentation, ARIA roles, `app-overrides.css` (50 lines of color aliases), `body.dark-canvas` dark mode pattern, `Drawer.tsx` wrapper (carries app-specific autosave/revert/delete behavior not in Heimdall).
 
-**Stub pages**: Several routes currently exist as functional stubs (`pipelines/runs`, `pipelines/flavors`, `data/individuals`, `data/datasets`, `reference/grounding`). Phase 6 brings these up to spec with design-aligned layouts. The `versioning` route has no design spec and stays as-is.
+**Stub pages**: Several routes currently exist as functional stubs (`pipelines/runs`, `data/individuals`, `data/datasets`, `reference/grounding`). Phase 6 brings these up to spec with design-aligned layouts. The `versioning` route has no design spec and stays as-is.
 
 ---
 
@@ -188,7 +188,7 @@ These routes exist in the router but render minimal or placeholder content. The 
 
 - `src/routes/app/pipelines/runs.tsx` — `PageHeader` + `FilterBar` (status segmented control: all / running / success / failed) + Heimdall `Table` with columns: pipeline name (mono), status badge, started, duration, records ingested, errors. No inspector; row links to the pipeline detail page.
 
-- `src/routes/app/pipelines/flavors.tsx` — `PageHeader` + `Table` of flavors (id, name, description, step count). Row selection opens a `Drawer` with flavor config form. Uses existing flavors API.
+- `src/routes/app/pipelines/$pipelineId.tsx` (configurations tab) — `PipelineConfiguration` management is part of the pipeline detail view, not a standalone route. The detail drawer exposes LLM provider, model, and prompt settings scoped to that pipeline type. A pipeline type can have many configurations; each configuration's `pipeline` field identifies which type it belongs to.
 
 - `src/routes/app/reference/workflows.tsx` — `PageHeader` + `Table` of grounding workflows (id, name, source, status, last run). Row selection opens a `Drawer` with workflow config. Uses existing grounding workflows API.
 
@@ -199,7 +199,7 @@ These routes exist in the router but render minimal or placeholder content. The 
 - Heimdall `Table` with `data-testid` on the table root
 - `EmptyState` for zero-data states (complete sentence, period, concrete next action — no exclamation)
 
-**Verify:** Each page renders without console errors. Filter reduces rows. Selecting a row opens the inspector/drawer. Run `pnpm test -- src/routes/app/data src/routes/app/pipelines/runs src/routes/app/pipelines/flavors src/routes/app/reference/workflows`.
+**Verify:** Each page renders without console errors. Filter reduces rows. Selecting a row opens the inspector/drawer. Run `pnpm test -- src/routes/app/data src/routes/app/pipelines/runs src/routes/app/reference/workflows`.
 
 ---
 
@@ -239,7 +239,7 @@ Every modal that triggers a server call must include a `ModalFootHint` in the fo
 ```tsx
 <ModalFoot hint={<ModalFootHint>POST /classes</ModalFootHint>}>
 ```
-This makes side effects explicit. Apply to every create/edit modal across all domains (class, scheme, taxonomy, property, relationship, individual, pipeline, flavor, workflow).
+This makes side effects explicit. Apply to every create/edit modal across all domains (class, scheme, taxonomy, property, relationship, individual, pipeline configuration, workflow).
 
 ### Status color intent
 Never use raw hex or CSS variable names directly for status colors. Always use Heimdall semantic tones:

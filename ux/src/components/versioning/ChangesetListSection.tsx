@@ -241,7 +241,6 @@ export function ChangesetListSection({
                     }}
                     disabled={applyMutation.isPending}
                     variant="primary"
-                    size="sm"
                   >
                     {applyMutation.isPending ? COPY.applyingButton : COPY.applyButton}
                   </Button>

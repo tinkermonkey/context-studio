@@ -11,10 +11,15 @@ import {
   createClass,
   createListProperties,
   createPropertyDefinition,
+  createListTaxonomies,
+  createListSchemes,
 } from "@/api/services/__tests__/fixtures/ontology.fixtures";
 import { RelationshipsPage } from "../relationships";
 
-const server = setupServer();
+const server = setupServer(
+  rest.get("*/api/taxonomies", (req, res, ctx) => res(ctx.json(createListTaxonomies([])))),
+  rest.get("*/api/schemes", (req, res, ctx) => res(ctx.json(createListSchemes([])))),
+);
 
 beforeAll(() => {
   server.listen({ onUnhandledRequest: "error" });
@@ -165,7 +170,7 @@ describe("Relationships Schema Page", () => {
       });
 
       const monoId = screen.getByText("rel-123");
-      expect(monoId).toHaveClass("mono");
+      expect(monoId.tagName.toLowerCase()).toBe("code");
     });
   });
 

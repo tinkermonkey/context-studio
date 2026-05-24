@@ -1,4 +1,4 @@
-import { GraphCanvas } from "reagraph";
+import { GraphCanvas, type GraphNodeData, type GraphEdgeData } from "@tinkermonkey/heimdall-ui";
 import { useEffect, useMemo } from "react";
 import type { GraphNode, GraphEdge } from "@/api/hooks/graph";
 import "@/design-system/graph.css";
@@ -7,7 +7,7 @@ import { useToasts } from "@/components/ui/Toast";
 interface GraphCanvasComponentProps {
   nodes: GraphNode[];
   edges: Array<{ id: string; source: string; target: string }>;
-  onNodeClick?: (nodeId: string) => void;
+  onNodeSelect?: (nodeId: string) => void;
   selectedNodeId?: string;
 }
 
@@ -36,8 +36,8 @@ export const validateEdgeEndpoints = (
 export const GraphCanvasComponent = ({
   nodes,
   edges,
-  onNodeClick,
-  selectedNodeId: _selectedNodeId,
+  onNodeSelect,
+  selectedNodeId,
 }: GraphCanvasComponentProps) => {
   const { toast } = useToasts();
   const validation = useMemo(() => validateEdgeEndpoints(nodes, edges), [nodes, edges]);
@@ -66,6 +66,19 @@ export const GraphCanvasComponent = ({
     );
   }
 
+  const heimdallNodes: GraphNodeData[] = nodes.map((node) => ({
+    id: node.id,
+    label: node.label,
+    kind: node.kind,
+    domainColor: node.domainColor,
+  }));
+
+  const heimdallEdges: GraphEdgeData[] = edges.map((edge) => ({
+    id: edge.id,
+    sourceId: edge.source,
+    targetId: edge.target,
+  }));
+
   return (
     <div
       data-testid="graph-canvas"
@@ -74,19 +87,12 @@ export const GraphCanvasComponent = ({
       aria-label="Graph visualization canvas"
     >
       <GraphCanvas
-        nodes={nodes.map((node) => ({
-          id: node.id,
-          label: node.label,
-          fill: node.domainColor,
-        }))}
-        edges={
-          edges.map((edge) => ({
-            id: edge.id,
-            sourceId: edge.source,
-            targetId: edge.target,
-          })) as any
-        }
-        onNodeClick={(node) => onNodeClick?.(node.id)}
+        nodes={heimdallNodes}
+        edges={heimdallEdges}
+        layout="force"
+        selectedNodeId={selectedNodeId}
+        onNodeSelect={onNodeSelect}
+        style={{ width: "100%", height: "100%" }}
       />
     </div>
   );

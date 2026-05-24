@@ -7,10 +7,19 @@ import { render } from "@/test/test-utils";
 import {
   createListProperties,
   createPropertyDefinition,
+  createListTaxonomies,
+  createListSchemes,
+  createListClasses,
+  createListRelationships,
 } from "@/api/services/__tests__/fixtures/ontology.fixtures";
 import { PropertiesPage } from "../properties";
 
-const server = setupServer();
+const server = setupServer(
+  rest.get("*/api/taxonomies", (req, res, ctx) => res(ctx.json(createListTaxonomies([])))),
+  rest.get("*/api/schemes", (req, res, ctx) => res(ctx.json(createListSchemes([])))),
+  rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([])))),
+  rest.get("*/api/relationships", (req, res, ctx) => res(ctx.json(createListRelationships([])))),
+);
 
 beforeAll(() => {
   server.listen({ onUnhandledRequest: "error" });
@@ -178,7 +187,7 @@ describe("Properties Schema Page", () => {
       });
 
       const monoId = screen.getByText("prop-123");
-      expect(monoId).toHaveClass("mono");
+      expect(monoId.tagName.toLowerCase()).toBe("code");
     });
 
     it("displays description column with em-dash placeholder when empty", async () => {

@@ -1,16 +1,11 @@
 import { Folder, ChevronDown, Search } from "lucide-react";
-import { Titlebar as HeimdallTitlebar } from "@tinkermonkey/heimdall-ui";
+import type { TitlebarProps } from "@tinkermonkey/heimdall-ui";
 import { useCommandPaletteStore } from "@/stores/commandPalette";
 
-interface TitlebarProps {
-  workspaceName?: string;
-  workspacePath?: string;
-}
-
-export function Titlebar({
+export function buildTitlebarProps(
   workspaceName = "Context Studio",
-  workspacePath = "~/Projects/context-studio",
-}: TitlebarProps) {
+  workspacePath = "~/Projects/context-studio"
+): TitlebarProps {
   const openPalette = useCommandPaletteStore((s) => s.openPalette);
 
   const left = (
@@ -39,5 +34,5 @@ export function Titlebar({
     </div>
   );
 
-  return <HeimdallTitlebar left={left} right={right} />;
+  return { left, right };
 }

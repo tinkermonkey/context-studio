@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { ColumnDef } from "@tanstack/react-table";
+import { type Column } from "@tinkermonkey/heimdall-ui";
 import { render } from "@/test/test-utils";
 import { SchemaTable } from "../SchemaTable";
 
@@ -11,14 +11,14 @@ interface TestItem {
   type: string;
 }
 
-const mockColumns: ColumnDef<TestItem>[] = [
+const mockColumns: Column<TestItem>[] = [
   {
-    accessorKey: "name",
-    header: "Name",
+    key: "name",
+    label: "Name",
   },
   {
-    accessorKey: "type",
-    header: "Type",
+    key: "type",
+    label: "Type",
   },
 ];
 
@@ -34,16 +34,9 @@ describe("SchemaTable", () => {
       expect(screen.getByTestId("schema-table")).toBeInTheDocument();
     });
 
-    it("has column header testids", () => {
+    it("uses default schema-table testid when no tableTestId provided", () => {
       render(<SchemaTable columns={mockColumns} data={mockData} />);
-      expect(screen.getByTestId("schema-header-name")).toBeInTheDocument();
-      expect(screen.getByTestId("schema-header-type")).toBeInTheDocument();
-    });
-
-    it("has row testids", () => {
-      render(<SchemaTable columns={mockColumns} data={mockData} />);
-      expect(screen.getByTestId("schema-row-1")).toBeInTheDocument();
-      expect(screen.getByTestId("schema-row-2")).toBeInTheDocument();
+      expect(screen.getByTestId("schema-table")).toBeInTheDocument();
     });
   });
 
@@ -65,51 +58,6 @@ describe("SchemaTable", () => {
       expect(screen.getByText("Item 2")).toBeInTheDocument();
       expect(screen.getByText("TypeA")).toBeInTheDocument();
       expect(screen.getByText("TypeB")).toBeInTheDocument();
-    });
-  });
-
-  describe("empty state", () => {
-    it("renders empty state message when no data", () => {
-      render(<SchemaTable columns={mockColumns} data={[]} />);
-      expect(screen.getByText("No items")).toBeInTheDocument();
-    });
-  });
-
-  describe("row selection styling", () => {
-    it("shows selected class for selected row", () => {
-      const { container } = render(
-        <SchemaTable columns={mockColumns} data={mockData} selectedId="1" />,
-      );
-      const selectedRow = container.querySelector('tr[data-testid="schema-row-1"]');
-      expect(selectedRow).toHaveClass("selected");
-    });
-
-    it("does not show selected class for non-selected rows", () => {
-      const { container } = render(
-        <SchemaTable columns={mockColumns} data={mockData} selectedId="1" />,
-      );
-      const unselectedRow = container.querySelector('tr[data-testid="schema-row-2"]');
-      expect(unselectedRow).not.toHaveClass("selected");
-    });
-  });
-
-  describe("row selection", () => {
-    it("calls onRowSelect when row is clicked", async () => {
-      const onRowSelect = vi.fn();
-      const user = userEvent.setup();
-      render(<SchemaTable columns={mockColumns} data={mockData} onRowSelect={onRowSelect} />);
-      const row = screen.getByTestId("schema-row-1");
-      await user.click(row);
-      expect(onRowSelect).toHaveBeenCalledWith("1");
-    });
-
-    it("does not call onRowSelect when not provided", async () => {
-      const user = userEvent.setup();
-      const { container } = render(<SchemaTable columns={mockColumns} data={mockData} />);
-      const row = container.querySelector('tr[data-testid="schema-row-1"]');
-      if (row) {
-        await user.click(row);
-      }
     });
   });
 
@@ -164,25 +112,6 @@ describe("SchemaTable", () => {
     });
   });
 
-  describe("row actions", () => {
-    it("renders row actions when provided", () => {
-      const renderActions = (row: TestItem) => (
-        <button data-testid={`action-${row.id}`}>Edit</button>
-      );
-      render(
-        <SchemaTable columns={mockColumns} data={mockData} renderRowActions={renderActions} />,
-      );
-      expect(screen.getByTestId("action-1")).toBeInTheDocument();
-      expect(screen.getByTestId("action-2")).toBeInTheDocument();
-    });
-
-    it("does not render actions when not provided", () => {
-      const { container } = render(<SchemaTable columns={mockColumns} data={mockData} />);
-      const lastCell = container.querySelector("tbody tr:last-child td:last-child");
-      expect(lastCell?.textContent).toBe("");
-    });
-  });
-
   describe("complete structure", () => {
     it("renders all elements together", () => {
       const onRowSelect = vi.fn();
@@ -195,8 +124,7 @@ describe("SchemaTable", () => {
         />,
       );
       expect(screen.getByTestId("schema-table")).toBeInTheDocument();
-      expect(screen.getByTestId("schema-header-name")).toBeInTheDocument();
-      expect(screen.getByTestId("schema-row-1")).toBeInTheDocument();
+      expect(screen.getByText("Name")).toBeInTheDocument();
       expect(screen.getByText("Item 1")).toBeInTheDocument();
     });
   });

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Drawer } from "@/components/ui/Drawer";
-import { TextInput as Input, TextArea as Textarea, Select } from "@tinkermonkey/heimdall-ui";
+import { TextInput as Input, TextArea as Textarea, Select, KVGrid } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { useUpdateClass, useDeleteClass, useMoveClass } from "@/api/hooks/ontology/useClasses";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
@@ -258,26 +258,14 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
             )}
           </div>
 
-          <div className="row" style={{ fontSize: "var(--text-xs)" }}>
-            <span style={{ color: "var(--canvas-fg-3)" }}>
-              Properties: <span style={{ fontWeight: 500 }}>{propertyCount}</span>
-            </span>
-            <span style={{ color: "var(--canvas-fg-3)" }}>
-              Relationships: <span style={{ fontWeight: 500 }}>{relationshipCount}</span>
-            </span>
-          </div>
-
-          <div className="row" style={{ fontSize: "var(--text-xs)" }}>
-            <span style={{ color: "var(--canvas-fg-3)" }}>
-              Individuals: <span style={{ fontWeight: 500 }}>{individualCount}</span>
-            </span>
-          </div>
-
-          <div className="row" style={{ fontSize: "var(--text-xs)" }}>
-            <span style={{ color: "var(--canvas-fg-3)" }}>
-              Created: {new Date(classData.created_at ?? "").toLocaleDateString()}
-            </span>
-          </div>
+          <KVGrid
+            rows={[
+              { key: "Properties", value: String(propertyCount) },
+              { key: "Relationships", value: String(relationshipCount) },
+              { key: "Individuals", value: String(individualCount) },
+              { key: "Created", value: new Date(classData.created_at ?? "").toLocaleDateString() },
+            ]}
+          />
         </div>
       </Drawer>
 

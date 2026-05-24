@@ -115,9 +115,9 @@ describe("Datasets Data Page", () => {
         expect(screen.getByText("No datasets yet")).toBeInTheDocument();
       });
 
-      const actionButton = screen.getByTestId("empty-state-new-dataset");
+      const actionButton = screen.getByTestId("empty-state-action");
       expect(actionButton).toBeInTheDocument();
-      expect(actionButton).toHaveTextContent("Create Dataset");
+      expect(actionButton).toHaveTextContent("New Dataset");
     });
 
     it("verifies empty-state element is present", async () => {
@@ -189,7 +189,7 @@ describe("Datasets Data Page", () => {
       });
 
       const monoId = screen.getByText("dataset-");
-      expect(monoId).toHaveClass("mono");
+      expect(monoId).toHaveClass("font-mono");
     });
 
     it("displays status column with Active for active datasets", async () => {
@@ -308,7 +308,7 @@ describe("Datasets Data Page", () => {
         expect(screen.getByText("Test Dataset")).toBeInTheDocument();
       });
 
-      expect(screen.getByTestId("dataset-row-delete-dataset-001")).toBeInTheDocument();
+      expect(screen.getByTestId("dataset-row-actions-dataset-001")).toBeInTheDocument();
     });
 
     it("verifies name cell is clickable and has correct testid", async () => {
@@ -331,10 +331,10 @@ describe("Datasets Data Page", () => {
       });
 
       const nameCell = screen.getByTestId("dataset-name-dataset-001");
-      expect(nameCell).toHaveStyle({ cursor: "pointer" });
+      expect(nameCell).toHaveClass("cursor-pointer");
     });
 
-    it("disables delete button for active datasets", async () => {
+    it("shows row actions menu for active datasets", async () => {
       const mockDatasets = createListDatasets([
         createDataset({
           id: "dataset-001",
@@ -354,11 +354,10 @@ describe("Datasets Data Page", () => {
         expect(screen.getByText("Active Dataset")).toBeInTheDocument();
       });
 
-      const deleteButton = screen.getByTestId("dataset-row-delete-dataset-001");
-      expect(deleteButton).toBeDisabled();
+      expect(screen.getByTestId("dataset-row-actions-dataset-001")).toBeInTheDocument();
     });
 
-    it("enables delete button for inactive datasets", async () => {
+    it("shows row actions menu for inactive datasets", async () => {
       const mockDatasets = createListDatasets([
         createDataset({
           id: "dataset-001",
@@ -378,8 +377,7 @@ describe("Datasets Data Page", () => {
         expect(screen.getByText("Inactive Dataset")).toBeInTheDocument();
       });
 
-      const deleteButton = screen.getByTestId("dataset-row-delete-dataset-001");
-      expect(deleteButton).not.toBeDisabled();
+      expect(screen.getByTestId("dataset-row-actions-dataset-001")).toBeInTheDocument();
     });
   });
 

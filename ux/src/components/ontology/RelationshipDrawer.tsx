@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Drawer } from "@/components/ui/Drawer";
-import { TextInput as Input } from "@tinkermonkey/heimdall-ui";
+import { TextInput as Input, KVGrid } from "@tinkermonkey/heimdall-ui";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useDeleteRelationship } from "@/api/hooks/ontology/useRelationships";
 import { useToasts } from "@/components/ui/Toast";
@@ -113,11 +113,11 @@ export function RelationshipDrawer({
             />
           </div>
 
-          <div style={{ display: "flex", gap: "var(--space-2)", fontSize: "var(--text-xs)" }}>
-            <span style={{ color: "var(--canvas-fg-3)" }}>
-              Created: {new Date(relationship.created_at ?? "").toLocaleDateString()}
-            </span>
-          </div>
+          <KVGrid
+            rows={[
+              { key: "Created", value: new Date(relationship.created_at ?? "").toLocaleDateString() },
+            ]}
+          />
         </div>
       </Drawer>
 

@@ -88,7 +88,7 @@ describe("Graph Page", () => {
       );
 
       expect(screen.getByTestId("graph-page")).toBeInTheDocument();
-      const graphShell = container.querySelector(".graph-shell");
+      const graphShell = container.querySelector('[data-testid="graph-shell"]');
       expect(graphShell).toBeInTheDocument();
     });
   });
@@ -246,7 +246,7 @@ describe("Graph Page", () => {
         </QueryClientProvider>,
       );
 
-      const graphShell = container.querySelector(".graph-shell");
+      const graphShell = container.querySelector('[data-testid="graph-shell"]');
       expect(graphShell).toBeInTheDocument();
     });
 
@@ -264,7 +264,7 @@ describe("Graph Page", () => {
         </QueryClientProvider>,
       );
 
-      const graphShell = container.querySelector(".graph-shell");
+      const graphShell = container.querySelector('[data-testid="graph-shell"]');
       expect(graphShell).toBeInTheDocument();
     });
 

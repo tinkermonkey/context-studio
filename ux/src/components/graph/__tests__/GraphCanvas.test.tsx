@@ -21,7 +21,7 @@ vi.mock("@/components/ui/Toast", async () => {
   };
 });
 
-vi.mock("reagraph", () => ({
+vi.mock("@tinkermonkey/heimdall-ui", () => ({
   GraphCanvas: mockGraphCanvas,
 }));
 
@@ -267,11 +267,11 @@ describe("GraphCanvas", () => {
       ).not.toBeInTheDocument();
     });
 
-    it("should pass onNodeClick callback to underlying GraphCanvas", () => {
-      const onNodeClick = vi.fn();
+    it("should pass onNodeSelect callback to underlying GraphCanvas", () => {
+      const onNodeSelect = vi.fn();
 
       render(
-        <GraphCanvasComponent nodes={mockNodes} edges={mockEdges} onNodeClick={onNodeClick} />,
+        <GraphCanvasComponent nodes={mockNodes} edges={mockEdges} onNodeSelect={onNodeSelect} />,
       );
 
       expect(screen.getAllByTestId("graph-canvas").length).toBeGreaterThan(0);

@@ -9,7 +9,6 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus, Trash2, Edit2, ExternalLink, Globe, Cpu, GitMerge, Database } from "lucide-react";
-import { ColumnDef } from "@tanstack/react-table";
 import {
   Button,
   TextInput as Input,
@@ -18,17 +17,17 @@ import {
   TabBar,
   StatGrid,
   Table,
+  Chip,
+  Modal,
+  PageHeader,
+  StatTile,
+  Panel,
+  FilterBar,
 } from "@tinkermonkey/heimdall-ui";
-import { Chip } from "@/components/ui/Chip";
-import { Modal } from "@/components/ui/Modal";
 import { Drawer } from "@/components/ui/Drawer";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { StatTile } from "@/components/ui/StatTile";
-import { Panel } from "@/components/ui/Panel";
 import { useToasts } from "@/components/ui/Toast";
 import { useCanvasStore } from "@/stores/canvas";
-import { SchemaTable } from "@/components/schema/SchemaTable";
-import { FilterBar } from "@/components/schema/FilterBar";
+import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
 import "./contact-sheet.css";
 
 export const Route = createFileRoute("/app/contact-sheet")({
@@ -78,23 +77,22 @@ export default function ContactSheet() {
     { id: "3", title: "Animal", description: "Heterotrophic organisms" },
   ];
 
-  const schemaColumns: ColumnDef<MockEntity>[] = [
+  const schemaColumns: Column<MockEntity>[] = [
     {
-      accessorKey: "id",
-      header: "ID",
-      size: 100,
-      cell: (info) => <span className="mono">{info.getValue() as string}</span>,
+      key: "id",
+      label: "ID",
+      render: (value) => <span className="mono">{value as string}</span>,
     },
     {
-      accessorKey: "title",
-      header: "Title",
-      cell: (info) => <span className="row-link">{info.getValue() as string}</span>,
+      key: "title",
+      label: "Title",
+      render: (value) => <span className="row-link">{value as string}</span>,
     },
     {
-      accessorKey: "description",
-      header: "Description",
-      cell: (info) => (
-        <span className="contact-sheet-description-text">{info.getValue() as string}</span>
+      key: "description",
+      label: "Description",
+      render: (value) => (
+        <span className="contact-sheet-description-text">{value as string}</span>
       ),
     },
   ];
@@ -133,16 +131,16 @@ export default function ContactSheet() {
           <Button variant="danger">Danger</Button>
         </Row>
         <Row>
-          <Button variant="primary" size="sm">
+          <Button variant="primary">
             Primary sm
           </Button>
-          <Button variant="secondary" size="sm">
+          <Button variant="secondary">
             Secondary sm
           </Button>
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost">
             Ghost sm
           </Button>
-          <Button variant="danger" size="sm">
+          <Button variant="danger">
             Danger sm
           </Button>
         </Row>
@@ -150,14 +148,14 @@ export default function ContactSheet() {
           <Button variant="primary" disabled>
             Disabled
           </Button>
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost">
             <Plus size={13} className="contact-sheet-icon-spacing" />
             With icon
           </Button>
-          <Button variant="ghost" size="sm" title="Edit">
+          <Button variant="ghost" title="Edit">
             <Edit2 size={14} />
           </Button>
-          <Button variant="ghost" size="sm" title="Delete">
+          <Button variant="ghost" title="Delete">
             <Trash2 size={14} />
           </Button>
         </Row>
@@ -166,12 +164,12 @@ export default function ContactSheet() {
       {/* ── Chips ── */}
       <Section title="Chips" testid="contact-sheet-chips">
         <Row wrap>
-          <Chip color="cyan">cyan</Chip>
-          <Chip color="amber">amber</Chip>
-          <Chip color="violet">violet</Chip>
-          <Chip color="emerald">emerald</Chip>
-          <Chip color="rose">rose</Chip>
-          <Chip color="gray">gray</Chip>
+          <Chip variant="cyan">cyan</Chip>
+          <Chip variant="amber">amber</Chip>
+          <Chip variant="violet">violet</Chip>
+          <Chip variant="emerald">emerald</Chip>
+          <Chip variant="rose">rose</Chip>
+          <Chip variant="neutral">gray</Chip>
           <Chip>default</Chip>
         </Row>
       </Section>
@@ -179,10 +177,10 @@ export default function ContactSheet() {
       {/* ── Stat Grid ── */}
       <Section title="Stat Tiles" testid="contact-sheet-stat-tiles">
         <StatGrid>
-          <StatTile label="Classes" value="22" color="cyan" sub="4 taxonomies" />
-          <StatTile label="Individuals" value="267" color="violet" sub="indexed" />
-          <StatTile label="Relationships" value="1,204" color="amber" sub="typed edges" />
-          <StatTile label="Pipelines" value="11" color="emerald" sub="1 running" />
+          <StatTile label="Classes" value="22" color="cyan" />
+          <StatTile label="Individuals" value="267" color="violet" />
+          <StatTile label="Relationships" value="1,204" color="amber" />
+          <StatTile label="Pipelines" value="11" color="emerald" />
         </StatGrid>
       </Section>
 
@@ -240,14 +238,7 @@ export default function ContactSheet() {
       {/* ── Panel ── */}
       <Section title="Panel" testid="contact-sheet-panel">
         <div className="contact-sheet-panel-container">
-          <Panel
-            title="Panel Title"
-            actions={
-              <Button variant="ghost" size="sm">
-                <Plus size={12} />
-              </Button>
-            }
-          >
+          <Panel title="Panel Title">
             <p className="contact-sheet-description-text">
               Panel content. This card has a header with an action button and body padding.
             </p>
@@ -269,8 +260,7 @@ export default function ContactSheet() {
                 key: "type",
                 label: "Type",
                 render: (value) => (
-                  <Chip
-                    color={value === "Class" ? "violet" : value === "Individual" ? "cyan" : "amber"}
+                  <Chip variant={value === "Class" ? "violet" : value === "Individual" ? "cyan" : "amber"}
                   >
                     {value}
                   </Chip>
@@ -280,7 +270,7 @@ export default function ContactSheet() {
                 key: "status",
                 label: "Status",
                 render: (value) => (
-                  <Chip color={value === "active" ? "emerald" : "gray"}>{value}</Chip>
+                  <Chip variant={value === "active" ? "emerald" : "neutral"}>{value}</Chip>
                 ),
               },
               {
@@ -292,7 +282,7 @@ export default function ContactSheet() {
                 key: "action",
                 label: "",
                 render: () => (
-                  <Button variant="ghost" size="sm" title="Open">
+                  <Button variant="ghost" title="Open">
                     <ExternalLink size={12} />
                   </Button>
                 ),
@@ -394,7 +384,7 @@ export default function ContactSheet() {
                   Pull species records, normalize names, write to life.organism
                 </div>
               </div>
-              <Chip color="amber">running</Chip>
+              <Chip variant="amber">running</Chip>
             </div>
             <div className="pipeline-card-flow">
               {[
@@ -470,8 +460,7 @@ export default function ContactSheet() {
             Open modal
           </Button>
         </Row>
-        <Modal
-          open={modalOpen}
+        <Modal isOpen={modalOpen}
           onClose={() => setModalOpen(false)}
           title="Create Class"
           subtitle="Define a new ontology class"
@@ -510,7 +499,7 @@ export default function ContactSheet() {
           <dl className="kv contact-sheet-kv-list">
             <dt className="contact-sheet-kv-label">Type</dt>
             <dd className="contact-sheet-kv-value">
-              <Chip color="violet">Individual</Chip>
+              <Chip variant="violet">Individual</Chip>
             </dd>
             <dt className="contact-sheet-kv-label">ID</dt>
             <dd className="contact-sheet-kv-value contact-sheet-kv-value-mono">ind_0042</dd>
@@ -528,9 +517,10 @@ export default function ContactSheet() {
           <h3>Filter Bar + Table + Drawer Layout</h3>
           <div className="contact-sheet-schema-table-container">
             <FilterBar
-              searchValue={searchFilter}
               onSearchChange={setSearchFilter}
-              placeholder="Search by title or description…"
+              searchPlaceholder="Search by title or description…"
+              showingCount={filteredSchemaData.length}
+              totalCount={mockSchemaData.length}
             />
             <div className="contact-sheet-schema-table-wrapper">
               <SchemaTable

@@ -3,9 +3,7 @@ import { CheckCircle } from "lucide-react";
 import { useCreateClass, useClasses, useSchemes } from "@/api/hooks/ontology";
 import { useToasts } from "@/components/ui/Toast";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
-import { Panel } from "@/components/ui/Panel";
-import { Button } from "@tinkermonkey/heimdall-ui";
-import { Chip } from "@/components/ui/Chip";
+import { Button, Chip, Panel } from "@tinkermonkey/heimdall-ui";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { formatConfidence } from "@/utils/formatters";
 import { COPY } from "@/routes/app/extraction/-copy";
@@ -46,7 +44,7 @@ function EntityRow({ entity, index, isProcessing, onApprove, onReject }: EntityR
         <div style={{ fontWeight: 500, marginBottom: "4px" }}>{entity.label}</div>
         <div className="flex-row-center">
           {entity.entity_type && (
-            <Chip color="gray" className="text-xs">
+            <Chip variant="neutral" className="text-xs">
               {entity.entity_type}
             </Chip>
           )}
@@ -66,7 +64,6 @@ function EntityRow({ entity, index, isProcessing, onApprove, onReject }: EntityR
       <div className="flex-gap-sm">
         <Button
           variant="primary"
-          size="sm"
           onClick={() => onApprove(entity)}
           disabled={isProcessing}
           data-testid={`entity-review-approve-${entity.id}`}
@@ -75,7 +72,6 @@ function EntityRow({ entity, index, isProcessing, onApprove, onReject }: EntityR
         </Button>
         <Button
           variant="ghost"
-          size="sm"
           onClick={() => onReject(entity.id)}
           disabled={isProcessing}
           data-testid={`entity-review-reject-${entity.id}`}
@@ -291,7 +287,6 @@ export function EntityReviewPanel({
     <div className="flex-gap-sm">
       <Button
         variant="primary"
-        size="sm"
         onClick={handleApproveAll}
         disabled={isProcessing}
         data-testid="entity-review-approve-all-button"
@@ -300,7 +295,6 @@ export function EntityReviewPanel({
       </Button>
       <Button
         variant="ghost"
-        size="sm"
         onClick={handleRejectAll}
         disabled={isProcessing}
         data-testid="entity-review-reject-all-button"
@@ -314,7 +308,6 @@ export function EntityReviewPanel({
     <div data-testid={`entity-review-panel-${layerIndex}`}>
       <Panel
         title={`${COPY.ENTITY_REVIEW_PANEL_TITLE} — ${layerName} (${unlinkedEntities.length})`}
-        actions={batchActions}
       >
         <div className="stack">
           {unlinkedEntities.map((entity, index) => (

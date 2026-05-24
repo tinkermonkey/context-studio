@@ -482,10 +482,10 @@ class PipelineRepository(Protocol):
 
 | Adapter | Location | Notes |
 |---|---|---|
-| `SQLitePipelineRepository` | `adapters/persistence/sqlite/pipeline_repo.py` | Uses `operations.db` for storage. Maps `pipeline_configurations` and `pipeline_flavor_executions` tables. |
+| `SQLitePipelineRepository` | `adapters/persistence/sqlite/pipeline_repo.py` | Uses `operations.db` for storage. Maps `pipeline_configurations` and `pipeline_executions` tables. |
 
 **Current code this replaces:**
-- `llm/flavor_service.py` (the `PipelineFlavorService`)
+- `llm/flavor_service.py` (formerly `PipelineFlavorService` — renamed to `PipelineConfiguration`)
 - `llm/execution_tracker.py`
 
 ---
@@ -722,7 +722,7 @@ This table maps every significant current source file to its destination in the 
 | `nlp/model_downloader.py` | `adapters/nlp/model_downloader.py` | |
 | `nlp/proxy_manager.py` | `adapters/reference/proxy_manager.py` | |
 | `llm/service.py` | `adapters/llm/provider_router.py` | |
-| `llm/flavor_service.py` | `adapters/persistence/sqlite/pipeline_repo.py` | |
+| `llm/flavor_service.py` (PipelineFlavorService → PipelineConfiguration) | `adapters/persistence/sqlite/pipeline_repo.py` | |
 | `llm/execution_tracker.py` | `adapters/persistence/sqlite/pipeline_repo.py` | |
 | `llm/provider_router.py` | `adapters/llm/provider_router.py` | |
 | `llm/model_capabilities.py` | `adapters/llm/model_capabilities.py` | |

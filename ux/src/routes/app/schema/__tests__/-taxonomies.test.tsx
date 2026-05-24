@@ -7,10 +7,19 @@ import { render } from "@/test/test-utils";
 import {
   createListTaxonomies,
   createTaxonomy,
+  createListSchemes,
+  createListClasses,
+  createListProperties,
+  createListRelationships,
 } from "@/api/services/__tests__/fixtures/ontology.fixtures";
 import { TaxonomiesPage } from "../taxonomies";
 
-const server = setupServer();
+const server = setupServer(
+  rest.get("*/api/schemes", (req, res, ctx) => res(ctx.json(createListSchemes([])))),
+  rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([])))),
+  rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(createListProperties([])))),
+  rest.get("*/api/relationships", (req, res, ctx) => res(ctx.json(createListRelationships([])))),
+);
 
 beforeAll(() => {
   server.listen({ onUnhandledRequest: "error" });
@@ -135,7 +144,7 @@ describe("Taxonomies Schema Page", () => {
       });
 
       const monoId = screen.getByText("tax-123");
-      expect(monoId).toHaveClass("mono");
+      expect(monoId.tagName.toLowerCase()).toBe("code");
     });
 
     it("displays description column with em-dash placeholder when empty", async () => {

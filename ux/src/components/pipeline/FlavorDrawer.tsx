@@ -47,14 +47,13 @@ export function FlavorDrawer({ flavor, onClose, onDelete, isDeleting = false }: 
       <div className="drawer-actions">
         <Button
           variant="danger"
-          size="sm"
           onClick={() => setShowDeleteConfirm(true)}
           disabled={isDeleting}
           data-testid="flavor-drawer-delete-button"
         >
           {isDeleting ? "Deleting..." : "Delete"}
         </Button>
-        <Button variant="ghost" size="sm" onClick={onClose}>
+        <Button variant="ghost" onClick={onClose}>
           Close
         </Button>
       </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Drawer } from "@/components/ui/Drawer";
-import { TextInput as Input, TextArea as Textarea } from "@tinkermonkey/heimdall-ui";
+import { TextInput as Input, TextArea as Textarea, KVGrid } from "@tinkermonkey/heimdall-ui";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useUpdateProperty, useDeleteProperty } from "@/api/hooks/ontology/useProperties";
 import { useAutosave } from "@/hooks/useAutosave";
@@ -137,11 +137,11 @@ export function PropertyDrawer({ property, onClose }: PropertyDrawerProps) {
             />
           </div>
 
-          <div style={{ display: "flex", gap: "var(--space-2)", fontSize: "var(--text-xs)" }}>
-            <span style={{ color: "var(--canvas-fg-3)" }}>
-              Created: {new Date(property.created_at ?? "").toLocaleDateString()}
-            </span>
-          </div>
+          <KVGrid
+            rows={[
+              { key: "Created", value: new Date(property.created_at ?? "").toLocaleDateString() },
+            ]}
+          />
         </div>
       </Drawer>
 

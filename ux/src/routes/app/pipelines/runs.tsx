@@ -1,16 +1,13 @@
-import { TextInput as Input, Button } from "@tinkermonkey/heimdall-ui";
+import { Button, Chip, PageHeader, FilterBar, SegmentedControl } from "@tinkermonkey/heimdall-ui";
 import { useState, useMemo } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ColumnDef } from "@tanstack/react-table";
 import { ExternalLink } from "lucide-react";
 import { useAllPipelineExecutions } from "@/api/hooks/pipeline";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { SchemaTable } from "@/components/schema/SchemaTable";
+import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
 
-import { Chip } from "@/components/ui/Chip";
 import { getStatusColor } from "@/utils/statusColorUtils";
 import { COPY } from "./-copy";
 import type { components } from "@/api/types";
@@ -61,86 +58,76 @@ function RunsPageContent() {
     );
   }, [executions, searchFilter]);
 
-  const runColumns: ColumnDef<ExecutionWithPipeline>[] = [
+  const runColumns: Column<ExecutionWithPipeline>[] = [
     {
-      accessorKey: "status",
-      header: COPY.RUN_STATUS_HEADER,
-      size: 100,
-      cell: (info) => {
-        const status = info.getValue() as ExecutionWithPipeline["status"];
+      key: "status",
+      label: COPY.RUN_STATUS_HEADER,
+      width: "100px",
+      render: (value) => {
+        const status = value as ExecutionWithPipeline["status"];
         return (
-          <Chip color={getStatusColor(status)} data-testid={`status-chip-${status}`}>
+          <Chip variant={getStatusColor(status)} data-testid={`status-chip-${status}`}>
             {status.charAt(0).toUpperCase() + status.slice(1)}
           </Chip>
         );
       },
     },
     {
-      accessorKey: "pipeline_title",
-      header: COPY.RUN_PIPELINE_HEADER,
-      cell: (info) => {
-        const title = info.getValue() as string;
-        const pipelineId = info.row.original.pipeline_config_id;
-        return (
-          <span
-            className="runs-pipeline-link"
-            onClick={() => navigate({ to: `/app/pipelines/${pipelineId}` })}
-            data-testid={`pipeline-link-${pipelineId}`}
-            role="button"
-          >
-            {title}
-          </span>
-        );
-      },
+      key: "pipeline_title",
+      label: COPY.RUN_PIPELINE_HEADER,
+      render: (value, row) => (
+        <span
+          className="text-cyan-400 font-medium cursor-pointer"
+          onClick={() => navigate({ to: `/app/pipelines/${row.pipeline_config_id}` })}
+          data-testid={`pipeline-link-${row.pipeline_config_id}`}
+          role="button"
+        >
+          {value as string}
+        </span>
+      ),
     },
     {
-      accessorKey: "timestamp",
-      header: COPY.RUN_STARTED_HEADER,
-      cell: (info) => {
-        const timestamp = info.getValue() as string;
+      key: "timestamp",
+      label: COPY.RUN_STARTED_HEADER,
+      render: (value, row) => {
+        const timestamp = value as string;
         return (
-          <span
-            title={formatTimestamp(timestamp)}
-            data-testid={`timestamp-${info.row.original.id}`}
-          >
+          <span title={formatTimestamp(timestamp)} data-testid={`timestamp-${row.id}`}>
             {new Date(timestamp).toLocaleDateString()}
           </span>
         );
       },
     },
     {
-      accessorKey: "duration_ms",
-      header: COPY.RUN_DURATION_HEADER,
-      cell: (info) => {
-        const duration = info.getValue() as number;
-        return (
-          <span className="mono" data-testid={`duration-${info.row.original.id}`}>
-            {formatDuration(duration)}
-          </span>
-        );
-      },
+      key: "duration_ms",
+      label: COPY.RUN_DURATION_HEADER,
+      render: (value, row) => (
+        <code className="font-mono text-xs" data-testid={`duration-${row.id}`}>
+          {formatDuration(value as number)}
+        </code>
+      ),
     },
     {
-      id: "tokens",
-      header: COPY.RUN_TOKENS_HEADER,
-      cell: ({ row }) => {
-        const total = (row.original.tokens_in || 0) + (row.original.tokens_out || 0);
+      key: "id",
+      label: COPY.RUN_TOKENS_HEADER,
+      render: (_, row) => {
+        const total = (row.tokens_in || 0) + (row.tokens_out || 0);
         return (
-          <span className="mono" data-testid={`tokens-${row.original.id}`}>
+          <code className="font-mono text-xs" data-testid={`tokens-${row.id}`}>
             {total}
-          </span>
+          </code>
         );
       },
     },
     {
-      id: "actions",
-      header: "",
-      size: 60,
-      cell: ({ row }) => (
+      key: "id",
+      label: "",
+      width: "60px",
+      render: (_, row) => (
         <a
-          href={`/app/pipelines/${row.original.pipeline_config_id}?execution=${row.original.id}`}
-          data-testid={`view-log-${row.original.id}`}
-          className="runs-view-log-link"
+          href={`/app/pipelines/${row.pipeline_config_id}?execution=${row.id}`}
+          data-testid={`view-log-${row.id}`}
+          className="flex items-center gap-1 text-xs opacity-60 hover:opacity-100"
         >
           {COPY.PIPELINE_VIEW_LOG}
           <ExternalLink size={12} />
@@ -149,11 +136,9 @@ function RunsPageContent() {
     },
   ];
 
-  let content;
-
   if (isLoading) {
-    content = (
-      <div className="stack">
+    return (
+      <div data-testid="pipeline-runs-page" className="stack">
         <Skeleton height={32} width={200} />
         <Skeleton height={40} />
         {Array.from({ length: 5 }).map((_, i) => (
@@ -161,9 +146,11 @@ function RunsPageContent() {
         ))}
       </div>
     );
-  } else if (error) {
-    content = (
-      <div className="stack">
+  }
+
+  if (error) {
+    return (
+      <div data-testid="pipeline-runs-page" className="stack">
         <ErrorBanner
           error={error}
           onRetry={() => refetch()}
@@ -172,92 +159,86 @@ function RunsPageContent() {
         />
       </div>
     );
-  } else if (totalCount === 0) {
-    content = <EmptyState title={COPY.NO_RUNS_TITLE} description={COPY.NO_RUNS_DESCRIPTION} />;
-  } else {
-    const hasFilters = !!searchFilter || statusFilter !== "all";
-    const showFilteredEmpty = totalCount > 0 && filteredExecutions.length === 0 && hasFilters;
-
-    content = (
-      <>
-        <PageHeader eyebrow="Pipelines" title={COPY.RUN_HISTORY_PAGE_TITLE} />
-
-        <div className="stack runs-filter-bar">
-          <Input
-            type="text"
-            placeholder={COPY.SEARCH_RUNS_PLACEHOLDER}
-            value={searchFilter}
-            onChange={(e) => setSearchFilter(e.target.value)}
-            data-testid="runs-search-input"
-          />
-          <div role="radiogroup" aria-label={COPY.FILTER_RUNS_LABEL} className="runs-filter-group">
-            {(
-              [
-                { label: COPY.FILTER_ALL, value: "all" },
-                { label: COPY.STATUS_FILTER_SUCCESS, value: "success" },
-                { label: COPY.STATUS_FILTER_ERROR, value: "error" },
-                { label: COPY.STATUS_FILTER_TIMEOUT, value: "timeout" },
-              ] as const
-            ).map((option) => (
-              <button
-                key={option.value}
-                role="radio"
-                aria-checked={statusFilter === option.value}
-                onClick={() => {
-                  setStatusFilter(option.value);
-                  setCurrentPage(0);
-                }}
-                className="status-filter-chip"
-                data-testid={`status-filter-${option.value}`}
-                data-active={statusFilter === option.value}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {showFilteredEmpty ? (
-          <EmptyState
-            title={COPY.NO_RUNS_FILTERED_TITLE}
-            description={COPY.NO_RUNS_FILTERED_DESCRIPTION}
-          />
-        ) : (
-          <>
-            <div data-testid="pipeline-runs-table">
-              <SchemaTable columns={runColumns} data={filteredExecutions} testIdPrefix="run" />
-            </div>
-
-            {totalCount > pageSize && (
-              <div className="runs-pagination-container">
-                <Button
-                  variant="ghost"
-                  disabled={currentPage === 0}
-                  onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-                  data-testid="pagination-prev"
-                >
-                  {COPY.PAGINATION_PREVIOUS}
-                </Button>
-                <span className="runs-page-counter">
-                  Page {currentPage + 1} of {Math.ceil(totalCount / pageSize)}
-                </span>
-                <Button
-                  variant="ghost"
-                  disabled={(currentPage + 1) * pageSize >= totalCount}
-                  onClick={() => setCurrentPage(currentPage + 1)}
-                  data-testid="pagination-next"
-                >
-                  {COPY.PAGINATION_NEXT}
-                </Button>
-              </div>
-            )}
-          </>
-        )}
-      </>
-    );
   }
 
-  return <div data-testid="pipeline-runs-page">{content}</div>;
+  const hasFilters = !!searchFilter || statusFilter !== "all";
+  const showFilteredEmpty = totalCount > 0 && filteredExecutions.length === 0 && hasFilters;
+
+  return (
+    <div data-testid="pipeline-runs-page" className="stack">
+      <PageHeader
+        eyebrow="Pipelines"
+        title={COPY.RUN_HISTORY_PAGE_TITLE}
+        idChip="/pipelines/runs"
+      />
+
+      <FilterBar
+        searchPlaceholder={COPY.SEARCH_RUNS_PLACEHOLDER}
+        onSearchChange={(v) => {
+          setSearchFilter(v);
+          setCurrentPage(0);
+        }}
+        showingCount={filteredExecutions.length}
+        totalCount={totalCount}
+        data-testid="runs-filter-bar"
+      />
+
+      <SegmentedControl
+        value={statusFilter}
+        onChange={(v) => {
+          setStatusFilter(v as StatusFilter);
+          setCurrentPage(0);
+        }}
+        options={[
+          { value: "all", label: COPY.FILTER_ALL },
+          { value: "success", label: COPY.STATUS_FILTER_SUCCESS },
+          { value: "error", label: COPY.STATUS_FILTER_ERROR },
+          { value: "timeout", label: COPY.STATUS_FILTER_TIMEOUT },
+        ]}
+        aria-label={COPY.FILTER_RUNS_LABEL}
+        data-testid="runs-status-filter"
+      />
+
+      {totalCount === 0 ? (
+        <EmptyState title={COPY.NO_RUNS_TITLE} description={COPY.NO_RUNS_DESCRIPTION} />
+      ) : showFilteredEmpty ? (
+        <EmptyState
+          title={COPY.NO_RUNS_FILTERED_TITLE}
+          description={COPY.NO_RUNS_FILTERED_DESCRIPTION}
+        />
+      ) : (
+        <>
+          <div data-testid="pipeline-runs-table">
+            <SchemaTable columns={runColumns} data={filteredExecutions} testIdPrefix="run" />
+          </div>
+
+          {totalCount > pageSize && (
+            <div className="flex items-center justify-center gap-4">
+              <Button
+                variant="ghost"
+                disabled={currentPage === 0}
+                onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                data-testid="pagination-prev"
+              >
+                {COPY.PAGINATION_PREVIOUS}
+              </Button>
+              <span className="text-xs opacity-60">
+                Page {currentPage + 1} of {Math.ceil(totalCount / pageSize)}
+              </span>
+              <Button
+                variant="ghost"
+                disabled={(currentPage + 1) * pageSize >= totalCount}
+                onClick={() => setCurrentPage(currentPage + 1)}
+                data-testid="pagination-next"
+              >
+                {COPY.PAGINATION_NEXT}
+              </Button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
 }
 
 export const Route = createFileRoute("/app/pipelines/runs")({

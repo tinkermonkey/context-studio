@@ -1,17 +1,14 @@
-import { Button, TextInput as Input } from "@tinkermonkey/heimdall-ui";
+import { Button, Modal, PageHeader, FilterBar } from "@tinkermonkey/heimdall-ui";
 import { useState, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { ColumnDef } from "@tanstack/react-table";
 import { Plus } from "lucide-react";
 import { useFlavors, useCreateFlavor, useDeleteFlavor } from "@/api/hooks/flavor";
-import { SchemaTable } from "@/components/schema/SchemaTable";
+import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Modal } from "@/components/ui/Modal";
-import { PageHeader } from "@/components/ui/PageHeader";
 import { FlavorForm } from "@/components/pipeline/FlavorForm";
 import { FlavorDrawer } from "@/components/pipeline/FlavorDrawer";
 import { COPY } from "./-copy";
@@ -38,41 +35,38 @@ function FlavorsContent() {
 
   const selectedFlavor = flavors.find((f) => f.id === selectedFlavorId);
 
-  const flavorColumns: ColumnDef<PipelineFlavorResponse>[] = [
+  const flavorColumns: Column<PipelineFlavorResponse>[] = [
     {
-      accessorKey: "name",
-      header: "Name",
-      cell: (info) => {
-        const flavor = info.row.original;
-        return (
-          <span
-            data-testid={`flavor-name-${flavor.id}`}
-            className="cursor-pointer hover:underline"
-            onClick={() => setSelectedFlavorId(flavor.id)}
-            role="button"
-          >
-            {info.getValue() as string}
-          </span>
-        );
-      },
+      key: "name",
+      label: "Name",
+      sortable: true,
+      render: (value, row) => (
+        <span
+          data-testid={`flavor-name-${row.id}`}
+          className="cursor-pointer hover:underline"
+          onClick={() => setSelectedFlavorId(row.id)}
+          role="button"
+        >
+          {value as string}
+        </span>
+      ),
     },
     {
-      accessorKey: "step_count",
-      header: "Steps",
-      size: 80,
-      cell: (info) => {
-        const flavor = info.row.original;
-        return <span data-testid={`flavor-steps-${flavor.id}`}>{info.getValue() as number}</span>;
-      },
+      key: "step_count",
+      label: "Steps",
+      width: "80px",
+      render: (value, row) => (
+        <span data-testid={`flavor-steps-${row.id}`}>{value as number}</span>
+      ),
     },
     {
-      id: "actions",
-      header: "",
-      size: 50,
-      cell: ({ row }) => (
+      key: "id",
+      label: "",
+      width: "50px",
+      render: (_, row) => (
         <button
-          data-testid={`flavor-row-actions-${row.original.id}`}
-          onClick={() => setSelectedFlavorId(row.original.id)}
+          data-testid={`flavor-row-actions-${row.id}`}
+          onClick={() => setSelectedFlavorId(row.id)}
           className="text-sm text-blue-500 hover:underline"
         >
           View
@@ -81,44 +75,15 @@ function FlavorsContent() {
     },
   ];
 
-  if (isLoading) {
-    return (
-      <div data-testid="flavors-page" className="stack">
-        <div className="flex-between">
-          <Skeleton width={200} height={32} />
-          <Skeleton width={120} height={32} />
-        </div>
-        <Skeleton height={40} />
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} height={40} />
-        ))}
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div data-testid="flavors-page" className="stack">
-        <ErrorBanner
-          error={error}
-          onRetry={() => refetch()}
-          message={COPY.FLAVORS_LOAD_ERROR}
-          daemonLogPath="/local-server/logs/context_studio.log"
-        />
-      </div>
-    );
-  }
-
   const hasFilters = !!searchFilter;
   const showFilteredEmpty = flavors.length > 0 && filteredFlavors.length === 0 && hasFilters;
 
   return (
     <div data-testid="flavors-page">
       <Modal
-        open={showCreateModal}
+        isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         title="Create New Flavor"
-        size="md"
       >
         <FlavorForm
           onSubmit={async (data) => {
@@ -152,6 +117,7 @@ function FlavorsContent() {
           <PageHeader
             eyebrow="Pipelines"
             title={COPY.FLAVORS_PAGE_TITLE}
+            idChip="/pipelines/flavors"
             actions={
               <Button
                 variant="primary"
@@ -164,29 +130,48 @@ function FlavorsContent() {
             }
           />
 
-          <Input
-            type="text"
-            placeholder={COPY.SEARCH_FLAVORS_PLACEHOLDER}
-            value={searchFilter}
-            onChange={(e) => setSearchFilter(e.target.value)}
-          />
-
-          {showFilteredEmpty ? (
-            <EmptyState
-              title={COPY.NO_FLAVORS_FILTERED_TITLE}
-              description={COPY.NO_FLAVORS_FILTERED_DESCRIPTION}
-            />
-          ) : flavors.length === 0 ? (
-            <EmptyState
-              title={COPY.NO_FLAVORS_TITLE}
-              description={COPY.NO_FLAVORS_DESCRIPTION}
-              action={{
-                label: COPY.CREATE_FLAVOR_CTA,
-                onClick: () => setShowCreateModal(true),
-              }}
+          {isLoading ? (
+            <>
+              <Skeleton height={40} />
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} height={40} />
+              ))}
+            </>
+          ) : error ? (
+            <ErrorBanner
+              error={error}
+              onRetry={() => refetch()}
+              message={COPY.FLAVORS_LOAD_ERROR}
+              daemonLogPath="/local-server/logs/context_studio.log"
             />
           ) : (
-            <SchemaTable columns={flavorColumns} data={filteredFlavors} testIdPrefix="flavor-row" />
+            <>
+              <FilterBar
+                searchPlaceholder={COPY.SEARCH_FLAVORS_PLACEHOLDER}
+                onSearchChange={setSearchFilter}
+                showingCount={filteredFlavors.length}
+                totalCount={flavors.length}
+                data-testid="flavors-filter-bar"
+              />
+
+              {showFilteredEmpty ? (
+                <EmptyState
+                  title={COPY.NO_FLAVORS_FILTERED_TITLE}
+                  description={COPY.NO_FLAVORS_FILTERED_DESCRIPTION}
+                />
+              ) : flavors.length === 0 ? (
+                <EmptyState
+                  title={COPY.NO_FLAVORS_TITLE}
+                  description={COPY.NO_FLAVORS_DESCRIPTION}
+                  action={{
+                    label: COPY.CREATE_FLAVOR_CTA,
+                    onClick: () => setShowCreateModal(true),
+                  }}
+                />
+              ) : (
+                <SchemaTable columns={flavorColumns} data={filteredFlavors} testIdPrefix="flavor-row" />
+              )}
+            </>
           )}
         </div>
       </SchemaPageLayout>

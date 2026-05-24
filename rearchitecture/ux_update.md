@@ -229,8 +229,7 @@ Per the design handoff:
 │   │       ├── pipelines/
 │   │       │   ├── index.tsx
 │   │       │   ├── $pipelineId.tsx
-│   │       │   ├── runs.tsx
-│   │       │   └── flavors.tsx
+│   │       │   └── runs.tsx
 │   │       ├── reference/
 │   │       │   ├── sources.tsx
 │   │       │   └── workflows.tsx
@@ -398,7 +397,6 @@ Extraction          /app/extraction
 Pipelines           /app/pipelines
   All pipelines     /app/pipelines (index)
   Run history       /app/pipelines/runs
-  Flavors           /app/pipelines/flavors
 External Reference  /app/reference
   Sources           /app/reference/sources
   Workflows         /app/reference/workflows

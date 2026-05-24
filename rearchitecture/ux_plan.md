@@ -352,10 +352,10 @@ Goal: Graph visualization, 4-layer text extraction, and full pipeline management
 3. **Pipelines** (`pipelines/`)
    - `index.tsx` — 2-column `PipelineCard` grid; failed pipelines pin to top
    - `PipelineCard.tsx` — finalize with live run status (chip + animated pulse when running), foot stats
-   - `$pipelineId.tsx` — detail drawer: definition editor, last 10 runs, error log
+   - `$pipelineId.tsx` — detail drawer: definition editor, last 10 runs, error log, and `PipelineConfiguration` management (LLM provider/model/prompt settings scoped to this pipeline type)
    - `runs.tsx` — full run history table with status chips, duration, record counts
-   - `flavors.tsx` — pipeline flavor/template management
    - Wire "Run" button: call `useExecutePipeline`, update statusbar ("1 pipeline running")
+   - Note: pipeline configurations (`PipelineConfiguration`) are managed within the pipeline detail view — there is no standalone `/pipelines/configurations` route. One pipeline type can have many configurations (e.g. different models for the same extraction type); each configuration's `pipeline` field identifies which type it belongs to.
 
 ### Verification
 

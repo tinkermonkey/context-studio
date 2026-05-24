@@ -142,10 +142,10 @@ function ConflictRow({
             autoFocus
             aria-label={`Edit resolution for ${conflict.field_name}`}
           />
-          <Button size="sm" variant="primary" onClick={onEditSubmit}>
+          <Button variant="primary" onClick={onEditSubmit}>
             ✓
           </Button>
-          <Button size="sm" variant="ghost" onClick={onEditCancel}>
+          <Button variant="ghost" onClick={onEditCancel}>
             ✕
           </Button>
         </div>
@@ -153,7 +153,6 @@ function ConflictRow({
         <div className="flex-gap-sm">
           <Button
             data-testid={`conflict-keep-ours-${conflict.entity_id}-${conflict.field_name}`}
-            size="sm"
             variant="ghost"
             onClick={onKeepOurs}
           >
@@ -161,7 +160,6 @@ function ConflictRow({
           </Button>
           <Button
             data-testid={`conflict-keep-theirs-${conflict.entity_id}-${conflict.field_name}`}
-            size="sm"
             variant="ghost"
             onClick={onKeepTheirs}
           >
@@ -169,7 +167,6 @@ function ConflictRow({
           </Button>
           <Button
             data-testid={`conflict-edit-${conflict.entity_id}-${conflict.field_name}`}
-            size="sm"
             variant="ghost"
             onClick={onEdit}
           >

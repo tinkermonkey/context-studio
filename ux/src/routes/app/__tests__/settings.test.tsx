@@ -116,9 +116,13 @@ describe("Settings Page", () => {
         expect(screen.getByText("My Workspace")).toBeInTheDocument();
         expect(screen.getByText("all-MiniLM-L6-v2")).toBeInTheDocument();
         expect(screen.getByText("en_core_web_sm")).toBeInTheDocument();
-        // Check for edit buttons which indicate config tiles are rendered
-        const editButtons = screen.getAllByRole("button", { name: /edit/i });
-        expect(editButtons.length).toBeGreaterThanOrEqual(5);
+        // Check that config tiles are rendered via their testids
+        expect(screen.getByTestId("config-tile-workspace")).toBeInTheDocument();
+        expect(screen.getByTestId("config-tile-llm")).toBeInTheDocument();
+        expect(screen.getByTestId("config-tile-embedding")).toBeInTheDocument();
+        expect(screen.getByTestId("config-tile-nlp")).toBeInTheDocument();
+        expect(screen.getByTestId("config-tile-reference-sources")).toBeInTheDocument();
+        expect(screen.getByTestId("config-tile-sync")).toBeInTheDocument();
       });
     });
   });
@@ -377,10 +381,10 @@ describe("Settings Page", () => {
         expect(screen.getByText("My Workspace")).toBeInTheDocument();
       });
 
-      // Click on workspace config tile using its testid
-      const editButton = screen.getByTestId("config-tile-workspace-button");
-      expect(editButton).toBeInTheDocument();
-      await userEvent.click(editButton);
+      // Click on workspace config tile (the tile itself is the button)
+      const tile = screen.getByTestId("config-tile-workspace");
+      expect(tile).toBeInTheDocument();
+      await userEvent.click(tile);
 
       // Modal should open
       await waitFor(() => {

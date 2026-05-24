@@ -147,7 +147,7 @@ function SyncStatusCard({
             />
           </div>
         ) : (
-          <Button variant="primary" size="md" onClick={onAction} style={{ width: "100%" }}>
+          <Button variant="primary" onClick={onAction} style={{ width: "100%" }}>
             {title}
           </Button>
         )}

@@ -631,6 +631,308 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
       },
       node ? `Inspector for ${node.id}` : "No node selected",
     ),
+  SplitPane: React.forwardRef(
+    ({ direction = "horizontal", first, second, className = "", ...props }: any, ref: any) =>
+      React.createElement(
+        "div",
+        {
+          ref,
+          className: ["split-pane", `split-pane--${direction}`, className]
+            .filter(Boolean)
+            .join(" "),
+          ...props,
+        },
+        React.createElement("div", { className: "split-pane__first" }, first),
+        second != null && React.createElement("div", { className: "split-pane__second" }, second),
+      ),
+  ),
+  FilterBar: React.forwardRef(
+    (
+      {
+        filters = [],
+        onSearchChange,
+        onFilterRemove,
+        searchPlaceholder = "Search…",
+        children,
+        showingCount: _showingCount,
+        totalCount: _totalCount,
+        className = "",
+        ...props
+      }: any,
+      ref: any,
+    ) =>
+      React.createElement(
+        "div",
+        {
+          ref,
+          className: ["filterbar", className].filter(Boolean).join(" "),
+          ...props,
+        },
+        React.createElement("input", {
+          type: "text",
+          placeholder: searchPlaceholder,
+          onChange: (e: any) => onSearchChange?.(e.target.value),
+          "data-testid": "schema-search-input",
+        }),
+        filters.length > 0 &&
+          React.createElement(
+            "div",
+            { className: "filterbar__chips" },
+            filters.map((filter: any) =>
+              React.createElement(
+                "span",
+                { key: filter.id, className: "filterbar__chip" },
+                filter.label,
+                React.createElement(
+                  "button",
+                  { onClick: () => onFilterRemove?.(filter.id) },
+                  "✕",
+                ),
+              ),
+            ),
+          ),
+        children,
+      ),
+  ),
+  KVGrid: React.forwardRef(({ rows = [], className = "", ...props }: any, ref: any) =>
+    React.createElement(
+      "dl",
+      { ref, className: ["kv-grid", className].filter(Boolean).join(" "), ...props },
+      rows.flatMap((row: any) => [
+        React.createElement("dt", { key: `${row.key}-k` }, row.key),
+        React.createElement("dd", { key: `${row.key}-v` }, row.value),
+      ]),
+    ),
+  ),
+  VersionPill: React.forwardRef(({ children, className = "", ...props }: any, ref: any) =>
+    React.createElement(
+      "span",
+      { ref, className: ["version-pill", className].filter(Boolean).join(" "), ...props },
+      children,
+    ),
+  ),
+  RowMenu: React.forwardRef(
+    ({ actions = [], onAction, className = "", ...props }: any, ref: any) =>
+      React.createElement(
+        "div",
+        {
+          ref,
+          className: ["row-menu", className].filter(Boolean).join(" "),
+          ...props,
+        },
+        React.createElement(
+          "button",
+          {
+            className: "row-menu__trigger",
+            type: "button",
+            onClick: (e: any) => e.stopPropagation(),
+          },
+          "⋮",
+        ),
+      ),
+  ),
+  HierarchyTree: React.forwardRef(({ children, className = "", ...props }: any, ref: any) =>
+    React.createElement(
+      "div",
+      { ref, className: ["hierarchy-tree", className].filter(Boolean).join(" "), ...props },
+      children,
+    ),
+  ),
+  HierarchyRow: React.forwardRef(
+    (
+      {
+        depth = 0,
+        domain,
+        kind,
+        label,
+        description,
+        meta,
+        selected,
+        onSelect,
+        className = "",
+        ...props
+      }: any,
+      ref: any,
+    ) =>
+      React.createElement(
+        "div",
+        {
+          ref,
+          className: ["hierarchy-row", selected && "hierarchy-row--selected", className]
+            .filter(Boolean)
+            .join(" "),
+          "data-depth": depth,
+          "data-domain": domain,
+          "data-kind": kind,
+          onClick: onSelect,
+          ...props,
+        },
+        React.createElement("span", { className: "hierarchy-row__label" }, label),
+        meta && React.createElement("span", { className: "hierarchy-row__meta" }, meta),
+      ),
+  ),
+  SegmentedControl: React.forwardRef(
+    ({ value, onChange, options = [], className = "", ...props }: any, ref: any) =>
+      React.createElement(
+        "div",
+        {
+          ref,
+          className: ["segmented-control", className].filter(Boolean).join(" "),
+          role: "group",
+          ...props,
+        },
+        options.map((option: any) =>
+          React.createElement(
+            "button",
+            {
+              key: option.value,
+              type: "button",
+              role: "radio",
+              "aria-checked": value === option.value,
+              className: [
+                "segmented-control__option",
+                value === option.value ? "segmented-control__option--active" : "",
+              ]
+                .filter(Boolean)
+                .join(" "),
+              "data-testid": `status-filter-${option.value}`,
+              "data-active": value === option.value,
+              onClick: () => onChange?.(option.value),
+            },
+            option.label,
+          ),
+        ),
+      ),
+  ),
+  ConfigTile: React.forwardRef(
+    ({ icon, title, description, summary = [], onClick, className = "", ...props }: any, ref: any) =>
+      React.createElement(
+        "button",
+        {
+          ref,
+          type: "button",
+          className: ["config-tile", className].filter(Boolean).join(" "),
+          onClick,
+          ...props,
+        },
+        React.createElement("div", { className: "config-tile__icon", "data-icon": icon }),
+        React.createElement("div", { className: "config-tile__title" }, title),
+        React.createElement("div", { className: "config-tile__description" }, description),
+        React.createElement(
+          "dl",
+          { className: "config-tile__summary" },
+          summary.flatMap((item: any) => [
+            React.createElement("dt", { key: `${item.label}-k` }, item.label),
+            React.createElement("dd", { key: `${item.label}-v` }, item.value),
+          ]),
+        ),
+      ),
+  ),
+  WorkspaceSwitcherDialog: React.forwardRef(
+    (
+      {
+        isOpen,
+        onClose,
+        current,
+        recent = [],
+        onOpenFolder,
+        onNewWorkspace,
+        onCloneFromGit,
+        onPickRecent,
+        ...props
+      }: any,
+      ref: any,
+    ) => {
+      if (!isOpen) return null;
+      return React.createElement(
+        "div",
+        { ref, "data-testid": "workspace-switcher-dialog", role: "dialog", ...props },
+        current &&
+          React.createElement(
+            "button",
+            {
+              "data-testid": "workspace-use-default-tile",
+              onClick: () => onPickRecent?.(current),
+            },
+            current.name,
+          ),
+        React.createElement(
+          "button",
+          { "data-testid": "workspace-open-folder-tile", onClick: onOpenFolder },
+          "Open folder…",
+        ),
+        React.createElement(
+          "button",
+          { "data-testid": "workspace-new-workspace-tile", onClick: onNewWorkspace },
+          "New workspace…",
+        ),
+        React.createElement(
+          "button",
+          { "data-testid": "workspace-clone-git-tile", onClick: onCloneFromGit },
+          "Clone from git…",
+        ),
+        recent
+          .filter((w: any) => !current || w.id !== current.id)
+          .map((workspace: any) =>
+            React.createElement(
+              "button",
+              {
+                key: workspace.id,
+                "data-testid": `workspace-recent-${workspace.id}`,
+                onClick: () => onPickRecent?.(workspace),
+              },
+              workspace.name,
+            ),
+          ),
+      );
+    },
+  ),
+  QuickAccessGrid: React.forwardRef(
+    ({ tiles = [], onAction, columns = 3, className = "", ...props }: any, ref: any) =>
+      React.createElement(
+        "div",
+        {
+          ref,
+          className: ["quick-access-grid", className].filter(Boolean).join(" "),
+          ...props,
+        },
+        tiles.map((tile: any) =>
+          React.createElement(
+            "button",
+            {
+              key: tile.id,
+              type: "button",
+              className: "quick-access-tile",
+              "data-testid": `quick-access-${tile.id}`,
+              onClick: () => onAction?.(tile.id),
+            },
+            React.createElement("span", { "data-icon": tile.icon }),
+            React.createElement("span", { className: "quick-access-tile__title" }, tile.title),
+            React.createElement(
+              "span",
+              { className: "quick-access-tile__description" },
+              tile.description,
+            ),
+          ),
+        ),
+      ),
+  ),
+  QuickAccessTile: React.forwardRef(
+    ({ icon, title, description, onClick, className = "", ...props }: any, ref: any) =>
+      React.createElement(
+        "button",
+        {
+          ref,
+          type: "button",
+          className: ["quick-access-tile", className].filter(Boolean).join(" "),
+          onClick,
+          ...props,
+        },
+        React.createElement("span", { "data-icon": icon }),
+        React.createElement("span", { className: "quick-access-tile__title" }, title),
+        React.createElement("span", { className: "quick-access-tile__description" }, description),
+      ),
+  ),
 }));
 
 // Mock window.scrollTo to avoid jsdom "Not implemented" errors

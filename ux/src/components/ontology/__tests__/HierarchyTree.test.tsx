@@ -97,15 +97,9 @@ describe("HierarchyTree", () => {
       expect(screen.getByText("Another Root")).toBeInTheDocument();
     });
 
-    it("applies kg-tree class", () => {
+    it("renders a hierarchy tree container", () => {
       const { container } = render(<HierarchyTree classes={mockClasses} />);
-      expect(container.querySelector(".kg-tree")).toBeInTheDocument();
-    });
-
-    it("applies kg-row and kg-cell classes to nodes", () => {
-      const { container } = render(<HierarchyTree classes={mockClasses} />);
-      expect(container.querySelector(".kg-row")).toBeInTheDocument();
-      expect(container.querySelector(".kg-cell")).toBeInTheDocument();
+      expect(container.querySelector('[data-testid="hierarchy-node-class-1"]')).toBeInTheDocument();
     });
   });
 
@@ -166,18 +160,15 @@ describe("HierarchyTree", () => {
     });
   });
 
-  describe("child count badge", () => {
-    it("renders badge with child count", () => {
-      const { container } = render(<HierarchyTree classes={mockHierarchy} />);
-      const badge = container.querySelector(".badge-tiny");
-      expect(badge).toBeInTheDocument();
-      expect(badge).toHaveTextContent("2");
+  describe("child count meta", () => {
+    it("renders child count for nodes with children", () => {
+      render(<HierarchyTree classes={mockHierarchy} />);
+      expect(screen.getByText("2")).toBeInTheDocument();
     });
 
-    it("does not render badge for leaf nodes", () => {
-      const { container } = render(<HierarchyTree classes={[mockHierarchy[2]]} />);
-      const badge = container.querySelector(".badge-tiny");
-      expect(badge).not.toBeInTheDocument();
+    it("does not render child count for leaf nodes", () => {
+      render(<HierarchyTree classes={[mockHierarchy[2]]} />);
+      expect(screen.queryByText("2")).not.toBeInTheDocument();
     });
   });
 
@@ -269,21 +260,19 @@ describe("HierarchyTree", () => {
       expect(screen.getByText("Child 1")).toBeInTheDocument();
       expect(screen.getAllByLabelText("Expand")).toHaveLength(1); // Just child-1's expand button
 
-      // Expand child-1 (depth 1)
-      await user.click(
-        screen
-          .getByText("Child 1")
-          .closest(".kg-row")
-          ?.querySelector("button") as HTMLButtonElement,
-      );
+      // Expand child-1 (depth 1) — find the expand button for "Child 1"
+      const child1Node = screen.getByTestId("hierarchy-node-child-1");
+      const child1Row = child1Node.closest("div");
+      const child1ExpandBtn = child1Row?.parentElement?.querySelector("button[aria-label]") as HTMLButtonElement;
+      await user.click(child1ExpandBtn);
 
       // Grandchild should be visible
       expect(screen.getByText("Grandchild")).toBeInTheDocument();
 
       // Grandchild should NOT have an expand button (depth 2 >= maxDepth 2)
       const grandchildNode = screen.getByTestId("hierarchy-node-grandchild-1");
-      const grandchildRow = grandchildNode.closest(".kg-row");
-      const expandButtons = grandchildRow?.querySelectorAll("button[aria-label]");
+      const grandchildContainer = grandchildNode.closest("div")?.parentElement;
+      const expandButtons = grandchildContainer?.querySelectorAll("button[aria-label]");
       expect(expandButtons?.length || 0).toBe(0);
     });
   });

@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { createFileRoute, Outlet, useNavigate, redirect } from "@tanstack/react-router";
+import { ShellLayout } from "@tinkermonkey/heimdall-ui";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { useCommandPaletteActions } from "@/hooks/useCommandPaletteActions";
 import { createStaticPaletteActions } from "@/config/staticPaletteActions";
 import { getWorkspacePath } from "@/lib/workspaceStorage";
-import { Sidebar } from "@/components/shell/Sidebar";
-import { Topbar } from "@/components/shell/Topbar";
-import { Statusbar } from "@/components/shell/Statusbar";
-import { Titlebar } from "@/components/shell/Titlebar";
+import { buildSidebarProps } from "@/components/shell/Sidebar";
+import { buildTopbarProps } from "@/components/shell/Topbar";
+import { buildStatusbarProps } from "@/components/shell/Statusbar";
+import { buildTitlebarProps } from "@/components/shell/Titlebar";
 import { useCommandPaletteStore } from "@/stores/commandPalette";
 
 export const Route = createFileRoute("/app")({
@@ -117,25 +118,21 @@ function AppShell() {
     };
   }, [registerActions, unregisterActions]);
 
+  const sidebarProps = buildSidebarProps(collapsed, setCollapsed);
+  const topbarProps = buildTopbarProps();
+  const statusbarProps = buildStatusbarProps();
+  const titlebarProps = buildTitlebarProps();
+
   return (
-    <div className="shell-layout">
-      <Titlebar />
-      <div className="shell-layout__main">
-        <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((v) => !v)} />
-        <div className="shell-layout__content">
-          <Topbar />
-          <div className="shell-layout__canvas">
-            <div className="canvas-scroll">
-              <div className="canvas-inner">
-                <ErrorBoundary>
-                  <Outlet />
-                </ErrorBoundary>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <Statusbar />
-    </div>
+    <ShellLayout
+      sidebar={sidebarProps}
+      topbar={topbarProps}
+      statusbar={statusbarProps}
+      titlebar={titlebarProps}
+    >
+      <ErrorBoundary>
+        <Outlet />
+      </ErrorBoundary>
+    </ShellLayout>
   );
 }

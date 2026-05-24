@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { useToasts } from "@/components/ui/Toast";
-import { TabBar } from "@tinkermonkey/heimdall-ui";
-import { PageHeader } from "@/components/ui/PageHeader";
+import { TabBar, PageHeader } from "@tinkermonkey/heimdall-ui";
 import { ChangesetPanel } from "@/components/versioning/ChangesetPanel";
 import { SyncStatusPanel } from "@/components/versioning/SyncStatus";
 import { ConflictResolver } from "@/components/versioning/ConflictResolver";

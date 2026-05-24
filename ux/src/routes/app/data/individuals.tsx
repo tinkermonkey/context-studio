@@ -1,16 +1,13 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
-import { ColumnDef } from "@tanstack/react-table";
-import { Edit2, Trash2 } from "lucide-react";
 import { useToasts } from "@/components/ui/Toast";
-import { Button } from "@tinkermonkey/heimdall-ui";
-import { Modal } from "@/components/ui/Modal";
+import { Button, Modal, FilterBar, PageHeader, RowMenu } from "@tinkermonkey/heimdall-ui";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Sparkline } from "@/components/ui/Sparkline";
-import { FilterBar } from "@/components/schema/FilterBar";
-import { SchemaTable } from "@/components/schema/SchemaTable";
+import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
+import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import { IndividualEditor } from "@/components/ontology/IndividualEditor";
 import { IndividualDrawer } from "@/components/ontology/IndividualDrawer";
 import {
@@ -43,40 +40,6 @@ interface IndividualsPageContentProps {
   onDeleteClick: (id: string) => void;
 }
 
-function IndividualsEmptyState({ onCreateClick }: { onCreateClick: () => void }) {
-  return (
-    <div className="empty-state" data-testid="empty-state">
-      <div className="empty-state-content">
-        <div className="empty-state-title">{individualsCopy.emptyState.title}</div>
-        <div className="empty-state-description">{individualsCopy.emptyState.description}</div>
-      </div>
-      <div
-        style={{
-          display: "flex",
-          gap: "var(--space-2)",
-          justifyContent: "center",
-          flexWrap: "wrap",
-        }}
-      >
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={onCreateClick}
-          data-testid="empty-state-new-individual"
-        >
-          {individualsCopy.emptyState.actionLabel}
-        </Button>
-        <Button variant="ghost" size="sm" disabled data-testid="empty-state-run-pipeline">
-          {individualsCopy.emptyState.runPipelineLabel}
-        </Button>
-        <Button variant="ghost" size="sm" disabled data-testid="empty-state-import">
-          {individualsCopy.emptyState.importLabel}
-        </Button>
-      </div>
-    </div>
-  );
-}
-
 function IndividualsPageContent({
   onCreateClick,
   selectedId,
@@ -100,57 +63,41 @@ function IndividualsPageContent({
       individual.id.toLowerCase().includes(searchFilter.toLowerCase()),
   );
 
-  const individualColumns: ColumnDef<IndividualResponse>[] = [
+  const individualColumns: Column<IndividualResponse>[] = [
     {
-      accessorKey: "id",
-      header: individualsCopy.table.idHeader,
-      size: 100,
-      cell: (info) => (
-        <span className="mono" style={{ fontSize: "var(--text-xs)" }}>
-          {(info.getValue() as string).slice(0, 8)}
+      key: "id",
+      label: individualsCopy.table.idHeader,
+      render: (value) => (
+        <code className="font-mono text-xs">{(value as string).slice(0, 8)}</code>
+      ),
+    },
+    {
+      key: "title",
+      label: individualsCopy.table.nameHeader,
+      sortable: true,
+      render: (value, row) => (
+        <span
+          className="text-cyan-400 font-medium cursor-pointer"
+          data-testid={`individual-name-${row.id}`}
+          onClick={() => onSelectedIdChange(row.id)}
+        >
+          {value as string}
         </span>
       ),
     },
     {
-      accessorKey: "title",
-      header: individualsCopy.table.nameHeader,
-      cell: (info) => {
-        const individualId = info.row.original.id;
+      key: "class_ids",
+      label: individualsCopy.table.classesHeader,
+      render: (value) => {
+        const classIds = value as string[];
         return (
-          <span
-            style={{
-              color: "var(--cyan-600, #0891b2)",
-              fontWeight: 500,
-              cursor: "pointer",
-            }}
-            data-testid={`individual-name-${individualId}`}
-            onClick={() => onSelectedIdChange(individualId)}
-          >
-            {info.getValue() as string}
-          </span>
-        );
-      },
-    },
-    {
-      accessorKey: "class_ids",
-      header: individualsCopy.table.classesHeader,
-      cell: (info) => {
-        const classIds = info.getValue() as string[];
-        return (
-          <div style={{ display: "flex", gap: "var(--space-2)", flexWrap: "wrap" }}>
+          <div className="flex gap-1 flex-wrap">
             {classIds.map((classId) => {
               const className = classMap.get(classId) || "Unknown";
               return (
                 <span
                   key={classId}
-                  style={{
-                    backgroundColor: "var(--canvas-bg-2)",
-                    color: "rgb(var(--canvas-fg-1))",
-                    padding: "4px 8px",
-                    borderRadius: "4px",
-                    fontSize: "var(--text-xs)",
-                    fontWeight: 500,
-                  }}
+                  className="bg-canvas-bg-2 text-xs font-medium px-2 py-1 rounded"
                   data-testid={`individual-class-chip-${classId}`}
                 >
                   {className}
@@ -162,53 +109,50 @@ function IndividualsPageContent({
       },
     },
     {
-      accessorKey: "description",
-      header: individualsCopy.table.descriptionHeader,
-      cell: (info) => {
-        const desc = info.getValue() as string | null | undefined;
-        if (!desc) return <span className="muted-text">—</span>;
+      key: "description",
+      label: individualsCopy.table.descriptionHeader,
+      render: (value) => {
+        const desc = value as string | null | undefined;
+        if (!desc) return <span className="opacity-60">—</span>;
         const truncated = desc.length > 50 ? desc.slice(0, 50) + "…" : desc;
         return <span>{truncated}</span>;
       },
     },
     {
-      accessorKey: "last_modified",
-      header: individualsCopy.table.updatedHeader,
-      cell: (info) => {
-        const date = info.getValue() as string | null;
-        const version = info.row.original.version;
+      key: "last_modified",
+      label: individualsCopy.table.updatedHeader,
+      render: (value, row) => {
+        const date = value as string | null;
         return (
-          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)" }}>
-            <Sparkline version={version} lastModified={date} maxHeight={16} />
-            <span style={{ fontSize: "var(--text-xs)", color: "var(--canvas-fg-3)" }}>
+          <div className="flex flex-col gap-1">
+            <Sparkline version={row.version} lastModified={date} maxHeight={16} />
+            <span className="text-xs opacity-60">
               {date ? new Date(date).toLocaleDateString() : "—"}
             </span>
           </div>
         );
       },
     },
+    {
+      key: "id",
+      label: "",
+      width: "40px",
+      render: (_, row) => (
+        <RowMenu
+          data-testid={`individual-row-actions-${row.id}`}
+          actions={[
+            { id: "edit", label: "Edit", icon: "edit" },
+            { type: "separator" },
+            { id: "delete", label: "Delete", icon: "trash", danger: true },
+          ]}
+          onAction={(actionId) => {
+            if (actionId === "edit") onEditClick(row.id);
+            if (actionId === "delete") onDeleteClick(row.id);
+          }}
+        />
+      ),
+    },
   ];
-
-  const renderRowActions = (row: IndividualResponse) => (
-    <div style={{ display: "flex", gap: "var(--space-1)" }}>
-      <button
-        type="button"
-        onClick={() => onEditClick(row.id)}
-        className="btn btn-icon"
-        data-testid={`individual-row-edit-${row.id}`}
-      >
-        <Edit2 size={16} style={{ color: "var(--canvas-fg-3)" }} />
-      </button>
-      <button
-        type="button"
-        onClick={() => onDeleteClick(row.id)}
-        className="btn btn-icon"
-        data-testid={`individual-row-delete-${row.id}`}
-      >
-        <Trash2 size={16} style={{ color: "var(--canvas-fg-3)" }} />
-      </button>
-    </div>
-  );
 
   if (isLoading) {
     return (
@@ -236,7 +180,16 @@ function IndividualsPageContent({
   }
 
   if (individuals.length === 0) {
-    return <IndividualsEmptyState onCreateClick={onCreateClick} />;
+    return (
+      <EmptyState
+        title={individualsCopy.emptyState.title}
+        description={individualsCopy.emptyState.description}
+        action={{
+          label: individualsCopy.emptyState.actionLabel,
+          onClick: onCreateClick,
+        }}
+      />
+    );
   }
 
   const hasFilters = !!searchFilter;
@@ -253,7 +206,13 @@ function IndividualsPageContent({
           />
         </div>
       )}
-      <FilterBar searchValue={searchFilter} onSearchChange={setSearchFilter} />
+      <FilterBar
+        data-testid="schema-filter-bar"
+        onSearchChange={setSearchFilter}
+        searchPlaceholder="Search by title or description…"
+        showingCount={filteredData.length}
+        totalCount={individuals.length}
+      />
 
       {showFilteredEmpty ? (
         <div style={{ marginTop: "var(--space-6)" }}>
@@ -263,14 +222,26 @@ function IndividualsPageContent({
           />
         </div>
       ) : (
-        <SchemaTable
-          columns={individualColumns}
+        <SchemaPageLayout
           data={filteredData}
-          onRowSelect={onSelectedIdChange}
           selectedId={selectedId}
-          testIdPrefix="individual"
-          renderRowActions={renderRowActions}
-        />
+          renderDrawerContent={(individual) => (
+            <IndividualDrawer
+              key={individual.id}
+              individualId={individual.id}
+              onClose={() => onSelectedIdChange(undefined)}
+              onSelectIndividual={onSelectedIdChange}
+            />
+          )}
+        >
+          <SchemaTable
+            columns={individualColumns}
+            data={filteredData}
+            onRowSelect={onSelectedIdChange}
+            selectedId={selectedId}
+            testIdPrefix="individual"
+          />
+        </SchemaPageLayout>
       )}
     </div>
   );
@@ -386,9 +357,11 @@ function IndividualsPageWrapper() {
 
   return (
     <div className="stack" data-testid="individuals-page">
-      <div className="flex-between">
-        <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>{individualsCopy.pageTitle}</h1>
-        <div className="row">
+      <PageHeader
+        eyebrow="Data"
+        title={individualsCopy.pageTitle}
+        idChip="/data/individuals"
+        actions={
           <Button
             variant="primary"
             onClick={() => setShowCreateModal(true)}
@@ -396,39 +369,30 @@ function IndividualsPageWrapper() {
           >
             {individualsCopy.create.buttonLabel}
           </Button>
-        </div>
-      </div>
-      <div className={selectedId ? "split-2" : undefined}>
-        <div>
-          <IndividualsPageContent
-            onCreateClick={() => setShowCreateModal(true)}
-            selectedId={selectedId}
-            onSelectedIdChange={handleSelectedIdChange}
-            classMap={classMap}
-            classesError={classesError}
-            classesErrorObj={classesErrorObj || null}
-            onRetryClasses={() => refetchClasses()}
-            onEditClick={handleEditClick}
-            onDeleteClick={handleDeleteClick}
-          />
-        </div>
-        {selectedId && (
-          <IndividualDrawer
-            individualId={selectedId}
-            onClose={() => handleSelectedIdChange(undefined)}
-            onSelectIndividual={handleSelectedIdChange}
-          />
-        )}
+        }
+      />
+
+      <div data-testid="schema-page-layout">
+        <IndividualsPageContent
+          onCreateClick={() => setShowCreateModal(true)}
+          selectedId={selectedId}
+          onSelectedIdChange={handleSelectedIdChange}
+          classMap={classMap}
+          classesError={classesError}
+          classesErrorObj={classesErrorObj || null}
+          onRetryClasses={() => refetchClasses()}
+          onEditClick={handleEditClick}
+          onDeleteClick={handleDeleteClick}
+        />
       </div>
 
       <Modal
-        open={showCreateModal}
+        isOpen={showCreateModal}
         onClose={() => {
           setShowCreateModal(false);
           setCreateError(null);
         }}
         title={individualsCopy.create.modalTitle}
-        size="md"
         data-testid="individual-create-modal"
       >
         {classesError && (
@@ -455,14 +419,13 @@ function IndividualsPageWrapper() {
       </Modal>
 
       <Modal
-        open={showEditModal}
+        isOpen={showEditModal}
         onClose={() => {
           setShowEditModal(false);
           setEditingId(null);
           setEditError(null);
         }}
         title={individualsCopy.edit.modalTitle}
-        size="md"
         data-testid="individual-edit-modal"
       >
         {editingIndividualError && (

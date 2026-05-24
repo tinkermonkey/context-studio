@@ -1,10 +1,10 @@
 import { Network, CheckCircle, AlertCircle } from "lucide-react";
-import { Statusbar as HeimdallStatusbar } from "@tinkermonkey/heimdall-ui";
+import type { StatusbarProps } from "@tinkermonkey/heimdall-ui";
 import { useHealth } from "@/api/hooks/admin";
 import { usePipelines } from "@/api/hooks/pipeline";
 import { useExecutionStore } from "@/stores/executionStore";
 
-export function Statusbar() {
+export function buildStatusbarProps(): StatusbarProps {
   const { data: health, isError } = useHealth();
   const { inFlightPipelineIds } = useExecutionStore();
   const runningCount = inFlightPipelineIds.size;
@@ -78,5 +78,5 @@ export function Statusbar() {
     </div>
   );
 
-  return <HeimdallStatusbar left={left} right={right} />;
+  return { left, right };
 }

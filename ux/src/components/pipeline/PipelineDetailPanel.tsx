@@ -1,13 +1,4 @@
-import {
-  TextArea as Textarea,
-  Button,
-  Select,
-  TextInput as Input,
-  TabBar,
-  KeyValueEditor,
-  TriState,
-  type KeyValueRow,
-} from "@tinkermonkey/heimdall-ui";
+import { TextArea as Textarea, Button, Select, TextInput as Input, TabBar, KeyValueEditor, TriState, type KeyValueRow, Chip } from "@tinkermonkey/heimdall-ui";
 import { useState, useRef, useEffect } from "react";
 import { Copy, Play, Loader, CheckCircle, AlertCircle, RotateCcw } from "lucide-react";
 import {
@@ -18,7 +9,6 @@ import {
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useAutosave } from "@/hooks/useAutosave";
 import { useToasts } from "@/components/ui/Toast";
-import { Chip } from "@/components/ui/Chip";
 import { formatRelativeTime, formatDuration } from "@/utils/formatters";
 import { formatTimeAgo } from "@/utils/dateFormatting";
 import { getStatusColor } from "@/utils/statusColorUtils";
@@ -225,7 +215,6 @@ export function PipelineDetailPanel({ pipeline }: PipelineDetailPanelProps) {
           {activeTab === "prompts" && isPromptsDirty && (
             <Button
               variant="ghost"
-              size="sm"
               onClick={handleRevertPrompts}
               data-testid="drawer-revert-button"
             >
@@ -236,7 +225,6 @@ export function PipelineDetailPanel({ pipeline }: PipelineDetailPanelProps) {
         </div>
         <Button
           variant="ghost"
-          size="sm"
           onClick={() => { setActiveTab("test"); handleRunTest(); }}
           disabled={executeMutation.isPending}
           data-testid="run-pipeline-btn"
@@ -337,7 +325,6 @@ export function PipelineDetailPanel({ pipeline }: PipelineDetailPanelProps) {
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
             <Button
               variant="primary"
-              size="sm"
               onClick={handleSaveConfig}
               disabled={configSaving || !isConfigDirty}
               data-testid="pipeline-save-config-button"
@@ -364,7 +351,6 @@ export function PipelineDetailPanel({ pipeline }: PipelineDetailPanelProps) {
 
           <Button
             variant="primary"
-            size="sm"
             onClick={handleRunTest}
             disabled={executeMutation.isPending}
             data-testid="pipeline-run-test-button"
@@ -386,7 +372,7 @@ export function PipelineDetailPanel({ pipeline }: PipelineDetailPanelProps) {
             <div className="pipeline-test-output" data-testid="pipeline-test-output">
               <div className="pipeline-test-output-header">
                 <div style={{ display: "flex", gap: "var(--space-2)", alignItems: "center" }}>
-                  <Chip color={getStatusColor(testOutput.status)}>{testOutput.status}</Chip>
+                  <Chip variant={getStatusColor(testOutput.status)}>{testOutput.status}</Chip>
                   <span className="pipeline-test-meta">
                     {formatDuration(testOutput.duration)} ·{" "}
                     {testOutput.tokens_in} → {testOutput.tokens_out} tokens
@@ -394,7 +380,6 @@ export function PipelineDetailPanel({ pipeline }: PipelineDetailPanelProps) {
                 </div>
                 <Button
                   variant="ghost"
-                  size="sm"
                   onClick={async () => {
                     try {
                       await navigator.clipboard.writeText(testOutput.text || testOutput.error || "");
@@ -449,7 +434,7 @@ export function PipelineDetailPanel({ pipeline }: PipelineDetailPanelProps) {
                 {executions.slice(0, 10).map((execution) => (
                   <tr key={execution.id}>
                     <td>
-                      <Chip color={getStatusColor(execution.status)}>
+                      <Chip variant={getStatusColor(execution.status)}>
                         {execution.status}
                       </Chip>
                     </td>
@@ -462,7 +447,6 @@ export function PipelineDetailPanel({ pipeline }: PipelineDetailPanelProps) {
                       {execution.error_message && (
                         <Button
                           variant="ghost"
-                          size="sm"
                           onClick={() =>
                             setExpandedLogId(
                               expandedLogId === execution.id ? null : execution.id,
@@ -487,7 +471,6 @@ export function PipelineDetailPanel({ pipeline }: PipelineDetailPanelProps) {
                 <span className="error-log-title">{COPY.ERROR_DETAILS_TITLE}</span>
                 <Button
                   variant="ghost"
-                  size="sm"
                   onClick={async () => {
                     try {
                       await navigator.clipboard.writeText(expandedExecution.error_message ?? "");

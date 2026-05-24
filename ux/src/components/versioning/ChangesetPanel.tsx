@@ -95,7 +95,6 @@ export function ChangesetPanel({ onError, onConflictDetected }: ChangesetPanelPr
               onClick={handleStageSelected}
               disabled={selectedChanges.size === 0 || createChangesetMutation.isPending}
               variant="primary"
-              size="sm"
             >
               {COPY.stageSelectedButton}
             </Button>

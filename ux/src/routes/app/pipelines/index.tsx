@@ -1,15 +1,13 @@
-import { Button, FilterBar } from "@tinkermonkey/heimdall-ui";
+import { Button, FilterBar, Modal, PageHeader, SegmentedControl } from "@tinkermonkey/heimdall-ui";
 import { useState, useMemo } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { usePipelines, useAllPipelineExecutions, useCreatePipeline } from "@/api/hooks/pipeline";
 import { PipelineCard } from "@/components/pipeline/PipelineCard";
 import { PipelineDetailPanel } from "@/components/pipeline/PipelineDetailPanel";
-import { PageHeader } from "@/components/ui/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Modal } from "@/components/ui/Modal";
 import { PipelineCreateForm } from "@/components/pipeline/PipelineCreateForm";
 import { useToasts } from "@/components/ui/Toast";
 import { COPY } from "./-copy";
@@ -119,11 +117,9 @@ export function PipelinesContent() {
             onClick: () => setShowCreateModal(true),
           }}
         />
-        <Modal
-          open={showCreateModal}
+        <Modal isOpen={showCreateModal}
           onClose={() => setShowCreateModal(false)}
           title={COPY.CREATE_PIPELINE_TITLE}
-          size="md"
         >
           <PipelineCreateForm
             isLoading={createPipeline.isPending}
@@ -145,11 +141,9 @@ export function PipelinesContent() {
 
   return (
     <div data-testid="pipelines-page">
-      <Modal
-        open={showCreateModal}
+      <Modal isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         title={COPY.CREATE_PIPELINE_TITLE}
-        size="md"
       >
         <PipelineCreateForm
           isLoading={createPipeline.isPending}
@@ -163,12 +157,9 @@ export function PipelinesContent() {
         />
       </Modal>
 
-      <Modal
-        open={!!selectedPipeline}
+      <Modal isOpen={!!selectedPipeline}
         onClose={() => setSelectedPipelineId(null)}
-        title={selectedPipeline?.title}
-        size="lg"
-        testId="pipeline-edit-modal"
+        title={selectedPipeline?.title} data-testid="pipeline-edit-modal"
       >
         {selectedPipeline && <PipelineDetailPanel pipeline={selectedPipeline} />}
       </Modal>
@@ -176,6 +167,7 @@ export function PipelinesContent() {
       <PageHeader
         eyebrow="Processing"
         title={COPY.PIPELINES_PAGE_TITLE}
+        idChip="/pipelines"
         actions={
           <Button
             variant="primary"
@@ -196,31 +188,17 @@ export function PipelinesContent() {
           onFilterRemove={() => setStatusFilter("all")}
           data-testid="pipelines-search-input"
         />
-        <div
-          role="radiogroup"
+        <SegmentedControl
+          value={statusFilter}
+          onChange={(v) => setStatusFilter(v as StatusFilter)}
+          options={[
+            { value: "all", label: COPY.FILTER_ALL },
+            { value: "enabled", label: COPY.FILTER_ENABLED },
+            { value: "disabled", label: COPY.FILTER_DISABLED },
+          ]}
           aria-label={COPY.FILTER_PIPELINES_LABEL}
-          style={{ display: "flex", gap: "var(--space-2)" }}
-        >
-          {(
-            [
-              { label: COPY.FILTER_ALL, value: "all" },
-              { label: COPY.FILTER_ENABLED, value: "enabled" },
-              { label: COPY.FILTER_DISABLED, value: "disabled" },
-            ] as const
-          ).map((option) => (
-            <button
-              key={option.value}
-              role="radio"
-              aria-checked={statusFilter === option.value}
-              onClick={() => setStatusFilter(option.value)}
-              className="status-filter-chip"
-              data-testid={`status-filter-${option.value}`}
-              data-active={statusFilter === option.value}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+          data-testid="pipeline-status-filter"
+        />
       </div>
 
       {executionsError && (

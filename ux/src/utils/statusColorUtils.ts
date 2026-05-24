@@ -1,7 +1,7 @@
 import type { components } from "@/api/types";
 
 type ExecutionStatus = components["schemas"]["ExecutionResponse"]["status"];
-type ChipColor = "emerald" | "rose" | "amber" | "gray";
+type ChipColor = "emerald" | "rose" | "amber" | "neutral";
 
 export function getStatusColor(status: ExecutionStatus): ChipColor {
   switch (status) {
@@ -12,6 +12,6 @@ export function getStatusColor(status: ExecutionStatus): ChipColor {
     case "timeout":
       return "amber";
     default:
-      return "gray";
+      return "neutral";
   }
 }

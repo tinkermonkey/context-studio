@@ -1,7 +1,6 @@
+import { Chip, Panel } from "@tinkermonkey/heimdall-ui";
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { Panel } from "@/components/ui/Panel";
-import { Chip } from "@/components/ui/Chip";
 import { formatConfidence } from "@/utils/formatters";
 import { COPY } from "@/routes/app/extraction/-copy";
 import type { components } from "@/api/types";
@@ -74,7 +73,7 @@ export function ExtractionResultPanel({
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
             {entities.map((entity) => (
               <div key={entity.id} title={`Type: ${entity.entity_type}`}>
-                <Chip color="cyan">
+                <Chip variant="cyan">
                   {entity.label} ({formatConfidence(entity.confidence)})
                 </Chip>
               </div>
@@ -131,7 +130,7 @@ export function ExtractionResultPanel({
 
   return (
     <div data-testid={testId}>
-      <Panel title={layerName} actions={toggleActions}>
+      <Panel title={layerName}>
         <div id={`${testId}-json`}>{renderContent()}</div>
       </Panel>
     </div>

@@ -1,7 +1,6 @@
-import { TextInput as Input, Field, Button } from "@tinkermonkey/heimdall-ui";
+import { TextInput as Input, Field, Button, Chip } from "@tinkermonkey/heimdall-ui";
 import { useState, useRef, useEffect } from "react";
 
-import { Chip } from "@/components/ui/Chip";
 import { useReferenceStatus, useClasses } from "@/api/hooks";
 import type { GroundingWorkflowCreate } from "@/api/types/manual/grounding";
 
@@ -197,7 +196,7 @@ export function GroundingWorkflowForm({ onSubmit, isLoading }: GroundingWorkflow
                     }}
                     data-testid={`workflow-class-chip-${cls.id}`}
                   >
-                    <Chip color="violet">{cls.title}</Chip>
+                    <Chip variant="violet">{cls.title}</Chip>
                     <button
                       type="button"
                       onClick={() => {

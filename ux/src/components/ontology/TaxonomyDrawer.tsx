@@ -1,4 +1,4 @@
-import { TextInput as Input, TextArea as Textarea, Button } from "@tinkermonkey/heimdall-ui";
+import { TextInput as Input, TextArea as Textarea, Button, KVGrid, VersionPill } from "@tinkermonkey/heimdall-ui";
 import { useState, useEffect, useRef } from "react";
 import { Drawer } from "@/components/ui/Drawer";
 
@@ -110,7 +110,6 @@ export function TaxonomyDrawer({ taxonomy, onClose }: TaxonomyDrawerProps) {
           taxonomy.status === "draft" && (
             <Button
               variant="ghost"
-              size="sm"
               onClick={() => setShowPublishDialog(true)}
               data-testid="taxonomy-drawer-publish-button"
             >
@@ -146,17 +145,13 @@ export function TaxonomyDrawer({ taxonomy, onClose }: TaxonomyDrawerProps) {
             />
           </div>
 
-          <div style={{ display: "flex", gap: "var(--space-2)", fontSize: "var(--text-xs)" }}>
-            <span style={{ color: "var(--canvas-fg-3)" }}>
-              Status: <span style={{ fontWeight: 500 }}>{taxonomy.status}</span>
-            </span>
-          </div>
-
-          <div style={{ display: "flex", gap: "var(--space-2)", fontSize: "var(--text-xs)" }}>
-            <span style={{ color: "var(--canvas-fg-3)" }}>
-              Created: {new Date(taxonomy.created_at ?? "").toLocaleDateString()}
-            </span>
-          </div>
+          <KVGrid
+            rows={[
+              { key: "Status", value: taxonomy.status },
+              { key: "Version", value: <VersionPill>v{taxonomy.version}</VersionPill> },
+              { key: "Created", value: new Date(taxonomy.created_at ?? "").toLocaleDateString() },
+            ]}
+          />
         </div>
       </Drawer>
 

@@ -1,6 +1,5 @@
-import { Button, TextInput as Input } from "@tinkermonkey/heimdall-ui";
+import { Button, TextInput as Input, Modal } from "@tinkermonkey/heimdall-ui";
 import { useState, useEffect } from "react";
-import { Modal } from "@/components/ui/Modal";
 
 import { COPY } from "@/routes/app/versioning/copy";
 import type { TextareaHTMLAttributes } from "react";
@@ -61,7 +60,7 @@ export function CreateChangesetModal({
   };
 
   return (
-    <Modal open={open} onClose={onClose} title={COPY.createChangesetModalTitle} size="md">
+    <Modal isOpen={open} onClose={onClose} title={COPY.createChangesetModalTitle}>
       <form
         onSubmit={handleSubmit}
         style={{ display: "flex", flexDirection: "column", gap: "16px" }}

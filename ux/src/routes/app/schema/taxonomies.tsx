@@ -1,20 +1,19 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
-import { ColumnDef } from "@tanstack/react-table";
-import { MoreVertical } from "lucide-react";
 import { useToasts } from "@/components/ui/Toast";
-import { Button } from "@tinkermonkey/heimdall-ui";
-import { Modal } from "@/components/ui/Modal";
-import { PageHeader } from "@/components/ui/PageHeader";
+import { Button, Modal, PageHeader, RowMenu, Chip, FilterBar, TabBar } from "@tinkermonkey/heimdall-ui";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { FilterBar } from "@/components/schema/FilterBar";
-import { SchemaTable } from "@/components/schema/SchemaTable";
+import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import { TaxonomyForm } from "@/components/schema/TaxonomyForm";
 import { TaxonomyDrawer } from "@/components/ontology/TaxonomyDrawer";
 import { useTaxonomies, useCreateTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
+import { useSchemes } from "@/api/hooks/ontology/useSchemes";
+import { useClasses } from "@/api/hooks/ontology/useClasses";
+import { useProperties } from "@/api/hooks/ontology/useProperties";
+import { useRelationships } from "@/api/hooks/ontology/useRelationships";
 import { taxonomiesCopy } from "./taxonomies/-copy";
 import type { components } from "@/api/types";
 
@@ -48,89 +47,64 @@ function TaxonomiesPageContent({
       tax.id.toLowerCase().includes(searchFilter.toLowerCase()),
   );
 
-  const taxonomyColumns: ColumnDef<TaxonomyResponse>[] = [
+  const taxonomyColumns: Column<TaxonomyResponse>[] = [
     {
-      accessorKey: "id",
-      header: "ID",
-      size: 100,
-      cell: (info) => (
-        <span className="mono" style={{ fontSize: "var(--text-xs)" }}>
-          {(info.getValue() as string).slice(0, 8)}
+      key: "id",
+      label: "ID",
+      render: (value) => (
+        <code className="font-mono text-xs">{(value as string).slice(0, 8)}</code>
+      ),
+    },
+    {
+      key: "title",
+      label: "Name",
+      sortable: true,
+      render: (value, row) => (
+        <span
+          style={{ color: "var(--accent-cyan, #22d3ee)", fontWeight: 500, cursor: "pointer" }}
+          onClick={() => onSelectedIdChange(row.id)}
+          data-testid={`taxonomy-name-${row.id}`}
+        >
+          {value as string}
         </span>
       ),
     },
     {
-      accessorKey: "title",
-      header: "Name",
-      cell: (info) => {
-        const taxonomyId = info.row.original.id;
-        return (
-          <span
-            style={{
-              color: "var(--cyan-600, #0891b2)",
-              fontWeight: 500,
-              cursor: "pointer",
-            }}
-            onClick={() => onSelectedIdChange(taxonomyId)}
-            data-testid={`taxonomy-name-${taxonomyId}`}
-          >
-            {info.getValue() as string}
-          </span>
-        );
+      key: "description",
+      label: "Description",
+      render: (value) => <span className="opacity-60">{(value as string) || "—"}</span>,
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: (value) => {
+        const status = value as string;
+        return <Chip variant={status === "draft" ? "amber" : "emerald"}>{status}</Chip>;
       },
     },
     {
-      accessorKey: "description",
-      header: "Description",
-      cell: (info) => <span className="muted-text">{(info.getValue() as string) || "—"}</span>,
-    },
-    {
-      accessorKey: "status",
-      header: "Status",
-      cell: (info) => {
-        const status = info.getValue() as string;
-        const bgColor =
-          status === "draft" ? "var(--amber-100, #fef3c7)" : "var(--green-100, #dcfce7)";
-        const textColor =
-          status === "draft" ? "var(--amber-800, #78350f)" : "var(--green-800, #166534)";
-        return (
-          <span
-            style={{
-              backgroundColor: bgColor,
-              color: textColor,
-              padding: "4px 8px",
-              borderRadius: "4px",
-              fontSize: "var(--text-xs)",
-              fontWeight: 500,
-              textTransform: "capitalize",
-            }}
-          >
-            {status}
-          </span>
-        );
-      },
-    },
-    {
-      id: "stats",
-      header: "Classes",
-      cell: () => <span className="muted-text">—</span>,
-    },
-    {
-      accessorKey: "last_modified",
-      header: "Updated",
-      cell: (info) => {
-        const date = info.getValue() as string | null;
+      key: "last_modified",
+      label: "Updated",
+      render: (value) => {
+        const date = value as string | null;
         return date ? new Date(date).toLocaleDateString() : "—";
       },
     },
     {
-      id: "actions",
-      header: "",
-      size: 40,
-      cell: ({ row }) => (
-        <button data-testid={`taxonomy-row-actions-${row.original.id}`} className="btn btn-icon">
-          <MoreVertical size={16} style={{ color: "var(--canvas-fg-3)" }} />
-        </button>
+      key: "created_at",
+      label: "",
+      width: "40px",
+      render: (_, row) => (
+        <RowMenu
+          data-testid={`taxonomy-row-actions-${row.id}`}
+          actions={[
+            { id: "edit", label: "Edit", icon: "edit" },
+            { id: "clone", label: "Clone", icon: "copy" },
+            { type: "separator" },
+            { id: "delete", label: "Delete", icon: "trash", danger: true },
+          ]}
+          onAction={(actionId) => console.log(`Action ${actionId} on taxonomy ${row.id}`)}
+        />
       ),
     },
   ];
@@ -173,7 +147,13 @@ function TaxonomiesPageContent({
 
   return (
     <div data-testid="taxonomies-page">
-      <FilterBar searchValue={searchFilter} onSearchChange={setSearchFilter} />
+      <FilterBar
+        data-testid="schema-filter-bar"
+        onSearchChange={setSearchFilter}
+        searchPlaceholder="Search by title or description…"
+        showingCount={filteredData.length}
+        totalCount={taxonomies.length}
+      />
 
       {showFilteredEmpty ? (
         <div style={{ marginTop: "var(--space-6)" }}>
@@ -215,6 +195,31 @@ function TaxonomiesPageWrapper() {
   const createMutation = useCreateTaxonomy();
   const { toast } = useToasts();
 
+  const { data: taxData } = useTaxonomies();
+  const { data: schemesData } = useSchemes();
+  const { data: classesData } = useClasses();
+  const { data: propsData } = useProperties();
+  const { data: relsData } = useRelationships();
+
+  const schemaTabs = [
+    { id: "taxonomies", label: "Taxonomies", count: taxData?.total },
+    { id: "schemes", label: "Schemes", count: schemesData?.total },
+    { id: "classes", label: "Classes", count: classesData?.total },
+    { id: "properties", label: "Properties", count: propsData?.total },
+    { id: "relationships", label: "Relationships", count: relsData?.items?.length ?? relsData?.total },
+  ];
+
+  const handleTabNavigate = (tabId: string) => {
+    const routes: Record<string, string> = {
+      taxonomies: "/app/schema/taxonomies",
+      schemes: "/app/schema/schemes",
+      classes: "/app/schema/classes",
+      properties: "/app/schema/properties",
+      relationships: "/app/schema/relationships",
+    };
+    navigate({ to: routes[tabId] as any });
+  };
+
   const handleSelectedIdChange = (id: string | undefined) => {
     navigate({
       to: "/app/schema/taxonomies",
@@ -240,6 +245,7 @@ function TaxonomiesPageWrapper() {
       <PageHeader
         eyebrow="Schema"
         title="Taxonomies"
+        idChip="/schema/taxonomies"
         actions={
           <div className="row" style={{ gap: "var(--space-2)" }}>
             <Button variant="ghost" onClick={() => {}} data-testid="taxonomy-import-button">
@@ -255,6 +261,9 @@ function TaxonomiesPageWrapper() {
           </div>
         }
       />
+
+      <TabBar tabs={schemaTabs} activeTabId="taxonomies" onSelectTab={handleTabNavigate} />
+
       <div data-testid="taxonomies-content">
         <TaxonomiesPageContent
           onCreateClick={() => setShowCreateModal(true)}
@@ -264,13 +273,12 @@ function TaxonomiesPageWrapper() {
       </div>
 
       <Modal
-        open={showCreateModal}
+        isOpen={showCreateModal}
         onClose={() => {
           setShowCreateModal(false);
           setCreateError(null);
         }}
         title="Create Taxonomy"
-        size="sm"
         data-testid="taxonomy-create-modal"
       >
         {createError && (

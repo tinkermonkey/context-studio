@@ -87,7 +87,6 @@ function Toast({ item, onDismiss }: ToastProps) {
       {item.action && (
         <Button
           variant="ghost"
-          size="sm"
           onClick={item.action.onAction}
           data-testid={`toast-action-${item.id}`}
         >

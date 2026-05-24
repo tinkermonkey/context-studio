@@ -1,6 +1,5 @@
-import { TextArea as Textarea, Button } from "@tinkermonkey/heimdall-ui";
+import { TextArea as Textarea, Button, Modal } from "@tinkermonkey/heimdall-ui";
 import { useState } from "react";
-import { Modal } from "@/components/ui/Modal";
 
 import { useToasts } from "@/components/ui/Toast";
 import { usePublishTaxonomy, usePublishDiffStats } from "@/api/hooks/ontology/useTaxonomies";
@@ -44,11 +43,9 @@ export function TaxonomyPublishDialog({
   const canPublish = commitMessage.trim().length > 0 && !publishMutation.isPending;
 
   return (
-    <Modal
-      open={open}
+    <Modal isOpen={open}
       onClose={onClose}
       title="Publish Taxonomy"
-      size="sm"
       data-testid="taxonomy-publish-dialog"
     >
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>

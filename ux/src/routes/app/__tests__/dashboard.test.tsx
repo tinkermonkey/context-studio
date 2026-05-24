@@ -275,7 +275,7 @@ describe("Dashboard", () => {
       expect(screen.getByText("Individuals")).toBeInTheDocument();
       expect(screen.getAllByText("5")).toBeTruthy();
 
-      expect(screen.getByText("Pipelines")).toBeInTheDocument();
+      expect(screen.getAllByText("Pipelines")).toBeTruthy();
       expect(screen.getAllByText("1")).toBeTruthy();
     });
 

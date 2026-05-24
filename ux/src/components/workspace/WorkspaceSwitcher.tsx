@@ -1,9 +1,7 @@
-import { TextInput as Input, Button } from "@tinkermonkey/heimdall-ui";
+import { TextInput as Input, Button, Modal, WorkspaceSwitcherDialog } from "@tinkermonkey/heimdall-ui";
 import { useState } from "react";
-import { Database, FolderOpen, Plus, GitBranch } from "lucide-react";
-import { Modal } from "@/components/ui/Modal";
-
 import { useConfig } from "@/api/hooks/admin/useConfig";
+import type { Workspace } from "@tinkermonkey/heimdall-ui";
 
 interface WorkspaceSwitcherProps {
   onSelect: (path: string) => void;
@@ -20,6 +18,10 @@ export function WorkspaceSwitcher({ onSelect, isLoading = false }: WorkspaceSwit
 
   const { data: config } = useConfig();
   const defaultDbPath = config?.sections?.database?.local_db_path as string | undefined;
+
+  const currentWorkspace: Workspace | undefined = defaultDbPath
+    ? { id: "configured", name: defaultDbPath.split("/").pop() ?? "workspace", path: defaultDbPath }
+    : undefined;
 
   const handleOpenSubmit = () => {
     if (openPath.trim()) {
@@ -45,73 +47,28 @@ export function WorkspaceSwitcher({ onSelect, isLoading = false }: WorkspaceSwit
     }
   };
 
-  const isDisabled = isLoading;
-
   return (
     <>
-      <div
-        data-testid="workspace-switcher-overlay"
-        className="fixed inset-0 flex items-center justify-center bg-black/50"
-      >
-        <div
-          data-testid="workspace-switcher-modal"
-          className="w-[700px] rounded-lg border border-gray-700 bg-gray-900 shadow-lg"
-        >
-          <div className="space-y-2 border-b border-gray-700 px-8 py-8">
-            <h1 className="text-xl font-semibold text-gray-100">Select Workspace</h1>
-            <p className="text-sm text-gray-400">
-              Choose how to set up your Context Studio workspace
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 p-8">
-            {defaultDbPath && (
-              <Tile
-                testId="workspace-use-default-tile"
-                icon={<Database size={32} />}
-                title="Use configured workspace"
-                description={defaultDbPath}
-                onClick={() => onSelect(defaultDbPath)}
-                disabled={isDisabled}
-                highlight
-              />
-            )}
-            <Tile
-              testId="workspace-open-folder-tile"
-              icon={<FolderOpen size={32} />}
-              title="Open folder…"
-              description="Use an existing folder as your workspace"
-              onClick={() => setShowOpenModal(true)}
-              disabled={isDisabled}
-            />
-            <Tile
-              testId="workspace-new-workspace-tile"
-              icon={<Plus size={32} />}
-              title="New workspace…"
-              description="Create a new workspace in a new folder"
-              onClick={() => setShowNewWorkspaceModal(true)}
-              disabled={isDisabled}
-            />
-            <Tile
-              testId="workspace-clone-git-tile"
-              icon={<GitBranch size={32} />}
-              title="Clone from git…"
-              description="Clone a workspace from a git repository"
-              onClick={() => setShowCloneModal(true)}
-              disabled={isDisabled}
-            />
-          </div>
-        </div>
-      </div>
+      <WorkspaceSwitcherDialog
+        isOpen={true}
+        onClose={() => {}}
+        current={currentWorkspace}
+        recent={currentWorkspace ? [currentWorkspace] : []}
+        onPickRecent={(workspace) => {
+          if (workspace.path) onSelect(workspace.path);
+        }}
+        onOpenFolder={() => setShowOpenModal(true)}
+        onNewWorkspace={() => setShowNewWorkspaceModal(true)}
+        onCloneFromGit={() => setShowCloneModal(true)}
+      />
 
       <Modal
-        open={showOpenModal}
+        isOpen={showOpenModal}
         onClose={() => {
           setShowOpenModal(false);
           setOpenPath("");
         }}
         title="Open Folder"
-        size="sm"
         footer={
           <div className="form-actions">
             <Button
@@ -123,7 +80,7 @@ export function WorkspaceSwitcher({ onSelect, isLoading = false }: WorkspaceSwit
             >
               Cancel
             </Button>
-            <Button variant="primary" onClick={handleOpenSubmit} disabled={!openPath.trim()}>
+            <Button variant="primary" onClick={handleOpenSubmit} disabled={!openPath.trim() || isLoading}>
               Open
             </Button>
           </div>
@@ -146,13 +103,12 @@ export function WorkspaceSwitcher({ onSelect, isLoading = false }: WorkspaceSwit
       </Modal>
 
       <Modal
-        open={showNewWorkspaceModal}
+        isOpen={showNewWorkspaceModal}
         onClose={() => {
           setShowNewWorkspaceModal(false);
           setNewWorkspaceName("");
         }}
         title="New Workspace"
-        size="sm"
         data-testid="new-workspace-modal"
         footer={
           <div className="form-actions">
@@ -168,7 +124,7 @@ export function WorkspaceSwitcher({ onSelect, isLoading = false }: WorkspaceSwit
             <Button
               variant="primary"
               onClick={handleNewWorkspaceSubmit}
-              disabled={!newWorkspaceName.trim()}
+              disabled={!newWorkspaceName.trim() || isLoading}
             >
               Create
             </Button>
@@ -192,13 +148,12 @@ export function WorkspaceSwitcher({ onSelect, isLoading = false }: WorkspaceSwit
       </Modal>
 
       <Modal
-        open={showCloneModal}
+        isOpen={showCloneModal}
         onClose={() => {
           setShowCloneModal(false);
           setGitUrl("");
         }}
         title="Clone from Git"
-        size="sm"
         data-testid="clone-git-modal"
         footer={
           <div className="form-actions">
@@ -211,7 +166,7 @@ export function WorkspaceSwitcher({ onSelect, isLoading = false }: WorkspaceSwit
             >
               Cancel
             </Button>
-            <Button variant="primary" onClick={handleCloneSubmit} disabled={!gitUrl.trim()}>
+            <Button variant="primary" onClick={handleCloneSubmit} disabled={!gitUrl.trim() || isLoading}>
               Clone
             </Button>
           </div>
@@ -233,45 +188,5 @@ export function WorkspaceSwitcher({ onSelect, isLoading = false }: WorkspaceSwit
         </div>
       </Modal>
     </>
-  );
-}
-
-interface TileProps {
-  testId: string;
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  onClick: () => void;
-  disabled?: boolean;
-  highlight?: boolean;
-}
-
-function Tile({
-  testId,
-  icon,
-  title,
-  description,
-  onClick,
-  disabled = false,
-  highlight = false,
-}: TileProps) {
-  return (
-    <button
-      data-testid={testId}
-      onClick={onClick}
-      disabled={disabled}
-      className={[
-        "flex flex-col items-center gap-4 rounded-lg border px-6 py-6 transition-all disabled:cursor-not-allowed disabled:opacity-50",
-        highlight
-          ? "border-cyan-600 bg-cyan-950 hover:border-cyan-400"
-          : "border-gray-700 bg-gray-800 hover:border-cyan-500",
-      ].join(" ")}
-    >
-      <div className={highlight ? "text-cyan-400" : "text-gray-500"}>{icon}</div>
-      <div className="text-center">
-        <div className="mb-1 font-semibold text-gray-100">{title}</div>
-        <div className="text-sm text-gray-400">{description}</div>
-      </div>
-    </button>
   );
 }

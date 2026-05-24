@@ -9,10 +9,17 @@ import {
   createClass,
   createListSchemes,
   createConceptScheme,
+  createListTaxonomies,
+  createListProperties,
+  createListRelationships,
 } from "@/api/services/__tests__/fixtures/ontology.fixtures";
 import { ClassesPage } from "../classes";
 
-const server = setupServer();
+const server = setupServer(
+  rest.get("*/api/taxonomies", (req, res, ctx) => res(ctx.json(createListTaxonomies([])))),
+  rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(createListProperties([])))),
+  rest.get("*/api/relationships", (req, res, ctx) => res(ctx.json(createListRelationships([])))),
+);
 
 beforeAll(() => {
   server.listen({ onUnhandledRequest: "error" });
@@ -136,7 +143,7 @@ describe("Classes Schema Page", () => {
       });
 
       const monoId = screen.getByText("class-12");
-      expect(monoId).toHaveClass("mono");
+      expect(monoId.tagName.toLowerCase()).toBe("code");
     });
 
     it("displays description column with em-dash placeholder when empty", async () => {

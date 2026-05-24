@@ -1,29 +1,21 @@
 import { useState } from "react";
-import {
-  useReactTable,
-  getCoreRowModel,
-  getSortedRowModel,
-  getPaginationRowModel,
-  getFilteredRowModel,
-  ColumnDef,
-  SortingState,
-  PaginationState,
-  flexRender,
-} from "@tanstack/react-table";
+import { Table, Button, type Column } from "@tinkermonkey/heimdall-ui";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@tinkermonkey/heimdall-ui";
 import { Skeleton } from "@/components/ui/Skeleton";
 
+export type { Column } from "@tinkermonkey/heimdall-ui";
+
 interface SchemaTableProps<T extends { id: string }> {
-  columns: ColumnDef<T>[];
+  columns: Column<T>[];
   data: T[];
   isLoading?: boolean;
   onRowSelect?: (rowId: string) => void;
   selectedId?: string;
-  renderRowActions?: (row: T) => React.ReactNode;
   testIdPrefix?: string;
   tableTestId?: string;
 }
+
+const PAGE_SIZE = 20;
 
 export function SchemaTable<T extends { id: string }>({
   columns,
@@ -31,32 +23,12 @@ export function SchemaTable<T extends { id: string }>({
   isLoading,
   onRowSelect,
   selectedId,
-  renderRowActions,
-  testIdPrefix = "schema",
   tableTestId,
 }: SchemaTableProps<T>) {
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 20,
-  });
+  const [pageIndex, setPageIndex] = useState(0);
 
-  const table = useReactTable({
-    data,
-    columns,
-    state: {
-      sorting,
-      pagination,
-    },
-    onSortingChange: setSorting,
-    onPaginationChange: setPagination,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-  });
-
-  const rowModel = table.getRowModel();
+  const pageCount = Math.ceil(data.length / PAGE_SIZE);
+  const pagedData = data.slice(pageIndex * PAGE_SIZE, (pageIndex + 1) * PAGE_SIZE);
 
   if (isLoading) {
     return (
@@ -88,77 +60,16 @@ export function SchemaTable<T extends { id: string }>({
       data-testid={tableTestId || "schema-table"}
       style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}
     >
-      <div className="table-wrap">
-        <table className="t">
-          <thead>
-            <tr>
-              {table.getHeaderGroups().map((headerGroup) =>
-                headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    onClick={header.column.getToggleSortingHandler()}
-                    style={{
-                      cursor: header.column.getCanSort() ? "pointer" : "default",
-                      userSelect: "none",
-                    }}
-                    data-testid={`schema-header-${header.id}`}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
-                      {header.column.getIsSorted() === "asc" && (
-                        <span style={{ fontSize: 10 }}>↑</span>
-                      )}
-                      {header.column.getIsSorted() === "desc" && (
-                        <span style={{ fontSize: 10 }}>↓</span>
-                      )}
-                    </div>
-                  </th>
-                )),
-              )}
-              <th style={{ width: 40 }} />
-            </tr>
-          </thead>
-          <tbody>
-            {rowModel.rows.length === 0 ? (
-              <tr>
-                <td colSpan={columns.length + 1} style={{ textAlign: "center", padding: "40px 0" }}>
-                  <div style={{ color: "var(--canvas-fg-3)", fontSize: "var(--text-sm)" }}>
-                    No items
-                  </div>
-                </td>
-              </tr>
-            ) : (
-              rowModel.rows.map((row) => (
-                <tr
-                  key={row.id}
-                  onClick={() => onRowSelect?.(row.original.id)}
-                  className={selectedId === row.original.id ? "selected" : ""}
-                  data-testid={`${testIdPrefix}-row-${row.original.id}`}
-                  style={{ cursor: onRowSelect ? "pointer" : "default" }}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  ))}
-                  <td style={{ width: 40, textAlign: "right" }}>
-                    {renderRowActions && (
-                      <div onClick={(e) => e.stopPropagation()}>
-                        {renderRowActions(row.original)}
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      <Table<T>
+        columns={columns}
+        data={pagedData}
+        rowKey="id"
+        selectable={!!onRowSelect}
+        selectedRows={selectedId ? [selectedId] : []}
+        onSelectRows={(keys) => onRowSelect?.(String(keys[0]))}
+      />
 
-      {/* Pagination controls */}
-      {table.getPageCount() > 1 && (
+      {pageCount > 1 && (
         <div
           style={{
             display: "flex",
@@ -169,23 +80,21 @@ export function SchemaTable<T extends { id: string }>({
           }}
         >
           <div>
-            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+            Page {pageIndex + 1} of {pageCount}
           </div>
           <div style={{ display: "flex", gap: "var(--space-2)" }}>
             <Button
               variant="ghost"
-              size="sm"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
+              onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
+              disabled={pageIndex === 0}
               data-testid="schema-pagination-prev"
             >
               <ChevronLeft size={14} />
             </Button>
             <Button
               variant="ghost"
-              size="sm"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
+              onClick={() => setPageIndex((p) => Math.min(pageCount - 1, p + 1))}
+              disabled={pageIndex >= pageCount - 1}
               data-testid="schema-pagination-next"
             >
               <ChevronRight size={14} />

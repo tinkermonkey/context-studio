@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Button } from "@tinkermonkey/heimdall-ui";
-import { Chip } from "@/components/ui/Chip";
+import { Button, Chip } from "@tinkermonkey/heimdall-ui";
 import { useToasts } from "@/components/ui/Toast";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
@@ -111,7 +110,7 @@ export function GroundingWorkflowDrawer({ workflowId, onClose }: GroundingWorkfl
   }
 
   const statusColor =
-    workflow.status === "active" ? "emerald" : workflow.status === "error" ? "rose" : "gray";
+    workflow.status === "active" ? "emerald" : workflow.status === "error" ? "rose" : "neutral";
 
   const lastRun = workflow.last_run ? new Date(workflow.last_run).toLocaleString() : "Never";
 
@@ -171,7 +170,7 @@ export function GroundingWorkflowDrawer({ workflowId, onClose }: GroundingWorkfl
       <div className="kv-row">
         <div className="kv-label">Source</div>
         <div className="kv-value">
-          <Chip color="cyan">{workflow.source}</Chip>
+          <Chip variant="cyan">{workflow.source}</Chip>
         </div>
       </div>
 
@@ -181,7 +180,7 @@ export function GroundingWorkflowDrawer({ workflowId, onClose }: GroundingWorkfl
           <div style={{ display: "flex", gap: "var(--space-1)", flexWrap: "wrap" }}>
             {workflow.class_scope.length > 0 ? (
               workflow.class_scope.map((scope) => (
-                <Chip key={scope} color="violet">
+                <Chip key={scope} variant="violet">
                   {scope}
                 </Chip>
               ))
@@ -195,7 +194,7 @@ export function GroundingWorkflowDrawer({ workflowId, onClose }: GroundingWorkfl
       <div className="kv-row">
         <div className="kv-label">Status</div>
         <div className="kv-value">
-          <Chip color={statusColor}>{workflow.status}</Chip>
+          <Chip variant={statusColor}>{workflow.status}</Chip>
         </div>
       </div>
 
@@ -242,7 +241,7 @@ export function GroundingWorkflowDrawer({ workflowId, onClose }: GroundingWorkfl
                         <span className="mono" style={{ fontSize: "var(--text-xs)" }}>
                           {new Date(run.timestamp).toLocaleString()}
                         </span>
-                        <Chip color={run.status === "success" ? "emerald" : "rose"}>
+                        <Chip variant={run.status === "success" ? "emerald" : "rose"}>
                           {run.status}
                         </Chip>
                       </div>
@@ -266,7 +265,6 @@ export function GroundingWorkflowDrawer({ workflowId, onClose }: GroundingWorkfl
         <div className="kv-value" style={{ display: "flex", gap: "var(--space-2)" }}>
           <Button
             variant="primary"
-            size="sm"
             onClick={handleRunNow}
             disabled={runMutation.isPending}
             data-testid="workflow-run-now-button"
@@ -275,7 +273,6 @@ export function GroundingWorkflowDrawer({ workflowId, onClose }: GroundingWorkfl
           </Button>
           <Button
             variant="danger"
-            size="sm"
             onClick={() => setShowDeleteConfirm(true)}
             disabled={deleteMutation.isPending}
             data-testid="workflow-delete-button"

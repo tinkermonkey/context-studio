@@ -6,11 +6,17 @@ import { GraphCanvasComponent } from "@/components/graph/GraphCanvas";
 import { MetricsPanel } from "@/components/graph/MetricsPanel";
 import { PathFinder } from "@/components/graph/PathFinder";
 import { SparqlEditor } from "@/components/graph/SparqlEditor";
-import { PageHeader } from "@/components/ui/PageHeader";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { TabBar, Button } from "@tinkermonkey/heimdall-ui";
+import {
+  TabBar,
+  Button,
+  PageHeader,
+  SplitPane,
+  GraphInspector,
+  type GraphNodeMetadata,
+} from "@tinkermonkey/heimdall-ui";
 import { COPY } from "./-copy";
 import "@/design-system/graph.css";
 
@@ -32,16 +38,56 @@ export function GraphPage() {
   const selectedNode =
     selectedNodeId && data ? (data.nodes.find((n) => n.id === selectedNodeId) ?? null) : null;
 
+  const selectedNodeMetadata: GraphNodeMetadata | null = selectedNode
+    ? {
+        id: selectedNode.id,
+        title: selectedNode.label,
+        kind: selectedNode.kind,
+      }
+    : null;
+
+  const inspectorPanel = (
+    <div role="complementary" aria-label="Inspector panel" className="flex flex-col h-full overflow-hidden">
+      <TabBar
+        tabs={[
+          { id: "metrics", label: COPY.METRICS_TAB },
+          { id: "path", label: COPY.PATH_FINDER_TAB },
+          { id: "sparql", label: COPY.SPARQL_QUERY_TAB },
+          { id: "node", label: COPY.NODE_INSPECTOR_TAB },
+        ]}
+        activeTabId={activeTab}
+        onSelectTab={setActiveTab}
+      />
+      {activeTab === "metrics" ? (
+        <MetricsPanel />
+      ) : activeTab === "path" ? (
+        <div className="p-3.5 overflow-y-auto flex-1 text-[13px]">
+          <PathFinder onNodeSelect={setSelectedNodeId} />
+        </div>
+      ) : activeTab === "sparql" ? (
+        <div className="p-3.5 overflow-y-auto flex-1 text-[13px]">
+          <SparqlEditor />
+        </div>
+      ) : (
+        <GraphInspector
+          data-testid="node-inspector"
+          node={selectedNodeMetadata}
+          emptyStateText={COPY.NO_NODE_SELECTED}
+          className="flex-1"
+        />
+      )}
+    </div>
+  );
+
   return (
     <div data-testid="graph-page">
       <PageHeader
         eyebrow="Knowledge Graph"
         title={COPY.PAGE_TITLE}
-        subtitle={COPY.PAGE_SUBTITLE}
+        idChip="/graph"
         actions={
           <Button
             variant="primary"
-            size="md"
             onClick={() => graphVisualization.mutate()}
             disabled={isLoading}
             aria-busy={isLoading}
@@ -71,10 +117,12 @@ export function GraphPage() {
       )}
 
       {isLoading && !hasData && (
-        <div className="graph-shell">
-          <Skeleton width="100%" height="100%" className="graph-canvas" />
-          <Skeleton width="100%" height="100%" className="graph-inspector" />
-        </div>
+        <SplitPane
+          direction="horizontal"
+          data-testid="graph-shell"
+          first={<Skeleton width="100%" height="100%" />}
+          second={<Skeleton width="100%" height="100%" />}
+        />
       )}
 
       {!isLoading && !hasData && !error && (
@@ -90,51 +138,19 @@ export function GraphPage() {
       )}
 
       {hasData && (
-        <div className="graph-shell">
-          <GraphCanvasComponent
-            nodes={data.nodes}
-            edges={data.edges}
-            onNodeClick={setSelectedNodeId}
-            selectedNodeId={selectedNodeId}
-          />
-          <aside className="graph-inspector" role="complementary" aria-label="Inspector panel">
-            <TabBar
-              tabs={[
-                { id: "metrics", label: COPY.METRICS_TAB },
-                { id: "path", label: COPY.PATH_FINDER_TAB },
-                { id: "sparql", label: COPY.SPARQL_QUERY_TAB },
-                { id: "node", label: COPY.NODE_INSPECTOR_TAB },
-              ]}
-              activeTabId={activeTab}
-              onSelectTab={setActiveTab}
+        <SplitPane
+          direction="horizontal"
+          data-testid="graph-shell"
+          first={
+            <GraphCanvasComponent
+              nodes={data.nodes}
+              edges={data.edges}
+              onNodeSelect={setSelectedNodeId}
+              selectedNodeId={selectedNodeId}
             />
-            {activeTab === "metrics" ? (
-              <MetricsPanel />
-            ) : activeTab === "path" ? (
-              <div className="gi-body">
-                <PathFinder onNodeSelect={setSelectedNodeId} />
-              </div>
-            ) : activeTab === "sparql" ? (
-              <div className="gi-body">
-                <SparqlEditor />
-              </div>
-            ) : (
-              <div className="gi-body" data-testid="node-inspector">
-                {selectedNode ? (
-                  <div className="gi-node-detail">
-                    <p className="gi-node-kind">{selectedNode.kind}</p>
-                    <p className="gi-node-label">{selectedNode.label}</p>
-                    <p className="gi-node-description">{COPY.SELECTED_NODE_DETAILS}</p>
-                  </div>
-                ) : (
-                  <div className="graph-inspector empty">
-                    <span>{COPY.NO_NODE_SELECTED}</span>
-                  </div>
-                )}
-              </div>
-            )}
-          </aside>
-        </div>
+          }
+          second={inspectorPanel}
+        />
       )}
     </div>
   );

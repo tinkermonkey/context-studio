@@ -1,7 +1,6 @@
-import { TextInput as Input, Select, Button } from "@tinkermonkey/heimdall-ui";
+import { TextInput as Input, Select, Button, Modal } from "@tinkermonkey/heimdall-ui";
 import { useState, useEffect, useRef } from "react";
 
-import { Modal } from "@/components/ui/Modal";
 
 import { COPY } from "@/routes/app/settings/copy";
 
@@ -122,13 +121,10 @@ export function EditConfigModal({
   );
 
   return (
-    <Modal
-      open={open}
+    <Modal isOpen={open}
       onClose={onClose}
       title={title}
-      size={section === "llmprovider" ? "lg" : "md"}
-      footer={footer}
-      testId="edit-config-modal"
+      footer={footer} data-testid="edit-config-modal"
     >
       <div className="stack-lg">
         {errors._form && <div className="form-error">{errors._form}</div>}

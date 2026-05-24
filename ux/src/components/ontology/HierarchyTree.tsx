@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { HierarchyTree as HeimdallHierarchyTree, HierarchyRow } from "@tinkermonkey/heimdall-ui";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import type { components } from "@/api/types";
@@ -62,49 +63,46 @@ function TreeNodeRenderer({
   const canExpand = hasChildren && depth < maxDepth;
 
   return (
-    <div key={node.class.id} className="flex flex-col">
-      <div className="kg-row">
-        <div className="kg-cell kg-cell-l" data-depth={depth + 1}>
-          {canExpand && (
-            <button
-              type="button"
-              onClick={() => onToggleExpanded(node.class.id)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "20px",
-                height: "20px",
-                padding: 0,
-                background: "transparent",
-                border: "none",
-                cursor: "pointer",
-                color: "var(--canvas-fg-3)",
-                marginRight: "4px",
-                flexShrink: 0,
-              }}
-              aria-label={isExpanded ? "Collapse" : "Expand"}
-            >
-              {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-            </button>
-          )}
-          {!canExpand && <div style={{ width: "24px", flexShrink: 0 }} />}
-
-          <div
-            className="kg-node"
-            data-testid={`hierarchy-node-${node.class.id}`}
-            data-domain={node.class.concept_scheme_id}
-            onClick={() => onNodeSelect?.(node.class.id)}
+    <div>
+      <div style={{ display: "flex", alignItems: "center" }}>
+        {canExpand ? (
+          <button
+            type="button"
+            onClick={() => onToggleExpanded(node.class.id)}
             style={{
-              flex: 1,
-              cursor: onNodeSelect ? "pointer" : "default",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "20px",
+              height: "20px",
+              padding: 0,
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              color: "var(--canvas-fg-3)",
+              flexShrink: 0,
+              position: "relative",
+              zIndex: 1,
             }}
+            aria-label={isExpanded ? "Collapse" : "Expand"}
           >
-            <div className="swatch" />
-            <span style={{ flexGrow: 1 }}>{node.class.title}</span>
-            {hasChildren && <span className="badge-tiny">{node.children.length}</span>}
-          </div>
-        </div>
+            {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+          </button>
+        ) : (
+          <div style={{ width: "20px", flexShrink: 0 }} />
+        )}
+        <HierarchyRow
+          depth={depth}
+          domain={node.class.concept_scheme_id || ""}
+          kind="class"
+          label={node.class.title}
+          description=""
+          meta={hasChildren ? String(node.children.length) : undefined}
+          onSelect={onNodeSelect ? () => onNodeSelect(node.class.id) : undefined}
+          data-testid={`hierarchy-node-${node.class.id}`}
+          data-domain={node.class.concept_scheme_id}
+          style={{ flex: 1, minWidth: 0 }}
+        />
       </div>
 
       {canExpand && isExpanded && (
@@ -184,7 +182,7 @@ export function HierarchyTree({
   }
 
   return (
-    <div className="kg-tree">
+    <HeimdallHierarchyTree>
       {rootNodes.map((node) => (
         <TreeNodeRenderer
           key={node.class.id}
@@ -196,6 +194,6 @@ export function HierarchyTree({
           maxDepth={maxDepth}
         />
       ))}
-    </div>
+    </HeimdallHierarchyTree>
   );
 }

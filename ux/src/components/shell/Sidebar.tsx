@@ -1,7 +1,27 @@
-import { useState } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { Menu } from "lucide-react";
-import { NavItem, type IconName } from "@tinkermonkey/heimdall-ui";
+import type { IconName } from "@tinkermonkey/heimdall-ui";
+
+interface SidebarProps {
+  sections: Array<{
+    title: string;
+    items: Array<{
+      id: string;
+      label: string;
+      icon?: IconName;
+      count?: number;
+      children?: Array<{
+        id: string;
+        label: string;
+        count?: number;
+      }>;
+    }>;
+  }>;
+  activeItemId?: string;
+  collapsed?: boolean;
+  onCollapse?: (collapsed: boolean) => void;
+  onSelectItem?: (itemId: string) => void;
+  className?: string;
+}
 
 interface NavItemPath {
   id: string;
@@ -68,156 +88,99 @@ const NAV_TREE: (NavItemDef | NavItemGroup)[] = [
   { id: "settings", label: "Settings", heimdallIcon: "settings", path: "/app/settings" },
 ];
 
-interface SidebarProps {
-  collapsed?: boolean;
-  onToggle?: () => void;
+function isNavItemGroup(item: NavItemDef | NavItemGroup): item is NavItemGroup {
+  return "children" in item;
 }
 
-export function Sidebar({ collapsed = false, onToggle }: SidebarProps = {}) {
+function isRouteMatch(currentPath: string, targetPath: string): boolean {
+  return currentPath === targetPath || currentPath.startsWith(targetPath + "/");
+}
+
+function getActiveItemId(pathname: string): string | undefined {
+  // Collect all matching candidates with their path lengths
+  const candidates: Array<{ id: string; path: string }> = [];
+
+  for (const item of NAV_TREE) {
+    if ("path" in item && item.path && isRouteMatch(pathname, item.path)) {
+      candidates.push({ id: item.id, path: item.path });
+    }
+    if ("children" in item) {
+      for (const child of item.children) {
+        if (isRouteMatch(pathname, child.path)) {
+          candidates.push({ id: child.id, path: child.path });
+        }
+      }
+    }
+  }
+
+  // Return the longest matching path (most specific match)
+  if (candidates.length === 0) return undefined;
+  const longest = candidates.reduce((a, b) => (a.path.length > b.path.length ? a : b));
+  return longest.id;
+}
+
+export function buildSidebarProps(
+  collapsed: boolean,
+  setCollapsed: (value: boolean) => void
+): SidebarProps {
   const navigate = useNavigate();
   const { location } = useRouterState();
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const pathname = location.pathname;
 
-  function isNavItemGroup(item: NavItemDef | NavItemGroup): item is NavItemGroup {
-    return "children" in item;
-  }
+  const activeItemId = getActiveItemId(pathname);
 
-  function isRouteMatch(currentPath: string, targetPath: string): boolean {
-    return currentPath === targetPath || currentPath.startsWith(targetPath + "/");
-  }
-
-  function getActiveItemId(): string | undefined {
-    // Collect all matching candidates with their path lengths
-    const candidates: Array<{ id: string; path: string }> = [];
-
-    for (const item of NAV_TREE) {
-      if ("path" in item && item.path && isRouteMatch(pathname, item.path)) {
-        candidates.push({ id: item.id, path: item.path });
-      }
-      if ("children" in item) {
-        for (const child of item.children) {
-          if (isRouteMatch(pathname, child.path)) {
-            candidates.push({ id: child.id, path: child.path });
-          }
-        }
-      }
-    }
-
-    // Return the longest matching path (most specific match)
-    if (candidates.length === 0) return undefined;
-    const longest = candidates.reduce((a, b) => (a.path.length > b.path.length ? a : b));
-    return longest.id;
-  }
-
-  function getActiveGroupId(): string | undefined {
-    // Collect all matching group candidates with their longest child path
-    const candidates: Array<{ groupId: string; maxChildLength: number }> = [];
-
-    for (const item of NAV_TREE) {
-      if ("children" in item) {
-        for (const child of item.children) {
-          if (isRouteMatch(pathname, child.path)) {
-            candidates.push({
-              groupId: item.id,
-              maxChildLength: child.path.length,
-            });
-            break; // Only need one match per group to determine if it's active
-          }
-        }
-      }
-    }
-
-    // Return the group with the longest matching child path
-    if (candidates.length === 0) return undefined;
-    const longest = candidates.reduce((a, b) => (a.maxChildLength > b.maxChildLength ? a : b));
-    return longest.groupId;
-  }
-
-  const activeItemId = getActiveItemId();
-  const activeGroupId = getActiveGroupId();
-
-  const handleGroupToggle = (groupId: string) => {
-    const newExpanded = new Set(expandedGroups);
-    if (newExpanded.has(groupId)) {
-      newExpanded.delete(groupId);
+  const sections = NAV_TREE.map((item) => {
+    if (isNavItemGroup(item)) {
+      return {
+        title: item.label,
+        items: [
+          {
+            id: item.id,
+            label: item.label,
+            icon: item.heimdallIcon,
+            children: item.children.map((child) => ({
+              id: child.id,
+              label: child.label,
+            })),
+          },
+        ],
+      };
     } else {
-      newExpanded.add(groupId);
+      return {
+        title: "",
+        items: [
+          {
+            id: item.id,
+            label: item.label,
+            icon: item.heimdallIcon,
+          },
+        ],
+      };
     }
-    setExpandedGroups(newExpanded);
+  });
+
+  const pathMap = new Map<string, string>();
+  for (const item of NAV_TREE) {
+    if ("path" in item && item.path) {
+      pathMap.set(item.id, item.path);
+    }
+    if ("children" in item) {
+      for (const child of item.children) {
+        pathMap.set(child.id, child.path);
+      }
+    }
+  }
+
+  return {
+    sections,
+    activeItemId,
+    collapsed,
+    onCollapse: setCollapsed,
+    onSelectItem: (itemId: string) => {
+      const path = pathMap.get(itemId);
+      if (path) {
+        navigate({ to: path });
+      }
+    },
   };
-
-  return (
-    <aside data-testid="sidebar" className={`shell-rail ${collapsed ? "collapsed" : ""}`}>
-      <button
-        data-testid="sidebar-toggle"
-        className="rail-collapse"
-        onClick={() => onToggle?.()}
-        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-      >
-        <Menu size={20} />
-      </button>
-
-      <nav>
-        {NAV_TREE.map((item) => {
-          const isGroup = isNavItemGroup(item);
-          const isExpanded = expandedGroups.has(item.id);
-          const isItemActive = activeItemId === item.id;
-          const isGroupActive = isGroup && activeGroupId === item.id;
-
-          if (isGroup) {
-            return (
-              <div key={item.id} className="nav-section">
-                <NavItem
-                  icon={item.heimdallIcon}
-                  label={!collapsed ? item.label : ""}
-                  active={isGroupActive}
-                  onClick={() => {
-                    const childPath =
-                      item.children.find((c) => c.id === activeItemId)?.path ||
-                      item.children[0].path;
-                    navigate({ to: childPath });
-                    handleGroupToggle(item.id);
-                  }}
-                  aria-label={collapsed ? item.label : undefined}
-                  data-testid={`sidebar-item-${item.id}`}
-                  aria-expanded={isExpanded}
-                />
-                {(isExpanded || isGroupActive) && (
-                  <div className="nav-sub">
-                    {item.children.map((child) => {
-                      const isChildActive = activeItemId === child.id;
-                      return (
-                        <NavItem
-                          key={child.id}
-                          label={!collapsed ? child.label : ""}
-                          active={isChildActive}
-                          onClick={() => navigate({ to: child.path })}
-                          aria-label={collapsed ? child.label : undefined}
-                          data-testid={`sidebar-item-${child.id}`}
-                        />
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          }
-
-          return (
-            <div key={item.id} className="nav-section">
-              <NavItem
-                icon={item.heimdallIcon}
-                label={!collapsed ? item.label : ""}
-                active={isItemActive}
-                onClick={() => navigate({ to: item.path! })}
-                aria-label={collapsed ? item.label : undefined}
-                data-testid={`sidebar-item-${item.id}`}
-              />
-            </div>
-          );
-        })}
-      </nav>
-    </aside>
-  );
 }

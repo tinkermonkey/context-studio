@@ -169,7 +169,6 @@ export function PipelineCreateForm({ onSubmit, onCancel, isLoading }: PipelineCr
       <div style={{ display: "flex", gap: "var(--space-2)", justifyContent: "flex-end" }}>
         <Button
           variant="ghost"
-          size="sm"
           type="button"
           onClick={onCancel}
           data-testid="pipeline-create-cancel"
@@ -178,7 +177,6 @@ export function PipelineCreateForm({ onSubmit, onCancel, isLoading }: PipelineCr
         </Button>
         <Button
           variant="primary"
-          size="sm"
           type="submit"
           disabled={isLoading}
           data-testid="pipeline-create-submit"

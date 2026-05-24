@@ -116,7 +116,7 @@ describe("Individuals Data Page", () => {
         expect(screen.getByText("No individuals yet")).toBeInTheDocument();
       });
 
-      const actionButton = screen.getByTestId("empty-state-new-individual");
+      const actionButton = screen.getByTestId("empty-state-action");
       expect(actionButton).toBeInTheDocument();
       expect(actionButton).toHaveTextContent("+ New individual");
     });
@@ -203,7 +203,7 @@ describe("Individuals Data Page", () => {
       });
 
       const monoId = screen.getByText("individu");
-      expect(monoId).toHaveClass("mono");
+      expect(monoId).toHaveClass("font-mono");
     });
 
     it("displays class chips with correct class names", async () => {
@@ -301,8 +301,7 @@ describe("Individuals Data Page", () => {
         expect(screen.getByText("Test Individual")).toBeInTheDocument();
       });
 
-      expect(screen.getByTestId("individual-row-edit-ind-001")).toBeInTheDocument();
-      expect(screen.getByTestId("individual-row-delete-ind-001")).toBeInTheDocument();
+      expect(screen.getByTestId("individual-row-actions-ind-001")).toBeInTheDocument();
     });
 
     it("verifies name cell is clickable and has correct testid", async () => {
@@ -333,7 +332,7 @@ describe("Individuals Data Page", () => {
       });
 
       const nameCell = screen.getByTestId("individual-name-ind-001");
-      expect(nameCell).toHaveStyle({ cursor: "pointer" });
+      expect(nameCell).toHaveClass("cursor-pointer");
     });
   });
 

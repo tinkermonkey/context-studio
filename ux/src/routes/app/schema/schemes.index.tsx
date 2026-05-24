@@ -1,21 +1,19 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
-import { ColumnDef } from "@tanstack/react-table";
-import { MoreVertical } from "lucide-react";
 import { useToasts } from "@/components/ui/Toast";
-import { Button } from "@tinkermonkey/heimdall-ui";
-import { Modal } from "@/components/ui/Modal";
-import { PageHeader } from "@/components/ui/PageHeader";
+import { Button, Modal, PageHeader, RowMenu, Chip, FilterBar, TabBar } from "@tinkermonkey/heimdall-ui";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { FilterBar } from "@/components/schema/FilterBar";
-import { SchemaTable } from "@/components/schema/SchemaTable";
+import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import { SchemeForm } from "@/components/schema/SchemeForm";
 import { SchemeDrawer } from "@/components/ontology/SchemeDrawer";
 import { useSchemes, useCreateScheme } from "@/api/hooks/ontology/useSchemes";
 import { useTaxonomies } from "@/api/hooks/ontology/useTaxonomies";
+import { useClasses } from "@/api/hooks/ontology/useClasses";
+import { useProperties } from "@/api/hooks/ontology/useProperties";
+import { useRelationships } from "@/api/hooks/ontology/useRelationships";
 import { schemesCopy } from "./schemes/-copy";
 import type { components } from "@/api/types";
 
@@ -55,85 +53,64 @@ function SchemesPageContent({
       scheme.id.toLowerCase().includes(searchFilter.toLowerCase()),
   );
 
-  const schemeColumns: ColumnDef<ConceptSchemeResponse>[] = [
+  const schemeColumns: Column<ConceptSchemeResponse>[] = [
     {
-      accessorKey: "id",
-      header: "ID",
-      size: 100,
-      cell: (info) => (
-        <span className="mono" style={{ fontSize: "var(--text-xs)" }}>
-          {(info.getValue() as string).slice(0, 8)}
+      key: "id",
+      label: "ID",
+      render: (value) => (
+        <code className="font-mono text-xs">{(value as string).slice(0, 8)}</code>
+      ),
+    },
+    {
+      key: "title",
+      label: "Name",
+      sortable: true,
+      render: (value, row) => (
+        <span
+          style={{ color: "var(--accent-cyan, #22d3ee)", fontWeight: 500, cursor: "pointer" }}
+          onClick={() => onSelectedIdChange(row.id)}
+          data-testid={`scheme-name-${row.id}`}
+        >
+          {value as string}
         </span>
       ),
     },
     {
-      accessorKey: "title",
-      header: "Name",
-      cell: (info) => {
-        const schemeId = info.row.original.id;
-        return (
-          <span
-            style={{
-              color: "var(--cyan-600, #0891b2)",
-              fontWeight: 500,
-              cursor: "pointer",
-            }}
-            onClick={() => onSelectedIdChange(schemeId)}
-            data-testid={`scheme-name-${schemeId}`}
-          >
-            {info.getValue() as string}
-          </span>
-        );
+      key: "description",
+      label: "Description",
+      render: (value) => <span className="opacity-60">{(value as string) || "—"}</span>,
+    },
+    {
+      key: "taxonomy_id",
+      label: "Parent Taxonomy",
+      render: (value) => {
+        const taxName = taxonomiesById.get(value as string) || "—";
+        return <Chip variant="neutral">{taxName}</Chip>;
       },
     },
     {
-      accessorKey: "description",
-      header: "Description",
-      cell: (info) => <span className="muted-text">{(info.getValue() as string) || "—"}</span>,
-    },
-    {
-      accessorKey: "taxonomy_id",
-      header: "Parent Taxonomy",
-      cell: (info) => {
-        const taxonomyId = info.getValue() as string;
-        const taxonomyName = taxonomiesById.get(taxonomyId) || "—";
-        return (
-          <span
-            style={{
-              backgroundColor: "var(--slate-100, #f1f5f9)",
-              color: "var(--slate-700, #334155)",
-              padding: "4px 8px",
-              borderRadius: "4px",
-              fontSize: "var(--text-xs)",
-              fontWeight: 500,
-            }}
-          >
-            {taxonomyName}
-          </span>
-        );
-      },
-    },
-    {
-      id: "classCount",
-      header: "Classes",
-      cell: () => <span className="muted-text">—</span>,
-    },
-    {
-      accessorKey: "last_modified",
-      header: "Updated",
-      cell: (info) => {
-        const date = info.getValue() as string | null;
+      key: "last_modified",
+      label: "Updated",
+      render: (value) => {
+        const date = value as string | null;
         return date ? new Date(date).toLocaleDateString() : "—";
       },
     },
     {
-      id: "actions",
-      header: "",
-      size: 40,
-      cell: ({ row }) => (
-        <button data-testid={`scheme-row-actions-${row.original.id}`} className="btn btn-icon">
-          <MoreVertical size={16} style={{ color: "var(--canvas-fg-3)" }} />
-        </button>
+      key: "created_at",
+      label: "",
+      width: "40px",
+      render: (_, row) => (
+        <RowMenu
+          data-testid={`scheme-row-actions-${row.id}`}
+          actions={[
+            { id: "edit", label: "Edit", icon: "edit" },
+            { id: "clone", label: "Clone", icon: "copy" },
+            { type: "separator" },
+            { id: "delete", label: "Delete", icon: "trash", danger: true },
+          ]}
+          onAction={(actionId) => console.log(`Action ${actionId} on scheme ${row.id}`)}
+        />
       ),
     },
   ];
@@ -180,7 +157,13 @@ function SchemesPageContent({
 
   return (
     <div data-testid="schemes-page">
-      <FilterBar searchValue={searchFilter} onSearchChange={setSearchFilter} />
+      <FilterBar
+        data-testid="schema-filter-bar"
+        onSearchChange={setSearchFilter}
+        searchPlaceholder="Search by title or description…"
+        showingCount={filteredData.length}
+        totalCount={schemes.length}
+      />
 
       {taxonomiesError && onRetryTaxonomies && (
         <div style={{ marginBottom: "var(--space-3)" }}>
@@ -240,8 +223,31 @@ export function SchemesIndexPage() {
     refetch: refetchTaxonomies,
   } = useTaxonomies();
   const taxonomies = taxonomiesResponse?.items || [];
-
   const taxonomiesById = new Map(taxonomies.map((t) => [t.id, t.title]));
+
+  const { data: schemesData } = useSchemes();
+  const { data: classesData } = useClasses();
+  const { data: propsData } = useProperties();
+  const { data: relsData } = useRelationships();
+
+  const schemaTabs = [
+    { id: "taxonomies", label: "Taxonomies", count: taxonomiesResponse?.total },
+    { id: "schemes", label: "Schemes", count: schemesData?.total },
+    { id: "classes", label: "Classes", count: classesData?.total },
+    { id: "properties", label: "Properties", count: propsData?.total },
+    { id: "relationships", label: "Relationships", count: relsData?.items?.length ?? relsData?.total },
+  ];
+
+  const handleTabNavigate = (tabId: string) => {
+    const routes: Record<string, string> = {
+      taxonomies: "/app/schema/taxonomies",
+      schemes: "/app/schema/schemes",
+      classes: "/app/schema/classes",
+      properties: "/app/schema/properties",
+      relationships: "/app/schema/relationships",
+    };
+    navigate({ to: routes[tabId] as any });
+  };
 
   const handleSelectedIdChange = (id?: string) => {
     navigate({
@@ -253,7 +259,6 @@ export function SchemesIndexPage() {
 
   const handleCreateSubmit = async (data: ConceptSchemeCreateRequest) => {
     setCreateError(null);
-    // For now, use the first taxonomy as default. This will be updated in phase with proper selection.
     const taxonomyId = taxonomies[0]?.id;
     if (!taxonomyId) {
       setCreateError("No taxonomies available");
@@ -278,6 +283,7 @@ export function SchemesIndexPage() {
         <PageHeader
           eyebrow="Schema"
           title="Concept Schemes"
+          idChip="/schema/schemes"
           actions={
             <Button
               variant="primary"
@@ -288,6 +294,9 @@ export function SchemesIndexPage() {
             </Button>
           }
         />
+
+        <TabBar tabs={schemaTabs} activeTabId="schemes" onSelectTab={handleTabNavigate} />
+
         <div data-testid="schemes-content">
           <SchemesPageContent
             onCreateClick={() => setShowCreateModal(true)}
@@ -300,13 +309,12 @@ export function SchemesIndexPage() {
         </div>
 
         <Modal
-          open={showCreateModal}
+          isOpen={showCreateModal}
           onClose={() => {
             setShowCreateModal(false);
             setCreateError(null);
           }}
           title="Create Concept Scheme"
-          size="sm"
           data-testid="scheme-create-modal"
         >
           {createError && (

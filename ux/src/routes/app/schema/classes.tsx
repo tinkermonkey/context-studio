@@ -1,21 +1,19 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
-import { ColumnDef } from "@tanstack/react-table";
-import { MoreVertical } from "lucide-react";
 import { useToasts } from "@/components/ui/Toast";
-import { Button } from "@tinkermonkey/heimdall-ui";
-import { Modal } from "@/components/ui/Modal";
-import { PageHeader } from "@/components/ui/PageHeader";
+import { Button, Modal, PageHeader, RowMenu, Chip, FilterBar, TabBar } from "@tinkermonkey/heimdall-ui";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { FilterBar } from "@/components/schema/FilterBar";
-import { SchemaTable } from "@/components/schema/SchemaTable";
+import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import { ClassEditor } from "@/components/ontology/ClassEditor";
 import { ClassDrawer } from "@/components/ontology/ClassDrawer";
 import { useClasses, useCreateClass } from "@/api/hooks/ontology/useClasses";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
+import { useTaxonomies } from "@/api/hooks/ontology/useTaxonomies";
+import { useProperties } from "@/api/hooks/ontology/useProperties";
+import { useRelationships } from "@/api/hooks/ontology/useRelationships";
 import { classesCopy } from "./classes/-copy";
 import type { components } from "@/api/types";
 
@@ -54,97 +52,84 @@ function ClassesPageContent({
       cls.id.toLowerCase().includes(searchFilter.toLowerCase()),
   );
 
-  const classColumns: ColumnDef<ClassResponse>[] = [
+  const classColumns: Column<ClassResponse>[] = [
     {
-      accessorKey: "id",
-      header: "ID",
-      size: 100,
-      cell: (info) => (
-        <span className="mono" style={{ fontSize: "var(--text-xs)" }}>
-          {(info.getValue() as string).slice(0, 8)}
+      key: "id",
+      label: "ID",
+      render: (value) => (
+        <code className="font-mono text-xs">{(value as string).slice(0, 8)}</code>
+      ),
+    },
+    {
+      key: "title",
+      label: "Name",
+      sortable: true,
+      render: (value, row) => (
+        <span
+          style={{ color: "var(--accent-cyan, #22d3ee)", fontWeight: 500, cursor: "pointer" }}
+          data-testid={`class-name-${row.id}`}
+          onClick={() => onSelectedIdChange(row.id)}
+        >
+          {value as string}
         </span>
       ),
     },
     {
-      accessorKey: "title",
-      header: "Name",
-      cell: (info) => {
-        const classId = info.row.original.id;
+      key: "concept_scheme_id",
+      label: "Domain",
+      render: (value, row) => {
+        const schemeName = schemeMap.get(value as string) || "Unknown";
         return (
-          <span
-            style={{
-              color: "var(--cyan-600, #0891b2)",
-              fontWeight: 500,
-              cursor: "pointer",
-            }}
-            data-testid={`class-name-${classId}`}
-            onClick={() => onSelectedIdChange(classId)}
-          >
-            {info.getValue() as string}
-          </span>
-        );
-      },
-    },
-    {
-      accessorKey: "concept_scheme_id",
-      header: "Domain",
-      cell: (info) => {
-        const schemeId = info.getValue() as string;
-        const schemeName = schemeMap.get(schemeId) || "Unknown";
-        return (
-          <span
-            style={{
-              backgroundColor: "var(--canvas-bg-2)",
-              color: "rgb(var(--canvas-fg-1))",
-              padding: "4px 8px",
-              borderRadius: "4px",
-              fontSize: "var(--text-xs)",
-              fontWeight: 500,
-            }}
-            data-testid={`class-domain-${info.row.original.id}`}
-          >
+          <Chip variant="neutral" data-testid={`class-domain-${row.id}`}>
             {schemeName}
-          </span>
+          </Chip>
         );
       },
     },
     {
-      accessorKey: "parent_class_id",
-      header: "Parent Class",
-      cell: (info) => {
-        const parentId = info.getValue() as string | null | undefined;
-        if (!parentId) return <span style={{ color: "var(--canvas-fg-3)" }}>—</span>;
+      key: "parent_class_id",
+      label: "Parent Class",
+      render: (value) => {
+        const parentId = value as string | null | undefined;
+        if (!parentId) return <span className="opacity-60">—</span>;
         const parentName = classMap.get(parentId) || "Unknown";
         return (
-          <span className="mono" style={{ fontSize: "var(--text-xs)" }}>
+          <code className="font-mono text-xs">
             {parentId.slice(0, 8)} ({parentName})
-          </span>
+          </code>
         );
       },
     },
     {
-      id: "propertyCount",
-      header: "Properties",
-      cell: ({ row }) => (
-        <span className="muted-text">{row.original.data_properties?.length ?? 0}</span>
+      key: "version",
+      label: "Properties",
+      render: (_, row) => (
+        <span className="opacity-60">{row.data_properties?.length ?? 0}</span>
       ),
     },
     {
-      accessorKey: "last_modified",
-      header: "Updated",
-      cell: (info) => {
-        const date = info.getValue() as string | null;
+      key: "last_modified",
+      label: "Updated",
+      render: (value) => {
+        const date = value as string | null;
         return date ? new Date(date).toLocaleDateString() : "—";
       },
     },
     {
-      id: "actions",
-      header: "",
-      size: 40,
-      cell: ({ row }) => (
-        <button data-testid={`class-row-actions-${row.original.id}`} className="btn btn-icon">
-          <MoreVertical size={16} style={{ color: "var(--canvas-fg-3)" }} />
-        </button>
+      key: "created_at",
+      label: "",
+      width: "40px",
+      render: (_, row) => (
+        <RowMenu
+          data-testid={`class-row-actions-${row.id}`}
+          actions={[
+            { id: "edit", label: "Edit", icon: "edit" },
+            { id: "clone", label: "Clone", icon: "copy" },
+            { type: "separator" },
+            { id: "delete", label: "Delete", icon: "trash", danger: true },
+          ]}
+          onAction={(actionId) => console.log(`Action ${actionId} on class ${row.id}`)}
+        />
       ),
     },
   ];
@@ -192,7 +177,13 @@ function ClassesPageContent({
 
   return (
     <div data-testid="classes-page">
-      <FilterBar searchValue={searchFilter} onSearchChange={setSearchFilter} />
+      <FilterBar
+        data-testid="schema-filter-bar"
+        onSearchChange={setSearchFilter}
+        searchPlaceholder="Search by title or description…"
+        showingCount={filteredData.length}
+        totalCount={classes.length}
+      />
 
       {schemesError && (
         <div style={{ marginBottom: "var(--space-3)" }}>
@@ -246,6 +237,31 @@ function ClassesPageWrapper() {
   const createMutation = useCreateClass();
   const { toast } = useToasts();
 
+  const { data: taxData } = useTaxonomies();
+  const { data: schemesData } = useSchemes();
+  const { data: classesData } = useClasses();
+  const { data: propsData } = useProperties();
+  const { data: relsData } = useRelationships();
+
+  const schemaTabs = [
+    { id: "taxonomies", label: "Taxonomies", count: taxData?.total },
+    { id: "schemes", label: "Schemes", count: schemesData?.total },
+    { id: "classes", label: "Classes", count: classesData?.total },
+    { id: "properties", label: "Properties", count: propsData?.total },
+    { id: "relationships", label: "Relationships", count: relsData?.items?.length ?? relsData?.total },
+  ];
+
+  const handleTabNavigate = (tabId: string) => {
+    const routes: Record<string, string> = {
+      taxonomies: "/app/schema/taxonomies",
+      schemes: "/app/schema/schemes",
+      classes: "/app/schema/classes",
+      properties: "/app/schema/properties",
+      relationships: "/app/schema/relationships",
+    };
+    navigate({ to: routes[tabId] as any });
+  };
+
   const handleSelectedIdChange = (id?: string) => {
     navigate({
       to: "/app/schema/classes",
@@ -284,6 +300,7 @@ function ClassesPageWrapper() {
       <PageHeader
         eyebrow="Schema"
         title="Classes"
+        idChip="/schema/classes"
         actions={
           <Button
             variant="primary"
@@ -294,6 +311,9 @@ function ClassesPageWrapper() {
           </Button>
         }
       />
+
+      <TabBar tabs={schemaTabs} activeTabId="classes" onSelectTab={handleTabNavigate} />
+
       <div data-testid="classes-content">
         <ClassesPageContent
           onCreateClick={() => setShowCreateModal(true)}
@@ -303,13 +323,12 @@ function ClassesPageWrapper() {
       </div>
 
       <Modal
-        open={showCreateModal}
+        isOpen={showCreateModal}
         onClose={() => {
           setShowCreateModal(false);
           setCreateError(null);
         }}
         title="Create Class"
-        size="md"
         data-testid="class-create-modal"
       >
         {createError && (

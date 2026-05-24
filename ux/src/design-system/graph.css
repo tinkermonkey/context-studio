@@ -23,64 +23,6 @@ body.dark-canvas {
   --graph-edge-strong: #5a6573;
 }
 
-/* ============ Layout ============ */
-.graph-shell {
-  display: grid;
-  grid-template-columns: 1fr 360px;
-  gap: 14px;
-  height: calc(100vh - 280px);
-  min-height: 560px;
-}
-
-.graph-canvas {
-  position: relative;
-  background: var(--graph-bg);
-  border: 1px solid rgb(var(--canvas-border));
-  border-radius: 10px;
-  overflow: hidden;
-  cursor: grab;
-}
-.graph-canvas:active {
-  cursor: grabbing;
-}
-
-.graph-canvas__error {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: rgb(var(--canvas-fg-2));
-}
-
-.graph-grid {
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(circle, var(--graph-grid) 1px, transparent 1px);
-  background-size: 18px 18px;
-  background-position: 0 0;
-  pointer-events: none;
-}
-
-.graph-stage {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 1340px;
-  height: 700px;
-  margin-left: -670px;
-  margin-top: -350px;
-  transform-origin: 50% 50%;
-  transition: transform 0.12s ease-out;
-}
-
-.graph-svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  overflow: visible;
-}
 
 /* ============ Cluster zones ============ */
 .graph-cluster rect {
@@ -512,29 +454,6 @@ body.dark-canvas .gt-chip.irrelevant {
   background: rgb(var(--dom-software));
 }
 
-/* ============ Inspector (right rail) ============ */
-.graph-inspector {
-  background: rgb(var(--canvas-card));
-  border: 1px solid rgb(var(--canvas-border));
-  border-radius: 10px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.graph-inspector .empty {
-  flex: 1;
-  display: grid;
-  place-items: center;
-  color: rgb(var(--canvas-fg-3));
-  font-size: 12.5px;
-}
-
-.gi-body {
-  padding: 14px 16px;
-  overflow-y: auto;
-  flex: 1;
-  font-size: 13px;
-}
 
 /* ============ View toggle (table / graph) ============ */
 .view-toggle {

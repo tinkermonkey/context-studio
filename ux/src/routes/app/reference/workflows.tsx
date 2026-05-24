@@ -1,22 +1,23 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
-import { ColumnDef } from "@tanstack/react-table";
-import { MoreVertical, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Button } from "@tinkermonkey/heimdall-ui";
-import { Chip } from "@/components/ui/Chip";
-import { Modal } from "@/components/ui/Modal";
-import { FilterBar } from "@/components/schema/FilterBar";
-import { SchemaTable } from "@/components/schema/SchemaTable";
+import { Button, Modal, Chip, RowMenu, FilterBar, PageHeader } from "@tinkermonkey/heimdall-ui";
+import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import { GroundingWorkflowDrawer } from "@/components/reference/GroundingWorkflowDrawer";
 import { GroundingWorkflowForm } from "@/components/reference/GroundingWorkflowForm";
 import { useToasts } from "@/components/ui/Toast";
 import { formatRelativeTime } from "@/utils/formatters";
 import { COPY } from "./copy";
-import { useGroundingWorkflows, useCreateGroundingWorkflow } from "@/api/hooks/reference";
+import {
+  useGroundingWorkflows,
+  useCreateGroundingWorkflow,
+  useDeleteGroundingWorkflow,
+  useRunGroundingWorkflow,
+} from "@/api/hooks/reference";
 import type {
   GroundingWorkflowResponse,
   GroundingWorkflowCreate,
@@ -30,12 +31,16 @@ interface WorkflowsPageContentProps {
   selectedId?: string;
   onSelectedIdChange: (id: string | undefined) => void;
   onCreateClick: () => void;
+  onDeleteClick: (id: string) => void;
+  onRunClick: (id: string) => void;
 }
 
 export function WorkflowsPageContent({
   selectedId,
   onSelectedIdChange,
   onCreateClick,
+  onDeleteClick,
+  onRunClick,
 }: WorkflowsPageContentProps) {
   const [searchFilter, setSearchFilter] = useState("");
   const { data: workflows, isLoading, error, refetch } = useGroundingWorkflows();
@@ -44,53 +49,51 @@ export function WorkflowsPageContent({
     workflow.title.toLowerCase().includes(searchFilter.toLowerCase()),
   );
 
-  const workflowColumns: ColumnDef<GroundingWorkflowResponse>[] = [
+  const workflowColumns: Column<GroundingWorkflowResponse>[] = [
     {
-      accessorKey: "title",
-      header: COPY.workflowsTableHeaderName,
-      cell: (info) => {
-        const workflowId = info.row.original.id;
-        return (
-          <button
-            style={{
-              background: "none",
-              border: "none",
-              color: "var(--cyan-600, #0891b2)",
-              fontWeight: 500,
-              cursor: "pointer",
-              padding: 0,
-            }}
-            onClick={() => onSelectedIdChange(workflowId)}
-            data-testid={`workflow-name-${workflowId}`}
-          >
-            {info.getValue() as string}
-          </button>
-        );
-      },
+      key: "title",
+      label: COPY.workflowsTableHeaderName,
+      sortable: true,
+      render: (value, row) => (
+        <button
+          style={{
+            background: "none",
+            border: "none",
+            color: "var(--accent-cyan, #22d3ee)",
+            fontWeight: 500,
+            cursor: "pointer",
+            padding: 0,
+          }}
+          onClick={() => onSelectedIdChange(row.id)}
+          data-testid={`workflow-name-${row.id}`}
+        >
+          {value as string}
+        </button>
+      ),
     },
     {
-      accessorKey: "source",
-      header: COPY.workflowsTableHeaderSource,
-      cell: (info) => <Chip color="cyan">{info.getValue() as string}</Chip>,
+      key: "source",
+      label: COPY.workflowsTableHeaderSource,
+      render: (value) => <Chip variant="cyan">{value as string}</Chip>,
     },
     {
-      accessorKey: "class_scope",
-      header: COPY.workflowsTableHeaderClassScope,
-      cell: (info) => {
-        const scopes = info.getValue() as string[];
+      key: "class_scope",
+      label: COPY.workflowsTableHeaderClassScope,
+      render: (value) => {
+        const scopes = value as string[];
         return (
           <div style={{ display: "flex", gap: "var(--space-1)", flexWrap: "wrap" }}>
             {scopes.length > 0 ? (
               scopes.slice(0, 2).map((scope) => (
-                <Chip key={scope} color="violet">
+                <Chip key={scope} variant="violet">
                   {scope}
                 </Chip>
               ))
             ) : (
-              <span className="muted-text">—</span>
+              <span className="opacity-60">—</span>
             )}
             {scopes.length > 2 && (
-              <span className="muted-text" style={{ fontSize: "var(--text-xs)" }}>
+              <span className="opacity-60" style={{ fontSize: "var(--text-xs)" }}>
                 +{scopes.length - 2}
               </span>
             )}
@@ -99,39 +102,48 @@ export function WorkflowsPageContent({
       },
     },
     {
-      accessorKey: "status",
-      header: COPY.workflowsTableHeaderStatus,
-      cell: (info) => {
-        const status = info.getValue() as string;
-        const statusColor = status === "active" ? "emerald" : status === "error" ? "rose" : "gray";
-
-        return <Chip color={statusColor}>{status}</Chip>;
+      key: "status",
+      label: COPY.workflowsTableHeaderStatus,
+      render: (value) => {
+        const status = value as string;
+        const statusColor = status === "active" ? "emerald" : status === "error" ? "rose" : "neutral";
+        return <Chip variant={statusColor as "emerald" | "rose" | "neutral"}>{status}</Chip>;
       },
     },
     {
-      accessorKey: "last_run",
-      header: COPY.workflowsTableHeaderLastRun,
-      cell: (info) => {
-        const date = info.getValue() as string | null;
+      key: "last_run",
+      label: COPY.workflowsTableHeaderLastRun,
+      render: (value) => {
+        const date = value as string | null;
         return (
-          <span className="muted-text" style={{ fontSize: "var(--text-xs)" }}>
+          <span className="opacity-60" style={{ fontSize: "var(--text-xs)" }}>
             {date ? formatRelativeTime(date) : "—"}
           </span>
         );
       },
     },
+    {
+      key: "id",
+      label: "",
+      width: "40px",
+      render: (_, row) => (
+        <RowMenu
+          data-testid={`workflow-row-actions-${row.id}`}
+          actions={[
+            { id: "view", label: "View details", icon: "edit" },
+            { id: "run", label: "Run now" },
+            { type: "separator" },
+            { id: "delete", label: "Delete", icon: "trash", danger: true },
+          ]}
+          onAction={(actionId: string) => {
+            if (actionId === "view") onSelectedIdChange(row.id);
+            if (actionId === "run") onRunClick(row.id);
+            if (actionId === "delete") onDeleteClick(row.id);
+          }}
+        />
+      ),
+    },
   ];
-
-  const renderRowActions = (workflow: GroundingWorkflowResponse) => (
-    <button
-      onClick={() => onSelectedIdChange(workflow.id)}
-      aria-label="Actions"
-      data-testid={`workflow-row-actions-${workflow.id}`}
-      className="btn btn-icon"
-    >
-      <MoreVertical size={16} style={{ color: "var(--canvas-fg-3)" }} />
-    </button>
-  );
 
   if (isLoading) {
     return (
@@ -177,7 +189,13 @@ export function WorkflowsPageContent({
 
   return (
     <div data-testid="reference-workflows-page">
-      <FilterBar searchValue={searchFilter} onSearchChange={setSearchFilter} />
+      <FilterBar
+        data-testid="schema-filter-bar"
+        onSearchChange={setSearchFilter}
+        searchPlaceholder="Search workflows…"
+        showingCount={filteredData.length}
+        totalCount={(workflows || []).length}
+      />
 
       {showFilteredEmpty ? (
         <div style={{ marginTop: "var(--space-6)" }}>
@@ -202,7 +220,6 @@ export function WorkflowsPageContent({
             columns={workflowColumns}
             data={filteredData}
             onRowSelect={(id) => onSelectedIdChange(id)}
-            renderRowActions={renderRowActions}
             selectedId={selectedId}
             tableTestId="reference-workflows-table"
           />
@@ -218,6 +235,8 @@ export function WorkflowsPageWrapper() {
   const selectedId = searchParams.selected;
   const [showCreateModal, setShowCreateModal] = useState(false);
   const createMutation = useCreateGroundingWorkflow();
+  const deleteMutation = useDeleteGroundingWorkflow();
+  const runMutation = useRunGroundingWorkflow();
   const { toast } = useToasts();
 
   const handleSelectedIdChange = (id: string | undefined) => {
@@ -226,10 +245,6 @@ export function WorkflowsPageWrapper() {
       search: id ? { selected: id } : {},
       replace: true,
     });
-  };
-
-  const handleCreateClick = () => {
-    setShowCreateModal(true);
   };
 
   const handleCreateSubmit = async (data: GroundingWorkflowCreate) => {
@@ -243,21 +258,51 @@ export function WorkflowsPageWrapper() {
     }
   };
 
+  const handleDeleteClick = (id: string) => {
+    if (confirm("Delete this workflow? This action cannot be undone.")) {
+      deleteMutation
+        .mutateAsync(id)
+        .then(() => {
+          if (selectedId === id) handleSelectedIdChange(undefined);
+          toast("success", "Workflow deleted.");
+        })
+        .catch((error) => {
+          toast("error", error instanceof Error ? error.message : "Failed to delete workflow.");
+        });
+    }
+  };
+
+  const handleRunClick = (id: string) => {
+    runMutation
+      .mutateAsync(id)
+      .then(() => toast("success", "Workflow run started."))
+      .catch((error) => {
+        toast("error", error instanceof Error ? error.message : "Failed to run workflow.");
+      });
+  };
+
   return (
     <div className="stack">
-      <div className="flex-between">
-        <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>{COPY.workflowsPageTitle}</h1>
-        <Button variant="primary" onClick={handleCreateClick} data-testid="new-workflow-button">
-          <Plus size={16} style={{ marginRight: "var(--space-1)" }} />
-          {COPY.newWorkflowButton}
-        </Button>
-      </div>
+      <PageHeader
+        eyebrow="Reference"
+        title={COPY.workflowsPageTitle}
+        idChip="/reference/workflows"
+        actions={
+          <Button
+            variant="primary"
+            onClick={() => setShowCreateModal(true)}
+            data-testid="new-workflow-button"
+          >
+            <Plus size={16} style={{ marginRight: "var(--space-1)" }} />
+            {COPY.newWorkflowButton}
+          </Button>
+        }
+      />
 
       <Modal
-        open={showCreateModal}
+        isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         title={COPY.createWorkflowModalTitle}
-        size="md"
         data-testid="workflow-create-modal"
       >
         <div style={{ padding: "var(--space-4)" }}>
@@ -272,7 +317,9 @@ export function WorkflowsPageWrapper() {
         <WorkflowsPageContent
           selectedId={selectedId}
           onSelectedIdChange={handleSelectedIdChange}
-          onCreateClick={handleCreateClick}
+          onCreateClick={() => setShowCreateModal(true)}
+          onDeleteClick={handleDeleteClick}
+          onRunClick={handleRunClick}
         />
       </div>
     </div>

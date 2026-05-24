@@ -170,12 +170,9 @@ selectors:
   - selector: schema-pagination-next
     component: components/schema/SchemaTable.tsx
     description: Next page button in table pagination
-  - selector: schema-search-input
-    component: components/schema/FilterBar.tsx
-    description: Search input for filtering table rows
   - selector: schema-filter-bar
-    component: components/schema/FilterBar.tsx
-    description: Filter bar container with search and filter chips
+    component: "@tinkermonkey/heimdall-ui FilterBar"
+    description: Filter bar container with search and filter chips (Heimdall component)
   - selector: schema-drawer-container
     component: components/schema/SchemaPageLayout.tsx
     description: Drawer container when entity is selected

@@ -1,13 +1,10 @@
+import { Chip, RowMenu, FilterBar } from "@tinkermonkey/heimdall-ui";
 import { useState } from "react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
-import { ColumnDef } from "@tanstack/react-table";
-import { MoreVertical } from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Chip } from "@/components/ui/Chip";
-import { FilterBar } from "@/components/schema/FilterBar";
-import { SchemaTable } from "@/components/schema/SchemaTable";
+import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import { ReferenceSourceDrawer } from "@/components/reference/ReferenceSourceDrawer";
 import { useReferenceStatus } from "@/api/hooks/reference";
@@ -42,46 +39,42 @@ export function SourcesPageContent({ selectedId, onSelectedIdChange }: SourcesPa
     source.name.toLowerCase().includes(searchFilter.toLowerCase()),
   );
 
-  const sourceColumns: ColumnDef<SourceWithId>[] = [
+  const sourceColumns: Column<SourceWithId>[] = [
     {
-      accessorKey: "name",
-      header: COPY.sourcesTableHeaderName,
-      cell: (info) => {
-        const sourceId = info.row.original.id;
-        return (
-          <button
-            style={{
-              background: "none",
-              border: "none",
-              color: "var(--cyan-600, #0891b2)",
-              fontWeight: 500,
-              cursor: "pointer",
-              padding: 0,
-            }}
-            onClick={() => onSelectedIdChange(sourceId)}
-            data-testid={`reference-source-name-${sourceId}`}
-          >
-            {info.getValue() as string}
-          </button>
-        );
-      },
+      key: "name",
+      label: COPY.sourcesTableHeaderName,
+      render: (value, row) => (
+        <button
+          style={{
+            background: "none",
+            border: "none",
+            color: "var(--accent-cyan, #22d3ee)",
+            fontWeight: 500,
+            cursor: "pointer",
+            padding: 0,
+          }}
+          onClick={() => onSelectedIdChange(row.id)}
+          data-testid={`reference-source-name-${row.id}`}
+        >
+          {value as string}
+        </button>
+      ),
     },
     {
-      accessorKey: "available",
-      header: COPY.sourcesTableHeaderStatus,
-      cell: (info) => {
-        const available = info.getValue() as boolean;
+      key: "available",
+      label: COPY.sourcesTableHeaderStatus,
+      render: (value) => {
+        const available = value as boolean;
         const statusLabel = available ? COPY.statusActive : COPY.statusInactive;
-
-        return <Chip color={available ? "emerald" : "gray"}>{statusLabel}</Chip>;
+        return <Chip variant={available ? "emerald" : "neutral"}>{statusLabel}</Chip>;
       },
     },
     {
-      accessorKey: "last_checked",
-      header: COPY.sourcesTableHeaderLastChecked,
-      cell: (info) => {
-        const date = info.getValue() as string | null;
-        if (!date) return <span className="muted-text">—</span>;
+      key: "last_checked",
+      label: COPY.sourcesTableHeaderLastChecked,
+      render: (value) => {
+        const date = value as string | null;
+        if (!date) return <span className="opacity-60">—</span>;
 
         const lastCheckedDate = new Date(date);
         const now = new Date();
@@ -101,21 +94,29 @@ export function SourcesPageContent({ selectedId, onSelectedIdChange }: SourcesPa
           relativeTime = COPY.daysAgo(diffDays);
         }
 
-        return <span className="muted-text">{relativeTime}</span>;
+        return <span className="opacity-60">{relativeTime}</span>;
       },
     },
+    {
+      key: "id",
+      label: "",
+      width: "40px",
+      render: (_, row) => (
+        <RowMenu
+          data-testid={`reference-source-row-actions-${row.name}`}
+          actions={[
+            { id: "configure", label: "Configure", icon: "settings" },
+            { id: "sync", label: "Sync now" },
+            { type: "separator" },
+            { id: "delete", label: "Delete", icon: "trash", danger: true },
+          ]}
+          onAction={(actionId: string) => {
+            console.log(`Action ${actionId} on source ${row.id}`);
+          }}
+        />
+      ),
+    },
   ];
-
-  const renderRowActions = (source: SourceWithId) => (
-    <button
-      onClick={() => onSelectedIdChange(source.id)}
-      aria-label="Actions"
-      data-testid={`reference-source-row-actions-${source.name}`}
-      className="btn btn-icon"
-    >
-      <MoreVertical size={16} style={{ color: "var(--canvas-fg-3)" }} />
-    </button>
-  );
 
   if (isLoading) {
     return (
@@ -157,7 +158,13 @@ export function SourcesPageContent({ selectedId, onSelectedIdChange }: SourcesPa
 
   return (
     <div data-testid="reference-sources-page">
-      <FilterBar searchValue={searchFilter} onSearchChange={setSearchFilter} />
+      <FilterBar
+        data-testid="schema-filter-bar"
+        onSearchChange={setSearchFilter}
+        searchPlaceholder="Search sources…"
+        showingCount={filteredData.length}
+        totalCount={sources.length}
+      />
 
       {showFilteredEmpty ? (
         <div style={{ marginTop: "var(--space-6)" }}>
@@ -182,7 +189,6 @@ export function SourcesPageContent({ selectedId, onSelectedIdChange }: SourcesPa
             columns={sourceColumns}
             data={filteredData}
             onRowSelect={(id) => onSelectedIdChange(id)}
-            renderRowActions={renderRowActions}
             selectedId={selectedId}
             tableTestId="reference-sources-table"
           />

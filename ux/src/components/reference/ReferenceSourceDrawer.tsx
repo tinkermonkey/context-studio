@@ -1,6 +1,5 @@
 import { Drawer } from "@/components/ui/Drawer";
-import { Button } from "@tinkermonkey/heimdall-ui";
-import { Chip } from "@/components/ui/Chip";
+import { Button, Chip } from "@tinkermonkey/heimdall-ui";
 import { useToasts } from "@/components/ui/Toast";
 import { useReferenceStatus } from "@/api/hooks/reference";
 import type { components } from "@/api/types";
@@ -37,7 +36,7 @@ export function ReferenceSourceDrawer({ source, onClose }: ReferenceSourceDrawer
         <div className="kv-row">
           <div className="kv-label">Status</div>
           <div className="kv-value">
-            <Chip color={source.available ? "emerald" : "gray"}>{statusLabel}</Chip>
+            <Chip variant={source.available ? "emerald" : "neutral"}>{statusLabel}</Chip>
           </div>
         </div>
 
@@ -51,7 +50,6 @@ export function ReferenceSourceDrawer({ source, onClose }: ReferenceSourceDrawer
           <div className="kv-value">
             <Button
               variant="ghost"
-              size="sm"
               onClick={handleRefresh}
               data-testid={`reference-source-refresh-${source.name}`}
             >

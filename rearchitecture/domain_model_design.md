@@ -439,6 +439,31 @@ class Execution:
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 ```
 
+#### PipelineType and PipelineRun subclasses
+
+Each pipeline type is an enum value. `NO_OP` is for testing only and is not exposed in the UX.
+
+```python
+class PipelineType(str, Enum):
+    INDIVIDUAL_EXTRACTION = "individual_extraction"
+    SCHEMA_EXTRACTION = "schema_extraction"
+    SCHEMA_NODE_GROUNDING = "schema_node_grounding"
+    SCHEMA_NODE_DEFINITION_REFINEMENT = "schema_node_definition_refinement"
+    SCHEMA_NODE_CONNECTION_REFINEMENT = "schema_node_connection_refinement"
+```
+
+Each type has a corresponding `PipelineRun` subclass that carries the type-specific inputs and outputs for a single execution:
+
+| PipelineType | Run subclass |
+|---|---|
+| `individual_extraction` | `IndividualExtractionRun` |
+| `schema_extraction` | `SchemaExtractionRun` |
+| `schema_node_grounding` | `SchemaGroundingRun` |
+| `schema_node_definition_refinement` | `SchemaDefinitionRefinementRun` |
+| `schema_node_connection_refinement` | `SchemaConnectionRefinementRun` |
+
+**Scoping relationship**: a `PipelineConfiguration` belongs to exactly one pipeline type via its `pipeline` field (a `PipelineType` string value). A single pipeline type can have many configurations — for example, different LLM providers or prompt variants for the same extraction task. The UX surfaces configurations within the pipeline detail view (`$pipelineId.tsx`), not as a standalone route.
+
 ---
 
 ## 5. Version Control Domain Model

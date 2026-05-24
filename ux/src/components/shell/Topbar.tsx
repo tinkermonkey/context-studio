@@ -1,4 +1,5 @@
-import { useRouterState, useNavigate } from "@tanstack/react-router";
+import { useRouterState } from "@tanstack/react-router";
+import type { TopbarProps } from "@tinkermonkey/heimdall-ui";
 import { Search, Bell, FileText, Sun, Moon, ChevronDown } from "lucide-react";
 import { useCommandPaletteStore } from "@/stores/commandPalette";
 import { useCanvasStore } from "@/stores/canvas";
@@ -31,42 +32,31 @@ function getWorkspaceName(): string {
   return name.replace(/\.[^.]+$/, "") || "workspace";
 }
 
-export function Topbar() {
+export function buildTopbarProps(): TopbarProps {
   const { location } = useRouterState();
-  const navigate = useNavigate();
   const openPalette = useCommandPaletteStore((s) => s.openPalette);
   const { darkCanvas, toggleDarkCanvas } = useCanvasStore();
   const crumbs = ROUTE_LABELS[location.pathname] ?? [location.pathname];
   const workspaceName = getWorkspaceName();
 
-  return (
-    <div className="topbar" role="banner" data-testid="topbar">
+  const breadcrumbs = crumbs.map((label) => ({ label }));
+
+  const children = (
+    <>
       <button
         className="ws-chip"
         type="button"
         data-testid="workspace-chip"
-        onClick={() => navigate({ to: "/welcome" })}
+        onClick={() => {
+          // TODO: Open WorkspaceSwitcherDialog - will be wired in app.tsx
+          console.log("Open workspace switcher");
+        }}
         title="Switch workspace"
       >
         <span className="ws-chip-dot" />
         <span className="ws-chip-name">{workspaceName}</span>
         <ChevronDown size={11} />
       </button>
-      <span className="crumbs-sep">/</span>
-      <div className="crumbs">
-        {crumbs.map((label, i) => (
-          <span key={i}>
-            {i < crumbs.length - 1 ? (
-              <>
-                <span>{label}</span>
-                <span className="sep">/</span>
-              </>
-            ) : (
-              <span className="last">{label}</span>
-            )}
-          </span>
-        ))}
-      </div>
       <div className="topbar-actions">
         <button
           className="topbar-palette"
@@ -99,6 +89,11 @@ export function Topbar() {
         <span className="dot" />
         main
       </span>
-    </div>
+    </>
   );
+
+  return {
+    breadcrumbs,
+    children,
+  };
 }

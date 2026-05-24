@@ -1,16 +1,12 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
-import { ColumnDef } from "@tanstack/react-table";
-import { Trash2 } from "lucide-react";
 import { useToasts } from "@/components/ui/Toast";
-import { Button } from "@tinkermonkey/heimdall-ui";
-import { Modal } from "@/components/ui/Modal";
+import { Button, Modal, FilterBar, PageHeader, RowMenu } from "@tinkermonkey/heimdall-ui";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { FilterBar } from "@/components/schema/FilterBar";
-import { SchemaTable } from "@/components/schema/SchemaTable";
-import { useDatasets, useCreateDataset, useDeleteDataset } from "@/api/hooks/admin/useDatasets";
+import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
+import { useDatasets, useCreateDataset, useDeleteDataset, useActivateDataset } from "@/api/hooks/admin/useDatasets";
 import { datasetsCopy } from "./datasets/-copy";
 import type { components } from "@/api/types";
 
@@ -27,33 +23,6 @@ interface DatasetsPageContentProps {
   onDeleteClick: (id: string) => void;
 }
 
-function DatasetsEmptyState({ onCreateClick }: { onCreateClick: () => void }) {
-  return (
-    <div className="empty-state" data-testid="empty-state">
-      <div className="empty-state-content">
-        <div className="empty-state-title">{datasetsCopy.emptyState.title}</div>
-        <div className="empty-state-description">{datasetsCopy.emptyState.description}</div>
-      </div>
-      <div
-        style={{
-          display: "flex",
-          gap: "var(--space-2)",
-          justifyContent: "center",
-          flexWrap: "wrap",
-        }}
-      >
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={onCreateClick}
-          data-testid="empty-state-new-dataset"
-        >
-          Create Dataset
-        </Button>
-      </div>
-    </div>
-  );
-}
 
 function DatasetsPageContent({
   onCreateClick,
@@ -64,6 +33,7 @@ function DatasetsPageContent({
   const [searchFilter, setSearchFilter] = useState("");
 
   const { data: listResponse, isLoading, error, refetch } = useDatasets();
+  const activateDataset = useActivateDataset();
   const datasets = listResponse || [];
 
   const filteredData = datasets.filter(
@@ -73,83 +43,77 @@ function DatasetsPageContent({
       dataset.id.toLowerCase().includes(searchFilter.toLowerCase()),
   );
 
-  const datasetColumns: ColumnDef<DatasetResponse>[] = [
+  const datasetColumns: Column<DatasetResponse>[] = [
     {
-      accessorKey: "id",
-      header: "ID",
-      size: 100,
-      cell: (info) => (
-        <span className="mono" style={{ fontSize: "var(--text-xs)" }}>
-          {(info.getValue() as string).slice(0, 8)}
+      key: "id",
+      label: "ID",
+      render: (value) => (
+        <code className="font-mono text-xs">{(value as string).slice(0, 8)}</code>
+      ),
+    },
+    {
+      key: "title",
+      label: "Name",
+      sortable: true,
+      render: (value, row) => (
+        <span
+          className="text-cyan-400 font-medium cursor-pointer"
+          data-testid={`dataset-name-${row.id}`}
+          onClick={() => onSelectedIdChange(row.id)}
+        >
+          {value as string}
         </span>
       ),
     },
     {
-      accessorKey: "title",
-      header: "Name",
-      cell: (info) => {
-        const datasetId = info.row.original.id;
-        return (
-          <span
-            style={{
-              color: "var(--cyan-600, #0891b2)",
-              fontWeight: 500,
-              cursor: "pointer",
-            }}
-            data-testid={`dataset-name-${datasetId}`}
-            onClick={() => onSelectedIdChange(datasetId)}
-          >
-            {info.getValue() as string}
-          </span>
-        );
-      },
+      key: "filename",
+      label: "Filename",
+      render: (value) => <span>{value as string}</span>,
     },
     {
-      accessorKey: "filename",
-      header: "Filename",
-      cell: (info) => {
-        const filename = info.getValue() as string;
-        return <span>{filename}</span>;
-      },
-    },
-    {
-      accessorKey: "description",
-      header: "Description",
-      cell: (info) => {
-        const desc = info.getValue() as string | null | undefined;
-        if (!desc) return <span className="muted-text">—</span>;
+      key: "description",
+      label: "Description",
+      render: (value) => {
+        const desc = value as string | null | undefined;
+        if (!desc) return <span className="opacity-60">—</span>;
         const truncated = desc.length > 50 ? desc.slice(0, 50) + "…" : desc;
         return <span>{truncated}</span>;
       },
     },
     {
-      accessorKey: "is_active",
-      header: "Status",
-      cell: (info) => {
-        const isActive = info.getValue() as boolean;
+      key: "is_active",
+      label: "Status",
+      render: (value) => {
+        const isActive = value as boolean;
         return isActive ? (
-          <span style={{ color: "var(--emerald-600)" }}>Active</span>
+          <span className="text-emerald-400">Active</span>
         ) : (
-          <span className="muted-text">Inactive</span>
+          <span className="opacity-60">Inactive</span>
         );
       },
     },
+    {
+      key: "id",
+      label: "",
+      width: "40px",
+      render: (_, row) => (
+        <RowMenu
+          data-testid={`dataset-row-actions-${row.id}`}
+          actions={[
+            { id: "activate", label: row.is_active ? "Active (current)" : "Activate" },
+            { type: "separator" },
+            { id: "delete", label: "Delete", icon: "trash", danger: true },
+          ]}
+          onAction={(actionId) => {
+            if (actionId === "activate" && !row.is_active) {
+              activateDataset.mutate(row.id);
+            }
+            if (actionId === "delete") onDeleteClick(row.id);
+          }}
+        />
+      ),
+    },
   ];
-
-  const renderRowActions = (row: DatasetResponse) => (
-    <div style={{ display: "flex", gap: "var(--space-1)" }}>
-      <button
-        type="button"
-        onClick={() => onDeleteClick(row.id)}
-        className="btn btn-icon"
-        data-testid={`dataset-row-delete-${row.id}`}
-        disabled={row.is_active}
-        title={row.is_active ? "Cannot delete active dataset" : "Delete dataset"}
-      >
-        <Trash2 size={16} style={{ color: "var(--canvas-fg-3)" }} />
-      </button>
-    </div>
-  );
 
   if (isLoading) {
     return (
@@ -177,7 +141,13 @@ function DatasetsPageContent({
   }
 
   if (datasets.length === 0) {
-    return <DatasetsEmptyState onCreateClick={onCreateClick} />;
+    return (
+      <EmptyState
+        title={datasetsCopy.emptyState.title}
+        description={datasetsCopy.emptyState.description}
+        action={{ label: "New Dataset", onClick: onCreateClick }}
+      />
+    );
   }
 
   const hasFilters = !!searchFilter;
@@ -185,7 +155,13 @@ function DatasetsPageContent({
 
   return (
     <div>
-      <FilterBar searchValue={searchFilter} onSearchChange={setSearchFilter} />
+      <FilterBar
+        data-testid="schema-filter-bar"
+        onSearchChange={setSearchFilter}
+        searchPlaceholder="Search by title or description…"
+        showingCount={filteredData.length}
+        totalCount={datasets.length}
+      />
 
       {showFilteredEmpty ? (
         <div style={{ marginTop: "var(--space-6)" }}>
@@ -198,7 +174,6 @@ function DatasetsPageContent({
           onRowSelect={onSelectedIdChange}
           selectedId={selectedId}
           testIdPrefix="dataset"
-          renderRowActions={renderRowActions}
         />
       )}
     </div>
@@ -275,9 +250,11 @@ function DatasetsPageWrapper() {
 
   return (
     <div className="stack" data-testid="datasets-page">
-      <div className="flex-between">
-        <h1 style={{ margin: 0, fontSize: "var(--text-xl)" }}>{datasetsCopy.pageTitle}</h1>
-        <div className="row">
+      <PageHeader
+        eyebrow="Data"
+        title={datasetsCopy.pageTitle}
+        idChip="/data/datasets"
+        actions={
           <Button
             variant="primary"
             onClick={() => setShowCreateModal(true)}
@@ -285,8 +262,8 @@ function DatasetsPageWrapper() {
           >
             New Dataset
           </Button>
-        </div>
-      </div>
+        }
+      />
       <DatasetsPageContent
         onCreateClick={() => setShowCreateModal(true)}
         selectedId={selectedId}
@@ -294,8 +271,7 @@ function DatasetsPageWrapper() {
         onDeleteClick={handleDeleteClick}
       />
 
-      <Modal
-        open={showCreateModal}
+      <Modal isOpen={showCreateModal}
         onClose={() => {
           setShowCreateModal(false);
           setCreateError(null);
@@ -304,7 +280,6 @@ function DatasetsPageWrapper() {
           setCreateDescription("");
         }}
         title={datasetsCopy.create.modalTitle}
-        size="md"
         data-testid="dataset-create-modal"
       >
         {createError && (

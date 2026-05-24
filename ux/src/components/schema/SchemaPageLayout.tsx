@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { SplitPane } from "@tinkermonkey/heimdall-ui";
 
 interface SchemaPageLayoutProps<T extends { id: string }> {
   data: T[];
@@ -13,13 +14,22 @@ export function SchemaPageLayout<T extends { id: string }>({
   renderDrawerContent,
   children,
 }: SchemaPageLayoutProps<T>) {
-  const selectedEntity = data.find((item) => item.id === selectedId);
+  const selectedEntity = selectedId ? data.find((item) => item.id === selectedId) : undefined;
 
   return (
-    <div className="split-2" data-testid="schema-page-layout">
-      <div>{children}</div>
-      {selectedEntity && renderDrawerContent && (
-        <div data-testid="schema-drawer-container">{renderDrawerContent(selectedEntity)}</div>
+    <div data-testid="schema-page-layout">
+      {selectedEntity && renderDrawerContent ? (
+        <SplitPane
+          direction="horizontal"
+          first={<div>{children}</div>}
+          second={
+            <div data-testid="schema-drawer-container">
+              {renderDrawerContent(selectedEntity)}
+            </div>
+          }
+        />
+      ) : (
+        children
       )}
     </div>
   );

@@ -1,12 +1,10 @@
+import { PageHeader, ConfigTile, TabBar } from "@tinkermonkey/heimdall-ui";
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Folder, Cpu, Layers, Type, Database, RefreshCw } from "lucide-react";
 import { useConfig, useUpdateConfig } from "@/api/hooks/admin";
 import { useToasts } from "@/components/ui/Toast";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { ConfigTile } from "@/components/settings/ConfigTile";
 import { EditConfigModal, type ConfigField } from "@/components/settings/EditConfigModal";
 import { COPY } from "./settings/copy";
 
@@ -40,7 +38,7 @@ export function SettingsPage() {
           <Skeleton height={60} width={400} />
           <Skeleton height={20} width={300} style={{ marginTop: "8px" }} />
         </div>
-        <div className="config-grid">
+        <div className="grid grid-cols-2 gap-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} height={180} />
           ))}
@@ -55,7 +53,7 @@ export function SettingsPage() {
         <PageHeader
           eyebrow="Administration"
           title={COPY.settingsPageTitle}
-          subtitle={COPY.settingsPageSubtitle}
+          idChip="/settings"
         />
         <ErrorBanner error={error} onRetry={refetch} message="Failed to load settings" />
       </div>
@@ -197,113 +195,96 @@ export function SettingsPage() {
         subtitle={COPY.settingsPageSubtitle}
       />
 
+      {/* Settings tabs */}
+      <div style={{ marginBottom: "var(--space-4)" }}>
+        <TabBar
+          tabs={[
+            { id: "general", label: "General" },
+            { id: "pipelines", label: "Pipelines" },
+            { id: "storage", label: "Storage" },
+            { id: "members", label: "Members" },
+            { id: "integrations", label: "Integrations" },
+          ]}
+          activeTabId="general"
+          onSelectTab={() => {}}
+        />
+      </div>
+
       {/* Config Tiles Grid */}
-      <div className="config-grid">
+      <div className="grid grid-cols-2 gap-3">
         {/* Workspace */}
         <ConfigTile
-          icon={Folder}
+          icon="schema"
           title={COPY.workspaceTileTitle}
           description={COPY.workspaceTileDescription}
-          summary={
-            <span>
-              {String(workspaceConfig.display_name || COPY.workspaceUnnamed)}
-              {workspaceConfig.path ? (
-                <>
-                  <br />
-                  <span className="config-tile-meta">{String(workspaceConfig.path)}</span>
-                </>
-              ) : null}
-            </span>
-          }
-          testid="config-tile-workspace"
-          onEdit={() => setOpenSection("workspace")}
-          isLoading={isLoading}
+          summary={[
+            { label: "Name", value: String(workspaceConfig.display_name || COPY.workspaceUnnamed) },
+            { label: "Path", value: String(workspaceConfig.path || COPY.notConfigured) },
+          ]}
+          onClick={() => setOpenSection("workspace")}
+          data-testid="config-tile-workspace"
         />
 
         {/* LLM Provider */}
         <ConfigTile
-          icon={Cpu}
+          icon="pipeline"
           title={COPY.llmProviderTileTitle}
           description={COPY.llmProviderTileDescription}
-          summary={
-            <span>
-              {llmConfig.provider ? (
-                <>
-                  {String(llmConfig.provider).charAt(0).toUpperCase() +
-                    String(llmConfig.provider).slice(1)}
-                  <br />
-                  <span className="config-tile-meta">
-                    {String(llmConfig.model || COPY.notConfigured)}
-                  </span>
-                </>
-              ) : (
-                COPY.notConfigured
-              )}
-            </span>
-          }
-          testid="config-tile-llm"
-          onEdit={() => setOpenSection("llm")}
-          isLoading={isLoading}
+          summary={[
+            { label: "Provider", value: llmConfig.provider ? String(llmConfig.provider).charAt(0).toUpperCase() + String(llmConfig.provider).slice(1) : COPY.notConfigured },
+            { label: "Model", value: String(llmConfig.model || COPY.notConfigured) },
+          ]}
+          onClick={() => setOpenSection("llm")}
+          data-testid="config-tile-llm"
         />
 
         {/* Embedding Model */}
         <ConfigTile
-          icon={Layers}
+          icon="layout"
           title={COPY.embeddingModelTileTitle}
           description={COPY.embeddingModelTileDescription}
-          summary={
-            <span>
-              {String(embeddingConfig.model_name || COPY.notConfigured)}
-              {embeddingConfig.vector_dimensions ? (
-                <>
-                  <br />
-                  <span className="config-tile-meta">
-                    {COPY.embeddingDimensionsMeta(Number(embeddingConfig.vector_dimensions))}
-                  </span>
-                </>
-              ) : null}
-            </span>
-          }
-          testid="config-tile-embedding"
-          onEdit={() => setOpenSection("embedding")}
-          isLoading={isLoading}
+          summary={[
+            { label: "Model", value: String(embeddingConfig.model_name || COPY.notConfigured) },
+            { label: "Dimensions", value: embeddingConfig.vector_dimensions ? COPY.embeddingDimensionsMeta(Number(embeddingConfig.vector_dimensions)) : COPY.notConfigured },
+          ]}
+          onClick={() => setOpenSection("embedding")}
+          data-testid="config-tile-embedding"
         />
 
         {/* NLP Model */}
         <ConfigTile
-          icon={Type}
+          icon="component"
           title={COPY.nlpModelTileTitle}
           description={COPY.nlpModelTileDescription}
-          summary={<span>{String(nlpConfig.model_name || COPY.notConfigured)}</span>}
-          testid="config-tile-nlp"
-          onEdit={() => setOpenSection("nlp")}
-          isLoading={isLoading}
+          summary={[
+            { label: "Model", value: String(nlpConfig.model_name || COPY.notConfigured) },
+          ]}
+          onClick={() => setOpenSection("nlp")}
+          data-testid="config-tile-nlp"
         />
 
         {/* Reference Sources */}
         <ConfigTile
-          icon={Database}
+          icon="data"
           title={COPY.referenceSourcesTileTitle}
           description={COPY.referenceSourcesTileDescription}
-          summary={<span>{COPY.referenceSourcesMeta(referenceSourcesCount)}</span>}
-          testid="config-tile-reference-sources"
-          onNavigate={() => navigate({ to: "/app/reference/sources" })}
-          isLoading={isLoading}
+          summary={[
+            { label: "Sources", value: COPY.referenceSourcesMeta(referenceSourcesCount) },
+          ]}
+          onClick={() => navigate({ to: "/app/reference/sources" })}
+          data-testid="config-tile-reference-sources"
         />
 
         {/* Sync Target */}
         <ConfigTile
-          icon={RefreshCw}
+          icon="reload"
           title={COPY.syncTargetTileTitle}
           description={COPY.syncTargetTileDescription}
-          summary={
-            <span style={{ color: syncConfig.path ? undefined : "var(--canvas-fg-3)" }}>
-              {String(syncConfig.path || COPY.notConfigured)}
-            </span>
-          }
-          testid="config-tile-sync"
-          onEdit={() => setOpenSection("sync")}
-          isLoading={isLoading}
+          summary={[
+            { label: "Target", value: String(syncConfig.path || COPY.notConfigured) },
+          ]}
+          onClick={() => setOpenSection("sync")}
+          data-testid="config-tile-sync"
         />
       </div>
 

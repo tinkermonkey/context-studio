@@ -51,17 +51,6 @@ describe("SchemaPageLayout", () => {
     });
   });
 
-  describe("CSS class styling", () => {
-    it("applies split-2 class for two-column layout", () => {
-      const { container } = render(
-        <SchemaPageLayout data={mockData}>
-          <div>Content</div>
-        </SchemaPageLayout>,
-      );
-      expect(container.querySelector(".split-2")).toBeInTheDocument();
-    });
-  });
-
   describe("children rendering", () => {
     it("renders children content", () => {
       render(

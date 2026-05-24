@@ -1,78 +1,16 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Network, Layers, GitBranch, Cpu, Plus } from "lucide-react";
-import { StatTile } from "@/components/ui/StatTile";
-import { StatGrid } from "@tinkermonkey/heimdall-ui";
-
-interface ActivityEvent {
-  id: string;
-  type: "create" | "update" | "delete" | "run";
-  subject: string;
-  timestamp: string;
-}
-
-function ActivityTimeline({ events, emptyState }: { events: ActivityEvent[]; emptyState: string }) {
-  if (events.length === 0) {
-    return (
-      <p
-        data-testid="activity-timeline-empty"
-        style={{ fontSize: "var(--text-sm)", color: "var(--canvas-fg-3)", margin: 0 }}
-      >
-        {emptyState}
-      </p>
-    );
-  }
-  return (
-    <ul data-testid="activity-timeline" style={{ listStyle: "none", margin: 0, padding: 0 }}>
-      {events.map((event) => (
-        <li
-          key={event.id}
-          data-testid={`activity-event-${event.id}`}
-          style={{
-            display: "flex",
-            gap: "var(--space-3)",
-            alignItems: "flex-start",
-            padding: "6px 0",
-          }}
-        >
-          <span
-            data-testid={`activity-dot-${event.type}`}
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: "50%",
-              marginTop: 5,
-              flexShrink: 0,
-              background:
-                event.type === "create"
-                  ? "var(--accent-emerald, #10b981)"
-                  : event.type === "delete"
-                    ? "var(--rose-400, #fb7185)"
-                    : event.type === "run"
-                      ? "var(--accent-cyan, #22d3ee)"
-                      : "var(--accent-amber, #fbbf24)",
-            }}
-          />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p
-              data-testid="activity-subject"
-              style={{ margin: 0, fontSize: "var(--text-sm)", color: "rgb(var(--canvas-fg-1))" }}
-            >
-              {event.subject}
-            </p>
-            <time
-              data-testid="activity-timestamp"
-              style={{ fontSize: "var(--text-xs)", color: "var(--canvas-fg-3)" }}
-            >
-              {new Date(event.timestamp).toLocaleString()}
-            </time>
-          </div>
-        </li>
-      ))}
-    </ul>
-  );
-}
-import { Panel } from "@/components/ui/Panel";
-import { PageHeader } from "@/components/ui/PageHeader";
+import {
+  StatTile,
+  Panel,
+  PageHeader,
+  KVGrid,
+  StatGrid,
+  ActivityTimeline,
+  QuickAccessGrid,
+  type ActivityEvent,
+  type ActivityEventType,
+} from "@tinkermonkey/heimdall-ui";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { HierarchyTree } from "@/components/ontology/HierarchyTree";
@@ -88,7 +26,7 @@ export const Route = createFileRoute("/app/")({
   component: Dashboard,
 });
 
-function mapOperationToEventType(op: string): "create" | "update" | "delete" | "run" {
+function mapOperationToEventType(op: string): ActivityEventType {
   switch (op) {
     case "create":
       return "create";
@@ -137,6 +75,7 @@ function EmptyState() {
 }
 
 export function Dashboard() {
+  const navigate = useNavigate();
   const { data: health } = useHealth();
   const {
     data: taxonomies,
@@ -178,7 +117,7 @@ export function Dashboard() {
   if (isEmptyState) {
     return (
       <div>
-        <PageHeader eyebrow="Main" title="Dashboard" subtitle="Knowledge graph overview" />
+        <PageHeader eyebrow="Main" title="Dashboard" idChip="/" />
         <EmptyState />
       </div>
     );
@@ -200,7 +139,7 @@ export function Dashboard() {
 
   return (
     <div>
-      <PageHeader eyebrow="Main" title="Dashboard" subtitle="Knowledge graph overview" />
+      <PageHeader eyebrow="Main" title="Dashboard" idChip="/" />
 
       {/* Stat grid */}
       <ErrorBanner
@@ -217,36 +156,28 @@ export function Dashboard() {
       >
         <StatTile
           label="Taxonomies"
-          value={
-            taxonomiesLoading ? <Skeleton width={40} height="1.5rem" /> : String(taxonomyCount)
-          }
+          value={taxonomiesLoading ? "—" : String(taxonomyCount)}
           color="cyan"
-          sub="knowledge domains"
         />
         <StatTile
           label="Classes"
-          value={classesLoading ? <Skeleton width={40} height="1.5rem" /> : String(classCount)}
+          value={classesLoading ? "—" : String(classCount)}
           color="violet"
-          sub="concept types"
         />
         <StatTile
           label="Individuals"
-          value={
-            individualsLoading ? <Skeleton width={40} height="1.5rem" /> : String(individualCount)
-          }
+          value={individualsLoading ? "—" : String(individualCount)}
           color="amber"
-          sub="indexed instances"
         />
         <StatTile
           label="Pipelines"
-          value={pipelinesLoading ? <Skeleton width={40} height="1.5rem" /> : String(pipelineCount)}
+          value={pipelinesLoading ? "—" : String(pipelineCount)}
           color="emerald"
-          sub={`${pipelines?.filter((p) => p.enabled).length ?? 0} enabled`}
         />
       </StatGrid>
 
       {/* Two-column layout */}
-      <div className="grid-2" style={{ marginBottom: "var(--space-6)" }}>
+      <div className="grid grid-cols-2 gap-6" style={{ marginBottom: "var(--space-6)" }}>
         {/* Recent Activity */}
         <Panel title="Recent Activity">
           <ErrorBanner
@@ -283,64 +214,22 @@ export function Dashboard() {
               ))}
             </div>
           ) : (
-            <div
-              className="kv"
-              style={{
-                display: "grid",
-                gridTemplateColumns: "140px 1fr",
-                gap: "8px 16px",
-                alignItems: "center",
-              }}
-            >
-              {(
-                [
-                  ["Status", health.status],
-                  ["Database", health.database_connected ? "connected" : "unavailable"],
-                  ["NLP pipeline", health.nlp_pipeline_ready ? "ready" : "not loaded"],
-                  ["Embedding model", health.embedding_model_loaded ? "loaded" : "not loaded"],
-                  ["LLM providers", (health.llm_providers_available ?? []).join(", ") || "none"],
-                  ["Uptime", `${Math.floor(health.uptime_seconds / 60)}m`],
-                ] as [string, string][]
-              ).map(([k, v]) => (
-                <>
-                  <dt
-                    key={`${k}-k`}
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: "11px",
-                      color: "var(--canvas-fg-3)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.07em",
-                      margin: 0,
-                    }}
-                  >
-                    {k}
-                  </dt>
-                  <dd
-                    key={`${k}-v`}
-                    style={{
-                      margin: 0,
-                      fontFamily: "var(--font-mono)",
-                      fontSize: "13px",
-                      color:
-                        v === "connected" || v === "ready" || v === "loaded"
-                          ? "var(--accent-emerald, #10b981)"
-                          : v === "unavailable" || v === "not loaded"
-                            ? "var(--rose-400, #fb7185)"
-                            : "rgb(var(--canvas-fg-1))",
-                    }}
-                  >
-                    {v}
-                  </dd>
-                </>
-              ))}
-            </div>
+            <KVGrid
+              rows={[
+                { key: "Status", value: health.status },
+                { key: "Database", value: health.database_connected ? "connected" : "unavailable" },
+                { key: "NLP pipeline", value: health.nlp_pipeline_ready ? "ready" : "not loaded" },
+                { key: "Embedding model", value: health.embedding_model_loaded ? "loaded" : "not loaded" },
+                { key: "LLM providers", value: (health.llm_providers_available ?? []).join(", ") || "none" },
+                { key: "Uptime", value: `${Math.floor(health.uptime_seconds / 60)}m` },
+              ]}
+            />
           )}
         </Panel>
       </div>
 
       {/* Knowledge Graph Structure */}
-      <div className="grid-2" style={{ marginBottom: "var(--space-6)" }}>
+      <div className="grid grid-cols-2 gap-6" style={{ marginBottom: "var(--space-6)" }}>
         <Panel title="Knowledge Graph Structure">
           <ErrorBanner
             error={classesError}
@@ -384,7 +273,7 @@ export function Dashboard() {
       </div>
 
       {/* Active Pipelines */}
-      <div>
+      <div style={{ marginBottom: "var(--space-6)" }}>
         <ErrorBanner
           error={pipelinesError}
           onRetry={refetchPipelines}
@@ -421,6 +310,27 @@ export function Dashboard() {
           </div>
         )}
       </div>
+
+      {/* Quick Access */}
+      <QuickAccessGrid
+        tiles={[
+          { id: "schema", icon: "schema", title: "Schema", description: "Manage taxonomies, classes, and properties" },
+          { id: "pipelines", icon: "pipeline", title: "Pipelines", description: "Configure and run extraction pipelines" },
+          { id: "data", icon: "data", title: "Data", description: "Browse individuals and datasets" },
+          { id: "graph", icon: "graph", title: "Graph", description: "Explore the knowledge graph visually" },
+        ]}
+        onAction={(tileId) => {
+          const routes: Record<string, string> = {
+            schema: "/app/schema/taxonomies",
+            pipelines: "/app/pipelines",
+            data: "/app/data/individuals",
+            graph: "/app/graph",
+          };
+          const to = routes[tileId];
+          if (to) navigate({ to });
+        }}
+        columns={4}
+      />
     </div>
   );
 }

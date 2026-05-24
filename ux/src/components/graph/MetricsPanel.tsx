@@ -1,7 +1,6 @@
+import { StatTile, Panel } from "@tinkermonkey/heimdall-ui";
 import { useGraphMetrics } from "@/api/hooks/graph";
 import type { components } from "@/api/types";
-import { Panel } from "@/components/ui/Panel";
-import { StatTile } from "@/components/ui/StatTile";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { COPY } from "@/routes/app/graph/-copy";
@@ -94,8 +93,7 @@ export function MetricsPanel() {
               label={COPY.COMMUNITIES_LABEL}
               value={communityCount.toString()}
               color="amber"
-              sub={metrics.algorithm}
-            />
+              />
           </div>
           <div data-testid="graph-metrics-avg-degree">
             <StatTile
