@@ -1,5 +1,5 @@
 """
-Exceptions for the LLM Pipeline Management domain context.
+Exceptions for the Pipeline Management bounded context.
 """
 
 

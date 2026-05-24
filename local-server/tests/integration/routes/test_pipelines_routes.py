@@ -19,7 +19,7 @@ from sqlalchemy.orm import sessionmaker
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.web.pipelines_routes import router
-from domain.pipeline.exceptions import (
+from domain.pipelines.exceptions import (
     PipelineError,
     PipelineExecutionError,
     PipelineExternalServiceError,

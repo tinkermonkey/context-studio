@@ -1,7 +1,7 @@
-"""Fake in-memory implementation of PipelineRepository for testing."""
+"""Fake in-memory implementation of PipelineConfigRepository for testing."""
 
-from domain.pipeline.entities import Execution, PipelineConfiguration
-from domain.pipeline.ports import ExecutionWithTitle
+from domain.pipelines.entities import Execution, PipelineConfiguration
+from domain.pipelines.ports import ExecutionWithTitle
 
 
 class FakePipelineRepository:

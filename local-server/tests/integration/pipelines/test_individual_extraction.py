@@ -35,7 +35,7 @@ from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.web.extraction_routes import router as extraction_router
 from domain.extraction.services import ExtractionService
 from domain.ontology.entities import Class, ConceptScheme, Taxonomy
-from domain.pipeline.exceptions import PipelineInputError
+from domain.pipelines.exceptions import PipelineInputError
 from domain.pipelines.entities import IndividualExtractionRun, PipelineType
 from domain.pipelines.individual_extraction import (
     IndividualExtractionOrchestrator,

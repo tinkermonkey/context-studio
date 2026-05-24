@@ -17,7 +17,7 @@ from adapters.persistence.sqlite.operations.models import (
     OperationsBase,
 )
 from adapters.persistence.sqlite.pipeline_repo import SQLitePipelineRepository
-from domain.pipeline.entities import Execution, PipelineConfiguration
+from domain.pipelines.entities import Execution, PipelineConfiguration
 
 
 @pytest.fixture

@@ -32,7 +32,7 @@ class FakeLLMProvider:
     """Fake LLM provider for testing."""
 
     def complete(self, system_prompt, user_prompt, model, **kwargs):
-        from domain.pipeline.ports import LLMResponse
+        from domain.pipelines.ports import LLMResponse
 
         # Simple response for testing
         return LLMResponse(

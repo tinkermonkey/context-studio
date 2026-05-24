@@ -12,7 +12,7 @@ from typing import Any, cast
 
 from adapters.reference.conceptnet import ConceptNetSource
 from adapters.reference.dbpedia import DBpediaSource
-from domain.pipeline.exceptions import PipelineExternalServiceError
+from domain.pipelines.exceptions import PipelineExternalServiceError
 from domain.pipelines.schema_node_grounding.scoring import GroundingCandidate
 from utils.logger import get_logger
 

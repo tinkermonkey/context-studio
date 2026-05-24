@@ -8,7 +8,7 @@ import pytest
 
 from adapters.reference.grounding import GroundingAdapter
 from domain.extraction.ports import ReferenceResult
-from domain.pipeline.exceptions import PipelineExternalServiceError
+from domain.pipelines.exceptions import PipelineExternalServiceError
 from domain.pipelines.schema_node_grounding.scoring import GroundingCandidate
 
 _test_file = os.path.abspath(__file__)

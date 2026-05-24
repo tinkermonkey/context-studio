@@ -9,9 +9,9 @@ import time
 
 import pytest
 
-from domain.pipeline.events import PipelineExecuted
-from domain.pipeline.exceptions import PipelineNotFoundError
-from domain.pipeline.services import PipelineService
+from domain.pipelines.events import PipelineExecuted
+from domain.pipelines.exceptions import PipelineNotFoundError
+from domain.pipelines.services import PipelineService
 from tests.fakes.fake_event_publisher import FakeEventPublisher
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_pipeline_repository import FakePipelineRepository
@@ -27,7 +27,6 @@ class TestPipelineServiceConfigurationCRUD:
         self.event_pub = FakeEventPublisher()
         self.service = PipelineService(
             pipeline_repo=self.repo,
-            flavor_repo=self.repo,
             llm=self.llm,
             event_publisher=self.event_pub,
         )
@@ -293,7 +292,6 @@ class TestPipelineServiceExecution:
         self.event_pub = FakeEventPublisher()
         self.service = PipelineService(
             pipeline_repo=self.repo,
-            flavor_repo=self.repo,
             llm=self.llm,
             event_publisher=self.event_pub,
         )

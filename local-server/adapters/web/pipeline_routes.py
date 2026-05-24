@@ -35,12 +35,12 @@ from adapters.web.schemas.pipeline import (
     PipelineConfigurationUpdate,
     PipelineExecuteRequest,
 )
-from domain.pipeline.exceptions import (
+from domain.pipelines.exceptions import (
     LayerExecutionError,
     PipelineError,
     PipelineNotFoundError,
 )
-from domain.pipeline.services import PipelineService
+from domain.pipelines.services import PipelineService
 from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
 

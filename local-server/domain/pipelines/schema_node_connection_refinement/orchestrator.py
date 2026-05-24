@@ -14,8 +14,8 @@ import re
 from dataclasses import dataclass, field, replace
 from typing import Any
 
-from domain.pipeline.exceptions import PipelineExecutionError, PipelineInputError
-from domain.pipeline.ports import LLMProvider
+from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
+from domain.pipelines.ports import LLMProvider
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
 from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal

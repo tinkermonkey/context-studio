@@ -2,7 +2,7 @@
 
 from typing import Any, Literal
 
-from domain.pipeline.ports import LLMResponse
+from domain.pipelines.ports import LLMResponse
 
 
 class FakeLLMProvider:

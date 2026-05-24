@@ -62,7 +62,7 @@ from adapters.reference.dbpedia import DBpediaSource
 from adapters.reference.grounding import GroundingAdapter
 from adapters.reference.schema_org import SchemaOrgSource
 from adapters.reference.wikidata import WikidataSource
-from adapters.web.orchestrator_factory import create_orchestrator, create_pipeline_state
+from adapters.factories.orchestrator_factory import create_orchestrator, create_pipeline_state
 from config import get_settings
 from domain.extraction.ports import ReferenceSource
 from domain.extraction.services import ExtractionService

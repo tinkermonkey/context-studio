@@ -9,8 +9,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from adapters.web.orchestrator_factory import create_orchestrator, create_pipeline_state
-from domain.pipeline.ports import LLMProvider
+from adapters.factories.orchestrator_factory import create_orchestrator, create_pipeline_state
+from domain.pipelines.ports import LLMProvider
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionOrchestrator,

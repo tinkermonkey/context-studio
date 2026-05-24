@@ -26,8 +26,8 @@ from adapters.events.in_process import InProcessEventPublisher
 from adapters.persistence.sqlite.operations.models import OperationsBase
 from adapters.persistence.sqlite.pipeline_repo import SQLitePipelineRepository
 from adapters.web.pipeline_routes import router
-from domain.pipeline.exceptions import LayerExecutionError
-from domain.pipeline.services import PipelineService
+from domain.pipelines.exceptions import LayerExecutionError
+from domain.pipelines.services import PipelineService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 
 

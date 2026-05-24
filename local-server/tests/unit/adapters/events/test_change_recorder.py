@@ -28,7 +28,7 @@ from domain.ontology.events import (
     TaxonomyDeleted,
     TaxonomyUpdated,
 )
-from domain.pipeline.events import PipelineExecuted
+from domain.pipelines.events import PipelineExecuted
 
 
 @pytest.fixture

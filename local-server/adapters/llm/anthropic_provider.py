@@ -18,7 +18,7 @@ except ImportError:
 from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode
 
-from domain.pipeline.ports import LLMResponse
+from domain.pipelines.ports import LLMResponse
 from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
 

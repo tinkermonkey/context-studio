@@ -22,7 +22,7 @@ from adapters.persistence.sqlite.models import (
     SchemaExtractionRun,
     SchemaGroundingRun,
 )
-from domain.pipeline.exceptions import PipelineStorageError
+from domain.pipelines.exceptions import PipelineStorageError
 from domain.pipelines.entities import (
     IndividualExtractionRun as DomainIndividualExtractionRun,
 )

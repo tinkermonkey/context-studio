@@ -8,7 +8,7 @@ import time
 
 import pytest
 
-from domain.pipeline.services import PipelineService
+from domain.pipelines.services import PipelineService
 from tests.fakes.fake_event_publisher import FakeEventPublisher
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_pipeline_repository import FakePipelineRepository
@@ -25,7 +25,6 @@ def _setup_pipeline_context() -> tuple[PipelineService, FakePipelineRepository]:
     event_publisher = FakeEventPublisher()
     service = PipelineService(
         pipeline_repo=repository,
-        flavor_repo=repository,
         llm=llm_provider,
         event_publisher=event_publisher,
     )

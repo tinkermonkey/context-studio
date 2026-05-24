@@ -21,8 +21,8 @@ from typing import Literal
 
 import httpx
 
-from domain.pipeline.exceptions import PipelineExternalServiceError
-from domain.pipeline.ports import LLMResponse
+from domain.pipelines.exceptions import PipelineExternalServiceError
+from domain.pipelines.ports import LLMResponse
 from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
 

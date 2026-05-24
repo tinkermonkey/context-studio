@@ -8,7 +8,7 @@ into audit trail gaps.
 
 from adapters.events.in_process import InProcessEventPublisher
 from domain.extraction.events import ExtractionCompleted
-from domain.pipeline.events import PipelineExecuted
+from domain.pipelines.events import PipelineExecuted
 
 
 class TestExtractionServiceEventHandlerFailures:

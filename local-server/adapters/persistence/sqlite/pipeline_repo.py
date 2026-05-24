@@ -1,5 +1,5 @@
 """
-SQLite adapter implementation of PipelineRepository for the Pipeline Management bounded context.
+SQLite adapter implementation of PipelineConfigRepository for the Pipeline Management bounded context.
 
 Provides persistence for pipeline configurations and execution records in operations.db.
 Handles domain-to-ORM mapping, session management, and query logic.
@@ -14,13 +14,13 @@ from adapters.persistence.sqlite.operations.models import (
     ExecutionModel,
     PipelineConfigurationModel,
 )
-from domain.pipeline.entities import Execution, PipelineConfiguration
-from domain.pipeline.ports import ExecutionWithTitle
+from domain.pipelines.entities import Execution, PipelineConfiguration
+from domain.pipelines.ports import ExecutionWithTitle
 
 
 class SQLitePipelineRepository:
     """
-    SQLite implementation of the PipelineRepository port for operations.db.
+    SQLite implementation of the PipelineConfigRepository port for operations.db.
 
     Manages persistence of pipeline configurations and execution records.
     """

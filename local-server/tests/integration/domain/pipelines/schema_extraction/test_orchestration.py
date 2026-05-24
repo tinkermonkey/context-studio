@@ -45,7 +45,7 @@ class MockLLMProvider:
         seed=None,
     ):
         """Return mock responses based on the stage."""
-        from domain.pipeline.ports import LLMResponse
+        from domain.pipelines.ports import LLMResponse
 
         self.call_count += 1
 
@@ -625,7 +625,7 @@ async def test_parse_warnings_structure():
 @pytest.mark.asyncio
 async def test_schema_extraction_empty_documents_raises():
     """Test that PipelineInputError is raised when documents list is empty."""
-    from domain.pipeline.exceptions import PipelineInputError
+    from domain.pipelines.exceptions import PipelineInputError
 
     llm_provider = MockLLMProvider()
     orchestrator = SchemaExtractionOrchestrator(llm_provider)
@@ -646,7 +646,7 @@ async def test_schema_extraction_empty_documents_raises():
 @pytest.mark.asyncio
 async def test_schema_extraction_whitespace_documents_raises():
     """Test that PipelineInputError is raised when all documents are whitespace."""
-    from domain.pipeline.exceptions import PipelineInputError
+    from domain.pipelines.exceptions import PipelineInputError
 
     llm_provider = MockLLMProvider()
     orchestrator = SchemaExtractionOrchestrator(llm_provider)
@@ -707,7 +707,7 @@ async def test_parse_warnings_definition_synthesis_missing_keys():
         """Returns definitions for only the first candidate label."""
 
         def complete(self, system_prompt, user_prompt, model, **kwargs):
-            from domain.pipeline.ports import LLMResponse
+            from domain.pipelines.ports import LLMResponse
 
             self.call_count += 1
             if "Return a JSON object mapping each label" in system_prompt:
@@ -766,7 +766,7 @@ async def test_connection_proposal_skips_incomplete_relationships():
         """Returns one valid and one incomplete relationship."""
 
         def complete(self, system_prompt, user_prompt, model, **kwargs):
-            from domain.pipeline.ports import LLMResponse
+            from domain.pipelines.ports import LLMResponse
 
             self.call_count += 1
             if "Return a JSON object mapping each label" in system_prompt:

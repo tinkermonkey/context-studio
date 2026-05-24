@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-from domain.pipeline.entities import Execution, PipelineConfiguration
+from domain.pipelines.entities import Execution, PipelineConfiguration
 
 
 @pytest.fixture

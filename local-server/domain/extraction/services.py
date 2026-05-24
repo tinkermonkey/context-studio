@@ -19,7 +19,7 @@ from uuid import uuid4
 
 from domain.interchange.services import set_batch_run_context
 from domain.ontology.ports import EmbeddingService, OntologyRepository
-from domain.pipeline.ports import LLMProvider
+from domain.pipelines.ports import LLMProvider
 from domain.ports import EventPublisher
 
 from . import layers

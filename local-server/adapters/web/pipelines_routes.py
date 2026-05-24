@@ -27,7 +27,7 @@ from uuid import uuid4
 from fastapi import APIRouter, Body, HTTPException, Query, Request
 from fastapi import status as http_status
 
-from adapters.web.orchestrator_factory import create_orchestrator, create_pipeline_state
+from adapters.factories.orchestrator_factory import create_orchestrator, create_pipeline_state
 from adapters.web.schemas.ontology import ListResponse
 from adapters.web.schemas.pipelines import (
     CandidateResponse,
@@ -37,7 +37,7 @@ from adapters.web.schemas.pipelines import (
     PipelineRunResponse,
     PipelineTypeResponse,
 )
-from domain.pipeline.exceptions import (
+from domain.pipelines.exceptions import (
     PipelineError,
     PipelineExecutionError,
     PipelineExternalServiceError,
@@ -367,6 +367,9 @@ async def run_pipeline(
         text = input_data.get("text", "")
         source_text_hash = sha256(text.encode()).hexdigest()
         specific_data["source_text_hash"] = source_text_hash
+        source_document_uri = input_data.get("source_document_uri")
+        if source_document_uri:
+            specific_data["source_document_uri"] = source_document_uri
 
     try:
         repo.create(

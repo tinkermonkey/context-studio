@@ -35,7 +35,7 @@ from domain.ontology.events import (
     TaxonomyDeleted,
     TaxonomyUpdated,
 )
-from domain.pipeline.events import PipelineExecuted
+from domain.pipelines.events import PipelineExecuted
 from domain.ports import ChangeRecordPort
 from domain.versioning.value_objects import ChangeOperation
 from utils.logger import get_logger

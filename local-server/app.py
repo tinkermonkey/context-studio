@@ -100,8 +100,8 @@ from domain.ontology.events import (
 
 # Import domain services
 from domain.ontology.services import OntologyService
-from domain.pipeline.events import PipelineExecuted
-from domain.pipeline.services import PipelineService
+from domain.pipelines.events import PipelineExecuted
+from domain.pipelines.services import PipelineService
 from domain.pipelines.individual_extraction import register_individual_extraction
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
@@ -116,7 +116,6 @@ from domain.pipelines.schema_node_definition_refinement import (
     register_schema_node_definition_refinement,
 )
 from domain.pipelines.schema_node_grounding import register_schema_node_grounding
-from domain.pipelines.schema_node_grounding.orchestrator import SchemaGroundingOrchestrator
 from domain.pipelines.schema_node_grounding.scoring import GroundingScorer
 from domain.versioning.events import ChangesetMerged, SyncCompleted
 from domain.versioning.ports import SyncTarget
@@ -309,20 +308,6 @@ async def lifespan(app: FastAPI):
         grounding_scorer = GroundingScorer(
             embedding_service=embedding_service,
             error_callback=log_embedding_error,
-        )
-        grounding_config = {
-            "top_n": 10,
-            "weights": {
-                "source_score": 0.3,
-                "label_match": 0.3,
-                "semantic_similarity": 0.4,
-            },
-        }
-        schema_grounding_orchestrator = SchemaGroundingOrchestrator(
-            llm_provider=llm_router,
-            grounding_adapter=grounding_adapter,
-            scorer=grounding_scorer,
-            config=grounding_config,
         )
         register_schema_node_grounding(
             impl_registry=implementation_registry,
@@ -596,12 +581,10 @@ async def lifespan(app: FastAPI):
         app.state.config_registry = config_registry
         app.state.type_registry = type_registry
 
-        # Store pipeline orchestrators
-        app.state.schema_grounding_orchestrator = schema_grounding_orchestrator
-
         # Store grounding dependencies for orchestrator factory
         app.state.grounding_adapter = grounding_adapter
         app.state.grounding_scorer = grounding_scorer
+        app.state.extraction_repo = extraction_repo
 
         # Store adapters needed for health checks
         app.state.nlp_processor = nlp_processor

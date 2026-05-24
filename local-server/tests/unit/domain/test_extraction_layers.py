@@ -14,7 +14,7 @@ from domain.extraction.ports import NLPEntity, ReferenceResult
 from domain.extraction.value_objects import LayerInput
 from domain.ontology.entities import Class
 from domain.ontology.value_objects import ExternalReference
-from domain.pipeline.ports import LLMResponse
+from domain.pipelines.ports import LLMResponse
 
 # ============================================================================
 # Fakes for Layer 0 (KG Context)

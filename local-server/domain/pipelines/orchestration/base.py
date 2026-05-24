@@ -12,8 +12,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any
 
-from domain.pipeline.ports import LLMProvider, LLMResponse
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
+from domain.pipelines.ports import LLMProvider, LLMResponse
 
 
 @dataclass
@@ -59,6 +59,15 @@ class PipelineOrchestrator(ABC):
             llm_provider: Port implementation for LLM completions
         """
         self._llm_provider = llm_provider
+
+    def build_graph(self) -> None:
+        """
+        Return the compiled LangGraph for this orchestrator.
+
+        Override in concrete implementations. Returns None in the base class
+        and in orchestrators that do not use a pre-compiled graph.
+        """
+        return None
 
     @abstractmethod
     async def execute(self, state: PipelineState) -> PipelineState:

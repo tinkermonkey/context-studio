@@ -18,8 +18,8 @@ import httpx
 import pytest
 
 from adapters.llm.openrouter_provider import OpenRouterProvider
-from domain.pipeline.exceptions import PipelineExternalServiceError
-from domain.pipeline.ports import LLMResponse
+from domain.pipelines.exceptions import PipelineExternalServiceError
+from domain.pipelines.ports import LLMResponse
 
 
 @pytest.mark.llm

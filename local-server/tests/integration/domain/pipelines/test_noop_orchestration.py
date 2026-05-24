@@ -12,7 +12,7 @@ before implementing concrete pipeline types.
 
 import pytest
 
-from domain.pipeline.ports import LLMResponse
+from domain.pipelines.ports import LLMResponse
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.orchestration.noop import NoOpPipelineOrchestrator, NoOpPipelineState
 

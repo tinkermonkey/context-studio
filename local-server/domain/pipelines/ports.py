@@ -8,9 +8,120 @@ explicitly inherit from these protocols.
 
 from __future__ import annotations
 
-from typing import Any, Protocol
+from dataclasses import dataclass
+from typing import Any, Literal, Protocol
 
-from .entities import PipelineRun, PipelineRunStatus, PipelineType
+from .entities import Execution, PipelineConfiguration, PipelineRun, PipelineRunStatus, PipelineType
+
+
+# ============================================================================
+# LLM provider value types and port
+# ============================================================================
+
+
+@dataclass(frozen=True)
+class LLMResponse:
+    """
+    Response from an LLM completion request.
+
+    Attributes:
+        content: The generated text response
+        tokens_in: Count of input tokens consumed
+        tokens_out: Count of output tokens generated
+        duration_ms: Time spent processing the request in milliseconds
+        finish_reason: Reason the model stopped (e.g., 'stop', 'length')
+        model: Name of the model that generated the response
+    """
+
+    content: str
+    tokens_in: int
+    tokens_out: int
+    duration_ms: float
+    finish_reason: str
+    model: str
+
+
+class LLMProvider(Protocol):
+    """Port for LLM completion and model introspection."""
+
+    def complete(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        model: str,
+        temperature: float = 0.0,
+        max_tokens: int = 2000,
+        response_format: Literal["json", "text"] | None = None,
+        timeout: float | None = None,
+        seed: int | None = None,
+    ) -> LLMResponse:
+        """Request a completion from an LLM."""
+        ...
+
+    async def complete_async(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        model: str,
+        temperature: float = 0.0,
+        max_tokens: int = 2000,
+        response_format: Literal["json", "text"] | None = None,
+        timeout: float | None = None,
+        seed: int | None = None,
+    ) -> LLMResponse:
+        """Request a completion from an LLM (async version)."""
+        ...
+
+    def is_model_available(self, model: str) -> bool:
+        """Check if a specific model is available."""
+        ...
+
+    def list_available_models(self) -> list[str]:
+        """Get list of available model identifiers."""
+        ...
+
+
+# ============================================================================
+# Config-management port value type
+# ============================================================================
+
+
+@dataclass(frozen=True)
+class ExecutionWithTitle:
+    """Pairs an execution with its pipeline title."""
+
+    execution: Execution
+    pipeline_title: str
+
+
+class PipelineConfigRepository(Protocol):
+    """Port for persisting and retrieving pipeline configurations and executions."""
+
+    def get_config(self, config_id: str) -> PipelineConfiguration | None:
+        ...
+
+    def list_configs(self, enabled_only: bool = False) -> list[PipelineConfiguration]:
+        ...
+
+    def save_config(self, config: PipelineConfiguration) -> PipelineConfiguration:
+        ...
+
+    def delete_config(self, config_id: str) -> bool:
+        ...
+
+    def record_execution(self, execution: Execution) -> Execution:
+        ...
+
+    def get_executions(self, pipeline_config_id: str, limit: int = 50) -> list[Execution]:
+        ...
+
+    def get_all_executions(
+        self,
+        status: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> tuple[list[ExecutionWithTitle], int]:
+        ...
 
 
 class TripleExtractionResult(Protocol):

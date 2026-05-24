@@ -14,7 +14,7 @@ from typing import Literal
 from adapters.llm.anthropic_provider import AnthropicProvider
 from adapters.llm.openai_provider import OpenAIProvider
 from adapters.llm.openrouter_provider import OpenRouterProvider
-from domain.pipeline.ports import LLMProvider, LLMResponse
+from domain.pipelines.ports import LLMProvider, LLMResponse
 from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
 

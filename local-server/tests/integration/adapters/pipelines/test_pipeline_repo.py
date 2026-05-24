@@ -17,7 +17,7 @@ from sqlalchemy.orm import sessionmaker
 
 from adapters.persistence.sqlite.models import Base, ChangeEvent
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
-from domain.pipeline.exceptions import PipelineStorageError
+from domain.pipelines.exceptions import PipelineStorageError
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 
 

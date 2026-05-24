@@ -38,7 +38,7 @@ from domain.ontology.events import (
     TaxonomyUpdated,
 )
 from domain.ontology.services import OntologyService
-from domain.pipeline.events import PipelineExecuted
+from domain.pipelines.events import PipelineExecuted
 from domain.versioning.value_objects import ChangeOperation
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 

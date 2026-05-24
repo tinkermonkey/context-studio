@@ -1,8 +1,5 @@
 """
-Domain events for the LLM Pipeline Management bounded context.
-
-PipelineExecuted captures the completion of an LLM pipeline execution,
-including the execution status and outcome.
+Domain events for the Pipeline Management bounded context.
 """
 
 from __future__ import annotations
@@ -17,11 +14,6 @@ from domain.events import DomainEvent
 class PipelineExecuted(DomainEvent):
     """
     Event emitted when a pipeline execution completes.
-
-    This event is published for every LLM pipeline execution, whether it
-    succeeds, times out, or encounters an error. It enables downstream
-    systems to track execution history, monitor performance, and trigger
-    workflows based on execution outcomes.
 
     Attributes:
         execution_id: ID of the Execution that completed

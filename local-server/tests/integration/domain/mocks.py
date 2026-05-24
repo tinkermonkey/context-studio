@@ -2,7 +2,7 @@
 Shared mock classes for domain integration tests.
 """
 
-from domain.pipeline.ports import LLMResponse
+from domain.pipelines.ports import LLMResponse
 from domain.ports import EventPublisher
 
 

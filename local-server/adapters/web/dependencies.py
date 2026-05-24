@@ -41,7 +41,7 @@ from domain.graph.services import GraphAnalysisService
 from domain.interchange.ports import BatchRunRepository
 from domain.ontology.ports import OntologyRepository
 from domain.ontology.services import OntologyService
-from domain.pipeline.services import PipelineService
+from domain.pipelines.services import PipelineService
 from domain.versioning.services import VersioningService
 from utils.async_executor import run_sync_in_executor
 

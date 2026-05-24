@@ -7,7 +7,7 @@ and pipeline states based on pipeline type and available services.
 
 from typing import Any, Type
 
-from domain.pipeline.ports import LLMProvider
+from domain.pipelines.ports import LLMProvider
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.individual_extraction.orchestrator import IndividualExtractionOrchestrator
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState

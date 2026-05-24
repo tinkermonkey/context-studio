@@ -15,7 +15,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from adapters.llm.provider_router import LLMProviderRouter
-from domain.pipeline.ports import LLMResponse
+from domain.pipelines.ports import LLMResponse
 
 
 class MockLLMProvider:
