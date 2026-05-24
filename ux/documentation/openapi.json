@@ -3023,200 +3023,6 @@
         }
       }
     },
-    "/api/pipelines/flavors": {
-      "get": {
-        "tags": [
-          "pipeline"
-        ],
-        "summary": "List Pipeline Flavors",
-        "description": "Retrieve all pipeline flavors.\n\nReturns:\n    List of PipelineFlavorResponse objects",
-        "operationId": "list_pipeline_flavors_api_pipelines_flavors_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/PipelineFlavorResponse"
-                  },
-                  "type": "array",
-                  "title": "Response List Pipeline Flavors Api Pipelines Flavors Get"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "pipeline"
-        ],
-        "summary": "Create Pipeline Flavor",
-        "description": "Create a new pipeline flavor.\n\nArgs:\n    request: PipelineFlavorCreateRequest with flavor details\n    service: PipelineService from dependency injection\n\nReturns:\n    Created PipelineFlavorResponse with server-generated id\n\nRaises:\n    HTTPException: 400 if invalid input, 409 if name already exists",
-        "operationId": "create_pipeline_flavor_api_pipelines_flavors_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PipelineFlavorCreateRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PipelineFlavorResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/pipelines/flavors/{flavor_id}": {
-      "get": {
-        "tags": [
-          "pipeline"
-        ],
-        "summary": "Get Pipeline Flavor",
-        "description": "Retrieve a pipeline flavor by ID.\n\nArgs:\n    flavor_id: The pipeline flavor ID\n    service: PipelineService from dependency injection\n\nReturns:\n    PipelineFlavorResponse\n\nRaises:\n    HTTPException: 404 if not found",
-        "operationId": "get_pipeline_flavor_api_pipelines_flavors__flavor_id__get",
-        "parameters": [
-          {
-            "name": "flavor_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Flavor Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PipelineFlavorResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "pipeline"
-        ],
-        "summary": "Update Pipeline Flavor",
-        "description": "Update a pipeline flavor.\n\nArgs:\n    flavor_id: The pipeline flavor ID\n    request: PipelineFlavorUpdateRequest with optional fields to update\n    service: PipelineService from dependency injection\n\nReturns:\n    Updated PipelineFlavorResponse\n\nRaises:\n    HTTPException: 400 if invalid, 404 if not found",
-        "operationId": "update_pipeline_flavor_api_pipelines_flavors__flavor_id__put",
-        "parameters": [
-          {
-            "name": "flavor_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Flavor Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PipelineFlavorUpdateRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PipelineFlavorResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "pipeline"
-        ],
-        "summary": "Delete Pipeline Flavor",
-        "description": "Delete a pipeline flavor.\n\nArgs:\n    flavor_id: The pipeline flavor ID\n    service: PipelineService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found",
-        "operationId": "delete_pipeline_flavor_api_pipelines_flavors__flavor_id__delete",
-        "parameters": [
-          {
-            "name": "flavor_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Flavor Id"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/pipelines/{pipeline_id}": {
       "get": {
         "tags": [
@@ -3851,6 +3657,117 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ListResponse_PipelineRunResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipelines/runs/{run_id}/apply": {
+      "post": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Apply Pipeline Run",
+        "description": "Apply a completed pipeline run's output to the ontology.\n\nMaterializes pipeline candidates into DRAFT ontology entities:\n- schema_extraction: creates Class, PropertyDefinition, and Relationship entities\n- individual_extraction: creates Individual and Relationship entities\n- schema_node_grounding: adds ExternalReference entries to an existing Class\n- schema_node_definition_refinement: updates the description of an existing Class\n- schema_node_connection_refinement: adds or removes Relationship entities\n\nAll created entities are stamped with Status.DRAFT and source_run_id set to the run ID\nfor full traceability. The operation is idempotent \u2014 applying the same run twice\nproduces no duplicates.\n\nArgs:\n    run_id: ID of the completed pipeline run to apply\n    concept_scheme_id: Required for schema_extraction \u2014 target concept scheme\n    taxonomy_id: Required for schema_extraction \u2014 parent taxonomy\n    node_id: Required for schema_node_grounding \u2014 class to apply groundings to\n    confidence_threshold: Minimum confidence score (0.0\u20131.0) for candidates to include\n\nReturns:\n    ApplyRunResponse with counts of created and skipped entities\n\nRaises:\n    HTTPException: 404 if run not found, 422 if run is not completed, 400 for missing params",
+        "operationId": "apply_pipeline_run_api_pipelines_runs__run_id__apply_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "concept_scheme_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Target concept scheme (required for schema_extraction)",
+              "title": "Concept Scheme Id"
+            },
+            "description": "Target concept scheme (required for schema_extraction)"
+          },
+          {
+            "name": "taxonomy_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Parent taxonomy (required for schema_extraction)",
+              "title": "Taxonomy Id"
+            },
+            "description": "Parent taxonomy (required for schema_extraction)"
+          },
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Target class node ID (required for schema_node_grounding)",
+              "title": "Node Id"
+            },
+            "description": "Target class node ID (required for schema_node_grounding)"
+          },
+          {
+            "name": "confidence_threshold",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "description": "Minimum candidate confidence",
+              "default": 0.0,
+              "title": "Confidence Threshold"
+            },
+            "description": "Minimum candidate confidence"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplyRunResponse"
                 }
               }
             }
@@ -5950,6 +5867,75 @@
         "type": "object",
         "title": "AppConfigurationResponse",
         "description": "Response containing application configuration with masked API keys.\n\nUsed for both configuration retrieval and reset operations. Sensitive values\n(API keys and other credentials) are masked to prevent exposure in logs and\nAPI responses."
+      },
+      "ApplyRunResponse": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id",
+            "description": "ID of the applied pipeline run"
+          },
+          "pipeline_type": {
+            "type": "string",
+            "title": "Pipeline Type",
+            "description": "Pipeline type that was applied"
+          },
+          "classes_created": {
+            "type": "integer",
+            "title": "Classes Created",
+            "description": "Class entities created",
+            "default": 0
+          },
+          "classes_skipped": {
+            "type": "integer",
+            "title": "Classes Skipped",
+            "description": "Class candidates skipped (already exist)",
+            "default": 0
+          },
+          "properties_created": {
+            "type": "integer",
+            "title": "Properties Created",
+            "description": "PropertyDefinition entities created",
+            "default": 0
+          },
+          "properties_skipped": {
+            "type": "integer",
+            "title": "Properties Skipped",
+            "description": "PropertyDefinition candidates skipped (already exist)",
+            "default": 0
+          },
+          "relationships_created": {
+            "type": "integer",
+            "title": "Relationships Created",
+            "description": "Relationship entities created",
+            "default": 0
+          },
+          "relationships_skipped": {
+            "type": "integer",
+            "title": "Relationships Skipped",
+            "description": "Relationship candidates skipped (already exist or unresolvable)",
+            "default": 0
+          },
+          "individuals_created": {
+            "type": "integer",
+            "title": "Individuals Created",
+            "description": "Individual entities created",
+            "default": 0
+          },
+          "individuals_skipped": {
+            "type": "integer",
+            "title": "Individuals Skipped",
+            "description": "Individual candidates skipped (already exist)",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "pipeline_type"
+        ],
+        "title": "ApplyRunResponse",
+        "description": "Response from applying a pipeline run's output to the ontology."
       },
       "AutoResolveConflictsRequest": {
         "properties": {
@@ -9693,144 +9679,6 @@
         "title": "PipelineExecuteRequest",
         "description": "Request to execute a pipeline."
       },
-      "PipelineFlavorCreateRequest": {
-        "properties": {
-          "name": {
-            "type": "string",
-            "minLength": 1,
-            "title": "Name",
-            "description": "Name of the flavor"
-          },
-          "description": {
-            "type": "string",
-            "minLength": 1,
-            "title": "Description",
-            "description": "Description of the flavor"
-          },
-          "steps": {
-            "items": {
-              "additionalProperties": true,
-              "type": "object"
-            },
-            "type": "array",
-            "title": "Steps",
-            "description": "List of configuration step definitions"
-          }
-        },
-        "type": "object",
-        "required": [
-          "name",
-          "description"
-        ],
-        "title": "PipelineFlavorCreateRequest",
-        "description": "Request to create a new pipeline flavor."
-      },
-      "PipelineFlavorResponse": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id",
-            "description": "Unique identifier"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name",
-            "description": "Name of the flavor"
-          },
-          "description": {
-            "type": "string",
-            "title": "Description",
-            "description": "Description of the flavor"
-          },
-          "steps": {
-            "items": {
-              "additionalProperties": true,
-              "type": "object"
-            },
-            "type": "array",
-            "title": "Steps",
-            "description": "Configuration step definitions"
-          },
-          "step_count": {
-            "type": "integer",
-            "title": "Step Count",
-            "description": "Number of steps in this flavor"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At",
-            "description": "ISO 8601 creation timestamp"
-          },
-          "last_updated": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Last Updated",
-            "description": "ISO 8601 last update timestamp"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "description",
-          "steps",
-          "step_count",
-          "created_at",
-          "last_updated"
-        ],
-        "title": "PipelineFlavorResponse",
-        "description": "Response containing pipeline flavor data."
-      },
-      "PipelineFlavorUpdateRequest": {
-        "properties": {
-          "name": {
-            "anyOf": [
-              {
-                "type": "string",
-                "minLength": 1
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Name",
-            "description": "Updated name"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string",
-                "minLength": 1
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description",
-            "description": "Updated description"
-          },
-          "steps": {
-            "anyOf": [
-              {
-                "items": {
-                  "additionalProperties": true,
-                  "type": "object"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Steps",
-            "description": "Updated steps"
-          }
-        },
-        "type": "object",
-        "title": "PipelineFlavorUpdateRequest",
-        "description": "Request to update a pipeline flavor."
-      },
       "PipelineRunRequest": {
         "properties": {
           "implementation_id": {
@@ -9846,6 +9694,7 @@
             "default": "default"
           }
         },
+        "additionalProperties": true,
         "type": "object",
         "title": "PipelineRunRequest",
         "description": "Base request to invoke a pipeline (polymorphic)."

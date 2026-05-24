@@ -109,6 +109,11 @@ from domain.pipelines.registry import (
     PipelineTypeRegistry,
 )
 from domain.pipelines.schema_extraction.bootstrap import register_schema_extraction
+from domain.pipelines.schema_extraction.apply_service import SchemaExtractionApplyService
+from domain.pipelines.individual_extraction.apply_service import IndividualExtractionApplyService
+from domain.pipelines.schema_node_grounding.apply_service import SchemaGroundingApplyService
+from domain.pipelines.schema_node_definition_refinement.apply_service import SchemaDefinitionRefinementApplyService
+from domain.pipelines.schema_node_connection_refinement.apply_service import SchemaConnectionRefinementApplyService
 from domain.pipelines.schema_node_connection_refinement import (
     register_schema_node_connection_refinement,
 )
@@ -580,6 +585,13 @@ async def lifespan(app: FastAPI):
         app.state.implementation_registry = implementation_registry
         app.state.config_registry = config_registry
         app.state.type_registry = type_registry
+
+        # Pipeline apply services — materialize pipeline output into ontology entities
+        app.state.schema_extraction_apply_svc = SchemaExtractionApplyService(ontology_repo)
+        app.state.individual_extraction_apply_svc = IndividualExtractionApplyService(ontology_repo)
+        app.state.schema_grounding_apply_svc = SchemaGroundingApplyService(ontology_repo)
+        app.state.schema_definition_apply_svc = SchemaDefinitionRefinementApplyService(ontology_repo)
+        app.state.schema_connection_apply_svc = SchemaConnectionRefinementApplyService(ontology_repo)
 
         # Store grounding dependencies for orchestrator factory
         app.state.grounding_adapter = grounding_adapter

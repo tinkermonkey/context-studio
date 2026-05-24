@@ -878,6 +878,7 @@ class SQLiteOntologyRepository:
                     mapped_orm.external_references
                 )  # type: ignore[assignment]
                 orm_entity.status = individual.status.value  # type: ignore[assignment]
+                orm_entity.source_run_id = individual.source_run_id  # type: ignore[assignment]
                 orm_entity.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
                 orm_entity.version = orm_entity.version + 1  # type: ignore[assignment]
 
@@ -1469,6 +1470,7 @@ class SQLiteOntologyRepository:
             last_modified=cast(datetime | None, orm_entity.last_modified),
             version=cast(int, orm_entity.version),
             status=Status(cast(str, orm_entity.status)),
+            source_run_id=cast(str | None, orm_entity.source_run_id),
             data_properties=deserialize_data_properties(
                 cast(list[dict[str, Any]], orm_entity.data_properties) or []
             ),

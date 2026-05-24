@@ -8,6 +8,7 @@ This module implements HTTP endpoints for generic pipeline execution:
 - POST   /api/pipelines/{type}/run                               → Invoke a pipeline
 - GET    /api/pipelines/runs/{run_id}                            → Fetch a PipelineRun by ID
 - GET    /api/pipelines/runs                                     → List PipelineRuns with filters
+- POST   /api/pipelines/runs/{run_id}/apply                      → Materialize run output into ontology
 
 Each endpoint is a thin adapter that:
 1. Receives HTTP request + parsed Pydantic schema
@@ -33,6 +34,7 @@ from adapters.factories.orchestrator_factory import (
 )
 from adapters.web.schemas.ontology import ListResponse
 from adapters.web.schemas.pipelines import (
+    ApplyRunResponse,
     CandidateResponse,
     ConfigurationResponse,
     ImplementationResponse,
@@ -626,3 +628,129 @@ async def list_pipeline_runs(
 
     responses = [_to_response(run) for run in filtered_runs]
     return ListResponse(items=responses, total=total, limit=limit, offset=offset)
+
+
+@router.post(
+    "/runs/{run_id}/apply",
+    response_model=ApplyRunResponse,
+    status_code=http_status.HTTP_200_OK,
+)
+async def apply_pipeline_run(
+    run_id: str,
+    request: Request,
+    concept_scheme_id: Optional[str] = Query(None, description="Target concept scheme (required for schema_extraction)"),
+    taxonomy_id: Optional[str] = Query(None, description="Parent taxonomy (required for schema_extraction)"),
+    node_id: Optional[str] = Query(None, description="Target class node ID (required for schema_node_grounding)"),
+    confidence_threshold: float = Query(0.0, ge=0.0, le=1.0, description="Minimum candidate confidence"),
+) -> ApplyRunResponse:
+    """
+    Apply a completed pipeline run's output to the ontology.
+
+    Materializes pipeline candidates into DRAFT ontology entities:
+    - schema_extraction: creates Class, PropertyDefinition, and Relationship entities
+    - individual_extraction: creates Individual and Relationship entities
+    - schema_node_grounding: adds ExternalReference entries to an existing Class
+    - schema_node_definition_refinement: updates the description of an existing Class
+    - schema_node_connection_refinement: adds or removes Relationship entities
+
+    All created entities are stamped with Status.DRAFT and source_run_id set to the run ID
+    for full traceability. The operation is idempotent — applying the same run twice
+    produces no duplicates.
+
+    Args:
+        run_id: ID of the completed pipeline run to apply
+        concept_scheme_id: Required for schema_extraction — target concept scheme
+        taxonomy_id: Required for schema_extraction — parent taxonomy
+        node_id: Required for schema_node_grounding — class to apply groundings to
+        confidence_threshold: Minimum confidence score (0.0–1.0) for candidates to include
+
+    Returns:
+        ApplyRunResponse with counts of created and skipped entities
+
+    Raises:
+        HTTPException: 404 if run not found, 422 if run is not completed, 400 for missing params
+    """
+    repo = request.app.state.pipeline_run_repo
+    run = repo.get(run_id)
+    if run is None:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"Pipeline run {run_id} not found",
+        )
+
+    if run.status != PipelineRunStatus.COMPLETED:
+        raise HTTPException(
+            status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Pipeline run {run_id} is not completed (status: {run.status.value})",
+        )
+
+    ptype = run.pipeline_type
+
+    try:
+        if ptype == PipelineType.SCHEMA_EXTRACTION:
+            if not concept_scheme_id:
+                raise HTTPException(
+                    status_code=http_status.HTTP_400_BAD_REQUEST,
+                    detail="concept_scheme_id is required for schema_extraction apply",
+                )
+            if not taxonomy_id:
+                raise HTTPException(
+                    status_code=http_status.HTTP_400_BAD_REQUEST,
+                    detail="taxonomy_id is required for schema_extraction apply",
+                )
+            svc = request.app.state.schema_extraction_apply_svc
+            apply_result = svc.apply(
+                run=run,
+                concept_scheme_id=concept_scheme_id,
+                taxonomy_id=taxonomy_id,
+                confidence_threshold=confidence_threshold,
+            )
+
+        elif ptype == PipelineType.INDIVIDUAL_EXTRACTION:
+            svc = request.app.state.individual_extraction_apply_svc
+            apply_result = svc.apply(run=run, confidence_threshold=confidence_threshold)
+
+        elif ptype == PipelineType.SCHEMA_NODE_GROUNDING:
+            if not node_id:
+                raise HTTPException(
+                    status_code=http_status.HTTP_400_BAD_REQUEST,
+                    detail="node_id is required for schema_node_grounding apply",
+                )
+            svc = request.app.state.schema_grounding_apply_svc
+            apply_result = svc.apply(
+                run=run,
+                node_id=node_id,
+                confidence_threshold=confidence_threshold,
+            )
+
+        elif ptype == PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT:
+            svc = request.app.state.schema_definition_apply_svc
+            apply_result = svc.apply(run=run, confidence_threshold=confidence_threshold)
+
+        elif ptype == PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT:
+            svc = request.app.state.schema_connection_apply_svc
+            apply_result = svc.apply(run=run, confidence_threshold=confidence_threshold)
+
+        else:
+            # NO_OP and any future types return empty result
+            from domain.pipelines.apply_result import ApplyResult
+            apply_result = ApplyResult()
+
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=http_status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
+
+    return ApplyRunResponse(
+        run_id=run_id,
+        pipeline_type=ptype.value,
+        classes_created=apply_result.classes_created,
+        classes_skipped=apply_result.classes_skipped,
+        properties_created=apply_result.properties_created,
+        properties_skipped=apply_result.properties_skipped,
+        relationships_created=apply_result.relationships_created,
+        relationships_skipped=apply_result.relationships_skipped,
+        individuals_created=apply_result.individuals_created,
+        individuals_skipped=apply_result.individuals_skipped,
+    )

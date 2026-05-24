@@ -289,6 +289,7 @@ def map_orm_to_domain(
             ),
             embedding=_deserialize_embedding(cast(bytes | None, orm_entity.embedding)),
             status=Status(cast(str, orm_entity.status)),
+            source_run_id=cast(str | None, orm_entity.source_run_id),
         )
 
     elif orm_entity.node_type == NodeType.INDIVIDUAL:
@@ -312,6 +313,7 @@ def map_orm_to_domain(
             ),
             is_relevant=cast(bool | None, orm_entity.is_relevant),
             status=Status(cast(str, orm_entity.status)),
+            source_run_id=cast(str | None, orm_entity.source_run_id),
         )
 
     else:
@@ -368,6 +370,7 @@ def map_domain_to_orm(
             lexical_senses=serialize_lexical_senses(entity.lexical_senses),
             data_properties=serialize_data_properties(entity.data_properties),
             embedding=_serialize_embedding(entity.embedding),
+            source_run_id=entity.source_run_id,
         )
 
     elif isinstance(entity, Individual):
@@ -376,6 +379,7 @@ def map_domain_to_orm(
             node_type=NodeType.INDIVIDUAL,
             data_properties=serialize_data_properties(entity.data_properties),
             external_references=serialize_external_references(entity.external_references),
+            source_run_id=entity.source_run_id,
         )
 
     elif isinstance(entity, PropertyDefinition):
@@ -385,6 +389,7 @@ def map_domain_to_orm(
             identifier=entity.identifier,
             ontology_mapping=serialize_ontology_mapping(entity.ontology_mapping),
             is_relevant=entity.is_relevant,
+            source_run_id=entity.source_run_id,
         )
 
     else:
@@ -407,6 +412,7 @@ def map_relationship_orm_to_domain(orm_rel: RelationshipORM) -> Relationship:
         target_id=cast(str, orm_rel.target_id),
         property_definition_id=cast(str, orm_rel.property_definition_id),
         created_at=cast(datetime, orm_rel.created_at),
+        source_run_id=cast(str | None, orm_rel.source_run_id),
     )
 
 
@@ -426,6 +432,7 @@ def map_relationship_domain_to_orm(rel: Relationship) -> RelationshipORM:
         target_id=rel.target_id,
         property_definition_id=rel.property_definition_id,
         created_at=rel.created_at,
+        source_run_id=rel.source_run_id,
     )
 
 

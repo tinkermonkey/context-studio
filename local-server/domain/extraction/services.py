@@ -494,7 +494,7 @@ Extract triples in the following JSON format:
 {
   "triples": [
     {
-      "subject": {"kind": "individual|class", "id": "...", "label": "..."},
+      "subject": {"kind": "individual|class", "id": "...", "label": "...", "class_id": "..."},
       "predicate": {"property_definition_id": "...", "label": "..."},
       "object": {"kind": "individual|class|literal", "id": "...", "label": "...", "value": "..."},
       "confidence": 0.95,
@@ -502,6 +502,8 @@ Extract triples in the following JSON format:
     }
   ]
 }
+
+When kind is "individual", populate class_id with the ontology class ID this individual belongs to.
 
 Return only valid JSON. If no triples can be extracted, return {"triples": []}."""
 
@@ -583,11 +585,15 @@ Ontology: {ontology.title if hasattr(ontology, 'title') else str(ontology)}"""
         }
 
         # Build subject
-        subject = {
-            "kind": subject_data.get("kind", "class"),
+        subject_kind = subject_data.get("kind", "class")
+        subject: dict = {
+            "kind": subject_kind,
             "id": subject_data.get("id", ""),
             "label": subject_data.get("label", ""),
         }
+        if subject_kind == "individual":
+            class_id = subject_data.get("class_id", "")
+            subject["class_ids"] = [class_id] if class_id else []
 
         # Build predicate
         predicate = {

@@ -176,6 +176,14 @@ class OntologyEntity(Base):  # type: ignore[valid-type,misc]
         doc="Whether included in semantic indexes",
     )
 
+    # Pipeline traceability
+    source_run_id = Column(
+        String(36),
+        nullable=True,
+        index=True,
+        doc="ID of the pipeline run that created or last modified this entity",
+    )
+
     # Property definition fields (only used when node_type='property_definition')
     identifier = Column(
         String(255),
@@ -302,6 +310,12 @@ class Relationship(Base):  # type: ignore[valid-type,misc]
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         doc="UTC timestamp of creation (immutable)",
+    )
+    source_run_id = Column(
+        String(36),
+        nullable=True,
+        index=True,
+        doc="ID of the pipeline run that created this relationship",
     )
 
     __table_args__ = (

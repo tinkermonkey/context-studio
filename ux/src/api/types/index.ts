@@ -1504,99 +1504,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/pipelines/flavors": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Pipeline Flavors
-     * @description Retrieve all pipeline flavors.
-     *
-     *     Returns:
-     *         List of PipelineFlavorResponse objects
-     */
-    get: operations["list_pipeline_flavors_api_pipelines_flavors_get"];
-    put?: never;
-    /**
-     * Create Pipeline Flavor
-     * @description Create a new pipeline flavor.
-     *
-     *     Args:
-     *         request: PipelineFlavorCreateRequest with flavor details
-     *         service: PipelineService from dependency injection
-     *
-     *     Returns:
-     *         Created PipelineFlavorResponse with server-generated id
-     *
-     *     Raises:
-     *         HTTPException: 400 if invalid input, 409 if name already exists
-     */
-    post: operations["create_pipeline_flavor_api_pipelines_flavors_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/pipelines/flavors/{flavor_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Pipeline Flavor
-     * @description Retrieve a pipeline flavor by ID.
-     *
-     *     Args:
-     *         flavor_id: The pipeline flavor ID
-     *         service: PipelineService from dependency injection
-     *
-     *     Returns:
-     *         PipelineFlavorResponse
-     *
-     *     Raises:
-     *         HTTPException: 404 if not found
-     */
-    get: operations["get_pipeline_flavor_api_pipelines_flavors__flavor_id__get"];
-    /**
-     * Update Pipeline Flavor
-     * @description Update a pipeline flavor.
-     *
-     *     Args:
-     *         flavor_id: The pipeline flavor ID
-     *         request: PipelineFlavorUpdateRequest with optional fields to update
-     *         service: PipelineService from dependency injection
-     *
-     *     Returns:
-     *         Updated PipelineFlavorResponse
-     *
-     *     Raises:
-     *         HTTPException: 400 if invalid, 404 if not found
-     */
-    put: operations["update_pipeline_flavor_api_pipelines_flavors__flavor_id__put"];
-    post?: never;
-    /**
-     * Delete Pipeline Flavor
-     * @description Delete a pipeline flavor.
-     *
-     *     Args:
-     *         flavor_id: The pipeline flavor ID
-     *         service: PipelineService from dependency injection
-     *
-     *     Raises:
-     *         HTTPException: 404 if not found
-     */
-    delete: operations["delete_pipeline_flavor_api_pipelines_flavors__flavor_id__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   "/api/pipelines/{pipeline_id}": {
     parameters: {
       query?: never;
@@ -1940,6 +1847,50 @@ export interface paths {
     get: operations["list_pipeline_runs_api_pipelines_runs_get"];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/runs/{run_id}/apply": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Apply Pipeline Run
+     * @description Apply a completed pipeline run's output to the ontology.
+     *
+     *     Materializes pipeline candidates into DRAFT ontology entities:
+     *     - schema_extraction: creates Class, PropertyDefinition, and Relationship entities
+     *     - individual_extraction: creates Individual and Relationship entities
+     *     - schema_node_grounding: adds ExternalReference entries to an existing Class
+     *     - schema_node_definition_refinement: updates the description of an existing Class
+     *     - schema_node_connection_refinement: adds or removes Relationship entities
+     *
+     *     All created entities are stamped with Status.DRAFT and source_run_id set to the run ID
+     *     for full traceability. The operation is idempotent — applying the same run twice
+     *     produces no duplicates.
+     *
+     *     Args:
+     *         run_id: ID of the completed pipeline run to apply
+     *         concept_scheme_id: Required for schema_extraction — target concept scheme
+     *         taxonomy_id: Required for schema_extraction — parent taxonomy
+     *         node_id: Required for schema_node_grounding — class to apply groundings to
+     *         confidence_threshold: Minimum confidence score (0.0–1.0) for candidates to include
+     *
+     *     Returns:
+     *         ApplyRunResponse with counts of created and skipped entities
+     *
+     *     Raises:
+     *         HTTPException: 404 if run not found, 422 if run is not completed, 400 for missing params
+     */
+    post: operations["apply_pipeline_run_api_pipelines_runs__run_id__apply_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -3413,6 +3364,70 @@ export interface components {
           [key: string]: unknown;
         };
       };
+    };
+    /**
+     * ApplyRunResponse
+     * @description Response from applying a pipeline run's output to the ontology.
+     */
+    ApplyRunResponse: {
+      /**
+       * Run Id
+       * @description ID of the applied pipeline run
+       */
+      run_id: string;
+      /**
+       * Pipeline Type
+       * @description Pipeline type that was applied
+       */
+      pipeline_type: string;
+      /**
+       * Classes Created
+       * @description Class entities created
+       * @default 0
+       */
+      classes_created: number;
+      /**
+       * Classes Skipped
+       * @description Class candidates skipped (already exist)
+       * @default 0
+       */
+      classes_skipped: number;
+      /**
+       * Properties Created
+       * @description PropertyDefinition entities created
+       * @default 0
+       */
+      properties_created: number;
+      /**
+       * Properties Skipped
+       * @description PropertyDefinition candidates skipped (already exist)
+       * @default 0
+       */
+      properties_skipped: number;
+      /**
+       * Relationships Created
+       * @description Relationship entities created
+       * @default 0
+       */
+      relationships_created: number;
+      /**
+       * Relationships Skipped
+       * @description Relationship candidates skipped (already exist or unresolvable)
+       * @default 0
+       */
+      relationships_skipped: number;
+      /**
+       * Individuals Created
+       * @description Individual entities created
+       * @default 0
+       */
+      individuals_created: number;
+      /**
+       * Individuals Skipped
+       * @description Individual candidates skipped (already exist)
+       * @default 0
+       */
+      individuals_skipped: number;
     };
     /**
      * AutoResolveConflictsRequest
@@ -5778,99 +5793,6 @@ export interface components {
       input_text: string;
     };
     /**
-     * PipelineFlavorCreateRequest
-     * @description Request to create a new pipeline flavor.
-     */
-    PipelineFlavorCreateRequest: {
-      /**
-       * Name
-       * @description Name of the flavor
-       */
-      name: string;
-      /**
-       * Description
-       * @description Description of the flavor
-       */
-      description: string;
-      /**
-       * Steps
-       * @description List of configuration step definitions
-       */
-      steps?: {
-        [key: string]: unknown;
-      }[];
-    };
-    /**
-     * PipelineFlavorResponse
-     * @description Response containing pipeline flavor data.
-     */
-    PipelineFlavorResponse: {
-      /**
-       * Id
-       * @description Unique identifier
-       */
-      id: string;
-      /**
-       * Name
-       * @description Name of the flavor
-       */
-      name: string;
-      /**
-       * Description
-       * @description Description of the flavor
-       */
-      description: string;
-      /**
-       * Steps
-       * @description Configuration step definitions
-       */
-      steps: {
-        [key: string]: unknown;
-      }[];
-      /**
-       * Step Count
-       * @description Number of steps in this flavor
-       */
-      step_count: number;
-      /**
-       * Created At
-       * Format: date-time
-       * @description ISO 8601 creation timestamp
-       */
-      created_at: string;
-      /**
-       * Last Updated
-       * Format: date-time
-       * @description ISO 8601 last update timestamp
-       */
-      last_updated: string;
-    };
-    /**
-     * PipelineFlavorUpdateRequest
-     * @description Request to update a pipeline flavor.
-     */
-    PipelineFlavorUpdateRequest: {
-      /**
-       * Name
-       * @description Updated name
-       */
-      name?: string | null;
-      /**
-       * Description
-       * @description Updated description
-       */
-      description?: string | null;
-      /**
-       * Steps
-       * @description Updated steps
-       */
-      steps?:
-        | {
-            [key: string]: unknown;
-          }[]
-        | null;
-    };
-    /**
      * PipelineRunRequest
      * @description Base request to invoke a pipeline (polymorphic).
      */
@@ -5887,6 +5809,8 @@ export interface components {
        * @default default
        */
       configuration_ref: string;
+    } & {
+      [key: string]: unknown;
     };
     /**
      * PipelineRunResponse
@@ -8879,154 +8803,6 @@ export interface operations {
       };
     };
   };
-  list_pipeline_flavors_api_pipelines_flavors_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["PipelineFlavorResponse"][];
-        };
-      };
-    };
-  };
-  create_pipeline_flavor_api_pipelines_flavors_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["PipelineFlavorCreateRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["PipelineFlavorResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_pipeline_flavor_api_pipelines_flavors__flavor_id__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        flavor_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["PipelineFlavorResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_pipeline_flavor_api_pipelines_flavors__flavor_id__put: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        flavor_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["PipelineFlavorUpdateRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["PipelineFlavorResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_pipeline_flavor_api_pipelines_flavors__flavor_id__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        flavor_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
   get_pipeline_configuration_api_pipelines__pipeline_id__get: {
     parameters: {
       query?: never;
@@ -9399,6 +9175,46 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ListResponse_PipelineRunResponse_"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  apply_pipeline_run_api_pipelines_runs__run_id__apply_post: {
+    parameters: {
+      query?: {
+        /** @description Target concept scheme (required for schema_extraction) */
+        concept_scheme_id?: string | null;
+        /** @description Parent taxonomy (required for schema_extraction) */
+        taxonomy_id?: string | null;
+        /** @description Target class node ID (required for schema_node_grounding) */
+        node_id?: string | null;
+        /** @description Minimum candidate confidence */
+        confidence_threshold?: number;
+      };
+      header?: never;
+      path: {
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApplyRunResponse"];
         };
       };
       /** @description Validation Error */

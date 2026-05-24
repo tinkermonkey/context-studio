@@ -143,6 +143,27 @@ class PipelineRunResponse(BaseModel):
     )
 
 
+class ApplyRunResponse(BaseModel):
+    """Response from applying a pipeline run's output to the ontology."""
+
+    run_id: str = Field(..., description="ID of the applied pipeline run")
+    pipeline_type: str = Field(..., description="Pipeline type that was applied")
+    classes_created: int = Field(default=0, description="Class entities created")
+    classes_skipped: int = Field(default=0, description="Class candidates skipped (already exist)")
+    properties_created: int = Field(default=0, description="PropertyDefinition entities created")
+    properties_skipped: int = Field(
+        default=0, description="PropertyDefinition candidates skipped (already exist)"
+    )
+    relationships_created: int = Field(default=0, description="Relationship entities created")
+    relationships_skipped: int = Field(
+        default=0, description="Relationship candidates skipped (already exist or unresolvable)"
+    )
+    individuals_created: int = Field(default=0, description="Individual entities created")
+    individuals_skipped: int = Field(
+        default=0, description="Individual candidates skipped (already exist)"
+    )
+
+
 class CandidateResponse(BaseModel):
     """Response containing a single candidate from a pipeline run.
 

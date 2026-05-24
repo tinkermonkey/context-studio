@@ -140,6 +140,7 @@ class Class:
     last_modified: datetime | None = None
     version: int = 1
     status: Status = Status.DRAFT
+    source_run_id: str | None = None
 
     def rename(self, new_title: str) -> None:
         """
@@ -208,6 +209,7 @@ class Individual:
     last_modified: datetime | None = None
     version: int = 1
     status: Status = Status.DRAFT
+    source_run_id: str | None = None
 
     def __post_init__(self) -> None:
         """Validate individual invariants."""
@@ -307,6 +309,7 @@ class Relationship:
     target_id: str
     property_definition_id: str
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    source_run_id: str | None = None
 
     def __post_init__(self) -> None:
         """Validate relationship invariants."""
@@ -342,6 +345,7 @@ class PropertyDefinition:
     last_modified: datetime | None = None
     version: int = 1
     status: Status = Status.DRAFT
+    source_run_id: str | None = None
 
     def rename(self, new_title: str) -> None:
         """
