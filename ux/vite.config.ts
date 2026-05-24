@@ -12,9 +12,9 @@ function heimdallReact19Compat(): Plugin {
     name: "heimdall-react19-compat",
     transform(code, id) {
       if (!id.includes("heimdall-ui")) return;
-      // v0.2.0 markers
-      const startMarker = "var Se = { exports: {} }, je = {};";
-      const endMarker = "var e = Se.exports;";
+      // v0.3.0 markers
+      const startMarker = "var ze = { exports: {} }, be = {};";
+      const endMarker = "var e = ze.exports;";
       const startIdx = code.indexOf(startMarker);
       const endIdx = code.indexOf(endMarker);
       if (startIdx !== -1 && endIdx !== -1) {
@@ -25,16 +25,16 @@ function heimdallReact19Compat(): Plugin {
           code.slice(endIdx + endMarker.length)
         );
       }
-      // v0.1.x fallback markers
-      const startMarker2 = "var me = { exports: {} }, J = {};";
-      const endMarker2 = "var a = me.exports;";
+      // v0.2.0 fallback markers
+      const startMarker2 = "var Se = { exports: {} }, je = {};";
+      const endMarker2 = "var e = Se.exports;";
       const startIdx2 = code.indexOf(startMarker2);
       const endIdx2 = code.indexOf(endMarker2);
       if (startIdx2 !== -1 && endIdx2 !== -1) {
         return (
           'import { jsx as __h_jsx, jsxs as __h_jsxs, Fragment as __h_Fragment } from "react/jsx-runtime";\n' +
           code.slice(0, startIdx2) +
-          "var a = { jsx: __h_jsx, jsxs: __h_jsxs, Fragment: __h_Fragment };" +
+          "var e = { jsx: __h_jsx, jsxs: __h_jsxs, Fragment: __h_Fragment };" +
           code.slice(endIdx2 + endMarker2.length)
         );
       }

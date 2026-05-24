@@ -241,20 +241,12 @@ export function PipelinesContent() {
       ) : (
         <div data-testid="pipelines-grid" className="grid-2">
           {filteredPipelines.map((pipeline) => (
-            <div
+            <PipelineCard
               key={pipeline.id}
-              role="button"
-              tabIndex={0}
-              className="pipeline-card-wrapper"
+              pipeline={pipeline}
+              selected={pipeline.id === selectedPipelineId}
               onClick={() => setSelectedPipelineId(pipeline.id)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  setSelectedPipelineId(pipeline.id);
-                }
-              }}
-            >
-              <PipelineCard pipeline={pipeline} />
-            </div>
+            />
           ))}
         </div>
       )}
