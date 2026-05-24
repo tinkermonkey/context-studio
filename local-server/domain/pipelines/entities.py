@@ -20,6 +20,8 @@ from enum import Enum
 from typing import Literal
 from uuid import uuid4
 
+_VALID_PROVIDERS: frozenset[str] = frozenset({"openai", "anthropic", "openrouter"})
+
 
 class PipelineRunStatus(str, Enum):
     """Status of a pipeline run."""
@@ -277,7 +279,7 @@ class PipelineConfiguration:
     id: str
     pipeline: str
     title: str
-    provider: Literal["openai", "anthropic"]
+    provider: str
     model: str
     config: dict
     system_prompt: str
@@ -289,8 +291,10 @@ class PipelineConfiguration:
     seed: int | None = None
 
     def __post_init__(self) -> None:
-        if self.provider not in ("openai", "anthropic"):
-            raise ValueError(f"provider must be 'openai' or 'anthropic', got '{self.provider}'")
+        if self.provider not in _VALID_PROVIDERS:
+            raise ValueError(
+                f"provider must be one of {sorted(_VALID_PROVIDERS)}, got '{self.provider}'"
+            )
         if self.version < 1:
             raise ValueError(f"version must be >= 1, got {self.version}")
         if self.seed is not None and self.seed < 0:

@@ -15,6 +15,7 @@ from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputErr
 from domain.pipelines.ports import LLMProvider
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
+from domain.pipelines.schema_node_grounding.ports import GroundingAdapterPort
 from domain.pipelines.schema_node_grounding.scoring import (
     GroundingScorer,
     NodeType,
@@ -55,7 +56,7 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
     def __init__(
         self,
         llm_provider: LLMProvider,
-        grounding_adapter: Any,
+        grounding_adapter: GroundingAdapterPort,
         scorer: GroundingScorer,
         config: dict[str, Any] | None = None,
     ) -> None:

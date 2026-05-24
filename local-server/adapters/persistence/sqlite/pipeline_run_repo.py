@@ -7,6 +7,7 @@ all pipeline types. Uses SQLAlchemy ORM for database access.
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import TYPE_CHECKING, Any, Callable
 
 from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
@@ -302,6 +303,65 @@ class PipelineRepository:
             )
             logger.error(msg)
             raise PipelineStorageError("Failed to list pipeline runs by type") from e
+        finally:
+            if self._should_close_session():
+                session.close()
+
+    def list_filtered(
+        self,
+        pipeline_type: PipelineType | None = None,
+        status: PipelineRunStatus | None = None,
+        implementation_id: str | None = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> tuple["PipelineRunList", int]:
+        """
+        List pipeline runs with DB-level filtering and pagination.
+
+        All filters are applied in the database query; no in-memory post-processing
+        is performed, so this is safe to call on large run tables.
+
+        Args:
+            pipeline_type: Filter by pipeline type
+            status: Filter by status
+            implementation_id: Filter by implementation ID
+            start_date: Include only runs created on or after this UTC datetime
+            end_date: Include only runs created on or before this UTC datetime
+            limit: Maximum number of rows to return
+            offset: Number of rows to skip (for pagination)
+
+        Returns:
+            Tuple of (page of domain entities, total matching count)
+
+        Raises:
+            PipelineStorageError: If database operation fails
+        """
+        session = self._get_session()
+        try:
+            q = session.query(PipelineRun)
+            if pipeline_type is not None:
+                q = q.filter(PipelineRun.pipeline_type == pipeline_type.value)
+            if status is not None:
+                q = q.filter(PipelineRun.status == status.value)
+            if implementation_id is not None:
+                q = q.filter(PipelineRun.implementation_id == implementation_id)
+            if start_date is not None:
+                q = q.filter(PipelineRun.created_at >= start_date)
+            if end_date is not None:
+                q = q.filter(PipelineRun.created_at <= end_date)
+
+            q = q.order_by(PipelineRun.created_at.desc())
+            total = q.count()
+            orm_objs = q.offset(offset).limit(limit).all()
+            return [self._orm_to_domain(obj) for obj in orm_objs], total
+        except OperationalError as e:
+            logger.error(f"Database operational error when listing filtered pipeline runs: {e}")
+            raise PipelineStorageError("Failed to list pipeline runs") from e
+        except SQLAlchemyError as e:
+            logger.error(f"Database error when listing filtered pipeline runs: {e}")
+            raise PipelineStorageError("Failed to list pipeline runs") from e
         finally:
             if self._should_close_session():
                 session.close()

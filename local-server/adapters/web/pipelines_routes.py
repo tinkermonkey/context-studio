@@ -20,14 +20,17 @@ Error handling translates domain exceptions to appropriate HTTP responses.
 """
 
 from datetime import datetime, timezone
-from hashlib import sha256
 from typing import Any, Optional
 from uuid import uuid4
 
 from fastapi import APIRouter, Body, HTTPException, Query, Request
 from fastapi import status as http_status
 
-from adapters.factories.orchestrator_factory import create_orchestrator, create_pipeline_state
+from adapters.factories.orchestrator_factory import (
+    build_run_specific_data,
+    create_orchestrator,
+    create_pipeline_state,
+)
 from adapters.web.schemas.ontology import ListResponse
 from adapters.web.schemas.pipelines import (
     CandidateResponse,
@@ -361,23 +364,14 @@ async def run_pipeline(
     )
 
     # Persist pipeline run to database only after validation succeeds
-    # Prepare type-specific data
-    specific_data: dict[str, Any] = {}
-    if ptype == PipelineType.INDIVIDUAL_EXTRACTION:
-        text = input_data.get("text", "")
-        source_text_hash = sha256(text.encode()).hexdigest()
-        specific_data["source_text_hash"] = source_text_hash
-        source_document_uri = input_data.get("source_document_uri")
-        if source_document_uri:
-            specific_data["source_document_uri"] = source_document_uri
-
+    specific_data = build_run_specific_data(ptype, input_data)
     try:
         repo.create(
             batch_run_id=run_id,
             pipeline_type=ptype,
             implementation_id=request_body.implementation_id,
             configuration_ref=request_body.configuration_ref,
-            specific_data=specific_data if specific_data else None,
+            specific_data=specific_data or None,
         )
     except PipelineStorageError as e:
         status_code, message = _handle_domain_error(e)
@@ -620,37 +614,15 @@ async def list_pipeline_runs(
                 detail=f"Invalid end_date format: {end_date} (use ISO 8601)",
             )
 
-    # Delegate type and status filters to the database; apply in-memory only for
-    # fields that don't have a dedicated repository method (implementation_id, dates).
-    if ptype is not None and status_enum is not None:
-        # Start from type-filtered set and apply status filter in memory — avoids
-        # adding a combined query method while keeping both major filters in the DB.
-        by_type = repo.list_by_type(ptype)
-        filtered_runs = [r for r in by_type if r.status == status_enum]
-    elif ptype is not None:
-        filtered_runs = repo.list_by_type(ptype)
-    elif status_enum is not None:
-        filtered_runs = repo.list_by_status(status_enum)
-    else:
-        filtered_runs = repo.list()
+    filtered_runs, total = repo.list_filtered(
+        pipeline_type=ptype,
+        status=status_enum,
+        implementation_id=implementation_id or None,
+        start_date=start_dt,
+        end_date=end_dt,
+        limit=limit,
+        offset=offset,
+    )
 
-    if implementation_id:
-        filtered_runs = [r for r in filtered_runs if r.implementation_id == implementation_id]
-
-    if start_dt is not None:
-        filtered_runs = [
-            r for r in filtered_runs if r.created_at.replace(tzinfo=None) >= start_dt
-        ]
-
-    if end_dt is not None:
-        filtered_runs = [
-            r for r in filtered_runs if r.created_at.replace(tzinfo=None) <= end_dt
-        ]
-
-    # Pagination
-    total = len(filtered_runs)
-    paginated_runs = filtered_runs[offset : offset + limit]
-
-    responses = [_to_response(run) for run in paginated_runs]
-
+    responses = [_to_response(run) for run in filtered_runs]
     return ListResponse(items=responses, total=total, limit=limit, offset=offset)

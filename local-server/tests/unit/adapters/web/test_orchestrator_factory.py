@@ -729,20 +729,19 @@ class TestCreatePipelineStateIndividualExtraction:
 class TestCreatePipelineStateUnknownType:
     """Test create_pipeline_state with unknown pipeline type."""
 
-    def test_returns_none_for_unknown_pipeline_type(self, mock_llm_provider):
-        """Test that unknown pipeline type returns None (implicit behavior)."""
+    def test_raises_for_unknown_pipeline_type(self, mock_llm_provider):
+        """Test that an unregistered pipeline type raises ValueError."""
 
         class UnknownPipelineType:
-            pass
+            value = "unknown"
 
-        result = create_pipeline_state(
-            run_id="run-test",
-            pipeline_type=UnknownPipelineType(),  # type: ignore
-            input_data={},
-            llm_provider=mock_llm_provider,
-        )
-
-        assert result is None
+        with pytest.raises(ValueError, match="No state class registered"):
+            create_pipeline_state(
+                run_id="run-test",
+                pipeline_type=UnknownPipelineType(),  # type: ignore
+                input_data={},
+                llm_provider=mock_llm_provider,
+            )
 
 
 class TestCreatePipelineStateCommonBehavior:
