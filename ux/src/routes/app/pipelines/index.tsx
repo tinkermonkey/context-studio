@@ -1,32 +1,51 @@
-import { Button, TextInput as Input } from "@tinkermonkey/heimdall-ui";
+import { Button, FilterBar } from "@tinkermonkey/heimdall-ui";
 import { useState, useMemo } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
-import { usePipelines, useAllPipelineExecutions } from "@/api/hooks/pipeline";
+import { usePipelines, useAllPipelineExecutions, useCreatePipeline } from "@/api/hooks/pipeline";
 import { PipelineCard } from "@/components/pipeline/PipelineCard";
+import { PipelineDetailPanel } from "@/components/pipeline/PipelineDetailPanel";
 import { PageHeader } from "@/components/ui/PageHeader";
-
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Modal } from "@/components/ui/Modal";
+import { PipelineCreateForm } from "@/components/pipeline/PipelineCreateForm";
+import { useToasts } from "@/components/ui/Toast";
 import { COPY } from "./-copy";
 
 type StatusFilter = "all" | "enabled" | "disabled";
 
 export function PipelinesContent() {
+  const navigate = useNavigate({ from: "/app/pipelines/" });
   const { data: pipelines = [], isLoading, error, refetch } = usePipelines();
   const { data: allExecutions, error: executionsError } = useAllPipelineExecutions(undefined, 50);
+  const createPipeline = useCreatePipeline();
+  const { toast } = useToasts();
+
   const [searchFilter, setSearchFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedPipelineId, setSelectedPipelineId] = useState<string | null>(null);
+
+  const selectedPipeline = useMemo(
+    () => pipelines.find((p) => p.id === selectedPipelineId) ?? null,
+    [pipelines, selectedPipelineId],
+  );
+
+  const activeFilterChips = useMemo(() => {
+    if (statusFilter === "all") return [];
+    return [{ id: "status", label: statusFilter === "enabled" ? COPY.FILTER_ENABLED : COPY.FILTER_DISABLED }];
+  }, [statusFilter]);
 
   const filteredPipelines = useMemo(() => {
     const getPipelineFailedStatus = (pipelineId: string): boolean => {
       if (!allExecutions?.items) return false;
-      const executionsForPipeline = allExecutions.items.filter(
+      const pipelineExecutions = allExecutions.items.filter(
         (e) => e.pipeline_config_id === pipelineId,
       );
-      if (executionsForPipeline.length === 0) return false;
-      const latestExecution = executionsForPipeline.reduce((latest, current) =>
+      if (pipelineExecutions.length === 0) return false;
+      const latestExecution = pipelineExecutions.reduce((latest, current) =>
         new Date(current.timestamp).getTime() > new Date(latest.timestamp).getTime()
           ? current
           : latest,
@@ -54,11 +73,7 @@ export function PipelinesContent() {
     return result.sort((a, b) => {
       const aFailed = getPipelineFailedStatus(a.id) ? 1 : 0;
       const bFailed = getPipelineFailedStatus(b.id) ? 1 : 0;
-
-      if (aFailed !== bFailed) {
-        return bFailed - aFailed;
-      }
-
+      if (aFailed !== bFailed) return bFailed - aFailed;
       return new Date(b.last_updated).getTime() - new Date(a.last_updated).getTime();
     });
   }, [pipelines, searchFilter, statusFilter, allExecutions]);
@@ -101,11 +116,26 @@ export function PipelinesContent() {
           description={COPY.NO_PIPELINES_DESCRIPTION}
           action={{
             label: COPY.CREATE_PIPELINE_CTA,
-            onClick: () => {
-              /* Pipeline creation route not yet implemented */
-            },
+            onClick: () => setShowCreateModal(true),
           }}
         />
+        <Modal
+          open={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          title={COPY.CREATE_PIPELINE_TITLE}
+          size="md"
+        >
+          <PipelineCreateForm
+            isLoading={createPipeline.isPending}
+            onCancel={() => setShowCreateModal(false)}
+            onSubmit={async (data) => {
+              const created = await createPipeline.mutateAsync(data);
+              toast("success", COPY.CREATE_PIPELINE_SUCCESS(created.title));
+              setShowCreateModal(false);
+              setSelectedPipelineId(created.id);
+            }}
+          />
+        </Modal>
       </div>
     );
   }
@@ -115,11 +145,43 @@ export function PipelinesContent() {
 
   return (
     <div data-testid="pipelines-page">
+      <Modal
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        title={COPY.CREATE_PIPELINE_TITLE}
+        size="md"
+      >
+        <PipelineCreateForm
+          isLoading={createPipeline.isPending}
+          onCancel={() => setShowCreateModal(false)}
+          onSubmit={async (data) => {
+            const created = await createPipeline.mutateAsync(data);
+            toast("success", COPY.CREATE_PIPELINE_SUCCESS(created.title));
+            setShowCreateModal(false);
+            setSelectedPipelineId(created.id);
+          }}
+        />
+      </Modal>
+
+      <Modal
+        open={!!selectedPipeline}
+        onClose={() => setSelectedPipelineId(null)}
+        title={selectedPipeline?.title}
+        size="lg"
+        testId="pipeline-edit-modal"
+      >
+        {selectedPipeline && <PipelineDetailPanel pipeline={selectedPipeline} />}
+      </Modal>
+
       <PageHeader
         eyebrow="Processing"
         title={COPY.PIPELINES_PAGE_TITLE}
         actions={
-          <Button variant="primary" disabled title="Pipeline creation is not yet implemented">
+          <Button
+            variant="primary"
+            onClick={() => setShowCreateModal(true)}
+            data-testid="pipeline-add-button"
+          >
             <Plus size={16} />
             {COPY.NEW_PIPELINE_BUTTON}
           </Button>
@@ -127,11 +189,11 @@ export function PipelinesContent() {
       />
 
       <div className="stack" style={{ marginBottom: "var(--space-6)" }}>
-        <Input
-          type="text"
-          placeholder={COPY.SEARCH_PIPELINES_PLACEHOLDER}
-          value={searchFilter}
-          onChange={(e) => setSearchFilter(e.target.value)}
+        <FilterBar
+          searchPlaceholder={COPY.SEARCH_PIPELINES_PLACEHOLDER}
+          filters={activeFilterChips}
+          onSearchChange={setSearchFilter}
+          onFilterRemove={() => setStatusFilter("all")}
           data-testid="pipelines-search-input"
         />
         <div
@@ -179,7 +241,20 @@ export function PipelinesContent() {
       ) : (
         <div data-testid="pipelines-grid" className="grid-2">
           {filteredPipelines.map((pipeline) => (
-            <PipelineCard key={pipeline.id} pipeline={pipeline} />
+            <div
+              key={pipeline.id}
+              role="button"
+              tabIndex={0}
+              className="pipeline-card-wrapper"
+              onClick={() => setSelectedPipelineId(pipeline.id)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  setSelectedPipelineId(pipeline.id);
+                }
+              }}
+            >
+              <PipelineCard pipeline={pipeline} />
+            </div>
           ))}
         </div>
       )}

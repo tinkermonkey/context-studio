@@ -1,11 +1,13 @@
 import type { components } from "@/api/types";
-import { Cpu, Play, Loader } from "lucide-react";
+import { Play, Loader, FileText, Zap, Link, HardDrive } from "lucide-react";
 import { usePipelineExecutions, useExecutePipeline } from "@/api/hooks/pipeline";
 import { formatRelativeTime, formatDuration } from "@/utils/formatters";
 import { Button } from "@tinkermonkey/heimdall-ui";
+import { Chip, type ChipColor } from "@/components/ui/Chip";
 import { useToasts } from "@/components/ui/Toast";
 import { useExecutionStore } from "@/stores/executionStore";
 import { COPY } from "@/routes/app/pipelines/-copy";
+import type { ReactNode } from "react";
 
 type PipelineConfigurationResponse = components["schemas"]["PipelineConfigurationResponse"];
 type ExecutionResponse = components["schemas"]["ExecutionResponse"];
@@ -15,6 +17,50 @@ interface PipelineCardProps {
 }
 
 type StatusVariant = "success" | "failed" | "idle" | "disabled" | "running";
+type StageKind = "source" | "extract" | "resolve" | "write";
+
+interface Stage {
+  kind: StageKind;
+  label: string;
+  sub: string;
+  icon: ReactNode;
+}
+
+const PIPELINE_STAGES: Record<string, Stage[]> = {
+  individual_extraction: [
+    { kind: "source", label: "Input", sub: "text", icon: <FileText size={13} /> },
+    { kind: "extract", label: "Extract", sub: "llm", icon: <Zap size={13} /> },
+    { kind: "write", label: "Store", sub: "graph", icon: <HardDrive size={13} /> },
+  ],
+  schema_extraction: [
+    { kind: "source", label: "Schema", sub: "nodes", icon: <FileText size={13} /> },
+    { kind: "extract", label: "Analyze", sub: "llm", icon: <Zap size={13} /> },
+    { kind: "resolve", label: "Ground", sub: "refs", icon: <Link size={13} /> },
+    { kind: "write", label: "Store", sub: "graph", icon: <HardDrive size={13} /> },
+  ],
+  schema_node_grounding: [
+    { kind: "source", label: "Nodes", sub: "schema", icon: <FileText size={13} /> },
+    { kind: "resolve", label: "Ground", sub: "llm", icon: <Link size={13} /> },
+    { kind: "write", label: "Apply", sub: "graph", icon: <HardDrive size={13} /> },
+  ],
+  schema_node_definition_refinement: [
+    { kind: "source", label: "Nodes", sub: "schema", icon: <FileText size={13} /> },
+    { kind: "extract", label: "Refine", sub: "llm", icon: <Zap size={13} /> },
+    { kind: "write", label: "Apply", sub: "graph", icon: <HardDrive size={13} /> },
+  ],
+  schema_node_connection_refinement: [
+    { kind: "source", label: "Edges", sub: "schema", icon: <FileText size={13} /> },
+    { kind: "resolve", label: "Connect", sub: "llm", icon: <Link size={13} /> },
+    { kind: "write", label: "Apply", sub: "graph", icon: <HardDrive size={13} /> },
+  ],
+};
+
+function getDefaultStages(pipeline: PipelineConfigurationResponse): Stage[] {
+  return [
+    { kind: "source", label: pipeline.provider, sub: "provider", icon: <FileText size={13} /> },
+    { kind: "extract", label: pipeline.model, sub: "model", icon: <Zap size={13} /> },
+  ];
+}
 
 function mapExecutionStatusToVariant(
   status: ExecutionResponse["status"],
@@ -32,14 +78,13 @@ function mapExecutionStatusToVariant(
   }
 }
 
-function getStatusChipClass(variant: StatusVariant): string {
+function getStatusChipColor(variant: StatusVariant): ChipColor {
   switch (variant) {
     case "success":
       return "emerald";
     case "failed":
       return "rose";
     case "disabled":
-      return "gray";
     case "idle":
       return "gray";
     case "running":
@@ -48,18 +93,7 @@ function getStatusChipClass(variant: StatusVariant): string {
 }
 
 function getStatusLabel(variant: StatusVariant): string {
-  switch (variant) {
-    case "success":
-      return "success";
-    case "failed":
-      return "failed";
-    case "disabled":
-      return "disabled";
-    case "idle":
-      return "idle";
-    case "running":
-      return "running";
-  }
+  return variant;
 }
 
 export function PipelineCard({ pipeline }: PipelineCardProps) {
@@ -98,15 +132,12 @@ export function PipelineCard({ pipeline }: PipelineCardProps) {
         : "idle";
   const lastRunTime = lastExecution ? formatRelativeTime(new Date(lastExecution.timestamp)) : null;
   const duration = lastExecution ? formatDuration(lastExecution.duration_ms) : null;
+  const stages = PIPELINE_STAGES[pipeline.pipeline] ?? getDefaultStages(pipeline);
 
   return (
     <div className="pipeline-card" data-testid={`pipeline-card-${pipeline.id}`}>
       <div className="pipeline-card-head">
-        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", minWidth: 0 }}>
-          <Cpu size={16} style={{ color: "var(--accent-violet, #7c3aed)", flexShrink: 0 }} />
-          <span className="name">{pipeline.title}</span>
-        </div>
-
+        <span className="name">{pipeline.title}</span>
         <div className="pipeline-card-actions">
           <Button
             variant="ghost"
@@ -119,22 +150,30 @@ export function PipelineCard({ pipeline }: PipelineCardProps) {
           >
             {executeMutation.isPending ? <Loader size={16} className="spin" /> : <Play size={16} />}
           </Button>
-          <div
-            className={`chip ${getStatusChipClass(statusVariant)} ${statusVariant === "running" ? "running" : ""}`}
+          <Chip
+            color={getStatusChipColor(statusVariant)}
             data-testid="pipeline-status-chip"
             role="status"
             aria-label={`Pipeline status: ${getStatusLabel(statusVariant)}`}
           >
-            <span className="dot" />
             {getStatusLabel(statusVariant)}
-          </div>
+          </Chip>
         </div>
       </div>
 
       <div className="pipeline-card-flow">
-        <span>{pipeline.provider}</span>
-        <span>·</span>
-        <span>{pipeline.model}</span>
+        {stages.map((stage, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 0, flex: "none" }}>
+            <div className="flow-node" data-kind={stage.kind}>
+              <div className="ic">{stage.icon}</div>
+              <div>
+                <div className="name">{stage.label}</div>
+                <div className="sub">{stage.sub}</div>
+              </div>
+            </div>
+            {i < stages.length - 1 && <div className="flow-arrow" />}
+          </div>
+        ))}
       </div>
 
       <div className="pipeline-card-foot">
@@ -150,7 +189,7 @@ export function PipelineCard({ pipeline }: PipelineCardProps) {
           </>
         )}
         {!lastExecution && (
-          <span style={{ color: "rgb(var(--canvas-fg-4))" }}>{COPY.NO_PIPELINE_RUNS}</span>
+          <span className="muted">{COPY.NO_PIPELINE_RUNS}</span>
         )}
       </div>
     </div>

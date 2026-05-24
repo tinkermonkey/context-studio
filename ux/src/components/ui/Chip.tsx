@@ -3,7 +3,7 @@ import { Chip as HeimdallChip } from "@tinkermonkey/heimdall-ui";
 
 type StatusColor = "emerald" | "amber" | "rose" | "cyan" | "violet" | "neutral";
 
-type ChipColor = "cyan" | "amber" | "violet" | "emerald" | "rose" | "gray";
+export type ChipColor = "cyan" | "amber" | "violet" | "emerald" | "rose" | "gray";
 
 interface ChipProps extends HTMLAttributes<HTMLSpanElement> {
   color?: ChipColor;

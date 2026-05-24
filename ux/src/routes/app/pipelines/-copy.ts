@@ -21,8 +21,6 @@ export const COPY = {
 
   // Pipeline Detail Page
   PIPELINE_LOAD_ERROR: "Failed to load pipeline",
-  PIPELINE_CONFIGURATION_LABEL: "Pipeline Configuration",
-  PIPELINE_EDIT_BUTTON: "Edit",
   PIPELINE_SAVE_BUTTON: "Save",
   PIPELINE_CANCEL_BUTTON: "Cancel",
   LAST_10_RUNS_LABEL: "Last 10 Runs",
@@ -30,6 +28,33 @@ export const COPY = {
   PIPELINE_RUN_BUTTON: "Run",
   PIPELINE_VIEW_LOG: "View log",
   NO_PIPELINE_RUNS: "No runs yet",
+
+  // Detail panel tabs
+  TAB_PROMPTS: "Prompts",
+  TAB_CONFIG: "Config",
+  TAB_TEST: "Test",
+  TAB_HISTORY: "History",
+
+  // Prompts tab
+  SYSTEM_PROMPT_LABEL: "System Prompt",
+  USER_PROMPT_LABEL: "User Prompt",
+  SYSTEM_PROMPT_PLACEHOLDER: "You are an expert at…",
+  USER_PROMPT_PLACEHOLDER: "Process the following:\n\n{text}",
+
+  // Config tab
+  PROVIDER_LABEL: "Provider",
+  MODEL_LABEL: "Model",
+  ENABLED_LABEL: "Enabled",
+  PIPELINE_CONFIGURATION_LABEL: "Extra Configuration",
+  SAVING_LABEL: "Saving…",
+
+  // Test tab
+  TEST_INPUT_LABEL: "Test Input",
+  TEST_INPUT_PLACEHOLDER: "Enter text to test the pipeline against…",
+  RUN_TEST_BUTTON: "Run",
+  RUNNING_LABEL: "Running…",
+  TEST_NO_OUTPUT: "Run the pipeline to see output here",
+  OUTPUT_COPIED: "Output copied to clipboard",
 
   // Pipeline Status Labels
   STATUS_SUCCESS: "success",
@@ -75,11 +100,33 @@ export const COPY = {
   NO_FLAVORS_FILTERED_TITLE: "No flavors match your search",
   NO_FLAVORS_FILTERED_DESCRIPTION: "Try adjusting your search criteria.",
 
+  // Create pipeline form
+  CREATE_PIPELINE_TITLE: "New Pipeline",
+  CREATE_FORM_TITLE_LABEL: "Title",
+  CREATE_FORM_TITLE_PLACEHOLDER: "e.g. Schema Extraction v2",
+  CREATE_FORM_PIPELINE_TYPE_LABEL: "Pipeline Type",
+  CREATE_FORM_PROVIDER_LABEL: "Provider",
+  CREATE_FORM_MODEL_LABEL: "Model",
+  CREATE_FORM_MODEL_PLACEHOLDER: "e.g. claude-sonnet-4-6",
+  CREATE_FORM_SYSTEM_PROMPT_LABEL: "System Prompt",
+  CREATE_FORM_SYSTEM_PROMPT_PLACEHOLDER: "You are an expert at…",
+  CREATE_FORM_USER_PROMPT_LABEL: "User Prompt",
+  CREATE_FORM_USER_PROMPT_PLACEHOLDER: "Process the following:\n\n{text}",
+  CREATE_FORM_ENABLED_LABEL: "Enabled",
+  CREATE_FORM_SUBMIT: "Create Pipeline",
+  CREATE_FORM_CREATING: "Creating…",
+  CREATE_PIPELINE_SUCCESS: (title: string) => `Pipeline '${title}' created`,
+  CREATE_PIPELINE_ERROR: "Failed to create pipeline",
+  VALIDATION_TITLE_REQUIRED: "Title is required",
+  VALIDATION_MODEL_REQUIRED: "Model is required",
+  VALIDATION_SYSTEM_PROMPT_REQUIRED: "System prompt is required",
+  VALIDATION_USER_PROMPT_REQUIRED: "User prompt is required",
+
   // Toast messages
   PIPELINE_COMPLETED: (title: string) => `Pipeline '${title}' completed`,
   PIPELINE_FAILED: (title: string) => `Pipeline '${title}' failed`,
   PIPELINE_RUN_ERROR: "Failed to run pipeline",
-  PIPELINE_CONFIG_SAVED: "Pipeline configuration saved",
+  PIPELINE_CONFIG_SAVED: "Configuration saved",
   PIPELINE_CONFIG_SAVE_ERROR: "Failed to save configuration",
   AUTOSAVE_FAILED: (error: string) => `Autosave failed: ${error}`,
   ERROR_COPIED: "Error copied to clipboard",

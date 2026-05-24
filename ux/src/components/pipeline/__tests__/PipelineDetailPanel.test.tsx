@@ -105,7 +105,7 @@ describe("PipelineDetailPanel", () => {
   it("renders configuration in code block with correct CSS class", () => {
     render(
       <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
+        <PipelineDetailPanel pipeline={mockPipeline} />
       </QueryClientProvider>,
     );
 
@@ -118,7 +118,7 @@ describe("PipelineDetailPanel", () => {
     const user = userEvent.setup();
     render(
       <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
+        <PipelineDetailPanel pipeline={mockPipeline} />
       </QueryClientProvider>,
     );
 
@@ -136,7 +136,7 @@ describe("PipelineDetailPanel", () => {
     const user = userEvent.setup();
     render(
       <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
+        <PipelineDetailPanel pipeline={mockPipeline} />
       </QueryClientProvider>,
     );
 
@@ -151,7 +151,7 @@ describe("PipelineDetailPanel", () => {
     const user = userEvent.setup();
     render(
       <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
+        <PipelineDetailPanel pipeline={mockPipeline} />
       </QueryClientProvider>,
     );
 
@@ -166,7 +166,7 @@ describe("PipelineDetailPanel", () => {
     const user = userEvent.setup();
     render(
       <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
+        <PipelineDetailPanel pipeline={mockPipeline} />
       </QueryClientProvider>,
     );
 
@@ -188,7 +188,7 @@ describe("PipelineDetailPanel", () => {
   it("renders runs table with correct testid", () => {
     render(
       <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
+        <PipelineDetailPanel pipeline={mockPipeline} />
       </QueryClientProvider>,
     );
 
@@ -206,7 +206,7 @@ describe("PipelineDetailPanel", () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
+        <PipelineDetailPanel pipeline={mockPipeline} />
       </QueryClientProvider>,
     );
 
@@ -225,7 +225,7 @@ describe("PipelineDetailPanel", () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
+        <PipelineDetailPanel pipeline={mockPipeline} />
       </QueryClientProvider>,
     );
 
@@ -244,7 +244,7 @@ describe("PipelineDetailPanel", () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
+        <PipelineDetailPanel pipeline={mockPipeline} />
       </QueryClientProvider>,
     );
 
@@ -269,7 +269,7 @@ describe("PipelineDetailPanel", () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
+        <PipelineDetailPanel pipeline={mockPipeline} />
       </QueryClientProvider>,
     );
 
@@ -292,7 +292,7 @@ describe("PipelineDetailPanel", () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
+        <PipelineDetailPanel pipeline={mockPipeline} />
       </QueryClientProvider>,
     );
 
@@ -315,7 +315,7 @@ describe("PipelineDetailPanel", () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
+        <PipelineDetailPanel pipeline={mockPipeline} />
       </QueryClientProvider>,
     );
 
@@ -339,7 +339,7 @@ describe("PipelineDetailPanel", () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
+        <PipelineDetailPanel pipeline={mockPipeline} />
       </QueryClientProvider>,
     );
 
@@ -352,7 +352,7 @@ describe("PipelineDetailPanel", () => {
   it("renders success status chips with emerald class", () => {
     render(
       <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
+        <PipelineDetailPanel pipeline={mockPipeline} />
       </QueryClientProvider>,
     );
 
@@ -371,7 +371,7 @@ describe("PipelineDetailPanel", () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
+        <PipelineDetailPanel pipeline={mockPipeline} />
       </QueryClientProvider>,
     );
 
@@ -383,7 +383,7 @@ describe("PipelineDetailPanel", () => {
     const user = userEvent.setup();
     render(
       <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
+        <PipelineDetailPanel pipeline={mockPipeline} />
       </QueryClientProvider>,
     );
 
@@ -398,7 +398,7 @@ describe("PipelineDetailPanel", () => {
     const user = userEvent.setup();
     render(
       <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
+        <PipelineDetailPanel pipeline={mockPipeline} />
       </QueryClientProvider>,
     );
 
@@ -416,7 +416,7 @@ describe("PipelineDetailPanel", () => {
   it("renders run button with correct testid and aria-label", () => {
     render(
       <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
+        <PipelineDetailPanel pipeline={mockPipeline} />
       </QueryClientProvider>,
     );
 
@@ -437,7 +437,7 @@ describe("PipelineDetailPanel", () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
+        <PipelineDetailPanel pipeline={mockPipeline} />
       </QueryClientProvider>,
     );
 
@@ -459,7 +459,7 @@ describe("PipelineDetailPanel", () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
+        <PipelineDetailPanel pipeline={mockPipeline} />
       </QueryClientProvider>,
     );
 
@@ -477,7 +477,7 @@ describe("PipelineDetailPanel", () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
+        <PipelineDetailPanel pipeline={mockPipeline} />
       </QueryClientProvider>,
     );
 
@@ -501,7 +501,7 @@ describe("PipelineDetailPanel", () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
+        <PipelineDetailPanel pipeline={mockPipeline} />
       </QueryClientProvider>,
     );
 
@@ -525,7 +525,7 @@ describe("PipelineDetailPanel", () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} onClose={vi.fn()} />
+        <PipelineDetailPanel pipeline={mockPipeline} />
       </QueryClientProvider>,
     );
 
