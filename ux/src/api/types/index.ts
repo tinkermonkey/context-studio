@@ -3169,6 +3169,43 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/admin/stats/trends": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Stats Trends
+     * @description Get rolling daily creation counts per entity type.
+     *
+     *     Returns `days` integers per entity type (oldest-first), where index 0 represents
+     *     `days-1` days ago and the last index represents today. Missing days are 0.
+     *
+     *     Entity types covered:
+     *     - taxonomies: change_events WHERE entity_type='taxonomy' AND operation='create'
+     *     - classes: change_events WHERE entity_type='class' AND operation='create'
+     *     - individuals: change_events WHERE entity_type='individual' AND operation='create'
+     *     - pipelines: pipeline_configurations WHERE created_at >= cutoff (operations.db)
+     *
+     *     Args:
+     *         days: Number of calendar days to roll up (default 7, max 90)
+     *         local_db: SQLAlchemy session for local.db (injected)
+     *         ops_db: SQLAlchemy session for operations.db (injected)
+     *
+     *     Returns:
+     *         StatsTrendsResponse with per-type daily count arrays
+     */
+    get: operations["get_stats_trends_api_v1_admin_stats_trends_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/interchange/export": {
     parameters: {
       query?: never;
@@ -6491,6 +6528,35 @@ export interface components {
        * @description List of available LLM provider names
        */
       llm_providers_available?: string[];
+    };
+    /**
+     * StatsTrendsResponse
+     * @description Response containing 7-day rolling daily creation counts per entity type.
+     *
+     *     Each list contains `days` integers (oldest-first, index 0 = days-1 days ago,
+     *     index days-1 = today). Missing days are filled with 0.
+     */
+    StatsTrendsResponse: {
+      /**
+       * Taxonomies
+       * @description Daily create counts for taxonomies
+       */
+      taxonomies: number[];
+      /**
+       * Classes
+       * @description Daily create counts for classes
+       */
+      classes: number[];
+      /**
+       * Individuals
+       * @description Daily create counts for individuals
+       */
+      individuals: number[];
+      /**
+       * Pipelines
+       * @description Daily create counts for pipeline configurations
+       */
+      pipelines: number[];
     };
     /**
      * SubgraphDataResponse
@@ -10509,6 +10575,38 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["DatasetResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_stats_trends_api_v1_admin_stats_trends_get: {
+    parameters: {
+      query?: {
+        /** @description Number of calendar days to include */
+        days?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["StatsTrendsResponse"];
         };
       };
       /** @description Validation Error */

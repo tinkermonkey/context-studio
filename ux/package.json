@@ -21,6 +21,8 @@
     "test:e2e:debug": "tsx scripts/check_test_contract.ts && playwright test --debug",
     "test:e2e:headed": "tsx scripts/check_test_contract.ts && playwright test --headed",
     "test:e2e:report": "playwright show-report",
+    "design-audit": "playwright test design/heimdall-conformance --reporter=list",
+    "design-audit:capture": "bash scripts/capture-design-audit.sh",
     "validate-selectors": "tsx scripts/check_test_contract.ts",
     "generate-types": "openapi-typescript ../local-server/documentation/openapi.json -o src/api/types/index.ts && prettier --write src/api/types/index.ts"
   },

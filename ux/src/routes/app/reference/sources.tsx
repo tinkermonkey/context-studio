@@ -1,7 +1,6 @@
 import { Chip, RowMenu, FilterBar } from "@tinkermonkey/heimdall-ui";
 import { useState } from "react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
@@ -121,10 +120,10 @@ export function SourcesPageContent({ selectedId, onSelectedIdChange }: SourcesPa
   if (isLoading) {
     return (
       <div data-testid="reference-sources-page" className="stack">
-        <Skeleton height={32} width={200} />
-        <Skeleton height={40} />
+        <div className="skeleton" style={{ height: 32, width: 200 }} />
+        <div className="skeleton" style={{ height: 40 }} />
         {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} height={40} />
+          <div key={i} className="skeleton" style={{ height: 40 }} />
         ))}
       </div>
     );

@@ -5,8 +5,10 @@ export const COPY = {
   SEARCH_PIPELINES_PLACEHOLDER: "Search by name, provider, or model…",
   FILTER_PIPELINES_LABEL: "Filter pipelines by status",
   FILTER_ALL: "All",
-  FILTER_ENABLED: "Enabled",
-  FILTER_DISABLED: "Disabled",
+  FILTER_RUNNING: "Running",
+  FILTER_SUCCESS: "Success",
+  FILTER_IDLE: "Idle",
+  FILTER_FAILED: "Failed",
 
   // Pipelines empty/error states
   PIPELINES_LOAD_ERROR: "Failed to load pipelines",

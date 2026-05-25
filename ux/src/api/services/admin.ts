@@ -9,6 +9,7 @@ type BackgroundTaskSummaryResponse = components["schemas"]["BackgroundTaskSummar
 type DatasetResponse = components["schemas"]["DatasetResponse"];
 type DatasetCreateRequest = components["schemas"]["DatasetCreateRequest"];
 type DatasetUpdateRequest = components["schemas"]["DatasetUpdateRequest"];
+type StatsTrendsResponse = components["schemas"]["StatsTrendsResponse"];
 
 class AdminService extends BaseService {
   async getHealth(): Promise<SystemHealthResponse> {
@@ -72,6 +73,10 @@ class AdminService extends BaseService {
 
   async activateDataset(datasetId: string): Promise<DatasetResponse> {
     return this.post<DatasetResponse>(`/api/v1/admin/datasets/${datasetId}/activate`);
+  }
+
+  async getStatsTrends(days = 7): Promise<StatsTrendsResponse> {
+    return this.get<StatsTrendsResponse>("/api/v1/admin/stats/trends", { days });
   }
 }
 

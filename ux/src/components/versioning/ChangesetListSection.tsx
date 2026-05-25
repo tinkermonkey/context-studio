@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
-import { Button } from "@tinkermonkey/heimdall-ui";
+import { Button, Chip } from "@tinkermonkey/heimdall-ui";
 import { useChangesets, useApplyChangeset } from "@/api/hooks/versioning";
 import { useToasts } from "@/components/ui/Toast";
 import { formatRelativeTime } from "@/utils/formatters";
@@ -13,45 +12,15 @@ interface ChangesetListSectionProps {
 }
 
 function getStateChip(state: string) {
-  const chipClasses: Record<string, { bg: string; text: string }> = {
-    working: {
-      bg: "var(--accent-blue-bg, #DBEAFE)",
-      text: "var(--accent-blue, #1E40AF)",
-    },
-    staged: {
-      bg: "var(--accent-amber-bg, #FEF3C7)",
-      text: "var(--accent-amber, #92400E)",
-    },
-    proposed: {
-      bg: "var(--accent-indigo-bg, #DDD6FE)",
-      text: "var(--accent-indigo, #4F46E5)",
-    },
-    approved: {
-      bg: "var(--accent-emerald-bg, #D1FAE5)",
-      text: "var(--accent-emerald, #065F46)",
-    },
-    merged: {
-      bg: "var(--accent-teal-bg, #CCFBF1)",
-      text: "var(--accent-teal, #0D9488)",
-    },
+  const variantMap: Record<string, "emerald" | "amber" | "violet" | "cyan" | "rose" | "neutral"> = {
+    working: "cyan",
+    staged: "amber",
+    proposed: "violet",
+    approved: "emerald",
+    merged: "emerald",
   };
-
-  const colors = chipClasses[state] || {
-    bg: "var(--canvas-bg-2)",
-    text: "var(--canvas-fg-2)",
-  };
-
-  return (
-    <span
-      className="chip"
-      style={{
-        backgroundColor: colors.bg,
-        color: colors.text,
-      }}
-    >
-      {state}
-    </span>
-  );
+  const variant = variantMap[state] ?? "neutral";
+  return <Chip variant={variant}>{state}</Chip>;
 }
 
 export function ChangesetListSection({
@@ -89,7 +58,7 @@ export function ChangesetListSection({
     return (
       <div className="stack-lg" style={{ flex: 1, overflow: "auto" }}>
         {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} height="48px" style={{ borderRadius: "var(--radius-md, 6px)" }} />
+          <div key={i} className="skeleton" style={{ height: "48px", borderRadius: "var(--radius-md, 6px)" }} />
         ))}
       </div>
     );

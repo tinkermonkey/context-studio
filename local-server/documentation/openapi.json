@@ -5520,6 +5520,54 @@
         }
       }
     },
+    "/api/v1/admin/stats/trends": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get Stats Trends",
+        "description": "Get rolling daily creation counts per entity type.\n\nReturns `days` integers per entity type (oldest-first), where index 0 represents\n`days-1` days ago and the last index represents today. Missing days are 0.\n\nEntity types covered:\n- taxonomies: change_events WHERE entity_type='taxonomy' AND operation='create'\n- classes: change_events WHERE entity_type='class' AND operation='create'\n- individuals: change_events WHERE entity_type='individual' AND operation='create'\n- pipelines: pipeline_configurations WHERE created_at >= cutoff (operations.db)\n\nArgs:\n    days: Number of calendar days to roll up (default 7, max 90)\n    local_db: SQLAlchemy session for local.db (injected)\n    ops_db: SQLAlchemy session for operations.db (injected)\n\nReturns:\n    StatsTrendsResponse with per-type daily count arrays",
+        "operationId": "get_stats_trends_api_v1_admin_stats_trends_get",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 90,
+              "minimum": 1,
+              "description": "Number of calendar days to include",
+              "default": 7,
+              "title": "Days"
+            },
+            "description": "Number of calendar days to include"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatsTrendsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/interchange/export": {
       "post": {
         "tags": [
@@ -10759,6 +10807,51 @@
         ],
         "title": "ServiceMetricsResponse",
         "description": "Response containing service-level metrics."
+      },
+      "StatsTrendsResponse": {
+        "properties": {
+          "taxonomies": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Taxonomies",
+            "description": "Daily create counts for taxonomies"
+          },
+          "classes": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Classes",
+            "description": "Daily create counts for classes"
+          },
+          "individuals": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Individuals",
+            "description": "Daily create counts for individuals"
+          },
+          "pipelines": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Pipelines",
+            "description": "Daily create counts for pipeline configurations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "taxonomies",
+          "classes",
+          "individuals",
+          "pipelines"
+        ],
+        "title": "StatsTrendsResponse",
+        "description": "Response containing 7-day rolling daily creation counts per entity type.\n\nEach list contains `days` integers (oldest-first, index 0 = days-1 days ago,\nindex days-1 = today). Missing days are filled with 0."
       },
       "SubgraphDataResponse": {
         "properties": {

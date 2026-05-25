@@ -4,6 +4,7 @@ export const QUERY_KEYS = {
   metrics: ["metrics"] as const,
   config: ["config"] as const,
   backgroundTasks: ["background-tasks"] as const,
+  statsTrends: (days?: number) => ["stats-trends", days] as const,
   datasets: () => ["datasets"] as const,
   dataset: (id: string) => ["datasets", id] as const,
   // Ontology

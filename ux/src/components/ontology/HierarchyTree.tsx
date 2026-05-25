@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { HierarchyTree as HeimdallHierarchyTree, HierarchyRow } from "@tinkermonkey/heimdall-ui";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import type { components } from "@/api/types";
 
@@ -164,10 +163,11 @@ export function HierarchyTree({
     return (
       <div className="stack">
         {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton
+          <div
             key={i}
-            height="28px"
+            className="skeleton"
             style={{
+              height: "28px",
               borderRadius: "var(--radius-md, 6px)",
               marginLeft: `${(i % 3) * 20}px`,
             }}

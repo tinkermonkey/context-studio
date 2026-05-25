@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Drawer } from "@/components/ui/Drawer";
 import { TextInput as Input, TextArea as Textarea, KVGrid } from "@tinkermonkey/heimdall-ui";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ConfirmDialog } from "@tinkermonkey/heimdall-ui";
 import { useUpdateScheme, useDeleteScheme } from "@/api/hooks/ontology/useSchemes";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { useAutosave } from "@/hooks/useAutosave";
@@ -164,18 +164,13 @@ export function SchemeDrawer({ scheme, taxonomyName, onClose }: SchemeDrawerProp
       </Drawer>
 
       <ConfirmDialog
-        open={showDeleteConfirm}
+        isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         title={schemesCopy.delete.confirmTitle}
         message={deleteMessage}
         confirmLabel={schemesCopy.delete.confirmButton}
-        onConfirm={handleDelete}
-        onError={(error) => {
-          toast("error", `Delete failed: ${error.message}`);
-        }}
-        danger
-        isLoading={deleteMutation.isPending}
-        data-testid="scheme-delete-confirm"
+        onConfirm={() => { void handleDelete(); }}
+        variant="danger"
       />
     </>
   );

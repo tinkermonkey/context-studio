@@ -6,7 +6,6 @@ import {
   useUpdatePipeline,
   useExecutePipeline,
 } from "@/api/hooks/pipeline";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { useAutosave } from "@/hooks/useAutosave";
 import { useToasts } from "@/components/ui/Toast";
 import { formatRelativeTime, formatDuration } from "@/utils/formatters";
@@ -412,7 +411,7 @@ export function PipelineDetailPanel({ pipeline }: PipelineDetailPanelProps) {
           {executionsLoading ? (
             <div className="stack">
               {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} height={40} />
+                <div key={i} className="skeleton" style={{ height: 40 }} />
               ))}
             </div>
           ) : executions.length === 0 ? (

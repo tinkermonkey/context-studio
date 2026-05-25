@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Table, Button, type Column } from "@tinkermonkey/heimdall-ui";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Skeleton } from "@/components/ui/Skeleton";
 
 export type { Column } from "@tinkermonkey/heimdall-ui";
 
@@ -45,7 +44,7 @@ export function SchemaTable<T extends { id: string }>({
             {Array.from({ length: 6 }).map((_, i) => (
               <tr key={i}>
                 <td colSpan={3}>
-                  <Skeleton style={{ height: 16 }} />
+                  <div className="skeleton" style={{ height: 16 }} />
                 </td>
               </tr>
             ))}

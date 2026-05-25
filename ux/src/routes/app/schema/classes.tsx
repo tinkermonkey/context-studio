@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useToasts } from "@/components/ui/Toast";
-import { Button, Modal, PageHeader, RowMenu, Chip, FilterBar, TabBar } from "@tinkermonkey/heimdall-ui";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { Button, Modal, PageHeader, RowMenu, Chip, FilterBar, TabBar, SegmentedControl } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
@@ -35,6 +34,7 @@ function ClassesPageContent({
   onSelectedIdChange,
 }: ClassesPageContentProps) {
   const [searchFilter, setSearchFilter] = useState("");
+  const [domainFilter, setDomainFilter] = useState<string>("all");
 
   const { data: listResponse, isLoading, error, refetch } = useClasses();
   const classes = listResponse?.items || [];
@@ -45,12 +45,19 @@ function ClassesPageContent({
   const schemeMap = new Map(schemes.map((s) => [s.id, s.title]));
   const classMap = new Map(classes.map((c) => [c.id, c.title]));
 
-  const filteredData = classes.filter(
-    (cls: ClassResponse) =>
-      cls.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      cls.description?.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      cls.id.toLowerCase().includes(searchFilter.toLowerCase()),
-  );
+  const domainOptions = [
+    { value: "all", label: "All" },
+    ...schemes.map((s) => ({ value: s.id, label: s.title })),
+  ];
+
+  const filteredData = classes
+    .filter((cls: ClassResponse) => domainFilter === "all" || cls.concept_scheme_id === domainFilter)
+    .filter(
+      (cls: ClassResponse) =>
+        cls.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
+        cls.description?.toLowerCase().includes(searchFilter.toLowerCase()) ||
+        cls.id.toLowerCase().includes(searchFilter.toLowerCase()),
+    );
 
   const classColumns: Column<ClassResponse>[] = [
     {
@@ -137,10 +144,10 @@ function ClassesPageContent({
   if (isLoading) {
     return (
       <div className="stack">
-        <Skeleton height={32} width={200} />
-        <Skeleton height={40} />
+        <div className="skeleton" style={{ height: 32, width: 200 }} />
+        <div className="skeleton" style={{ height: 40 }} />
         {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} height={40} />
+          <div key={i} className="skeleton" style={{ height: 40 }} />
         ))}
       </div>
     );
@@ -172,7 +179,7 @@ function ClassesPageContent({
     );
   }
 
-  const hasFilters = !!searchFilter;
+  const hasFilters = !!searchFilter || domainFilter !== "all";
   const showFilteredEmpty = classes.length > 0 && filteredData.length === 0 && hasFilters;
 
   return (
@@ -184,6 +191,14 @@ function ClassesPageContent({
         showingCount={filteredData.length}
         totalCount={classes.length}
       />
+
+      {schemes.length > 0 && (
+        <SegmentedControl
+          value={domainFilter}
+          onChange={(v) => setDomainFilter(v as string)}
+          options={domainOptions}
+        />
+      )}
 
       {schemesError && (
         <div style={{ marginBottom: "var(--space-3)" }}>

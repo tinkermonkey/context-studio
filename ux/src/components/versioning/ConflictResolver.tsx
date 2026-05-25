@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { Button } from "@tinkermonkey/heimdall-ui";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -463,7 +462,7 @@ export function ConflictResolver({ proposalId, onResolved }: ConflictResolverPro
     return (
       <div className="stack-lg" style={{ flex: 1, overflow: "auto" }}>
         {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} height="64px" style={{ borderRadius: "var(--radius-md, 6px)" }} />
+          <div key={i} className="skeleton" style={{ height: "64px", borderRadius: "var(--radius-md, 6px)" }} />
         ))}
       </div>
     );

@@ -9,7 +9,7 @@ interface CanvasState {
 export const useCanvasStore = create<CanvasState>()(
   persist(
     (set) => ({
-      darkCanvas: false,
+      darkCanvas: true,
       toggleDarkCanvas: () =>
         set((state) => {
           const next = !state.darkCanvas;
@@ -26,6 +26,8 @@ export const useCanvasStore = create<CanvasState>()(
       onRehydrateStorage: () => (state) => {
         if (state?.darkCanvas) {
           document.body.classList.add("dark-canvas");
+        } else {
+          document.body.classList.remove("dark-canvas");
         }
       },
     },

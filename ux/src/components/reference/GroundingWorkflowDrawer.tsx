@@ -1,9 +1,7 @@
 import { useState } from "react";
-import { Button, Chip } from "@tinkermonkey/heimdall-ui";
+import { Button, Chip, ConfirmDialog } from "@tinkermonkey/heimdall-ui";
 import { useToasts } from "@/components/ui/Toast";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useUndoDelete } from "@/hooks/useUndoDelete";
 import {
   useGroundingWorkflow,
@@ -85,8 +83,8 @@ export function GroundingWorkflowDrawer({ workflowId, onClose }: GroundingWorkfl
   if (isLoading) {
     return (
       <div className="kv" data-testid="grounding-workflow-drawer">
-        <Skeleton height={32} />
-        <Skeleton height={24} style={{ marginTop: "var(--space-3)" }} />
+        <div className="skeleton" style={{ height: 32 }} />
+        <div className="skeleton" style={{ height: 24, marginTop: "var(--space-3)" }} />
       </div>
     );
   }
@@ -216,7 +214,7 @@ export function GroundingWorkflowDrawer({ workflowId, onClose }: GroundingWorkfl
           <div className="kv-value">
             <div style={{ width: "100%" }}>
               {runsLoading ? (
-                <Skeleton height={20} />
+                <div className="skeleton" style={{ height: 20 }} />
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
                   {runs.slice(0, 5).map((run) => (
@@ -283,17 +281,13 @@ export function GroundingWorkflowDrawer({ workflowId, onClose }: GroundingWorkfl
       </div>
 
       <ConfirmDialog
-        open={showDeleteConfirm}
+        isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         title="Delete Workflow"
         message="Are you sure you want to delete this workflow? This action cannot be undone."
         confirmLabel="Delete"
-        danger
-        onConfirm={handleDeleteConfirm}
-        onError={(error) => {
-          toast("error", `Delete failed: ${error.message}`);
-        }}
-        isLoading={deleteMutation.isPending}
+        variant="danger"
+        onConfirm={() => { void handleDeleteConfirm(); }}
       />
     </div>
   );

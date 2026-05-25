@@ -57,138 +57,6 @@ a {
   border-radius: 999px;
 }
 
-/* ------------ Titlebar ------------ */
-.titlebar {
-  height: 36px;
-  background: linear-gradient(180deg, rgb(var(--shell-bg-2)) 0%, rgb(var(--shell-bg)) 100%);
-  border-bottom: 1px solid rgb(var(--shell-border));
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 0 14px;
-  flex: none;
-  user-select: none;
-  -webkit-app-region: drag;
-}
-.titlebar .lights {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  -webkit-app-region: no-drag;
-}
-.titlebar .lights span {
-  width: 12px;
-  height: 12px;
-  border-radius: 999px;
-  display: inline-block;
-  border: 1px solid rgba(0, 0, 0, 0.4);
-  cursor: pointer;
-  transition: filter 120ms ease;
-}
-.titlebar .lights span:hover {
-  filter: brightness(1.2);
-}
-.titlebar .l-close {
-  background: #ff5f57;
-}
-.titlebar .l-min {
-  background: #febc2e;
-}
-.titlebar .l-max {
-  background: #28c840;
-}
-.titlebar-app {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 12px;
-  color: rgb(var(--shell-fg-2));
-  min-width: 0;
-  white-space: nowrap;
-  flex-shrink: 1;
-  overflow: hidden;
-}
-.titlebar-app-name {
-  color: rgb(var(--shell-fg-1));
-  font-weight: 600;
-  white-space: nowrap;
-  flex: none;
-}
-.titlebar-app-sep {
-  color: rgb(var(--shell-fg-4));
-}
-.titlebar-ws {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: transparent;
-  border: 1px solid transparent;
-  color: rgb(var(--shell-fg-2));
-  font-family: var(--font-mono);
-  font-size: 11px;
-  padding: 3px 8px;
-  border-radius: 5px;
-  cursor: pointer;
-  -webkit-app-region: no-drag;
-  min-width: 0;
-}
-.titlebar-ws:hover {
-  background: rgb(var(--shell-surface));
-  border-color: rgb(var(--shell-border));
-  color: rgb(var(--shell-fg-1));
-}
-.titlebar-ws svg {
-  stroke: currentColor;
-  stroke-width: 1.75;
-  fill: none;
-  flex: none;
-}
-.titlebar-ws span {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.titlebar-spacer {
-  flex: 1;
-}
-.titlebar-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  -webkit-app-region: no-drag;
-}
-.titlebar-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  height: 24px;
-  padding: 0 10px;
-  background: rgb(var(--shell-surface));
-  border: 1px solid rgb(var(--shell-border));
-  color: rgb(var(--shell-fg-2));
-  border-radius: 5px;
-  font-size: 11px;
-  cursor: pointer;
-}
-.titlebar-btn:hover {
-  color: rgb(var(--shell-fg-1));
-  border-color: rgb(var(--shell-border-2));
-}
-.titlebar-btn svg {
-  stroke: currentColor;
-  stroke-width: 1.75;
-  fill: none;
-}
-.kbd-mini {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: rgb(var(--shell-fg-3));
-  background: rgb(var(--shell-bg));
-  border: 1px solid rgb(var(--shell-border));
-  padding: 1px 5px;
-  border-radius: 3px;
-}
-
 /* ------------ Statusbar ------------ */
 .statusbar {
   flex: none;
@@ -1275,16 +1143,6 @@ body.dark-canvas .input:focus {
   border-color: rgb(var(--accent-primary));
   box-shadow: 0 0 0 3px color-mix(in oklab, rgb(var(--accent-primary)) 15%, transparent);
 }
-body.dark-canvas .topbar {
-  background: rgb(var(--shell-bg));
-}
-body.dark-canvas .topbar-ico:hover {
-  background: rgb(var(--shell-surface));
-}
-body.dark-canvas .topbar-search input {
-  background: rgba(0, 0, 0, 0.25);
-}
-
 /* ------------ Error Banner ------------ */
 .error-banner {
   display: flex;
@@ -1400,6 +1258,12 @@ body.dark-canvas .topbar-search input {
 }
 
 /* ------------ Skeleton shimmer ------------ */
+.skeleton {
+  background: rgb(var(--canvas-border));
+  border-radius: var(--radius-md);
+  animation: skeleton-shimmer 1.4s ease infinite;
+}
+
 @keyframes skeleton-shimmer {
   0% {
     opacity: 1;
@@ -1475,6 +1339,12 @@ body.dark-canvas .diff-added {
 }
 
 /* ============ Page Header ============ */
+/* ST-4: Heimdall PageHeader forces eyebrow text to uppercase via .page-header__eyebrow.
+   Override to preserve the casing passed by the caller. */
+.page-header__eyebrow {
+  text-transform: none;
+}
+
 /* ------------ Stat grid 4-col override (keep 4 cols down to 1024px) ------------ */
 @media (max-width: 1400px) {
   .stat-grid--cols-4 {

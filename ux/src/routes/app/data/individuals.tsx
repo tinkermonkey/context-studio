@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useToasts } from "@/components/ui/Toast";
-import { Button, Modal, FilterBar, PageHeader, RowMenu } from "@tinkermonkey/heimdall-ui";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { Button, Modal, FilterBar, PageHeader, RowMenu, Sparkline } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Sparkline } from "@/components/ui/Sparkline";
 import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import { IndividualEditor } from "@/components/ontology/IndividualEditor";
@@ -123,9 +121,20 @@ function IndividualsPageContent({
       label: individualsCopy.table.updatedHeader,
       render: (value, row) => {
         const date = value as string | null;
+        const barCount = Math.min(row.version, 10);
+        const sparkData = Array.from({ length: barCount }, (_, i) =>
+          Math.round(30 + ((i + 1) / barCount) * 70),
+        );
+        const getSparkColor = (lastModified: string | null): string => {
+          if (!lastModified) return "neutral";
+          const ageInHours = (Date.now() - new Date(lastModified).getTime()) / (1000 * 60 * 60);
+          if (ageInHours < 24) return "emerald";
+          if (ageInHours < 7 * 24) return "amber";
+          return "neutral";
+        };
         return (
           <div className="flex flex-col gap-1">
-            <Sparkline version={row.version} lastModified={date} maxHeight={16} />
+            <Sparkline data={sparkData} color={getSparkColor(date)} height={16} />
             <span className="text-xs opacity-60">
               {date ? new Date(date).toLocaleDateString() : "—"}
             </span>
@@ -157,10 +166,10 @@ function IndividualsPageContent({
   if (isLoading) {
     return (
       <div className="stack">
-        <Skeleton height={32} width={200} />
-        <Skeleton height={40} />
+        <div className="skeleton" style={{ height: 32, width: 200 }} />
+        <div className="skeleton" style={{ height: 40 }} />
         {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} height={40} />
+          <div key={i} className="skeleton" style={{ height: 40 }} />
         ))}
       </div>
     );
@@ -450,9 +459,9 @@ function IndividualsPageWrapper() {
         )}
         {isLoadingEditingIndividual && (
           <div className="stack-lg">
-            <Skeleton height={40} />
-            <Skeleton height={40} />
-            <Skeleton height={80} />
+            <div className="skeleton" style={{ height: 40 }} />
+            <div className="skeleton" style={{ height: 40 }} />
+            <div className="skeleton" style={{ height: 80 }} />
           </div>
         )}
         {editingId && !isLoadingEditingIndividual && !editingIndividualError && (

@@ -11,11 +11,10 @@ import {
   type ActivityEvent,
   type ActivityEventType,
 } from "@tinkermonkey/heimdall-ui";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { HierarchyTree } from "@/components/ontology/HierarchyTree";
 import { PipelineCard } from "@/components/pipeline/PipelineCard";
-import { useHealth } from "@/api/hooks/admin";
+import { useHealth, useStatsTrends } from "@/api/hooks/admin";
 import { useTaxonomies } from "@/api/hooks/ontology";
 import { useClasses } from "@/api/hooks/ontology";
 import { useIndividuals } from "@/api/hooks/ontology";
@@ -36,6 +35,44 @@ function mapOperationToEventType(op: string): ActivityEventType {
       return "delete";
     default:
       return "run";
+  }
+}
+
+function mapEntityTypeToKind(entityType: string): string {
+  switch (entityType) {
+    case "taxonomy":
+      return "taxonomy";
+    case "concept_scheme":
+      return "scheme";
+    case "class":
+      return "class";
+    case "individual":
+      return "individual";
+    case "relationship":
+      return "relationship";
+    case "property_definition":
+      return "property";
+    default:
+      return entityType;
+  }
+}
+
+function mapEntityTypeToKindLabel(entityType: string): string {
+  switch (entityType) {
+    case "taxonomy":
+      return "Taxonomy";
+    case "concept_scheme":
+      return "Scheme";
+    case "class":
+      return "Class";
+    case "individual":
+      return "Individual";
+    case "relationship":
+      return "Relationship";
+    case "property_definition":
+      return "Property";
+    default:
+      return entityType;
   }
 }
 
@@ -77,6 +114,7 @@ function EmptyState() {
 export function Dashboard() {
   const navigate = useNavigate();
   const { data: health } = useHealth();
+  const { data: trends } = useStatsTrends();
   const {
     data: taxonomies,
     isLoading: taxonomiesLoading,
@@ -117,7 +155,7 @@ export function Dashboard() {
   if (isEmptyState) {
     return (
       <div>
-        <PageHeader eyebrow="Main" title="Dashboard" idChip="/" />
+        <PageHeader eyebrow="" title="Dashboard" />
         <EmptyState />
       </div>
     );
@@ -131,15 +169,19 @@ export function Dashboard() {
           return {
             id: event.id,
             type: mapOperationToEventType(event.operation),
-            subject: `${event.operation} ${event.entity_type}: ${stateTitle}`,
+            subject: stateTitle,
             timestamp: event.timestamp,
+            kind: mapEntityTypeToKind(event.entity_type),
+            kindLabel: mapEntityTypeToKindLabel(event.entity_type),
           };
         })
       : [];
 
+  const activePipelines = pipelines ?? [];
+
   return (
     <div>
-      <PageHeader eyebrow="Main" title="Dashboard" idChip="/" />
+      <PageHeader eyebrow="" title="Dashboard" />
 
       {/* Stat grid */}
       <ErrorBanner
@@ -158,26 +200,47 @@ export function Dashboard() {
           label="Taxonomies"
           value={taxonomiesLoading ? "—" : String(taxonomyCount)}
           color="cyan"
+          icon="schema"
+          sparkData={trends?.taxonomies}
         />
         <StatTile
           label="Classes"
           value={classesLoading ? "—" : String(classCount)}
           color="violet"
+          icon="component"
+          sparkData={trends?.classes}
         />
         <StatTile
           label="Individuals"
           value={individualsLoading ? "—" : String(individualCount)}
           color="amber"
+          icon="data"
+          sparkData={trends?.individuals}
         />
         <StatTile
           label="Pipelines"
           value={pipelinesLoading ? "—" : String(pipelineCount)}
           color="emerald"
+          icon="pipeline"
+          sparkData={trends?.pipelines}
         />
       </StatGrid>
 
-      {/* Two-column layout */}
+      {/* Two-column layout: HierarchyTree + ActivityTimeline */}
       <div className="grid grid-cols-2 gap-6" style={{ marginBottom: "var(--space-6)" }}>
+        {/* Knowledge Graph Structure */}
+        <Panel title="Knowledge Graph Structure">
+          <ErrorBanner
+            error={classesError}
+            onRetry={refetchClasses}
+            message="Could not load class hierarchy"
+            compact
+          />
+          {!classesError && (
+            <HierarchyTree classes={classes?.items} loading={classesLoading} error={classesError} />
+          )}
+        </Panel>
+
         {/* Recent Activity */}
         <Panel title="Recent Activity">
           <ErrorBanner
@@ -191,10 +254,10 @@ export function Dashboard() {
               {changesLoading ? (
                 <div className="stack-lg">
                   {Array.from({ length: 4 }).map((_, i) => (
-                    <Skeleton
+                    <div
                       key={i}
-                      height="36px"
-                      style={{ borderRadius: "var(--radius-md, 6px)" }}
+                      className="skeleton"
+                      style={{ height: "36px", borderRadius: "var(--radius-md, 6px)" }}
                     />
                   ))}
                 </div>
@@ -204,13 +267,16 @@ export function Dashboard() {
             </>
           )}
         </Panel>
+      </div>
 
-        {/* Graph Health / Quick Stats */}
+      {/* Second two-column layout: System Status + Individuals by Class */}
+      <div className="grid grid-cols-2 gap-6" style={{ marginBottom: "var(--space-6)" }}>
+        {/* System Status */}
         <Panel title="System Status">
           {!health ? (
             <div className="stack-lg">
               {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} height="20px" />
+                <div key={i} className="skeleton" style={{ height: "20px" }} />
               ))}
             </div>
           ) : (
@@ -226,22 +292,8 @@ export function Dashboard() {
             />
           )}
         </Panel>
-      </div>
 
-      {/* Knowledge Graph Structure */}
-      <div className="grid grid-cols-2 gap-6" style={{ marginBottom: "var(--space-6)" }}>
-        <Panel title="Knowledge Graph Structure">
-          <ErrorBanner
-            error={classesError}
-            onRetry={refetchClasses}
-            message="Could not load class hierarchy"
-            compact
-          />
-          {!classesError && (
-            <HierarchyTree classes={classes?.items} loading={classesLoading} error={classesError} />
-          )}
-        </Panel>
-
+        {/* Individuals by Class */}
         <Panel title="Individuals by Class">
           <ErrorBanner
             error={individualsError}
@@ -252,12 +304,12 @@ export function Dashboard() {
           {!individualsError && individualsLoading && (
             <div className="stack-lg">
               {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} height="28px" style={{ borderRadius: "var(--radius-md, 6px)" }} />
+                <div key={i} className="skeleton" style={{ height: "28px", borderRadius: "var(--radius-md, 6px)" }} />
               ))}
             </div>
           )}
           {!individualsError && !individualsLoading && individualCount === 0 && (
-            <p style={{ fontSize: "var(--text-sm)", color: "var(--canvas-fg-3)", margin: 0 }}>
+            <p style={{ fontSize: "var(--text-sm)", color: "rgb(var(--canvas-fg-3))", margin: 0 }}>
               No individuals yet.
             </p>
           )}
@@ -265,48 +317,62 @@ export function Dashboard() {
             !individualsLoading &&
             individuals &&
             individuals.items.length > 0 && (
-              <div style={{ fontSize: "var(--text-xs)", color: "var(--canvas-fg-3)" }}>
+              <div style={{ fontSize: "var(--text-xs)", color: "rgb(var(--canvas-fg-3))" }}>
                 Showing {Math.min(individuals.items.length, 10)} of {individuals.total} individuals
               </div>
             )}
         </Panel>
       </div>
 
-      {/* Active Pipelines */}
+      {/* Active Pipelines — always show section, empty state when none */}
       <div style={{ marginBottom: "var(--space-6)" }}>
+        <div className="flex-row-center" style={{ marginBottom: "var(--space-4)" }}>
+          <Layers size={16} style={{ color: "rgb(var(--canvas-fg-3))" }} />
+          <span
+            style={{
+              fontSize: "var(--text-sm)",
+              fontWeight: 600,
+              color: "rgb(var(--canvas-fg-1))",
+            }}
+          >
+            Active Pipelines
+          </span>
+        </div>
         <ErrorBanner
           error={pipelinesError}
           onRetry={refetchPipelines}
           message="Could not load pipelines"
           compact
         />
-        {!pipelinesError && !pipelinesLoading && pipelines && pipelines.length > 0 && (
-          <div>
-            <div className="flex-row-center" style={{ marginBottom: "var(--space-4)" }}>
-              <Layers size={16} style={{ color: "var(--canvas-fg-3)" }} />
-              <span
-                style={{
-                  fontSize: "var(--text-sm)",
-                  fontWeight: 600,
-                  color: "rgb(var(--canvas-fg-1))",
-                }}
-              >
-                Active Pipelines
-              </span>
-            </div>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-                gap: "var(--space-4)",
-              }}
-            >
-              {pipelines
-                .filter((p) => p.enabled)
-                .map((pipeline) => (
-                  <PipelineCard key={pipeline.id} pipeline={pipeline} />
-                ))}
-            </div>
+        {!pipelinesError && pipelinesLoading && (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+              gap: "var(--space-4)",
+            }}
+          >
+            {Array.from({ length: 2 }).map((_, i) => (
+              <div key={i} className="skeleton" style={{ height: "120px", borderRadius: "var(--radius-md, 6px)" }} />
+            ))}
+          </div>
+        )}
+        {!pipelinesError && !pipelinesLoading && activePipelines.length === 0 && (
+          <p style={{ fontSize: "var(--text-sm)", color: "rgb(var(--canvas-fg-3))", margin: 0 }}>
+            No active pipelines. Configure a pipeline to get started.
+          </p>
+        )}
+        {!pipelinesError && !pipelinesLoading && activePipelines.length > 0 && (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+              gap: "var(--space-4)",
+            }}
+          >
+            {activePipelines.map((pipeline) => (
+              <PipelineCard key={pipeline.id} pipeline={pipeline} />
+            ))}
           </div>
         )}
       </div>
@@ -315,21 +381,25 @@ export function Dashboard() {
       <QuickAccessGrid
         tiles={[
           { id: "schema", icon: "schema", title: "Schema", description: "Manage taxonomies, classes, and properties" },
-          { id: "pipelines", icon: "pipeline", title: "Pipelines", description: "Configure and run extraction pipelines" },
           { id: "data", icon: "data", title: "Data", description: "Browse individuals and datasets" },
-          { id: "graph", icon: "graph", title: "Graph", description: "Explore the knowledge graph visually" },
+          { id: "pipelines", icon: "pipeline", title: "Pipelines", description: "Configure and run extraction pipelines" },
+          { id: "graph", icon: "graph", title: "Knowledge Graph", description: "Explore the knowledge graph visually" },
+          { id: "nlp", icon: "pipeline", title: "NLP", description: "Natural language processing configuration" },
+          { id: "configuration", icon: "settings", title: "Configuration", description: "Manage system settings and preferences" },
         ]}
         onAction={(tileId) => {
           const routes: Record<string, string> = {
             schema: "/app/schema/taxonomies",
-            pipelines: "/app/pipelines",
             data: "/app/data/individuals",
+            pipelines: "/app/pipelines",
             graph: "/app/graph",
+            nlp: "/app/pipelines",
+            configuration: "/app/settings",
           };
           const to = routes[tileId];
           if (to) navigate({ to });
         }}
-        columns={4}
+        columns={6}
       />
     </div>
   );

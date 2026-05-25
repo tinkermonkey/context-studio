@@ -1,7 +1,6 @@
 import { StatTile, Panel } from "@tinkermonkey/heimdall-ui";
 import { useGraphMetrics } from "@/api/hooks/graph";
 import type { components } from "@/api/types";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { COPY } from "@/routes/app/graph/-copy";
 
@@ -15,19 +14,19 @@ export function MetricsPanel() {
       <div className="grid-2">
         <div className="stat" data-color="cyan">
           <div className="label">{COPY.NODE_COUNT_LABEL}</div>
-          <Skeleton width={40} height="1.5rem" />
+          <div className="skeleton" style={{ width: 40, height: "1.5rem" }} />
         </div>
         <div className="stat" data-color="violet">
           <div className="label">{COPY.EDGE_COUNT_LABEL}</div>
-          <Skeleton width={40} height="1.5rem" />
+          <div className="skeleton" style={{ width: 40, height: "1.5rem" }} />
         </div>
         <div className="stat" data-color="amber">
           <div className="label">{COPY.COMMUNITIES_LABEL}</div>
-          <Skeleton width={40} height="1.5rem" />
+          <div className="skeleton" style={{ width: 40, height: "1.5rem" }} />
         </div>
         <div className="stat" data-color="emerald">
           <div className="label">{COPY.AVG_DEGREE_LABEL}</div>
-          <Skeleton width={40} height="1.5rem" />
+          <div className="skeleton" style={{ width: 40, height: "1.5rem" }} />
         </div>
       </div>
 
@@ -36,8 +35,8 @@ export function MetricsPanel() {
         <div className="centrality-list-skeleton">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="centrality-row-skeleton">
-              <Skeleton width={100} height="1.25rem" />
-              <Skeleton width={40} height="1.25rem" />
+              <div className="skeleton" style={{ width: 100, height: "1.25rem" }} />
+              <div className="skeleton" style={{ width: 40, height: "1.25rem" }} />
             </div>
           ))}
         </div>

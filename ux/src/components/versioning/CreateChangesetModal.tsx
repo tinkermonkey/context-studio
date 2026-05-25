@@ -1,8 +1,7 @@
-import { Button, TextInput as Input, Modal } from "@tinkermonkey/heimdall-ui";
+import { Button, TextInput as Input, Modal, TextArea } from "@tinkermonkey/heimdall-ui";
 import { useState, useEffect } from "react";
 
 import { COPY } from "@/routes/app/versioning/copy";
-import type { TextareaHTMLAttributes } from "react";
 
 interface CreateChangesetModalProps {
   open: boolean;
@@ -10,10 +9,6 @@ interface CreateChangesetModalProps {
   onSubmit: (name: string, description?: string) => void;
   isLoading: boolean;
   selectedCount: number;
-}
-
-function Textarea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return <textarea {...props} className="input" style={{ resize: "vertical", ...props.style }} />;
 }
 
 export function CreateChangesetModal({
@@ -115,7 +110,7 @@ export function CreateChangesetModal({
           >
             {COPY.changesetDescriptionLabel}
           </label>
-          <Textarea
+          <TextArea
             id="changeset-description"
             data-testid="changeset-description-input"
             value={description}

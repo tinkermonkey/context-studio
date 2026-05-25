@@ -2,7 +2,7 @@ import { TextInput as Input, TextArea as Textarea, Button, KVGrid, VersionPill }
 import { useState, useEffect, useRef } from "react";
 import { Drawer } from "@/components/ui/Drawer";
 
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ConfirmDialog } from "@tinkermonkey/heimdall-ui";
 import { useUpdateTaxonomy, useDeleteTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
 import { useAutosave } from "@/hooks/useAutosave";
 import { useToasts } from "@/components/ui/Toast";
@@ -169,18 +169,13 @@ export function TaxonomyDrawer({ taxonomy, onClose }: TaxonomyDrawerProps) {
       />
 
       <ConfirmDialog
-        open={showDeleteConfirm}
+        isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         title={taxonomiesCopy.delete.confirmTitle}
         message="This taxonomy and all its concept schemes will be permanently deleted."
         confirmLabel={taxonomiesCopy.delete.confirmButton}
-        onConfirm={handleDelete}
-        onError={(error) => {
-          toast("error", `Delete failed: ${error.message}`);
-        }}
-        danger
-        isLoading={deleteMutation.isPending}
-        data-testid="taxonomy-delete-confirm"
+        onConfirm={() => { void handleDelete(); }}
+        variant="danger"
       />
     </>
   );

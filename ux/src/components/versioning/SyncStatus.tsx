@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
-import { Button } from "@tinkermonkey/heimdall-ui";
+import { Button, Chip } from "@tinkermonkey/heimdall-ui";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useSyncStatus, usePushSync, usePullSync } from "@/api/hooks/versioning";
 import { useConfig } from "@/api/hooks/admin";
@@ -18,17 +17,14 @@ interface SyncStatusPanelProps {
 }
 
 function getStatusChip(status: string) {
-  const chipMap: Record<string, string> = {
+  const variantMap: Record<string, "emerald" | "amber" | "rose" | "neutral"> = {
     synced: "emerald",
     ahead: "amber",
     behind: "amber",
     diverged: "rose",
-    unknown: "gray",
   };
-
-  const chipClass = chipMap[status] || "gray";
-
-  return <span className={`chip ${chipClass}`}>{status}</span>;
+  const variant = variantMap[status] ?? "neutral";
+  return <Chip variant={variant}>{status}</Chip>;
 }
 
 function determineStatus(syncStatus: SyncStatusResponse): string {
@@ -50,8 +46,8 @@ function determineStatus(syncStatus: SyncStatusResponse): string {
 function SyncStatusLoadingState() {
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", width: "100%" }}>
-      <Skeleton height="200px" style={{ borderRadius: "var(--radius-lg, 8px)" }} />
-      <Skeleton height="200px" style={{ borderRadius: "var(--radius-lg, 8px)" }} />
+      <div className="skeleton" style={{ height: "200px", borderRadius: "var(--radius-lg, 8px)" }} />
+      <div className="skeleton" style={{ height: "200px", borderRadius: "var(--radius-lg, 8px)" }} />
     </div>
   );
 }

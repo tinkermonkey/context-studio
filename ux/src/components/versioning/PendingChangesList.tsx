@@ -1,5 +1,5 @@
-import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
+import { Chip } from "@tinkermonkey/heimdall-ui";
 import { formatRelativeTime } from "@/utils/formatters";
 import { COPY } from "@/routes/app/versioning/copy";
 import type { components } from "@/api/types";
@@ -16,35 +16,18 @@ interface PendingChangesListProps {
   onRetry: () => void;
 }
 
-function getOperationColor(operation: string): string {
-  switch (operation) {
-    case "create":
-      return "var(--accent-cyan, #22D3EE)";
-    case "update":
-      return "var(--accent-violet, #A78BFA)";
-    case "delete":
-      return "var(--accent-rose, #F87171)";
-    default:
-      return "var(--canvas-fg-3)";
-  }
-}
-
 function getOperationChip(operation: string) {
-  return (
-    <span
-      className="chip"
-      style={{
-        backgroundColor: getOperationColor(operation),
-        color: "white",
-      }}
-    >
-      {operation}
-    </span>
-  );
+  const variantMap: Record<string, "cyan" | "violet" | "rose" | "neutral"> = {
+    create: "cyan",
+    update: "violet",
+    delete: "rose",
+  };
+  const variant = variantMap[operation] ?? "neutral";
+  return <Chip variant={variant}>{operation}</Chip>;
 }
 
 function getEntityTypeChip(entityType: string) {
-  return <span className="chip">{entityType}</span>;
+  return <Chip variant="neutral">{entityType}</Chip>;
 }
 
 export function PendingChangesList({
@@ -60,7 +43,7 @@ export function PendingChangesList({
     return (
       <div className="stack-lg" style={{ flex: 1, overflow: "auto" }}>
         {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} height="48px" style={{ borderRadius: "var(--radius-md, 6px)" }} />
+          <div key={i} className="skeleton" style={{ height: "48px", borderRadius: "var(--radius-md, 6px)" }} />
         ))}
       </div>
     );

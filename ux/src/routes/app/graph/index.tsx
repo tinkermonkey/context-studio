@@ -8,7 +8,6 @@ import { PathFinder } from "@/components/graph/PathFinder";
 import { SparqlEditor } from "@/components/graph/SparqlEditor";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Skeleton } from "@/components/ui/Skeleton";
 import {
   TabBar,
   Button,
@@ -120,8 +119,8 @@ export function GraphPage() {
         <SplitPane
           direction="horizontal"
           data-testid="graph-shell"
-          first={<Skeleton width="100%" height="100%" />}
-          second={<Skeleton width="100%" height="100%" />}
+          first={<div className="skeleton" style={{ width: "100%", height: "100%" }} />}
+          second={<div className="skeleton" style={{ width: "100%", height: "100%" }} />}
         />
       )}
 

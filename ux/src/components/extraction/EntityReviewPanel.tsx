@@ -4,7 +4,6 @@ import { useCreateClass, useClasses, useSchemes } from "@/api/hooks/ontology";
 import { useToasts } from "@/components/ui/Toast";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { Button, Chip, Panel } from "@tinkermonkey/heimdall-ui";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { formatConfidence } from "@/utils/formatters";
 import { COPY } from "@/routes/app/extraction/-copy";
 import type { components } from "@/api/types";
@@ -246,11 +245,11 @@ export function EntityReviewPanel({
           <div className="stack">
             {[0, 1, 2].map((i) => (
               <div key={i} className="flex-row-center">
-                <Skeleton width="200px" height="32px" />
-                <Skeleton width="60px" height="24px" />
+                <div className="skeleton" style={{ width: "200px", height: "32px" }} />
+                <div className="skeleton" style={{ width: "60px", height: "24px" }} />
                 <div style={{ marginLeft: "auto" }} className="flex-gap-sm">
-                  <Skeleton width="60px" height="28px" />
-                  <Skeleton width="60px" height="28px" />
+                  <div className="skeleton" style={{ width: "60px", height: "28px" }} />
+                  <div className="skeleton" style={{ width: "60px", height: "28px" }} />
                 </div>
               </div>
             ))}

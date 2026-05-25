@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Drawer } from "@/components/ui/Drawer";
 import { TextInput as Input, KVGrid } from "@tinkermonkey/heimdall-ui";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ConfirmDialog } from "@tinkermonkey/heimdall-ui";
 import { useDeleteRelationship } from "@/api/hooks/ontology/useRelationships";
 import { useToasts } from "@/components/ui/Toast";
 import { useUndoDelete } from "@/hooks/useUndoDelete";
@@ -122,18 +122,13 @@ export function RelationshipDrawer({
       </Drawer>
 
       <ConfirmDialog
-        open={showDeleteConfirm}
+        isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         title={relationshipsCopy.delete.confirmTitle}
         message="This relationship and all its instances will be permanently deleted."
         confirmLabel={relationshipsCopy.delete.confirmButton}
-        onConfirm={handleDelete}
-        onError={(error) => {
-          toast("error", `Delete failed: ${error.message}`);
-        }}
-        danger
-        isLoading={deleteMutation.isPending}
-        data-testid="relationship-delete-confirm"
+        onConfirm={() => { void handleDelete(); }}
+        variant="danger"
       />
     </>
   );

@@ -13,14 +13,20 @@ Endpoints:
 - POST /api/v1/admin/configuration/reset    - Reset configuration to defaults
 - GET  /api/v1/admin/tasks                  - List background tasks
 - GET  /api/v1/admin/tasks/{task_id}        - Get background task details
+- GET  /api/v1/admin/stats/trends           - Get rolling daily creation counts per entity type
 
 All route handlers use run_sync_in_executor to prevent blocking the async event loop
 when calling synchronous domain service methods.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from collections import defaultdict
+from datetime import datetime, timedelta, timezone
 
-from adapters.web.dependencies import get_admin_service
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import text
+from sqlalchemy.orm import Session
+
+from adapters.web.dependencies import get_admin_service, get_local_db_session, get_operations_db_session
 from adapters.web.schemas.admin import (
     AppConfigurationResponse,
     BackgroundTaskResponse,
@@ -32,6 +38,7 @@ from adapters.web.schemas.admin import (
     DatasetResponse,
     DatasetUpdateRequest,
     ServiceMetricsResponse,
+    StatsTrendsResponse,
     SystemHealthResponse,
 )
 from domain.admin.exceptions import (
@@ -514,3 +521,93 @@ async def activate_dataset(
     except Exception as exc:
         status_code, message = _handle_admin_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.get("/stats/trends", response_model=StatsTrendsResponse)
+async def get_stats_trends(
+    days: int = Query(default=7, ge=1, le=90, description="Number of calendar days to include"),
+    local_db: Session = Depends(get_local_db_session),
+    ops_db: Session = Depends(get_operations_db_session),
+) -> StatsTrendsResponse:
+    """
+    Get rolling daily creation counts per entity type.
+
+    Returns `days` integers per entity type (oldest-first), where index 0 represents
+    `days-1` days ago and the last index represents today. Missing days are 0.
+
+    Entity types covered:
+    - taxonomies: change_events WHERE entity_type='taxonomy' AND operation='create'
+    - classes: change_events WHERE entity_type='class' AND operation='create'
+    - individuals: change_events WHERE entity_type='individual' AND operation='create'
+    - pipelines: pipeline_configurations WHERE created_at >= cutoff (operations.db)
+
+    Args:
+        days: Number of calendar days to roll up (default 7, max 90)
+        local_db: SQLAlchemy session for local.db (injected)
+        ops_db: SQLAlchemy session for operations.db (injected)
+
+    Returns:
+        StatsTrendsResponse with per-type daily count arrays
+    """
+    try:
+        now = datetime.now(timezone.utc)
+        cutoff = now - timedelta(days=days)
+
+        # Build ordered date labels: [cutoff.date, ..., today]
+        date_labels = [(cutoff + timedelta(days=i)).date() for i in range(days)]
+
+        # --- Query change_events in local.db ---
+        rows = local_db.execute(
+            text(
+                """
+                SELECT date(timestamp) AS day, entity_type, COUNT(*) AS cnt
+                FROM change_events
+                WHERE operation = 'create'
+                  AND entity_type IN ('taxonomy', 'class', 'individual')
+                  AND timestamp >= :cutoff
+                GROUP BY date(timestamp), entity_type
+                """
+            ),
+            {"cutoff": cutoff.isoformat()},
+        ).fetchall()
+
+        # Accumulate counts keyed by (date_str, entity_type)
+        event_counts: dict[tuple[str, str], int] = defaultdict(int)
+        for row in rows:
+            event_counts[(row[0], row[1])] += row[2]
+
+        # --- Query pipeline_configurations in operations.db ---
+        pipeline_rows = ops_db.execute(
+            text(
+                """
+                SELECT date(created_at) AS day, COUNT(*) AS cnt
+                FROM pipeline_configurations
+                WHERE created_at >= :cutoff
+                GROUP BY date(created_at)
+                """
+            ),
+            {"cutoff": cutoff.isoformat()},
+        ).fetchall()
+
+        pipeline_counts: dict[str, int] = defaultdict(int)
+        for row in pipeline_rows:
+            pipeline_counts[row[0]] += row[1]
+
+        # Build arrays: one integer per calendar day, oldest first
+        taxonomies = [event_counts.get((str(d), "taxonomy"), 0) for d in date_labels]
+        classes = [event_counts.get((str(d), "class"), 0) for d in date_labels]
+        individuals = [event_counts.get((str(d), "individual"), 0) for d in date_labels]
+        pipelines = [pipeline_counts.get(str(d), 0) for d in date_labels]
+
+        return StatsTrendsResponse(
+            taxonomies=taxonomies,
+            classes=classes,
+            individuals=individuals,
+            pipelines=pipelines,
+        )
+    except Exception as exc:
+        logger.error(f"Error fetching stats trends: {exc}", exc_info=exc)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve stats trends",
+        )

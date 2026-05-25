@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, Fragment } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { Drawer } from "@/components/ui/Drawer";
 import { TextInput as Input, TextArea as Textarea, Button, Panel } from "@tinkermonkey/heimdall-ui";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { useAutosave } from "@/hooks/useAutosave";
@@ -251,10 +250,10 @@ export function IndividualDrawer({
         data-testid="individual-detail-page"
       >
         <div className="stack-lg">
-          <Skeleton height={40} />
-          <Skeleton height={40} />
-          <Skeleton height={80} />
-          <Skeleton height={200} />
+          <div className="skeleton" style={{ height: 40 }} />
+          <div className="skeleton" style={{ height: 40 }} />
+          <div className="skeleton" style={{ height: 80 }} />
+          <div className="skeleton" style={{ height: 200 }} />
         </div>
       </Drawer>
     );
@@ -553,9 +552,9 @@ export function IndividualDrawer({
           )}
           {isLoadingProperties ? (
             <div className="stack">
-              <Skeleton height={40} />
-              <Skeleton height={40} />
-              <Skeleton height={40} />
+              <div className="skeleton" style={{ height: 40 }} />
+              <div className="skeleton" style={{ height: 40 }} />
+              <div className="skeleton" style={{ height: 40 }} />
             </div>
           ) : inheritedPropertiesError ? null : inheritedProperties.length === 0 ? (
             <EmptyState

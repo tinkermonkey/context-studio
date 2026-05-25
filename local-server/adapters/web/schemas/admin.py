@@ -254,3 +254,16 @@ class DatasetUpdateRequest(BaseModel):
 
     title: Optional[str] = Field(None, description="New title", min_length=1)
     description: Optional[str] = Field(None, description="New description")
+
+
+class StatsTrendsResponse(BaseModel):
+    """Response containing 7-day rolling daily creation counts per entity type.
+
+    Each list contains `days` integers (oldest-first, index 0 = days-1 days ago,
+    index days-1 = today). Missing days are filled with 0.
+    """
+
+    taxonomies: list[int] = Field(..., description="Daily create counts for taxonomies")
+    classes: list[int] = Field(..., description="Daily create counts for classes")
+    individuals: list[int] = Field(..., description="Daily create counts for individuals")
+    pipelines: list[int] = Field(..., description="Daily create counts for pipeline configurations")

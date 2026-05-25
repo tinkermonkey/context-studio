@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button, Modal, Chip, RowMenu, FilterBar, PageHeader } from "@tinkermonkey/heimdall-ui";
@@ -148,10 +147,10 @@ export function WorkflowsPageContent({
   if (isLoading) {
     return (
       <div data-testid="reference-workflows-page" className="stack">
-        <Skeleton height={32} width={200} />
-        <Skeleton height={40} />
+        <div className="skeleton" style={{ height: 32, width: 200 }} />
+        <div className="skeleton" style={{ height: 40 }} />
         {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} height={40} />
+          <div key={i} className="skeleton" style={{ height: 40 }} />
         ))}
       </div>
     );

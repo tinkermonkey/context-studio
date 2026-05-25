@@ -1,11 +1,9 @@
-import { PageHeader, ConfigTile, TabBar } from "@tinkermonkey/heimdall-ui";
+import { PageHeader, ConfigTile, TabBar, Field, TextInput, Select } from "@tinkermonkey/heimdall-ui";
 import { useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useConfig, useUpdateConfig } from "@/api/hooks/admin";
 import { useToasts } from "@/components/ui/Toast";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
-import { EditConfigModal, type ConfigField } from "@/components/settings/EditConfigModal";
 import { COPY } from "./settings/copy";
 
 export const Route = createFileRoute("/app/settings")({
@@ -13,21 +11,19 @@ export const Route = createFileRoute("/app/settings")({
 });
 
 export function SettingsPage() {
-  const navigate = useNavigate();
   const { toast } = useToasts();
   const { data: config, isLoading, error, refetch } = useConfig();
   const updateMutation = useUpdateConfig();
 
-  const [openSection, setOpenSection] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("general");
 
-  const handleUpdateSection = async (section: string, updates: { [key: string]: unknown }) => {
+  const handleFieldBlur = async (section: string, key: string, value: string) => {
     try {
-      await updateMutation.mutateAsync({ section, data: { updates } });
+      await updateMutation.mutateAsync({ section, data: { updates: { [key]: value } } });
       toast("success", COPY.settingsUpdatedSuccess(section));
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : COPY.failedToSaveSettings;
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : COPY.failedToSaveSettings;
       toast("error", errorMsg);
-      throw error;
     }
   };
 
@@ -35,13 +31,20 @@ export function SettingsPage() {
     return (
       <div data-testid="settings-page">
         <div style={{ marginBottom: "24px" }}>
-          <Skeleton height={60} width={400} />
-          <Skeleton height={20} width={300} style={{ marginTop: "8px" }} />
+          <div className="skeleton" style={{ height: 60, width: 400 }} />
+          <div className="skeleton" style={{ height: 20, width: 300, marginTop: "8px" }} />
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} height={180} />
-          ))}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: "24px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="skeleton" style={{ height: 60 }} />
+            ))}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="skeleton" style={{ height: 100 }} />
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -51,7 +54,7 @@ export function SettingsPage() {
     return (
       <div data-testid="settings-page">
         <PageHeader
-          eyebrow="Administration"
+          eyebrow="settings"
           title={COPY.settingsPageTitle}
           idChip="/settings"
         />
@@ -61,137 +64,17 @@ export function SettingsPage() {
   }
 
   const sections = config?.sections || {};
-
-  // Workspace section
   const workspaceConfig = sections.workspace || {};
-  const workspaceFields: ConfigField[] = [
-    {
-      key: "display_name",
-      label: COPY.workspaceDisplayNameLabel,
-      placeholder: COPY.workspaceDisplayNamePlaceholder,
-      required: true,
-    },
-    {
-      key: "path",
-      label: COPY.workspacePathLabel,
-      readOnly: true,
-    },
-  ];
-
-  // LLM Provider section
   const llmConfig = sections.llm || {};
-  const llmFields: ConfigField[] = [
-    {
-      key: "provider",
-      label: COPY.llmProviderLabel,
-      options: [
-        { label: COPY.llmProviderAnthropicOption, value: "anthropic" },
-        { label: COPY.llmProviderOpenAIOption, value: "openai" },
-        { label: COPY.llmProviderOllamaOption, value: "ollama" },
-      ],
-      required: true,
-    },
-    {
-      key: "model",
-      label: COPY.llmModelLabel,
-      placeholder: COPY.llmModelPlaceholder,
-      required: true,
-    },
-    {
-      key: "api_key",
-      label: COPY.llmApiKeyLabel,
-      type: "password",
-      sensitive: true,
-      placeholder: COPY.llmApiKeyPlaceholder,
-    },
-    ...(llmConfig.provider === "ollama"
-      ? [
-          {
-            key: "base_url",
-            label: COPY.llmBaseUrlLabel,
-            type: "url",
-            placeholder: COPY.llmBaseUrlPlaceholder,
-          } as ConfigField,
-        ]
-      : []),
-  ];
-
-  // Embedding Model section
   const embeddingConfig = sections.embedding || {};
-  const embeddingFields: ConfigField[] = [
-    {
-      key: "model_name",
-      label: COPY.embeddingModelNameLabel,
-      placeholder: COPY.embeddingModelNamePlaceholder,
-      required: true,
-    },
-    {
-      key: "vector_dimensions",
-      label: COPY.embeddingVectorDimensionsLabel,
-      type: "number",
-      readOnly: true,
-    },
-  ];
-
-  // NLP Model section
-  const nlpConfig = sections.nlp || {};
-  const nlpFields: ConfigField[] = [
-    {
-      key: "model_name",
-      label: COPY.nlpModelNameLabel,
-      placeholder: COPY.nlpModelNamePlaceholder,
-      required: true,
-    },
-  ];
-
-  // Sync Target section
-  const syncConfig = sections.sync || {};
-  const syncFields: ConfigField[] = [
-    {
-      key: "target_type",
-      label: COPY.syncTargetTypeLabel,
-      options: [
-        { label: COPY.syncTargetTypeLocalOption, value: "local" },
-        { label: COPY.syncTargetTypeS3Option, value: "s3" },
-      ],
-      required: true,
-    },
-    {
-      key: "path",
-      label:
-        syncConfig.target_type === "s3" ? COPY.syncTargetS3BucketLabel : COPY.syncTargetPathLabel,
-      placeholder:
-        syncConfig.target_type === "s3"
-          ? COPY.syncTargetS3BucketPlaceholder
-          : COPY.syncTargetPathPlaceholder,
-    },
-    ...(syncConfig.target_type === "s3"
-      ? [
-          {
-            key: "aws_access_key_id",
-            label: COPY.syncTargetAwsAccessKeyLabel,
-            type: "password",
-            sensitive: true,
-          } as ConfigField,
-          {
-            key: "aws_secret_access_key",
-            label: COPY.syncTargetAwsSecretKeyLabel,
-            type: "password",
-            sensitive: true,
-          } as ConfigField,
-        ]
-      : []),
-  ];
-
-  const referenceSourcesCount =
-    (Array.isArray(sections.reference_sources) ? sections.reference_sources.length : 0) || 0;
 
   return (
     <div data-testid="settings-page">
       {/* Page Header */}
       <PageHeader
-        eyebrow="Administration"
+        eyebrow="settings"
         title={COPY.settingsPageTitle}
+        idChip="/settings"
         subtitle={COPY.settingsPageSubtitle}
       />
 
@@ -199,150 +82,124 @@ export function SettingsPage() {
       <div style={{ marginBottom: "var(--space-4)" }}>
         <TabBar
           tabs={[
-            { id: "general", label: "General" },
-            { id: "pipelines", label: "Pipelines" },
-            { id: "storage", label: "Storage" },
-            { id: "members", label: "Members" },
-            { id: "integrations", label: "Integrations" },
+            { id: "general", label: "General", count: 5 },
+            { id: "pipelines", label: "Pipelines", count: 0 },
+            { id: "storage", label: "Storage", count: 0 },
+            { id: "members", label: "Members", count: 0 },
+            { id: "integrations", label: "Integrations", count: 0 },
           ]}
-          activeTabId="general"
-          onSelectTab={() => {}}
+          activeTabId={activeTab}
+          onSelectTab={setActiveTab}
         />
       </div>
 
-      {/* Config Tiles Grid */}
-      <div className="grid grid-cols-2 gap-3">
-        {/* Workspace */}
-        <ConfigTile
-          icon="schema"
-          title={COPY.workspaceTileTitle}
-          description={COPY.workspaceTileDescription}
-          summary={[
-            { label: "Name", value: String(workspaceConfig.display_name || COPY.workspaceUnnamed) },
-            { label: "Path", value: String(workspaceConfig.path || COPY.notConfigured) },
-          ]}
-          onClick={() => setOpenSection("workspace")}
-          data-testid="config-tile-workspace"
-        />
+      {/* General tab — two-column layout */}
+      {activeTab === "general" && (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 280px",
+            gap: "24px",
+            alignItems: "start",
+          }}
+        >
+          {/* Left column: form fields */}
+          <div
+            data-testid="settings-general-form"
+            style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+          >
+            <Field label={COPY.workspaceDisplayNameLabel}>
+              <TextInput
+                data-testid="settings-workspace-name-input"
+                defaultValue={String(workspaceConfig.display_name || "")}
+                placeholder={COPY.workspaceDisplayNamePlaceholder}
+                onBlur={(e) => handleFieldBlur("workspace", "display_name", e.target.value)}
+              />
+            </Field>
 
-        {/* LLM Provider */}
-        <ConfigTile
-          icon="pipeline"
-          title={COPY.llmProviderTileTitle}
-          description={COPY.llmProviderTileDescription}
-          summary={[
-            { label: "Provider", value: llmConfig.provider ? String(llmConfig.provider).charAt(0).toUpperCase() + String(llmConfig.provider).slice(1) : COPY.notConfigured },
-            { label: "Model", value: String(llmConfig.model || COPY.notConfigured) },
-          ]}
-          onClick={() => setOpenSection("llm")}
-          data-testid="config-tile-llm"
-        />
+            <Field label={COPY.workspacePathLabel}>
+              <TextInput
+                data-testid="settings-workspace-path-input"
+                mono
+                defaultValue={String(workspaceConfig.path || "")}
+                readOnly
+              />
+            </Field>
 
-        {/* Embedding Model */}
-        <ConfigTile
-          icon="layout"
-          title={COPY.embeddingModelTileTitle}
-          description={COPY.embeddingModelTileDescription}
-          summary={[
-            { label: "Model", value: String(embeddingConfig.model_name || COPY.notConfigured) },
-            { label: "Dimensions", value: embeddingConfig.vector_dimensions ? COPY.embeddingDimensionsMeta(Number(embeddingConfig.vector_dimensions)) : COPY.notConfigured },
-          ]}
-          onClick={() => setOpenSection("embedding")}
-          data-testid="config-tile-embedding"
-        />
+            <Field label={COPY.llmProviderLabel}>
+              <Select
+                data-testid="settings-llm-provider-select"
+                defaultValue={String(llmConfig.provider || "")}
+                onBlur={(e) => handleFieldBlur("llm", "provider", e.target.value)}
+              >
+                <option value="">{COPY.selectOptionPlaceholder}</option>
+                <option value="anthropic">{COPY.llmProviderAnthropicOption}</option>
+                <option value="openai">{COPY.llmProviderOpenAIOption}</option>
+                <option value="ollama">{COPY.llmProviderOllamaOption}</option>
+              </Select>
+            </Field>
 
-        {/* NLP Model */}
-        <ConfigTile
-          icon="component"
-          title={COPY.nlpModelTileTitle}
-          description={COPY.nlpModelTileDescription}
-          summary={[
-            { label: "Model", value: String(nlpConfig.model_name || COPY.notConfigured) },
-          ]}
-          onClick={() => setOpenSection("nlp")}
-          data-testid="config-tile-nlp"
-        />
+            <Field label={COPY.llmModelLabel}>
+              <TextInput
+                data-testid="settings-llm-model-input"
+                defaultValue={String(llmConfig.model || "")}
+                placeholder={COPY.llmModelPlaceholder}
+                onBlur={(e) => handleFieldBlur("llm", "model", e.target.value)}
+              />
+            </Field>
 
-        {/* Reference Sources */}
-        <ConfigTile
-          icon="data"
-          title={COPY.referenceSourcesTileTitle}
-          description={COPY.referenceSourcesTileDescription}
-          summary={[
-            { label: "Sources", value: COPY.referenceSourcesMeta(referenceSourcesCount) },
-          ]}
-          onClick={() => navigate({ to: "/app/reference/sources" })}
-          data-testid="config-tile-reference-sources"
-        />
+            <Field label={COPY.embeddingModelNameLabel}>
+              <TextInput
+                data-testid="settings-embedding-model-input"
+                defaultValue={String(embeddingConfig.model_name || "")}
+                placeholder={COPY.embeddingModelNamePlaceholder}
+                onBlur={(e) => handleFieldBlur("embedding", "model_name", e.target.value)}
+              />
+            </Field>
+          </div>
 
-        {/* Sync Target */}
-        <ConfigTile
-          icon="reload"
-          title={COPY.syncTargetTileTitle}
-          description={COPY.syncTargetTileDescription}
-          summary={[
-            { label: "Target", value: String(syncConfig.path || COPY.notConfigured) },
-          ]}
-          onClick={() => setOpenSection("sync")}
-          data-testid="config-tile-sync"
-        />
-      </div>
+          {/* Right column: summary ConfigTile cards */}
+          <div
+            data-testid="settings-summary-tiles"
+            style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+          >
+            <ConfigTile
+              icon="hardDrive"
+              title="Backups"
+              description="Local database backup configuration"
+              summary={[
+                { label: "Status", value: "Not configured" },
+                { label: "Last backup", value: "Never" },
+              ]}
+              onClick={() => {}}
+              data-testid="config-tile-backups"
+            />
 
-      {/* Modals */}
-      <EditConfigModal
-        open={openSection === "workspace"}
-        onClose={() => setOpenSection(null)}
-        section="workspace"
-        title={COPY.editWorkspaceSettingsTitle}
-        fields={workspaceFields}
-        values={workspaceConfig}
-        onSave={(updates) => handleUpdateSection("workspace", updates)}
-        isLoading={updateMutation.isPending}
-      />
+            <ConfigTile
+              icon="zap"
+              title="Performance"
+              description="Indexing and cache settings"
+              summary={[
+                { label: "Cache", value: "Enabled" },
+                { label: "Index", value: "Up to date" },
+              ]}
+              onClick={() => {}}
+              data-testid="config-tile-performance"
+            />
 
-      <EditConfigModal
-        open={openSection === "llm"}
-        onClose={() => setOpenSection(null)}
-        section="llmprovider"
-        title={COPY.editLlmProviderSettingsTitle}
-        fields={llmFields}
-        values={llmConfig}
-        onSave={(updates) => handleUpdateSection("llm", updates)}
-        isLoading={updateMutation.isPending}
-      />
-
-      <EditConfigModal
-        open={openSection === "embedding"}
-        onClose={() => setOpenSection(null)}
-        section="embedding"
-        title={COPY.editEmbeddingModelSettingsTitle}
-        fields={embeddingFields}
-        values={embeddingConfig}
-        onSave={(updates) => handleUpdateSection("embedding", updates)}
-        isLoading={updateMutation.isPending}
-      />
-
-      <EditConfigModal
-        open={openSection === "nlp"}
-        onClose={() => setOpenSection(null)}
-        section="nlp"
-        title={COPY.editNlpModelSettingsTitle}
-        fields={nlpFields}
-        values={nlpConfig}
-        onSave={(updates) => handleUpdateSection("nlp", updates)}
-        isLoading={updateMutation.isPending}
-      />
-
-      <EditConfigModal
-        open={openSection === "sync"}
-        onClose={() => setOpenSection(null)}
-        section="sync"
-        title={COPY.editSyncTargetSettingsTitle}
-        fields={syncFields}
-        values={syncConfig}
-        onSave={(updates) => handleUpdateSection("sync", updates)}
-        isLoading={updateMutation.isPending}
-      />
+            <ConfigTile
+              icon="bell"
+              title="Telemetry"
+              description="Usage and error reporting"
+              summary={[
+                { label: "Reporting", value: "Disabled" },
+              ]}
+              onClick={() => {}}
+              data-testid="config-tile-telemetry"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

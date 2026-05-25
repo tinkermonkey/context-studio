@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Drawer } from "@/components/ui/Drawer";
 import { TextInput as Input, TextArea as Textarea, KVGrid } from "@tinkermonkey/heimdall-ui";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ConfirmDialog } from "@tinkermonkey/heimdall-ui";
 import { useUpdateProperty, useDeleteProperty } from "@/api/hooks/ontology/useProperties";
 import { useAutosave } from "@/hooks/useAutosave";
 import { useToasts } from "@/components/ui/Toast";
@@ -146,18 +146,13 @@ export function PropertyDrawer({ property, onClose }: PropertyDrawerProps) {
       </Drawer>
 
       <ConfirmDialog
-        open={showDeleteConfirm}
+        isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         title={propertiesCopy.delete.confirmTitle}
         message="This property will be permanently deleted."
         confirmLabel={propertiesCopy.delete.confirmButton}
-        onConfirm={handleDelete}
-        onError={(error) => {
-          toast("error", `Delete failed: ${error.message}`);
-        }}
-        danger
-        isLoading={deleteMutation.isPending}
-        data-testid="property-delete-confirm"
+        onConfirm={() => { void handleDelete(); }}
+        variant="danger"
       />
     </>
   );

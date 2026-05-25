@@ -96,6 +96,8 @@ export function PipelineCard({ pipeline, selected, onClick }: PipelineCardProps)
   const lastRunTime = lastExecution ? formatRelativeTime(new Date(lastExecution.timestamp)) : null;
   const duration = lastExecution ? formatDuration(lastExecution.duration_ms) : null;
 
+  const errors = lastExecution?.status === "error" || lastExecution?.status === "timeout" ? 1 : 0;
+
   const footerContent = lastExecution ? (
     <span className="muted">
       {lastRunTime} · {lastExecution.tokens_in} → {lastExecution.tokens_out} tokens · {duration}
@@ -113,13 +115,14 @@ export function PipelineCard({ pipeline, selected, onClick }: PipelineCardProps)
       pipeline={{
         id: pipeline.id,
         name: pipeline.title,
+        description: `${pipeline.provider} · ${pipeline.model}`,
         status,
         flow,
         recent: {
           ingested: 0,
           created: 0,
           updated: 0,
-          errors: 0,
+          errors,
         },
         lastRun: lastExecution?.timestamp,
       }}

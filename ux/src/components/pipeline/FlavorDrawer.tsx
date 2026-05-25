@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Button } from "@tinkermonkey/heimdall-ui";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Button, ConfirmDialog } from "@tinkermonkey/heimdall-ui";
 import { useToasts } from "@/components/ui/Toast";
 import type { components } from "@/api/types";
 
@@ -18,8 +17,13 @@ export function FlavorDrawer({ flavor, onClose, onDelete, isDeleting = false }: 
   const { toast } = useToasts();
 
   const handleDelete = async () => {
-    await onDelete(flavor.id);
-    onClose();
+    try {
+      await onDelete(flavor.id);
+      onClose();
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      toast("error", `Delete failed: ${err.message}`);
+    }
   };
 
   return (
@@ -59,18 +63,14 @@ export function FlavorDrawer({ flavor, onClose, onDelete, isDeleting = false }: 
       </div>
 
       <ConfirmDialog
-        open={showDeleteConfirm}
+        isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         title="Delete Flavor"
         message="Are you sure you want to delete this flavor? This action cannot be undone."
         confirmLabel="Delete"
         cancelLabel="Cancel"
-        danger
-        onConfirm={handleDelete}
-        onError={(error) => {
-          toast("error", `Delete failed: ${error.message}`);
-        }}
-        isLoading={isDeleting}
+        variant="danger"
+        onConfirm={() => { void handleDelete(); }}
       />
     </>
   );

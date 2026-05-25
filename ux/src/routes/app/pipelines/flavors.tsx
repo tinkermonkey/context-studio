@@ -6,7 +6,6 @@ import { useFlavors, useCreateFlavor, useDeleteFlavor } from "@/api/hooks/flavor
 import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 
-import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FlavorForm } from "@/components/pipeline/FlavorForm";
@@ -132,9 +131,9 @@ function FlavorsContent() {
 
           {isLoading ? (
             <>
-              <Skeleton height={40} />
+              <div className="skeleton" style={{ height: 40 }} />
               {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} height={40} />
+                <div key={i} className="skeleton" style={{ height: 40 }} />
               ))}
             </>
           ) : error ? (

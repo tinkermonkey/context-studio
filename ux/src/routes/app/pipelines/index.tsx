@@ -5,14 +5,13 @@ import { Plus } from "lucide-react";
 import { usePipelines, useAllPipelineExecutions, useCreatePipeline } from "@/api/hooks/pipeline";
 import { PipelineCard } from "@/components/pipeline/PipelineCard";
 import { PipelineDetailPanel } from "@/components/pipeline/PipelineDetailPanel";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PipelineCreateForm } from "@/components/pipeline/PipelineCreateForm";
 import { useToasts } from "@/components/ui/Toast";
 import { COPY } from "./-copy";
 
-type StatusFilter = "all" | "enabled" | "disabled";
+type StatusFilter = "all" | "running" | "success" | "idle" | "failed";
 
 export function PipelinesContent() {
   const navigate = useNavigate({ from: "/app/pipelines/" });
@@ -33,22 +32,30 @@ export function PipelinesContent() {
 
   const activeFilterChips = useMemo(() => {
     if (statusFilter === "all") return [];
-    return [{ id: "status", label: statusFilter === "enabled" ? COPY.FILTER_ENABLED : COPY.FILTER_DISABLED }];
+    const labelMap: Record<Exclude<StatusFilter, "all">, string> = {
+      running: COPY.FILTER_RUNNING,
+      success: COPY.FILTER_SUCCESS,
+      idle: COPY.FILTER_IDLE,
+      failed: COPY.FILTER_FAILED,
+    };
+    return [{ id: "status", label: labelMap[statusFilter] }];
   }, [statusFilter]);
 
   const filteredPipelines = useMemo(() => {
-    const getPipelineFailedStatus = (pipelineId: string): boolean => {
-      if (!allExecutions?.items) return false;
+    const getRunStatus = (pipelineId: string): "running" | "success" | "idle" | "failed" => {
+      if (!allExecutions?.items) return "idle";
       const pipelineExecutions = allExecutions.items.filter(
         (e) => e.pipeline_config_id === pipelineId,
       );
-      if (pipelineExecutions.length === 0) return false;
+      if (pipelineExecutions.length === 0) return "idle";
       const latestExecution = pipelineExecutions.reduce((latest, current) =>
         new Date(current.timestamp).getTime() > new Date(latest.timestamp).getTime()
           ? current
           : latest,
       );
-      return latestExecution.status === "error" || latestExecution.status === "timeout";
+      if (latestExecution.status === "success") return "success";
+      if (latestExecution.status === "error" || latestExecution.status === "timeout") return "failed";
+      return "idle";
     };
 
     let result = pipelines;
@@ -65,12 +72,14 @@ export function PipelinesContent() {
     }
 
     if (statusFilter !== "all") {
-      result = result.filter((p) => (statusFilter === "enabled" ? p.enabled : !p.enabled));
+      result = result.filter((p) => getRunStatus(p.id) === statusFilter);
     }
 
     return result.sort((a, b) => {
-      const aFailed = getPipelineFailedStatus(a.id) ? 1 : 0;
-      const bFailed = getPipelineFailedStatus(b.id) ? 1 : 0;
+      const aStatus = getRunStatus(a.id);
+      const bStatus = getRunStatus(b.id);
+      const aFailed = aStatus === "failed" ? 1 : 0;
+      const bFailed = bStatus === "failed" ? 1 : 0;
       if (aFailed !== bFailed) return bFailed - aFailed;
       return new Date(b.last_updated).getTime() - new Date(a.last_updated).getTime();
     });
@@ -80,13 +89,13 @@ export function PipelinesContent() {
     return (
       <div data-testid="pipelines-page" className="stack">
         <div className="flex-between">
-          <Skeleton width={200} height={32} />
-          <Skeleton width={120} height={32} />
+          <div className="skeleton" style={{ width: 200, height: 32 }} />
+          <div className="skeleton" style={{ width: 120, height: 32 }} />
         </div>
-        <Skeleton height={40} />
+        <div className="skeleton" style={{ height: 40 }} />
         <div className="grid-2">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} height={120} />
+            <div key={i} className="skeleton" style={{ height: 120 }} />
           ))}
         </div>
       </div>
@@ -186,6 +195,8 @@ export function PipelinesContent() {
           filters={activeFilterChips}
           onSearchChange={setSearchFilter}
           onFilterRemove={() => setStatusFilter("all")}
+          showingCount={filteredPipelines.length}
+          totalCount={pipelines.length}
           data-testid="pipelines-search-input"
         />
         <SegmentedControl
@@ -193,8 +204,10 @@ export function PipelinesContent() {
           onChange={(v) => setStatusFilter(v as StatusFilter)}
           options={[
             { value: "all", label: COPY.FILTER_ALL },
-            { value: "enabled", label: COPY.FILTER_ENABLED },
-            { value: "disabled", label: COPY.FILTER_DISABLED },
+            { value: "running", label: COPY.FILTER_RUNNING },
+            { value: "success", label: COPY.FILTER_SUCCESS },
+            { value: "idle", label: COPY.FILTER_IDLE },
+            { value: "failed", label: COPY.FILTER_FAILED },
           ]}
           aria-label={COPY.FILTER_PIPELINES_LABEL}
           data-testid="pipeline-status-filter"
