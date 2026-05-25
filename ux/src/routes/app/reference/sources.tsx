@@ -176,7 +176,7 @@ export function SourcesPageContent({ selectedId, onSelectedIdChange }: SourcesPa
         <SchemaPageLayout
           data={filteredData}
           selectedId={selectedId}
-          renderDrawerContent={(source) => (
+          renderInspectorContent={(source) => (
             <ReferenceSourceDrawer
               key={source.name}
               source={source}

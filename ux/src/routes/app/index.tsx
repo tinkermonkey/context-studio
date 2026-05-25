@@ -38,43 +38,12 @@ function mapOperationToEventType(op: string): ActivityEventType {
   }
 }
 
-function mapEntityTypeToKind(entityType: string): string {
-  switch (entityType) {
-    case "taxonomy":
-      return "taxonomy";
-    case "concept_scheme":
-      return "scheme";
-    case "class":
-      return "class";
-    case "individual":
-      return "individual";
-    case "relationship":
-      return "relationship";
-    case "property_definition":
-      return "property";
-    default:
-      return entityType;
-  }
+
+function meaningfulSparkData(data: number[] | undefined): number[] | undefined {
+  if (!data || data.every((v) => v === 0)) return undefined;
+  return data;
 }
 
-function mapEntityTypeToKindLabel(entityType: string): string {
-  switch (entityType) {
-    case "taxonomy":
-      return "Taxonomy";
-    case "concept_scheme":
-      return "Scheme";
-    case "class":
-      return "Class";
-    case "individual":
-      return "Individual";
-    case "relationship":
-      return "Relationship";
-    case "property_definition":
-      return "Property";
-    default:
-      return entityType;
-  }
-}
 
 function EmptyState() {
   return (
@@ -165,14 +134,16 @@ export function Dashboard() {
     !changesError && changesData?.events
       ? changesData.events.slice(0, 8).map((event) => {
           const stateTitle =
-            typeof event.new_state?.title === "string" ? event.new_state.title : event.entity_id;
+            (typeof event.new_state?.title === "string" && event.new_state.title) ||
+            (typeof event.new_state?.name === "string" && event.new_state.name) ||
+            (typeof event.new_state?.label === "string" && event.new_state.label) ||
+            `Unnamed ${event.entity_type.replace(/_/g, " ")}`;
+          const isPipelineExecution = event.entity_type === "pipeline_execution";
           return {
             id: event.id,
-            type: mapOperationToEventType(event.operation),
+            type: isPipelineExecution ? ("run" as ActivityEventType) : mapOperationToEventType(event.operation),
             subject: stateTitle,
             timestamp: event.timestamp,
-            kind: mapEntityTypeToKind(event.entity_type),
-            kindLabel: mapEntityTypeToKindLabel(event.entity_type),
           };
         })
       : [];
@@ -201,28 +172,28 @@ export function Dashboard() {
           value={taxonomiesLoading ? "—" : String(taxonomyCount)}
           color="cyan"
           icon="schema"
-          sparkData={trends?.taxonomies}
+          sparkData={meaningfulSparkData(trends?.taxonomies)}
         />
         <StatTile
           label="Classes"
           value={classesLoading ? "—" : String(classCount)}
           color="violet"
           icon="component"
-          sparkData={trends?.classes}
+          sparkData={meaningfulSparkData(trends?.classes)}
         />
         <StatTile
           label="Individuals"
           value={individualsLoading ? "—" : String(individualCount)}
           color="amber"
           icon="data"
-          sparkData={trends?.individuals}
+          sparkData={meaningfulSparkData(trends?.individuals)}
         />
         <StatTile
           label="Pipelines"
           value={pipelinesLoading ? "—" : String(pipelineCount)}
           color="emerald"
           icon="pipeline"
-          sparkData={trends?.pipelines}
+          sparkData={meaningfulSparkData(trends?.pipelines)}
         />
       </StatGrid>
 

@@ -100,10 +100,10 @@ test.describe("Ontology Management Full CRUD Chain", () => {
     const propertyRows = page.locator('[data-testid^="schema-row-"]');
     const firstPropertyRow = propertyRows.first();
     await firstPropertyRow.click();
-    await expect(page.getByTestId("property-drawer")).toBeVisible();
+    await expect(page.getByTestId("property-inspector")).toBeVisible();
 
     // Verify property drawer appears with expected fields
-    await expect(page.getByTestId("property-drawer")).toBeVisible();
+    await expect(page.getByTestId("property-inspector")).toBeVisible();
     await expect(page.getByTestId("property-drawer-identifier")).toBeVisible();
     await expect(page.getByTestId("property-drawer-title-input")).toBeVisible();
     await expect(page.getByTestId("property-drawer-description-input")).toBeVisible();

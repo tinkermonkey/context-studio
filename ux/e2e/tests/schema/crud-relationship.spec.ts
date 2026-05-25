@@ -153,7 +153,7 @@ test.describe("Relationship CRUD Operations", () => {
     await page.waitForLoadState("networkidle");
 
     // Verify drawer appears
-    const drawer = page.getByTestId("relationship-drawer");
+    const drawer = page.getByTestId("relationship-inspector");
     await expect(drawer).toBeVisible();
 
     // Verify drawer title displays source → target format
@@ -242,11 +242,11 @@ test.describe("Relationship CRUD Operations", () => {
     await relationshipRow.click();
     await page.waitForLoadState("networkidle");
 
-    const drawer = page.getByTestId("relationship-drawer");
+    const drawer = page.getByTestId("relationship-inspector");
     await expect(drawer).toBeVisible();
 
     // Delete relationship with confirmation
-    const deleteButton = page.getByTestId("drawer-delete-button");
+    const deleteButton = page.getByTestId("inspector-delete-button");
     await expect(deleteButton).toBeVisible();
     await deleteButton.click();
     await page.waitForLoadState("networkidle");
@@ -329,11 +329,11 @@ test.describe("Relationship CRUD Operations", () => {
     await relationshipRow.click();
     await page.waitForLoadState("networkidle");
 
-    const drawer = page.getByTestId("relationship-drawer");
+    const drawer = page.getByTestId("relationship-inspector");
     await expect(drawer).toBeVisible();
 
     // Delete relationship
-    const deleteButton = page.getByTestId("drawer-delete-button");
+    const deleteButton = page.getByTestId("inspector-delete-button");
     await expect(deleteButton).toBeVisible();
     await deleteButton.click();
     await page.waitForLoadState("networkidle");
@@ -419,8 +419,8 @@ test.describe("Relationship CRUD Operations", () => {
     await relationshipRow.click();
     await page.waitForLoadState("networkidle");
 
-    const drawer = page.getByTestId("relationship-drawer");
-    const deleteButton = page.getByTestId("drawer-delete-button");
+    const drawer = page.getByTestId("relationship-inspector");
+    const deleteButton = page.getByTestId("inspector-delete-button");
     await deleteButton.click();
     await page.waitForLoadState("networkidle");
 
@@ -457,7 +457,7 @@ test.describe("Relationship CRUD Operations", () => {
     await restoredRow.click();
     await page.waitForLoadState("networkidle");
 
-    const restoredDrawer = page.getByTestId("relationship-drawer");
+    const restoredDrawer = page.getByTestId("relationship-inspector");
     await expect(restoredDrawer).toBeVisible();
 
     const restoredSourceValue = await page

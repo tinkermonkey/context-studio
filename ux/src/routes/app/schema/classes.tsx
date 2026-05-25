@@ -223,7 +223,7 @@ function ClassesPageContent({
         <SchemaPageLayout
           data={filteredData}
           selectedId={selectedId}
-          renderDrawerContent={(cls) => (
+          renderInspectorContent={(cls) => (
             <ClassDrawer
               key={cls.id}
               classData={cls}

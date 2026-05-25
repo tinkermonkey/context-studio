@@ -128,7 +128,7 @@ test.describe("Create Class", () => {
 
     // Verify drawer layout is applied (indicating row is selected)
     await expect(page.getByTestId("schema-page-layout")).toBeVisible();
-    await expect(page.getByTestId("class-drawer")).toBeVisible();
+    await expect(page.getByTestId("class-inspector")).toBeVisible();
   });
 
   test("Drawer Shows Correct Class Details", async ({ page }) => {
@@ -164,7 +164,7 @@ test.describe("Create Class", () => {
     // Wait for modal to close and drawer to appear
     await expect(page.getByTestId("class-create-modal")).not.toBeVisible();
     await page.waitForLoadState("networkidle");
-    await expect(page.getByTestId("class-drawer")).toBeVisible();
+    await expect(page.getByTestId("class-inspector")).toBeVisible();
 
     // Verify drawer contains correct data
     await expect(page.getByTestId("class-drawer-id")).toHaveValue(/cls_/);

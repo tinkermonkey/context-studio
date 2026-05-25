@@ -97,7 +97,7 @@ function FlavorsContent() {
       <SchemaPageLayout
         data={filteredFlavors}
         selectedId={selectedFlavorId}
-        renderDrawerContent={(flavor) =>
+        renderInspectorContent={(flavor) =>
           flavor &&
           selectedFlavor && (
             <FlavorDrawer

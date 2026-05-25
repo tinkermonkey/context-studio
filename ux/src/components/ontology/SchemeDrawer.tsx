@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Drawer } from "@/components/ui/Drawer";
-import { TextInput as Input, TextArea as Textarea, KVGrid } from "@tinkermonkey/heimdall-ui";
+import { Loader, CheckCircle, AlertCircle } from "lucide-react";
+import { InspectorPanel, TextInput as Input, TextArea as Textarea, Button, KVGrid } from "@tinkermonkey/heimdall-ui";
 import { ConfirmDialog } from "@tinkermonkey/heimdall-ui";
 import { useUpdateScheme, useDeleteScheme } from "@/api/hooks/ontology/useSchemes";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
@@ -8,6 +8,7 @@ import { useAutosave } from "@/hooks/useAutosave";
 import { useToasts } from "@/components/ui/Toast";
 import { useUndoDelete } from "@/hooks/useUndoDelete";
 import { schemesCopy } from "@/routes/app/schema/schemes/-copy";
+import { formatTimeAgo } from "@/utils/dateFormatting";
 import type { components } from "@/api/types";
 
 type ConceptSchemeResponse = components["schemas"]["ConceptSchemeResponse"];
@@ -15,10 +16,10 @@ type ConceptSchemeResponse = components["schemas"]["ConceptSchemeResponse"];
 interface SchemeDrawerProps {
   scheme: ConceptSchemeResponse | null;
   taxonomyName: string;
-  onClose: () => void;
+  onClose?: () => void;
 }
 
-export function SchemeDrawer({ scheme, taxonomyName, onClose }: SchemeDrawerProps) {
+export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
   const [title, setTitle] = useState(scheme?.title ?? "");
   const [description, setDescription] = useState(scheme?.description ?? "");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -88,7 +89,6 @@ export function SchemeDrawer({ scheme, taxonomyName, onClose }: SchemeDrawerProp
       },
       autoDismissMs: 8000,
     });
-    onClose();
   };
 
   const handleDeleteClick = () => {
@@ -106,20 +106,38 @@ export function SchemeDrawer({ scheme, taxonomyName, onClose }: SchemeDrawerProp
   const deleteMessage =
     classes.length > 0 ? classCountText + " and cannot be undone." : "This cannot be undone.";
 
+  const inspectorActions = (
+    <>
+      <span data-testid="inspector-autosave-status" style={{ display: "contents" }}>
+        {autosaveState === "saving" && <Loader size={14} className="spin" />}
+        {autosaveState === "saved" && lastSavedAtRef.current && (
+          <span style={{ fontSize: "var(--text-xs)", color: "rgb(var(--canvas-fg-3))" }}>
+            Saved {formatTimeAgo(lastSavedAtRef.current)}
+          </span>
+        )}
+        {autosaveState === "error" && <AlertCircle size={14} style={{ color: "rgb(var(--status-rose))" }} />}
+      </span>
+      {isDirty && (
+        <Button variant="ghost" size="sm" onClick={revert} data-testid="inspector-revert-button">
+          Revert
+        </Button>
+      )}
+      <Button variant="danger" size="sm" onClick={handleDeleteClick} data-testid="inspector-delete-button">
+        Delete
+      </Button>
+    </>
+  );
+
   return (
     <>
-      <Drawer
-        open={!!scheme}
-        onClose={onClose}
+      <InspectorPanel
+        eyebrow="concept scheme"
         title={scheme.title}
-        autosaveState={autosaveState}
-        isDirty={isDirty}
-        lastSavedAt={lastSavedAtRef.current || undefined}
-        onRevert={revert}
-        onDelete={handleDeleteClick}
-        data-testid="scheme-drawer"
+        id={scheme.id}
+        actions={inspectorActions}
+        data-testid="scheme-inspector"
       >
-        <div className="stack-lg">
+        <InspectorPanel.Section title="Details">
           <div>
             <label className="form-group-label">ID</label>
             <Input type="text" value={scheme.id} disabled mono data-testid="scheme-drawer-id" />
@@ -154,14 +172,16 @@ export function SchemeDrawer({ scheme, taxonomyName, onClose }: SchemeDrawerProp
               data-testid="scheme-drawer-parent-taxonomy"
             />
           </div>
+        </InspectorPanel.Section>
 
+        <InspectorPanel.Section title="Metrics">
           <KVGrid
             rows={[
               { key: "Created", value: new Date(scheme.created_at ?? "").toLocaleDateString() },
             ]}
           />
-        </div>
-      </Drawer>
+        </InspectorPanel.Section>
+      </InspectorPanel>
 
       <ConfirmDialog
         isOpen={showDeleteConfirm}

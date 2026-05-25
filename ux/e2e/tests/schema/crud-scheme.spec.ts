@@ -69,7 +69,7 @@ test.describe("Concept Scheme CRUD Operations", () => {
     await schemeRow.click();
 
     // Step 2: Verify drawer opens
-    const drawer = page.getByTestId("scheme-drawer");
+    const drawer = page.getByTestId("scheme-inspector");
     await expect(drawer).toBeVisible();
 
     // Step 3: Verify schema-page-layout is present
@@ -120,7 +120,7 @@ test.describe("Concept Scheme CRUD Operations", () => {
     await page.waitForLoadState("networkidle");
 
     // Step 1: Locate title input
-    const drawer = page.getByTestId("scheme-drawer");
+    const drawer = page.getByTestId("scheme-inspector");
     const titleField = drawer.locator('[data-testid="scheme-drawer-title-input"]');
 
     // Step 2: Clear and type new title
@@ -128,7 +128,7 @@ test.describe("Concept Scheme CRUD Operations", () => {
     await titleField.fill("Updated Test Scheme");
 
     // Step 3: Observe autosave indicator
-    const autosaveStatus = drawer.locator('[data-testid="drawer-autosave-status"]');
+    const autosaveStatus = drawer.locator('[data-testid="inspector-autosave-status"]');
     await expect(autosaveStatus).toBeVisible();
 
     // Step 4: Wait for autosave to complete - indicator should show "saved"
@@ -171,8 +171,8 @@ test.describe("Concept Scheme CRUD Operations", () => {
     await page.waitForLoadState("networkidle");
 
     // Step 2: Locate and click delete button
-    const drawer = page.getByTestId("scheme-drawer");
-    const deleteButton = drawer.locator('[data-testid="drawer-delete-button"]');
+    const drawer = page.getByTestId("scheme-inspector");
+    const deleteButton = drawer.locator('[data-testid="inspector-delete-button"]');
     await expect(deleteButton).toBeVisible();
     await deleteButton.click();
 
@@ -186,7 +186,7 @@ test.describe("Concept Scheme CRUD Operations", () => {
 
     // Step 5: Verify drawer closes and scheme is removed from list
     await page.waitForLoadState("networkidle");
-    await expect(page.getByTestId("scheme-drawer")).not.toBeVisible();
+    await expect(page.getByTestId("scheme-inspector")).not.toBeVisible();
 
     // Verify scheme is no longer in table
     const schemeTable = page.getByTestId("schema-table");
@@ -218,8 +218,8 @@ test.describe("Concept Scheme CRUD Operations", () => {
     await schemeRow.click();
     await page.waitForLoadState("networkidle");
 
-    const drawer = page.getByTestId("scheme-drawer");
-    const deleteButton = drawer.locator('[data-testid="drawer-delete-button"]');
+    const drawer = page.getByTestId("scheme-inspector");
+    const deleteButton = drawer.locator('[data-testid="inspector-delete-button"]');
     await deleteButton.click();
 
     const _confirmDialog = page.getByTestId("scheme-delete-confirm");

@@ -173,9 +173,23 @@ selectors:
   - selector: schema-filter-bar
     component: "@tinkermonkey/heimdall-ui FilterBar"
     description: Filter bar container with search and filter chips (Heimdall component)
-  - selector: schema-drawer-container
+  - selector: schema-inspector-container
     component: components/schema/SchemaPageLayout.tsx
-    description: Drawer container when entity is selected
+    description: Inspector container when entity is selected
+  - selector: schema-drawer-container
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Detail panel container for pipeline views
+
+  # Shared Inspector Actions (present in all InspectorPanel components)
+  - selector: inspector-autosave-status
+    component: components/ontology/*.tsx
+    description: Autosave status indicator in inspector panel actions
+  - selector: inspector-revert-button
+    component: components/ontology/*.tsx
+    description: Revert button in inspector panel actions (visible only when dirty)
+  - selector: inspector-delete-button
+    component: components/ontology/*.tsx
+    description: Delete button in inspector panel actions
 
   # Property Definition Form
   - selector: property-definition-form
@@ -197,10 +211,10 @@ selectors:
     component: components/schema/PropertyDefinitionForm.tsx
     description: Submit button for property form
 
-  # Property Drawer
-  - selector: property-drawer
+  # Property Inspector
+  - selector: property-inspector
     component: components/ontology/PropertyDrawer.tsx
-    description: Drawer for editing property definition details
+    description: Inline inspector panel for editing property definition details
   - selector: property-drawer-identifier
     component: components/ontology/PropertyDrawer.tsx
     description: Read-only identifier field in property drawer
@@ -246,10 +260,10 @@ selectors:
     component: routes/app/schema/properties.tsx
     description: Main content area of properties page
 
-  # Relationship Drawer
-  - selector: relationship-drawer
+  # Relationship Inspector
+  - selector: relationship-inspector
     component: components/ontology/RelationshipDrawer.tsx
-    description: Drawer for viewing relationship details
+    description: Inline inspector panel for viewing relationship details
   - selector: relationship-drawer-id
     component: components/ontology/RelationshipDrawer.tsx
     description: Read-only ID field in relationship drawer
@@ -343,10 +357,10 @@ selectors:
     component: components/schema/RelationshipForm.tsx
     description: Submit button for relationship creation form
 
-  # Taxonomy Drawer
-  - selector: taxonomy-drawer
+  # Taxonomy Inspector
+  - selector: taxonomy-inspector
     component: components/ontology/TaxonomyDrawer.tsx
-    description: Drawer for editing taxonomy details
+    description: Inline inspector panel for editing taxonomy details
   - selector: taxonomy-drawer-id
     component: components/ontology/TaxonomyDrawer.tsx
     description: Read-only ID field in taxonomy drawer
@@ -437,10 +451,10 @@ selectors:
     component: components/schema/SchemeForm.tsx
     description: Submit button for scheme form
 
-  # Concept Schemes Drawer
-  - selector: scheme-drawer
+  # Concept Schemes Inspector
+  - selector: scheme-inspector
     component: components/ontology/SchemeDrawer.tsx
-    description: Drawer for editing concept scheme details
+    description: Inline inspector panel for editing concept scheme details
   - selector: scheme-drawer-id
     component: components/ontology/SchemeDrawer.tsx
     description: Read-only ID field in scheme drawer
@@ -511,10 +525,10 @@ selectors:
     component: routes/app/schema/classes.tsx
     description: Actions menu button for class row
 
-  # Class Drawer
-  - selector: class-drawer
+  # Class Inspector
+  - selector: class-inspector
     component: components/ontology/ClassDrawer.tsx
-    description: Drawer for editing class details
+    description: Inline inspector panel for editing class details
   - selector: class-drawer-id
     component: components/ontology/ClassDrawer.tsx
     description: Read-only ID field in class drawer

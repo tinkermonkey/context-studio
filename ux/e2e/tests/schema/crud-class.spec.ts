@@ -76,7 +76,7 @@ test.describe("Class CRUD Operations", () => {
     await page.locator(`[data-testid="class-name-${testClass.id}"]`).click();
 
     // Step 3: Verify drawer opens
-    await expect(page.getByTestId("class-drawer")).toBeVisible();
+    await expect(page.getByTestId("class-inspector")).toBeVisible();
 
     // Step 5: Verify read-only ID field
     const idField = page.getByTestId("class-drawer-id");
@@ -95,7 +95,7 @@ test.describe("Class CRUD Operations", () => {
     await expect(domainSelect).toBeVisible();
 
     // Step 9: Verify no parent class field (or shows "—")
-    const drawerContainer = page.getByTestId("class-drawer");
+    const drawerContainer = page.getByTestId("class-inspector");
     const _parentDisplay = drawerContainer.locator("text=—");
     // Parent might not be visible if there's no parent, which is expected
   });
@@ -120,7 +120,7 @@ test.describe("Class CRUD Operations", () => {
 
     // Click to open drawer
     await page.locator(`[data-testid="class-name-${testClass.id}"]`).click();
-    await expect(page.getByTestId("class-drawer")).toBeVisible();
+    await expect(page.getByTestId("class-inspector")).toBeVisible();
 
     // Step 1-2: Locate and clear the name input, then type new name
     const nameInput = page.getByTestId("class-drawer-name-input");
@@ -128,7 +128,7 @@ test.describe("Class CRUD Operations", () => {
     await nameInput.fill("Updated Test Class");
 
     // Step 4-5: Verify autosave indicator transitions to "saved"
-    const autosaveStatus = page.getByTestId("drawer-autosave-status");
+    const autosaveStatus = page.getByTestId("inspector-autosave-status");
     await expect(autosaveStatus).toContainText(/Saved|saved/, { timeout: 5000 });
 
     // Step 6: Verify input field value changed
@@ -165,10 +165,10 @@ test.describe("Class CRUD Operations", () => {
 
     // Click to open drawer
     await page.locator(`[data-testid="class-name-${testClass.id}"]`).click();
-    await expect(page.getByTestId("class-drawer")).toBeVisible();
+    await expect(page.getByTestId("class-inspector")).toBeVisible();
 
     // Step 1: Click delete button
-    await page.getByTestId("drawer-delete-button").click();
+    await page.getByTestId("inspector-delete-button").click();
 
     // Step 3: Verify type-to-confirm dialog appears
     await expect(page.getByTestId("type-confirm-dialog")).toBeVisible();
@@ -187,7 +187,7 @@ test.describe("Class CRUD Operations", () => {
     // Step 9: Verify dialog closes and class removed from table
     await page.waitForLoadState("networkidle");
     await expect(page.getByTestId("type-confirm-dialog")).not.toBeVisible();
-    await expect(page.getByTestId("class-drawer")).not.toBeVisible();
+    await expect(page.getByTestId("class-inspector")).not.toBeVisible();
 
     // Verify class no longer in table
     await expect(page.getByTestId("schema-table")).not.toContainText("Updated Test Class");
@@ -215,9 +215,9 @@ test.describe("Class CRUD Operations", () => {
 
     // Delete the class first
     await page.locator(`[data-testid="class-name-${testClass.id}"]`).click();
-    await expect(page.getByTestId("class-drawer")).toBeVisible();
+    await expect(page.getByTestId("class-inspector")).toBeVisible();
 
-    await page.getByTestId("drawer-delete-button").click();
+    await page.getByTestId("inspector-delete-button").click();
     await expect(page.getByTestId("type-confirm-dialog")).toBeVisible();
 
     const confirmInput = page.getByTestId("type-confirm-input");
@@ -284,10 +284,10 @@ test.describe("Class CRUD Operations", () => {
 
     // Click to open drawer
     await page.locator(`[data-testid="class-name-${testClass.id}"]`).click();
-    await expect(page.getByTestId("class-drawer")).toBeVisible();
+    await expect(page.getByTestId("class-inspector")).toBeVisible();
 
     // Step 1: Click delete button
-    await page.getByTestId("drawer-delete-button").click();
+    await page.getByTestId("inspector-delete-button").click();
 
     // Step 3: Verify type-to-confirm dialog appears
     await expect(page.getByTestId("type-confirm-dialog")).toBeVisible();

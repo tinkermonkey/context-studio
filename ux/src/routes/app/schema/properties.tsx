@@ -133,7 +133,7 @@ function PropertiesPageContent({ onCreateClick }: PropertiesPageContentProps) {
       <SchemaPageLayout
         data={filteredData}
         selectedId={selectedId}
-        renderDrawerContent={(prop) => (
+        renderInspectorContent={(prop) => (
           <PropertyDrawer key={prop.id} property={prop} onClose={() => setSelectedId(undefined)} />
         )}
       >

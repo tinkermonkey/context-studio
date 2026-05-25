@@ -238,7 +238,7 @@ function RelationshipsPageContent({
         <SchemaPageLayout
           data={filteredData}
           selectedId={selectedId}
-          renderDrawerContent={(rel) => (
+          renderInspectorContent={(rel) => (
             <RelationshipDrawer
               key={rel.id}
               relationship={rel}

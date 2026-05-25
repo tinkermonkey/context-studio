@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, Fragment } from "react";
-import { ChevronUp, ChevronDown } from "lucide-react";
-import { Drawer } from "@/components/ui/Drawer";
-import { TextInput as Input, TextArea as Textarea, Button, Panel } from "@tinkermonkey/heimdall-ui";
+import { ChevronUp, ChevronDown, Loader, AlertCircle } from "lucide-react";
+import { InspectorPanel, TextInput as Input, TextArea as Textarea, Button, Panel } from "@tinkermonkey/heimdall-ui";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { useAutosave } from "@/hooks/useAutosave";
@@ -18,6 +17,7 @@ import {
 import { useClasses } from "@/api/hooks/ontology";
 import { ApiError } from "@/api/client/interceptors";
 import { individualsCopy } from "@/routes/app/data/individuals/-copy";
+import { formatTimeAgo } from "@/utils/dateFormatting";
 import type { components } from "@/api/types";
 
 type ClassResponse = components["schemas"]["ClassResponse"];
@@ -25,7 +25,7 @@ type DataPropertyValueResponse = components["schemas"]["DataPropertyValueRespons
 
 interface IndividualDrawerProps {
   individualId: string | null;
-  onClose: () => void;
+  onClose?: () => void;
   onSelectIndividual?: (id: string) => void;
 }
 
@@ -128,7 +128,6 @@ function ClassChip({
 
 export function IndividualDrawer({
   individualId,
-  onClose,
   onSelectIndividual,
 }: IndividualDrawerProps) {
   const [title, setTitle] = useState("");
@@ -203,15 +202,6 @@ export function IndividualDrawer({
     },
   });
 
-  const handleClose = () => {
-    // If there are unsaved changes and a save is pending, prevent closing
-    if (isDirty && status !== "idle" && status !== "saved") {
-      toast("warning", individualsCopy.toasts.pendingChanges);
-      return;
-    }
-    onClose();
-  };
-
   useEffect(() => {
     if (individual) {
       setTitle(individual.title);
@@ -233,77 +223,68 @@ export function IndividualDrawer({
     }
   }, [showClassOptions]);
 
-  // Drawer is intentionally closed
   if (!individualId) return null;
 
-  // Handle loading state
+  const autosaveState = status === "idle" ? undefined : (status as "saving" | "saved" | "error");
+
+  // Loading state
   if (isLoadingIndividual) {
     return (
-      <Drawer
-        open={true}
-        onClose={handleClose}
+      <InspectorPanel
+        eyebrow="individual"
         title="Loading..."
-        autosaveState={undefined}
-        isDirty={false}
-        lastSavedAt={undefined}
-        onRevert={() => {}}
+        id=""
         data-testid="individual-detail-page"
       >
-        <div className="stack-lg">
-          <div className="skeleton" style={{ height: 40 }} />
-          <div className="skeleton" style={{ height: 40 }} />
-          <div className="skeleton" style={{ height: 80 }} />
-          <div className="skeleton" style={{ height: 200 }} />
-        </div>
-      </Drawer>
+        <InspectorPanel.Section title="Details">
+          <div className="stack-lg">
+            <div className="skeleton" style={{ height: 40 }} />
+            <div className="skeleton" style={{ height: 40 }} />
+            <div className="skeleton" style={{ height: 80 }} />
+            <div className="skeleton" style={{ height: 200 }} />
+          </div>
+        </InspectorPanel.Section>
+      </InspectorPanel>
     );
   }
 
-  // Handle error state
+  // Error state
   if (individualError) {
     return (
-      <Drawer
-        open={true}
-        onClose={handleClose}
+      <InspectorPanel
+        eyebrow="individual"
         title="Error"
-        autosaveState={undefined}
-        isDirty={false}
-        lastSavedAt={undefined}
-        onRevert={() => {}}
+        id=""
         data-testid="individual-detail-page"
       >
-        <div style={{ padding: "var(--space-3)" }}>
+        <InspectorPanel.Section title="Details">
           <ErrorBanner
             error={individualError}
             onRetry={() => refetchIndividual()}
             message={individualsCopy.errors.failedToLoad}
             compact={true}
           />
-        </div>
-      </Drawer>
+        </InspectorPanel.Section>
+      </InspectorPanel>
     );
   }
 
-  // Handle not-found state
+  // Not-found state
   if (!individual) {
     return (
-      <Drawer
-        open={true}
-        onClose={handleClose}
+      <InspectorPanel
+        eyebrow="individual"
         title={individualsCopy.drawer.notFoundTitle}
-        autosaveState={undefined}
-        isDirty={false}
-        lastSavedAt={undefined}
-        onRevert={() => {}}
+        id=""
         data-testid="individual-detail-page"
       >
-        <div style={{ padding: "var(--space-3)" }}>
+        <InspectorPanel.Section title="Details">
           <EmptyState
             title={individualsCopy.drawer.notFoundTitle}
             description={individualsCopy.drawer.notFoundDescription}
           />
-        </div>
-      </Drawer>
+        </InspectorPanel.Section>
+      </InspectorPanel>
     );
   }
 
@@ -385,21 +366,34 @@ export function IndividualDrawer({
         cls.id.toLowerCase().includes(searchQuery.toLowerCase())),
   );
 
-  const autosaveState = status === "idle" ? undefined : (status as "saving" | "saved" | "error");
+  const inspectorActions = (
+    <>
+      <span data-testid="inspector-autosave-status" style={{ display: "contents" }}>
+        {autosaveState === "saving" && <Loader size={14} className="spin" />}
+        {autosaveState === "saved" && lastSavedAtRef.current && (
+          <span style={{ fontSize: "var(--text-xs)", color: "rgb(var(--canvas-fg-3))" }}>
+            Saved {formatTimeAgo(lastSavedAtRef.current)}
+          </span>
+        )}
+        {autosaveState === "error" && <AlertCircle size={14} style={{ color: "rgb(var(--status-rose))" }} />}
+      </span>
+      {isDirty && (
+        <Button variant="ghost" size="sm" onClick={revert} data-testid="inspector-revert-button">
+          Revert
+        </Button>
+      )}
+    </>
+  );
 
   return (
-    <Drawer
-      open={!!individual}
-      onClose={handleClose}
+    <InspectorPanel
+      eyebrow="individual"
       title={individual.title}
-      autosaveState={autosaveState}
-      isDirty={isDirty}
-      lastSavedAt={lastSavedAtRef.current || undefined}
-      onRevert={revert}
+      id={individual.id}
+      actions={inspectorActions}
       data-testid="individual-detail-page"
     >
-      <div className="stack-lg">
-        {/* Header Section */}
+      <InspectorPanel.Section title="Details">
         <div>
           <label className="form-group-label">{individualsCopy.drawer.idLabel}</label>
           <Input
@@ -430,8 +424,9 @@ export function IndividualDrawer({
             rows={4}
           />
         </div>
+      </InspectorPanel.Section>
 
-        {/* Class Membership Panel */}
+      <InspectorPanel.Section title={individualsCopy.drawer.classMembershipTitle}>
         <Panel
           title={individualsCopy.drawer.classMembershipTitle}
           data-testid="individual-class-list"
@@ -530,8 +525,9 @@ export function IndividualDrawer({
             )}
           </div>
         </Panel>
+      </InspectorPanel.Section>
 
-        {/* Inherited Properties Panel */}
+      <InspectorPanel.Section title={individualsCopy.drawer.inheritedPropertiesTitle}>
         <Panel
           title={individualsCopy.drawer.inheritedPropertiesTitle}
           data-testid="individual-properties-panel"
@@ -616,8 +612,9 @@ export function IndividualDrawer({
             </div>
           )}
         </Panel>
+      </InspectorPanel.Section>
 
-        {/* Related Individuals Panel */}
+      <InspectorPanel.Section title={individualsCopy.drawer.relatedIndividualsTitle}>
         <Panel
           title={individualsCopy.drawer.relatedIndividualsTitle}
           data-testid="related-individuals-panel"
@@ -691,18 +688,7 @@ export function IndividualDrawer({
             </div>
           )}
         </Panel>
-
-        <div style={{ display: "flex", gap: "var(--space-2)" }}>
-          <Button
-            variant="ghost"
-            onClick={handleClose}
-            style={{ flex: 1 }}
-            data-testid="individual-drawer-close-button"
-          >
-            {individualsCopy.drawer.closeButton}
-          </Button>
-        </div>
-      </div>
-    </Drawer>
+      </InspectorPanel.Section>
+    </InspectorPanel>
   );
 }

@@ -207,7 +207,7 @@ export function WorkflowsPageContent({
         <SchemaPageLayout
           data={filteredData}
           selectedId={selectedId}
-          renderDrawerContent={(workflow) => (
+          renderInspectorContent={(workflow) => (
             <GroundingWorkflowDrawer
               key={workflow.id}
               workflowId={workflow.id}

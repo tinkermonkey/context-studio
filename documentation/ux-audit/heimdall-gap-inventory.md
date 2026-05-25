@@ -86,24 +86,26 @@ Screenshot pairs are saved in `/screenshots/audit/`.
 | CR-1 | ✅ 2026-05-25 | `src/components/ui/ConfirmDialog.tsx` | `ConfirmDialog` from Heimdall | Deleted; 6 drawer call sites updated (ClassDrawer, IndividualDrawer, PropertyDrawer, RelationshipDrawer, SchemeDrawer, TaxonomyDrawer); `TypeToConfirmDialog` rewired to use Heimdall `Modal` directly |
 | CR-2 | ✅ 2026-05-25 | `src/components/ui/Skeleton.tsx` | CSS class pattern (`className="skeleton"`) | Deleted; 25 call sites replaced with `<div className="skeleton" style={{...}} />`; `.skeleton` CSS class added to studio.css |
 | CR-3 | ✅ 2026-05-25 | Private `Textarea` in `src/components/versioning/CreateChangesetModal.tsx` | Heimdall `TextArea` | Inline wrapper removed; Heimdall `TextArea` now used directly |
+| CR-4 | ✅ 2026-05-25 | `src/components/ui/Drawer.tsx` | `InspectorPanel` (header/actions) + raw Heimdall `Drawer` (shell) | All 6 entity detail views (Class, Taxonomy, Scheme, Property, Relationship, Individual) migrated to `InspectorPanel` in a split layout. `SchemaPageLayout.renderDrawerContent` renamed to `renderInspectorContent`. Crash caused by browser HTTP cache serving old bundle; resolved by clearing `.vite/deps` and restarting dev server. |
+| CR-5 | ⚠️ not-mappable | `src/components/schema/SchemaTable.tsx` | — | Heimdall `Table` has no `pagination` prop (`TableProps` confirmed) — custom pagination strip is necessary, not a re-implementation |
+| CR-6 | ⚠️ won't-fix | `src/components/schema/SchemaPageLayout.tsx` | `SplitPane` directly | Already uses SplitPane internally; thin wrapper, low-priority simplification |
 
 ---
 
 ## Priority Order
 
-All tracked gaps are resolved. No open items remain.
-
 | ID | Status | Notes |
 |----|--------|-------|
-| S-2 | ⚠️ won't-fix | Heimdall `Sidebar` has no footer prop — confirmed in source: `SidebarProps` has no `footer`/`profile`/`renderFooter` field; `ShellLayoutProps.sidebar` is typed as `SidebarProps & { hide? }` with no additions. Only option would be absolute-positioned overlay or forking the package. |
+| D-5 | open | StatTile sparklines — Category C, only visible with real historical trend data; `meaningfulSparkData()` correctly suppresses all-zero arrays |
+| CR-4 | ✅ 2026-05-25 | `ui/Drawer.tsx` — all 6 entity drawers replaced with `InspectorPanel` in split layout |
+| S-2 | ⚠️ won't-fix | Heimdall `Sidebar` has no footer prop — confirmed in source: `SidebarProps` has no `footer`/`profile`/`renderFooter` field |
 | ST-5 | ⚠️ n/a | Settings page auto-saves inline (no modal); `hintFooter` has nowhere to attach |
 
 ---
 
 ## CSS Cleanup (tracked separately)
 
-Current total: **2,843 lines** across studio.css (1,358), crud.css (875), graph.css (610).
-_(Previous: 2,837 — `.skeleton` class added 6 lines to studio.css in 2026-05-25 iteration.)_
+Current total: **2,843 lines** across studio.css (1,358), crud.css (875), graph.css (610). _(Unchanged — no CSS added/removed in 2026-05-25 iteration 4.)_
 Target: **≤1,200 lines** (retaining tokens, graph-specific, and titlebar CSS only).
 
 Suspect blocks to audit:

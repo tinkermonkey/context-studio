@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Drawer } from "@/components/ui/Drawer";
-import { TextInput as Input, TextArea as Textarea, Select, KVGrid } from "@tinkermonkey/heimdall-ui";
+import { Loader, CheckCircle, AlertCircle } from "lucide-react";
+import { InspectorPanel, TextInput as Input, TextArea as Textarea, Select, KVGrid, Button } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { useUpdateClass, useDeleteClass, useMoveClass } from "@/api/hooks/ontology/useClasses";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
@@ -13,16 +13,17 @@ import { useIndividuals } from "@/api/hooks/ontology/useIndividuals";
 import { useRelationships } from "@/api/hooks/ontology/useRelationships";
 import { ApiError } from "@/api/client/interceptors";
 import { classesCopy } from "@/routes/app/schema/classes/-copy";
+import { formatTimeAgo } from "@/utils/dateFormatting";
 import type { components } from "@/api/types";
 
 type ClassResponse = components["schemas"]["ClassResponse"];
 
 interface ClassDrawerProps {
   classData: ClassResponse | null;
-  onClose: () => void;
+  onClose?: () => void;
 }
 
-export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
+export function ClassDrawer({ classData }: ClassDrawerProps) {
   const [title, setTitle] = useState(classData?.title ?? "");
   const [description, setDescription] = useState(classData?.description ?? "");
   const [domainId, setDomainId] = useState(classData?.concept_scheme_id ?? "");
@@ -127,14 +128,13 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
       },
       autoDismissMs: 8000,
     });
-    onClose();
   };
 
   const handleDeleteClick = () => {
     if (individualCount > 0) {
       setShowDeleteConfirm(true);
     } else {
-      handleDelete();
+      void handleDelete();
     }
   };
 
@@ -153,20 +153,38 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
   );
   const relationshipCount = relationshipsForClass.length;
 
+  const inspectorActions = (
+    <>
+      <span data-testid="inspector-autosave-status" style={{ display: "contents" }}>
+        {autosaveState === "saving" && <Loader size={14} className="spin" />}
+        {autosaveState === "saved" && lastSavedAtRef.current && (
+          <span style={{ fontSize: "var(--text-xs)", color: "rgb(var(--canvas-fg-3))" }}>
+            Saved {formatTimeAgo(lastSavedAtRef.current)}
+          </span>
+        )}
+        {autosaveState === "error" && <AlertCircle size={14} style={{ color: "rgb(var(--status-rose))" }} />}
+      </span>
+      {isDirty && (
+        <Button variant="ghost" size="sm" onClick={revert} data-testid="inspector-revert-button">
+          Revert
+        </Button>
+      )}
+      <Button variant="danger" size="sm" onClick={handleDeleteClick} data-testid="inspector-delete-button">
+        Delete
+      </Button>
+    </>
+  );
+
   return (
     <>
-      <Drawer
-        open={!!classData}
-        onClose={onClose}
+      <InspectorPanel
+        eyebrow="class"
         title={classData.title}
-        autosaveState={autosaveState}
-        isDirty={isDirty}
-        lastSavedAt={lastSavedAtRef.current || undefined}
-        onRevert={revert}
-        onDelete={handleDeleteClick}
-        data-testid="class-drawer"
+        id={classData.id}
+        actions={inspectorActions}
+        data-testid="class-inspector"
       >
-        <div className="stack-lg">
+        <InspectorPanel.Section title="Details">
           {individualsError && (
             <ErrorBanner
               error={individualsError as Error}
@@ -257,7 +275,9 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
               </div>
             )}
           </div>
+        </InspectorPanel.Section>
 
+        <InspectorPanel.Section title="Metrics">
           <KVGrid
             rows={[
               { key: "Properties", value: String(propertyCount) },
@@ -266,8 +286,8 @@ export function ClassDrawer({ classData, onClose }: ClassDrawerProps) {
               { key: "Created", value: new Date(classData.created_at ?? "").toLocaleDateString() },
             ]}
           />
-        </div>
-      </Drawer>
+        </InspectorPanel.Section>
+      </InspectorPanel>
 
       <TypeToConfirmDialog
         open={showDeleteConfirm}

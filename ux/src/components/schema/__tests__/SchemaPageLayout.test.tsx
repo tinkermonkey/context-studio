@@ -25,29 +25,29 @@ describe("SchemaPageLayout", () => {
       expect(screen.getByTestId("schema-page-layout")).toBeInTheDocument();
     });
 
-    it("has schema-drawer-container data-testid when entity is selected", () => {
+    it("has schema-inspector-container data-testid when entity is selected", () => {
       render(
         <SchemaPageLayout
           data={mockData}
           selectedId="1"
-          renderDrawerContent={(entity) => <div>Details for {entity.name}</div>}
+          renderInspectorContent={(entity) => <div>Details for {entity.name}</div>}
         >
           <div>Content</div>
         </SchemaPageLayout>,
       );
-      expect(screen.getByTestId("schema-drawer-container")).toBeInTheDocument();
+      expect(screen.getByTestId("schema-inspector-container")).toBeInTheDocument();
     });
 
     it("does not render drawer container when no entity selected", () => {
       render(
         <SchemaPageLayout
           data={mockData}
-          renderDrawerContent={(entity) => <div>Details for {entity.name}</div>}
+          renderInspectorContent={(entity) => <div>Details for {entity.name}</div>}
         >
           <div>Content</div>
         </SchemaPageLayout>,
       );
-      expect(screen.queryByTestId("schema-drawer-container")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("schema-inspector-container")).not.toBeInTheDocument();
     });
   });
 
@@ -88,7 +88,7 @@ describe("SchemaPageLayout", () => {
         <SchemaPageLayout
           data={mockData}
           selectedId="1"
-          renderDrawerContent={(entity) => <div>Details: {entity.name}</div>}
+          renderInspectorContent={(entity) => <div>Details: {entity.name}</div>}
         >
           <div>Content</div>
         </SchemaPageLayout>,
@@ -100,7 +100,7 @@ describe("SchemaPageLayout", () => {
       render(
         <SchemaPageLayout
           data={mockData}
-          renderDrawerContent={(entity) => <div>Details: {entity.name}</div>}
+          renderInspectorContent={(entity) => <div>Details: {entity.name}</div>}
         >
           <div>Content</div>
         </SchemaPageLayout>,
@@ -108,13 +108,13 @@ describe("SchemaPageLayout", () => {
       expect(screen.queryByText(/Details:/)).not.toBeInTheDocument();
     });
 
-    it("does not render drawer when renderDrawerContent not provided", () => {
+    it("does not render drawer when renderInspectorContent not provided", () => {
       render(
         <SchemaPageLayout data={mockData} selectedId="1">
           <div>Content</div>
         </SchemaPageLayout>,
       );
-      expect(screen.queryByTestId("schema-drawer-container")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("schema-inspector-container")).not.toBeInTheDocument();
     });
 
     it("renders correct drawer content for selected entity", () => {
@@ -122,7 +122,7 @@ describe("SchemaPageLayout", () => {
         <SchemaPageLayout
           data={mockData}
           selectedId="2"
-          renderDrawerContent={(entity) => <div>Editing: {entity.name}</div>}
+          renderInspectorContent={(entity) => <div>Editing: {entity.name}</div>}
         >
           <div>Content</div>
         </SchemaPageLayout>,
@@ -135,7 +135,7 @@ describe("SchemaPageLayout", () => {
         <SchemaPageLayout
           data={mockData}
           selectedId="1"
-          renderDrawerContent={(entity) => <div>{entity.name}</div>}
+          renderInspectorContent={(entity) => <div>{entity.name}</div>}
         >
           <div>Content</div>
         </SchemaPageLayout>,
@@ -147,7 +147,7 @@ describe("SchemaPageLayout", () => {
         <SchemaPageLayout
           data={mockData}
           selectedId="3"
-          renderDrawerContent={(entity) => <div>{entity.name}</div>}
+          renderInspectorContent={(entity) => <div>{entity.name}</div>}
         >
           <div>Content</div>
         </SchemaPageLayout>,
@@ -164,7 +164,7 @@ describe("SchemaPageLayout", () => {
         <SchemaPageLayout
           data={mockData}
           selectedId="2"
-          renderDrawerContent={(entity) => <div>{entity.name}</div>}
+          renderInspectorContent={(entity) => <div>{entity.name}</div>}
         >
           <div>Content</div>
         </SchemaPageLayout>,
@@ -177,12 +177,12 @@ describe("SchemaPageLayout", () => {
         <SchemaPageLayout
           data={mockData}
           selectedId="999"
-          renderDrawerContent={(entity) => <div>{entity.name}</div>}
+          renderInspectorContent={(entity) => <div>{entity.name}</div>}
         >
           <div>Content</div>
         </SchemaPageLayout>,
       );
-      expect(screen.queryByTestId("schema-drawer-container")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("schema-inspector-container")).not.toBeInTheDocument();
     });
   });
 
@@ -192,14 +192,14 @@ describe("SchemaPageLayout", () => {
         <SchemaPageLayout
           data={mockData}
           selectedId="1"
-          renderDrawerContent={(entity) => <div>Entity: {entity.name}</div>}
+          renderInspectorContent={(entity) => <div>Entity: {entity.name}</div>}
         >
           <div>Main content area</div>
         </SchemaPageLayout>,
       );
       expect(screen.getByTestId("schema-page-layout")).toBeInTheDocument();
       expect(screen.getByText("Main content area")).toBeInTheDocument();
-      expect(screen.getByTestId("schema-drawer-container")).toBeInTheDocument();
+      expect(screen.getByTestId("schema-inspector-container")).toBeInTheDocument();
       expect(screen.getByText("Entity: Entity 1")).toBeInTheDocument();
     });
 
@@ -207,14 +207,14 @@ describe("SchemaPageLayout", () => {
       render(
         <SchemaPageLayout
           data={mockData}
-          renderDrawerContent={(entity) => <div>Entity: {entity.name}</div>}
+          renderInspectorContent={(entity) => <div>Entity: {entity.name}</div>}
         >
           <div>Main content area</div>
         </SchemaPageLayout>,
       );
       expect(screen.getByTestId("schema-page-layout")).toBeInTheDocument();
       expect(screen.getByText("Main content area")).toBeInTheDocument();
-      expect(screen.queryByTestId("schema-drawer-container")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("schema-inspector-container")).not.toBeInTheDocument();
     });
   });
 });

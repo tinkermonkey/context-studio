@@ -187,7 +187,7 @@ function SchemesPageContent({
         <SchemaPageLayout
           data={filteredData}
           selectedId={selectedId}
-          renderDrawerContent={(scheme) => (
+          renderInspectorContent={(scheme) => (
             <SchemeDrawer
               key={scheme.id}
               scheme={scheme}

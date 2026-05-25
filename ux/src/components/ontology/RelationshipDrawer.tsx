@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Drawer } from "@/components/ui/Drawer";
-import { TextInput as Input, KVGrid } from "@tinkermonkey/heimdall-ui";
+import { InspectorPanel, TextInput as Input, Button, KVGrid } from "@tinkermonkey/heimdall-ui";
 import { ConfirmDialog } from "@tinkermonkey/heimdall-ui";
 import { useDeleteRelationship } from "@/api/hooks/ontology/useRelationships";
 import { useToasts } from "@/components/ui/Toast";
@@ -16,7 +15,7 @@ interface RelationshipDrawerProps {
   sourceName: string;
   targetName: string;
   propertyName: string;
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 export function RelationshipDrawer({
@@ -24,7 +23,6 @@ export function RelationshipDrawer({
   sourceName,
   targetName,
   propertyName,
-  onClose,
 }: RelationshipDrawerProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { toast } = useToasts();
@@ -48,7 +46,6 @@ export function RelationshipDrawer({
         },
         autoDismissMs: 8000,
       });
-      onClose();
     } catch (error) {
       const message = error instanceof ApiError ? error.detail : "Failed to delete relationship";
       toast("error", message);
@@ -61,17 +58,22 @@ export function RelationshipDrawer({
 
   if (!relationship) return null;
 
+  const inspectorActions = (
+    <Button variant="danger" size="sm" onClick={handleDeleteClick} data-testid="inspector-delete-button">
+      Delete
+    </Button>
+  );
+
   return (
     <>
-      <Drawer
-        open={!!relationship}
-        onClose={onClose}
+      <InspectorPanel
+        eyebrow="relationship"
         title={`${sourceName} → ${targetName}`}
-        isDirty={false}
-        onDelete={handleDeleteClick}
-        data-testid="relationship-drawer"
+        id={relationship.id}
+        actions={inspectorActions}
+        data-testid="relationship-inspector"
       >
-        <div className="stack-lg">
+        <InspectorPanel.Section title="Details">
           <div>
             <label className="form-group-label">ID</label>
             <Input
@@ -112,14 +114,16 @@ export function RelationshipDrawer({
               data-testid="relationship-drawer-property-type"
             />
           </div>
+        </InspectorPanel.Section>
 
+        <InspectorPanel.Section title="Metrics">
           <KVGrid
             rows={[
               { key: "Created", value: new Date(relationship.created_at ?? "").toLocaleDateString() },
             ]}
           />
-        </div>
-      </Drawer>
+        </InspectorPanel.Section>
+      </InspectorPanel>
 
       <ConfirmDialog
         isOpen={showDeleteConfirm}

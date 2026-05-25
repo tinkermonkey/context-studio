@@ -1,22 +1,23 @@
 import { useState, useEffect, useRef } from "react";
-import { Drawer } from "@/components/ui/Drawer";
-import { TextInput as Input, TextArea as Textarea, KVGrid } from "@tinkermonkey/heimdall-ui";
+import { Loader, CheckCircle, AlertCircle } from "lucide-react";
+import { InspectorPanel, TextInput as Input, TextArea as Textarea, Button, KVGrid } from "@tinkermonkey/heimdall-ui";
 import { ConfirmDialog } from "@tinkermonkey/heimdall-ui";
 import { useUpdateProperty, useDeleteProperty } from "@/api/hooks/ontology/useProperties";
 import { useAutosave } from "@/hooks/useAutosave";
 import { useToasts } from "@/components/ui/Toast";
 import { useUndoDelete } from "@/hooks/useUndoDelete";
 import { propertiesCopy } from "@/routes/app/schema/properties/-copy";
+import { formatTimeAgo } from "@/utils/dateFormatting";
 import type { components } from "@/api/types";
 
 type PropertyDefinitionResponse = components["schemas"]["PropertyDefinitionResponse"];
 
 interface PropertyDrawerProps {
   property: PropertyDefinitionResponse | null;
-  onClose: () => void;
+  onClose?: () => void;
 }
 
-export function PropertyDrawer({ property, onClose }: PropertyDrawerProps) {
+export function PropertyDrawer({ property }: PropertyDrawerProps) {
   const [title, setTitle] = useState(property?.title ?? "");
   const [description, setDescription] = useState(property?.description ?? "");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -81,7 +82,6 @@ export function PropertyDrawer({ property, onClose }: PropertyDrawerProps) {
       },
       autoDismissMs: 8000,
     });
-    onClose();
   };
 
   const handleDeleteClick = () => {
@@ -92,20 +92,38 @@ export function PropertyDrawer({ property, onClose }: PropertyDrawerProps) {
 
   const autosaveState = status === "idle" ? undefined : (status as "saving" | "saved" | "error");
 
+  const inspectorActions = (
+    <>
+      <span data-testid="inspector-autosave-status" style={{ display: "contents" }}>
+        {autosaveState === "saving" && <Loader size={14} className="spin" />}
+        {autosaveState === "saved" && lastSavedAtRef.current && (
+          <span style={{ fontSize: "var(--text-xs)", color: "rgb(var(--canvas-fg-3))" }}>
+            Saved {formatTimeAgo(lastSavedAtRef.current)}
+          </span>
+        )}
+        {autosaveState === "error" && <AlertCircle size={14} style={{ color: "rgb(var(--status-rose))" }} />}
+      </span>
+      {isDirty && (
+        <Button variant="ghost" size="sm" onClick={revert} data-testid="inspector-revert-button">
+          Revert
+        </Button>
+      )}
+      <Button variant="danger" size="sm" onClick={handleDeleteClick} data-testid="inspector-delete-button">
+        Delete
+      </Button>
+    </>
+  );
+
   return (
     <>
-      <Drawer
-        open={!!property}
-        onClose={onClose}
+      <InspectorPanel
+        eyebrow="property"
         title={property.title}
-        autosaveState={autosaveState}
-        isDirty={isDirty}
-        lastSavedAt={lastSavedAtRef.current || undefined}
-        onRevert={revert}
-        onDelete={handleDeleteClick}
-        data-testid="property-drawer"
+        id={property.id}
+        actions={inspectorActions}
+        data-testid="property-inspector"
       >
-        <div className="stack-lg">
+        <InspectorPanel.Section title="Details">
           <div>
             <label className="form-group-label">Identifier</label>
             <Input
@@ -136,14 +154,16 @@ export function PropertyDrawer({ property, onClose }: PropertyDrawerProps) {
               rows={4}
             />
           </div>
+        </InspectorPanel.Section>
 
+        <InspectorPanel.Section title="Metrics">
           <KVGrid
             rows={[
               { key: "Created", value: new Date(property.created_at ?? "").toLocaleDateString() },
             ]}
           />
-        </div>
-      </Drawer>
+        </InspectorPanel.Section>
+      </InspectorPanel>
 
       <ConfirmDialog
         isOpen={showDeleteConfirm}

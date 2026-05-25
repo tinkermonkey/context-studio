@@ -66,7 +66,7 @@ test.describe("Taxonomy CRUD Operations", () => {
     await tableRow.click();
 
     // Verify drawer opens
-    await expect(page.getByTestId("taxonomy-drawer")).toBeVisible();
+    await expect(page.getByTestId("taxonomy-inspector")).toBeVisible();
 
     // Verify read-only ID field is visible
     await expect(page.getByTestId("taxonomy-drawer-id")).toBeVisible();
@@ -107,7 +107,7 @@ test.describe("Taxonomy CRUD Operations", () => {
       .filter({ hasText: "E2E Test Taxonomy Create" })
       .first();
     await tableRow.click();
-    await expect(page.getByTestId("taxonomy-drawer")).toBeVisible();
+    await expect(page.getByTestId("taxonomy-inspector")).toBeVisible();
 
     // Test Case 3: Edit the title field and verify autosave
     const titleInput = page.getByTestId("taxonomy-drawer-title-input");
@@ -117,7 +117,7 @@ test.describe("Taxonomy CRUD Operations", () => {
     await titleInput.fill("E2E Test Taxonomy Updated");
 
     // Wait for autosave indicator to appear
-    const autosaveStatus = page.getByTestId("drawer-autosave-status");
+    const autosaveStatus = page.getByTestId("inspector-autosave-status");
     await expect(autosaveStatus).toBeVisible({ timeout: 5000 });
 
     // Wait for autosave to complete (indicator shows saved state or disappears)
@@ -153,10 +153,10 @@ test.describe("Taxonomy CRUD Operations", () => {
       .filter({ hasText: "E2E Test Taxonomy Create" })
       .first();
     await tableRow.click();
-    await expect(page.getByTestId("taxonomy-drawer")).toBeVisible();
+    await expect(page.getByTestId("taxonomy-inspector")).toBeVisible();
 
     // Test Case 4: Delete via drawer delete button
-    const deleteButton = page.getByTestId("drawer-delete-button");
+    const deleteButton = page.getByTestId("inspector-delete-button");
     await deleteButton.click();
 
     // Verify confirmation dialog appears
@@ -171,7 +171,7 @@ test.describe("Taxonomy CRUD Operations", () => {
     await expect(confirmDialog).not.toBeVisible();
 
     // Wait for drawer to close
-    await expect(page.getByTestId("taxonomy-drawer")).not.toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId("taxonomy-inspector")).not.toBeVisible({ timeout: 5000 });
 
     // Verify taxonomy no longer appears in the table
     const table = page.getByTestId("schema-table");

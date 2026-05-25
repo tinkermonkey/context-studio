@@ -42,7 +42,7 @@ test.describe("Promote a draft taxonomy", () => {
     await page.waitForLoadState("networkidle");
 
     // Step 2: Drawer opens on the right showing taxonomy details
-    const drawer = page.getByTestId("taxonomy-drawer");
+    const drawer = page.getByTestId("taxonomy-inspector");
     await expect(drawer).toBeVisible();
 
     // Step 3: Verify the drawer displays the status chip showing "draft"
@@ -111,7 +111,7 @@ test.describe("Promote a draft taxonomy", () => {
     await page.waitForLoadState("networkidle");
 
     // Verify drawer is open and shows draft status
-    const drawer = page.getByTestId("taxonomy-drawer");
+    const drawer = page.getByTestId("taxonomy-inspector");
     await expect(drawer).toBeVisible();
     await expect(drawer).toContainText("draft");
 
@@ -163,7 +163,7 @@ test.describe("Promote a draft taxonomy", () => {
     await page.waitForLoadState("networkidle");
 
     // Step 2: Drawer opens showing taxonomy with no classes listed
-    const drawer = page.getByTestId("taxonomy-drawer");
+    const drawer = page.getByTestId("taxonomy-inspector");
     await expect(drawer).toBeVisible();
 
     // Step 3: Click the "Publish…" button

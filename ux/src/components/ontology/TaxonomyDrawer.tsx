@@ -1,7 +1,6 @@
-import { TextInput as Input, TextArea as Textarea, Button, KVGrid, VersionPill } from "@tinkermonkey/heimdall-ui";
 import { useState, useEffect, useRef } from "react";
-import { Drawer } from "@/components/ui/Drawer";
-
+import { Loader, CheckCircle, AlertCircle } from "lucide-react";
+import { InspectorPanel, TextInput as Input, TextArea as Textarea, Button, KVGrid, VersionPill } from "@tinkermonkey/heimdall-ui";
 import { ConfirmDialog } from "@tinkermonkey/heimdall-ui";
 import { useUpdateTaxonomy, useDeleteTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
 import { useAutosave } from "@/hooks/useAutosave";
@@ -9,16 +8,17 @@ import { useToasts } from "@/components/ui/Toast";
 import { useUndoDelete } from "@/hooks/useUndoDelete";
 import { taxonomiesCopy } from "@/routes/app/schema/taxonomies/-copy";
 import { TaxonomyPublishDialog } from "./TaxonomyPublishDialog";
+import { formatTimeAgo } from "@/utils/dateFormatting";
 import type { components } from "@/api/types";
 
 type TaxonomyResponse = components["schemas"]["TaxonomyResponse"];
 
 interface TaxonomyDrawerProps {
   taxonomy: TaxonomyResponse | null;
-  onClose: () => void;
+  onClose?: () => void;
 }
 
-export function TaxonomyDrawer({ taxonomy, onClose }: TaxonomyDrawerProps) {
+export function TaxonomyDrawer({ taxonomy }: TaxonomyDrawerProps) {
   const [title, setTitle] = useState(taxonomy?.title ?? "");
   const [description, setDescription] = useState(taxonomy?.description ?? "");
   const [showPublishDialog, setShowPublishDialog] = useState(false);
@@ -84,7 +84,6 @@ export function TaxonomyDrawer({ taxonomy, onClose }: TaxonomyDrawerProps) {
       },
       autoDismissMs: 8000,
     });
-    onClose();
   };
 
   const handleDeleteClick = () => {
@@ -95,31 +94,48 @@ export function TaxonomyDrawer({ taxonomy, onClose }: TaxonomyDrawerProps) {
 
   const autosaveState = status === "idle" ? undefined : (status as "saving" | "saved" | "error");
 
+  const inspectorActions = (
+    <>
+      {taxonomy.status === "draft" && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowPublishDialog(true)}
+          data-testid="taxonomy-drawer-publish-button"
+        >
+          Publish…
+        </Button>
+      )}
+      <span data-testid="inspector-autosave-status" style={{ display: "contents" }}>
+        {autosaveState === "saving" && <Loader size={14} className="spin" />}
+        {autosaveState === "saved" && lastSavedAtRef.current && (
+          <span style={{ fontSize: "var(--text-xs)", color: "rgb(var(--canvas-fg-3))" }}>
+            Saved {formatTimeAgo(lastSavedAtRef.current)}
+          </span>
+        )}
+        {autosaveState === "error" && <AlertCircle size={14} style={{ color: "rgb(var(--status-rose))" }} />}
+      </span>
+      {isDirty && (
+        <Button variant="ghost" size="sm" onClick={revert} data-testid="inspector-revert-button">
+          Revert
+        </Button>
+      )}
+      <Button variant="danger" size="sm" onClick={handleDeleteClick} data-testid="inspector-delete-button">
+        Delete
+      </Button>
+    </>
+  );
+
   return (
     <>
-      <Drawer
-        open={!!taxonomy}
-        onClose={onClose}
+      <InspectorPanel
+        eyebrow="taxonomy"
         title={taxonomy.title}
-        autosaveState={autosaveState}
-        isDirty={isDirty}
-        lastSavedAt={lastSavedAtRef.current || undefined}
-        onRevert={revert}
-        onDelete={handleDeleteClick}
-        headerAction={
-          taxonomy.status === "draft" && (
-            <Button
-              variant="ghost"
-              onClick={() => setShowPublishDialog(true)}
-              data-testid="taxonomy-drawer-publish-button"
-            >
-              Publish…
-            </Button>
-          )
-        }
-        data-testid="taxonomy-drawer"
+        id={taxonomy.id}
+        actions={inspectorActions}
+        data-testid="taxonomy-inspector"
       >
-        <div className="stack-lg">
+        <InspectorPanel.Section title="Details">
           <div>
             <label className="form-group-label">ID</label>
             <Input type="text" value={taxonomy.id} disabled mono data-testid="taxonomy-drawer-id" />
@@ -144,7 +160,9 @@ export function TaxonomyDrawer({ taxonomy, onClose }: TaxonomyDrawerProps) {
               rows={4}
             />
           </div>
+        </InspectorPanel.Section>
 
+        <InspectorPanel.Section title="Metrics">
           <KVGrid
             rows={[
               { key: "Status", value: taxonomy.status },
@@ -152,8 +170,8 @@ export function TaxonomyDrawer({ taxonomy, onClose }: TaxonomyDrawerProps) {
               { key: "Created", value: new Date(taxonomy.created_at ?? "").toLocaleDateString() },
             ]}
           />
-        </div>
-      </Drawer>
+        </InspectorPanel.Section>
+      </InspectorPanel>
 
       <TaxonomyPublishDialog
         open={showPublishDialog}

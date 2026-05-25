@@ -89,7 +89,7 @@ test.describe("Property CRUD Operations", () => {
     await expect(drawer).toBeVisible();
 
     // Verify the drawer displays the property details
-    const propertyDrawer = page.getByTestId("property-drawer");
+    const propertyDrawer = page.getByTestId("property-inspector");
     await expect(propertyDrawer).toBeVisible();
 
     // Verify the identifier field is read-only and displays correct value
@@ -143,7 +143,7 @@ test.describe("Property CRUD Operations", () => {
     await titleInput.fill("Test Property CRUD - Updated");
 
     // Verify the autosave status indicator becomes visible
-    const autosaveStatus = page.getByTestId("drawer-autosave-status");
+    const autosaveStatus = page.getByTestId("inspector-autosave-status");
     await expect(autosaveStatus).toBeVisible({ timeout: 5000 });
 
     // Wait for autosave to complete (status indicator shows success or clears)
@@ -184,7 +184,7 @@ test.describe("Property CRUD Operations", () => {
     await expect(drawer).toBeVisible();
 
     // Locate and click the delete button
-    const deleteButton = page.getByTestId("drawer-delete-button");
+    const deleteButton = page.getByTestId("inspector-delete-button");
     await expect(deleteButton).toBeVisible();
     await deleteButton.click();
 
@@ -230,7 +230,7 @@ test.describe("Property CRUD Operations", () => {
     await expect(drawer).toBeVisible();
 
     // Click delete button
-    const deleteButton = page.getByTestId("drawer-delete-button");
+    const deleteButton = page.getByTestId("inspector-delete-button");
     await expect(deleteButton).toBeVisible();
     await deleteButton.click();
 
@@ -263,7 +263,7 @@ test.describe("Property CRUD Operations", () => {
     await page.waitForLoadState("networkidle");
 
     // Verify drawer opens with original data intact
-    const propertyDrawer = page.getByTestId("property-drawer");
+    const propertyDrawer = page.getByTestId("property-inspector");
     await expect(propertyDrawer).toBeVisible();
 
     const titleField = page.getByTestId("property-drawer-title-input");
@@ -317,7 +317,7 @@ test.describe("Property CRUD Operations", () => {
     await expect(drawer).toBeVisible();
 
     // Click delete button
-    const deleteButton = page.getByTestId("drawer-delete-button");
+    const deleteButton = page.getByTestId("inspector-delete-button");
     await expect(deleteButton).toBeVisible();
     await deleteButton.click();
 

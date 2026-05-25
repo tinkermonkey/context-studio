@@ -234,7 +234,7 @@ function IndividualsPageContent({
         <SchemaPageLayout
           data={filteredData}
           selectedId={selectedId}
-          renderDrawerContent={(individual) => (
+          renderInspectorContent={(individual) => (
             <IndividualDrawer
               key={individual.id}
               individualId={individual.id}

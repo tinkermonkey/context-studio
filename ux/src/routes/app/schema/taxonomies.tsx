@@ -165,7 +165,7 @@ function TaxonomiesPageContent({
         <SchemaPageLayout
           data={filteredData}
           selectedId={selectedId}
-          renderDrawerContent={(tax) => (
+          renderInspectorContent={(tax) => (
             <TaxonomyDrawer
               key={tax.id}
               taxonomy={tax}

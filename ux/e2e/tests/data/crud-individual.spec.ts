@@ -141,7 +141,7 @@ test.describe("Individual CRUD Operations", () => {
     await titleInput.fill("Updated Test Individual");
 
     // Verify autosave status shows "saving" then "saved"
-    const autosaveStatus = page.getByTestId("drawer-autosave-status");
+    const autosaveStatus = page.getByTestId("inspector-autosave-status");
     await expect(autosaveStatus).toBeVisible();
 
     // Wait for autosave to complete (should show "saved" state)
