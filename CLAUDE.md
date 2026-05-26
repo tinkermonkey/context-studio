@@ -341,6 +341,24 @@ This applies to all shell and canvas tokens (`--shell-bg`, `--canvas-fg-*`, `--c
 
 Heimdall's native `--accent-primary` is **amber** (`#fbbf24`). The app's cyan palette is exposed via `--status-cyan` and aliased as `--accent-cyan` in `app-overrides.css`. Do not assume `--accent-primary` is cyan — use the explicit alias when you want cyan.
 
+#### Heimdall Component Skills
+
+Before using any `@tinkermonkey/heimdall-ui` component, read the relevant skill file from `.claude/skills/heimdall/`. Each skill covers props, usage examples, and gotchas for a component group:
+
+| Skill file | Components covered |
+|---|---|
+| `.claude/skills/heimdall/heimdall-shell/SKILL.md` | AppTitle, Titlebar, Statusbar, ShellLayout |
+| `.claude/skills/heimdall/heimdall-primitives/SKILL.md` | Icon, Button, Chip, Badge, StatusBadge, VersionPill, SegmentedControl |
+| `.claude/skills/heimdall/heimdall-navigation/SKILL.md` | NavItem, Sidebar, Topbar, TabBar |
+| `.claude/skills/heimdall/heimdall-layout/SKILL.md` | Panel, SplitPane |
+| `.claude/skills/heimdall/heimdall-inputs/SKILL.md` | TextInput, TextArea, NumberInput, Select, TriState, Field, FilterDropdown, EntityPicker, KeyValueEditor, OrderedList, RelationshipBuilder |
+| `.claude/skills/heimdall/heimdall-overlays/SKILL.md` | Modal, ConfirmDialog, Toast, CommandPalette, WorkspaceSwitcherDialog, Drawer |
+| `.claude/skills/heimdall/heimdall-data-display/SKILL.md` | StatTile, StatGrid, Table, KVGrid, InspectorPanel |
+| `.claude/skills/heimdall/heimdall-page-patterns/SKILL.md` | PageHeader, FilterBar, ActivityTimeline, AlertStrip, QuickAccessGrid, QuickAccessTile, ConfigTile, PipelineCard, FormCallout, RowMenu |
+| `.claude/skills/heimdall/heimdall-charts/SKILL.md` | Sparkline, LineChart, BarChart, BarV, BarH, StackedBar, Donut, PieChart, Heatmap, StatusTimeline, ProgressBar, MetricRow |
+| `.claude/skills/heimdall/heimdall-graph/SKILL.md` | GraphCanvas, GraphNode, GraphEdge, GraphInspector, TopologyNode, HierarchyRow, HierarchyTree |
+| `.claude/skills/heimdall/heimdall-chat/SKILL.md` | ChatMessage, ToolBlock, ThinkingBlock, ChatDivider, ChatSuggestions, ChatComposer, ChatContainer |
+
 ### API Client Architecture
 
 - Prefer type-safe clients generated from OpenAPI specs
