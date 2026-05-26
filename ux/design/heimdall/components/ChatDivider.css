@@ -1,0 +1,22 @@
+.chat-divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.chat-divider__line {
+  flex: 1;
+  height: 1px;
+  background: rgb(var(--canvas-border, 30, 42, 68));
+}
+
+.chat-divider__label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgb(var(--canvas-fg-4, 107, 114, 128));
+  white-space: nowrap;
+  flex: 0 0 auto;
+}

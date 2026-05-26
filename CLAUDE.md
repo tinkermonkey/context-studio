@@ -307,7 +307,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 - Write clean, readable, and maintainable code
 - When API signatures change, run `npm run generate-types` to regenerate API types, then update hooks and services
-- **CSS design reference**: `ux/design/styles/` is the source of truth for the design system. When porting CSS, verify `body.dark-canvas` rule counts match between the reference and `src/design-system/studio.css` — this is the most common source of drift.
+- **UX design reference**: `ux/design/Context Studio.html` is the authoritative prototype — open in a browser and compare before implementing any page. The source is in `ux/design/cs/pages.jsx` (pages) and `ux/design/cs/app.jsx` (shell). Every JSX tag maps 1:1 to a `@tinkermonkey/heimdall-ui` import. Run `/context-studio-ux` for the full guide.
 
 ### CSS Architecture
 
@@ -449,6 +449,7 @@ Task(subagent_type="playwright-test-healer",    prompt="Diagnose failing test in
 
 | Skill | What it does |
 |---|---|
+| `/context-studio-ux` | **Start here for any UX work.** Covers the Heimdall design system, the reference design prototype (`ux/design/`), the page→component map, CSS layer architecture, and customization rules. Read before touching any frontend code. |
 | `/frontend-visual-qa` | Visual QA for a completed frontend page or component: screenshots in both canvas modes, layout composition check, form validation timing, test assertion audit. Run after any new page, drawer, or form. |
 | `/context-studio-design` | Generate well-branded UI assets or production components for Context Studio. Contains design tokens, CSS, icons, and visual reference cards. Use when designing new screens or prototypes. |
 | `/context-studio-test` | Run test suites — backend (pytest), frontend unit (vitest), E2E (playwright). Accepts `backend`, `unit`, `integration`, `frontend`, `e2e`, `smoke`, `validate`, `all`. |

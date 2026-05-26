@@ -1,0 +1,106 @@
+.config-tile {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  background-color: rgb(var(--canvas-card));
+  border: 1px solid rgb(var(--canvas-border));
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 80ms ease-out;
+  outline: none;
+  text-align: left;
+}
+
+.config-tile:hover {
+  background-color: rgb(var(--canvas-bg-2));
+  border-color: rgb(var(--accent-primary));
+}
+
+.config-tile:focus-visible {
+  box-shadow: var(--focus-ring);
+  border-color: rgb(var(--accent-primary));
+}
+
+.config-tile:active {
+  background-color: rgb(var(--canvas-bg));
+}
+
+.config-tile__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background-color: rgb(var(--canvas-bg-2));
+  color: rgb(var(--canvas-fg-1));
+  transition: background-color 80ms ease-out;
+  margin-top: 2px;
+}
+
+.config-tile:hover .config-tile__icon {
+  background-color: rgb(var(--accent-primary-hover));
+  color: white;
+}
+
+.config-tile--disabled,
+.config-tile:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.config-tile__content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.config-tile__title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: rgb(var(--canvas-fg-1));
+}
+
+.config-tile__description {
+  font-size: 11px;
+  color: rgb(var(--canvas-fg-3));
+  line-height: 1.3;
+}
+
+.config-tile__summary {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgb(var(--canvas-border));
+}
+
+.config-tile__summary-key {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: rgb(var(--canvas-fg-3));
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.config-tile__summary-value {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  color: rgb(var(--canvas-fg-1));
+  word-break: break-word;
+}
+
+.config-tile__chevron {
+  flex-shrink: 0;
+  color: rgb(var(--canvas-fg-3));
+  align-self: center;
+  margin-left: auto;
+}

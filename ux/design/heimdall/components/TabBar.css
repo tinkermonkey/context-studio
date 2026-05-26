@@ -1,0 +1,62 @@
+.tab-bar {
+  display: flex;
+  flex-direction: column;
+  background: rgb(var(--canvas-card));
+  border-bottom: 1px solid rgb(var(--canvas-border));
+}
+
+.tab-bar__tabs {
+  display: flex;
+  gap: 18px;
+}
+
+.tab-bar__tab {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 0;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: rgb(var(--canvas-fg-2));
+  font-size: 13px;
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all 80ms ease-out;
+  position: relative;
+}
+
+.tab-bar__tab:hover:not(.tab-bar__tab--disabled) {
+  color: rgb(var(--canvas-fg-1));
+  background: rgb(var(--canvas-bg-2));
+}
+
+.tab-bar__tab:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+  border-radius: 4px;
+}
+
+.tab-bar__tab--disabled {
+  color: rgb(var(--canvas-fg-3));
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.tab-bar__tab--active {
+  color: rgb(var(--canvas-fg-1));
+  border-bottom-color: rgb(var(--accent-primary));
+}
+
+.tab-bar__tab-label {
+  white-space: nowrap;
+}
+
+.tab-bar__tab--active .chip--id-tag {
+  color: rgb(var(--accent-primary));
+  background-color: rgb(var(--accent-primary) / 0.1);
+  border-color: rgb(var(--accent-primary) / 0.25);
+}

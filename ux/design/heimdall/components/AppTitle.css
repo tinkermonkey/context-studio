@@ -1,0 +1,72 @@
+.app-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: rgb(var(--shell-bg-2));
+  border-bottom: 1px solid rgb(var(--shell-border));
+  border-right: 1px solid rgb(var(--shell-border));
+  flex-shrink: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  position: relative;
+}
+
+.app-title__mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgb(var(--accent-primary)) 0%, rgb(var(--accent-primary-deep)) 100%);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.app-title__mark::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1.5px solid rgba(11, 15, 20, 0.7);
+  border-radius: 3px;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(11, 15, 20, 0.8) 1.5px, transparent 2px),
+    radial-gradient(circle at 70% 70%, rgba(11, 15, 20, 0.8) 1.5px, transparent 2px),
+    radial-gradient(circle at 70% 30%, rgba(11, 15, 20, 0.8) 1.5px, transparent 2px);
+}
+
+.app-title__text {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.app-title__name {
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  color: rgb(var(--shell-fg-1));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-title__version {
+  display: block;
+  font-size: 10px;
+  color: rgb(var(--shell-fg-3));
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-top: 1px;
+  font-family: var(--font-mono);
+}
+
+.app-title--collapsed .app-title__text {
+  display: none;
+}
+
+.app-title--collapsed {
+  justify-content: center;
+  padding: 14px 0;
+}

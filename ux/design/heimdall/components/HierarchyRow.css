@@ -1,0 +1,115 @@
+.hierarchy-row {
+  display: grid;
+  grid-template-columns: 220px 2.2fr;
+  gap: 18px;
+  padding: 7px 0;
+  align-items: center;
+  transition: background-color 150ms ease;
+  border-radius: var(--radius-sm);
+  outline: none;
+}
+
+.hierarchy-row.interactive {
+  cursor: pointer;
+}
+
+.hierarchy-row:focus-visible {
+  box-shadow: var(--focus-ring);
+  outline: none;
+}
+
+.hierarchy-row:hover {
+  background-color: rgb(var(--canvas-bg-2));
+}
+
+.hierarchy-row.selected {
+  outline: 2px solid rgb(var(--accent-primary));
+  outline-offset: -2px;
+  border-radius: var(--radius-sm);
+}
+
+.hierarchy-row.selected:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+.hierarchy-row__left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  padding-left: calc(14px + var(--hierarchy-depth) * 20px);
+}
+
+.hierarchy-row__connector {
+  position: absolute;
+  left: calc(14px + var(--hierarchy-depth) * 20px - 12px);
+  top: -7px;
+  bottom: -7px;
+  width: 1px;
+  border-left: 1px dashed rgb(var(--canvas-border));
+}
+
+.hierarchy-row__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  background-color: rgb(var(--canvas-surface));
+  border: 1px solid rgb(var(--canvas-border));
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+.hierarchy-row__swatch {
+  display: inline-block;
+  width: 3px;
+  height: 14px;
+  background-color: rgb(var(--domain-color));
+  border-radius: 1px;
+  margin-right: 2px;
+  margin-left: -4px;
+}
+
+.hierarchy-row__kind {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(var(--canvas-fg-3));
+}
+
+.hierarchy-row__label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: rgb(var(--canvas-fg-1));
+}
+
+.hierarchy-row__meta {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: rgb(var(--canvas-fg-3));
+  margin-left: 4px;
+}
+
+.hierarchy-row__right {
+  display: flex;
+  align-items: center;
+}
+
+.hierarchy-row__description {
+  font-size: 12.5px;
+  color: rgb(var(--canvas-fg-3));
+  line-height: 1.55;
+}
+
+/* Dark canvas overrides */
+body.dark-canvas .hierarchy-row:hover {
+  background-color: rgb(var(--canvas-surface) / 0.5);
+}
+
+body.dark-canvas .hierarchy-row__pill {
+  background-color: rgb(var(--canvas-surface-2) / 0.4);
+  border-color: rgb(var(--canvas-border));
+}

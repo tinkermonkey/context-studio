@@ -1,0 +1,123 @@
+@keyframes badge-pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+/* Base badge styles */
+.badge {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+}
+
+.badge--cyan {
+  background-color: rgb(var(--status-cyan));
+}
+
+.badge--emerald {
+  background-color: rgb(var(--status-emerald));
+}
+
+.badge--amber {
+  background-color: rgb(var(--status-amber));
+}
+
+.badge--rose {
+  background-color: rgb(var(--status-rose));
+}
+
+.badge--violet {
+  background-color: rgb(var(--status-violet));
+}
+
+.badge--neutral {
+  background-color: rgb(var(--status-neutral));
+}
+
+.badge--pulse {
+  animation: badge-pulse 1.6s ease-out infinite;
+}
+
+/* Status badge styles */
+.status-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-badge::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+}
+
+.status-badge::after {
+  content: '';
+  position: relative;
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  z-index: 1;
+}
+
+.status-badge--cyan::before {
+  background-color: rgb(var(--status-cyan));
+}
+
+.status-badge--cyan::after {
+  background-color: rgb(var(--status-cyan));
+}
+
+.status-badge--emerald::before {
+  background-color: rgb(var(--status-emerald));
+}
+
+.status-badge--emerald::after {
+  background-color: rgb(var(--status-emerald));
+}
+
+.status-badge--amber::before {
+  background-color: rgb(var(--status-amber));
+}
+
+.status-badge--amber::after {
+  background-color: rgb(var(--status-amber));
+}
+
+.status-badge--rose::before {
+  background-color: rgb(var(--status-rose));
+}
+
+.status-badge--rose::after {
+  background-color: rgb(var(--status-rose));
+}
+
+.status-badge--violet::before {
+  background-color: rgb(var(--status-violet));
+}
+
+.status-badge--violet::after {
+  background-color: rgb(var(--status-violet));
+}
+
+.status-badge--neutral::before {
+  background-color: rgb(var(--status-neutral));
+}
+
+.status-badge--neutral::after {
+  background-color: rgb(var(--status-neutral));
+}
+
+.status-badge--pulse::before {
+  animation: badge-pulse 1.6s ease-out infinite;
+}

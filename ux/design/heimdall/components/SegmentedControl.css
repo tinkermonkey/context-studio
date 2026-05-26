@@ -1,0 +1,50 @@
+.segmented-control {
+  display: inline-flex;
+  gap: 4px;
+  background: transparent;
+}
+
+.segmented-control__segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0 12px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: var(--font-weight-medium);
+  color: rgb(var(--canvas-fg-2));
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.08s, border-color 0.08s, color 0.08s;
+  white-space: nowrap;
+  outline: none;
+}
+
+.segmented-control__segment:focus-visible {
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+}
+
+.segmented-control__segment:hover:not(.segmented-control__segment--active):not(:disabled) {
+  background: rgb(var(--canvas-bg-2));
+  color: rgb(var(--canvas-fg-1));
+}
+
+.segmented-control__segment--active {
+  background: rgb(var(--canvas-surface-2));
+  border-color: rgb(var(--canvas-border-strong));
+  color: rgb(var(--canvas-fg-1));
+}
+
+.segmented-control__segment:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.segmented-control--disabled .segmented-control__segment {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}

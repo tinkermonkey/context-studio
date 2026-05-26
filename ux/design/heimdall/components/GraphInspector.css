@@ -1,0 +1,243 @@
+.graph-inspector {
+  background: rgb(var(--canvas-card));
+  border: 1px solid rgb(var(--canvas-border));
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.graph-inspector__empty {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  color: rgb(var(--canvas-fg-3));
+  font-size: 12.5px;
+}
+
+.graph-inspector__head {
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid rgb(var(--canvas-border));
+}
+
+.graph-inspector__head-eyebrow {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.graph-inspector__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background: rgb(var(--canvas-bg-2));
+  color: rgb(var(--canvas-fg-2));
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 4px;
+  font-family: var(--font-mono, monospace);
+}
+
+.graph-inspector__badge--life {
+  background: var(--status-emerald-bg-alpha);
+  color: rgb(var(--status-emerald));
+  border: 1px solid var(--status-emerald-border-alpha);
+}
+
+.graph-inspector__badge--climate {
+  background: var(--status-amber-bg-alpha);
+  color: rgb(var(--status-amber));
+  border: 1px solid var(--status-amber-border-alpha);
+}
+
+.graph-inspector__badge--software {
+  background: var(--status-violet-bg-alpha);
+  color: rgb(var(--status-violet));
+  border: 1px solid var(--status-violet-border-alpha);
+}
+
+.graph-inspector__title {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: rgb(var(--canvas-fg-1));
+  line-height: 1.2;
+}
+
+.graph-inspector__id {
+  font-size: 11px;
+  color: rgb(var(--canvas-fg-3));
+  margin-top: 4px;
+  font-family: var(--font-mono, monospace);
+}
+
+.graph-inspector__body {
+  padding: 14px 16px;
+  overflow-y: auto;
+  flex: 1;
+  font-size: 13px;
+}
+
+.graph-inspector__description {
+  color: rgb(var(--canvas-fg-2));
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0 0 14px;
+}
+
+.graph-inspector__kv {
+  display: grid;
+  grid-template-columns: 86px 1fr;
+  gap: 6px 12px;
+  font-size: 12.5px;
+  margin: 0 0 14px;
+}
+
+.graph-inspector__kv dt {
+  color: rgb(var(--canvas-fg-3));
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  align-self: center;
+}
+
+.graph-inspector__kv dd {
+  margin: 0;
+  color: rgb(var(--canvas-fg-1));
+  font-family: var(--font-mono, monospace);
+}
+
+.graph-inspector__section-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgb(var(--canvas-fg-3));
+  margin: 12px 0 6px;
+  font-weight: 500;
+}
+
+.graph-inspector__rels {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.graph-inspector__rel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  padding: 4px 0;
+}
+
+.graph-inspector__rel-dir {
+  font-family: var(--font-mono, monospace);
+  width: 14px;
+  font-size: 14px;
+  text-align: center;
+  flex: none;
+  color: rgb(var(--canvas-fg-4));
+}
+
+.graph-inspector__rel-dir--out {
+  color: rgb(var(--accent-primary-deep));
+}
+
+.graph-inspector__rel-pred {
+  font-size: 11px;
+  flex: none;
+  color: rgb(var(--canvas-fg-2));
+  font-family: var(--font-mono, monospace);
+}
+
+.graph-inspector__rel-target {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 8px 0 6px;
+  border: 1px solid rgb(var(--canvas-border));
+  border-radius: 4px;
+  background: rgb(var(--canvas-card));
+  color: rgb(var(--canvas-fg-1));
+  font-family: var(--font-sans, sans-serif);
+  font-size: 11.5px;
+  cursor: pointer;
+  min-width: 0;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: border-color 0.1s, background 0.1s;
+}
+
+.graph-inspector__rel-target:hover {
+  border-color: rgb(var(--accent-primary-deep));
+  background: rgb(var(--canvas-bg-2));
+}
+
+.graph-inspector__rel-target:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+  border-color: rgb(var(--accent-primary-deep));
+}
+
+.graph-inspector__rel-swatch {
+  width: 3px;
+  height: 12px;
+  border-radius: 1px;
+  background: rgb(var(--dom-default));
+  margin-right: 6px;
+  flex: none;
+}
+
+.graph-inspector__rel-target[data-domain='life'] .graph-inspector__rel-swatch {
+  background: rgb(var(--dom-life));
+}
+
+.graph-inspector__rel-target[data-domain='climate'] .graph-inspector__rel-swatch {
+  background: rgb(var(--dom-climate));
+}
+
+.graph-inspector__rel-target[data-domain='software'] .graph-inspector__rel-swatch {
+  background: rgb(var(--dom-software));
+}
+
+.graph-inspector__empty-mini {
+  padding: 18px;
+  text-align: center;
+  font-size: 12px;
+  color: rgb(var(--canvas-fg-3));
+  background: rgb(var(--canvas-bg-2));
+  border-radius: 6px;
+  border: 1px dashed rgb(var(--canvas-border-strong));
+}
+
+body.dark-canvas .graph-inspector {
+  background: rgb(var(--canvas-card));
+  border-color: rgb(var(--canvas-border));
+  color: rgb(var(--canvas-fg-1));
+}
+
+body.dark-canvas .graph-inspector__title {
+  color: rgb(var(--canvas-fg-1));
+}
+
+body.dark-canvas .graph-inspector__kv dd {
+  color: rgb(var(--canvas-fg-1));
+}
+
+body.dark-canvas .graph-inspector__rel-target {
+  background: rgb(var(--canvas-card));
+  border-color: rgb(var(--canvas-border));
+  color: rgb(var(--canvas-fg-1));
+}
+
+body.dark-canvas .graph-inspector__rel-target:hover {
+  border-color: rgb(var(--accent-primary-deep));
+  background: rgb(var(--canvas-bg-2));
+}

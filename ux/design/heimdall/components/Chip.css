@@ -1,0 +1,169 @@
+/* Base chip styles */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  border: 1px solid;
+  border-radius: var(--radius-sm);
+  padding: 2px 7px;
+}
+
+.chip__dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+}
+
+/* Default form (semantic color variants) */
+.chip--default {
+  border-radius: var(--radius-sm);
+  padding: 2px 7px;
+}
+
+/* Cyan variant */
+.chip--cyan {
+  color: rgb(var(--semantic-cyan-fg));
+  background-color: rgb(var(--semantic-cyan-bg));
+  border-color: rgb(var(--semantic-cyan-border));
+}
+
+.chip--cyan .chip__dot {
+  background-color: rgb(var(--status-cyan));
+}
+
+/* Amber variant */
+.chip--amber {
+  color: rgb(var(--semantic-amber-fg));
+  background-color: rgb(var(--semantic-amber-bg));
+  border-color: rgb(var(--semantic-amber-border));
+}
+
+.chip--amber .chip__dot {
+  background-color: rgb(var(--status-amber));
+}
+
+/* Violet variant */
+.chip--violet {
+  color: rgb(var(--semantic-violet-fg));
+  background-color: rgb(var(--semantic-violet-bg));
+  border-color: rgb(var(--semantic-violet-border));
+}
+
+.chip--violet .chip__dot {
+  background-color: rgb(var(--status-violet));
+}
+
+/* Emerald variant */
+.chip--emerald {
+  color: rgb(var(--semantic-emerald-fg));
+  background-color: rgb(var(--semantic-emerald-bg));
+  border-color: rgb(var(--semantic-emerald-border));
+}
+
+.chip--emerald .chip__dot {
+  background-color: rgb(var(--status-emerald));
+}
+
+/* Rose variant */
+.chip--rose {
+  color: rgb(var(--semantic-rose-fg));
+  background-color: rgb(var(--semantic-rose-bg));
+  border-color: rgb(var(--semantic-rose-border));
+}
+
+.chip--rose .chip__dot {
+  background-color: rgb(var(--status-rose));
+}
+
+/* Neutral variant */
+.chip--neutral {
+  color: rgb(var(--semantic-neutral-fg));
+  background-color: rgb(var(--semantic-neutral-bg));
+  border-color: rgb(var(--semantic-neutral-border));
+}
+
+.chip--neutral .chip__dot {
+  background-color: rgb(var(--status-neutral));
+}
+
+/* ID tag form */
+.chip--id-tag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  color: rgb(var(--semantic-id-tag-fg));
+  background-color: rgb(var(--semantic-id-tag-bg));
+  border-color: rgb(var(--semantic-id-tag-border));
+}
+
+/* Version badge form */
+.chip--version {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  padding: 1px 7px;
+  border-radius: 9999px;
+  color: rgb(var(--semantic-version-fg));
+  background-color: var(--semantic-version-bg-alpha);
+  border: 1px solid var(--semantic-version-border-alpha);
+}
+
+/* ---- Dark canvas overrides — translucent tints ---- */
+body.dark-canvas .chip--cyan {
+  color: rgb(var(--status-cyan));
+  background-color: rgb(var(--status-cyan) / 0.12);
+  border-color: rgb(var(--status-cyan) / 0.25);
+}
+body.dark-canvas .chip--amber {
+  color: rgb(var(--status-amber));
+  background-color: rgb(var(--status-amber) / 0.12);
+  border-color: rgb(var(--status-amber) / 0.25);
+}
+body.dark-canvas .chip--violet {
+  color: rgb(var(--status-violet));
+  background-color: rgb(var(--status-violet) / 0.12);
+  border-color: rgb(var(--status-violet) / 0.25);
+}
+body.dark-canvas .chip--emerald {
+  color: rgb(var(--status-emerald));
+  background-color: rgb(var(--status-emerald) / 0.12);
+  border-color: rgb(var(--status-emerald) / 0.25);
+}
+body.dark-canvas .chip--rose {
+  color: rgb(var(--status-rose));
+  background-color: rgb(var(--status-rose) / 0.12);
+  border-color: rgb(var(--status-rose) / 0.25);
+}
+body.dark-canvas .chip--neutral {
+  color: rgb(var(--canvas-fg-3));
+  background-color: var(--white-overlay-sm);
+  border-color: var(--white-overlay-lg);
+}
+body.dark-canvas .chip--id-tag {
+  color: rgb(var(--canvas-fg-3));
+  background-color: var(--white-overlay-sm);
+  border-color: var(--white-overlay-lg);
+}
+
+/* Environment pill form */
+.chip--env {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: var(--radius-md);
+  color: rgb(var(--semantic-env-fg));
+  background-color: var(--semantic-env-bg-alpha);
+  border-color: var(--semantic-env-border-alpha);
+  gap: 6px;
+}
+
+.chip--env .chip__dot--env {
+  width: 6px;
+  height: 6px;
+  background-color: rgb(var(--semantic-env-fg));
+}

@@ -1,0 +1,44 @@
+.chat-suggestions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.chat-suggestions__pill {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: rgb(var(--canvas-fg-2, 156, 163, 175));
+  background: rgb(var(--canvas-surface, 36, 55, 99));
+  border: 1px solid rgb(var(--canvas-border-2));
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.chat-suggestions__pill:hover:not(:disabled) {
+  color: rgb(var(--canvas-fg-1));
+  background: rgb(var(--canvas-surface-2));
+  border-color: rgb(var(--canvas-border, 30, 42, 68));
+}
+
+.chat-suggestions__pill:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+  border-color: rgb(var(--accent-primary, 245, 158, 11));
+}
+
+.chat-suggestions__pill--selected {
+  color: rgb(var(--accent-primary, 245, 158, 11));
+  border-color: rgb(var(--accent-primary, 245, 158, 11));
+  background: rgb(var(--canvas-surface, 36, 55, 99));
+}
+
+.chat-suggestions__pill--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

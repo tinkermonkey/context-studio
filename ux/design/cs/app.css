@@ -1,0 +1,133 @@
+/* Context Studio v2 — small custom selectors not covered by Heimdall primitives.
+   Most styling comes from the imported Heimdall component CSS. */
+
+.cs-domain-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+
+.cs-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ============================================================================
+   CS-namespaced compositions
+   These are NEW patterns assembled from Heimdall primitives — not overrides.
+   ============================================================================ */
+
+/* Page meta — workspace chip + sync time + daemon health, rendered ABOVE
+   <PageHeader> (we pass no `eyebrow` prop). Recommended library fix: widen
+   the `eyebrow` prop type to ReactNode so this row can live inside the
+   primitive. See HEIMDALL_DESIGN_SYSTEM_FEEDBACK.md §3. */
+.cs-page-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: rgb(var(--canvas-fg-3));
+}
+
+.cs-page-meta__sep {
+  color: rgb(var(--canvas-fg-4));
+}
+
+.cs-page-meta__health {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cs-page-meta__health::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgb(var(--status-emerald));
+  box-shadow: 0 0 0 3px rgb(var(--status-emerald) / 0.18);
+}
+
+/* ============================================================================
+   OVERRIDES — pending library fix.
+   These CSS rules target Heimdall's own selectors to restore polish lost in
+   the v2 rebuild. They are scoped, additive, and use Heimdall tokens (no new
+   colors). REMOVE ONCE the corresponding library changes ship — see
+   HEIMDALL_DESIGN_SYSTEM_FEEDBACK.md §1.
+   ============================================================================ */
+
+/* (a) PipelineCard nodes should distribute evenly across the flow strip,
+       not clump to the left.
+       Library fix: PipelineCardProps['flowLayout'] = 'fill' | 'auto'. */
+.pipeline-card__flow {
+  align-items: stretch;
+}
+.pipeline-card__node {
+  flex: 1;
+  min-width: 0;
+}
+
+/* (b) PipelineCard nodes should sit inside a bordered tile so the eye groups
+       [icon + name + label] as one unit.
+       Library fix: ship this as default styling on .pipeline-card__node. */
+.pipeline-card__node {
+  padding: 8px 10px;
+  border: 1px solid rgb(var(--canvas-border));
+  border-radius: var(--radius-md);
+  background: rgb(var(--canvas-card));
+}
+
+/* (c) Each pipeline stage in our Graph-RAG workflow (source → extract → resolve → write)
+       carries a stage-specific tone. We can't pass tone per-node yet, so we use
+       :nth-child position. This is FRAGILE — it assumes every pipeline has exactly
+       four stages in source/extract/resolve/write order. Data in data.js does, but
+       this MUST go away once FlowNode.tone is in the public API.
+       Library fix: FlowNode['tone'] = 'cyan' | 'violet' | 'amber' | 'emerald' | …. */
+
+/* stage 1 — source (cyan) */
+.pipeline-card__flow > div:nth-child(1) {
+  border-color: rgb(var(--status-cyan) / 0.30);
+}
+.pipeline-card__flow > div:nth-child(1) .pipeline-card__icon-tile {
+  background: rgb(var(--status-cyan) / 0.10);
+  color: rgb(var(--status-cyan));
+}
+
+/* stage 2 — extract (violet) */
+.pipeline-card__flow > div:nth-child(3) {
+  border-color: rgb(var(--status-violet) / 0.30);
+}
+.pipeline-card__flow > div:nth-child(3) .pipeline-card__icon-tile {
+  background: rgb(var(--status-violet) / 0.10);
+  color: rgb(var(--status-violet));
+}
+
+/* stage 3 — resolve (amber, same as accent so we keep the existing token) */
+.pipeline-card__flow > div:nth-child(5) {
+  border-color: rgb(var(--status-amber) / 0.30);
+}
+.pipeline-card__flow > div:nth-child(5) .pipeline-card__icon-tile {
+  background: rgb(var(--status-amber) / 0.12);
+  color: rgb(var(--status-amber));
+}
+
+/* stage 4 — write (emerald) */
+.pipeline-card__flow > div:nth-child(7) {
+  border-color: rgb(var(--status-emerald) / 0.30);
+}
+.pipeline-card__flow > div:nth-child(7) .pipeline-card__icon-tile {
+  background: rgb(var(--status-emerald) / 0.10);
+  color: rgb(var(--status-emerald));
+}
+
+/* (d) Arrow width — bump from 20px → 26px so the visual rhythm matches the
+       newly-present node tiles.
+       Library fix: bump default .pipeline-card__arrow width to 24-26px. */
+.pipeline-card__arrow {
+  width: 26px;
+}

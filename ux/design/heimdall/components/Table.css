@@ -1,0 +1,115 @@
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+  border: 1px solid rgb(var(--canvas-border));
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.table__head {
+  background: rgb(var(--canvas-bg-2));
+}
+
+.table__header {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgb(var(--canvas-fg-3));
+  font-weight: var(--font-weight-medium);
+  padding: 10px 14px;
+  border-bottom: 1px solid rgb(var(--canvas-border));
+  cursor: default;
+}
+
+.table__header--sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.table__header--sortable:hover {
+  background: rgb(var(--canvas-bg-2));
+}
+
+.table__header-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.table__sort-icon {
+  color: rgb(var(--accent-primary));
+}
+
+.table__body {
+  background: rgb(var(--canvas-card));
+}
+
+.table__row {
+  transition: background 80ms ease-out;
+}
+
+.table__row:hover {
+  background: rgb(var(--canvas-bg-2));
+}
+
+body.dark-canvas .table__row:hover {
+  background: var(--white-overlay-xs);
+}
+
+.table__row--selected {
+  background: rgb(var(--accent-primary) / 0.06);
+}
+
+.table__cell {
+  padding: 11px 14px;
+  color: rgb(var(--canvas-fg-1));
+  vertical-align: middle;
+  border-bottom: 1px solid rgb(var(--canvas-border));
+}
+
+.table__row:last-child .table__cell {
+  border-bottom: none;
+}
+
+.table__cell--checkbox {
+  text-align: center;
+  padding: 11px 10px;
+}
+
+.table__checkbox {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: rgb(var(--accent-primary));
+  border-radius: 2px;
+}
+
+.table__checkbox:focus-visible {
+  outline: 2px solid rgb(var(--accent-primary));
+  outline-offset: 2px;
+}
+
+.table__row--clickable {
+  cursor: pointer;
+}
+
+.table__row--clickable:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px rgba(245, 158, 11, 0.18);
+}
+
+.table__cell--empty {
+  text-align: center;
+  color: rgb(var(--canvas-fg-3));
+  padding: 32px 14px;
+  font-size: 13px;
+}
+
+.table__header--sortable:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px rgba(245, 158, 11, 0.18);
+}

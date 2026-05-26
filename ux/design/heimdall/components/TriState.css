@@ -1,0 +1,18 @@
+.tri-state {
+  width: 18px;
+  height: 18px;
+  accent-color: rgb(var(--accent-primary));
+  cursor: pointer;
+  transition: all 80ms ease-out;
+  outline: none;
+}
+
+.tri-state:focus-visible {
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-md);
+}
+
+.tri-state:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

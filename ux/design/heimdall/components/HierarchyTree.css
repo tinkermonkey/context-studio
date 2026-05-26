@@ -1,0 +1,13 @@
+.hierarchy-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.hierarchy-tree > * {
+  border-bottom: 1px solid rgb(var(--canvas-border));
+}
+
+.hierarchy-tree > *:last-child {
+  border-bottom: none;
+}

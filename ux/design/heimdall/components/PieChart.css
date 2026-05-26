@@ -1,0 +1,25 @@
+.pie-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pie-chart__legend {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.pie-chart__legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pie-chart__legend-swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 1px;
+  flex-shrink: 0;
+}

@@ -1,0 +1,124 @@
+.statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: 27px;
+  padding: 0 16px;
+  background: rgb(var(--shell-bg-2));
+  border-top: 1px solid rgb(var(--shell-border));
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.statusbar__slot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11.5px;
+  color: rgb(var(--shell-fg-3));
+}
+
+.statusbar__slot--left {
+  flex: 0 0 auto;
+}
+
+.statusbar__slot--center {
+  flex: 1;
+  justify-content: center;
+  min-width: 0;
+}
+
+.statusbar__slot--right {
+  flex: 0 0 auto;
+}
+
+.statusbar__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.statusbar__divider {
+  width: 1px;
+  height: 12px;
+  background: rgb(var(--shell-border-2));
+  flex-shrink: 0;
+  margin: 0 2px;
+}
+
+.statusbar__item--pulse {
+}
+
+.statusbar__pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.statusbar__pulse::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: inherit;
+  z-index: 0;
+  animation: statusbar-pulse-glow 1.6s ease-out infinite;
+}
+
+@keyframes statusbar-pulse-glow {
+  0% {
+    transform: translate(-50%, -50%) scale(0.6);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.4);
+    opacity: 0;
+  }
+}
+
+.statusbar__pulse--emerald {
+  background: rgb(var(--status-ok));
+}
+
+.statusbar__pulse--cyan {
+  background: rgb(var(--status-updating));
+}
+
+.statusbar__pulse--rose {
+  background: rgb(var(--status-error));
+}
+
+.statusbar__pulse--amber {
+  background: rgb(var(--accent-primary));
+}
+
+.statusbar__pulse--violet {
+  background: rgb(var(--status-secondary));
+}
+
+.statusbar__pulse--neutral {
+  background: rgb(var(--status-idle));
+}
+
+.statusbar__label {
+  font-size: 11.5px;
+  color: rgb(var(--shell-fg-3));
+}
+
+.statusbar__label--mono {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: rgb(var(--shell-fg-2));
+}
+
+.statusbar__item--mono {
+  color: rgb(var(--shell-fg-2));
+}

@@ -1,0 +1,38 @@
+.progress-bar {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background-color: rgb(var(--shell-surface));
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-bar__fill {
+  height: 100%;
+  transition: width 0.3s ease;
+  border-radius: 2px;
+}
+
+.progress-bar--emerald .progress-bar__fill {
+  background-color: rgb(var(--status-emerald));
+}
+
+.progress-bar--amber .progress-bar__fill {
+  background-color: rgb(var(--status-amber));
+}
+
+.progress-bar--rose .progress-bar__fill {
+  background-color: rgb(var(--status-rose));
+}
+
+.progress-bar--cyan .progress-bar__fill {
+  background-color: rgb(var(--status-cyan));
+}
+
+.progress-bar--neutral .progress-bar__fill {
+  background-color: rgb(var(--canvas-fg-2));
+}
+
+.progress-bar--violet .progress-bar__fill {
+  background-color: rgb(var(--status-violet));
+}

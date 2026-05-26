@@ -1,0 +1,61 @@
+.shell-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: rgb(var(--shell-bg));
+}
+
+.shell-layout__main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.shell-layout__sidebar-col {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow: hidden;
+  align-self: stretch;
+  min-height: 0;
+}
+
+.shell-layout__content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  background: rgb(var(--shell-bg));
+}
+
+body.dark-canvas .shell-layout__content {
+  background: rgb(var(--shell-bg-2));
+}
+
+.shell-layout__canvas {
+  flex: 1;
+  overflow: auto;
+  background: rgb(var(--canvas-bg));
+  min-width: 1100px;
+  padding: 22px 26px 32px;
+  border-top-left-radius: 8px;
+}
+
+.shell-layout__canvas::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.shell-layout__canvas::-webkit-scrollbar-track {
+  background: rgb(var(--canvas-bg));
+}
+
+.shell-layout__canvas::-webkit-scrollbar-thumb {
+  background: rgb(var(--canvas-border));
+  border-radius: 4px;
+}
+
+.shell-layout__canvas::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--canvas-border-strong));
+}

@@ -1,0 +1,41 @@
+.graph-canvas {
+  position: relative;
+  background: rgb(var(--canvas-bg));
+  border: 1px solid rgb(var(--canvas-border));
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: grab;
+  user-select: none;
+}
+
+.graph-canvas:active {
+  cursor: grabbing;
+}
+
+/* Off-screen div used to measure natural node dimensions before rendering */
+.graph-measure {
+  position: fixed;
+  left: -9999px;
+  top: -9999px;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.graph-svg {
+  display: block;
+}
+
+/* Grid dot color via CSS — the SVG circle uses fill: currentColor */
+.graph-grid-dot {
+  fill: rgb(var(--canvas-fg-3));
+  opacity: 0.3;
+}
+
+.graph-grid {
+  pointer-events: none;
+}
+
+body.dark-canvas {
+  --graph-edge: rgb(var(--canvas-border-2));
+  --graph-edge-strong: rgb(var(--canvas-border-strong));
+}

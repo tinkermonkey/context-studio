@@ -1,0 +1,108 @@
+.graph-node {
+  background: rgb(var(--canvas-card));
+  border: 1px solid rgb(var(--canvas-border-strong));
+  font-family: var(--font-sans, sans-serif);
+  font-size: 12px;
+  color: rgb(var(--canvas-fg-1));
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px 0 6px;
+  border-radius: 4px;
+  cursor: default;
+  white-space: nowrap;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition:
+    border-color 0.1s,
+    box-shadow 0.1s;
+  outline: none;
+}
+
+.graph-node[role='button'] {
+  cursor: pointer;
+}
+
+.graph-node[role='button']:focus-visible {
+  box-shadow:
+    0 0 0 3px rgba(245, 158, 11, 0.18),
+    0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.graph-node:hover {
+  border-color: rgb(var(--accent-primary-deep));
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+}
+
+.graph-node.selected {
+  border-color: rgb(var(--accent-primary-deep));
+  box-shadow:
+    0 0 0 2px rgb(var(--accent-primary)),
+    0 4px 10px rgba(15, 23, 42, 0.1);
+}
+
+body.dark-canvas .graph-node.selected {
+  box-shadow:
+    0 0 0 2px rgb(var(--accent-primary)),
+    0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.graph-node__swatch {
+  width: 3px;
+  height: 16px;
+  border-radius: 1px;
+  background: rgb(var(--dom-default));
+  margin-right: 7px;
+  flex: none;
+}
+
+.graph-node[data-domain='life'] .graph-node__swatch {
+  background: rgb(var(--dom-life));
+}
+
+.graph-node[data-domain='climate'] .graph-node__swatch {
+  background: rgb(var(--dom-climate));
+}
+
+.graph-node[data-domain='software'] .graph-node__swatch {
+  background: rgb(var(--dom-software));
+}
+
+.graph-node__label {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.graph-node__kind {
+  font-family: var(--font-mono, monospace);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: rgb(var(--canvas-fg-3));
+  margin-left: 7px;
+  padding: 1px 5px;
+  border-radius: 2px;
+  background: rgb(var(--canvas-bg-2));
+  border: 1px solid rgb(var(--canvas-border));
+  flex: none;
+}
+
+.graph-node[data-kind='individual'] .graph-node__kind {
+  color: rgb(var(--accent-primary-deep));
+  background: var(--status-amber-bg-alpha);
+  border-color: var(--status-amber-border-alpha);
+}
+
+body.dark-canvas .graph-node {
+  background: rgb(var(--canvas-card));
+  border-color: rgb(var(--canvas-border-strong));
+  color: rgb(var(--canvas-fg-1));
+}
+
+body.dark-canvas .graph-node__kind {
+  background: rgb(var(--canvas-bg-2));
+  border-color: rgb(var(--canvas-border));
+  color: rgb(var(--canvas-fg-3));
+}

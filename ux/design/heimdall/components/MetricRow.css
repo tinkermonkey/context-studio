@@ -1,0 +1,48 @@
+.metric-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 70px 80px;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgb(var(--canvas-border));
+}
+
+.metric-row:last-child {
+  border-bottom: none;
+}
+
+.metric-row__label {
+  font-size: 13px;
+  color: rgb(var(--canvas-fg-1));
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metric-row__progress {
+  flex: 1;
+  min-width: 0;
+}
+
+.metric-row__sparkline {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.metric-row__value {
+  text-align: right;
+  font-size: 13px;
+  color: rgb(var(--canvas-fg-1));
+  font-weight: 600;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.metric-row__unit {
+  font-size: 11px;
+  color: rgb(var(--canvas-fg-2));
+  margin-left: 2px;
+  font-weight: normal;
+}

@@ -1,0 +1,148 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: var(--font-weight-medium);
+  border: 1px solid transparent;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.08s, border-color 0.08s, color 0.08s;
+  outline: none;
+}
+
+.btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.btn svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Size modifiers */
+.btn--sm {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.btn--md {
+  /* matches base — explicit class for clarity */
+  height: 34px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+.btn--icon {
+  width: 34px;
+  padding: 0;
+}
+
+.btn--icon.btn--sm {
+  width: 28px;
+}
+
+/* Primary — near-black slate in light; bright accent in dark */
+.btn--primary {
+  background: rgb(var(--canvas-fg-1));
+  color: white;
+}
+
+.btn--primary:not(:disabled):hover {
+  background: rgb(var(--canvas-fg-2));
+}
+
+body.dark-canvas .btn--primary {
+  background: rgb(var(--accent-primary));
+  color: rgb(var(--canvas-bg));
+}
+
+body.dark-canvas .btn--primary svg {
+  color: rgb(var(--canvas-bg));
+}
+
+body.dark-canvas .btn--primary:not(:disabled):hover {
+  background: rgb(var(--accent-primary-hover));
+  color: rgb(var(--canvas-bg));
+}
+
+/* Accent — amber-700 brand CTA; use sparingly */
+.btn--accent {
+  background: rgb(var(--accent-primary-deep));
+  color: white;
+}
+
+.btn--accent:not(:disabled):hover {
+  background: rgb(var(--accent-primary-hover));
+  color: white;
+}
+
+/* Ghost — toolbar/row actions; transparent at rest */
+.btn--ghost {
+  background: transparent;
+  color: rgb(var(--canvas-fg-2));
+  border-color: rgb(var(--canvas-border));
+}
+
+.btn--ghost:not(:disabled):hover {
+  background: rgb(var(--canvas-bg-2));
+  color: rgb(var(--canvas-fg-1));
+  border-color: rgb(var(--canvas-border-strong));
+}
+
+/* Secondary — maps to ghost visually (spec: "ghost for everything secondary") */
+.btn--secondary {
+  background: transparent;
+  color: rgb(var(--canvas-fg-2));
+  border-color: rgb(var(--canvas-border));
+}
+
+.btn--secondary:not(:disabled):hover {
+  background: rgb(var(--canvas-bg-2));
+  color: rgb(var(--canvas-fg-1));
+  border-color: rgb(var(--canvas-border-strong));
+}
+
+/* Danger — destructive actions */
+.btn--danger {
+  background: rgb(var(--status-error-fg));
+  color: white;
+  border-color: transparent;
+}
+
+.btn--danger:not(:disabled):hover {
+  background: rgb(var(--status-rose-deep));
+  color: white;
+}
+
+/* Link */
+.btn--link {
+  background: transparent;
+  color: rgb(var(--accent-primary-deep));
+  text-decoration: underline;
+  padding: 0;
+  height: auto;
+  border: none;
+}
+
+.btn--link:not(:disabled):hover {
+  color: rgb(var(--accent-primary-hover));
+}

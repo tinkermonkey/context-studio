@@ -1,0 +1,15 @@
+.version-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 18px;
+  padding: 2px 7px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  border-radius: 3px;
+  color: rgb(var(--accent-primary));
+  background-color: var(--accent-primary-bg-alpha-sm);
+  border: 1px solid var(--accent-primary-border-alpha-md);
+  white-space: nowrap;
+}

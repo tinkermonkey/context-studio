@@ -1,0 +1,155 @@
+.topology-node {
+  background: rgb(var(--canvas-card));
+  border: 1px solid rgb(var(--canvas-border));
+  border-radius: 8px;
+  padding: 12px;
+  min-width: 180px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition:
+    border-color 0.1s,
+    box-shadow 0.1s;
+  font-family: var(--font-sans, sans-serif);
+  color: rgb(var(--canvas-fg-1));
+}
+
+.topology-node:hover {
+  border-color: rgb(var(--accent-primary-deep));
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.topology-node__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.topology-node__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgb(var(--canvas-fg-1));
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topology-node__status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+  margin-left: 8px;
+  box-shadow: 0 0 8px currentColor;
+  opacity: 0.8;
+}
+
+.topology-node__role {
+  font-size: 11px;
+  color: rgb(var(--canvas-fg-3));
+  font-family: var(--font-mono, monospace);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.topology-node__metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.topology-node__metric-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0 8px;
+  font-size: 11px;
+}
+
+.topology-node__metric-label {
+  grid-column: 1;
+  color: rgb(var(--canvas-fg-3));
+  font-family: var(--font-mono, monospace);
+  text-transform: uppercase;
+  font-size: 9px;
+  letter-spacing: 0.05em;
+}
+
+.topology-node__metric-value {
+  grid-column: 2;
+  grid-row: 1;
+  color: rgb(var(--canvas-fg-1));
+  font-weight: 600;
+  font-family: var(--font-mono, monospace);
+  white-space: nowrap;
+}
+
+.topology-node__metric-unit {
+  font-size: 9px;
+  color: rgb(var(--canvas-fg-3));
+  margin-left: 2px;
+}
+
+.topology-node__metric-bar {
+  grid-column: 1 / -1;
+  height: 4px;
+  background: rgb(var(--canvas-bg-2));
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.topology-node__metric-fill {
+  height: 100%;
+  width: 100%;
+  transition: width 0.3s ease-out;
+  border-radius: 2px;
+}
+
+.topology-node--interactive {
+  cursor: pointer;
+}
+
+.topology-node--interactive:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+}
+
+.topology-node--selected {
+  border-color: rgb(var(--accent-primary));
+  box-shadow: 0 0 0 1px rgb(var(--accent-primary));
+}
+
+.topology-node--selected:hover {
+  border-color: rgb(var(--accent-primary));
+  box-shadow: 0 0 0 1px rgb(var(--accent-primary));
+}
+
+.topology-node--ok {
+  border-color: var(--status-emerald-border-alpha-md);
+}
+
+.topology-node--warning {
+  border-color: var(--status-amber-border-alpha-md);
+}
+
+.topology-node--error {
+  border-color: var(--status-rose-border-alpha-md);
+}
+
+.topology-node--idle {
+  border-color: var(--status-neutral-border-alpha);
+}
+
+body.dark-canvas .topology-node {
+  background: rgb(var(--canvas-card));
+  border-color: rgb(var(--canvas-border));
+  color: rgb(var(--canvas-fg-1));
+}
+
+body.dark-canvas .topology-node__title {
+  color: rgb(var(--canvas-fg-1));
+}
+
+body.dark-canvas .topology-node__metric-bar {
+  background: rgb(var(--canvas-bg-2));
+}

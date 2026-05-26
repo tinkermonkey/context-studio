@@ -1,0 +1,53 @@
+.select {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  background-color: rgb(var(--canvas-card));
+  border: 1px solid rgb(var(--canvas-border));
+  border-radius: var(--radius-md);
+  padding: 7px 10px;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: rgb(var(--canvas-fg-1));
+  transition: all 80ms ease-out;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2364748b' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 32px;
+}
+
+.dark-canvas .select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2394a3b8' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+}
+
+.select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.select:focus-visible {
+  background-color: rgb(var(--canvas-bg));
+  border-color: rgb(var(--accent-primary));
+  box-shadow: var(--focus-ring);
+}
+
+.select--error {
+  border-color: rgb(var(--status-rose));
+}
+
+.select--error:focus-visible {
+  box-shadow: 0 0 0 3px var(--status-rose-border-alpha);
+}
+
+.select option {
+  background-color: rgb(var(--canvas-surface));
+  color: rgb(var(--canvas-fg-1));
+}
+
+.select option:checked {
+  background-color: rgb(var(--accent-primary));
+  color: white;
+}
