@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { rest } from "msw";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
 import {
@@ -31,25 +31,23 @@ describe("Datasets Data Page", () => {
   describe("loading state", () => {
     it("displays loading skeleton state while data loads", async () => {
       server.use(
-        rest.get("*/api/v1/admin/datasets", async (req, res, ctx) => {
+        http.get("*/api/v1/admin/datasets", async () => {
           await new Promise((resolve) => setTimeout(resolve, 100));
-          return res(ctx.json(createListDatasets([])));
+          return HttpResponse.json(createListDatasets([]));
         }),
       );
 
       const { container } = render(<DatasetsPage />);
 
-      const skeletonElements = container.querySelectorAll(
-        "div[style*='animation: skeleton-shimmer']",
-      );
+      const skeletonElements = container.querySelectorAll("div.skeleton");
       expect(skeletonElements.length).toBeGreaterThanOrEqual(5);
     });
 
     it("verifies data-testid attribute present on page container during loading", async () => {
       server.use(
-        rest.get("*/api/v1/admin/datasets", async (req, res, ctx) => {
+        http.get("*/api/v1/admin/datasets", async () => {
           await new Promise((resolve) => setTimeout(resolve, 100));
-          return res(ctx.json(createListDatasets([])));
+          return HttpResponse.json(createListDatasets([]));
         }),
       );
 
@@ -66,8 +64,8 @@ describe("Datasets Data Page", () => {
   describe("error state", () => {
     it("displays error banner with retry button when API fails", async () => {
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) =>
-          res(ctx.status(500), ctx.json({ detail: "Internal server error" })),
+        http.get("*/api/v1/admin/datasets", () =>
+          HttpResponse.json({ detail: "Internal server error" }, { status: 500 }),
         ),
       );
 
@@ -87,8 +85,8 @@ describe("Datasets Data Page", () => {
   describe("empty state", () => {
     it("displays empty state copy when no datasets exist", async () => {
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) =>
-          res(ctx.json(createListDatasets([]))),
+        http.get("*/api/v1/admin/datasets", () =>
+          HttpResponse.json(createListDatasets([])),
         ),
       );
 
@@ -104,8 +102,8 @@ describe("Datasets Data Page", () => {
 
     it("displays CTA button with correct label in empty state", async () => {
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) =>
-          res(ctx.json(createListDatasets([]))),
+        http.get("*/api/v1/admin/datasets", () =>
+          HttpResponse.json(createListDatasets([])),
         ),
       );
 
@@ -122,8 +120,8 @@ describe("Datasets Data Page", () => {
 
     it("verifies empty-state element is present", async () => {
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) =>
-          res(ctx.json(createListDatasets([]))),
+        http.get("*/api/v1/admin/datasets", () =>
+          HttpResponse.json(createListDatasets([])),
         ),
       );
 
@@ -158,7 +156,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
+        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
       );
 
       render(<DatasetsPage />);
@@ -179,7 +177,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
+        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
       );
 
       render(<DatasetsPage />);
@@ -203,7 +201,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
+        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
       );
 
       render(<DatasetsPage />);
@@ -226,7 +224,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
+        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
       );
 
       render(<DatasetsPage />);
@@ -249,7 +247,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
+        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
       );
 
       render(<DatasetsPage />);
@@ -275,7 +273,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
+        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
       );
 
       render(<DatasetsPage />);
@@ -299,7 +297,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
+        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
       );
 
       render(<DatasetsPage />);
@@ -321,7 +319,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
+        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
       );
 
       render(<DatasetsPage />);
@@ -345,7 +343,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
+        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
       );
 
       render(<DatasetsPage />);
@@ -368,7 +366,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
+        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
       );
 
       render(<DatasetsPage />);
@@ -405,7 +403,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
+        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
       );
 
       render(<DatasetsPage />);
@@ -439,7 +437,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
+        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
       );
 
       render(<DatasetsPage />);
@@ -470,7 +468,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
+        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
       );
 
       render(<DatasetsPage />);
@@ -501,7 +499,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
+        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
       );
 
       render(<DatasetsPage />);
@@ -533,7 +531,7 @@ describe("Datasets Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) => res(ctx.json(mockDatasets))),
+        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
       );
 
       render(<DatasetsPage />);
@@ -560,8 +558,8 @@ describe("Datasets Data Page", () => {
   describe("page header and call-to-action", () => {
     it("displays page title 'Datasets'", async () => {
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) =>
-          res(ctx.json(createListDatasets([]))),
+        http.get("*/api/v1/admin/datasets", () =>
+          HttpResponse.json(createListDatasets([])),
         ),
       );
 
@@ -574,8 +572,8 @@ describe("Datasets Data Page", () => {
 
     it("displays 'New Dataset' button in header", async () => {
       server.use(
-        rest.get("*/api/v1/admin/datasets", (req, res, ctx) =>
-          res(ctx.json(createListDatasets([]))),
+        http.get("*/api/v1/admin/datasets", () =>
+          HttpResponse.json(createListDatasets([])),
         ),
       );
 

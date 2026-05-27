@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { rest } from "msw";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
 import {
@@ -31,9 +31,9 @@ describe("Versioning Page", () => {
   describe("page structure", () => {
     it("renders versioning page root", async () => {
       server.use(
-        rest.get("*/api/v1/versioning/changesets", (req, res, ctx) => res(ctx.json([]))),
-        rest.get("*/api/v1/versioning/changes", (req, res, ctx) =>
-          res(ctx.json({ events: [], total: 0 })),
+        http.get("*/api/v1/versioning/changesets", () => HttpResponse.json([])),
+        http.get("*/api/v1/versioning/changes", () =>
+          HttpResponse.json({ events: [], total: 0 }),
         ),
       );
 
@@ -46,9 +46,9 @@ describe("Versioning Page", () => {
 
     it("displays tabs for changesets, conflicts, and sync", async () => {
       server.use(
-        rest.get("*/api/v1/versioning/changesets", (req, res, ctx) => res(ctx.json([]))),
-        rest.get("*/api/v1/versioning/changes", (req, res, ctx) =>
-          res(ctx.json({ events: [], total: 0 })),
+        http.get("*/api/v1/versioning/changesets", () => HttpResponse.json([])),
+        http.get("*/api/v1/versioning/changes", () =>
+          HttpResponse.json({ events: [], total: 0 }),
         ),
       );
 
@@ -68,9 +68,9 @@ describe("Versioning Page", () => {
   describe("changeset panel states", () => {
     it("displays changeset panel on default tab with page root testid", async () => {
       server.use(
-        rest.get("*/api/v1/versioning/changesets", (req, res, ctx) => res(ctx.json([]))),
-        rest.get("*/api/v1/versioning/changes", (req, res, ctx) =>
-          res(ctx.json({ events: [], total: 0 })),
+        http.get("*/api/v1/versioning/changesets", () => HttpResponse.json([])),
+        http.get("*/api/v1/versioning/changes", () =>
+          HttpResponse.json({ events: [], total: 0 }),
         ),
       );
 
@@ -98,8 +98,8 @@ describe("Versioning Page", () => {
       });
 
       server.use(
-        rest.get("*/api/v1/versioning/changesets", (req, res, ctx) => res(ctx.json([]))),
-        rest.get("*/api/v1/versioning/changes", (req, res, ctx) => res(ctx.json(mockChanges))),
+        http.get("*/api/v1/versioning/changesets", () => HttpResponse.json([])),
+        http.get("*/api/v1/versioning/changes", () => HttpResponse.json(mockChanges)),
       );
 
       render(<VersioningPage />);
@@ -117,12 +117,12 @@ describe("Versioning Page", () => {
   describe("sync status panel states", () => {
     it("switches to sync tab when clicked", async () => {
       server.use(
-        rest.get("*/api/v1/versioning/sync/status", (req, res, ctx) =>
-          res(ctx.json(createSyncStatus())),
+        http.get("*/api/v1/versioning/sync/status", () =>
+          HttpResponse.json(createSyncStatus()),
         ),
-        rest.get("*/api/v1/versioning/changesets", (req, res, ctx) => res(ctx.json([]))),
-        rest.get("*/api/v1/versioning/changes", (req, res, ctx) =>
-          res(ctx.json({ events: [], total: 0 })),
+        http.get("*/api/v1/versioning/changesets", () => HttpResponse.json([])),
+        http.get("*/api/v1/versioning/changes", () =>
+          HttpResponse.json({ events: [], total: 0 }),
         ),
       );
 
@@ -143,9 +143,9 @@ describe("Versioning Page", () => {
   describe("conflict resolver states", () => {
     it("renders conflict tab and shows empty state when no proposal selected", async () => {
       server.use(
-        rest.get("*/api/v1/versioning/changesets", (req, res, ctx) => res(ctx.json([]))),
-        rest.get("*/api/v1/versioning/changes", (req, res, ctx) =>
-          res(ctx.json({ events: [], total: 0 })),
+        http.get("*/api/v1/versioning/changesets", () => HttpResponse.json([])),
+        http.get("*/api/v1/versioning/changes", () =>
+          HttpResponse.json({ events: [], total: 0 }),
         ),
       );
 

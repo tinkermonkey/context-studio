@@ -1,125 +1,84 @@
-import { useState, useMemo } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { HierarchyTree as HeimdallHierarchyTree, HierarchyRow } from "@tinkermonkey/heimdall-ui";
 import { EmptyState } from "@/components/ui/EmptyState";
 import type { components } from "@/api/types";
 
+type TaxonomyResponse = components["schemas"]["TaxonomyResponse"];
+type ConceptSchemeResponse = components["schemas"]["ConceptSchemeResponse"];
 type ClassResponse = components["schemas"]["ClassResponse"];
 
 export interface HierarchyTreeProps {
+  taxonomies?: TaxonomyResponse[];
+  schemes?: ConceptSchemeResponse[];
   classes?: ClassResponse[];
   loading?: boolean;
   error?: Error | null;
-  onNodeSelect?: (nodeId: string) => void;
-  maxDepth?: number;
+  onSelectClass?: (classId: string) => void;
 }
 
-interface TreeNode {
-  class: ClassResponse;
-  children: TreeNode[];
-}
-
-function buildTree(classes: ClassResponse[]): TreeNode[] {
-  const nodeMap = new Map<string, TreeNode>();
-
-  classes.forEach((cls) => {
-    nodeMap.set(cls.id, { class: cls, children: [] });
-  });
-
-  const roots: TreeNode[] = [];
-  classes.forEach((cls) => {
-    const node = nodeMap.get(cls.id)!;
-    if (cls.parent_class_id && nodeMap.has(cls.parent_class_id)) {
-      nodeMap.get(cls.parent_class_id)!.children.push(node);
-    } else {
-      roots.push(node);
-    }
-  });
-
-  roots.sort((a, b) => a.class.title.localeCompare(b.class.title));
-  return roots;
-}
-
-interface TreeNodeRendererProps {
-  node: TreeNode;
-  expandedNodeIds: Set<string>;
-  onToggleExpanded: (nodeId: string) => void;
-  onNodeSelect?: (nodeId: string) => void;
-  depth: number;
-  maxDepth: number;
-}
-
-function TreeNodeRenderer({
-  node,
-  expandedNodeIds,
-  onToggleExpanded,
-  onNodeSelect,
-  depth,
-  maxDepth,
-}: TreeNodeRendererProps) {
-  const hasChildren = node.children.length > 0;
-  const isExpanded = expandedNodeIds.has(node.class.id);
-  const canExpand = hasChildren && depth < maxDepth;
-
-  return (
-    <>
-      <HierarchyRow
-        depth={depth}
-        domain={node.class.concept_scheme_id || ""}
-        kind="class"
-        label={node.class.title}
-        description=""
-        meta={hasChildren ? String(node.children.length) : undefined}
-        onSelect={() => {
-          if (canExpand) {
-            onToggleExpanded(node.class.id);
-          } else if (onNodeSelect) {
-            onNodeSelect(node.class.id);
-          }
-        }}
-        data-testid={`hierarchy-node-${node.class.id}`}
-        data-domain={node.class.concept_scheme_id}
-      />
-      {canExpand && isExpanded &&
-        node.children.map((child) => (
-          <TreeNodeRenderer
-            key={child.class.id}
-            node={child}
-            expandedNodeIds={expandedNodeIds}
-            onToggleExpanded={onToggleExpanded}
-            onNodeSelect={onNodeSelect}
-            depth={depth + 1}
-            maxDepth={maxDepth}
-          />
-        ))
-      }
-    </>
-  );
+function countLabel(n: number, singular: string, plural: string): string {
+  return `${n} ${n === 1 ? singular : plural}`;
 }
 
 export function HierarchyTree({
+  taxonomies,
+  schemes,
   classes,
   loading = false,
   error = null,
-  onNodeSelect,
-  maxDepth = 5,
+  onSelectClass,
 }: HierarchyTreeProps) {
-  const [expandedNodeIds, setExpandedNodeIds] = useState<Set<string>>(new Set());
-
-  const rootNodes = useMemo(() => {
-    if (!classes || classes.length === 0) return [];
-    return buildTree(classes);
+  const sortedTaxonomies = useMemo(
+    () => [...(taxonomies ?? [])].sort((a, b) => a.title.localeCompare(b.title)),
+    [taxonomies],
+  );
+  const schemesByTaxonomy = useMemo(() => {
+    const map = new Map<string, ConceptSchemeResponse[]>();
+    (schemes ?? []).forEach((scheme) => {
+      const list = map.get(scheme.taxonomy_id) ?? [];
+      list.push(scheme);
+      map.set(scheme.taxonomy_id, list);
+    });
+    map.forEach((list) => list.sort((a, b) => a.title.localeCompare(b.title)));
+    return map;
+  }, [schemes]);
+  const classesByScheme = useMemo(() => {
+    const map = new Map<string, ClassResponse[]>();
+    (classes ?? []).forEach((cls) => {
+      const list = map.get(cls.concept_scheme_id) ?? [];
+      list.push(cls);
+      map.set(cls.concept_scheme_id, list);
+    });
+    map.forEach((list) => list.sort((a, b) => a.title.localeCompare(b.title)));
+    return map;
   }, [classes]);
 
-  const handleToggleExpanded = (nodeId: string) => {
-    setExpandedNodeIds((prev) => {
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [seeded, setSeeded] = useState(false);
+  const [selectedClassId, setSelectedClassId] = useState<string | undefined>(undefined);
+
+  // Seed the first taxonomy and its first scheme open, matching the reference design.
+  if (!seeded && sortedTaxonomies.length > 0) {
+    const firstTaxonomy = sortedTaxonomies[0];
+    const firstScheme = schemesByTaxonomy.get(firstTaxonomy.id)?.[0];
+    const initial = new Set<string>([firstTaxonomy.id]);
+    if (firstScheme) initial.add(firstScheme.id);
+    setExpandedIds(initial);
+    setSeeded(true);
+  }
+
+  const toggle = (id: string) => {
+    setExpandedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(nodeId)) {
-        next.delete(nodeId);
-      } else {
-        next.add(nodeId);
-      }
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
+  };
+
+  const handleSelectClass = (classId: string) => {
+    setSelectedClassId(classId);
+    onSelectClass?.(classId);
   };
 
   if (error) {
@@ -150,23 +109,63 @@ export function HierarchyTree({
     );
   }
 
-  if (!classes || classes.length === 0) {
-    return <EmptyState title="No classes found" variant="compact" />;
+  if (sortedTaxonomies.length === 0) {
+    return <EmptyState title="No structure yet" variant="compact" />;
   }
 
   return (
     <HeimdallHierarchyTree>
-      {rootNodes.map((node) => (
-        <TreeNodeRenderer
-          key={node.class.id}
-          node={node}
-          expandedNodeIds={expandedNodeIds}
-          onToggleExpanded={handleToggleExpanded}
-          onNodeSelect={onNodeSelect}
-          depth={0}
-          maxDepth={maxDepth}
-        />
-      ))}
+      {sortedTaxonomies.map((taxonomy) => {
+        const taxonomySchemes = schemesByTaxonomy.get(taxonomy.id) ?? [];
+        const taxonomyOpen = expandedIds.has(taxonomy.id);
+        return (
+          <Fragment key={taxonomy.id}>
+            <HierarchyRow
+              depth={0}
+              domain="default"
+              kind="taxonomy"
+              label={taxonomy.title}
+              meta={countLabel(taxonomySchemes.length, "scheme", "schemes")}
+              description={taxonomy.description ?? ""}
+              onSelect={() => toggle(taxonomy.id)}
+              data-testid={`hierarchy-node-${taxonomy.id}`}
+            />
+            {taxonomyOpen &&
+              taxonomySchemes.map((scheme) => {
+                const schemeClasses = classesByScheme.get(scheme.id) ?? [];
+                const schemeOpen = expandedIds.has(scheme.id);
+                return (
+                  <Fragment key={scheme.id}>
+                    <HierarchyRow
+                      depth={1}
+                      domain="default"
+                      kind="scheme"
+                      label={scheme.title}
+                      meta={countLabel(schemeClasses.length, "class", "classes")}
+                      description={scheme.description ?? ""}
+                      onSelect={() => toggle(scheme.id)}
+                      data-testid={`hierarchy-node-${scheme.id}`}
+                    />
+                    {schemeOpen &&
+                      schemeClasses.map((cls) => (
+                        <HierarchyRow
+                          key={cls.id}
+                          depth={2}
+                          domain="default"
+                          kind="class"
+                          label={cls.title}
+                          description={cls.description ?? ""}
+                          selected={selectedClassId === cls.id}
+                          onSelect={() => handleSelectClass(cls.id)}
+                          data-testid={`hierarchy-node-${cls.id}`}
+                        />
+                      ))}
+                  </Fragment>
+                );
+              })}
+          </Fragment>
+        );
+      })}
     </HeimdallHierarchyTree>
   );
 }

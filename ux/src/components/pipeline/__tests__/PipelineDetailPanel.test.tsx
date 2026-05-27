@@ -102,436 +102,405 @@ describe("PipelineDetailPanel", () => {
     vi.clearAllMocks();
   });
 
-  it("renders configuration in code block with correct CSS class", () => {
-    render(
+  function renderPanel(pipeline = mockPipeline) {
+    return render(
       <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} />
+        <PipelineDetailPanel pipeline={pipeline} />
       </QueryClientProvider>,
     );
+  }
 
-    const preElement = screen.getByTestId("pipeline-config-pre");
-    expect(preElement).toHaveClass("pipeline-code-block");
-    expect(preElement).toHaveTextContent('"key": "value"');
-  });
+  async function openTab(user: ReturnType<typeof userEvent.setup>, label: RegExp) {
+    await user.click(screen.getByRole("tab", { name: label }));
+  }
 
-  it("renders edit button and switches to edit mode", async () => {
-    const user = userEvent.setup();
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
+  describe("tabs", () => {
+    it("defaults to the Prompts tab showing both prompt editors", () => {
+      renderPanel();
+      expect(screen.getByTestId("pipeline-system-prompt")).toBeInTheDocument();
+      expect(screen.getByTestId("pipeline-user-prompt")).toBeInTheDocument();
+    });
 
-    const editButton = screen.getByTestId("pipeline-edit-config-button");
-    expect(editButton).toBeInTheDocument();
-
-    await user.click(editButton);
-
-    const textarea = screen.getByTestId("pipeline-config-textarea");
-    expect(textarea).toBeInTheDocument();
-    expect(screen.queryByTestId("pipeline-config-pre")).not.toBeInTheDocument();
-  });
-
-  it("renders textarea with correct styling in edit mode", async () => {
-    const user = userEvent.setup();
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-
-    const editButton = screen.getByTestId("pipeline-edit-config-button");
-    await user.click(editButton);
-
-    const textarea = screen.getByTestId("pipeline-config-textarea");
-    expect(textarea).toHaveAttribute("rows", "10");
-  });
-
-  it("shows save and cancel buttons in edit mode", async () => {
-    const user = userEvent.setup();
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-
-    const editButton = screen.getByTestId("pipeline-edit-config-button");
-    await user.click(editButton);
-
-    expect(screen.getByTestId("pipeline-save-config-button")).toBeInTheDocument();
-    expect(screen.getByTestId("pipeline-revert-config-button")).toBeInTheDocument();
-  });
-
-  it("reverts changes when cancel button is clicked", async () => {
-    const user = userEvent.setup();
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-
-    const editButton = screen.getByTestId("pipeline-edit-config-button");
-    await user.click(editButton);
-
-    const textarea = screen.getByTestId("pipeline-config-textarea") as HTMLTextAreaElement;
-    await user.clear(textarea);
-    await user.type(textarea, "changed config");
-
-    const cancelButton = screen.getByTestId("pipeline-revert-config-button");
-    await user.click(cancelButton);
-
-    const preElement = screen.getByTestId("pipeline-config-pre");
-    expect(preElement).toBeInTheDocument();
-    expect(preElement).not.toHaveTextContent("changed config");
-  });
-
-  it("renders runs table with correct testid", () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-
-    expect(screen.getByTestId("pipeline-runs-table")).toBeInTheDocument();
-  });
-
-  it("renders 'no runs' message when no executions", () => {
-    vi.mocked(pipelineHooks.usePipelineExecutions).mockReturnValue({
-      data: [],
-      isLoading: false,
-      error: null,
-      isFetching: false,
-      status: "success",
-    } as any);
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-
-    expect(screen.getByTestId("pipeline-no-runs")).toBeInTheDocument();
-    expect(screen.getByTestId("pipeline-no-runs")).toHaveClass("pipeline-empty-state");
-  });
-
-  it("renders view log button for failed executions", () => {
-    vi.mocked(pipelineHooks.usePipelineExecutions).mockReturnValue({
-      data: [mockFailedExecution],
-      isLoading: false,
-      error: null,
-      isFetching: false,
-      status: "success",
-    } as any);
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-
-    expect(screen.getByTestId(`pipeline-view-log-${mockFailedExecution.id}`)).toBeInTheDocument();
-  });
-
-  it("shows error log panel when view log is clicked", async () => {
-    const user = userEvent.setup();
-    vi.mocked(pipelineHooks.usePipelineExecutions).mockReturnValue({
-      data: [mockFailedExecution],
-      isLoading: false,
-      error: null,
-      isFetching: false,
-      status: "success",
-    } as any);
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-
-    const viewLogButton = screen.getByTestId(`pipeline-view-log-${mockFailedExecution.id}`);
-    await user.click(viewLogButton);
-
-    const errorLog = screen.getByTestId("pipeline-error-log");
-    expect(errorLog).toBeInTheDocument();
-    expect(errorLog).toHaveClass("pipeline-error-log");
-    expect(errorLog).toHaveTextContent("Test error message");
-  });
-
-  it("renders error message in correct CSS class", async () => {
-    const user = userEvent.setup();
-    vi.mocked(pipelineHooks.usePipelineExecutions).mockReturnValue({
-      data: [mockFailedExecution],
-      isLoading: false,
-      error: null,
-      isFetching: false,
-      status: "success",
-    } as any);
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-
-    const viewLogButton = screen.getByTestId(`pipeline-view-log-${mockFailedExecution.id}`);
-    await user.click(viewLogButton);
-
-    const errorMessage = screen.getByText("Test error message");
-    expect(errorMessage).toHaveClass("pipeline-error-message");
-  });
-
-  it("copy error button has correct aria-label", async () => {
-    const user = userEvent.setup();
-    vi.mocked(pipelineHooks.usePipelineExecutions).mockReturnValue({
-      data: [mockFailedExecution],
-      isLoading: false,
-      error: null,
-      isFetching: false,
-      status: "success",
-    } as any);
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-
-    const viewLogButton = screen.getByTestId(`pipeline-view-log-${mockFailedExecution.id}`);
-    await user.click(viewLogButton);
-
-    const copyButton = screen.getByTestId("pipeline-copy-error-button");
-    expect(copyButton).toHaveAttribute("aria-label", "Copy error to clipboard");
-  });
-
-  it("view log button has aria-expanded attribute", async () => {
-    const user = userEvent.setup();
-    vi.mocked(pipelineHooks.usePipelineExecutions).mockReturnValue({
-      data: [mockFailedExecution],
-      isLoading: false,
-      error: null,
-      isFetching: false,
-      status: "success",
-    } as any);
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-
-    const viewLogButton = screen.getByTestId(`pipeline-view-log-${mockFailedExecution.id}`);
-    expect(viewLogButton).toHaveAttribute("aria-expanded", "false");
-
-    await user.click(viewLogButton);
-
-    expect(viewLogButton).toHaveAttribute("aria-expanded", "true");
-  });
-
-  it("shows error details for correct execution when expanding log", async () => {
-    const user = userEvent.setup();
-    vi.mocked(pipelineHooks.usePipelineExecutions).mockReturnValue({
-      data: [mockFailedExecution, mockExecution],
-      isLoading: false,
-      error: null,
-      isFetching: false,
-      status: "success",
-    } as any);
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-
-    const viewLogButton = screen.getByTestId(`pipeline-view-log-${mockFailedExecution.id}`);
-    await user.click(viewLogButton);
-
-    expect(screen.getByText("Test error message")).toBeInTheDocument();
-  });
-
-  it("renders success status chips with emerald class", () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-
-    const chip = screen.getByText("success");
-    expect(chip.closest("[class*='chip']")).toHaveClass("chip--emerald");
-  });
-
-  it("renders error status chips with rose class", () => {
-    vi.mocked(pipelineHooks.usePipelineExecutions).mockReturnValue({
-      data: [mockFailedExecution],
-      isLoading: false,
-      error: null,
-      isFetching: false,
-      status: "success",
-    } as any);
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-
-    const chip = screen.getByText("error");
-    expect(chip.closest("[class*='chip']")).toHaveClass("chip--rose");
-  });
-
-  it("disables save button when no changes are made", async () => {
-    const user = userEvent.setup();
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-
-    const editButton = screen.getByTestId("pipeline-edit-config-button");
-    await user.click(editButton);
-
-    const saveButton = screen.getByTestId("pipeline-save-config-button") as HTMLButtonElement;
-    expect(saveButton.disabled).toBe(true);
-  });
-
-  it("enables save button when config is changed", async () => {
-    const user = userEvent.setup();
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-
-    const editButton = screen.getByTestId("pipeline-edit-config-button");
-    await user.click(editButton);
-
-    const textarea = screen.getByTestId("pipeline-config-textarea");
-    await user.clear(textarea);
-    await user.type(textarea, "new config");
-
-    const saveButton = screen.getByTestId("pipeline-save-config-button") as HTMLButtonElement;
-    expect(saveButton.disabled).toBe(false);
-  });
-
-  it("renders run button with correct testid and aria-label", () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-
-    const runButton = screen.getByTestId("run-pipeline-btn");
-    expect(runButton).toBeInTheDocument();
-    expect(runButton).toHaveAttribute("aria-label", "Run pipeline");
-    expect(runButton).toHaveAttribute("title", "Run pipeline");
-  });
-
-  it("calls mutation when run button is clicked", async () => {
-    const user = userEvent.setup();
-    const mockMutate = vi.fn().mockResolvedValue(mockExecution);
-    vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
-      mutateAsync: mockMutate,
-      isPending: false,
-      status: "idle",
-    } as any);
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-
-    const runButton = screen.getByTestId("run-pipeline-btn");
-    await user.click(runButton);
-
-    expect(mockMutate).toHaveBeenCalledWith({
-      id: mockPipeline.id,
-      inputText: "",
+    it("renders all four tabs", () => {
+      renderPanel();
+      expect(screen.getByRole("tab", { name: /prompts/i })).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: /config/i })).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: /test/i })).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: /history/i })).toBeInTheDocument();
     });
   });
 
-  it("shows spinner when mutation is pending", () => {
-    vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
-      mutateAsync: vi.fn(),
-      isPending: true,
-      status: "pending",
-    } as any);
+  describe("config tab", () => {
+    it("renders the KeyValueEditor seeded from the pipeline config", async () => {
+      const user = userEvent.setup();
+      renderPanel();
+      await openTab(user, /config/i);
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
+      // KeyValueEditor root carries the testid passed by the component
+      expect(screen.getByTestId("pipeline-config-editor")).toBeInTheDocument();
 
-    const runButton = screen.getByTestId("run-pipeline-btn");
-    const spinner = runButton.querySelector("svg");
-    expect(spinner).toHaveClass("spin");
-  });
-
-  it("disables run button when mutation is pending", () => {
-    vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
-      mutateAsync: vi.fn(),
-      isPending: true,
-      status: "pending",
-    } as any);
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-
-    const runButton = screen.getByTestId("run-pipeline-btn") as HTMLButtonElement;
-    expect(runButton.disabled).toBe(true);
-  });
-
-  it("calls toast when pipeline completes with success status", async () => {
-    const user = userEvent.setup();
-    const mockMutate = vi.fn().mockResolvedValue({
-      ...mockExecution,
-      status: "success",
+      // pipeline.config = { key: "value" } seeds a single row with id "0"
+      expect(screen.getByTestId("key-input-0")).toHaveValue("key");
+      expect(screen.getByTestId("value-input-0")).toHaveValue("value");
     });
-    vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
-      mutateAsync: mockMutate,
-      isPending: false,
-      status: "idle",
-    } as any);
 
-    mockToast.mockClear();
+    it("reflects pipeline.enabled in the enabled toggle", async () => {
+      const user = userEvent.setup();
+      renderPanel();
+      await openTab(user, /config/i);
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
+      const toggle = screen.getByTestId("pipeline-enabled-toggle") as HTMLInputElement;
+      expect(toggle.checked).toBe(true);
+    });
 
-    const runButton = screen.getByTestId("run-pipeline-btn");
-    await user.click(runButton);
+    it("disables the save button initially when config is not dirty", async () => {
+      const user = userEvent.setup();
+      renderPanel();
+      await openTab(user, /config/i);
 
-    expect(mockToast).toHaveBeenCalled();
-    expect(mockMutate).toHaveBeenCalled();
+      const saveButton = screen.getByTestId("pipeline-save-config-button") as HTMLButtonElement;
+      expect(saveButton.disabled).toBe(true);
+    });
+
+    it("enables the save button after editing a config value", async () => {
+      const user = userEvent.setup();
+      renderPanel();
+      await openTab(user, /config/i);
+
+      const saveButton = screen.getByTestId("pipeline-save-config-button") as HTMLButtonElement;
+      expect(saveButton.disabled).toBe(true);
+
+      await user.clear(screen.getByTestId("value-input-0"));
+      await user.type(screen.getByTestId("value-input-0"), "updated");
+
+      expect(screen.getByTestId("value-input-0")).toHaveValue("updated");
+      expect(saveButton.disabled).toBe(false);
+    });
+
+    it("enables the save button after toggling enabled", async () => {
+      const user = userEvent.setup();
+      renderPanel();
+      await openTab(user, /config/i);
+
+      const saveButton = screen.getByTestId("pipeline-save-config-button") as HTMLButtonElement;
+      expect(saveButton.disabled).toBe(true);
+
+      await user.click(screen.getByTestId("pipeline-enabled-toggle"));
+
+      const toggle = screen.getByTestId("pipeline-enabled-toggle") as HTMLInputElement;
+      expect(toggle.checked).toBe(false);
+      expect(saveButton.disabled).toBe(false);
+    });
+
+    it("saves the updated config via the update mutation with the edited payload", async () => {
+      const user = userEvent.setup();
+      const mockMutate = vi.fn().mockResolvedValue({});
+      vi.mocked(pipelineHooks.useUpdatePipeline).mockReturnValue({
+        mutateAsync: mockMutate,
+        isPending: false,
+        status: "idle",
+      } as any);
+
+      renderPanel();
+      await openTab(user, /config/i);
+
+      await user.clear(screen.getByTestId("value-input-0"));
+      await user.type(screen.getByTestId("value-input-0"), "updated");
+      await user.click(screen.getByTestId("pipeline-save-config-button"));
+
+      expect(mockMutate).toHaveBeenCalledWith({
+        id: mockPipeline.id,
+        data: {
+          provider: mockPipeline.provider,
+          model: mockPipeline.model,
+          enabled: mockPipeline.enabled,
+          config: { key: "updated" },
+        },
+      });
+      expect(mockToast).toHaveBeenCalledWith("success", "Configuration saved");
+    });
+
+    it("saves the new enabled flag via the update mutation", async () => {
+      const user = userEvent.setup();
+      const mockMutate = vi.fn().mockResolvedValue({});
+      vi.mocked(pipelineHooks.useUpdatePipeline).mockReturnValue({
+        mutateAsync: mockMutate,
+        isPending: false,
+        status: "idle",
+      } as any);
+
+      renderPanel();
+      await openTab(user, /config/i);
+
+      // TriState cycles from its current `true` state on click; the save
+      // payload carries whatever new enabled value the toggle reports.
+      await user.click(screen.getByTestId("pipeline-enabled-toggle"));
+      await user.click(screen.getByTestId("pipeline-save-config-button"));
+
+      expect(mockMutate).toHaveBeenCalledTimes(1);
+      const payload = mockMutate.mock.calls[0][0];
+      expect(payload.id).toBe(mockPipeline.id);
+      expect(payload.data.provider).toBe(mockPipeline.provider);
+      expect(payload.data.model).toBe(mockPipeline.model);
+      expect(payload.data.config).toEqual({ key: "value" });
+      // enabled changed away from the pipeline's original `true`
+      expect(payload.data.enabled).not.toBe(true);
+    });
+
+    it("toasts an error when saving config fails", async () => {
+      const user = userEvent.setup();
+      const mockMutate = vi.fn().mockRejectedValue(new Error("Save boom"));
+      vi.mocked(pipelineHooks.useUpdatePipeline).mockReturnValue({
+        mutateAsync: mockMutate,
+        isPending: false,
+        status: "idle",
+      } as any);
+
+      renderPanel();
+      await openTab(user, /config/i);
+
+      await user.clear(screen.getByTestId("value-input-0"));
+      await user.type(screen.getByTestId("value-input-0"), "updated");
+      await user.click(screen.getByTestId("pipeline-save-config-button"));
+
+      expect(mockMutate).toHaveBeenCalled();
+      expect(mockToast).toHaveBeenCalledWith("error", "Save boom");
+    });
   });
 
-  it("calls toast when pipeline execution fails", async () => {
-    const user = userEvent.setup();
-    const mockMutate = vi.fn().mockRejectedValue(new Error("Execution failed"));
-    vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
-      mutateAsync: mockMutate,
-      isPending: false,
-      status: "idle",
-    } as any);
+  describe("history tab", () => {
+    it("renders the runs table", async () => {
+      const user = userEvent.setup();
+      renderPanel();
+      await openTab(user, /history/i);
 
-    mockToast.mockClear();
+      expect(screen.getByTestId("pipeline-runs-table")).toBeInTheDocument();
+    });
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineDetailPanel pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
+    it("renders the 'no runs' empty state when there are no executions", async () => {
+      const user = userEvent.setup();
+      vi.mocked(pipelineHooks.usePipelineExecutions).mockReturnValue({
+        data: [],
+        isLoading: false,
+        error: null,
+        isFetching: false,
+        status: "success",
+      } as any);
 
-    const runButton = screen.getByTestId("run-pipeline-btn");
-    await user.click(runButton);
+      renderPanel();
+      await openTab(user, /history/i);
 
-    expect(mockToast).toHaveBeenCalled();
+      const empty = screen.getByTestId("pipeline-no-runs");
+      expect(empty).toBeInTheDocument();
+      expect(empty).toHaveClass("pipeline-empty-state");
+    });
+
+    it("renders the view-log button only for executions with an error message", async () => {
+      const user = userEvent.setup();
+      vi.mocked(pipelineHooks.usePipelineExecutions).mockReturnValue({
+        data: [mockFailedExecution],
+        isLoading: false,
+        error: null,
+        isFetching: false,
+        status: "success",
+      } as any);
+
+      renderPanel();
+      await openTab(user, /history/i);
+
+      expect(
+        screen.getByTestId(`pipeline-view-log-${mockFailedExecution.id}`),
+      ).toBeInTheDocument();
+    });
+
+    it("expands the error log when the view-log button is clicked", async () => {
+      const user = userEvent.setup();
+      vi.mocked(pipelineHooks.usePipelineExecutions).mockReturnValue({
+        data: [mockFailedExecution],
+        isLoading: false,
+        error: null,
+        isFetching: false,
+        status: "success",
+      } as any);
+
+      renderPanel();
+      await openTab(user, /history/i);
+      await user.click(screen.getByTestId(`pipeline-view-log-${mockFailedExecution.id}`));
+
+      const errorLog = screen.getByTestId("pipeline-error-log");
+      expect(errorLog).toBeInTheDocument();
+      expect(errorLog).toHaveClass("pipeline-error-log");
+      expect(errorLog).toHaveTextContent("Test error message");
+    });
+
+    it("renders the error message in the pipeline-error-message element", async () => {
+      const user = userEvent.setup();
+      vi.mocked(pipelineHooks.usePipelineExecutions).mockReturnValue({
+        data: [mockFailedExecution],
+        isLoading: false,
+        error: null,
+        isFetching: false,
+        status: "success",
+      } as any);
+
+      renderPanel();
+      await openTab(user, /history/i);
+      await user.click(screen.getByTestId(`pipeline-view-log-${mockFailedExecution.id}`));
+
+      expect(screen.getByText("Test error message")).toHaveClass("pipeline-error-message");
+    });
+
+    it("gives the copy-error button the correct aria-label", async () => {
+      const user = userEvent.setup();
+      vi.mocked(pipelineHooks.usePipelineExecutions).mockReturnValue({
+        data: [mockFailedExecution],
+        isLoading: false,
+        error: null,
+        isFetching: false,
+        status: "success",
+      } as any);
+
+      renderPanel();
+      await openTab(user, /history/i);
+      await user.click(screen.getByTestId(`pipeline-view-log-${mockFailedExecution.id}`));
+
+      expect(screen.getByTestId("pipeline-copy-error-button")).toHaveAttribute(
+        "aria-label",
+        "Copy error to clipboard",
+      );
+    });
+
+    it("toggles aria-expanded on the view-log button", async () => {
+      const user = userEvent.setup();
+      vi.mocked(pipelineHooks.usePipelineExecutions).mockReturnValue({
+        data: [mockFailedExecution],
+        isLoading: false,
+        error: null,
+        isFetching: false,
+        status: "success",
+      } as any);
+
+      renderPanel();
+      await openTab(user, /history/i);
+
+      const viewLogButton = screen.getByTestId(`pipeline-view-log-${mockFailedExecution.id}`);
+      expect(viewLogButton).toHaveAttribute("aria-expanded", "false");
+
+      await user.click(viewLogButton);
+
+      expect(viewLogButton).toHaveAttribute("aria-expanded", "true");
+    });
+
+    it("renders a success execution status chip with the emerald variant", async () => {
+      const user = userEvent.setup();
+      renderPanel();
+      await openTab(user, /history/i);
+
+      const chip = screen.getByText("success");
+      expect(chip.closest("[class*='chip']")).toHaveClass("chip--emerald");
+    });
+
+    it("renders an error execution status chip with the rose variant", async () => {
+      const user = userEvent.setup();
+      vi.mocked(pipelineHooks.usePipelineExecutions).mockReturnValue({
+        data: [mockFailedExecution],
+        isLoading: false,
+        error: null,
+        isFetching: false,
+        status: "success",
+      } as any);
+
+      renderPanel();
+      await openTab(user, /history/i);
+
+      const chip = screen.getByText("error");
+      expect(chip.closest("[class*='chip']")).toHaveClass("chip--rose");
+    });
+  });
+
+  describe("run button", () => {
+    it("renders with the correct testid and aria-label", () => {
+      renderPanel();
+
+      const runButton = screen.getByTestId("run-pipeline-btn");
+      expect(runButton).toBeInTheDocument();
+      expect(runButton).toHaveAttribute("aria-label", "Run pipeline");
+      expect(runButton).toHaveAttribute("title", "Run pipeline");
+    });
+
+    it("executes the pipeline with the current test input when clicked", async () => {
+      const user = userEvent.setup();
+      const mockMutate = vi.fn().mockResolvedValue(mockExecution);
+      vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
+        mutateAsync: mockMutate,
+        isPending: false,
+        status: "idle",
+      } as any);
+
+      renderPanel();
+      await user.click(screen.getByTestId("run-pipeline-btn"));
+
+      expect(mockMutate).toHaveBeenCalledWith({
+        id: mockPipeline.id,
+        inputText: "",
+      });
+    });
+
+    it("shows a spinner on the run button while the mutation is pending", () => {
+      vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
+        mutateAsync: vi.fn(),
+        isPending: true,
+        status: "pending",
+      } as any);
+
+      renderPanel();
+
+      const runButton = screen.getByTestId("run-pipeline-btn");
+      expect(runButton.querySelector("svg")).toHaveClass("spin");
+    });
+
+    it("disables the run button while the mutation is pending", () => {
+      vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
+        mutateAsync: vi.fn(),
+        isPending: true,
+        status: "pending",
+      } as any);
+
+      renderPanel();
+
+      const runButton = screen.getByTestId("run-pipeline-btn") as HTMLButtonElement;
+      expect(runButton.disabled).toBe(true);
+    });
+
+    it("toasts when the executed pipeline returns a non-success status", async () => {
+      const user = userEvent.setup();
+      const mockMutate = vi.fn().mockResolvedValue({ ...mockExecution, status: "error" });
+      vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
+        mutateAsync: mockMutate,
+        isPending: false,
+        status: "idle",
+      } as any);
+
+      renderPanel();
+      await user.click(screen.getByTestId("run-pipeline-btn"));
+
+      expect(mockMutate).toHaveBeenCalled();
+      expect(mockToast).toHaveBeenCalledWith("error", "Pipeline 'Test Pipeline' failed");
+    });
+
+    it("toasts the error message when the execution rejects", async () => {
+      const user = userEvent.setup();
+      const mockMutate = vi.fn().mockRejectedValue(new Error("Execution failed"));
+      vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
+        mutateAsync: mockMutate,
+        isPending: false,
+        status: "idle",
+      } as any);
+
+      renderPanel();
+      await user.click(screen.getByTestId("run-pipeline-btn"));
+
+      expect(mockToast).toHaveBeenCalledWith("error", "Execution failed");
+    });
   });
 });

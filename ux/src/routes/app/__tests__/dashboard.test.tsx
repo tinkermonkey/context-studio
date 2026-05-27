@@ -1,9 +1,43 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
-import { rest } from "msw";
+import { screen, waitFor, within } from "@testing-library/react";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
 import { Dashboard } from "../index";
+
+const HEALTH = {
+  status: "ok",
+  database_connected: true,
+  nlp_pipeline_ready: true,
+  embedding_model_loaded: true,
+  llm_providers_available: ["anthropic"],
+  uptime_seconds: 3600,
+};
+
+/**
+ * Register handlers for every endpoint the Dashboard fetches. The test server
+ * runs with onUnhandledRequest:"error", so each request must be mocked. The
+ * Dashboard hooks call: taxonomies, schemes, classes, individuals, pipelines
+ * (/api/pipelines — NOT /api/v1/pipelines), admin health, admin stats trends,
+ * and versioning changes.
+ */
+function baseHandlers(overrides: ReturnType<typeof http.get>[] = []) {
+  // MSW v2 resolves with the FIRST matching handler, so overrides must precede
+  // the defaults to take effect.
+  return [
+    ...overrides,
+    http.get("*/api/v1/admin/health", () => HttpResponse.json(HEALTH)),
+    http.get("*/api/v1/admin/stats/trends", () =>
+      HttpResponse.json({ taxonomies: [], schemes: [], classes: [], individuals: [], pipelines: [] }),
+    ),
+    http.get("*/api/taxonomies", () => HttpResponse.json({ items: [], total: 0, offset: 0 })),
+    http.get("*/api/schemes", () => HttpResponse.json({ items: [], total: 0, offset: 0 })),
+    http.get("*/api/classes", () => HttpResponse.json({ items: [], total: 0, offset: 0 })),
+    http.get("*/api/individuals", () => HttpResponse.json({ items: [], total: 0, offset: 0 })),
+    http.get("*/api/pipelines", () => HttpResponse.json([])),
+    http.get("*/api/v1/versioning/changes", () => HttpResponse.json({ events: [], total: 0 })),
+  ];
+}
 
 // Mock the Link component to avoid router issues
 vi.mock("@tanstack/react-router", async () => {
@@ -34,33 +68,7 @@ describe("Dashboard", () => {
   // ========================================================================
   describe("empty state", () => {
     it("displays empty state when no taxonomies exist", async () => {
-      server.use(
-        rest.get("*/api/v1/admin/health", (req, res, ctx) =>
-          res(
-            ctx.json({
-              status: "ok",
-              database_connected: true,
-              nlp_pipeline_ready: true,
-              embedding_model_loaded: true,
-              llm_providers_available: ["anthropic"],
-              uptime_seconds: 3600,
-            }),
-          ),
-        ),
-        rest.get("*/api/taxonomies", (req, res, ctx) =>
-          res(ctx.json({ items: [], total: 0, offset: 0 })),
-        ),
-        rest.get("*/api/classes", (req, res, ctx) =>
-          res(ctx.json({ items: [], total: 0, offset: 0 })),
-        ),
-        rest.get("*/api/individuals", (req, res, ctx) =>
-          res(ctx.json({ items: [], total: 0, offset: 0 })),
-        ),
-        rest.get("*/api/v1/pipelines", (req, res, ctx) => res(ctx.json([]))),
-        rest.get("*/api/v1/versioning/changes", (req, res, ctx) =>
-          res(ctx.json({ events: [], total: 0 })),
-        ),
-      );
+      server.use(...baseHandlers());
 
       render(<Dashboard />);
 
@@ -82,39 +90,38 @@ describe("Dashboard", () => {
       const taxonomiesPromise = new Promise<void>((resolve) => {
         resolveTaxonomies = resolve;
       });
+      let resolveChanges: () => void;
+      const changesPromise = new Promise<void>((resolve) => {
+        resolveChanges = resolve;
+      });
 
+      // Hold taxonomies pending so the dashboard renders its main view (not the
+      // empty state), and hold the changes request pending so the Recent
+      // activity panel renders its skeleton placeholders (4 of them).
       server.use(
-        rest.get("*/api/taxonomies", async (req, res, ctx) => {
-          await taxonomiesPromise;
-          return res(ctx.json({ items: [], total: 0 }));
-        }),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json({ items: [], total: 0 }))),
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json({ items: [], total: 0 }))),
-        rest.get("*/api/v1/pipelines", (req, res, ctx) => res(ctx.json([]))),
-        rest.get("*/api/v1/admin/health", (req, res, ctx) =>
-          res(
-            ctx.json({
-              status: "ok",
-              database_connected: true,
-              nlp_pipeline_ready: true,
-              embedding_model_loaded: true,
-              llm_providers_available: ["anthropic"],
-              uptime_seconds: 3600,
-            }),
-          ),
-        ),
-        rest.get("*/api/v1/versioning/changes", (req, res, ctx) =>
-          res(ctx.json({ events: [], total: 0 })),
-        ),
+        ...baseHandlers([
+          http.get("*/api/taxonomies", async () => {
+            await taxonomiesPromise;
+            return HttpResponse.json({ items: [{ id: "t-1", title: "Bio" }], total: 1, offset: 0 });
+          }),
+          http.get("*/api/v1/versioning/changes", async () => {
+            await changesPromise;
+            return HttpResponse.json({ events: [], total: 0 });
+          }),
+        ]),
       );
 
       const { container } = render(<Dashboard />);
 
-      // Verify skeletons are rendered by looking for skeleton-shimmer animation
-      const skeletons = container.querySelectorAll('[style*="skeleton-shimmer"]');
-      expect(skeletons.length).toBeGreaterThan(0);
+      // Skeletons render as <div className="skeleton"> (CSS-driven shimmer).
+      // The Recent activity panel renders 4 while changes are loading.
+      await waitFor(() => {
+        const skeletons = container.querySelectorAll(".skeleton");
+        expect(skeletons.length).toBeGreaterThanOrEqual(4);
+      });
 
       resolveTaxonomies!();
+      resolveChanges!();
     });
   });
 
@@ -124,27 +131,11 @@ describe("Dashboard", () => {
   describe("error state", () => {
     it("displays error banner when taxonomies fail to load", async () => {
       server.use(
-        rest.get("*/api/taxonomies", (req, res, ctx) =>
-          res(ctx.status(500), ctx.json({ detail: "Server error" })),
-        ),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json({ items: [], total: 0 }))),
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json({ items: [], total: 0 }))),
-        rest.get("*/api/v1/pipelines", (req, res, ctx) => res(ctx.json([]))),
-        rest.get("*/api/v1/admin/health", (req, res, ctx) =>
-          res(
-            ctx.json({
-              status: "ok",
-              database_connected: true,
-              nlp_pipeline_ready: true,
-              embedding_model_loaded: true,
-              llm_providers_available: ["anthropic"],
-              uptime_seconds: 3600,
-            }),
+        ...baseHandlers([
+          http.get("*/api/taxonomies", () =>
+            HttpResponse.json({ detail: "Server error" }, { status: 500 }),
           ),
-        ),
-        rest.get("*/api/v1/versioning/changes", (req, res, ctx) =>
-          res(ctx.json({ events: [], total: 0 })),
-        ),
+        ]),
       );
 
       render(<Dashboard />);
@@ -156,29 +147,14 @@ describe("Dashboard", () => {
 
     it("displays multiple error banners when multiple sections fail", async () => {
       server.use(
-        rest.get("*/api/taxonomies", (req, res, ctx) =>
-          res(ctx.status(500), ctx.json({ detail: "Server error" })),
-        ),
-        rest.get("*/api/classes", (req, res, ctx) =>
-          res(ctx.status(500), ctx.json({ detail: "Server error" })),
-        ),
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json({ items: [], total: 0 }))),
-        rest.get("*/api/v1/pipelines", (req, res, ctx) => res(ctx.json([]))),
-        rest.get("*/api/v1/admin/health", (req, res, ctx) =>
-          res(
-            ctx.json({
-              status: "ok",
-              database_connected: true,
-              nlp_pipeline_ready: true,
-              embedding_model_loaded: true,
-              llm_providers_available: ["anthropic"],
-              uptime_seconds: 3600,
-            }),
+        ...baseHandlers([
+          http.get("*/api/taxonomies", () =>
+            HttpResponse.json({ detail: "Server error" }, { status: 500 }),
           ),
-        ),
-        rest.get("*/api/v1/versioning/changes", (req, res, ctx) =>
-          res(ctx.json({ events: [], total: 0 })),
-        ),
+          http.get("*/api/classes", () =>
+            HttpResponse.json({ detail: "Server error" }, { status: 500 }),
+          ),
+        ]),
       );
 
       render(<Dashboard />);
@@ -196,123 +172,74 @@ describe("Dashboard", () => {
   describe("populated state", () => {
     it("displays stat tiles with loaded data", async () => {
       server.use(
-        rest.get("*/api/taxonomies", (req, res, ctx) =>
-          res(
-            ctx.json({
+        ...baseHandlers([
+          http.get("*/api/taxonomies", () =>
+            HttpResponse.json({
               items: [{ id: "tax-1", title: "Biology", description: "Life sciences" }],
               total: 1,
               offset: 0,
             }),
           ),
-        ),
-        rest.get("*/api/classes", (req, res, ctx) =>
-          res(
-            ctx.json({
+          http.get("*/api/classes", () =>
+            HttpResponse.json({
               items: [{ id: "class-1", title: "Organism", description: "Living things" }],
               total: 3,
               offset: 0,
             }),
           ),
-        ),
-        rest.get("*/api/individuals", (req, res, ctx) =>
-          res(
-            ctx.json({
+          http.get("*/api/individuals", () =>
+            HttpResponse.json({
               items: [{ id: "ind-1", title: "Human", description: "Species" }],
               total: 5,
               offset: 0,
             }),
           ),
-        ),
-        rest.get("*/api/v1/pipelines", (req, res, ctx) =>
-          res(
-            ctx.json([
+          http.get("*/api/pipelines", () =>
+            HttpResponse.json([
               { id: "pipe-1", title: "Extraction", enabled: true },
               { id: "pipe-2", title: "Enrichment", enabled: false },
             ]),
           ),
-        ),
-        rest.get("*/api/v1/admin/health", (req, res, ctx) =>
-          res(
-            ctx.json({
-              status: "ok",
-              database_connected: true,
-              nlp_pipeline_ready: true,
-              embedding_model_loaded: true,
-              llm_providers_available: ["anthropic"],
-              uptime_seconds: 3600,
-            }),
-          ),
-        ),
-        rest.get("*/api/v1/versioning/changes", (req, res, ctx) =>
-          res(
-            ctx.json({
-              events: [
-                {
-                  id: "event-1",
-                  operation: "create",
-                  entity_type: "taxonomy",
-                  entity_id: "tax-1",
-                  timestamp: new Date().toISOString(),
-                  new_state: { title: "Biology" },
-                },
-              ],
-              total: 1,
-            }),
-          ),
-        ),
+        ]),
       );
 
-      render(<Dashboard />);
+      const { container } = render(<Dashboard />);
+
+      // "Taxonomies" appears in the stat grid, the Quick Access grid, and the
+      // hierarchy panel. Scope assertions to the stat grid (.stat-grid) so each
+      // label/value pair is unambiguous.
+      await waitFor(() => {
+        expect(container.querySelector(".stat-grid")).toBeInTheDocument();
+      });
+      const statGrid = within(container.querySelector(".stat-grid") as HTMLElement);
 
       await waitFor(() => {
-        expect(screen.getByText("Taxonomies")).toBeInTheDocument();
-        expect(screen.getByText("1")).toBeInTheDocument();
+        expect(statGrid.getByText("Taxonomies")).toBeInTheDocument();
+        expect(statGrid.getByText("1")).toBeInTheDocument();
       });
 
-      expect(screen.getByText("Classes")).toBeInTheDocument();
-      expect(screen.getAllByText("3")).toBeTruthy();
+      expect(statGrid.getByText("Classes")).toBeInTheDocument();
+      expect(statGrid.getByText("3")).toBeInTheDocument();
 
-      expect(screen.getByText("Individuals")).toBeInTheDocument();
-      expect(screen.getAllByText("5")).toBeTruthy();
+      expect(statGrid.getByText("Individuals")).toBeInTheDocument();
+      expect(statGrid.getByText("5")).toBeInTheDocument();
 
-      expect(screen.getAllByText("Pipelines")).toBeTruthy();
-      expect(screen.getAllByText("1")).toBeTruthy();
+      // Two pipelines were returned by /api/pipelines.
+      expect(statGrid.getByText("Pipelines")).toBeInTheDocument();
+      expect(statGrid.getByText("2")).toBeInTheDocument();
     });
 
     it("displays activity section header when populated", async () => {
       server.use(
-        rest.get("*/api/taxonomies", (req, res, ctx) =>
-          res(
-            ctx.json({
+        ...baseHandlers([
+          http.get("*/api/taxonomies", () =>
+            HttpResponse.json({
               items: [{ id: "tax-1", title: "Biology" }],
               total: 1,
               offset: 0,
             }),
           ),
-        ),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json({ items: [], total: 0 }))),
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json({ items: [], total: 0 }))),
-        rest.get("*/api/v1/pipelines", (req, res, ctx) => res(ctx.json([]))),
-        rest.get("*/api/v1/admin/health", (req, res, ctx) =>
-          res(
-            ctx.json({
-              status: "ok",
-              database_connected: true,
-              nlp_pipeline_ready: true,
-              embedding_model_loaded: true,
-              llm_providers_available: ["anthropic"],
-              uptime_seconds: 3600,
-            }),
-          ),
-        ),
-        rest.get("*/api/v1/versioning/changes", (req, res, ctx) =>
-          res(
-            ctx.json({
-              events: [],
-              total: 0,
-            }),
-          ),
-        ),
+        ]),
       );
 
       render(<Dashboard />);
@@ -325,33 +252,15 @@ describe("Dashboard", () => {
 
     it("displays active pipelines and quick access sections when populated", async () => {
       server.use(
-        rest.get("*/api/taxonomies", (req, res, ctx) =>
-          res(
-            ctx.json({
+        ...baseHandlers([
+          http.get("*/api/taxonomies", () =>
+            HttpResponse.json({
               items: [{ id: "tax-1", title: "Biology" }],
               total: 1,
               offset: 0,
             }),
           ),
-        ),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json({ items: [], total: 0 }))),
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json({ items: [], total: 0 }))),
-        rest.get("*/api/v1/pipelines", (req, res, ctx) => res(ctx.json([]))),
-        rest.get("*/api/v1/admin/health", (req, res, ctx) =>
-          res(
-            ctx.json({
-              status: "ok",
-              database_connected: true,
-              nlp_pipeline_ready: true,
-              embedding_model_loaded: true,
-              llm_providers_available: ["anthropic"],
-              uptime_seconds: 3600,
-            }),
-          ),
-        ),
-        rest.get("*/api/v1/versioning/changes", (req, res, ctx) =>
-          res(ctx.json({ events: [], total: 0 })),
-        ),
+        ]),
       );
 
       render(<Dashboard />);
@@ -369,47 +278,33 @@ describe("Dashboard", () => {
   describe("partial state", () => {
     it("displays available data while some sections error", async () => {
       server.use(
-        rest.get("*/api/taxonomies", (req, res, ctx) =>
-          res(
-            ctx.json({
+        ...baseHandlers([
+          http.get("*/api/taxonomies", () =>
+            HttpResponse.json({
               items: [{ id: "tax-1", title: "Biology" }],
               total: 1,
               offset: 0,
             }),
           ),
-        ),
-        rest.get("*/api/classes", (req, res, ctx) =>
-          res(ctx.status(500), ctx.json({ detail: "Error" })),
-        ),
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json({ items: [], total: 0 }))),
-        rest.get("*/api/v1/pipelines", (req, res, ctx) => res(ctx.json([]))),
-        rest.get("*/api/v1/admin/health", (req, res, ctx) =>
-          res(
-            ctx.json({
-              status: "ok",
-              database_connected: true,
-              nlp_pipeline_ready: true,
-              embedding_model_loaded: true,
-              llm_providers_available: ["anthropic"],
-              uptime_seconds: 3600,
-            }),
+          http.get("*/api/classes", () =>
+            HttpResponse.json({ detail: "Error" }, { status: 500 }),
           ),
-        ),
-        rest.get("*/api/v1/versioning/changes", (req, res, ctx) =>
-          res(ctx.json({ events: [], total: 0 })),
-        ),
+        ]),
       );
 
-      render(<Dashboard />);
+      const { container } = render(<Dashboard />);
 
       await waitFor(() => {
-        // Should show taxonomy data
-        expect(screen.getByText("Taxonomies")).toBeInTheDocument();
-        expect(screen.getByText("1")).toBeInTheDocument();
-
         // Should show classes error
         expect(screen.getByText("Could not load class hierarchy")).toBeInTheDocument();
       });
+
+      // Should still show the taxonomy stat tile (count 1) despite the class
+      // hierarchy error. Scope to the stat grid since "Taxonomies" also appears
+      // in the Quick Access grid.
+      const statGrid = within(container.querySelector(".stat-grid") as HTMLElement);
+      expect(statGrid.getByText("Taxonomies")).toBeInTheDocument();
+      expect(statGrid.getByText("1")).toBeInTheDocument();
     });
   });
 });

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeAll, beforeEach, afterEach, afterAll } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { rest } from "msw";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
 import { IndividualEditor } from "../IndividualEditor";
@@ -49,7 +49,7 @@ const mockClasses = [
 
 function setupDefaultMocks() {
   server.use(
-    rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses(mockClasses)))),
+    http.get("*/api/classes", () => HttpResponse.json(createListClasses(mockClasses))),
   );
 }
 

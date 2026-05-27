@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { rest } from "msw";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
 import { SettingsPage } from "../settings";
@@ -20,6 +20,12 @@ afterAll(() => {
   server.close();
 });
 
+// This file covers the Settings page shell: structure, error/retry handling,
+// empty config, and how the General-tab form surfaces config values. The
+// page is driven by GET /api/v1/admin/configuration and persists edits via
+// PATCH on blur. The summary-tile coverage lives in
+// src/routes/app/settings/__tests__/settings.test.tsx; here we focus on the
+// behaviors unique to the shell.
 describe("Settings Page", () => {
   // ========================================================================
   // Page Structure
@@ -27,32 +33,14 @@ describe("Settings Page", () => {
   describe("page structure", () => {
     it("renders settings page root with testid", async () => {
       server.use(
-        rest.get("*/api/v1/admin/configuration", (req, res, ctx) =>
-          res(
-            ctx.json({
-              sections: {
-                workspace: {
-                  display_name: "My Workspace",
-                  path: "/workspace",
-                },
-                llm: {
-                  provider: "anthropic",
-                  model: "claude-3-opus",
-                },
-                embedding: {
-                  model_name: "all-MiniLM-L6-v2",
-                  vector_dimensions: 384,
-                },
-                nlp: {
-                  model_name: "en_core_web_sm",
-                },
-                sync: {
-                  target_type: "local",
-                  path: "/sync",
-                },
-              },
-            }),
-          ),
+        http.get("*/api/v1/admin/configuration", () =>
+          HttpResponse.json({
+            sections: {
+              workspace: { display_name: "My Workspace", path: "/workspace" },
+              llm: { provider: "anthropic", model: "claude-3-opus" },
+              embedding: { model_name: "all-MiniLM-L6-v2", vector_dimensions: 384 },
+            },
+          }),
         ),
       );
 
@@ -63,14 +51,10 @@ describe("Settings Page", () => {
       });
     });
 
-    it("displays page title and subtitle", async () => {
+    it("displays page title heading", async () => {
       server.use(
-        rest.get("*/api/v1/admin/configuration", (req, res, ctx) =>
-          res(
-            ctx.json({
-              sections: {},
-            }),
-          ),
+        http.get("*/api/v1/admin/configuration", () =>
+          HttpResponse.json({ sections: {} }),
         ),
       );
 
@@ -81,49 +65,29 @@ describe("Settings Page", () => {
       });
     });
 
-    it("displays all configuration section tiles", async () => {
+    it("renders the general tab with its form and summary tiles", async () => {
       server.use(
-        rest.get("*/api/v1/admin/configuration", (req, res, ctx) =>
-          res(
-            ctx.json({
-              sections: {
-                workspace: {
-                  display_name: "My Workspace",
-                  path: "/workspace",
-                },
-                llm: {
-                  provider: "anthropic",
-                },
-                embedding: {
-                  model_name: "all-MiniLM-L6-v2",
-                },
-                nlp: {
-                  model_name: "en_core_web_sm",
-                },
-                sync: {
-                  target_type: "local",
-                },
-              },
-            }),
-          ),
+        http.get("*/api/v1/admin/configuration", () =>
+          HttpResponse.json({
+            sections: {
+              workspace: { display_name: "My Workspace", path: "/workspace" },
+              llm: { provider: "anthropic" },
+              embedding: { model_name: "all-MiniLM-L6-v2" },
+            },
+          }),
         ),
       );
 
       render(<SettingsPage />);
 
       await waitFor(() => {
-        // Check for key config values
-        expect(screen.getByText("My Workspace")).toBeInTheDocument();
-        expect(screen.getByText("all-MiniLM-L6-v2")).toBeInTheDocument();
-        expect(screen.getByText("en_core_web_sm")).toBeInTheDocument();
-        // Check that config tiles are rendered via their testids
-        expect(screen.getByTestId("config-tile-workspace")).toBeInTheDocument();
-        expect(screen.getByTestId("config-tile-llm")).toBeInTheDocument();
-        expect(screen.getByTestId("config-tile-embedding")).toBeInTheDocument();
-        expect(screen.getByTestId("config-tile-nlp")).toBeInTheDocument();
-        expect(screen.getByTestId("config-tile-reference-sources")).toBeInTheDocument();
-        expect(screen.getByTestId("config-tile-sync")).toBeInTheDocument();
+        expect(screen.getByTestId("settings-general-form")).toBeInTheDocument();
       });
+
+      // Summary tiles in the right column.
+      expect(screen.getByTestId("config-tile-backups")).toBeInTheDocument();
+      expect(screen.getByTestId("config-tile-performance")).toBeInTheDocument();
+      expect(screen.getByTestId("config-tile-telemetry")).toBeInTheDocument();
     });
   });
 
@@ -131,29 +95,26 @@ describe("Settings Page", () => {
   // Loading State
   // ========================================================================
   describe("loading state", () => {
-    it("displays skeleton loading while data is fetching", async () => {
+    it("displays skeleton placeholders while data is fetching", async () => {
       let resolveRequest: () => void;
-      const promise = new Promise<void>((resolve) => {
+      const pending = new Promise<void>((resolve) => {
         resolveRequest = resolve;
       });
 
       server.use(
-        rest.get("*/api/v1/admin/configuration", async (req, res, ctx) => {
-          await promise;
-          return res(
-            ctx.json({
-              sections: {},
-            }),
-          );
+        http.get("*/api/v1/admin/configuration", async () => {
+          await pending;
+          return HttpResponse.json({ sections: {} });
         }),
       );
 
       const { container } = render(<SettingsPage />);
 
-      // Wait for skeletons to appear - they have the skeleton-shimmer animation
+      // Skeletons render as <div className="skeleton">: 2 header + 5 form-row
+      // + 3 summary-tile = 10 total.
       await waitFor(() => {
-        const skeletons = container.querySelectorAll('[style*="skeleton-shimmer"]');
-        expect(skeletons.length).toBe(8);
+        const skeletons = container.querySelectorAll(".skeleton");
+        expect(skeletons.length).toBe(10);
       });
 
       resolveRequest!();
@@ -166,8 +127,8 @@ describe("Settings Page", () => {
   describe("error state", () => {
     it("displays error banner when API request fails", async () => {
       server.use(
-        rest.get("*/api/v1/admin/configuration", (req, res, ctx) =>
-          res(ctx.status(500), ctx.json({ detail: "Server error" })),
+        http.get("*/api/v1/admin/configuration", () =>
+          HttpResponse.json({ detail: "Server error" }, { status: 500 }),
         ),
       );
 
@@ -178,37 +139,32 @@ describe("Settings Page", () => {
       });
     });
 
-    it("provides retry button on error", async () => {
+    it("provides retry button on error and recovers after retry", async () => {
       let callCount = 0;
 
       server.use(
-        rest.get("*/api/v1/admin/configuration", (req, res, ctx) => {
+        http.get("*/api/v1/admin/configuration", () => {
           callCount++;
           if (callCount === 1) {
-            return res(ctx.status(500), ctx.json({ detail: "Server error" }));
+            return HttpResponse.json({ detail: "Server error" }, { status: 500 });
           }
-          return res(
-            ctx.json({
-              sections: {},
-            }),
-          );
+          return HttpResponse.json({
+            sections: {
+              workspace: { display_name: "My Workspace", path: "/workspace" },
+            },
+          });
         }),
       );
 
       render(<SettingsPage />);
 
-      await waitFor(() => {
-        // Retry button should be present when there's an error
-        const retryButton = screen.getByRole("button", { name: /retry/i });
-        expect(retryButton).toBeInTheDocument();
-      });
-
-      const retryButton = screen.getByRole("button", { name: /retry/i });
+      const retryButton = await screen.findByRole("button", { name: /retry/i });
+      expect(retryButton).toBeInTheDocument();
       await userEvent.click(retryButton);
 
-      // After retry succeeds, page should load normally
+      // After retry succeeds, the general form renders.
       await waitFor(() => {
-        expect(screen.getByTestId("settings-page")).toBeInTheDocument();
+        expect(screen.getByTestId("settings-general-form")).toBeInTheDocument();
       });
     });
   });
@@ -217,242 +173,71 @@ describe("Settings Page", () => {
   // Empty State
   // ========================================================================
   describe("empty state", () => {
-    it("displays settings page with empty sections", async () => {
+    it("renders the page with empty config sections", async () => {
       server.use(
-        rest.get("*/api/v1/admin/configuration", (req, res, ctx) =>
-          res(
-            ctx.json({
-              sections: {},
-            }),
-          ),
+        http.get("*/api/v1/admin/configuration", () =>
+          HttpResponse.json({ sections: {} }),
         ),
       );
 
       render(<SettingsPage />);
 
+      // The form still renders, with blank inputs, and the summary tiles persist.
       await waitFor(() => {
-        expect(screen.getByTestId("settings-page")).toBeInTheDocument();
+        expect(screen.getByTestId("settings-general-form")).toBeInTheDocument();
       });
+      expect(screen.getByTestId("config-tile-backups")).toBeInTheDocument();
     });
   });
 
   // ========================================================================
-  // Populated State
+  // Populated Form Values
   // ========================================================================
-  describe("populated state", () => {
-    it("displays workspace configuration settings", async () => {
+  describe("populated form", () => {
+    it("surfaces workspace, llm, and embedding config through form inputs", async () => {
       server.use(
-        rest.get("*/api/v1/admin/configuration", (req, res, ctx) =>
-          res(
-            ctx.json({
-              sections: {
-                workspace: {
-                  display_name: "My Workspace",
-                  path: "/workspace",
-                },
-                llm: {},
-                embedding: {},
-                nlp: {},
-                sync: {},
-              },
-            }),
-          ),
+        http.get("*/api/v1/admin/configuration", () =>
+          HttpResponse.json({
+            sections: {
+              workspace: { display_name: "My Workspace", path: "/workspace" },
+              llm: { provider: "anthropic", model: "claude-3-opus" },
+              embedding: { model_name: "all-MiniLM-L6-v2" },
+            },
+          }),
         ),
       );
 
       render(<SettingsPage />);
 
       await waitFor(() => {
-        expect(screen.getByText("My Workspace")).toBeInTheDocument();
-        expect(screen.getByText("/workspace")).toBeInTheDocument();
+        expect(screen.getByDisplayValue("My Workspace")).toBeInTheDocument();
       });
+
+      expect(screen.getByDisplayValue("/workspace")).toBeInTheDocument();
+      expect(screen.getByDisplayValue("claude-3-opus")).toBeInTheDocument();
+      expect(screen.getByDisplayValue("all-MiniLM-L6-v2")).toBeInTheDocument();
     });
 
-    it("displays LLM configuration with provider selection", async () => {
+    it("reflects a different LLM model in the model input", async () => {
       server.use(
-        rest.get("*/api/v1/admin/configuration", (req, res, ctx) =>
-          res(
-            ctx.json({
-              sections: {
-                workspace: {
-                  display_name: "My Workspace",
-                  path: "/workspace",
-                },
-                llm: {
-                  provider: "anthropic",
-                  model: "claude-3-opus",
-                  api_key: "sk-...",
-                },
-                embedding: {},
-                nlp: {},
-                sync: {},
-              },
-            }),
-          ),
+        http.get("*/api/v1/admin/configuration", () =>
+          HttpResponse.json({
+            sections: {
+              workspace: { display_name: "My Workspace", path: "/workspace" },
+              llm: { provider: "openai", model: "gpt-4" },
+            },
+          }),
         ),
       );
 
       render(<SettingsPage />);
 
       await waitFor(() => {
-        expect(screen.getByText("claude-3-opus")).toBeInTheDocument();
-      });
-    });
-
-    it("displays all configuration sections when populated", async () => {
-      server.use(
-        rest.get("*/api/v1/admin/configuration", (req, res, ctx) =>
-          res(
-            ctx.json({
-              sections: {
-                workspace: {
-                  display_name: "My Workspace",
-                  path: "/workspace",
-                },
-                llm: {
-                  provider: "anthropic",
-                  model: "claude-3-opus",
-                },
-                embedding: {
-                  model_name: "all-MiniLM-L6-v2",
-                  vector_dimensions: 384,
-                },
-                nlp: {
-                  model_name: "en_core_web_sm",
-                },
-                sync: {
-                  target_type: "local",
-                  path: "/sync",
-                },
-              },
-            }),
-          ),
-        ),
-      );
-
-      render(<SettingsPage />);
-
-      await waitFor(() => {
-        // Verify workspace section
-        expect(screen.getByText("My Workspace")).toBeInTheDocument();
-
-        // Verify LLM section
-        expect(screen.getByText("claude-3-opus")).toBeInTheDocument();
-
-        // Verify embedding section
-        expect(screen.getByText("all-MiniLM-L6-v2")).toBeInTheDocument();
-
-        // Verify NLP section
-        expect(screen.getByText("en_core_web_sm")).toBeInTheDocument();
-
-        // Verify sync section
-        expect(screen.getByText("/sync")).toBeInTheDocument();
-      });
-    });
-  });
-
-  // ========================================================================
-  // Interactive State
-  // ========================================================================
-  describe("interactive state", () => {
-    it("opens edit modal when config tile is clicked", async () => {
-      server.use(
-        rest.get("*/api/v1/admin/configuration", (req, res, ctx) =>
-          res(
-            ctx.json({
-              sections: {
-                workspace: {
-                  display_name: "My Workspace",
-                  path: "/workspace",
-                },
-                llm: {},
-                embedding: {},
-                nlp: {},
-                sync: {},
-              },
-            }),
-          ),
-        ),
-      );
-
-      render(<SettingsPage />);
-
-      await waitFor(() => {
-        expect(screen.getByText("My Workspace")).toBeInTheDocument();
+        expect(screen.getByDisplayValue("gpt-4")).toBeInTheDocument();
       });
 
-      // Click on workspace config tile (the tile itself is the button)
-      const tile = screen.getByTestId("config-tile-workspace");
-      expect(tile).toBeInTheDocument();
-      await userEvent.click(tile);
-
-      // Modal should open
-      await waitFor(() => {
-        const modal = screen.queryByRole("dialog");
-        expect(modal || screen.getByTestId("edit-config-modal")).toBeInTheDocument();
-      });
-    });
-
-    it("handles different LLM providers", async () => {
-      server.use(
-        rest.get("*/api/v1/admin/configuration", (req, res, ctx) =>
-          res(
-            ctx.json({
-              sections: {
-                workspace: {
-                  display_name: "My Workspace",
-                  path: "/workspace",
-                },
-                llm: {
-                  provider: "openai",
-                  model: "gpt-4",
-                },
-                embedding: {},
-                nlp: {},
-                sync: {},
-              },
-            }),
-          ),
-        ),
-      );
-
-      render(<SettingsPage />);
-
-      await waitFor(() => {
-        expect(screen.getByText("gpt-4")).toBeInTheDocument();
-      });
-    });
-
-    it("displays conditional fields based on sync target type", async () => {
-      server.use(
-        rest.get("*/api/v1/admin/configuration", (req, res, ctx) =>
-          res(
-            ctx.json({
-              sections: {
-                workspace: {
-                  display_name: "My Workspace",
-                  path: "/workspace",
-                },
-                llm: {},
-                embedding: {},
-                nlp: {},
-                sync: {
-                  target_type: "s3",
-                  path: "my-bucket",
-                  aws_access_key_id: "AKIA...",
-                  aws_secret_access_key: "secret",
-                },
-              },
-            }),
-          ),
-        ),
-      );
-
-      render(<SettingsPage />);
-
-      await waitFor(() => {
-        expect(screen.getByText("my-bucket")).toBeInTheDocument();
-      });
+      // The provider select reflects the configured provider.
+      expect(screen.getByTestId("settings-llm-provider-select")).toHaveValue("openai");
     });
   });
 });

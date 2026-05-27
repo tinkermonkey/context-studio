@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { rest } from "msw";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
 import {
@@ -33,28 +33,26 @@ describe("Individuals Data Page", () => {
   describe("loading state", () => {
     it("displays loading skeleton state while data loads", async () => {
       server.use(
-        rest.get("*/api/individuals", async (req, res, ctx) => {
+        http.get("*/api/individuals", async () => {
           await new Promise((resolve) => setTimeout(resolve, 100));
-          return res(ctx.json(createListIndividuals([])));
+          return HttpResponse.json(createListIndividuals([]));
         }),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([])))),
+        http.get("*/api/classes", () => HttpResponse.json(createListClasses([]))),
       );
 
       const { container } = render(<IndividualsPage />);
 
-      const skeletonElements = container.querySelectorAll(
-        "div[style*='animation: skeleton-shimmer']",
-      );
+      const skeletonElements = container.querySelectorAll("div.skeleton");
       expect(skeletonElements.length).toBeGreaterThanOrEqual(5);
     });
 
     it("verifies data-testid attribute present on page container during loading", async () => {
       server.use(
-        rest.get("*/api/individuals", async (req, res, ctx) => {
+        http.get("*/api/individuals", async () => {
           await new Promise((resolve) => setTimeout(resolve, 100));
-          return res(ctx.json(createListIndividuals([])));
+          return HttpResponse.json(createListIndividuals([]));
         }),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([])))),
+        http.get("*/api/classes", () => HttpResponse.json(createListClasses([]))),
       );
 
       render(<IndividualsPage />);
@@ -70,10 +68,10 @@ describe("Individuals Data Page", () => {
   describe("error state", () => {
     it("displays error banner with retry button when API fails", async () => {
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) =>
-          res(ctx.status(500), ctx.json({ detail: "Internal server error" })),
+        http.get("*/api/individuals", () =>
+          HttpResponse.json({ detail: "Internal server error" }, { status: 500 }),
         ),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([])))),
+        http.get("*/api/classes", () => HttpResponse.json(createListClasses([]))),
       );
 
       render(<IndividualsPage />);
@@ -92,8 +90,8 @@ describe("Individuals Data Page", () => {
   describe("empty state", () => {
     it("displays empty state copy when no individuals exist", async () => {
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(createListIndividuals([])))),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([])))),
+        http.get("*/api/individuals", () => HttpResponse.json(createListIndividuals([]))),
+        http.get("*/api/classes", () => HttpResponse.json(createListClasses([]))),
       );
 
       render(<IndividualsPage />);
@@ -106,8 +104,8 @@ describe("Individuals Data Page", () => {
 
     it("displays CTA button with correct label in empty state", async () => {
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(createListIndividuals([])))),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([])))),
+        http.get("*/api/individuals", () => HttpResponse.json(createListIndividuals([]))),
+        http.get("*/api/classes", () => HttpResponse.json(createListClasses([]))),
       );
 
       render(<IndividualsPage />);
@@ -123,8 +121,8 @@ describe("Individuals Data Page", () => {
 
     it("verifies empty-state element is present", async () => {
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(createListIndividuals([])))),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([])))),
+        http.get("*/api/individuals", () => HttpResponse.json(createListIndividuals([]))),
+        http.get("*/api/classes", () => HttpResponse.json(createListClasses([]))),
       );
 
       render(<IndividualsPage />);
@@ -163,8 +161,8 @@ describe("Individuals Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
+        http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
+        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
       );
 
       render(<IndividualsPage />);
@@ -192,8 +190,8 @@ describe("Individuals Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
+        http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
+        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
       );
 
       render(<IndividualsPage />);
@@ -227,8 +225,8 @@ describe("Individuals Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
+        http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
+        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
       );
 
       render(<IndividualsPage />);
@@ -260,8 +258,8 @@ describe("Individuals Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
+        http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
+        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
       );
 
       render(<IndividualsPage />);
@@ -291,8 +289,8 @@ describe("Individuals Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
+        http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
+        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
       );
 
       render(<IndividualsPage />);
@@ -321,8 +319,8 @@ describe("Individuals Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
+        http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
+        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
       );
 
       render(<IndividualsPage />);
@@ -367,8 +365,8 @@ describe("Individuals Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
+        http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
+        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
       );
 
       render(<IndividualsPage />);
@@ -407,8 +405,8 @@ describe("Individuals Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
+        http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
+        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
       );
 
       render(<IndividualsPage />);
@@ -447,8 +445,8 @@ describe("Individuals Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
+        http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
+        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
       );
 
       render(<IndividualsPage />);
@@ -492,8 +490,8 @@ describe("Individuals Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
+        http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
+        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
       );
 
       render(<IndividualsPage />);
@@ -524,9 +522,9 @@ describe("Individuals Data Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/classes", (req, res, ctx) =>
-          res(ctx.status(500), ctx.json({ detail: "Server error" })),
+        http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
+        http.get("*/api/classes", () =>
+          HttpResponse.json({ detail: "Server error" }, { status: 500 }),
         ),
       );
 

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { rest } from "msw";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
 import { SourcesPageWrapper } from "../sources";
@@ -27,13 +27,11 @@ describe("Reference Sources Page", () => {
   describe("page structure", () => {
     it("renders sources page root with testid", async () => {
       server.use(
-        rest.get("*/api/reference/status", (req, res, ctx) =>
-          res(
-            ctx.json({
+        http.get("*/api/reference/status", () =>
+          HttpResponse.json({
               sources: [],
               workflows: [],
             }),
-          ),
         ),
       );
 
@@ -46,13 +44,11 @@ describe("Reference Sources Page", () => {
 
     it("displays page title", async () => {
       server.use(
-        rest.get("*/api/reference/status", (req, res, ctx) =>
-          res(
-            ctx.json({
+        http.get("*/api/reference/status", () =>
+          HttpResponse.json({
               sources: [],
               workflows: [],
             }),
-          ),
         ),
       );
 
@@ -75,14 +71,12 @@ describe("Reference Sources Page", () => {
       });
 
       server.use(
-        rest.get("*/api/reference/status", async (req, res, ctx) => {
+        http.get("*/api/reference/status", async () => {
           await promise;
-          return res(
-            ctx.json({
+          return HttpResponse.json({
               sources: [],
               workflows: [],
-            }),
-          );
+            });
         }),
       );
 
@@ -101,8 +95,8 @@ describe("Reference Sources Page", () => {
   describe("error state", () => {
     it("handles API errors gracefully", async () => {
       server.use(
-        rest.get("*/api/reference/status", (req, res, ctx) =>
-          res(ctx.status(500), ctx.json({ detail: "Server error" })),
+        http.get("*/api/reference/status", () =>
+          HttpResponse.json({ detail: "Server error" }, { status: 500 }),
         ),
       );
 
@@ -121,13 +115,11 @@ describe("Reference Sources Page", () => {
   describe("empty state", () => {
     it("displays message when no sources exist", async () => {
       server.use(
-        rest.get("*/api/reference/status", (req, res, ctx) =>
-          res(
-            ctx.json({
+        http.get("*/api/reference/status", () =>
+          HttpResponse.json({
               sources: [],
               workflows: [],
             }),
-          ),
         ),
       );
 
@@ -145,9 +137,8 @@ describe("Reference Sources Page", () => {
   describe("populated state", () => {
     it("displays sources list with data", async () => {
       server.use(
-        rest.get("*/api/reference/status", (req, res, ctx) =>
-          res(
-            ctx.json({
+        http.get("*/api/reference/status", () =>
+          HttpResponse.json({
               sources: [
                 {
                   name: "ConceptNet",
@@ -158,7 +149,6 @@ describe("Reference Sources Page", () => {
               ],
               workflows: [],
             }),
-          ),
         ),
       );
 
@@ -171,9 +161,8 @@ describe("Reference Sources Page", () => {
 
     it("displays multiple sources in the list", async () => {
       server.use(
-        rest.get("*/api/reference/status", (req, res, ctx) =>
-          res(
-            ctx.json({
+        http.get("*/api/reference/status", () =>
+          HttpResponse.json({
               sources: [
                 {
                   name: "ConceptNet",
@@ -190,7 +179,6 @@ describe("Reference Sources Page", () => {
               ],
               workflows: [],
             }),
-          ),
         ),
       );
 
@@ -209,9 +197,8 @@ describe("Reference Sources Page", () => {
   describe("interactive state", () => {
     it("allows filtering sources by search", async () => {
       server.use(
-        rest.get("*/api/reference/status", (req, res, ctx) =>
-          res(
-            ctx.json({
+        http.get("*/api/reference/status", () =>
+          HttpResponse.json({
               sources: [
                 {
                   name: "ConceptNet",
@@ -228,7 +215,6 @@ describe("Reference Sources Page", () => {
               ],
               workflows: [],
             }),
-          ),
         ),
       );
 
@@ -249,9 +235,8 @@ describe("Reference Sources Page", () => {
 
     it("allows selecting a source to view details", async () => {
       server.use(
-        rest.get("*/api/reference/status", (req, res, ctx) =>
-          res(
-            ctx.json({
+        http.get("*/api/reference/status", () =>
+          HttpResponse.json({
               sources: [
                 {
                   name: "ConceptNet",
@@ -262,7 +247,6 @@ describe("Reference Sources Page", () => {
               ],
               workflows: [],
             }),
-          ),
         ),
       );
 

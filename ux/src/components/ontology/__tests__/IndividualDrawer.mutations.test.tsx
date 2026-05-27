@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { rest } from "msw";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
 import { IndividualDrawer } from "../IndividualDrawer";
@@ -53,13 +53,13 @@ describe("IndividualDrawer - Mutation Workflows", () => {
 
   function setupDefaultHandlers() {
     server.use(
-      rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-      rest.get("*/api/individuals/ind-001", (req, res, ctx) =>
-        res(ctx.json(mockIndividuals.items[0])),
+      http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
+      http.get("*/api/individuals/ind-001", () =>
+        HttpResponse.json(mockIndividuals.items[0]),
       ),
-      rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
-      rest.get("*/api/individuals/*/inherited-properties", (req, res, ctx) =>
-        res(ctx.json({ items: [], total: 0, limit: 10, offset: 0 })),
+      http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
+      http.get("*/api/individuals/*/inherited-properties", () =>
+        HttpResponse.json({ items: [], total: 0, limit: 10, offset: 0 }),
       ),
     );
   }
@@ -71,18 +71,14 @@ describe("IndividualDrawer - Mutation Workflows", () => {
 
       setupDefaultHandlers();
       server.use(
-        rest.put(/.*\/api\/individuals\/.*/, (req, res, ctx) => {
+        http.put(/.*\/api\/individuals\/.*/, () => {
           updateCalled = true;
-          return res(
-            ctx.json(
-              createIndividual({
+          return HttpResponse.json(createIndividual({
                 id: "ind-001",
                 title: "Updated Title",
                 description: "Original description",
                 class_ids: ["class-person", "class-employee"],
-              }),
-            ),
-          );
+              }),);
         }),
       );
 
@@ -110,18 +106,14 @@ describe("IndividualDrawer - Mutation Workflows", () => {
 
       setupDefaultHandlers();
       server.use(
-        rest.put(/.*\/api\/individuals\/.*/, (req, res, ctx) => {
+        http.put(/.*\/api\/individuals\/.*/, () => {
           updateCalled = true;
-          return res(
-            ctx.json(
-              createIndividual({
+          return HttpResponse.json(createIndividual({
                 id: "ind-001",
                 title: "Test Individual",
                 description: "Updated description",
                 class_ids: ["class-person", "class-employee"],
-              }),
-            ),
-          );
+              }),);
         }),
       );
 
@@ -153,17 +145,13 @@ describe("IndividualDrawer - Mutation Workflows", () => {
 
       setupDefaultHandlers();
       server.use(
-        rest.post(/.*\/api\/individuals\/.*\/classes/, (req, res, ctx) => {
+        http.post(/.*\/api\/individuals\/.*\/classes/, () => {
           addClassCalled = true;
-          return res(
-            ctx.json(
-              createIndividual({
+          return HttpResponse.json(createIndividual({
                 id: "ind-001",
                 title: "Test Individual",
                 class_ids: ["class-person", "class-employee", "class-manager"],
-              }),
-            ),
-          );
+              }),);
         }),
       );
 
@@ -200,17 +188,13 @@ describe("IndividualDrawer - Mutation Workflows", () => {
 
       setupDefaultHandlers();
       server.use(
-        rest.delete(/.*\/api\/individuals\/.*\/classes\/.*/, (req, res, ctx) => {
+        http.delete(/.*\/api\/individuals\/.*\/classes\/.*/, () => {
           removeClassCalled = true;
-          return res(
-            ctx.json(
-              createIndividual({
+          return HttpResponse.json(createIndividual({
                 id: "ind-001",
                 title: "Test Individual",
                 class_ids: ["class-person"],
-              }),
-            ),
-          );
+              }),);
         }),
       );
 
@@ -244,9 +228,9 @@ describe("IndividualDrawer - Mutation Workflows", () => {
 
       setupDefaultHandlers();
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(singleClassIndividual))),
-        rest.delete(/.*\/api\/individuals\/.*\/classes\/.*/, (req, res, ctx) => {
-          return res(ctx.status(400), ctx.json({ detail: "Cannot remove last class" }));
+        http.get("*/api/individuals", () => HttpResponse.json(singleClassIndividual)),
+        http.delete(/.*\/api\/individuals\/.*\/classes\/.*/, () => {
+          return HttpResponse.json({ detail: "Cannot remove last class" }, { status: 400 });
         }),
       );
 
@@ -278,17 +262,13 @@ describe("IndividualDrawer - Mutation Workflows", () => {
 
       setupDefaultHandlers();
       server.use(
-        rest.put(/.*\/api\/individuals\/.*\/classes$/, (req, res, ctx) => {
+        http.put(/.*\/api\/individuals\/.*\/classes$/, () => {
           reorderCalled = true;
-          return res(
-            ctx.json(
-              createIndividual({
+          return HttpResponse.json(createIndividual({
                 id: "ind-001",
                 title: "Test Individual",
                 class_ids: ["class-employee", "class-person"],
-              }),
-            ),
-          );
+              }),);
         }),
       );
 
@@ -315,17 +295,13 @@ describe("IndividualDrawer - Mutation Workflows", () => {
 
       setupDefaultHandlers();
       server.use(
-        rest.put(/.*\/api\/individuals\/.*\/classes$/, (req, res, ctx) => {
+        http.put(/.*\/api\/individuals\/.*\/classes$/, () => {
           reorderCalled = true;
-          return res(
-            ctx.json(
-              createIndividual({
+          return HttpResponse.json(createIndividual({
                 id: "ind-001",
                 title: "Test Individual",
                 class_ids: ["class-employee", "class-person"],
-              }),
-            ),
-          );
+              }),);
         }),
       );
 

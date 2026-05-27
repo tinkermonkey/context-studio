@@ -74,6 +74,7 @@ export function TypeToConfirmDialog({
           variant="ghost"
           onClick={handleClose}
           disabled={isProcessing || isLoading}
+          data-testid="type-confirm-cancel"
         >
           Cancel
         </Button>
@@ -81,6 +82,7 @@ export function TypeToConfirmDialog({
           variant="danger"
           onClick={() => { void handleConfirm(); }}
           disabled={isDisabled}
+          data-testid="type-confirm-button"
         >
           {confirmLabel}
         </Button>

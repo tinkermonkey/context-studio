@@ -91,10 +91,8 @@ describe("EntityReviewPanel", () => {
       const { container } = renderWithProvider(
         <EntityReviewPanel entities={[mockEntity]} layerIndex={0} isLoading={true} />,
       );
-      // Skeletons are divs with specific animation styles
-      const skeletonElements = container.querySelectorAll(
-        'div[style*="animation: skeleton-shimmer"]',
-      );
+      // Skeletons render as <div className="skeleton">
+      const skeletonElements = container.querySelectorAll("div.skeleton");
       expect(skeletonElements.length).toBeGreaterThan(0);
     });
 
@@ -379,8 +377,11 @@ describe("EntityReviewPanel", () => {
     });
   });
 
-  describe("batch operations", () => {
-    it("approve all creates class for each unlinked entity", async () => {
+  // The panel renders one approve/reject button per entity row; there is no
+  // "Approve All" / "Reject All" batch button in the current UI, so multi-entity
+  // approval is exercised by approving each row in turn.
+  describe("approving multiple entities", () => {
+    it("creates a class for each entity approved", async () => {
       const user = userEvent.setup();
       mockCreateClass
         .mockResolvedValueOnce({ id: "new-class-1", title: mockEntity.label })
@@ -388,13 +389,21 @@ describe("EntityReviewPanel", () => {
 
       renderWithProvider(<EntityReviewPanel entities={[mockEntity, mockEntity2]} layerIndex={0} />);
 
-      const approveAllButton = screen.getByRole("button", { name: /approve all/i });
-      await user.click(approveAllButton);
+      await user.click(screen.getByTestId(`entity-review-approve-${mockEntity.id}`));
+      await user.click(screen.getByTestId(`entity-review-approve-${mockEntity2.id}`));
 
       expect(mockCreateClass).toHaveBeenCalledTimes(2);
+      expect(mockCreateClass).toHaveBeenNthCalledWith(1, {
+        schemeId: mockScheme.id,
+        data: { title: mockEntity.label, description: mockEntity.description },
+      });
+      expect(mockCreateClass).toHaveBeenNthCalledWith(2, {
+        schemeId: mockScheme.id,
+        data: { title: mockEntity2.label, description: null },
+      });
     });
 
-    it("approve all with partial failure shows success and error messages", async () => {
+    it("surfaces a success toast for an approval that succeeds and an error toast for one that fails", async () => {
       const user = userEvent.setup();
       mockCreateClass
         .mockResolvedValueOnce({ id: "new-class-1", title: mockEntity.label })
@@ -402,10 +411,9 @@ describe("EntityReviewPanel", () => {
 
       renderWithProvider(<EntityReviewPanel entities={[mockEntity, mockEntity2]} layerIndex={0} />);
 
-      const approveAllButton = screen.getByRole("button", { name: /approve all/i });
-      await user.click(approveAllButton);
+      await user.click(screen.getByTestId(`entity-review-approve-${mockEntity.id}`));
+      await user.click(screen.getByTestId(`entity-review-approve-${mockEntity2.id}`));
 
-      // Should have both success and error toasts
       const calls = mockToast.mock.calls;
       const hasSuccess = calls.some((call) => call[0] === "success");
       const hasError = calls.some((call) => call[0] === "error");

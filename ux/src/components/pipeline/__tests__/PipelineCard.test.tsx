@@ -5,25 +5,34 @@ import { queryClient } from "@/api/utils/queryClient";
 import { PipelineCard } from "../PipelineCard";
 import * as pipelineHooks from "@/api/hooks/pipeline";
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import { useExecutionStore } from "@/stores/executionStore";
 
 vi.mock("@/api/hooks/pipeline");
 vi.mock("@/stores/executionStore", () => ({
-  useExecutionStore: vi.fn((selector) => {
+  useExecutionStore: vi.fn(),
+}));
+
+function setExecutionStore(inFlight: string[] = []) {
+  vi.mocked(useExecutionStore).mockImplementation((selector: any) => {
     const state = {
-      inFlightPipelineIds: new Set(),
+      inFlightPipelineIds: new Set(inFlight),
       startExecution: vi.fn(),
       endExecution: vi.fn(),
-      hasRunningExecutions: vi.fn(() => false),
+      hasRunningExecutions: vi.fn(() => inFlight.length > 0),
     };
     return selector ? selector(state) : state;
-  }),
-}));
+  });
+}
 const mockToast = vi.fn();
 vi.mock("@/components/ui/Toast", () => ({
   useToasts: () => ({
     toast: mockToast,
   }),
 }));
+
+function getStatus() {
+  return document.querySelector(".pipeline-card__status") as HTMLElement | null;
+}
 
 describe("PipelineCard", () => {
   const mockPipeline = {
@@ -57,6 +66,7 @@ describe("PipelineCard", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    setExecutionStore([]);
 
     vi.mocked(pipelineHooks.usePipelineExecutions).mockReturnValue({
       data: [mockExecution],
@@ -73,275 +83,175 @@ describe("PipelineCard", () => {
     } as any);
   });
 
-  it("renders pipeline title", () => {
-    render(
+  function renderCard(pipeline = mockPipeline) {
+    return render(
       <QueryClientProvider client={queryClient}>
-        <PipelineCard pipeline={mockPipeline} />
+        <PipelineCard pipeline={pipeline} />
       </QueryClientProvider>,
     );
+  }
+
+  it("passes the pipeline title as the card name", () => {
+    renderCard();
     expect(screen.getByText("Test Pipeline")).toBeInTheDocument();
   });
 
-  it("renders provider and model", () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineCard pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-    expect(screen.getByText("openai")).toBeInTheDocument();
-    expect(screen.getByText("gpt-4")).toBeInTheDocument();
+  it("renders the combined provider · model description", () => {
+    renderCard();
+    expect(screen.getByText("openai · gpt-4")).toBeInTheDocument();
   });
 
-  it("renders success status chip with emerald class", () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineCard pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-    const chip = screen.getByTestId("pipeline-status-chip");
-    expect(chip).toHaveTextContent("success");
-    expect(chip).toHaveClass("chip", "emerald");
-  });
-
-  it("renders footer stats with last run time", () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineCard pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-    expect(screen.getByText(/ago/)).toBeInTheDocument();
-    expect(screen.getByText(/tokens/)).toBeInTheDocument();
-  });
-
-  it("renders 'No runs yet' when no executions", () => {
-    vi.mocked(pipelineHooks.usePipelineExecutions).mockReturnValue({
-      data: [],
-      isLoading: false,
-      error: null,
-      isFetching: false,
-      status: "success",
-    } as any);
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineCard pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-    expect(screen.getByText("No runs yet")).toBeInTheDocument();
-  });
-
-  it("renders failed status with rose class for error executions", () => {
-    const failedExecution = { ...mockExecution, status: "error" as const };
-    vi.mocked(pipelineHooks.usePipelineExecutions).mockReturnValue({
-      data: [failedExecution],
-      isLoading: false,
-      error: null,
-      isFetching: false,
-      status: "success",
-    } as any);
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineCard pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-    const chip = screen.getByTestId("pipeline-status-chip");
-    expect(chip).toHaveTextContent("failed");
-    expect(chip).toHaveClass("chip", "rose");
-  });
-
-  it("renders idle status with gray class when no executions", () => {
-    vi.mocked(pipelineHooks.usePipelineExecutions).mockReturnValue({
-      data: [],
-      isLoading: false,
-      error: null,
-      isFetching: false,
-      status: "success",
-    } as any);
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineCard pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-    const chip = screen.getByTestId("pipeline-status-chip");
-    expect(chip).toHaveTextContent("idle");
-    expect(chip).toHaveClass("chip", "gray");
-  });
-
-  it("renders disabled status with gray class when pipeline is disabled", () => {
-    const disabledPipeline = { ...mockPipeline, enabled: false };
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineCard pipeline={disabledPipeline} />
-      </QueryClientProvider>,
-    );
-    const chip = screen.getByTestId("pipeline-status-chip");
-    expect(chip).toHaveTextContent("disabled");
-    expect(chip).toHaveClass("chip", "gray");
-  });
-
-  it("has correct data-testid attributes", () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineCard pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
+  it("passes the card data-testid through to the Heimdall card", () => {
+    renderCard();
     expect(screen.getByTestId("pipeline-card-pipeline-1")).toBeInTheDocument();
-    expect(screen.getByTestId("pipeline-status-chip")).toBeInTheDocument();
   });
 
-  it("has ARIA status role and label on chip", () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineCard pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-    const chip = screen.getByTestId("pipeline-status-chip");
-    expect(chip).toHaveAttribute("role", "status");
-    expect(chip).toHaveAttribute("aria-label", "Pipeline status: success");
-  });
+  describe("status mapping", () => {
+    it("maps a successful last execution to 'success'", () => {
+      renderCard();
+      const status = getStatus();
+      expect(status).toHaveTextContent("success");
+      expect(status).toHaveAttribute("data-status", "success");
+    });
 
-  it("renders run button with correct testid and aria-label", () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineCard pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-    const runButton = screen.getByTestId("run-pipeline-btn");
-    expect(runButton).toBeInTheDocument();
-    expect(runButton).toHaveAttribute("aria-label", "Run pipeline");
-    expect(runButton).toHaveAttribute("title", "Run pipeline");
-  });
+    it("maps an error execution to 'failed'", () => {
+      vi.mocked(pipelineHooks.usePipelineExecutions).mockReturnValue({
+        data: [{ ...mockExecution, status: "error" as const }],
+        isLoading: false,
+        error: null,
+        isFetching: false,
+        status: "success",
+      } as any);
+      renderCard();
+      const status = getStatus();
+      expect(status).toHaveTextContent("failed");
+      expect(status).toHaveAttribute("data-status", "failed");
+    });
 
-  it("calls mutation when run button is clicked", async () => {
-    const user = userEvent.setup();
-    const mockMutate = vi.fn().mockResolvedValue(mockExecution);
-    vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
-      mutateAsync: mockMutate,
-      isPending: false,
-      status: "idle",
-    } as any);
+    it("maps a timeout execution to 'failed'", () => {
+      vi.mocked(pipelineHooks.usePipelineExecutions).mockReturnValue({
+        data: [{ ...mockExecution, status: "timeout" as const }],
+        isLoading: false,
+        error: null,
+        isFetching: false,
+        status: "success",
+      } as any);
+      renderCard();
+      expect(getStatus()).toHaveTextContent("failed");
+    });
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineCard pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
+    it("maps no executions to 'idle'", () => {
+      vi.mocked(pipelineHooks.usePipelineExecutions).mockReturnValue({
+        data: [],
+        isLoading: false,
+        error: null,
+        isFetching: false,
+        status: "success",
+      } as any);
+      renderCard();
+      expect(getStatus()).toHaveTextContent("idle");
+    });
 
-    const runButton = screen.getByTestId("run-pipeline-btn");
-    await user.click(runButton);
+    it("maps a disabled pipeline to 'idle' (not 'disabled')", () => {
+      renderCard({ ...mockPipeline, enabled: false });
+      const status = getStatus();
+      expect(status).toHaveTextContent("idle");
+      expect(status).toHaveAttribute("data-status", "idle");
+    });
 
-    expect(mockMutate).toHaveBeenCalledWith({
-      id: mockPipeline.id,
-      inputText: "",
+    it("maps an in-flight pipeline to 'running'", () => {
+      setExecutionStore(["pipeline-1"]);
+      renderCard();
+      expect(getStatus()).toHaveTextContent("running");
     });
   });
 
-  it("shows spinner when mutation is pending", () => {
-    vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
-      mutateAsync: vi.fn(),
-      isPending: true,
-      status: "pending",
-    } as any);
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineCard pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-
-    const runButton = screen.getByTestId("run-pipeline-btn");
-    const spinner = runButton.querySelector("svg");
-    expect(spinner).toHaveClass("spin");
-  });
-
-  it("disables run button when mutation is pending", () => {
-    vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
-      mutateAsync: vi.fn(),
-      isPending: true,
-      status: "pending",
-    } as any);
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineCard pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-
-    const runButton = screen.getByTestId("run-pipeline-btn") as HTMLButtonElement;
-    expect(runButton.disabled).toBe(true);
-  });
-
-  it("calls mutation with success status execution", async () => {
-    const user = userEvent.setup();
-    const mockMutate = vi.fn().mockResolvedValue({
-      ...mockExecution,
-      status: "success",
+  describe("footer", () => {
+    it("shows relative time and token counts when an execution exists", () => {
+      renderCard();
+      const footer = document.querySelector(".pipeline-card__foot") as HTMLElement;
+      expect(footer).toHaveTextContent(/ago/);
+      expect(footer).toHaveTextContent(/tokens/);
     });
-    vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
-      mutateAsync: mockMutate,
-      isPending: false,
-      status: "idle",
-    } as any);
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineCard pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-
-    const runButton = screen.getByTestId("run-pipeline-btn");
-    await user.click(runButton);
-
-    expect(mockMutate).toHaveBeenCalled();
-    expect(mockToast).toHaveBeenCalledWith("success", "Pipeline 'Test Pipeline' completed");
-  });
-
-  it("calls mutation with error status execution", async () => {
-    const user = userEvent.setup();
-    const mockMutate = vi.fn().mockResolvedValue({
-      ...mockExecution,
-      status: "error",
+    it("shows 'No runs yet' when there are no executions", () => {
+      vi.mocked(pipelineHooks.usePipelineExecutions).mockReturnValue({
+        data: [],
+        isLoading: false,
+        error: null,
+        isFetching: false,
+        status: "success",
+      } as any);
+      renderCard();
+      expect(screen.getByText("No runs yet")).toBeInTheDocument();
     });
-    vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
-      mutateAsync: mockMutate,
-      isPending: false,
-      status: "idle",
-    } as any);
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineCard pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
-
-    const runButton = screen.getByTestId("run-pipeline-btn");
-    await user.click(runButton);
-
-    expect(mockMutate).toHaveBeenCalled();
-    expect(mockToast).toHaveBeenCalledWith("error", "Pipeline 'Test Pipeline' failed");
   });
 
-  it("calls toast on mutation failure", async () => {
-    const user = userEvent.setup();
-    const mockMutate = vi.fn().mockRejectedValue(new Error("Execution failed"));
-    vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
-      mutateAsync: mockMutate,
-      isPending: false,
-      status: "idle",
-    } as any);
+  describe("run button", () => {
+    it("calls executeMutation.mutateAsync with the pipeline id and empty input", async () => {
+      const user = userEvent.setup();
+      const mockMutate = vi.fn().mockResolvedValue(mockExecution);
+      vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
+        mutateAsync: mockMutate,
+        isPending: false,
+        status: "idle",
+      } as any);
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineCard pipeline={mockPipeline} />
-      </QueryClientProvider>,
-    );
+      renderCard();
+      await user.click(screen.getByTestId("pipeline-run-btn"));
 
-    const runButton = screen.getByTestId("run-pipeline-btn");
-    await user.click(runButton);
+      expect(mockMutate).toHaveBeenCalledWith({ id: "pipeline-1", inputText: "" });
+    });
 
-    expect(mockMutate).toHaveBeenCalled();
-    expect(mockToast).toHaveBeenCalledWith("error", "Execution failed");
+    it("toasts success when the run completes with success status", async () => {
+      const user = userEvent.setup();
+      const mockMutate = vi.fn().mockResolvedValue({ ...mockExecution, status: "success" });
+      vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
+        mutateAsync: mockMutate,
+        isPending: false,
+        status: "idle",
+      } as any);
+
+      renderCard();
+      await user.click(screen.getByTestId("pipeline-run-btn"));
+
+      expect(mockToast).toHaveBeenCalledWith("success", "Pipeline 'Test Pipeline' completed");
+    });
+
+    it("toasts an error when the run completes with error status", async () => {
+      const user = userEvent.setup();
+      const mockMutate = vi.fn().mockResolvedValue({ ...mockExecution, status: "error" });
+      vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
+        mutateAsync: mockMutate,
+        isPending: false,
+        status: "idle",
+      } as any);
+
+      renderCard();
+      await user.click(screen.getByTestId("pipeline-run-btn"));
+
+      expect(mockToast).toHaveBeenCalledWith("error", "Pipeline 'Test Pipeline' failed");
+    });
+
+    it("toasts the error message when the mutation rejects", async () => {
+      const user = userEvent.setup();
+      const mockMutate = vi.fn().mockRejectedValue(new Error("Execution failed"));
+      vi.mocked(pipelineHooks.useExecutePipeline).mockReturnValue({
+        mutateAsync: mockMutate,
+        isPending: false,
+        status: "idle",
+      } as any);
+
+      renderCard();
+      await user.click(screen.getByTestId("pipeline-run-btn"));
+
+      expect(mockToast).toHaveBeenCalledWith("error", "Execution failed");
+    });
+
+    it("does not render the run button when the pipeline is running", () => {
+      setExecutionStore(["pipeline-1"]);
+      renderCard();
+      expect(screen.queryByTestId("pipeline-run-btn")).not.toBeInTheDocument();
+    });
   });
 });

@@ -77,6 +77,12 @@ describe("Pipelines Page", () => {
       isFetching: false,
       status: "success",
     } as any);
+
+    vi.mocked(pipelineHooks.useCreatePipeline).mockReturnValue({
+      mutateAsync: vi.fn(),
+      isPending: false,
+      status: "idle",
+    } as any);
   });
 
   describe("page structure", () => {
@@ -292,7 +298,7 @@ describe("Pipelines Page", () => {
       expect(grid).toHaveClass("grid-2");
     });
 
-    it("status filter has proper radiogroup role", () => {
+    it("status filter renders as a labeled group of radio options", () => {
       vi.mocked(pipelineHooks.usePipelines).mockReturnValue({
         data: [mockPipeline1],
         isLoading: false,
@@ -308,8 +314,10 @@ describe("Pipelines Page", () => {
         </QueryClientProvider>,
       );
 
-      const radiogroup = screen.getByRole("radiogroup");
-      expect(radiogroup).toBeInTheDocument();
+      const group = screen.getByRole("group", { name: /filter pipelines by status/i });
+      expect(group).toBeInTheDocument();
+      const radios = screen.getAllByRole("radio");
+      expect(radios.length).toBe(5);
     });
 
     it("page title renders as heading level 1 when pipelines exist", () => {
@@ -477,8 +485,9 @@ describe("Pipelines Page", () => {
       );
 
       const card = screen.getByTestId("pipeline-card-pipeline-1");
-      const statusChip = card.querySelector("[data-testid='pipeline-status-chip']");
-      expect(statusChip).toHaveTextContent("idle");
+      const status = card.querySelector(".pipeline-card__status");
+      expect(status).toHaveTextContent("idle");
+      expect(status).toHaveAttribute("data-status", "idle");
     });
   });
 });

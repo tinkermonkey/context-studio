@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
-import { rest } from "msw";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { ontologyService } from "../ontology";
 import {
@@ -61,7 +61,7 @@ describe("OntologyService - Taxonomies", () => {
         createTaxonomy({ id: "tax-2", title: "Chemistry" }),
       ]);
 
-      server.use(rest.get("*/api/taxonomies", (req, res, ctx) => res(ctx.json(mockTaxonomies))));
+      server.use(http.get("*/api/taxonomies", () => HttpResponse.json(mockTaxonomies)));
 
       const result = await ontologyService.listTaxonomies();
 
@@ -72,13 +72,10 @@ describe("OntologyService - Taxonomies", () => {
 
     it("throws ApiError on 500 from listTaxonomies", async () => {
       server.use(
-        rest.get("*/api/taxonomies", (req, res, ctx) =>
-          res(
-            ctx.status(500),
-            ctx.json({
+        http.get("*/api/taxonomies", () =>
+          HttpResponse.json({
               detail: "Internal server error",
-            }),
-          ),
+            }, { status: 500 }),
         ),
       );
 
@@ -98,7 +95,7 @@ describe("OntologyService - Taxonomies", () => {
       });
 
       server.use(
-        rest.get("*/api/taxonomies/tax-123", (req, res, ctx) => res(ctx.json(mockTaxonomy))),
+        http.get("*/api/taxonomies/tax-123", () => HttpResponse.json(mockTaxonomy)),
       );
 
       const result = await ontologyService.getTaxonomy("tax-123");
@@ -110,13 +107,10 @@ describe("OntologyService - Taxonomies", () => {
 
     it("throws ApiError with 404 on getTaxonomy with non-existent ID", async () => {
       server.use(
-        rest.get("*/api/taxonomies/not-found", (req, res, ctx) =>
-          res(
-            ctx.status(404),
-            ctx.json({
+        http.get("*/api/taxonomies/not-found", () =>
+          HttpResponse.json({
               detail: "Taxonomy not found",
-            }),
-          ),
+            }, { status: 404 }),
         ),
       );
 
@@ -138,7 +132,7 @@ describe("OntologyService - Taxonomies", () => {
         title: "New Biology",
       });
 
-      server.use(rest.post("*/api/taxonomies", (req, res, ctx) => res(ctx.json(mockResponse))));
+      server.use(http.post("*/api/taxonomies", () => HttpResponse.json(mockResponse)));
 
       const result = await ontologyService.createTaxonomy(createRequest);
 
@@ -151,13 +145,10 @@ describe("OntologyService - Taxonomies", () => {
       const createRequest = createTaxonomyCreateRequest({ title: "" });
 
       server.use(
-        rest.post("*/api/taxonomies", (req, res, ctx) =>
-          res(
-            ctx.status(400),
-            ctx.json({
+        http.post("*/api/taxonomies", () =>
+          HttpResponse.json({
               detail: "Title cannot be empty",
-            }),
-          ),
+            }, { status: 400 }),
         ),
       );
 
@@ -174,13 +165,10 @@ describe("OntologyService - Taxonomies", () => {
       });
 
       server.use(
-        rest.post("*/api/taxonomies", (req, res, ctx) =>
-          res(
-            ctx.status(409),
-            ctx.json({
+        http.post("*/api/taxonomies", () =>
+          HttpResponse.json({
               detail: "Taxonomy with this title already exists",
-            }),
-          ),
+            }, { status: 409 }),
         ),
       );
 
@@ -201,7 +189,7 @@ describe("OntologyService - Taxonomies", () => {
       });
 
       server.use(
-        rest.put("*/api/taxonomies/tax-123", (req, res, ctx) => res(ctx.json(mockResponse))),
+        http.put("*/api/taxonomies/tax-123", () => HttpResponse.json(mockResponse)),
       );
 
       const result = await ontologyService.updateTaxonomy("tax-123", updateRequest);
@@ -214,13 +202,10 @@ describe("OntologyService - Taxonomies", () => {
       const updateRequest = { title: "Updated" };
 
       server.use(
-        rest.put("*/api/taxonomies/not-found", (req, res, ctx) =>
-          res(
-            ctx.status(404),
-            ctx.json({
+        http.put("*/api/taxonomies/not-found", () =>
+          HttpResponse.json({
               detail: "Taxonomy not found",
-            }),
-          ),
+            }, { status: 404 }),
         ),
       );
 
@@ -235,20 +220,17 @@ describe("OntologyService - Taxonomies", () => {
 
   describe("deleteTaxonomy", () => {
     it("deletes taxonomy via DELETE /api/taxonomies/:id", async () => {
-      server.use(rest.delete("*/api/taxonomies/tax-123", (req, res, ctx) => res(ctx.status(204))));
+      server.use(http.delete("*/api/taxonomies/tax-123", () => new HttpResponse(null, { status: 204 })));
 
       await expect(ontologyService.deleteTaxonomy("tax-123")).resolves.toBeDefined();
     });
 
     it("throws ApiError with 404 on deleteTaxonomy with non-existent ID", async () => {
       server.use(
-        rest.delete("*/api/taxonomies/not-found", (req, res, ctx) =>
-          res(
-            ctx.status(404),
-            ctx.json({
+        http.delete("*/api/taxonomies/not-found", () =>
+          HttpResponse.json({
               detail: "Taxonomy not found",
-            }),
-          ),
+            }, { status: 404 }),
         ),
       );
 
@@ -260,13 +242,10 @@ describe("OntologyService - Taxonomies", () => {
 
     it("throws ApiError with 422 on deleteTaxonomy with child schemes", async () => {
       server.use(
-        rest.delete("*/api/taxonomies/tax-123", (req, res, ctx) =>
-          res(
-            ctx.status(422),
-            ctx.json({
+        http.delete("*/api/taxonomies/tax-123", () =>
+          HttpResponse.json({
               detail: "Cannot delete taxonomy with concept schemes",
-            }),
-          ),
+            }, { status: 422 }),
         ),
       );
 
@@ -287,8 +266,8 @@ describe("OntologyService - Taxonomies", () => {
       });
 
       server.use(
-        rest.get("*/api/taxonomies/tax-123/publish-diff", (req, res, ctx) =>
-          res(ctx.json(mockStats)),
+        http.get("*/api/taxonomies/tax-123/publish-diff", () =>
+          HttpResponse.json(mockStats),
         ),
       );
 
@@ -302,13 +281,10 @@ describe("OntologyService - Taxonomies", () => {
 
     it("throws ApiError with 404 on getPublishDiffStats with non-existent taxonomy", async () => {
       server.use(
-        rest.get("*/api/taxonomies/not-found/publish-diff", (req, res, ctx) =>
-          res(
-            ctx.status(404),
-            ctx.json({
+        http.get("*/api/taxonomies/not-found/publish-diff", () =>
+          HttpResponse.json({
               detail: "Taxonomy not found",
-            }),
-          ),
+            }, { status: 404 }),
         ),
       );
 
@@ -327,8 +303,8 @@ describe("OntologyService - Taxonomies", () => {
       });
 
       server.use(
-        rest.post("*/api/taxonomies/tax-123/publish", (req, res, ctx) =>
-          res(ctx.json(mockTaxonomy)),
+        http.post("*/api/taxonomies/tax-123/publish", () =>
+          HttpResponse.json(mockTaxonomy),
         ),
       );
 
@@ -340,13 +316,10 @@ describe("OntologyService - Taxonomies", () => {
 
     it("throws ApiError with 400 on publishTaxonomy with invalid commit message", async () => {
       server.use(
-        rest.post("*/api/taxonomies/tax-123/publish", (req, res, ctx) =>
-          res(
-            ctx.status(400),
-            ctx.json({
+        http.post("*/api/taxonomies/tax-123/publish", () =>
+          HttpResponse.json({
               detail: "Commit message is required",
-            }),
-          ),
+            }, { status: 400 }),
         ),
       );
 
@@ -370,7 +343,7 @@ describe("OntologyService - Concept Schemes", () => {
         createConceptScheme({ id: "scheme-2", title: "Plants" }),
       ]);
 
-      server.use(rest.get("*/api/schemes", (req, res, ctx) => res(ctx.json(mockSchemes))));
+      server.use(http.get("*/api/schemes", () => HttpResponse.json(mockSchemes)));
 
       const result = await ontologyService.listSchemes();
 
@@ -384,12 +357,12 @@ describe("OntologyService - Concept Schemes", () => {
       ]);
 
       server.use(
-        rest.get("*/api/schemes", (req, res, ctx) => {
-          const url = new URL(req.url);
+        http.get("*/api/schemes", ({ request }) => {
+          const url = new URL(request.url);
           if (url.searchParams.get("taxonomy_id") === "tax-123") {
-            return res(ctx.json(mockSchemes));
+            return HttpResponse.json(mockSchemes);
           }
-          return res(ctx.json(createListSchemes([])));
+          return HttpResponse.json(createListSchemes([]));
         }),
       );
 
@@ -401,13 +374,10 @@ describe("OntologyService - Concept Schemes", () => {
 
     it("throws ApiError on 500 from listSchemes", async () => {
       server.use(
-        rest.get("*/api/schemes", (req, res, ctx) =>
-          res(
-            ctx.status(500),
-            ctx.json({
+        http.get("*/api/schemes", () =>
+          HttpResponse.json({
               detail: "Internal server error",
-            }),
-          ),
+            }, { status: 500 }),
         ),
       );
 
@@ -426,7 +396,7 @@ describe("OntologyService - Concept Schemes", () => {
       });
 
       server.use(
-        rest.get("*/api/schemes/scheme-123", (req, res, ctx) => res(ctx.json(mockScheme))),
+        http.get("*/api/schemes/scheme-123", () => HttpResponse.json(mockScheme)),
       );
 
       const result = await ontologyService.getScheme("scheme-123");
@@ -436,13 +406,10 @@ describe("OntologyService - Concept Schemes", () => {
 
     it("throws ApiError with 404 on getScheme with non-existent ID", async () => {
       server.use(
-        rest.get("*/api/schemes/not-found", (req, res, ctx) =>
-          res(
-            ctx.status(404),
-            ctx.json({
+        http.get("*/api/schemes/not-found", () =>
+          HttpResponse.json({
               detail: "Concept scheme not found",
-            }),
-          ),
+            }, { status: 404 }),
         ),
       );
 
@@ -465,8 +432,8 @@ describe("OntologyService - Concept Schemes", () => {
       });
 
       server.use(
-        rest.post("*/api/taxonomies/tax-123/schemes", (req, res, ctx) =>
-          res(ctx.json(mockResponse)),
+        http.post("*/api/taxonomies/tax-123/schemes", () =>
+          HttpResponse.json(mockResponse),
         ),
       );
 
@@ -480,13 +447,10 @@ describe("OntologyService - Concept Schemes", () => {
       const createRequest = createConceptSchemeCreateRequest();
 
       server.use(
-        rest.post("*/api/taxonomies/not-found/schemes", (req, res, ctx) =>
-          res(
-            ctx.status(404),
-            ctx.json({
+        http.post("*/api/taxonomies/not-found/schemes", () =>
+          HttpResponse.json({
               detail: "Taxonomy not found",
-            }),
-          ),
+            }, { status: 404 }),
         ),
       );
 
@@ -506,7 +470,7 @@ describe("OntologyService - Concept Schemes", () => {
       });
 
       server.use(
-        rest.put("*/api/schemes/scheme-123", (req, res, ctx) => res(ctx.json(mockResponse))),
+        http.put("*/api/schemes/scheme-123", () => HttpResponse.json(mockResponse)),
       );
 
       const result = await ontologyService.updateScheme("scheme-123", updateRequest);
@@ -516,13 +480,10 @@ describe("OntologyService - Concept Schemes", () => {
 
     it("throws ApiError with 404 on updateScheme with non-existent ID", async () => {
       server.use(
-        rest.put("*/api/schemes/not-found", (req, res, ctx) =>
-          res(
-            ctx.status(404),
-            ctx.json({
+        http.put("*/api/schemes/not-found", () =>
+          HttpResponse.json({
               detail: "Scheme not found",
-            }),
-          ),
+            }, { status: 404 }),
         ),
       );
 
@@ -537,20 +498,17 @@ describe("OntologyService - Concept Schemes", () => {
 
   describe("deleteScheme", () => {
     it("deletes scheme via DELETE /api/schemes/:id", async () => {
-      server.use(rest.delete("*/api/schemes/scheme-123", (req, res, ctx) => res(ctx.status(204))));
+      server.use(http.delete("*/api/schemes/scheme-123", () => new HttpResponse(null, { status: 204 })));
 
       await expect(ontologyService.deleteScheme("scheme-123")).resolves.toBeDefined();
     });
 
     it("throws ApiError with 404 on deleteScheme with non-existent ID", async () => {
       server.use(
-        rest.delete("*/api/schemes/not-found", (req, res, ctx) =>
-          res(
-            ctx.status(404),
-            ctx.json({
+        http.delete("*/api/schemes/not-found", () =>
+          HttpResponse.json({
               detail: "Scheme not found",
-            }),
-          ),
+            }, { status: 404 }),
         ),
       );
 
@@ -574,7 +532,7 @@ describe("OntologyService - Classes", () => {
         createClass({ id: "class-2", title: "Cat" }),
       ]);
 
-      server.use(rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))));
+      server.use(http.get("*/api/classes", () => HttpResponse.json(mockClasses)));
 
       const result = await ontologyService.listClasses();
 
@@ -591,15 +549,15 @@ describe("OntologyService - Classes", () => {
       ]);
 
       server.use(
-        rest.get("*/api/classes", (req, res, ctx) => {
-          const url = new URL(req.url);
+        http.get("*/api/classes", ({ request }) => {
+          const url = new URL(request.url);
           const hasScheme = url.searchParams.get("concept_scheme_id") === "scheme-123";
           const hasParent = url.searchParams.get("parent_class_id") === "class-parent";
 
           if (hasScheme && hasParent) {
-            return res(ctx.json(mockClasses));
+            return HttpResponse.json(mockClasses);
           }
-          return res(ctx.json(createListClasses([])));
+          return HttpResponse.json(createListClasses([]));
         }),
       );
 
@@ -613,13 +571,10 @@ describe("OntologyService - Classes", () => {
 
     it("throws ApiError on 500 from listClasses", async () => {
       server.use(
-        rest.get("*/api/classes", (req, res, ctx) =>
-          res(
-            ctx.status(500),
-            ctx.json({
+        http.get("*/api/classes", () =>
+          HttpResponse.json({
               detail: "Internal server error",
-            }),
-          ),
+            }, { status: 500 }),
         ),
       );
 
@@ -637,7 +592,7 @@ describe("OntologyService - Classes", () => {
         title: "Dog",
       });
 
-      server.use(rest.get("*/api/classes/class-123", (req, res, ctx) => res(ctx.json(mockClass))));
+      server.use(http.get("*/api/classes/class-123", () => HttpResponse.json(mockClass)));
 
       const result = await ontologyService.getClass("class-123");
 
@@ -646,13 +601,10 @@ describe("OntologyService - Classes", () => {
 
     it("throws ApiError with 404 on getClass with non-existent ID", async () => {
       server.use(
-        rest.get("*/api/classes/not-found", (req, res, ctx) =>
-          res(
-            ctx.status(404),
-            ctx.json({
+        http.get("*/api/classes/not-found", () =>
+          HttpResponse.json({
               detail: "Class not found",
-            }),
-          ),
+            }, { status: 404 }),
         ),
       );
 
@@ -673,8 +625,8 @@ describe("OntologyService - Classes", () => {
       });
 
       server.use(
-        rest.post("*/api/schemes/scheme-123/classes", (req, res, ctx) =>
-          res(ctx.json(mockResponse)),
+        http.post("*/api/schemes/scheme-123/classes", () =>
+          HttpResponse.json(mockResponse),
         ),
       );
 
@@ -687,13 +639,10 @@ describe("OntologyService - Classes", () => {
       const createRequest = createClassCreateRequest();
 
       server.use(
-        rest.post("*/api/schemes/not-found/classes", (req, res, ctx) =>
-          res(
-            ctx.status(404),
-            ctx.json({
+        http.post("*/api/schemes/not-found/classes", () =>
+          HttpResponse.json({
               detail: "Scheme not found",
-            }),
-          ),
+            }, { status: 404 }),
         ),
       );
 
@@ -713,7 +662,7 @@ describe("OntologyService - Classes", () => {
       });
 
       server.use(
-        rest.put("*/api/classes/class-123", (req, res, ctx) => res(ctx.json(mockResponse))),
+        http.put("*/api/classes/class-123", () => HttpResponse.json(mockResponse)),
       );
 
       const result = await ontologyService.updateClass("class-123", updateRequest);
@@ -723,13 +672,10 @@ describe("OntologyService - Classes", () => {
 
     it("throws ApiError with 404 on updateClass with non-existent ID", async () => {
       server.use(
-        rest.put("*/api/classes/not-found", (req, res, ctx) =>
-          res(
-            ctx.status(404),
-            ctx.json({
+        http.put("*/api/classes/not-found", () =>
+          HttpResponse.json({
               detail: "Class not found",
-            }),
-          ),
+            }, { status: 404 }),
         ),
       );
 
@@ -751,7 +697,7 @@ describe("OntologyService - Classes", () => {
       });
 
       server.use(
-        rest.post("*/api/classes/class-123/move", (req, res, ctx) => res(ctx.json(mockResponse))),
+        http.post("*/api/classes/class-123/move", () => HttpResponse.json(mockResponse)),
       );
 
       const result = await ontologyService.moveClass("class-123", moveRequest);
@@ -763,13 +709,10 @@ describe("OntologyService - Classes", () => {
       const moveRequest = { target_scheme_id: "invalid" };
 
       server.use(
-        rest.post("*/api/classes/class-123/move", (req, res, ctx) =>
-          res(
-            ctx.status(400),
-            ctx.json({
+        http.post("*/api/classes/class-123/move", () =>
+          HttpResponse.json({
               detail: "Target scheme not found",
-            }),
-          ),
+            }, { status: 400 }),
         ),
       );
 
@@ -782,20 +725,17 @@ describe("OntologyService - Classes", () => {
 
   describe("deleteClass", () => {
     it("deletes class via DELETE /api/classes/:id", async () => {
-      server.use(rest.delete("*/api/classes/class-123", (req, res, ctx) => res(ctx.status(204))));
+      server.use(http.delete("*/api/classes/class-123", () => new HttpResponse(null, { status: 204 })));
 
       await expect(ontologyService.deleteClass("class-123")).resolves.toBeDefined();
     });
 
     it("throws ApiError with 404 on deleteClass with non-existent ID", async () => {
       server.use(
-        rest.delete("*/api/classes/not-found", (req, res, ctx) =>
-          res(
-            ctx.status(404),
-            ctx.json({
+        http.delete("*/api/classes/not-found", () =>
+          HttpResponse.json({
               detail: "Class not found",
-            }),
-          ),
+            }, { status: 404 }),
         ),
       );
 
@@ -819,7 +759,7 @@ describe("OntologyService - Individuals", () => {
         createIndividual({ id: "ind-2", title: "Fluffy" }),
       ]);
 
-      server.use(rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))));
+      server.use(http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)));
 
       const result = await ontologyService.listIndividuals();
 
@@ -835,12 +775,12 @@ describe("OntologyService - Individuals", () => {
       ]);
 
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) => {
-          const url = new URL(req.url);
+        http.get("*/api/individuals", ({ request }) => {
+          const url = new URL(request.url);
           if (url.searchParams.get("class_id") === "class-dog") {
-            return res(ctx.json(mockIndividuals));
+            return HttpResponse.json(mockIndividuals);
           }
-          return res(ctx.json(createListIndividuals([])));
+          return HttpResponse.json(createListIndividuals([]));
         }),
       );
 
@@ -853,13 +793,10 @@ describe("OntologyService - Individuals", () => {
 
     it("throws ApiError on 500 from listIndividuals", async () => {
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) =>
-          res(
-            ctx.status(500),
-            ctx.json({
+        http.get("*/api/individuals", () =>
+          HttpResponse.json({
               detail: "Internal server error",
-            }),
-          ),
+            }, { status: 500 }),
         ),
       );
 
@@ -878,7 +815,7 @@ describe("OntologyService - Individuals", () => {
       });
 
       server.use(
-        rest.get("*/api/individuals/ind-123", (req, res, ctx) => res(ctx.json(mockIndividual))),
+        http.get("*/api/individuals/ind-123", () => HttpResponse.json(mockIndividual)),
       );
 
       const result = await ontologyService.getIndividual("ind-123");
@@ -888,13 +825,10 @@ describe("OntologyService - Individuals", () => {
 
     it("throws ApiError with 404 on getIndividual with non-existent ID", async () => {
       server.use(
-        rest.get("*/api/individuals/not-found", (req, res, ctx) =>
-          res(
-            ctx.status(404),
-            ctx.json({
+        http.get("*/api/individuals/not-found", () =>
+          HttpResponse.json({
               detail: "Individual not found",
-            }),
-          ),
+            }, { status: 404 }),
         ),
       );
 
@@ -917,7 +851,7 @@ describe("OntologyService - Individuals", () => {
         class_ids: ["class-dog"],
       });
 
-      server.use(rest.post("*/api/individuals", (req, res, ctx) => res(ctx.json(mockResponse))));
+      server.use(http.post("*/api/individuals", () => HttpResponse.json(mockResponse)));
 
       const result = await ontologyService.createIndividual(createRequest);
 
@@ -931,13 +865,10 @@ describe("OntologyService - Individuals", () => {
       });
 
       server.use(
-        rest.post("*/api/individuals", (req, res, ctx) =>
-          res(
-            ctx.status(400),
-            ctx.json({
+        http.post("*/api/individuals", () =>
+          HttpResponse.json({
               detail: "One or more classes not found",
-            }),
-          ),
+            }, { status: 400 }),
         ),
       );
 
@@ -957,7 +888,7 @@ describe("OntologyService - Individuals", () => {
       });
 
       server.use(
-        rest.put("*/api/individuals/ind-123", (req, res, ctx) => res(ctx.json(mockResponse))),
+        http.put("*/api/individuals/ind-123", () => HttpResponse.json(mockResponse)),
       );
 
       const result = await ontologyService.updateIndividual("ind-123", updateRequest);
@@ -967,13 +898,10 @@ describe("OntologyService - Individuals", () => {
 
     it("throws ApiError with 404 on updateIndividual with non-existent ID", async () => {
       server.use(
-        rest.put("*/api/individuals/not-found", (req, res, ctx) =>
-          res(
-            ctx.status(404),
-            ctx.json({
+        http.put("*/api/individuals/not-found", () =>
+          HttpResponse.json({
               detail: "Individual not found",
-            }),
-          ),
+            }, { status: 404 }),
         ),
       );
 
@@ -988,20 +916,17 @@ describe("OntologyService - Individuals", () => {
 
   describe("deleteIndividual", () => {
     it("deletes individual via DELETE /api/individuals/:id", async () => {
-      server.use(rest.delete("*/api/individuals/ind-123", (req, res, ctx) => res(ctx.status(204))));
+      server.use(http.delete("*/api/individuals/ind-123", () => new HttpResponse(null, { status: 204 })));
 
       await expect(ontologyService.deleteIndividual("ind-123")).resolves.toBeDefined();
     });
 
     it("throws ApiError with 404 on deleteIndividual with non-existent ID", async () => {
       server.use(
-        rest.delete("*/api/individuals/not-found", (req, res, ctx) =>
-          res(
-            ctx.status(404),
-            ctx.json({
+        http.delete("*/api/individuals/not-found", () =>
+          HttpResponse.json({
               detail: "Individual not found",
-            }),
-          ),
+            }, { status: 404 }),
         ),
       );
 
@@ -1021,8 +946,8 @@ describe("OntologyService - Individuals", () => {
       });
 
       server.use(
-        rest.post("*/api/individuals/ind-123/classes", (req, res, ctx) =>
-          res(ctx.json(mockResponse)),
+        http.post("*/api/individuals/ind-123/classes", () =>
+          HttpResponse.json(mockResponse),
         ),
       );
 
@@ -1035,13 +960,10 @@ describe("OntologyService - Individuals", () => {
       const classRequest = { class_id: "class-new" };
 
       server.use(
-        rest.post("*/api/individuals/not-found/classes", (req, res, ctx) =>
-          res(
-            ctx.status(404),
-            ctx.json({
+        http.post("*/api/individuals/not-found/classes", () =>
+          HttpResponse.json({
               detail: "Individual not found",
-            }),
-          ),
+            }, { status: 404 }),
         ),
       );
 
@@ -1057,8 +979,8 @@ describe("OntologyService - Individuals", () => {
   describe("removeParentClass", () => {
     it("removes parent class from individual via DELETE /api/individuals/:individualId/classes/:classId", async () => {
       server.use(
-        rest.delete("*/api/individuals/ind-123/classes/class-old", (req, res, ctx) =>
-          res(ctx.status(204)),
+        http.delete("*/api/individuals/ind-123/classes/class-old", () =>
+          new HttpResponse(null, { status: 204 }),
         ),
       );
 
@@ -1069,13 +991,10 @@ describe("OntologyService - Individuals", () => {
 
     it("throws ApiError with 404 on removeParentClass with non-existent individual", async () => {
       server.use(
-        rest.delete("*/api/individuals/not-found/classes/class-old", (req, res, ctx) =>
-          res(
-            ctx.status(404),
-            ctx.json({
+        http.delete("*/api/individuals/not-found/classes/class-old", () =>
+          HttpResponse.json({
               detail: "Individual not found",
-            }),
-          ),
+            }, { status: 404 }),
         ),
       );
 
@@ -1099,8 +1018,8 @@ describe("OntologyService - Individuals", () => {
       });
 
       server.use(
-        rest.put("*/api/individuals/ind-123/classes", (req, res, ctx) =>
-          res(ctx.json(mockResponse)),
+        http.put("*/api/individuals/ind-123/classes", () =>
+          HttpResponse.json(mockResponse),
         ),
       );
 
@@ -1115,13 +1034,10 @@ describe("OntologyService - Individuals", () => {
       };
 
       server.use(
-        rest.put("*/api/individuals/not-found/classes", (req, res, ctx) =>
-          res(
-            ctx.status(404),
-            ctx.json({
+        http.put("*/api/individuals/not-found/classes", () =>
+          HttpResponse.json({
               detail: "Individual not found",
-            }),
-          ),
+            }, { status: 404 }),
         ),
       );
 
@@ -1142,8 +1058,8 @@ describe("OntologyService - Individuals", () => {
       ]);
 
       server.use(
-        rest.get("*/api/individuals/ind-123/inherited-properties", (req, res, ctx) =>
-          res(ctx.json(mockProperties)),
+        http.get("*/api/individuals/ind-123/inherited-properties", () =>
+          HttpResponse.json(mockProperties),
         ),
       );
 
@@ -1155,13 +1071,10 @@ describe("OntologyService - Individuals", () => {
 
     it("throws ApiError with 404 on getIndividualInheritedProperties with non-existent individual", async () => {
       server.use(
-        rest.get("*/api/individuals/not-found/inherited-properties", (req, res, ctx) =>
-          res(
-            ctx.status(404),
-            ctx.json({
+        http.get("*/api/individuals/not-found/inherited-properties", () =>
+          HttpResponse.json({
               detail: "Individual not found",
-            }),
-          ),
+            }, { status: 404 }),
         ),
       );
 
@@ -1187,7 +1100,7 @@ describe("OntologyService - Property Definitions", () => {
         createPropertyDefinition({ id: "prop-2", title: "Size" }),
       ]);
 
-      server.use(rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(mockProperties))));
+      server.use(http.get("*/api/properties", () => HttpResponse.json(mockProperties)));
 
       const result = await ontologyService.listProperties();
 
@@ -1200,12 +1113,12 @@ describe("OntologyService - Property Definitions", () => {
       ]);
 
       server.use(
-        rest.get("*/api/properties", (req, res, ctx) => {
-          const url = new URL(req.url);
+        http.get("*/api/properties", ({ request }) => {
+          const url = new URL(request.url);
           if (url.searchParams.get("is_relevant") === "true") {
-            return res(ctx.json(mockProperties));
+            return HttpResponse.json(mockProperties);
           }
-          return res(ctx.json(createListProperties([])));
+          return HttpResponse.json(createListProperties([]));
         }),
       );
 
@@ -1216,13 +1129,10 @@ describe("OntologyService - Property Definitions", () => {
 
     it("throws ApiError on 500 from listProperties", async () => {
       server.use(
-        rest.get("*/api/properties", (req, res, ctx) =>
-          res(
-            ctx.status(500),
-            ctx.json({
+        http.get("*/api/properties", () =>
+          HttpResponse.json({
               detail: "Internal server error",
-            }),
-          ),
+            }, { status: 500 }),
         ),
       );
 
@@ -1241,7 +1151,7 @@ describe("OntologyService - Property Definitions", () => {
       });
 
       server.use(
-        rest.get("*/api/properties/prop-123", (req, res, ctx) => res(ctx.json(mockProperty))),
+        http.get("*/api/properties/prop-123", () => HttpResponse.json(mockProperty)),
       );
 
       const result = await ontologyService.getProperty("prop-123");
@@ -1251,13 +1161,10 @@ describe("OntologyService - Property Definitions", () => {
 
     it("throws ApiError with 404 on getProperty with non-existent ID", async () => {
       server.use(
-        rest.get("*/api/properties/not-found", (req, res, ctx) =>
-          res(
-            ctx.status(404),
-            ctx.json({
+        http.get("*/api/properties/not-found", () =>
+          HttpResponse.json({
               detail: "Property not found",
-            }),
-          ),
+            }, { status: 404 }),
         ),
       );
 
@@ -1278,7 +1185,7 @@ describe("OntologyService - Property Definitions", () => {
         title: "Color",
       });
 
-      server.use(rest.post("*/api/properties", (req, res, ctx) => res(ctx.json(mockResponse))));
+      server.use(http.post("*/api/properties", () => HttpResponse.json(mockResponse)));
 
       const result = await ontologyService.createProperty(createRequest);
 
@@ -1292,13 +1199,10 @@ describe("OntologyService - Property Definitions", () => {
       });
 
       server.use(
-        rest.post("*/api/properties", (req, res, ctx) =>
-          res(
-            ctx.status(400),
-            ctx.json({
+        http.post("*/api/properties", () =>
+          HttpResponse.json({
               detail: "Title cannot be empty",
-            }),
-          ),
+            }, { status: 400 }),
         ),
       );
 
@@ -1318,7 +1222,7 @@ describe("OntologyService - Property Definitions", () => {
       });
 
       server.use(
-        rest.put("*/api/properties/prop-123", (req, res, ctx) => res(ctx.json(mockResponse))),
+        http.put("*/api/properties/prop-123", () => HttpResponse.json(mockResponse)),
       );
 
       const result = await ontologyService.updateProperty("prop-123", updateRequest);
@@ -1328,13 +1232,10 @@ describe("OntologyService - Property Definitions", () => {
 
     it("throws ApiError with 404 on updateProperty with non-existent ID", async () => {
       server.use(
-        rest.put("*/api/properties/not-found", (req, res, ctx) =>
-          res(
-            ctx.status(404),
-            ctx.json({
+        http.put("*/api/properties/not-found", () =>
+          HttpResponse.json({
               detail: "Property not found",
-            }),
-          ),
+            }, { status: 404 }),
         ),
       );
 
@@ -1349,20 +1250,17 @@ describe("OntologyService - Property Definitions", () => {
 
   describe("deleteProperty", () => {
     it("deletes property via DELETE /api/properties/:id", async () => {
-      server.use(rest.delete("*/api/properties/prop-123", (req, res, ctx) => res(ctx.status(204))));
+      server.use(http.delete("*/api/properties/prop-123", () => new HttpResponse(null, { status: 204 })));
 
       await expect(ontologyService.deleteProperty("prop-123")).resolves.toBeDefined();
     });
 
     it("throws ApiError with 422 on deleteProperty with dependent relationships", async () => {
       server.use(
-        rest.delete("*/api/properties/prop-123", (req, res, ctx) =>
-          res(
-            ctx.status(422),
-            ctx.json({
+        http.delete("*/api/properties/prop-123", () =>
+          HttpResponse.json({
               detail: "Cannot delete property with existing relationships",
-            }),
-          ),
+            }, { status: 422 }),
         ),
       );
 
@@ -1388,7 +1286,7 @@ describe("OntologyService - Relationships", () => {
       ]);
 
       server.use(
-        rest.get("*/api/relationships", (req, res, ctx) => res(ctx.json(mockRelationships))),
+        http.get("*/api/relationships", () => HttpResponse.json(mockRelationships)),
       );
 
       const result = await ontologyService.listRelationships();
@@ -1407,16 +1305,16 @@ describe("OntologyService - Relationships", () => {
       ]);
 
       server.use(
-        rest.get("*/api/relationships", (req, res, ctx) => {
-          const url = new URL(req.url);
+        http.get("*/api/relationships", ({ request }) => {
+          const url = new URL(request.url);
           const hasSource = url.searchParams.get("source_id") === "class-1";
           const hasTarget = url.searchParams.get("target_id") === "class-2";
           const hasProperty = url.searchParams.get("property_id") === "prop-123";
 
           if (hasSource && hasTarget && hasProperty) {
-            return res(ctx.json(mockRelationships));
+            return HttpResponse.json(mockRelationships);
           }
-          return res(ctx.json(createListRelationships([])));
+          return HttpResponse.json(createListRelationships([]));
         }),
       );
 
@@ -1431,13 +1329,10 @@ describe("OntologyService - Relationships", () => {
 
     it("throws ApiError on 500 from listRelationships", async () => {
       server.use(
-        rest.get("*/api/relationships", (req, res, ctx) =>
-          res(
-            ctx.status(500),
-            ctx.json({
+        http.get("*/api/relationships", () =>
+          HttpResponse.json({
               detail: "Internal server error",
-            }),
-          ),
+            }, { status: 500 }),
         ),
       );
 
@@ -1455,7 +1350,7 @@ describe("OntologyService - Relationships", () => {
       });
 
       server.use(
-        rest.get("*/api/relationships/rel-123", (req, res, ctx) => res(ctx.json(mockRelationship))),
+        http.get("*/api/relationships/rel-123", () => HttpResponse.json(mockRelationship)),
       );
 
       const result = await ontologyService.getRelationship("rel-123");
@@ -1465,13 +1360,10 @@ describe("OntologyService - Relationships", () => {
 
     it("throws ApiError with 404 on getRelationship with non-existent ID", async () => {
       server.use(
-        rest.get("*/api/relationships/not-found", (req, res, ctx) =>
-          res(
-            ctx.status(404),
-            ctx.json({
+        http.get("*/api/relationships/not-found", () =>
+          HttpResponse.json({
               detail: "Relationship not found",
-            }),
-          ),
+            }, { status: 404 }),
         ),
       );
 
@@ -1489,7 +1381,7 @@ describe("OntologyService - Relationships", () => {
         id: "rel-999",
       });
 
-      server.use(rest.post("*/api/relationships", (req, res, ctx) => res(ctx.json(mockResponse))));
+      server.use(http.post("*/api/relationships", () => HttpResponse.json(mockResponse)));
 
       const result = await ontologyService.createRelationship(createRequest);
 
@@ -1502,13 +1394,10 @@ describe("OntologyService - Relationships", () => {
       });
 
       server.use(
-        rest.post("*/api/relationships", (req, res, ctx) =>
-          res(
-            ctx.status(400),
-            ctx.json({
+        http.post("*/api/relationships", () =>
+          HttpResponse.json({
               detail: "Source class not found",
-            }),
-          ),
+            }, { status: 400 }),
         ),
       );
 
@@ -1522,7 +1411,7 @@ describe("OntologyService - Relationships", () => {
   describe("deleteRelationship", () => {
     it("deletes relationship via DELETE /api/relationships/:id", async () => {
       server.use(
-        rest.delete("*/api/relationships/rel-123", (req, res, ctx) => res(ctx.status(204))),
+        http.delete("*/api/relationships/rel-123", () => new HttpResponse(null, { status: 204 })),
       );
 
       await expect(ontologyService.deleteRelationship("rel-123")).resolves.toBeDefined();
@@ -1530,13 +1419,10 @@ describe("OntologyService - Relationships", () => {
 
     it("throws ApiError with 404 on deleteRelationship with non-existent ID", async () => {
       server.use(
-        rest.delete("*/api/relationships/not-found", (req, res, ctx) =>
-          res(
-            ctx.status(404),
-            ctx.json({
+        http.delete("*/api/relationships/not-found", () =>
+          HttpResponse.json({
               detail: "Relationship not found",
-            }),
-          ),
+            }, { status: 404 }),
         ),
       );
 

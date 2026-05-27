@@ -14,7 +14,7 @@ describe("getStatusColor", () => {
     expect(getStatusColor("timeout")).toBe("amber");
   });
 
-  it("returns gray for unknown status", () => {
-    expect(getStatusColor("unknown" as any)).toBe("gray");
+  it("returns neutral for unknown status", () => {
+    expect(getStatusColor("unknown" as any)).toBe("neutral");
   });
 });

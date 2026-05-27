@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { rest } from "msw";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
 import {
@@ -15,10 +15,10 @@ import {
 import { PropertiesPage } from "../properties";
 
 const server = setupServer(
-  rest.get("*/api/taxonomies", (req, res, ctx) => res(ctx.json(createListTaxonomies([])))),
-  rest.get("*/api/schemes", (req, res, ctx) => res(ctx.json(createListSchemes([])))),
-  rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([])))),
-  rest.get("*/api/relationships", (req, res, ctx) => res(ctx.json(createListRelationships([])))),
+  http.get("*/api/taxonomies", () => HttpResponse.json(createListTaxonomies([]))),
+  http.get("*/api/schemes", () => HttpResponse.json(createListSchemes([]))),
+  http.get("*/api/classes", () => HttpResponse.json(createListClasses([]))),
+  http.get("*/api/relationships", () => HttpResponse.json(createListRelationships([]))),
 );
 
 beforeAll(() => {
@@ -40,19 +40,18 @@ describe("Properties Schema Page", () => {
   describe("loading state", () => {
     it("displays loading skeleton state with 5 skeleton rows matching table layout", async () => {
       server.use(
-        rest.get("*/api/properties", async (req, res, ctx) => {
+        http.get("*/api/properties", async () => {
           // Delay the response so we can capture loading state
           await new Promise((resolve) => setTimeout(resolve, 100));
-          return res(ctx.json(createListProperties([])));
+          return HttpResponse.json(createListProperties([]));
         }),
       );
 
       const { container } = render(<PropertiesPage />);
 
-      // Verify skeleton rows are rendered before data arrives
-      const skeletonElements = container.querySelectorAll(
-        "div[style*='animation: skeleton-shimmer']",
-      );
+      // Verify skeleton rows are rendered before data arrives.
+      // Skeletons now use the `.skeleton` class (shimmer is in CSS, not inline style).
+      const skeletonElements = container.querySelectorAll(".skeleton");
       expect(skeletonElements.length).toBeGreaterThanOrEqual(5);
     });
   });
@@ -63,8 +62,8 @@ describe("Properties Schema Page", () => {
   describe("error state", () => {
     it("displays error banner with retry button when API fails", async () => {
       server.use(
-        rest.get("*/api/properties", (req, res, ctx) =>
-          res(ctx.status(500), ctx.json({ detail: "Internal server error" })),
+        http.get("*/api/properties", () =>
+          HttpResponse.json({ detail: "Internal server error" }, { status: 500 }),
         ),
       );
 
@@ -81,12 +80,12 @@ describe("Properties Schema Page", () => {
       let callCount = 0;
 
       server.use(
-        rest.get("*/api/properties", (req, res, ctx) => {
+        http.get("*/api/properties", () => {
           callCount++;
           if (callCount === 1) {
-            return res(ctx.status(500), ctx.json({ detail: "Server error" }));
+            return HttpResponse.json({ detail: "Server error" }, { status: 500 });
           }
-          return res(ctx.json(createListProperties([])));
+          return HttpResponse.json(createListProperties([]));
         }),
       );
 
@@ -113,7 +112,7 @@ describe("Properties Schema Page", () => {
   describe("empty state", () => {
     it("displays empty state copy when no properties exist", async () => {
       server.use(
-        rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(createListProperties([])))),
+        http.get("*/api/properties", () => HttpResponse.json(createListProperties([]))),
       );
 
       render(<PropertiesPage />);
@@ -128,7 +127,7 @@ describe("Properties Schema Page", () => {
 
     it("empty state displays action label button", async () => {
       server.use(
-        rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(createListProperties([])))),
+        http.get("*/api/properties", () => HttpResponse.json(createListProperties([]))),
       );
 
       render(<PropertiesPage />);
@@ -159,7 +158,7 @@ describe("Properties Schema Page", () => {
         }),
       ]);
 
-      server.use(rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(mockProperties))));
+      server.use(http.get("*/api/properties", () => HttpResponse.json(mockProperties)));
 
       render(<PropertiesPage />);
 
@@ -169,7 +168,7 @@ describe("Properties Schema Page", () => {
       });
     });
 
-    it("displays mono ID in first column of table rows", async () => {
+    it("displays mono identifier in first column of table rows", async () => {
       const mockProperties = createListProperties([
         createPropertyDefinition({
           id: "prop-123",
@@ -178,7 +177,7 @@ describe("Properties Schema Page", () => {
         }),
       ]);
 
-      server.use(rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(mockProperties))));
+      server.use(http.get("*/api/properties", () => HttpResponse.json(mockProperties)));
 
       render(<PropertiesPage />);
 
@@ -186,8 +185,11 @@ describe("Properties Schema Page", () => {
         expect(screen.getByText("TestProp")).toBeInTheDocument();
       });
 
-      const monoId = screen.getByText("prop-123");
-      expect(monoId.tagName.toLowerCase()).toBe("code");
+      // The first column for properties is the property `identifier` (not the
+      // raw id), rendered in a mono-font span — no longer a <code> element.
+      const monoId = screen.getByText("test_prop");
+      expect(monoId.tagName.toLowerCase()).toBe("span");
+      expect(monoId).toHaveStyle({ fontFamily: "var(--font-mono)" });
     });
 
     it("displays description column with em-dash placeholder when empty", async () => {
@@ -200,7 +202,7 @@ describe("Properties Schema Page", () => {
         }),
       ]);
 
-      server.use(rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(mockProperties))));
+      server.use(http.get("*/api/properties", () => HttpResponse.json(mockProperties)));
 
       render(<PropertiesPage />);
 
@@ -236,7 +238,7 @@ describe("Properties Schema Page", () => {
         }),
       ]);
 
-      server.use(rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(mockProperties))));
+      server.use(http.get("*/api/properties", () => HttpResponse.json(mockProperties)));
 
       render(<PropertiesPage />);
 
@@ -268,7 +270,7 @@ describe("Properties Schema Page", () => {
         }),
       ]);
 
-      server.use(rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(mockProperties))));
+      server.use(http.get("*/api/properties", () => HttpResponse.json(mockProperties)));
 
       render(<PropertiesPage />);
 

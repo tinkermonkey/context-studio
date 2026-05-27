@@ -5,313 +5,176 @@ import { render } from "@/test/test-utils";
 import { HierarchyTree } from "../HierarchyTree";
 import type { components } from "@/api/types";
 
+type TaxonomyResponse = components["schemas"]["TaxonomyResponse"];
+type ConceptSchemeResponse = components["schemas"]["ConceptSchemeResponse"];
 type ClassResponse = components["schemas"]["ClassResponse"];
 
-const mockClasses: ClassResponse[] = [
-  {
-    id: "class-1",
-    title: "Root Class",
-    concept_scheme_id: "scheme-1",
-    taxonomy_id: "taxonomy-1",
-    parent_class_id: null,
-    created_at: new Date().toISOString(),
-    version: 1,
-    status: "draft",
-  },
-  {
-    id: "class-2",
-    title: "Child Class",
-    concept_scheme_id: "scheme-1",
-    taxonomy_id: "taxonomy-1",
-    parent_class_id: "class-1",
-    created_at: new Date().toISOString(),
-    version: 1,
-    status: "draft",
-  },
-  {
-    id: "class-3",
-    title: "Another Root",
-    concept_scheme_id: "scheme-1",
-    taxonomy_id: "taxonomy-1",
-    parent_class_id: null,
-    created_at: new Date().toISOString(),
-    version: 1,
-    status: "draft",
-  },
+const taxonomies: TaxonomyResponse[] = [
+  { id: "tax-1", title: "Alpha Taxonomy", description: "Alpha root", version: 1, status: "draft" },
+  { id: "tax-2", title: "Beta Taxonomy", description: "Beta root", version: 1, status: "draft" },
 ];
 
-const mockHierarchy: ClassResponse[] = [
-  {
-    id: "root-1",
-    title: "Root",
-    concept_scheme_id: "scheme-1",
-    taxonomy_id: "taxonomy-1",
-    parent_class_id: null,
-    created_at: new Date().toISOString(),
-    version: 1,
-    status: "draft",
-  },
-  {
-    id: "child-1",
-    title: "Child 1",
-    concept_scheme_id: "scheme-1",
-    taxonomy_id: "taxonomy-1",
-    parent_class_id: "root-1",
-    created_at: new Date().toISOString(),
-    version: 1,
-    status: "draft",
-  },
-  {
-    id: "child-2",
-    title: "Child 2",
-    concept_scheme_id: "scheme-1",
-    taxonomy_id: "taxonomy-1",
-    parent_class_id: "root-1",
-    created_at: new Date().toISOString(),
-    version: 1,
-    status: "draft",
-  },
-  {
-    id: "grandchild-1",
-    title: "Grandchild",
-    concept_scheme_id: "scheme-1",
-    taxonomy_id: "taxonomy-1",
-    parent_class_id: "child-1",
-    created_at: new Date().toISOString(),
-    version: 1,
-    status: "draft",
-  },
+const schemes: ConceptSchemeResponse[] = [
+  { id: "scheme-1", taxonomy_id: "tax-1", title: "Scheme One", description: "First scheme", version: 1, status: "draft" },
+  { id: "scheme-2", taxonomy_id: "tax-1", title: "Scheme Two", description: "Second scheme", version: 1, status: "draft" },
+  { id: "scheme-3", taxonomy_id: "tax-2", title: "Scheme Three", description: "Third scheme", version: 1, status: "draft" },
 ];
+
+const classes: ClassResponse[] = [
+  { id: "class-1", concept_scheme_id: "scheme-1", taxonomy_id: "tax-1", title: "Class One", description: "First class", parent_class_id: null, version: 1, status: "draft" },
+  { id: "class-2", concept_scheme_id: "scheme-1", taxonomy_id: "tax-1", title: "Class Two", description: "Second class", parent_class_id: null, version: 1, status: "draft" },
+  { id: "class-3", concept_scheme_id: "scheme-2", taxonomy_id: "tax-1", title: "Class Three", description: "Third class", parent_class_id: null, version: 1, status: "draft" },
+];
+
+function renderTree(overrides?: Partial<Parameters<typeof HierarchyTree>[0]>) {
+  return render(
+    <HierarchyTree taxonomies={taxonomies} schemes={schemes} classes={classes} {...overrides} />,
+  );
+}
 
 describe("HierarchyTree", () => {
-  describe("rendering nodes", () => {
-    it("renders root class nodes", () => {
-      render(<HierarchyTree classes={mockClasses} />);
+  describe("structure", () => {
+    it("renders every taxonomy as a top-level row", () => {
+      renderTree();
+      expect(screen.getByTestId("hierarchy-node-tax-1")).toBeInTheDocument();
+      expect(screen.getByTestId("hierarchy-node-tax-2")).toBeInTheDocument();
+    });
+
+    it("seeds the first taxonomy and its first scheme open", () => {
+      renderTree();
+      // tax-1 open → both of its schemes visible
+      expect(screen.getByTestId("hierarchy-node-scheme-1")).toBeInTheDocument();
+      expect(screen.getByTestId("hierarchy-node-scheme-2")).toBeInTheDocument();
+      // scheme-1 open → its classes visible
       expect(screen.getByTestId("hierarchy-node-class-1")).toBeInTheDocument();
+      expect(screen.getByTestId("hierarchy-node-class-2")).toBeInTheDocument();
+    });
+
+    it("keeps collapsed branches out of the DOM", () => {
+      renderTree();
+      // tax-2 collapsed → its scheme hidden
+      expect(screen.queryByTestId("hierarchy-node-scheme-3")).not.toBeInTheDocument();
+      // scheme-2 collapsed → its class hidden
+      expect(screen.queryByTestId("hierarchy-node-class-3")).not.toBeInTheDocument();
+    });
+
+    it("tags each row with the correct kind", () => {
+      renderTree();
+      expect(screen.getByTestId("hierarchy-node-tax-1")).toHaveAttribute("data-kind", "taxonomy");
+      expect(screen.getByTestId("hierarchy-node-scheme-1")).toHaveAttribute("data-kind", "scheme");
+      expect(screen.getByTestId("hierarchy-node-class-1")).toHaveAttribute("data-kind", "class");
+    });
+
+    it("uses the default domain swatch for all rows", () => {
+      renderTree();
+      expect(screen.getByTestId("hierarchy-node-tax-1")).toHaveAttribute("data-domain", "default");
+      expect(screen.getByTestId("hierarchy-node-class-1")).toHaveAttribute("data-domain", "default");
+    });
+
+    it("indents rows by depth", () => {
+      renderTree();
+      expect(screen.getByTestId("hierarchy-node-tax-1")).toHaveAttribute("data-depth", "0");
+      expect(screen.getByTestId("hierarchy-node-scheme-1")).toHaveAttribute("data-depth", "1");
+      expect(screen.getByTestId("hierarchy-node-class-1")).toHaveAttribute("data-depth", "2");
+    });
+  });
+
+  describe("meta counts", () => {
+    it("shows pluralized scheme counts on taxonomy rows", () => {
+      renderTree();
+      expect(screen.getByText("2 schemes")).toBeInTheDocument();
+      expect(screen.getByText("1 scheme")).toBeInTheDocument();
+    });
+
+    it("shows pluralized class counts on scheme rows", () => {
+      renderTree();
+      expect(screen.getByText("2 classes")).toBeInTheDocument();
+      expect(screen.getByText("1 class")).toBeInTheDocument();
+    });
+  });
+
+  describe("expand / collapse", () => {
+    it("expands a collapsed taxonomy on click", async () => {
+      const user = userEvent.setup();
+      renderTree();
+      expect(screen.queryByTestId("hierarchy-node-scheme-3")).not.toBeInTheDocument();
+      await user.click(screen.getByTestId("hierarchy-node-tax-2"));
+      expect(screen.getByTestId("hierarchy-node-scheme-3")).toBeInTheDocument();
+    });
+
+    it("collapses an open taxonomy on click", async () => {
+      const user = userEvent.setup();
+      renderTree();
+      expect(screen.getByTestId("hierarchy-node-scheme-1")).toBeInTheDocument();
+      await user.click(screen.getByTestId("hierarchy-node-tax-1"));
+      expect(screen.queryByTestId("hierarchy-node-scheme-1")).not.toBeInTheDocument();
+    });
+
+    it("expands a collapsed scheme to reveal its classes", async () => {
+      const user = userEvent.setup();
+      renderTree();
+      expect(screen.queryByTestId("hierarchy-node-class-3")).not.toBeInTheDocument();
+      await user.click(screen.getByTestId("hierarchy-node-scheme-2"));
       expect(screen.getByTestId("hierarchy-node-class-3")).toBeInTheDocument();
     });
-
-    it("displays root node titles", () => {
-      render(<HierarchyTree classes={mockClasses} />);
-      expect(screen.getByText("Root Class")).toBeInTheDocument();
-      expect(screen.getByText("Another Root")).toBeInTheDocument();
-    });
-
-    it("renders a hierarchy tree container", () => {
-      const { container } = render(<HierarchyTree classes={mockClasses} />);
-      expect(container.querySelector('[data-testid="hierarchy-node-class-1"]')).toBeInTheDocument();
-    });
   });
 
-  describe("node data attributes", () => {
-    it("has hierarchy-node testid with class id", () => {
-      render(<HierarchyTree classes={mockClasses} />);
-      const node = screen.getByTestId("hierarchy-node-class-1");
-      expect(node).toBeInTheDocument();
-    });
-
-    it("has data-domain attribute with concept scheme id", () => {
-      const { container } = render(<HierarchyTree classes={mockClasses} />);
-      const node = container.querySelector('[data-testid="hierarchy-node-class-1"]');
-      expect(node).toHaveAttribute("data-domain", "scheme-1");
-    });
-  });
-
-  describe("expand/collapse functionality", () => {
-    it("renders expand button for nodes with children", () => {
-      render(<HierarchyTree classes={mockHierarchy} />);
-      const expandButton = screen.getByLabelText("Expand");
-      expect(expandButton).toBeInTheDocument();
-    });
-
-    it("does not render expand button for leaf nodes", () => {
-      render(<HierarchyTree classes={[mockClasses[0]]} />);
-      const expandButton = screen.queryByLabelText("Expand");
-      expect(expandButton).not.toBeInTheDocument();
-    });
-
-    it("toggles expand button label on click", async () => {
+  describe("class selection", () => {
+    it("calls onSelectClass with the class id", async () => {
+      const onSelectClass = vi.fn();
       const user = userEvent.setup();
-      render(<HierarchyTree classes={mockHierarchy} />);
-      let expandButton = screen.getByLabelText("Expand");
-      await user.click(expandButton);
-      expandButton = screen.getByLabelText("Collapse");
-      expect(expandButton).toBeInTheDocument();
+      renderTree({ onSelectClass });
+      await user.click(screen.getByTestId("hierarchy-node-class-1"));
+      expect(onSelectClass).toHaveBeenCalledWith("class-1");
     });
 
-    it("shows children when node is expanded", async () => {
+    it("marks the selected class row", async () => {
       const user = userEvent.setup();
-      render(<HierarchyTree classes={mockHierarchy} />);
-      expect(screen.queryByText("Child 1")).not.toBeInTheDocument();
-      const expandButton = screen.getByLabelText("Expand");
-      await user.click(expandButton);
-      expect(screen.getByText("Child 1")).toBeInTheDocument();
-    });
-
-    it("hides children when node is collapsed", async () => {
-      const user = userEvent.setup();
-      render(<HierarchyTree classes={mockHierarchy} />);
-      const expandButton = screen.getByLabelText("Expand");
-      await user.click(expandButton);
-      expect(screen.getByText("Child 1")).toBeInTheDocument();
-      const collapseButton = screen.getByLabelText("Collapse");
-      await user.click(collapseButton);
-      expect(screen.queryByText("Child 1")).not.toBeInTheDocument();
-    });
-  });
-
-  describe("child count meta", () => {
-    it("renders child count for nodes with children", () => {
-      render(<HierarchyTree classes={mockHierarchy} />);
-      expect(screen.getByText("2")).toBeInTheDocument();
-    });
-
-    it("does not render child count for leaf nodes", () => {
-      render(<HierarchyTree classes={[mockHierarchy[2]]} />);
-      expect(screen.queryByText("2")).not.toBeInTheDocument();
-    });
-  });
-
-  describe("node selection", () => {
-    it("calls onNodeSelect when node is clicked", async () => {
-      const onNodeSelect = vi.fn();
-      const user = userEvent.setup();
-      render(<HierarchyTree classes={mockClasses} onNodeSelect={onNodeSelect} />);
-      const node = screen.getByTestId("hierarchy-node-class-1");
-      await user.click(node);
-      expect(onNodeSelect).toHaveBeenCalledWith("class-1");
-    });
-
-    it("does not call onNodeSelect when not provided", async () => {
-      const user = userEvent.setup();
-      render(<HierarchyTree classes={mockClasses} />);
-      const node = screen.getByTestId("hierarchy-node-class-1");
-      await user.click(node);
-    });
-
-    it("calls onNodeSelect with correct child id when child is clicked", async () => {
-      const onNodeSelect = vi.fn();
-      const user = userEvent.setup();
-      render(<HierarchyTree classes={mockHierarchy} onNodeSelect={onNodeSelect} />);
-      const expandButton = screen.getByLabelText("Expand");
-      await user.click(expandButton);
-      const childNode = screen.getByTestId("hierarchy-node-child-1");
-      await user.click(childNode);
-      expect(onNodeSelect).toHaveBeenCalledWith("child-1");
+      renderTree();
+      await user.click(screen.getByTestId("hierarchy-node-class-1"));
+      expect(screen.getByTestId("hierarchy-node-class-1").className).toContain("hierarchy-row--selected");
     });
   });
 
   describe("loading state", () => {
-    it("renders skeleton loaders when loading is true", () => {
-      const { container } = render(<HierarchyTree classes={[]} loading={true} />);
-      const skeletons = container.querySelectorAll("div");
-      const hasLoading = Array.from(skeletons).some((el) =>
-        el.style.animation?.includes("skeleton-shimmer"),
-      );
-      expect(hasLoading).toBe(true);
+    it("renders skeleton loaders when loading", () => {
+      const { container } = render(<HierarchyTree loading />);
+      const hasSkeleton = container.querySelector(".skeleton");
+      expect(hasSkeleton).toBeInTheDocument();
     });
 
-    it("does not render nodes when loading", () => {
-      render(<HierarchyTree classes={mockClasses} loading={true} />);
-      expect(screen.queryByText("Root Class")).not.toBeInTheDocument();
+    it("does not render rows when loading", () => {
+      renderTree({ loading: true });
+      expect(screen.queryByTestId("hierarchy-node-tax-1")).not.toBeInTheDocument();
     });
   });
 
   describe("error state", () => {
-    it("renders error message when error provided", () => {
-      const error = new Error("Failed to load");
-      render(<HierarchyTree classes={[]} error={error} />);
-      expect(screen.getByText("Failed to load")).toBeInTheDocument();
+    it("renders the error message", () => {
+      renderTree({ error: new Error("Boom") });
+      expect(screen.getByText("Boom")).toBeInTheDocument();
     });
 
-    it("renders default error message when error has no message", () => {
-      render(<HierarchyTree classes={[]} error={new Error("")} />);
+    it("renders a default message when the error has none", () => {
+      renderTree({ error: new Error("") });
       expect(screen.getByText("Failed to load class hierarchy")).toBeInTheDocument();
     });
 
-    it("does not render nodes when error", () => {
-      render(<HierarchyTree classes={mockClasses} error={new Error("Error")} />);
-      expect(screen.queryByText("Root Class")).not.toBeInTheDocument();
+    it("does not render rows when in error", () => {
+      renderTree({ error: new Error("Boom") });
+      expect(screen.queryByTestId("hierarchy-node-tax-1")).not.toBeInTheDocument();
     });
   });
 
   describe("empty state", () => {
-    it("renders empty message when no classes provided", () => {
-      render(<HierarchyTree classes={[]} />);
-      expect(screen.getByText("No classes found")).toBeInTheDocument();
+    it("renders an empty message when there are no taxonomies", () => {
+      render(<HierarchyTree taxonomies={[]} schemes={[]} classes={[]} />);
+      expect(screen.getByText("No structure yet")).toBeInTheDocument();
     });
 
-    it("does not render nodes when classes is undefined", () => {
+    it("renders an empty message when props are undefined", () => {
       render(<HierarchyTree />);
-      expect(screen.getByText("No classes found")).toBeInTheDocument();
-    });
-  });
-
-  describe("max depth", () => {
-    it("limits expansion to maxDepth", async () => {
-      const user = userEvent.setup();
-      render(<HierarchyTree classes={mockHierarchy} maxDepth={2} />);
-
-      // Expand root (depth 0) - should have expand button
-      expect(screen.getAllByLabelText("Expand")).toHaveLength(1);
-      await user.click(screen.getAllByLabelText("Expand")[0]);
-
-      // After expanding root, child-1 should be visible and have an expand button
-      expect(screen.getByText("Child 1")).toBeInTheDocument();
-      expect(screen.getAllByLabelText("Expand")).toHaveLength(1); // Just child-1's expand button
-
-      // Expand child-1 (depth 1) — find the expand button for "Child 1"
-      const child1Node = screen.getByTestId("hierarchy-node-child-1");
-      const child1Row = child1Node.closest("div");
-      const child1ExpandBtn = child1Row?.parentElement?.querySelector("button[aria-label]") as HTMLButtonElement;
-      await user.click(child1ExpandBtn);
-
-      // Grandchild should be visible
-      expect(screen.getByText("Grandchild")).toBeInTheDocument();
-
-      // Grandchild should NOT have an expand button (depth 2 >= maxDepth 2)
-      const grandchildNode = screen.getByTestId("hierarchy-node-grandchild-1");
-      const grandchildContainer = grandchildNode.closest("div")?.parentElement;
-      const expandButtons = grandchildContainer?.querySelectorAll("button[aria-label]");
-      expect(expandButtons?.length || 0).toBe(0);
-    });
-  });
-
-  describe("accessibility", () => {
-    it("expand/collapse buttons have aria labels", () => {
-      render(<HierarchyTree classes={mockHierarchy} />);
-      expect(screen.getByLabelText("Expand")).toBeInTheDocument();
-    });
-
-    it("root nodes have data-testid for semantic identification", () => {
-      render(<HierarchyTree classes={mockClasses} />);
-      // Only root nodes are rendered without expansion
-      expect(screen.getByTestId("hierarchy-node-class-1")).toBeInTheDocument();
-      expect(screen.getByTestId("hierarchy-node-class-3")).toBeInTheDocument();
-    });
-  });
-
-  describe("complete structure", () => {
-    it("renders full tree with root and children", () => {
-      render(<HierarchyTree classes={mockHierarchy} />);
-      expect(screen.getByText("Root")).toBeInTheDocument();
-      expect(screen.queryByText("Child 1")).not.toBeInTheDocument();
-    });
-
-    it("renders tree with expansion", async () => {
-      const user = userEvent.setup();
-      const onNodeSelect = vi.fn();
-      render(<HierarchyTree classes={mockHierarchy} onNodeSelect={onNodeSelect} />);
-
-      // Initial state
-      expect(screen.getByText("Root")).toBeInTheDocument();
-      expect(screen.queryByText("Child 1")).not.toBeInTheDocument();
-
-      // Expand
-      const expandButton = screen.getByLabelText("Expand");
-      await user.click(expandButton);
-      expect(screen.getByText("Child 1")).toBeInTheDocument();
-      expect(screen.getByText("Child 2")).toBeInTheDocument();
+      expect(screen.getByText("No structure yet")).toBeInTheDocument();
     });
   });
 });

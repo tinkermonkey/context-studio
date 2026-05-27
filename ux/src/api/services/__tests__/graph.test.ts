@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
-import { rest } from "msw";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { graphService } from "../graph";
 import {
@@ -38,7 +38,7 @@ describe("GraphService", () => {
         edge_count: 300,
       });
 
-      server.use(rest.post("*/api/graph/build", (req, res, ctx) => res(ctx.json(mockGraph))));
+      server.use(http.post("*/api/graph/build", () => HttpResponse.json(mockGraph)));
 
       const result = await graphService.buildGraph();
 
@@ -49,13 +49,10 @@ describe("GraphService", () => {
 
     it("throws ApiError on 500 from buildGraph", async () => {
       server.use(
-        rest.post("*/api/graph/build", (req, res, ctx) =>
-          res(
-            ctx.status(500),
-            ctx.json({
+        http.post("*/api/graph/build", () =>
+          HttpResponse.json({
               detail: "Graph build failed",
-            }),
-          ),
+            }, { status: 500 }),
         ),
       );
 
@@ -70,7 +67,7 @@ describe("GraphService", () => {
     it("returns graph metrics without algorithm parameter", async () => {
       const mockMetrics = createGraphMetrics();
 
-      server.use(rest.get("*/api/graph/metrics", (req, res, ctx) => res(ctx.json(mockMetrics))));
+      server.use(http.get("*/api/graph/metrics", () => HttpResponse.json(mockMetrics)));
 
       const result = await graphService.getMetrics();
 
@@ -84,7 +81,7 @@ describe("GraphService", () => {
         algorithm: "betweenness_centrality",
       });
 
-      server.use(rest.get("*/api/graph/metrics", (req, res, ctx) => res(ctx.json(mockMetrics))));
+      server.use(http.get("*/api/graph/metrics", () => HttpResponse.json(mockMetrics)));
 
       const result = await graphService.getMetrics("betweenness_centrality");
 
@@ -93,13 +90,10 @@ describe("GraphService", () => {
 
     it("throws ApiError on 400 from getMetrics", async () => {
       server.use(
-        rest.get("*/api/graph/metrics", (req, res, ctx) =>
-          res(
-            ctx.status(400),
-            ctx.json({
+        http.get("*/api/graph/metrics", () =>
+          HttpResponse.json({
               detail: "Invalid algorithm",
-            }),
-          ),
+            }, { status: 400 }),
         ),
       );
 
@@ -118,13 +112,13 @@ describe("GraphService", () => {
       });
 
       server.use(
-        rest.get("*/api/graph/subgraph", (req, res, ctx) => {
-          const url = new URL(req.url);
+        http.get("*/api/graph/subgraph", ({ request }) => {
+          const url = new URL(request.url);
           const nodes = url.searchParams.get("nodes");
           if (nodes === "node-1,node-2") {
-            return res(ctx.json(mockSubgraph));
+            return HttpResponse.json(mockSubgraph);
           }
-          return res(ctx.status(400), ctx.json({ detail: "Invalid nodes" }));
+          return HttpResponse.json({ detail: "Invalid nodes" }, { status: 400 });
         }),
       );
 
@@ -136,13 +130,10 @@ describe("GraphService", () => {
 
     it("throws ApiError with 400 on getSubgraph with empty node list", async () => {
       server.use(
-        rest.get("*/api/graph/subgraph", (req, res, ctx) =>
-          res(
-            ctx.status(400),
-            ctx.json({
+        http.get("*/api/graph/subgraph", () =>
+          HttpResponse.json({
               detail: "At least one node ID is required",
-            }),
-          ),
+            }, { status: 400 }),
         ),
       );
 
@@ -162,7 +153,7 @@ describe("GraphService", () => {
       });
 
       server.use(
-        rest.get("*/api/graph/paths/shortest", (req, res, ctx) => res(ctx.json(mockPath))),
+        http.get("*/api/graph/paths/shortest", () => HttpResponse.json(mockPath)),
       );
 
       const result = await graphService.getShortestPath("node-1", "node-10");
@@ -174,13 +165,10 @@ describe("GraphService", () => {
 
     it("throws ApiError on 404 when path not found", async () => {
       server.use(
-        rest.get("*/api/graph/paths/shortest", (req, res, ctx) =>
-          res(
-            ctx.status(404),
-            ctx.json({
+        http.get("*/api/graph/paths/shortest", () =>
+          HttpResponse.json({
               detail: "No path found between nodes",
-            }),
-          ),
+            }, { status: 404 }),
         ),
       );
 
@@ -198,7 +186,7 @@ describe("GraphService", () => {
         results: [{ x: "node-1" }, { x: "node-2" }, { x: "node-3" }],
       });
 
-      server.use(rest.post("*/api/graph/sparql", (req, res, ctx) => res(ctx.json(mockResults))));
+      server.use(http.post("*/api/graph/sparql", () => HttpResponse.json(mockResults)));
 
       const result = await graphService.sparqlQuery(sparqlRequest.query);
 
@@ -209,13 +197,10 @@ describe("GraphService", () => {
 
     it("throws ApiError on 400 for invalid SPARQL query", async () => {
       server.use(
-        rest.post("*/api/graph/sparql", (req, res, ctx) =>
-          res(
-            ctx.status(400),
-            ctx.json({
+        http.post("*/api/graph/sparql", () =>
+          HttpResponse.json({
               detail: "Invalid SPARQL query syntax",
-            }),
-          ),
+            }, { status: 400 }),
         ),
       );
 
@@ -228,13 +213,10 @@ describe("GraphService", () => {
 
     it("throws ApiError on 500 for query execution error", async () => {
       server.use(
-        rest.post("*/api/graph/sparql", (req, res, ctx) =>
-          res(
-            ctx.status(500),
-            ctx.json({
+        http.post("*/api/graph/sparql", () =>
+          HttpResponse.json({
               detail: "Query execution timeout",
-            }),
-          ),
+            }, { status: 500 }),
         ),
       );
 

@@ -16,7 +16,7 @@ import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { HierarchyTree } from "@/components/ontology/HierarchyTree";
 import { PipelineCard } from "@/components/pipeline/PipelineCard";
 import { useHealth, useStatsTrends } from "@/api/hooks/admin";
-import { useTaxonomies, useClasses, useIndividuals } from "@/api/hooks/ontology";
+import { useTaxonomies, useSchemes, useClasses, useIndividuals } from "@/api/hooks/ontology";
 import { usePipelines } from "@/api/hooks/pipeline";
 import { useChanges } from "@/api/hooks/versioning";
 import { useExecutionStore } from "@/stores/executionStore";
@@ -92,6 +92,10 @@ export function Dashboard() {
     refetch: refetchTaxonomies,
   } = useTaxonomies();
   const {
+    data: schemes,
+    isLoading: schemesLoading,
+  } = useSchemes();
+  const {
     data: classes,
     isLoading: classesLoading,
     error: classesError,
@@ -117,6 +121,7 @@ export function Dashboard() {
   const inFlightPipelineIds = useExecutionStore((state) => state.inFlightPipelineIds);
 
   const taxonomyCount = taxonomies?.total ?? 0;
+  const schemeCount = schemes?.total ?? 0;
   const classCount = classes?.total ?? 0;
   const individualCount = individuals?.total ?? 0;
   const pipelineCount = pipelines?.length ?? 0;
@@ -239,7 +244,7 @@ export function Dashboard() {
           headerAction={
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "rgb(var(--canvas-fg-3))", whiteSpace: "nowrap" }}>
-                {taxonomyCount} tax · {classCount} cls
+                {taxonomyCount} tax · {schemeCount} sch · {classCount} cls
               </span>
               <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/app/schema/classes" })}>
                 Open <Icon name="arrowRight" size={11} />
@@ -256,7 +261,13 @@ export function Dashboard() {
           />
           <div style={{ maxHeight: 460, overflow: "auto", padding: "6px 0" }}>
             {!classesError && (
-              <HierarchyTree classes={classes?.items} loading={classesLoading} error={classesError} />
+              <HierarchyTree
+                taxonomies={taxonomies?.items}
+                schemes={schemes?.items}
+                classes={classes?.items}
+                loading={taxonomiesLoading || schemesLoading || classesLoading}
+                error={classesError}
+              />
             )}
           </div>
         </Panel>

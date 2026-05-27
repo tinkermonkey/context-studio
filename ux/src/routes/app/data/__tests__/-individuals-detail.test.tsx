@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
-import { rest } from "msw";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
 import {
@@ -35,8 +35,8 @@ describe("Individual Detail Page (Drawer Component)", () => {
       const mockClasses = createListClasses([]);
 
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
+        http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
+        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
       );
 
       const { container } = render(<IndividualDrawer individualId={null} onClose={() => {}} />);
@@ -69,13 +69,13 @@ describe("Individual Detail Page (Drawer Component)", () => {
       ]);
 
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/individuals/ind-001", (req, res, ctx) =>
-          res(ctx.json(mockIndividuals.items[0])),
+        http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
+        http.get("*/api/individuals/ind-001", () =>
+          HttpResponse.json(mockIndividuals.items[0]),
         ),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
-        rest.get("*/api/individuals/ind-001/inherited-properties", (req, res, ctx) =>
-          res(ctx.json({ items: [], total: 0, limit: 10, offset: 0 })),
+        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
+        http.get("*/api/individuals/ind-001/inherited-properties", () =>
+          HttpResponse.json({ items: [], total: 0, limit: 10, offset: 0 }),
         ),
       );
 
@@ -103,13 +103,13 @@ describe("Individual Detail Page (Drawer Component)", () => {
       ]);
 
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/individuals/ind-001", (req, res, ctx) =>
-          res(ctx.json(mockIndividuals.items[0])),
+        http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
+        http.get("*/api/individuals/ind-001", () =>
+          HttpResponse.json(mockIndividuals.items[0]),
         ),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
-        rest.get("*/api/individuals/*/inherited-properties", (req, res, ctx) =>
-          res(ctx.json({ items: [], total: 0, limit: 10, offset: 0 })),
+        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
+        http.get("*/api/individuals/*/inherited-properties", () =>
+          HttpResponse.json({ items: [], total: 0, limit: 10, offset: 0 }),
         ),
       );
 
@@ -139,13 +139,13 @@ describe("Individual Detail Page (Drawer Component)", () => {
       ]);
 
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/individuals/ind-001", (req, res, ctx) =>
-          res(ctx.json(mockIndividuals.items[0])),
+        http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
+        http.get("*/api/individuals/ind-001", () =>
+          HttpResponse.json(mockIndividuals.items[0]),
         ),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
-        rest.get("*/api/individuals/*/inherited-properties", (req, res, ctx) =>
-          res(ctx.json({ items: [], total: 0, limit: 10, offset: 0 })),
+        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
+        http.get("*/api/individuals/*/inherited-properties", () =>
+          HttpResponse.json({ items: [], total: 0, limit: 10, offset: 0 }),
         ),
       );
 
@@ -175,13 +175,13 @@ describe("Individual Detail Page (Drawer Component)", () => {
       ]);
 
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/individuals/ind-001", (req, res, ctx) =>
-          res(ctx.json(mockIndividuals.items[0])),
+        http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
+        http.get("*/api/individuals/ind-001", () =>
+          HttpResponse.json(mockIndividuals.items[0]),
         ),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
-        rest.get("*/api/individuals/*/inherited-properties", (req, res, ctx) =>
-          res(ctx.json({ items: [], total: 0, limit: 10, offset: 0 })),
+        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
+        http.get("*/api/individuals/*/inherited-properties", () =>
+          HttpResponse.json({ items: [], total: 0, limit: 10, offset: 0 }),
         ),
       );
 
@@ -216,20 +216,20 @@ describe("Individual Detail Page (Drawer Component)", () => {
       ]);
 
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/individuals/ind-001", (req, res, ctx) =>
-          res(ctx.json(mockIndividuals.items[0])),
+        http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
+        http.get("*/api/individuals/ind-001", () =>
+          HttpResponse.json(mockIndividuals.items[0]),
         ),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
-        rest.get("*/api/individuals/*/inherited-properties", (req, res, ctx) =>
-          res(ctx.json({ items: [], total: 0, limit: 10, offset: 0 })),
+        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
+        http.get("*/api/individuals/*/inherited-properties", () =>
+          HttpResponse.json({ items: [], total: 0, limit: 10, offset: 0 }),
         ),
       );
 
       render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
 
       await waitFor(() => {
-        expect(screen.getByText("Class Membership")).toBeInTheDocument();
+        expect(screen.getByTestId("individual-class-list")).toBeInTheDocument();
       });
 
       expect(screen.getByText("Person")).toBeInTheDocument();
@@ -257,13 +257,13 @@ describe("Individual Detail Page (Drawer Component)", () => {
       ]);
 
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/individuals/ind-001", (req, res, ctx) =>
-          res(ctx.json(mockIndividuals.items[0])),
+        http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
+        http.get("*/api/individuals/ind-001", () =>
+          HttpResponse.json(mockIndividuals.items[0]),
         ),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
-        rest.get("*/api/individuals/*/inherited-properties", (req, res, ctx) =>
-          res(ctx.json({ items: [], total: 0, limit: 10, offset: 0 })),
+        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
+        http.get("*/api/individuals/*/inherited-properties", () =>
+          HttpResponse.json({ items: [], total: 0, limit: 10, offset: 0 }),
         ),
       );
 
@@ -292,13 +292,13 @@ describe("Individual Detail Page (Drawer Component)", () => {
       ]);
 
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/individuals/ind-001", (req, res, ctx) =>
-          res(ctx.json(mockIndividuals.items[0])),
+        http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
+        http.get("*/api/individuals/ind-001", () =>
+          HttpResponse.json(mockIndividuals.items[0]),
         ),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
-        rest.get("*/api/individuals/*/inherited-properties", (req, res, ctx) =>
-          res(ctx.json({ items: [], total: 0, limit: 10, offset: 0 })),
+        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
+        http.get("*/api/individuals/*/inherited-properties", () =>
+          HttpResponse.json({ items: [], total: 0, limit: 10, offset: 0 }),
         ),
       );
 
@@ -326,20 +326,20 @@ describe("Individual Detail Page (Drawer Component)", () => {
       ]);
 
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/individuals/ind-001", (req, res, ctx) =>
-          res(ctx.json(mockIndividuals.items[0])),
+        http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
+        http.get("*/api/individuals/ind-001", () =>
+          HttpResponse.json(mockIndividuals.items[0]),
         ),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
-        rest.get("*/api/individuals/*/inherited-properties", (req, res, ctx) =>
-          res(ctx.json({ items: [], total: 0, limit: 10, offset: 0 })),
+        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
+        http.get("*/api/individuals/*/inherited-properties", () =>
+          HttpResponse.json({ items: [], total: 0, limit: 10, offset: 0 }),
         ),
       );
 
       render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
 
       await waitFor(() => {
-        expect(screen.getByText("Inherited Properties")).toBeInTheDocument();
+        expect(screen.getByTestId("individual-properties-panel")).toBeInTheDocument();
       });
     });
 
@@ -365,24 +365,24 @@ describe("Individual Detail Page (Drawer Component)", () => {
       ]);
 
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/individuals/ind-001", (req, res, ctx) =>
-          res(ctx.json(mockIndividuals.items[0])),
+        http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
+        http.get("*/api/individuals/ind-001", () =>
+          HttpResponse.json(mockIndividuals.items[0]),
         ),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
-        rest.get("*/api/individuals/*/inherited-properties", (req, res, ctx) =>
-          res(ctx.json({ items: [], total: 0, limit: 10, offset: 0 })),
+        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
+        http.get("*/api/individuals/*/inherited-properties", () =>
+          HttpResponse.json({ items: [], total: 0, limit: 10, offset: 0 }),
         ),
       );
 
       render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
 
       await waitFor(() => {
-        expect(screen.getByText("Related Individuals")).toBeInTheDocument();
+        expect(screen.getByTestId("related-individuals-panel")).toBeInTheDocument();
       });
     });
 
-    it("displays close button with correct testid", async () => {
+    it("renders the inspector actions region (autosave status)", async () => {
       const mockIndividuals = createListIndividuals([
         createIndividual({
           id: "ind-001",
@@ -399,21 +399,23 @@ describe("Individual Detail Page (Drawer Component)", () => {
       ]);
 
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/individuals/ind-001", (req, res, ctx) =>
-          res(ctx.json(mockIndividuals.items[0])),
+        http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
+        http.get("*/api/individuals/ind-001", () =>
+          HttpResponse.json(mockIndividuals.items[0]),
         ),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
-        rest.get("*/api/individuals/*/inherited-properties", (req, res, ctx) =>
-          res(ctx.json({ items: [], total: 0, limit: 10, offset: 0 })),
+        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
+        http.get("*/api/individuals/*/inherited-properties", () =>
+          HttpResponse.json({ items: [], total: 0, limit: 10, offset: 0 }),
         ),
       );
 
       render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
 
+      // IndividualDrawer surfaces its actions (autosave status / revert) through the
+      // InspectorPanel actions slot; the close affordance lives in the parent Drawer wrapper.
+      // Poll for the populated state, whose InspectorPanel renders the actions region.
       await waitFor(() => {
-        expect(screen.getByTestId("individual-drawer-close-button")).toBeInTheDocument();
-        expect(screen.getByTestId("individual-drawer-close-button")).toHaveRole("button");
+        expect(screen.getByTestId("inspector-autosave-status")).toBeInTheDocument();
       });
     });
   });
@@ -439,20 +441,20 @@ describe("Individual Detail Page (Drawer Component)", () => {
       ]);
 
       server.use(
-        rest.get("*/api/individuals", (req, res, ctx) => res(ctx.json(mockIndividuals))),
-        rest.get("*/api/individuals/ind-001", (req, res, ctx) =>
-          res(ctx.json(mockIndividuals.items[0])),
+        http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
+        http.get("*/api/individuals/ind-001", () =>
+          HttpResponse.json(mockIndividuals.items[0]),
         ),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
-        rest.get("*/api/individuals/*/inherited-properties", (req, res, ctx) =>
-          res(ctx.status(500), ctx.json({ detail: "Server error" })),
+        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
+        http.get("*/api/individuals/*/inherited-properties", () =>
+          HttpResponse.json({ detail: "Server error" }, { status: 500 }),
         ),
       );
 
       render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
 
       await waitFor(() => {
-        expect(screen.getByText("Inherited Properties")).toBeInTheDocument();
+        expect(screen.getByTestId("individual-properties-panel")).toBeInTheDocument();
       });
     });
   });

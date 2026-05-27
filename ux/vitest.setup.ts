@@ -152,6 +152,192 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
       );
     },
   ),
+  PipelineCard: React.forwardRef(
+    (
+      {
+        pipeline,
+        onRun,
+        onCancel,
+        onOptions,
+        footerContent,
+        compact,
+        selected,
+        headerAction,
+        className = "",
+        ...props
+      }: any,
+      ref: any,
+    ) =>
+      React.createElement(
+        "div",
+        {
+          ref,
+          className: ["pipeline-card", compact && "pipeline-card--compact", className]
+            .filter(Boolean)
+            .join(" "),
+          "data-testid": "pipeline-card",
+          ...props,
+        },
+        React.createElement("div", { className: "pipeline-card__name-mono" }, pipeline?.name),
+        pipeline?.id &&
+          React.createElement("div", { className: "pipeline-card__id-mono" }, pipeline.id),
+        pipeline?.description &&
+          React.createElement("p", { className: "pipeline-card__description" }, pipeline.description),
+        React.createElement(
+          "span",
+          { className: "pipeline-card__status", "data-status": pipeline?.status },
+          pipeline?.status,
+        ),
+        (pipeline?.flow ?? []).map((node: any) =>
+          React.createElement("div", { key: node.id, className: "pipeline-card__node" }, node.name),
+        ),
+        onRun &&
+          pipeline?.status !== "running" &&
+          React.createElement(
+            "button",
+            { type: "button", "data-testid": "pipeline-run-btn", onClick: onRun },
+            "Run",
+          ),
+        React.createElement("div", { className: "pipeline-card__foot" }, footerContent),
+      ),
+  ),
+  InspectorPanel: (() => {
+    const IP: any = React.forwardRef(
+      (
+        { eyebrow, title, id, version, actions, children, className = "", ...props }: any,
+        ref: any,
+      ) =>
+        React.createElement(
+          "div",
+          { ref, className: ["inspector-panel", className].filter(Boolean).join(" "), ...props },
+          eyebrow && React.createElement("div", { className: "inspector-panel__eyebrow" }, eyebrow),
+          React.createElement("div", { className: "inspector-panel__title" }, title),
+          id && React.createElement("span", { className: "inspector-panel__id" }, id),
+          version != null &&
+            React.createElement("span", { className: "inspector-panel__version" }, version),
+          actions && React.createElement("div", { className: "inspector-panel__actions" }, actions),
+          React.createElement("div", { className: "inspector-panel__body" }, children),
+        ),
+    );
+    IP.Section = ({ title, count, actions, children, className = "", ...props }: any) =>
+      React.createElement(
+        "div",
+        { className: ["inspector-panel__section", className].filter(Boolean).join(" "), ...props },
+        React.createElement(
+          "div",
+          { className: "inspector-panel__section-title" },
+          title,
+          count != null &&
+            React.createElement("span", { className: "inspector-panel__section-count" }, `· ${count}`),
+        ),
+        actions && React.createElement("div", { className: "inspector-panel__section-actions" }, actions),
+        children && React.createElement("div", { className: "inspector-panel__section-content" }, children),
+      );
+    IP.PropertySection = ({ title, count, actionLabel, onAction, rows = [], className = "", ...props }: any) =>
+      React.createElement(
+        "div",
+        { className: ["inspector-panel__property-section", className].filter(Boolean).join(" "), ...props },
+        React.createElement("span", { className: "inspector-panel__property-section-title" }, title),
+        count != null &&
+          React.createElement("span", { className: "inspector-panel__property-section-count" }, count),
+        onAction &&
+          React.createElement(
+            "button",
+            { type: "button", className: "inspector-panel__property-section-action", onClick: onAction },
+            actionLabel,
+          ),
+        rows.map((row: any) =>
+          React.createElement(
+            "div",
+            { key: row.key, className: "inspector-panel__property-row" },
+            React.createElement("span", { className: "inspector-panel__property-key" }, row.key),
+            React.createElement("span", { className: "inspector-panel__property-value" }, row.value),
+          ),
+        ),
+      );
+    return IP;
+  })(),
+  Sparkline: React.forwardRef(
+    ({ data, width, height, color, area, label, className = "", ...props }: any, ref: any) =>
+      React.createElement("div", {
+        ref,
+        className: ["sparkline", className].filter(Boolean).join(" "),
+        "data-testid": "sparkline",
+        ...props,
+      }),
+  ),
+  KeyValueEditor: React.forwardRef(
+    (
+      {
+        rows = [],
+        onChange,
+        datatypeColumn,
+        datatypes,
+        disabled,
+        keyPlaceholder = "Key",
+        valuePlaceholder = "Value",
+        addLabel = "Add row",
+        className = "",
+        ...props
+      }: any,
+      ref: any,
+    ) =>
+      React.createElement(
+        "div",
+        {
+          ref,
+          className: ["key-value-editor", className].filter(Boolean).join(" "),
+          "data-testid": "key-value-editor",
+          ...props,
+        },
+        rows.map((row: any) =>
+          React.createElement(
+            "div",
+            { key: row.id, className: "key-value-row", "data-testid": `key-value-row-${row.id}` },
+            React.createElement("input", {
+              className: "key-value-row__key",
+              "data-testid": `key-input-${row.id}`,
+              placeholder: keyPlaceholder,
+              value: row.key,
+              disabled,
+              onChange: (e: any) =>
+                onChange?.(rows.map((r: any) => (r.id === row.id ? { ...r, key: e.target.value } : r))),
+            }),
+            React.createElement("input", {
+              className: "key-value-row__value",
+              "data-testid": `value-input-${row.id}`,
+              placeholder: valuePlaceholder,
+              value: row.value,
+              disabled,
+              onChange: (e: any) =>
+                onChange?.(rows.map((r: any) => (r.id === row.id ? { ...r, value: e.target.value } : r))),
+            }),
+            React.createElement(
+              "button",
+              {
+                type: "button",
+                "data-testid": `remove-row-${row.id}`,
+                "aria-label": "Remove row",
+                disabled,
+                onClick: () => onChange?.(rows.filter((r: any) => r.id !== row.id)),
+              },
+              "✕",
+            ),
+          ),
+        ),
+        React.createElement(
+          "button",
+          {
+            type: "button",
+            className: "key-value-editor__add",
+            "data-testid": "add-row-btn",
+            disabled,
+            onClick: () => onChange?.([...rows, { id: `kv-${rows.length + 1}`, key: "", value: "" }]),
+          },
+          addLabel,
+        ),
+      ),
+  ),
   ConfirmDialog: React.forwardRef(
     (
       {

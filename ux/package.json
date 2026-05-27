@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prepare": "cd .. && husky ux/.husky",
     "dev": "vite --port=3100",
     "build": "vite build",
     "serve": "vite preview",
@@ -66,8 +67,10 @@
     "eslint": "^10.0.2",
     "eslint-plugin-react-hooks": "^7.1.0",
     "globals": "^17.6.0",
+    "husky": "^9.1.7",
     "js-yaml": "^4.1.0",
     "jsdom": "^26.1.0",
+    "lint-staged": "^17.0.5",
     "msw": "^2.14.6",
     "openapi-typescript": "^7.8.0",
     "prettier": "^3.6.2",

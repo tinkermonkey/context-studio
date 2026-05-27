@@ -1360,3 +1360,156 @@ selectors:
   - selector: create-toast-btn
     component: routes/app/contact-sheet.tsx
     description: Create toast button on contact sheet
+
+  # Settings — General tab form + summary tiles
+  - selector: settings-general-form
+    component: routes/app/settings.tsx
+    description: General settings tab form container
+  - selector: settings-workspace-name-input
+    component: routes/app/settings.tsx
+    description: Workspace display-name input (General tab)
+  - selector: settings-workspace-path-input
+    component: routes/app/settings.tsx
+    description: Workspace path input (General tab)
+  - selector: settings-llm-provider-select
+    component: routes/app/settings.tsx
+    description: LLM provider select (General tab)
+  - selector: settings-llm-model-input
+    component: routes/app/settings.tsx
+    description: LLM model input (General tab)
+  - selector: settings-embedding-model-input
+    component: routes/app/settings.tsx
+    description: Embedding model input (General tab)
+  - selector: settings-summary-tiles
+    component: routes/app/settings.tsx
+    description: Read-only summary config tiles container
+  - selector: config-tile-backups
+    component: routes/app/settings.tsx
+    description: Backups summary config tile
+  - selector: config-tile-performance
+    component: routes/app/settings.tsx
+    description: Performance summary config tile
+  - selector: config-tile-telemetry
+    component: routes/app/settings.tsx
+    description: Telemetry summary config tile
+
+  # Pipelines — list page
+  - selector: pipeline-add-button
+    component: routes/app/pipelines/index.tsx
+    description: New-pipeline button on the pipelines page
+  - selector: pipeline-status-filter
+    component: routes/app/pipelines/index.tsx
+    description: Status filter control on the pipelines page
+  - selector: pipeline-edit-modal
+    component: routes/app/pipelines/index.tsx
+    description: Create/edit pipeline modal on the pipelines page
+
+  # Pipelines — runs and flavors pages
+  - selector: runs-filter-bar
+    component: routes/app/pipelines/runs.tsx
+    description: Filter bar on the pipeline runs page
+  - selector: runs-status-filter
+    component: routes/app/pipelines/runs.tsx
+    description: Status filter on the pipeline runs page
+  - selector: flavors-filter-bar
+    component: routes/app/pipelines/flavors.tsx
+    description: Filter bar on the pipeline flavors page
+
+  # Pipeline create form
+  - selector: pipeline-create-form
+    component: components/pipeline/PipelineCreateForm.tsx
+    description: New-pipeline form container
+  - selector: pipeline-create-title
+    component: components/pipeline/PipelineCreateForm.tsx
+    description: Title input in the create-pipeline form
+  - selector: pipeline-create-type
+    component: components/pipeline/PipelineCreateForm.tsx
+    description: Pipeline-type select in the create-pipeline form
+  - selector: pipeline-create-provider
+    component: components/pipeline/PipelineCreateForm.tsx
+    description: Provider select in the create-pipeline form
+  - selector: pipeline-create-model
+    component: components/pipeline/PipelineCreateForm.tsx
+    description: Model input in the create-pipeline form
+  - selector: pipeline-create-system-prompt
+    component: components/pipeline/PipelineCreateForm.tsx
+    description: System-prompt textarea in the create-pipeline form
+  - selector: pipeline-create-user-prompt
+    component: components/pipeline/PipelineCreateForm.tsx
+    description: User-prompt textarea in the create-pipeline form
+  - selector: pipeline-create-enabled
+    component: components/pipeline/PipelineCreateForm.tsx
+    description: Enabled toggle in the create-pipeline form
+  - selector: pipeline-create-cancel
+    component: components/pipeline/PipelineCreateForm.tsx
+    description: Cancel button in the create-pipeline form
+  - selector: pipeline-create-submit
+    component: components/pipeline/PipelineCreateForm.tsx
+    description: Submit button in the create-pipeline form
+
+  # Pipeline detail panel — Config and Test tabs
+  - selector: pipeline-config-editor
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: KeyValueEditor for pipeline config (Config tab)
+  - selector: pipeline-enabled-toggle
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Enabled toggle (Config tab)
+  - selector: pipeline-provider-select
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Provider select (Config tab)
+  - selector: pipeline-model-input
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Model input (Config tab)
+  - selector: pipeline-system-prompt
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: System-prompt textarea (Config tab)
+  - selector: pipeline-user-prompt
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: User-prompt textarea (Config tab)
+  - selector: pipeline-run-test-button
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Run-test button (Test tab)
+  - selector: pipeline-test-input
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Test input textarea (Test tab)
+  - selector: pipeline-test-output
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Test output container (Test tab)
+  - selector: pipeline-test-output-text
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Test output text (Test tab)
+  - selector: pipeline-test-no-output
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Empty test-output placeholder (Test tab)
+  - selector: pipeline-copy-output-button
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Copy test-output button (Test tab)
+
+  # Graph page
+  - selector: graph-shell
+    component: routes/app/graph/index.tsx
+    description: Graph page shell container
+
+  # Taxonomies page
+  - selector: taxonomy-export-button
+    component: routes/app/schema/taxonomies.tsx
+    description: Export button on the taxonomies page
+
+  # Dynamic per-row action triggers
+  - selector: dataset-row-actions-*
+    component: routes/app/data/datasets.tsx
+    description: Row-actions trigger per dataset row (suffix = dataset id)
+  - selector: individual-row-actions-*
+    component: routes/app/data/individuals.tsx
+    description: Row-actions trigger per individual row (suffix = individual id)
+
+  # Testids produced by Heimdall components that our tests query directly
+  - selector: pipeline-run-btn
+    component: components/pipeline/PipelineCard.tsx
+    description: Run button rendered by the Heimdall PipelineCard
+  - selector: key-input-*
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Per-row key input rendered by the Heimdall KeyValueEditor (suffix = row id)
+  - selector: value-input-*
+    component: components/pipeline/PipelineDetailPanel.tsx
+    description: Per-row value input rendered by the Heimdall KeyValueEditor (suffix = row id)

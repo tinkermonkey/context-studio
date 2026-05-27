@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
-import { rest } from "msw";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { adminService } from "../admin";
 import {
@@ -44,7 +44,7 @@ describe("AdminService - Health & Metrics", () => {
         status: "healthy",
       });
 
-      server.use(rest.get("*/api/v1/admin/health", (req, res, ctx) => res(ctx.json(mockHealth))));
+      server.use(http.get("*/api/v1/admin/health", () => HttpResponse.json(mockHealth)));
 
       const result = await adminService.getHealth();
 
@@ -57,7 +57,7 @@ describe("AdminService - Health & Metrics", () => {
         status: "degraded",
       });
 
-      server.use(rest.get("*/api/v1/admin/health", (req, res, ctx) => res(ctx.json(mockHealth))));
+      server.use(http.get("*/api/v1/admin/health", () => HttpResponse.json(mockHealth)));
 
       const result = await adminService.getHealth();
 
@@ -66,13 +66,10 @@ describe("AdminService - Health & Metrics", () => {
 
     it("throws ApiError on 500 from getHealth", async () => {
       server.use(
-        rest.get("*/api/v1/admin/health", (req, res, ctx) =>
-          res(
-            ctx.status(500),
-            ctx.json({
+        http.get("*/api/v1/admin/health", () =>
+          HttpResponse.json({
               detail: "Health check failed",
-            }),
-          ),
+            }, { status: 500 }),
         ),
       );
 
@@ -90,7 +87,7 @@ describe("AdminService - Health & Metrics", () => {
       });
 
       server.use(
-        rest.get("*/api/v1/admin/health/database", (req, res, ctx) => res(ctx.json(mockDbHealth))),
+        http.get("*/api/v1/admin/health/database", () => HttpResponse.json(mockDbHealth)),
       );
 
       const result = await adminService.getDatabaseHealth();
@@ -106,7 +103,7 @@ describe("AdminService - Health & Metrics", () => {
       });
 
       server.use(
-        rest.get("*/api/v1/admin/health/database", (req, res, ctx) => res(ctx.json(mockDbHealth))),
+        http.get("*/api/v1/admin/health/database", () => HttpResponse.json(mockDbHealth)),
       );
 
       const result = await adminService.getDatabaseHealth();
@@ -117,13 +114,10 @@ describe("AdminService - Health & Metrics", () => {
 
     it("throws ApiError on 500 from getDatabaseHealth", async () => {
       server.use(
-        rest.get("*/api/v1/admin/health/database", (req, res, ctx) =>
-          res(
-            ctx.status(500),
-            ctx.json({
+        http.get("*/api/v1/admin/health/database", () =>
+          HttpResponse.json({
               detail: "Database health check failed",
-            }),
-          ),
+            }, { status: 500 }),
         ),
       );
 
@@ -139,7 +133,7 @@ describe("AdminService - Health & Metrics", () => {
       const mockMetrics = createServiceMetrics();
 
       server.use(
-        rest.get("*/api/v1/admin/health/services", (req, res, ctx) => res(ctx.json(mockMetrics))),
+        http.get("*/api/v1/admin/health/services", () => HttpResponse.json(mockMetrics)),
       );
 
       const result = await adminService.getServiceMetrics();
@@ -154,7 +148,7 @@ describe("AdminService - Health & Metrics", () => {
       });
 
       server.use(
-        rest.get("*/api/v1/admin/health/services", (req, res, ctx) => res(ctx.json(mockMetrics))),
+        http.get("*/api/v1/admin/health/services", () => HttpResponse.json(mockMetrics)),
       );
 
       const result = await adminService.getServiceMetrics();
@@ -164,13 +158,10 @@ describe("AdminService - Health & Metrics", () => {
 
     it("throws ApiError on 500 from getServiceMetrics", async () => {
       server.use(
-        rest.get("*/api/v1/admin/health/services", (req, res, ctx) =>
-          res(
-            ctx.status(500),
-            ctx.json({
+        http.get("*/api/v1/admin/health/services", () =>
+          HttpResponse.json({
               detail: "Could not retrieve service metrics",
-            }),
-          ),
+            }, { status: 500 }),
         ),
       );
 
@@ -193,7 +184,7 @@ describe("AdminService - Health & Metrics", () => {
       });
 
       server.use(
-        rest.get("*/api/v1/admin/health/tasks", (req, res, ctx) => res(ctx.json(mockSummary))),
+        http.get("*/api/v1/admin/health/tasks", () => HttpResponse.json(mockSummary)),
       );
 
       const result = await adminService.getTaskSummary();
@@ -205,13 +196,10 @@ describe("AdminService - Health & Metrics", () => {
 
     it("throws ApiError on 500 from getTaskSummary", async () => {
       server.use(
-        rest.get("*/api/v1/admin/health/tasks", (req, res, ctx) =>
-          res(
-            ctx.status(500),
-            ctx.json({
+        http.get("*/api/v1/admin/health/tasks", () =>
+          HttpResponse.json({
               detail: "Could not retrieve task summary",
-            }),
-          ),
+            }, { status: 500 }),
         ),
       );
 
@@ -233,7 +221,7 @@ describe("AdminService - Configuration Management", () => {
       const mockConfig = createAppConfiguration();
 
       server.use(
-        rest.get("*/api/v1/admin/configuration", (req, res, ctx) => res(ctx.json(mockConfig))),
+        http.get("*/api/v1/admin/configuration", () => HttpResponse.json(mockConfig)),
       );
 
       const result = await adminService.getConfig();
@@ -262,7 +250,7 @@ describe("AdminService - Configuration Management", () => {
       });
 
       server.use(
-        rest.get("*/api/v1/admin/configuration", (req, res, ctx) => res(ctx.json(mockConfig))),
+        http.get("*/api/v1/admin/configuration", () => HttpResponse.json(mockConfig)),
       );
 
       const result = await adminService.getConfig();
@@ -274,13 +262,10 @@ describe("AdminService - Configuration Management", () => {
 
     it("throws ApiError on 500 from getConfig", async () => {
       server.use(
-        rest.get("*/api/v1/admin/configuration", (req, res, ctx) =>
-          res(
-            ctx.status(500),
-            ctx.json({
+        http.get("*/api/v1/admin/configuration", () =>
+          HttpResponse.json({
               detail: "Could not load configuration",
-            }),
-          ),
+            }, { status: 500 }),
         ),
       );
 
@@ -309,8 +294,8 @@ describe("AdminService - Configuration Management", () => {
       });
 
       server.use(
-        rest.patch("*/api/v1/admin/configuration/llm", (req, res, ctx) =>
-          res(ctx.json(mockResponse)),
+        http.patch("*/api/v1/admin/configuration/llm", () =>
+          HttpResponse.json(mockResponse),
         ),
       );
 
@@ -327,13 +312,10 @@ describe("AdminService - Configuration Management", () => {
       });
 
       server.use(
-        rest.patch("*/api/v1/admin/configuration/llm", (req, res, ctx) =>
-          res(
-            ctx.status(400),
-            ctx.json({
+        http.patch("*/api/v1/admin/configuration/llm", () =>
+          HttpResponse.json({
               detail: "Invalid model specified",
-            }),
-          ),
+            }, { status: 400 }),
         ),
       );
 
@@ -348,13 +330,10 @@ describe("AdminService - Configuration Management", () => {
       const updateRequest = createConfigSectionUpdateRequest();
 
       server.use(
-        rest.patch("*/api/v1/admin/configuration/non_existent_section", (req, res, ctx) =>
-          res(
-            ctx.status(404),
-            ctx.json({
+        http.patch("*/api/v1/admin/configuration/non_existent_section", () =>
+          HttpResponse.json({
               detail: "Configuration section not found",
-            }),
-          ),
+            }, { status: 404 }),
         ),
       );
 
@@ -384,8 +363,8 @@ describe("AdminService - Configuration Management", () => {
       });
 
       server.use(
-        rest.post("*/api/v1/admin/configuration/reset", (req, res, ctx) =>
-          res(ctx.json(mockConfig)),
+        http.post("*/api/v1/admin/configuration/reset", () =>
+          HttpResponse.json(mockConfig),
         ),
       );
 
@@ -396,13 +375,10 @@ describe("AdminService - Configuration Management", () => {
 
     it("throws ApiError on 500 from resetConfig", async () => {
       server.use(
-        rest.post("*/api/v1/admin/configuration/reset", (req, res, ctx) =>
-          res(
-            ctx.status(500),
-            ctx.json({
+        http.post("*/api/v1/admin/configuration/reset", () =>
+          HttpResponse.json({
               detail: "Failed to reset configuration",
-            }),
-          ),
+            }, { status: 500 }),
         ),
       );
 
@@ -423,7 +399,7 @@ describe("AdminService - Background Tasks", () => {
     it("returns array of background tasks from GET /api/v1/admin/tasks", async () => {
       const mockTasks = createBackgroundTaskArray(3);
 
-      server.use(rest.get("*/api/v1/admin/tasks", (req, res, ctx) => res(ctx.json(mockTasks))));
+      server.use(http.get("*/api/v1/admin/tasks", () => HttpResponse.json(mockTasks)));
 
       const result = await adminService.getBackgroundTasks();
 
@@ -433,7 +409,7 @@ describe("AdminService - Background Tasks", () => {
     });
 
     it("returns empty array when no tasks exist", async () => {
-      server.use(rest.get("*/api/v1/admin/tasks", (req, res, ctx) => res(ctx.json([]))));
+      server.use(http.get("*/api/v1/admin/tasks", () => HttpResponse.json([])));
 
       const result = await adminService.getBackgroundTasks();
 
@@ -450,7 +426,7 @@ describe("AdminService - Background Tasks", () => {
         }),
       ];
 
-      server.use(rest.get("*/api/v1/admin/tasks", (req, res, ctx) => res(ctx.json(mockTasks))));
+      server.use(http.get("*/api/v1/admin/tasks", () => HttpResponse.json(mockTasks)));
 
       const result = await adminService.getBackgroundTasks();
 
@@ -462,13 +438,10 @@ describe("AdminService - Background Tasks", () => {
 
     it("throws ApiError on 500 from getBackgroundTasks", async () => {
       server.use(
-        rest.get("*/api/v1/admin/tasks", (req, res, ctx) =>
-          res(
-            ctx.status(500),
-            ctx.json({
+        http.get("*/api/v1/admin/tasks", () =>
+          HttpResponse.json({
               detail: "Failed to retrieve tasks",
-            }),
-          ),
+            }, { status: 500 }),
         ),
       );
 
@@ -487,7 +460,7 @@ describe("AdminService - Background Tasks", () => {
       });
 
       server.use(
-        rest.get("*/api/v1/admin/tasks/task-123", (req, res, ctx) => res(ctx.json(mockTask))),
+        http.get("*/api/v1/admin/tasks/task-123", () => HttpResponse.json(mockTask)),
       );
 
       const result = await adminService.getBackgroundTask("task-123");
@@ -504,7 +477,7 @@ describe("AdminService - Background Tasks", () => {
       });
 
       server.use(
-        rest.get("*/api/v1/admin/tasks/task-fail", (req, res, ctx) => res(ctx.json(mockTask))),
+        http.get("*/api/v1/admin/tasks/task-fail", () => HttpResponse.json(mockTask)),
       );
 
       const result = await adminService.getBackgroundTask("task-fail");
@@ -515,13 +488,10 @@ describe("AdminService - Background Tasks", () => {
 
     it("throws ApiError with 404 on getBackgroundTask with non-existent ID", async () => {
       server.use(
-        rest.get("*/api/v1/admin/tasks/not-found", (req, res, ctx) =>
-          res(
-            ctx.status(404),
-            ctx.json({
+        http.get("*/api/v1/admin/tasks/not-found", () =>
+          HttpResponse.json({
               detail: "Task not found",
-            }),
-          ),
+            }, { status: 404 }),
         ),
       );
 
@@ -534,13 +504,10 @@ describe("AdminService - Background Tasks", () => {
 
     it("throws ApiError on 500 from getBackgroundTask", async () => {
       server.use(
-        rest.get("*/api/v1/admin/tasks/task-123", (req, res, ctx) =>
-          res(
-            ctx.status(500),
-            ctx.json({
+        http.get("*/api/v1/admin/tasks/task-123", () =>
+          HttpResponse.json({
               detail: "Failed to retrieve task",
-            }),
-          ),
+            }, { status: 500 }),
         ),
       );
 

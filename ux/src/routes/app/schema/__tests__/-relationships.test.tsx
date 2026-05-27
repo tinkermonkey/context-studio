@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { rest } from "msw";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
 import {
@@ -16,9 +16,18 @@ import {
 } from "@/api/services/__tests__/fixtures/ontology.fixtures";
 import { RelationshipsPage } from "../relationships";
 
+// The Predicate column renders the property *identifier* wrapped in mono
+// arrows: `— {identifier} →`. The three segments are separate text nodes
+// inside one span, so we match on the span's combined textContent.
+function predicateMatcher(identifier: string) {
+  return (_content: string, element: Element | null) =>
+    element?.tagName.toLowerCase() === "span" &&
+    element.textContent?.replace(/\s+/g, " ").trim() === `— ${identifier} →`;
+}
+
 const server = setupServer(
-  rest.get("*/api/taxonomies", (req, res, ctx) => res(ctx.json(createListTaxonomies([])))),
-  rest.get("*/api/schemes", (req, res, ctx) => res(ctx.json(createListSchemes([])))),
+  http.get("*/api/taxonomies", () => HttpResponse.json(createListTaxonomies([]))),
+  http.get("*/api/schemes", () => HttpResponse.json(createListSchemes([]))),
 );
 
 beforeAll(() => {
@@ -40,20 +49,19 @@ describe("Relationships Schema Page", () => {
   describe("loading state", () => {
     it("displays loading skeleton state with 5 skeleton rows matching table layout", async () => {
       server.use(
-        rest.get("*/api/relationships", async (req, res, ctx) => {
+        http.get("*/api/relationships", async () => {
           await new Promise((resolve) => setTimeout(resolve, 100));
-          return res(ctx.json(createListRelationships([])));
+          return HttpResponse.json(createListRelationships([]));
         }),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([])))),
-        rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(createListProperties([])))),
+        http.get("*/api/classes", () => HttpResponse.json(createListClasses([]))),
+        http.get("*/api/properties", () => HttpResponse.json(createListProperties([]))),
       );
 
       const { container } = render(<RelationshipsPage />);
 
-      // Verify skeleton rows are rendered before data arrives
-      const skeletonElements = container.querySelectorAll(
-        "div[style*='animation: skeleton-shimmer']",
-      );
+      // Verify skeleton rows are rendered before data arrives.
+      // Skeletons now use the `.skeleton` class (shimmer is in CSS, not inline style).
+      const skeletonElements = container.querySelectorAll(".skeleton");
       expect(skeletonElements.length).toBeGreaterThanOrEqual(5);
     });
   });
@@ -64,11 +72,11 @@ describe("Relationships Schema Page", () => {
   describe("error state", () => {
     it("displays error banner with retry button when API fails", async () => {
       server.use(
-        rest.get("*/api/relationships", (req, res, ctx) =>
-          res(ctx.status(500), ctx.json({ detail: "Internal server error" })),
+        http.get("*/api/relationships", () =>
+          HttpResponse.json({ detail: "Internal server error" }, { status: 500 }),
         ),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([])))),
-        rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(createListProperties([])))),
+        http.get("*/api/classes", () => HttpResponse.json(createListClasses([]))),
+        http.get("*/api/properties", () => HttpResponse.json(createListProperties([]))),
       );
 
       render(<RelationshipsPage />);
@@ -87,11 +95,11 @@ describe("Relationships Schema Page", () => {
   describe("empty state", () => {
     it("displays empty state copy when no relationships exist", async () => {
       server.use(
-        rest.get("*/api/relationships", (req, res, ctx) =>
-          res(ctx.json(createListRelationships([]))),
+        http.get("*/api/relationships", () =>
+          HttpResponse.json(createListRelationships([])),
         ),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([])))),
-        rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(createListProperties([])))),
+        http.get("*/api/classes", () => HttpResponse.json(createListClasses([]))),
+        http.get("*/api/properties", () => HttpResponse.json(createListProperties([]))),
       );
 
       render(<RelationshipsPage />);
@@ -116,7 +124,7 @@ describe("Relationships Schema Page", () => {
       ]);
 
       const mockProperties = createListProperties([
-        createPropertyDefinition({ id: "prop-1", title: "works_for" }),
+        createPropertyDefinition({ id: "prop-1", title: "works_for", identifier: "works_for" }),
       ]);
 
       const mockRelationships = createListRelationships([
@@ -129,19 +137,23 @@ describe("Relationships Schema Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/relationships", (req, res, ctx) => res(ctx.json(mockRelationships))),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
-        rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(mockProperties))),
+        http.get("*/api/relationships", () => HttpResponse.json(mockRelationships)),
+        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
+        http.get("*/api/properties", () => HttpResponse.json(mockProperties)),
       );
 
       render(<RelationshipsPage />);
 
       await waitFor(() => {
-        // Check for the relationship data in the table
-        expect(screen.getByText("works_for")).toBeInTheDocument();
-        // Check that the page renders without errors
+        // Page renders without errors.
         expect(screen.getByTestId("relationships-page")).toBeInTheDocument();
       });
+
+      // The Predicate column resolves the property identifier ("— works_for →").
+      expect(screen.getByText(predicateMatcher("works_for"))).toBeInTheDocument();
+      // Source and target columns resolve the class titles.
+      expect(screen.getByText("Person")).toBeInTheDocument();
+      expect(screen.getByText("Company")).toBeInTheDocument();
     });
 
     it("displays mono ID in first column of table rows", async () => {
@@ -157,9 +169,9 @@ describe("Relationships Schema Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/relationships", (req, res, ctx) => res(ctx.json(mockRelationships))),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
-        rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(mockProperties))),
+        http.get("*/api/relationships", () => HttpResponse.json(mockRelationships)),
+        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
+        http.get("*/api/properties", () => HttpResponse.json(mockProperties)),
       );
 
       render(<RelationshipsPage />);
@@ -169,8 +181,11 @@ describe("Relationships Schema Page", () => {
         expect(screen.getByTestId("relationships-page")).toBeInTheDocument();
       });
 
+      // The identifier cell renders the id ("rel-123") in a mono-font span,
+      // no longer a <code> element.
       const monoId = screen.getByText("rel-123");
-      expect(monoId.tagName.toLowerCase()).toBe("code");
+      expect(monoId.tagName.toLowerCase()).toBe("span");
+      expect(monoId).toHaveStyle({ fontFamily: "var(--font-mono)" });
     });
   });
 
@@ -189,23 +204,24 @@ describe("Relationships Schema Page", () => {
       ]);
 
       const mockProperties = createListProperties([
-        createPropertyDefinition({ id: "prop-1", title: "works_for" }),
+        createPropertyDefinition({ id: "prop-1", title: "works_for", identifier: "works_for" }),
       ]);
 
       server.use(
-        rest.get("*/api/relationships", (req, res, ctx) => res(ctx.json(mockRelationships))),
-        rest.get("*/api/classes", (req, res, ctx) =>
-          res(ctx.status(500), ctx.json({ detail: "Classes API error" })),
+        http.get("*/api/relationships", () => HttpResponse.json(mockRelationships)),
+        http.get("*/api/classes", () =>
+          HttpResponse.json({ detail: "Classes API error" }, { status: 500 }),
         ),
-        rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(mockProperties))),
+        http.get("*/api/properties", () => HttpResponse.json(mockProperties)),
       );
 
       render(<RelationshipsPage />);
 
       await waitFor(() => {
-        // Relationships and properties should render
-        expect(screen.getByText("works_for")).toBeInTheDocument();
-        // Missing class names show as em-dash
+        // Relationships and properties should render — the Predicate column
+        // resolves from the (successful) properties query.
+        expect(screen.getByText(predicateMatcher("works_for"))).toBeInTheDocument();
+        // Missing class names (classes query failed) show as em-dash.
         expect(screen.getAllByText("—").length).toBeGreaterThan(0);
       });
     });
@@ -222,8 +238,8 @@ describe("Relationships Schema Page", () => {
       ]);
 
       const mockProperties = createListProperties([
-        createPropertyDefinition({ id: "prop-1", title: "works_for" }),
-        createPropertyDefinition({ id: "prop-2", title: "manages" }),
+        createPropertyDefinition({ id: "prop-1", title: "works_for", identifier: "works_for" }),
+        createPropertyDefinition({ id: "prop-2", title: "manages", identifier: "manages" }),
       ]);
 
       const mockRelationships = createListRelationships([
@@ -242,30 +258,32 @@ describe("Relationships Schema Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/relationships", (req, res, ctx) => res(ctx.json(mockRelationships))),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
-        rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(mockProperties))),
+        http.get("*/api/relationships", () => HttpResponse.json(mockRelationships)),
+        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
+        http.get("*/api/properties", () => HttpResponse.json(mockProperties)),
       );
 
       render(<RelationshipsPage />);
 
+      // Both predicates render initially (Predicate column shows identifier).
       await waitFor(() => {
-        expect(screen.getByText("works_for")).toBeInTheDocument();
-        expect(screen.getByText("manages")).toBeInTheDocument();
+        expect(screen.getByText(predicateMatcher("works_for"))).toBeInTheDocument();
+        expect(screen.getByText(predicateMatcher("manages"))).toBeInTheDocument();
       });
 
+      // Search filters on property title; "manages" row should be removed.
       const searchInput = screen.getByPlaceholderText(/search/i);
       await userEvent.type(searchInput, "works_for");
 
-      expect(screen.getByText("works_for")).toBeInTheDocument();
-      expect(screen.queryByText("manages")).not.toBeInTheDocument();
+      expect(screen.getByText(predicateMatcher("works_for"))).toBeInTheDocument();
+      expect(screen.queryByText(predicateMatcher("manages"))).not.toBeInTheDocument();
     });
 
     it("shows filtered empty state when filters match no results", async () => {
       const mockClasses = createListClasses([createClass({ id: "class-1", title: "Person" })]);
 
       const mockProperties = createListProperties([
-        createPropertyDefinition({ id: "prop-1", title: "works_for" }),
+        createPropertyDefinition({ id: "prop-1", title: "works_for", identifier: "works_for" }),
       ]);
 
       const mockRelationships = createListRelationships([
@@ -278,15 +296,15 @@ describe("Relationships Schema Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/relationships", (req, res, ctx) => res(ctx.json(mockRelationships))),
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
-        rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(mockProperties))),
+        http.get("*/api/relationships", () => HttpResponse.json(mockRelationships)),
+        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
+        http.get("*/api/properties", () => HttpResponse.json(mockProperties)),
       );
 
       render(<RelationshipsPage />);
 
       await waitFor(() => {
-        expect(screen.getByText("works_for")).toBeInTheDocument();
+        expect(screen.getByText(predicateMatcher("works_for"))).toBeInTheDocument();
       });
 
       const searchInput = screen.getByPlaceholderText(/search/i);

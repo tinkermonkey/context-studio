@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { rest } from "msw";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
 import { WorkflowsPageWrapper } from "../workflows";
@@ -27,7 +27,7 @@ describe("Reference Workflows Page", () => {
   describe("page structure", () => {
     it("renders workflows page root with testid", async () => {
       server.use(
-        rest.get("*/api/reference/grounding-workflows", (req, res, ctx) => res(ctx.json([]))),
+        http.get("*/api/reference/grounding-workflows", () => HttpResponse.json([])),
       );
 
       render(<WorkflowsPageWrapper />);
@@ -39,7 +39,7 @@ describe("Reference Workflows Page", () => {
 
     it("displays page title", async () => {
       server.use(
-        rest.get("*/api/reference/grounding-workflows", (req, res, ctx) => res(ctx.json([]))),
+        http.get("*/api/reference/grounding-workflows", () => HttpResponse.json([])),
       );
 
       render(<WorkflowsPageWrapper />);
@@ -51,7 +51,7 @@ describe("Reference Workflows Page", () => {
 
     it("displays create button", async () => {
       server.use(
-        rest.get("*/api/reference/grounding-workflows", (req, res, ctx) => res(ctx.json([]))),
+        http.get("*/api/reference/grounding-workflows", () => HttpResponse.json([])),
       );
 
       render(<WorkflowsPageWrapper />);
@@ -76,9 +76,9 @@ describe("Reference Workflows Page", () => {
       });
 
       server.use(
-        rest.get("*/api/reference/grounding-workflows", async (req, res, ctx) => {
+        http.get("*/api/reference/grounding-workflows", async () => {
           await promise;
-          return res(ctx.json([]));
+          return HttpResponse.json([]);
         }),
       );
 
@@ -97,8 +97,8 @@ describe("Reference Workflows Page", () => {
   describe("error state", () => {
     it("handles API errors gracefully", async () => {
       server.use(
-        rest.get("*/api/reference/grounding-workflows", (req, res, ctx) =>
-          res(ctx.status(500), ctx.json({ detail: "Server error" })),
+        http.get("*/api/reference/grounding-workflows", () =>
+          HttpResponse.json({ detail: "Server error" }, { status: 500 }),
         ),
       );
 
@@ -115,7 +115,7 @@ describe("Reference Workflows Page", () => {
   describe("empty state", () => {
     it("displays empty state when no workflows exist", async () => {
       server.use(
-        rest.get("*/api/reference/grounding-workflows", (req, res, ctx) => res(ctx.json([]))),
+        http.get("*/api/reference/grounding-workflows", () => HttpResponse.json([])),
       );
 
       render(<WorkflowsPageWrapper />);
@@ -132,9 +132,8 @@ describe("Reference Workflows Page", () => {
   describe("populated state", () => {
     it("displays workflows list with data", async () => {
       server.use(
-        rest.get("*/api/reference/grounding-workflows", (req, res, ctx) =>
-          res(
-            ctx.json([
+        http.get("*/api/reference/grounding-workflows", () =>
+          HttpResponse.json([
               {
                 id: "workflow-1",
                 title: "Entity Grounding",
@@ -145,7 +144,6 @@ describe("Reference Workflows Page", () => {
                 updated_at: new Date().toISOString(),
               },
             ]),
-          ),
         ),
       );
 
@@ -158,9 +156,8 @@ describe("Reference Workflows Page", () => {
 
     it("displays multiple workflows in the list", async () => {
       server.use(
-        rest.get("*/api/reference/grounding-workflows", (req, res, ctx) =>
-          res(
-            ctx.json([
+        http.get("*/api/reference/grounding-workflows", () =>
+          HttpResponse.json([
               {
                 id: "workflow-1",
                 title: "Entity Grounding",
@@ -180,7 +177,6 @@ describe("Reference Workflows Page", () => {
                 updated_at: new Date().toISOString(),
               },
             ]),
-          ),
         ),
       );
 
@@ -194,9 +190,8 @@ describe("Reference Workflows Page", () => {
 
     it("displays source and scope information for workflows", async () => {
       server.use(
-        rest.get("*/api/reference/grounding-workflows", (req, res, ctx) =>
-          res(
-            ctx.json([
+        http.get("*/api/reference/grounding-workflows", () =>
+          HttpResponse.json([
               {
                 id: "workflow-1",
                 title: "Entity Grounding",
@@ -207,7 +202,6 @@ describe("Reference Workflows Page", () => {
                 updated_at: new Date().toISOString(),
               },
             ]),
-          ),
         ),
       );
 
@@ -227,9 +221,8 @@ describe("Reference Workflows Page", () => {
   describe("interactive state", () => {
     it("allows filtering workflows by search", async () => {
       server.use(
-        rest.get("*/api/reference/grounding-workflows", (req, res, ctx) =>
-          res(
-            ctx.json([
+        http.get("*/api/reference/grounding-workflows", () =>
+          HttpResponse.json([
               {
                 id: "workflow-1",
                 title: "Entity Grounding",
@@ -249,7 +242,6 @@ describe("Reference Workflows Page", () => {
                 updated_at: new Date().toISOString(),
               },
             ]),
-          ),
         ),
       );
 
@@ -270,9 +262,8 @@ describe("Reference Workflows Page", () => {
 
     it("allows selecting a workflow to view details", async () => {
       server.use(
-        rest.get("*/api/reference/grounding-workflows", (req, res, ctx) =>
-          res(
-            ctx.json([
+        http.get("*/api/reference/grounding-workflows", () =>
+          HttpResponse.json([
               {
                 id: "workflow-1",
                 title: "Entity Grounding",
@@ -283,7 +274,6 @@ describe("Reference Workflows Page", () => {
                 updated_at: new Date().toISOString(),
               },
             ]),
-          ),
         ),
       );
 
@@ -302,7 +292,7 @@ describe("Reference Workflows Page", () => {
 
     it("allows creating a new workflow", async () => {
       server.use(
-        rest.get("*/api/reference/grounding-workflows", (req, res, ctx) => res(ctx.json([]))),
+        http.get("*/api/reference/grounding-workflows", () => HttpResponse.json([])),
       );
 
       render(<WorkflowsPageWrapper />);

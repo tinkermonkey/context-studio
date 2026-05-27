@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { rest } from "msw";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
 import {
@@ -16,9 +16,9 @@ import {
 import { ClassesPage } from "../classes";
 
 const server = setupServer(
-  rest.get("*/api/taxonomies", (req, res, ctx) => res(ctx.json(createListTaxonomies([])))),
-  rest.get("*/api/properties", (req, res, ctx) => res(ctx.json(createListProperties([])))),
-  rest.get("*/api/relationships", (req, res, ctx) => res(ctx.json(createListRelationships([])))),
+  http.get("*/api/taxonomies", () => HttpResponse.json(createListTaxonomies([]))),
+  http.get("*/api/properties", () => HttpResponse.json(createListProperties([]))),
+  http.get("*/api/relationships", () => HttpResponse.json(createListRelationships([]))),
 );
 
 beforeAll(() => {
@@ -40,19 +40,18 @@ describe("Classes Schema Page", () => {
   describe("loading state", () => {
     it("displays loading skeleton state with 5 skeleton rows matching table layout", async () => {
       server.use(
-        rest.get("*/api/classes", async (req, res, ctx) => {
+        http.get("*/api/classes", async () => {
           await new Promise((resolve) => setTimeout(resolve, 100));
-          return res(ctx.json(createListClasses([])));
+          return HttpResponse.json(createListClasses([]));
         }),
-        rest.get("*/api/schemes", (req, res, ctx) => res(ctx.json(createListSchemes([])))),
+        http.get("*/api/schemes", () => HttpResponse.json(createListSchemes([]))),
       );
 
       const { container } = render(<ClassesPage />);
 
-      // Verify skeleton rows are rendered before data arrives
-      const skeletonElements = container.querySelectorAll(
-        "div[style*='animation: skeleton-shimmer']",
-      );
+      // Verify skeleton rows are rendered before data arrives.
+      // Skeletons now use the `.skeleton` class (shimmer is in CSS, not inline style).
+      const skeletonElements = container.querySelectorAll(".skeleton");
       expect(skeletonElements.length).toBeGreaterThanOrEqual(5);
     });
   });
@@ -63,8 +62,8 @@ describe("Classes Schema Page", () => {
   describe("error state", () => {
     it("displays error banner with retry button when API fails", async () => {
       server.use(
-        rest.get("*/api/classes", (req, res, ctx) =>
-          res(ctx.status(500), ctx.json({ detail: "Internal server error" })),
+        http.get("*/api/classes", () =>
+          HttpResponse.json({ detail: "Internal server error" }, { status: 500 }),
         ),
       );
 
@@ -84,7 +83,7 @@ describe("Classes Schema Page", () => {
   describe("empty state", () => {
     it("displays empty state copy when no classes exist", async () => {
       server.use(
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(createListClasses([])))),
+        http.get("*/api/classes", () => HttpResponse.json(createListClasses([]))),
       );
 
       render(<ClassesPage />);
@@ -116,7 +115,7 @@ describe("Classes Schema Page", () => {
         }),
       ]);
 
-      server.use(rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))));
+      server.use(http.get("*/api/classes", () => HttpResponse.json(mockClasses)));
 
       render(<ClassesPage />);
 
@@ -134,7 +133,7 @@ describe("Classes Schema Page", () => {
         }),
       ]);
 
-      server.use(rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))));
+      server.use(http.get("*/api/classes", () => HttpResponse.json(mockClasses)));
 
       render(<ClassesPage />);
 
@@ -142,8 +141,11 @@ describe("Classes Schema Page", () => {
         expect(screen.getByText("TestClass")).toBeInTheDocument();
       });
 
+      // The identifier cell renders the id truncated to 8 chars ("class-12")
+      // in a mono-font span, no longer a <code> element.
       const monoId = screen.getByText("class-12");
-      expect(monoId.tagName.toLowerCase()).toBe("code");
+      expect(monoId.tagName.toLowerCase()).toBe("span");
+      expect(monoId).toHaveStyle({ fontFamily: "var(--font-mono)" });
     });
 
     it("displays description column with em-dash placeholder when empty", async () => {
@@ -155,7 +157,7 @@ describe("Classes Schema Page", () => {
         }),
       ]);
 
-      server.use(rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))));
+      server.use(http.get("*/api/classes", () => HttpResponse.json(mockClasses)));
 
       render(<ClassesPage />);
 
@@ -188,7 +190,7 @@ describe("Classes Schema Page", () => {
         }),
       ]);
 
-      server.use(rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))));
+      server.use(http.get("*/api/classes", () => HttpResponse.json(mockClasses)));
 
       render(<ClassesPage />);
 
@@ -218,7 +220,7 @@ describe("Classes Schema Page", () => {
         }),
       ]);
 
-      server.use(rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))));
+      server.use(http.get("*/api/classes", () => HttpResponse.json(mockClasses)));
 
       render(<ClassesPage />);
 
@@ -257,9 +259,9 @@ describe("Classes Schema Page", () => {
       ]);
 
       server.use(
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
-        rest.get("*/api/schemes", (req, res, ctx) =>
-          res(ctx.status(500), ctx.json({ detail: "Failed to load schemes" })),
+        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
+        http.get("*/api/schemes", () =>
+          HttpResponse.json({ detail: "Failed to load schemes" }, { status: 500 }),
         ),
       );
 
@@ -294,13 +296,13 @@ describe("Classes Schema Page", () => {
       let schemesCallCount = 0;
 
       server.use(
-        rest.get("*/api/classes", (req, res, ctx) => res(ctx.json(mockClasses))),
-        rest.get("*/api/schemes", (req, res, ctx) => {
+        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
+        http.get("*/api/schemes", () => {
           schemesCallCount++;
           if (schemesCallCount === 1) {
-            return res(ctx.status(500), ctx.json({ detail: "Failed to load schemes" }));
+            return HttpResponse.json({ detail: "Failed to load schemes" }, { status: 500 });
           }
-          return res(ctx.json(mockSchemes));
+          return HttpResponse.json(mockSchemes);
         }),
       );
 
@@ -323,8 +325,11 @@ describe("Classes Schema Page", () => {
       await waitFor(() => {
         // Error banner should disappear
         expect(screen.queryByText(/Failed to load domains/i)).not.toBeInTheDocument();
-        // Scheme name should now appear in the Domain column
-        expect(screen.getByText("People Domain")).toBeInTheDocument();
+        // Scheme name should now resolve in the Scheme column chip for the row.
+        // "People Domain" also appears in the domain filter (SegmentedControl),
+        // so scope the assertion to the row's scheme chip via its test id.
+        const schemeChip = screen.getByTestId("class-domain-class-1");
+        expect(schemeChip).toHaveTextContent("People Domain");
       });
     });
   });

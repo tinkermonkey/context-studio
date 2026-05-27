@@ -1,0 +1,2 @@
+# Git hooks run from the repo root (context-studio); the npm package lives in ux/.
+cd ux && npx lint-staged
