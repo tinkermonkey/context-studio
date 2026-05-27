@@ -1,7 +1,18 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useToasts } from "@/components/ui/Toast";
-import { Button, Modal, PageHeader, RowMenu, Chip, FilterBar, TabBar, SegmentedControl } from "@tinkermonkey/heimdall-ui";
+import {
+  Button,
+  Modal,
+  PageHeader,
+  RowMenu,
+  Chip,
+  FilterBar,
+  TabBar,
+  Icon,
+  VersionPill,
+  SegmentedControl,
+} from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
@@ -46,12 +57,14 @@ function ClassesPageContent({
   const classMap = new Map(classes.map((c) => [c.id, c.title]));
 
   const domainOptions = [
-    { value: "all", label: "All" },
+    { value: "all", label: "All domains" },
     ...schemes.map((s) => ({ value: s.id, label: s.title })),
   ];
 
   const filteredData = classes
-    .filter((cls: ClassResponse) => domainFilter === "all" || cls.concept_scheme_id === domainFilter)
+    .filter(
+      (cls: ClassResponse) => domainFilter === "all" || cls.concept_scheme_id === domainFilter,
+    )
     .filter(
       (cls: ClassResponse) =>
         cls.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
@@ -62,30 +75,35 @@ function ClassesPageContent({
   const classColumns: Column<ClassResponse>[] = [
     {
       key: "id",
-      label: "ID",
+      label: "Identifier",
+      width: "120px",
       render: (value) => (
-        <code className="font-mono text-xs">{(value as string).slice(0, 8)}</code>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: 12.5 }}>
+          {(value as string).slice(0, 8)}
+        </span>
       ),
     },
     {
       key: "title",
-      label: "Name",
+      label: "Title",
       sortable: true,
-      render: (value, row) => (
-        <span
-          style={{ color: "var(--accent-cyan, #22d3ee)", fontWeight: 500, cursor: "pointer" }}
-          data-testid={`class-name-${row.id}`}
-          onClick={() => onSelectedIdChange(row.id)}
-        >
-          {value as string}
+      render: (value) => <span style={{ fontWeight: 500 }}>{value as string}</span>,
+    },
+    {
+      key: "description",
+      label: "Description",
+      render: (value) => (
+        <span style={{ color: "rgb(var(--canvas-fg-3))", fontSize: 12.5 }}>
+          {(value as string) || "—"}
         </span>
       ),
     },
     {
       key: "concept_scheme_id",
-      label: "Domain",
+      label: "Scheme",
+      width: "140px",
       render: (value, row) => {
-        const schemeName = schemeMap.get(value as string) || "Unknown";
+        const schemeName = schemeMap.get(value as string) || "—";
         return (
           <Chip variant="neutral" data-testid={`class-domain-${row.id}`}>
             {schemeName}
@@ -95,32 +113,31 @@ function ClassesPageContent({
     },
     {
       key: "parent_class_id",
-      label: "Parent Class",
+      label: "Parent",
+      width: "120px",
       render: (value) => {
         const parentId = value as string | null | undefined;
-        if (!parentId) return <span className="opacity-60">—</span>;
-        const parentName = classMap.get(parentId) || "Unknown";
+        if (!parentId)
+          return <em style={{ color: "rgb(var(--canvas-fg-3))", fontSize: 12 }}>— root —</em>;
+        const parentName = classMap.get(parentId);
         return (
-          <code className="font-mono text-xs">
-            {parentId.slice(0, 8)} ({parentName})
-          </code>
+          <span
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: 11.5,
+              color: "rgb(var(--canvas-fg-2))",
+            }}
+          >
+            {parentName || parentId.slice(0, 8)}
+          </span>
         );
       },
     },
     {
       key: "version",
-      label: "Properties",
-      render: (_, row) => (
-        <span className="opacity-60">{row.data_properties?.length ?? 0}</span>
-      ),
-    },
-    {
-      key: "last_modified",
-      label: "Updated",
-      render: (value) => {
-        const date = value as string | null;
-        return date ? new Date(date).toLocaleDateString() : "—";
-      },
+      label: "Ver",
+      width: "60px",
+      render: (value) => <VersionPill>{value as number}</VersionPill>,
     },
     {
       key: "created_at",
@@ -183,42 +200,38 @@ function ClassesPageContent({
   const showFilteredEmpty = classes.length > 0 && filteredData.length === 0 && hasFilters;
 
   return (
-    <div data-testid="classes-page">
+    <div data-testid="classes-page" className="stack">
       <FilterBar
         data-testid="schema-filter-bar"
         onSearchChange={setSearchFilter}
-        searchPlaceholder="Search by title or description…"
+        searchPlaceholder="Search classes, descriptions, ids…"
         showingCount={filteredData.length}
         totalCount={classes.length}
-      />
+      >
+        {schemes.length > 0 && (
+          <SegmentedControl
+            value={domainFilter}
+            onChange={(v) => setDomainFilter(v as string)}
+            options={domainOptions}
+          />
+        )}
+      </FilterBar>
 
-      {schemes.length > 0 && (
-        <SegmentedControl
-          value={domainFilter}
-          onChange={(v) => setDomainFilter(v as string)}
-          options={domainOptions}
+      {schemesError && (
+        <ErrorBanner
+          error={schemesError as Error}
+          onRetry={() => refetchSchemes()}
+          message="Failed to load domains"
+          compact
+          daemonLogPath="/local-server/logs/context_studio.log"
         />
       )}
 
-      {schemesError && (
-        <div style={{ marginBottom: "var(--space-3)" }}>
-          <ErrorBanner
-            error={schemesError as Error}
-            onRetry={() => refetchSchemes()}
-            message="Failed to load domains"
-            compact
-            daemonLogPath="/local-server/logs/context_studio.log"
-          />
-        </div>
-      )}
-
       {showFilteredEmpty ? (
-        <div style={{ marginTop: "var(--space-6)" }}>
-          <EmptyState
-            title={classesCopy.filteredEmpty.title}
-            description={classesCopy.filteredEmpty.description}
-          />
-        </div>
+        <EmptyState
+          title={classesCopy.filteredEmpty.title}
+          description={classesCopy.filteredEmpty.description}
+        />
       ) : (
         <SchemaPageLayout
           data={filteredData}
@@ -263,7 +276,11 @@ function ClassesPageWrapper() {
     { id: "schemes", label: "Schemes", count: schemesData?.total },
     { id: "classes", label: "Classes", count: classesData?.total },
     { id: "properties", label: "Properties", count: propsData?.total },
-    { id: "relationships", label: "Relationships", count: relsData?.items?.length ?? relsData?.total },
+    {
+      id: "relationships",
+      label: "Relationships",
+      count: relsData?.items?.length ?? relsData?.total,
+    },
   ];
 
   const handleTabNavigate = (tabId: string) => {
@@ -313,17 +330,23 @@ function ClassesPageWrapper() {
   return (
     <div className="stack">
       <PageHeader
-        eyebrow="Schema"
+        eyebrow="SCHEMA · node_type · class"
         title="Classes"
         idChip="/schema/classes"
+        subtitle="Classes are the structural nodes of the graph. Each belongs to a concept scheme, inherits from a parent class, and carries data-property definitions populated by pipelines or curators."
         actions={
-          <Button
-            variant="primary"
-            onClick={() => setShowCreateModal(true)}
-            data-testid="class-add-button"
-          >
-            + New class
-          </Button>
+          <>
+            <Button variant="ghost" onClick={() => {}}>
+              <Icon name="download" size={13} /> Export
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => setShowCreateModal(true)}
+              data-testid="class-add-button"
+            >
+              <Icon name="plus" size={13} /> New class
+            </Button>
+          </>
         }
       />
 

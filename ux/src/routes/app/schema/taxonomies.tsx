@@ -1,7 +1,17 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useToasts } from "@/components/ui/Toast";
-import { Button, Modal, PageHeader, RowMenu, Chip, FilterBar, TabBar } from "@tinkermonkey/heimdall-ui";
+import {
+  Button,
+  Modal,
+  PageHeader,
+  RowMenu,
+  Chip,
+  FilterBar,
+  TabBar,
+  Icon,
+  VersionPill,
+} from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
@@ -49,33 +59,33 @@ function TaxonomiesPageContent({
   const taxonomyColumns: Column<TaxonomyResponse>[] = [
     {
       key: "id",
-      label: "ID",
+      label: "Identifier",
+      width: "160px",
       render: (value) => (
-        <code className="font-mono text-xs">{(value as string).slice(0, 8)}</code>
-      ),
-    },
-    {
-      key: "title",
-      label: "Name",
-      sortable: true,
-      render: (value, row) => (
-        <span
-          style={{ color: "var(--accent-cyan, #22d3ee)", fontWeight: 500, cursor: "pointer" }}
-          onClick={() => onSelectedIdChange(row.id)}
-          data-testid={`taxonomy-name-${row.id}`}
-        >
-          {value as string}
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: 12.5 }}>
+          {(value as string).slice(0, 8)}
         </span>
       ),
     },
     {
+      key: "title",
+      label: "Title",
+      sortable: true,
+      render: (value) => <span style={{ fontWeight: 500 }}>{value as string}</span>,
+    },
+    {
       key: "description",
       label: "Description",
-      render: (value) => <span className="opacity-60">{(value as string) || "—"}</span>,
+      render: (value) => (
+        <span style={{ color: "rgb(var(--canvas-fg-3))", fontSize: 12.5 }}>
+          {(value as string) || "—"}
+        </span>
+      ),
     },
     {
       key: "status",
       label: "Status",
+      width: "120px",
       render: (value) => {
         const status = value as string;
         return <Chip variant={status === "draft" ? "amber" : "emerald"}>{status}</Chip>;
@@ -84,10 +94,27 @@ function TaxonomiesPageContent({
     {
       key: "last_modified",
       label: "Updated",
+      width: "120px",
       render: (value) => {
         const date = value as string | null;
-        return date ? new Date(date).toLocaleDateString() : "—";
+        return (
+          <span
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: 11.5,
+              color: "rgb(var(--canvas-fg-3))",
+            }}
+          >
+            {date ? new Date(date).toLocaleDateString() : "—"}
+          </span>
+        );
       },
+    },
+    {
+      key: "version",
+      label: "Ver",
+      width: "60px",
+      render: (value) => <VersionPill>{value as number}</VersionPill>,
     },
     {
       key: "created_at",
@@ -145,7 +172,7 @@ function TaxonomiesPageContent({
   const showFilteredEmpty = taxonomies.length > 0 && filteredData.length === 0 && hasFilters;
 
   return (
-    <div data-testid="taxonomies-page">
+    <div data-testid="taxonomies-page" className="stack">
       <FilterBar
         data-testid="schema-filter-bar"
         onSearchChange={setSearchFilter}
@@ -155,12 +182,10 @@ function TaxonomiesPageContent({
       />
 
       {showFilteredEmpty ? (
-        <div style={{ marginTop: "var(--space-6)" }}>
-          <EmptyState
-            title={taxonomiesCopy.filteredEmpty.title}
-            description={taxonomiesCopy.filteredEmpty.description}
-          />
-        </div>
+        <EmptyState
+          title={taxonomiesCopy.filteredEmpty.title}
+          description={taxonomiesCopy.filteredEmpty.description}
+        />
       ) : (
         <SchemaPageLayout
           data={filteredData}
@@ -205,7 +230,11 @@ function TaxonomiesPageWrapper() {
     { id: "schemes", label: "Schemes", count: schemesData?.total },
     { id: "classes", label: "Classes", count: classesData?.total },
     { id: "properties", label: "Properties", count: propsData?.total },
-    { id: "relationships", label: "Relationships", count: relsData?.items?.length ?? relsData?.total },
+    {
+      id: "relationships",
+      label: "Relationships",
+      count: relsData?.items?.length ?? relsData?.total,
+    },
   ];
 
   const handleTabNavigate = (tabId: string) => {
@@ -242,22 +271,23 @@ function TaxonomiesPageWrapper() {
   return (
     <div className="stack">
       <PageHeader
-        eyebrow="Schema"
+        eyebrow="SCHEMA · node_type · taxonomy"
         title="Taxonomies"
         idChip="/schema/taxonomies"
+        subtitle="A taxonomy is the top-level domain. It groups concept schemes — each scheme is a focused area of knowledge."
         actions={
-          <div className="row" style={{ gap: "var(--space-2)" }}>
-            <Button variant="ghost" onClick={() => {}} data-testid="taxonomy-import-button">
-              Import
+          <>
+            <Button variant="ghost" onClick={() => {}} data-testid="taxonomy-export-button">
+              <Icon name="download" size={13} /> Export
             </Button>
             <Button
               variant="primary"
               onClick={() => setShowCreateModal(true)}
               data-testid="taxonomy-add-button"
             >
-              + New taxonomy
+              <Icon name="plus" size={13} /> New taxonomy
             </Button>
-          </div>
+          </>
         }
       />
 

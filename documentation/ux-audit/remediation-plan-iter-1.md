@@ -1,49 +1,40 @@
-# Heimdall Fix — Iteration 1 of 1
+# Heimdall Fix — Iteration 1 of 5
 
-**Date:** 2026-05-24
-**Behavioral tests:** S-3 PASS, P-1 FAIL (tablist selector doesn't match Heimdall TabBar DOM), ST-4 PASS
+**Date:** 2026-05-26
+**Behavioral tests:** S-3 PASS, P-1 PASS, ST-4 PASS
 
----
+## Root cause resolved
 
-## Component Replacements (from Step 0 catalog audit)
+The app was rendering a blank screen due to a broken `heimdallReact19Compat` Vite plugin — the Heimdall v0.3.0 bundle changed its internal marker variables from `ze`/`be` to `Ze`/`ye` (case change). The plugin was updated with the correct markers and also injects `import React from "react"` to satisfy `React.forwardRef` calls in the bundle.
 
-No Wave 1 shell replacements needed — shell components are already deleted and replaced with Heimdall `ShellLayout`.
+## Component Replacements (from catalog audit)
 
-Wave 2 replacements identified (deferred to next iteration — not on in-scope pages):
-
+No urgent Wave 1 replacements. Two Wave 2 candidates for future iterations:
 | Custom file | Heimdall equivalent | Wave |
 |---|---|---|
-| `src/components/ui/Sparkline.tsx` | `Heimdall.Sparkline` (only consumer: individuals.tsx) | Wave 2 / individuals |
-| `getStateChip` in `ChangesetListSection.tsx` | `StatusBadge` | Wave 2 / versioning |
-| `getStatusChip` in `SyncStatus.tsx` | `StatusBadge` | Wave 2 / versioning |
-| `getOperationColor` in `PendingChangesList.tsx` | `Chip` color prop | Wave 2 / versioning |
-| Raw `<textarea>` in `CreateChangesetModal.tsx` | `Heimdall.TextArea` | Wave 2 / versioning |
-| `GroundingWorkflowDrawer.tsx` (renders own div.drawer-body) | `ui/Drawer` wrapper | Wave 2 / reference |
-
----
+| `src/components/schema/SchemaPageLayout.tsx` | Direct `SplitPane` usage | Wave 2 (future) |
+| `src/components/graph/MetricsPanel.tsx` | `BarV`/`BarH`/`MetricRow`/`StatGrid` | Wave 2 (future) |
 
 ## Visual Review Summary
 
 | Page | Score | Blocking failures |
-|------|-------|-------------------|
-| Dashboard | 6/9 PASS | #2 (B — "MAIN" eyebrow), #8 (A — Active Pipelines not visible*), #9 (A — QuickAccess not visible*) |
-| Schema — Classes | 6/7 PASS | none (item 7 UNKNOWN — needs interactive test) |
-| Pipelines | 3/4 PASS | #4 (A — PipelineCard metrics show "No runs yet") |
-| Settings | 4/5 PASS | none (item 1 is C — eyebrow CSS uppercasing) |
-
-*Code is present; sections likely below fold in review agents' image window. Active Pipelines filter changed to show all pipelines (not just `p.enabled`).
-
----
+|---|---|---|
+| Dashboard | 5/9 PASS | #4/#5 (3/4 StatTiles missing sparklines), #7 (ActivityTimeline no kind labels) |
+| Schema Classes | 5/7 PASS | #3 (eyebrow chip missing), #4 (route path badge missing) |
+| Schema Taxonomies | 7/7 PASS | — |
+| Pipelines | 4/4 PASS | — |
+| Settings | 5/5 PASS | — |
 
 ## Work assignments
 
-### Wave 1 — Shell / shared
-Not required — shell is passing.
+### Wave 1 — Shell / shared (SKIPPED — no shell failures)
 
-### Wave 2 — Dashboard
-- Remove `eyebrow="Main"` and `idChip="/"` from both `PageHeader` instances
-- Remove fabricated `sparkData` arrays from all four `StatTile` components
-- Change Active Pipelines filter to show all pipelines (not just `p.enabled`)
+### Wave 2 — Page agents (run in parallel)
 
-### Wave 2 — Settings
-- Add CSS override so Heimdall `PageHeader` eyebrow is not force-uppercased
+#### Agent: dashboard
+Fixes: StatTile sparkData for TAXONOMIES, CLASSES, INDIVIDUALS tiles + ActivityTimeline kind/kindLabel props
+Files: `ux/src/routes/app/index.tsx`
+
+#### Agent: schema-classes
+Fixes: PageHeader eyebrow + idChip on Classes page (mirror what Taxonomies page has)
+Files: `ux/src/routes/app/schema/classes.tsx` or equivalent

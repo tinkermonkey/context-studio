@@ -1345,6 +1345,45 @@ body.dark-canvas .diff-added {
   text-transform: none;
 }
 
+/* ============ Page-level composition helpers ============ */
+
+/* Page meta row — workspace chip + sync time + daemon health, rendered above PageHeader */
+.cs-page-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: rgb(var(--canvas-fg-3));
+}
+
+.cs-page-meta__sep {
+  color: rgb(var(--canvas-fg-4));
+}
+
+.cs-page-meta__health {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cs-page-meta__health::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgb(var(--status-emerald));
+  box-shadow: 0 0 0 3px rgb(var(--status-emerald) / 0.18);
+}
+
+/* Space-between flex row — used for section headers with title + subtitle/action */
+.cs-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 /* ------------ Stat grid 4-col override (keep 4 cols down to 1024px) ------------ */
 @media (max-width: 1400px) {
   .stat-grid--cols-4 {

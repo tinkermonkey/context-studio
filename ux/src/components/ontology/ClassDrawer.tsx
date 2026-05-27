@@ -1,6 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { Loader, CheckCircle, AlertCircle } from "lucide-react";
-import { InspectorPanel, TextInput as Input, TextArea as Textarea, Select, KVGrid, Button } from "@tinkermonkey/heimdall-ui";
+import {
+  InspectorPanel,
+  TextInput as Input,
+  TextArea as Textarea,
+  Select,
+  KVGrid,
+  Button,
+} from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { useUpdateClass, useDeleteClass, useMoveClass } from "@/api/hooks/ontology/useClasses";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
@@ -162,14 +169,21 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
             Saved {formatTimeAgo(lastSavedAtRef.current)}
           </span>
         )}
-        {autosaveState === "error" && <AlertCircle size={14} style={{ color: "rgb(var(--status-rose))" }} />}
+        {autosaveState === "error" && (
+          <AlertCircle size={14} style={{ color: "rgb(var(--status-rose))" }} />
+        )}
       </span>
       {isDirty && (
         <Button variant="ghost" size="sm" onClick={revert} data-testid="inspector-revert-button">
           Revert
         </Button>
       )}
-      <Button variant="danger" size="sm" onClick={handleDeleteClick} data-testid="inspector-delete-button">
+      <Button
+        variant="danger"
+        size="sm"
+        onClick={handleDeleteClick}
+        data-testid="inspector-delete-button"
+      >
         Delete
       </Button>
     </>
@@ -185,95 +199,78 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
         data-testid="class-inspector"
       >
         <InspectorPanel.Section title="Details">
-          {individualsError && (
-            <ErrorBanner
-              error={individualsError as Error}
-              onRetry={() => refetchIndividuals()}
-              message="Failed to load individuals"
-              compact
-            />
-          )}
-          {relationshipsError && (
-            <ErrorBanner
-              error={relationshipsError as Error}
-              onRetry={() => refetchRelationships()}
-              message="Failed to load relationships"
-              compact
-            />
-          )}
-          <div>
-            <label className="form-group-label">ID</label>
-            <Input type="text" value={classData.id} disabled mono data-testid="class-drawer-id" />
-          </div>
-
-          <div>
-            <label className="form-group-label">Name</label>
-            <Input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              data-testid="class-drawer-name-input"
-            />
-          </div>
-
-          <div>
-            <label className="form-group-label">Description</label>
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              data-testid="class-drawer-description-input"
-              rows={4}
-            />
-          </div>
-
-          <div>
-            <label className="form-group-label">Domain</label>
-            <Select
-              value={domainId}
-              onChange={(e) => handleSchemeChange(e.target.value)}
-              disabled={moveMutation.isPending}
-              data-testid="class-drawer-domain-select"
-            >
-              <option value="">Select a domain</option>
-              {schemes.map((scheme) => (
-                <option key={scheme.id} value={scheme.id}>
-                  {scheme.title}
-                </option>
-              ))}
-            </Select>
-          </div>
-
-          <div>
-            <label className="form-group-label">Parent Class</label>
-            {selectedParent ? (
-              <div
-                className="flex-row-center"
-                style={{
-                  padding: "var(--space-2) var(--space-3)",
-                  background: "var(--canvas-bg-2)",
-                  borderRadius: "var(--radius-sm)",
-                  fontSize: "var(--text-sm)",
-                }}
-              >
-                <span className="mono" style={{ flex: 1, fontSize: "var(--text-xs)" }}>
-                  {selectedParent.id.slice(0, 8)}
-                </span>
-                <span>{selectedParent.title}</span>
-              </div>
-            ) : (
-              <div
-                className="flex-row-center"
-                style={{
-                  padding: "var(--space-2) var(--space-3)",
-                  background: "var(--canvas-bg-2)",
-                  borderRadius: "var(--radius-sm)",
-                  fontSize: "var(--text-sm)",
-                  color: "var(--canvas-fg-3)",
-                }}
-              >
-                —
-              </div>
+          <div className="stack">
+            {individualsError && (
+              <ErrorBanner
+                error={individualsError as Error}
+                onRetry={() => refetchIndividuals()}
+                message="Failed to load individuals"
+                compact
+              />
             )}
+            {relationshipsError && (
+              <ErrorBanner
+                error={relationshipsError as Error}
+                onRetry={() => refetchRelationships()}
+                message="Failed to load relationships"
+                compact
+              />
+            )}
+            <div>
+              <label className="form-group-label">ID</label>
+              <Input type="text" value={classData.id} disabled mono data-testid="class-drawer-id" />
+            </div>
+
+            <div>
+              <label className="form-group-label">Name</label>
+              <Input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                data-testid="class-drawer-name-input"
+              />
+            </div>
+
+            <div>
+              <label className="form-group-label">Description</label>
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                data-testid="class-drawer-description-input"
+                rows={4}
+              />
+            </div>
+
+            <div>
+              <label className="form-group-label">Domain</label>
+              <Select
+                value={domainId}
+                onChange={(e) => handleSchemeChange(e.target.value)}
+                disabled={moveMutation.isPending}
+                data-testid="class-drawer-domain-select"
+              >
+                <option value="">Select a domain</option>
+                {schemes.map((scheme) => (
+                  <option key={scheme.id} value={scheme.id}>
+                    {scheme.title}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            <div>
+              <label className="form-group-label">Parent Class</label>
+              {selectedParent ? (
+                <div className="readonly-display">
+                  <span className="mono" style={{ flex: 1, fontSize: "var(--text-xs)" }}>
+                    {selectedParent.id.slice(0, 8)}
+                  </span>
+                  <span>{selectedParent.title}</span>
+                </div>
+              ) : (
+                <div className="readonly-display muted">—</div>
+              )}
+            </div>
           </div>
         </InspectorPanel.Section>
 

@@ -112,11 +112,7 @@ export function ClassEditor({ schemeId, initialData, onSubmit, isLoading }: Clas
             autoFocus
             data-testid="class-editor-name-input"
           />
-          {nameError && (
-            <div style={{ color: "var(--rose-600)", fontSize: "var(--text-xs)", marginTop: "4px" }}>
-              {nameError}
-            </div>
-          )}
+          {nameError && <div className="field-error">{nameError}</div>}
         </div>
 
         {!initialData && (
@@ -140,33 +136,19 @@ export function ClassEditor({ schemeId, initialData, onSubmit, isLoading }: Clas
 
         <div>
           <label className="form-group-label">Parent Class (optional)</label>
-          <div style={{ position: "relative" }}>
+          <div className="entity-picker">
             {selectedParent ? (
-              <div
-                className="flex-row-center"
-                style={{
-                  padding: "var(--space-2) var(--space-3)",
-                  background: "var(--canvas-bg-2)",
-                  borderRadius: "var(--radius-sm)",
-                  fontSize: "var(--text-sm)",
-                }}
-              >
+              <div className="entity-picked">
                 <span className="mono" style={{ flex: 1, fontSize: "var(--text-xs)" }}>
                   {selectedParent.id.slice(0, 8)}
                 </span>
                 <span>{selectedParent.title}</span>
                 <button
                   type="button"
+                  className="entity-clear"
                   onClick={() => {
                     setParentClassId("");
                     setSearchParent("");
-                  }}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    padding: 0,
-                    color: "var(--canvas-fg-3)",
                   }}
                   data-testid="class-editor-parent-clear"
                 >
@@ -188,50 +170,20 @@ export function ClassEditor({ schemeId, initialData, onSubmit, isLoading }: Clas
                   data-testid="class-editor-parent-input"
                 />
                 {showParentOptions && filteredClasses.length > 0 && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: "100%",
-                      left: 0,
-                      right: 0,
-                      background: "var(--canvas-bg)",
-                      border: "1px solid rgb(var(--canvas-fg-4))",
-                      borderRadius: "var(--radius-sm)",
-                      marginTop: "4px",
-                      zIndex: 10,
-                      maxHeight: "200px",
-                      overflowY: "auto",
-                    }}
-                  >
+                  <div className="entity-results">
                     {filteredClasses.map((cls) => (
                       <button
                         key={cls.id}
                         type="button"
+                        className="entity-result"
                         onClick={() => {
                           setParentClassId(cls.id);
                           setSearchParent("");
                           setShowParentOptions(false);
                         }}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "var(--space-2)",
-                          padding: "var(--space-2) var(--space-3)",
-                          width: "100%",
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          textAlign: "left",
-                          fontSize: "var(--text-sm)",
-                          color: "rgb(var(--canvas-fg-1))",
-                          borderBottom: "1px solid rgb(var(--canvas-fg-4))",
-                        }}
                         data-testid={`class-editor-parent-option-${cls.id}`}
                       >
-                        <span
-                          className="mono"
-                          style={{ fontSize: "var(--text-xs)", color: "var(--canvas-fg-3)" }}
-                        >
+                        <span className="mono" style={{ fontSize: "var(--text-xs)" }}>
                           {cls.id.slice(0, 8)}
                         </span>
                         <span>{cls.title}</span>

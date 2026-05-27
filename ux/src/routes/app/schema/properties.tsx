@@ -1,7 +1,17 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useToasts } from "@/components/ui/Toast";
-import { Button, Modal, PageHeader, RowMenu, FilterBar, TabBar } from "@tinkermonkey/heimdall-ui";
+import {
+  Button,
+  Modal,
+  PageHeader,
+  RowMenu,
+  Chip,
+  FilterBar,
+  TabBar,
+  Icon,
+  VersionPill,
+} from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
@@ -25,6 +35,12 @@ interface PropertiesPageContentProps {
   onCreateClick: () => void;
 }
 
+function relevanceChip(isRelevant: boolean | null | undefined) {
+  if (isRelevant === true) return <Chip variant="emerald">relevant</Chip>;
+  if (isRelevant === false) return <Chip variant="rose">irrelevant</Chip>;
+  return <Chip variant="neutral">unevaluated</Chip>;
+}
+
 function PropertiesPageContent({ onCreateClick }: PropertiesPageContentProps) {
   const [selectedId, setSelectedId] = useState<string>();
   const [searchFilter, setSearchFilter] = useState("");
@@ -40,34 +56,41 @@ function PropertiesPageContent({ onCreateClick }: PropertiesPageContentProps) {
 
   const propertyColumns: Column<PropertyDefinitionResponse>[] = [
     {
-      key: "id",
-      label: "ID",
+      key: "identifier",
+      label: "Identifier",
+      width: "180px",
       render: (value) => (
-        <code className="font-mono text-xs">{(value as string).slice(0, 8)}</code>
-      ),
-    },
-    {
-      key: "title",
-      label: "Name",
-      sortable: true,
-      render: (value) => (
-        <span style={{ color: "var(--accent-cyan, #22d3ee)", fontWeight: 500 }}>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, fontWeight: 500 }}>
           {value as string}
         </span>
       ),
     },
     {
-      key: "description",
-      label: "Description",
-      render: (value) => <span className="opacity-60">{(value as string) || "—"}</span>,
+      key: "title",
+      label: "Title",
+      sortable: true,
+      render: (value) => <span style={{ fontWeight: 500 }}>{value as string}</span>,
     },
     {
-      key: "last_modified",
-      label: "Updated",
-      render: (value) => {
-        const date = value as string | null;
-        return date ? new Date(date).toLocaleDateString() : "—";
-      },
+      key: "description",
+      label: "Description",
+      render: (value) => (
+        <span style={{ color: "rgb(var(--canvas-fg-3))", fontSize: 12.5 }}>
+          {(value as string) || "—"}
+        </span>
+      ),
+    },
+    {
+      key: "is_relevant",
+      label: "Relevance",
+      width: "140px",
+      render: (value) => relevanceChip(value as boolean | null | undefined),
+    },
+    {
+      key: "version",
+      label: "Ver",
+      width: "60px",
+      render: (value) => <VersionPill>{value as number}</VersionPill>,
     },
     {
       key: "created_at",
@@ -122,11 +145,11 @@ function PropertiesPageContent({ onCreateClick }: PropertiesPageContentProps) {
   }
 
   return (
-    <div data-testid="properties-page">
+    <div data-testid="properties-page" className="stack">
       <FilterBar
         data-testid="schema-filter-bar"
         onSearchChange={setSearchFilter}
-        searchPlaceholder="Search by title or description…"
+        searchPlaceholder="Search by identifier, title, or description…"
         showingCount={filteredData.length}
         totalCount={properties.length}
       />
@@ -165,7 +188,11 @@ function PropertiesPageWrapper() {
     { id: "schemes", label: "Schemes", count: schemesData?.total },
     { id: "classes", label: "Classes", count: classesData?.total },
     { id: "properties", label: "Properties", count: propsData?.total },
-    { id: "relationships", label: "Relationships", count: relsData?.items?.length ?? relsData?.total },
+    {
+      id: "relationships",
+      label: "Relationships",
+      count: relsData?.items?.length ?? relsData?.total,
+    },
   ];
 
   const handleTabNavigate = (tabId: string) => {
@@ -197,17 +224,23 @@ function PropertiesPageWrapper() {
   return (
     <div className="stack">
       <PageHeader
-        eyebrow="Schema"
-        title="Property Definitions"
-        idChip="/schema/property-definitions"
+        eyebrow="SCHEMA · node_type · property_definition"
+        title="Properties"
+        idChip="/schema/properties"
+        subtitle="Property definitions are the named predicates used by relationships. A tri-state relevance flag drives which appear in the inferred graph."
         actions={
-          <Button
-            variant="primary"
-            onClick={() => setShowCreateModal(true)}
-            data-testid="property-add-button"
-          >
-            + Add property
-          </Button>
+          <>
+            <Button variant="ghost" onClick={() => {}}>
+              <Icon name="filter" size={13} /> Filter
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => setShowCreateModal(true)}
+              data-testid="property-add-button"
+            >
+              <Icon name="plus" size={13} /> New property
+            </Button>
+          </>
         }
       />
 

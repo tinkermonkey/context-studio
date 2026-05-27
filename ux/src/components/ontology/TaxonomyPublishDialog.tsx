@@ -43,7 +43,8 @@ export function TaxonomyPublishDialog({
   const canPublish = commitMessage.trim().length > 0 && !publishMutation.isPending;
 
   return (
-    <Modal isOpen={open}
+    <Modal
+      isOpen={open}
       onClose={onClose}
       title="Publish Taxonomy"
       data-testid="taxonomy-publish-dialog"
@@ -53,7 +54,7 @@ export function TaxonomyPublishDialog({
           <p
             style={{
               fontSize: "var(--text-sm)",
-              color: "var(--canvas-fg-2)",
+              color: "rgb(var(--canvas-fg-2))",
               marginBottom: "var(--space-2)",
             }}
           >
@@ -63,11 +64,12 @@ export function TaxonomyPublishDialog({
 
         <div
           style={{
-            padding: "var(--space-2)",
-            backgroundColor: "rgb(var(--canvas-fg-4))",
-            borderRadius: "4px",
+            padding: "var(--space-2) var(--space-3)",
+            backgroundColor: "rgb(var(--canvas-bg-2))",
+            border: "1px solid rgb(var(--canvas-border))",
+            borderRadius: "var(--radius-sm)",
             fontSize: "var(--text-xs)",
-            color: "var(--canvas-fg-3)",
+            color: "rgb(var(--canvas-fg-2))",
           }}
         >
           {diffStatsQuery.isLoading ? (

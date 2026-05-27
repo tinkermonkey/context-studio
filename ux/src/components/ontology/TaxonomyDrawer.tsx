@@ -1,6 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { Loader, CheckCircle, AlertCircle } from "lucide-react";
-import { InspectorPanel, TextInput as Input, TextArea as Textarea, Button, KVGrid, VersionPill } from "@tinkermonkey/heimdall-ui";
+import {
+  InspectorPanel,
+  TextInput as Input,
+  TextArea as Textarea,
+  Button,
+  KVGrid,
+  VersionPill,
+} from "@tinkermonkey/heimdall-ui";
 import { ConfirmDialog } from "@tinkermonkey/heimdall-ui";
 import { useUpdateTaxonomy, useDeleteTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
 import { useAutosave } from "@/hooks/useAutosave";
@@ -113,14 +120,21 @@ export function TaxonomyDrawer({ taxonomy }: TaxonomyDrawerProps) {
             Saved {formatTimeAgo(lastSavedAtRef.current)}
           </span>
         )}
-        {autosaveState === "error" && <AlertCircle size={14} style={{ color: "rgb(var(--status-rose))" }} />}
+        {autosaveState === "error" && (
+          <AlertCircle size={14} style={{ color: "rgb(var(--status-rose))" }} />
+        )}
       </span>
       {isDirty && (
         <Button variant="ghost" size="sm" onClick={revert} data-testid="inspector-revert-button">
           Revert
         </Button>
       )}
-      <Button variant="danger" size="sm" onClick={handleDeleteClick} data-testid="inspector-delete-button">
+      <Button
+        variant="danger"
+        size="sm"
+        onClick={handleDeleteClick}
+        data-testid="inspector-delete-button"
+      >
         Delete
       </Button>
     </>
@@ -136,29 +150,37 @@ export function TaxonomyDrawer({ taxonomy }: TaxonomyDrawerProps) {
         data-testid="taxonomy-inspector"
       >
         <InspectorPanel.Section title="Details">
-          <div>
-            <label className="form-group-label">ID</label>
-            <Input type="text" value={taxonomy.id} disabled mono data-testid="taxonomy-drawer-id" />
-          </div>
+          <div className="stack">
+            <div>
+              <label className="form-group-label">ID</label>
+              <Input
+                type="text"
+                value={taxonomy.id}
+                disabled
+                mono
+                data-testid="taxonomy-drawer-id"
+              />
+            </div>
 
-          <div>
-            <label className="form-group-label">Title</label>
-            <Input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              data-testid="taxonomy-drawer-title-input"
-            />
-          </div>
+            <div>
+              <label className="form-group-label">Title</label>
+              <Input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                data-testid="taxonomy-drawer-title-input"
+              />
+            </div>
 
-          <div>
-            <label className="form-group-label">Description</label>
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              data-testid="taxonomy-drawer-description-input"
-              rows={4}
-            />
+            <div>
+              <label className="form-group-label">Description</label>
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                data-testid="taxonomy-drawer-description-input"
+                rows={4}
+              />
+            </div>
           </div>
         </InspectorPanel.Section>
 
@@ -192,7 +214,9 @@ export function TaxonomyDrawer({ taxonomy }: TaxonomyDrawerProps) {
         title={taxonomiesCopy.delete.confirmTitle}
         message="This taxonomy and all its concept schemes will be permanently deleted."
         confirmLabel={taxonomiesCopy.delete.confirmButton}
-        onConfirm={() => { void handleDelete(); }}
+        onConfirm={() => {
+          void handleDelete();
+        }}
         variant="danger"
       />
     </>

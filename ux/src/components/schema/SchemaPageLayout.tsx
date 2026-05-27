@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { SplitPane } from "@tinkermonkey/heimdall-ui";
+import { Panel } from "@tinkermonkey/heimdall-ui";
 
 interface SchemaPageLayoutProps<T extends { id: string }> {
   data: T[];
@@ -16,21 +16,23 @@ export function SchemaPageLayout<T extends { id: string }>({
 }: SchemaPageLayoutProps<T>) {
   const selectedEntity = selectedId ? data.find((item) => item.id === selectedId) : undefined;
 
+  if (selectedEntity && renderInspectorContent) {
+    return (
+      <div
+        data-testid="schema-page-layout"
+        style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 14, alignItems: "start" }}
+      >
+        <Panel noPadding>{children}</Panel>
+        <div data-testid="schema-inspector-container">
+          {renderInspectorContent(selectedEntity)}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div data-testid="schema-page-layout">
-      {selectedEntity && renderInspectorContent ? (
-        <SplitPane
-          direction="horizontal"
-          first={<div>{children}</div>}
-          second={
-            <div data-testid="schema-inspector-container">
-              {renderInspectorContent(selectedEntity)}
-            </div>
-          }
-        />
-      ) : (
-        children
-      )}
+      <Panel noPadding>{children}</Panel>
     </div>
   );
 }

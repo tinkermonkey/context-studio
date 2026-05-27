@@ -1,7 +1,17 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useToasts } from "@/components/ui/Toast";
-import { Button, Modal, PageHeader, RowMenu, Chip, FilterBar, TabBar } from "@tinkermonkey/heimdall-ui";
+import {
+  Button,
+  Modal,
+  PageHeader,
+  RowMenu,
+  Chip,
+  FilterBar,
+  TabBar,
+  Icon,
+  VersionPill,
+} from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
@@ -55,33 +65,33 @@ function SchemesPageContent({
   const schemeColumns: Column<ConceptSchemeResponse>[] = [
     {
       key: "id",
-      label: "ID",
+      label: "Identifier",
+      width: "160px",
       render: (value) => (
-        <code className="font-mono text-xs">{(value as string).slice(0, 8)}</code>
-      ),
-    },
-    {
-      key: "title",
-      label: "Name",
-      sortable: true,
-      render: (value, row) => (
-        <span
-          style={{ color: "var(--accent-cyan, #22d3ee)", fontWeight: 500, cursor: "pointer" }}
-          onClick={() => onSelectedIdChange(row.id)}
-          data-testid={`scheme-name-${row.id}`}
-        >
-          {value as string}
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: 12.5 }}>
+          {(value as string).slice(0, 8)}
         </span>
       ),
     },
     {
+      key: "title",
+      label: "Title",
+      sortable: true,
+      render: (value) => <span style={{ fontWeight: 500 }}>{value as string}</span>,
+    },
+    {
       key: "description",
       label: "Description",
-      render: (value) => <span className="opacity-60">{(value as string) || "—"}</span>,
+      render: (value) => (
+        <span style={{ color: "rgb(var(--canvas-fg-3))", fontSize: 12.5 }}>
+          {(value as string) || "—"}
+        </span>
+      ),
     },
     {
       key: "taxonomy_id",
-      label: "Parent Taxonomy",
+      label: "Taxonomy",
+      width: "160px",
       render: (value) => {
         const taxName = taxonomiesById.get(value as string) || "—";
         return <Chip variant="neutral">{taxName}</Chip>;
@@ -90,10 +100,27 @@ function SchemesPageContent({
     {
       key: "last_modified",
       label: "Updated",
+      width: "120px",
       render: (value) => {
         const date = value as string | null;
-        return date ? new Date(date).toLocaleDateString() : "—";
+        return (
+          <span
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: 11.5,
+              color: "rgb(var(--canvas-fg-3))",
+            }}
+          >
+            {date ? new Date(date).toLocaleDateString() : "—"}
+          </span>
+        );
       },
+    },
+    {
+      key: "version",
+      label: "Ver",
+      width: "60px",
+      render: (value) => <VersionPill>{value as number}</VersionPill>,
     },
     {
       key: "created_at",
@@ -155,7 +182,7 @@ function SchemesPageContent({
   const showFilteredEmpty = schemes.length > 0 && filteredData.length === 0 && hasFilters;
 
   return (
-    <div data-testid="schemes-page">
+    <div data-testid="schemes-page" className="stack">
       <FilterBar
         data-testid="schema-filter-bar"
         onSearchChange={setSearchFilter}
@@ -165,24 +192,20 @@ function SchemesPageContent({
       />
 
       {taxonomiesError && onRetryTaxonomies && (
-        <div style={{ marginBottom: "var(--space-3)" }}>
-          <ErrorBanner
-            error={taxonomiesError}
-            onRetry={onRetryTaxonomies}
-            message="Failed to load parent taxonomies"
-            compact
-            daemonLogPath="/local-server/logs/context_studio.log"
-          />
-        </div>
+        <ErrorBanner
+          error={taxonomiesError}
+          onRetry={onRetryTaxonomies}
+          message="Failed to load parent taxonomies"
+          compact
+          daemonLogPath="/local-server/logs/context_studio.log"
+        />
       )}
 
       {showFilteredEmpty ? (
-        <div style={{ marginTop: "var(--space-6)" }}>
-          <EmptyState
-            title={schemesCopy.filteredEmpty.title}
-            description={schemesCopy.filteredEmpty.description}
-          />
-        </div>
+        <EmptyState
+          title={schemesCopy.filteredEmpty.title}
+          description={schemesCopy.filteredEmpty.description}
+        />
       ) : (
         <SchemaPageLayout
           data={filteredData}
@@ -234,7 +257,11 @@ export function SchemesIndexPage() {
     { id: "schemes", label: "Schemes", count: schemesData?.total },
     { id: "classes", label: "Classes", count: classesData?.total },
     { id: "properties", label: "Properties", count: propsData?.total },
-    { id: "relationships", label: "Relationships", count: relsData?.items?.length ?? relsData?.total },
+    {
+      id: "relationships",
+      label: "Relationships",
+      count: relsData?.items?.length ?? relsData?.total,
+    },
   ];
 
   const handleTabNavigate = (tabId: string) => {
@@ -277,59 +304,63 @@ export function SchemesIndexPage() {
   };
 
   return (
-    <>
-      <div className="stack">
-        <PageHeader
-          eyebrow="Schema"
-          title="Concept Schemes"
-          idChip="/schema/schemes"
-          actions={
+    <div className="stack">
+      <PageHeader
+        eyebrow="SCHEMA · node_type · concept_scheme"
+        title="Concept Schemes"
+        idChip="/schema/schemes"
+        subtitle="A concept scheme is a focused vocabulary inside a taxonomy. Classes belong to exactly one scheme."
+        actions={
+          <>
+            <Button variant="ghost" onClick={() => {}}>
+              <Icon name="download" size={13} /> Export
+            </Button>
             <Button
               variant="primary"
               onClick={() => setShowCreateModal(true)}
               data-testid="scheme-add-button"
             >
-              + New scheme
+              <Icon name="plus" size={13} /> New scheme
             </Button>
-          }
+          </>
+        }
+      />
+
+      <TabBar tabs={schemaTabs} activeTabId="schemes" onSelectTab={handleTabNavigate} />
+
+      <div data-testid="schemes-content">
+        <SchemesPageContent
+          onCreateClick={() => setShowCreateModal(true)}
+          selectedId={selectedId}
+          onSelectedIdChange={handleSelectedIdChange}
+          taxonomiesById={taxonomiesById}
+          taxonomiesError={taxonomiesError}
+          onRetryTaxonomies={() => refetchTaxonomies()}
         />
-
-        <TabBar tabs={schemaTabs} activeTabId="schemes" onSelectTab={handleTabNavigate} />
-
-        <div data-testid="schemes-content">
-          <SchemesPageContent
-            onCreateClick={() => setShowCreateModal(true)}
-            selectedId={selectedId}
-            onSelectedIdChange={handleSelectedIdChange}
-            taxonomiesById={taxonomiesById}
-            taxonomiesError={taxonomiesError}
-            onRetryTaxonomies={() => refetchTaxonomies()}
-          />
-        </div>
-
-        <Modal
-          isOpen={showCreateModal}
-          onClose={() => {
-            setShowCreateModal(false);
-            setCreateError(null);
-          }}
-          title="Create Concept Scheme"
-          data-testid="scheme-create-modal"
-        >
-          {createError && (
-            <div style={{ marginBottom: "var(--space-3)" }}>
-              <ErrorBanner
-                error={new Error(createError)}
-                onRetry={() => setCreateError(null)}
-                message="Failed to create scheme"
-                daemonLogPath="/local-server/logs/context_studio.log"
-              />
-            </div>
-          )}
-          <SchemeForm onSubmit={handleCreateSubmit} isLoading={createMutation.isPending} />
-        </Modal>
       </div>
-    </>
+
+      <Modal
+        isOpen={showCreateModal}
+        onClose={() => {
+          setShowCreateModal(false);
+          setCreateError(null);
+        }}
+        title="Create Concept Scheme"
+        data-testid="scheme-create-modal"
+      >
+        {createError && (
+          <div style={{ marginBottom: "var(--space-3)" }}>
+            <ErrorBanner
+              error={new Error(createError)}
+              onRetry={() => setCreateError(null)}
+              message="Failed to create scheme"
+              daemonLogPath="/local-server/logs/context_studio.log"
+            />
+          </div>
+        )}
+        <SchemeForm onSubmit={handleCreateSubmit} isLoading={createMutation.isPending} />
+      </Modal>
+    </div>
   );
 }
 

@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
 import { HierarchyTree as HeimdallHierarchyTree, HierarchyRow } from "@tinkermonkey/heimdall-ui";
 import { EmptyState } from "@/components/ui/EmptyState";
 import type { components } from "@/api/types";
@@ -62,64 +61,38 @@ function TreeNodeRenderer({
   const canExpand = hasChildren && depth < maxDepth;
 
   return (
-    <div>
-      <div style={{ display: "flex", alignItems: "center" }}>
-        {canExpand ? (
-          <button
-            type="button"
-            onClick={() => onToggleExpanded(node.class.id)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "20px",
-              height: "20px",
-              padding: 0,
-              background: "transparent",
-              border: "none",
-              cursor: "pointer",
-              color: "var(--canvas-fg-3)",
-              flexShrink: 0,
-              position: "relative",
-              zIndex: 1,
-            }}
-            aria-label={isExpanded ? "Collapse" : "Expand"}
-          >
-            {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-          </button>
-        ) : (
-          <div style={{ width: "20px", flexShrink: 0 }} />
-        )}
-        <HierarchyRow
-          depth={depth}
-          domain={node.class.concept_scheme_id || ""}
-          kind="class"
-          label={node.class.title}
-          description=""
-          meta={hasChildren ? String(node.children.length) : undefined}
-          onSelect={onNodeSelect ? () => onNodeSelect(node.class.id) : undefined}
-          data-testid={`hierarchy-node-${node.class.id}`}
-          data-domain={node.class.concept_scheme_id}
-          style={{ flex: 1, minWidth: 0 }}
-        />
-      </div>
-
-      {canExpand && isExpanded && (
-        <div>
-          {node.children.map((child) => (
-            <TreeNodeRenderer
-              key={child.class.id}
-              node={child}
-              expandedNodeIds={expandedNodeIds}
-              onToggleExpanded={onToggleExpanded}
-              onNodeSelect={onNodeSelect}
-              depth={depth + 1}
-              maxDepth={maxDepth}
-            />
-          ))}
-        </div>
-      )}
-    </div>
+    <>
+      <HierarchyRow
+        depth={depth}
+        domain={node.class.concept_scheme_id || ""}
+        kind="class"
+        label={node.class.title}
+        description=""
+        meta={hasChildren ? String(node.children.length) : undefined}
+        onSelect={() => {
+          if (canExpand) {
+            onToggleExpanded(node.class.id);
+          } else if (onNodeSelect) {
+            onNodeSelect(node.class.id);
+          }
+        }}
+        data-testid={`hierarchy-node-${node.class.id}`}
+        data-domain={node.class.concept_scheme_id}
+      />
+      {canExpand && isExpanded &&
+        node.children.map((child) => (
+          <TreeNodeRenderer
+            key={child.class.id}
+            node={child}
+            expandedNodeIds={expandedNodeIds}
+            onToggleExpanded={onToggleExpanded}
+            onNodeSelect={onNodeSelect}
+            depth={depth + 1}
+            maxDepth={maxDepth}
+          />
+        ))
+      }
+    </>
   );
 }
 

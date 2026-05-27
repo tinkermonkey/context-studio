@@ -59,7 +59,12 @@ export function RelationshipDrawer({
   if (!relationship) return null;
 
   const inspectorActions = (
-    <Button variant="danger" size="sm" onClick={handleDeleteClick} data-testid="inspector-delete-button">
+    <Button
+      variant="danger"
+      size="sm"
+      onClick={handleDeleteClick}
+      data-testid="inspector-delete-button"
+    >
       Delete
     </Button>
   );
@@ -74,52 +79,57 @@ export function RelationshipDrawer({
         data-testid="relationship-inspector"
       >
         <InspectorPanel.Section title="Details">
-          <div>
-            <label className="form-group-label">ID</label>
-            <Input
-              type="text"
-              value={relationship.id}
-              disabled
-              mono
-              data-testid="relationship-drawer-id"
-            />
-          </div>
+          <div className="stack">
+            <div>
+              <label className="form-group-label">ID</label>
+              <Input
+                type="text"
+                value={relationship.id}
+                disabled
+                mono
+                data-testid="relationship-drawer-id"
+              />
+            </div>
 
-          <div>
-            <label className="form-group-label">Source Class</label>
-            <Input
-              type="text"
-              value={sourceName}
-              disabled
-              data-testid="relationship-drawer-source-class"
-            />
-          </div>
+            <div>
+              <label className="form-group-label">Source Class</label>
+              <Input
+                type="text"
+                value={sourceName}
+                disabled
+                data-testid="relationship-drawer-source-class"
+              />
+            </div>
 
-          <div>
-            <label className="form-group-label">Target Class</label>
-            <Input
-              type="text"
-              value={targetName}
-              disabled
-              data-testid="relationship-drawer-target-class"
-            />
-          </div>
+            <div>
+              <label className="form-group-label">Target Class</label>
+              <Input
+                type="text"
+                value={targetName}
+                disabled
+                data-testid="relationship-drawer-target-class"
+              />
+            </div>
 
-          <div>
-            <label className="form-group-label">Relationship Type</label>
-            <Input
-              type="text"
-              value={propertyName}
-              disabled
-              data-testid="relationship-drawer-property-type"
-            />
+            <div>
+              <label className="form-group-label">Relationship Type</label>
+              <Input
+                type="text"
+                value={propertyName}
+                disabled
+                data-testid="relationship-drawer-property-type"
+              />
+            </div>
           </div>
         </InspectorPanel.Section>
 
         <InspectorPanel.Section title="Metrics">
           <KVGrid
             rows={[
-              { key: "Created", value: new Date(relationship.created_at ?? "").toLocaleDateString() },
+              {
+                key: "Created",
+                value: new Date(relationship.created_at ?? "").toLocaleDateString(),
+              },
             ]}
           />
         </InspectorPanel.Section>
@@ -131,7 +141,9 @@ export function RelationshipDrawer({
         title={relationshipsCopy.delete.confirmTitle}
         message="This relationship and all its instances will be permanently deleted."
         confirmLabel={relationshipsCopy.delete.confirmButton}
-        onConfirm={() => { void handleDelete(); }}
+        onConfirm={() => {
+          void handleDelete();
+        }}
         variant="danger"
       />
     </>

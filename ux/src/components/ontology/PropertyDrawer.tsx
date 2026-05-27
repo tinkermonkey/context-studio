@@ -1,6 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { Loader, CheckCircle, AlertCircle } from "lucide-react";
-import { InspectorPanel, TextInput as Input, TextArea as Textarea, Button, KVGrid } from "@tinkermonkey/heimdall-ui";
+import {
+  InspectorPanel,
+  TextInput as Input,
+  TextArea as Textarea,
+  Button,
+  KVGrid,
+} from "@tinkermonkey/heimdall-ui";
 import { ConfirmDialog } from "@tinkermonkey/heimdall-ui";
 import { useUpdateProperty, useDeleteProperty } from "@/api/hooks/ontology/useProperties";
 import { useAutosave } from "@/hooks/useAutosave";
@@ -101,14 +107,21 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
             Saved {formatTimeAgo(lastSavedAtRef.current)}
           </span>
         )}
-        {autosaveState === "error" && <AlertCircle size={14} style={{ color: "rgb(var(--status-rose))" }} />}
+        {autosaveState === "error" && (
+          <AlertCircle size={14} style={{ color: "rgb(var(--status-rose))" }} />
+        )}
       </span>
       {isDirty && (
         <Button variant="ghost" size="sm" onClick={revert} data-testid="inspector-revert-button">
           Revert
         </Button>
       )}
-      <Button variant="danger" size="sm" onClick={handleDeleteClick} data-testid="inspector-delete-button">
+      <Button
+        variant="danger"
+        size="sm"
+        onClick={handleDeleteClick}
+        data-testid="inspector-delete-button"
+      >
         Delete
       </Button>
     </>
@@ -124,35 +137,37 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
         data-testid="property-inspector"
       >
         <InspectorPanel.Section title="Details">
-          <div>
-            <label className="form-group-label">Identifier</label>
-            <Input
-              type="text"
-              value={property.identifier}
-              disabled
-              mono
-              data-testid="property-drawer-identifier"
-            />
-          </div>
+          <div className="stack">
+            <div>
+              <label className="form-group-label">Identifier</label>
+              <Input
+                type="text"
+                value={property.identifier}
+                disabled
+                mono
+                data-testid="property-drawer-identifier"
+              />
+            </div>
 
-          <div>
-            <label className="form-group-label">Title</label>
-            <Input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              data-testid="property-drawer-title-input"
-            />
-          </div>
+            <div>
+              <label className="form-group-label">Title</label>
+              <Input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                data-testid="property-drawer-title-input"
+              />
+            </div>
 
-          <div>
-            <label className="form-group-label">Description</label>
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              data-testid="property-drawer-description-input"
-              rows={4}
-            />
+            <div>
+              <label className="form-group-label">Description</label>
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                data-testid="property-drawer-description-input"
+                rows={4}
+              />
+            </div>
           </div>
         </InspectorPanel.Section>
 
@@ -171,7 +186,9 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
         title={propertiesCopy.delete.confirmTitle}
         message="This property will be permanently deleted."
         confirmLabel={propertiesCopy.delete.confirmButton}
-        onConfirm={() => { void handleDelete(); }}
+        onConfirm={() => {
+          void handleDelete();
+        }}
         variant="danger"
       />
     </>

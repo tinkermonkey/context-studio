@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Table, Button, type Column } from "@tinkermonkey/heimdall-ui";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Table, Button, Icon, type Column } from "@tinkermonkey/heimdall-ui";
 
 export type { Column } from "@tinkermonkey/heimdall-ui";
 
@@ -55,17 +54,13 @@ export function SchemaTable<T extends { id: string }>({
   }
 
   return (
-    <div
-      data-testid={tableTestId || "schema-table"}
-      style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}
-    >
+    <div data-testid={tableTestId || "schema-table"}>
       <Table<T>
         columns={columns}
         data={pagedData}
         rowKey="id"
-        selectable={!!onRowSelect}
         selectedRows={selectedId ? [selectedId] : []}
-        onSelectRows={(keys) => onRowSelect?.(String(keys[0]))}
+        onRowClick={(row) => onRowSelect?.((row as { id: string }).id)}
       />
 
       {pageCount > 1 && (
@@ -74,29 +69,33 @@ export function SchemaTable<T extends { id: string }>({
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            fontSize: "var(--text-sm)",
-            color: "var(--canvas-fg-2)",
+            padding: "10px 14px",
+            borderTop: "1px solid rgb(var(--canvas-border))",
+            fontSize: 12.5,
+            color: "rgb(var(--canvas-fg-3))",
           }}
         >
-          <div>
+          <span>
             Page {pageIndex + 1} of {pageCount}
-          </div>
-          <div style={{ display: "flex", gap: "var(--space-2)" }}>
+          </span>
+          <div style={{ display: "flex", gap: 6 }}>
             <Button
               variant="ghost"
+              size="sm"
               onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
               disabled={pageIndex === 0}
               data-testid="schema-pagination-prev"
             >
-              <ChevronLeft size={14} />
+              <Icon name="chevronLeft" size={13} />
             </Button>
             <Button
               variant="ghost"
+              size="sm"
               onClick={() => setPageIndex((p) => Math.min(pageCount - 1, p + 1))}
               disabled={pageIndex >= pageCount - 1}
               data-testid="schema-pagination-next"
             >
-              <ChevronRight size={14} />
+              <Icon name="chevronRight" size={13} />
             </Button>
           </div>
         </div>

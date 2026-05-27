@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Button, Modal, PageHeader, RowMenu, FilterBar, TabBar, Select } from "@tinkermonkey/heimdall-ui";
+import { Button, Modal, PageHeader, FilterBar, TabBar, Icon } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
@@ -20,7 +20,7 @@ type RelationshipResponse = components["schemas"]["RelationshipResponse"];
 
 interface RelationshipsPageContentProps {
   classesById: Map<string, string>;
-  propertiesById: Map<string, string>;
+  propertiesById: Map<string, { title: string; identifier: string }>;
   classesError?: Error | null;
   onRetryClasses?: () => void;
   propertiesError?: Error | null;
@@ -39,8 +39,6 @@ function RelationshipsPageContent({
 }: RelationshipsPageContentProps) {
   const [selectedId, setSelectedId] = useState<string>();
   const [searchFilter, setSearchFilter] = useState("");
-  const [sourceClassFilter, setSourceClassFilter] = useState<string>();
-  const [targetClassFilter, setTargetClassFilter] = useState<string>();
 
   const { data: listResponse, isLoading, error, refetch } = useRelationships();
   const relationships = listResponse?.items || [];
@@ -48,67 +46,78 @@ function RelationshipsPageContent({
   const filteredData = relationships.filter((rel: RelationshipResponse) => {
     const sourceClassName = classesById.get(rel.source_id)?.toLowerCase() ?? "";
     const targetClassName = classesById.get(rel.target_id)?.toLowerCase() ?? "";
-    const propertyName = propertiesById.get(rel.property_definition_id)?.toLowerCase() ?? "";
+    const prop = propertiesById.get(rel.property_definition_id);
+    const propertyName = (prop?.title ?? "").toLowerCase();
     const search = searchFilter.toLowerCase();
-
-    const matchesSearch =
+    return (
       sourceClassName.includes(search) ||
       targetClassName.includes(search) ||
-      propertyName.includes(search);
-
-    const matchesSourceFilter = !sourceClassFilter || rel.source_id === sourceClassFilter;
-    const matchesTargetFilter = !targetClassFilter || rel.target_id === targetClassFilter;
-
-    return matchesSearch && matchesSourceFilter && matchesTargetFilter;
+      propertyName.includes(search)
+    );
   });
 
   const relationshipColumns: Column<RelationshipResponse>[] = [
     {
       key: "id",
-      label: "ID",
+      label: "Identifier",
+      width: "120px",
       render: (value) => (
-        <code className="font-mono text-xs">{(value as string).slice(0, 8)}</code>
-      ),
-    },
-    {
-      key: "property_definition_id",
-      label: "Name",
-      render: (value) => (
-        <span style={{ color: "var(--accent-cyan, #22d3ee)", fontWeight: 500 }}>
-          {propertiesById.get(value as string) || "—"}
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: 12.5 }}>
+          {(value as string).slice(0, 8)}
         </span>
       ),
     },
     {
       key: "source_id",
-      label: "Source Class",
+      label: "Source",
       render: (value) => (
-        <span className="opacity-60">{classesById.get(value as string) || "—"}</span>
+        <span style={{ fontWeight: 500 }}>{classesById.get(value as string) || "—"}</span>
       ),
     },
     {
+      key: "property_definition_id",
+      label: "Predicate",
+      width: "200px",
+      render: (value) => {
+        const prop = propertiesById.get(value as string);
+        return (
+          <span
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: 11.5,
+              color: "rgb(var(--canvas-fg-3))",
+            }}
+          >
+            — {prop?.identifier ?? "?"} →
+          </span>
+        );
+      },
+    },
+    {
       key: "target_id",
-      label: "Target Class",
+      label: "Target",
       render: (value) => (
-        <span className="opacity-60">{classesById.get(value as string) || "—"}</span>
+        <span style={{ fontWeight: 500 }}>{classesById.get(value as string) || "—"}</span>
       ),
     },
     {
       key: "created_at",
-      label: "",
-      width: "40px",
-      render: (_, row) => (
-        <RowMenu
-          data-testid={`relationship-row-actions-${row.id}`}
-          actions={[
-            { id: "edit", label: "Edit", icon: "edit" },
-            { id: "clone", label: "Clone", icon: "copy" },
-            { type: "separator" },
-            { id: "delete", label: "Delete", icon: "trash", danger: true },
-          ]}
-          onAction={(actionId: string) => console.log(`Action ${actionId} on relationship ${row.id}`)}
-        />
-      ),
+      label: "Created",
+      width: "120px",
+      render: (value) => {
+        const date = value as string | null;
+        return (
+          <span
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: 11.5,
+              color: "rgb(var(--canvas-fg-3))",
+            }}
+          >
+            {date ? new Date(date).toLocaleDateString() : "—"}
+          </span>
+        );
+      },
     },
   ];
 
@@ -143,97 +152,48 @@ function RelationshipsPageContent({
         description={relationshipsCopy.emptyState.description}
         action={{
           label: relationshipsCopy.emptyState.actionLabel,
-          onClick: () => {
-            onCreateClick?.();
-          },
+          onClick: () => onCreateClick?.(),
         }}
       />
     );
   }
 
-  const hasFilters = !!searchFilter || !!sourceClassFilter || !!targetClassFilter;
+  const hasFilters = !!searchFilter;
   const showFilteredEmpty = relationships.length > 0 && filteredData.length === 0 && hasFilters;
 
   return (
-    <div data-testid="relationships-page">
-      <div className="stack">
-        <div className="row" style={{ flexWrap: "wrap" }}>
-          <Select
-            value={sourceClassFilter || ""}
-            onChange={(e) => setSourceClassFilter(e.target.value || undefined)}
-            data-testid="relationship-source-class-filter"
-          >
-            <option value="">Source Class</option>
-            {Array.from(classesById.entries()).map(([id, name]) => (
-              <option key={id} value={id}>
-                {name}
-              </option>
-            ))}
-          </Select>
-
-          <Select
-            value={targetClassFilter || ""}
-            onChange={(e) => setTargetClassFilter(e.target.value || undefined)}
-            data-testid="relationship-target-class-filter"
-          >
-            <option value="">Target Class</option>
-            {Array.from(classesById.entries()).map(([id, name]) => (
-              <option key={id} value={id}>
-                {name}
-              </option>
-            ))}
-          </Select>
-        </div>
-
-        <FilterBar
-          data-testid="schema-filter-bar"
-          onSearchChange={setSearchFilter}
-          filters={[
-            ...(sourceClassFilter
-              ? [{ id: sourceClassFilter, label: `Source: ${classesById.get(sourceClassFilter) || sourceClassFilter}` }]
-              : []),
-            ...(targetClassFilter
-              ? [{ id: targetClassFilter, label: `Target: ${classesById.get(targetClassFilter) || targetClassFilter}` }]
-              : []),
-          ]}
-          onFilterRemove={(id) => {
-            if (id === sourceClassFilter) setSourceClassFilter(undefined);
-            if (id === targetClassFilter) setTargetClassFilter(undefined);
-          }}
-          showingCount={filteredData.length}
-          totalCount={relationships.length}
-        />
-      </div>
+    <div data-testid="relationships-page" className="stack">
+      <FilterBar
+        data-testid="schema-filter-bar"
+        onSearchChange={setSearchFilter}
+        searchPlaceholder="Search by source, predicate, or target…"
+        showingCount={filteredData.length}
+        totalCount={relationships.length}
+      />
 
       {classesError && onRetryClasses && (
-        <div style={{ marginBottom: "var(--space-3)" }}>
-          <ErrorBanner
-            error={classesError}
-            onRetry={onRetryClasses}
-            message="Failed to load classes"
-            compact
-          />
-        </div>
+        <ErrorBanner
+          error={classesError}
+          onRetry={onRetryClasses}
+          message="Failed to load classes"
+          compact
+        />
       )}
 
       {propertiesError && onRetryProperties && (
-        <div style={{ marginBottom: "var(--space-3)" }}>
-          <ErrorBanner
-            error={propertiesError}
-            onRetry={onRetryProperties}
-            message="Failed to load properties"
-            compact
-          />
-        </div>
+        <ErrorBanner
+          error={propertiesError}
+          onRetry={onRetryProperties}
+          message="Failed to load properties"
+          compact
+        />
       )}
 
       {showFilteredEmpty ? (
-        <div style={{ marginTop: "var(--space-6)" }}>
-          <EmptyState
-            title={relationshipsCopy.filteredEmpty.title}
-            description={relationshipsCopy.filteredEmpty.description}
-          />
-        </div>
+        <EmptyState
+          title={relationshipsCopy.filteredEmpty.title}
+          description={relationshipsCopy.filteredEmpty.description}
+        />
       ) : (
         <SchemaPageLayout
           data={filteredData}
@@ -244,7 +204,7 @@ function RelationshipsPageContent({
               relationship={rel}
               sourceName={classesById.get(rel.source_id) || "—"}
               targetName={classesById.get(rel.target_id) || "—"}
-              propertyName={propertiesById.get(rel.property_definition_id) || "—"}
+              propertyName={propertiesById.get(rel.property_definition_id)?.title || "—"}
               onClose={() => setSelectedId(undefined)}
             />
           )}
@@ -278,7 +238,9 @@ function RelationshipsPageWrapper() {
   const properties = propertiesResponse?.items || [];
 
   const classesById = new Map(classes.map((c) => [c.id, c.title]));
-  const propertiesById = new Map(properties.map((p) => [p.id, p.title]));
+  const propertiesById = new Map(
+    properties.map((p) => [p.id, { title: p.title, identifier: p.identifier }]),
+  );
 
   const { data: taxData } = useTaxonomies();
   const { data: schemesData } = useSchemes();
@@ -290,7 +252,11 @@ function RelationshipsPageWrapper() {
     { id: "schemes", label: "Schemes", count: schemesData?.total },
     { id: "classes", label: "Classes", count: classesResponse?.total },
     { id: "properties", label: "Properties", count: propsData?.total },
-    { id: "relationships", label: "Relationships", count: relsData?.items?.length ?? relsData?.total },
+    {
+      id: "relationships",
+      label: "Relationships",
+      count: relsData?.items?.length ?? relsData?.total,
+    },
   ];
 
   const handleTabNavigate = (tabId: string) => {
@@ -318,17 +284,23 @@ function RelationshipsPageWrapper() {
   return (
     <div className="stack">
       <PageHeader
-        eyebrow="Schema"
+        eyebrow="SCHEMA · node_type · relationship"
         title="Relationships"
         idChip="/schema/relationships"
+        subtitle="A relationship is a typed triple (s, p, o) between two graph nodes. Source and confidence are tracked separately from the data."
         actions={
-          <Button
-            variant="primary"
-            onClick={() => setShowCreateModal(true)}
-            data-testid="relationship-add-button"
-          >
-            + Add relationship
-          </Button>
+          <>
+            <Button variant="ghost" onClick={() => {}}>
+              <Icon name="download" size={13} /> Export
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => setShowCreateModal(true)}
+              data-testid="relationship-add-button"
+            >
+              <Icon name="plus" size={13} /> New relationship
+            </Button>
+          </>
         }
       />
 

@@ -318,12 +318,12 @@ describe("Dashboard", () => {
       render(<Dashboard />);
 
       await waitFor(() => {
-        expect(screen.getByText("Recent Activity")).toBeInTheDocument();
+        expect(screen.getByText("Recent activity")).toBeInTheDocument();
         expect(screen.getByText("No recent changes.")).toBeInTheDocument();
       });
     });
 
-    it("displays system status with health data", async () => {
+    it("displays active pipelines and quick access sections when populated", async () => {
       server.use(
         rest.get("*/api/taxonomies", (req, res, ctx) =>
           res(
@@ -357,9 +357,8 @@ describe("Dashboard", () => {
       render(<Dashboard />);
 
       await waitFor(() => {
-        expect(screen.getByText("System Status")).toBeInTheDocument();
-        expect(screen.getByText("connected")).toBeInTheDocument();
-        expect(screen.getByText("ready")).toBeInTheDocument();
+        expect(screen.getByText("Active pipelines")).toBeInTheDocument();
+        expect(screen.getByText("Quick access")).toBeInTheDocument();
       });
     });
   });

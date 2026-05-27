@@ -1,6 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { Loader, CheckCircle, AlertCircle } from "lucide-react";
-import { InspectorPanel, TextInput as Input, TextArea as Textarea, Button, KVGrid } from "@tinkermonkey/heimdall-ui";
+import {
+  InspectorPanel,
+  TextInput as Input,
+  TextArea as Textarea,
+  Button,
+  KVGrid,
+} from "@tinkermonkey/heimdall-ui";
 import { ConfirmDialog } from "@tinkermonkey/heimdall-ui";
 import { useUpdateScheme, useDeleteScheme } from "@/api/hooks/ontology/useSchemes";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
@@ -115,14 +121,21 @@ export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
             Saved {formatTimeAgo(lastSavedAtRef.current)}
           </span>
         )}
-        {autosaveState === "error" && <AlertCircle size={14} style={{ color: "rgb(var(--status-rose))" }} />}
+        {autosaveState === "error" && (
+          <AlertCircle size={14} style={{ color: "rgb(var(--status-rose))" }} />
+        )}
       </span>
       {isDirty && (
         <Button variant="ghost" size="sm" onClick={revert} data-testid="inspector-revert-button">
           Revert
         </Button>
       )}
-      <Button variant="danger" size="sm" onClick={handleDeleteClick} data-testid="inspector-delete-button">
+      <Button
+        variant="danger"
+        size="sm"
+        onClick={handleDeleteClick}
+        data-testid="inspector-delete-button"
+      >
         Delete
       </Button>
     </>
@@ -138,39 +151,41 @@ export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
         data-testid="scheme-inspector"
       >
         <InspectorPanel.Section title="Details">
-          <div>
-            <label className="form-group-label">ID</label>
-            <Input type="text" value={scheme.id} disabled mono data-testid="scheme-drawer-id" />
-          </div>
+          <div className="stack">
+            <div>
+              <label className="form-group-label">ID</label>
+              <Input type="text" value={scheme.id} disabled mono data-testid="scheme-drawer-id" />
+            </div>
 
-          <div>
-            <label className="form-group-label">Title</label>
-            <Input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              data-testid="scheme-drawer-title-input"
-            />
-          </div>
+            <div>
+              <label className="form-group-label">Title</label>
+              <Input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                data-testid="scheme-drawer-title-input"
+              />
+            </div>
 
-          <div>
-            <label className="form-group-label">Description</label>
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              data-testid="scheme-drawer-description-input"
-              rows={4}
-            />
-          </div>
+            <div>
+              <label className="form-group-label">Description</label>
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                data-testid="scheme-drawer-description-input"
+                rows={4}
+              />
+            </div>
 
-          <div>
-            <label className="form-group-label">Parent Taxonomy</label>
-            <Input
-              type="text"
-              value={taxonomyName}
-              disabled
-              data-testid="scheme-drawer-parent-taxonomy"
-            />
+            <div>
+              <label className="form-group-label">Parent Taxonomy</label>
+              <Input
+                type="text"
+                value={taxonomyName}
+                disabled
+                data-testid="scheme-drawer-parent-taxonomy"
+              />
+            </div>
           </div>
         </InspectorPanel.Section>
 
@@ -189,7 +204,9 @@ export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
         title={schemesCopy.delete.confirmTitle}
         message={deleteMessage}
         confirmLabel={schemesCopy.delete.confirmButton}
-        onConfirm={() => { void handleDelete(); }}
+        onConfirm={() => {
+          void handleDelete();
+        }}
         variant="danger"
       />
     </>

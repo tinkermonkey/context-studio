@@ -63,10 +63,11 @@ function mapStatus(
 interface PipelineCardProps {
   pipeline: PipelineConfigurationResponse;
   selected?: boolean;
+  compact?: boolean;
   onClick?: () => void;
 }
 
-export function PipelineCard({ pipeline, selected, onClick }: PipelineCardProps) {
+export function PipelineCard({ pipeline, selected, compact, onClick }: PipelineCardProps) {
   const { data: executions = [] } = usePipelineExecutions(pipeline.id);
   const executeMutation = useExecutePipeline();
   const { toast } = useToasts();
@@ -110,6 +111,7 @@ export function PipelineCard({ pipeline, selected, onClick }: PipelineCardProps)
     <HeimdallPipelineCard
       data-testid={`pipeline-card-${pipeline.id}`}
       selected={selected}
+      compact={compact}
       onClick={onClick}
       onRun={handleRun}
       pipeline={{
