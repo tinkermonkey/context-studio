@@ -201,7 +201,7 @@ describe("Individuals Data Page", () => {
       });
 
       const monoId = screen.getByText("individu");
-      expect(monoId).toHaveClass("font-mono");
+      expect(monoId).toHaveStyle({ fontFamily: "var(--font-mono)" });
     });
 
     it("displays class chips with correct class names", async () => {

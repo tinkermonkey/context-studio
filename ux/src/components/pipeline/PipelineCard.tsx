@@ -99,12 +99,12 @@ export function PipelineCard({ pipeline, selected, compact, onClick }: PipelineC
 
   const errors = lastExecution?.status === "error" || lastExecution?.status === "timeout" ? 1 : 0;
 
-  const footerContent = lastExecution ? (
-    <span className="muted">
-      {lastRunTime} · {lastExecution.tokens_in} → {lastExecution.tokens_out} tokens · {duration}
-    </span>
-  ) : (
-    <span className="muted">{COPY.NO_PIPELINE_RUNS}</span>
+  const footerContent = (
+    <div className="pipeline-card-foot">
+      {lastExecution
+        ? `${lastRunTime} · ${lastExecution.tokens_in} → ${lastExecution.tokens_out} tokens · ${duration}`
+        : COPY.NO_PIPELINE_RUNS}
+    </div>
   );
 
   return (

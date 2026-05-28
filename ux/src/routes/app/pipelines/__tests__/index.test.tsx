@@ -278,7 +278,7 @@ describe("Pipelines Page", () => {
   });
 
   describe("accessibility and styling", () => {
-    it("pipelines grid uses proper grid layout class", () => {
+    it("pipelines list uses single-column stack layout class", () => {
       vi.mocked(pipelineHooks.usePipelines).mockReturnValue({
         data: [mockPipeline1, mockPipeline2],
         isLoading: false,
@@ -295,7 +295,7 @@ describe("Pipelines Page", () => {
       );
 
       const grid = screen.getByTestId("pipelines-grid");
-      expect(grid).toHaveClass("grid-2");
+      expect(grid).toHaveClass("pipeline-list");
     });
 
     it("status filter renders as a labeled group of radio options", () => {

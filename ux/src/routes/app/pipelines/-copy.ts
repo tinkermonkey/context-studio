@@ -1,6 +1,8 @@
 export const COPY = {
   // Pipelines Index Page
   PIPELINES_PAGE_TITLE: "Pipelines",
+  PIPELINES_PAGE_SUBTITLE:
+    "Graph-RAG ingest pipelines. Each pipeline pulls from a source, extracts structure, and writes to the knowledge graph.",
   NEW_PIPELINE_BUTTON: "New Pipeline",
   SEARCH_PIPELINES_PLACEHOLDER: "Search by name, provider, or model…",
   FILTER_PIPELINES_LABEL: "Filter pipelines by status",

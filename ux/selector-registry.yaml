@@ -601,6 +601,9 @@ selectors:
   - selector: individuals-page
     component: routes/app/data/individuals.tsx
     description: Main individuals page container
+  - selector: individuals-content
+    component: routes/app/data/individuals.tsx
+    description: Main content area of individuals page
   - selector: individual-add-button
     component: routes/app/data/individuals.tsx
     description: Button to open create individual modal

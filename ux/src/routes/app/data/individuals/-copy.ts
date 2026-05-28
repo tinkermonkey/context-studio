@@ -1,5 +1,7 @@
 export const individualsCopy = {
   pageTitle: "Individuals",
+  subtitle:
+    "Concrete instances populated from pipelines or curators. Each individual belongs to one or more classes.",
   emptyState: {
     title: "No individuals yet",
     description:
@@ -13,7 +15,7 @@ export const individualsCopy = {
     description: "Try adjusting your search or filters to find individuals.",
   },
   create: {
-    buttonLabel: "+ New individual",
+    buttonLabel: "New individual",
     modalTitle: "Create Individual",
     successToast: "Individual created",
     submitButton: "Create Individual",
@@ -91,10 +93,10 @@ export const individualsCopy = {
     pendingChanges: "Waiting for autosave to complete...",
   },
   table: {
-    idHeader: "ID",
-    nameHeader: "Name",
+    idHeader: "Identifier",
+    nameHeader: "Title",
     classesHeader: "Classes",
     descriptionHeader: "Description",
-    updatedHeader: "Updated",
+    versionHeader: "Ver",
   },
 };

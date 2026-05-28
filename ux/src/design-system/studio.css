@@ -924,6 +924,22 @@ select.input {
   gap: var(--space-6);
 }
 
+.pipeline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pipeline-card-foot {
+  padding: 10px 14px;
+  font-size: 12px;
+  color: rgb(var(--canvas-fg-3));
+}
+
+.pipeline-card--compact .pipeline-card-foot {
+  padding: 8px 12px;
+}
+
 .pipeline-card-wrapper {
   cursor: pointer;
   outline: none;

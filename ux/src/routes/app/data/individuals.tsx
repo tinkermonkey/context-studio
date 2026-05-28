@@ -1,7 +1,16 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useToasts } from "@/components/ui/Toast";
-import { Button, Modal, FilterBar, PageHeader, RowMenu, Sparkline } from "@tinkermonkey/heimdall-ui";
+import {
+  Button,
+  Modal,
+  FilterBar,
+  PageHeader,
+  RowMenu,
+  Chip,
+  VersionPill,
+  Icon,
+} from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
@@ -65,8 +74,11 @@ function IndividualsPageContent({
     {
       key: "id",
       label: individualsCopy.table.idHeader,
+      width: "120px",
       render: (value) => (
-        <code className="font-mono text-xs">{(value as string).slice(0, 8)}</code>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: 12.5 }}>
+          {(value as string).slice(0, 8)}
+        </span>
       ),
     },
     {
@@ -75,7 +87,8 @@ function IndividualsPageContent({
       sortable: true,
       render: (value, row) => (
         <span
-          className="text-cyan-400 font-medium cursor-pointer"
+          className="cursor-pointer"
+          style={{ fontWeight: 500 }}
           data-testid={`individual-name-${row.id}`}
           onClick={() => onSelectedIdChange(row.id)}
         >
@@ -84,63 +97,40 @@ function IndividualsPageContent({
       ),
     },
     {
+      key: "description",
+      label: individualsCopy.table.descriptionHeader,
+      render: (value) => (
+        <span style={{ color: "rgb(var(--canvas-fg-3))", fontSize: 12.5 }}>
+          {(value as string) || "—"}
+        </span>
+      ),
+    },
+    {
       key: "class_ids",
       label: individualsCopy.table.classesHeader,
+      width: "200px",
       render: (value) => {
         const classIds = value as string[];
         return (
-          <div className="flex gap-1 flex-wrap">
-            {classIds.map((classId) => {
-              const className = classMap.get(classId) || "Unknown";
-              return (
-                <span
-                  key={classId}
-                  className="bg-canvas-bg-2 text-xs font-medium px-2 py-1 rounded"
-                  data-testid={`individual-class-chip-${classId}`}
-                >
-                  {className}
-                </span>
-              );
-            })}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+            {classIds.map((classId) => (
+              <Chip
+                key={classId}
+                variant="neutral"
+                data-testid={`individual-class-chip-${classId}`}
+              >
+                {classMap.get(classId) || individualsCopy.drawer.classNameFallback}
+              </Chip>
+            ))}
           </div>
         );
       },
     },
     {
-      key: "description",
-      label: individualsCopy.table.descriptionHeader,
-      render: (value) => {
-        const desc = value as string | null | undefined;
-        if (!desc) return <span className="opacity-60">—</span>;
-        const truncated = desc.length > 50 ? desc.slice(0, 50) + "…" : desc;
-        return <span>{truncated}</span>;
-      },
-    },
-    {
-      key: "last_modified",
-      label: individualsCopy.table.updatedHeader,
-      render: (value, row) => {
-        const date = value as string | null;
-        const barCount = Math.min(row.version, 10);
-        const sparkData = Array.from({ length: barCount }, (_, i) =>
-          Math.round(30 + ((i + 1) / barCount) * 70),
-        );
-        const getSparkColor = (lastModified: string | null): string => {
-          if (!lastModified) return "neutral";
-          const ageInHours = (Date.now() - new Date(lastModified).getTime()) / (1000 * 60 * 60);
-          if (ageInHours < 24) return "emerald";
-          if (ageInHours < 7 * 24) return "amber";
-          return "neutral";
-        };
-        return (
-          <div className="flex flex-col gap-1">
-            <Sparkline data={sparkData} color={getSparkColor(date)} height={16} />
-            <span className="text-xs opacity-60">
-              {date ? new Date(date).toLocaleDateString() : "—"}
-            </span>
-          </div>
-        );
-      },
+      key: "version",
+      label: individualsCopy.table.versionHeader,
+      width: "60px",
+      render: (value) => <VersionPill>{value as number}</VersionPill>,
     },
     {
       key: "id",
@@ -205,15 +195,13 @@ function IndividualsPageContent({
   const showFilteredEmpty = individuals.length > 0 && filteredData.length === 0 && hasFilters;
 
   return (
-    <div>
+    <div className="stack">
       {classesError && (
-        <div style={{ marginBottom: "var(--space-3)" }}>
-          <ErrorBanner
-            error={classesErrorObj || new Error(individualsCopy.errors.failedToLoadClasses)}
-            onRetry={onRetryClasses}
-            message={individualsCopy.errors.failedToLoadClasses}
-          />
-        </div>
+        <ErrorBanner
+          error={classesErrorObj || new Error(individualsCopy.errors.failedToLoadClasses)}
+          onRetry={onRetryClasses}
+          message={individualsCopy.errors.failedToLoadClasses}
+        />
       )}
       <FilterBar
         data-testid="schema-filter-bar"
@@ -224,12 +212,10 @@ function IndividualsPageContent({
       />
 
       {showFilteredEmpty ? (
-        <div style={{ marginTop: "var(--space-6)" }}>
-          <EmptyState
-            title={individualsCopy.filteredEmpty.title}
-            description={individualsCopy.filteredEmpty.description}
-          />
-        </div>
+        <EmptyState
+          title={individualsCopy.filteredEmpty.title}
+          description={individualsCopy.filteredEmpty.description}
+        />
       ) : (
         <SchemaPageLayout
           data={filteredData}
@@ -367,21 +353,22 @@ function IndividualsPageWrapper() {
   return (
     <div className="stack" data-testid="individuals-page">
       <PageHeader
-        eyebrow="Data"
+        eyebrow="DATA · node_type · individual"
         title={individualsCopy.pageTitle}
         idChip="/data/individuals"
+        subtitle={individualsCopy.subtitle}
         actions={
           <Button
             variant="primary"
             onClick={() => setShowCreateModal(true)}
             data-testid="individual-add-button"
           >
-            {individualsCopy.create.buttonLabel}
+            <Icon name="plus" size={13} /> {individualsCopy.create.buttonLabel}
           </Button>
         }
       />
 
-      <div data-testid="schema-page-layout">
+      <div data-testid="individuals-content">
         <IndividualsPageContent
           onCreateClick={() => setShowCreateModal(true)}
           selectedId={selectedId}

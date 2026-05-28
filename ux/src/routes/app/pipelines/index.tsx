@@ -1,7 +1,6 @@
-import { Button, FilterBar, Modal, PageHeader, SegmentedControl } from "@tinkermonkey/heimdall-ui";
+import { Button, FilterBar, Icon, Modal, PageHeader, SegmentedControl } from "@tinkermonkey/heimdall-ui";
 import { useState, useMemo } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
 import { usePipelines, useAllPipelineExecutions, useCreatePipeline } from "@/api/hooks/pipeline";
 import { PipelineCard } from "@/components/pipeline/PipelineCard";
 import { PipelineDetailPanel } from "@/components/pipeline/PipelineDetailPanel";
@@ -93,7 +92,7 @@ export function PipelinesContent() {
           <div className="skeleton" style={{ width: 120, height: 32 }} />
         </div>
         <div className="skeleton" style={{ height: 40 }} />
-        <div className="grid-2">
+        <div className="pipeline-list">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="skeleton" style={{ height: 120 }} />
           ))}
@@ -149,7 +148,7 @@ export function PipelinesContent() {
   const showFilteredEmpty = pipelines.length > 0 && filteredPipelines.length === 0 && hasFilters;
 
   return (
-    <div data-testid="pipelines-page">
+    <div data-testid="pipelines-page" className="stack">
       <Modal isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         title={COPY.CREATE_PIPELINE_TITLE}
@@ -174,22 +173,23 @@ export function PipelinesContent() {
       </Modal>
 
       <PageHeader
-        eyebrow="Processing"
+        eyebrow="PIPELINES · workflow"
         title={COPY.PIPELINES_PAGE_TITLE}
         idChip="/pipelines"
+        subtitle={COPY.PIPELINES_PAGE_SUBTITLE}
         actions={
           <Button
             variant="primary"
             onClick={() => setShowCreateModal(true)}
             data-testid="pipeline-add-button"
           >
-            <Plus size={16} />
+            <Icon name="plus" size={13} />
             {COPY.NEW_PIPELINE_BUTTON}
           </Button>
         }
       />
 
-      <div className="stack" style={{ marginBottom: "var(--space-6)" }}>
+      <div className="stack">
         <FilterBar
           searchPlaceholder={COPY.SEARCH_PIPELINES_PLACEHOLDER}
           filters={activeFilterChips}
@@ -215,13 +215,11 @@ export function PipelinesContent() {
       </div>
 
       {executionsError && (
-        <div style={{ marginBottom: "var(--space-6)" }}>
-          <ErrorBanner
-            error={executionsError}
-            message={COPY.EXECUTIONS_LOAD_ERROR}
-            daemonLogPath="/local-server/logs/context_studio.log"
-          />
-        </div>
+        <ErrorBanner
+          error={executionsError}
+          message={COPY.EXECUTIONS_LOAD_ERROR}
+          daemonLogPath="/local-server/logs/context_studio.log"
+        />
       )}
 
       {showFilteredEmpty ? (
@@ -230,7 +228,7 @@ export function PipelinesContent() {
           description={COPY.NO_PIPELINES_FILTERED_DESCRIPTION}
         />
       ) : (
-        <div data-testid="pipelines-grid" className="grid-2">
+        <div data-testid="pipelines-grid" className="pipeline-list">
           {filteredPipelines.map((pipeline) => (
             <PipelineCard
               key={pipeline.id}
