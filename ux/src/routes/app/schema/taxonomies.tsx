@@ -10,7 +10,6 @@ import {
   FilterBar,
   TabBar,
   Icon,
-  VersionPill,
 } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -23,11 +22,38 @@ import { useSchemes } from "@/api/hooks/ontology/useSchemes";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { useProperties } from "@/api/hooks/ontology/useProperties";
 import { useRelationships } from "@/api/hooks/ontology/useRelationships";
+import { useIndividuals } from "@/api/hooks/ontology/useIndividuals";
 import { taxonomiesCopy } from "./taxonomies/-copy";
 import type { components } from "@/api/types";
 
 type TaxonomyResponse = components["schemas"]["TaxonomyResponse"];
 type TaxonomyCreateRequest = components["schemas"]["TaxonomyCreateRequest"];
+
+const SWATCH_PALETTE = [
+  "rgb(var(--status-emerald))",
+  "rgb(var(--status-amber))",
+  "rgb(var(--status-cyan))",
+  "rgb(var(--status-violet))",
+  "rgb(var(--status-rose))",
+  "rgb(var(--accent-primary))",
+];
+
+function swatchColor(id: string): string {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) {
+    h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  }
+  return SWATCH_PALETTE[h % SWATCH_PALETTE.length];
+}
+
+function toIsoDate(input: string): string {
+  const d = new Date(input);
+  if (Number.isNaN(d.getTime())) return "—";
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
 
 interface TaxonomiesSearchParams {
   selected?: string;
@@ -48,6 +74,36 @@ function TaxonomiesPageContent({
 
   const { data: listResponse, isLoading, error, refetch } = useTaxonomies();
   const taxonomies = listResponse?.items || [];
+  const { data: schemesList } = useSchemes();
+  const { data: classesList } = useClasses();
+  const { data: individualsList } = useIndividuals();
+
+  const schemeCountByTaxonomy = (schemesList?.items ?? []).reduce<Record<string, number>>(
+    (acc, s) => {
+      acc[s.taxonomy_id] = (acc[s.taxonomy_id] ?? 0) + 1;
+      return acc;
+    },
+    {},
+  );
+
+  const classCountByTaxonomy: Record<string, number> = {};
+  const classTaxonomyById: Record<string, string> = {};
+  for (const c of classesList?.items ?? []) {
+    classCountByTaxonomy[c.taxonomy_id] = (classCountByTaxonomy[c.taxonomy_id] ?? 0) + 1;
+    classTaxonomyById[c.id] = c.taxonomy_id;
+  }
+
+  const individualCountByTaxonomy: Record<string, number> = {};
+  for (const ind of individualsList?.items ?? []) {
+    const taxIds = new Set<string>();
+    for (const classId of ind.class_ids ?? []) {
+      const taxId = classTaxonomyById[classId];
+      if (taxId) taxIds.add(taxId);
+    }
+    for (const taxId of taxIds) {
+      individualCountByTaxonomy[taxId] = (individualCountByTaxonomy[taxId] ?? 0) + 1;
+    }
+  }
 
   const filteredData = taxonomies.filter(
     (tax: TaxonomyResponse) =>
@@ -60,36 +116,57 @@ function TaxonomiesPageContent({
     {
       key: "id",
       label: "Identifier",
-      width: "160px",
-      render: (value) => (
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 12.5 }}>
-          {(value as string).slice(0, 8)}
-        </span>
-      ),
+      width: "180px",
+      render: (value) => {
+        const id = value as string;
+        return (
+          <span className="taxonomy-id-cell">
+            <span
+              className="taxonomy-id-cell__swatch"
+              style={{ background: swatchColor(id) }}
+              aria-hidden="true"
+            />
+            <span className="taxonomy-id-cell__text">{id.slice(0, 8)}</span>
+          </span>
+        );
+      },
     },
     {
       key: "title",
       label: "Title",
       sortable: true,
-      render: (value) => <span style={{ fontWeight: 500 }}>{value as string}</span>,
+      render: (value) => <span className="taxonomy-title-cell">{value as string}</span>,
     },
     {
       key: "description",
       label: "Description",
       render: (value) => (
-        <span style={{ color: "rgb(var(--canvas-fg-3))", fontSize: 12.5 }}>
-          {(value as string) || "—"}
-        </span>
+        <span className="taxonomy-desc-cell">{(value as string) || "—"}</span>
       ),
     },
     {
-      key: "status",
-      label: "Status",
-      width: "120px",
-      render: (value) => {
-        const status = value as string;
-        return <Chip variant={status === "draft" ? "amber" : "emerald"}>{status}</Chip>;
-      },
+      key: "id",
+      label: "Schemes",
+      width: "100px",
+      render: (_, row) => (
+        <Chip variant="neutral">{schemeCountByTaxonomy[row.id] ?? 0}</Chip>
+      ),
+    },
+    {
+      key: "id",
+      label: "Classes",
+      width: "90px",
+      render: (_, row) => (
+        <span className="taxonomy-count-cell">{classCountByTaxonomy[row.id] ?? 0}</span>
+      ),
+    },
+    {
+      key: "id",
+      label: "Individuals",
+      width: "110px",
+      render: (_, row) => (
+        <span className="taxonomy-count-cell">{individualCountByTaxonomy[row.id] ?? 0}</span>
+      ),
     },
     {
       key: "last_modified",
@@ -98,23 +175,9 @@ function TaxonomiesPageContent({
       render: (value) => {
         const date = value as string | null;
         return (
-          <span
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: 11.5,
-              color: "rgb(var(--canvas-fg-3))",
-            }}
-          >
-            {date ? new Date(date).toLocaleDateString() : "—"}
-          </span>
+          <span className="taxonomy-date-cell">{date ? toIsoDate(date) : "—"}</span>
         );
       },
-    },
-    {
-      key: "version",
-      label: "Ver",
-      width: "60px",
-      render: (value) => <VersionPill>{value as number}</VersionPill>,
     },
     {
       key: "created_at",

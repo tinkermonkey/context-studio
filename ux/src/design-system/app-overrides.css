@@ -48,3 +48,247 @@ body.dark-canvas {
   --graph-cluster-software-bg: rgba(129 140 248 / 0.12);
   --shell-surface-2: rgb(55 80 140);
 }
+
+/* Heimdall .hierarchy-row pins the pill column at 220px, but the pill
+   contains the kind tag, label, and meta count and frequently exceeds
+   that — the overflow visually collides with the description column.
+   Let the pill column size to its content. */
+.hierarchy-row {
+  grid-template-columns: max-content minmax(0, 1fr);
+}
+
+/* Sticky table headers — the table sits inside the scrolling
+   .shell-layout__canvas, so each <th> sticks to the top of the canvas
+   while rows scroll underneath. The opaque background hides the rows
+   that pass behind, and the bottom shadow preserves the head/body
+   divider once it detaches from the rounded corner.
+   The :has() rule lifts overflow clipping on any panel/table wrapper
+   that contains a table, since overflow:hidden on an ancestor would
+   clip the sticky header once it scrolls above that ancestor's box. */
+.panel:has(.table),
+.panel:has(.table) .panel__body {
+  overflow: visible;
+}
+.table {
+  overflow: visible;
+}
+.table__header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: rgb(var(--canvas-bg-2));
+  box-shadow: inset 0 -1px 0 rgb(var(--canvas-border));
+  border-bottom: none;
+}
+
+/* Sidebar user identity footer (Heimdall Sidebar `footer` slot) */
+.sidebar-user-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 4px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 80ms ease-out;
+}
+
+.sidebar-user-footer:hover {
+  background: rgb(var(--shell-surface));
+}
+
+.sidebar-user-footer__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(var(--accent-primary));
+  color: rgb(var(--shell-bg));
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: var(--font-weight-medium);
+  flex-shrink: 0;
+}
+
+.sidebar-user-footer__meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: hidden;
+}
+
+.sidebar-user-footer__name {
+  font-size: 13px;
+  color: rgb(var(--shell-fg-1));
+  font-weight: var(--font-weight-medium);
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.sidebar-user-footer__context {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: rgb(var(--shell-fg-3));
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.sidebar-user-footer__caret {
+  color: rgb(var(--shell-fg-3));
+  flex-shrink: 0;
+}
+
+.sidebar--collapsed .sidebar-user-footer__meta,
+.sidebar--collapsed .sidebar-user-footer__caret {
+  display: none;
+}
+
+/* Workspace switcher pill in topbar leading slot */
+.workspace-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 10px;
+  background: rgb(var(--shell-surface));
+  border: 1px solid rgb(var(--shell-border));
+  border-radius: 999px;
+  color: rgb(var(--shell-fg-1));
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: background 80ms ease-out, border-color 80ms ease-out;
+}
+
+.workspace-switcher:hover {
+  background: rgb(var(--shell-bg-2));
+  border-color: rgb(var(--shell-border-2));
+}
+
+.workspace-switcher__label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: var(--font-weight-medium);
+}
+
+/* Right-side action cluster in topbar */
+.topbar-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbar-iconbtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-md);
+  background: transparent;
+  border: none;
+  color: rgb(var(--shell-fg-2));
+  cursor: pointer;
+  transition: background 80ms ease-out, color 80ms ease-out;
+}
+
+.topbar-iconbtn:hover {
+  background: rgb(var(--shell-surface));
+  color: rgb(var(--shell-fg-1));
+}
+
+.topbar-iconbtn__badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 4px;
+  border-radius: 7px;
+  background: rgb(var(--accent-primary));
+  color: rgb(var(--shell-bg));
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: var(--font-weight-medium);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* Branch pill: tighten the inner badge+label spacing inside Chip */
+.topbar-branch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+
+/* Statusbar accents — git branch glyph, in-running highlight */
+.statusbar__item--branch {
+  gap: 6px;
+}
+
+.statusbar__branch-glyph {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: rgb(var(--shell-fg-3));
+  line-height: 1;
+}
+
+.statusbar__accent {
+  color: rgb(var(--accent-primary));
+}
+
+/* Taxonomy table cells — identifier swatch acts as the row's left-edge marker
+   by absolute-positioning itself to span the cell's full height inside the
+   first cell. */
+.taxonomy-id-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+}
+
+.taxonomy-id-cell__swatch {
+  position: absolute;
+  left: -14px;
+  top: -10px;
+  bottom: -10px;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+}
+
+.taxonomy-id-cell__text {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: rgb(var(--canvas-fg-2));
+}
+
+.taxonomy-title-cell {
+  font-weight: var(--font-weight-medium);
+  color: rgb(var(--accent-primary));
+}
+
+.taxonomy-desc-cell {
+  color: rgb(var(--canvas-fg-3));
+  font-size: 12.5px;
+}
+
+.taxonomy-count-cell {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: rgb(var(--canvas-fg-2));
+}
+
+.taxonomy-date-cell {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: rgb(var(--canvas-fg-3));
+}

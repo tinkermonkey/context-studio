@@ -1516,3 +1516,19 @@ selectors:
   - selector: value-input-*
     component: components/pipeline/PipelineDetailPanel.tsx
     description: Per-row value input rendered by the Heimdall KeyValueEditor (suffix = row id)
+
+  - selector: sidebar-user-footer
+    component: src/routes/app.tsx
+    description: User-identity footer pinned to the bottom of the sidebar (avatar, name, workspace · branch)
+  - selector: workspace-switcher
+    component: src/routes/app.tsx
+    description: Workspace switcher pill in the topbar leading slot — opens the workspace switcher
+  - selector: topbar-actions
+    component: src/routes/app.tsx
+    description: Right-side action cluster in the topbar (notifications, docs, branch indicator)
+  - selector: topbar-notifications
+    component: src/routes/app.tsx
+    description: Topbar notifications bell with unread count badge
+  - selector: topbar-docs
+    component: src/routes/app.tsx
+    description: Topbar documentation/help icon button
